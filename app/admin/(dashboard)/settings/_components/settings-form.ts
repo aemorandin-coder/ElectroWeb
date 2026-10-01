@@ -22,7 +22,7 @@ export interface SettingsForm {
   businessHours: Record<WeekDay, DayHours>;
 
   autoExchangeRates: boolean; exchangeRateVES: string;
-  taxEnabled: boolean; taxPercent: string;
+  taxEnabled: boolean; taxPercent: string; taxDigitalProducts: boolean;
   minOrderAmountUSD: string; maxOrderAmountUSD: string;
 
   deliveryEnabled: boolean; packagingFeeUSD: string;
@@ -66,7 +66,7 @@ export const SECTIONS: { id: SectionId; label: string; description: string; icon
   {
     id: 'precios', label: 'Precios y pagos', icon: FiDollarSign,
     description: 'Tasa BCV para los precios en bolívares, IVA y montos mínimo y máximo por compra.',
-    fields: ['autoExchangeRates', 'exchangeRateVES', 'taxEnabled', 'taxPercent', 'minOrderAmountUSD', 'maxOrderAmountUSD'],
+    fields: ['autoExchangeRates', 'exchangeRateVES', 'taxEnabled', 'taxPercent', 'taxDigitalProducts', 'minOrderAmountUSD', 'maxOrderAmountUSD'],
   },
   {
     id: 'envios', label: 'Envíos y retiro', icon: FiTruck,
@@ -152,7 +152,7 @@ export function toSettingsForm(data: Record<string, unknown>): SettingsForm {
     businessHours: toHours(data.businessHours),
 
     autoExchangeRates: bool(data.autoExchangeRates, false), exchangeRateVES: num(data.exchangeRateVES),
-    taxEnabled: bool(data.taxEnabled, false), taxPercent: num(data.taxPercent, '0'),
+    taxEnabled: bool(data.taxEnabled, false), taxPercent: num(data.taxPercent, '0'), taxDigitalProducts: bool(data.taxDigitalProducts, false),
     minOrderAmountUSD: num(data.minOrderAmountUSD), maxOrderAmountUSD: num(data.maxOrderAmountUSD),
 
     deliveryEnabled: bool(data.deliveryEnabled, true), packagingFeeUSD: num(data.packagingFeeUSD, '2.5'),

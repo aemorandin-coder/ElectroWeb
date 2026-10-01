@@ -826,6 +826,8 @@ model CompanySettings {
   // Taxes
   taxEnabled Boolean @default(true)
   taxPercent Decimal?
+  /// C-151: los productos digitales (códigos, gift cards, recargas) también llevan IVA. Apagado por decisión de Andrés (01/10)
+  taxDigitalProducts Boolean @default(false)
   
   // Order Limits
   minOrderAmountUSD Decimal?

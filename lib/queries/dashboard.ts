@@ -62,7 +62,7 @@ export async function getDashboard(): Promise<DashboardData> {
 
   const ajustes = await prisma.companySettings.findUnique({
     where: { id: 'default' },
-    select: { lowStockThreshold: true, taxEnabled: true, taxPercent: true, homeMetaImage: true, rif: true, address: true },
+    select: { lowStockThreshold: true, taxEnabled: true, taxPercent: true, taxDigitalProducts: true, homeMetaImage: true, rif: true, address: true },
   });
   const umbral = ajustes?.lowStockThreshold ?? 10;
   const pocoStock: Prisma.ProductWhereInput = { ...FISICO_PUBLICADO, stock: { gt: 0, lte: umbral } };
@@ -122,7 +122,9 @@ export async function getDashboard(): Promise<DashboardData> {
   const iva = ajustes?.taxEnabled ? Number(ajustes.taxPercent ?? 0) : 0;
   const sinGanancia = new Set<string>();
   for (const p of conCosto) if ((desglosePrecio(Number(p.priceUSD), Number(p.costPerItem), iva)?.gananciaUSD ?? 1) <= 0) sinGanancia.add(p.id);
-  for (const v of variantesConCosto) if ((desglosePrecio(Number(v.priceUSD), Number(v.costUSD), iva)?.gananciaUSD ?? 1) <= 0) sinGanancia.add(v.productId);
+  // C-151: los montos digitales solo descuentan el IVA si Configuración dice que lo llevan
+  const ivaDigital = ajustes?.taxDigitalProducts ? iva : 0;
+  for (const v of variantesConCosto) if ((desglosePrecio(Number(v.priceUSD), Number(v.costUSD), ivaDigital)?.gananciaUSD ?? 1) <= 0) sinGanancia.add(v.productId);
 
   // Los 7 días en hora de Venezuela, con los que no tuvieron ventas en cero
   const porDia = new Map<string, number>();

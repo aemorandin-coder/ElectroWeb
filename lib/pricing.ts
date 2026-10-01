@@ -60,6 +60,13 @@ export interface PricingSettings {
   /** Los precios incluyen IVA: el total no cambia, se informa cuánto es IVA (C-146) */
   taxEnabled: boolean;
   taxPercent: number;
+  /** C-151: los productos digitales también llevan IVA. Apagado: sus órdenes guardan IVA 0 y la tienda no dice "IVA incluido" en ellos */
+  taxDigital: boolean;
+}
+
+/** ¿El precio de este tipo de producto lleva IVA dentro? (C-151) */
+export function llevaIva(settings: Pick<PricingSettings, 'taxEnabled' | 'taxPercent' | 'taxDigital'>, productType: string | null | undefined): boolean {
+  return settings.taxEnabled && settings.taxPercent > 0 && (productType !== 'DIGITAL' || settings.taxDigital);
 }
 
 /**
@@ -167,6 +174,9 @@ export function toPricingSettings(raw: {
   freeDeliveryThresholdUSD?: NumberLike;
   taxEnabled?: boolean | null;
   taxPercent?: NumberLike;
+  /** Nombre de la columna (Prisma) o el del ajuste público */
+  taxDigitalProducts?: boolean | null;
+  taxDigital?: boolean | null;
 } | null | undefined): PricingSettings {
   const s = raw ?? {};
   const packaging = s.packagingFeeUSD === null || s.packagingFeeUSD === undefined || s.packagingFeeUSD === ''
@@ -178,6 +188,7 @@ export function toPricingSettings(raw: {
     freeDeliveryThresholdUSD: toNumber(s.freeDeliveryThresholdUSD) || null,
     taxEnabled: Boolean(s.taxEnabled) && toNumber(s.taxPercent) > 0,
     taxPercent: Math.max(toNumber(s.taxPercent), 0),
+    taxDigital: Boolean(s.taxDigitalProducts ?? s.taxDigital),
   };
 }
 
@@ -253,7 +264,7 @@ function calculateShipping(
   return breakdown;
 }
 
-function calculateGroup(lines: PricingLine[], shippingUSD: number, settings: PricingSettings): OrderGroupTotals | null {
+function calculateGroup(lines: PricingLine[], shippingUSD: number, settings: PricingSettings, tipo: 'PHYSICAL' | 'DIGITAL'): OrderGroupTotals | null {
   if (lines.length === 0) return null;
 
   let subtotal = 0;
@@ -267,7 +278,8 @@ function calculateGroup(lines: PricingLine[], shippingUSD: number, settings: Pri
   const discountUSD = roundMoney(discount);
   // El IVA no se suma: ya está dentro de los precios. `taxUSD` es la parte del total que es IVA (C-146)
   const totalUSD = roundMoney(subtotalUSD - discountUSD + shippingUSD);
-  const taxUSD = settings.taxEnabled ? ivaIncluido(totalUSD, settings.taxPercent).ivaUSD : 0;
+  // C-151: la orden digital solo lleva IVA si Configuración dice que los digitales lo llevan
+  const taxUSD = llevaIva(settings, tipo) ? ivaIncluido(totalUSD, settings.taxPercent).ivaUSD : 0;
 
   return {
     lines,
@@ -290,8 +302,8 @@ export function calculateOrder(
   const digitalLines = lines.filter(line => line.productType === 'DIGITAL');
 
   // El envío se carga completo a la orden física; la digital nunca paga envío.
-  const physical = calculateGroup(physicalLines, physicalLines.length > 0 ? shipping.total : 0, settings);
-  const digital = calculateGroup(digitalLines, 0, settings);
+  const physical = calculateGroup(physicalLines, physicalLines.length > 0 ? shipping.total : 0, settings, 'PHYSICAL');
+  const digital = calculateGroup(digitalLines, 0, settings, 'DIGITAL');
   const groups = [physical, digital].filter((g): g is OrderGroupTotals => g !== null);
 
   return {

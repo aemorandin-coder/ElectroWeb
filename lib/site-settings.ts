@@ -131,6 +131,8 @@ export interface PublicSettings {
     /** C-146: los precios incluyen IVA y con qué porcentaje (0 = no se muestra) */
     taxEnabled: boolean;
     taxPercent: number;
+    /** C-151: los productos digitales también llevan IVA (apagado: en ellos no se dice "IVA incluido") */
+    taxDigital: boolean;
     pickupEnabled: boolean;
     pickupAddress: string | null;
     pickupInstructions: string | null;
@@ -185,7 +187,7 @@ const PUBLIC_SETTINGS_SELECT = {
     socialMedia: true, businessHours: true,
     primaryCurrency: true, exchangeRateVES: true, exchangeRateEUR: true,
     deliveryEnabled: true, localDeliveryEnabled: true, deliveryFeeUSD: true, freeDeliveryThresholdUSD: true, shippingCostPerKg: true,
-    minConsolidatedShipping: true, packagingFeeUSD: true, taxEnabled: true, taxPercent: true,
+    minConsolidatedShipping: true, packagingFeeUSD: true, taxEnabled: true, taxPercent: true, taxDigitalProducts: true,
     pickupEnabled: true, pickupAddress: true, pickupInstructions: true,
     minOrderAmountUSD: true, maxOrderAmountUSD: true,
     heroVideoEnabled: true, heroVideoUrl: true, heroVideoTitle: true, heroVideoDescription: true,
@@ -210,7 +212,7 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     socialMedia: [], businessHours: null,
     primaryCurrency: 'USD', exchangeRateVES: 36.5, exchangeRateEUR: 0.92,
     deliveryEnabled: false, localDeliveryEnabled: false, deliveryFeeUSD: 0, freeDeliveryThresholdUSD: null, shippingCostPerKg: 2,
-    minConsolidatedShipping: 3, packagingFeeUSD: 2.5, taxEnabled: false, taxPercent: 0,
+    minConsolidatedShipping: 3, packagingFeeUSD: 2.5, taxEnabled: false, taxPercent: 0, taxDigital: false,
     pickupEnabled: false, pickupAddress: null, pickupInstructions: null,
     minOrderAmountUSD: null, maxOrderAmountUSD: null,
     heroVideoEnabled: false, heroVideoUrl: null, heroVideoTitle: null, heroVideoDescription: null,
@@ -239,8 +241,10 @@ function toPublicSettings(row: PublicSettingsRow): PublicSettings {
     const num = (value: Prisma.Decimal | null, fallback: number) => (value ? Number(value) : fallback);
     const socialMedia = parseJson<unknown>(row.socialMedia, []);
 
+    // La columna se llama taxDigitalProducts; hacia afuera sale como taxDigital
+    const { taxDigitalProducts, ...resto } = row;
     return {
-        ...row,
+        ...resto,
         socialMedia: Array.isArray(socialMedia) ? (socialMedia as SocialMediaLink[]) : [],
         businessHours: parseJson<PublicSettings['businessHours']>(row.businessHours, null),
         primaryCurrency: row.primaryCurrency || 'USD',
@@ -253,6 +257,7 @@ function toPublicSettings(row: PublicSettingsRow): PublicSettings {
         packagingFeeUSD: num(row.packagingFeeUSD, 2.5),
         taxEnabled: Boolean(row.taxEnabled) && num(row.taxPercent, 0) > 0,
         taxPercent: num(row.taxPercent, 0),
+        taxDigital: Boolean(taxDigitalProducts),
         minOrderAmountUSD: row.minOrderAmountUSD ? Number(row.minOrderAmountUSD) : null,
         maxOrderAmountUSD: row.maxOrderAmountUSD ? Number(row.maxOrderAmountUSD) : null,
         maintenanceStartTime: row.maintenanceStartTime ? row.maintenanceStartTime.toISOString() : null,

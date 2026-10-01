@@ -148,6 +148,15 @@ export default function PricesSection({ form, set, errors, savedAutoExchangeRate
           {form.taxEnabled && (
             <NumberField label="Porcentaje" suffix="%" value={form.taxPercent} onChange={(v) => set('taxPercent', v)} error={errors.taxPercent} min={0} max={100} step={0.01} className="max-w-xs" hint="La alícuota general hoy es 16. Con 0 la tienda no muestra el IVA." />
           )}
+          {form.taxEnabled && (
+            // C-151: decisión de Andrés del 01/10: los digitales no llevan IVA. Apagado, sus pedidos guardan IVA 0
+            <SwitchRow
+              label="Los productos digitales también llevan IVA"
+              description="Códigos, gift cards y recargas. Apagado: en ellos la tienda no dice «IVA incluido», sus pedidos salen con IVA en cero y su margen se calcula sin IVA. Confírmalo con tu contador."
+              checked={form.taxDigitalProducts}
+              onChange={(v) => set('taxDigitalProducts', v)}
+            />
+          )}
         </div>
       </SettingsCard>
 

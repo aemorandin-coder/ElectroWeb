@@ -90,7 +90,7 @@ export default function CarritoPage() {
       : JSON.stringify({ items: items.map(toOrderItem), deliveryMethod: 'PICKUP', couponCode }),
     [items, couponCode]
   );
-  const [quote, setQuote] = useState<{ key: string; subtotalUSD: number; discountUSD: number; totalUSD: number; coupon: { applied: boolean; message: string } | null; errors: string[] } | null>(null);
+  const [quote, setQuote] = useState<{ key: string; subtotalUSD: number; discountUSD: number; totalUSD: number; fisicosUSD: number; coupon: { applied: boolean; message: string } | null; errors: string[] } | null>(null);
   useEffect(() => {
     if (status !== 'authenticated' || !quoteBody || items.length === 0) return;
     const controller = new AbortController();
@@ -103,6 +103,8 @@ export default function CarritoPage() {
           // Sin la entrega: el total de productos es subtotal menos descuentos
           setQuote({
             key: quoteBody, subtotalUSD: c.subtotalUSD, discountUSD: c.discountUSD, totalUSD: Math.round((c.subtotalUSD - c.discountUSD) * 100) / 100, coupon: data.coupon,
+            // C-151: la parte de los productos físicos (sin la entrega), por si los digitales no llevan IVA
+            fisicosUSD: c.physical ? Math.round((c.physical.subtotalUSD - c.physical.discountUSD) * 100) / 100 : 0,
             // Productos que ya no se pueden comprar (sin stock, sin publicar, monto digital que ya no existe): no suman al total
             errors: Array.isArray(data.errors) ? data.errors : [],
           });
@@ -120,7 +122,10 @@ export default function CarritoPage() {
   const discount = server ? server.discountUSD : 0;
   const total = server ? server.totalUSD : localTotal;
   // C-146: los precios ya llevan el IVA. Se dice cuánto del total es IVA; nunca se suma nada
-  const iva = settings?.taxEnabled ? ivaIncluido(total, Number(settings.taxPercent) || 0) : null;
+  // C-151: si los digitales no llevan IVA, se calcula solo sobre los productos físicos
+  const fisicos = server ? server.fisicosUSD : items.reduce((sum, item) => sum + (item.productType !== 'DIGITAL' ? item.price * item.quantity : 0), 0);
+  const gravado = settings?.taxDigital ? total : Math.min(fisicos, total);
+  const iva = settings?.taxEnabled ? ivaIncluido(gravado, Number(settings.taxPercent) || 0) : null;
   // C-106: el total aún no lleva la entrega; se avisa aquí para que el embalaje del checkout no sorprenda
   const hasPhysical = items.some(item => item.productType !== 'DIGITAL');
   const envioGratis = items.some(item => item.freeShipping && item.productType !== 'DIGITAL');
@@ -422,7 +427,7 @@ export default function CarritoPage() {
                         )}
                       </div>
                     </div>
-                    {iva && <IvaIncluido totalUSD={total} ivaUSD={iva.ivaUSD} className="mt-2 text-right" />}
+                    {iva && <IvaIncluido totalUSD={gravado} ivaUSD={iva.ivaUSD} soloFisicos={gravado < total - 0.005} className="mt-2 text-right" />}
                     {localSavings > 0.004 && (
                       <p className="mt-2 text-sm font-semibold text-success-strong">Ahorras {formatUSD(localSavings)} con las ofertas de hoy</p>
                     )}

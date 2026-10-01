@@ -174,9 +174,27 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
               IVA incluido ({c.taxPercent} %): <strong className="font-semibold text-ink">{formatUSD(totales.ivaUSD)}</strong> · Base imponible: {formatUSD(totales.baseUSD)}
             </p>
           )}
+          {totales.retencionUSD > 0 && (
+            <div className="mt-3 border-t border-line pt-3 text-sm" data-retencion>
+              <div className="flex justify-between gap-3">
+                <p className="text-ink-soft">Retención del IVA ({c.ivaRetentionPercent} %), la practica el cliente</p>
+                <p className="whitespace-nowrap tabular-nums text-ink-soft">−{formatUSD(totales.retencionUSD)}</p>
+              </div>
+              <div className="mt-1 flex items-baseline justify-between gap-3">
+                <p className="font-semibold text-ink">Neto a pagar a {empresa.marca}</p>
+                <p className="whitespace-nowrap text-lg font-bold tabular-nums text-brand-700" data-neto>{formatUSD(totales.netoUSD)}</p>
+              </div>
+              {empresa.tasaVES > 0 && (
+                <p className="text-right text-xs tabular-nums text-muted">{formatVES(Math.round(totales.netoUSD * empresa.tasaVES * 100) / 100)} a la tasa BCV de hoy</p>
+              )}
+              <p className="mt-1 text-xs leading-relaxed text-muted">
+                El cliente retiene ese monto del IVA al pagar y le entrega a {empresa.nombre} su comprobante de retención.
+              </p>
+            </div>
+          )}
           {totales.anticipoUSD !== null && totales.saldoUSD !== null && (
             <dl className="mt-3 space-y-1 border-t border-line pt-3 text-sm">
-              <div className="flex justify-between gap-3"><dt className="font-semibold text-ink">Anticipo ({c.advancePercent} %)</dt><dd className="font-semibold tabular-nums text-ink">{formatUSD(totales.anticipoUSD)}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="font-semibold text-ink">Anticipo ({c.advancePercent} %{totales.retencionUSD > 0 ? ' del neto' : ''})</dt><dd className="font-semibold tabular-nums text-ink">{formatUSD(totales.anticipoUSD)}</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-ink-soft">Saldo contra entrega</dt><dd className="tabular-nums text-ink-soft">{formatUSD(totales.saldoUSD)}</dd></div>
             </dl>
           )}

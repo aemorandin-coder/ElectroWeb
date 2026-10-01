@@ -1,10 +1,20 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `71703ab`, hasta C-163, el 01/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `ba6055c`, hasta C-158, el 01/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 01/10 (noche) · C-157 y C-158 (`ba6055c`)
+Comprobado desde fuera el 01/10: `POST /api/cron/resenas` responde 401 (la ruta existe y pide la clave) y `/productos?search=audifonos` ya encuentra los productos. **Cambio de base: una columna** (`orders.reviewRequestedAt`).
+- **C-157 · Pedir la reseña por correo** (`estado/C-157.md`): un cron diario manda un correo por cliente, 5 días después de la entrega (2 si es solo digital), con hasta tres productos que no ha reseñado. Interruptor en Mi perfil → Notificaciones → "Tus reseñas".
+  ```sql
+  ALTER TABLE "orders" ADD COLUMN "reviewRequestedAt" TIMESTAMP(3);
+  ```
+  Pasos que llevaba: `docs/plan/scripts/marcar-resenas-c157.sql` (marcar las órdenes ya entregadas, antes del cron) y `~/cron-resenas.sh` copiado de `cron-favoritos.sh` con `0 15 * * *` en `crontab`.
+- **C-158 · Buscador sin acentos** (`estado/C-158.md`): "audifonos" encuentra "Audífonos", plurales y errores de tecleo con aviso. Sin cambio de base.
+- Sin confirmar con Andrés: que el SQL de marcado se corrió **antes** del cron, que la línea del cron está puesta (`crontab -l`) y las pruebas de `SIGUIENTE.md`.
 
 ## 01/10 (noche) · C-162 y C-163 (`71703ab`)
 Sin cambio de base. Comprobado desde fuera el 01/10: `/categorias` ya muestra "Gift Cards y Recargas", "Videojuegos" y "Celulares y Tablets", o sea que el guion de C-163 también se corrió en el servidor.

@@ -19,6 +19,7 @@ import {
   FiBook,
   FiExternalLink,
   FiFileText,
+  FiClipboard,
 } from 'react-icons/fi';
 import { FaMoneyCheckAlt } from 'react-icons/fa';
 import { PiListHeartBold } from 'react-icons/pi';
@@ -31,6 +32,7 @@ const MENU = [
   { href: '/customer', icon: FiHome, label: 'Inicio' },
   { href: '/customer/balance', icon: FaMoneyCheckAlt, label: 'Puntos ES' },
   { href: '/customer/orders', icon: FiShoppingBag, label: 'Mis Pedidos' },
+  { href: '/customer/cotizaciones', icon: FiClipboard, label: 'Mis cotizaciones' },
   { href: '/customer/wishlist', icon: PiListHeartBold, label: 'Favoritos' },
   { href: '/customer/addresses', icon: FiMapPin, label: 'Direcciones' },
   { href: '/customer/warranty', icon: FiShield, label: 'Garantía' },

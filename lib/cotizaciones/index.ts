@@ -49,7 +49,7 @@ async function ivaVigente(): Promise<number> {
 
 export async function crearCotizacion(datos: CotizacionEntrada, extra: { status: EstadoCotizacion; createdById?: string | null; userId?: string | null; requestNote?: string | null }) {
   const taxPercent = await ivaVigente();
-  const { totalUSD } = totalesCotizacion(datos.items, taxPercent, datos.advancePercent);
+  const { totalUSD } = totalesCotizacion(datos.items, taxPercent, datos.advancePercent, datos.ivaRetentionPercent);
   const { items, ...campos } = datos;
   return conNumero((tx, number) => tx.quote.create({
     data: {
@@ -71,7 +71,7 @@ export async function crearCotizacion(datos: CotizacionEntrada, extra: { status:
 /** Guarda los cambios del panel. Una cotización aprobada ya no se toca. Devuelve null si no existe o está cerrada. */
 export async function guardarCotizacion(id: string, datos: CotizacionEntrada) {
   const taxPercent = await ivaVigente();
-  const { totalUSD } = totalesCotizacion(datos.items, taxPercent, datos.advancePercent);
+  const { totalUSD } = totalesCotizacion(datos.items, taxPercent, datos.advancePercent, datos.ivaRetentionPercent);
   const { items, ...campos } = datos;
   return prisma.$transaction(async (tx) => {
     const r = await tx.quote.updateMany({
@@ -115,7 +115,8 @@ function comun(q: CotizacionConLineas) {
     terms: q.terms,
     taxPercent,
     items,
-    totales: totalesCotizacion(items, taxPercent, q.advancePercent),
+    ivaRetentionPercent: q.ivaRetentionPercent,
+    totales: totalesCotizacion(items, taxPercent, q.advancePercent, q.ivaRetentionPercent),
     sentAt: q.sentAt?.toISOString() ?? null,
     venceEl: venceEl(q.sentAt, q.validityDays)?.toISOString() ?? null,
     approvedAt: q.approvedAt?.toISOString() ?? null,
@@ -143,6 +144,8 @@ export function aCotizacionAdmin(q: CotizacionConLineas) {
     contactEmail: q.contactEmail,
     contactPhone: q.contactPhone,
     requestNote: q.requestNote,
+    emailedAt: q.emailedAt?.toISOString() ?? null,
+    emailedTo: q.emailedTo,
     updatedAt: q.updatedAt.toISOString(),
   };
 }

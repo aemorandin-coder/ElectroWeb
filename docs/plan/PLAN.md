@@ -298,7 +298,7 @@ docs/plan/estado/G-*.md
 
 Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estado/<ID>.md`. Aquí va el mapa.
 
-### 5.1 Lo hecho (126 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 01/10)
+### 5.1 Lo hecho (127 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 01/10)
 
 **Plan original (12/09):**
 | Fase | Tareas | Qué dejó |
@@ -318,7 +318,7 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 | Envíos y entrega | C-100, C-106, C-126, C-127, C-153 | ZOOM y MRW con oficinas reales y cobro a destino, rastreo, detalle de la orden, tiempo real y embalaje según el paquete. |
 | Catálogo que vende | C-78, C-102, C-117 a C-119, C-121, C-122, C-124, C-133, C-134, C-136, C-154, C-155, C-157, C-158, C-161, C-162, C-163 | Ofertas y cupones, cinta ES, carga masiva, usados y reacondicionados, garantías, reseñas, el asistente de productos, la confianza junto al botón de compra y el correo que pide la reseña. |
 | Panel del cliente | C-55, C-128, C-137, C-138 | Marco, inicio con resumen, Mis pedidos, Favoritos, Direcciones y Mi perfil en pestañas. |
-| Legal y facturación | C-103, C-120, C-144, C-146, C-146b, C-147, C-147b, C-148, C-148b, C-151 | Firma de documentos, IVA incluido a la vista, precio sugerido desde el costo, datos para la factura, relación de ventas, cotizaciones y términos sin promesas falsas. |
+| Legal y facturación | C-103, C-120, C-144, C-146, C-146b, C-147, C-147b, C-148, C-148b, C-151, C-159 | Firma de documentos, IVA incluido a la vista, precio sugerido desde el costo, datos para la factura, relación de ventas, cotizaciones y términos sin promesas falsas. |
 | Crecimiento | C-112, C-113, C-116, C-145, C-149 | ElectroStudio, medición del embudo de compra y el catálogo legible para Google, las redes y las IA. |
 | Equipo y documentos | C-53, C-77, C-86, C-90, C-91, C-93, C-94, C-98, C-99, C-108, C-111, C-152, C-156 | Revisiones de Gemini y de ChatGPT, deuda técnica (ESLint en 0), el bloque único de subida y este orden de documentos. |
 
@@ -328,7 +328,6 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 **En fila (Claude, en este orden):**
 | ID | Tarea | Notas |
 |---|---|---|
-| **C-159** | Cotizaciones, tercera parte | Mandarla por correo desde el panel, "Mis cotizaciones" en el panel del cliente y la retención del 75 % del IVA para contribuyentes especiales y entes públicos. |
 | **C-160** | Menores (una sola tarea) | La lista de abajo. |
 
 **Menores (C-160):**
@@ -380,7 +379,7 @@ La base técnica está: el embudo se mide (C-145), el catálogo es legible para 
 2. Encender la medición y Search Console; esperar una semana de datos.
 3. Anuncios: búsqueda de Google (texto) y catálogo de Meta con `/feed/productos.xml`. Google Merchant Center no admite a Venezuela (lista oficial leída el 01/10).
 4. Reseñas por correo (C-157, hecha: falta subirla): la prueba social que hoy falta.
-5. Instituciones: la retención del IVA en las cotizaciones (C-159) y, del lado de Andrés, el Registro Nacional de Contratistas.
+5. Instituciones: la retención del IVA en las cotizaciones (C-159, hecha: falta subirla; la practican los sujetos pasivos especiales, no los órganos del Estado) y, del lado de Andrés, el Registro Nacional de Contratistas.
 
 **Qué mirar cada semana** (Dashboard y Reportes del panel): productos publicados, visitas, agregados al carrito, compras y ventas cobradas. Los números de la empresa no se escriben en este repositorio, que es público.
 

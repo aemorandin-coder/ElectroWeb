@@ -31,24 +31,49 @@ export interface LineaCotizacion {
   unitPriceUSD: number;
 }
 
+/**
+ * Retención del IVA (C-159). La practica el cliente al pagar, solo si es sujeto pasivo especial (Providencia
+ * SNAT/2025/000054): el 75 % del IVA, o el 100 % en los casos del art. 5 (factura sin el IVA discriminado o sin los
+ * requisitos, proveedor no inscrito o con consulta negativa en el Portal Fiscal). No la practican los órganos de la
+ * República, los estados y los municipios ni los entes públicos sin fines empresariales (art. 3, numerales 11 y 12).
+ * La marca el equipo en la cotización; el cliente no la elige.
+ */
+export const RETENCIONES_IVA = [0, 75, 100] as const;
+export type RetencionIva = (typeof RETENCIONES_IVA)[number];
+
 export interface TotalesCotizacion {
   totalUSD: number;
   baseUSD: number;
   ivaUSD: number;
-  /** Anticipo y saldo, solo si la cotización pide anticipo */
+  /** IVA que retiene el cliente al pagar (0 si no retiene) */
+  retencionUSD: number;
+  /** Lo que el cliente le paga a la tienda: el total menos la retención. Sin retención, es el total. */
+  netoUSD: number;
+  /** Anticipo y saldo, solo si la cotización pide anticipo. Se calculan sobre lo que se paga (el neto). */
   anticipoUSD: number | null;
   saldoUSD: number | null;
 }
 
 const centimos = (n: number) => Math.round(n * 100) / 100;
 
-/** Total de las líneas, el IVA que ya va dentro (C-146) y el anticipo. El servidor lo usa como fuente de verdad. */
-export function totalesCotizacion(lineas: Pick<LineaCotizacion, 'quantity' | 'unitPriceUSD'>[], taxPercent: number, advancePercent: number | null | undefined): TotalesCotizacion {
+/**
+ * Total de las líneas, el IVA que ya va dentro (C-146), la retención del IVA (C-159) y el anticipo.
+ * El servidor lo usa como fuente de verdad. La retención es una parte del IVA: sin IVA no hay retención.
+ */
+export function totalesCotizacion(
+  lineas: Pick<LineaCotizacion, 'quantity' | 'unitPriceUSD'>[],
+  taxPercent: number,
+  advancePercent: number | null | undefined,
+  retentionPercent: number = 0,
+): TotalesCotizacion {
   const totalUSD = centimos(lineas.reduce((suma, l) => suma + centimos(l.unitPriceUSD * l.quantity), 0));
   const { baseUSD, ivaUSD } = ivaIncluido(totalUSD, taxPercent);
+  const porcentaje = (RETENCIONES_IVA as readonly number[]).includes(retentionPercent) ? retentionPercent : 0;
+  const retencionUSD = centimos(ivaUSD * (porcentaje / 100));
+  const netoUSD = centimos(totalUSD - retencionUSD);
   const pct = advancePercent && advancePercent > 0 && advancePercent < 100 ? advancePercent : null;
-  const anticipoUSD = pct ? centimos(totalUSD * (pct / 100)) : null;
-  return { totalUSD, baseUSD, ivaUSD, anticipoUSD, saldoUSD: anticipoUSD === null ? null : centimos(totalUSD - anticipoUSD) };
+  const anticipoUSD = pct ? centimos(netoUSD * (pct / 100)) : null;
+  return { totalUSD, baseUSD, ivaUSD, retencionUSD, netoUSD, anticipoUSD, saldoUSD: anticipoUSD === null ? null : centimos(netoUSD - anticipoUSD) };
 }
 
 /** Hasta cuándo vale una cotización enviada. */
@@ -91,6 +116,7 @@ export const cotizacionSchema = z.object({
   subject: opcional(200),
   validityDays: z.number().int().min(1, 'La validez mínima es 1 día').max(180, 'La validez máxima es 180 días'),
   advancePercent: z.number().int().min(1).max(99).optional().nullable().transform((v) => v ?? null),
+  ivaRetentionPercent: z.union([z.literal(0), z.literal(75), z.literal(100)], { message: 'La retención del IVA es 0, 75 o 100 %' }).default(0),
   conditions: opcional(3000),
   terms: opcional(3000),
   items: z.array(lineaSchema).max(60, 'Máximo 60 líneas'),

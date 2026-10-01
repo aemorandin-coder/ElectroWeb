@@ -11,7 +11,7 @@ La fila y lo que espera datos de Andrés están en **`PLAN.md` §5.2**: C-155, C
 
 **Números que no son tareas de Claude:** C-76 (emojis de correos) pasó a Gemini G-53; C-79 (panel de creadores en móvil), a ChatGPT GPT-05; C-81 (estilos viejos de `components/ui`, Footer, botón de cuenta y carrito del header), a Gemini G-45 y G-46. Los demás huecos no se usaron.
 
-## 2. Hechas (120)
+## 2. Hechas (121)
 Las marcas de dinero y de seguridad de las filas vienen de cuando se escribieron. "Rama `claude/C-XX`" dice de dónde salió cada una: todas están fusionadas en `main`.
 
 | ID | Tarea | Qué quedó |
@@ -136,6 +136,7 @@ Las marcas de dinero y de seguridad de las filas vienen de cuando se escribieron
 | C-154 | **C-154 · Confianza antes de pagar** (01/10, sin cambio de base; `estado/C-154.md`) | La ficha del producto dice, en una línea encima del botón de compra, la garantía, el envío y el embalaje. La garantía con sus días también en los productos nuevos (antes solo en usados) y cómo se resuelve, con las palabras de los términos. El embalaje de ese producto (C-153) y los montos de embalaje y envío gratis. No desapareció nada. Verificado: 26/26 a cuatro anchos y la prueba de humo 59/59. El plazo de los digitales espera los datos de Andrés (C-154b). |
 | C-fix-cursos | **C-fix-cursos · Filtro por categoría de /cursos** | `estado/C-fix-cursos.md` |
 | C-156 | **C-156 · Orden de los documentos del plan** (01/10, solo documentos; `estado/C-156.md`) | `PLAN.md` vuelve a ser el plan maestro (carriles, tablero, lista única de pendientes y decisiones al día); `SIGUIENTE.md` queda solo con lo vigente; nuevos `OPERACION.md` e `HISTORIAL.md`; este registro ordenado por número; las siete auditorías con su cierre; 13 estados vencidos anotados; y el guion de un comando para el redondeo de C-96. |
+| C-161 | **C-161 · La foto de un producto usado, bien encuadrada** (01/10, sin cambio de base; `estado/C-161.md`) | Aviso de Andrés con una captura de producción. La foto recortada de un producto que no es nuevo quedaba pegada a los bordes: ahora el servidor la arma con fondo blanco y centrada, sin la cinta ES. Verificado: HTTP 17/17 con la foto real. Las fotos ya subidas hay que volver a subirlas. |
 
 ## 3. Plan original (rondas R1 a R8, del 12/09): cerrado
 > Así se planificó el 12/09 y así quedó hecho. Se conserva como referencia de por qué existe cada pieza. **Las reglas de trabajo vigentes están en `CLAUDE.md` y en `PLAN.md` §4** (hoy el merge y el push los hace Claude, no Andrés).

@@ -41,6 +41,9 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
       onChange([...images, ...results.map((r) => r.url)]);
       const badged = results.filter((r) => r.badged).length;
       if (badged) toast.success(badged === 1 ? 'Foto lista con fondo blanco y la cinta ES' : `${badged} fotos listas con fondo blanco y la cinta ES`);
+      // C-161: un usado no lleva la cinta, pero su foto recortada también queda centrada y con aire
+      const enmarcadas = results.filter((r) => r.framed && !r.badged).length;
+      if (enmarcadas) toast.success(enmarcadas === 1 ? 'Foto lista con fondo blanco, centrada (sin la cinta ES: no es un producto nuevo)' : `${enmarcadas} fotos listas con fondo blanco, centradas (sin la cinta ES: no es un producto nuevo)`);
       // C-133: la que no lleva cinta se dice al momento (el 30/09 una foto quedó sin cinta y nadie avisó)
       const sinCinta = badge ? results.length - badged : 0;
       if (sinCinta > 0) {

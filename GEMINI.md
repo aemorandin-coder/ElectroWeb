@@ -444,3 +444,11 @@ Andrés autorizó el 01/10 que Claude pusiera título y descripción propios en 
 - **Imágenes y direcciones absolutas:** `absoluteUrl()` de `@/lib/seo`. No armes la dirección a mano con `NEXT_PUBLIC_BASE_URL`, y no uses `/og-image.png` (no existe).
 - **Enlaces a una categoría:** `/categorias/<slug>`. `/productos?category=<slug>` sigue funcionando para los filtros, pero la dirección propia de la categoría es la primera.
 - **Datos estructurados:** `<JsonLd data={…} />` de `@/components/seo/JsonLd` con las funciones de `lib/seo.ts`. No escribas un `<script type="application/ld+json">` a mano.
+
+## 11. Cambios de Claude del 01/10 que te afectan (C-147: datos para la factura)
+
+Mueven datos de facturación: **no los cambies ni los "limpies".**
+- **Archivos tuyos tocados:** `components/customer/DetallePedido.tsx` (muestra a nombre de quién va la factura y su número) y `app/customer/(dashboard)/profile/_components/Empresa.tsx` y `tipos.ts` (domicilio fiscal).
+- **A nombre de quién va la factura** lo decide el servidor (`lib/facturacion.ts`, `resolverFactura`) con los datos de la cuenta. Ninguna pantalla manda el nombre, la cédula, la razón social ni el RIF en el pedido: solo la elección (`billing.type`).
+- **La razón social y el RIF de una empresa en revisión o verificada no se editan.** No agregues campos para cambiarlos.
+- **Textos:** la web no emite facturas (las hace la tienda en SADES o en el talonario). Nunca escribas "factura fiscal automática", "descarga tu factura" ni nada parecido. El recibo del pedido sigue diciendo "Este recibo no es una factura fiscal".

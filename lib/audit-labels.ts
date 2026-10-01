@@ -21,6 +21,7 @@ export const ETIQUETA_ACCION: Record<string, string> = {
     ORDER_CREATED: 'Orden creada',
     ORDER_STATUS_CHANGED: 'Estado de orden cambiado',
     ORDER_PAYMENT_UPDATED: 'Pago de orden confirmado',
+    ORDER_INVOICE_NOTED: 'Número de factura anotado en una orden',
     ORDER_CANCELLED: 'Orden cancelada',
     ORDER_REFUNDED: 'Orden reembolsada',
     GIFT_CARD_CREATED: 'Gift card creada',

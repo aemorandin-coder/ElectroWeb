@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { leerDocumento, leerTelefono, nombreSchema } from '@/lib/validations/registro';
+import { DOMICILIO_MAX, DOMICILIO_MIN, leerDomicilioFiscal } from '@/lib/facturacion';
 
 // null se acepta como vacío: la ruta ya lo trataba así
 const texto = (max: number) => z.string().trim().max(max, `Máximo ${max} caracteres`).nullable();
@@ -32,6 +33,8 @@ const datosPerfil = z.object({
   customerType: z.enum(['', 'PERSON', 'COMPANY'], { error: 'Tipo de cliente inválido' }).nullable().optional(),
   companyName: texto(150).optional(),
   taxId: texto(30).optional(),
+  // C-147: domicilio fiscal de la empresa, para la factura
+  businessFiscalAddress: texto(DOMICILIO_MAX).optional(),
 });
 
 const perfilSchema = datosPerfil.extend({
@@ -65,6 +68,7 @@ const PERFIL_PUBLICO = {
   businessRIF: true,
   businessConstitutiveAct: true,
   businessRIFDocument: true,
+  businessFiscalAddress: true,
   savedAddresses: true,
 } satisfies Prisma.ProfileSelect;
 
@@ -137,7 +141,7 @@ export async function PUT(request: NextRequest) {
 
     const actual = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { name: true, image: true, profile: { select: { idNumber: true, phone: true, whatsapp: true } } },
+      select: { name: true, image: true, profile: { select: { idNumber: true, phone: true, whatsapp: true, businessVerificationStatus: true } } },
     });
     if (!actual) {
       return NextResponse.json({ success: false, error: 'Usuario no encontrado' }, { status: 404 });
@@ -205,8 +209,20 @@ export async function PUT(request: NextRequest) {
     if (profileData.state !== undefined) profileUpdateData.state = profileData.state || null;
     if (profileData.country !== undefined) profileUpdateData.country = profileData.country || 'Venezuela';
     if (profileData.customerType !== undefined) profileUpdateData.customerType = profileData.customerType || 'PERSON';
-    if (profileData.companyName !== undefined) profileUpdateData.companyName = profileData.companyName || null;
-    if (profileData.taxId !== undefined) profileUpdateData.taxId = profileData.taxId || null;
+    // C-147: la razón social y el RIF de una empresa en revisión o verificada no se cambian por aquí. Antes sí se podía,
+    // y la empresa seguía "verificada" con otro nombre y otro RIF: los que ahora van a la factura
+    const empresaFija = ['PENDING', 'APPROVED'].includes(actual.profile?.businessVerificationStatus ?? '');
+    if (!empresaFija) {
+      if (profileData.companyName !== undefined) profileUpdateData.companyName = profileData.companyName || null;
+      if (profileData.taxId !== undefined) profileUpdateData.taxId = profileData.taxId || null;
+    }
+    if (profileData.businessFiscalAddress !== undefined) {
+      const domicilio = profileData.businessFiscalAddress ? leerDomicilioFiscal(profileData.businessFiscalAddress) : null;
+      if (profileData.businessFiscalAddress && !domicilio) {
+        return NextResponse.json({ success: false, error: `El domicilio fiscal debe tener de ${DOMICILIO_MIN} a ${DOMICILIO_MAX} letras.` }, { status: 400 });
+      }
+      profileUpdateData.businessFiscalAddress = domicilio;
+    }
 
     // Update or create profile
     const profile = await prisma.profile.upsert({
@@ -216,6 +232,8 @@ export async function PUT(request: NextRequest) {
         user: { connect: { id: session.user.id } },
         ...(profileUpdateData as Omit<Prisma.ProfileCreateInput, 'user'>),
       },
+      // La misma lista blanca del GET: antes la respuesta traía la fila entera (IP del último acceso, carrito guardado…)
+      select: PERFIL_PUBLICO,
     });
 
     // Update or create default address if provided

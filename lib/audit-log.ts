@@ -30,6 +30,8 @@ export type AuditAction =
     | 'ORDER_CREATED'
     | 'ORDER_STATUS_CHANGED'
     | 'ORDER_PAYMENT_UPDATED'
+    // C-147: el equipo anotó (o corrigió) el número de la factura de una orden
+    | 'ORDER_INVOICE_NOTED'
     | 'ORDER_CANCELLED'
     | 'ORDER_REFUNDED'
     // Gift Cards

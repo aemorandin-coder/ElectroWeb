@@ -30,6 +30,12 @@ export interface PedidoCliente {
   subtotalUSD?: number | string | null;
   shippingUSD?: number | string | null;
   discountUSD?: number | string | null;
+  /** C-147: a nombre de quién va la factura y el número de la que emitió la tienda */
+  billingType?: string | null;
+  billingName?: string | null;
+  billingTaxId?: string | null;
+  billingAddress?: string | null;
+  invoiceNumber?: string | null;
   /** C-146: la parte del total que es IVA (0 en pedidos de antes) */
   taxUSD?: number | string | null;
   totalUSD: number;
@@ -191,6 +197,27 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
                 </div>
               )}
             </dl>
+            {(pedido.billingName || pedido.invoiceNumber) && (
+              // C-147: a nombre de quién va la factura (copia del día de la compra) y su número cuando la tienda la emite
+              <dl className="space-y-1 border-t border-line pt-2 text-sm">
+                {pedido.billingName && (
+                  <div className="flex justify-between gap-3">
+                    <dt className="shrink-0 text-ink-soft">Factura a nombre de</dt>
+                    <dd className="text-right text-ink [overflow-wrap:anywhere]">
+                      {pedido.billingName}
+                      {pedido.billingTaxId && <span className="block text-xs tabular-nums text-muted">{pedido.billingType === 'COMPANY' ? 'RIF' : 'Cédula'} {pedido.billingTaxId}</span>}
+                      {pedido.billingAddress && <span className="block text-xs text-muted">{pedido.billingAddress}</span>}
+                    </dd>
+                  </div>
+                )}
+                {pedido.invoiceNumber && (
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-ink-soft">Factura n.º</dt>
+                    <dd className="font-semibold tabular-nums text-ink">{pedido.invoiceNumber}</dd>
+                  </div>
+                )}
+              </dl>
+            )}
             <p className="text-xs text-muted">Este recibo no es una factura fiscal.</p>
           </section>
         </div>

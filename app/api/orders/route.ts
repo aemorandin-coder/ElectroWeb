@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { resolverFactura } from '@/lib/facturacion';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
 import {
@@ -132,6 +133,7 @@ export async function GET(request: NextRequest) {
                 customerType: true,
                 companyName: true,
                 taxId: true,
+                businessVerified: true,
                 // C-126: datos de facturación en el detalle (antes solo nombre y correo)
                 phone: true,
                 idNumber: true,
@@ -349,6 +351,7 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
 // C-132: `usarPuntos` con MOBILE_PAYMENT = pago mixto (Puntos ES + Pago Móvil por lo que falta). Un método manual
 // (BINANCE_PAY, PAYPAL, ZELLE…) exige el id de un método activo de ese tipo y la referencia del pago.
 // C-100: la dirección legible y los datos de la oficina los arma el servidor (lib/envios/destino.ts).
+// C-147: `billing: { type: 'PERSON' | 'COMPANY', fiscalAddress? }` elige a nombre de quién va la factura.
 // Precios, envío, descuentos, total y dueño de la orden se calculan aquí; el resto del body se ignora.
 export async function POST(request: NextRequest) {
   try {
@@ -379,12 +382,26 @@ export async function POST(request: NextRequest) {
     }
 
     // C-85: teléfono y cédula se piden en la primera compra (el registro ya no pide la cédula y Google no trae ninguno)
-    const perfil = await prisma.profile.findUnique({ where: { userId }, select: { phone: true, idNumber: true } });
+    const cuenta = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        name: true,
+        profile: { select: { phone: true, idNumber: true, companyName: true, taxId: true, businessVerified: true, businessFiscalAddress: true } },
+      },
+    });
+    const perfil = cuenta?.profile;
     if (!perfil?.phone?.trim() || !perfil?.idNumber?.trim()) {
       return NextResponse.json(
         { error: 'Completa tu teléfono y tu cédula antes de hacer el pedido.', field: 'datos-cliente' },
         { status: 400 }
       );
+    }
+
+    // C-147: a nombre de quién va la factura. Del body solo se lee la elección (y el domicilio fiscal la primera vez):
+    // el nombre, la cédula, la razón social y el RIF salen de la cuenta, y la empresa tiene que estar verificada
+    const factura = resolverFactura({ name: cuenta?.name ?? null, ...perfil }, body.billing);
+    if (!factura.ok) {
+      return NextResponse.json({ error: factura.error, field: 'datos-factura' }, { status: 400 });
     }
 
     const items = parseOrderItems(body.items);
@@ -697,6 +714,11 @@ export async function POST(request: NextRequest) {
 
       const orders: CreatedOrder[] = [];
 
+      // C-147: el domicilio fiscal escrito en esta compra queda en el perfil para la próxima
+      if (factura.guardarDomicilio) {
+        await tx.profile.update({ where: { userId }, data: { businessFiscalAddress: factura.guardarDomicilio } });
+      }
+
       for (const [index, group] of groups.entries()) {
         const orderNumber = orderNumbers[index];
         const { totals } = group;
@@ -736,6 +758,8 @@ export async function POST(request: NextRequest) {
             paymentMethod,
             pointsUSD: montoDecimal(puntosDe[index]),
             paymentReference: referenciaManual,
+            // C-147: copia de los datos de la factura (si después cambia la cuenta, la orden conserva los suyos)
+            ...factura.datos,
             // WALLET y MOBILE_PAYMENT verificado (en BD y por monto) se tratan como pagados
             status: isPaymentConfirmed ? OrderStatus.PROCESSING : OrderStatus.PENDING,
             paymentStatus: isPaymentConfirmed ? PaymentStatus.PAID : PaymentStatus.PENDING,

@@ -143,6 +143,9 @@ export default withAuth(
           pathname === '/api/settings/public' ||
           pathname.startsWith('/api/exchange-rates') ||
           pathname.startsWith('/api/contact') ||
+          // Cotizaciones (C-148): pedirla desde la tienda y aprobarla con el enlace, sin cuenta. Captcha y límite en el handler
+          pathname === '/api/cotizaciones' ||
+          /^\/api\/cotizaciones\/[A-Za-z0-9_-]{16,40}$/.test(pathname) ||
           // Exige sesión dentro del handler y responde 401 en JSON (sin redirigir al login)
           pathname.startsWith('/api/product-requests') ||
           pathname.startsWith('/api/reviews') ||

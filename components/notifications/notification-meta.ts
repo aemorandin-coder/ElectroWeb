@@ -1,7 +1,7 @@
 // Ícono y tono de cada notificación (C-73). Avisos del equipo por categoría del catálogo; las del cliente por tipo.
 import type { IconType } from 'react-icons';
 import {
-  FiAlertTriangle, FiBell, FiBookOpen, FiBox, FiBriefcase, FiCheckCircle, FiCreditCard, FiDollarSign, FiGift, FiHeart, FiLogIn,
+  FiAlertTriangle, FiBell, FiBookOpen, FiBox, FiBriefcase, FiCheckCircle, FiCreditCard, FiDollarSign, FiFileText, FiGift, FiHeart, FiLogIn,
   FiMail, FiPackage, FiPercent, FiRefreshCw, FiSend, FiShield, FiShoppingBag, FiStar, FiTag, FiTool, FiTruck, FiUserPlus, FiUsers, FiXCircle,
 } from 'react-icons/fi';
 import type { AdminTone } from '@/lib/admin-ui';
@@ -38,6 +38,8 @@ const EVENT_META: Partial<Record<string, Meta>> = {
   EXCHANGE_RATE_UPDATED: { Icon: FiRefreshCw, tone: 'neutral' },
   EXCHANGE_RATE_FAILED: { Icon: FiAlertTriangle, tone: 'warning' },
   ADMIN_LOGIN: { Icon: FiLogIn, tone: 'neutral' },
+  QUOTE_REQUESTED: { Icon: FiFileText, tone: 'warning' },
+  QUOTE_APPROVED: { Icon: FiCheckCircle, tone: 'success' },
   ADMIN_SESSION_REPORTED: { Icon: FiAlertTriangle, tone: 'danger' },
   ADMIN_TEAM_CHANGED: { Icon: FiShield, tone: 'warning' },
   // Notificaciones del cliente

@@ -737,4 +737,15 @@ html, body { overflow-x: clip; }
   body:has(.recibo-portal) > *:not(.recibo-portal) {
     display: none !important;
   }
+  /* C-148: al imprimir una cotización sale solo el documento. Fuera lo que flota sobre la página
+     (barra inferior, botón de WhatsApp, avisos): se imprimían encima y forzaban una segunda hoja. */
+  body:has(.documento-imprimible) .fixed {
+    display: none !important;
+  }
+  /* Los fondos del documento (encabezado de la tabla, recuadro del cliente) salen aunque el navegador tenga
+     apagado "imprimir fondos": sin esto el encabezado de la tabla quedaba en letras blancas sobre blanco. */
+  .documento-imprimible {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }

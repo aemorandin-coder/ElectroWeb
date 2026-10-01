@@ -34,6 +34,7 @@ export async function GET() {
       pendingCourses,
       pendingReviews,
       pendingWarranty,
+      pendingQuotes,
     ] = await Promise.all([
       // Órdenes pendientes
       prisma.order.count({ where: { status: 'PENDING' } }),
@@ -67,6 +68,9 @@ export async function GET() {
 
       // Garantías por atender: nuevas o con respuesta del cliente (menú Garantías, C-122)
       prisma.warrantyClaim.count({ where: { awaitingStaff: true, status: { notIn: ['RESOLVED', 'REJECTED'] } } }),
+
+      // Cotizaciones que pidió un cliente y esperan precios (menú Cotizaciones, C-148)
+      prisma.quote.count({ where: { status: 'REQUESTED' } }),
     ]);
 
     // Mensajes y Solicitudes = mensajes + solicitudes de producto (las notificaciones tienen su propio menú desde C-73)
@@ -81,6 +85,7 @@ export async function GET() {
       pendingCourses,
       pendingReviews,
       pendingWarranty,
+      pendingQuotes,
       unreadNotifications,
     });
   } catch (error) {

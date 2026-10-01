@@ -265,7 +265,7 @@ bash scripts/deploy.sh
    - Mientras tanto, el interruptor "Cobrar IVA" de Configuración queda como está: no tiene efecto (`STORE_CHARGES_TAX = false`).
 5. **C-107:** seguro del envío a elección del cliente. Espera los costos de ZOOM y MRW y el OK de la migración.
 6. **C-92:** desactivar clientes en vez de borrarlos. Detalle en `AUDITORIA_CLIENTES_BORRADOS.md`.
-   - Falta de Andrés: las 4 consultas de diagnóstico y cancelar esas órdenes con el motivo "Prueba: cliente eliminado".
+   - Falta de Andrés: correr el diagnóstico (un solo comando, solo lee: `docs/plan/scripts/diagnostico-c92.sql`, con las instrucciones arriba del archivo), pasarle la salida a Claude y cancelar esas órdenes con el motivo "Prueba: cliente eliminado".
    - Sumar (C-139): al cerrar una cuenta con Puntos ES, dejar un movimiento que anote que se perdieron (regla del 30/09).
    - Lleva una migración de `onDelete`, con su OK.
 7. ~~Wizard de producto~~: hecho en C-134 (30/09, `estado/C-134.md`). Si Andrés quiere más cambios en el asistente, que diga cuáles.

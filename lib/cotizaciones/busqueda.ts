@@ -22,22 +22,28 @@ export function terminosDeBusqueda(busqueda: string): string[] {
     });
 }
 
-/** Distancia de edición (Levenshtein) con tope: devuelve `tope + 1` en cuanto la supera. */
+/**
+ * Distancia de edición con tope: devuelve `tope + 1` en cuanto la supera. Cuenta como un solo error el cambio de dos
+ * letras seguidas ("tecaldo" por "teclado"), que es el descuido más común al teclear.
+ */
 export function distancia(a: string, b: string, tope: number): number {
   if (Math.abs(a.length - b.length) > tope) return tope + 1;
+  let antesDeAnterior: number[] = [];
   let anterior = Array.from({ length: b.length + 1 }, (_, i) => i);
   for (let i = 1; i <= a.length; i++) {
     const fila = [i];
     let minimo = i;
     for (let j = 1; j <= b.length; j++) {
-      const valor = Math.min(anterior[j] + 1, fila[j - 1] + 1, anterior[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      let valor = Math.min(anterior[j] + 1, fila[j - 1] + 1, anterior[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) valor = Math.min(valor, antesDeAnterior[j - 2] + 1);
       fila.push(valor);
       if (valor < minimo) minimo = valor;
     }
     if (minimo > tope) return tope + 1;
+    antesDeAnterior = anterior;
     anterior = fila;
   }
-  return anterior[b.length];
+  return Math.min(anterior[b.length], tope + 1);
 }
 
 /** Errores de tecleo que se perdonan según el largo de la palabra. */

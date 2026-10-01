@@ -4,6 +4,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { parseProductImages } from '@/lib/product-utils';
+import { patron, sinAcentos } from '@/lib/busqueda-sql';
 import { normalizar, puntaje, seParece, terminosDeBusqueda } from './busqueda';
 
 export interface ProductoParaCotizar {
@@ -25,13 +26,7 @@ const CANDIDATOS = 60;
 /** Tope de productos que se revisan cuando hay que perdonar un error de tecleo */
 const TOPE_PARECIDOS = 4000;
 
-// Postgres sin la extensión unaccent: los acentos se quitan con translate()
-const CON_ACENTO = 'áéíóúàèìòùäëïöüâêîôûçñ';
-const SIN_ACENTO = 'aeiouaeiouaeiouaeioucn';
-const sinAcentos = (expresion: Prisma.Sql) => Prisma.sql`translate(lower(${expresion}), ${CON_ACENTO}, ${SIN_ACENTO})`;
 const TEXTO = sinAcentos(Prisma.sql`concat_ws(' ', p."name", p."sku", p."barcode", b."name", c."name")`);
-/** El término como patrón de LIKE, con sus comodines escapados */
-const patron = (termino: string) => `%${termino.replace(/[\\%_]/g, '\\$&')}%`;
 
 interface Fila {
   id: string;

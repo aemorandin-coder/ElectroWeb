@@ -1,18 +1,18 @@
-# Lo de ahora (actualizado 2026-10-01, C-157)
+# Lo de ahora (actualizado 2026-10-01, C-158)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** todo hasta C-161 y C-155, más C-162 (la tarjeta estrella y la cinta), C-163 (el guion de categorías), y C-157 (pedir la reseña por correo). Igual a GitHub.
+- **`main`:** todo hasta C-161 y C-155, más C-162 (la tarjeta estrella y la cinta), C-163 (el guion de categorías), C-157 (pedir la reseña por correo) y C-158 (buscador sin acentos). Igual a GitHub.
 - **Producción: hasta C-155** (debería ser `57840db`). Visto desde fuera el 01/10: la tablet W&O ya tiene marca (el campo es de C-155) y la foto del Sonic está armada sin cinta (C-161). **No se sabe** si la búsqueda en la web respondió bien desde el servidor ni si se corrió el redondeo de C-96: preguntárselo a Andrés.
-- **Falta subir:** C-162, C-163 y C-157 (bloque de abajo). **Cambio de base: una columna** (`orders.reviewRequestedAt`) y **un cron nuevo**.
+- **Falta subir:** C-162, C-163, C-157 y C-158 (bloque de abajo). **Cambio de base: una columna** (`orders.reviewRequestedAt`) y **un cron nuevo**.
 - **Gemini:** sin ronda abierta. La próxima la escribe Claude.
 
-## 2. Deploy pendiente: C-162, C-163 y C-157
-Avisos de Andrés del 01/10 y la reseña por correo. Detalle y pruebas en `estado/C-162.md`, `estado/C-163.md` y `estado/C-157.md`.
+## 2. Deploy pendiente: C-162, C-163, C-157 y C-158
+Avisos de Andrés del 01/10, la reseña por correo y el buscador. Detalle y pruebas en `estado/C-162.md`, `estado/C-163.md`, `estado/C-157.md` y `estado/C-158.md`.
 
-- **Lo que sube:** tres tareas. **Cambio de base: una columna** (`orders.reviewRequestedAt`). Un **cron nuevo**. Sin dependencias ni variables nuevas.
+- **Lo que sube:** cuatro tareas. **Cambio de base: una columna** (`orders.reviewRequestedAt`). Un **cron nuevo**. Sin dependencias ni variables nuevas.
 - Verificado todo junto: `tsc`, `npm run build` y la prueba de humo, **59 de 59**.
 
 **Qué trae:**
@@ -20,6 +20,7 @@ Avisos de Andrés del 01/10 y la reseña por correo. Detalle y pruebas en `estad
 - **Cinta ES (C-162):** la franja azul baja en diagonal hasta el borde de la foto, como en las fotos hechas a mano. Antes terminaba en un corte vertical.
 - **Guion de categorías (C-163):** ordena las categorías de producción con un comando (pasos 7 y 8).
 - **Reseña por correo (C-157):** 5 días después de la entrega (2 si es solo digital) el cliente recibe **un** correo con los productos que todavía no reseñó y un botón a cada uno. Ya no sale el correo que se mandaba al instante de la entrega. El cliente puede apagarlo en Mi perfil → Notificaciones → "Tus reseñas".
+- **Buscador sin acentos (C-158):** "audifonos" encuentra "Audífonos" (también la ñ y las mayúsculas), entiende plurales y, si lo escrito no coincide, muestra lo que se parece con un aviso ("tecaldo" encuentra el teclado). Sin cambio de base ni pasos en el servidor.
 
 ### Pasos (en el servidor, `/var/www/electroshopve`)
 1. **Qué hay ahora:** `git log -1 --oneline`. Debe empezar por `57840db`. Si dice otra cosa, avisar a Claude antes de seguir.
@@ -61,6 +62,7 @@ Avisos de Andrés del 01/10 y la reseña por correo. Detalle y pruebas en `estad
    - **Prueba real con tu cuenta:** busca una orden tuya entregada (o marca una de prueba como entregada) y adelanta su fecha:
      `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -c "UPDATE orders SET \"deliveredAt\" = now() - interval '6 days', \"reviewRequestedAt\" = NULL WHERE \"orderNumber\" = 'ORD-2026-00XX'"` (con su número) y corre `~/cron-resenas.sh`: debe responder `"correos":1` y llegarte el correo. El botón abre la ficha y baja hasta "Reseñas".
    - El enlace "No recibir más este pedido de reseñas" del correo muestra su confirmación y apaga el interruptor.
+5. **Buscador (C-158):** en la tienda, buscar `audifonos` y `teclado` sin acento y escribir mal una palabra (`tecaldo`): salen los productos y, en el mal escrito, el aviso azul "Estos productos se le parecen". En Admin → Productos, buscar con y sin acento.
 
 ### Pruebas de lo anterior, si faltan (ya está en producción)
 - **Buscar en la web (C-155):** Productos → Nuevo → Producto físico, "Teclado mecánico Redragon Kumara K552", "Buscar". Si arriba dice "Los datos vienen de la búsqueda con IA y no se pudieron contrastar", los buscadores no le responden al servidor: avisar a Claude. La clave va en el `.env` del servidor como `GROQ_API_KEY`.
@@ -107,9 +109,8 @@ En el orden en que más destraban:
 
 ## 4. Fila de Claude
 La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. Lo próximo, en orden:
-1. **C-158 · Buscador de la tienda sin acentos.**
-2. **C-159 · Cotizaciones:** por correo, "Mis cotizaciones" y la retención del IVA.
-3. **C-160 · Menores.**
+1. **C-159 · Cotizaciones:** por correo, "Mis cotizaciones" y la retención del IVA.
+2. **C-160 · Menores.**
 - En cuanto lleguen los datos de la sección 3: C-154b (plazo de los digitales), C-107 (seguro) y C-92 (clientes).
 - Lo que salga de la revisión final y de las pruebas del deploy se arregla antes que lo demás.
 - **Pregunta abierta para Andrés (C-157):** ¿5 días después de la entrega (2 si es digital) le parece bien? Se cambia en `lib/resenas-avisos.ts` (`DIAS_FISICO`, `DIAS_DIGITAL`).

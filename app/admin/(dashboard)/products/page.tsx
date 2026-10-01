@@ -10,6 +10,7 @@ import {
 } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { parseProductImages } from '@/lib/product-utils';
+import { normalizar } from '@/lib/cotizaciones/busqueda';
 import ListaProductos, { type CambiosRapidos } from './_components/lista/ListaProductos';
 import { EdicionMasiva, VistaRapida } from './_components/lista/Modales';
 import SadesPanel from './_components/lista/SadesPanel';
@@ -116,9 +117,10 @@ export default function ProductsPage() {
   }), [productos]);
 
   const visibles = useMemo(() => {
-    const q = busqueda.trim().toLowerCase();
+    // Sin acentos ni mayúsculas (C-158): "audifonos" encuentra "Audífonos"
+    const q = normalizar(busqueda.trim());
     return productos.filter((p) =>
-      (!q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)) &&
+      (!q || normalizar(p.name).includes(q) || normalizar(p.sku).includes(q)) &&
       (!categoria || p.category?.id === categoria) &&
       (filtro === 'todos' || (filtro === 'publicados' && p.status === 'PUBLISHED') || (filtro === 'borradores' && p.status === 'DRAFT')
         || (filtro === 'archivados' && p.status === 'ARCHIVED') || (filtro === 'sin-stock' && sinStock(p))));

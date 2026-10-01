@@ -1,7 +1,9 @@
-# Punto de partida (actualizado 2026-09-30, cierre de C-141, C-139 y C-142)
+# Punto de partida (actualizado 2026-09-30, cierre de C-141, C-139, C-142 y C-143)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-141, C-139 y C-142**.
-- **Producción:** C-138 confirmado (`d53d5b4`, con los dos crons). **Falta el deploy de C-141** (§00000), que es urgente por lo que cambia: al terminar, el panel pide configurar los dos pasos.
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-143**.
+- **Producción: C-141 desplegada el 30/09** (Andrés configuró sus dos pasos). No se sabe con qué commit exacto: preguntarle si el deploy incluyó C-139 y C-142.
+- **Incidente del deploy (C-143):** la cuenta de Andrés era ADMIN, no SUPER_ADMIN, y quedó sin Configuración, Métodos de Pago ni Equipo. Arreglo: `npx tsx scripts/create-master-admin.ts <su correo>` en el servidor y volver a entrar. **Confirmar que lo corrió y que ya ve Configuración.**
+- **C-143** (en `main`, falta el deploy): el panel avisa cuando la tienda no tiene super admin, el guion cierra la sesión al promover, y el menú de la cuenta en la tienda trata al equipo como equipo (`estado/C-143.md`).
 - Andrés dijo el 30/09 que las pruebas de los deploys del 30/09 salieron "excelentes", con algunos ajustes para más adelante. Sobre el deploy de C-140 respondió "recuerda que necesito probar": **no está confirmado**. Los pasos de C-141 sirven igual si ese deploy no se hizo (§00000).
 - **C-139** (Puntos ES) hecha y en `main`: va en el mismo deploy que C-141 y no cambia la base (§000000).
 - **C-142:** los términos de los Puntos ES que se firman ya traen la regla del cierre de cuenta (decisión de Andrés del 30/09). Se publican solos con el deploy y cada cliente los firma en su próxima recarga (`estado/C-142.md`).
@@ -35,6 +37,7 @@ Detalle, hallazgos y pruebas en `estado/C-141.md`.
 **Cambio de base (aditivo): una tabla nueva**, `segundo_factor` (SQL en `estado/C-141.md`). Ningún `DROP` ni `ALTER ... TYPE`.
 
 **Antes del deploy (Andrés):**
+- **Comprueba que tu cuenta es super admin.** Si tu cuenta es Administrador (el panel lo dice arriba a la derecha), después del deploy no verás Configuración, Métodos de Pago ni Equipo. Se arregla en el servidor con `npx tsx scripts/create-master-admin.ts <tu correo>` (no cambia tu contraseña) y volviendo a entrar.
 - Instala **Google Authenticator** o **Authy** en tu teléfono.
 - Ten a mano dónde guardar 10 códigos fuera del teléfono (papel, o un archivo en otra computadora).
 - Hazlo cuando puedas terminar los pasos de una vez: entre el deploy y tu configuración, quien tenga tu contraseña podría registrar su propia app.
@@ -351,7 +354,7 @@ bash scripts/deploy.sh
 ## 6. Mensaje para empezar (próxima sesión de Claude)
 > Continúa ElectroShopVe (tienda en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` completo y tu memoria del proyecto.
 > 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
-> 2. Pregúntame si el deploy de C-141, C-139 y C-142 terminó bien (§00000 y §000000): si configuré mis dos pasos, si llegó el correo de invitación, qué cuentas quedaron en Equipo, cómo se ve la página de Puntos ES y si la recarga pide firmar los términos nuevos. Y mis respuestas a las 5 preguntas de C-120 (`estado/C-120.md`).
+> 2. Pregúntame si ya soy super admin en producción (C-143: `npx tsx scripts/create-master-admin.ts <mi correo>`) y si veo Configuración, Métodos de Pago y Equipo. Después, si el deploy de C-141, C-139, C-142 y C-143 terminó bien (§00000 y §000000): si configuré mis dos pasos, si llegó el correo de invitación, qué cuentas quedaron en Equipo, cómo se ve la página de Puntos ES y si la recarga pide firmar los términos nuevos. Y mis respuestas a las 5 preguntas de C-120 (`estado/C-120.md`).
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
 > 4. Sigue con la **revisión final** conmigo (`REVISION_FINAL.md`) y arregla lo que salga. Al terminar cada tarea: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
 > 5. Después: C-107 (faltan los costos de ZOOM y MRW), C-92 (faltan tus 4 consultas) y C-120, rediseñada con mis respuestas (la web no factura).

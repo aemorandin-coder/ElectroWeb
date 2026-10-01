@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
-import { FiLogOut, FiUser, FiPackage, FiSettings, FiCheckCircle, FiAlertCircle, FiChevronRight } from 'react-icons/fi';
+import { FiLogOut, FiUser, FiPackage, FiSettings, FiCheckCircle, FiAlertCircle, FiChevronRight, FiShield } from 'react-icons/fi';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 interface UserAccountButtonProps {
@@ -89,6 +89,10 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
   const userImage = user?.image || null;
   const isVerified = session.user?.emailVerified;
   const isAdmin = session.user?.userType === 'admin';
+  // C-143: al equipo no se le trata como a un cliente. En vez de "SIN VERIFICAR" (la verificación del correo es de
+  // clientes) se muestra su rol, y el panel de administración va primero.
+  const rolEquipo = isAdmin ? (session.user?.role === 'SUPER_ADMIN' ? 'SUPER ADMIN' : 'ADMINISTRADOR') : null;
+  const bordeAvatar = isAdmin ? 'border-brand-200 shadow-brand-500/20' : isVerified ? 'border-success shadow-success/20' : 'border-warning shadow-warning/20';
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -106,10 +110,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
         className="relative flex items-center gap-1.5 px-1.5 py-1 hover:bg-brand-50 rounded-xl transition-all duration-300 group z-[var(--z-dropdown)] lg:z-auto"
       >
         {userImage && !imageError ? (
-          <div className={`relative w-9 h-9 rounded-full overflow-hidden border-2 shadow-md group-hover:shadow-lg transition-all ${isVerified
-            ? 'border-success shadow-success/20'
-            : 'border-warning shadow-warning/20'
-            }`}>
+          <div className={`relative w-9 h-9 rounded-full overflow-hidden border-2 shadow-md group-hover:shadow-lg transition-all ${bordeAvatar}`}>
             <Image
               src={userImage}
               alt={userName}
@@ -122,10 +123,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
             />
           </div>
         ) : (
-          <div className={`w-9 h-9 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold shadow-md group-hover:shadow-lg transition-all border-2 ${isVerified
-            ? 'border-success shadow-success/20'
-            : 'border-warning shadow-warning/20'
-            }`}>
+          <div className={`w-9 h-9 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold shadow-md group-hover:shadow-lg transition-all border-2 ${bordeAvatar}`}>
             {userName.charAt(0).toUpperCase()}
           </div>
         )}
@@ -173,7 +171,12 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                 
                 {/* Status Badge */}
                 <div className="mt-2">
-                  {isVerified ? (
+                  {rolEquipo ? (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-50 rounded-lg border border-brand-200">
+                      <FiShield className="w-3 h-3 text-brand-600" />
+                      <span className="text-brand-700 text-xs font-bold tracking-wide">{rolEquipo}</span>
+                    </div>
+                  ) : isVerified ? (
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-success/15 rounded-lg border border-success/30">
                       <FiCheckCircle className="w-3 h-3 text-success" />
                       <span className="text-success-strong text-xs font-bold tracking-wide">CUENTA VERIFICADA</span>
@@ -191,6 +194,24 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
 
           {/* Menu Actions */}
           <div className="p-2.5 space-y-1 bg-white">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                onClick={() => setIsOpen(false)}
+                className="group flex items-center justify-between px-3 py-3 rounded-xl hover:bg-surface transition-colors duration-200 active:scale-95"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 group-hover:bg-brand-500 group-hover:text-white transition-colors">
+                    <FiSettings className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-ink font-bold text-sm block">Panel de administración</span>
+                    <span className="text-muted text-xs">Órdenes, productos y clientes</span>
+                  </div>
+                </div>
+                <FiChevronRight className="w-4 h-4 text-subtle group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
+              </Link>
+            )}
               <>
                 <Link
                   href="/customer"
@@ -202,8 +223,8 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                       <FiUser className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-ink font-bold text-sm block">Mi Panel</span>
-                      <span className="text-muted text-xs">Gestión de cuenta</span>
+                      <span className="text-ink font-bold text-sm block">{isAdmin ? 'Mi panel de cliente' : 'Mi Panel'}</span>
+                      <span className="text-muted text-xs">{isAdmin ? 'Para probar compras con esta cuenta' : 'Gestión de cuenta'}</span>
                     </div>
                   </div>
                   <FiChevronRight className="w-4 h-4 text-subtle group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
@@ -227,24 +248,6 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                 </Link>
               </>
 
-            {isAdmin && (
-              <Link
-                href="/admin"
-                onClick={() => setIsOpen(false)}
-                className="group flex items-center justify-between px-3 py-3 rounded-xl hover:bg-surface transition-colors duration-200 active:scale-95"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 group-hover:bg-brand-500 group-hover:text-white transition-colors">
-                    <FiSettings className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-ink font-bold text-sm block">Panel Admin</span>
-                    <span className="text-muted text-xs">Administración del sitio</span>
-                  </div>
-                </div>
-                <FiChevronRight className="w-4 h-4 text-subtle group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
-              </Link>
-            )}
           </div>
 
           {/* Logout Section */}

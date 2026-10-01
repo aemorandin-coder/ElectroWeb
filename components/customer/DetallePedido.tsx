@@ -8,6 +8,7 @@ import OrderTracking from '@/components/orders/OrderTracking';
 import { formatUSD, formatVES } from '@/lib/currency';
 import IvaIncluido from '@/components/ui/IvaIncluido';
 import { formatOrderPaymentMethod } from '@/lib/format-helpers';
+import { conceptoEntrega } from '@/lib/facturacion';
 import { conditionBadge, warrantyDaysFor, type Condition, type Grade } from '@/lib/product-condition';
 import { estadoParaCliente } from '@/lib/order-pasos';
 import { adminBadge } from '@/lib/admin-ui';
@@ -173,7 +174,7 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
             <dl className="space-y-1 text-sm">
               <div className="flex justify-between gap-3"><dt className="text-ink-soft">Subtotal</dt><dd className="tabular-nums text-ink">{formatUSD(subtotal)}</dd></div>
               {descuento > 0 && <div className="flex justify-between gap-3"><dt className="text-ink-soft">Descuento</dt><dd className="tabular-nums text-success-strong">−{formatUSD(descuento)}</dd></div>}
-              {envio > 0 && <div className="flex justify-between gap-3"><dt className="text-ink-soft">Envío y embalaje</dt><dd className="tabular-nums text-ink">{formatUSD(envio)}</dd></div>}
+              {envio > 0 && <div className="flex justify-between gap-3"><dt className="text-ink-soft">{conceptoEntrega(pedido.deliveryMethod)}</dt><dd className="tabular-nums text-ink">{formatUSD(envio)}</dd></div>}
               <div className="flex justify-between gap-3 border-t border-line pt-2">
                 <dt className="font-semibold text-ink">Total</dt>
                 <dd className="text-right">

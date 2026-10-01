@@ -12,6 +12,8 @@ export interface FilaVenta {
   documento: string;
   tipo: 'Persona' | 'Empresa';
   domicilioFiscal: string | null;
+  /** Embalaje o delivery que cobró la tienda: ya está dentro del total (y de la base y el IVA) */
+  entregaUSD: number;
   baseUSD: number;
   ivaUSD: number;
   totalUSD: number;
@@ -28,6 +30,7 @@ export interface TotalesVentas {
   ordenes: number;
   anuladas: number;
   sinFactura: number;
+  entregaUSD: number;
   baseUSD: number;
   ivaUSD: number;
   totalUSD: number;
@@ -58,11 +61,12 @@ const centimos = (n: number) => Math.round(n * 100);
 /** Suma solo las órdenes válidas: una anulada se lista, pero no cuenta. */
 export function totalesVentas(filas: FilaVenta[]): TotalesVentas {
   const validas = filas.filter((f) => !f.anulada);
-  const suma = (campo: 'baseUSD' | 'ivaUSD' | 'totalUSD' | 'totalBs' | 'puntosUSD') => validas.reduce((total, f) => total + centimos(f[campo]), 0) / 100;
+  const suma = (campo: 'entregaUSD' | 'baseUSD' | 'ivaUSD' | 'totalUSD' | 'totalBs' | 'puntosUSD') => validas.reduce((total, f) => total + centimos(f[campo]), 0) / 100;
   return {
     ordenes: validas.length,
     anuladas: filas.length - validas.length,
     sinFactura: validas.filter((f) => !f.factura).length,
+    entregaUSD: suma('entregaUSD'),
     baseUSD: suma('baseUSD'),
     ivaUSD: suma('ivaUSD'),
     totalUSD: suma('totalUSD'),
@@ -87,7 +91,7 @@ export function celda(valor: string | null | undefined): string {
 
 const COLUMNAS = [
   'Fecha de pago', 'Orden', 'Factura n.º', 'Cliente', 'Cédula o RIF', 'Tipo', 'Domicilio fiscal',
-  'Base imponible USD', 'IVA USD', 'Total USD', 'Tasa BCV', 'Total Bs.', 'Forma de pago', 'Pagado con Puntos ES USD', 'Estado',
+  'Embalaje o delivery USD (dentro del total)', 'Base imponible USD', 'IVA USD', 'Total USD', 'Tasa BCV', 'Total Bs.', 'Forma de pago', 'Pagado con Puntos ES USD', 'Estado',
 ];
 
 /** El archivo: punto y coma entre columnas (Excel en español) y una fila de totales al final. */
@@ -97,12 +101,12 @@ export function csvRelacionVentas(filas: FilaVenta[]): string {
     COLUMNAS.map(celda).join(';'),
     ...filas.map((f) => [
       celda(fechaVe(f.fecha)), celda(f.orden), celda(f.factura), celda(f.cliente), celda(f.documento), celda(f.tipo), celda(f.domicilioFiscal),
-      numero(f.baseUSD), numero(f.ivaUSD), numero(f.totalUSD), numero(f.tasa), numero(f.totalBs), celda(f.pago), numero(f.puntosUSD),
+      numero(f.entregaUSD), numero(f.baseUSD), numero(f.ivaUSD), numero(f.totalUSD), numero(f.tasa), numero(f.totalBs), celda(f.pago), numero(f.puntosUSD),
       celda(f.anulada ? 'Anulada (no suma)' : 'Válida'),
     ].join(';')),
     [
       celda('Totales (sin las anuladas)'), celda(`${totales.ordenes} órdenes`), '', '', '', '', '',
-      numero(totales.baseUSD), numero(totales.ivaUSD), numero(totales.totalUSD), '', numero(totales.totalBs), '', numero(totales.puntosUSD), '',
+      numero(totales.entregaUSD), numero(totales.baseUSD), numero(totales.ivaUSD), numero(totales.totalUSD), '', numero(totales.totalBs), '', numero(totales.puntosUSD), '',
     ].join(';'),
   ];
   return lineas.join('\r\n');

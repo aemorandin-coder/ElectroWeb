@@ -83,8 +83,22 @@ export function baseEIva(totalUSD: number, taxUSD: number): { baseUSD: number; i
   return { baseUSD: Math.round((totalUSD - iva) * 100) / 100, ivaUSD: iva };
 }
 
+/**
+ * Cómo se llama lo que la tienda cobra por la entrega (C-147b). Va en la factura como un renglón más, con su nombre y su
+ * monto: es un accesorio de la venta y forma parte de la base imponible (Ley del IVA, art. 23, numeral 2).
+ * - Envío por ZOOM o MRW: la tienda cobra solo el embalaje. El flete lo cobra y lo factura la empresa de envíos.
+ * - Delivery en Guanare: lo cobra la tienda.
+ */
+export function conceptoEntrega(deliveryMethod: string | null | undefined): string {
+  if (deliveryMethod === 'SHIPPING') return 'Embalaje';
+  if (deliveryMethod === 'LOCAL_DELIVERY') return 'Delivery en Guanare';
+  // Órdenes de antes de C-100 (HOME_DELIVERY): no se sabe cuál de los dos fue
+  return 'Envío y embalaje';
+}
+
 export interface OrdenParaFacturar {
   orderNumber: string;
+  deliveryMethod?: string | null;
   createdAt: string | Date;
   billingType?: string | null;
   billingName?: string | null;
@@ -128,7 +142,7 @@ export function textoParaFacturar(orden: OrdenParaFacturar): string {
     '',
     ...orden.items.map((item) => `${item.quantity} × ${item.productName} · ${formatUSD(Number(item.priceUSD) || 0)} c/u · ${formatUSD(Number(item.totalUSD) || 0)}`),
     descuento > 0 ? `Descuento: -${formatUSD(descuento)}` : null,
-    envio > 0 ? `Embalaje o delivery: ${formatUSD(envio)}` : null,
+    envio > 0 ? `1 × ${conceptoEntrega(orden.deliveryMethod)} · ${formatUSD(envio)}` : null,
     '',
     ivaUSD > 0 ? `Base imponible: ${formatUSD(baseUSD)}` : null,
     ivaUSD > 0 ? `IVA: ${formatUSD(ivaUSD)}` : null,

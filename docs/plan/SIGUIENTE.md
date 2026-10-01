@@ -1,6 +1,7 @@
-# Punto de partida (actualizado 2026-10-01, cierre de C-146b)
+# Punto de partida (actualizado 2026-10-01, cierre de C-147b)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-146b** (orden real: C-149, C-147, C-150, C-146b).
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-147b** (orden real: C-149, C-147, C-150, C-146b, C-147b).
+- **C-147b** (01/10, en `main`, va con el deploy de C-147, sin cambio de base): cómo se factura el embalaje (`estado/C-147b.md`). Va en la misma factura, como renglón aparte y con IVA; el flete con cobro a destino lo factura ZOOM o MRW. "Copiar datos para facturar" y el recibo ya lo nombran "Embalaje" o "Delivery en Guanare", y la relación de ventas trae su columna. **Para el contador:** las 4 preguntas del estado.
 - **C-146b** (01/10, en `main`, falta el deploy, **sin cambio de base**): precio sugerido desde el costo y margen real (`estado/C-146b.md`).
   - **Pruebas después del deploy (Andrés):**
     1. Productos → editar uno físico → paso "Precios": escribir el costo. Aparece "Precio sugerido" (costo + 30 % + IVA 16 %). "Usar este precio" lo pone en el precio; el margen queda en 30 %.

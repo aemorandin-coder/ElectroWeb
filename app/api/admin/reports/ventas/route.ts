@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       },
       select: {
         orderNumber: true, status: true, paymentStatus: true, paymentMethod: true, pointsUSD: true,
-        totalUSD: true, taxUSD: true, totalVES: true, exchangeRateVES: true, paidAt: true, createdAt: true,
+        totalUSD: true, taxUSD: true, shippingUSD: true, totalVES: true, exchangeRateVES: true, paidAt: true, createdAt: true,
         billingType: true, billingName: true, billingTaxId: true, billingAddress: true, invoiceNumber: true,
         guestName: true,
         user: { select: { name: true, profile: { select: { idNumber: true } } } },
@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
         documento: o.billingTaxId || o.user?.profile?.idNumber || '',
         tipo: o.billingType === 'COMPANY' ? 'Empresa' : 'Persona',
         domicilioFiscal: o.billingAddress,
+        entregaUSD: Number(o.shippingUSD),
         baseUSD,
         ivaUSD,
         totalUSD,

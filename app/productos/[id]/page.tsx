@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FaWhatsapp } from 'react-icons/fa6';
-import { FiChevronRight, FiCreditCard, FiMapPin, FiShield, FiStar, FiTruck, FiZap } from 'react-icons/fi';
+import { FiBox, FiChevronRight, FiCreditCard, FiMapPin, FiShield, FiStar, FiTruck, FiZap } from 'react-icons/fi';
 import Footer from '@/components/Footer';
 import { PAYMENT_LABELS } from '@/components/home/TrustBar';
 import ProductGallery from '@/components/product/ProductGallery';
@@ -25,6 +25,8 @@ import { getActivePaymentMethodKinds, getHomeSettings } from '@/lib/queries/home
 import { getProductBySlug, getPublicReviews, getRelatedProducts, getReviewSummary } from '@/lib/queries/product';
 import { getPublicSettings } from '@/lib/site-settings';
 import { formatUSD } from '@/lib/currency';
+import { calculateOrder, toPricingSettings } from '@/lib/pricing';
+import { resumenEmbalaje } from '@/lib/embalaje';
 import { INTERNAL_SPEC_KEYS } from '@/lib/product-specs';
 import JsonLd from '@/components/seo/JsonLd';
 import { absoluteUrl, breadcrumbJsonLd, plainText, productJsonLd } from '@/lib/seo';
@@ -96,29 +98,70 @@ export default async function ProductPage({ params }: PageProps) {
   const waNumber = settings.whatsapp?.replace(/\D/g, '');
   const sharePath = product.shortCode ? `/p/${product.shortCode}` : `/productos/${product.slug}`;
 
-  const delivery = [
+  // C-154: lo que cuesta mandar este producto solo, con el mismo cálculo de la orden (C-153: el embalaje sale de su paquete)
+  const envio = isDigital
+    ? null
+    : calculateOrder(
+      [{
+        productId: product.id, name: product.name, productType: 'PHYSICAL', unitPriceUSD: product.priceUSD, quantity: 1,
+        weightKg: product.weightKg, dimensions: product.dimensions, isConsolidable: product.isConsolidable,
+        shippingCostUSD: 0, freeShipping: product.freeShipping, discountPercent: 0,
+      }],
+      toPricingSettings(settings),
+      'SHIPPING'
+    ).shipping;
+  const envioGratis = envio?.isFreeShipping ?? false;
+  const embalaje = envio && !envioGratis && envio.packagingFee > 0 ? envio.packagingFee : 0;
+  const empaque = envio?.packaging ? resumenEmbalaje(envio.packaging).toLowerCase() : null;
+  const textoEnvio = [
+    'Por ZOOM o MRW con cobro a destino: el flete lo pagas al retirar.',
+    embalaje > 0
+      ? empaque ? `Embalaje de este producto: ${formatUSD(embalaje)} (${empaque}).` : `Embalaje: ${formatUSD(embalaje)} por pedido.`
+      : envio?.packagingFreeByThreshold ? 'El embalaje es gratis con este producto.' : '',
+    envio?.missingFreePackagingUSD != null && settings.freePackagingThresholdUSD ? `Embalaje gratis en compras desde ${formatUSD(settings.freePackagingThresholdUSD)}.` : '',
+    envio?.missingFreeShippingUSD != null && settings.freeDeliveryThresholdUSD ? `Envío gratis en compras desde ${formatUSD(settings.freeDeliveryThresholdUSD)}.` : '',
+  ].filter(Boolean).join(' ');
+
+  const delivery: Array<{ Icon: typeof FiTruck; title: string; text: string; link?: { href: string; label: string } }> = [
     ...(isDigital
       ? [{ Icon: FiZap, title: deliveryMode.store, text: deliveryMode.storeHelp }]
       : settings.deliveryEnabled
-        ? [product.freeShipping
+        ? [envioGratis
           ? { Icon: FiTruck, title: 'Envío gratis a toda Venezuela', text: 'Por ZOOM o MRW: el envío lo paga la tienda' }
-          : { Icon: FiTruck, title: 'Envíos a toda Venezuela', text: 'Por ZOOM o MRW con cobro a destino: el flete lo pagas al retirar' }]
+          : { Icon: FiTruck, title: 'Envíos a toda Venezuela', text: textoEnvio }]
         : []),
     ...(!isDigital && settings.localDeliveryEnabled
       ? [{
         Icon: FiMapPin,
         title: 'Delivery en Guanare',
-        text: product.freeShipping || !(settings.deliveryFeeUSD > 0) ? 'Gratis' : `${formatUSD(settings.deliveryFeeUSD)} por pedido`,
+        text: envioGratis || !(settings.deliveryFeeUSD > 0) ? 'Gratis' : `${formatUSD(settings.deliveryFeeUSD)} por pedido`,
       }]
       : []),
     ...(!isDigital && settings.pickupEnabled ? [{ Icon: FiMapPin, title: 'Retiro en tienda', text: settings.pickupAddress || 'Coordina el retiro al comprar' }] : []),
-    product.condition
-      ? { Icon: FiShield, title: `Garantía de la tienda: ${product.condition.warrantyDays} días`, text: 'Por fallas de funcionamiento' }
+    // C-154: la garantía con sus días también en los productos nuevos, y qué hace la tienda si procede (términos, 6.3)
+    product.warrantyDays
+      ? {
+        Icon: FiShield,
+        title: `Garantía de la tienda: ${product.warrantyDays} días`,
+        text: `${product.condition ? '' : 'Producto 100% original. '}Por fallas de funcionamiento: se repara; si no se puede, se cambia por uno igual o equivalente; y si tampoco, se devuelve lo pagado por el producto en Puntos ES.`,
+        link: { href: '/terminos#garantia', label: 'Ver condiciones' },
+      }
       : { Icon: FiShield, title: 'Producto 100% original', text: 'Con respaldo de la tienda' },
     ...(paymentKinds.length > 0
       ? [{ Icon: FiCreditCard, title: 'Formas de pago', text: paymentKinds.map((kind) => PAYMENT_LABELS[kind].label).join(' · ') }]
       : []),
   ];
+
+  // C-154: lo esencial en una línea, justo encima del botón de compra (el detalle queda debajo)
+  const resumen: Array<{ Icon: typeof FiTruck; text: string }> = isDigital
+    ? [{ Icon: FiZap, text: deliveryMode.store }]
+    : [
+      ...(product.warrantyDays ? [{ Icon: FiShield, text: `Garantía ${product.warrantyDays} días` }] : []),
+      ...(settings.deliveryEnabled
+        ? [{ Icon: FiTruck, text: envioGratis ? 'Envío gratis' : 'Envío nacional' }]
+        : settings.pickupEnabled ? [{ Icon: FiMapPin, text: 'Retiro en tienda' }] : []),
+      ...(settings.deliveryEnabled && embalaje > 0 ? [{ Icon: FiBox, text: `Embalaje ${formatUSD(embalaje)}` }] : []),
+    ];
 
   return (
     <div className="min-h-dvh bg-surface">
@@ -206,6 +249,16 @@ export default async function ProductPage({ params }: PageProps) {
                     exchangeRateVES={settings.exchangeRateVES}
                     ivaIncluido={settings.taxEnabled && (!isDigital || settings.taxDigital)}
                     lowStockThreshold={homeSettings.lowStockThreshold}
+                    beforeActions={resumen.length > 0 && (
+                      <ul aria-label="Garantía y entrega" className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs font-medium text-ink-soft">
+                        {resumen.map(({ Icon, text }) => (
+                          <li key={text} className="flex items-center gap-1.5">
+                            <Icon className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden="true" />
+                            {text}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     afterPrice={(product.oferta || coupons.length > 0) && (
                       // C-102: oferta de la tienda y cupones que sirven para este producto, debajo del precio
                       <div className="space-y-2">
@@ -217,12 +270,15 @@ export default async function ProductPage({ params }: PageProps) {
                 </div>
 
                 <ul className="mt-5 space-y-3 border-t border-line pt-5">
-                  {delivery.map(({ Icon, title, text }) => (
+                  {delivery.map(({ Icon, title, text, link }) => (
                     <li key={title} className="flex gap-3">
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600"><Icon className="h-4 w-4" aria-hidden="true" /></span>
                       <span className="min-w-0">
                         <span className="block text-sm font-semibold text-ink">{title}</span>
-                        <span className="block text-xs text-muted">{text}</span>
+                        <span className="block text-xs text-muted">
+                          {text}
+                          {link && <> <Link href={link.href} className="font-semibold text-brand-700 hover:underline">{link.label}</Link></>}
+                        </span>
                       </span>
                     </li>
                   ))}

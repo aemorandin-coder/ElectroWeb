@@ -1,60 +1,58 @@
-# Lo de ahora (actualizado 2026-10-01, C-155)
+# Lo de ahora (actualizado 2026-10-01, C-163)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** todo hasta C-156, más C-161 (la foto de los usados) y C-155 (buscar el producto en la web). Igual a GitHub.
-- **Producción: `6aae5a6`, hasta C-154.** Andrés subió C-153 y C-154 el 01/10 (captura del servidor, y desde fuera: los ajustes públicos ya traen `packagingRules` y la ficha dice "Garantía … · Envío nacional"). Las 3 columnas de C-153 ya están en la base. El embalaje sigue en **$1,00** hasta encender el cálculo.
-- **Falta subir:** C-161 y C-155 (bloque de abajo), **sin cambio de base**. C-156 solo cambia documentos y un guion de SQL.
+- **`main`:** todo hasta C-161 y C-155, más C-162 (la tarjeta estrella y la cinta) y C-163 (el guion de categorías). Igual a GitHub.
+- **Producción: hasta C-155** (debería ser `57840db`). Visto desde fuera el 01/10: la tablet W&O ya tiene marca (el campo es de C-155) y la foto del Sonic está armada sin cinta (C-161). **No se sabe** si la búsqueda en la web respondió bien desde el servidor ni si se corrió el redondeo de C-96: preguntárselo a Andrés.
+- **Falta subir:** C-162 y C-163 (bloque de abajo), **sin cambio de base**.
 - **Gemini:** sin ronda abierta. La próxima la escribe Claude.
-- **Confirmado por Andrés el 01/10:** el nginx ya pasa la IP real (C-105) y el resto del equipo ya está invitado y funcionando (C-141).
 
-## 2. Deploy pendiente: C-161 y C-155
-Pedidos de Andrés del 01/10. Detalle y pruebas en `estado/C-161.md` y `estado/C-155.md`.
+## 2. Deploy pendiente: C-162 y C-163
+Avisos de Andrés del 01/10. Detalle y pruebas en `estado/C-162.md` y `estado/C-163.md`.
 
-- **Lo que sube:** dos tareas, **sin cambio de base** y sin dependencias nuevas.
-- **Una variable de entorno nueva, opcional:** `GROQ_API_KEY` (la clave de Groq de Andrés). Sin ella todo funciona; la búsqueda de productos sale sin IA.
+- **Lo que sube:** dos tareas, **sin cambio de base**, sin dependencias ni variables nuevas.
 - Verificado todo junto: `tsc`, `npm run build` y la prueba de humo, **59 de 59**.
 
 **Qué trae:**
-- **Foto de los usados (C-161):** la foto recortada de un producto de caja abierta, reacondicionado o usado se arma con fondo blanco y centrada, sin la cinta ES.
-- **Buscar el producto en la web (C-155):** en el asistente, debajo del nombre. Trae marca, código de barras, peso y medidas de la caja, especificaciones y un borrador de la descripción, con casillas para elegir. Y el campo **Marca**, que el asistente no tenía.
+- **Tarjeta estrella del inicio (C-162):** la foto llena el alto de la tarjeta (antes quedaba una franja blanca arriba) y la etiqueta va en la esquina. Al lado quedan dos tarjetas a la vista en vez de tres; las demás, con la flecha.
+- **Cinta ES (C-162):** la franja azul baja en diagonal hasta el borde de la foto, como en las fotos hechas a mano. Antes terminaba en un corte vertical.
+- **Guion de categorías (C-163):** ordena las categorías de producción con un comando (pasos 4 y 5).
 
 ### Pasos (en el servidor, `/var/www/electroshopve`)
-1. **Qué hay ahora:** `git log -1 --oneline`. Debe empezar por `6aae5a6`. Si dice otra cosa, avisar a Claude antes de seguir.
-2. **La clave de Groq:** abrir el `.env` (`nano .env`) y agregar al final una línea con tu clave, entre comillas:
-   `GROQ_API_KEY="pega-aquí-tu-clave"`
-   Guardar (Ctrl+O, Enter) y salir (Ctrl+X). La clave va solo en ese archivo: no se sube a GitHub.
-3. **Subir:** `git pull --ff-only` y `bash scripts/deploy.sh`.
-   - Esta vez **no hay SQL**: el guion no debería parar. Si para y muestra SQL, no seguir y avisar a Claude.
-4. **Comprobar:** `git log -1 --oneline` muestra el último commit de `main`.
-5. **El redondeo de C-96** (pendiente desde el 24/09; cambia la base, por eso lleva su respaldo). En la misma carpeta, un comando después del otro:
+1. **Qué hay ahora:** `git log -1 --oneline`. Debe empezar por `57840db`. Si dice otra cosa, avisar a Claude antes de seguir.
+2. **Subir:** `git pull --ff-only` y `bash scripts/deploy.sh`.
+   - **No hay SQL**: el guion no debería parar. Si para y muestra SQL, no seguir y avisar a Claude.
+3. **Comprobar:** `git log -1 --oneline` muestra el último commit de `main`.
+4. **Categorías, primero mirar** (no cambia nada; muestra la lista de lo que haría):
+   `npx tsx scripts/reorganizar-categorias.ts`
+5. **Categorías, aplicar** (si la lista está bien). Como mueve productos, antes un respaldo:
+   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-categorias.dump`
+   `npx tsx scripts/reorganizar-categorias.ts --aplicar --borrar-vacias`
+   - Crea "Gift Cards y Recargas", "Videojuegos" y "Audio"; "Smartphones" pasa a "Celulares y Tablets"; mueve las gift cards y recargas, los dos juegos y los audífonos; corrige las descripciones; sube a 6 las categorías del inicio; y borra "General" y "Otros" si están vacías.
+   - Sin `--borrar-vacias` hace todo menos borrar.
+6. **Si falta el redondeo de C-96** (pendiente desde el 24/09), con su respaldo:
    `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-redondeo-c96.dump`
    `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/redondeo-c96.sql`
-   - Quita el arrastre de los Puntos ES guardados antes del 21/09 (por ejemplo `9.449999999999999` en vez de `9.45`). No cambia lo que ve ningún cliente.
-   - Muestra tres números. El último debe ser 0. Si el del medio ("diferencia real") no es 0, pasarle la salida a Claude: esas cuentas no las toca.
+   - Muestra tres números. El último debe ser 0. Si el del medio ("diferencia real") no es 0, pasarle la salida a Claude.
 
 ### Pruebas después de subir (unos 10 minutos)
-1. **Buscar un producto en la web (C-155):** Productos → Nuevo → Producto físico. Escribir "Teclado mecánico Redragon Kumara K552" y tocar "Buscar".
-   - En menos de medio minuto sale la lista: "Redragon" marcado, el peso y las medidas como "Estimado" y sin marcar, las especificaciones y la descripción.
-   - **Si arriba dice "Los datos vienen de la búsqueda con IA y no se pudieron contrastar"**, los buscadores no le responden al servidor: funciona, pero avisar a Claude.
-   - "Usar lo marcado": la marca y la descripción quedan escritas. Salir sin guardar ("Descartar").
-2. **La marca (C-155):** editar los audífonos Piston, el SSD y el teclado AOAS y escribirles la **Marca** (campo nuevo, junto a la categoría). Guardar.
-3. **La carátula del Grand Theft Auto V PS5 (C-161):** Productos → editar → quitar las dos primeras fotos (son la misma) y volver a subir la carátula. Avisa "Foto lista con fondo blanco, centrada". En el inicio sale con aire alrededor y su etiqueta "CAJA ABIERTA · EXCELENTE".
+1. **Inicio en la computadora:** en "Destacados de la semana", la foto del primer producto llena el alto de su tarjeta, sin franja blanca arriba, y "NUEVO" está en la esquina.
+2. **Categorías:** en un par de minutos, "Compra por categoría" muestra seis. Las gift cards están en "Gift Cards y Recargas"; Sonic y GTA V, en "Videojuegos"; los audífonos Piston, en "Audio"; la tablet, en "Celulares y Tablets". En `/categorias`, cada una con su descripción.
+3. **Volver a subir tres fotos** (las ya armadas no cambian solas). En cada producto: editar, quitar la foto y subirla otra vez.
+   - **Tablet W&O** y **audífonos Piston**: para que la cinta salga sin el corte.
+   - **Grand Theft Auto V PS5**: para que quede centrada y con aire (quitar las dos primeras, que son la misma).
+   - Si no tienes el original, la tienda lo guarda: la dirección de la foto, terminada en `.orig.png` en vez de `.webp`.
 
-### Pruebas de C-153 y C-154, si faltan (ya están en producción)
-1. **Configuración → Envíos y retiro → "Embalaje según el paquete":** encender. Aparecen cinco empaques sugeridos a partir de tu $1,00 (sobre $0,30, caja pequeña $0,60, alargada $1,00, mediana $1,00, grande $1,60) y abajo "Así cobra la tienda con estos empaques".
-   - **Corrige las medidas con las de tus sobres y cajas reales (por dentro) y pon tus precios.** Guardar.
-2. **La ficha de los audífonos Piston** dice "Embalaje de este producto: $0,30 (sobre acolchado)". **Carrito** con ellos: "solo el embalaje ($0,30, sobre acolchado)". Agregar el SSD: sigue siendo un sobre.
-3. **"Embalaje gratis desde":** pon un monto (por ejemplo $20) y Guardar. El carrito dice "Te faltan $X en productos para el embalaje gratis", con su barra.
-4. **Una compra barata con envío.** En el panel, Órdenes → esa orden: bloque "Cómo empacar" con el empaque, lo que va dentro, las piezas y el peso. "Copiar datos para la guía" trae "Piezas", "Peso aprox." y "Empaque".
-5. **Dashboard → "Tu tienda: por completar":** avisa del producto sin peso o medidas (hoy, el teclado AOAS). Ponérselos.
+### Pruebas de lo anterior, si faltan (ya está en producción)
+- **Buscar en la web (C-155):** Productos → Nuevo → Producto físico, "Teclado mecánico Redragon Kumara K552", "Buscar". Si arriba dice "Los datos vienen de la búsqueda con IA y no se pudieron contrastar", los buscadores no le responden al servidor: avisar a Claude. La clave va en el `.env` del servidor como `GROQ_API_KEY`.
+- **Marca (C-155):** ponerla en los audífonos Piston, el SSD y el teclado AOAS.
+- **Embalaje según el paquete (C-153):** Configuración → Envíos y retiro → encender, corregir las medidas y los precios de tus sobres y cajas, y poner el monto del embalaje gratis. Una compra barata con envío: en la orden, "Cómo empacar".
 
 ### Si algo sale mal
-- **La búsqueda en la web** no toca nada si no se usa. Quitar la línea `GROQ_API_KEY` del `.env` la deja sin IA.
-- **Volver atrás:** `git reset --hard 6aae5a6 && npm install && bash scripts/deploy.sh --sin-pull`.
-- **El embalaje según el paquete** (C-153) se apaga con su interruptor: vuelve el precio único al instante.
+- **Volver atrás el código:** `git reset --hard 57840db && npm install && bash scripts/deploy.sh --sin-pull`.
+- **Las categorías:** el guion hace todo o nada. Para deshacerlo después, el respaldo del paso 5, o mover los productos desde el panel.
 
 ## 3. Tareas de Andrés (sin código)
 En el orden en que más destraban:
@@ -63,7 +61,7 @@ En el orden en que más destraban:
 1. El deploy de arriba, con sus pruebas y el redondeo de C-96.
 2. **La revisión final** ([`REVISION_FINAL.md`](./REVISION_FINAL.md)): en el teléfono real, marcando cada punto. Pendiente desde el 26/09.
 3. Pasar a borrador el **"Producto Test"** (Consolas) y renombrar los productos digitales que dicen **"(SALDO)"** (`estado/C-136.md`).
-4. **Marca** en cada producto físico (paso 3 de las pruebas) e **imagen para compartir** de 1200 × 630 px (Configuración → SEO → Inicio). El Dashboard lo recuerda.
+4. **Marca** en cada producto físico (campo nuevo, junto a la categoría) e **imagen para compartir** de 1200 × 630 px (Configuración → SEO → Inicio). El Dashboard lo recuerda.
 5. **Cargar catálogo:** con la búsqueda en la web (C-155) o con la carga masiva (Productos → Más → "Importar (.json)").
 
 **Medición (antes de pagar un anuncio)**

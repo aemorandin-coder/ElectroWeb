@@ -52,6 +52,7 @@ DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg
 ### Deploys hechos
 | Fecha | Qué subió | Commit | Base |
 |---|---|---|---|
+| 01/10 (noche) | C-161 y C-155 (con C-156, documentos) | `57840db` | sin cambio; variable `GROQ_API_KEY` |
 | 01/10 (noche) | C-153 y C-154 | `6aae5a6` | 3 columnas (`packagingPlan`, `packagingRules`, `freePackagingThresholdUSD`) |
 | 01/10 | C-149 a C-152 (bloque único) | `866afe5` | 8 columnas |
 | 30/09 a 01/10 | C-139 y C-142 a C-148b | `3f2db8d` | tablas `quotes` y `quote_items`, columna `quoteStamp` |

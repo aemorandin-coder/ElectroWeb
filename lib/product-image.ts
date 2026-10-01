@@ -16,8 +16,15 @@ const MARGIN = 0.08;
  */
 const BADGE = { size: 0.42, left: 0.665, fromBottom: 0.358 };
 const BADGE_FILE = path.join(process.cwd(), 'public', 'images', 'brand', 'cinta-es.png');
+/**
+ * C-162: el borde de arriba de la franja, medido en `cinta-es.png` (en fracciones de su cuadro): toca el lado
+ * izquierdo del cuadro a 0,6898 de su alto y baja con esa pendiente. Como el cuadro se corta por abajo, la franja
+ * llegaba a su lado izquierdo antes que al borde de la foto y terminaba en un corte vertical. En las fotos que Andrés
+ * armaba a mano la franja sigue en diagonal hasta el borde de abajo: ese tramo se dibuja aparte, del mismo azul.
+ */
+const FRANJA = { enIzquierda: 0.6898, pendiente: -0.8693, color: 'rgb(34,86,220)' };
 
-let badgeCache: Promise<{ input: Buffer; left: number; top: number }> | null = null;
+let badgeCache: Promise<Array<{ input: Buffer; left: number; top: number }>> | null = null;
 
 /** La cinta ya escalada y recortada al borde de la foto (se prepara una vez) */
 function badgeOverlay() {
@@ -31,7 +38,18 @@ function badgeOverlay() {
       .extract({ left: 0, top: 0, width: Math.min(size, S - left), height: Math.min(size, S - top) })
       .png()
       .toBuffer();
-    return { input, left, top };
+    // El tramo de la franja a la izquierda del cuadro: un triángulo hasta el borde de abajo de la foto.
+    // Entra 2 px en el cuadro para que no quede una línea entre las dos piezas
+    const solape = 2;
+    const yEnCuadro = top + FRANJA.enIzquierda * size;
+    const xAbajo = left + (S - yEnCuadro) / FRANJA.pendiente;
+    const puntos = [
+      [left + solape, yEnCuadro + FRANJA.pendiente * solape],
+      [xAbajo, S],
+      [left + solape, S],
+    ].map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ');
+    const tramo = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}"><polygon points="${puntos}" fill="${FRANJA.color}"/></svg>`);
+    return [{ input: tramo, left: 0, top: 0 }, { input, left, top }];
   })();
   // Si falla (archivo movido), el próximo intento vuelve a leerlo
   badgeCache.catch(() => {
@@ -92,7 +110,7 @@ export async function composeProductImage(buffer: Buffer, { cinta = true }: { ci
   const product = await sharp(trimmed).resize(inner, inner, { fit: 'inside', withoutEnlargement: false }).png().toBuffer();
   const { width = inner, height = inner } = await sharp(product).metadata();
   const capas: sharp.OverlayOptions[] = [{ input: product, left: Math.round((S - width) / 2), top: Math.round((S - height) / 2) }];
-  if (cinta) capas.push(await badgeOverlay());
+  if (cinta) capas.push(...(await badgeOverlay()));
   return sharp({ create: { width: S, height: S, channels: 3, background: '#ffffff' } })
     .composite(capas)
     .webp({ quality: 90 })

@@ -7,6 +7,8 @@ const ITEM_WIDTHS = {
   // Vitrina: en móvil una tarjeta grande y se asoma buena parte de la siguiente; tres visibles desde lg.
   // 60vw: a 360×740 el botón de la primera tarjeta queda por encima de la barra inferior (C-21)
   featured: 'w-[60vw] sm:w-[40vw] lg:w-[calc((100%-2rem)/3)]',
+  // Al lado del producto estrella (solo desde xl): dos visibles, del mismo ancho que las tres de antes (C-162)
+  featuredSide: 'w-[calc((100%-1rem)/2)]',
   // Shelves: dos visibles y se asoma la tercera en móvil; cuatro en desktop
   default: 'w-[44vw] sm:w-[30vw] lg:w-[calc((100%-3rem)/4)]',
 };

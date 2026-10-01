@@ -1,6 +1,29 @@
-# Punto de partida (actualizado 2026-10-01, cierre de C-149)
+# Punto de partida (actualizado 2026-10-01, cierre de C-147)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-149**.
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-147** (se hizo después de C-149).
+- **Dicho por Andrés el 01/10:** ya puso 16 en el IVA (C-146). Los cursos se van a llenar: "Cursos" se queda en el menú. Las devoluciones de garantía quedan como en los términos (reparar, cambiar por uno igual y, si no hay, Puntos ES). No sabe si el deploy incluyó C-148b: se ve en Configuración → Negocio ("Sello y firma de los presupuestos").
+- **Pedido de Andrés del 01/10, sin hacer:** el menú del panel tiene 25 ítems y mucho scroll. Claude propuso agruparlo en 7 secciones que se abren y se cierran, sin cambiar ninguna página (§3d). **Falta su visto bueno.**
+- **C-147** (01/10, en `main`, falta el deploy, **siete columnas nuevas**): datos para la factura y relación de ventas del mes (`estado/C-147.md`).
+  - En el pago: "¿A nombre de quién va la factura?" (la persona o su empresa verificada, con RIF y domicilio fiscal). La orden guarda la copia.
+  - En el panel, detalle de la orden: "Copiar datos para facturar" y "N.º de la factura emitida". El cliente ve el número en su pedido.
+  - Reportes: "Relación de ventas del mes" para el contador.
+  - Cerrado: una empresa verificada podía cambiarse el nombre y el RIF desde su perfil.
+  - **SQL del deploy** (el guion para y lo muestra; debe ser solo esto, más lo de C-148b si no se había desplegado):
+    ```sql
+    ALTER TABLE "orders" ADD COLUMN "billingAddress" TEXT, ADD COLUMN "billingName" TEXT, ADD COLUMN "billingTaxId" TEXT,
+    ADD COLUMN "billingType" TEXT, ADD COLUMN "invoiceNumber" TEXT, ADD COLUMN "invoicedAt" TIMESTAMP(3);
+    ALTER TABLE "profiles" ADD COLUMN "businessFiscalAddress" TEXT;
+    ```
+  - **Deploy (Andrés, en el servidor):**
+    1. `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-c147.dump`
+    2. `git pull --ff-only` y `bash scripts/deploy.sh`. Para y muestra el SQL: si hay un `DROP` o un `ALTER ... TYPE`, avisar a Claude.
+    3. `npx prisma db push` y `bash scripts/deploy.sh` otra vez.
+  - **Pruebas después del deploy (Andrés):**
+    1. Una compra barata con tu cuenta de cliente: en el pago aparece "Datos de la factura" a tu nombre y tu cédula.
+    2. En el panel, Órdenes → esa orden: el bloque "Facturación" dice a nombre de quién va. "Copiar datos para facturar" y pegarlo en un bloc de notas: salen el cliente, los productos, la base, el IVA y el total.
+    3. Escribir un número en "N.º de la factura emitida" y Guardar. En Mis pedidos del cliente, "Detalle y recibo" muestra "Factura n.º".
+    4. Reportes → "Relación de ventas del mes" → Descargar: se abre en Excel con una fila por orden y los totales al final. Si las columnas salen todas juntas en una sola, avisar a Claude.
+    5. Con una cuenta de empresa verificada (Verificaciones → aprobar una de prueba): el pago ofrece "A nombre de mi empresa" y pide el domicilio fiscal la primera vez.
 - **C-149** (01/10, en `main`, falta el deploy, **sin cambio de base**): que Google, las redes y las IA encuentren el catálogo (`estado/C-149.md`). Incluye las seis correcciones técnicas del análisis externo que pasó Andrés.
   - Sitemap corregido (las 14 categorías daban "no encontrado") y regenerado cada hora; sin `/login` ni `/registro`.
   - `robots.txt` deja leer las fotos de los productos; `www` redirige al dominio principal.
@@ -334,19 +357,34 @@ Andrés quiere que la tienda sea la vitrina digital de la empresa en todo el pa�
 2. ✅ **C-146 · "IVA incluido" a la vista** (hecha). Falta **C-146b**: precio sugerido desde el costo (costo × 1,30 × 1,16) y aviso de margen para el dueño.
 2b. ✅ **C-148 y C-148b · Cotizaciones** (hechas). Falta: retención del IVA de contribuyentes especiales, mandarla por correo y "Mis cotizaciones" en el panel del cliente.
 3. ✅ **C-149 · Que Google, las redes y las IA encuentren el catálogo** (hecha, `estado/C-149.md`).
-4. **C-147 · Datos para la factura** y relación de ventas del mes. **Es la siguiente.**
+4. ✅ **C-147 · Datos para la factura** y relación de ventas del mes (hecha, `estado/C-147.md`).
 5. **C-150 · Confianza antes de pagar** (sale del análisis externo del 01/10; espera las decisiones de §3c).
 - **Google Merchant Center no admite a Venezuela** (lista oficial leída el 01/10). Los anuncios de Google que sí se pueden pagar son los de búsqueda (texto). Para medir sus ventas basta vincular Google Analytics con Google Ads e importar la conversión `purchase` (C-145): no hace falta otra etiqueta.
 - **Regla para los documentos:** el repositorio es público. Aquí no se escriben datos fiscales ni financieros de la empresa (ventas, márgenes reales, cómo declara). Eso va en la conversación con Andrés.
 
 ## 3c. Análisis externo del 01/10: lo comercial (decide Andrés)
 Andrés pasó un análisis que compara la tienda con otras dos. Lo técnico se hizo en C-149. Queda lo comercial:
+0. **Resuelto el 01/10:** las devoluciones quedan como en los términos (punto 3) y "Cursos" se queda en el menú (punto 4).
 1. **Garantía, despacho y entrega junto al botón de compra.** La ficha ya los muestra debajo del botón (envíos, delivery, retiro, garantía y formas de pago). Falta decidir si suben por encima del botón en el teléfono y si se agrega el embalaje.
 2. **Entrega de los digitales:** decir un plazo y un horario reales, y distinguir "código" de "recarga directa". **Falta de Andrés:** cuánto tarda de verdad cada tipo y en qué horario se atiende.
 3. **Devoluciones de garantía en Puntos ES.** Los términos dicen que, si no se puede reparar ni cambiar, se devuelve en Puntos ES. El análisis propone devolver al medio de pago original. Es una decisión de negocio (`PLAN.md` §7) y toca los términos: confirmar con el abogado.
 4. **Cursos sin contenido:** quitar "Cursos" del menú mientras no haya cursos publicados. C-149 ya los sacó del sitemap cuando no hay ninguno.
 5. **Reseñas verificadas:** pedir la reseña por correo unos días después de la entrega (hoy el cliente tiene que acordarse).
 6. **Precios:** fuera del código. Es de Andrés con sus proveedores.
+
+## 3d. Menú del panel: propuesta de Claude del 01/10 (falta el visto bueno de Andrés)
+Hoy son 25 ítems en una lista. La propuesta no fusiona páginas ni cambia direcciones: las agrupa en secciones que se abren y se cierran, con la suma de sus avisos en el título.
+| Sección | Lo que lleva |
+|---|---|
+| Inicio | Dashboard |
+| Ventas | Órdenes, Cotizaciones, Transacciones, Garantías, Gift Cards |
+| Catálogo | Productos, Categorías, Descuentos, Reseñas |
+| Clientes | Clientes, Mensajes y Solicitudes |
+| Marketing | Marketing y Contenido, ElectroStudio, Trabajos Realizados |
+| Cursos | Cursos, Creadores |
+| Administración | Reportes, Notificaciones, Documentos Legales, Métodos de Pago, Equipo, Configuración, Mi seguridad |
+- Se abre sola la sección de la página en la que estás. En el teléfono, el menú cabe sin deslizar.
+- **Por qué no meter todo dentro de Configuración:** Configuración, Métodos de Pago y Equipo son solo del dueño; Notificaciones y Documentos Legales también los usa el Administrador. Como sección del menú, cada quien ve lo suyo.
 
 ## 4. Decisiones tomadas (no volver a preguntar)
 - **Google:** vincular por correo; teléfono y cédula en la primera compra; admins nunca con Google.
@@ -422,4 +460,4 @@ Andrés pasó un análisis que compara la tienda con otras dos. Lo técnico se h
 > 2. Pregúntame cómo me fue invitando al equipo (si llegó el correo de invitación y si cada persona configuró sus dos pasos) y si el deploy de C-139 a C-149 terminó bien: hasta qué tarea llegó, si puse 16 en el IVA (C-146), las pruebas de las cotizaciones (C-148b) y las de C-149 (arriba), y mis decisiones de §3c.
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
 > 4. Sigue con la **revisión final** conmigo (`REVISION_FINAL.md`) y arregla lo que salga. Al terminar cada tarea: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
-> 5. Después, el plan de crecimiento de `SIGUIENTE.md` §3b (sigue C-147) y lo comercial de §3c con mis decisiones, y C-107 y C-92 cuando te pase los datos.
+> 5. Después, el menú del panel (§3d, si lo aprobé), lo comercial de §3c con mis decisiones, C-146b (precio sugerido desde el costo) y C-107 y C-92 cuando te pase los datos.

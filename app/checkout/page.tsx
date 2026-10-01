@@ -25,6 +25,8 @@ import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import DatosDelCliente from '@/components/checkout/DatosDelCliente';
+import DatosFactura, { type EleccionFactura, type EmpresaFactura } from '@/components/checkout/DatosFactura';
+import { leerDomicilioFiscal } from '@/lib/facturacion';
 import EntregaEnvio, { ENVIO_INICIAL, ResumenEnvio, envioDesdeDireccion, envioParaServidor, validarEnvio, type DireccionGuardada, type EnvioForm } from '@/components/checkout/EntregaEnvio';
 import { ConfianzaEnvio } from '@/components/envios/ConfianzaEnvio';
 import { calculateOrder, toPricingSettings, type DeliveryMethod, type OrderCalculation, type PricingLine } from '@/lib/pricing';
@@ -55,6 +57,10 @@ export default function CheckoutPage() {
   const [error, setError] = useState('');
   // C-85: el formulario de teléfono y cédula espera al perfil para no aparecer y desaparecer
   const [perfilCargado, setPerfilCargado] = useState(false);
+  // C-147: a nombre de quién va la factura. La empresa solo aparece si está verificada
+  const [empresaFactura, setEmpresaFactura] = useState<EmpresaFactura | null>(null);
+  const [factura, setFactura] = useState<EleccionFactura>({ tipo: 'PERSON', domicilio: '' });
+  const [errorFactura, setErrorFactura] = useState('');
   // Ajustes públicos del contexto (vienen del servidor en el layout): antes se volvían a pedir a /api/settings/public (C-111)
   const { settings: companySettings } = useSettings();
   const [userBalance, setUserBalance] = useState<number>(0);
@@ -170,6 +176,9 @@ export default function CheckoutPage() {
         .then(res => res.json())
         .then(data => {
           setPerfilCargado(true);
+          if (data.profile?.businessVerified && data.profile.companyName && data.profile.taxId) {
+            setEmpresaFactura({ nombre: data.profile.companyName, rif: data.profile.taxId, domicilio: data.profile.businessFiscalAddress || null });
+          }
           if (data.profile?.phone || data.profile?.idNumber) {
             setFormData(prev => ({
               ...prev,
@@ -407,6 +416,17 @@ export default function CheckoutPage() {
       return;
     }
 
+    // C-147: factura a nombre de la empresa sin domicilio fiscal guardado: se escribe aquí (el servidor lo vuelve a validar)
+    const facturaEmpresa = factura.tipo === 'COMPANY' && empresaFactura !== null;
+    if (facturaEmpresa && !empresaFactura.domicilio && !leerDomicilioFiscal(factura.domicilio)) {
+      setErrorFactura('Escribe el domicilio fiscal de tu empresa, como aparece en su RIF.');
+      setError('Falta el domicilio fiscal de tu empresa para la factura.');
+      setLoading(false);
+      document.getElementById('datos-factura')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    setErrorFactura('');
+
     // C-100: destino y quién recibe (el servidor lo vuelve a validar contra ZOOM y MRW)
     const problemaEnvio = hasPhysicalItems ? validarEnvio(envio, clienteEnvio) : null;
     if (problemaEnvio) {
@@ -477,6 +497,8 @@ export default function CheckoutPage() {
           companyPaymentMethodId: paymentMode === 'MANUAL' ? metodoManual?.id : undefined,
           paymentReference: paymentMode === 'MANUAL' ? referenciaManual : undefined,
           notes: formData.notes,
+          // C-147: solo la elección; el nombre, la cédula, la razón social y el RIF los pone el servidor desde la cuenta
+          billing: facturaEmpresa ? { type: 'COMPANY', fiscalAddress: empresaFactura.domicilio ? undefined : factura.domicilio } : { type: 'PERSON' },
           couponCode,
           expectedTotalUSD: finalTotal,
         }),
@@ -501,6 +523,10 @@ export default function CheckoutPage() {
           void fetchBalance();
         }
         if (orderData.field === 'referencia-pago') document.getElementById('referencia-pago')?.focus();
+        if (orderData.field === 'datos-factura') {
+          setErrorFactura(orderData.error || '');
+          document.getElementById('datos-factura')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         if (orderResponse.status === 402 && orderData.pagoIncompleto) {
           document.getElementById('metodo-de-pago')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -1386,6 +1412,18 @@ export default function CheckoutPage() {
                   </Link>
                 </div>
               </div>
+
+              {/* C-147: a nombre de quién va la factura */}
+              {session?.user && perfilCargado && (
+                <DatosFactura
+                  nombre={formData.customerName}
+                  cedula={formData.customerIdNumber}
+                  empresa={empresaFactura}
+                  value={factura}
+                  onChange={(valor) => { setFactura(valor); setErrorFactura(''); }}
+                  error={errorFactura}
+                />
+              )}
 
               {/* Summary Card */}
               <div className="relative bg-white rounded-2xl border border-line overflow-hidden shadow-xl animate-slideUp">

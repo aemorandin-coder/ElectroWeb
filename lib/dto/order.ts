@@ -22,6 +22,12 @@ export const customerOrderSelect = {
   // C-137: tasa del día de la compra, para el recibo
   exchangeRateVES: true,
   notes: true,
+  // C-147: a nombre de quién va la factura y su número cuando la tienda la emite
+  billingType: true,
+  billingName: true,
+  billingTaxId: true,
+  billingAddress: true,
+  invoiceNumber: true,
   createdAt: true,
   paidAt: true,
   shippedAt: true,

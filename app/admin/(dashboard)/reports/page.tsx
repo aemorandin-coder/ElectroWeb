@@ -19,6 +19,7 @@ import {
 } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import { ETIQUETA_GRAVEDAD } from '@/lib/audit-labels';
+import RelacionVentas from './_components/RelacionVentas';
 
 // Reportes (C-104). Cada número lleva debajo "de dónde sale": la misma regla que usa la API.
 
@@ -287,6 +288,9 @@ export default function ReportsPage() {
                     <p className={adminPageSubtitle}>Ventas, pedidos y actividad de los últimos {periodoTexto}</p>
                 </div>
             </div>
+
+            {/* C-147: la descarga del mes para el contador (no depende del período de abajo) */}
+            <RelacionVentas />
 
             <div className="space-y-3">
                 <div className="min-w-0 overflow-x-auto border-b border-line pb-2 pr-6" role="tablist" aria-label="Secciones de reportes">

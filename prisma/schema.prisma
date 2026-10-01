@@ -110,6 +110,8 @@ model Profile {
   businessRIFDocument         String?
   businessVerificationNotes   String?
   businessVerifiedAt          DateTime?
+  /// C-147: domicilio fiscal de la empresa, para la factura a su nombre
+  businessFiscalAddress       String?
   savedAddresses              String?  // JSON array of saved addresses
   savedCart                   String?  // JSON string with the cart items
   
@@ -644,6 +646,15 @@ model Order {
 
   notes         String?
   adminNotes    String?     // Notas internas del admin
+
+  // C-147: a nombre de quién va la factura, copiado al comprar (null en las órdenes de antes)
+  billingType    String?    // PERSON (cédula) o COMPANY (empresa verificada, con RIF)
+  billingName    String?
+  billingTaxId   String?    // Cédula o RIF
+  billingAddress String?    // Domicilio fiscal de la empresa
+  // La factura se emite fuera de la web (SADES o el talonario): aquí solo se anota su número
+  invoiceNumber  String?
+  invoicedAt     DateTime?
 
   // Status Timestamps
   confirmedAt   DateTime?   // Cuando el admin confirma el pedido

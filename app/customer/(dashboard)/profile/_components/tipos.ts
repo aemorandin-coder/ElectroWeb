@@ -16,6 +16,8 @@ export interface DatosPerfil {
     businessVerificationNotes: string | null;
     businessConstitutiveAct: string | null;
     businessRIFDocument: string | null;
+    /** C-147 */
+    businessFiscalAddress?: string | null;
   } | null;
   resumen: { pedidosPagados: number; totalComprado: number };
 }

@@ -13,6 +13,7 @@ import { formatUSD } from '@/lib/currency';
 import IvaIncluido from '@/components/ui/IvaIncluido';
 import { ETIQUETA_ESTADO } from '@/lib/order-admin';
 import { EMPRESAS_GUIA, NOMBRE_EMPRESA, siguientePaso, type PasoOrden } from '@/lib/envios/empresas';
+import FacturaOrden from './_components/FacturaOrden';
 import EntregaOrden from './_components/EntregaOrden';
 import {
   adminBadge,
@@ -61,10 +62,20 @@ interface Order {
       customerType: string | null;
       companyName: string | null;
       taxId: string | null;
+      businessVerified?: boolean | null;
       phone?: string | null;
       idNumber?: string | null;
     };
   } | null;
+  /** C-147: a nombre de quién va la factura (copia de la orden) y el número de la factura emitida */
+  billingType?: string | null;
+  billingName?: string | null;
+  billingTaxId?: string | null;
+  billingAddress?: string | null;
+  invoiceNumber?: string | null;
+  invoicedAt?: string | null;
+  discountUSD?: number | string | null;
+  shippingUSD?: number | string | null;
   /** C-126: Pagos Móvil verificados y vinculados a la orden */
   pagosMovil?: PagoMovilResumen[];
   /** C-132: parte pagada con Puntos ES (pago mixto) y referencia de un pago manual */
@@ -711,36 +722,19 @@ export default function OrdersPage() {
             {/* Content */}
             <div className={adminModalBody}>
               <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {/* Facturación: quién compra (la cuenta). Quién recibe va en Envío */}
+                {/* Facturación (C-147): a nombre de quién va la factura, los datos para emitirla y su número. Quién recibe va en Envío */}
                 <section className="rounded-xl border border-line p-4" aria-labelledby="orden-facturacion">
                   <h4 id="orden-facturacion" className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
                     <FiUser className="h-4 w-4" aria-hidden="true" /> Facturación
                   </h4>
-                  <div className="space-y-1 text-sm [overflow-wrap:anywhere]">
-                    {selectedOrder.user ? (
-                      <>
-                        <p className="font-semibold text-ink">{selectedOrder.user.name || 'Sin nombre'}</p>
-                        {selectedOrder.user.profile?.customerType === 'BUSINESS' && selectedOrder.user.profile.companyName && (
-                          <p className="text-ink">
-                            {selectedOrder.user.profile.companyName}
-                            {selectedOrder.user.profile.taxId && <span className="text-muted"> · RIF {selectedOrder.user.profile.taxId}</span>}
-                          </p>
-                        )}
-                        {selectedOrder.user.profile?.idNumber && <p className="text-muted">Cédula {selectedOrder.user.profile.idNumber}</p>}
-                        <p><a href={`mailto:${selectedOrder.user.email}`} className="text-brand-600 hover:text-brand-700">{selectedOrder.user.email}</a></p>
-                        {selectedOrder.user.profile?.phone && (
-                          <p><a href={`tel:${selectedOrder.user.profile.phone}`} className="tabular-nums text-brand-600 hover:text-brand-700">{selectedOrder.user.profile.phone}</a></p>
-                        )}
-                      </>
-                    ) : selectedOrder.guestEmail ? (
-                      <>
-                        <p className="font-semibold text-ink">Invitado</p>
-                        <p className="text-muted">{selectedOrder.guestEmail}</p>
-                      </>
-                    ) : (
-                      <span className={adminBadge('neutral')}><FiUserX className="h-3.5 w-3.5" aria-hidden="true" /> Cliente eliminado</span>
-                    )}
-                  </div>
+                  <FacturaOrden
+                    key={selectedOrder.id}
+                    orden={selectedOrder}
+                    onGuardada={(factura) => {
+                      setOrders((prev) => prev.map((o) => (o.id === selectedOrder.id ? { ...o, ...factura } : o)));
+                      setSelectedOrder((prev) => (prev && prev.id === selectedOrder.id ? { ...prev, ...factura } : prev));
+                    }}
+                  />
                 </section>
 
                 {/* Pago: método en palabras, origen de los fondos y estado */}

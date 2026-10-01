@@ -3,6 +3,7 @@
 Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-143**.
 - **Producción: C-141 desplegada el 30/09** (Andrés configuró sus dos pasos). No se sabe con qué commit exacto: preguntarle si el deploy incluyó C-139 y C-142.
 - **Incidente del deploy (C-143):** la cuenta de Andrés era ADMIN, no SUPER_ADMIN, y quedó sin Configuración, Métodos de Pago ni Equipo. Arreglo: `npx tsx scripts/create-master-admin.ts <su correo>` en el servidor y volver a entrar. **Confirmar que lo corrió y que ya ve Configuración.**
+- **Decidido por Andrés (30/09, después del incidente):** él es el super admin y desde ahí da los roles y los usuarios en Equipo. El rol Administrador queda como está (sin Configuración, Métodos de Pago ni Equipo). Todavía no corrió el diagnóstico de C-92.
 - **C-143** (en `main`, falta el deploy): el panel avisa cuando la tienda no tiene super admin, el guion cierra la sesión al promover, y el menú de la cuenta en la tienda trata al equipo como equipo (`estado/C-143.md`).
 - Andrés dijo el 30/09 que las pruebas de los deploys del 30/09 salieron "excelentes", con algunos ajustes para más adelante. Sobre el deploy de C-140 respondió "recuerda que necesito probar": **no está confirmado**. Los pasos de C-141 sirven igual si ese deploy no se hizo (§00000).
 - **C-139** (Puntos ES) hecha y en `main`: va en el mismo deploy que C-141 y no cambia la base (§000000).

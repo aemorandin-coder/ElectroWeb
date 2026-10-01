@@ -6,6 +6,7 @@ import { generateShortCode } from '@/lib/short-code';
 import { authOptions } from '@/lib/auth';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { registrarAccionAdmin } from '@/lib/audit-log';
+import { isAuthorized } from '@/lib/auth-helpers';
 
 // Función auxiliar para esperar (Rate Limiting)
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -14,10 +15,9 @@ export async function POST(req: NextRequest) {
     try {
         // 1. Seguridad: Verificar Admin
         const session = await getServerSession(authOptions);
-        const userRole = (session?.user as { role?: string } | undefined)?.role;
-
-        if (!session || !userRole || (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        // C-141: antes miraba solo el rol (se saltaba los dos pasos)
+        if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
         // 2. Obtener cursor del body

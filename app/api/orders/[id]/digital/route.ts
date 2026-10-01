@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { publicarOrdenes } from '@/lib/realtime/bus';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { esAdminVerificado } from '@/lib/auth-helpers';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { sendDigitalCodeEmail } from '@/lib/email-service';
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Orden no encontrada' }, { status: 404 });
         }
 
-        const isAdmin = session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN';
+        const isAdmin = esAdminVerificado(session);
         const isOwner = order.userId === session.user.id;
 
         if (!isAdmin && !isOwner) {
@@ -142,7 +143,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role as string)) {
+        if (!session?.user || !esAdminVerificado(session)) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 

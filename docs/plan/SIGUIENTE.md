@@ -1,24 +1,56 @@
-# Punto de partida (actualizado 2026-09-30, cierre de la conversación larga del 30/09)
+# Punto de partida (actualizado 2026-09-30, cierre de C-141)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-140** (`86bc22d`).
-- **Producción:** C-138 confirmado (`d53d5b4`, con los dos crons). Andrés mandó después una captura de un build con la advertencia "Dynamic filesystem access": **preguntarle si era el deploy de C-140 y si terminó con "Listo: sirviendo…"**.
-- **En curso: C-141** en la rama `claude/C-141`, sin mergear y **sin poder mergearse todavía** (§00000).
-- Falta que Andrés cuente cómo salieron las pruebas de los deploys del 30/09 (§00, §000 y §0000).
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-141** (merge de `claude/C-141`).
+- **Producción:** C-138 confirmado (`d53d5b4`, con los dos crons). **Falta el deploy de C-141** (§00000), que es urgente por lo que cambia: al terminar, el panel pide configurar los dos pasos.
+- Andrés dijo el 30/09 que las pruebas de los deploys del 30/09 salieron "excelentes", con algunos ajustes para más adelante. **No confirmó expresamente el deploy de C-140**: los pasos de C-141 sirven igual si ese deploy no se hizo (§00000).
+- **Sigue C-139** (Puntos ES), con una regla nueva de Andrés sobre las cuentas que se cierran (§3).
 
-## 00000. C-141 · Equipo, roles y dos pasos: EN CURSO (rama `claude/C-141`)
-- **Leer `docs/plan/estado/C-141.md` completo:** tiene las decisiones de Andrés, lo hecho y **la lista de lo que falta, en orden**.
-- Para seguir: `git checkout claude/C-141`. El commit `103bf4c` está a medias.
-  - Hecho: TOTP verificado con el RFC, el código en el login, los roles Super admin y Administrador, y los permisos atados a los dos pasos.
-  - Falta: la pantalla de configuración, el `proxy`, el paso del código en el login, la pantalla Equipo con invitaciones, el guion de emergencia y las pruebas.
-- **No mergear hasta terminar:** sin la pantalla de configuración ningún admin tendría permisos.
-- **Decidido por Andrés el 30/09:**
-  - Dos pasos con app de códigos, obligatorios para todo el panel.
-  - Roles: Super admin (él) y Administrador (todo menos Configuración sensible y Equipo).
-  - Admins nuevos por invitación al correo.
-  - C-141 va antes que C-139.
-- **Primer punto de C-141:** quitar la advertencia del build "Dynamic filesystem access" de `app/api/uploads/[...path]` (`/*turbopackIgnore: true*/`; la ruta ya se valida con `isInside`). No es un error ni un riesgo de seguridad: hace el build más pesado.
+## 00000. C-141 · Equipo, roles y dos pasos: en `main`, falta el deploy
+Detalle, hallazgos y pruebas en `estado/C-141.md`.
+- **Dos pasos obligatorios para todo el panel:** contraseña y un código de una app (Google Authenticator o Authy), con 10 códigos de respaldo.
+- **Roles:** Super admin (todo) y Administrador (todo menos Configuración, Métodos de pago, canales de aviso, publicar documentos legales y Equipo).
+- **Equipo** (menú nuevo, solo el super admin): invitar por correo, cambiar el rol, quitar y devolver el acceso, reiniciar los dos pasos y cerrar sesiones.
+- **Mi seguridad** (menú nuevo, todos los admin): configurar los dos pasos y generar códigos de respaldo.
+- **Arreglos de seguridad al pasar:** la API de clientes dejaba editar o borrar cuentas del equipo y devolvía el hash de la contraseña.
 
-## 0000. C-140 (30/09, noche): en `main`, falta el deploy
+**Cambio de base (aditivo): una tabla nueva**, `segundo_factor` (SQL en `estado/C-141.md`). Ningún `DROP` ni `ALTER ... TYPE`.
+
+**Antes del deploy (Andrés):**
+- Instala **Google Authenticator** o **Authy** en tu teléfono.
+- Ten a mano dónde guardar 10 códigos fuera del teléfono (papel, o un archivo en otra computadora).
+- Hazlo cuando puedas terminar los pasos de una vez: entre el deploy y tu configuración, quien tenga tu contraseña podría registrar su propia app.
+
+**Deploy (Andrés, en el servidor):**
+1. `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-c141.dump`
+2. `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL. Debe ser solo:
+   - `CREATE TABLE "segundo_factor"` con su llave (`ADD CONSTRAINT ... FOREIGN KEY`).
+   - Si el deploy de C-140 no se había hecho, también `CREATE TABLE "user_sessions"`, su índice y su llave.
+   - Si aparece un `DROP` o un `ALTER ... TYPE`, parar y avisar a Claude.
+3. `npx prisma db push` y `bash scripts/deploy.sh` otra vez.
+4. **Enseguida, en el panel:** entra con tu correo y tu contraseña. Te lleva a **Mi seguridad**:
+   1. "Ya tengo la app: seguir".
+   2. Escanea el QR con la app (o "Abrir en la app de códigos" si estás en el teléfono).
+   3. Escribe el código de 6 dígitos y "Activar la verificación".
+   4. Guarda los 10 códigos (Copiar o Descargar .txt), marca la casilla y "Entrar al panel".
+5. **Equipo:** revisa la lista. A cada cuenta que ya no se use, "Administrar" → "Quitar el acceso". Las demás salen como "Dos pasos sin configurar" hasta que cada persona entre y los configure: avísales.
+
+**Si pierdes el teléfono y los códigos** (y no hay otro super admin), en el servidor:
+`cd /var/www/electroshopve && npx tsx scripts/reset-dos-pasos.ts <tu correo>`. Después entra y configúralos de nuevo enseguida.
+
+**Pruebas después del deploy:**
+1. Cierra sesión y vuelve a entrar: después de la contraseña pide el código de la app. Con un código equivocado dice "El código no es correcto".
+2. Entra una vez con "Usar un código de respaldo": en Mi seguridad baja a "Te quedan 9 códigos".
+3. Mi seguridad → "Generar códigos nuevos" con un código de la app: muestra 10 nuevos.
+4. Equipo → "Invitar" con un correo tuyo de prueba, como Administrador:
+   - Llega el correo "Invitación al panel de Electro Shop". El enlace abre "Crea tu contraseña".
+   - Entra con esa cuenta: configura sus dos pasos y su menú **no** tiene Configuración, Métodos de Pago ni Equipo.
+   - Con tu cuenta: "Administrar" → "Quitar el acceso". Esa cuenta ya no entra.
+5. Telegram y la campana: llega "Dos pasos activados" e "Invitación al panel". En Notificaciones → Qué avisar aparece **"Cambios en el equipo"**.
+6. El build ya no muestra la advertencia "Dynamic filesystem access".
+
+**Si algo sale mal:** `git reset --hard 86bc22d && npm install && bash scripts/deploy.sh --sin-pull` vuelve a C-140. La tabla nueva no molesta al código viejo.
+
+## 0000. C-140 (30/09, noche): en `main`; el deploy va con el de C-141 si no se hizo
 - **C-140 · Sesiones con nombre, una sola sesión de admin y "No fui yo"**. Detalle y pruebas en `estado/C-140.md`.
   - **Clientes:** Mi perfil → Seguridad lista cada sesión (dispositivo, último uso) con "Cerrar" y "Cerrar las demás". Correo al entrar desde un dispositivo nuevo.
   - **Admin:** una sola sesión (la nueva cierra la anterior), 12 horas, y cierre tras 1 hora sin uso con aviso a los 55 min.
@@ -34,7 +66,7 @@ Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-140** (`86bc22d`
   2. Telegram: llega "Inicio de sesión en el panel" con el botón "No fui yo". Abrirlo muestra la confirmación; **no confirmar** (bloquearía tu cuenta).
   3. Admin → Notificaciones: "Inicio de sesión en el panel" con Panel y Telegram activos (si la tabla ya estaba guardada, el valor nuevo por defecto no se aplica solo).
   4. Cliente: entrar desde el teléfono y la computadora; en Mi perfil → Seguridad aparecen las dos; "Cerrar" la otra.
-- **C-141 · Equipo, roles y verificación en dos pasos:** decidido y en curso (§00000).
+- **C-141 · Equipo, roles y verificación en dos pasos:** hecha (§00000).
 
 ## 000. C-138 (30/09, noche): en `main` y en producción
 - **C-138 · Mi perfil en pestañas y avisos de favoritos** (`claude/C-138`, sale de `main`). Detalle y pruebas en `estado/C-138.md`.
@@ -57,7 +89,7 @@ Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-140** (`86bc22d`
   2. Guardar un producto en Favoritos, bajarle el precio desde el admin y esperar la hora del cron (o correr el `curl` a mano): aviso en la campana y correo.
   3. Con una cuenta de prueba: "Eliminar" → llega a Mensajes y Solicitudes y como aviso; "Cancelar el pedido".
   4. Admin → Verificaciones: rechazar una empresa de prueba con motivo → el cliente recibe el aviso.
-- **Falta de Andrés:** qué pasa con los Puntos ES de quien cierra su cuenta (los términos no lo dicen).
+- **Decidido por Andrés el 30/09:** quien cierra su cuenta **pierde sus Puntos ES**: no son reembolsables. La tienda le sugiere gastarlos en productos antes de cerrarla. Falta ponerlo en la pantalla y en los términos: va en C-139 (§3).
 - **Aprobado el 30/09 y en fila:**
   - **C-140 · Sesiones con nombre.** Cliente: varias sesiones, cada una visible y con "Cerrar", y correo al entrar desde un dispositivo nuevo. Admin: una sola sesión (la nueva cierra la anterior), 12 h y cierre tras 1 h sin uso. Tabla de sesiones nueva (aditiva). Va en la pestaña Seguridad de C-138.
   - **C-139 · Página de Puntos ES:** historial completo con "Cargar más", recargas pendientes y rechazadas claras (con el motivo), "Cómo funcionan" con enlace a los términos y enlace al pedido en cada compra o devolución.
@@ -156,7 +188,7 @@ Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pe
 - Detalle y pruebas de cada una en su `estado/C-12X.md`.
 
 ## 1. Estado de las ramas
-- **`main`:** todo hasta C-137 (merge del 30/09, en producción). `claude/C-138` lista sin mergear (§000).
+- **`main`:** todo hasta C-141. En producción, hasta C-138 confirmado (C-140 y C-141: §00000).
 - **Gemini:** R23 (G-69) cerrada y en `main`, con dos arreglos de Claude (resultado al final de `PLAN_GEMINI.md`). **No tiene ronda abierta.** Su carril no tiene deudas de reglas (verificado el 28/09 con `grep`: 0 hex, 0 textos de menos de 11 px, 0 `font-black`, 0 `z-[número]`, 0 `alert` o `console.log` y 0 emojis).
 - **ChatGPT:** fuera del equipo desde el 21/09. Limpieza opcional en la máquina de Andrés: `git worktree remove ../ElectroShopVe-chatgpt`, `git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main` y `git stash drop stash@{0}`.
 - **Historial de tareas:** cada una tiene su `docs/plan/estado/C-XX.md`. Resumen en `PLAN_CLAUDE.md`, "Orden de trabajo".
@@ -195,12 +227,12 @@ bash scripts/deploy.sh
   - Hubo dos fallos del build: los tipos de una ruta borrada y la falta de memoria. Los dos se arreglaron en `deploy.sh` y `next.config.js`.
 
 ## 3. Qué sigue (Claude, en orden)
-1. **C-141 · Equipo, roles y verificación en dos pasos**: en curso (§00000, `estado/C-141.md`). Antes, confirmar el deploy de C-140 (§0000). Después **C-139** (Puntos ES).
-1b. Resumen de C-141 (decidido el 30/09):
-   - Verificación en dos pasos obligatoria para el admin con app de códigos (Google Authenticator o Authy) y códigos de respaldo.
-   - Pantalla "Equipo": invitar admins por correo (cada uno crea su contraseña), roles con permisos guardados, desactivar a quien sale y cerrar sus sesiones.
-   - Hoy: solo Admin y Super admin con acceso a todo; Soporte no entra; admins solo por el guion `create-master-admin.ts`.
-   - Borrar `scripts/update-admin-role.js` (hace super admin a todos) y `/api/admin/promote-super-admin`.
+1. **C-139 · Página de Puntos ES** (antes, confirmar el deploy de C-141, §00000):
+   - Historial completo con "Cargar más", recargas pendientes y rechazadas claras (con el motivo), "Cómo funcionan" con enlace a los términos y enlace al pedido en cada compra o devolución.
+   - **Regla nueva de Andrés (30/09): quien cierra su cuenta pierde sus Puntos ES; no son reembolsables.**
+     - En "Eliminar cuenta" (Mi perfil): si tiene Puntos ES, mostrar cuántos y sugerirle gastarlos en productos antes de pedir el cierre.
+     - En "Cómo funcionan" y en los términos de los Puntos ES: decir que no son reembolsables y que se pierden al cerrar la cuenta. Cambiar los términos crea una versión nueva que cada cliente firma en su próxima recarga (C-135).
+     - En el aviso al equipo de la solicitud de cierre: cuántos Puntos ES tiene esa cuenta.
 2. **Revisión final con Andrés** (`REVISION_FINAL.md`), y arreglar lo que salga. En producción:
    - Checkout: con el mínimo de compra activo, el aviso aparece antes de pagar. Una compra real con saldo y otra con Pago Móvil.
    - Una compra con cupón.
@@ -227,8 +259,7 @@ bash scripts/deploy.sh
    - Ocultar el formulario de reseña a quien no puede reseñar.
    - `/terminos` y `/privacidad` como documentos editables.
    - Conservar el slug al renombrar una categoría.
-   - Advertencias "Dynamic filesystem access" de `app/api/uploads/[...path]`.
-   - Los 11 errores de ESLint fuera de `app`, `components`, `lib` y `contexts`: `scripts/`, `prisma/seed.ts`, `proxy.ts` y `docs/plan/scripts`.
+   - Los errores de ESLint fuera de `app`, `components`, `lib` y `contexts`: `scripts/`, `prisma/seed.ts` y `docs/plan/scripts` (`proxy.ts` quedó limpio en C-141).
 9. **ElectroStudio:** el artefacto "Flyers ElectroShop" ya se puede retirar. Si Andrés quiere pasar sus historias, se hace un importador.
 10. **Al cerrar el ciclo:** borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` de la máquina local.
 
@@ -248,6 +279,12 @@ bash scripts/deploy.sh
 - **Productos (28/09):** el fondo de las fotos se quita desde el teléfono; los usados llevan etiqueta "Usado" y no el sello "ES".
 - **Usados (28 y 29/09):** cuatro condiciones (Nuevo, Caja abierta, Reacondicionado, Usado); cupones no, ofertas sí; la garantía la da la tienda (30, 30, 90 y 30 días por defecto); **sin devoluciones por cambio de opinión** (falla, daño o producto distinto se atienden como garantía).
 - **Migraciones:** Andrés autorizó siempre (29/09). Aditivas y con respaldo.
+- **Panel (30/09, C-140 y C-141):**
+  - Dos pasos con app de códigos, obligatorios para todo el panel y sin opción de desactivarlos.
+  - Roles: Super admin (el dueño) y Administrador (sin Configuración, Métodos de pago, canales de aviso, publicar documentos legales ni Equipo). Soporte, ventas o contenido: no por ahora.
+  - Admins nuevos solo por invitación al correo. Una cuenta de cliente no se convierte en admin.
+  - Una sola sesión de admin, 12 horas y cierre tras 1 hora sin uso.
+- **Puntos ES al cerrar la cuenta (30/09):** se pierden; no son reembolsables. Se sugiere gastarlos en productos antes.
 - **IVA (29/09):** se deja para C-120, junto con la facturación a empresa y la revisión legal.
 - **ElectroStudio (28/09):** dos pantallas (inicio y editor); lo agotado o sin publicar avisa y deja descargar; miniaturas reales en la lista.
 - **Descuentos (25/09):**
@@ -285,7 +322,7 @@ bash scripts/deploy.sh
   - **Al terminar:** borrar `.next-test` y `git checkout tsconfig.json` (Next le agrega la carpeta).
 - **Pruebas:**
   - HTTP con Node y un JWT firmado con `encode` de `next-auth/jwt`.
-    - Admin: `userType: 'admin'`.
+    - Admin: `userType: 'admin'` y, desde C-141, `dosPasos: true` (sin eso no tiene permisos y el `proxy` lo manda a Mi seguridad). Para el flujo real: login por HTTP y el código TOTP calculado con la clave que devuelve `POST /api/admin/dos-pasos {accion:'iniciar'}`.
     - Cliente: `userType: 'customer'` y `emailVerified`.
   - Navegador con Firefox headless y WebDriver BiDi.
     - Para leer un canvas, usar `canvas[role=img]`: el primer `<canvas>` puede ser una miniatura.
@@ -297,7 +334,7 @@ bash scripts/deploy.sh
 ## 6. Mensaje para empezar (próxima sesión de Claude)
 > Continúa ElectroShopVe (tienda en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` completo y tu memoria del proyecto.
 > 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
-> 2. Pregúntame si el deploy de C-140 terminó bien (§0000) y cómo salieron las pruebas de los deploys del 30/09.
+> 2. Pregúntame si el deploy de C-141 terminó bien (§00000): si configuré mis dos pasos, si llegó el correo de invitación y qué cuentas quedaron en Equipo.
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
-> 4. Sigue **C-141** en la rama `claude/C-141` según la lista de `docs/plan/estado/C-141.md` ("Falta, en este orden"). Al terminar: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
-> 5. Después: C-139 (Puntos ES), la revisión final, C-107, C-92, el wizard de producto y C-120 (`SIGUIENTE.md` §3).
+> 4. Sigue con **C-139** (Puntos ES, con la regla de las cuentas que se cierran, §3). Al terminar: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
+> 5. Después: la revisión final, C-107, C-92, el wizard de producto y C-120 (`SIGUIENTE.md` §3).

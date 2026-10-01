@@ -4,11 +4,11 @@ import { useState, useEffect, Suspense, useRef } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { FiAlertCircle, FiEye, FiEyeOff, FiShield } from 'react-icons/fi';
+import { FiAlertCircle, FiArrowLeft, FiEye, FiEyeOff, FiShield } from 'react-icons/fi';
 import AuthShell from '@/components/auth/AuthShell';
 import BotonGoogle from '@/components/auth/BotonGoogle';
 import HCaptchaWrapper, { type HCaptchaRefMethods } from '@/components/HCaptchaWrapper';
-import { adminError, adminInput, adminLabel, adminNotice, adminPrimaryButton } from '@/lib/admin-ui';
+import { adminError, adminHint, adminInput, adminLabel, adminNotice, adminPrimaryButton } from '@/lib/admin-ui';
 import { rutaInternaSegura } from '@/lib/rutas';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
@@ -51,6 +51,13 @@ function LoginPageContent({ google }: { google: boolean }) {
   const [showPassword, setShowPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  // C-141: segundo paso del panel (código de la app o uno de respaldo)
+  const [pideCodigo, setPideCodigo] = useState(false);
+  const [codigo, setCodigo] = useState('');
+  const [conRespaldo, setConRespaldo] = useState(false);
+  // El envío del formulario ya lleva a su destino con una carga completa: el efecto de "ya tenías sesión" no navega
+  // también (eran dos cargas seguidas del panel, y la segunda borraba lo que el admin ya hubiera tocado)
+  const enviando = useRef(false);
 
   // Captcha state
   const captchaRef = useRef<HCaptchaRefMethods>(null);
@@ -141,7 +148,7 @@ function LoginPageContent({ google }: { google: boolean }) {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (status === 'authenticated' && session) {
+    if (status === 'authenticated' && session && !enviando.current) {
       const userType = session.user?.userType || 'customer';
       if (userType === 'admin') {
         router.push('/admin');
@@ -200,6 +207,11 @@ function LoginPageContent({ google }: { google: boolean }) {
     e.preventDefault();
     setError('');
 
+    if (pideCodigo && !codigo.trim()) {
+      setError(conRespaldo ? 'Escribe uno de tus códigos de respaldo.' : 'Escribe el código de 6 dígitos de tu app.');
+      return;
+    }
+
     // Check captcha if required
     if (requiresCaptcha && !captchaToken) {
       setError('Por favor, completa la verificación de seguridad.');
@@ -207,18 +219,30 @@ function LoginPageContent({ google }: { google: boolean }) {
     }
 
     setIsLoading(true);
+    enviando.current = true;
 
     try {
+      let entro = false;
       const result = await signIn('unified-credentials', {
         email,
         password,
         userType,
         // El servidor lo exige tras 2 fallos con la misma cuenta (C-80)
         captchaToken: captchaToken ?? '',
+        ...(pideCodigo ? { codigo: codigo.trim() } : {}),
         redirect: false,
       });
 
-      if (result?.error === 'CUENTA_SOCIAL') {
+      if (result?.error === 'CODIGO_REQUERIDO') {
+        // La contraseña está bien: falta el código. El captcha se usa una sola vez, así que se pide de nuevo si tocaba
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
+        setPideCodigo(true);
+      } else if (result?.error === 'CODIGO_INVALIDO') {
+        incrementFailedAttempts();
+        setCodigo('');
+        setError(conRespaldo ? 'Ese código de respaldo no es válido o ya se usó.' : 'El código no es correcto. Escribe el que muestra la app ahora.');
+      } else if (result?.error === 'CUENTA_SOCIAL') {
         setError(MENSAJE_CUENTA_SOCIAL);
       } else if (result?.error === 'CUENTA_SUSPENDIDA') {
         setError(ERRORES_DE_ACCESO['cuenta-suspendida']);
@@ -234,8 +258,11 @@ function LoginPageContent({ google }: { google: boolean }) {
         setError(mensajeDeEspera(result.error));
       } else if (result?.error) {
         incrementFailedAttempts();
+        setPideCodigo(false);
+        setCodigo('');
         setError('Correo o contraseña incorrectos. Revisa los datos e intenta de nuevo.');
       } else if (result?.ok) {
+        entro = true;
         // Reset failed attempts on success
         resetFailedAttempts();
         // Wait a bit for session to be established
@@ -258,8 +285,10 @@ function LoginPageContent({ google }: { google: boolean }) {
           window.location.href = destino ?? '/';
         }
       }
+      if (!entro) enviando.current = false;
     } catch (err) {
       console.error('Login error:', err);
+      enviando.current = false;
       setError('Error al conectar con el servidor. Intente nuevamente.');
     } finally {
       setIsLoading(false);
@@ -306,16 +335,53 @@ function LoginPageContent({ google }: { google: boolean }) {
       }
     >
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-ink">Iniciar sesión</h1>
-        <p className="mt-1 text-sm text-muted">{google && userType !== 'admin' ? 'Entra con Google o con tu correo.' : 'Entra con tu correo y tu contraseña.'}</p>
+        <h1 className="text-2xl font-bold text-ink">{pideCodigo ? 'Verificación en dos pasos' : 'Iniciar sesión'}</h1>
+        <p className="mt-1 text-sm text-muted">
+          {pideCodigo
+            ? conRespaldo ? 'Escribe uno de los códigos de respaldo que guardaste. Cada uno sirve una sola vez.' : 'Abre tu app de códigos y escribe el código de 6 dígitos de Electro Shop.'
+            : google && userType !== 'admin' ? 'Entra con Google o con tu correo.' : 'Entra con tu correo y tu contraseña.'}
+        </p>
       </div>
 
       {/* Los administradores nunca entran con Google (decisión de Andrés, C-85) */}
-      {google && userType !== 'admin' && <BotonGoogle destino={destinoCliente ?? '/'} deshabilitado={isLoading} />}
+      {google && userType !== 'admin' && !pideCodigo && <BotonGoogle destino={destinoCliente ?? '/'} deshabilitado={isLoading} />}
 
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        {pideCodigo && (
+          <div>
+            <label htmlFor="codigo" className={adminLabel}>{conRespaldo ? 'Código de respaldo' : 'Código de la app'}</label>
+            <input
+              key={conRespaldo ? 'respaldo' : 'app'}
+              id="codigo"
+              type="text"
+              inputMode={conRespaldo ? 'text' : 'numeric'}
+              autoComplete={conRespaldo ? 'off' : 'one-time-code'}
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck={false}
+              autoFocus
+              maxLength={conRespaldo ? 12 : 7}
+              value={codigo}
+              onChange={(e) => { setCodigo(conRespaldo ? e.target.value.toUpperCase() : e.target.value.replace(/[^\d\s]/g, '')); setError(''); }}
+              placeholder={conRespaldo ? 'XXXX-XXXX' : '000000'}
+              className={`${adminInput()} text-center font-mono text-lg tracking-widest`}
+              disabled={isLoading}
+            />
+            <p className={adminHint}>{email}</p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <button type="button" onClick={() => { setPideCodigo(false); setCodigo(''); setConRespaldo(false); setError(''); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-ink">
+                <FiArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Volver
+              </button>
+              <button type="button" onClick={() => { setConRespaldo((v) => !v); setCodigo(''); setError(''); }} className="text-sm font-medium text-brand-600 hover:text-brand-700">
+                {conRespaldo ? 'Usar el código de la app' : 'Usar un código de respaldo'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Email Field */}
-        <div>
+        <div className={pideCodigo ? 'hidden' : undefined}>
           <label htmlFor="email" className={adminLabel}>
             Correo
           </label>
@@ -347,7 +413,7 @@ function LoginPageContent({ google }: { google: boolean }) {
         </div>
 
         {/* Password Field */}
-        <div>
+        <div className={pideCodigo ? 'hidden' : undefined}>
           <div className="mb-1.5 flex items-center justify-between gap-3">
             <label htmlFor="password" className="text-sm font-semibold text-ink">
               Contraseña
@@ -420,10 +486,15 @@ function LoginPageContent({ google }: { google: boolean }) {
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" />
               Entrando
             </>
+          ) : pideCodigo ? (
+            'Verificar y entrar'
           ) : (
             'Iniciar sesión'
           )}
         </button>
+        {pideCodigo && (
+          <p className="text-center text-xs text-muted">¿Sin teléfono y sin códigos de respaldo? Pide al dueño de la tienda que reinicie tu verificación desde Equipo.</p>
+        )}
       </form>
     </AuthShell>
   );

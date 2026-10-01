@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { esAdminVerificado } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+        if (!session?.user || !esAdminVerificado(session)) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+        if (!session?.user || !esAdminVerificado(session)) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
@@ -145,7 +146,7 @@ export async function DELETE(request: Request) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+        if (!session?.user || !esAdminVerificado(session)) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 

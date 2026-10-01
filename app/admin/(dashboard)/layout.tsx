@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   FiBarChart2, FiBox, FiClipboard, FiCreditCard, FiDollarSign, FiExternalLink, FiGift, FiGrid, FiLogOut,
-  FiBell, FiBookOpen, FiFilm, FiLifeBuoy, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUsers, FiX,
+  FiBell, FiBookOpen, FiFilm, FiLifeBuoy, FiLock, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUserPlus, FiUsers, FiX,
 } from 'react-icons/fi';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { MdAdminPanelSettings } from 'react-icons/md';
@@ -14,6 +14,7 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 import ControlSesionAdmin, { cerrarSesionAdmin } from '@/components/admin/ControlSesionAdmin';
+import { hasPermission, PAGINAS_SOLO_DUENO } from '@/lib/auth-helpers';
 
 interface NavigationItem {
   name: string;
@@ -72,6 +73,17 @@ export default function AdminLayout({
     }
   }, [status, session, router]);
 
+  // C-141: sin la verificación en dos pasos el panel solo deja configurarla (el `proxy` hace lo mismo en el servidor)
+  const conDosPasos = session?.user?.dosPasos === true;
+  const debeConfigurar = status === 'authenticated' && session?.user?.userType === 'admin' && !conDosPasos;
+  // Páginas solo del dueño: el `proxy` ya devuelve al Administrador al inicio, pero el navegador puede abrir una
+  // copia guardada de la página sin pasar por el servidor (sus APIs responden 403 igual)
+  const soloDueno = conDosPasos && session?.user?.role !== 'SUPER_ADMIN' && PAGINAS_SOLO_DUENO.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  useEffect(() => {
+    if (debeConfigurar && pathname !== '/admin/seguridad') router.replace('/admin/seguridad');
+    else if (soloDueno) router.replace('/admin');
+  }, [debeConfigurar, soloDueno, pathname, router]);
+
   const cerrarCajon = useCallback(() => setDrawerPath(null), []);
   useCajonAccesible(isDrawerOpen, 'admin-sidebar', cerrarCajon);
 
@@ -95,12 +107,12 @@ export default function AdminLayout({
 
   // Fetch sidebar counts when pathname changes (navigating refreshes counts immediately)
   useCargarAlMontar(() => {
-    if (status === 'authenticated') void fetchSidebarCounts();
-  }, [status, pathname, fetchSidebarCounts]);
+    if (status === 'authenticated' && conDosPasos) void fetchSidebarCounts();
+  }, [status, conDosPasos, pathname, fetchSidebarCounts]);
 
   // Listen to custom refresh events and run polling
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (status === 'authenticated' && conDosPasos) {
       const handleRefresh = () => {
         fetchSidebarCounts();
       };
@@ -113,7 +125,7 @@ export default function AdminLayout({
         clearInterval(interval);
       };
     }
-  }, [status, fetchSidebarCounts]);
+  }, [status, conDosPasos, fetchSidebarCounts]);
 
   if (status === 'loading') {
     return (
@@ -259,7 +271,7 @@ export default function AdminLayout({
       name: 'Documentos Legales',
       href: '/admin/legal',
       icon: <FiShield className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_CONTENT',
+      permission: 'MANAGE_USERS',
     },
     {
       name: 'Reportes',
@@ -268,27 +280,27 @@ export default function AdminLayout({
       permission: 'VIEW_REPORTS',
     },
     {
+      // C-141: invitar admins, roles, accesos y dos pasos de cada cuenta. Solo el super admin
+      name: 'Equipo',
+      href: '/admin/equipo',
+      icon: <FiUserPlus className="h-5 w-5" aria-hidden="true" />,
+      permission: 'MANAGE_TEAM',
+    },
+    {
       name: 'Configuración',
       href: '/admin/settings',
       icon: <FiSettings className="h-5 w-5" aria-hidden="true" />,
       permission: 'MANAGE_SETTINGS',
     },
+    {
+      name: 'Mi seguridad',
+      href: '/admin/seguridad',
+      icon: <FiLock className="h-5 w-5" aria-hidden="true" />,
+    },
   ];
 
-  const hasPermission = (permission?: string) => {
-    if (!permission) return true;
-    // Special permission: only SUPER_ADMIN can access
-    if (permission === 'SUPER_ADMIN_ONLY') {
-      return session.user.role === 'SUPER_ADMIN';
-    }
-    // Grant full access to ADMIN and SUPER_ADMIN roles
-    if (session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') return true;
-    return session.user.permissions?.includes(permission);
-  };
-
-  const filteredNavigation = navigation.filter((item) =>
-    hasPermission(item.permission)
-  );
+  // Los mismos permisos que revisa el servidor (C-141): antes el menú tenía su propia copia, que le daba todo al Administrador
+  const filteredNavigation = navigation.filter((item) => !item.permission || hasPermission(session, item.permission));
 
   const handleSignOut = async () => {
     try {
@@ -309,6 +321,29 @@ export default function AdminLayout({
   const roleLabel = session.user.role === 'SUPER_ADMIN' ? 'Super Admin'
     : session.user.role === 'ADMIN' ? 'Administrador'
       : session.user.role === 'SUPPORT' ? 'Soporte' : 'Usuario';
+
+  // Sin dos pasos: solo la pantalla para configurarlos, sin menú, campana ni contadores
+  if (!conDosPasos) {
+    return (
+      <div className="min-h-dvh bg-surface">
+        <ControlSesionAdmin />
+        <header className="flex h-16 items-center gap-3 border-b border-line bg-white px-4 lg:px-6">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-white">
+            <MdAdminPanelSettings className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold text-ink">Electro Shop</span>
+            <span className="block truncate text-xs text-muted">{session.user.email}</span>
+          </span>
+          <button type="button" onClick={handleSignOut} className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-medium text-ink-soft hover:bg-surface hover:text-ink">
+            <FiLogOut className="h-4 w-4" aria-hidden="true" />
+            <span className="max-sm:sr-only">Cerrar sesión</span>
+          </button>
+        </header>
+        <main className="p-3 sm:p-4 lg:p-6">{pathname === '/admin/seguridad' ? children : null}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-dvh bg-surface">
@@ -429,7 +464,7 @@ export default function AdminLayout({
         {/* Sin transform ni backdrop-filter en los contenedores: si no, los modales `fixed` de las páginas quedan encerrados aquí */}
         <main className="p-3 sm:p-4 lg:p-6">
           <div className="mx-auto min-w-0 max-w-[1600px]">
-            {children}
+            {soloDueno ? null : children}
           </div>
         </main>
       </div>

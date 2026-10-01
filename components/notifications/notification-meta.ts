@@ -2,7 +2,7 @@
 import type { IconType } from 'react-icons';
 import {
   FiAlertTriangle, FiBell, FiBookOpen, FiBox, FiBriefcase, FiCheckCircle, FiCreditCard, FiDollarSign, FiGift, FiHeart, FiLogIn,
-  FiMail, FiPackage, FiPercent, FiRefreshCw, FiSend, FiShoppingBag, FiStar, FiTag, FiTool, FiTruck, FiUserPlus, FiUsers, FiXCircle,
+  FiMail, FiPackage, FiPercent, FiRefreshCw, FiSend, FiShield, FiShoppingBag, FiStar, FiTag, FiTool, FiTruck, FiUserPlus, FiUsers, FiXCircle,
 } from 'react-icons/fi';
 import type { AdminTone } from '@/lib/admin-ui';
 import { ADMIN_EVENTS, isAdminEventType, type AdminEventCategory } from '@/lib/admin-events/catalog';
@@ -38,6 +38,8 @@ const EVENT_META: Partial<Record<string, Meta>> = {
   EXCHANGE_RATE_UPDATED: { Icon: FiRefreshCw, tone: 'neutral' },
   EXCHANGE_RATE_FAILED: { Icon: FiAlertTriangle, tone: 'warning' },
   ADMIN_LOGIN: { Icon: FiLogIn, tone: 'neutral' },
+  ADMIN_SESSION_REPORTED: { Icon: FiAlertTriangle, tone: 'danger' },
+  ADMIN_TEAM_CHANGED: { Icon: FiShield, tone: 'warning' },
   // Notificaciones del cliente
   ORDER_CONFIRMED: { Icon: FiCheckCircle, tone: 'brand' },
   ORDER_PAID: { Icon: FiDollarSign, tone: 'success' },

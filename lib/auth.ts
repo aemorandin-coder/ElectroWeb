@@ -14,6 +14,7 @@ import { ipParaRegistro } from '@/lib/ip';
 import { createAuditLog, getSeverityForAction, type AuditAction } from '@/lib/audit-log';
 import { describirDispositivo } from '@/lib/dispositivo';
 import { abrirSesion, sesionValida } from '@/lib/sesiones';
+import { estadoDosPasos, verificarCodigo } from '@/lib/dos-pasos';
 
 /** Inicios de sesión en la bitácora (C-104): Reportes → Seguridad cuenta aciertos, fallos y bloqueos por IP. */
 async function registrarEnBitacora(action: AuditAction, datos: { userId?: string; email?: string | null; details?: Record<string, unknown> }) {
@@ -96,6 +97,8 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
         userType: { label: 'User Type', type: 'text' }, // Kept for compatibility but ignored logic-wise
         captchaToken: { label: 'Captcha', type: 'text' },
+        // C-141: el código de 6 dígitos de la app (o uno de respaldo) de los admin con dos pasos
+        codigo: { label: 'Código', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -127,7 +130,6 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (isPasswordValid) {
-            registrarAcierto(correo);
             if (!(await cuentaPuedeEntrar(user.id))) {
               await registrarEnBitacora('SECURITY_ACCESS_DENIED', { userId: user.id, email: user.email, details: { motivo: 'Cuenta suspendida' } });
               throw new Error('CUENTA_SUSPENDIDA');
@@ -135,12 +137,24 @@ export const authOptions: NextAuthOptions = {
 
             const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
 
-            // SUPER_ADMIN single session rule: delete all previous sessions
-            if (user.role === 'SUPER_ADMIN') {
-              await prisma.session.deleteMany({
-                where: { userId: user.id },
-              });
+            // C-141: con dos pasos activos, la contraseña sola no alcanza. Un código equivocado cuenta como fallo
+            // (mismo límite de intentos que la contraseña). Sin dos pasos, el admin entra solo a configurarlos.
+            let dosPasos = false;
+            if (isAdmin && (await estadoDosPasos(user.id)).activo) {
+              const codigo = credentials.codigo?.trim();
+              if (!codigo) throw new Error('CODIGO_REQUERIDO');
+              if (!(await verificarCodigo(user.id, codigo))) {
+                const esperar = registrarFallo(correo, ip);
+                await registrarEnBitacora(esperar > 0 ? 'AUTH_LOGIN_BLOCKED' : 'AUTH_LOGIN_FAILED', {
+                  userId: user.id,
+                  email: correo,
+                  details: { motivo: 'Código de dos pasos equivocado', ...(esperar > 0 ? { esperaSegundos: esperar } : {}) },
+                });
+                throw new Error(esperar > 0 ? `DEMASIADOS_INTENTOS:${esperar}` : 'CODIGO_INVALIDO');
+              }
+              dosPasos = true;
             }
+            registrarAcierto(correo);
 
             await registrarAcceso(user.id, isAdmin, user.email, 'contraseña');
 
@@ -154,6 +168,7 @@ export const authOptions: NextAuthOptions = {
               emailVerified: user.emailVerified ? true : false,
               permissions: [],
               sessionVersion: user.sessionVersion,
+              dosPasos,
             };
           }
         }
@@ -243,6 +258,7 @@ export const authOptions: NextAuthOptions = {
         token.userType = user.userType;
         token.emailVerified = Boolean(user.emailVerified);
         token.sessionVersion = user.sessionVersion;
+        token.dosPasos = Boolean(user.dosPasos);
         // C-140: cada inicio de sesión tiene su fila (dispositivo, vencimiento, cierre); el token lleva su id
         token.sid = await abrirSesion({
           userId: user.id,
@@ -279,6 +295,8 @@ export const authOptions: NextAuthOptions = {
           token.userType = (dbUser.role === 'ADMIN' || dbUser.role === 'SUPER_ADMIN') ? 'admin' : 'customer';
           token.emailVerified = dbUser.emailVerified ? true : false;
           token.sessionVersion = dbUser.sessionVersion;
+          // C-141: al activar los dos pasos la sesión pasa a verificada sin volver a entrar
+          if (token.userType === 'admin') token.dosPasos = (await estadoDosPasos(dbUser.id)).activo;
         }
       }
 
@@ -296,6 +314,7 @@ export const authOptions: NextAuthOptions = {
         session.user.userType = token.userType;
         session.user.image = token.image;
         session.user.emailVerified = token.emailVerified;
+        session.user.dosPasos = Boolean(token.dosPasos);
       }
       return session;
     },

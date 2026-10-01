@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { esAdminVerificado } from '@/lib/auth-helpers';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    const userRole = (session?.user as { role?: string } | undefined)?.role;
-    if (!session || !userRole || !['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
+    if (!session || !esAdminVerificado(session)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 

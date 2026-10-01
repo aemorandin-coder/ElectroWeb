@@ -6,6 +6,15 @@ import { Prisma } from '@prisma/client';
 import { normalizarCorreo } from '@/lib/correo';
 import { isAuthorized } from '@/lib/auth-helpers';
 
+/**
+ * C-141: esta API es solo de clientes. Antes aceptaba cualquier id: un Administrador podía cambiarle el correo
+ * al dueño (y pedir después "recuperar contraseña") o borrar una cuenta del equipo. El equipo se maneja en Equipo.
+ */
+async function esCliente(id: string): Promise<boolean> {
+  const u = await prisma.user.findUnique({ where: { id }, select: { role: true } });
+  return u?.role === 'USER';
+}
+
 // GET - Get customer details
 export async function GET(
   request: NextRequest,
@@ -24,8 +33,10 @@ export async function GET(
       return NextResponse.json({ error: 'ID de cliente requerido' }, { status: 400 });
     }
 
-    const customer = await prisma.user.findUnique({
-      where: { id: customerId },
+    const customer = await prisma.user.findFirst({
+      where: { id: customerId, role: 'USER' },
+      // El hash de la contraseña nunca sale del servidor (antes venía en la respuesta)
+      omit: { password: true },
       include: {
         profile: true,
         addresses: true,
@@ -95,6 +106,10 @@ export async function PUT(
       return NextResponse.json({ error: 'ID de cliente requerido' }, { status: 400 });
     }
 
+    if (!(await esCliente(customerId))) {
+      return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 });
+    }
+
     const body = await request.json();
     const { name, phone, whatsapp, customerType, companyName, taxId } = body;
     // Minúsculas y sin espacios, como en el registro: si no, el cliente no podía iniciar sesión con su correo (C-83)
@@ -125,6 +140,7 @@ export async function PUT(
         ...(name !== undefined && { name }),
         ...(email !== undefined && { email }),
       },
+      select: { id: true, name: true, email: true },
     });
 
     // Update or create profile
@@ -182,6 +198,10 @@ export async function DELETE(
 
     if (!customerId) {
       return NextResponse.json({ error: 'ID de cliente requerido' }, { status: 400 });
+    }
+
+    if (!(await esCliente(customerId))) {
+      return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 });
     }
 
     // Check if customer has orders

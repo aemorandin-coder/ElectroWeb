@@ -42,8 +42,12 @@ export async function POST(request: NextRequest) {
         // Find user by email
         const user = await buscarUsuarioPorCorreo(email);
 
+        // C-141: una invitación al panel sin aceptar (sin contraseña) solo se renueva desde Equipo: si no, el enlace
+        // de 24 horas no vencería nunca
+        const invitacionSinAceptar = Boolean(user && !user.password && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'));
+
         // Always return success to prevent email enumeration
-        if (!user || !user.email) {
+        if (!user || !user.email || invitacionSinAceptar) {
             return NextResponse.json(
                 { message: 'Si el correo existe, recibirás un enlace de recuperación' },
                 { status: 200 }

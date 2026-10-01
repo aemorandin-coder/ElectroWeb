@@ -53,6 +53,8 @@ model User {
   sessions      Session[]
   // C-140: cada inicio de sesión con nombre (dispositivo, fecha, cierre). Session de arriba es del adaptador de NextAuth y no se usa (JWT)
   sesiones      UserSession[]
+  // C-141: verificación en dos pasos del panel (app de códigos)
+  segundoFactor SegundoFactor?
   orders        Order[]
   warrantyClaims WarrantyClaim[]
   reviews       Review[]
@@ -1080,6 +1082,20 @@ model UserSession {
 
   @@index([userId])
   @@map("user_sessions")
+}
+
+// C-141: verificación en dos pasos (TOTP, RFC 6238) de los admin. Obligatoria para usar el panel.
+model SegundoFactor {
+  userId          String    @id
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  secreto         String    // cifrado con AES-256-GCM (lib/dos-pasos.ts); nunca sale del servidor salvo al configurarlo
+  activadoAt      DateTime? // null = configuración empezada y sin confirmar
+  ultimoPaso      Int       @default(0) // último intervalo de 30 s usado: un código no sirve dos veces
+  codigosRespaldo String[]  // HMAC de los códigos de un solo uso que quedan
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("segundo_factor")
 }
 
 model NotificationPreference {

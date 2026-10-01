@@ -9,7 +9,9 @@ import {
   adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPageHeader, adminPageSubtitle,
   adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab,
 } from '@/lib/admin-ui';
+import { useSession } from 'next-auth/react';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { hasPermission } from '@/lib/auth-helpers';
 import { TextoDocumento } from '@/components/legal/SignDocumentModal';
 
 // Legal (C-103): firmas de los clientes con su constancia en PDF, y los documentos con sus versiones.
@@ -51,6 +53,9 @@ const csv = (v: string | number | null | undefined) => `"${String(v ?? '').repla
 
 export default function LegalPage() {
   const [tab, setTab] = useState<'firmas' | 'documentos'>('firmas');
+  // C-141: publicar documentos es configuración sensible (solo el super admin); el Administrador los lee
+  const { data: session } = useSession();
+  const puedePublicar = hasPermission(session, 'MANAGE_SETTINGS');
 
   // Firmas
   const [firmas, setFirmas] = useState<Firma[]>([]);
@@ -258,10 +263,12 @@ export default function LegalPage() {
       ) : (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm text-muted">Publicar una versión nueva pide la firma otra vez a todos. Las firmas anteriores se conservan.</p>
-            <button type="button" onClick={() => { setErrores({}); setVistaPrevia(false); setEditor({ slug: '', title: '', content: '', requiredFor: '' }); }} className={adminPrimaryButton}>
-              <FiPlus className="h-4 w-4" aria-hidden="true" /> Nuevo documento
-            </button>
+            <p className="text-sm text-muted">{puedePublicar ? 'Publicar una versión nueva pide la firma otra vez a todos. Las firmas anteriores se conservan.' : 'Solo un super admin publica documentos o versiones nuevas.'}</p>
+            {puedePublicar && (
+              <button type="button" onClick={() => { setErrores({}); setVistaPrevia(false); setEditor({ slug: '', title: '', content: '', requiredFor: '' }); }} className={adminPrimaryButton}>
+                <FiPlus className="h-4 w-4" aria-hidden="true" /> Nuevo documento
+              </button>
+            )}
           </div>
           <ul className="space-y-3">
             {vigentes.map((d) => {
@@ -277,9 +284,11 @@ export default function LegalPage() {
                       </p>
                       <p className="text-sm text-muted">Publicada {fechaHora(d.publishedAt)} · {d.signatures} {d.signatures === 1 ? 'firma' : 'firmas'} · Huella {d.contentHash.slice(0, 12)}…</p>
                     </div>
-                    <button type="button" onClick={() => { setErrores({}); setVistaPrevia(false); setEditor({ slug: d.slug, title: d.title, content: d.content, requiredFor: d.requiredFor ?? '' }); }} className={adminSecondaryButton}>
-                      <FiEdit3 className="h-4 w-4" aria-hidden="true" /> Nueva versión
-                    </button>
+                    {puedePublicar && (
+                      <button type="button" onClick={() => { setErrores({}); setVistaPrevia(false); setEditor({ slug: d.slug, title: d.title, content: d.content, requiredFor: d.requiredFor ?? '' }); }} className={adminSecondaryButton}>
+                        <FiEdit3 className="h-4 w-4" aria-hidden="true" /> Nueva versión
+                      </button>
+                    )}
                   </div>
                   {anteriores.length > 0 && (
                     <details className="mt-2">

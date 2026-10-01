@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { getMaintenanceState, getRequestIP, isMaintenanceExemptPath, maintenanceResponse } from '@/lib/maintenance';
 import { scheduleExchangeRateRefresh } from '@/lib/exchange-rate';
 import { isFlyerCode, STUDIO_COOKIE, STUDIO_COOKIE_DAYS } from '@/lib/studio/code';
+import { PAGINAS_SOLO_DUENO } from '@/lib/auth-helpers';
 
 const REF_COOKIE = 'electroshop_ref';
 const REF_TTL_DAYS = 30;
@@ -13,8 +14,8 @@ export default withAuth(
     const { pathname } = req.nextUrl;
     const isAdminRoute = pathname.startsWith('/admin');
     const isLoginPage = pathname === '/login' || pathname === '/admin/login';
-    const userRole = (token as any)?.role;
-    const userType = (token as any)?.userType;
+    const userRole = token?.role;
+    const userType = token?.userType;
     const isAdminUser = userType === 'admin' || userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
 
     // ── MAINTENANCE MODE (D3) ────────────────────────────────────────
@@ -75,6 +76,23 @@ export default withAuth(
 
       if (!isAdminUser) {
         return NextResponse.redirect(new URL('/login?redirect=admin&error=admin_required', req.url));
+      }
+
+      // Páginas solo del dueño (C-141): Configuración, Métodos de pago y Equipo. Sus APIs ya responden 403
+      if (userRole !== 'SUPER_ADMIN' && PAGINAS_SOLO_DUENO.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+        return NextResponse.redirect(new URL('/admin', req.url));
+      }
+    }
+
+    // ── DOS PASOS (C-141) ────────────────────────────────────────────
+    // Sin la verificación en dos pasos, el admin solo puede configurarla: el panel lo lleva a Mi seguridad y sus
+    // APIs responden 403. Las demás APIs con acciones de admin lo cortan con hasPermission (lib/auth-helpers.ts).
+    if (token && isAdminUser && token.dosPasos !== true) {
+      if (pathname.startsWith('/api/admin/') && pathname !== '/api/admin/dos-pasos') {
+        return NextResponse.json({ error: 'Configura la verificación en dos pasos para usar el panel.', codigo: 'DOS_PASOS' }, { status: 403 });
+      }
+      if (isAdminRoute && !isLoginPage && pathname !== '/admin/seguridad') {
+        return NextResponse.redirect(new URL('/admin/seguridad', req.url));
       }
     }
 

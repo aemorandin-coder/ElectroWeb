@@ -1,10 +1,21 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `866afe5`, hasta C-151, el 01/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `6aae5a6`, hasta C-154, el 01/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 01/10 (noche) · C-153 y C-154 (`6aae5a6`)
+Andrés los subió el mismo 01/10, antes de recibir el bloque que los juntaba con C-161 y C-155. Comprobado desde fuera: los ajustes públicos traen `packagingRules` y `freePackagingThresholdUSD`, y la ficha dice "Garantía … · Envío nacional".
+- **C-153 · Embalaje según el paquete** (`estado/C-153.md`): 3 columnas nuevas. Apagado hasta que se encienda en Configuración → Envíos y retiro.
+  ```sql
+  ALTER TABLE "orders" ADD COLUMN "packagingPlan" TEXT;
+  ALTER TABLE "company_settings" ADD COLUMN "freePackagingThresholdUSD" DECIMAL(65,30),
+  ADD COLUMN "packagingRules" TEXT;
+  ```
+- **C-154 · Confianza antes de pagar** (`estado/C-154.md`): la garantía, el envío y el embalaje junto al botón de compra. Sin cambio de base.
+- Las pruebas de las dos siguen en `SIGUIENTE.md` hasta que Andrés las confirme.
 
 ## 01/10 · Bloque C-149 a C-152 (`866afe5`)
 Pedido de Andrés del 01/10: revisar todas las ramas y subir todo en un solo bloque. **Subido el 01/10** (comprobado desde fuera). Queda como registro de lo que entró y de sus pruebas.

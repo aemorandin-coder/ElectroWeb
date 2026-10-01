@@ -47,8 +47,7 @@ Pedidos de Andrés del 01/10. Detalle, investigación y pruebas en `estado/C-153
 1. Medidas y precios reales de sus empaques, y el precio del "Bulto aparte".
 2. El monto del embalaje gratis (vacío: siempre se cobra).
 3. Si quiere marcar productos "frágiles" para darles más relleno (no está hecho; pide una columna).
-
-3b. Para la ficha: **cuánto tarda de verdad la entrega de un código y de una recarga, y en qué horario se atiende** (hoy dice "cuando confirmamos tu pago").
+4. Para la ficha: **cuánto tarda de verdad la entrega de un código y de una recarga, y en qué horario se atiende** (hoy dice "cuando confirmamos tu pago").
 
 ### Lo que sigue (Claude)
 - **C-155 · Buscar el producto en la web desde el asistente** (idea de Andrés del 01/10, con sus cinco respuestas):

@@ -5,7 +5,8 @@ Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-141 y C-139**.
 - Andrés dijo el 30/09 que las pruebas de los deploys del 30/09 salieron "excelentes", con algunos ajustes para más adelante. **No confirmó expresamente el deploy de C-140**: los pasos de C-141 sirven igual si ese deploy no se hizo (§00000).
 - **C-139** (Puntos ES) hecha y en `main`: va en el mismo deploy que C-141 y no cambia la base (§000000).
 - **Falta una decisión de Andrés:** publicar ya, o con C-120, los términos de los Puntos ES con la regla del cierre de cuenta (§000000).
-- **Sigue:** la revisión final con Andrés (§3).
+- **C-120** (facturación, IVA y términos): investigación hecha, con decisiones para Andrés y preguntas para su contador (`estado/C-120.md`).
+- **Sigue:** la revisión final con Andrés (§3). C-107 y C-92 esperan datos suyos.
 
 ## 000000. C-139 · Página de Puntos ES: en `main`, va con el deploy de C-141
 Detalle y pruebas en `estado/C-139.md`. **Sin cambio de base.**
@@ -258,9 +259,12 @@ bash scripts/deploy.sh
 4b. **C-119 · Productos usados y reacondicionados:** hecha y en `main` el 29/09 (`estado/C-119.md`). Lleva cambio de base (§0).
    - "Usado" en el correo de compra: hecho en C-121 (29/09, rama `claude/C-121`), con 4 arreglos del correo (decía "debitado de tu billetera" también en un Pago Móvil por confirmar, faltaba el descuento, no escapaba el nombre y la dirección).
    - Módulo de garantías: hecho en C-122 (29/09, rama `claude/C-122`, sobre C-121; **lleva tablas nuevas**). Menú "Garantías" con estados, historial, notas internas, fotos privadas y devolución al saldo de verdad (`estado/C-122.md`).
-4c. **C-120 · Facturación a empresa, IVA y términos** (pedida por Andrés el 29/09 para después, con investigación a fondo):
-   - El flujo empieza cuando el cliente cambia a "empresa" en su panel, para facturar.
-   - Revisar las leyes venezolanas (IVA, facturación, ventas en línea, protección al consumidor) y los términos y condiciones, pensando en el crecimiento de la empresa.
+4c. **C-120 · Facturación a empresa, IVA y términos: investigación hecha el 30/09** (`estado/C-120.md`, con fuentes). Sin código todavía.
+   - **Lo principal:** las ventas por web necesitan **factura digital con una imprenta digital autorizada por el SENIAT** (Providencia SNAT/2024/000102, art. 5), con el IVA discriminado y, para empresas, su razón social, RIF y domicilio fiscal.
+   - Un contribuyente especial le retiene a la tienda el 75 % del IVA: el checkout no lo contempla.
+   - El carrito y el correo de compra dicen "Impuestos (Exento)": no es cierto para electrónica.
+   - **Faltan las decisiones de Andrés** (D1 a D7: si la empresa es contribuyente especial, si los precios incluyen el IVA, cómo se factura hoy la web, qué imprenta digital) **y las 8 preguntas para su contador.**
+   - Propuesta en tres fases. La Fase 1 (datos fiscales, "factura a nombre de", IVA en el resumen, RIF en ElectroStudio y correos, privacidad y términos) no necesita proveedor: se puede empezar cuando Andrés responda D1 a D3.
    - Mientras tanto, el interruptor "Cobrar IVA" de Configuración queda como está: no tiene efecto (`STORE_CHARGES_TAX = false`).
 5. **C-107:** seguro del envío a elección del cliente. Espera los costos de ZOOM y MRW y el OK de la migración.
 6. **C-92:** desactivar clientes en vez de borrarlos. Detalle en `AUDITORIA_CLIENTES_BORRADOS.md`.
@@ -353,4 +357,4 @@ bash scripts/deploy.sh
 > 2. Pregúntame si el deploy de C-141 y C-139 terminó bien (§00000 y §000000): si configuré mis dos pasos, si llegó el correo de invitación, qué cuentas quedaron en Equipo y cómo se ve la página de Puntos ES. Y qué decidí sobre los términos de los Puntos ES (§000000).
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
 > 4. Sigue con la **revisión final** conmigo (`REVISION_FINAL.md`) y arregla lo que salga. Al terminar cada tarea: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
-> 5. Después: C-107 (faltan los costos de ZOOM y MRW), C-92 (faltan tus 4 consultas) y C-120 (`SIGUIENTE.md` §3).
+> 5. Después: C-107 (faltan los costos de ZOOM y MRW), C-92 (faltan tus 4 consultas) y la Fase 1 de C-120 cuando respondas D1 a D3 (`estado/C-120.md` §5).

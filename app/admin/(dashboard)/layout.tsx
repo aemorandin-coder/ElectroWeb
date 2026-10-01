@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   FiBarChart2, FiBox, FiClipboard, FiCreditCard, FiDollarSign, FiExternalLink, FiGift, FiGrid, FiLogOut,
-  FiBell, FiBookOpen, FiFilm, FiLifeBuoy, FiLock, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUserPlus, FiUsers, FiX,
+  FiAlertTriangle, FiBell, FiBookOpen, FiFilm, FiLifeBuoy, FiLock, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUserPlus, FiUsers, FiX,
 } from 'react-icons/fi';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { MdAdminPanelSettings } from 'react-icons/md';
@@ -83,6 +83,17 @@ export default function AdminLayout({
     if (debeConfigurar && pathname !== '/admin/seguridad') router.replace('/admin/seguridad');
     else if (soloDueno) router.replace('/admin');
   }, [debeConfigurar, soloDueno, pathname, router]);
+
+  // C-143: una tienda sin super admin (el dueño quedó como Administrador) no tiene quién abra Configuración,
+  // Métodos de pago ni Equipo. El panel lo dice, con la salida, en vez de dejar el menú incompleto sin explicación.
+  const [sinSuperAdmin, setSinSuperAdmin] = useState(false);
+  const esAdministrador = conDosPasos && session?.user?.role === 'ADMIN';
+  useCargarAlMontar(async () => {
+    if (!esAdministrador) return;
+    const res = await fetch('/api/admin/dos-pasos', { cache: 'no-store' }).catch(() => null);
+    const datos = res?.ok ? await res.json().catch(() => null) : null;
+    setSinSuperAdmin(datos?.sinSuperAdmin === true);
+  }, [esAdministrador]);
 
   const cerrarCajon = useCallback(() => setDrawerPath(null), []);
   useCajonAccesible(isDrawerOpen, 'admin-sidebar', cerrarCajon);
@@ -464,6 +475,18 @@ export default function AdminLayout({
         {/* Sin transform ni backdrop-filter en los contenedores: si no, los modales `fixed` de las páginas quedan encerrados aquí */}
         <main className="p-3 sm:p-4 lg:p-6">
           <div className="mx-auto min-w-0 max-w-[1600px]">
+            {sinSuperAdmin && (
+              <div className="mb-4 flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning-strong" role="alert">
+                <FiAlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+                <div className="min-w-0">
+                  <p className="font-semibold">Esta tienda no tiene ningún super admin.</p>
+                  <p className="mt-1">
+                    Por eso nadie ve Configuración, Métodos de Pago ni Equipo: tu cuenta es de Administrador. El dueño lo arregla en el servidor, sin cambiar su contraseña ni sus dos pasos, y después vuelve a entrar:
+                  </p>
+                  <code className="mt-2 block break-all rounded-lg bg-white px-3 py-2 font-mono text-xs text-ink">npx tsx scripts/create-master-admin.ts {session.user.email}</code>
+                </div>
+              </div>
+            )}
             {soloDueno ? null : children}
           </div>
         </main>

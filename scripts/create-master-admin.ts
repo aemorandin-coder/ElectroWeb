@@ -3,6 +3,9 @@
  *
  *   npx tsx scripts/create-master-admin.ts <correo> "<Nombre>"
  *
+ * Si el dueño quedó como Administrador (sin Configuración ni Equipo), este guion con su correo lo pasa a super admin
+ * sin tocar su contraseña ni sus dos pasos, y cierra su sesión para que vuelva a entrar (C-143).
+ *
  * La contraseña se lee de ADMIN_PASSWORD (debe cumplir la regla del registro). Si no se pasa, se genera una
  * aleatoria y se muestra UNA vez. Si el correo ya existe, pide --reset para cambiarle la contraseña.
  *
@@ -35,8 +38,13 @@ async function main() {
 
   const existente = await prisma.user.findUnique({ where: { email }, select: { id: true } });
   if (existente && !reset) {
-    await prisma.user.update({ where: { id: existente.id }, data: { role: 'SUPER_ADMIN' } });
-    console.log(`[OK] ${email} ya existía: ahora es super admin. La contraseña no se cambió (usa --reset para cambiarla).`);
+    // El rol viaja en la sesión: se cierran las abiertas para que la próxima entrada ya sea de super admin (C-143)
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: existente.id }, data: { role: 'SUPER_ADMIN', sessionVersion: { increment: 1 } } }),
+      prisma.userSession.updateMany({ where: { userId: existente.id, revokedAt: null }, data: { revokedAt: new Date(), motivoCierre: 'CERRADA' } }),
+    ]);
+    console.log(`[OK] ${email} ya existía: ahora es super admin. La contraseña y los dos pasos no cambiaron (usa --reset para cambiar la contraseña).`);
+    console.log('[AVISO] Su sesión se cerró: vuelve a entrar al panel para ver Configuración, Métodos de Pago y Equipo.');
     return;
   }
   const hash = await bcrypt.hash(password, 12);

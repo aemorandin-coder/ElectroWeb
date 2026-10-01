@@ -3,7 +3,7 @@
 // sus dos pasos, y el dueño nunca la conoce. Roles: Super admin (todo) y Administrador (ver lib/auth-helpers.ts).
 
 import { randomBytes } from 'crypto';
-import type { Role } from '@prisma/client';
+import type { Prisma, Role } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getBaseTemplate, sendEmail } from '@/lib/email-service';
 import { escapeHtml } from '@/lib/html';
@@ -14,6 +14,17 @@ export const VIGENCIA_INVITACION_MS = 24 * 60 * 60 * 1000;
 
 export const esRolEquipo = (rol: Role | string | null | undefined): rol is RolEquipo => rol === 'ADMIN' || rol === 'SUPER_ADMIN';
 export const nombreRol = (rol: RolEquipo) => (rol === 'SUPER_ADMIN' ? 'Super admin' : 'Administrador');
+
+/** Super admins con acceso: con contraseña y sin suspender. Sin ninguno, nadie abre Configuración ni Equipo. */
+export function superAdminsConAcceso(db: Prisma.TransactionClient = prisma): Promise<number> {
+  return db.user.count({
+    where: {
+      role: 'SUPER_ADMIN',
+      password: { not: null },
+      OR: [{ profile: null }, { profile: { accountStatus: { not: 'SUSPENDED' } } }],
+    },
+  });
+}
 
 export type EstadoMiembro = 'activo' | 'invitado' | 'sin_acceso';
 

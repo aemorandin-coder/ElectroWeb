@@ -8,6 +8,7 @@ import { cerrarLasDemas } from '@/lib/sesiones';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
+import { superAdminsConAcceso } from '@/lib/equipo';
 
 // Verificación en dos pasos del propio admin (C-141): Mi seguridad.
 // Es la única API del panel que responde sin los dos pasos hechos: sirve para configurarlos (ver proxy.ts).
@@ -23,7 +24,9 @@ async function quien(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const yo = await quien(request);
   if (!yo) return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
-  return NextResponse.json(await estadoDosPasos(yo.userId), { headers: { 'Cache-Control': 'no-store' } });
+  // C-143: una tienda sin super admin no tiene quién abra Configuración ni Equipo. El panel lo avisa con la salida.
+  const [estado, superAdmins] = await Promise.all([estadoDosPasos(yo.userId), superAdminsConAcceso()]);
+  return NextResponse.json({ ...estado, sinSuperAdmin: superAdmins === 0 }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 const postSchema = z.discriminatedUnion('accion', [

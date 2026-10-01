@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 import { hasPermission } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { buscarUsuarioPorCorreo, normalizarCorreo } from '@/lib/correo';
-import { crearEnlaceInvitacion, enviarInvitacion, esRolEquipo, listarEquipo, nombreRol, ROLES_EQUIPO, type RolEquipo } from '@/lib/equipo';
+import { crearEnlaceInvitacion, enviarInvitacion, esRolEquipo, listarEquipo, nombreRol, ROLES_EQUIPO, superAdminsConAcceso, type RolEquipo } from '@/lib/equipo';
 import { reiniciarDosPasos } from '@/lib/dos-pasos';
 import { cerrarLasDemas } from '@/lib/sesiones';
 import { registrarAccionAdmin } from '@/lib/audit-log';
@@ -40,17 +40,6 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || !hasPermission(session, 'MANAGE_TEAM')) return error('No autorizado', 403);
   return NextResponse.json({ equipo: await listarEquipo(session.user.id) }, { headers: { 'Cache-Control': 'no-store' } });
-}
-
-/** Super admins con acceso: con contraseña y sin suspender. */
-function superAdminsConAcceso(tx: Prisma.TransactionClient) {
-  return tx.user.count({
-    where: {
-      role: 'SUPER_ADMIN',
-      password: { not: null },
-      OR: [{ profile: null }, { profile: { accountStatus: { not: 'SUSPENDED' } } }],
-    },
-  });
 }
 
 class SinSuperAdmin extends Error {}

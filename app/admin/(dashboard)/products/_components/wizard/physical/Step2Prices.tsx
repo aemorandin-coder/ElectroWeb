@@ -137,7 +137,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
         ayuda={(
           <span className="inline-flex items-start gap-1.5">
             <FiInfo className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
-            ZOOM o MRW con cobro a destino: el peso y las medidas dan la tarifa de referencia que ve el cliente.
+            ZOOM o MRW con cobro a destino: con el peso y las medidas la tienda elige el empaque, cobra su embalaje y muestra la tarifa de referencia.
           </span>
         )}
       >
@@ -186,7 +186,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {[
               { val: true, title: 'En el mismo paquete', desc: 'Productos pequeños: van junto con el resto del pedido. Lo normal.' },
-              { val: false, title: 'Bulto aparte', desc: 'TVs y electrodomésticos grandes: viajan solos.' },
+              { val: false, title: 'Bulto aparte', desc: 'TVs y electrodomésticos grandes: viajan solos, en su propia caja.' },
             ].map(({ val, title, desc }) => (
               <label key={String(val)} className={`${wizardChoice(data.isConsolidable === val)} flex cursor-pointer items-start gap-3 p-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500`}>
                 <input

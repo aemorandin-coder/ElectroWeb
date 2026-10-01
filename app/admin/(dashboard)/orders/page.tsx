@@ -101,6 +101,7 @@ interface Order {
   // C-100: destino y destinatario del checkout, e historial del envío
   shippingMode?: string | null;
   shippingPaidBy?: string | null;
+  packagingPlan?: string | null;
   shippingState?: string | null;
   shippingCity?: string | null;
   courierOfficeCode?: string | null;

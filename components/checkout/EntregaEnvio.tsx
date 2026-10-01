@@ -10,6 +10,7 @@ import { leerDocumento, leerTelefono, nombreSchema } from '@/lib/validations/reg
 import { etiquetaModo, type Empresa, type ModoEnvio } from '@/lib/envios/empresas';
 import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
 import type { DeliveryMethod, ShippingBreakdown } from '@/lib/pricing';
+import { resumenEmbalaje } from '@/lib/embalaje';
 
 /**
  * Entrega del checkout (C-100). ZOOM o MRW con cobro a destino (oficina real de su lista o puerta a puerta),
@@ -186,6 +187,7 @@ export default function EntregaEnvio({
   opciones,
   cliente,
   envio,
+  envioNacional,
   items,
   direcciones,
   error,
@@ -197,14 +199,14 @@ export default function EntregaEnvio({
     local: boolean;
     retiro: boolean;
     tarifaLocal: number;
-    /** Embalaje de Configuración: lo único que cobra la tienda en un envío por ZOOM o MRW */
-    embalaje: number;
     retiroDireccion?: string | null;
     retiroInstrucciones?: string | null;
     tasaVES: number;
   };
   cliente: ClienteEnvio;
   envio: ShippingBreakdown;
+  /** C-153: lo que se cobraría con ZOOM o MRW aunque haya otra entrega elegida: el embalaje sale del paquete de este pedido */
+  envioNacional: ShippingBreakdown;
   /** Artículos tal cual se mandan a /api/orders, para la tarifa de referencia de ZOOM */
   items: unknown[];
   direcciones: Array<{ address: string; city?: string; state?: string }>;
@@ -349,9 +351,11 @@ export default function EntregaEnvio({
         id: 'SHIPPING' as const,
         titulo: 'Envío nacional',
         // C-106: el monto a la vista desde la tarjeta, como en la de Guanare
-        detalle: envio.isFreeShipping || !(opciones.embalaje > 0)
+        detalle: envioNacional.isFreeShipping
           ? 'ZOOM o MRW · gratis en este pedido'
-          : `ZOOM o MRW · embalaje ${formatUSD(opciones.embalaje)} + flete al retirar`,
+          : envioNacional.packagingFee > 0
+            ? `ZOOM o MRW · embalaje ${formatUSD(envioNacional.packagingFee)} + flete al retirar`
+            : 'ZOOM o MRW · embalaje gratis + flete al retirar',
         Icono: FiTruck,
       }]
       : []),
@@ -359,7 +363,7 @@ export default function EntregaEnvio({
       ? [{
         id: 'LOCAL_DELIVERY' as const,
         titulo: 'Delivery en Guanare',
-        detalle: envio.isFreeShipping || !(opciones.tarifaLocal > 0) ? 'Gratis' : formatUSD(opciones.tarifaLocal),
+        detalle: envioNacional.isFreeShipping || !(opciones.tarifaLocal > 0) ? 'Gratis' : formatUSD(opciones.tarifaLocal),
         Icono: FiHome,
       }]
       : []),
@@ -570,7 +574,8 @@ export default function EntregaEnvio({
         <div className={`${adminNotice('brand')} space-y-1`}>
           <p className="flex items-center gap-1.5 font-semibold"><FiInfo className="h-4 w-4" aria-hidden="true" /> Cobro a destino</p>
           <p>
-            El flete se lo pagas a {value.carrier} cuando {value.mode === 'OFFICE' ? 'retires en la oficina' : 'recibas el paquete'}. Aquí solo pagas el embalaje.
+            El flete se lo pagas a {value.carrier} cuando {value.mode === 'OFFICE' ? 'retires en la oficina' : 'recibas el paquete'}.{' '}
+            {envio.packagingFee > 0 ? 'Aquí solo pagas el embalaje.' : 'El embalaje es gratis en este pedido.'}
           </p>
           {value.carrier === 'ZOOM' && tarifaVigente && (
             <p className="tabular-nums">
@@ -702,9 +707,12 @@ export function ResumenEnvio({
   }
 
   const empresa = form.carrier || '';
+  // C-153: con empaques configurados, el renglón dice en qué viaja el pedido
+  const empaque = envio.packaging ? resumenEmbalaje(envio.packaging) : null;
   return (
     <div className="space-y-2">
-      <FilaMonto etiqueta="Embalaje y empaquetado:" monto={envio.total} tasaVES={tasaVES} />
+      <FilaMonto etiqueta={empaque ? `Embalaje (${empaque}):` : 'Embalaje y empaquetado:'} monto={envio.total} tasaVES={tasaVES} />
+      {envio.packagingFreeByThreshold && <p className="text-xs text-muted">Embalaje gratis por el monto de tu compra.</p>}
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm text-muted">Flete{empresa ? ` (${empresa})` : ''}:</span>
         <span className="text-sm font-semibold text-ink-soft">{form.mode === 'DOOR' ? 'Al recibir' : 'Al retirar'}</span>

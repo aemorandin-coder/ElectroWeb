@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { FiCheck, FiCopy, FiExternalLink, FiMapPin, FiRefreshCw, FiTruck, FiUser } from 'react-icons/fi';
+import { FiAlertTriangle, FiBox, FiCheck, FiCopy, FiExternalLink, FiMapPin, FiRefreshCw, FiTruck, FiUser } from 'react-icons/fi';
 import { adminBadge, adminSecondaryButton } from '@/lib/admin-ui';
+import { leerEmbalajeGuardado, renglonesEmbalaje } from '@/lib/embalaje';
 import { ETIQUETA_ENTREGA, NOMBRE_EMPRESA, etiquetaModo, type EmpresaGuia } from '@/lib/envios/empresas';
 
 // C-100: lo que el equipo necesita para despachar: destino, quién recibe, quién paga el flete,
@@ -18,6 +19,8 @@ export interface EntregaOrdenDatos {
   shippingCarrier?: string | null;
   shippingMode?: string | null;
   shippingPaidBy?: string | null;
+  /** C-153: plan de despacho que guardó la orden (JSON) */
+  packagingPlan?: string | null;
   shippingState?: string | null;
   shippingCity?: string | null;
   courierOfficeCode?: string | null;
@@ -44,6 +47,8 @@ function datosGuia(o: EntregaOrdenDatos): string {
   const destino = o.shippingMode === 'OFFICE'
     ? `${o.shippingCarrier === 'MRW' ? 'Agencia' : 'Oficina'} ${o.courierOfficeName ?? ''} (código ${o.courierOfficeCode ?? '—'}), ${[o.shippingCity, o.shippingState].filter(Boolean).join(', ')}`
     : o.shippingAddress ?? '';
+  // C-153: piezas, peso y empaque salen del plan que armó la tienda al comprar: nadie los calcula a mano
+  const plan = leerEmbalajeGuardado(o.packagingPlan);
   return [
     `Orden: ${o.orderNumber}`,
     `Destinatario: ${o.recipientName ?? ''}`,
@@ -52,6 +57,13 @@ function datosGuia(o: EntregaOrdenDatos): string {
     `Destino: ${destino}`,
     `Flete: ${o.shippingPaidBy === 'STORE' ? 'lo paga la tienda (envío gratis)' : 'cobro a destino'}`,
     `Contenido: ${contenido}`,
+    ...(plan
+      ? [
+        `Piezas: ${plan.piezas}`,
+        `Peso aprox.: ${String(plan.pesoKg).replace('.', ',')} kg`,
+        ...(plan.bultos.length > 0 ? [`Empaque: ${renglonesEmbalaje(plan).join(' | ')}`] : []),
+      ]
+      : []),
   ].join('\n');
 }
 
@@ -62,6 +74,7 @@ export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrden
   const conDatosNuevos = Boolean(orden.recipientName || orden.shippingMode);
   const esEnvio = orden.deliveryMethod === 'SHIPPING' || orden.deliveryMethod === 'HOME_DELIVERY';
   const eventos = orden.shipmentEvents ?? [];
+  const plan = esEnvio ? leerEmbalajeGuardado(orden.packagingPlan) : null;
 
   // C-126: el botón mismo dice "Copiado" dos segundos (antes solo un toast que se perdía detrás del modal)
   const [copiado, setCopiado] = useState<'datos' | 'guia' | null>(null);
@@ -144,6 +157,27 @@ export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrden
             <span className="text-muted"> · {orden.recipientIdNumber} · {orden.recipientPhone}</span>
           </span>
         </p>
+      )}
+
+      {/* C-153: cómo se despacha. Lo decide la tienda con las medidas de los productos, no quien empaca */}
+      {plan && (
+        <div className="rounded-lg bg-surface p-3 text-sm">
+          <p className="flex items-center gap-1.5 font-semibold text-ink">
+            <FiBox className="h-4 w-4 text-brand-600" aria-hidden="true" />
+            Cómo empacar: {plan.piezas} {plan.piezas === 1 ? 'pieza' : 'piezas'} · {String(plan.pesoKg).replace('.', ',')} kg aprox.
+          </p>
+          {plan.bultos.length > 0 && (
+            <ul className="mt-1 list-disc space-y-0.5 pl-6 text-ink-soft [overflow-wrap:anywhere]">
+              {renglonesEmbalaje(plan).map((renglon) => <li key={renglon}>{renglon}</li>)}
+            </ul>
+          )}
+          {plan.estimados.length > 0 && (
+            <p className="mt-1.5 flex items-start gap-1.5 text-xs text-warning-strong">
+              <FiAlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              Sin medidas en la ficha (tamaño estimado por el peso): {plan.estimados.join(', ')}. Revisa que quepa antes de cerrar el paquete.
+            </p>
+          )}
+        </div>
       )}
 
       {esEnvio && conDatosNuevos && (

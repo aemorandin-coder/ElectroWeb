@@ -29,6 +29,7 @@ import DatosFactura, { type EleccionFactura, type EmpresaFactura } from '@/compo
 import { leerDomicilioFiscal } from '@/lib/facturacion';
 import EntregaEnvio, { ENVIO_INICIAL, ResumenEnvio, envioDesdeDireccion, envioParaServidor, validarEnvio, type DireccionGuardada, type EnvioForm } from '@/components/checkout/EntregaEnvio';
 import { ConfianzaEnvio } from '@/components/envios/ConfianzaEnvio';
+import { AvisosEmbalaje } from '@/components/envios/AvisosEmbalaje';
 import { calculateOrder, toPricingSettings, type DeliveryMethod, type OrderCalculation, type PricingLine } from '@/lib/pricing';
 
 import { parseCartItemId, toOrderItem } from '@/lib/cart-items';
@@ -275,6 +276,11 @@ export default function CheckoutPage() {
     () => calculateOrder(pricingLines, toPricingSettings(companySettings), envio.deliveryMethod),
     [pricingLines, companySettings, envio.deliveryMethod]
   );
+  // C-153: lo que costaría el envío por ZOOM o MRW aunque haya otra entrega elegida (el embalaje sale del paquete)
+  const envioNacionalLocal = useMemo(
+    () => calculateOrder(pricingLines, toPricingSettings(companySettings), 'SHIPPING').shipping,
+    [pricingLines, companySettings]
+  );
 
   // Cotización del servidor: es lo que realmente se cobra (precios y pesos actualizados).
   // Se guarda con la clave del carrito para no mostrar una cotización vieja.
@@ -364,6 +370,7 @@ export default function CheckoutPage() {
   const cartSubtotal = orderCalculation.subtotalUSD;
   const cartDiscount = orderCalculation.discountUSD;
   const shippingBreakdown = orderCalculation.shipping;
+  const envioNacional = envio.deliveryMethod === 'SHIPPING' ? shippingBreakdown : envioNacionalLocal;
   const finalTotal = orderCalculation.totalUSD;
   const hasPhysicalItems = items.some(item => item.productType !== 'DIGITAL');
   // C-106: con ZOOM o MRW (cobro a destino) el total es lo que se paga hoy; el flete va aparte
@@ -862,13 +869,13 @@ export default function CheckoutPage() {
                     local: companySettings?.localDeliveryEnabled === true,
                     retiro: companySettings?.pickupEnabled === true,
                     tarifaLocal: Number(companySettings?.deliveryFeeUSD) || 0,
-                    embalaje: toPricingSettings(companySettings).packagingFeeUSD,
                     retiroDireccion: companySettings?.pickupAddress,
                     retiroInstrucciones: companySettings?.pickupInstructions,
                     tasaVES: Number(companySettings?.exchangeRateVES) || 0,
                   }}
                   cliente={clienteEnvio}
                   envio={shippingBreakdown}
+                  envioNacional={envioNacional}
                   items={orderItemsBody}
                   direcciones={savedAddresses}
                 />
@@ -1551,6 +1558,14 @@ export default function CheckoutPage() {
 
                     {/* Envío (C-100) */}
                     <ResumenEnvio envio={shippingBreakdown} form={envio} tasaVES={Number(companySettings?.exchangeRateVES) || 0} hayFisicos={hasPhysicalItems} />
+                    {/* C-153: cuánto falta para el embalaje o el envío gratis, y en qué viaja el pedido */}
+                    {hasPhysicalItems && envio.deliveryMethod === 'SHIPPING' && (
+                      <AvisosEmbalaje
+                        envio={shippingBreakdown}
+                        umbralEmbalaje={companySettings?.freePackagingThresholdUSD ?? null}
+                        umbralEnvio={companySettings?.freeDeliveryThresholdUSD ?? null}
+                      />
+                    )}
 
                     {/* Total - Premium Style */}
                     <div className="pt-4 border-t-2 border-dashed border-line">

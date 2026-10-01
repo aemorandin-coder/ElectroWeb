@@ -1,7 +1,64 @@
-# Punto de partida (actualizado 2026-10-01, bloque de subida listo)
+# Punto de partida (actualizado 2026-10-01, C-153 en `main`)
 
-## Bloque único de subida del 01/10: de C-148b a C-151
-Pedido de Andrés del 01/10: revisar todas las ramas y subir todo en un solo bloque.
+## Deploy pendiente: C-153 · Embalaje según el paquete
+Pedido de Andrés del 01/10. Detalle, investigación y pruebas en `estado/C-153.md`.
+
+- **Producción hoy: el bloque del 01/10** (C-149 a C-151, `866afe5`). Comprobado desde fuera el 01/10 por la tarde: `/llms.txt` responde y los ajustes públicos ya traen el IVA de los digitales. En producción el embalaje es de **$1,00** y el envío gratis, desde $300.
+- **Lo que sube:** una tarea, **3 columnas nuevas** (aditivas). Sin dependencias ni variables de entorno nuevas.
+- **Después del deploy no cambia nada en la tienda** hasta encender el cálculo en Configuración.
+
+**Qué trae:**
+- La tienda arma el paquete con las medidas de cada producto y cobra el empaque que hace falta: un sobre para unos audífonos, una caja para un teclado, y todo lo que se pueda en un solo paquete.
+- Embalaje gratis desde un monto, sin que la tienda pague el flete, con el aviso "te faltan $X" en el carrito y en el pago.
+- Cada orden guarda cómo se despacha: el panel dice qué empaque usar, qué va dentro, cuántas piezas y el peso para la guía.
+- El Dashboard avisa de los productos sin peso o medidas.
+
+### Pasos (en el servidor, `/var/www/electroshopve`)
+1. **Qué hay ahora:** `git log -1 --oneline`. Debe empezar por `866afe5`. Si dice otra cosa, avisar a Claude antes de seguir.
+2. **Respaldo:**
+   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-c153.dump`
+3. **Código y primer intento:** `git pull --ff-only` y `bash scripts/deploy.sh`. El guion **para** y muestra el SQL. Tiene que ser exactamente esto (el orden puede variar):
+   ```sql
+   ALTER TABLE "orders" ADD COLUMN "packagingPlan" TEXT;
+   ALTER TABLE "company_settings" ADD COLUMN "freePackagingThresholdUSD" DECIMAL(65,30),
+   ADD COLUMN "packagingRules" TEXT;
+   ```
+   - Solo `ADD COLUMN`. **Si aparece un `DROP`, un `ALTER ... TYPE` o una tabla que no está aquí: no seguir y avisar a Claude.**
+4. **Aplicar y subir:** `npx prisma db push` y `bash scripts/deploy.sh` otra vez.
+5. **Comprobar:** `git log -1 --oneline` muestra el último commit de `main`.
+
+### Pruebas después de subir (unos 10 minutos, en este orden)
+1. **Sin tocar nada:** un carrito con un producto físico dice lo de siempre, embalaje de $1,00.
+2. **Configuración → Envíos y retiro → "Embalaje según el paquete":** encender. Aparecen cinco empaques sugeridos a partir de tu $1,00 (sobre $0,30, caja pequeña $0,60, alargada $1,00, mediana $1,00, grande $1,60) y abajo "Así cobra la tienda con estos empaques".
+   - **Corrige las medidas con las de tus sobres y cajas reales (por dentro) y pon tus precios.** Guardar.
+3. **Carrito** con los audífonos Piston: "solo el embalaje ($0,30, sobre acolchado)". Agregar el SSD: sigue siendo un sobre.
+4. **"Embalaje gratis desde":** pon un monto (por ejemplo $20) y Guardar. El carrito dice "Te faltan $X en productos para el embalaje gratis", con su barra.
+5. **Una compra barata con envío.** En el panel, Órdenes → esa orden: bloque "Cómo empacar" con el empaque, lo que va dentro, las piezas y el peso. "Copiar datos para la guía" y pegarlo en un bloc de notas: trae "Piezas", "Peso aprox." y "Empaque".
+6. **Dashboard → "Tu tienda: por completar":** avisa del producto sin peso o medidas (hoy, el teclado AOAS). Ponérselos.
+
+### Si algo sale mal
+- **Sin deploy:** apagar el interruptor de "Embalaje según el paquete". Vuelve el precio único al instante y los empaques se conservan.
+- **Volver atrás:** `git reset --hard 866afe5 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas nuevas no molestan al código anterior.
+
+### Decide Andrés (sin código)
+1. Medidas y precios reales de sus empaques, y el precio del "Bulto aparte".
+2. El monto del embalaje gratis (vacío: siempre se cobra).
+3. Si quiere marcar productos "frágiles" para darles más relleno (no está hecho; pide una columna).
+
+### Lo que sigue (Claude)
+- **C-154 · Confianza antes de pagar:** garantía, despacho y embalaje junto al botón de compra. Con C-153 la ficha ya puede decir cuánto cuesta el embalaje de ese producto.
+- **C-155 · Buscar el producto en la web desde el asistente** (idea de Andrés del 01/10, con sus cinco respuestas):
+  1. Un botón por producto, en el primer paso del asistente.
+  2. Sin API de pago: leyendo páginas de la web. Es frágil (cambian o bloquean): si una fuente falla, el asistente sigue igual y dice que no encontró.
+  3. Trae descripción, peso y medidas de la caja, especificaciones, marca y código de barras. Andrés corrige después.
+  4. Busca por modelo y nombre.
+  5. Si no encuentra las medidas, propone un estimado, marcado como tal.
+  - Cuidados de Claude: las medidas ahora mueven dinero (C-153), así que entran como sugerencia a la vista; y la descripción se redacta propia, no copiada (texto repetido perjudica en Google, C-149).
+
+---
+
+## Bloque del 01/10 (C-149 a C-151): en producción
+Pedido de Andrés del 01/10: revisar todas las ramas y subir todo en un solo bloque. **Subido el 01/10** (comprobado desde fuera). Queda como registro de lo que entró y de sus pruebas.
 
 **Cómo está todo (revisado el 01/10):**
 - **Ramas:** las 154 ramas de trabajo están fusionadas en `main`, y `main` es igual a GitHub. La única sin fusionar es `chatgpt/product-fixes-main`, un borrador viejo de ChatGPT del 21/09 que Claude rehízo en C-95: no sube.
@@ -66,15 +123,15 @@ Pedido de Andrés del 01/10: revisar todas las ramas y subir todo en un solo blo
 - **Google Search Console:** agregar el dominio y enviar el sitemap.
 - **Para el contador:** las preguntas de `estado/C-151.md` (IVA de los digitales), `estado/C-147b.md` (embalaje) y `estado/C-120.md` §6.
 
-### Lo que sigue después del bloque (Claude)
-- **Embalaje más inteligente** (aprobado por Andrés el 01/10): precio por tamaño del paquete, embalaje gratis desde un monto (sin que la tienda pague el flete) y el aviso "te faltan $X" en el carrito. Sin empezar.
-- **Confianza antes de pagar:** garantía, despacho y embalaje junto al botón de compra. Sin empezar.
+### Lo que seguía después del bloque
+- ~~Embalaje más inteligente~~: hecho en C-153 (arriba).
+- **Confianza antes de pagar:** C-154 (arriba).
 
 ---
 
 ## Detalle de cada tarea (los pasos de arriba reemplazan los deploys sueltos de abajo)
 
-En GitHub, `main` tiene todo hasta **C-151** (orden real: C-149, C-147, C-150, C-146b, C-147b, C-151).
+En GitHub, `main` tiene todo hasta **C-153** (orden real: C-149, C-147, C-150, C-146b, C-147b, C-151, C-152, C-153).
 - **C-151** (01/10, en `main`, falta el deploy, **una columna nueva**): los productos digitales no llevan IVA (`estado/C-151.md`). Decisión de Andrés del 01/10.
   - Interruptor en Configuración → Precios → IVA, **apagado por defecto**: no hay que tocar nada después del deploy.
   - SQL del deploy: `ALTER TABLE "company_settings" ADD COLUMN "taxDigitalProducts" BOOLEAN NOT NULL DEFAULT false;` (se suma al de C-147).
@@ -374,7 +431,7 @@ Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pe
 - Detalle y pruebas de cada una en su `estado/C-12X.md`.
 
 ## 1. Estado de las ramas
-- **`main`:** todo hasta C-151. **Producción: C-148b** (`3f2db8d`), comprobado desde fuera el 01/10. Lo que falta sube en un solo bloque (arriba).
+- **`main`:** todo hasta C-153. **Producción: el bloque del 01/10** (`866afe5`, hasta C-151), comprobado desde fuera el 01/10. Falta subir C-153 (arriba).
 - **Gemini:** R23 (G-69) cerrada y en `main`, con dos arreglos de Claude (resultado al final de `PLAN_GEMINI.md`). **No tiene ronda abierta.** Su carril no tiene deudas de reglas (verificado el 28/09 con `grep`: 0 hex, 0 textos de menos de 11 px, 0 `font-black`, 0 `z-[número]`, 0 `alert` o `console.log` y 0 emojis).
 - **ChatGPT:** fuera del equipo desde el 21/09. Limpieza opcional en la máquina de Andrés: `git worktree remove ../ElectroShopVe-chatgpt`, `git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main` y `git stash drop stash@{0}`.
 - **Historial de tareas:** cada una tiene su `docs/plan/estado/C-XX.md`. Resumen en `PLAN_CLAUDE.md`, "Orden de trabajo".
@@ -450,7 +507,7 @@ Andrés quiere que la tienda sea la vitrina digital de la empresa en todo el pa�
 2b. ✅ **C-148 y C-148b · Cotizaciones** (hechas). Falta: retención del IVA de contribuyentes especiales, mandarla por correo y "Mis cotizaciones" en el panel del cliente.
 3. ✅ **C-149 · Que Google, las redes y las IA encuentren el catálogo** (hecha, `estado/C-149.md`).
 4. ✅ **C-147 · Datos para la factura** y relación de ventas del mes (hecha, `estado/C-147.md`).
-5. **C-153 · Embalaje más inteligente** y **C-154 · Confianza antes de pagar** (salen del análisis externo del 01/10; §3e).
+5. ✅ **C-153 · Embalaje según el paquete** (hecha). Sigue **C-154 · Confianza antes de pagar** (salen del análisis externo del 01/10; §3e).
 - **Google Merchant Center no admite a Venezuela** (lista oficial leída el 01/10). Los anuncios de Google que sí se pueden pagar son los de búsqueda (texto). Para medir sus ventas basta vincular Google Analytics con Google Ads e importar la conversión `purchase` (C-145): no hace falta otra etiqueta.
 - **Regla para los documentos:** el repositorio es público. Aquí no se escriben datos fiscales ni financieros de la empresa (ventas, márgenes reales, cómo declara). Eso va en la conversación con Andrés.
 
@@ -488,8 +545,9 @@ Hoy son 25 ítems en una lista. La propuesta no fusiona páginas ni cambia direc
 
 **De Claude, en el orden recomendado:**
 1. ✅ **C-146b · Precio sugerido desde el costo** (hecha, `estado/C-146b.md`).
-2. **C-153 · Embalaje más inteligente** (aprobado por Andrés el 01/10): precio por tamaño del paquete, embalaje gratis desde un monto y aviso "te faltan $X" en el carrito.
+2. ✅ **C-153 · Embalaje según el paquete** (hecha, `estado/C-153.md`).
 2b. **C-154 · Confianza antes de pagar** (§3c): garantía, despacho y embalaje junto al botón; cómo se resuelve una garantía dicho antes del pago; plazo de los digitales.
+2c. **C-155 · Buscar el producto en la web desde el asistente** (decisiones de Andrés arriba).
 3. **Reseñas por correo** unos días después de la entrega.
 4. **Buscador de la tienda sin acentos** ("bateria" encuentra "Batería"), con lo hecho en C-148b.
 5. **Cotizaciones:** mandarla por correo, "Mis cotizaciones" y la retención del 75 % del IVA.
@@ -545,7 +603,9 @@ Hoy son 25 ítems en una lista. La propuesta no fusiona páginas ni cambia direc
 ## 5. Datos útiles para Claude
 - **Node:** `export PATH="$HOME/.local/lib/nodejs/node-v20.18.0-linux-x64/bin:$PATH"`.
 - **Antes de tocar nada:** `git status`, `git log -3` y `git branch --show-current`. Gemini a veces trabaja en la carpeta principal.
-- **Tienda de ejemplo:** esquema `rev10_demo`, con el esquema del 28/09 aplicado.
+- **Tienda de ejemplo:** esquema `rev10_demo`, con el esquema del 28/09 aplicado y las columnas de cada tarea hasta C-153.
+  - El build de prueba necesita `NEXT_PUBLIC_BASE_URL=http://localhost:3100`: sin eso la prueba de humo falla en la redirección de `www` y en la dirección propia de las categorías.
+  - `next dev` con `NEXT_DIST_DIR=.next-test` se rompe a la segunda carga (Tailwind lee su propia carpeta, que git no ignora): para `next dev`, la carpeta normal.
   - Productos de prueba: audífonos, teclado, gift card y Robux con montos.
   - Cupones de ejemplo (HOLA15, CINCO, FUTURO).
   - Un cliente con teléfono y cédula (`cliente@demo.test`) y un admin (`admin@demo.test`).

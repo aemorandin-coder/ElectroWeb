@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { hasPermission } from '@/lib/auth-helpers';
 import { crossFieldErrors, fieldErrors, HOT_AD_FIELDS, settingsPatchSchema } from '@/lib/validations/settings';
 import { clearSettingsCache } from '@/lib/site-settings';
+import { leerReglasEmbalaje } from '@/lib/embalaje';
 import { refreshExchangeRate } from '@/lib/exchange-rate';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { registrarAccionAdmin } from '@/lib/audit-log';
@@ -41,6 +42,8 @@ function toAdminSettings(row: CompanySettings, canManageSettings: boolean) {
   data.businessHours = parseJson(row.businessHours);
   data.socialMedia = parseJson(row.socialMedia) ?? [];
   data.adminAlertEmails = parseAlertEmails(row.adminAlertEmails);
+  // C-153: los empaques van como objeto (la columna guarda el texto JSON)
+  data.packagingRules = leerReglasEmbalaje(row.packagingRules);
   if (!canManageSettings) {
     for (const field of SETTINGS_ONLY_FIELDS) delete data[field];
   }

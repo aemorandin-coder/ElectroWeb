@@ -28,7 +28,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { orderBlockers, parseDeliveryMethod, parseOrderItems, quoteOrder, OrderInputError, type QuotedLine } from '@/lib/order-quote';
-import { montoDecimal, type OrderGroupTotals } from '@/lib/pricing';
+import { montoDecimal, roundMoney, type OrderGroupTotals } from '@/lib/pricing';
+import type { EmbalajeGuardado } from '@/lib/embalaje';
 import {
   orderPatchSchema,
   problemaTransicion,
@@ -226,6 +227,8 @@ interface OrderGroup {
   /** Solo la orden física: destino, destinatario y quién paga el flete (C-100) */
   destino: DestinoOrden | null;
   shippingPaidBy: string | null;
+  /** C-153: cómo se despacha (JSON), para el panel */
+  packagingPlan: string | null;
   tag: string;
 }
 
@@ -642,12 +645,25 @@ export async function POST(request: NextRequest) {
     // La compra se divide en una orden física (con envío) y una digital, como hasta ahora
     const groups: OrderGroup[] = [];
     if (calculation.physical) {
+      const fisicas = quote.lines.filter(line => line.productType !== 'DIGITAL');
+      // C-153: el plan de despacho queda en la orden: piezas y peso para la guía y, con empaques configurados,
+      // qué empaque usar y qué va dentro. Es la copia del momento de la compra (las medidas pueden cambiar después).
+      const plan = calculation.shipping.packaging;
+      const embalaje: EmbalajeGuardado | null = deliveryMethod === 'SHIPPING'
+        ? {
+          piezas: Math.max(calculation.shipping.pieces, 1),
+          pesoKg: plan ? plan.pesoKg : roundMoney(fisicas.reduce((kg, line) => kg + (line.weightKg || 0.1) * line.quantity, 0)),
+          bultos: plan?.bultos ?? [],
+          estimados: plan?.estimados ?? [],
+        }
+        : null;
       groups.push({
         totals: calculation.physical,
-        lines: quote.lines.filter(line => line.productType !== 'DIGITAL'),
+        lines: fisicas,
         deliveryMethod,
         destino,
         shippingPaidBy: calculation.shipping.paidBy,
+        packagingPlan: embalaje ? JSON.stringify(embalaje) : null,
         tag: '[Productos Físicos]',
       });
     }
@@ -658,6 +674,7 @@ export async function POST(request: NextRequest) {
         deliveryMethod: 'DIGITAL',
         destino: null,
         shippingPaidBy: null,
+        packagingPlan: null,
         tag: '[Productos Digitales]',
       });
     }
@@ -745,6 +762,7 @@ export async function POST(request: NextRequest) {
             deliveryMethod: group.deliveryMethod,
             ...(group.destino ?? { shippingAddress: '' }),
             shippingPaidBy: group.shippingPaidBy,
+            packagingPlan: group.packagingPlan,
             subtotalUSD: montoDecimal(totals.subtotalUSD),
             taxUSD: montoDecimal(totals.taxUSD),
             shippingUSD: montoDecimal(totals.shippingUSD),

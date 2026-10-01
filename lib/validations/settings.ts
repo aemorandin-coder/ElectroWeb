@@ -4,6 +4,7 @@
 // stock crítico) ya no se aceptan: siguen en la base de datos, pero nadie los lee.
 
 import { z } from 'zod';
+import { MAX_EMPAQUES } from '@/lib/embalaje';
 
 export const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 export type WeekDay = (typeof WEEK_DAYS)[number];
@@ -44,6 +45,9 @@ const optionalMoney = (max = 1_000_000) =>
   z.preprocess(toNumber, z.number({ error: 'Monto inválido' }).min(0, 'No puede ser negativo').max(max, `Máximo ${max}`).nullable());
 const integer = (min: number, max: number) =>
   z.preprocess(toNumber, z.number({ error: 'Escribe un número' }).int('Debe ser un número entero').min(min, `Mínimo ${min}`).max(max, `Máximo ${max}`));
+
+/** Lado de un empaque, en cm */
+const medidaCm = z.preprocess(toNumber, z.number({ error: 'Escribe las tres medidas de cada empaque' }).gt(0, 'Las medidas deben ser mayores a 0').max(300, 'Máximo 300 cm por lado'));
 
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Color inválido');
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora inválida');
@@ -110,6 +114,25 @@ export const settingsUpdateSchema = z.object({
   localDeliveryEnabled: z.boolean(),
   deliveryFeeUSD: money(1000),
   freeDeliveryThresholdUSD: optionalMoney(),
+  // C-153: embalaje gratis desde un monto (el flete sigue con cobro a destino) y empaques de la tienda
+  freePackagingThresholdUSD: optionalMoney(),
+  packagingRules: z
+    .object({
+      activo: z.boolean(),
+      bultoAparteUSD: money(1000),
+      empaques: z
+        .array(z.object({
+          id: z.string().trim().min(1).max(40),
+          nombre: z.string().trim().min(1, 'Ponle nombre a cada empaque').max(40, 'Nombre de máximo 40 caracteres'),
+          largoCm: medidaCm,
+          anchoCm: medidaCm,
+          altoCm: medidaCm,
+          precioUSD: money(1000),
+        }))
+        .max(MAX_EMPAQUES, `Máximo ${MAX_EMPAQUES} empaques`),
+    })
+    .refine((reglas) => !reglas.activo || reglas.empaques.length > 0, 'Agrega al menos un empaque o apaga el cálculo por paquete')
+    .transform((reglas) => JSON.stringify(reglas)),
   pickupEnabled: z.boolean(),
   pickupAddress: optionalText(250),
   pickupInstructions: optionalText(500),

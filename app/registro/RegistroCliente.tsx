@@ -12,6 +12,7 @@ import { ControlTelefono } from '@/components/forms/ControlesDatos';
 import HCaptchaWrapper, { type HCaptchaRefMethods } from '@/components/HCaptchaWrapper';
 import { adminError, adminHint, adminInput, adminLabel, adminNotice, adminPrimaryButton } from '@/lib/admin-ui';
 import { rutaInternaSegura } from '@/lib/rutas';
+import { trackSignUp } from '@/components/AnalyticsTracker';
 import {
   REGLAS_CONTRASENA,
   registroSchema,
@@ -172,6 +173,8 @@ function RegistroContenido({ google }: { google: boolean }) {
         }
         return;
       }
+
+      trackSignUp('correo');
 
       // Con el correo que guardó el servidor (en minúsculas): con el escrito a mano fallaba si tenía mayúsculas (C-83)
       const result = await signIn('unified-credentials', {

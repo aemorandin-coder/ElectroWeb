@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { trackAddToCart } from '@/components/AnalyticsTracker';
 
 const CART_KEY = 'cart';
 // Dueño del carrito guardado en localStorage: el userId que lo sincronizó, o 'guest'
@@ -220,6 +221,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = (item: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
     changedByUser.current = true;
     const requested = Math.max(1, Math.floor(quantity) || 1);
+    // C-145: el embudo de compra empieza aquí (Google Analytics, píxel de Meta y la analítica propia)
+    if (item.stock >= 1) trackAddToCart(item.id, item.name, item.price, Math.min(requested, item.stock));
 
     setItems((currentItems) => {
       const existingItem = currentItems.find((i) => i.id === item.id);

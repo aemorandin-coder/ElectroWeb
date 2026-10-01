@@ -7,11 +7,25 @@ import { escaparHtml, firmaBajaValida, urlBase, type TipoBaja } from '@/lib/emai
  * y nadie puede dar de baja a otra persona cambiando el id.
  * GET muestra la confirmación; POST es la baja "de un clic" que piden Gmail y Yahoo (List-Unsubscribe-Post).
  * C-138: `tipo=favoritos` da de baja solo los avisos de favoritos por correo.
+ * C-157: `tipo=resenas`, solo el pedido de reseñas.
  */
 
 function leerTipo(request: NextRequest): TipoBaja {
-  return request.nextUrl.searchParams.get('tipo') === 'favoritos' ? 'favoritos' : 'promociones';
+  const tipo = request.nextUrl.searchParams.get('tipo');
+  return tipo === 'favoritos' || tipo === 'resenas' ? tipo : 'promociones';
 }
+
+const CAMBIO: Record<TipoBaja, { emailPromotions: false } | { emailFavoritos: false } | { emailReviews: false }> = {
+  promociones: { emailPromotions: false },
+  favoritos: { emailFavoritos: false },
+  resenas: { emailReviews: false },
+};
+
+const TITULO_BAJA: Record<TipoBaja, string> = {
+  promociones: 'Listo, no recibirás más promociones',
+  favoritos: 'Listo, no recibirás más avisos de tus favoritos por correo',
+  resenas: 'Listo, no te pediremos más reseñas por correo',
+};
 
 async function darDeBaja(request: NextRequest, tipo: TipoBaja): Promise<boolean> {
   const userId = request.nextUrl.searchParams.get('u') ?? '';
@@ -21,7 +35,7 @@ async function darDeBaja(request: NextRequest, tipo: TipoBaja): Promise<boolean>
   const usuario = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
   if (!usuario) return false;
 
-  const cambio = tipo === 'favoritos' ? { emailFavoritos: false } : { emailPromotions: false };
+  const cambio = CAMBIO[tipo];
   await prisma.notificationPreference.upsert({
     where: { userId },
     update: cambio,
@@ -32,7 +46,7 @@ async function darDeBaja(request: NextRequest, tipo: TipoBaja): Promise<boolean>
 
 function pagina(ok: boolean, tipo: TipoBaja): NextResponse {
   const titulo = ok
-    ? (tipo === 'favoritos' ? 'Listo, no recibirás más avisos de tus favoritos por correo' : 'Listo, no recibirás más promociones')
+    ? TITULO_BAJA[tipo]
     : 'El enlace no es válido';
   const texto = ok
     ? 'Seguirás recibiendo los correos de tus pedidos. Puedes volver a activarlos cuando quieras en Mi perfil → Notificaciones.'

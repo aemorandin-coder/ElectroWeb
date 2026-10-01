@@ -8,7 +8,8 @@ import { Interruptor, Seccion } from './comun';
 import type { Ajustes } from './tipos';
 
 // Notificaciones (C-138): solo lo que la tienda de verdad hace. Antes había 7 interruptores y 6 no hacían nada.
-// Los avisos de favoritos los manda el cron (lib/favoritos-avisos.ts); las ofertas por correo son las campañas (C-75).
+// Los avisos de favoritos los manda el cron (lib/favoritos-avisos.ts), el pedido de reseñas también (lib/resenas-avisos.ts, C-157);
+// las ofertas por correo son las campañas (C-75).
 
 type Clave = keyof Ajustes['notificaciones'];
 
@@ -67,6 +68,16 @@ export default function Notificaciones({ inicial }: { inicial: Ajustes['notifica
             deshabilitado={guardando === 'emailFavoritos'}
           />
         </div>
+      </Seccion>
+
+      <Seccion titulo="Tus reseñas" descripcion="Unos días después de recibir tu pedido te escribimos para preguntarte qué te pareció. Solo si no has opinado todavía de ese producto.">
+        <Interruptor
+          titulo="Por correo"
+          descripcion="Un solo correo por pedido, con un botón para dejar tu reseña. Cada correo trae un enlace para darte de baja."
+          activo={prefs.emailReviews}
+          onCambio={(v) => cambiar('emailReviews', v)}
+          deshabilitado={guardando === 'emailReviews'}
+        />
       </Seccion>
 
       <Seccion titulo="Ofertas y novedades">

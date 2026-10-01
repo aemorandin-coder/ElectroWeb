@@ -71,8 +71,8 @@ function secreto(): string {
   return valor;
 }
 
-/** Qué correo se deja de recibir: las campañas (C-75) o los avisos de favoritos (C-138). */
-export type TipoBaja = 'promociones' | 'favoritos';
+/** Qué correo se deja de recibir: las campañas (C-75), los avisos de favoritos (C-138) o el pedido de reseñas (C-157). */
+export type TipoBaja = 'promociones' | 'favoritos' | 'resenas';
 
 /** Enlace de baja firmado: no hace falta iniciar sesión y no se puede dar de baja a otra persona. */
 export function firmaBaja(userId: string, tipo: TipoBaja = 'promociones'): string {

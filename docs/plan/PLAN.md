@@ -298,7 +298,7 @@ docs/plan/estado/G-*.md
 
 Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estado/<ID>.md`. Aquí va el mapa.
 
-### 5.1 Lo hecho (124 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 01/10)
+### 5.1 Lo hecho (125 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 01/10)
 
 **Plan original (12/09):**
 | Fase | Tareas | Qué dejó |
@@ -316,7 +316,7 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 | Acceso y cuentas | C-80, C-83 a C-85, C-88, C-89, C-105, C-140, C-141, C-143 | Login con límites en el servidor, registro corto y con Google, una sola regla de contraseñas, IP real, sesiones con nombre, roles, equipo por invitación y verificación en dos pasos. |
 | Dinero: pagos y Puntos ES | C-87, C-96, C-101, C-114, C-115, C-123, C-125, C-129 a C-132, C-135, C-139, C-142 | Montos exactos, métodos de pago bien hechos, Pago Móvil que verifica al primer intento, pagos sin orden, mínimo de compra, checkout con todos los métodos y pago mixto, y "Puntos ES" con sus términos. |
 | Envíos y entrega | C-100, C-106, C-126, C-127, C-153 | ZOOM y MRW con oficinas reales y cobro a destino, rastreo, detalle de la orden, tiempo real y embalaje según el paquete. |
-| Catálogo que vende | C-78, C-102, C-117 a C-119, C-121, C-122, C-124, C-133, C-134, C-136, C-154, C-155, C-161, C-162, C-163 | Ofertas y cupones, cinta ES, carga masiva, usados y reacondicionados, garantías, reseñas, el asistente de productos y la confianza junto al botón de compra. |
+| Catálogo que vende | C-78, C-102, C-117 a C-119, C-121, C-122, C-124, C-133, C-134, C-136, C-154, C-155, C-157, C-161, C-162, C-163 | Ofertas y cupones, cinta ES, carga masiva, usados y reacondicionados, garantías, reseñas, el asistente de productos, la confianza junto al botón de compra y el correo que pide la reseña. |
 | Panel del cliente | C-55, C-128, C-137, C-138 | Marco, inicio con resumen, Mis pedidos, Favoritos, Direcciones y Mi perfil en pestañas. |
 | Legal y facturación | C-103, C-120, C-144, C-146, C-146b, C-147, C-147b, C-148, C-148b, C-151 | Firma de documentos, IVA incluido a la vista, precio sugerido desde el costo, datos para la factura, relación de ventas, cotizaciones y términos sin promesas falsas. |
 | Crecimiento | C-112, C-113, C-116, C-145, C-149 | ElectroStudio, medición del embudo de compra y el catálogo legible para Google, las redes y las IA. |
@@ -328,7 +328,6 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 **En fila (Claude, en este orden):**
 | ID | Tarea | Notas |
 |---|---|---|
-| **C-157** | Pedir la reseña por correo unos días después de la entrega | Hoy el cliente tiene que acordarse. Solo a quien tiene una orden entregada del producto. |
 | **C-158** | Buscador de la tienda sin acentos | "bateria" encuentra "Batería". Reutiliza `lib/cotizaciones/busqueda.ts` (C-148b). |
 | **C-159** | Cotizaciones, tercera parte | Mandarla por correo desde el panel, "Mis cotizaciones" en el panel del cliente y la retención del 75 % del IVA para contribuyentes especiales y entes públicos. |
 | **C-160** | Menores (una sola tarea) | La lista de abajo. |
@@ -380,7 +379,7 @@ La base técnica está: el embudo se mide (C-145), el catálogo es legible para 
 1. Catálogo: cargar productos con marca, medidas y fotos (C-155 ayuda con cada uno).
 2. Encender la medición y Search Console; esperar una semana de datos.
 3. Anuncios: búsqueda de Google (texto) y catálogo de Meta con `/feed/productos.xml`. Google Merchant Center no admite a Venezuela (lista oficial leída el 01/10).
-4. Reseñas por correo (C-157): la prueba social que hoy falta.
+4. Reseñas por correo (C-157, hecha: falta subirla): la prueba social que hoy falta.
 5. Instituciones: la retención del IVA en las cotizaciones (C-159) y, del lado de Andrés, el Registro Nacional de Contratistas.
 
 **Qué mirar cada semana** (Dashboard y Reportes del panel): productos publicados, visitas, agregados al carrito, compras y ventas cobradas. Los números de la empresa no se escriben en este repositorio, que es público.

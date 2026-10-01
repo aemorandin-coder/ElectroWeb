@@ -244,7 +244,7 @@ export async function PATCH(request: NextRequest) {
                             companyLogo: companySettings?.logo || '',
                             customerName: updatedReview.user.name || 'Cliente',
                             productName: updatedReview.product.name,
-                            productUrl: `${process.env.NEXTAUTH_URL}/productos/${updatedReview.product.slug}#reviews`,
+                            productUrl: `${process.env.NEXTAUTH_URL}/productos/${updatedReview.product.slug}#resenas`,
                             rating: updatedReview.rating,
                         }),
                     });

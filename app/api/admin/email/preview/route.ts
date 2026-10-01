@@ -8,7 +8,7 @@ import {
     sendOrderShippedEmail, sendOrderDeliveredEmail, sendDigitalCodeEmail, sendGiftCardEmail, sendTestEmail,
 } from '@/lib/email-service';
 import { generateOrderConfirmationEmail } from '@/lib/email-templates/OrderConfirmation';
-import { generateReviewReminderEmail } from '@/lib/email-templates/ReviewReminder';
+import { correoPedirResenas } from '@/lib/resenas-avisos';
 import { sendCourseEnrollmentEmail, sendCourseCertificateEmail, sendCreatorStatusEmail } from '@/lib/email-templates/CourseCertificate';
 import { renderCampana } from '@/lib/email-campaigns';
 
@@ -47,16 +47,13 @@ const PLANTILLAS: { id: string; name: string; description: string; render: () =>
     { id: 'order_shipped', name: 'Pedido enviado', description: 'Con transportista y guía', render: () => capturarCorreo(() => sendOrderShippedEmail(DESTINO, { orderNumber: 'ORD-2026-0001', customerName: 'María', trackingNumber: '123456789', shippingCarrier: 'MRW' })) },
     { id: 'order_delivered', name: 'Pedido entregado', description: 'Al marcarlo entregado', render: () => capturarCorreo(() => sendOrderDeliveredEmail(DESTINO, { orderNumber: 'ORD-2026-0001', customerName: 'María' })) },
     {
-        id: 'review_reminder', name: 'Reseña del pedido', description: 'Recordatorio tras la entrega',
+        id: 'review_reminder', name: 'Pedir la reseña', description: 'Cinco días después de la entrega (dos si es digital)',
         render: async () => {
-            const ajustes = await prisma.companySettings.findFirst({ select: { companyName: true, logo: true } });
-            return {
-                subject: '¿Qué te pareció tu compra? - ORD-2026-0001',
-                html: generateReviewReminderEmail({
-                    companyName: ajustes?.companyName || 'Electro Shop', companyLogo: ajustes?.logo || undefined,
-                    customerName: 'María', orderNumber: 'ORD-2026-0001', productName: 'Audífonos inalámbricos', reviewUrl: '#',
-                }),
-            };
+            const { asunto, html } = await correoPedirResenas('ejemplo', 'María', [
+                { nombre: 'Audífonos inalámbricos', slug: 'audifonos-inalambricos', imagen: null, precioUSD: 25 },
+                { nombre: 'Teclado mecánico', slug: 'teclado-mecanico', imagen: null, precioUSD: 18 },
+            ]);
+            return { subject: asunto, html };
         },
     },
     { id: 'digital_code', name: 'Código digital', description: 'Entrega de un código', render: () => capturarCorreo(() => sendDigitalCodeEmail(DESTINO, { orderNumber: 'ORD-2026-0001', customerName: 'María', productName: 'PlayStation Store $25', code: 'XXXX-XXXX-XXXX', platform: 'PlayStation' })) },

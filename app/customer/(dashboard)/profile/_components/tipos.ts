@@ -39,5 +39,5 @@ export interface Ajustes {
     ultimoDispositivo: string | null;
     actividad: Actividad[];
   };
-  notificaciones: { emailPromotions: boolean; inAppFavoritos: boolean; emailFavoritos: boolean };
+  notificaciones: { emailPromotions: boolean; inAppFavoritos: boolean; emailFavoritos: boolean; emailReviews: boolean };
 }

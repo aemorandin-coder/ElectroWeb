@@ -220,7 +220,7 @@ export default function AdminReviewsPage() {
     const producto = (review: Review) =>
         review.product ? (
             <a
-                href={`/productos/${review.product.slug}#reviews`}
+                href={`/productos/${review.product.slug}#resenas`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700"

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { leerNombreMarca, resolverMarca } from '@/lib/marcas';
 import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { digitalVariantsInputSchema, minActivePrice, syncDigitalVariants, type DigitalVariantInput } from '@/lib/digital-variants';
@@ -215,7 +216,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Máximo 8 imágenes permitidas por producto' }, { status: 400 });
     }
 
+    // C-155: la marca escrita en el asistente (se busca o se crea dentro de la transacción)
+    const marca = leerNombreMarca(body.brandName);
+    if ('error' in marca) return NextResponse.json({ error: marca.error }, { status: 400 });
+    const brandId = body.brandName !== undefined ? null : body.brandId || null;
+
     const product = await prisma.$transaction(async (tx) => {
+      const marcaId = marca.nombre ? await resolverMarca(tx, marca.nombre) : brandId;
       const created = await tx.product.create({
       data: {
         name: body.name,
@@ -231,7 +238,7 @@ export async function POST(request: NextRequest) {
         barcode: body.barcode || null,
         tags: body.tags && Array.isArray(body.tags) ? JSON.stringify(body.tags) : null,
         categoryId: body.categoryId,
-        brandId: body.brandId || null,
+        brandId: marcaId,
         images: JSON.stringify(imageArray),
         mainImage: imageArray.length > 0 ? imageArray[0] : null,
         specs: createSpecs(body.specifications, body.productType === 'DIGITAL' ? parseDigitalMargin(body.digitalMarginPercent) : undefined),

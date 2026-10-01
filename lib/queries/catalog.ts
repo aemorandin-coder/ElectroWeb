@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma';
 import { publicProductInclude, toPublicProduct, type PublicProduct } from '@/lib/dto/product';
 import { conOfertas, filtroEnOferta } from '@/lib/promotions';
 import { visibleProducts } from '@/lib/queries/home';
+import { buscarEnCatalogo } from '@/lib/queries/busqueda-catalogo';
 
 export const CATALOG_PAGE_SIZE = 24;
 const MAX_PRICE = 10_000_000;
@@ -107,19 +108,10 @@ export function isIndexableCatalog(params: CatalogParams): boolean {
   return !hasActiveFilters({ ...params, category: null }) && params.page === 1 && params.sort === 'recientes';
 }
 
-function filterConditions(params: CatalogParams, { withCategory, ofertas }: { withCategory: boolean; ofertas: Prisma.ProductWhereInput }): Prisma.ProductWhereInput[] {
+function filterConditions(params: CatalogParams, { withCategory, ofertas, busqueda }: { withCategory: boolean; ofertas: Prisma.ProductWhereInput; busqueda: string[] | null }): Prisma.ProductWhereInput[] {
   const conditions: Prisma.ProductWhereInput[] = [];
-  // Cada palabra debe aparecer en el nombre, la descripción, la marca o la categoría ("teclado aoas")
-  for (const term of params.search.split(/\s+/).filter(Boolean).slice(0, 6)) {
-    conditions.push({
-      OR: [
-        { name: { contains: term, mode: 'insensitive' } },
-        { description: { contains: term, mode: 'insensitive' } },
-        { brand: { name: { contains: term, mode: 'insensitive' } } },
-        { category: { name: { contains: term, mode: 'insensitive' } } },
-      ],
-    });
-  }
+  // La búsqueda (C-158) ya se resolvió sin acentos ni mayúsculas: aquí solo se pide esos productos
+  if (busqueda) conditions.push({ id: { in: busqueda } });
   if (withCategory && params.category) conditions.push({ category: { slug: params.category } });
   if (params.min !== null) conditions.push({ priceUSD: { gte: params.min } });
   if (params.max !== null) conditions.push({ priceUSD: { lte: params.max } });
@@ -161,13 +153,17 @@ export interface CatalogResult {
   categories: CatalogCategoryFacet[];
   /** Categoría elegida, si existe */
   currentCategory: CatalogCurrentCategory | null;
+  /** La búsqueda no coincidió exacto: se muestran productos que se parecen (C-158) */
+  aproximado: boolean;
 }
 
 export async function getCatalog(params: CatalogParams): Promise<CatalogResult> {
   // "Solo ofertas" incluye las ofertas de la tienda vigentes (C-102), no solo el precio anterior
   const ofertas = params.offers ? await filtroEnOferta() : {};
-  const where = await visibleProducts({ AND: filterConditions(params, { withCategory: true, ofertas }) });
-  const whereWithoutCategory = await visibleProducts({ AND: filterConditions(params, { withCategory: false, ofertas }) });
+  const coincidencias = params.search ? await buscarEnCatalogo(params.search) : null;
+  const busqueda = coincidencias?.ids ?? null;
+  const where = await visibleProducts({ AND: filterConditions(params, { withCategory: true, ofertas, busqueda }) });
+  const whereWithoutCategory = await visibleProducts({ AND: filterConditions(params, { withCategory: false, ofertas, busqueda }) });
 
   const [total, counts] = await Promise.all([
     prisma.product.count({ where }),
@@ -206,6 +202,7 @@ export async function getCatalog(params: CatalogParams): Promise<CatalogResult> 
     totalPages,
     categories,
     currentCategory: selected ? { ...selected, count: countById.get(selected.id) ?? 0 } : null,
+    aproximado: coincidencias?.aproximado ?? false,
   };
 }
 

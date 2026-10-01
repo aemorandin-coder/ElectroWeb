@@ -105,7 +105,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
     getCatalog(params),
     params.category ? getCategorySummary(params.category) : null,
   ]);
-  const { products, total, page, totalPages, categories, currentCategory } = catalog;
+  const { products, total, page, totalPages, categories, currentCategory, aproximado } = catalog;
   const current = { ...params, page };
   // Solo la página que se indexa (el catálogo o una categoría, sin búsqueda ni filtros) lleva datos estructurados
   const indexable = isIndexableCatalog(params);
@@ -221,6 +221,11 @@ export default async function ProductosPage({ searchParams }: PageProps) {
             <section aria-label="Resultados">
               {products.length > 0 ? (
                 <>
+                  {aproximado && (
+                    <p role="status" className="mb-3 rounded-lg bg-brand-50 px-3 py-2 text-sm text-ink-soft">
+                      No encontramos «{params.search}» tal cual. Estos productos se le parecen.
+                    </p>
+                  )}
                   <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-4 xl:grid-cols-4">
                     {products.map((product, index) => (
                       <li key={product.id}>

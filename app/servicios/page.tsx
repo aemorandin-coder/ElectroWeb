@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
+import { absoluteUrl } from '@/lib/seo';
 import PublicHeader from '@/components/public/PublicHeader';
 import PageHeader from '@/components/ui/PageHeader';
 import { getPublicSettings } from '@/lib/site-settings';
@@ -21,34 +22,35 @@ export async function generateMetadata(): Promise<Metadata> {
       servicesMetaKeywords: true,
       servicesMetaImage: true,
       logo: true,
-      companyName: true,
     }
   });
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
-
-  const title = settings?.servicesMetaTitle || `Servicios | ${settings?.companyName || 'Electro Shop'}`;
+  // C-149: el layout ya agrega " | Empresa" (salía "Servicios | Electro Shop | Electro Shop"); el título del admin va tal cual
+  const title = settings?.servicesMetaTitle || 'Servicios';
   const description = settings?.servicesMetaDescription || 'Servicios profesionales tecnológicos para tu negocio. Instalación de CCTV, redes, puntos de venta y mantenimiento técnico.';
   const keywords = settings?.servicesMetaKeywords ? settings.servicesMetaKeywords.split(',').map(k => k.trim()) : undefined;
 
-  const shareImage = settings?.servicesMetaImage || settings?.logo || '/og-image.png';
-  const absoluteShareImage = shareImage.startsWith('http') ? shareImage : `${baseUrl}${shareImage.startsWith('/') ? '' : '/'}${shareImage}`;
+  // Sin el respaldo a /og-image.png, que no existe (C-06)
+  const absoluteShareImage = absoluteUrl(settings?.servicesMetaImage || settings?.logo);
+  const images = absoluteShareImage ? [{ url: absoluteShareImage }] : undefined;
 
   return {
-    title,
+    title: settings?.servicesMetaTitle ? { absolute: title } : title,
     description,
     keywords,
+    alternates: { canonical: '/servicios' },
     openGraph: {
       title,
       description,
-      images: [{ url: absoluteShareImage }],
+      url: '/servicios',
+      images,
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [{ url: absoluteShareImage }],
+      images,
     }
   };
 }

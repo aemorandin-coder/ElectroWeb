@@ -434,3 +434,13 @@ Andrés pidió el 29/09 cinco módulos, y algunos tocan tu carril. **No revierta
   - El layout: el inicio va sin tarjeta envolvente y escucha el evento `abrir-menu-cliente`.
   - Los pasos de un pedido salen de `pasosPedido()` (`lib/order-pasos.ts`): no hagas otro mapeo de estados.
 - **Palabras (C-129, C-131):** el saldo de la tienda se llama **"Puntos ES"** en todo texto visible (regla de Andrés del 30/09). Nunca "saldo", "billetera", "wallet" ni "monedero". SUDEBAN sancionó a Yummy por un servicio de "billeteras", y el saldo de ElectroShop se mantiene como pago anticipado que solo compra en la tienda. Tampoco escribas que el saldo se puede retirar o transferir.
+
+## 10. Cambios de Claude del 01/10 que te afectan (C-149)
+
+Andrés autorizó el 01/10 que Claude pusiera título y descripción propios en siete páginas de tu carril. **No los quites ni los "limpies".**
+- **Archivos tuyos tocados (solo metadatos):** `app/contacto/page.tsx`, `app/terminos/page.tsx`, `app/privacidad/page.tsx`, `app/solicitar-producto/page.tsx`, `app/servicios/page.tsx`, `app/cursos/page.tsx` y uno nuevo, `app/gift-cards/layout.tsx`.
+- **Títulos:** una página pública declara `title: 'Contacto'`, sin el nombre de la tienda. El layout raíz agrega " | Electro Shop": si lo escribes tú, sale dos veces.
+- **Una página `'use client'` no puede exportar `metadata`:** va en un `layout.tsx` de su carpeta (como `app/gift-cards/layout.tsx`).
+- **Imágenes y direcciones absolutas:** `absoluteUrl()` de `@/lib/seo`. No armes la dirección a mano con `NEXT_PUBLIC_BASE_URL`, y no uses `/og-image.png` (no existe).
+- **Enlaces a una categoría:** `/categorias/<slug>`. `/productos?category=<slug>` sigue funcionando para los filtros, pero la dirección propia de la categoría es la primera.
+- **Datos estructurados:** `<JsonLd data={…} />` de `@/components/seo/JsonLd` con las funciones de `lib/seo.ts`. No escribas un `<script type="application/ld+json">` a mano.

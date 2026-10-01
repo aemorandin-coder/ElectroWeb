@@ -26,6 +26,8 @@ import { getProductBySlug, getPublicReviews, getRelatedProducts, getReviewSummar
 import { getPublicSettings } from '@/lib/site-settings';
 import { formatUSD } from '@/lib/currency';
 import { INTERNAL_SPEC_KEYS } from '@/lib/product-specs';
+import JsonLd from '@/components/seo/JsonLd';
+import { absoluteUrl, breadcrumbJsonLd, plainText, productJsonLd } from '@/lib/seo';
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -33,19 +35,13 @@ type PageProps = { params: Promise<{ id: string }> };
 const HIDDEN_SPEC_KEYS = new Set<string>([...INTERNAL_SPEC_KEYS, 'redemptionInstructions']);
 const regionName = (value: string) => DIGITAL_REGIONS.find((r) => r.value === value)?.label ?? value;
 
-const baseUrl = () => process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
-function absoluteUrl(url: string | null | undefined): string | null {
-  if (!url || url.startsWith('data:')) return null;
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  return `${baseUrl()}${url.startsWith('/') ? '' : '/'}${url}`;
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
   const product = await getProductBySlug(id);
   if (!product) return { title: 'Producto no encontrado', robots: { index: false } };
 
-  const description = (product.seoDescription || product.description || `Compra ${product.name} con envío a toda Venezuela.`).replace(/\s+/g, ' ').slice(0, 160);
+  // Sin descripción no se promete el envío: depende de Configuración y del producto (C-149)
+  const description = plainText(product.seoDescription || product.description || `${product.name} en ${product.category.name}. Precio en dólares y bolívares.`, 160);
   const image = absoluteUrl(product.seoImage) || absoluteUrl(product.mainImage) || absoluteUrl(product.images[0]);
   // Una sola definición de metadatos (antes había otra en layout.tsx que la pisaba)
   return {
@@ -99,27 +95,6 @@ export default async function ProductPage({ params }: PageProps) {
   const deliveryMode = DELIVERY_MODES[product.deliveryMethod === 'MANUAL' ? 'MANUAL' : 'INSTANT'];
   const waNumber = settings.whatsapp?.replace(/\D/g, '');
   const sharePath = product.shortCode ? `/p/${product.shortCode}` : `/productos/${product.slug}`;
-  const inStock = isDigital || product.stock > 0;
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.name,
-    description: product.description?.slice(0, 500) || undefined,
-    image: images.map(absoluteUrl).filter(Boolean),
-    brand: product.brand ? { '@type': 'Brand', name: product.brand.name } : undefined,
-    category: product.category.name,
-    offers: {
-      '@type': 'Offer',
-      url: `${baseUrl()}/productos/${product.slug}`,
-      priceCurrency: 'USD',
-      price: product.priceUSD.toFixed(2),
-      availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      // C-119: Google distingue nuevo, reacondicionado y usado (caja abierta ya no está sellada: usado)
-      itemCondition: `https://schema.org/${product.condition?.kind === 'REFURBISHED' ? 'RefurbishedCondition' : product.condition ? 'UsedCondition' : 'NewCondition'}`,
-    },
-    aggregateRating: summary.count > 0 ? { '@type': 'AggregateRating', ratingValue: summary.average.toFixed(1), reviewCount: summary.count } : undefined,
-  };
 
   const delivery = [
     ...(isDigital
@@ -148,8 +123,16 @@ export default async function ProductPage({ params }: PageProps) {
   return (
     <div className="min-h-dvh bg-surface">
       <PublicHeader />
-      {/* JSON-LD de producto: precio, disponibilidad y valoración para Google */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
+      {/* Datos estructurados (C-149): la ficha con precio, disponibilidad, condición y reseñas, y la ruta de navegación */}
+      <JsonLd data={productJsonLd({ product, rating: summary, reviews, deliveryEnabled: settings.deliveryEnabled })} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: 'Inicio', path: '/' },
+          { name: 'Productos', path: '/productos' },
+          { name: product.category.name, path: `/categorias/${product.category.slug}` },
+          { name: product.name, path: `/productos/${product.slug}` },
+        ])}
+      />
 
       <main>
         <Container className="pb-10 pt-4 lg:pt-6">
@@ -159,7 +142,7 @@ export default async function ProductPage({ params }: PageProps) {
               <li aria-hidden="true" className="shrink-0"><FiChevronRight className="h-3 w-3" /></li>
               <li className="shrink-0"><Link href="/productos" className="hover:text-brand-600 hover:underline">Productos</Link></li>
               <li aria-hidden="true" className="shrink-0"><FiChevronRight className="h-3 w-3" /></li>
-              <li className="shrink-0"><Link href={`/productos?category=${product.category.slug}`} className="hover:text-brand-600 hover:underline">{product.category.name}</Link></li>
+              <li className="shrink-0"><Link href={`/categorias/${product.category.slug}`} className="hover:text-brand-600 hover:underline">{product.category.name}</Link></li>
               <li aria-hidden="true" className="hidden shrink-0 sm:block"><FiChevronRight className="h-3 w-3" /></li>
               <li className="hidden min-w-0 sm:block"><span aria-current="page" className="block truncate text-ink-soft">{product.name}</span></li>
             </ol>
@@ -188,7 +171,7 @@ export default async function ProductPage({ params }: PageProps) {
               <div className="rounded-2xl border border-line bg-white p-4 lg:p-6">
                 <p className="text-xs font-medium text-muted">
                   {product.brand && <span className="uppercase tracking-wide">{product.brand.name} · </span>}
-                  <Link href={`/productos?category=${product.category.slug}`} className="text-brand-700 hover:underline">{product.category.name}</Link>
+                  <Link href={`/categorias/${product.category.slug}`} className="text-brand-700 hover:underline">{product.category.name}</Link>
                 </p>
                 <h1 className="mt-1 text-xl font-bold leading-snug text-ink sm:text-2xl lg:text-3xl">{product.name}</h1>
                 {product.condition && <ConditionNotice condition={product.condition} />}
@@ -304,7 +287,7 @@ export default async function ProductPage({ params }: PageProps) {
 
           {related.length > 0 && (
             <section aria-labelledby="relacionados-title" className="mt-8 lg:mt-10">
-              <SectionHeader id="relacionados-title" title="También te puede interesar" href={`/productos?category=${product.category.slug}`} />
+              <SectionHeader id="relacionados-title" title="También te puede interesar" href={`/categorias/${product.category.slug}`} />
               <ProductShelf label="Productos relacionados">
                 {related.map((item) => (
                   <ProductCard key={item.id} product={item} exchangeRateVES={settings.exchangeRateVES} lowStockThreshold={homeSettings.lowStockThreshold} />

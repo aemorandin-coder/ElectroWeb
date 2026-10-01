@@ -17,8 +17,11 @@ import { prisma } from '@/lib/prisma';
 import {
   CATALOG_PAGE_SIZE,
   catalogHref,
+  categoryText,
   getCatalog,
+  getCategorySummary,
   hasActiveFilters,
+  isIndexableCatalog,
   parseCatalogParams,
   SORT_OPTIONS,
   type CatalogParams,
@@ -26,42 +29,47 @@ import {
 import { getAutoIcon } from '@/lib/category-icons';
 import { getHomeSettings } from '@/lib/queries/home';
 import { getPublicSettings } from '@/lib/site-settings';
+import JsonLd from '@/components/seo/JsonLd';
+import { absoluteUrl, breadcrumbJsonLd, plainText, productListJsonLd } from '@/lib/seo';
 
 type PageProps = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const params = parseCatalogParams(await searchParams);
-  const [settings, category] = await Promise.all([
+  const [settings, publicSettings, category] = await Promise.all([
     prisma.companySettings.findFirst({
       select: { productsMetaTitle: true, productsMetaDescription: true, productsMetaKeywords: true, productsMetaImage: true, logo: true },
     }),
-    params.category ? prisma.category.findUnique({ where: { slug: params.category }, select: { name: true } }) : null,
+    getPublicSettings(),
+    params.category ? getCategorySummary(params.category) : null,
   ]);
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com';
-  const description = settings?.productsMetaDescription || 'Tecnología, gaming, gift cards y recargas digitales con envíos a toda Venezuela. Precios en dólares y bolívares.';
-  const shareImage = settings?.productsMetaImage || settings?.logo || null;
-  const absoluteShareImage = shareImage && (shareImage.startsWith('http') ? shareImage : `${baseUrl}${shareImage.startsWith('/') ? '' : '/'}${shareImage}`);
+  // C-149: cada categoría tiene su propio texto en los buscadores (antes todas repetían el del catálogo)
+  const description = category
+    ? plainText(categoryText(category, publicSettings.deliveryEnabled), 160)
+    : settings?.productsMetaDescription || 'Tecnología, gaming, gift cards y recargas digitales con envíos a toda Venezuela. Precios en dólares y bolívares.';
+  const absoluteShareImage = absoluteUrl(settings?.productsMetaImage || settings?.logo);
+  // La dirección propia de la categoría es /categorias/<slug>: /productos?category=<slug> apunta a ella
+  const canonical = category ? `/categorias/${category.slug}` : '/productos';
 
   // El layout agrega " | Empresa": el título propio del admin se usa tal cual para no repetirla
   const title: Metadata['title'] = params.search
     ? `Resultados para "${params.search}"`
     : category
-      ? category.name
+      ? `${category.name} en Venezuela`
       : settings?.productsMetaTitle
         ? { absolute: settings.productsMetaTitle }
         : 'Productos';
 
-  // Búsquedas, filtros y páginas siguientes no se indexan; la categoría sí
-  const onlyCategory = !params.search && params.min === null && params.max === null && !params.offers && !params.inStock && !params.type && !params.condition && params.page === 1 && params.sort === 'recientes';
 
   return {
     title,
     description,
     keywords: settings?.productsMetaKeywords ? settings.productsMetaKeywords.split(',').map((k) => k.trim()) : undefined,
-    alternates: { canonical: category ? `/productos?category=${params.category}` : '/productos' },
-    robots: onlyCategory ? undefined : { index: false, follow: true },
-    openGraph: { description, images: absoluteShareImage ? [{ url: absoluteShareImage }] : undefined, type: 'website' },
+    alternates: { canonical },
+    // Búsquedas, filtros y páginas siguientes no se indexan; la categoría sí
+    robots: isIndexableCatalog(params) ? undefined : { index: false, follow: true },
+    openGraph: { description, url: canonical, images: absoluteShareImage ? [{ url: absoluteShareImage }] : undefined, type: 'website' },
   };
 }
 
@@ -91,9 +99,16 @@ export default async function ProductosPage({ searchParams }: PageProps) {
   if (Object.values(raw).some((value) => value === '' || (Array.isArray(value) && value.includes('')))) {
     redirect(catalogHref(params, { page: params.page }));
   }
-  const [settings, homeSettings, catalog] = await Promise.all([getPublicSettings(), getHomeSettings(), getCatalog(params)]);
+  const [settings, homeSettings, catalog, summary] = await Promise.all([
+    getPublicSettings(),
+    getHomeSettings(),
+    getCatalog(params),
+    params.category ? getCategorySummary(params.category) : null,
+  ]);
   const { products, total, page, totalPages, categories, currentCategory } = catalog;
   const current = { ...params, page };
+  // Solo la página que se indexa (el catálogo o una categoría, sin búsqueda ni filtros) lleva datos estructurados
+  const indexable = isIndexableCatalog(params);
 
   const heading = params.search ? `Resultados para "${params.search}"` : currentCategory?.name ?? 'Productos';
   const chips = activeChips(current, currentCategory?.name ?? null);
@@ -105,6 +120,18 @@ export default async function ProductosPage({ searchParams }: PageProps) {
   return (
     <div className="min-h-dvh bg-surface">
       <PublicHeader />
+      {indexable && (
+        <>
+          <JsonLd
+            data={breadcrumbJsonLd([
+              { name: 'Inicio', path: '/' },
+              { name: 'Productos', path: '/productos' },
+              ...(currentCategory ? [{ name: currentCategory.name, path: `/categorias/${currentCategory.slug}` }] : []),
+            ])}
+          />
+          {products.length > 0 && <JsonLd data={productListJsonLd(heading, products)} />}
+        </>
+      )}
 
       <main>
         <PageHeader
@@ -120,7 +147,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
           title={heading}
           description={
             params.search ? undefined
-              : currentCategory ? currentCategory.description || `Todo lo que tenemos en ${currentCategory.name}, con precios en dólares y bolívares.`
+              : summary ? categoryText(summary, settings.deliveryEnabled)
                 : 'Tecnología, gaming y gift cards con envíos a toda Venezuela. Precios en dólares y bolívares.'
           }
           meta={

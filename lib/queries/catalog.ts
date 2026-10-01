@@ -2,6 +2,7 @@
 // se leen de searchParams y se resuelven en la base de datos (nada de traer todo y filtrar en el cliente).
 // Mismas reglas de visibilidad que el home (publicados; sin stock ocultos si el admin lo pide).
 
+import { cache } from 'react';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { publicProductInclude, toPublicProduct, type PublicProduct } from '@/lib/dto/product';
@@ -99,6 +100,11 @@ export function catalogHref(params: CatalogParams, changes: Partial<CatalogParam
 /** ¿Hay algún filtro aplicado (sin contar orden ni página)? */
 export function hasActiveFilters(params: CatalogParams): boolean {
   return Boolean(params.search || params.category || params.min !== null || params.max !== null || params.offers || params.inStock || params.type || params.condition);
+}
+
+/** La página que se indexa: el catálogo o una categoría, sin búsqueda, filtros, orden ni páginas siguientes. */
+export function isIndexableCatalog(params: CatalogParams): boolean {
+  return !hasActiveFilters({ ...params, category: null }) && params.page === 1 && params.sort === 'recientes';
 }
 
 function filterConditions(params: CatalogParams, { withCategory, ofertas }: { withCategory: boolean; ofertas: Prisma.ProductWhereInput }): Prisma.ProductWhereInput[] {
@@ -201,4 +207,52 @@ export async function getCatalog(params: CatalogParams): Promise<CatalogResult> 
     categories,
     currentCategory: selected ? { ...selected, count: countById.get(selected.id) ?? 0 } : null,
   };
+}
+
+export interface CategorySummary {
+  name: string;
+  slug: string;
+  /** Texto que escribió el equipo en Categorías; null si no hay */
+  description: string | null;
+  /** Hasta 4 marcas, primero las que tienen más productos */
+  brands: string[];
+}
+
+/**
+ * C-149: lo que hay hoy en una categoría, para su texto en la página y en los buscadores.
+ * `cache()`: generateMetadata y la página comparten la consulta.
+ */
+export const getCategorySummary = cache(async (slug: string): Promise<CategorySummary | null> => {
+  const category = await prisma.category.findUnique({ where: { slug }, select: { id: true, name: true, slug: true, description: true } });
+  if (!category) return null;
+  const byBrand = await prisma.product.groupBy({
+    by: ['brandId'],
+    where: await visibleProducts({ categoryId: category.id, brandId: { not: null } }),
+    _count: { brandId: true },
+    orderBy: { _count: { brandId: 'desc' } },
+    take: 4,
+  });
+  const ids = byBrand.map((row) => row.brandId).filter((id): id is string => Boolean(id));
+  const names = ids.length > 0 ? await prisma.brand.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } }) : [];
+  const nameById = new Map(names.map((brand) => [brand.id, brand.name]));
+  return {
+    name: category.name,
+    slug: category.slug,
+    description: category.description?.trim() || null,
+    brands: ids.map((id) => nameById.get(id)).filter((name): name is string => Boolean(name)),
+  };
+});
+
+const listaEs = (items: string[]) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}` : items[0] ?? '');
+
+/**
+ * Texto propio de la categoría: el que escribió el equipo o, si no hay, uno armado con las marcas que la tienda
+ * tiene hoy en ella. Sin la cantidad: la página ya la dice debajo. El envío solo se menciona si está activo en Configuración.
+ */
+export function categoryText(summary: CategorySummary, deliveryEnabled: boolean): string {
+  if (summary.description) return summary.description;
+  const que = summary.brands.length > 0
+    ? `${summary.name} de ${summary.brands.length === 1 ? 'la marca' : 'marcas como'} ${listaEs(summary.brands)}`
+    : `Todo lo que tenemos en ${summary.name}`;
+  return `${que}. Precios en dólares y en bolívares${deliveryEnabled ? ', con envíos a toda Venezuela' : ''}.`;
 }

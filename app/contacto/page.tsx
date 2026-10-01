@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { getPublicSettings } from '@/lib/site-settings';
 import PublicHeader from '@/components/public/PublicHeader';
@@ -10,6 +11,13 @@ import Footer from '@/components/Footer';
 import { adminIconChip } from '@/lib/admin-ui';
 
 export const revalidate = 0;
+
+// C-149: título y descripción propios (salía con los de la portada)
+export const metadata: Metadata = {
+  title: 'Contacto',
+  description: 'Cómo contactar a Electro Shop: WhatsApp, teléfono, correo, dirección y horario de la tienda.',
+  alternates: { canonical: '/contacto' },
+};
 
 type Canal = {
   clave: string;

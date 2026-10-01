@@ -53,7 +53,6 @@ export async function GET(
         } else if (isDocument) {
             const name = pathSegments.slice(1).join('/');
             const session = await getServerSession(authOptions);
-            const role = session?.user?.role;
             const isAdmin = esAdminVerificado(session);
             // Mismo 404 para "no existe" y "no es tuyo": no se revela qué documentos hay
             if (!session?.user || pathSegments.length !== 2 || (!isAdmin && documentOwner(name) !== session.user.id)) {
@@ -73,11 +72,12 @@ export async function GET(
             }
         }
 
-        if (!existsSync(filePath)) {
+        // turbopackIgnore: la ruta ya quedó dentro de su carpeta (isInside). Sin esto el build rastrea todo el proyecto (C-141)
+        if (!existsSync(/*turbopackIgnore: true*/ filePath)) {
             return NextResponse.json({ error: 'File not found' }, { status: 404 });
         }
 
-        const buffer = await readFile(filePath);
+        const buffer = await readFile(/*turbopackIgnore: true*/ filePath);
         const ext = path.extname(filePath).toLowerCase();
         const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 

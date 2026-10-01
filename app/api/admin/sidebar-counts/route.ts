@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { esAdminVerificado } from '@/lib/auth-helpers';
 import { pagoSinOrdenWhere } from '@/lib/pago-movil-sin-orden';
 
 export const dynamic = 'force-dynamic';
@@ -15,13 +16,12 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const user = session.user as { role?: string; id?: string };
-    const role = user.role;
-    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN' && role !== 'SUPPORT') {
+    // 403 y no 401 para el admin sin los dos pasos: con 401 el panel cierra la sesión (C-140) y no podría configurarlos
+    if (!esAdminVerificado(session)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
-    const userId = user.id;
+    const userId = session.user.id;
 
     const [
       pendingOrders,

@@ -2,13 +2,15 @@
 // según RFC 6238 (TOTP, SHA-1, 30 s), más 10 códigos de respaldo de un solo uso. Decisión de Andrés del 30/09.
 // Solo servidor: el secreto se guarda cifrado y los códigos de respaldo como HMAC.
 
-import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto';
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'crypto';
 import qrcode from 'qrcode-generator';
 import { prisma } from '@/lib/prisma';
 
 const PASO_S = 30;
 const DIGITOS = 6;
 const ALFABETO = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+// Códigos de respaldo: se copian a mano, así que sin I, L, O, U, 0 ni 1 (30 símbolos, 8 por código: unos 39 bits)
+const ALFABETO_RESPALDO = 'ABCDEFGHJKMNPQRSTVWXYZ23456789';
 
 /* ── Cifrado del secreto (AES-256-GCM, clave derivada de NEXTAUTH_SECRET, como el token de Telegram) ── */
 
@@ -106,7 +108,7 @@ function huellaRespaldo(codigo: string): string {
 
 function nuevosCodigosRespaldo(): { codigos: string[]; huellas: string[] } {
   const codigos = Array.from({ length: 10 }, () => {
-    const t = aBase32(randomBytes(5)).slice(0, 8); // 40 bits
+    const t = Array.from({ length: 8 }, () => ALFABETO_RESPALDO[randomInt(ALFABETO_RESPALDO.length)]).join('');
     return `${t.slice(0, 4)}-${t.slice(4)}`;
   });
   return { codigos, huellas: codigos.map(huellaRespaldo) };

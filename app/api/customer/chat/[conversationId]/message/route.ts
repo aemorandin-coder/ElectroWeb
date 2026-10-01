@@ -25,7 +25,6 @@ export async function POST(
 
     // SEGURIDAD (C-70): solo el dueño o un admin escriben, y el remitente sale de la sesión
     // (antes llegaba del cuerpo: cualquiera escribía en chats ajenos haciéndose pasar por el admin)
-    const role = session.user.role;
     const isAdmin = esAdminVerificado(session);
     const conversation = await prisma.chatConversation.findUnique({ where: { id: conversationId }, select: { userId: true } });
     if (!conversation || (!isAdmin && conversation.userId !== session.user.id)) {

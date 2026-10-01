@@ -82,6 +82,7 @@ export const ADMIN_EVENTS = {
   EXCHANGE_RATE_FAILED: { category: 'sistema', label: 'Tasa BCV sin actualizar', description: 'La fuente no respondió o mandó una tasa que no cuadra.', defaults: on(true, false, true) },
   MAINTENANCE_CHANGED: { category: 'sistema', label: 'Modo mantenimiento', description: 'Alguien activó o apagó el modo mantenimiento.', defaults: on(true, false, true) },
   ADMIN_SESSION_REPORTED: { category: 'sistema', label: '"No fui yo" en el panel', description: 'Un admin reportó un inicio de sesión que no hizo: se cerraron sus sesiones y se bloqueó su contraseña.', defaults: on(true, true, true) },
+  ADMIN_TEAM_CHANGED: { category: 'sistema', label: 'Cambios en el equipo', description: 'Invitaciones al panel, cambios de rol, accesos quitados o devueltos y la verificación en dos pasos de cada cuenta.', defaults: on(true, true, true) },
   ADMIN_LOGIN: { category: 'sistema', label: 'Inicio de sesión en el panel', description: 'Un administrador entró al panel, con dispositivo, IP y el botón "No fui yo" para cerrar y bloquear esa sesión.', defaults: on(true, false, true), silent: true },
 } satisfies Record<string, AdminEventDefinition>;
 

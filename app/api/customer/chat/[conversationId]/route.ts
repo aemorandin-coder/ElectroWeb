@@ -27,7 +27,6 @@ export async function GET(
     });
 
     // SEGURIDAD (C-70): solo el dueño de la conversación o un admin (antes cualquier sesión leía chats ajenos)
-    const role = session.user.role;
     const isAdmin = esAdminVerificado(session);
     if (!conversation || (!isAdmin && conversation.userId !== session.user.id)) {
       return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });

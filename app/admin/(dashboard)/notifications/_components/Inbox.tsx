@@ -18,7 +18,7 @@ const syncBadges = () => {
   window.dispatchEvent(new Event('refresh-sidebar-counts'));
 };
 
-export default function Inbox() {
+export default function Inbox({ puedeElegir }: { puedeElegir: boolean }) {
   const [category, setCategory] = useState<AdminEventCategory | 'all'>('all');
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
@@ -142,7 +142,7 @@ export default function Inbox() {
           <FiBell className="h-10 w-10 text-subtle" aria-hidden="true" />
           <p className="mt-3 font-semibold text-ink">{unreadOnly ? 'Nada sin leer' : 'Sin notificaciones'}</p>
           <p className="mt-1 max-w-sm text-sm text-muted">
-            Aquí llegan las ventas, recargas, solicitudes y alertas de la tienda. Elige qué llega en la pestaña Qué avisar.
+            Aquí llegan las ventas, recargas, solicitudes y alertas de la tienda.{puedeElegir ? ' Elige qué llega en la pestaña Qué avisar.' : ''}
           </p>
         </div>
       ) : (

@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { FaTelegram } from 'react-icons/fa6';
 import { FiInbox, FiSliders } from 'react-icons/fi';
 import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab } from '@/lib/admin-ui';
+import { hasPermission } from '@/lib/auth-helpers';
 import Inbox from './_components/Inbox';
 import ChannelMatrix from './_components/ChannelMatrix';
 import TelegramPanel from './_components/TelegramPanel';
@@ -26,7 +28,12 @@ function tabFromHash(): TabId {
 }
 
 export default function NotificationsPage() {
-  const [active, setActive] = useState<TabId>('bandeja');
+  const [elegida, setActive] = useState<TabId>('bandeja');
+  // C-141: los canales de aviso y el bot de Telegram son configuración sensible (solo el super admin)
+  const { data: session } = useSession();
+  const esDueno = hasPermission(session, 'MANAGE_SETTINGS');
+  const tabs = esDueno ? TABS : TABS.filter((tab) => tab.id === 'bandeja');
+  const active = tabs.some((tab) => tab.id === elegida) ? elegida : 'bandeja';
 
   useEffect(() => {
     const sync = () => setActive(tabFromHash());
@@ -52,18 +59,20 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      <div className="-mx-1 mb-5 overflow-x-auto px-1 pb-1">
-        <div className="flex w-max gap-1 rounded-xl border border-line bg-white p-1" role="tablist" aria-label="Secciones">
-          {TABS.map(({ id, label, Icon }) => (
-            <button key={id} type="button" role="tab" aria-selected={active === id} onClick={() => goTo(id)} className={adminTab(active === id)}>
-              <Icon className="h-4 w-4" aria-hidden="true" />
-              {label}
-            </button>
-          ))}
+      {tabs.length > 1 && (
+        <div className="-mx-1 mb-5 overflow-x-auto px-1 pb-1">
+          <div className="flex w-max gap-1 rounded-xl border border-line bg-white p-1" role="tablist" aria-label="Secciones">
+            {tabs.map(({ id, label, Icon }) => (
+              <button key={id} type="button" role="tab" aria-selected={active === id} onClick={() => goTo(id)} className={adminTab(active === id)}>
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {active === 'bandeja' && <Inbox />}
+      {active === 'bandeja' && <Inbox puedeElegir={esDueno} />}
       {active === 'avisos' && <ChannelMatrix onGoToTelegram={() => goTo('telegram')} />}
       {active === 'telegram' && <TelegramPanel />}
     </div>

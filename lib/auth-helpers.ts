@@ -10,6 +10,8 @@ import { Session } from 'next-auth';
  * El menú del panel usa esta misma función.
  */
 export const SOLO_DUENO = ['MANAGE_SETTINGS', 'MANAGE_TEAM'];
+/** Páginas del panel que solo abre el super admin (el `proxy` devuelve a los demás al inicio del panel). */
+export const PAGINAS_SOLO_DUENO = ['/admin/settings', '/admin/payments', '/admin/equipo'];
 
 export function hasPermission(session: Session | null, permission: string): boolean {
     if (!session) return false;

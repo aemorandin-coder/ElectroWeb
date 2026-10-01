@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FiAlertCircle, FiCheck, FiCheckCircle, FiCircle, FiEye, FiEyeOff } from 'react-icons/fi';
 import AuthShell from '@/components/auth/AuthShell';
@@ -12,6 +12,9 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const params = useParams();
   const token = params.token as string;
+  // C-141: el mismo enlace sirve para aceptar una invitación al panel (?invitacion=1): cambia solo el texto
+  const invitacion = useSearchParams().get('invitacion') === '1';
+  const destino = invitacion ? '/login?redirect=admin' : '/login';
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -47,7 +50,7 @@ export default function ResetPasswordPage() {
       const data = await response.json();
       if (response.ok) {
         setSuccess(true);
-        setTimeout(() => router.push('/login'), 3000);
+        setTimeout(() => router.push(destino), 3000);
       } else {
         const message = data.message || 'Error al restablecer la contraseña';
         if (/token|enlace|expir/i.test(message)) setExpired(true);
@@ -62,28 +65,38 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <AuthShell volver={{ href: '/login', texto: 'Volver al Login' }}>
+    <AuthShell volver={{ href: destino, texto: 'Volver al Login' }}>
       {success ? (
         <div className="text-center">
           <FiCheckCircle className="mx-auto h-12 w-12 text-success-strong" aria-hidden="true" />
-          <h1 className="mt-4 text-2xl font-bold text-ink">Contraseña restablecida</h1>
-          <p className="mt-2 text-sm leading-relaxed text-muted">Tu contraseña se actualizó. Te llevaremos al inicio de sesión en unos segundos.</p>
-          <Link href="/login" className={`${adminPrimaryButton} mt-6 w-full`}>Ir al Login</Link>
+          <h1 className="mt-4 text-2xl font-bold text-ink">{invitacion ? 'Contraseña creada' : 'Contraseña restablecida'}</h1>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            {invitacion
+              ? 'Ya puedes entrar al panel con tu correo y esta contraseña. Al entrar configurarás la verificación en dos pasos.'
+              : 'Tu contraseña se actualizó. Te llevaremos al inicio de sesión en unos segundos.'}
+          </p>
+          <Link href={destino} className={`${adminPrimaryButton} mt-6 w-full`}>Ir al Login</Link>
         </div>
       ) : expired ? (
         <div className="text-center">
           <FiAlertCircle className="mx-auto h-12 w-12 text-deal" aria-hidden="true" />
-          <h1 className="mt-4 text-2xl font-bold text-ink">Enlace vencido o inválido</h1>
-          <p className="mt-2 text-sm leading-relaxed text-muted">Este enlace ya no sirve para cambiar la contraseña. Solicita uno nuevo.</p>
-          <Link href="/recuperar-contrasena" className={`${adminPrimaryButton} mt-6 w-full`}>Solicitar otro enlace</Link>
+          <h1 className="mt-4 text-2xl font-bold text-ink">{invitacion ? 'Invitación vencida o ya usada' : 'Enlace vencido o inválido'}</h1>
+          {invitacion ? (
+            <p className="mt-2 text-sm leading-relaxed text-muted">Las invitaciones sirven 24 horas y una sola vez. Pide a quien te invitó que te la reenvíe desde Equipo.</p>
+          ) : (
+            <>
+              <p className="mt-2 text-sm leading-relaxed text-muted">Este enlace ya no sirve para cambiar la contraseña. Solicita uno nuevo.</p>
+              <Link href="/recuperar-contrasena" className={`${adminPrimaryButton} mt-6 w-full`}>Solicitar otro enlace</Link>
+            </>
+          )}
         </div>
       ) : (
         <>
-          <h1 className="text-2xl font-bold text-ink">Nueva contraseña</h1>
-          <p className="mt-2 text-sm text-muted">Elige una contraseña segura para tu cuenta.</p>
+          <h1 className="text-2xl font-bold text-ink">{invitacion ? 'Crea tu contraseña' : 'Nueva contraseña'}</h1>
+          <p className="mt-2 text-sm text-muted">{invitacion ? 'Te invitaron al panel de Electro Shop. Elige una contraseña que no uses en otro sitio.' : 'Elige una contraseña segura para tu cuenta.'}</p>
           <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
             <div>
-              <label htmlFor="password" className={adminLabel}>Nueva contraseña</label>
+              <label htmlFor="password" className={adminLabel}>{invitacion ? 'Contraseña' : 'Nueva contraseña'}</label>
               <div className="relative">
                 <input id="password" ref={passwordRef} type={showPassword ? 'text' : 'password'} required value={password}
                   onChange={(event) => { setPassword(event.target.value); if (error?.field === 'password') setError(null); }}
@@ -123,7 +136,7 @@ export default function ResetPasswordPage() {
               <p id="confirm-error" className={`${adminError} min-h-4`} role={error?.field === 'confirmPassword' ? 'alert' : undefined}>{error?.field === 'confirmPassword' ? error.message : ''}</p>
             </div>
             <button type="submit" disabled={loading} className={`${adminPrimaryButton} w-full`}>
-              {loading ? 'Restableciendo...' : 'Restablecer contraseña'}
+              {loading ? 'Guardando…' : invitacion ? 'Crear contraseña' : 'Restablecer contraseña'}
             </button>
           </form>
         </>

@@ -51,6 +51,9 @@ export async function POST(request: NextRequest) {
         }
 
         const hashedPassword = await bcrypt.hash(password, 12);
+        // C-141: quien acepta una invitación al panel crea aquí su contraseña; abrir el enlace prueba que el correo es suyo
+        const esEquipo = resetToken.user.role === 'ADMIN' || resetToken.user.role === 'SUPER_ADMIN';
+        const verificarCorreo = esEquipo && !resetToken.user.emailVerified;
 
         // C-88: el enlace sirve una sola vez aunque se envíe dos veces a la vez (se borra antes de cambiar la clave),
         // y cambiar la contraseña cierra las sesiones abiertas: si alguien más había entrado a la cuenta, sale.
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
             if (borrado.count === 0) return false;
             await tx.user.update({
                 where: { id: resetToken.userId },
-                data: { password: hashedPassword, sessionVersion: { increment: 1 } },
+                data: { password: hashedPassword, sessionVersion: { increment: 1 }, ...(verificarCorreo ? { emailVerified: new Date() } : {}) },
             });
             await tx.passwordResetToken.deleteMany({ where: { userId: resetToken.userId } });
             return true;

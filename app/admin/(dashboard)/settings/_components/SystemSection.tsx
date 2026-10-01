@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import Link from 'next/link';
 import { FiAlertTriangle, FiMail, FiPlus, FiX } from 'react-icons/fi';
 import { adminBadge, adminInput, adminLabel, adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
@@ -8,13 +8,6 @@ import type { SectionProps } from './settings-form';
 import { Field, SettingsCard, SwitchRow, TextAreaField } from './fields';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-interface AdminUser {
-  id: string;
-  name: string | null;
-  email: string;
-  role: string;
-}
 
 function ColorField({ label, value, onChange, error }: { label: string; value: string; onChange: (value: string) => void; error?: string }) {
   const id = useId();
@@ -38,23 +31,7 @@ function ColorField({ label, value, onChange, error }: { label: string; value: s
 export default function SystemSection({ form, set, errors }: SectionProps) {
   const [newEmail, setNewEmail] = useState('');
   const [emailError, setEmailError] = useState('');
-  const [admins, setAdmins] = useState<AdminUser[] | null>(null);
   const emailInputId = useId();
-
-  useEffect(() => {
-    let active = true;
-    fetch('/api/admin/users?role=admin')
-      .then((response) => (response.ok ? response.json() : { users: [] }))
-      .then((data) => {
-        if (active) setAdmins(Array.isArray(data.users) ? data.users : []);
-      })
-      .catch(() => {
-        if (active) setAdmins([]);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const addEmail = () => {
     const email = newEmail.trim().toLowerCase();
@@ -173,30 +150,11 @@ export default function SystemSection({ form, set, errors }: SectionProps) {
       </SettingsCard>
 
       <SettingsCard
-        title="Administradores"
-        description="Tienen acceso completo al panel."
-        action={<Link href="/admin/customers" className="text-sm font-semibold text-brand-600 hover:underline">Gestionar en Clientes</Link>}
+        title="Equipo"
+        description="Quién entra al panel, con qué rol y con la verificación en dos pasos."
+        action={<Link href="/admin/equipo" className="text-sm font-semibold text-brand-600 hover:underline">Abrir Equipo</Link>}
       >
-        {admins === null ? (
-          <p className="text-sm text-muted">Cargando…</p>
-        ) : admins.length === 0 ? (
-          <p className="text-sm text-muted">No se encontraron administradores.</p>
-        ) : (
-          <ul className="divide-y divide-line">
-            {admins.map((admin) => (
-              <li key={admin.id} className="flex items-center gap-3 py-2.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700" aria-hidden="true">
-                  {(admin.name || admin.email).charAt(0).toUpperCase()}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-ink">{admin.name || 'Sin nombre'}</span>
-                  <span className="block truncate text-xs text-muted">{admin.email}</span>
-                </span>
-                <span className={adminBadge(admin.role === 'SUPER_ADMIN' ? 'brand' : 'neutral')}>{admin.role === 'SUPER_ADMIN' ? 'Super admin' : 'Admin'}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <p className="text-sm text-muted">Invita a un administrador, cambia su rol, quítale el acceso o reinicia sus dos pasos desde Equipo.</p>
       </SettingsCard>
     </>
   );

@@ -350,7 +350,7 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 |---|---|---|
 | **C-92** | Clientes: desactivar en vez de borrar | La salida del diagnóstico (`docs/plan/scripts/diagnostico-c92.sql`, solo lee). Lleva una migración de `onDelete`. Suma: dejar un movimiento cuando se pierden Puntos ES al cerrar la cuenta. |
 | **C-107** | Seguro del envío a elección del cliente | Cuánto cobran ZOOM y MRW en Guanare y si aplica con cobro a destino. Una columna nueva en `orders`. |
-| **C-154b** | Plazo de entrega de los digitales en la ficha | Cuánto tarda de verdad un código y una recarga, y en qué horario se atiende. |
+| **C-154b** | Plazo de entrega de los digitales en la ficha | Andrés dijo el 01/10: unas 2 horas, con la meta de 30 minutos. Falta el horario en que se atiende. |
 | **C-153b** | Productos "frágiles" con más relleno | Decidir si se quiere. Una columna en productos. |
 | — | Taller (equipos en reparación) | SADES arriba: los datos están ahí. |
 
@@ -410,7 +410,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 ### 7.1 Abiertas
 | # | Decisión o dato | Para qué |
 |---|---|---|
-| A1 | Cuánto tarda de verdad la entrega de un código y de una recarga, y en qué horario se atiende | La ficha de los digitales (C-154b). Hoy dice "cuando confirmamos tu pago". |
+| A1 | Entrega de un código y de una recarga: unas 2 horas, meta de 30 minutos (01/10). ¿En qué horario se atiende? | La ficha de los digitales (C-154b). Hoy dice "cuando confirmamos tu pago". |
 | A2 | Costos del seguro de ZOOM y MRW en Guanare, y si aplica con cobro a destino | C-107. |
 | A3 | Términos, 3 afirmaciones escritas a mano (`estado/C-144.md`): "comprobante vencido o ilegible" como motivo de rechazo, los plazos (24-48 h, 2 a 7 días, 5 a 10 días de garantía) y el contacto (correo, WhatsApp y horario) | Que los términos solo prometan lo que se cumple. |
 | A4 | Términos y privacidad revisados por el abogado (`estado/C-120.md` §7) | Publicarlos como documento con versión. |

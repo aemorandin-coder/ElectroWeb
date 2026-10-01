@@ -1,10 +1,16 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `57840db`, hasta C-155, el 01/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `71703ab`, hasta C-163, el 01/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 01/10 (noche) · C-162 y C-163 (`71703ab`)
+Sin cambio de base. Comprobado desde fuera el 01/10: `/categorias` ya muestra "Gift Cards y Recargas", "Videojuegos" y "Celulares y Tablets", o sea que el guion de C-163 también se corrió en el servidor.
+- **C-162 · Tarjeta estrella del inicio y cinta ES sin corte** (`estado/C-162.md`).
+- **C-163 · Guion para ordenar las categorías** (`estado/C-163.md`; `scripts/reorganizar-categorias.ts`, con `--aplicar --borrar-vacias`).
+- Sin confirmar con Andrés: las pruebas visuales (la tarjeta estrella en la computadora y volver a subir las fotos de la tablet W&O, los audífonos Piston y GTA V) y el redondeo de C-96.
 
 ## 01/10 (noche) · C-161 y C-155 (`57840db`)
 Sin cambio de base. Visto desde fuera: la tablet W&O tiene marca (campo de C-155) y la foto del Sonic Frontier está armada sin cinta (C-161).

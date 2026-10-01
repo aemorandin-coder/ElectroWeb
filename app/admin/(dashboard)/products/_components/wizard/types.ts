@@ -2,6 +2,7 @@ import { formatFaceValue, getPlatform, type DigitalProvider, type DigitalUnit } 
 
 /** Fila editable de un monto digital (C-60). Los números van como texto mientras se escriben. */
 import { isSecondHand, needsGrade, type Condition, type Grade, type Packaging } from '@/lib/product-condition';
+import { desglosePrecio } from '@/lib/precio-sugerido';
 
 export interface VariantRow {
   /** Clave local para React (las filas nuevas aún no tienen id) */
@@ -61,12 +62,16 @@ export const SKU_VALIDO = /^[A-Za-z0-9][A-Za-z0-9 ._\/-]{1,59}$/;
 export const PESO_MAXIMO_KG = 1000;
 export const MEDIDA_MAXIMA_CM = 500;
 
-/** Margen sobre el costo, en %. null si no hay costo. */
-export function rowMargin(row: VariantRow): number | null {
+/**
+ * Margen sobre el costo, en %. null si no hay costo.
+ * C-146b: `ivaPercent` es el IVA que el precio lleva dentro (0 si la tienda no lo tiene configurado): la ganancia es
+ * el precio sin el IVA menos el costo. Antes el IVA contaba como ganancia.
+ */
+export function rowMargin(row: VariantRow, ivaPercent = 0): number | null {
   const cost = num(row.costUSD);
   const price = num(row.priceUSD);
   if (!(cost > 0) || !(price > 0)) return null;
-  return ((price - cost) / cost) * 100;
+  return desglosePrecio(price, cost, ivaPercent)?.margenPercent ?? null;
 }
 
 export interface Category {

@@ -1,7 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { FiAlertTriangle, FiArrowDown, FiArrowUp, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { useSettings } from '@/contexts/SettingsContext';
 import { formatUSD } from '@/lib/currency';
+import { formatMargen } from '@/lib/precio-sugerido';
 import { DIGITAL_PROVIDERS, DIGITAL_UNIT_KEYS, DIGITAL_UNITS, formatFaceValue, getPlatform, type DigitalProvider, type DigitalUnit } from '@/lib/digital-catalog';
 import { newVariantRow, rowMargin, type StepProps, type VariantRow } from '../types';
 import { wizardCard, wizardError, wizardHint, wizardInput, wizardSecondaryButton, wizardSectionHelp, wizardSectionTitle } from '../ui';
@@ -12,11 +15,17 @@ const variantLabel = 'mb-1 block text-xs font-semibold text-ink-soft';
 /**
  * Paso 2 del producto digital (C-60): los montos que se venden.
  * Cada fila: monto + unidad ("800 Robux", "$25"), costo en el proveedor, precio de venta, margen y proveedor.
+ * C-146b: el margen de cada monto descuenta el IVA que el precio lleva dentro, y la calculadora puede sumarlo.
+ * Por defecto calcula como siempre (costo + margen): sumar el IVA sube los precios, y eso lo decide el dueño.
  */
 export default function DigitalStep2Variants({ data, onChange, errors }: StepProps) {
   const rows = data.digitalVariants;
   const platform = getPlatform(data.digitalPlatform);
   const defaultUnit: DigitalUnit = rows[rows.length - 1]?.unit ?? platform?.unit ?? 'USD';
+  const { settings } = useSettings();
+  const iva = settings?.taxEnabled ? settings.taxPercent : 0;
+  const ivaTexto = String(iva).replace('.', ',');
+  const [sumarIva, setSumarIva] = useState(false);
 
   const setRows = (next: VariantRow[]) => onChange({ digitalVariants: next });
   const update = (key: string, changes: Partial<VariantRow>) =>
@@ -40,8 +49,9 @@ export default function DigitalStep2Variants({ data, onChange, errors }: StepPro
     setRows(next);
   };
   const applyMargin = () => {
-    const factor = 1 + data.marginPercent / 100;
-    setRows(rows.map((row) => (num(row.costUSD) > 0 ? { ...row, priceUSD: (Math.ceil(num(row.costUSD) * factor * 100) / 100).toFixed(2) } : row)));
+    const factor = (1 + data.marginPercent / 100) * (sumarIva && iva > 0 ? 1 + iva / 100 : 1);
+    // Con una holgura mínima: 10 × 1,12 × 100 da 1120,0000000000002 en coma flotante y el precio subía a 11,21
+    setRows(rows.map((row) => (num(row.costUSD) > 0 ? { ...row, priceUSD: (Math.ceil(num(row.costUSD) * factor * 100 - 1e-6) / 100).toFixed(2) } : row)));
   };
   const setProviderForAll = (provider: DigitalProvider | '') => setRows(rows.map((row) => ({ ...row, provider })));
 
@@ -67,7 +77,16 @@ export default function DigitalStep2Variants({ data, onChange, errors }: StepPro
             </div>
             <button type="button" onClick={applyMargin} className={wizardSecondaryButton}>Aplicar a los que tienen costo</button>
           </div>
-          <p className={wizardHint}>Precio = costo + margen, redondeado hacia arriba al centavo.</p>
+          {iva > 0 && (
+            <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-2 text-sm text-ink">
+              <input type="checkbox" checked={sumarIva} onChange={(e) => setSumarIva(e.target.checked)} className="h-5 w-5 shrink-0 accent-brand-500" />
+              Sumar el IVA ({ivaTexto} %) al precio
+            </label>
+          )}
+          <p className={wizardHint}>
+            Precio = costo + margen{sumarIva && iva > 0 ? ` + IVA ${ivaTexto} %` : ''}, redondeado hacia arriba al centavo.
+            {iva > 0 && ` El margen de cada monto ya descuenta el IVA que el precio lleva dentro (${ivaTexto} %).`}
+          </p>
         </div>
         <div>
           <label htmlFor="provider-all" className="mb-1.5 block text-sm font-semibold text-ink">Proveedor de todos</label>
@@ -85,8 +104,8 @@ export default function DigitalStep2Variants({ data, onChange, errors }: StepPro
       ) : (
         <ul className="space-y-3">
           {rows.map((row, index) => {
-            const margin = rowMargin(row);
-            const belowCost = margin !== null && margin < 0;
+            const margin = rowMargin(row, iva);
+            const belowCost = margin !== null && margin <= 0;
             const id = (field: string) => `variant-${row.key}-${field}`;
             return (
               <li key={row.key} className={`rounded-2xl border p-4 ${row.isActive ? 'border-line bg-white' : 'border-dashed border-line bg-surface'}`}>
@@ -101,7 +120,7 @@ export default function DigitalStep2Variants({ data, onChange, errors }: StepPro
                   {margin !== null && (
                     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${belowCost ? 'bg-deal-bg text-deal' : 'bg-success-strong/10 text-success-strong'}`}>
                       {belowCost && <FiAlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />}
-                      Margen {margin.toLocaleString('es-VE', { maximumFractionDigits: 1 })} %
+                      Margen {formatMargen(margin)}
                     </span>
                   )}
                   <div className="flex items-center">

@@ -1,6 +1,12 @@
-# Punto de partida (actualizado 2026-10-01, cierre de C-150)
+# Punto de partida (actualizado 2026-10-01, cierre de C-146b)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-150** (orden real: C-149, C-147, C-150).
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-146b** (orden real: C-149, C-147, C-150, C-146b).
+- **C-146b** (01/10, en `main`, falta el deploy, **sin cambio de base**): precio sugerido desde el costo y margen real (`estado/C-146b.md`).
+  - **Pruebas después del deploy (Andrés):**
+    1. Productos → editar uno físico → paso "Precios": escribir el costo. Aparece "Precio sugerido" (costo + 30 % + IVA 16 %). "Usar este precio" lo pone en el precio; el margen queda en 30 %.
+    2. Subir el precio a mano por encima: aparece el aviso del 30 % (solo lo ves tú).
+    3. Editar un producto digital → "Montos y precios": cada monto dice su margen ya sin el IVA. Los que salgan en rojo se venden con pérdida si el IVA se paga.
+  - **Decisión abierta de Andrés:** si los productos digitales llevan IVA (lo dice el contador). Hoy la calculadora digital no lo suma.
 - **C-150** (01/10, en `main`, falta el deploy, **sin cambio de base**): menú del panel por secciones y Dashboard de trabajo (`estado/C-150.md`). Aprobado por Andrés el 01/10 ("deja Dashboard como Dashboard").
   - **Pruebas después del deploy (Andrés):**
     1. En el teléfono, abrir el menú del panel: Dashboard y seis secciones, sin deslizar. Tocar "Ventas": se abren sus cinco páginas.
@@ -359,7 +365,7 @@ bash scripts/deploy.sh
 ## 3b. Crecimiento (meta de Andrés del 30/09)
 Andrés quiere que la tienda sea la vitrina digital de la empresa en todo el país y pagar anuncios. Orden recomendado por Claude; falta que Andrés lo confirme:
 1. ✅ **C-145 · Medición del embudo** (hecha).
-2. ✅ **C-146 · "IVA incluido" a la vista** (hecha). Falta **C-146b**: precio sugerido desde el costo (costo × 1,30 × 1,16) y aviso de margen para el dueño.
+2. ✅ **C-146 y C-146b · "IVA incluido" a la vista y precio sugerido desde el costo** (hechas).
 2b. ✅ **C-148 y C-148b · Cotizaciones** (hechas). Falta: retención del IVA de contribuyentes especiales, mandarla por correo y "Mis cotizaciones" en el panel del cliente.
 3. ✅ **C-149 · Que Google, las redes y las IA encuentren el catálogo** (hecha, `estado/C-149.md`).
 4. ✅ **C-147 · Datos para la factura** y relación de ventas del mes (hecha, `estado/C-147.md`).
@@ -400,7 +406,7 @@ Hoy son 25 ítems en una lista. La propuesta no fusiona páginas ni cambia direc
 - Datos que esperan tareas: costos del seguro de ZOOM y MRW (C-107), el diagnóstico de clientes borrados (C-92), plazos reales de la entrega digital (§3c) y SADES arriba (taller).
 
 **De Claude, en el orden recomendado:**
-1. **C-146b · Precio sugerido desde el costo** (costo × 1,30 × 1,16) y aviso de margen para el dueño.
+1. ✅ **C-146b · Precio sugerido desde el costo** (hecha, `estado/C-146b.md`).
 2. **C-151 · Confianza antes de pagar** (§3c): garantía, despacho y embalaje junto al botón; cómo se resuelve una garantía dicho antes del pago; plazo de los digitales.
 3. **Reseñas por correo** unos días después de la entrega.
 4. **Buscador de la tienda sin acentos** ("bateria" encuentra "Batería"), con lo hecho en C-148b.

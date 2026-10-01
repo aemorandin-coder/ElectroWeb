@@ -1,12 +1,86 @@
-# Punto de partida (actualizado 2026-10-01, cierre de C-151)
+# Punto de partida (actualizado 2026-10-01, bloque de subida listo)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-151** (orden real: C-149, C-147, C-150, C-146b, C-147b, C-151).
+## Bloque único de subida del 01/10: de C-148b a C-151
+Pedido de Andrés del 01/10: revisar todas las ramas y subir todo en un solo bloque.
+
+**Cómo está todo (revisado el 01/10):**
+- **Ramas:** las 154 ramas de trabajo están fusionadas en `main`, y `main` es igual a GitHub. La única sin fusionar es `chatgpt/product-fixes-main`, un borrador viejo de ChatGPT del 21/09 que Claude rehízo en C-95: no sube.
+- **Producción hoy: C-148b** (`3f2db8d`). Se ve desde fuera: tiene la hoja de impresión de los presupuestos, "IVA incluido" y los términos nuevos; no tiene `/llms.txt`.
+- **Lo que sube:** 6 tareas, 71 archivos, **8 columnas nuevas** (todas aditivas). Sin dependencias nuevas ni variables de entorno nuevas.
+
+| Tarea | Qué trae | Base |
+|---|---|---|
+| C-149 | Sitemap y `robots.txt` corregidos, `www` redirige, categorías con dirección y texto propios, datos estructurados, `/llms.txt`, feed para Meta, títulos propios | — |
+| C-147 | "Datos de la factura" en el pago, facturación en el detalle de la orden, relación de ventas del mes | 7 columnas |
+| C-150 | Menú del panel por secciones y Dashboard nuevo | — |
+| C-146b | Precio sugerido desde el costo y margen real | — |
+| C-147b | El embalaje con su nombre en los datos para facturar y en el recibo | — |
+| C-151 | Los productos digitales no llevan IVA (interruptor apagado por defecto) | 1 columna |
+
+**Verificado todo junto sobre `main`:** `tsc`, `npm run build` y la prueba de humo `scripts/e2e/humo.ts`: **59 de 59** (todas las páginas públicas, una compra mixta real, el panel con los dos roles y el teléfono). Cada tarea tiene además sus pruebas en su `estado/C-XX.md`.
+
+### Pasos (en el servidor, `/var/www/electroshopve`)
+1. **Qué hay ahora:** `git log -1 --oneline`. Debe empezar por `3f2db8d`. Si dice otra cosa, avisar a Claude antes de seguir.
+2. **Respaldo:**
+   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-bloque-01-10.dump`
+3. **Código y primer intento:** `git pull --ff-only` y `bash scripts/deploy.sh`. El guion **para** y muestra el SQL. Tiene que ser exactamente esto (el orden puede variar):
+   ```sql
+   ALTER TABLE "profiles" ADD COLUMN "businessFiscalAddress" TEXT;
+   ALTER TABLE "orders" ADD COLUMN "billingAddress" TEXT,
+   ADD COLUMN "billingName" TEXT,
+   ADD COLUMN "billingTaxId" TEXT,
+   ADD COLUMN "billingType" TEXT,
+   ADD COLUMN "invoiceNumber" TEXT,
+   ADD COLUMN "invoicedAt" TIMESTAMP(3);
+   ALTER TABLE "company_settings" ADD COLUMN "taxDigitalProducts" BOOLEAN NOT NULL DEFAULT false;
+   ```
+   - Solo `ADD COLUMN`. **Si aparece un `DROP`, un `ALTER ... TYPE` o una tabla que no está aquí: no seguir y avisar a Claude.**
+   - Mientras tanto la tienda sigue igual, con la versión anterior.
+4. **Aplicar y subir:** `npx prisma db push` y `bash scripts/deploy.sh` otra vez. Compila (unos minutos) y cambia a la versión nueva sin tumbar la tienda.
+5. **Comprobar:** `git log -1 --oneline` muestra el último commit de `main`, y `curl -s -o /dev/null -w '%{http_code}\n' https://electroshopve.com/llms.txt` responde `200`.
+
+### Pruebas después de subir (unos 15 minutos, en este orden)
+**Desde el servidor:**
+1. `curl -sI https://www.electroshopve.com/ | head -5` → `308` y `location: https://electroshopve.com/`. Si dice `200`, nginx no le pasa el dominio a la tienda: avisar a Claude (se arregla con un bloque `server` para `www` en nginx).
+
+**En la tienda, con el teléfono:**
+2. Un producto físico dice "IVA incluido"; uno digital, no.
+3. Un carrito con uno de cada uno: "IVA incluido en los productos físicos".
+4. En el pago aparece "Datos de la factura" a tu nombre y tu cédula. Hacer una compra barata.
+5. Mis pedidos → "Detalle y recibo": dice "Factura a nombre de" y, si hubo envío, "Embalaje".
+6. `https://electroshopve.com/sitemap.xml`: las categorías salen como `/categorias/accesorios-gaming`. `https://electroshopve.com/llms.txt` se lee.
+
+**En el panel:**
+7. El menú: "Dashboard" y seis secciones. En el teléfono cabe sin deslizar.
+8. Dashboard: acciones rápidas arriba; "Ventas cobradas" de hoy incluye la compra de prueba; "Tu tienda: por completar" lista lo que falta.
+9. Órdenes → la compra de prueba: bloque "Facturación", "Copiar datos para facturar" (pegarlo en un bloc de notas) y escribir un número en "N.º de la factura emitida". El cliente lo ve en su pedido.
+10. Reportes → "Relación de ventas del mes" → Descargar: se abre en Excel, una fila por orden. Si las columnas salen todas juntas en una, avisar a Claude.
+11. Productos → editar uno físico → "Precios": al escribir el costo aparece el precio sugerido.
+12. Configuración → Precios → IVA: está el interruptor "Los productos digitales también llevan IVA", apagado.
+
+### Si algo sale mal
+`git reset --hard 3f2db8d && npm install && bash scripts/deploy.sh --sin-pull` vuelve a la versión de hoy. Las columnas nuevas no molestan al código anterior: no hay que quitarlas.
+
+### Después de subir, sin prisa (sin código)
+- Poner la **marca** a los productos físicos y subir la **imagen para compartir** (Configuración → SEO → Inicio, 1200 × 630). El Dashboard lo recuerda.
+- **Google Search Console:** agregar el dominio y enviar el sitemap.
+- **Para el contador:** las preguntas de `estado/C-151.md` (IVA de los digitales), `estado/C-147b.md` (embalaje) y `estado/C-120.md` §6.
+
+### Lo que sigue después del bloque (Claude)
+- **Embalaje más inteligente** (aprobado por Andrés el 01/10): precio por tamaño del paquete, embalaje gratis desde un monto (sin que la tienda pague el flete) y el aviso "te faltan $X" en el carrito. Sin empezar.
+- **Confianza antes de pagar:** garantía, despacho y embalaje junto al botón de compra. Sin empezar.
+
+---
+
+## Detalle de cada tarea (los pasos de arriba reemplazan los deploys sueltos de abajo)
+
+En GitHub, `main` tiene todo hasta **C-151** (orden real: C-149, C-147, C-150, C-146b, C-147b, C-151).
 - **C-151** (01/10, en `main`, falta el deploy, **una columna nueva**): los productos digitales no llevan IVA (`estado/C-151.md`). Decisión de Andrés del 01/10.
   - Interruptor en Configuración → Precios → IVA, **apagado por defecto**: no hay que tocar nada después del deploy.
   - SQL del deploy: `ALTER TABLE "company_settings" ADD COLUMN "taxDigitalProducts" BOOLEAN NOT NULL DEFAULT false;` (se suma al de C-147).
   - **Pruebas después del deploy (Andrés):** abrir un producto digital (no dice "IVA incluido") y uno físico (sí lo dice); un carrito con los dos dice "IVA incluido en los productos físicos".
   - **Para el contador:** las 4 preguntas del estado (la base es el art. 16 de la Ley del IVA, no que sean "de entretenimiento"; las recargas directas son el caso dudoso).
-- **Pruebas de punta a punta:** el motor quedó en `scripts/e2e/lib.ts` (usuarios y sesiones de prueba, Firefox sin ventana). Los guiones de cada tarea se escriben en `scripts/e2e/_tNNN.ts`, se corren con `npx tsx` y se borran: la carpeta temporal se vacía con cada desconexión.
+- **Pruebas de punta a punta:** el motor quedó en `scripts/e2e/lib.ts` (usuarios y sesiones de prueba, Firefox sin ventana) y la prueba de humo de todo junto, en `scripts/e2e/humo.ts`. Los guiones de cada tarea se escriben en `scripts/e2e/_tNNN.ts`, se corren con `npx tsx` y se borran: la carpeta temporal se vacía con cada desconexión.
 - **C-147b** (01/10, en `main`, va con el deploy de C-147, sin cambio de base): cómo se factura el embalaje (`estado/C-147b.md`). Va en la misma factura, como renglón aparte y con IVA; el flete con cobro a destino lo factura ZOOM o MRW. "Copiar datos para facturar" y el recibo ya lo nombran "Embalaje" o "Delivery en Guanare", y la relación de ventas trae su columna. **Para el contador:** las 4 preguntas del estado.
 - **C-146b** (01/10, en `main`, falta el deploy, **sin cambio de base**): precio sugerido desde el costo y margen real (`estado/C-146b.md`).
   - **Pruebas después del deploy (Andrés):**
@@ -300,7 +374,7 @@ Todo está en `main` y en GitHub (merges de C-124 a C-129 hechos el 29/09 por pe
 - Detalle y pruebas de cada una en su `estado/C-12X.md`.
 
 ## 1. Estado de las ramas
-- **`main`:** todo hasta C-149. En producción (visto desde fuera el 01/10): `/cotizacion` responde, así que el deploy llegó al menos a C-148. Falta que Andrés confirme si incluyó C-148b.
+- **`main`:** todo hasta C-151. **Producción: C-148b** (`3f2db8d`), comprobado desde fuera el 01/10. Lo que falta sube en un solo bloque (arriba).
 - **Gemini:** R23 (G-69) cerrada y en `main`, con dos arreglos de Claude (resultado al final de `PLAN_GEMINI.md`). **No tiene ronda abierta.** Su carril no tiene deudas de reglas (verificado el 28/09 con `grep`: 0 hex, 0 textos de menos de 11 px, 0 `font-black`, 0 `z-[número]`, 0 `alert` o `console.log` y 0 emojis).
 - **ChatGPT:** fuera del equipo desde el 21/09. Limpieza opcional en la máquina de Andrés: `git worktree remove ../ElectroShopVe-chatgpt`, `git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main` y `git stash drop stash@{0}`.
 - **Historial de tareas:** cada una tiene su `docs/plan/estado/C-XX.md`. Resumen en `PLAN_CLAUDE.md`, "Orden de trabajo".
@@ -376,7 +450,7 @@ Andrés quiere que la tienda sea la vitrina digital de la empresa en todo el pa�
 2b. ✅ **C-148 y C-148b · Cotizaciones** (hechas). Falta: retención del IVA de contribuyentes especiales, mandarla por correo y "Mis cotizaciones" en el panel del cliente.
 3. ✅ **C-149 · Que Google, las redes y las IA encuentren el catálogo** (hecha, `estado/C-149.md`).
 4. ✅ **C-147 · Datos para la factura** y relación de ventas del mes (hecha, `estado/C-147.md`).
-5. **C-150 · Confianza antes de pagar** (sale del análisis externo del 01/10; espera las decisiones de §3c).
+5. **C-153 · Embalaje más inteligente** y **C-154 · Confianza antes de pagar** (salen del análisis externo del 01/10; §3e).
 - **Google Merchant Center no admite a Venezuela** (lista oficial leída el 01/10). Los anuncios de Google que sí se pueden pagar son los de búsqueda (texto). Para medir sus ventas basta vincular Google Analytics con Google Ads e importar la conversión `purchase` (C-145): no hace falta otra etiqueta.
 - **Regla para los documentos:** el repositorio es público. Aquí no se escriben datos fiscales ni financieros de la empresa (ventas, márgenes reales, cómo declara). Eso va en la conversación con Andrés.
 
@@ -414,7 +488,8 @@ Hoy son 25 ítems en una lista. La propuesta no fusiona páginas ni cambia direc
 
 **De Claude, en el orden recomendado:**
 1. ✅ **C-146b · Precio sugerido desde el costo** (hecha, `estado/C-146b.md`).
-2. **C-151 · Confianza antes de pagar** (§3c): garantía, despacho y embalaje junto al botón; cómo se resuelve una garantía dicho antes del pago; plazo de los digitales.
+2. **C-153 · Embalaje más inteligente** (aprobado por Andrés el 01/10): precio por tamaño del paquete, embalaje gratis desde un monto y aviso "te faltan $X" en el carrito.
+2b. **C-154 · Confianza antes de pagar** (§3c): garantía, despacho y embalaje junto al botón; cómo se resuelve una garantía dicho antes del pago; plazo de los digitales.
 3. **Reseñas por correo** unos días después de la entrega.
 4. **Buscador de la tienda sin acentos** ("bateria" encuentra "Batería"), con lo hecho en C-148b.
 5. **Cotizaciones:** mandarla por correo, "Mis cotizaciones" y la retención del 75 % del IVA.

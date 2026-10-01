@@ -3,6 +3,13 @@ Hecha por Claude.
 - **Código:** unas 21.000 líneas en 30 pantallas y 26 rutas `/api/admin`, más las APIs que el admin consume.
 - **Navegador:** recorrido de las 23 páginas a 1440 y 390 px contra una tienda de ejemplo (Firefox + WebDriver BiDi). Incluye consola, peticiones fallidas, desbordes y apertura de modales.
 
+## Cierre (2026-10-01, C-156)
+**Todo resuelto y en producción.** Las filas que abajo dicen "tarjeta asignada" o "pendiente" quedaron así:
+- **Gemini, ronda R9 (G-30 a G-34):** hechas y revisadas en C-53 (E5 a E10, F1 a F4, D1 a D5). El 28/09 su carril se midió sin deudas de reglas.
+- **F7** (proveedor, referencia y costo del pedido digital): C-60b.
+- **F8 y D6, productos:** `alert()` y `confirm()` fuera en G-58; la lista se rehízo en C-51 y `ProductForm.tsx` se borró en G-63. El asistente, en C-134.
+- Después de esta auditoría el panel cambió más: órdenes (C-74, C-126), el resto de las pantallas (C-110), roles y dos pasos (C-141) y el menú por secciones con el Dashboard (C-150).
+
 Leyenda de estado: ✅ resuelto en rama · 🟦 tarjeta asignada · ⬜ pendiente de asignar.
 
 ## 1. Seguridad y dinero

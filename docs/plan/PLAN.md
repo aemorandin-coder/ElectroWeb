@@ -1,16 +1,33 @@
-# Plan maestro — Rediseño "vitrina" + saneamiento
+# Plan maestro — ElectroShopVe WEB
 
-> Diagnóstico con evidencias: [`AUDITORIA.md`](./AUDITORIA.md)
-> Reglas por agente: [`/CLAUDE.md`](../../CLAUDE.md) y [`/GEMINI.md`](../../GEMINI.md)
-> **Planes de trabajo en paralelo (rondas):** [`PLAN_CLAUDE.md`](./PLAN_CLAUDE.md) y [`PLAN_GEMINI.md`](./PLAN_GEMINI.md)
-> Progreso: carpeta [`estado/`](./estado/) con **un archivo por tarea** (`C-01.md`, `G-05a.md`…). Cada agente crea solo archivos con su prefijo, así las ramas nunca chocan.
+> **Al día: 2026-10-01 (C-156).** Este archivo es el plan completo: objetivo, sistema de diseño, carriles, tablero y decisiones. Los números de sección no cambian: `CLAUDE.md` y `GEMINI.md` los citan.
+
+| Documento | Para qué |
+|---|---|
+| [`SIGUIENTE.md`](./SIGUIENTE.md) | Lo de ahora: qué falta subir, las tareas de Andrés y la fila de Claude. Se lee al empezar cada sesión. |
+| **`PLAN.md`** (este) | El plan: objetivo (§0), diseño (§1 a §3), carriles (§4), tablero y lista de pendientes (§5), QA (§6) y decisiones (§7). |
+| [`OPERACION.md`](./OPERACION.md) | Servidor, deploy, vuelta atrás, entorno local y pruebas. |
+| [`HISTORIAL.md`](./HISTORIAL.md) | Lo ya subido, con su SQL y sus pruebas. |
+| [`PLAN_CLAUDE.md`](./PLAN_CLAUDE.md) | Registro de las tareas `C-*`: una fila por tarea. |
+| [`PLAN_GEMINI.md`](./PLAN_GEMINI.md) | Rondas y tarjetas `G-*`. Hoy no hay ronda abierta. |
+| [`estado/`](./estado/) | Un archivo por tarea (`C-01.md`, `G-05a.md`…): qué cambió, cómo se verificó y qué quedó. |
+| `AUDITORIA*.md` | Los siete diagnósticos. Cada uno abre con su cierre: qué tarea resolvió cada hallazgo y qué sigue abierto. |
+| [`REVISION_FINAL.md`](./REVISION_FINAL.md) | La lista de revisión en producción, con Andrés. |
+| [`/CLAUDE.md`](../../CLAUDE.md) y [`/GEMINI.md`](../../GEMINI.md) | Reglas de cada agente. `CHATGPT.md` y `PLAN_CHATGPT.md` quedan como historial. |
+| `docs/API_SADES_EWEB.md` y `docs/INTEGRACION_PAGO_MOVIL_BDV.md` | Referencia de dos sistemas externos: la API de SADES y la de Conciliación del BDV. |
 
 ## 0. Objetivo
 
+**El plan original (12/09), cumplido:** las fases 0 a 3 están cerradas y en producción.
 1. **El home vende.** Lo primero que se ve son productos con precio y botón de compra, no un mensaje. La estructura toma a BestBuy como referencia: buscador protagonista en el header, franja de categorías, vitrinas de productos y confianza.
 2. **ElectroShop sigue siendo ElectroShop.** Se conservan el wordmark Tektrron con degradado azul, el azul `#2a63cd`, la barra inferior móvil oscura y el tono cercano en español venezolano.
 3. **Primero se blindan el dinero y los datos**, antes de tocar un píxel (Fase 0).
 4. **Dos agentes sin choques:** carriles de archivos separados, dependencias explícitas y un archivo de estado por tarea.
+
+**Desde el 30/09 (meta de Andrés), en curso:**
+5. **La tienda es la vitrina digital de la empresa para todo el país.** Que Google, las redes y las IA encuentren el catálogo; anuncios que se puedan medir; ventas a empresas e instituciones.
+6. **Una empresa formal y seria.** La web no emite facturas: prepara los datos y SADES o el talonario facturan. El IVA va a la vista y los términos solo prometen lo que la tienda cumple.
+7. **Que comprar sea fácil y dé confianza:** pagar con los métodos reales, saber cuánto cuesta el envío y el embalaje antes de pagar, y ver la garantía junto al botón.
 
 ---
 
@@ -104,6 +121,8 @@ Un único módulo, `lib/currency.ts` (C-12): `formatUSD(1099)` → `$1.099,00` y
 
 ## 2. Rediseño del header
 
+> **Hecho** (C-20, C-21, C-32, C-54). Queda como referencia del diseño. Cambios posteriores: "Ofertas" en la franja y en "Más" del teléfono (C-102), y el menú de la cuenta muestra el rol del equipo (C-143).
+
 ### Desktop (≥1024px)
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
@@ -134,6 +153,8 @@ Un único módulo, `lib/currency.ts` (C-12): `formatUSD(1099)` → `$1.099,00` y
 ---
 
 ## 3. Rediseño del home
+
+> **Hecho** (C-22, C-26, C-95). Queda como referencia del diseño. Cambios posteriores: el popup promocional sale solo en el home y como mucho una vez al día (C-23, C-25), la barra de confianza muestra solo los métodos de pago activos y las tarjetas llevan oferta, "Usado" y la cinta ES (C-102, C-119, C-133).
 
 Todo se renderiza en el servidor (`revalidate = 60`). Solo son componentes cliente: `AddToCartButton`, `ShareButton` y el buscador. Una sección con menos de 4 productos no se muestra.
 
@@ -217,26 +238,34 @@ Todo se renderiza en el servidor (`revalidate = 60`). Solo son componentes clien
 
 ## 4. Carriles (quién puede tocar qué)
 
-### Carril CLAUDE (Gemini tiene prohibido editar)
-```
-app/api/**            prisma/**             lib/**               contexts/**
-proxy.ts              next.config.js        package.json         *.config.*
-app/layout.tsx        app/providers.tsx     app/globals.css      app/page.tsx
-app/(public)/**       app/productos/**      app/categorias/**    app/comparar/**
-app/mis-pedidos/**    app/carrito/**   (*)  app/checkout/**  (*)  app/robots.ts  app/sitemap.ts
-components/public/**  components/home/**    components/ui/**     components/notifications/**
-components/catalog/**  components/product/**
-components/checkout/** (*)   components/Footer.tsx   components/CartIcon.tsx
-components/UserAccountButton.tsx   components/WhatsAppButton.tsx   components/HotAdOverlay.tsx
-components/MobileScrollProgress.tsx   components/DynamicFavicon.tsx   components/AnalyticsTracker.tsx
-app/login/**  app/registro/**  components/auth/**        (desde C-84: seguridad y registro con Google)
-app/admin/(dashboard)/studio/**                            (desde C-112: ElectroStudio)
-app/admin/(dashboard)/transactions/_components/PagosSinOrden.tsx   (desde C-114: dinero)
-CLAUDE.md  GEMINI.md  CHATGPT.md  docs/plan/PLAN*.md  docs/plan/AUDITORIA*.md  docs/plan/estado/C-*.md
-```
-(*) Se **liberan para Gemini** cuando `estado/C-01.md` y `estado/C-05.md` digan `Estado: HECHO` en `main` (solo para las tareas G-05g y G-06g).
+**El equipo (desde el 21/09):**
+| Quién | Qué hace |
+|---|---|
+| **Claude** | Todo lo que pide criterio: seguridad, dinero, datos, arquitectura, componentes compartidos y el rediseño de las pantallas. Revisa el trabajo de Gemini, hace el merge a `main` y el push. |
+| **Gemini** | Tareas mecánicas y cerradas, solo con una tarjeta `G-*` abierta. |
+| **Andrés** | Decide el negocio (§7), hace el deploy y las pruebas en producción, y trae los datos reales. |
 
-### Carril GEMINI
+ChatGPT salió del equipo el 21/09. Sus pantallas (panel admin, `app/creator/**`, `app/recuperar-contrasena/**`, `app/verificar-email/**`) son de Claude, que las rediseña con el método de `CHATGPT.md` §4.
+
+### Carril CLAUDE
+Todo el repositorio, salvo el carril Gemini de abajo. Lo que más pesa:
+```
+app/api/**            prisma/**             lib/**               contexts/**          scripts/**
+proxy.ts              next.config.js        package.json         *.config.*
+app/layout.tsx        app/providers.tsx     app/globals.css      app/page.tsx         app/robots.ts   app/sitemap.ts
+app/productos/**      app/categorias/**     app/carrito/**       app/checkout/**      app/p/**
+app/cotizacion/**     app/feed/**           app/llms.txt/**      app/sesion/**        app/certificado/**
+app/login/**          app/registro/**       app/recuperar-contrasena/**   app/verificar-email/**   components/auth/**
+app/admin/**          components/admin/**   app/creator/**
+components/public/**  components/home/**    components/ui/**     components/catalog/**   components/product/**
+components/checkout/**   components/cart/**   components/cotizaciones/**   components/envios/**   components/warranty/**
+components/notifications/**   components/legal/**   components/seo/**   components/forms/**   components/gift-card/**
+components/Footer.tsx   components/CartIcon.tsx   components/UserAccountButton.tsx   components/WhatsAppButton.tsx
+components/HotAdOverlay.tsx   components/AnalyticsTracker.tsx
+CLAUDE.md  GEMINI.md  CHATGPT.md  README.md  docs/plan/*.md  docs/plan/estado/C-*.md
+```
+
+### Carril GEMINI (solo con una tarjeta `G-*` abierta)
 ```
 app/customer/**          components/customer/**
 app/cursos/**            components/cursos/**
@@ -246,111 +275,119 @@ app/gift-cards/**        app/canjear-gift-card/**
 app/solicitar-producto/**  app/privacidad/**  app/terminos/**
 components/modals/**  components/reviews/**  components/orders/**  components/social/**
 components/pago-movil/**  components/onboarding/**
-app/admin/**  components/admin/**   ← SOLO arreglos mecánicos pedidos por una tarjeta G (ver GEMINI.md §2). Nada de lógica.
-                                        Excepto admin/(dashboard)/settings/** y products/** (C-50 y C-51).
 docs/plan/estado/G-*.md
 ```
-Desde R12 (2026-09-16), solo para cambiar clases: `components/ui/**`, `components/Footer.tsx`, `components/UserAccountButton.tsx`, `components/CartIcon.tsx` y el resumen de `app/checkout/page.tsx` (ver `PLAN_GEMINI.md`, Ronda R12).
-
-### Ex carril CHATGPT · **ChatGPT salió del equipo el 21/09**
-Estas pantallas vuelven a **Claude** (rediseño y jerarquía, con la guía de `CHATGPT.md` §4). Gemini solo entra con una tarjeta G que las nombre (R20: limpieza mecánica de `products/**`). Tabla de lo pendiente: "Salida del 21/09" en `PLAN_CHATGPT.md`.
-Lo que era de cada ronda de ChatGPT, como referencia:
-```
-R1: app/admin/(dashboard)/page.tsx   app/admin/(dashboard)/orders/**   app/admin/(dashboard)/customers/**
-    app/admin/(dashboard)/transactions/**   app/admin/(dashboard)/gift-cards/**   app/admin/(dashboard)/reports/**
-    app/creator/**   app/recuperar-contrasena/**   app/verificar-email/**
-    app/admin/(dashboard)/layout.tsx → solo el className del contenedor de {children} (GPT-01)
-    app/customer/(dashboard)/orders/[id]/digital/** (autorizado por Andrés, GPT-02)
-R2: app/admin/(dashboard)/products/**   (antes C-51 de Claude; reasignado el 17/09)
-R3: app/admin/(dashboard)/{payments,inquiries,messages,product-requests,discount-requests,reviews,verifications,categories,servicios,legal}/**
-docs/plan/estado/GPT-*.md
-```
-Si una ronda de Gemini necesita un archivo de Claude, Claude lo autoriza en la tarjeta antes de empezar.
-
-Borrado de archivos muertos (G-02): **solo** la lista exacta de esa tarea, aunque el archivo esté en el carril de Claude.
+- La lista exacta y sus excepciones por ronda están en `GEMINI.md` §2, que es la que manda.
+- **En el carril de Claude, Gemini solo hace arreglos mecánicos y solo cuando una tarjeta nombra el archivo** (clases, textos, tipos): nada de lógica, permisos, cálculos ni peticiones.
+- **Claude entra al carril Gemini cuando Andrés pide un rediseño o hay dinero de por medio** (panel del cliente en C-128, C-137, C-138 y C-139; términos en C-144). Lo anota en el estado y en `GEMINI.md`.
+- Si una ronda de Gemini necesita un archivo de Claude, Claude lo autoriza en la tarjeta antes de empezar.
 
 ### Protocolo anti-choque
-1. **Worktrees separados.** Claude trabaja en la carpeta principal, en ramas `claude/<id>`. Gemini trabaja en su carpeta (`../ElectroShopVe-gemini`, ramas `gemini/RN`):
-   ```bash
-   git worktree add "../ElectroShopVe-gemini" -b gemini/base
-   ```
-   Gemini usa **una rama por ronda** (`gemini/R1`, `gemini/R2`…) creada desde `main` actualizado, con un commit por tarea. Claude usa una rama por tarea (`claude/C-XX`).
-2. **Tú (Andrés) integras a `main`.** Ningún agente hace merge a `main`, push `--force`, `rebase` de ramas ajenas ni `reset --hard`.
-3. **Una tarea = una rama = uno o varios commits con prefijo** `[C-01]` o `[G-05a]`.
-4. **Dependencias duras:** una tarea no empieza si su dependencia no figura como `HECHO` y mergeada en `main`.
+1. **Carpetas separadas.** Claude trabaja en la carpeta principal, en ramas `claude/<ID>`. Gemini trabaja en su carpeta (`../ElectroShopVe-gemini`), en una rama por ronda (`gemini/RN`) creada desde `main` actualizado, con un commit por tarea.
+2. **Claude integra a `main` y sube** (regla de Andrés del 30/09): `git merge --no-ff --no-edit`, comprobar que entra exactamente lo revisado y que no hay credenciales, y `git push`. Gemini nunca hace merge ni push. Nadie hace push `--force`, `rebase` de ramas ajenas ni `reset --hard` sobre `main`.
+3. **Una tarea = una rama = uno o varios commits con prefijo** `[C-155]` o `[G-70]`.
+4. **Dependencias duras:** una tarea no empieza si su dependencia no figura como `HECHO` en `main`.
 5. **Estado:** al terminar (o bloquearse) una tarea, el agente crea `docs/plan/estado/<ID>.md` con `Estado: HECHO` o `Estado: BLOQUEADO — motivo`, dentro del mismo commit. Nunca edita archivos de estado del otro prefijo.
-6. **Si Gemini necesita algo del carril Claude** (un token nuevo, un componente, una ruta de API), lo escribe como `PEDIDO:` en el archivo `estado/G-XX.md` de su tarea actual y sigue con otra tarea.
+6. **Si Gemini necesita algo del carril Claude** (un token, un componente, una ruta de API), lo escribe como `PEDIDO:` en el estado de su tarea y sigue con otra.
+7. **El deploy lo hace Andrés, en un solo bloque:** Claude deja en `SIGUIENTE.md` una sola sección con el SQL total, las pruebas y la vuelta atrás (`OPERACION.md` §2).
+8. **Migraciones:** solo aditivas y con respaldo (autorizadas el 29/09). Borrar datos pide el OK de Andrés.
 
 ---
 
-## 5. Tablero de tareas
+## 5. Tablero
 
-Leyenda de dependencias: `—` = puede empezar ya.
+Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estado/<ID>.md`. Aquí va el mapa.
 
-### FASE 0 — Blindaje (CLAUDE) · bloqueante · antes de cualquier cambio visual
+### 5.1 Lo hecho (120 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 01/10)
 
-| ID | Tarea | Depende | Criterio de hecho |
-|----|-------|---------|-------------------|
-| **C-01** | `POST /api/orders`: recalcular precio, subtotal, envío, impuesto y total **en el servidor** desde Prisma; ignorar `body.userId`; `quantity` entero > 0; número de orden `ORD-{año actual}-XXXX` generado dentro de la transacción con reintento por `@unique`; comisión de referidos con el total del servidor. Adaptar `app/checkout/page.tsx` al nuevo contrato. | — | Un POST manipulado (total 0.01 con WALLET, `userId` ajeno o cantidad negativa) se rechaza o se recalcula. Una compra normal sigue funcionando. |
-| **C-02** | DTO público `lib/dto/product.ts` (lista blanca de campos) aplicado a `/api/products/public`, `/api/products/slug/[slug]`, home, `/productos` y categorías. `GET /api/products` pasa a exigir admin. | — | `grep costPerItem` en rutas públicas y páginas = 0. El HTML de `/productos` no contiene `costPerItem`. |
-| **C-03** | `getPublicSettings()` con lista blanca; `SettingsProvider` recibe `initialSettings` desde el layout; Footer, WhatsApp, HotAd, DynamicFavicon y Header leen del contexto. | — | 0 requests a `/api/settings/public` al cargar el home. `adminAlertEmails` no aparece en el HTML. |
-| **C-04** | Quitar el fallback de `SUPER_ADMIN_PROMOTION_KEY`; unificar cabeceras de seguridad en `next.config.js`; resolver la cookie `x-is-admin` (implementar mantenimiento o borrarla). | — | Sin clave → 503. Una sola fuente de cabeceras. |
-| **C-05** | Carrito: arreglar el merge (no sumar en cada recarga); tope de stock al agregar; exponer `totalItems` (unidades) y usarlo en header y barra móvil. | — | Recargar 5 veces logueado no cambia las cantidades. Los dos contadores muestran lo mismo. |
-| **C-06** | Rutas: redirects en `next.config.js` (`/mis-pedidos`→`/customer/orders`, `/mi-cuenta`→`/customer`, `/customer/wallet`→`/customer/balance`, `/auth/login`→`/login`); borrar `app/mis-pedidos`, `app/(public)/layout.tsx` y `/comparar` (**decisión pendiente**); link `/customer/product-requests` en la API; `robots.ts` sin `/_next/` ni `/uploads/`; quitar fallbacks a `favicon.ico`/`og-image.png` inexistentes. | — | Ningún `href` o `push` apunta a una ruta inexistente. |
+**Plan original (12/09):**
+| Fase | Tareas | Qué dejó |
+|---|---|---|
+| 0 · Blindaje | C-01 a C-08, C-50a, C-70, C-72 | Órdenes y totales calculados en el servidor, DTO públicos, settings con lista blanca, carrito sin duplicados, rutas limpias, captcha real y los huecos de seguridad del panel cerrados. |
+| 1 · Fundaciones | C-10 a C-13 | Tokens de color y capas, Inter, primitivas (`ProductCard`, `Price`, `useBodyScrollLock`, `lib/currency.ts`) y las queries del home. |
+| 2 · Header y home | C-20 a C-27 | Header con buscador y franja de categorías, barra móvil, home vitrina, popup y enlaces cortos. |
+| 3 · Catálogo y cierre | C-30 a C-33, C-40 | `/productos` con la URL como fuente de verdad, ficha sin self-fetch, categorías, imágenes optimizadas, README y `.env.example`. |
+| Gemini | G-01 a G-69, en 23 rondas | Tipografía, colores a tokens, capas, toasts, `dvh`, contraste y limpieza mecánica. Su carril no tiene deudas de reglas (comprobado el 28/09). |
 
-### FASE 1 — Fundaciones de diseño (CLAUDE)
+**Después del plan, por tema:**
+| Tema | Tareas | Qué dejó |
+|---|---|---|
+| Panel del admin | C-50b, C-51 a C-54, C-60, C-60b, C-71, C-73 a C-75, C-82, C-95, C-97, C-104, C-109, C-110, C-150 | Marco del panel, Configuración, Productos, pedidos digitales, gift cards, notificaciones y Telegram, flujo de órdenes, Marketing, Reportes, el resto de las pantallas, y el menú por secciones con el Dashboard de trabajo. |
+| Acceso y cuentas | C-80, C-83 a C-85, C-88, C-89, C-105, C-140, C-141, C-143 | Login con límites en el servidor, registro corto y con Google, una sola regla de contraseñas, IP real, sesiones con nombre, roles, equipo por invitación y verificación en dos pasos. |
+| Dinero: pagos y Puntos ES | C-87, C-96, C-101, C-114, C-115, C-123, C-125, C-129 a C-132, C-135, C-139, C-142 | Montos exactos, métodos de pago bien hechos, Pago Móvil que verifica al primer intento, pagos sin orden, mínimo de compra, checkout con todos los métodos y pago mixto, y "Puntos ES" con sus términos. |
+| Envíos y entrega | C-100, C-106, C-126, C-127, C-153 | ZOOM y MRW con oficinas reales y cobro a destino, rastreo, detalle de la orden, tiempo real y embalaje según el paquete. |
+| Catálogo que vende | C-78, C-102, C-117 a C-119, C-121, C-122, C-124, C-133, C-134, C-136, C-154 | Ofertas y cupones, cinta ES, carga masiva, usados y reacondicionados, garantías, reseñas, el asistente de productos y la confianza junto al botón de compra. |
+| Panel del cliente | C-55, C-128, C-137, C-138 | Marco, inicio con resumen, Mis pedidos, Favoritos, Direcciones y Mi perfil en pestañas. |
+| Legal y facturación | C-103, C-120, C-144, C-146, C-146b, C-147, C-147b, C-148, C-148b, C-151 | Firma de documentos, IVA incluido a la vista, precio sugerido desde el costo, datos para la factura, relación de ventas, cotizaciones y términos sin promesas falsas. |
+| Crecimiento | C-112, C-113, C-116, C-145, C-149 | ElectroStudio, medición del embudo de compra y el catálogo legible para Google, las redes y las IA. |
+| Equipo y documentos | C-53, C-77, C-86, C-90, C-91, C-93, C-94, C-98, C-99, C-108, C-111, C-152, C-156 | Revisiones de Gemini y de ChatGPT, deuda técnica (ESLint en 0), el bloque único de subida y este orden de documentos. |
 
-| ID | Tarea | Depende | Criterio de hecho |
-|----|-------|---------|-------------------|
-| **C-10** | `globals.css`: tokens de §1.1 y §1.3, borrar keyframes duplicados y `PageAnimations`, quitar `user-select:none` global (dejarlo solo en botones y nav), `overflow-x: clip`, quitar `transition: all` global y la regla `[class*="z-40"]`. | — | Las clases `bg-brand-500`, `text-ink`, `border-line` funcionan. Se puede seleccionar texto. |
-| **C-11** | Fuentes: Inter variable local (`font-sans`), Tektrron (`font-brand`), eliminar Nakadai y el objeto falso `inter`. | — | En DevTools, el body usa Inter. |
-| **C-12** | Primitivas: `Container`, `SectionHeader`, `Price`, `ProductBadge`, `ProductCard` v2, `ProductShelf` (scroll-snap CSS, flechas en desktop), `AddToCartButton`, `useBodyScrollLock` (contador de bloqueos), `lib/currency.ts`. Documentarlas en `components/ui/README.md`. | C-10 | Página de muestra interna o storybook mínimo verificable a 360px y 1280px. |
-| **C-13** | `lib/queries/home.ts`: featured, deals, bestSellers, newArrivals, topCategories, categoriesRail. Todas devuelven DTO. | C-02 | Cada query probada con datos reales; sin Decimals crudos. |
+### 5.2 Lista única de pendientes
+Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
-### FASE 2 — Header y home (CLAUDE)
+**En fila (Claude, en este orden):**
+| ID | Tarea | Notas |
+|---|---|---|
+| **C-155** | Buscar el producto en la web desde el asistente | Decisiones de Andrés del 01/10 (§7.2). Sin API de pago; las medidas entran como sugerencia porque ahora mueven dinero (C-153); la descripción se redacta propia. |
+| **C-157** | Pedir la reseña por correo unos días después de la entrega | Hoy el cliente tiene que acordarse. Solo a quien tiene una orden entregada del producto. |
+| **C-158** | Buscador de la tienda sin acentos | "bateria" encuentra "Batería". Reutiliza `lib/cotizaciones/busqueda.ts` (C-148b). |
+| **C-159** | Cotizaciones, tercera parte | Mandarla por correo desde el panel, "Mis cotizaciones" en el panel del cliente y la retención del 75 % del IVA para contribuyentes especiales y entes públicos. |
+| **C-160** | Menores (una sola tarea) | La lista de abajo. |
 
-| ID | Tarea | Depende | Criterio de hecho |
-|----|-------|---------|-------------------|
-| **C-20** | Header nuevo (§2) con buscador, franja de categorías, mega menú y tasa BCV. `<PublicHeader />` **sin props debe seguir funcionando** (Gemini lo usa en sus páginas). | C-03, C-10, C-12 | Sin detección de secciones por className; sin animaciones infinitas; accesible con teclado. |
-| **C-21** | Barra móvil: breakpoint `lg`, contador en unidades, drawer accesible (Esc, foco, aria); variable `--bottom-nav-h` y padding inferior global; WhatsApp encima de la barra y sin badge falso; eliminar `MobileScrollProgress`. | C-10, C-05 | A 360px nada queda tapado; a 768px hay una sola navegación. |
-| **C-22** | Home nuevo (§3). Borrar `HomeSearchBar` y `ProductCarousel`. | C-12, C-13, C-20 | Primer pantallazo a 360px: header, buscador, chips y al menos 1 producto con precio y botón. |
-| **C-23** | `HotAdOverlay`: se puede cerrar al instante, máximo 1 vez cada 24 h, solo en el home, sin bloquear el touch (**decisión pendiente**). | C-03 | — |
+**Menores (C-160):**
+- Ordenar el catálogo por el precio de oferta.
+- Ocultar el formulario de reseña a quien no puede reseñar.
+- `/terminos` y `/privacidad` como documentos editables, con los datos de contacto tomados de Configuración (hoy están escritos a mano, `estado/C-144.md`).
+- Conservar el slug al renombrar una categoría.
+- Borrar `POST /api/customer/balance/deduct` si las gift cards no lo necesitan: ninguna pantalla lo llama (C-139).
+- `app/global-error.tsx`: es la única pantalla con `slate-*`, un hex y `min-h-screen`.
+- `<style jsx global>` en `components/UserAccountButton.tsx` y 2 `min-h-screen` en el panel (`layout.tsx` y `admin/login`).
+- `toFixed` que todavía formatean precios en `components/gift-card`, `app/creator` y `app/admin` (el resto son cálculos, PDF o datos para el banco).
+- SMTP: la conexión no verifica el certificado (`rejectUnauthorized: false`) y la contraseña se guarda sin cifrar (`AUDITORIA_MARKETING.md`, 11 y 12).
+- `components/modals/RechargeModalV2.tsx` todavía pide `/api/settings/public` (carril Gemini: tarjeta G).
+- ESLint fuera de `app`, `components`, `lib` y `contexts`: `scripts/`, `prisma/seed.ts` y `docs/plan/scripts`.
 
-### FASE 3 — Catálogo (CLAUDE)
+**Esperan un dato o una decisión de Andrés:**
+| ID | Tarea | Qué falta |
+|---|---|---|
+| **C-92** | Clientes: desactivar en vez de borrar | La salida del diagnóstico (`docs/plan/scripts/diagnostico-c92.sql`, solo lee). Lleva una migración de `onDelete`. Suma: dejar un movimiento cuando se pierden Puntos ES al cerrar la cuenta. |
+| **C-107** | Seguro del envío a elección del cliente | Cuánto cobran ZOOM y MRW en Guanare y si aplica con cobro a destino. Una columna nueva en `orders`. |
+| **C-154b** | Plazo de entrega de los digitales en la ficha | Cuánto tarda de verdad un código y una recarga, y en qué horario se atiende. |
+| **C-153b** | Productos "frágiles" con más relleno | Decidir si se quiere. Una columna en productos. |
+| — | Taller (equipos en reparación) | SADES arriba: los datos están ahí. |
 
-| ID | Tarea | Depende | Criterio de hecho |
-|----|-------|---------|-------------------|
-| **C-30** | `/productos`: búsqueda, filtros, orden y paginación en el servidor con la URL como fuente de verdad (`useSearchParams`); filtros móviles por encima de la barra; "Destacados" ordena en vez de filtrar; sin límite de $10.000. | C-12, C-20 | Buscar desde el header estando en `/productos` actualiza los resultados. El botón "Atrás" conserva los filtros. |
-| **C-31** | Detalle de producto: Prisma directo (sin self-fetch) con `cache()` compartido entre metadata y página; relacionados con ProductCard v2; barra sticky "Agregar" en móvil por encima de la barra inferior; mostrar `compareAtPriceUSD`. | C-02, C-12 | Funciona sin `NEXT_PUBLIC_APP_URL`. |
-| **C-32** | `/categorias` y `/categorias/[category]` al nuevo sistema, con Footer. | C-12 | — |
-| **C-33** | Imágenes: evaluar quitar `images.unoptimized` (sharp ya está instalado) y migrar los `<img>` del carril Claude. | C-22 | Lighthouse móvil del home antes y después, anotado en el estado. |
-| **C-40** | README actualizado, revisión de todas las ramas de Gemini y checklist QA final (§6). | todo | — |
+**Sin fecha (dependen de terceros o no se pidieron):**
+- Binance Pay y PayPal automáticos: piden cuenta de comercio (KYB) y cuenta Business. Hoy son manuales con reserva de 2 horas.
+- Crear la guía de ZOOM desde el panel: pide cuenta corporativa de ZOOM. MRW no tiene API pública.
+- Importador de las historias del artefacto viejo a ElectroStudio, si Andrés las quiere.
+- Firma dibujada con el dedo al aprobar una cotización (hoy la aprobación es digital, con nombre y cédula).
+- Entrar con Facebook o Apple: no va por ahora (24/09).
 
-### Tareas de GEMINI
-Tarjetas G-01 a G-08 en **`/GEMINI.md`**; G-09 a G-14 y el orden por rondas en **`PLAN_GEMINI.md`**. Resumen:
+**Limpieza (sin urgencia):**
+- Máquina de Andrés: la carpeta y las ramas de ChatGPT, y las ramas locales ya fusionadas (comandos en `SIGUIENTE.md`).
+- Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
+- `public/uploads/` tiene 40 archivos versionados aunque está en `.gitignore`: decidir si se sacan del índice (`git rm --cached`).
 
-| ID | Tarea | Depende |
-|----|-------|---------|
-| **G-01** | Corregir links a rutas inexistentes dentro de su carril | — |
-| **G-02** | Borrar archivos muertos (lista cerrada) | — |
-| **G-03** | Agregar `PublicHeader` y `Footer` a `privacidad`, `terminos` y `canjear-gift-card` | — |
-| **G-04** | Reemplazar `alert()` por `toast` | G-04a: — · G-04b: C-01 y C-05 |
-| **G-05a…g** | Tipografía: eliminar tamaños ilegibles y `font-black`/`font-extrabold` por lotes | a–e: — · f: al final · g: C-01 y C-05 |
-| **G-06a…g** | Colores: hex → tokens por lotes | **C-10** (todos) · g: además C-01 y C-05 |
-| **G-07** | `h-screen`/`min-h-screen` → `h-dvh`/`min-h-dvh` en su carril | — |
-| **G-08** | Hacer visibles en táctil 4 controles que hoy solo aparecen con hover | — |
-| **G-09** | Settings desde `useSettings()` en 5 páginas (sin fetch duplicado) | — |
-| **G-10** | z-index gigantes → variables de capa | C-10 y C-21 |
-| **G-11** | Bloqueo de scroll con `useBodyScrollLock` en 4 archivos | C-12 |
-| **G-12** | Quitar `animate-pulse` de las manchas de blur | — |
-| **G-13** | Contraste: `text-white/30…60` → `/80` | — |
-| **G-14** | Inventario final (solo reporte) | R6 |
+### 5.3 Crecimiento: qué frena y qué sigue
+La base técnica está: el embudo se mide (C-145), el catálogo es legible para buscadores e IA (C-149), el precio dice su IVA, hay cotizaciones para empresas y la ficha da confianza antes de pagar.
 
-El orden por rondas, sincronizado con Claude, está en [`PLAN_GEMINI.md`](./PLAN_GEMINI.md) §3 y [`PLAN_CLAUDE.md`](./PLAN_CLAUDE.md) §3.
+**Lo que frena hoy no es código:**
+1. **El catálogo es corto** (9 productos publicados el 01/10, ninguno con marca). Sin catálogo no hay qué posicionar ni qué anunciar. Herramientas: la carga masiva con plantilla (C-118) y la búsqueda del producto en la web (C-155).
+2. **La medición no está encendida:** faltan las claves de Google Analytics y del píxel de Meta en el servidor, y dar de alta el dominio en Google Search Console.
+3. **Los precios:** dependen de los proveedores (fuera del código).
+
+**Orden recomendado:**
+1. Catálogo: C-155, y cargar productos con marca, medidas y fotos.
+2. Encender la medición y Search Console; esperar una semana de datos.
+3. Anuncios: búsqueda de Google (texto) y catálogo de Meta con `/feed/productos.xml`. Google Merchant Center no admite a Venezuela (lista oficial leída el 01/10).
+4. Reseñas por correo (C-157): la prueba social que hoy falta.
+5. Instituciones: la retención del IVA en las cotizaciones (C-159) y, del lado de Andrés, el Registro Nacional de Contratistas.
+
+**Qué mirar cada semana** (Dashboard y Reportes del panel): productos publicados, visitas, agregados al carrito, compras y ventas cobradas. Los números de la empresa no se escriben en este repositorio, que es público.
 
 ---
 
-## 6. QA manual (lo haces tú antes de mergear cada fase)
+## 6. QA manual
 
 Anchos a probar: **360 · 390 · 768 · 1024 · 1440 px** (DevTools → modo responsive). Incluir un Android real de gama media si es posible.
 
@@ -361,16 +398,82 @@ Anchos a probar: **360 · 390 · 768 · 1024 · 1440 px** (DevTools → modo res
 - [ ] Panel de filtros móvil: el botón "Ver N productos" es visible y se puede tocar.
 - [ ] Se puede seleccionar y copiar el nombre y el precio de un producto.
 - [ ] El popup promocional se cierra al primer toque.
-- [ ] Checkout completo con Pago Móvil y con saldo (WALLET).
+- [ ] Checkout completo con Pago Móvil y con Puntos ES, y uno con pago mixto.
 - [ ] Ver el código fuente del home y de `/productos`: buscar `costPerItem` y `adminAlertEmails` → 0 resultados.
 - [ ] `npm run lint`, `npx tsc --noEmit` y `npm run build` sin errores nuevos.
 
-## 7. Decisiones pendientes (Andrés)
+La lista completa para revisar en producción con Andrés, pantalla por pantalla, está en [`REVISION_FINAL.md`](./REVISION_FINAL.md). La prueba automática de todo junto es `scripts/e2e/humo.ts` (`OPERACION.md` §3).
 
-| # | Decisión | Propuesta por defecto |
-|---|----------|-----------------------|
-| D1 | `/comparar`: ¿arreglar o eliminar? | Eliminar y redirigir a `/productos` (nadie la enlaza y está rota). |
-| D2 | Popup promocional: ¿mantener la cuenta regresiva obligatoria de 5 s? | Quitarla; cierre inmediato; máximo 1 vez cada 24 h. |
-| D3 | Modo mantenimiento: ¿implementarlo o eliminar el toggle del admin? | Implementarlo en `proxy.ts` (el campo ya existe). |
-| D4 | Formato de precio USD | `$1.099,00` (separadores venezolanos). |
-| D5 | Categorías fijas en la franja del header | Automáticas: las 2 con más productos. |
+## 7. Decisiones de negocio (Andrés)
+
+Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmación: borrar datos, force push y cambiar variables de entorno de producción.
+
+### 7.1 Abiertas
+| # | Decisión o dato | Para qué |
+|---|---|---|
+| A1 | Cuánto tarda de verdad la entrega de un código y de una recarga, y en qué horario se atiende | La ficha de los digitales (C-154b). Hoy dice "cuando confirmamos tu pago". |
+| A2 | Costos del seguro de ZOOM y MRW en Guanare, y si aplica con cobro a destino | C-107. |
+| A3 | Términos, 3 afirmaciones escritas a mano (`estado/C-144.md`): "comprobante vencido o ilegible" como motivo de rechazo, los plazos (24-48 h, 2 a 7 días, 5 a 10 días de garantía) y el contacto (correo, WhatsApp y horario) | Que los términos solo prometan lo que se cumple. |
+| A4 | Términos y privacidad revisados por el abogado (`estado/C-120.md` §7) | Publicarlos como documento con versión. |
+| A5 | Preguntas para el contador: IVA de los digitales (`estado/C-151.md`), embalaje (`estado/C-147b.md`) y las de `estado/C-120.md` §6 | Confirmar la lectura de la norma. |
+| A6 | ¿Marcar productos "frágiles"? | C-153b. |
+| A7 | Medidas y precios reales de los empaques, precio del "bulto aparte" y monto del embalaje gratis | Encender el embalaje según el paquete (C-153). |
+| A8 | ¿Firma dibujada al aprobar una cotización? | Hoy no hace falta. |
+| A9 | ¿Teléfono opcional en el registro? ¿Captcha? (`AUDITORIA_REGISTRO.md` §2) | Registro todavía más corto. |
+| A10 | ¿Poner el repositorio en privado? (recomendado) | Hoy es público. |
+
+### 7.2 Tomadas (no volver a preguntar)
+**Del plan original (D1 a D5):** `/comparar` se eliminó y redirige a `/productos` (C-06). El popup se cierra al instante y sale como mucho una vez cada 24 h (C-23). El modo mantenimiento se implementó (C-04). El precio se escribe `$1.099,00` (C-12). Las categorías de la franja son las dos con más productos (C-20).
+
+- **Equipo y forma de trabajo:**
+  - ChatGPT fuera del equipo (21/09).
+  - Claude hace el merge a `main` y el push; el deploy lo hace Andrés, en un solo bloque (30/09 y 01/10).
+  - Migraciones autorizadas siempre que sean aditivas y con respaldo (29/09).
+  - Sin emojis en la web ni en el código (14/09).
+  - Cuidado con los términos: ninguna promesa escrita a mano que la tienda no cumpla; ante la duda, preguntar (30/09).
+- **Registro y acceso:**
+  - Google: se vincula por correo; teléfono y cédula en la primera compra; los admin nunca entran con Google.
+  - Cédula fuera del registro. Onboarding con física.
+  - Facebook y Apple: no por ahora (24/09).
+- **Panel (30/09, C-140 y C-141):**
+  - Dos pasos con app de códigos, obligatorios para todo el panel y sin opción de desactivarlos.
+  - Roles: Super admin (el dueño) y Administrador (sin Configuración, Métodos de pago, canales de aviso, publicar documentos legales ni Equipo). Soporte, ventas o contenido: no por ahora.
+  - Admins nuevos solo por invitación al correo. Una cuenta de cliente no se convierte en admin.
+  - Una sola sesión de admin, 12 horas y cierre tras 1 hora sin uso.
+  - Menú por secciones; "Dashboard" se llama Dashboard; "Cursos" se queda en el menú (01/10).
+- **Clientes:** se borran solo si no tienen órdenes, Puntos ES, transacciones ni gift cards; si tienen algo, se desactivan (17/09).
+- **Dinero:**
+  - Nunca sale de la empresa.
+  - Comisiones de promotores solo por compras pagadas (16/09).
+  - Pago Móvil sin orden: pasa a los Puntos ES del cliente (28/09). Lo pagado de más se acredita completo (29/09).
+  - Mínimo de compra solo sobre los productos, sin embalaje ni envío. Máximo sobre todo lo que paga el cliente (28/09).
+  - Sin subir capturas: se usa la verificación con el BDV (29/09).
+  - Binance Pay y PayPal manuales, con reserva de 2 horas (29/09).
+  - Redondeo de los montos viejos de C-96: autorizado (24/09); lo corre Andrés en el servidor.
+- **Puntos ES (reglas legales, 29 y 30/09):**
+  - Se llaman "Puntos ES" en todo texto. Nunca "saldo", "billetera", "wallet" ni "monedero".
+  - Solo compran en la tienda: nunca se transfieren a otro cliente, nunca se retiran, nunca pagan a terceros. Así quedan como "esquema de prepago", fuera de la regulación del BCV (Resolución 18-12-01, art. 19).
+  - Quien cierra su cuenta los pierde: no son reembolsables. Se le sugiere gastarlos antes.
+  - La comisión del Pago Móvil P2C (hasta 1,5 %, mínimo Bs. 14) la paga la tienda. No se cobra recargo al cliente: está prohibido.
+  - Gift card: solo con Puntos ES.
+- **Envíos:**
+  - ZOOM y MRW con cobro a destino; delivery en Guanare con tarifa fija; envío gratis por producto o por monto (22/09).
+  - Sin cuenta corporativa de MRW por ahora (24/09).
+  - El seguro se le pregunta al cliente (24/09; espera los costos, C-107).
+  - Embalaje según el paquete, apagado hasta que Andrés lo encienda (01/10).
+- **Productos:**
+  - El fondo de las fotos se quita desde el teléfono; los usados llevan etiqueta "Usado" y no el sello "ES" (28/09).
+  - Cuatro condiciones: Nuevo, Caja abierta, Reacondicionado y Usado. Cupones no, ofertas sí. La garantía la da la tienda (30, 30, 90 y 30 días por defecto).
+  - Sin devoluciones por cambio de opinión: falla, daño o producto distinto se atienden como garantía. Si no se puede reparar ni cambiar, se devuelve en Puntos ES, como dicen los términos (01/10).
+  - Duplicar: el servidor copia todo; la copia nace en borrador y sin stock.
+  - Especificaciones sin mínimo y sugeridas por categoría (30/09).
+  - Buscar el producto en la web (C-155, 01/10): un botón por producto en el primer paso del asistente; sin API de pago; trae descripción, peso y medidas de la caja, especificaciones, marca y código de barras; busca por modelo y nombre; si no encuentra las medidas, propone un estimado marcado como tal.
+- **Descuentos (25/09):** si hay varios, gana el mayor. Los digitales, fuera. Precio tachado. "Pedir descuento" reemplazado por ofertas y cupones. El cupón de monto fijo va primero a los productos sin oferta.
+- **Reseñas:** solo con una orden entregada del producto.
+- **Facturación e IVA (30/09 y 01/10):**
+  - La web no emite facturas: prepara los datos, y SADES o el talonario facturan. No se construye un facturador ni se integra una imprenta digital.
+  - El precio publicado ya lleva el IVA y se dice cuánto es. El precio sugerido es costo + 30 % + IVA.
+  - Los productos digitales no llevan IVA (interruptor en Configuración, apagado).
+- **ElectroStudio:** historias en la base, dos pantallas (inicio y editor), trabajo por fases. El plan semanal automático quedó fuera (28/09).
+- **Taller:** espera a SADES (30/09).
+- **Credenciales del historial (C-40):** revisado el 26/09, no había nada que cambiar. Si algún día se configura el webhook de SADES, usar un secreto nuevo.

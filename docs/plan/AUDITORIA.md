@@ -5,6 +5,44 @@ Alcance: home, header/nav, tienda pública, carrito, APIs públicas y de órdene
 No auditado a fondo: panel admin (UI), dashboard de creador, flujos de email.
 Limitación: en el entorno de auditoría no había Node instalado, así que **no se corrió `tsc`, `lint` ni `build`**. Todo lo de abajo sale de leer el código; lo marcado "(verificar)" requiere confirmarlo en ejecución.
 
+## Cierre (2026-10-01, C-156)
+Esta auditoría es la del 12/09 y dio origen al plan. **Todo lo de P0 y P1 está resuelto y en producción.** Medido otra vez sobre `main` el 01/10 con `grep` en `app`, `components`, `lib` y `contexts`.
+
+| Hallazgos | Cerrado en | Cómo quedó |
+|---|---|---|
+| S1 a S4 (órdenes) | C-01 | Precio, total, dueño y número de orden salen del servidor. Casos manipulados probados (44/44). |
+| S5 a S7 (productos) | C-02 | DTO con lista blanca; `GET /api/products` pide permiso de admin. |
+| S8 (settings) | C-03 y C-50a | `getPublicSettings()` con lista blanca. |
+| S9 (clave de super admin) | C-04 y C-141 | La ruta `promote-super-admin` ya no existe; los roles se dan en Equipo. |
+| S10 (HTML del hero) | C-22 | El hero de mensaje salió del home. |
+| S11 y S12 (cookie y cabeceras) | C-04 | Modo mantenimiento implementado en `proxy.ts`; una sola fuente de cabeceras. |
+| B1 a B3 (carrito) | C-05 | Un merge por sesión, tope de stock y un solo contador. |
+| B4 a B8 (catálogo) | C-30 | La URL es la fuente de verdad; búsqueda, filtros y paginación en el servidor. |
+| B9 (self-fetch de la ficha) | C-31 | Prisma directo con `cache()`. |
+| B10 y B11 (tarjeta y carrusel) | C-12 y C-22 | `ProductCard` v2 con *stretched link*; `ProductCarousel` borrado. |
+| B12 (`/comparar`) | C-06 | Eliminada; redirige a `/productos`. |
+| B13, B14 y B16 (header y flotantes) | C-20 y C-21 | Un solo breakpoint (`lg`), sin detección por `className`, WhatsApp sin badge falso. |
+| B15 (popup) | C-23 y C-25 | Cierre inmediato, una vez cada 24 h y solo en el home. |
+| B17 y B18 (home) | C-22 | Secciones nuevas. |
+| B19 (bloqueo de scroll) | C-12 y G-11 | `useBodyScrollLock`: 0 usos de `body.style.overflow`. |
+| §3 Rutas inertes y código muerto | C-06, C-07 y G-02 | Redirects, páginas huérfanas borradas y los 18 módulos sin uso borrados. Los ajustes del admin que la tienda ignoraba se conectaron o se quitaron en C-50b. |
+| §3 SEO | C-06 y C-149 | `robots.ts` deja leer `/_next/` y las fotos; sitemap corregido. |
+| §4 Paleta | C-10 y G-06 | Tokens de `PLAN.md` §1.1. Hex en clases: 1 (ver abajo). |
+| §5 Tipografía | C-11 y G-05 | Inter local, Nakadai fuera. 0 textos de menos de 11 px y 0 `font-black`. |
+| §6 Mobile | C-21, C-33, G-07, G-08 y G-12 | Una navegación, `dvh`, sin reveals solo con hover, imágenes optimizadas, 1 `fetch` de settings en el contexto. |
+| §7 CSS global | C-10 | `user-select` solo en botones y navegación, `overflow-x: clip`, keyframes sin duplicar. |
+| §8 Calidad | C-07, C-40, C-111 y C-151 | 0 `any`, 0 `console.log`, ESLint en 0 errores, README nuevo, y pruebas de punta a punta (`scripts/e2e/`). |
+
+**Lo que sigue abierto (menor, en `PLAN.md` §5.2, C-160):**
+- `app/global-error.tsx` conserva `slate-*`, un hex y `min-h-screen`; hay 2 `min-h-screen` más en el panel.
+- Un `<style jsx global>` en `components/UserAccountButton.tsx`.
+- `components/modals/RechargeModalV2.tsx` todavía pide `/api/settings/public`.
+- Archivos grandes: `app/checkout/page.tsx` bajó de 2.537 a 1.770 líneas y `app/gift-cards/page.tsx` de 1.358 a 841; no hay tarea para partirlos más.
+- 28 `<img>`: son plantillas de correo, el lienzo de ElectroStudio, vistas previas del panel y el certificado, donde `next/image` no aplica.
+- `public/uploads/` tiene 40 archivos versionados: decidir si se sacan del índice.
+
+---
+
 Severidad: **P0** = dinero, datos o caída · **P1** = funcionalidad rota que ve el cliente · **P2** = deuda, rendimiento o consistencia.
 
 ---

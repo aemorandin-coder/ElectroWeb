@@ -2,6 +2,12 @@
 
 Fecha: 2026-09-16 · Autor: Claude · Para: Andrés
 
+## Cierre (2026-10-01, C-156)
+- **Hecho:** C-83 (login sin distinguir mayúsculas), C-84 (registro corto), C-85 (Google y cédula fuera del registro), C-80 (límite de intentos en el servidor), C-88 (una sola regla de contraseñas) y GPT-06 (recuperar contraseña y verificar correo con el diseño nuevo).
+- **Google:** el código está; el botón aparece cuando Andrés ponga `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en el servidor (pasos en la sección 3).
+- **Facebook y Apple:** no van por ahora (decisión del 24/09).
+- **Abierto (decide Andrés, `PLAN.md` §7.1):** teléfono opcional en el registro y el captcha visible.
+
 ## 1. Qué le pasó al cliente ("Credenciales invalidas")
 
 El teclado del teléfono escribió el correo con mayúsculas (`CONTACTO@FRANDING.COM.PE`). El registro lo guardaba en minúsculas, pero el login lo buscaba tal cual lo escribió el cliente, y en PostgreSQL `Contacto@…` y `contacto@…` son textos distintos. La cuenta sí existía; el login no la encontraba.

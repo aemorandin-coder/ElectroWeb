@@ -1,5 +1,7 @@
 # 🌐 API Externa ElectroCaja (eweb)
 
+> **Qué es este archivo:** la documentación de la API del sistema de trastienda (SADES / ElectroCaja), de enero de 2026. **No es la API de la tienda.** La tienda la consume desde `lib/sades.ts` (catálogo, stock y webhook). Antes estaba en la raíz como `API_DOCUMENTATION.md`; se movió aquí el 01/10/2026 (C-156) y no se ha vuelto a contrastar con SADES.
+
 ## Documentación Completa de Endpoints
 
 **Versión:** 1.0  

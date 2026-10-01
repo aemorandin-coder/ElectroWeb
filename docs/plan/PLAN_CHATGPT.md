@@ -306,4 +306,4 @@ Andrés sacó a ChatGPT del equipo el mismo 21/09: no vuelve de la pausa. Lo pen
 | R2 · productos (GPT-07…GPT-11) | **Claude, C-51** (vuelve a su dueño original) | Primero el mapa (lo que pedía GPT-07). Incluye las casillas perdidas de las acciones masivas (C-98) y "Duplicar". Gemini hace antes la limpieza mecánica (R20: G-63, G-65, G-66). |
 | R3 · resto del panel (GPT-12…GPT-16) | **Claude**, pantalla por pantalla | Con la guía de `CHATGPT.md` §4. |
 | Borrar `ProductForm.tsx` (GPT-11) | **Gemini G-63** | Confirmado sin uso con `git grep`. |
-| Carpeta `../ElectroShopVe-chatgpt`, ramas `chatgpt/*` y `stash@{0}` | **Andrés** | Todo ya está en `main` o reemplazado por C-95. Se pueden borrar (comandos en `SIGUIENTE.md` §1). |
+| Carpeta `../ElectroShopVe-chatgpt`, ramas `chatgpt/*` y `stash@{0}` | **Andrés** | Todo ya está en `main` o reemplazado por C-95. Se pueden borrar (comandos en `SIGUIENTE.md`, "Limpieza opcional"). |

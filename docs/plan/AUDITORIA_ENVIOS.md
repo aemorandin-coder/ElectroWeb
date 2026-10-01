@@ -3,6 +3,25 @@
 Pedido de Andrés (21/09): revisar si el flujo de envío es lógico, también desde el panel, y averiguar cómo trabajar con **ZOOM** y **MRW** para que el cliente gestione y rastree su envío.
 Solo lectura: no se cambió código. Las APIs de ZOOM se probaron de verdad contra su servidor de pruebas.
 
+## Cierre (2026-10-01, C-156)
+**Los 14 hallazgos están resueltos y en producción.** Lo de "Cómo funciona hoy" describe la tienda del 21/09, antes de C-100.
+
+| Hallazgos | Cerrado en | Cómo quedó |
+|---|---|---|
+| E1 | C-100 | El envío gratis ya no cuenta los digitales. |
+| E2 y E3 | C-100 y C-106 | Decisión D-E1: **cobro a destino**. La tienda cobra solo el embalaje y el cliente paga el flete al retirar; la tarifa de ZOOM se muestra como referencia. El embalaje se calcula según el paquete desde C-153. |
+| E4, E11 y E12 | C-100 | No se envía sin pago; cada tipo de entrega tiene sus estados; el enlace de rastreo lo arma el servidor. |
+| E5 a E8 | C-100 y C-137 | La orden guarda la empresa, la oficina real (de la lista de ZOOM o de MRW), la ciudad y quién recibe con su cédula. |
+| E9 | C-100 y C-126 | Rastreo de ZOOM con su guía; MRW con "Copiar guía" y botón a su página. |
+| E10 | C-100 | Rastreo automático cada 2 horas con aviso al cliente (el cron del servidor existe desde el 30/09). |
+| E13 y E14 | C-100 | El pedido digital se cierra al entregar el último código; el correo dice el tipo de entrega real. |
+
+**Decisiones:** D-E1 = cobro a destino. D-E2 = oficina de ZOOM o MRW, y delivery en Guanare con tarifa fija. D-E3 = sin cuenta corporativa por ahora (24/09). D-E4 = migraciones aditivas autorizadas (29/09).
+
+**Lo que sigue abierto (`PLAN.md` §5.2):** el seguro a elección del cliente (C-107, espera los costos) y crear la guía de ZOOM desde el panel (fase 2: pide cuenta corporativa).
+
+---
+
 ## 1. Cómo funciona hoy
 
 ```

@@ -2,6 +2,23 @@
 
 `/admin/marketing`: una página de 1.118 líneas con 6 pestañas, más `SocialMediaGenerator` (869), `EmailSettingsPanel` (525) y 7 APIs.
 
+## Cierre (2026-10-01, C-156)
+**Resuelto en C-75**, salvo dos puntos de correo. El mapa de abajo describe la pantalla del 16/09.
+
+| Hallazgos | Cerrado en | Cómo quedó |
+|---|---|---|
+| 1 a 6 (comisiones) | C-75 | Comisión solo por compras pagadas, se rechaza sola al cancelar, aprobación atómica y por promotor, % entre 0 y 50, y no se borra un promotor con historial. |
+| 7 a 10 (campañas y plantilla) | C-75 y C-109 | Un correo por persona, solo a quien aceptó promociones, con baja de un clic, imágenes con URL absoluta y destinatarios paginados. |
+| 13 (emojis en los correos) | C-75 y G-53 | Pie sin emojis. |
+| 14 a 16 (código, permisos y contador) | C-75 y C-82 | Una sección por archivo; el SMTP pasó a Configuración. |
+| Pestaña "Redes Sociales" | C-112, C-113 y C-116 | Reemplazada por ElectroStudio, sin IA y sin claves en el navegador. |
+
+**Lo que sigue abierto (menor, `PLAN.md` §5.2, C-160):**
+- 11: la conexión SMTP no verifica el certificado (`rejectUnauthorized: false` en `lib/email-service.ts`).
+- 12: la contraseña SMTP se guarda sin cifrar en la base.
+
+---
+
 ## Mapa: qué hace cada pestaña y qué pasa en la tienda
 
 | Pestaña | Qué hace hoy | Efecto real | Estado |

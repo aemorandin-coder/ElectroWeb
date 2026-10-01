@@ -3,7 +3,7 @@
 Responde a Andrés en español. Tienda online de Electro Shop Morandin C.A. (Guanare, Venezuela).
 Stack: Next.js 16 (App Router, `proxy.ts` como middleware), React 19, Tailwind CSS 4 (`@theme` en `app/globals.css`), Prisma 6 + PostgreSQL, NextAuth 4, react-hot-toast.
 
-**Antes de trabajar:** lee `docs/plan/PLAN_CLAUDE.md` (tu orden por rondas y el detalle de cada tarea), `docs/plan/PLAN.md` (diseño y carriles) y, si la tarea toca un bug, su fila en `docs/plan/AUDITORIA.md`.
+**Antes de trabajar:** lee `docs/plan/SIGUIENTE.md` (lo de ahora: qué falta subir, las tareas de Andrés y tu fila) y `docs/plan/PLAN.md` (el plan maestro: diseño §1, carriles §4, lista de pendientes §5 y decisiones §7). Antes de probar o de dar pasos de deploy, `docs/plan/OPERACION.md`. El registro de tus tareas está en `docs/plan/PLAN_CLAUDE.md`; lo ya subido, en `docs/plan/HISTORIAL.md`; y cada auditoría (`docs/plan/AUDITORIA*.md`) abre con su cierre.
 **Next.js 16 tiene cambios incompatibles** con versiones anteriores (ver `AGENTS.md`, generado por `next dev`). Antes de usar una API de Next (caché, `params`, `proxy`, fuentes, imágenes), consulta `node_modules/next/dist/docs/`.
 
 ## Rol en el equipo
@@ -14,8 +14,8 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
 2. Una tarea = rama `claude/<ID>` = commits con prefijo `[C-XX]`. **Claude hace el merge a `main` y el push** cuando la tarea está verificada (regla de Andrés del 2026-09-30):
    - `git merge --no-ff --no-edit claude/C-XX` (sin `--no-edit` git abre un editor que no existe y la fusión queda a medias).
    - Antes de subir: `git diff main claude/C-XX` vacío después de la fusión (entra exactamente lo revisado) y sin credenciales en lo que se sube (el repositorio es público).
-   - El deploy en el servidor lo sigue haciendo Andrés: dale los pasos (SQL, cron, pruebas) en `SIGUIENTE.md`.
-3. Al terminar, crea `docs/plan/estado/C-XX.md` con `Estado: HECHO` (o `BLOQUEADO — motivo`) en el mismo commit: qué cambió, cómo se verificó y qué queda pendiente.
+   - El deploy en el servidor lo sigue haciendo Andrés: dale los pasos en `SIGUIENTE.md`, **en un solo bloque** con todo lo que falta subir (commit que debe tener producción, SQL total, cron, pruebas y vuelta atrás). Cuando Andrés lo sube, el bloque pasa a `HISTORIAL.md`.
+3. Al terminar, crea `docs/plan/estado/C-XX.md` con `Estado: HECHO` (o `BLOQUEADO — motivo`) en el mismo commit: qué cambió, cómo se verificó y qué queda pendiente. En el mismo commit: su fila en `PLAN_CLAUDE.md`, y `PLAN.md` §5 y `SIGUIENTE.md` al día. Lo que quede pendiente va a la lista única de `PLAN.md` §5.2, no solo al estado.
 4. Si una tarea C cambia algo que Gemini usa (tokens, `<PublicHeader />`, `Footer`, rutas), mantén la compatibilidad o deja una nota en el estado **y** actualiza `GEMINI.md`.
 5. Si una tarjeta de Gemini queda desactualizada (líneas que se movieron, tokens que cambiaron), actualiza `GEMINI.md` antes de que Gemini la tome.
 6. Antes de mergear, revisa las ramas `gemini/*`: el diff debe quedar dentro de su carril y los greps de verificación deben dar lo esperado. Para ver solo la lógica que cambió, compara las dos versiones sin `className` ni sangría (C-86). Revisa también los commits de Gemini que lleguen a `main` sin rama (como `[Marketing]` del 21/09).
@@ -43,4 +43,4 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
 - Cambios en órdenes, carrito o saldo: probar el caso normal **y** el caso manipulado.
 
 ## Prohibido sin confirmación de Andrés
-Borrar datos, force push, cambiar variables de entorno de producción y decisiones de negocio listadas en `PLAN.md` §7. Las migraciones aditivas están autorizadas (29/09) y el merge con push a `main` también (30/09, ver regla 2).
+Borrar datos, force push, cambiar variables de entorno de producción y decisiones de negocio listadas en `PLAN.md` §7 (las tomadas no se cambian; las abiertas no se dan por resueltas). Las migraciones aditivas están autorizadas (29/09) y el merge con push a `main` también (30/09, ver regla 2).

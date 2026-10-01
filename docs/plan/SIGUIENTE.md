@@ -1,19 +1,19 @@
-# Lo de ahora (actualizado 2026-10-01, C-156)
+# Lo de ahora (actualizado 2026-10-01, C-161)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** todo hasta C-154, más C-156 (este orden de documentos). Igual a GitHub.
+- **`main`:** todo hasta C-154, más C-156 (el orden de los documentos) y C-161 (la foto de los usados). Igual a GitHub.
 - **Producción:** el bloque del 01/10 (`866afe5`, hasta C-151), comprobado desde fuera. En producción el embalaje es de **$1,00** y el envío gratis, desde $300.
-- **Falta subir:** C-153 y C-154 (bloque de abajo). C-156 solo cambia documentos y un guion de SQL: no cambia la tienda.
+- **Falta subir:** C-153, C-154 y C-161 (bloque de abajo). C-156 solo cambia documentos y un guion de SQL: no cambia la tienda.
 - **Gemini:** sin ronda abierta. La próxima la escribe Claude.
 - **Confirmado por Andrés el 01/10:** el nginx ya pasa la IP real (C-105) y el resto del equipo ya está invitado y funcionando (C-141).
 
-## 2. Deploy pendiente: C-153 · Embalaje según el paquete y C-154 · Confianza antes de pagar
-Pedidos de Andrés del 01/10. Detalle, investigación y pruebas en `estado/C-153.md` y `estado/C-154.md`.
+## 2. Deploy pendiente: C-153 · Embalaje según el paquete, C-154 · Confianza antes de pagar y C-161 · Foto de los usados
+Pedidos de Andrés del 01/10. Detalle, investigación y pruebas en `estado/C-153.md`, `estado/C-154.md` y `estado/C-161.md`.
 
-- **Lo que sube:** dos tareas, **3 columnas nuevas** (aditivas, todas de C-153). Sin dependencias ni variables de entorno nuevas.
+- **Lo que sube:** tres tareas, **3 columnas nuevas** (aditivas, todas de C-153). Sin dependencias ni variables de entorno nuevas.
 - **El embalaje no cambia** hasta encender el cálculo en Configuración. **La ficha del producto sí cambia al subir** (C-154).
 
 **Qué trae:**
@@ -22,6 +22,7 @@ Pedidos de Andrés del 01/10. Detalle, investigación y pruebas en `estado/C-153
 - Cada orden guarda cómo se despacha: el panel dice qué empaque usar, qué va dentro, cuántas piezas y el peso para la guía.
 - El Dashboard avisa de los productos sin peso o medidas.
 - **Ficha del producto (C-154):** una línea encima del botón de compra con la garantía, el envío y el embalaje; la garantía con sus días también en los productos nuevos y cómo se resuelve; el embalaje de ese producto y los montos de embalaje y envío gratis.
+- **Foto de los usados (C-161):** la foto recortada de un producto de caja abierta, reacondicionado o usado se arma con fondo blanco y centrada, sin la cinta ES. Antes quedaba pegada a los bordes.
 
 ### Pasos (en el servidor, `/var/www/electroshopve`)
 1. **Qué hay ahora:** `git log -1 --oneline`. Debe empezar por `866afe5`. Si dice otra cosa, avisar a Claude antes de seguir.
@@ -52,6 +53,7 @@ Pedidos de Andrés del 01/10. Detalle, investigación y pruebas en `estado/C-153
 4. **"Embalaje gratis desde":** pon un monto (por ejemplo $20) y Guardar. El carrito dice "Te faltan $X en productos para el embalaje gratis", con su barra.
 5. **Una compra barata con envío.** En el panel, Órdenes → esa orden: bloque "Cómo empacar" con el empaque, lo que va dentro, las piezas y el peso. "Copiar datos para la guía" y pegarlo en un bloc de notas: trae "Piezas", "Peso aprox." y "Empaque".
 6. **Dashboard → "Tu tienda: por completar":** avisa del producto sin peso o medidas (hoy, el teclado AOAS). Ponérselos.
+7. **La carátula del Grand Theft Auto V PS5 (C-161):** Productos → editar → quitar las dos primeras fotos (son la misma) y volver a subir la carátula. Avisa "Foto lista con fondo blanco, centrada". En el inicio sale con aire alrededor y su etiqueta "CAJA ABIERTA · EXCELENTE".
 
 ### Si algo sale mal
 - **Sin deploy:** apagar el interruptor de "Embalaje según el paquete". Vuelve el precio único al instante y los empaques se conservan.

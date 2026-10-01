@@ -110,13 +110,16 @@ export async function POST(request: NextRequest) {
     // cinta "ES"). El original transparente queda al lado como <nombre>.orig.png para ElectroStudio.
     // Solo si lo pide el formulario de productos: categorías y métodos de pago usan esta ruta sin tocar la imagen.
     // C-133: también con fondo blanco liso (y en JPG): antes una foto ya blanca quedaba sin cinta
-    const isProductPhoto = formData.get('purpose') === 'product' && ['image/png', 'image/webp', 'image/jpeg'].includes(mimeType);
+    // C-161: 'product-used' arma el mismo marco (fondo blanco, centrada, con aire) sin la cinta: un usado no la lleva
+    const purpose = formData.get('purpose');
+    const conCinta = purpose === 'product';
+    const isProductPhoto = (conCinta || purpose === 'product-used') && ['image/png', 'image/webp', 'image/jpeg'].includes(mimeType);
     const armar = isProductPhoto && (
       (mimeType !== 'image/jpeg' && (await hasTransparency(buffer).catch(() => false)))
       || (await hasPlainWhiteBackground(buffer).catch(() => false))
     );
     if (armar) {
-      const composed = await composeProductImage(buffer);
+      const composed = await composeProductImage(buffer, { cinta: conCinta });
       await writeFile(path.join(uploadDir, `${base}.orig.png`), await sharp(buffer).png().toBuffer());
       await writeFile(path.join(uploadDir, `${base}.webp`), composed);
       return NextResponse.json({
@@ -126,7 +129,8 @@ export async function POST(request: NextRequest) {
         filename: `${base}.webp`,
         size: composed.length,
         type: 'image/webp',
-        badged: true,
+        badged: conCinta,
+        framed: true,
       });
     }
 
@@ -145,6 +149,7 @@ export async function POST(request: NextRequest) {
       size: file.size,
       type: file.type,
       badged: false,
+      framed: false,
     });
   } catch (error) {
     console.error('Error uploading file:', error);

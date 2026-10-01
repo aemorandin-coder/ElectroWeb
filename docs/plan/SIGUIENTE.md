@@ -2,7 +2,7 @@
 
 Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-143**.
 - **Producción: C-141 desplegada el 30/09** (Andrés configuró sus dos pasos). No se sabe con qué commit exacto: preguntarle si el deploy incluyó C-139 y C-142.
-- **Incidente del deploy (C-143):** la cuenta de Andrés era ADMIN, no SUPER_ADMIN, y quedó sin Configuración, Métodos de Pago ni Equipo. Arreglo: `npx tsx scripts/create-master-admin.ts <su correo>` en el servidor y volver a entrar. **Confirmar que lo corrió y que ya ve Configuración.**
+- **Incidente del deploy (C-143):** la cuenta de Andrés era ADMIN, no SUPER_ADMIN, y quedó sin Configuración, Métodos de Pago ni Equipo. Arreglo: `npx tsx scripts/create-master-admin.ts <su correo>` en el servidor y volver a entrar. **Resuelto el 30/09 (10:46 p. m.):** Andrés mandó la captura de Equipo con su cuenta como Super admin, con dos pasos activos. Es la única cuenta del equipo en producción; va a invitar al resto desde ahí.
 - **Decidido por Andrés (30/09, después del incidente):** él es el super admin y desde ahí da los roles y los usuarios en Equipo. El rol Administrador queda como está (sin Configuración, Métodos de Pago ni Equipo). Todavía no corrió el diagnóstico de C-92.
 - **C-143** (en `main`, falta el deploy): el panel avisa cuando la tienda no tiene super admin, el guion cierra la sesión al promover, y el menú de la cuenta en la tienda trata al equipo como equipo (`estado/C-143.md`).
 - Andrés dijo el 30/09 que las pruebas de los deploys del 30/09 salieron "excelentes", con algunos ajustes para más adelante. Sobre el deploy de C-140 respondió "recuerda que necesito probar": **no está confirmado**. Los pasos de C-141 sirven igual si ese deploy no se hizo (§00000).
@@ -355,7 +355,7 @@ bash scripts/deploy.sh
 ## 6. Mensaje para empezar (próxima sesión de Claude)
 > Continúa ElectroShopVe (tienda en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` completo y tu memoria del proyecto.
 > 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
-> 2. Pregúntame si ya soy super admin en producción (C-143: `npx tsx scripts/create-master-admin.ts <mi correo>`) y si veo Configuración, Métodos de Pago y Equipo. Después, si el deploy de C-141, C-139, C-142 y C-143 terminó bien (§00000 y §000000): si configuré mis dos pasos, si llegó el correo de invitación, qué cuentas quedaron en Equipo, cómo se ve la página de Puntos ES y si la recarga pide firmar los términos nuevos. Y mis respuestas a las 5 preguntas de C-120 (`estado/C-120.md`).
+> 2. Pregúntame cómo me fue invitando al equipo (si llegó el correo de invitación y si cada persona configuró sus dos pasos) y si el deploy de C-141, C-139, C-142 y C-143 terminó bien (§00000 y §000000): si configuré mis dos pasos, si llegó el correo de invitación, qué cuentas quedaron en Equipo, cómo se ve la página de Puntos ES y si la recarga pide firmar los términos nuevos. Y mis respuestas a las 5 preguntas de C-120 (`estado/C-120.md`).
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
 > 4. Sigue con la **revisión final** conmigo (`REVISION_FINAL.md`) y arregla lo que salga. Al terminar cada tarea: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
 > 5. Después: C-107 (faltan los costos de ZOOM y MRW), C-92 (faltan tus 4 consultas) y C-120, rediseñada con mis respuestas (la web no factura).

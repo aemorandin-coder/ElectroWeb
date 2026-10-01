@@ -16,6 +16,8 @@ import { getPlatform } from '@/lib/digital-catalog';
 interface PurchasePanelProps {
   product: PublicProduct;
   exchangeRateVES?: number | null;
+  /** C-146: el precio publicado ya lleva el IVA (Configuración → Precios) */
+  ivaIncluido?: boolean;
   lowStockThreshold: number;
   /** C-102: oferta y cupones, debajo del precio */
   afterPrice?: ReactNode;
@@ -31,7 +33,7 @@ const MAX_DIGITAL_QUANTITY = 10;
  * - En móvil, mientras los botones no están a la vista aparece una barra fija encima de la barra inferior.
  * El precio real lo vuelve a calcular el servidor al crear la orden (C-01).
  */
-export default function PurchasePanel({ product: productoInicial, exchangeRateVES, lowStockThreshold, afterPrice }: PurchasePanelProps) {
+export default function PurchasePanel({ product: productoInicial, exchangeRateVES, ivaIncluido = false, lowStockThreshold, afterPrice }: PurchasePanelProps) {
   // C-127: stock en vivo. Si otra compra o el panel lo cambian, "Quedan 2" o "Agotado" se ven sin recargar
   const stockVivo = useStockEnVivo(productoInicial.id, productoInicial.stock);
   const product = stockVivo === productoInicial.stock ? productoInicial : { ...productoInicial, stock: stockVivo };
@@ -150,6 +152,7 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
     <div className="space-y-5">
       <div>
         <Price priceUSD={unitPrice} compareAtPriceUSD={selected ? null : product.compareAtPriceUSD} exchangeRateVES={exchangeRateVES} size="lg" />
+        {ivaIncluido && <p className="mt-1 text-xs text-muted">IVA incluido</p>}
         {stockLabel ? (
           <p className={`mt-2 text-sm font-medium ${stockLabel.className}`}>{stockLabel.text}</p>
         ) : (

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { FiPackage, FiPrinter, FiX } from 'react-icons/fi';
 import OrderTracking from '@/components/orders/OrderTracking';
 import { formatUSD, formatVES } from '@/lib/currency';
+import IvaIncluido from '@/components/ui/IvaIncluido';
 import { formatOrderPaymentMethod } from '@/lib/format-helpers';
 import { conditionBadge, warrantyDaysFor, type Condition, type Grade } from '@/lib/product-condition';
 import { estadoParaCliente } from '@/lib/order-pasos';
@@ -29,6 +30,8 @@ export interface PedidoCliente {
   subtotalUSD?: number | string | null;
   shippingUSD?: number | string | null;
   discountUSD?: number | string | null;
+  /** C-146: la parte del total que es IVA (0 en pedidos de antes) */
+  taxUSD?: number | string | null;
   totalUSD: number;
   totalVES?: number | string | null;
   exchangeRateVES?: number | string | null;
@@ -176,6 +179,7 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
                   )}
                 </dd>
               </div>
+              <IvaIncluido totalUSD={pedido.totalUSD} ivaUSD={n(pedido.taxUSD)} className="text-right" />
               {pedido.paymentMethod && (
                 <div className="flex justify-between gap-3">
                   <dt className="text-ink-soft">Pago</dt>

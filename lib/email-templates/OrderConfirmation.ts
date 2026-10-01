@@ -1,3 +1,4 @@
+import { porcentajeIva } from '@/lib/pricing';
 import { getEmailStyles, getEmailHeader, getEmailFooter } from './base';
 import { ETIQUETA_ENTREGA } from '@/lib/envios/empresas';
 import { escapeHtml } from '@/lib/html';
@@ -71,6 +72,14 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
   const etiquetaEnvio = deliveryMethod === ETIQUETA_ENTREGA.SHIPPING
     ? 'Embalaje (el flete se paga al retirar):'
     : deliveryMethod === ETIQUETA_ENTREGA.LOCAL_DELIVERY ? 'Delivery en Guanare:' : 'Envío:';
+
+  // C-146: los precios ya llevan el IVA. Se dice cuánto del total es; un pedido sin IVA guardado no muestra nada.
+  // Antes decía "Impuestos (Exento)", que no es cierto para lo que vende la tienda.
+  const ivaNum = Number(tax) || 0;
+  const totalNum = Number(total) || 0;
+  const ivaTexto = ivaNum > 0 && totalNum > ivaNum
+    ? `Incluye IVA (${porcentajeIva(totalNum, ivaNum)} %): ${ivaNum.toFixed(2)} ${currency} · Base imponible: ${(totalNum - ivaNum).toFixed(2)} ${currency}`
+    : '';
 
   return `
     <!DOCTYPE html>
@@ -154,21 +163,22 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
                 <td style="padding: 4px 0; text-align: right; font-weight: 600; color: #495057;">${shipping} ${currency}</td>
               </tr>
               ` : ''}
-              <tr>
-                <td style="padding: 4px 0; color: #6c757d;">Impuestos (Exento):</td>
-                <td style="padding: 4px 0; text-align: right; font-weight: 600; color: #495057;">${tax} ${currency}</td>
-              </tr>
               <tr style="border-top: 1.5px solid #dee2e6; font-size: 16px; font-weight: bold;">
                 <td style="padding: 12px 0 0 0; color: #2a63cd;">${paid ? 'Total pagado:' : 'Total a pagar:'}</td>
                 <td style="padding: 12px 0 0 0; text-align: right; color: #2a63cd;">${total} ${currency}</td>
               </tr>
+              ${ivaTexto ? `
+              <tr>
+                <td colspan="2" style="padding: 6px 0 0 0; text-align: right; font-size: 12px; color: #6c757d;">${ivaTexto}</td>
+              </tr>
+              ` : ''}
             </table>
           </div>
 
           ${deliveryMethod !== ETIQUETA_ENTREGA.DIGITAL ? `
           <div style="margin-top: 20px; padding: 12px; background-color: #eef1f6; border-left: 4px solid #2a63cd; border-radius: 4px; font-size: 12px; color: #495057; line-height: 1.5;">
-            <strong>Nota Importante sobre tu Facturación:</strong><br>
-            Tu factura física original, sellada y firmada, va dentro del paquete junto con tus productos físicos.
+            <strong>Tu comprobante de compra</strong><br>
+            Va dentro del paquete, junto con tus productos.
           </div>
           ` : ''}
 

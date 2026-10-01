@@ -11,7 +11,9 @@ Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-143**.
 - **C-139** (Puntos ES) hecha y en `main`: va en el mismo deploy que C-141 y no cambia la base (§000000).
 - **C-142:** los términos de los Puntos ES que se firman ya traen la regla del cierre de cuenta (decisión de Andrés del 30/09). Se publican solos con el deploy y cada cliente los firma en su próxima recarga (`estado/C-142.md`).
 - **C-120** (facturación, IVA y términos): investigación hecha y **rediseñada con las respuestas de Andrés del 30/09** (`estado/C-120.md`): la web no emite facturas (eso es de SADES y del talonario); la web prepara los datos. Sigue en C-146, C-147 y C-148.
+- **C-146** (en `main`, falta el deploy): **"IVA incluido" con la base y el IVA** en ficha, carrito, pago, correo, recibo y panel; fuera "Impuestos (Exento)". El total no cambia. **Después del deploy, Andrés tiene que poner 16 en Configuración → Precios → IVA** (`estado/C-146.md`).
 - **C-145** (en `main`, falta el deploy): el embudo de compra ya se mide (carrito, pago, compra y registro). Para que llegue a Google Analytics y a Meta faltan `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_FB_PIXEL_ID` en el `.env` del servidor (`estado/C-145.md`).
+- **Datos de Andrés (30/09):** tiene contador; puede invertir unos $200 al mes en anuncios; falta que configure Google Analytics y el píxel de Meta (Claude le dio los pasos).
 - **Meta de Andrés (30/09):** la tienda como vitrina digital para todo el país, con SEO, anuncios y ventas a empresas e instituciones. Plan de crecimiento en §3b.
 - **Sigue:** la revisión final con Andrés (§3). C-107 y C-92 esperan datos suyos.
 
@@ -287,7 +289,8 @@ bash scripts/deploy.sh
 ## 3b. Crecimiento (meta de Andrés del 30/09)
 Andrés quiere que la tienda sea la vitrina digital de la empresa en todo el país y pagar anuncios. Orden recomendado por Claude; falta que Andrés lo confirme:
 1. ✅ **C-145 · Medición del embudo** (hecha).
-2. **C-146 · Precio con IVA a la vista:** precio sugerido desde el costo (costo × 1,30 × 1,16), aviso de margen para el dueño, "IVA incluido" con base e IVA en carrito, pago, correo y recibo. Fuera "Impuestos (Exento)".
+2. ✅ **C-146 · "IVA incluido" a la vista** (hecha). Falta **C-146b**: precio sugerido desde el costo (costo × 1,30 × 1,16) y aviso de margen para el dueño.
+2b. **C-148 primero (pedido de Andrés del 30/09):** "Pedir cotización" para empresas. Andrés tiene en sus artefactos los `.html` que usó para ABBY Kingdom y un laboratorio clínico: usarlos como modelo.
 3. **C-149 · Que Google y las IA encuentren el catálogo:**
    - Feed de productos para Google Merchant Center (fichas gratis de Shopping y, después, anuncios).
    - Datos estructurados completos: disponibilidad, condición, envío, marca, código; `Organization` con RIF y dirección.

@@ -767,6 +767,8 @@ model CompanySettings {
   // Branding
   logo        String?
   favicon     String?
+  /// C-148b: imagen del sello con la firma, sobre la línea "Por la empresa" de los presupuestos
+  quoteStamp  String?
   primaryColor   String?
   secondaryColor String?
   
@@ -1135,6 +1137,10 @@ model QuoteItem {
   quantity     Int     @default(1)
   unitPriceUSD Decimal
   position     Int     @default(0)
+  // C-148b: unidades que se descontaron del inventario al aprobarse la cotización (se devuelven si no se concreta)
+  stockDeducted Int    @default(0)
+  // …y las que faltaron porque no había (el equipo tiene que conseguirlas antes de entregar)
+  stockMissing  Int    @default(0)
 
   @@index([quoteId])
   @@map("quote_items")

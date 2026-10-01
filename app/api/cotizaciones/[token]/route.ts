@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { prisma } from '@/lib/prisma';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD } from '@/lib/currency';
-import { cotizacionPorToken } from '@/lib/cotizaciones';
+import { aprobarCotizacion, cotizacionPorToken, resumenInventario } from '@/lib/cotizaciones';
 import { estaVencida } from '@/lib/cotizaciones/core';
 
 // POST /api/cotizaciones/<token> — el cliente da su conformidad a la cotización que recibió (C-148).
@@ -35,18 +34,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: problema?.message ?? 'Revisa los datos', field: problema?.path[0] }, { status: 400 });
   }
 
-  // Condicional: si el equipo la cambió o la cerró en el mismo instante, no se aprueba una versión que el cliente no vio
-  const r = await prisma.quote.updateMany({
-    where: { id: cotizacion.id, status: 'SENT', updatedAt: cotizacion.updatedAt },
-    data: { status: 'APPROVED', approvedAt: new Date(), approvedName: datos.data.nombre, approvedDoc: datos.data.documento, approvedIp: ip },
-  });
-  if (r.count !== 1) return NextResponse.json({ error: 'La cotización cambió mientras la revisabas. Recarga la página y vuelve a verla.' }, { status: 409 });
+  // Condicional: si el equipo la cambió o la cerró en el mismo instante, no se aprueba una versión que el cliente no vio.
+  // Al aprobarse se descuentan del inventario los productos del catálogo que se cotizaron (C-148b).
+  const aprobada = await aprobarCotizacion(cotizacion.id, { nombre: datos.data.nombre, documento: datos.data.documento, ip }, { estados: ['SENT'], updatedAt: cotizacion.updatedAt });
+  if (!aprobada) return NextResponse.json({ error: 'La cotización cambió mientras la revisabas. Recarga la página y vuelve a verla.' }, { status: 409 });
+  const inventario = resumenInventario(aprobada.movimientos);
 
   emitAdminEvent({
     type: 'QUOTE_APPROVED',
     title: `Cotización aprobada · ${cotizacion.number}`,
     summary: `${datos.data.nombre} aprobó la cotización de ${cotizacion.clientName}.`,
-    fields: [['Total', formatUSD(Number(cotizacion.totalUSD))], ['Documento', datos.data.documento], ['Contacto', cotizacion.contactPhone]],
+    // El aviso del panel muestra los tres primeros datos: el inventario va antes que el documento
+    fields: [['Total', formatUSD(Number(cotizacion.totalUSD))], ['Descontado del inventario', inventario.descontado || null], ['Faltó inventario', inventario.faltante || null], ['Documento', datos.data.documento], ['Contacto', cotizacion.contactPhone]],
     link: `/admin/cotizaciones/${cotizacion.id}`,
   });
   return NextResponse.json({ ok: true });

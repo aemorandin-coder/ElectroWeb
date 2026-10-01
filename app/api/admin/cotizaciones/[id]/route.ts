@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { registrarAccionAdmin } from '@/lib/audit-log';
-import { aCotizacionAdmin, buscarCotizacion, guardarCotizacion } from '@/lib/cotizaciones';
+import { aCotizacionAdmin, aprobarCotizacion, buscarCotizacion, cerrarCotizacion, guardarCotizacion, resumenInventario } from '@/lib/cotizaciones';
 import { cotizacionSchema } from '@/lib/cotizaciones/core';
 
 // Una cotización del panel (C-148): leer, guardar, enviar, cerrar y borrar.
@@ -45,7 +45,7 @@ export async function PUT(request: NextRequest, { params }: Contexto) {
   return NextResponse.json({ cotizacion: aCotizacionAdmin(cotizacion) });
 }
 
-const accionSchema = z.object({ accion: z.enum(['enviar', 'rechazar', 'reabrir']) });
+const accionSchema = z.object({ accion: z.enum(['enviar', 'rechazar', 'reabrir', 'aprobar']) });
 
 export async function PATCH(request: NextRequest, { params }: Contexto) {
   const session = await autorizado();
@@ -55,24 +55,50 @@ export async function PATCH(request: NextRequest, { params }: Contexto) {
   if (!actual) return noExiste();
   const datos = accionSchema.safeParse(await request.json().catch(() => null));
   if (!datos.success) return NextResponse.json({ error: 'Acción inválida' }, { status: 400 });
-  if (actual.status === 'APPROVED') return NextResponse.json({ error: 'Esta cotización ya fue aprobada por el cliente.' }, { status: 409 });
-
   const { accion } = datos.data;
-  if (accion === 'enviar') {
-    if (actual.items.length === 0) return NextResponse.json({ error: 'Agrega al menos una línea antes de enviarla.' }, { status: 400 });
+  const yaAprobada = () => NextResponse.json({ error: 'Esta cotización ya fue aprobada. Si no se concretó, márcala así para devolver el inventario.' }, { status: 409 });
+  const responder = async (extra: Record<string, unknown> = {}) => {
+    const cotizacion = await buscarCotizacion(id);
+    return NextResponse.json({ cotizacion: cotizacion ? aCotizacionAdmin(cotizacion) : null, ...extra });
+  };
+
+  if (accion === 'enviar' || accion === 'aprobar') {
+    if (actual.status === 'APPROVED') return yaAprobada();
+    if (actual.items.length === 0) return NextResponse.json({ error: 'Agrega al menos una línea antes.' }, { status: 400 });
     if (!(Number(actual.totalUSD) > 0)) return NextResponse.json({ error: 'El total no puede ser $0: revisa los precios.' }, { status: 400 });
   }
-  // Enviar de nuevo reinicia la validez: el cliente vuelve a tener los días completos desde hoy
-  const cambio = accion === 'enviar' ? { status: 'SENT', sentAt: new Date() }
-    : accion === 'rechazar' ? { status: 'REJECTED' }
-    // Volver a borrador apaga el enlace, pero conserva que el cliente ya la vio (no se podrá borrar)
-    : { status: 'DRAFT' };
-  const r = await prisma.quote.updateMany({ where: { id, status: { not: 'APPROVED' } }, data: cambio });
-  if (r.count !== 1) return NextResponse.json({ error: 'Esta cotización ya fue aprobada por el cliente.' }, { status: 409 });
 
+  if (accion === 'aprobar') {
+    // El cliente aprobó por WhatsApp o en persona: lo registra el equipo. Descuenta el inventario igual que el enlace (C-148b)
+    const persona = actual.contactName || actual.clientName;
+    const aprobada = await aprobarCotizacion(
+      id,
+      { nombre: `${persona} (registrada por ${session.user.name || session.user.email || 'el equipo'})`, documento: actual.clientDoc, ip: null },
+      { estados: ['REQUESTED', 'DRAFT', 'SENT'] },
+    );
+    if (!aprobada) return yaAprobada();
+    const inventario = resumenInventario(aprobada.movimientos);
+    await registrarAccionAdmin(session, 'ORDER_STATUS_CHANGED', { type: 'QUOTE', id }, { numero: actual.number, de: actual.status, a: 'APPROVED', ...inventario }, request);
+    return responder({ inventario });
+  }
+
+  if (accion === 'rechazar') {
+    // También desde aprobada: devuelve al inventario lo que se había descontado
+    const cerrada = await cerrarCotizacion(id);
+    if (!cerrada) return NextResponse.json({ error: 'Esta cotización ya estaba cerrada.' }, { status: 409 });
+    const devuelto = cerrada.devuelto.map((m) => `${m.descontado} × ${m.title}`).join(', ');
+    await registrarAccionAdmin(session, 'ORDER_STATUS_CHANGED', { type: 'QUOTE', id }, { numero: actual.number, de: actual.status, a: 'REJECTED', ...(devuelto ? { devuelto } : {}) }, request);
+    return responder({ devuelto });
+  }
+
+  // enviar o reabrir: nunca sobre una aprobada (tiene inventario descontado)
+  if (actual.status === 'APPROVED') return yaAprobada();
+  // Enviar de nuevo reinicia la validez. Volver a borrador apaga el enlace, pero conserva que el cliente ya la vio
+  const cambio = accion === 'enviar' ? { status: 'SENT', sentAt: new Date() } : { status: 'DRAFT' };
+  const r = await prisma.quote.updateMany({ where: { id, status: { not: 'APPROVED' } }, data: cambio });
+  if (r.count !== 1) return yaAprobada();
   await registrarAccionAdmin(session, 'ORDER_STATUS_CHANGED', { type: 'QUOTE', id }, { numero: actual.number, de: actual.status, a: cambio.status }, request);
-  const cotizacion = await buscarCotizacion(id);
-  return NextResponse.json({ cotizacion: cotizacion ? aCotizacionAdmin(cotizacion) : null });
+  return responder();
 }
 
 export async function DELETE(request: NextRequest, { params }: Contexto) {

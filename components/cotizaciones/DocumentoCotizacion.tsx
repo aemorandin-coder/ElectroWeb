@@ -6,6 +6,8 @@ import type { CotizacionPublica } from '@/lib/cotizaciones';
 // La cotización como documento (C-148): la misma hoja en pantalla y al imprimir o guardar en PDF.
 // Sigue el orden de los presupuestos que Andrés hacía a mano: empresa, número y fecha, cliente, equipos, condiciones,
 // total, formas de pago, garantía y firmas. No es un documento fiscal.
+// Firmas (C-148b): por la tienda va su sello; por el cliente, la aprobación digital (nombre, cédula o RIF, fecha y
+// hora). Mientras no la apruebe, la hoja impresa dice que está pendiente y trae el código para aprobarla.
 
 export interface EmpresaCotizacion {
   /** El nombre de la marca, como en el encabezado de la tienda ("Electro Shop") */
@@ -22,8 +24,19 @@ export interface EmpresaCotizacion {
   correo: string | null;
   sitio: string;
   tasaVES: number;
-  /** Nombres de los métodos de pago activos ("Pago Móvil", "Binance Pay") */
-  metodosDePago: string[];
+  /** Los métodos de pago activos con sus datos para pagar, como en el pago de la tienda (decisión de Andrés del 01/10) */
+  pagos: { nombre: string; lineas: string[] }[];
+  /** "Guanare - Portuguesa", para el sello */
+  lugar: string | null;
+  /** Imagen del sello firmado (Configuración → Negocio). Sin ella se dibuja el sello con los datos de la empresa.
+   *  Se pide al doble de su tamaño en pantalla para que salga nítida al imprimir. */
+  selloFirmado: string | null;
+}
+
+/** El QR del enlace del presupuesto, para aprobarlo desde la hoja impresa */
+export interface QrCotizacion {
+  tamano: number;
+  camino: string;
 }
 
 const fechaLarga = (iso: string) => {
@@ -40,16 +53,39 @@ function Dato({ etiqueta, children }: { etiqueta: string; children: React.ReactN
   );
 }
 
-export default function DocumentoCotizacion({ cotizacion: c, empresa }: { cotizacion: CotizacionPublica; empresa: EmpresaCotizacion }) {
+/** El sello de la tienda: el logo largo del membrete, el RIF, el teléfono y la ciudad (pedido de Andrés del 01/10). */
+function Sello({ empresa }: { empresa: EmpresaCotizacion }) {
+  return (
+    <div className="inline-block -rotate-3 rounded-xl border-2 border-brand-600 p-0.5 text-brand-700" data-sello>
+      <div className="whitespace-nowrap rounded-lg border border-brand-600 px-3 py-1.5 text-center">
+        <p className="flex items-center justify-center gap-1.5">
+          {empresa.logo && (
+            <span className="relative h-6 w-6 shrink-0">
+              <Image src={empresa.logo} alt="" fill sizes="24px" className="object-contain" />
+            </span>
+          )}
+          <span className="font-brand text-lg font-bold leading-none tracking-tight text-brand-600">{empresa.marca}</span>
+        </p>
+        {empresa.rif && <p className="mt-1 text-xs font-semibold leading-tight">RIF: {empresa.rif}</p>}
+        {(empresa.telefono || empresa.whatsapp) && <p className="text-xs leading-tight">Tel.: {empresa.telefono || empresa.whatsapp}</p>}
+        {empresa.lugar && <p className="text-xs font-semibold uppercase leading-tight tracking-wide">{empresa.lugar}</p>}
+      </div>
+    </div>
+  );
+}
+
+export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { cotizacion: CotizacionPublica; empresa: EmpresaCotizacion; qr?: QrCotizacion | null }) {
   const { totales } = c;
   const condiciones = lineasDeTexto(c.conditions);
   const terminos = lineasDeTexto(c.terms);
   const fecha = c.sentAt ?? c.createdAt;
+  const aprobada = Boolean(c.approvedAt && c.approvedName);
+  const fechaAprobacion = c.approvedAt ? new Date(c.approvedAt).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
   const contacto = [empresa.whatsapp && `WhatsApp: ${empresa.whatsapp}`, empresa.telefono && empresa.telefono !== empresa.whatsapp && `Tel.: ${empresa.telefono}`].filter(Boolean).join(' · ');
 
   return (
     <article className="mx-auto max-w-4xl rounded-2xl border border-line bg-white p-5 text-ink sm:p-8 print:max-w-none print:rounded-none print:border-0 print:p-0">
-      <header className="flex flex-col gap-4 border-b-2 border-brand-500 pb-4 sm:flex-row sm:items-start sm:justify-between">
+      <header className="flex flex-col gap-4 border-b-2 border-brand-500 pb-4 sm:flex-row sm:items-start sm:justify-between print:pb-3">
         <div className="min-w-0">
           {/* Membrete con el logo largo de la tienda (pedido de Andrés del 30/09): el ícono y el nombre con la letra
               de la marca, igual que en el encabezado. Color liso: un degradado no sale al imprimir. */}
@@ -76,7 +112,7 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa }: { cotiza
         </div>
       </header>
 
-      <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 rounded-xl bg-surface p-4 sm:grid-cols-2 print:grid-cols-2">
+      <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 rounded-xl bg-surface p-4 sm:grid-cols-2 print:mt-3 print:grid-cols-2 print:gap-y-2 print:p-3">
         <Dato etiqueta="Cliente o empresa">{c.clientName}</Dato>
         {c.clientDoc && <Dato etiqueta="RIF o cédula">{c.clientDoc}</Dato>}
         {c.contactName && <Dato etiqueta="Atención">{c.contactName}</Dato>}
@@ -87,7 +123,7 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa }: { cotiza
         </Dato>
       </dl>
 
-      <div className="mt-4 overflow-x-auto print:overflow-visible">
+      <div className="mt-4 overflow-x-auto print:mt-3 print:overflow-visible">
         <table className="w-full min-w-[32rem] text-sm print:min-w-0">
           <thead>
             <tr className="bg-brand-600 text-left text-xs font-semibold uppercase tracking-wide text-white">
@@ -100,20 +136,20 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa }: { cotiza
           <tbody>
             {c.items.map((l) => (
               <tr key={l.id} className="border-b border-line align-top break-inside-avoid">
-                <td className="px-3 py-3">
+                <td className="px-3 py-3 print:py-2">
                   <p className="font-semibold text-ink">{l.title}</p>
                   {l.description && <p className="mt-0.5 whitespace-pre-line text-xs leading-relaxed text-ink-soft">{l.description}</p>}
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums">{l.quantity}</td>
-                <td className="whitespace-nowrap px-3 py-3 text-right tabular-nums">{formatUSD(l.unitPriceUSD)}</td>
-                <td className="whitespace-nowrap px-3 py-3 text-right font-semibold tabular-nums">{l.unitPriceUSD === 0 ? 'Incluido' : formatUSD(Math.round(l.unitPriceUSD * l.quantity * 100) / 100)}</td>
+                <td className="px-3 py-3 text-right tabular-nums print:py-2">{l.quantity}</td>
+                <td className="whitespace-nowrap px-3 py-3 text-right tabular-nums print:py-2">{formatUSD(l.unitPriceUSD)}</td>
+                <td className="whitespace-nowrap px-3 py-3 text-right font-semibold tabular-nums print:py-2">{l.unitPriceUSD === 0 ? 'Incluido' : formatUSD(Math.round(l.unitPriceUSD * l.quantity * 100) / 100)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 print:grid-cols-2">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 print:mt-3 print:grid-cols-2">
         <section aria-labelledby="cot-condiciones" className="break-inside-avoid">
           {condiciones.length > 0 && (
             <>
@@ -147,42 +183,86 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa }: { cotiza
         </section>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 print:grid-cols-2">
-        <section aria-labelledby="cot-pago" className="break-inside-avoid">
-          <h2 id="cot-pago" className="text-sm font-bold text-ink">Formas de pago</h2>
-          <p className="mt-1 text-xs leading-relaxed text-ink-soft">
-            {empresa.metodosDePago.length > 0 ? `${empresa.metodosDePago.join(', ')}.` : 'Las que la tienda tenga activas al momento de pagar.'}
-            {' '}Los datos para pagar se entregan al aprobar el presupuesto{empresa.whatsapp ? `, por WhatsApp al ${empresa.whatsapp}` : ''}.
-          </p>
-        </section>
+      <section aria-labelledby="cot-pago" className="mt-4 break-inside-avoid print:mt-3" data-pagos>
+        <h2 id="cot-pago" className="text-sm font-bold text-ink">Formas de pago</h2>
+        {empresa.pagos.length > 0 ? (
+          <ul className="mt-2 grid gap-2 sm:grid-cols-3 print:grid-cols-3">
+            {empresa.pagos.map((pago) => (
+              <li key={pago.nombre} className="rounded-lg border border-line p-2.5 text-xs leading-relaxed text-ink-soft">
+                <p className="font-semibold text-ink">{pago.nombre}</p>
+                {pago.lineas.map((linea) => <p key={linea} className="break-words">{linea}</p>)}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-1 text-xs leading-relaxed text-ink-soft">Las que la tienda tenga activas al momento de pagar.</p>
+        )}
+        <p className="mt-2 text-xs leading-relaxed text-ink-soft">
+          Al pagar, avísanos{empresa.whatsapp ? ` por WhatsApp al ${empresa.whatsapp}` : ''} con el número de este presupuesto ({c.number}) para confirmar el pedido.
+        </p>
+      </section>
+
+      {/* Al imprimir, la garantía y las firmas van juntas: si no caben, pasan las dos a la otra hoja (unas firmas
+          solas en una hoja parecen un papel suelto). Con una garantía muy larga se deja partir. */}
+      <div className={terminos.length <= 8 ? 'break-inside-avoid' : undefined}>
         {terminos.length > 0 && (
-          <section aria-labelledby="cot-terminos" className="break-inside-avoid">
+          <section aria-labelledby="cot-terminos" className="mt-4 break-inside-avoid print:mt-3">
             <h2 id="cot-terminos" className="text-sm font-bold text-ink">Entrega y garantía</h2>
             <ol className="mt-1 list-decimal space-y-1 pl-5 text-xs leading-relaxed text-ink-soft">
               {terminos.map((linea) => <li key={linea}>{linea}</li>)}
             </ol>
           </section>
         )}
-      </div>
 
-      <div className="mt-8 grid grid-cols-2 gap-6 break-inside-avoid text-center text-xs text-ink-soft">
-        <div className="border-t border-ink pt-2">
-          <p className="font-semibold text-ink">Por {empresa.nombre}</p>
-          <p>{empresa.rif ? `RIF: ${empresa.rif}` : 'Emisión del presupuesto'}</p>
+        <div className="mt-6 grid grid-cols-1 gap-6 break-inside-avoid text-center text-xs text-ink-soft sm:grid-cols-2 print:mt-3 print:grid-cols-2" data-firmas>
+          <div className="flex flex-col">
+            <div className="flex flex-1 items-end justify-center pb-1 sm:min-h-24 print:min-h-16">
+              {empresa.selloFirmado ? (
+                <span className="relative block h-24 w-44 print:h-16 print:w-40" data-sello-firmado>
+                  <Image src={empresa.selloFirmado} alt={`Sello y firma de ${empresa.nombre}`} fill sizes="384px" className="object-contain object-bottom" />
+                </span>
+              ) : (
+                <Sello empresa={empresa} />
+              )}
+            </div>
+            <div className="border-t border-ink pt-2">
+              <p className="font-semibold text-ink">Por {empresa.nombre}</p>
+              <p>{empresa.rif ? `RIF: ${empresa.rif}` : 'Emisión del presupuesto'}</p>
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <div className="flex flex-1 items-end justify-center pb-1 sm:min-h-24 print:min-h-16">
+              {aprobada ? (
+                <div className="rounded-xl border-2 border-success-strong px-3 py-1.5 text-success-strong" data-aprobada>
+                  <p className="text-xs font-bold uppercase tracking-wide">Aprobado</p>
+                  <p className="text-xs font-semibold leading-tight text-ink">{c.approvedName}</p>
+                  {c.approvedDoc && <p className="text-xs leading-tight text-ink">{c.approvedDoc}</p>}
+                  <p className="text-xs leading-tight text-ink-soft">{fechaAprobacion}</p>
+                </div>
+              ) : c.status === 'SENT' ? (
+                <div className="flex items-center gap-2 text-left" data-pendiente>
+                  {qr && (
+                    <svg viewBox={`0 0 ${qr.tamano} ${qr.tamano}`} role="img" aria-label="Código QR para abrir y aprobar este presupuesto" className="hidden h-20 w-20 shrink-0 print:block" shapeRendering="crispEdges">
+                      <path d={qr.camino} className="fill-ink" />
+                    </svg>
+                  )}
+                  <p className="max-w-52 text-xs leading-snug text-ink-soft">
+                    <strong className="block font-semibold text-warning-strong">Pendiente de aprobación</strong>
+                    <span className="print:hidden">Se aprueba en esta página, con tu nombre y tu cédula o RIF.</span>
+                    <span className="hidden print:inline">Para aprobarlo, escanea el código y escribe tu nombre y tu cédula o RIF.</span>
+                  </p>
+                </div>
+              ) : null}
+            </div>
+            <div className="border-t border-ink pt-2">
+              <p className="font-semibold text-ink">Por {c.clientName}</p>
+              <p>{aprobada ? 'Aprobación registrada con fecha y hora' : 'Conformidad y aprobación'}</p>
+            </div>
+          </div>
         </div>
-        <div className="border-t border-ink pt-2">
-          <p className="font-semibold text-ink">Por {c.clientName}</p>
-          {c.approvedAt && c.approvedName ? (
-            <p data-aprobada>
-              Aprobado por {c.approvedName}{c.approvedDoc ? ` · ${c.approvedDoc}` : ''} el {new Date(c.approvedAt).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
-            </p>
-          ) : (
-            <p>Conformidad y aprobación</p>
-          )}
-        </div>
-      </div>
 
-      <p className="mt-4 text-center text-xs text-muted">Este presupuesto no es una factura.</p>
+        <p className="mt-4 text-center text-xs text-muted print:mt-2">Este presupuesto no es una factura.</p>
+      </div>
     </article>
   );
 }

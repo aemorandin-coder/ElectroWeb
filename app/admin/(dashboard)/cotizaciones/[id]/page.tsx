@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { FaWhatsapp } from 'react-icons/fa6';
-import { FiArrowLeft, FiCheckCircle, FiCopy, FiExternalLink, FiPlus, FiSearch, FiSend, FiTrash2 } from 'react-icons/fi';
+import { FiAlertTriangle, FiArrowLeft, FiBox, FiCheckCircle, FiCopy, FiExternalLink, FiPlus, FiSend, FiTrash2 } from 'react-icons/fi';
 import {
   adminBadge, adminCard, adminDangerButton, adminError, adminHint, adminIconButton, adminInput, adminLabel, adminNotice, adminPageSubtitle, adminPageTitle,
   adminPrimaryButton, adminSecondaryButton, adminSectionTitle, adminSpinner,
@@ -16,10 +16,12 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { CONDICIONES_POR_DEFECTO, ESTADO_TEXTO, TERMINOS_POR_DEFECTO, totalesCotizacion } from '@/lib/cotizaciones/core';
 import type { CotizacionAdmin } from '@/lib/cotizaciones';
+import type { ProductoParaCotizar } from '@/lib/cotizaciones/productos';
+import { BuscadorProductos } from '@/components/cotizaciones/BuscadorProductos';
 
 // Editor de una cotización (C-148). El servidor recalcula el total cada vez que se guarda: lo de aquí es una vista.
-// Orden de la pantalla: lo que pidió el cliente (si la pidió), datos del cliente, líneas, condiciones, y al final
-// guardar y enviar. Una cotización aprobada queda de solo lectura.
+// Orden de la pantalla: lo que pidió el cliente (si la pidió), datos del cliente, líneas (primero el buscador del
+// catálogo, después lo agregado y el total), condiciones, y al final guardar y enviar. Aprobada, queda de solo lectura.
 
 interface Linea {
   clave: string;
@@ -78,9 +80,8 @@ export default function EditorCotizacion() {
   const [noExiste, setNoExiste] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState('');
-  // Buscador del catálogo
-  const [busqueda, setBusqueda] = useState('');
-  const [resultados, setResultados] = useState<{ id: string; name: string; priceUSD: number }[] | null>(null);
+  // Lo que se sabe de los productos del catálogo que están en las líneas (código y disponible)
+  const [catalogo, setCatalogo] = useState<Record<string, ProductoParaCotizar>>({});
 
   const aplicar = (c: CotizacionAdmin) => {
     const { form: f, lineas: l } = aFormulario(c);
@@ -97,8 +98,14 @@ export default function EditorCotizacion() {
       setCargando(false);
       return;
     }
-    aplicar((await res.json()).cotizacion);
+    const cargada = (await res.json()).cotizacion as CotizacionAdmin;
+    aplicar(cargada);
     setCargando(false);
+    const ids = [...new Set(cargada.items.flatMap((l) => (l.productId ? [l.productId] : [])))];
+    if (ids.length === 0 || cargada.estadoGuardado === 'APPROVED') return;
+    const info = await fetch(`/api/admin/cotizaciones/productos?ids=${ids.join(',')}`, { cache: 'no-store' }).catch(() => null);
+    const datos = info?.ok ? ((await info.json().catch(() => null)) as { productos: ProductoParaCotizar[] } | null) : null;
+    if (datos) setCatalogo((c) => ({ ...c, ...Object.fromEntries(datos.productos.map((p) => [p.id, p])) }));
   }, [id]);
 
   const soloLectura = cotizacion?.estadoGuardado === 'APPROVED';
@@ -109,6 +116,10 @@ export default function EditorCotizacion() {
   };
 
   const taxPercent = cotizacion ? cotizacion.taxPercent : settings?.taxEnabled ? Number(settings.taxPercent) || 0 : 0;
+  const cantidadDe = (l: Linea) => Math.max(1, Math.floor(numero(l.quantity)));
+  /** Unidades de cada producto del catálogo que van en la cotización */
+  const enCotizacion = new Map<string, number>();
+  for (const l of lineas) if (l.productId) enCotizacion.set(l.productId, (enCotizacion.get(l.productId) ?? 0) + cantidadDe(l));
   const totales = totalesCotizacion(lineas.map((l) => ({ quantity: Math.max(1, Math.floor(numero(l.quantity))), unitPriceUSD: numero(l.unitPriceUSD) })), taxPercent, numero(form.advancePercent) || null);
 
   const cuerpo = () => ({
@@ -150,7 +161,7 @@ export default function EditorCotizacion() {
     else aplicar(guardada);
   };
 
-  const accion = async (idCotizacion: string, cual: 'enviar' | 'rechazar' | 'reabrir'): Promise<CotizacionAdmin | null> => {
+  const accion = async (idCotizacion: string, cual: 'enviar' | 'rechazar' | 'reabrir' | 'aprobar'): Promise<CotizacionAdmin | null> => {
     const res = await fetch(`/api/admin/cotizaciones/${idCotizacion}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accion: cual }) }).catch(() => null);
     const datos = res ? await res.json().catch(() => ({})) : {};
     if (!res?.ok) {
@@ -177,6 +188,47 @@ export default function EditorCotizacion() {
     else aplicar(enviada);
   };
 
+  // El cliente aprobó por WhatsApp o en persona: lo registra el equipo. Descuenta el inventario igual que el enlace
+  const aprobar = async () => {
+    const delCatalogo = lineas.filter((l) => l.productId).length;
+    const ok = await confirm({
+      title: 'Marcar como aprobada',
+      message: `Úsalo cuando el cliente ya dijo que sí por WhatsApp o en persona.${delCatalogo > 0 ? ` Se descuentan del inventario los productos del catálogo de esta cotización (${delCatalogo === 1 ? '1 línea' : `${delCatalogo} líneas`}), con su número como referencia.` : ' Esta cotización no tiene productos del catálogo: no se toca el inventario.'} Después ya no se puede editar.`,
+      confirmText: 'Marcar como aprobada',
+      cancelText: 'Cancelar',
+      type: 'warning',
+    });
+    if (!ok) return;
+    const guardada = await guardar();
+    if (!guardada) return;
+    setOcupado(true);
+    const aprobada = await accion(guardada.id, 'aprobar');
+    setOcupado(false);
+    if (!aprobada) {
+      if (esNueva) router.replace(`/admin/cotizaciones/${guardada.id}`);
+      else aplicar(guardada);
+      return;
+    }
+    toast.success('Cotización aprobada');
+    if (esNueva) router.replace(`/admin/cotizaciones/${aprobada.id}`);
+    else aplicar(aprobada);
+  };
+
+  const noSeConcreto = async () => {
+    if (!cotizacion) return;
+    const descontado = cotizacion.inventario.filter((l) => l.descontado > 0);
+    const ok = await confirm({
+      title: 'No se concretó',
+      message: descontado.length > 0
+        ? `Se devuelven al inventario: ${descontado.map((l) => `${l.descontado} × ${l.title}`).join(', ')}. El enlace del cliente deja de abrir.`
+        : 'La cotización se cierra y el enlace del cliente deja de abrir.',
+      confirmText: 'No se concretó',
+      cancelText: 'Volver',
+      type: 'danger',
+    });
+    if (ok) await cerrar('rechazar');
+  };
+
   const cerrar = async (cual: 'rechazar' | 'reabrir') => {
     if (!cotizacion) return;
     setOcupado(true);
@@ -184,6 +236,7 @@ export default function EditorCotizacion() {
     setOcupado(false);
     if (!r) return;
     toast.success(cual === 'rechazar' ? 'Marcada como no concretada' : 'Volvió a borrador: el enlace del cliente queda apagado');
+    setError('');
     aplicar(r);
   };
 
@@ -200,19 +253,17 @@ export default function EditorCotizacion() {
     router.replace('/admin/cotizaciones');
   };
 
-  const buscar = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (busqueda.trim().length < 2) return;
-    const res = await fetch(`/api/products?search=${encodeURIComponent(busqueda.trim())}&status=published&limit=8`, { cache: 'no-store' }).catch(() => null);
-    const datos = res?.ok ? await res.json().catch(() => null) : null;
-    const lista = Array.isArray(datos) ? datos : datos?.products ?? [];
-    setResultados(lista.map((p: { id: string; name: string; priceUSD: number | string }) => ({ id: p.id, name: p.name, priceUSD: Number(p.priceUSD) || 0 })));
-  };
-
-  const agregarProducto = (p: { id: string; name: string; priceUSD: number }) => {
-    setLineas((ls) => [...ls, { clave: clave(), productId: p.id, title: p.name, description: '', quantity: '1', unitPriceUSD: String(p.priceUSD) }]);
-    setResultados(null);
-    setBusqueda('');
+  // Un producto que ya está en la cotización suma una unidad a su línea en vez de repetirla
+  const agregarProducto = (p: ProductoParaCotizar) => {
+    const yaVan = enCotizacion.get(p.id) ?? 0;
+    setCatalogo((c) => ({ ...c, [p.id]: p }));
+    setLineas((ls) => {
+      const i = ls.findIndex((l) => l.productId === p.id);
+      if (i === -1) return [...ls, { clave: clave(), productId: p.id, title: p.name, description: '', quantity: '1', unitPriceUSD: String(p.priceUSD) }];
+      return ls.map((l, j) => (j === i ? { ...l, quantity: String(Math.min(9999, Math.max(1, Math.floor(numero(l.quantity))) + 1)) } : l));
+    });
+    setError('');
+    toast.success(yaVan > 0 ? `Ahora van ${yaVan + 1}: ${p.name}` : `Agregado: ${p.name}`, { id: `agregado-${p.id}` });
   };
 
   if (cargando) return <div className="flex justify-center py-16" role="status" aria-label="Cargando"><span className={adminSpinner} aria-hidden="true" /></div>;
@@ -264,6 +315,16 @@ export default function EditorCotizacion() {
             Aprobada por <strong>{cotizacion.approvedName}</strong>{cotizacion.approvedDoc ? ` (${cotizacion.approvedDoc})` : ''}
             {cotizacion.approvedAt ? ` el ${new Date(cotizacion.approvedAt).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })}` : ''}.
             {' '}Ya no se puede cambiar: coordina el pago y la entrega con el cliente.
+            {cotizacion.inventario.some((l) => l.descontado > 0) && (
+              <span className="mt-1 block" data-descontado>
+                Descontado del inventario con {cotizacion.number}: {cotizacion.inventario.filter((l) => l.descontado > 0).map((l) => `${l.descontado} × ${l.title}`).join(', ')}.
+              </span>
+            )}
+            {cotizacion.inventario.some((l) => l.falto > 0) && (
+              <strong className="mt-1 block text-warning-strong" data-faltante>
+                Faltó inventario: {cotizacion.inventario.filter((l) => l.falto > 0).map((l) => `${l.falto} de ${l.quantity} × ${l.title}`).join(', ')}. Consíguelo antes de entregar.
+              </strong>
+            )}
           </span>
         </p>
       )}
@@ -325,68 +386,71 @@ export default function EditorCotizacion() {
           <h2 id="lineas-titulo" className={adminSectionTitle}>Equipos y servicios</h2>
           <p className={adminPageSubtitle}>Los precios van finales, con el IVA incluido. Una línea en $0 sale como &quot;Incluido&quot;.</p>
 
-          {lineas.length === 0 ? (
-            <p className="mt-3 rounded-xl border border-dashed border-line px-4 py-6 text-center text-sm text-muted">Todavía no hay líneas. Busca un producto del catálogo o agrega una línea libre.</p>
-          ) : (
-            <ul className="mt-3 space-y-3">
-              {lineas.map((l, i) => (
-                <li key={l.clave} className="rounded-xl border border-line p-3" data-linea>
-                  <div className="flex items-start gap-2">
-                    <div className="min-w-0 flex-1">
-                      <label htmlFor={`${l.clave}-title`} className="sr-only">Línea {i + 1}: qué es</label>
-                      <input id={`${l.clave}-title`} value={l.title} onChange={(e) => cambiarLinea(l.clave, 'title', e.target.value)} maxLength={160} className={adminInput()} placeholder="Equipo o servicio" />
-                    </div>
-                    <button type="button" onClick={() => setLineas((ls) => ls.filter((x) => x.clave !== l.clave))} aria-label={`Quitar la línea ${i + 1}`} className={`${adminIconButton} h-11 w-11 shrink-0 hover:text-deal`}>
-                      <FiTrash2 className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                  </div>
-                  <label htmlFor={`${l.clave}-desc`} className="sr-only">Línea {i + 1}: descripción</label>
-                  <textarea id={`${l.clave}-desc`} rows={2} value={l.description} onChange={(e) => cambiarLinea(l.clave, 'description', e.target.value)} maxLength={1200} className={`${adminInput()} mt-2 h-auto py-2`} placeholder="Descripción para el cliente (opcional)" />
-                  <div className="mt-2 grid grid-cols-3 items-end gap-2">
-                    <div>
-                      <label htmlFor={`${l.clave}-qty`} className="mb-1 block text-xs font-semibold text-muted">Cantidad</label>
-                      <input id={`${l.clave}-qty`} inputMode="numeric" value={l.quantity} onChange={(e) => cambiarLinea(l.clave, 'quantity', e.target.value.replace(/\D/g, ''))} maxLength={4} className={`${adminInput()} text-right tabular-nums`} />
-                    </div>
-                    <div>
-                      <label htmlFor={`${l.clave}-price`} className="mb-1 block text-xs font-semibold text-muted">Precio unitario ($)</label>
-                      <input id={`${l.clave}-price`} inputMode="decimal" value={l.unitPriceUSD} onChange={(e) => cambiarLinea(l.clave, 'unitPriceUSD', e.target.value.replace(/[^\d.,]/g, ''))} maxLength={12} className={`${adminInput()} text-right tabular-nums`} />
-                    </div>
-                    <p className="pb-2.5 text-right text-sm font-semibold tabular-nums text-ink">{formatUSD(Math.round(numero(l.unitPriceUSD) * Math.max(1, Math.floor(numero(l.quantity))) * 100) / 100)}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+          {!soloLectura && (
+            <div className="mt-4 rounded-xl bg-surface p-3 sm:p-4">
+              <BuscadorProductos enCotizacion={enCotizacion} onAgregar={agregarProducto} bloqueado={ocupado} />
+              <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-ink-soft">¿Un servicio o algo que no está en el catálogo?</p>
+                <button type="button" onClick={() => setLineas((ls) => [...ls, { clave: clave(), productId: null, title: '', description: '', quantity: '1', unitPriceUSD: '' }])} className={`${adminSecondaryButton} shrink-0`} data-linea-libre>
+                  <FiPlus className="h-4 w-4" aria-hidden="true" />
+                  Agregar una línea libre
+                </button>
+              </div>
+            </div>
           )}
 
-          {!soloLectura && (
-            <div className="mt-4 space-y-3 border-t border-line pt-4">
-              <form onSubmit={buscar} className="flex gap-2" role="search">
-                <label className="relative block flex-1">
-                  <span className="sr-only">Buscar un producto del catálogo</span>
-                  <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
-                  <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar en el catálogo" className={`${adminInput()} pl-9`} />
-                </label>
-                <button type="submit" className={`${adminSecondaryButton} shrink-0`}>Buscar</button>
-              </form>
-              {resultados && (
-                resultados.length === 0 ? <p className="text-sm text-muted">Ningún producto publicado con ese nombre.</p> : (
-                  <ul className="divide-y divide-line rounded-xl border border-line">
-                    {resultados.map((p) => (
-                      <li key={p.id}>
-                        <button type="button" onClick={() => agregarProducto(p)} className="flex min-h-11 w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-surface">
-                          <span className="min-w-0 truncate text-ink">{p.name}</span>
-                          <span className="shrink-0 font-semibold tabular-nums text-ink">{formatUSD(p.priceUSD)}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )
-              )}
-              <button type="button" onClick={() => setLineas((ls) => [...ls, { clave: clave(), productId: null, title: '', description: '', quantity: '1', unitPriceUSD: '' }])} className={adminSecondaryButton}>
-                <FiPlus className="h-4 w-4" aria-hidden="true" />
-                Agregar una línea libre
-              </button>
-            </div>
+          <h3 className="mt-5 text-sm font-semibold text-ink">En la cotización{lineas.length > 0 ? ` (${lineas.length})` : ''}</h3>
+          {lineas.length === 0 ? (
+            <p className="mt-2 rounded-xl border border-dashed border-line px-4 py-6 text-center text-sm text-muted">Todavía no hay líneas. Busca un producto del catálogo o agrega una línea libre.</p>
+          ) : (
+            <ul className="mt-2 space-y-3">
+              {lineas.map((l, i) => {
+                const producto = l.productId ? catalogo[l.productId] : undefined;
+                const pedidas = l.productId ? enCotizacion.get(l.productId) ?? 0 : 0;
+                const faltan = producto && producto.disponible !== null ? Math.max(0, pedidas - producto.disponible) : 0;
+                return (
+                  <li key={l.clave} className="rounded-xl border border-line p-3" data-linea>
+                    {l.productId && (
+                      <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-soft" data-del-catalogo>
+                        <span className={adminBadge('brand')}><FiBox className="h-3 w-3" aria-hidden="true" />Del catálogo</span>
+                        {producto && <span className="[overflow-wrap:anywhere]">{producto.sku}</span>}
+                        {producto && !soloLectura && (producto.disponible === null
+                          ? <span>Digital: no lleva inventario</span>
+                          : <span>{producto.disponible === 0 ? 'Sin existencias' : `${producto.disponible} ${producto.disponible === 1 ? 'disponible' : 'disponibles'}`}</span>)}
+                      </p>
+                    )}
+                    <div className="flex items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <label htmlFor={`${l.clave}-title`} className="sr-only">Línea {i + 1}: qué es</label>
+                        <input id={`${l.clave}-title`} value={l.title} onChange={(e) => cambiarLinea(l.clave, 'title', e.target.value)} maxLength={160} className={adminInput()} placeholder="Equipo o servicio" />
+                      </div>
+                      <button type="button" onClick={() => setLineas((ls) => ls.filter((x) => x.clave !== l.clave))} aria-label={`Quitar la línea ${i + 1}`} className={`${adminIconButton} h-11 w-11 shrink-0 hover:text-deal`}>
+                        <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                    <label htmlFor={`${l.clave}-desc`} className="sr-only">Línea {i + 1}: descripción</label>
+                    <textarea id={`${l.clave}-desc`} rows={2} value={l.description} onChange={(e) => cambiarLinea(l.clave, 'description', e.target.value)} maxLength={1200} className={`${adminInput()} mt-2 h-auto py-2`} placeholder="Descripción para el cliente (opcional)" />
+                    <div className="mt-2 grid grid-cols-3 items-end gap-2">
+                      <div>
+                        <label htmlFor={`${l.clave}-qty`} className="mb-1 block text-xs font-semibold text-muted">Cantidad</label>
+                        <input id={`${l.clave}-qty`} inputMode="numeric" value={l.quantity} onChange={(e) => cambiarLinea(l.clave, 'quantity', e.target.value.replace(/\D/g, ''))} maxLength={4} className={`${adminInput()} text-right tabular-nums`} />
+                      </div>
+                      <div>
+                        <label htmlFor={`${l.clave}-price`} className="mb-1 block text-xs font-semibold text-muted">Precio unitario ($)</label>
+                        <input id={`${l.clave}-price`} inputMode="decimal" value={l.unitPriceUSD} onChange={(e) => cambiarLinea(l.clave, 'unitPriceUSD', e.target.value.replace(/[^\d.,]/g, ''))} maxLength={12} className={`${adminInput()} text-right tabular-nums`} />
+                      </div>
+                      <p className="pb-2.5 text-right text-sm font-semibold tabular-nums text-ink">{formatUSD(Math.round(numero(l.unitPriceUSD) * cantidadDe(l) * 100) / 100)}</p>
+                    </div>
+                    {faltan > 0 && !soloLectura && (
+                      <p className="mt-2 flex items-start gap-1.5 text-xs font-semibold text-warning-strong" data-falta-inventario>
+                        <FiAlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        <span>{producto?.disponible === 0 ? 'No hay existencias' : `Solo hay ${producto?.disponible}`}: si se aprueba así, {faltan === 1 ? 'falta 1 unidad' : `faltan ${faltan} unidades`} por conseguir.</span>
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           )}
 
           <div className="mt-4 border-t border-line pt-4 text-right">
@@ -426,6 +490,12 @@ export default function EditorCotizacion() {
 
       {error && <p className={`${adminError} mt-4 text-sm`} role="alert">{error}</p>}
 
+      {soloLectura && (
+        <div className="mt-4">
+          <button type="button" onClick={noSeConcreto} disabled={ocupado} className={adminSecondaryButton}>No se concretó: devolver al inventario</button>
+        </div>
+      )}
+
       {!soloLectura && (
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <button type="button" onClick={enviar} disabled={ocupado} className={adminPrimaryButton}>
@@ -436,10 +506,13 @@ export default function EditorCotizacion() {
           {cotizacion && !visibleParaCliente && (
             <a href={enlace} target="_blank" rel="noopener noreferrer" className={adminSecondaryButton}><FiExternalLink className="h-4 w-4" aria-hidden="true" />Vista previa</a>
           )}
+          {cotizacion && cotizacion.estadoGuardado !== 'REJECTED' && (
+            <button type="button" onClick={aprobar} disabled={ocupado} className={adminSecondaryButton}><FiCheckCircle className="h-4 w-4" aria-hidden="true" />Marcar como aprobada</button>
+          )}
           {cotizacion?.estadoGuardado === 'SENT' && (
             <>
               <button type="button" onClick={() => void cerrar('reabrir')} disabled={ocupado} className={adminSecondaryButton}>Volver a borrador</button>
-              <button type="button" onClick={() => void cerrar('rechazar')} disabled={ocupado} className={adminSecondaryButton}>No se concretó</button>
+              <button type="button" onClick={noSeConcreto} disabled={ocupado} className={adminSecondaryButton}>No se concretó</button>
             </>
           )}
           {cotizacion?.estadoGuardado === 'REJECTED' && (

@@ -7,6 +7,7 @@ import { OrderStatus, PaymentStatus, type Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { hoyCaracas } from '@/lib/pago-movil/monto';
 import { pagoSinOrdenWhere } from '@/lib/pago-movil-sin-orden';
+import { desglosePrecio } from '@/lib/precio-sugerido';
 
 const VENTA: Prisma.OrderWhereInput = {
   paymentStatus: PaymentStatus.PAID,
@@ -71,7 +72,7 @@ export async function getDashboard(): Promise<DashboardData> {
     ordenes, productos, publicados, clientes,
     pagosPorConfirmar, porPreparar, recargas, pagosSinOrden, facturasEmpresa, cotizaciones, garantias, mensajes, solicitudes,
     resenas, descuentos, verificaciones, creadores, cursos, referidos, sinStock,
-    recientes, pocos, pocosTotal, metodosActivos, sinMarca, sinFoto,
+    recientes, pocos, pocosTotal, metodosActivos, sinMarca, sinFoto, conCosto, variantesConCosto,
   ] = await Promise.all([
     prisma.order.aggregate({ where: { ...VENTA, paidAt: { gte: desdeHoy } }, _sum: { totalUSD: true }, _count: true }),
     prisma.order.aggregate({ where: { ...VENTA, paidAt: { gte: desdeMes } }, _sum: { totalUSD: true }, _count: true }),
@@ -112,7 +113,16 @@ export async function getDashboard(): Promise<DashboardData> {
     prisma.companyPaymentMethod.count({ where: { isActive: true } }),
     prisma.product.count({ where: { ...FISICO_PUBLICADO, brandId: null } }),
     prisma.product.count({ where: { status: 'PUBLISHED', mainImage: null, images: { in: ['', '[]'] } } }),
+    // C-146b: precio y costo de lo publicado, para avisar de lo que se vende sin ganancia. No sale del servidor
+    prisma.product.findMany({ where: { ...FISICO_PUBLICADO, costPerItem: { gt: 0 } }, select: { id: true, priceUSD: true, costPerItem: true } }),
+    prisma.digitalVariant.findMany({ where: { isActive: true, costUSD: { gt: 0 }, product: { status: 'PUBLISHED' } }, select: { productId: true, priceUSD: true, costUSD: true } }),
   ]);
+
+  // Sin ganancia: quitando el IVA que el precio lleva dentro, queda el costo o menos
+  const iva = ajustes?.taxEnabled ? Number(ajustes.taxPercent ?? 0) : 0;
+  const sinGanancia = new Set<string>();
+  for (const p of conCosto) if ((desglosePrecio(Number(p.priceUSD), Number(p.costPerItem), iva)?.gananciaUSD ?? 1) <= 0) sinGanancia.add(p.id);
+  for (const v of variantesConCosto) if ((desglosePrecio(Number(v.priceUSD), Number(v.costUSD), iva)?.gananciaUSD ?? 1) <= 0) sinGanancia.add(v.productId);
 
   // Los 7 días en hora de Venezuela, con los que no tuvieron ventas en cero
   const porDia = new Map<string, number>();
@@ -127,6 +137,7 @@ export async function getDashboard(): Promise<DashboardData> {
   if (metodosActivos === 0) tienda.push({ clave: 'pagos', texto: 'No hay ningún método de pago activo: nadie puede pagar.', href: '/admin/payments', soloDueno: true });
   if (!ajustes?.taxEnabled || !(Number(ajustes.taxPercent ?? 0) > 0)) tienda.push({ clave: 'iva', texto: 'Falta el porcentaje del IVA: la tienda no dice "IVA incluido".', href: '/admin/settings', soloDueno: true });
   if (!ajustes?.rif || !ajustes.address) tienda.push({ clave: 'negocio', texto: 'Faltan el RIF o la dirección de la tienda (salen en el pie, los presupuestos y Google).', href: '/admin/settings', soloDueno: true });
+  if (sinGanancia.size > 0) tienda.push({ clave: 'ganancia', texto: `${sinGanancia.size} ${sinGanancia.size === 1 ? 'producto publicado se vende' : 'productos publicados se venden'} al costo o por debajo${iva > 0 ? ', quitando el IVA' : ''}.`, href: '/admin/products', soloDueno: true });
   if (sinMarca > 0) tienda.push({ clave: 'marca', texto: `${sinMarca} ${sinMarca === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} marca (Google y el catálogo de Meta la piden).`, href: '/admin/products', soloDueno: false });
   if (sinFoto > 0) tienda.push({ clave: 'foto', texto: `${sinFoto} ${sinFoto === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} foto.`, href: '/admin/products', soloDueno: false });
   if (!ajustes?.homeMetaImage) tienda.push({ clave: 'compartir', texto: 'Falta la imagen para compartir (1200 × 630): al pegar el enlace de la tienda sale el logo cuadrado.', href: '/admin/settings', soloDueno: true });

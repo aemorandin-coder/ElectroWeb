@@ -10,7 +10,9 @@ Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-143**.
 - Andrés dijo el 30/09 que las pruebas de los deploys del 30/09 salieron "excelentes", con algunos ajustes para más adelante. Sobre el deploy de C-140 respondió "recuerda que necesito probar": **no está confirmado**. Los pasos de C-141 sirven igual si ese deploy no se hizo (§00000).
 - **C-139** (Puntos ES) hecha y en `main`: va en el mismo deploy que C-141 y no cambia la base (§000000).
 - **C-142:** los términos de los Puntos ES que se firman ya traen la regla del cierre de cuenta (decisión de Andrés del 30/09). Se publican solos con el deploy y cada cliente los firma en su próxima recarga (`estado/C-142.md`).
-- **C-120** (facturación, IVA y términos): investigación hecha (`estado/C-120.md`). **Andrés pidió rediseñarla: la web no factura** (tiene SADES y facturación manual; en la web hace ticket de caja). Claude le hizo 5 preguntas sobre el flujo de la empresa: **esperar sus respuestas antes de proponer nada.**
+- **C-120** (facturación, IVA y términos): investigación hecha y **rediseñada con las respuestas de Andrés del 30/09** (`estado/C-120.md`): la web no emite facturas (eso es de SADES y del talonario); la web prepara los datos. Sigue en C-146, C-147 y C-148.
+- **C-145** (en `main`, falta el deploy): el embudo de compra ya se mide (carrito, pago, compra y registro). Para que llegue a Google Analytics y a Meta faltan `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_FB_PIXEL_ID` en el `.env` del servidor (`estado/C-145.md`).
+- **Meta de Andrés (30/09):** la tienda como vitrina digital para todo el país, con SEO, anuncios y ventas a empresas e instituciones. Plan de crecimiento en §3b.
 - **Sigue:** la revisión final con Andrés (§3). C-107 y C-92 esperan datos suyos.
 
 ## 000000. C-139 · Página de Puntos ES: en `main`, va con el deploy de C-141
@@ -264,11 +266,7 @@ bash scripts/deploy.sh
 4b. **C-119 · Productos usados y reacondicionados:** hecha y en `main` el 29/09 (`estado/C-119.md`). Lleva cambio de base (§0).
    - "Usado" en el correo de compra: hecho en C-121 (29/09, rama `claude/C-121`), con 4 arreglos del correo (decía "debitado de tu billetera" también en un Pago Móvil por confirmar, faltaba el descuento, no escapaba el nombre y la dirección).
    - Módulo de garantías: hecho en C-122 (29/09, rama `claude/C-122`, sobre C-121; **lleva tablas nuevas**). Menú "Garantías" con estados, historial, notas internas, fotos privadas y devolución al saldo de verdad (`estado/C-122.md`).
-4c. **C-120 · Facturación a empresa, IVA y términos: investigación hecha el 30/09** (`estado/C-120.md`, con fuentes). Sin código.
-   - **Dirección de Andrés (30/09): la web no factura.** Tiene SADES y facturación manual; en la web hace un ticket de caja y lleva la relación de ventas a su manera. **No construir un facturador ni integrar una imprenta digital.**
-   - Pidió rediseñar la tarea estudiando la ley, a partir de 5 preguntas sobre el flujo de la empresa (están en `estado/C-120.md`). **Sin sus respuestas no se propone nada.**
-   - Lo que la investigación deja claro igual: la ley pide factura digital para las ventas por web (Providencia SNAT/2024/000102, art. 5) y el carrito y el correo dicen "Impuestos (Exento)". Cómo lo resuelve la empresa es decisión de Andrés y de su contador.
-   - Mientras tanto, el interruptor "Cobrar IVA" de Configuración queda como está: no tiene efecto (`STORE_CHARGES_TAX = false`).
+4c. **C-120 · Facturación a empresa, IVA y términos:** investigada y rediseñada el 30/09 (`estado/C-120.md`). **La web no emite facturas**: prepara los datos y SADES o el talonario facturan. No construir un facturador ni integrar una imprenta digital. Se reparte en C-146, C-147 y C-148 (§3b).
 5. **C-107:** seguro del envío a elección del cliente. Espera los costos de ZOOM y MRW y el OK de la migración.
 6. **C-92:** desactivar clientes en vez de borrarlos. Detalle en `AUDITORIA_CLIENTES_BORRADOS.md`.
    - Falta de Andrés: correr el diagnóstico (un solo comando, solo lee: `docs/plan/scripts/diagnostico-c92.sql`, con las instrucciones arriba del archivo), pasarle la salida a Claude y cancelar esas órdenes con el motivo "Prueba: cliente eliminado".
@@ -285,6 +283,20 @@ bash scripts/deploy.sh
    - Los errores de ESLint fuera de `app`, `components`, `lib` y `contexts`: `scripts/`, `prisma/seed.ts` y `docs/plan/scripts` (`proxy.ts` quedó limpio en C-141).
 9. **ElectroStudio:** el artefacto "Flyers ElectroShop" ya se puede retirar. Si Andrés quiere pasar sus historias, se hace un importador.
 10. **Al cerrar el ciclo:** borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` de la máquina local.
+
+## 3b. Crecimiento (meta de Andrés del 30/09)
+Andrés quiere que la tienda sea la vitrina digital de la empresa en todo el país y pagar anuncios. Orden recomendado por Claude; falta que Andrés lo confirme:
+1. ✅ **C-145 · Medición del embudo** (hecha).
+2. **C-146 · Precio con IVA a la vista:** precio sugerido desde el costo (costo × 1,30 × 1,16), aviso de margen para el dueño, "IVA incluido" con base e IVA en carrito, pago, correo y recibo. Fuera "Impuestos (Exento)".
+3. **C-149 · Que Google y las IA encuentren el catálogo:**
+   - Feed de productos para Google Merchant Center (fichas gratis de Shopping y, después, anuncios).
+   - Datos estructurados completos: disponibilidad, condición, envío, marca, código; `Organization` con RIF y dirección.
+   - `llms.txt` y páginas de categoría con texto propio.
+   - Revisar el sitemap: hoy incluye `/login` y `/registro`.
+4. **C-147 · Datos para la factura** y relación de ventas del mes.
+5. **C-148 · Cotizaciones y compras de empresas e instituciones** (con retención del IVA).
+- **Hallazgos de la revisión del 30/09:** la tienda ya tiene sitemap, `robots`, datos estructurados de producto y soporte para Google Analytics y el píxel de Meta. No tiene feed de Merchant Center, etiqueta de conversión de Google Ads ni `llms.txt`.
+- **Regla para los documentos:** el repositorio es público. Aquí no se escriben datos fiscales ni financieros de la empresa (ventas, márgenes reales, cómo declara). Eso va en la conversación con Andrés.
 
 ## 4. Decisiones tomadas (no volver a preguntar)
 - **Google:** vincular por correo; teléfono y cédula en la primera compra; admins nunca con Google.
@@ -360,4 +372,4 @@ bash scripts/deploy.sh
 > 2. Pregúntame cómo me fue invitando al equipo (si llegó el correo de invitación y si cada persona configuró sus dos pasos) y si el deploy de C-141, C-139, C-142 y C-143 terminó bien (§00000 y §000000): si configuré mis dos pasos, si llegó el correo de invitación, qué cuentas quedaron en Equipo, cómo se ve la página de Puntos ES y si la recarga pide firmar los términos nuevos. Y mis respuestas a las 5 preguntas de C-120 (`estado/C-120.md`).
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
 > 4. Sigue con la **revisión final** conmigo (`REVISION_FINAL.md`) y arregla lo que salga. Al terminar cada tarea: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
-> 5. Después: C-107 (faltan los costos de ZOOM y MRW), C-92 (faltan tus 4 consultas) y C-120, rediseñada con mis respuestas (la web no factura).
+> 5. Después, el plan de crecimiento de `SIGUIENTE.md` §3b en el orden que yo confirme (C-146, C-149, C-147, C-148), y C-107 y C-92 cuando te pase los datos.

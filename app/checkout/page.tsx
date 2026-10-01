@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import Footer from '@/components/Footer';
@@ -33,11 +33,23 @@ import { parseCartItemId, toOrderItem } from '@/lib/cart-items';
 import CouponBox from '@/components/cart/CouponBox';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useSettings } from '@/contexts/SettingsContext';
+import { trackInitiateCheckout, trackPurchase } from '@/components/AnalyticsTracker';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { items, clearCart, couponCode, setCouponCode } = useCart();
+
+  // C-145: "empezó a pagar", una vez por visita al pago y solo con sesión y productos
+  const pagoMedido = useRef(false);
+  useEffect(() => {
+    if (pagoMedido.current || status !== 'authenticated' || items.length === 0) return;
+    pagoMedido.current = true;
+    trackInitiateCheckout(
+      Math.round(items.reduce((suma, i) => suma + i.price * i.quantity, 0) * 100) / 100,
+      items.reduce((suma, i) => suma + i.quantity, 0),
+    );
+  }, [status, items]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   // C-85: el formulario de teléfono y cédula espera al perfil para no aparecer y desaparecer
@@ -519,6 +531,13 @@ export default function CheckoutPage() {
 
       // Un momento para ver la compra completada antes de ir a la confirmación
       await new Promise(resolve => setTimeout(resolve, 1200));
+
+      // C-145: la compra, con lo que el servidor cobró (no con el total calculado en el navegador)
+      trackPurchase(
+        createdOrders.map(o => o.orderNumber).join(','),
+        Number(orderData.totalUSD ?? finalTotal),
+        items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+      );
 
       // Now clear cart and redirect to success page
       clearCart();

@@ -114,7 +114,11 @@ const DISPOSITIVO: Record<string, { label: string; icon: ComponentType<{ classNa
     mobile: { label: 'Teléfono', icon: FiSmartphone },
     tablet: { label: 'Tableta', icon: FiTablet },
 };
-const EVENTO: Record<string, string> = { page_view: 'Vistas de página', click: 'Clics', form_submit: 'Formularios enviados' };
+const EVENTO: Record<string, string> = {
+    page_view: 'Vistas de página', click: 'Clics', form_submit: 'Formularios enviados',
+    // C-145: el embudo de compra
+    add_to_cart: 'Agregados al carrito', begin_checkout: 'Pagos iniciados', purchase: 'Compras', sign_up: 'Registros',
+};
 const COLORES = ['var(--color-brand-500)', 'var(--color-success)', 'var(--color-warning)', 'var(--color-accent)'];
 const TONO_GRAVEDAD: Record<string, AdminTone> = { INFO: 'neutral', WARNING: 'warning', CRITICAL: 'danger' };
 const tooltipStyle = { background: 'var(--color-surface)', border: '1px solid var(--color-line-strong)', borderRadius: '8px', fontSize: '12px' };

@@ -206,8 +206,11 @@ export default function AnalyticsTracker() {
     return null; // This component doesn't render anything
 }
 
-// Custom event tracking helper functions
+// Eventos del embudo de compra (C-145). Estaban escritos desde antes, pero ninguna pantalla los llamaba: Google
+// Analytics y el píxel de Meta solo veían páginas vistas, y un anuncio no podía saber qué vendió.
+// Cada uno va a Google Analytics y al píxel (si están configurados) y a la analítica propia de la tienda.
 export function trackSignUp(method: string = 'Credentials') {
+    void trackEvent({ eventType: 'sign_up', eventCategory: 'conversion', eventAction: 'sign_up', eventLabel: method });
     // GA4
     if (window.gtag) {
         window.gtag('event', 'sign_up', { method });
@@ -218,13 +221,15 @@ export function trackSignUp(method: string = 'Credentials') {
     }
 }
 
-export function trackAddToCart(productId: string, productName: string, value: number, currency: string = 'USD') {
+export function trackAddToCart(productId: string, productName: string, price: number, quantity: number = 1, currency: string = 'USD') {
+    const value = Math.round(price * quantity * 100) / 100;
+    void trackEvent({ eventType: 'add_to_cart', eventCategory: 'conversion', eventAction: 'add_to_cart', eventLabel: productId, eventValue: value });
     // GA4
     if (window.gtag) {
         window.gtag('event', 'add_to_cart', {
             currency,
             value,
-            items: [{ item_id: productId, item_name: productName, price: value, quantity: 1 }]
+            items: [{ item_id: productId, item_name: productName, price, quantity }]
         });
     }
     // Facebook Pixel
@@ -240,6 +245,7 @@ export function trackAddToCart(productId: string, productName: string, value: nu
 }
 
 export function trackInitiateCheckout(cartTotal: number, itemCount: number, currency: string = 'USD') {
+    void trackEvent({ eventType: 'begin_checkout', eventCategory: 'conversion', eventAction: 'begin_checkout', eventValue: cartTotal });
     // GA4
     if (window.gtag) {
         window.gtag('event', 'begin_checkout', {
@@ -259,6 +265,7 @@ export function trackInitiateCheckout(cartTotal: number, itemCount: number, curr
 }
 
 export function trackPurchase(orderId: string, total: number, items: Array<{ id: string, name: string, price: number, quantity: number }>, currency: string = 'USD') {
+    void trackEvent({ eventType: 'purchase', eventCategory: 'conversion', eventAction: 'purchase', eventLabel: orderId, eventValue: total });
     // GA4
     if (window.gtag) {
         window.gtag('event', 'purchase', {

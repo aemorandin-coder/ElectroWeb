@@ -267,7 +267,7 @@ bash scripts/deploy.sh
    - Falta de Andrés: las 4 consultas de diagnóstico y cancelar esas órdenes con el motivo "Prueba: cliente eliminado".
    - Sumar (C-139): al cerrar una cuenta con Puntos ES, dejar un movimiento que anote que se perdieron (regla del 30/09).
    - Lleva una migración de `onDelete`, con su OK.
-7. **Wizard de producto** (crear y editar): rediseño paso a paso, lo que quedó de C-51.
+7. ~~Wizard de producto~~: hecho en C-134 (30/09, `estado/C-134.md`). Si Andrés quiere más cambios en el asistente, que diga cuáles.
 8. **Menores:**
    - ~~Aviso cuando un favorito entra en oferta~~: hecho en C-138.
    - Ordenar el catálogo por el precio de oferta.
@@ -353,4 +353,4 @@ bash scripts/deploy.sh
 > 2. Pregúntame si el deploy de C-141 y C-139 terminó bien (§00000 y §000000): si configuré mis dos pasos, si llegó el correo de invitación, qué cuentas quedaron en Equipo y cómo se ve la página de Puntos ES. Y qué decidí sobre los términos de los Puntos ES (§000000).
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
 > 4. Sigue con la **revisión final** conmigo (`REVISION_FINAL.md`) y arregla lo que salga. Al terminar cada tarea: estado HECHO, `SIGUIENTE.md` con el SQL y las pruebas, merge y push (tú los haces, regla 2 de `CLAUDE.md`), y los pasos del deploy para mí.
-> 5. Después: C-107, C-92, el wizard de producto y C-120 (`SIGUIENTE.md` §3).
+> 5. Después: C-107 (faltan los costos de ZOOM y MRW), C-92 (faltan tus 4 consultas) y C-120 (`SIGUIENTE.md` §3).

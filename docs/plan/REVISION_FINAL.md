@@ -20,13 +20,18 @@ Cómo: en el teléfono real y en DevTools a **360 · 768 · 1024 · 1440 px**, c
 - [ ] **Reseñas:** sin una orden entregada del producto, el formulario lo explica y el servidor lo rechaza.
 
 ## Cliente
-- [ ] **Recargar saldo sin haber firmado:** abre la firma y el servidor no deja recargar.
+- [ ] **Recargar Puntos ES sin haber firmado:** abre la firma y el servidor no deja recargar.
 - [ ] **Firma con el dedo:**
   - El trazo sale donde toca el dedo y la página no se mueve.
   - Un punto no sirve como firma.
   - Al terminar, "Descargar PDF".
 - [ ] **Mis documentos:** lo firmado con su PDF y lo pendiente con "Leer y firmar".
 - [ ] **PDF:** texto completo con acentos, tus datos, la firma y la huella.
+- [ ] **Puntos ES (C-139):**
+  - Historial con "Cargar más" y filtros. "Ver el pedido" abre ese pedido.
+  - Una recarga por confirmar sale con su aviso y sin sumar. Una rechazada muestra el motivo.
+  - "Eliminar" la cuenta con Puntos ES: dice cuántos tiene, que se pierden, y pide marcar la casilla.
+- [ ] **Mi perfil → Seguridad (C-140):** cada sesión con su dispositivo y "Cerrar".
 - [ ] **Menú del panel (360):**
   - Cerrado, Tab no entra al menú.
   - Abierto, Tab queda dentro.
@@ -54,8 +59,10 @@ Cómo: en el teléfono real y en DevTools a **360 · 768 · 1024 · 1440 px**, c
 - [ ] **Consultas:** mensajes y solicitudes. Marcar una solicitud "Cumplida" le llega al cliente como aviso.
 
 ## Seguridad (antes de dar por cerrado)
-- [ ] `SADES_WEBHOOK_SECRET` rotado en el servidor y en SADES (`SIGUIENTE.md` §0).
-- [ ] La cuenta `masteradmin@electroshopve.com` no existe en producción, o ya tiene otra contraseña.
+- [x] `SADES_WEBHOOK_SECRET` y la cuenta `masteradmin@electroshopve.com`: revisado en producción el 26/09, no había nada que cambiar (`SIGUIENTE.md` §4).
+- [ ] **Dos pasos (C-141):** entrar al panel pide el código de la app. Un código de respaldo sirve una sola vez.
+- [ ] **Equipo (C-141):** todas las cuentas con "Dos pasos activos" o sin acceso. Un Administrador no ve Configuración, Métodos de Pago ni Equipo.
+- [ ] **Una sola sesión de admin (C-140):** entrar en el teléfono cierra la de la computadora.
 
 ## Anotaciones
 | Punto | Ancho | Qué pasa |

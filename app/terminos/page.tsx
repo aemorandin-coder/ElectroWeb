@@ -59,7 +59,7 @@ export default function TermsPage() {
             </section>
 
             {/* Balance System */}
-            <section className="bg-surface rounded-xl p-6 border border-line">
+            <section id="puntos-es" className="scroll-mt-28 bg-surface rounded-xl p-6 border border-line">
               <div className="flex items-center gap-2 mb-3">
                 <FiDollarSign className="w-5 h-5 text-warning-strong" />
                 <h2 className="text-xl font-bold text-ink">3. Puntos ES y Recargas</h2>
@@ -78,6 +78,9 @@ export default function TermsPage() {
                     <strong className="text-deal">LOS PUNTOS ES RECARGADOS NO SON REEMBOLSABLES BAJO NINGUNA CIRCUNSTANCIA.</strong> Una vez
                     acreditados, los Puntos ES no podrán ser retirados, transferidos a terceros, ni convertidos en dinero en efectivo.
                     Los Puntos ES únicamente pueden utilizarse para compras dentro de la plataforma.
+                  </p>
+                  <p className="mt-2 text-ink-soft">
+                    Si el usuario pide cerrar su cuenta, los Puntos ES que le queden se pierden: antes de cerrarla puede usarlos en productos de la tienda.
                   </p>
                 </div>
 

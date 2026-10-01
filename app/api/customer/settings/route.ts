@@ -99,7 +99,12 @@ function leerMetodo(details: string | null): 'google' | 'contraseña' | null {
 
 const patchSchema = z.union([
     z.object({ action: z.literal('deactivate') }),
-    z.object({ action: z.literal('request_deletion'), reason: z.string().trim().max(500, 'Máximo 500 caracteres').optional() }),
+    z.object({
+        action: z.literal('request_deletion'),
+        reason: z.string().trim().max(500, 'Máximo 500 caracteres').optional(),
+        // C-139: con Puntos ES en la cuenta, el cliente confirma que sabe que los pierde
+        aceptaPerderPuntos: z.boolean().optional(),
+    }),
     z.object({ action: z.literal('cancel_deletion') }),
     z.object({
         notificaciones: z.object({
@@ -149,7 +154,7 @@ export async function PATCH(request: NextRequest) {
         }
 
         if (body.action === 'request_deletion') {
-            return pedirEliminacion(userId, body.reason || null);
+            return pedirEliminacion(userId, body.reason || null, body.aceptaPerderPuntos === true);
         }
 
         // cancel_deletion: solo si estaba pedida (no reactiva una cuenta suspendida por la tienda)
@@ -185,7 +190,7 @@ export async function PATCH(request: NextRequest) {
  * se enteraba. Ahora el pedido llega a Mensajes y Solicitudes y como aviso al equipo, con lo que hay que revisar
  * (pedidos en curso y Puntos ES). Quien tiene pedidos se desactiva en vez de borrarse (regla de C-92).
  */
-async function pedirEliminacion(userId: string, motivo: string | null) {
+async function pedirEliminacion(userId: string, motivo: string | null, aceptaPerderPuntos: boolean) {
     const user = await prisma.user.findUnique({
         where: { id: userId },
         select: {
@@ -204,10 +209,21 @@ async function pedirEliminacion(userId: string, motivo: string | null) {
         return NextResponse.json({ error: 'Tu cuenta está suspendida. Escríbenos para resolverlo.' }, { status: 400 });
     }
 
-    const enCurso = await prisma.order.count({
-        where: { userId, status: { notIn: ['DELIVERED', 'CANCELLED', 'REFUNDED'] } },
-    });
+    // C-139 (regla de Andrés del 30/09): los Puntos ES no son reembolsables y se pierden al cerrar la cuenta.
+    // Quien todavía tiene tiene que aceptarlo expresamente; la tienda le sugiere gastarlos antes en productos.
     const puntos = Number(user.balance?.balance ?? 0);
+    if (puntos > 0 && !aceptaPerderPuntos) {
+        return NextResponse.json({
+            error: `Tienes ${formatPuntos(puntos)}. No son reembolsables y se pierden al cerrar la cuenta: úsalos antes en la tienda o confirma que aceptas perderlos.`,
+            codigo: 'PUNTOS_ES',
+            puntos,
+        }, { status: 409 });
+    }
+
+    const [enCurso, recargasPorConfirmar] = await Promise.all([
+        prisma.order.count({ where: { userId, status: { notIn: ['DELIVERED', 'CANCELLED', 'REFUNDED'] } } }),
+        prisma.transaction.count({ where: { balance: { userId }, type: 'RECHARGE', status: 'PENDING' } }),
+    ]);
 
     await prisma.profile.upsert({
         where: { userId },
@@ -218,7 +234,8 @@ async function pedirEliminacion(userId: string, motivo: string | null) {
     const datos: [string, string][] = [
         ['Pedidos', String(user._count.orders)],
         ['Pedidos en curso', String(enCurso)],
-        ['Puntos ES', formatPuntos(puntos)],
+        ['Puntos ES', puntos > 0 ? `${formatPuntos(puntos)} (aceptó que los pierde al cerrar la cuenta)` : formatPuntos(0)],
+        ...(recargasPorConfirmar > 0 ? [['Recargas por confirmar', String(recargasPorConfirmar)] as [string, string]] : []),
     ];
     await prisma.contactMessage.create({
         data: {

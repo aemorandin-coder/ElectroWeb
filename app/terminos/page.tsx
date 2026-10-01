@@ -16,7 +16,7 @@ export default function TermsPage() {
           icon={<FiFileText />}
           eyebrow="Legal"
           title="Términos y condiciones"
-          description="Última actualización: septiembre 2026 · Versión 3.0"
+          description="Última actualización: septiembre 2026 · Versión 3.1"
         />
         <Container className="py-6 lg:py-10">
           <article className="mx-auto max-w-3xl space-y-8 rounded-2xl border border-line bg-white p-5 leading-relaxed text-ink-soft sm:p-8 lg:p-10">
@@ -137,19 +137,18 @@ export default function TermsPage() {
             <section>
               <div className="flex items-center gap-2 mb-3">
                 <FiCreditCard className="w-5 h-5 text-brand-600" />
-                <h2 className="text-xl font-bold text-ink">4. Métodos de Pago y Facturación</h2>
+                <h2 className="text-xl font-bold text-ink">4. Métodos de Pago y Precios</h2>
               </div>
+              {/* C-144: sin lista escrita a mano. Prometía bancos, Zelle y "efectivo en tienda" que la tienda no ofrece;
+                  los métodos reales son los que el admin tiene activos y el pago los muestra. */}
               <p className="mb-3">
-                Aceptamos diversos métodos de pago, incluyendo:
+                Los métodos de pago disponibles son <strong>los que la tienda muestra al momento de pagar</strong>, además de
+                los Puntos ES que el usuario tenga en su cuenta. Pueden cambiar con el tiempo. La Empresa no recibe pagos
+                por medios distintos a los que aparecen ahí.
               </p>
-              <ul className="list-disc pl-6 space-y-1 text-ink-soft mb-3">
-                <li>Transferencias bancarias nacionales (Banesco, Mercantil, Provincial, Venezuela, etc.)</li>
-                <li>Pago Móvil</li>
-                <li>Zelle (pagos internacionales)</li>
-                <li>Binance Pay y criptomonedas seleccionadas</li>
-                <li>Efectivo en tienda</li>
-                <li>Puntos ES (previamente recargados)</li>
-              </ul>
+              <p className="mb-3">
+                Cada pago se verifica antes de procesar el pedido.
+              </p>
               <p>
                 Todos los precios están expresados en <strong>Dólares Americanos (USD)</strong> y pueden ser pagados
                 en Bolívares a la tasa de cambio oficial del BCV vigente al momento del pago. La Empresa se reserva

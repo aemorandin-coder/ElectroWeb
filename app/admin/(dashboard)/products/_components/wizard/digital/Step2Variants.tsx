@@ -15,15 +15,16 @@ const variantLabel = 'mb-1 block text-xs font-semibold text-ink-soft';
 /**
  * Paso 2 del producto digital (C-60): los montos que se venden.
  * Cada fila: monto + unidad ("800 Robux", "$25"), costo en el proveedor, precio de venta, margen y proveedor.
- * C-146b: el margen de cada monto descuenta el IVA que el precio lleva dentro, y la calculadora puede sumarlo.
- * Por defecto calcula como siempre (costo + margen): sumar el IVA sube los precios, y eso lo decide el dueño.
+ * C-146b y C-151: si los digitales llevan IVA (Configuración → Precios; por defecto no), el margen de cada monto
+ * descuenta el IVA que el precio lleva dentro y la calculadora puede sumarlo. Si no lo llevan, es costo + margen.
  */
 export default function DigitalStep2Variants({ data, onChange, errors }: StepProps) {
   const rows = data.digitalVariants;
   const platform = getPlatform(data.digitalPlatform);
   const defaultUnit: DigitalUnit = rows[rows.length - 1]?.unit ?? platform?.unit ?? 'USD';
   const { settings } = useSettings();
-  const iva = settings?.taxEnabled ? settings.taxPercent : 0;
+  // C-151: el IVA solo cuenta si Configuración dice que los digitales lo llevan (por defecto, no)
+  const iva = settings?.taxEnabled && settings.taxDigital ? settings.taxPercent : 0;
   const ivaTexto = String(iva).replace('.', ',');
   const [sumarIva, setSumarIva] = useState(false);
 

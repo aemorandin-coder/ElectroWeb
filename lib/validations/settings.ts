@@ -98,6 +98,8 @@ export const settingsUpdateSchema = z.object({
   autoExchangeRates: z.boolean(),
   exchangeRateVES: z.preprocess(toNumber, z.number({ error: 'Escribe la tasa' }).gt(0, 'Debe ser mayor a 0').max(10_000_000)),
   taxEnabled: z.boolean(),
+  // C-151: los productos digitales también llevan IVA
+  taxDigitalProducts: z.boolean(),
   taxPercent: z.preprocess(toNumber, z.number({ error: 'Escribe el porcentaje' }).min(0, 'No puede ser negativo').max(100, 'Máximo 100%')),
   minOrderAmountUSD: optionalMoney(),
   maxOrderAmountUSD: optionalMoney(),

@@ -1,13 +1,19 @@
-# Punto de partida (actualizado 2026-10-01, cierre de C-147b)
+# Punto de partida (actualizado 2026-10-01, cierre de C-151)
 
-Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-147b** (orden real: C-149, C-147, C-150, C-146b, C-147b).
+Léelo antes de empezar. En GitHub, `main` tiene todo hasta **C-151** (orden real: C-149, C-147, C-150, C-146b, C-147b, C-151).
+- **C-151** (01/10, en `main`, falta el deploy, **una columna nueva**): los productos digitales no llevan IVA (`estado/C-151.md`). Decisión de Andrés del 01/10.
+  - Interruptor en Configuración → Precios → IVA, **apagado por defecto**: no hay que tocar nada después del deploy.
+  - SQL del deploy: `ALTER TABLE "company_settings" ADD COLUMN "taxDigitalProducts" BOOLEAN NOT NULL DEFAULT false;` (se suma al de C-147).
+  - **Pruebas después del deploy (Andrés):** abrir un producto digital (no dice "IVA incluido") y uno físico (sí lo dice); un carrito con los dos dice "IVA incluido en los productos físicos".
+  - **Para el contador:** las 4 preguntas del estado (la base es el art. 16 de la Ley del IVA, no que sean "de entretenimiento"; las recargas directas son el caso dudoso).
+- **Pruebas de punta a punta:** el motor quedó en `scripts/e2e/lib.ts` (usuarios y sesiones de prueba, Firefox sin ventana). Los guiones de cada tarea se escriben en `scripts/e2e/_tNNN.ts`, se corren con `npx tsx` y se borran: la carpeta temporal se vacía con cada desconexión.
 - **C-147b** (01/10, en `main`, va con el deploy de C-147, sin cambio de base): cómo se factura el embalaje (`estado/C-147b.md`). Va en la misma factura, como renglón aparte y con IVA; el flete con cobro a destino lo factura ZOOM o MRW. "Copiar datos para facturar" y el recibo ya lo nombran "Embalaje" o "Delivery en Guanare", y la relación de ventas trae su columna. **Para el contador:** las 4 preguntas del estado.
 - **C-146b** (01/10, en `main`, falta el deploy, **sin cambio de base**): precio sugerido desde el costo y margen real (`estado/C-146b.md`).
   - **Pruebas después del deploy (Andrés):**
     1. Productos → editar uno físico → paso "Precios": escribir el costo. Aparece "Precio sugerido" (costo + 30 % + IVA 16 %). "Usar este precio" lo pone en el precio; el margen queda en 30 %.
     2. Subir el precio a mano por encima: aparece el aviso del 30 % (solo lo ves tú).
     3. Editar un producto digital → "Montos y precios": cada monto dice su margen ya sin el IVA. Los que salgan en rojo se venden con pérdida si el IVA se paga.
-  - **Decisión abierta de Andrés:** si los productos digitales llevan IVA (lo dice el contador). Hoy la calculadora digital no lo suma.
+  - **Resuelto el 01/10 (C-151):** los productos digitales no llevan IVA; su margen se calcula sin IVA.
 - **C-150** (01/10, en `main`, falta el deploy, **sin cambio de base**): menú del panel por secciones y Dashboard de trabajo (`estado/C-150.md`). Aprobado por Andrés el 01/10 ("deja Dashboard como Dashboard").
   - **Pruebas después del deploy (Andrés):**
     1. En el teléfono, abrir el menú del panel: Dashboard y seis secciones, sin deslizar. Tocar "Ventas": se abren sus cinco páginas.

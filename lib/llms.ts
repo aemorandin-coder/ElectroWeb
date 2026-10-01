@@ -78,7 +78,7 @@ export function buildLlmsTxt({ settings, categories, products, paymentMethods }:
   ]);
 
   section('Cómo se compra', [
-    `- Precios en dólares (USD)${settings.taxEnabled ? ', con el IVA incluido' : ''}. El equivalente en bolívares se calcula con la tasa del día que muestra la tienda.`,
+    `- Precios en dólares (USD)${settings.taxEnabled ? `, con el IVA incluido${!settings.taxDigital && products.some((p) => p.productType === 'DIGITAL') ? ' en los productos físicos' : ''}` : ''}. El equivalente en bolívares se calcula con la tasa del día que muestra la tienda.`,
     paymentMethods.length > 0 && `- Formas de pago: ${paymentMethods.map((m) => md(m)).join(', ')}. La tienda muestra los datos de cada una al pagar.`,
     settings.deliveryEnabled && '- Envíos a toda Venezuela por ZOOM o MRW con cobro a destino: el flete se paga al retirar el paquete. Los productos marcados con "Envío gratis" los envía la tienda sin costo.',
     settings.localDeliveryEnabled && `- Delivery en ${md(settings.city) || 'la ciudad de la tienda'}${settings.deliveryFeeUSD > 0 ? `: ${formatUSD(settings.deliveryFeeUSD)} por pedido` : ''}.`,

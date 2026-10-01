@@ -204,7 +204,7 @@ export default async function ProductPage({ params }: PageProps) {
                   <PurchasePanel
                     product={product}
                     exchangeRateVES={settings.exchangeRateVES}
-                    ivaIncluido={settings.taxEnabled}
+                    ivaIncluido={settings.taxEnabled && (!isDigital || settings.taxDigital)}
                     lowStockThreshold={homeSettings.lowStockThreshold}
                     afterPrice={(product.oferta || coupons.length > 0) && (
                       // C-102: oferta de la tienda y cupones que sirven para este producto, debajo del precio

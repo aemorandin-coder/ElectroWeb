@@ -1568,7 +1568,11 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                       {/* C-146: los precios ya llevan el IVA; aquí se dice cuánto del total es */}
-                      <IvaIncluido totalUSD={finalTotal} ivaUSD={orderCalculation.taxUSD} className="mt-2 text-right" />
+                      {(() => {
+                        // C-151: lo que lleva IVA. Si los digitales no lo llevan, en una compra mixta es solo la parte física
+                        const gravado = [orderCalculation.physical, orderCalculation.digital].reduce((suma, g) => suma + (g && g.taxUSD > 0 ? g.totalUSD : 0), 0);
+                        return <IvaIncluido totalUSD={gravado} ivaUSD={orderCalculation.taxUSD} soloFisicos={gravado < finalTotal - 0.005} className="mt-2 text-right" />;
+                      })()}
                       {fleteAparte && (
                         <p className="mt-2 text-right text-xs text-muted">
                           No incluye el flete: se lo pagas a {envio.carrier || 'la empresa de envíos'} al {envio.mode === 'DOOR' ? 'recibir' : 'retirar'}.

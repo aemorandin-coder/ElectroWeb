@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   FiBarChart2, FiBox, FiClipboard, FiCreditCard, FiDollarSign, FiExternalLink, FiGift, FiGrid, FiLogOut,
-  FiAlertTriangle, FiBell, FiBookOpen, FiFileText, FiFilm, FiLifeBuoy, FiLock, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUserPlus, FiUsers, FiX,
+  FiAlertTriangle, FiBell, FiBookOpen, FiChevronDown, FiFileText, FiShoppingBag, FiFilm, FiLifeBuoy, FiLock, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUserPlus, FiUsers, FiX,
 } from 'react-icons/fi';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { MdAdminPanelSettings } from 'react-icons/md';
@@ -24,6 +24,14 @@ interface NavigationItem {
   countKey?: keyof SidebarCounts;
 }
 
+/** C-150: sección del menú que se abre y se cierra (Ventas, Catálogo…) */
+interface NavigationGroup {
+  id: string;
+  name: string;
+  icon: ReactNode;
+  items: NavigationItem[];
+}
+
 interface SidebarCounts {
   pendingOrders: number;
   pendingTransactions: number;
@@ -34,6 +42,7 @@ interface SidebarCounts {
   pendingDiscounts: number;
   pendingCreators: number;
   pendingCourses: number;
+  pendingVerifications: number;
   unreadNotifications: number;
 }
 
@@ -61,8 +70,11 @@ export default function AdminLayout({
     pendingDiscounts: 0,
     pendingCreators: 0,
     pendingCourses: 0,
+    pendingVerifications: 0,
     unreadNotifications: 0,
   });
+  // C-150: secciones que el admin abrió o cerró a mano. Sin tocar, está abierta la de la página en la que está
+  const [secciones, setSecciones] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -160,168 +172,118 @@ export default function AdminLayout({
     return null;
   }
 
-  const navigation: NavigationItem[] = [
+  const icono = 'h-5 w-5';
+  const dashboard: NavigationItem = { name: 'Dashboard', href: '/admin', icon: <FiGrid className={icono} aria-hidden="true" /> };
+
+  // C-150: el menú eran 25 ítems en una sola lista (en el teléfono había que deslizar para llegar a Configuración).
+  // Ahora son secciones que se abren y se cierran. Ninguna página cambió de dirección ni de permiso.
+  const grupos: NavigationGroup[] = [
     {
-      name: 'Dashboard',
-      href: '/admin',
-      icon: <FiGrid className="h-5 w-5" aria-hidden="true" />,
+      id: 'ventas',
+      name: 'Ventas',
+      icon: <FiShoppingBag className={icono} aria-hidden="true" />,
+      items: [
+        { name: 'Órdenes', href: '/admin/orders', icon: <FiClipboard className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingOrders' },
+        // C-148: presupuestos para empresas e instituciones
+        { name: 'Cotizaciones', href: '/admin/cotizaciones', icon: <FiFileText className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingQuotes' },
+        { name: 'Transacciones', href: '/admin/transactions', icon: <FiDollarSign className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingTransactions' },
+        // C-122: antes las solicitudes llegaban mezcladas en Mensajes y Solicitudes
+        { name: 'Garantías', href: '/admin/garantias', icon: <FiLifeBuoy className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingWarranty' },
+        { name: 'Gift Cards', href: '/admin/gift-cards', icon: <FiGift className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS' },
+      ],
     },
     {
-      name: 'Productos',
-      href: '/admin/products',
-      icon: <FiBox className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_PRODUCTS',
+      id: 'catalogo',
+      name: 'Catálogo',
+      icon: <FiBox className={icono} aria-hidden="true" />,
+      items: [
+        { name: 'Productos', href: '/admin/products', icon: <FiBox className={icono} aria-hidden="true" />, permission: 'MANAGE_PRODUCTS' },
+        { name: 'Categorías', href: '/admin/categories', icon: <FiTag className={icono} aria-hidden="true" />, permission: 'MANAGE_PRODUCTS' },
+        { name: 'Descuentos', href: '/admin/discount-requests', icon: <FiPercent className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingDiscounts' },
+        // C-110: antes solo se llegaba desde el Dashboard
+        { name: 'Reseñas', href: '/admin/reviews', icon: <FiStar className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingReviews' },
+      ],
     },
     {
-      name: 'Categorías',
-      href: '/admin/categories',
-      icon: <FiTag className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_PRODUCTS',
-    },
-    {
-      name: 'Órdenes',
-      href: '/admin/orders',
-      icon: <FiClipboard className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_ORDERS',
-      countKey: 'pendingOrders',
-    },
-    {
-      name: 'Transacciones',
-      href: '/admin/transactions',
-      icon: <FiDollarSign className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_ORDERS',
-      countKey: 'pendingTransactions',
-    },
-    {
-      // C-148: presupuestos para empresas e instituciones
-      name: 'Cotizaciones',
-      href: '/admin/cotizaciones',
-      icon: <FiFileText className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_ORDERS',
-      countKey: 'pendingQuotes',
-    },
-    {
-      // C-122: antes las solicitudes llegaban mezcladas en Mensajes y Solicitudes
-      name: 'Garantías',
-      href: '/admin/garantias',
-      icon: <FiLifeBuoy className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_ORDERS',
-      countKey: 'pendingWarranty',
-    },
-    {
-      name: 'Gift Cards',
-      href: '/admin/gift-cards',
-      icon: <FiGift className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_ORDERS',
-    },
-    {
+      id: 'clientes',
       name: 'Clientes',
-      href: '/admin/customers',
-      icon: <FiUsers className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_USERS',
+      icon: <FiUsers className={icono} aria-hidden="true" />,
+      items: [
+        { name: 'Clientes', href: '/admin/customers', icon: <FiUsers className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS' },
+        { name: 'Mensajes y Solicitudes', href: '/admin/inquiries', icon: <FiMessageSquare className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingInquiries' },
+        // C-150: las empresas por verificar no estaban en el menú (solo se llegaba desde un aviso del Dashboard)
+        { name: 'Verificaciones', href: '/admin/verifications', icon: <FiUserCheck className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS', countKey: 'pendingVerifications' },
+      ],
     },
     {
-      name: 'Métodos de Pago',
-      href: '/admin/payments',
-      icon: <FiCreditCard className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_SETTINGS',
+      id: 'marketing',
+      name: 'Marketing',
+      icon: <FiTrendingUp className={icono} aria-hidden="true" />,
+      items: [
+        { name: 'Marketing y Contenido', href: '/admin/marketing', icon: <FiTrendingUp className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
+        // C-112: reemplaza a "Imágenes para redes" de Marketing
+        { name: 'ElectroStudio', href: '/admin/studio', icon: <FiFilm className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
+        { name: 'Trabajos Realizados', href: '/admin/servicios', icon: <FiTool className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
+      ],
     },
     {
-      name: 'Notificaciones',
-      href: '/admin/notifications',
-      icon: <FiBell className="h-5 w-5" aria-hidden="true" />,
-      countKey: 'unreadNotifications',
-    },
-    {
-      name: 'Mensajes y Solicitudes',
-      href: '/admin/inquiries',
-      icon: <FiMessageSquare className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_CONTENT',
-      countKey: 'pendingInquiries',
-    },
-    {
-      // C-110: antes solo se llegaba desde el Dashboard
-      name: 'Reseñas',
-      href: '/admin/reviews',
-      icon: <FiStar className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_CONTENT',
-      countKey: 'pendingReviews',
-    },
-    {
-      name: 'Marketing y Contenido',
-      href: '/admin/marketing',
-      icon: <FiTrendingUp className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_CONTENT',
-    },
-    {
-      // C-112: reemplaza a "Imágenes para redes" de Marketing
-      name: 'ElectroStudio',
-      href: '/admin/studio',
-      icon: <FiFilm className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_CONTENT',
-    },
-    // C-82: no había forma de llegar a los cursos ni a los creadores desde el menú (solo desde una notificación)
-    {
+      // C-82: no había forma de llegar a los cursos ni a los creadores desde el menú (solo desde una notificación)
+      id: 'cursos',
       name: 'Cursos',
-      href: '/admin/cursos',
-      icon: <FiBookOpen className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_CONTENT',
-      countKey: 'pendingCourses',
+      icon: <FiBookOpen className={icono} aria-hidden="true" />,
+      items: [
+        { name: 'Cursos', href: '/admin/cursos', icon: <FiBookOpen className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingCourses' },
+        { name: 'Creadores', href: '/admin/creators', icon: <FiUserPlus className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS', countKey: 'pendingCreators' },
+      ],
     },
     {
-      name: 'Creadores',
-      href: '/admin/creators',
-      icon: <FiUserCheck className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_USERS',
-      countKey: 'pendingCreators',
-    },
-    {
-      name: 'Trabajos Realizados',
-      href: '/admin/servicios',
-      icon: <FiTool className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_CONTENT',
-    },
-    {
-      name: 'Descuentos',
-      href: '/admin/discount-requests',
-      icon: <FiPercent className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_CONTENT',
-      countKey: 'pendingDiscounts',
-    },
-    {
-      name: 'Documentos Legales',
-      href: '/admin/legal',
-      icon: <FiShield className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_USERS',
-    },
-    {
-      name: 'Reportes',
-      href: '/admin/reports',
-      icon: <FiBarChart2 className="h-5 w-5" aria-hidden="true" />,
-      permission: 'VIEW_REPORTS',
-    },
-    {
-      // C-141: invitar admins, roles, accesos y dos pasos de cada cuenta. Solo el super admin
-      name: 'Equipo',
-      href: '/admin/equipo',
-      icon: <FiUserPlus className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_TEAM',
-    },
-    {
-      name: 'Configuración',
-      href: '/admin/settings',
-      icon: <FiSettings className="h-5 w-5" aria-hidden="true" />,
-      permission: 'MANAGE_SETTINGS',
-    },
-    {
-      name: 'Mi seguridad',
-      href: '/admin/seguridad',
-      icon: <FiLock className="h-5 w-5" aria-hidden="true" />,
+      id: 'administracion',
+      name: 'Administración',
+      icon: <FiSettings className={icono} aria-hidden="true" />,
+      items: [
+        { name: 'Reportes', href: '/admin/reports', icon: <FiBarChart2 className={icono} aria-hidden="true" />, permission: 'VIEW_REPORTS' },
+        { name: 'Notificaciones', href: '/admin/notifications', icon: <FiBell className={icono} aria-hidden="true" />, countKey: 'unreadNotifications' },
+        { name: 'Documentos Legales', href: '/admin/legal', icon: <FiShield className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS' },
+        { name: 'Métodos de Pago', href: '/admin/payments', icon: <FiCreditCard className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
+        // C-141: invitar admins, roles, accesos y dos pasos de cada cuenta. Solo el super admin
+        { name: 'Equipo', href: '/admin/equipo', icon: <FiUsers className={icono} aria-hidden="true" />, permission: 'MANAGE_TEAM' },
+        { name: 'Configuración', href: '/admin/settings', icon: <FiSettings className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
+        { name: 'Mi seguridad', href: '/admin/seguridad', icon: <FiLock className={icono} aria-hidden="true" /> },
+      ],
     },
   ];
 
   // Los mismos permisos que revisa el servidor (C-141): antes el menú tenía su propia copia, que le daba todo al Administrador
-  const filteredNavigation = navigation.filter((item) => !item.permission || hasPermission(session, item.permission));
+  const gruposVisibles = grupos
+    .map((grupo) => ({ ...grupo, items: grupo.items.filter((item) => !item.permission || hasPermission(session, item.permission)) }))
+    .filter((grupo) => grupo.items.length > 0);
+  const activo = (item: NavigationItem) => pathname === item.href || (item.href !== '/admin' && pathname.startsWith(`${item.href}/`));
+  const grupoActivo = gruposVisibles.find((grupo) => grupo.items.some(activo))?.id ?? null;
+
+  const enlace = (item: NavigationItem, dentro: boolean) => {
+    const isActive = activo(item);
+    const badgeCount = item.countKey ? sidebarCounts[item.countKey] : 0;
+    return (
+      <li key={item.href}>
+        <Link
+          href={item.href}
+          aria-current={isActive ? 'page' : undefined}
+          className={`relative flex h-11 items-center gap-3 rounded-lg text-sm font-medium transition-colors ${dentro ? 'pl-6 pr-3' : 'px-3'} ${
+            isActive ? 'bg-brand-50 font-semibold text-brand-700' : 'text-ink-soft hover:bg-surface hover:text-ink'
+          }`}
+        >
+          {isActive && <span className="absolute inset-y-2 left-0 w-1 rounded-r bg-brand-500" aria-hidden="true" />}
+          <span className={isActive ? 'text-brand-600' : 'text-muted'}>{item.icon}</span>
+          <span className="flex-1 truncate">{item.name}</span>
+          {badgeCount > 0 && (
+            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-bold text-white">
+              {badgeCount > 99 ? '99+' : badgeCount}
+            </span>
+          )}
+        </Link>
+      </li>
+    );
+  };
 
   const handleSignOut = async () => {
     try {
@@ -396,29 +358,36 @@ export default function AdminLayout({
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 overflow-y-auto px-3 py-2">
           <ul className="space-y-0.5">
-            {filteredNavigation.map((item) => {
-              const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
-              const badgeCount = item.countKey ? sidebarCounts[item.countKey] : 0;
+            {enlace(dashboard, false)}
+            {gruposVisibles.map((grupo) => {
+              const abierta = secciones[grupo.id] ?? grupo.id === grupoActivo;
+              const contiene = grupo.id === grupoActivo;
+              // Cerrada, la sección muestra la suma de los avisos de sus páginas
+              const avisos = grupo.items.reduce((suma, item) => suma + (item.countKey ? sidebarCounts[item.countKey] : 0), 0);
               return (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    aria-current={isActive ? 'page' : undefined}
-                    className={`relative flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
-                      isActive ? 'bg-brand-50 font-semibold text-brand-700' : 'text-ink-soft hover:bg-surface hover:text-ink'
-                    }`}
+                <li key={grupo.id}>
+                  <button
+                    type="button"
+                    onClick={() => setSecciones((prev) => ({ ...prev, [grupo.id]: !abierta }))}
+                    aria-expanded={abierta}
+                    aria-controls={`menu-${grupo.id}`}
+                    className={`flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-semibold transition-colors hover:bg-surface ${contiene ? 'text-brand-700' : 'text-ink'}`}
                   >
-                    {isActive && <span className="absolute inset-y-2 left-0 w-1 rounded-r bg-brand-500" aria-hidden="true" />}
-                    <span className={isActive ? 'text-brand-600' : 'text-muted'}>{item.icon}</span>
-                    <span className="flex-1 truncate">{item.name}</span>
-                    {badgeCount > 0 && (
+                    <span className={contiene ? 'text-brand-600' : 'text-muted'}>{grupo.icon}</span>
+                    <span className="flex-1 truncate">{grupo.name}</span>
+                    {!abierta && avisos > 0 && (
                       <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-bold text-white">
-                        {badgeCount > 99 ? '99+' : badgeCount}
+                        {avisos > 99 ? '99+' : avisos}
+                        <span className="sr-only"> pendientes</span>
                       </span>
                     )}
-                  </Link>
+                    <FiChevronDown className={`h-4 w-4 shrink-0 text-muted transition-transform ${abierta ? 'rotate-180' : ''}`} aria-hidden="true" />
+                  </button>
+                  <ul id={`menu-${grupo.id}`} hidden={!abierta} className="space-y-0.5 pb-1">
+                    {grupo.items.map((item) => enlace(item, true))}
+                  </ul>
                 </li>
               );
             })}

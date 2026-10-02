@@ -1,6 +1,6 @@
 // Lo que un creador puede escribir en su curso (C-72). Todo lo demás (dueño, estado, destacado, inscritos,
 // calificación, slug) lo decide el servidor o el admin.
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 
 const optionalText = (max: number) => z.string().trim().max(max).nullable().optional().transform((value) => value || null);
 const optionalUrl = z

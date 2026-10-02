@@ -20,6 +20,7 @@ import {
 import { formatUSD } from '@/lib/currency';
 import { ETIQUETA_GRAVEDAD } from '@/lib/audit-labels';
 import RelacionVentas from './_components/RelacionVentas';
+import CspPanel from './_components/CspPanel';
 
 // Reportes (C-104). Cada número lleva debajo "de dónde sale": la misma regla que usa la API.
 
@@ -631,6 +632,7 @@ export default function ReportsPage() {
                                     </ul>
                                 ) : <Vacio>Sin registros para este filtro</Vacio>}
                             </Panel>
+                            <CspPanel />
                         </div>
                     )}
 

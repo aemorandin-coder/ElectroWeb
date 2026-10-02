@@ -1,16 +1,35 @@
-# Lo de ahora (actualizado 2026-10-02, C-165 · versión 1.0.0-rc.1)
+# Lo de ahora (actualizado 2026-10-02, C-166 · versión 1.0.0-rc.2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main` = producción = `v1.0.0-rc.1`** (`2480457`), igual a GitHub. Comprobado desde fuera el 02/10: la cabecera `X-Powered-By` desapareció y `POST /api/cron/respaldos` responde 401 (la ruta existe y pide la clave). El servidor estaba en `d453809` (C-164) antes de subir C-165.
-- **Sin confirmar con Andrés:** que el primer "Respaldar ahora" salió con dos filas "Hecho" y dos archivos `.enc` en su Drive (**Google real nunca se probó**), que probó una restauración, que puso la línea del cron en `crontab -l`, el redondeo de C-96 y las pruebas visuales de C-162. Se sabe que creó la clave del respaldo y que empezó a conectar Google (la app estaba en modo "Prueba": hay que **publicarla**, `estado/C-165.md`).
-- **Falta subir: nada.** Lo siguiente en código es C-166 (opcional).
+- **`main`:** versión **`v1.0.0-rc.2`** (C-166), igual a GitHub. **Producción: `v1.0.0-rc.1`** (C-165; `2480457`), comprobado desde fuera el 02/10 (sin `X-Powered-By`, `POST /api/cron/respaldos` responde 401). En `main` hay además un commit de solo documentos (`4cbaca1`) que da igual si se sube.
+- **Falta subir: C-166** (bloque de abajo). **Cambio de base: una tabla nueva** (`csp_violations`). Sin crons ni variables obligatorias. Solo avisa: no puede romper nada.
+- **Sin confirmar con Andrés** (decía que sí a lo esencial el 02/10: Google conectado, primer respaldo bueno y cron): la restauración de prueba, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Por confirmar de lo que ya está en producción
-No hay deploy pendiente. Estas son las pruebas que Andrés debe dar por buenas (o avisar a Claude con lo que falle). Detalle en `estado/C-165.md`, `estado/C-164.md`, `estado/C-159.md` y `estado/C-160.md`; lo subido, con su SQL, en `HISTORIAL.md`.
+## 2. Deploy pendiente: C-166 (v1.0.0-rc.2)
+**La Content-Security-Policy, en modo "solo avisa".** Es la defensa que limita de qué dominios puede cargar la tienda scripts, conexiones y marcos. Hoy **no bloquea nada**: el navegador avisa y el aviso se guarda agrupado en Reportes → Seguridad. Detalle y pruebas en `estado/C-166.md`.
+- **Verificado:** `tsc`, `npm run lint` (0 errores), `npm run build`; 19 comprobaciones de la lectura de avisos; un barrido de **65 pantallas con Firefox** (públicas, del cliente y del admin) con Analytics, el píxel de Meta y hCaptcha cargando de verdad: **cero avisos legítimos**, también en modo bloqueo, donde lo ajeno sí se bloquea. **No probado:** tráfico real (clics de compra, comprobantes, videos de cursos), Chrome y Safari.
+- **SQL que va a mostrar `deploy.sh`** (solo este): `CREATE TABLE "csp_violations"` (9 columnas), `CREATE INDEX "csp_violations_lastSeen_idx"` y `CREATE UNIQUE INDEX "csp_violations_directive_blocked_pagePath_disposition_key"`. Nada que borre o cambie lo que ya existe.
+
+### Pasos (en el servidor, `/var/www/electroshopve`)
+1. **Qué hay ahora:** `git log -1 --oneline` debe empezar por `2480457` (o `4cbaca1`). Si dice otra cosa, avisar a Claude.
+2. **Respaldo antes de subir:** Admin → Configuración → **Respaldos** → "Respaldar ahora" y esperar las dos filas "Hecho" (así de paso se prueba el respaldo automático). Si prefieres a mano:
+   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-c166.dump`
+3. **Subir:** `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL de arriba. Si coincide: `npx prisma db push` y `bash scripts/deploy.sh` otra vez. Si aparece un `DROP` o algo distinto, no seguir y avisar a Claude.
+4. **Comprobar:** `git describe --tags` debe decir `v1.0.0-rc.2` y
+   `curl -sI https://electroshopve.com/ | grep -i content-security`
+   debe mostrar una línea que empieza por `Content-Security-Policy-Report-Only: default-src 'self'; script-src …`. Además `curl -sI https://electroshopve.com/api/settings/public | grep -ci content-security` debe dar `0` (la API no la lleva).
+5. **Probar (10 minutos)**, en el teléfono y en la computadora: inicio, un producto, agregar al carrito, `/registro` (debe verse el captcha), iniciar sesión, y en el panel el Dashboard, Pedidos y Configuración → Respaldos. **Todo debe verse y funcionar igual que antes.**
+6. **Mirar el panel:** Reportes → pestaña **Seguridad** → hasta abajo, **"Política de contenido (CSP)"**. Lo esperado: "Sin avisos" o casi. Si hay una lista, mandar una captura a Claude.
+7. **Dejarla una semana** con visitas reales. Si el panel sigue limpio, se pasa a bloquear (C-166b: `CSP_ENFORCE="true"` en el `.env` y un deploy, avisar a Claude). Cuando pongas las claves de Analytics y del píxel de Meta (`NEXT_PUBLIC_GA_ID`, `NEXT_PUBLIC_FB_PIXEL_ID`), volver a mirar el panel esa semana.
+
+**Vuelta atrás:** `git reset --hard 2480457 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla nueva no molesta al código anterior (no se quita). Nada de lo que hace C-166 puede dejar la tienda sin funcionar: en modo "solo avisa" el navegador no bloquea nada.
+
+### Por confirmar de lo que ya está en producción (C-165 y anteriores)
+No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés debe dar por buenas (o avisar a Claude con lo que falle). Detalle en `estado/C-165.md`, `estado/C-164.md`, `estado/C-159.md` y `estado/C-160.md`; lo subido, con su SQL, en `HISTORIAL.md`.
 
 ### Respaldos (C-165), lo más importante
 1. **La clave privada guardada fuera del servidor** (gestor de contraseñas) y una copia del `.env`.
@@ -85,7 +104,7 @@ En el orden en que más destraban:
 ## 4. Fila de Claude
 La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **No queda código en fila que no espere un dato tuyo:**
 - Esperan datos: C-154b (plazo de los digitales: ya se sabe que son unas 2 horas, falta el horario), C-107 (seguro), C-92 (clientes) y C-153b (decidir si los "frágiles" llevan más relleno).
-- **C-166 (opcional, después del deploy):** Content-Security-Policy en modo "solo reportar" (la defensa que limita qué scripts carga la página; con Analytics, Meta y hCaptcha activarla de golpe rompería cosas). Y, con una restauración probada, evaluar subir el volcado directo a Drive sin pasar por disco si la base crece.
+- **C-166b (después de una semana con C-166 limpia):** pasar la Content-Security-Policy a "bloquea" (`CSP_ENFORCE="true"` y un deploy) y, con una restauración probada, evaluar subir el volcado directo a Drive sin pasar por disco si la base crece.
 - Lo que salga de la revisión final y de las pruebas del deploy se arregla antes que lo demás.
 - Mientras tanto Claude puede revisar `REVISION_FINAL.md` contigo (en el teléfono, punto por punto) o escribir la próxima ronda de Gemini cuando haya una tarea mecánica.
 - El plazo de la reseña (C-157) queda en 5 días (2 si es digital), en `lib/resenas-avisos.ts` (`DIAS_FISICO`, `DIAS_DIGITAL`), hasta que Andrés diga otra cosa.

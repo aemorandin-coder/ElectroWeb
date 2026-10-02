@@ -7,6 +7,19 @@ const wwwRedirect = SITE_HOST.startsWith('www.')
   // Menos /api/: un servicio externo que llame a la API con "www" (un webhook, un cron) no sigue redirecciones
   : [{ source: '/:path((?!api/).*)', has: [{ type: 'host', value: `www.${SITE_HOST}` }], destination: `${SITE_URL}/:path`, permanent: true }];
 
+// C-166: Content-Security-Policy. Por defecto solo AVISA (Report-Only: no bloquea nada y cada aviso va a /api/csp-report, que
+// los agrupa en Reportes → Seguridad). Solo en las páginas (no en /api ni /_next). Para que bloquee: CSP_ENFORCE="true" en el .env del servidor y volver a compilar
+// (las cabeceras se fijan en el build). En desarrollo no se pone: React usa eval y llenaría todo de avisos falsos.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- next.config.js es CommonJS
+const { construirPolitica } = require('./lib/csp-policy');
+const CSP_ENFORCE = process.env.CSP_ENFORCE === 'true';
+const CSP_HEADERS = process.env.NODE_ENV === 'production'
+  ? [
+      { key: CSP_ENFORCE ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only', value: construirPolitica({ enforce: CSP_ENFORCE }) },
+      { key: 'Reporting-Endpoints', value: 'csp="/api/csp-report"' },
+    ]
+  : [];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // C-165: no anunciar con qué está hecha la tienda (cabecera X-Powered-By)
@@ -83,6 +96,12 @@ const nextConfig = {
           { key: 'Referrer-Policy',              value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy',           value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
         ],
+      },
+      {
+        // C-166: la política solo viaja con las PÁGINAS. La API y los archivos de Next no la necesitan, y son ~1,3 KB más en
+        // cada respuesta: junto con las cookies de sesión (el login) podrían pasar el límite de cabeceras de nginx (4 KB)
+        source: '/((?!api/|_next/).*)',
+        headers: CSP_HEADERS,
       },
       {
         // Las respuestas de la API no se guardan, salvo los archivos subidos (C-33) y la imagen versionada del popup (C-23b)

@@ -2,7 +2,7 @@
 // El checkout manda códigos (ciudad, oficina); el nombre y la dirección de la oficina salen de la lista
 // de ZOOM o MRW, no del navegador. El texto legible de `shippingAddress` también lo arma el servidor.
 
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 import { documentoSchema, nombreSchema, telefonoSchema } from '@/lib/validations/registro';
 import { NOMBRE_EMPRESA, nombreEstado, type Empresa, type ModoEnvio } from '@/lib/envios/empresas';
 import { ciudadesZoom, oficinasZoom } from '@/lib/envios/zoom';

@@ -1,5 +1,5 @@
 import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client';
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 import { EMPRESAS_GUIA, esRetiro, usaEmpresa } from '@/lib/envios/empresas';
 
 /**

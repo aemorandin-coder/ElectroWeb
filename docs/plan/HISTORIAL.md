@@ -29,7 +29,7 @@ Comprobado desde fuera el 02/10: sin `X-Powered-By` y `POST /api/cron/respaldos`
   ```sql
   ALTER TABLE "quotes" ADD COLUMN "emailedAt" TIMESTAMP(3), ADD COLUMN "emailedTo" TEXT, ADD COLUMN "ivaRetentionPercent" INTEGER NOT NULL DEFAULT 0;
   ```
-- Sin confirmar con Andrés: el primer respaldo contra Google real, la restauración de prueba, la línea del cron, el redondeo de C-96 y las pruebas de `SIGUIENTE.md`.
+- Andrés confirmó el 02/10 ("sí a todo"): Google conectado, el primer respaldo bueno con sus dos archivos en Drive, el cron y la clave guardada. Sin confirmar: la restauración de prueba, el redondeo de C-96 y las pruebas de `SIGUIENTE.md`.
 
 ## 01/10 (noche) · C-157 y C-158 (`ba6055c`)
 Comprobado desde fuera el 01/10: `POST /api/cron/resenas` responde 401 (la ruta existe y pide la clave) y `/productos?search=audifonos` ya encuentra los productos. **Cambio de base: una columna** (`orders.reviewRequestedAt`).

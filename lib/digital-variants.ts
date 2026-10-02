@@ -1,7 +1,7 @@
 // Variantes digitales (C-60): validación de lo que envía el admin y guardado. Solo servidor.
 
 import type { Prisma } from '@prisma/client';
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 import { DIGITAL_PROVIDERS, DIGITAL_UNIT_KEYS, formatFaceValue } from '@/lib/digital-catalog';
 
 const money = z.coerce.number().finite().min(0).max(100_000);

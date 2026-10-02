@@ -4,71 +4,23 @@
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** todo lo hecho hasta C-165. Es la versión **`v1.0.0-rc.1`** (primera con número y etiqueta; `CHANGELOG.md` explica cómo se numera). Igual a GitHub.
-- **Producción: C-158 seguro; C-159 y C-160 probablemente ya** (el 02/10 `/terminos` pasó a "Versión 4" y muestra el contacto de Configuración, la marca de C-160, que salió junto con C-159). **Preguntarle a Andrés** `git log -1 --oneline` en el servidor. Sigue sin saberse: el redondeo de C-96 y las pruebas visuales de C-162. Confirmado por Andrés el 02/10: el SQL de marcado de C-157 y la línea del cron de reseñas.
-- **Falta subir: C-164 y C-165, en un solo lote** (bloque de abajo), y C-159 y C-160 si el servidor sigue en `ba6055c` o `7f996ef`. **Cambio de base: dos tablas nuevas** (`backup_settings` y `backup_runs`, de C-165) y, solo si falta C-159, tres columnas en `quotes`. **Un cron nuevo** (respaldos) y un paso de Google Cloud que hace Andrés. Sin variables obligatorias.
+- **`main` = producción = `v1.0.0-rc.1`** (`2480457`), igual a GitHub. Comprobado desde fuera el 02/10: la cabecera `X-Powered-By` desapareció y `POST /api/cron/respaldos` responde 401 (la ruta existe y pide la clave). El servidor estaba en `d453809` (C-164) antes de subir C-165.
+- **Sin confirmar con Andrés:** que el primer "Respaldar ahora" salió con dos filas "Hecho" y dos archivos `.enc` en su Drive (**Google real nunca se probó**), que probó una restauración, que puso la línea del cron en `crontab -l`, el redondeo de C-96 y las pruebas visuales de C-162. Se sabe que creó la clave del respaldo y que empezó a conectar Google (la app estaba en modo "Prueba": hay que **publicarla**, `estado/C-165.md`).
+- **Falta subir: nada.** Lo siguiente en código es C-166 (opcional).
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: C-164 y C-165 (y C-159 y C-160 si faltan)
-**Lo más importante de este bloque es C-165: el primer respaldo fuera del servidor.** Hasta hoy, si el servidor se daña, se pierden las órdenes, los clientes y los Puntos ES. Detalle y pruebas en `estado/C-165.md`, `estado/C-164.md`, `estado/C-159.md` y `estado/C-160.md`.
+## 2. Por confirmar de lo que ya está en producción
+No hay deploy pendiente. Estas son las pruebas que Andrés debe dar por buenas (o avisar a Claude con lo que falle). Detalle en `estado/C-165.md`, `estado/C-164.md`, `estado/C-159.md` y `estado/C-160.md`; lo subido, con su SQL, en `HISTORIAL.md`.
 
-- **Verificado (C-165):** `tsc`, `npm run lint` (0 errores), `npm run build`; 22 comprobaciones del cifrado y el volcado, 43 del respaldo de punta a punta (con restauración real), 82 del servidor y el flujo OAuth, 29 en el navegador a 360 y 1440 px, y la prueba de humo, **59 de 59**. **No probado: Google real** (se probó con un Drive simulado): por eso el paso 7 de abajo es probar de verdad.
-- **El SQL total que va a mostrar `deploy.sh`** (solo ese; puede salir en varias líneas y en otro orden):
-  - **Siempre (C-165):** dos `CREATE TABLE` (`"backup_settings"` y `"backup_runs"`) y dos `CREATE INDEX` sobre `"backup_runs"`. Nada que borre o cambie lo que ya existe.
-  - **Además, solo si faltaba C-159:** `ALTER TABLE "quotes" ADD COLUMN "emailedAt" TIMESTAMP(3), ADD COLUMN "emailedTo" TEXT, ADD COLUMN "ivaRetentionPercent" INTEGER NOT NULL DEFAULT 0;`
+### Respaldos (C-165), lo más importante
+1. **La clave privada guardada fuera del servidor** (gestor de contraseñas) y una copia del `.env`.
+2. **Google conectado:** Configuración → Respaldos → Google Drive muestra "Conectado" y su correo. Requiere la app **publicada** ("En producción" en Google Auth Platform → Público), si no el permiso vence a los 7 días.
+3. **"Respaldar ahora":** dos filas "Hecho" (base y fotos/constancias) y dos archivos `.enc` en la carpeta "Respaldos ElectroShop" de su Drive. Si sale "Falló", pasar el texto del historial a Claude.
+4. **"Verificar el último":** dice que coincide con Drive.
+5. **Respaldo encendido y el cron puesto:** `crontab -l` muestra `5 * * * * /home/luami/cron-respaldos.sh …`; al día siguiente aparece un respaldo "automático" en el historial.
+6. **Una restauración de prueba** (`OPERACION.md`, "Restaurar un respaldo", pasos 1 a 3): un respaldo que nunca se abrió no es un respaldo. Repetirla cada trimestre.
 
-**Qué trae (C-165):**
-- **Configuración → Respaldos** (solo el dueño): clave de cifrado (la privada se muestra **una sola vez**), conexión con tu Google Drive, hora y días que se guardan, "Respaldar ahora", "Verificar el último" e historial.
-- Cada día, a la hora que elijas, la base se copia, se **cifra** y se sube a la carpeta "Respaldos ElectroShop" de tu Drive; los domingos también las fotos y las constancias firmadas. Solo cuenta como hecho si Drive confirma que lo guardó completo. Si falla, avisa por el panel, el correo y Telegram, y el Dashboard lo recuerda.
-- Se quitó la cabecera `X-Powered-By`. Versión `1.0.0-rc.1`, `CHANGELOG.md` y etiqueta de git.
-
-**Qué trae (C-159):**
-- **Retención del IVA:** en el editor de cotizaciones, "Retención del IVA que practica el cliente" (No retiene / 75 % / 100 %), que marca el equipo. El presupuesto muestra el IVA que retiene el cliente y el **neto a pagar** (y el anticipo se calcula sobre el neto). **Ojo:** los órganos del Estado, las gobernaciones, las alcaldías y los entes públicos sin fines empresariales **no** retienen (Providencia SNAT/2025/000054, art. 3); retienen los contribuyentes especiales.
-- **Enviar por correo:** en el editor, dentro de "Enlace para el cliente": el correo del cliente ya puesto, un mensaje opcional y el botón. Le llega el resumen con un botón para ver y aprobar el presupuesto.
-- **Mis cotizaciones:** menú nuevo en el panel del cliente, con las que pidió con su cuenta y las que le enviaste a su correo (verificado).
-
-**Qué trae (C-164):**
-- Se borró `POST /api/customer/balance/add` (ninguna pantalla lo usaba y dejaba acreditar Puntos ES con el permiso de órdenes). `seed.ts` ya no trae contraseña por defecto ni corre en producción. Las valoraciones salen con coma ("4,5") y el modal de recargar toma la tasa del contexto en vez de pedirla otra vez.
-
-**Qué trae (C-160):**
-- **`/terminos` y `/privacidad` se editan en el panel** (Legal → Documentos → "Nueva versión") y **el contacto sale de Configuración**. El que estaba escrito a mano no era el de Configuración (decía `electroshopgre@gmail.com` y de lunes a viernes). **Léelas después de subir.**
-- **Buscador:** ordena por relevancia, busca por SKU y código de barras, y las búsquedas del panel (clientes, firmas, garantías, cotizaciones, destinatarios) y de cursos ignoran los acentos.
-- **Precio con oferta:** "menor a mayor" ordena por lo que paga el cliente, no por el precio de lista.
-- **Reseñas:** el formulario solo aparece a quien compró y recibió el producto (antes, un candado que solo se veía con hover y un campo "Título" que no hacía nada).
-- **Correo (SMTP):** la contraseña del servidor de correo del panel se guarda cifrada y la conexión verifica el certificado.
-- Renombrar una categoría **conserva su dirección**; correos y avisos con el formato de precios de la tienda ("$1.250,50"); se borró `balance/deduct`; ESLint en 0 errores.
-
-### Pasos (en el servidor, `/var/www/electroshopve`)
-1. **Qué hay ahora:** `git log -1 --oneline`.
-   - `d453809` (C-164 ya está) o `2ccba36`: solo cambia lo de C-165 (y C-164 si estaba en `2ccba36`). No hay SQL de `quotes`.
-   - `ba6055c` o `7f996ef`: faltan C-159, C-160, C-164 y C-165. El SQL incluye también las columnas de `quotes`.
-   - Otra cosa: avisar a Claude antes de seguir.
-2. **Respaldo a mano antes de subir** (cambia la base; es el último que haces a mano):
-   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-c165.dump`
-3. **Requisitos del respaldo** (que `pg_dump` sea de la misma versión mayor que PostgreSQL o más nueva, que exista `tar` y que haya espacio en `/tmp`):
-   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump --version && psql "$DB" -Atc 'show server_version' && tar --version | head -1 && df -h /tmp | tail -1`
-   Si `pg_dump` es de una versión mayor **menor** que la de `server_version` (por ejemplo 15 contra 16), avisar a Claude antes de seguir.
-4. **Subir:** `git pull --ff-only` y `bash scripts/deploy.sh`.
-   - El guion **para y muestra el SQL**. Si coincide con el de arriba: `npx prisma db push` y `bash scripts/deploy.sh` otra vez. Si aparece un `DROP` o algo distinto, no seguir y avisar a Claude.
-5. **Comprobar:** `git describe --tags` debe decir `v1.0.0-rc.1` y `curl -sI https://electroshopve.com/ | grep -ci x-powered` debe dar `0`.
-6. **El cron del respaldo** (una llamada por hora; la hora real la eliges en el panel):
-   `cp /var/www/electroshopve/docs/plan/scripts/cron-respaldos.sh ~/cron-respaldos.sh && chmod +x ~/cron-respaldos.sh && ~/cron-respaldos.sh`
-   Debe responder `{"respaldo":"no","motivo":"apagado"}`. Luego `crontab -e` y agregar la línea:
-   `5 * * * * /home/luami/cron-respaldos.sh >> /home/luami/cron-respaldos.log 2>&1`
-7. **Conectar y probar de verdad** (20 minutos, una sola vez): Admin → Configuración → **Respaldos**.
-   1. **Crear la clave.** Se muestra la clave privada **una sola vez**: copiarla o descargar el archivo y guardarla **fuera del servidor** (gestor de contraseñas). Sin ella no se puede abrir ningún respaldo. Marcar "Ya guardé la clave".
-   2. **Google Drive:** abrir "Cómo obtener el ID y el secreto" y seguir los 5 pasos en `console.cloud.google.com` (proyecto nuevo, activar **Google Drive API**, pantalla de consentimiento externa con el permiso `drive.file` y **publicarla**, credenciales de "Aplicación web" con la dirección que muestra la pantalla). Pegar el ID y el secreto, "Guardar", "Conectar con Google" y aceptar. Debe volver con "Google Drive conectado" y la cuenta.
-   3. **Respaldo automático:** encender, elegir la hora (3:00 a. m. está bien) y guardar la programación.
-   4. **"Respaldar ahora".** Tarda unos minutos. En el historial deben salir dos filas "Hecho" (base y fotos/constancias) y en tu Drive, carpeta "Respaldos ElectroShop", dos archivos que terminan en `.enc`. Si sale "Falló", el historial dice por qué: pásale el texto a Claude.
-   5. **"Verificar el último":** debe decir que están en Drive y su huella coincide.
-   6. Al día siguiente (o al otro), mirar que haya un respaldo "automático" nuevo.
-8. **Probar una restauración, esa misma tarde** (`OPERACION.md`, "Restaurar un respaldo", pasos 1 a 3): bajar el `.dump.enc` de Drive, descifrarlo con tu clave privada y restaurarlo en una base de prueba. **Un respaldo que nunca se abrió no es un respaldo.**
-9. **Si falta el redondeo de C-96** (pendiente desde el 24/09), con su respaldo:
-   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-redondeo-c96.dump`
-   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/redondeo-c96.sql`
-   - Muestra tres números. El último debe ser 0. Si el del medio ("diferencia real") no es 0, pasarle la salida a Claude.
-
-### Pruebas después de subir (unas 20 minutos, además del paso 7)
+### Otras pruebas pendientes (unas 20 minutos)
 1. **Últimos menores (C-164):** una valoración con decimales sale con coma ("4,5") en Admin → Cursos o en el panel del creador; Puntos ES → "Recargar": al escribir un monto aparece el equivalente en bolívares.
 2. **Dashboard:** con el respaldo encendido y hecho, no sale el recordatorio de respaldos; apagado, sí.
 3. **Retención (C-159, si faltaba):** Admin → Cotizaciones → Nueva → una línea de $116 → "Retención del IVA" 75 %: "Retención del IVA (75 %): −$12,00 · Neto a pagar: $104,00". "Enviar por correo" a tu correo: llega con un botón. "Mis cotizaciones" en una cuenta de cliente.
@@ -85,10 +37,14 @@
 - **Embalaje según el paquete (C-153):** Configuración → Envíos y retiro → encender, corregir las medidas y los precios de tus sobres y cajas, y poner el monto del embalaje gratis. Una compra barata con envío: en la orden, "Cómo empacar".
 
 ### Si algo sale mal
-- **El respaldo falla o Google no conecta:** no afecta a la tienda. Ver el motivo en el historial de Configuración → Respaldos y pasárselo a Claude. Mientras tanto, el respaldo a mano del paso 2 y `~/respaldo-antes-c165.dump` sirven.
-- **Volver atrás el código:** `git reset --hard <commit> && npm install && bash scripts/deploy.sh --sin-pull`, con `<commit>` = `d453809` (deshacer solo C-165), `2ccba36` (deshacer también C-164) o `ba6055c` (antes de todo). Las tablas y columnas nuevas no molestan al código anterior (no se quitan). Quitar la línea de `cron-respaldos.sh` de `crontab -e` si se vuelve a un commit sin C-165 (la ruta ya no existiría y el cron daría error cada hora).
+- **El respaldo falla o Google no conecta:** no afecta a la tienda. Ver el motivo en el historial de Configuración → Respaldos y pasárselo a Claude. Mientras tanto sirve `~/respaldo-antes-c165.dump` (hecho antes de subir).
+- **Volver atrás el código:** `git reset --hard <commit> && npm install && bash scripts/deploy.sh --sin-pull`, con `<commit>` = `d453809` (deshacer solo C-165) o `2ccba36` (también C-164). Las tablas nuevas no molestan al código anterior (no se quitan). Antes, quitar la línea de `cron-respaldos.sh` de `crontab -e`: la ruta ya no existiría y el cron daría error cada hora.
 - **Si el correo del panel deja de salir** (certificado): `SMTP_ALLOW_SELF_SIGNED="true"` en el `.env` y el deploy, o volver atrás.
 - **Si el cron de reseñas manda correos de más:** quitar su línea de `crontab -e` y avisar a Claude con lo que respondió `~/cron-resenas.sh`.
+- **Redondeo de C-96** (pendiente desde el 24/09, si falta), con su respaldo:
+  `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-redondeo-c96.dump`
+  `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/redondeo-c96.sql`
+  Muestra tres números: el último debe ser 0; si el del medio ("diferencia real") no es 0, pasarle la salida a Claude.
 
 ## 3. Tareas de Andrés (sin código)
 En el orden en que más destraban:

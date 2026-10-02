@@ -8,7 +8,7 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import {
   adminError, adminHint, adminInput, adminLabel, adminModalOverlay, adminModalPanel, adminPrimaryButton, adminSecondaryButton,
 } from '@/lib/admin-ui';
-import { parsearDocumento } from '@/lib/legal-docs-core';
+import { parsearDocumento, segmentosNegrita } from '@/lib/legal-docs-core';
 import { RESORTES, avanzarResorte, crearResorte, prefiereMenosMovimiento } from '@/lib/motion/resorte';
 import SignaturePad, { type SignaturePadHandle } from './SignaturePad';
 
@@ -33,13 +33,16 @@ const LARGO_MINIMO = 120; // px de trazo: un garabato corto o un punto no es una
 
 /** Contenido del documento con el formato de lib/legal-docs-core (sin HTML) */
 export function TextoDocumento({ content }: { content: string }) {
+  // Negritas de **texto** (C-160): sin HTML, solo tramos de texto
+  const linea = (texto: string) => segmentosNegrita(texto).map((t, k) => (t.negrita ? <strong key={k} className="font-semibold text-ink">{t.texto}</strong> : t.texto));
   return (
     <div className="space-y-3 text-sm leading-relaxed text-ink-soft">
       {parsearDocumento(content).map((b, i) => {
         if (b.tipo === 'subtitulo') return <h3 key={i} className="pt-2 text-sm font-bold text-ink">{b.texto}</h3>;
-        if (b.tipo === 'aviso') return <p key={i} className="rounded-lg border border-deal/30 bg-deal-bg p-3 font-semibold text-deal">{b.texto}</p>;
-        if (b.tipo === 'lista') return <ul key={i} className="list-disc space-y-1 pl-6">{b.items.map((it, j) => <li key={j}>{it}</li>)}</ul>;
-        return <p key={i}>{b.texto}</p>;
+        if (b.tipo === 'subsubtitulo') return <h4 key={i} className="pt-1 text-sm font-semibold text-ink">{b.texto}</h4>;
+        if (b.tipo === 'aviso') return <p key={i} className="rounded-lg border border-deal/30 bg-deal-bg p-3 font-semibold text-deal">{linea(b.texto)}</p>;
+        if (b.tipo === 'lista') return <ul key={i} className="list-disc space-y-1 pl-6">{b.items.map((it, j) => <li key={j}>{linea(it)}</li>)}</ul>;
+        return <p key={i}>{linea(b.texto)}</p>;
       })}
     </div>
   );

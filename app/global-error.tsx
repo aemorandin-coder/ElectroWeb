@@ -1,72 +1,60 @@
 'use client';
 
 import { useEffect } from 'react';
-import Link from 'next/link';
+import { FiAlertTriangle, FiHome, FiRefreshCw } from 'react-icons/fi';
+import { adminCard, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import './globals.css';
+
+// Error en el layout raíz (C-160). Esta pantalla reemplaza al layout: lleva sus propias etiquetas <html> y <body> y
+// sus estilos (por eso importa globals.css). Es la última red: sin proveedores ni datos, solo texto y dos botones.
+// Mismo diseño que app/error.tsx, con los tokens de PLAN.md §1. `retry` vuelve a pedir la página al servidor.
 
 export default function GlobalError({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry?: () => void;
 }) {
   useEffect(() => {
     console.error(error);
   }, [error]);
 
   return (
-    <html>
+    <html lang="es">
       <body>
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-          <div className="max-w-md w-full mx-4">
-            <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-200">
-              {/* Icon */}
-              <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
-                <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-
-              {/* Title */}
-              <h1 className="text-2xl font-bold text-slate-800 mb-2">
-                ¡Algo salió mal!
-              </h1>
-
-              {/* Description */}
-              <p className="text-slate-500 mb-6">
-                Ha ocurrido un error inesperado. Nuestro equipo ha sido notificado y estamos trabajando para solucionarlo.
-              </p>
-
-              {/* Error ID */}
-              {error.digest && (
-                <p className="text-xs text-slate-400 mb-6 font-mono">
-                  ID del error: {error.digest}
-                </p>
-              )}
-
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  onClick={reset}
-                  className="px-6 py-3 bg-[#2a63cd] text-white font-bold rounded-xl hover:bg-[#1e4ba3] transition-all shadow-lg"
-                >
-                  Intentar de nuevo
-                </button>
-                <Link
-                  href="/"
-                  className="px-6 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-all"
-                >
-                  Ir al inicio
-                </Link>
-              </div>
+        <main className="flex min-h-dvh items-center justify-center bg-surface p-4">
+          <div className={`${adminCard} w-full max-w-md p-8 text-center`}>
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-deal/30 bg-deal-bg text-deal" aria-hidden="true">
+              <FiAlertTriangle className="h-7 w-7" />
             </div>
-
-            {/* Footer */}
-            <p className="text-center text-xs text-slate-400 mt-6">
-              Si el problema persiste, contáctanos por WhatsApp
+            <h1 className="mb-2 text-xl font-bold text-ink sm:text-2xl">Algo salió mal</h1>
+            <p className="mb-6 text-sm leading-relaxed text-muted">
+              Ha ocurrido un error inesperado. Intenta de nuevo; si el problema sigue, escríbenos por WhatsApp.
             </p>
+            {error.digest && (
+              <p className="mb-6 inline-block rounded-lg border border-line bg-surface px-3 py-1.5 font-mono text-xs text-subtle">
+                Código de error: {error.digest}
+              </p>
+            )}
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => (typeof retry === 'function' ? retry() : window.location.reload())}
+                className={`${adminPrimaryButton} flex-1 justify-center gap-2 py-2.5`}
+              >
+                <FiRefreshCw className="h-4 w-4" aria-hidden="true" />
+                Intentar de nuevo
+              </button>
+              {/* Un enlace normal a propósito: con el layout caído, la navegación del cliente puede no funcionar */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+              <a href="/" className={`${adminSecondaryButton} flex-1 justify-center gap-2 py-2.5`}>
+                <FiHome className="h-4 w-4" aria-hidden="true" />
+                Ir al inicio
+              </a>
+            </div>
           </div>
-        </div>
+        </main>
       </body>
     </html>
   );

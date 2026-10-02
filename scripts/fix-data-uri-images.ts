@@ -80,12 +80,12 @@ async function main() {
         return;
     }
 
-    let updatedFields: Record<string, string> = {};
+    const updatedFields: Record<string, string> = {};
     let hasChanges = false;
 
     // Check each image field
     for (const field of imageFields) {
-        const value = (settings as any)[field];
+        const value = (settings as Record<string, unknown>)[field];
 
         if (!value) {
             console.log(`⏭️  ${field}: empty`);

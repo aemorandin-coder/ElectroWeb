@@ -298,7 +298,7 @@ docs/plan/estado/G-*.md
 
 Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estado/<ID>.md`. Aquí va el mapa.
 
-### 5.1 Lo hecho (127 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 01/10)
+### 5.1 Lo hecho (128 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 01/10)
 
 **Plan original (12/09):**
 | Fase | Tareas | Qué dejó |
@@ -320,29 +320,17 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 | Panel del cliente | C-55, C-128, C-137, C-138 | Marco, inicio con resumen, Mis pedidos, Favoritos, Direcciones y Mi perfil en pestañas. |
 | Legal y facturación | C-103, C-120, C-144, C-146, C-146b, C-147, C-147b, C-148, C-148b, C-151, C-159 | Firma de documentos, IVA incluido a la vista, precio sugerido desde el costo, datos para la factura, relación de ventas, cotizaciones y términos sin promesas falsas. |
 | Crecimiento | C-112, C-113, C-116, C-145, C-149 | ElectroStudio, medición del embudo de compra y el catálogo legible para Google, las redes y las IA. |
-| Equipo y documentos | C-53, C-77, C-86, C-90, C-91, C-93, C-94, C-98, C-99, C-108, C-111, C-152, C-156 | Revisiones de Gemini y de ChatGPT, deuda técnica (ESLint en 0), el bloque único de subida y este orden de documentos. |
+| Equipo y documentos | C-53, C-77, C-86, C-90, C-91, C-93, C-94, C-98, C-99, C-108, C-111, C-152, C-156, C-160 | Revisiones de Gemini y de ChatGPT, deuda técnica (ESLint en 0), el bloque único de subida y este orden de documentos. |
 
 ### 5.2 Lista única de pendientes
 Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
-**En fila (Claude, en este orden):**
-| ID | Tarea | Notas |
-|---|---|---|
-| **C-160** | Menores (una sola tarea) | La lista de abajo. |
-
-**Menores (C-160):**
-- Ordenar el catálogo por el precio de oferta.
-- Buscador: ordenar por relevancia, buscar por SKU y código de barras, y que las búsquedas del panel (clientes, firmas, garantías, campañas) tampoco distingan acentos (`estado/C-158.md`).
-- Ocultar el formulario de reseña a quien no puede reseñar.
-- `/terminos` y `/privacidad` como documentos editables, con los datos de contacto tomados de Configuración (hoy están escritos a mano, `estado/C-144.md`).
-- Conservar el slug al renombrar una categoría.
-- Borrar `POST /api/customer/balance/deduct` si las gift cards no lo necesitan: ninguna pantalla lo llama (C-139).
-- `app/global-error.tsx`: es la única pantalla con `slate-*`, un hex y `min-h-screen`.
-- `<style jsx global>` en `components/UserAccountButton.tsx` y 2 `min-h-screen` en el panel (`layout.tsx` y `admin/login`).
-- `toFixed` que todavía formatean precios en `components/gift-card`, `app/creator` y `app/admin` (el resto son cálculos, PDF o datos para el banco).
-- SMTP: la conexión no verifica el certificado (`rejectUnauthorized: false`) y la contraseña se guarda sin cifrar (`AUDITORIA_MARKETING.md`, 11 y 12).
-- `components/modals/RechargeModalV2.tsx` todavía pide `/api/settings/public` (carril Gemini: tarjeta G).
-- ESLint fuera de `app`, `components`, `lib` y `contexts`: `scripts/`, `prisma/seed.ts` y `docs/plan/scripts`.
+**En fila (Claude):** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Lo menor que queda:
+- `components/modals/RechargeModalV2.tsx` todavía pide `/api/settings/public` (carril Gemini: tarjeta G de la próxima ronda).
+- Las valoraciones de `app/creator` y `app/admin` salen con punto decimal ("4.5"): coma, como el resto de la tienda (tarjeta G).
+- `POST /api/customer/balance/add` (solo admin) no lo llama ninguna pantalla: ver si se borra.
+- `prisma/seed.ts` crea un admin con la contraseña `admin123` por defecto: guion de desarrollo, nunca en producción (cambiar el valor por defecto por un error si falta la variable).
+- El abogado revisa `/terminos` y `/privacidad` desde Legal → Documentos (`estado/C-160.md`).
 
 **Esperan un dato o una decisión de Andrés:**
 | ID | Tarea | Qué falta |

@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { firmaSelectAdmin } from '@/lib/legal-docs';
+import { idsPorTexto } from '@/lib/busqueda-sql';
 
 // Firmas de los clientes (C-103). Sin la imagen en la lista: se pide aparte al abrir una (antes venía base64 en cada fila).
 export async function GET(request: NextRequest) {
@@ -18,9 +19,9 @@ export async function GET(request: NextRequest) {
   const search = (sp.get('search') || '').trim().slice(0, 80);
   const estado = sp.get('estado');
   const where: Prisma.DocumentSignatureWhereInput = {
+    // Nombre y correo sin acentos ni mayúsculas (C-160); la cédula se guarda normalizada
     ...(search ? { OR: [
-      { userName: { contains: search, mode: 'insensitive' } },
-      { userEmail: { contains: search, mode: 'insensitive' } },
+      { id: { in: await idsPorTexto('document_signatures', ['userName', 'userEmail'], search) } },
       { idNumber: { contains: search.toUpperCase().replace(/[\s.-]/g, '') } },
     ] } : {}),
     ...(estado === 'vigentes' ? { revokedAt: null, document: { isCurrent: true } } : estado === 'revocadas' ? { revokedAt: { not: null } } : {}),

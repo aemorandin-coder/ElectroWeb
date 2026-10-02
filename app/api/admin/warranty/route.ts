@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { claimCode } from '@/lib/warranty';
+import { idsPorTexto } from '@/lib/busqueda-sql';
 
 const CLOSED = ['RESOLVED', 'REJECTED'] as const;
 
@@ -25,10 +26,10 @@ export async function GET(request: NextRequest) {
     const number = Number(q.replace(/^g-?/i, ''));
     where.OR = [
       ...(Number.isInteger(number) && number > 0 ? [{ number }] : []),
-      { productName: { contains: q, mode: 'insensitive' } },
+      // Producto, cliente y correo sin acentos ni mayúsculas (C-160); el número de orden no lleva acentos
+      { id: { in: await idsPorTexto('warranty_claims', ['productName'], q) } },
       { order: { orderNumber: { contains: q, mode: 'insensitive' } } },
-      { user: { name: { contains: q, mode: 'insensitive' } } },
-      { user: { email: { contains: q, mode: 'insensitive' } } },
+      { userId: { in: await idsPorTexto('users', ['name', 'email'], q) } },
     ];
   }
 

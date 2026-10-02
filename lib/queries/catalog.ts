@@ -6,7 +6,8 @@ import { cache } from 'react';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { publicProductInclude, toPublicProduct, type PublicProduct } from '@/lib/dto/product';
-import { conOfertas, filtroEnOferta } from '@/lib/promotions';
+import { conOfertas, filtroEnOferta, getOfertasVigentes } from '@/lib/promotions';
+import { mejorOferta } from '@/lib/promotions-core';
 import { visibleProducts } from '@/lib/queries/home';
 import { buscarEnCatalogo } from '@/lib/queries/busqueda-catalogo';
 
@@ -20,7 +21,12 @@ export const SORT_OPTIONS = [
   { value: 'precio-desc', label: 'Precio: mayor a menor' },
   { value: 'nombre', label: 'Nombre (A-Z)' },
 ] as const;
-export type CatalogSort = (typeof SORT_OPTIONS)[number]['value'];
+/** "Más relevantes" solo existe con una búsqueda (C-160); sin ella el orden es "recientes". */
+export const SORT_RELEVANCIA = { value: 'relevancia', label: 'Más relevantes' } as const;
+export type CatalogSort = (typeof SORT_OPTIONS)[number]['value'] | typeof SORT_RELEVANCIA.value;
+
+/** El orden cuando la URL no dice cuál: por relevancia si hay búsqueda, si no el más reciente. */
+export const ordenPorDefecto = (search: string): CatalogSort => (search ? 'relevancia' : 'recientes');
 
 export type CatalogType = 'digital' | 'fisico';
 export type CatalogCondition = 'nuevo' | 'usado';
@@ -55,7 +61,8 @@ export function parseCatalogParams(raw: RawSearchParams): CatalogParams {
   const categoryRaw = (first(raw.category) || first(raw.categoria)).trim().toLowerCase();
   const category = /^[a-z0-9-]{1,80}$/.test(categoryRaw) ? categoryRaw : null;
   const sortRaw = first(raw.sort);
-  const sort = (SORT_OPTIONS.some((o) => o.value === sortRaw) ? sortRaw : 'recientes') as CatalogSort;
+  const valido = SORT_OPTIONS.some((o) => o.value === sortRaw) || (sortRaw === SORT_RELEVANCIA.value && search !== '');
+  const sort = (valido ? sortRaw : ordenPorDefecto(search)) as CatalogSort;
   let min = parsePrice(first(raw.min));
   let max = parsePrice(first(raw.max));
   if (min !== null && max !== null && min > max) [min, max] = [max, min];
@@ -83,6 +90,8 @@ export function parseCatalogParams(raw: RawSearchParams): CatalogParams {
 export function catalogHref(params: CatalogParams, changes: Partial<CatalogParams> = {}): string {
   const next = { ...params, ...changes };
   if (!('page' in changes)) next.page = 1;
+  // Sin búsqueda no hay "relevancia": al quitarla, el orden vuelve al más reciente
+  if (!next.search && next.sort === 'relevancia') next.sort = 'recientes';
   const query = new URLSearchParams();
   if (next.search) query.set('search', next.search);
   if (next.category) query.set('category', next.category);
@@ -92,7 +101,7 @@ export function catalogHref(params: CatalogParams, changes: Partial<CatalogParam
   if (next.inStock) query.set('disponible', '1');
   if (next.type) query.set('tipo', next.type);
   if (next.condition) query.set('condicion', next.condition);
-  if (next.sort !== 'recientes') query.set('sort', next.sort);
+  if (next.sort !== ordenPorDefecto(next.search)) query.set('sort', next.sort);
   if (next.page > 1) query.set('page', String(next.page));
   const qs = query.toString();
   return qs ? `/productos?${qs}` : '/productos';
@@ -105,7 +114,7 @@ export function hasActiveFilters(params: CatalogParams): boolean {
 
 /** La página que se indexa: el catálogo o una categoría, sin búsqueda, filtros, orden ni páginas siguientes. */
 export function isIndexableCatalog(params: CatalogParams): boolean {
-  return !hasActiveFilters({ ...params, category: null }) && params.page === 1 && params.sort === 'recientes';
+  return !hasActiveFilters({ ...params, category: null }) && params.page === 1 && params.sort === ordenPorDefecto(params.search);
 }
 
 function filterConditions(params: CatalogParams, { withCategory, ofertas, busqueda }: { withCategory: boolean; ofertas: Prisma.ProductWhereInput; busqueda: string[] | null }): Prisma.ProductWhereInput[] {
@@ -124,6 +133,8 @@ function filterConditions(params: CatalogParams, { withCategory, ofertas, busque
 }
 
 const ORDER_BY: Record<CatalogSort, Prisma.ProductOrderByWithRelationInput[]> = {
+  // "relevancia" no la da la base: la resuelve `idsEnOrden`. Si algo la pide aquí, cae al más reciente.
+  relevancia: [{ createdAt: 'desc' }, { id: 'asc' }],
   recientes: [{ createdAt: 'desc' }, { id: 'asc' }],
   destacados: [{ isFeatured: 'desc' }, { createdAt: 'desc' }, { id: 'asc' }],
   'precio-asc': [{ priceUSD: 'asc' }, { id: 'asc' }],
@@ -157,6 +168,35 @@ export interface CatalogResult {
   aproximado: boolean;
 }
 
+/**
+ * Los ids que cumplen `where`, en el orden que la base no puede dar (C-160); null si basta con ordenar en la base.
+ * - Relevancia: el orden de `buscarEnCatalogo`.
+ * - Precio con una oferta de la tienda vigente: se ordena por el precio que paga el cliente (con la oferta), no por el
+ *   precio de lista: con la base, un producto rebajado salía en un lugar que no era el de su precio.
+ * Son pocos productos: se trae la lista de ids y se pagina aquí.
+ */
+async function idsEnOrden(where: Prisma.ProductWhereInput, params: CatalogParams, coincidencias: { ids: string[] } | null): Promise<string[] | null> {
+  if (params.sort === 'relevancia' && coincidencias) {
+    const puesto = new Map(coincidencias.ids.map((id, i) => [id, i]));
+    const filas = await prisma.product.findMany({ where, select: { id: true } });
+    return filas.map((f) => f.id).sort((a, b) => (puesto.get(a) ?? Infinity) - (puesto.get(b) ?? Infinity));
+  }
+  if (params.sort === 'precio-asc' || params.sort === 'precio-desc') {
+    const ofertas = (await getOfertasVigentes()).filter((o) => o.kind === 'AUTOMATIC');
+    if (ofertas.length === 0) return null;
+    const filas = await prisma.product.findMany({ where, select: { id: true, priceUSD: true, categoryId: true, productType: true } });
+    const sentido = params.sort === 'precio-asc' ? 1 : -1;
+    return filas
+      .map((f) => {
+        const lista = Number(f.priceUSD);
+        return { id: f.id, precio: mejorOferta(ofertas, { id: f.id, categoryId: f.categoryId, productType: f.productType }, lista)?.priceUSD ?? lista };
+      })
+      .sort((a, b) => sentido * (a.precio - b.precio) || a.id.localeCompare(b.id))
+      .map((f) => f.id);
+  }
+  return null;
+}
+
 export async function getCatalog(params: CatalogParams): Promise<CatalogResult> {
   // "Solo ofertas" incluye las ofertas de la tienda vigentes (C-102), no solo el precio anterior
   const ofertas = params.offers ? await filtroEnOferta() : {};
@@ -174,20 +214,30 @@ export async function getCatalog(params: CatalogParams): Promise<CatalogResult> 
   // Una página fuera de rango muestra la última en vez de una lista vacía
   const page = Math.min(params.page, totalPages);
 
-  const [rows, categoryRows, selected] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      include: publicProductInclude,
-      orderBy: ORDER_BY[params.sort],
-      skip: (page - 1) * CATALOG_PAGE_SIZE,
-      take: CATALOG_PAGE_SIZE,
-    }),
+  const enOrden = await idsEnOrden(where, params, coincidencias);
+  const idsDeLaPagina = enOrden?.slice((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE) ?? null;
+
+  const [filas, categoryRows, selected] = await Promise.all([
+    idsDeLaPagina
+      ? prisma.product.findMany({ where: { id: { in: idsDeLaPagina } }, include: publicProductInclude })
+      : prisma.product.findMany({
+          where,
+          include: publicProductInclude,
+          orderBy: ORDER_BY[params.sort],
+          skip: (page - 1) * CATALOG_PAGE_SIZE,
+          take: CATALOG_PAGE_SIZE,
+        }),
     prisma.category.findMany({
       where: { id: { in: counts.map((c) => c.categoryId) } },
       select: { id: true, name: true, slug: true },
     }),
     params.category ? prisma.category.findUnique({ where: { slug: params.category }, select: { id: true, name: true, slug: true, icon: true, description: true } }) : null,
   ]);
+
+  // Con orden en memoria, la base devuelve la página sin orden: se acomoda como dijo `idsEnOrden`
+  const rows = idsDeLaPagina
+    ? [...filas].sort((a, b) => idsDeLaPagina.indexOf(a.id) - idsDeLaPagina.indexOf(b.id))
+    : filas;
 
   const countById = new Map(counts.map((c) => [c.categoryId, c._count.categoryId]));
   const categories = categoryRows

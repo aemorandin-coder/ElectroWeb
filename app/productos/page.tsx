@@ -24,6 +24,7 @@ import {
   isIndexableCatalog,
   parseCatalogParams,
   SORT_OPTIONS,
+  SORT_RELEVANCIA,
   type CatalogParams,
 } from '@/lib/queries/catalog';
 import { getAutoIcon } from '@/lib/category-icons';
@@ -113,7 +114,8 @@ export default async function ProductosPage({ searchParams }: PageProps) {
   const heading = params.search ? `Resultados para "${params.search}"` : currentCategory?.name ?? 'Productos';
   const chips = activeChips(current, currentCategory?.name ?? null);
   const filterCount = chips.filter((chip) => !chip.label.startsWith('"')).length;
-  const sortOptions = SORT_OPTIONS.map((option) => ({ ...option, href: catalogHref(current, { sort: option.value }) }));
+  // "Más relevantes" solo con una búsqueda (C-160)
+  const sortOptions = (params.search ? [SORT_RELEVANCIA, ...SORT_OPTIONS] : SORT_OPTIONS).map((option) => ({ ...option, href: catalogHref(current, { sort: option.value }) }));
   const rangeStart = total === 0 ? 0 : (page - 1) * CATALOG_PAGE_SIZE + 1;
   const rangeEnd = Math.min(page * CATALOG_PAGE_SIZE, total);
 

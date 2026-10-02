@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { destinatariosWhere } from '@/lib/email-campaigns';
+import { idsPorTexto } from '@/lib/busqueda-sql';
 
 const POR_PAGINA = 50;
 
@@ -20,18 +21,12 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  // Prisma no escapa los comodines de LIKE en `contains`: sin esto, buscar "%" o "_" devolvía a todos
-  const q = (searchParams.get('q') ?? '').trim().slice(0, 100).replace(/[\\%_]/g, '\\$&');
+  const q = (searchParams.get('q') ?? '').trim().slice(0, 100);
   const pagina = Math.min(Math.max(Math.floor(Number(searchParams.get('pagina')) || 1), 1), 1000);
 
   const where: Prisma.UserWhereInput = q
-    ? {
-      ...destinatariosWhere,
-      OR: [
-        { name: { contains: q, mode: 'insensitive' } },
-        { email: { contains: q, mode: 'insensitive' } },
-      ],
-    }
+    // Sin acentos ni mayúsculas, y sin comodines que traigan a todos (C-160)
+    ? { ...destinatariosWhere, id: { in: await idsPorTexto('users', ['name', 'email'], q) } }
     : destinatariosWhere;
 
   const [destinatarios, coincidencias, total] = await Promise.all([

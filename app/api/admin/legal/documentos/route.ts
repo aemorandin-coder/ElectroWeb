@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { documentoVigente, hashContenido, SLUG_TERMINOS_SALDO } from '@/lib/legal-docs';
 import { REQUERIDO_PARA } from '@/lib/legal-docs-core';
+import { asegurarPaginasLegales, esPaginaLegalPublica, VARIABLES_LEGALES_AYUDA } from '@/lib/legal-publico';
 
 // Documentos legales del panel (C-103). Leerlos: permiso de clientes. Publicar: permiso de configuración.
 export async function GET() {
@@ -15,6 +16,8 @@ export async function GET() {
     return NextResponse.json({ error: 'No autorizado' }, { status: session ? 403 : 401 });
   }
   await documentoVigente(SLUG_TERMINOS_SALDO);
+  // /terminos y /privacidad (C-160): se crean aquí la primera vez para poder editarlas
+  await asegurarPaginasLegales();
   const [docs, conteos, legado] = await Promise.all([
     prisma.legalDocument.findMany({ orderBy: [{ slug: 'asc' }, { version: 'desc' }] }),
     prisma.documentSignature.groupBy({ by: ['documentId'], where: { revokedAt: null }, _count: true }),
@@ -24,11 +27,12 @@ export async function GET() {
   return NextResponse.json({
     documents: docs.map((d) => ({
       id: d.id, slug: d.slug, version: d.version, title: d.title, content: d.content, contentHash: d.contentHash,
-      requiredFor: d.requiredFor, isCurrent: d.isCurrent, publishedAt: d.publishedAt.toISOString(),
+      requiredFor: d.requiredFor, isCurrent: d.isCurrent, publishedAt: d.publishedAt.toISOString(), publica: esPaginaLegalPublica(d.slug),
       signatures: (porDoc.get(d.id) ?? 0) + (d.slug === SLUG_TERMINOS_SALDO && d.version === 1 ? legado : 0),
     })),
     legacyPending: legado,
     requiredOptions: REQUERIDO_PARA,
+    variables: VARIABLES_LEGALES_AYUDA,
   });
 }
 
@@ -55,9 +59,11 @@ export async function POST(request: NextRequest) {
   const slug = parsed.data.slug || title.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 60);
   if (!slug) return NextResponse.json({ error: 'Título inválido', fields: { title: 'Usa letras o números' } }, { status: 400 });
 
+  // Las páginas públicas no se firman: nunca se exigen para nada (C-160)
+  const requiredFor = esPaginaLegalPublica(slug) ? null : (parsed.data.requiredFor ?? null);
   const actual = await prisma.legalDocument.findFirst({ where: { slug, isCurrent: true } });
   const contentHash = hashContenido(title, content);
-  if (actual && actual.contentHash === contentHash && actual.requiredFor === (parsed.data.requiredFor ?? null)) {
+  if (actual && actual.contentHash === contentHash && actual.requiredFor === requiredFor) {
     return NextResponse.json({ error: 'No hay cambios: el texto es igual a la versión vigente' }, { status: 400 });
   }
   const ultima = await prisma.legalDocument.findFirst({ where: { slug }, orderBy: { version: 'desc' }, select: { version: true } });
@@ -66,7 +72,7 @@ export async function POST(request: NextRequest) {
     return tx.legalDocument.create({
       data: {
         slug, version: (ultima?.version ?? 0) + 1, title, content, contentHash,
-        requiredFor: parsed.data.requiredFor ?? null, createdById: session?.user?.id ?? null,
+        requiredFor, createdById: session?.user?.id ?? null,
       },
     });
   });

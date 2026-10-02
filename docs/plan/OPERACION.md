@@ -16,7 +16,7 @@
   - `15 */2 * * * /home/luami/cron-envios.sh`: rastreo de las guías de ZOOM (C-100).
   - `0 15 * * * /home/luami/cron-resenas.sh`: pide la reseña por correo a quien recibió su pedido hace unos días (C-157, una vez al día). Confirmar con `crontab -l` que la línea está puesta (la ruta ya existe en producción desde el 01/10).
   - Para probar uno a mano se corre el guion: responde JSON (`revisados`, `avisos`…).
-- **Variables de entorno:** todas explicadas en `.env.example`. Opcionales que todavía no están en el servidor: `GROQ_API_KEY` (C-155, la pone Andrés con el deploy), `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_FB_PIXEL_ID` (C-145), `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (C-85).
+- **Variables de entorno:** todas explicadas en `.env.example`. Opcionales que todavía no están en el servidor: `GROQ_API_KEY` (C-155, la pone Andrés con el deploy), `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_FB_PIXEL_ID` (C-145), `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (C-85) y `SMTP_ALLOW_SELF_SIGNED` (C-160, solo si el servidor de correo del panel tiene un certificado autofirmado).
 
 ## 2. Deploy
 El deploy lo hace Andrés. Claude deja en `SIGUIENTE.md` **un solo bloque** con todo lo que falta subir: el commit que debe tener producción, el SQL total, las pruebas en orden y la vuelta atrás.

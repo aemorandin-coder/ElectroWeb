@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
         if (!session?.user || !session.user.id) {
             return NextResponse.json({
                 canReview: false,
+                reason: 'not_logged_in',
                 message: 'Debes iniciar sesión para dejar una reseña'
             });
         }
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
         if (existingReview) {
             return NextResponse.json({
                 canReview: false,
+                reason: 'already_reviewed',
                 message: 'Ya has enviado una reseña para este producto',
             });
         }
@@ -53,6 +55,7 @@ export async function GET(request: NextRequest) {
         if (!deliveredOrder) {
             return NextResponse.json({
                 canReview: false,
+                reason: 'not_purchased',
                 message: 'Solo puedes dejar reseñas de productos que hayas comprado y recibido',
             });
         }

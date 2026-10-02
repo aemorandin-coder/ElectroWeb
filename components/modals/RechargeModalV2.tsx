@@ -7,6 +7,7 @@ import {
     FiX, FiDollarSign, FiCheck, FiShield, FiArrowLeft, FiAlertTriangle, FiCheckCircle
 } from 'react-icons/fi';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
 import SignDocumentModal from '@/components/legal/SignDocumentModal';
@@ -34,7 +35,9 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     const [reference, setReference] = useState('');
     const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
     const [processing, setProcessing] = useState(false);
-    const [exchangeRate, setExchangeRate] = useState<number>(0);
+    // Tasa de la tienda (C-72): es la que usa el servidor para aprobar la recarga, no la del BCV en vivo. Viene del contexto (C-164).
+    const { settings } = useSettings();
+    const exchangeRate = Number(settings?.exchangeRateVES) || 0;
     const [hasAcceptedTerms, setHasAcceptedTerms] = useState<boolean | null>(null);
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [loadingMethods, setLoadingMethods] = useState(true);
@@ -67,21 +70,8 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
     const quickAmounts = [10, 25, 50, 100, 200];
 
-    // Fetch exchange rate and payment methods
+    // Fetch payment methods
     useEffect(() => {
-        const fetchRate = async () => {
-            try {
-                // Tasa de la tienda (C-72): es la que usa el servidor para aprobar la recarga, no la del BCV en vivo
-                const response = await fetch('/api/settings/public');
-                if (response.ok) {
-                    const data = await response.json();
-                    setExchangeRate(Number(data.exchangeRateVES) || 0);
-                }
-            } catch (error) {
-                console.error('Error fetching exchange rate:', error);
-            }
-        };
-
         const fetchPaymentMethods = async () => {
             setLoadingMethods(true);
             try {
@@ -104,7 +94,6 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
         };
 
         if (isOpen) {
-            fetchRate();
             fetchPaymentMethods();
         }
     }, [isOpen]);

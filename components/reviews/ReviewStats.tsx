@@ -2,6 +2,7 @@
 
 import StarRating from './StarRating';
 import { FaStar } from 'react-icons/fa';
+import { formatRating } from '@/lib/currency';
 
 interface ReviewStatsProps {
     averageRating: number;
@@ -35,7 +36,7 @@ export default function ReviewStats({
                 {/* Average Rating */}
                 <div className="text-center">
                     <div className="text-5xl font-bold text-ink mb-2">
-                        {averageRating.toFixed(1)}
+                        {formatRating(averageRating)}
                     </div>
                     <StarRating rating={averageRating} readonly size="md" />
                     <p className="text-sm text-muted mt-2">

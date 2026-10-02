@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FiCheck } from 'react-icons/fi';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { formatRating } from '@/lib/currency';
 
 type Lesson = {
   id: string;
@@ -178,7 +179,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
           <div className="flex flex-wrap items-center gap-3 mb-6">
             {rating && (
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold text-warning-strong">{rating.toFixed(1)}</span>
+                <span className="text-sm font-bold text-warning-strong">{formatRating(rating)}</span>
                 <StarRow rating={rating} />
                 <span className="text-sm text-muted">({course._count.reviews} reseñas)</span>
               </div>

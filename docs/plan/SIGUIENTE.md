@@ -1,24 +1,27 @@
-# Lo de ahora (actualizado 2026-10-02, C-160)
+# Lo de ahora (actualizado 2026-10-02, C-164)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** todo lo hecho hasta C-163, más C-157, C-158, C-159 (cotizaciones, tercera parte) y C-160 (los menores). Igual a GitHub.
-- **Producción: hasta C-158** (debería ser `ba6055c`, o `7f996ef` si se subió un momento antes: los dos tienen C-157 y C-158). Visto desde fuera el 01/10: `/api/cron/resenas` responde 401 y la búsqueda sin acento funciona. **No se sabe** si el SQL de marcado se corrió antes del cron, si la línea del cron está puesta (`crontab -l`), si se corrió el redondeo de C-96 ni si salieron bien las pruebas visuales de C-162: preguntárselo a Andrés.
-- **Falta subir:** C-159 y C-160, **en un solo lote** (bloque de abajo). **Cambio de base: tres columnas** en `quotes` (todas de C-159; C-160 no cambia la base). Sin crons. Una variable opcional (`SMTP_ALLOW_SELF_SIGNED`).
-- **Gemini:** sin ronda abierta. La próxima la escribe Claude.
+- **`main`:** todo lo hecho hasta C-163, más C-157, C-158, C-159 (cotizaciones, tercera parte), C-160 (los menores) y C-164 (los últimos menores de código). Igual a GitHub.
+- **Producción: C-158 seguro; C-159 y C-160 probablemente ya.** Visto desde fuera el 02/10: `/terminos` ya muestra el contacto y el horario de Configuración ("Lunes a Sábado 9:00 AM - 7:00 PM") y no el correo escrito a mano de antes, que es la marca de C-160 (y C-159 y C-160 salen en un solo lote). Desde fuera no se puede confirmar C-159 (sus rutas piden sesión). **Preguntárselo a Andrés:** `git log -1 --oneline` en el servidor (`2ccba36` = ya subidas; `ba6055c` o `7f996ef` = faltan). También **no se sabe** si el SQL de marcado de C-157 se corrió antes del cron, si la línea del cron está puesta (`crontab -l`), si se corrió el redondeo de C-96 ni si salieron bien las pruebas visuales de C-162.
+- **Falta subir:** C-164 seguro, y C-159 y C-160 si el servidor todavía está en `ba6055c`/`7f996ef`, **todo en un solo lote** (bloque de abajo). **Cambio de base: tres columnas** en `quotes` (de C-159; C-160 y C-164 no cambian la base; si C-159 ya subió, no hay SQL). Sin crons. Una variable opcional (`SMTP_ALLOW_SELF_SIGNED`).
+- **Gemini:** sin ronda abierta. Las tarjetas que quedaban (`RechargeModalV2` y las valoraciones con coma) las cerró Claude en C-164.
 
-## 2. Deploy pendiente: C-159 y C-160
-Cotizaciones (retención del IVA, correo, Mis cotizaciones) y los menores (páginas legales editables, buscador, reseñas, SMTP y más). Detalle y pruebas en `estado/C-159.md` y `estado/C-160.md`.
+## 2. Deploy pendiente: C-159, C-160 y C-164
+Cotizaciones (retención del IVA, correo, Mis cotizaciones), los menores (páginas legales editables, buscador, reseñas, SMTP y más) y los últimos menores de código. Detalle y pruebas en `estado/C-159.md`, `estado/C-160.md` y `estado/C-164.md`.
 
-- **Lo que sube:** dos tareas. **Cambio de base: tres columnas** en `quotes`. Sin dependencias, crons ni guiones.
-- Verificado: `tsc`, `npm run lint` (0 errores), `npm run build`, las pruebas propias de cada tarea (57 y 84 comprobaciones) y la prueba de humo, **59 de 59**.
+- **Lo que sube:** tres tareas (dos si C-159 y C-160 ya están). **Cambio de base: tres columnas** en `quotes` (solo si falta C-159). Sin dependencias, crons ni guiones.
+- Verificado: `tsc`, `npm run lint` (0 errores), `npm run build`, las pruebas propias de C-159 y C-160 (57 y 84 comprobaciones) y la prueba de humo, **59 de 59** (esa última, antes de C-164; C-164 pasó `tsc`, `lint` y `build`).
 
 **Qué trae (C-159):**
 - **Retención del IVA:** en el editor de cotizaciones, "Retención del IVA que practica el cliente" (No retiene / 75 % / 100 %), que marca el equipo. El presupuesto muestra el IVA que retiene el cliente y el **neto a pagar** (y el anticipo se calcula sobre el neto). **Ojo:** los órganos del Estado, las gobernaciones, las alcaldías y los entes públicos sin fines empresariales **no** retienen (Providencia SNAT/2025/000054, art. 3); retienen los contribuyentes especiales.
 - **Enviar por correo:** en el editor, dentro de "Enlace para el cliente": el correo del cliente ya puesto, un mensaje opcional y el botón. Le llega el resumen con un botón para ver y aprobar el presupuesto.
 - **Mis cotizaciones:** menú nuevo en el panel del cliente, con las que pidió con su cuenta y las que le enviaste a su correo (verificado).
+
+**Qué trae (C-164):**
+- Se borró `POST /api/customer/balance/add` (ninguna pantalla lo usaba y dejaba acreditar Puntos ES con el permiso de órdenes). `seed.ts` ya no trae contraseña por defecto ni corre en producción. Las valoraciones salen con coma ("4,5") y el modal de recargar toma la tasa del contexto en vez de pedirla otra vez.
 
 **Qué trae (C-160):**
 - **`/terminos` y `/privacidad` se editan en el panel** (Legal → Documentos → "Nueva versión") y **el contacto sale de Configuración**. El que estaba escrito a mano no era el de Configuración (decía `electroshopgre@gmail.com` y de lunes a viernes). **Léelas después de subir.**
@@ -29,8 +32,11 @@ Cotizaciones (retención del IVA, correo, Mis cotizaciones) y los menores (pági
 - Renombrar una categoría **conserva su dirección**; correos y avisos con el formato de precios de la tienda ("$1.250,50"); se borró `balance/deduct`; ESLint en 0 errores.
 
 ### Pasos (en el servidor, `/var/www/electroshopve`)
-1. **Qué hay ahora:** `git log -1 --oneline`. Debe empezar por `ba6055c` (o `7f996ef`). Si dice otra cosa, avisar a Claude antes de seguir.
-2. **Respaldo** (cambia la base):
+1. **Qué hay ahora:** `git log -1 --oneline`.
+   - Empieza por `ba6055c` o `7f996ef`: faltan C-159, C-160 y C-164. Seguir con los pasos 2 al 4.
+   - Empieza por `2ccba36`: C-159 y C-160 ya están; solo falta C-164 (sin cambio de base). Saltar el paso 2 y en el 3 hacer solo `git pull --ff-only` y `bash scripts/deploy.sh` (no debe mostrar ningún SQL: si lo muestra, parar y avisar a Claude).
+   - Otra cosa: avisar a Claude antes de seguir.
+2. **Respaldo** (solo si falta C-159; cambia la base):
    `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-c159-c160.dump`
 3. **Subir:** `git pull --ff-only` y `bash scripts/deploy.sh`.
    - El guion **para y muestra este SQL** (solo ese): `ALTER TABLE "quotes" ADD COLUMN "emailedAt" TIMESTAMP(3), ADD COLUMN "emailedTo" TEXT, ADD COLUMN "ivaRetentionPercent" INTEGER NOT NULL DEFAULT 0;` (puede salir en varias líneas).
@@ -49,6 +55,7 @@ Cotizaciones (retención del IVA, correo, Mis cotizaciones) y los menores (pági
 5. **Correo del panel (C-160):** Configuración → Correo → "Probar conexión" (si usas el servidor de correo del panel). Si da un error de certificado, avísame o pon `SMTP_ALLOW_SELF_SIGNED="true"` en el `.env` del servidor y reinicia con el deploy.
 6. **Buscador y catálogo (C-160):** buscar `teclado` y ver que el primero es el que mejor responde; "Menor a mayor" con una oferta puesta (el producto rebajado sale donde le toca por su precio con la oferta).
 7. **Reseña (C-160):** en la ficha de un producto, con una cuenta que no lo compró: una línea ("solo quienes compraron…") y ningún formulario; con una que sí lo recibió, el formulario.
+8. **Últimos menores (C-164):** una valoración con decimales sale con coma ("4,5") en Admin → Cursos o en el panel del creador; Mi saldo → "Recargar": al escribir un monto aparece el equivalente en bolívares.
 
 ### Pruebas de lo anterior, si faltan (ya está en producción)
 - **Reseña por correo (C-157):** Admin → Marketing → Correos → "Pedir la reseña" (correo de ejemplo con dos botones); Mi perfil → Notificaciones → "Tus reseñas". **Prueba real:** adelantar una orden tuya entregada y correr el cron:
@@ -61,7 +68,7 @@ Cotizaciones (retención del IVA, correo, Mis cotizaciones) y los menores (pági
 - **Embalaje según el paquete (C-153):** Configuración → Envíos y retiro → encender, corregir las medidas y los precios de tus sobres y cajas, y poner el monto del embalaje gratis. Una compra barata con envío: en la orden, "Cómo empacar".
 
 ### Si algo sale mal
-- **Volver atrás el código:** `git reset --hard ba6055c && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas nuevas no molestan al código anterior (no se quitan). Las dos páginas legales que se crearon en la base (`terminos` y `privacidad`) tampoco molestan: el código anterior no las lee.
+- **Volver atrás el código:** a `ba6055c` (antes de todo: `git reset --hard ba6055c && npm install && bash scripts/deploy.sh --sin-pull`) o, si solo quieres deshacer C-164, a `2ccba36`. Las columnas nuevas no molestan al código anterior (no se quitan). Las dos páginas legales que se crearon en la base (`terminos` y `privacidad`) tampoco molestan: el código anterior no las lee.
 - **Si el correo del panel deja de salir** (certificado): `SMTP_ALLOW_SELF_SIGNED="true"` en el `.env` y el deploy, o volver atrás.
 - **Si el cron de reseñas manda correos de más:** quitar su línea de `crontab -e` y avisar a Claude con lo que respondió `~/cron-resenas.sh`.
 
@@ -102,7 +109,7 @@ En el orden en que más destraban:
 La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **No queda código en fila que no espere un dato tuyo:**
 - Esperan datos: C-154b (plazo de los digitales: ya se sabe que son unas 2 horas, falta el horario), C-107 (seguro), C-92 (clientes) y C-153b (decidir si los "frágiles" llevan más relleno).
 - Lo que salga de la revisión final y de las pruebas del deploy se arregla antes que lo demás.
-- Mientras tanto Claude puede escribir la próxima ronda de Gemini (`RechargeModalV2` y las valoraciones con coma) o revisar `REVISION_FINAL.md` contigo.
+- Mientras tanto Claude puede revisar `REVISION_FINAL.md` contigo (en el teléfono, punto por punto) o escribir la próxima ronda de Gemini cuando haya una tarea mecánica.
 - El plazo de la reseña (C-157) queda en 5 días (2 si es digital), en `lib/resenas-avisos.ts` (`DIAS_FISICO`, `DIAS_DIGITAL`), hasta que Andrés diga otra cosa.
 
 ## 5. Mensaje para empezar (próxima sesión de Claude)

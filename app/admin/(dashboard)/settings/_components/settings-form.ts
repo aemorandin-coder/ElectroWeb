@@ -3,7 +3,7 @@
 
 import type { IconType } from 'react-icons';
 import { leerReglasEmbalaje, type Empaque } from '@/lib/embalaje';
-import { FiBriefcase, FiDollarSign, FiMail, FiSearch, FiShield, FiShoppingBag, FiTruck } from 'react-icons/fi';
+import { FiBriefcase, FiDatabase, FiDollarSign, FiMail, FiSearch, FiShield, FiShoppingBag, FiTruck } from 'react-icons/fi';
 
 export const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 export type WeekDay = (typeof WEEK_DAYS)[number];
@@ -64,7 +64,7 @@ export interface SectionProps {
   errors: FieldErrors;
 }
 
-export type SectionId = 'negocio' | 'precios' | 'envios' | 'tienda' | 'seo' | 'sistema' | 'correo';
+export type SectionId = 'negocio' | 'precios' | 'envios' | 'tienda' | 'seo' | 'sistema' | 'correo' | 'respaldos';
 
 export const SECTIONS: { id: SectionId; label: string; description: string; icon: IconType; fields: SettingsKey[] }[] = [
   {
@@ -107,6 +107,12 @@ export const SECTIONS: { id: SectionId; label: string; description: string; icon
   {
     id: 'correo', label: 'Correo', icon: FiMail,
     description: 'Servidor con el que salen todos los correos de la tienda, remitente y campañas de marketing.',
+    fields: [],
+  },
+  // C-165: respaldos a Google Drive. Tiene su propio guardado y sus propias acciones (no usa la barra común)
+  {
+    id: 'respaldos', label: 'Respaldos', icon: FiDatabase,
+    description: 'Copia cifrada de la base de datos y de los archivos en tu Google Drive, cada día y sola.',
     fields: [],
   },
 ];

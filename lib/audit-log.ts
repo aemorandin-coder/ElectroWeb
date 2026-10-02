@@ -61,7 +61,13 @@ export type AuditAction =
     | 'ORPHAN_PAYMENT_LINKED'
     | 'ORPHAN_PAYMENT_ARCHIVED'
     // C-129: el equipo consultó un Pago Móvil al BDV desde Transacciones (solo consulta)
-    | 'PAGO_MOVIL_CONSULTADO';
+    | 'PAGO_MOVIL_CONSULTADO'
+    // C-165: respaldos a Google Drive
+    | 'BACKUP_SETTINGS_CHANGED'
+    | 'BACKUP_KEY_CREATED'
+    | 'BACKUP_DRIVE_CONNECTED'
+    | 'BACKUP_DRIVE_DISCONNECTED'
+    | 'BACKUP_RUN_REQUESTED';
 
 export type AuditSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
 

@@ -86,6 +86,8 @@ export const ADMIN_EVENTS = {
   ADMIN_SESSION_REPORTED: { category: 'sistema', label: '"No fui yo" en el panel', description: 'Un admin reportó un inicio de sesión que no hizo: se cerraron sus sesiones y se bloqueó su contraseña.', defaults: on(true, true, true) },
   ADMIN_TEAM_CHANGED: { category: 'sistema', label: 'Cambios en el equipo', description: 'Invitaciones al panel, cambios de rol, accesos quitados o devueltos y la verificación en dos pasos de cada cuenta.', defaults: on(true, true, true) },
   ADMIN_LOGIN: { category: 'sistema', label: 'Inicio de sesión en el panel', description: 'Un administrador entró al panel, con dispositivo, IP y el botón "No fui yo" para cerrar y bloquear esa sesión.', defaults: on(true, false, true), silent: true },
+  BACKUP_FAILED: { category: 'sistema', label: 'Respaldo fallido', description: 'El respaldo automático no se pudo hacer o no quedó bien guardado en Drive. Sin respaldo, un fallo del servidor puede costar las órdenes y los Puntos ES.', defaults: on(true, true, true) },
+  BACKUP_OK: { category: 'sistema', label: 'Respaldo hecho', description: 'El respaldo del día quedó guardado y comprobado en Google Drive.', defaults: on(false, false, true), silent: true },
 } satisfies Record<string, AdminEventDefinition>;
 
 export type AdminEventType = keyof typeof ADMIN_EVENTS;

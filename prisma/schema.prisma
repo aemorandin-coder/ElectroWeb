@@ -1998,3 +1998,60 @@ model WarrantyClaimEvent {
   @@index([claimId, createdAt])
   @@map("warranty_claim_events")
 }
+
+/// Respaldos automáticos a Google Drive (C-165). Una sola fila ("default").
+/// Los secretos (clientSecret y refreshToken) van cifrados con la clave del servidor; la clave PRIVADA del respaldo
+/// no se guarda nunca: solo la pública, para cifrar. Sin la privada nadie puede abrir un respaldo, tampoco el servidor.
+model BackupSettings {
+  id                  String    @id @default("default")
+  enabled             Boolean   @default(false)
+  /// Hora de Venezuela (0 a 23) desde la que corre el respaldo del día
+  hour                Int       @default(3)
+  retentionDays       Int       @default(14)
+  /// Incluye las fotos subidas y las constancias firmadas (domingos y al respaldar a mano)
+  includeFiles        Boolean   @default(true)
+  publicKeyPem        String?
+  keyFingerprint      String?
+  keyCreatedAt        DateTime?
+  driveClientId       String?
+  driveClientSecret   String?
+  driveRefreshToken   String?
+  driveEmail          String?
+  driveFolderId       String?
+  driveConnectedAt    DateTime?
+  /// Error de la última conexión o renovación del permiso (para avisar que hay que volver a conectar)
+  driveError          String?
+  updatedAt           DateTime  @updatedAt
+
+  @@map("backup_settings")
+}
+
+/// Cada vez que se intentó un respaldo (C-165)
+model BackupRun {
+  id           String    @id @default(cuid())
+  /// DB (la base de datos) o FILES (fotos y constancias)
+  kind         String
+  /// CRON o MANUAL
+  trigger      String
+  /// RUNNING, OK o FAILED
+  status       String    @default("RUNNING")
+  startedAt    DateTime  @default(now())
+  finishedAt   DateTime?
+  fileName     String?
+  sizeBytes    BigInt?
+  /// MD5 del archivo cifrado tal como se subió: la prueba de que Drive lo guardó completo
+  md5          String?
+  driveFileId  String?
+  /// Tablas con datos del volcado (kind DB) o archivos del paquete (kind FILES), contados al revisarlo
+  items        Int?
+  error        String?
+  /// Última vez que se bajó de Drive y se comprobó el MD5
+  verifiedAt   DateTime?
+  verifiedOk   Boolean?
+  /// Borrado de Drive por la retención
+  deletedAt    DateTime?
+
+  @@index([kind, startedAt])
+  @@index([status])
+  @@map("backup_runs")
+}

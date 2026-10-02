@@ -298,7 +298,7 @@ docs/plan/estado/G-*.md
 
 Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estado/<ID>.md`. Aquí va el mapa.
 
-### 5.1 Lo hecho (129 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 02/10)
+### 5.1 Lo hecho (130 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 02/10)
 
 **Plan original (12/09):**
 | Fase | Tareas | Qué dejó |
@@ -321,11 +321,13 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 | Legal y facturación | C-103, C-120, C-144, C-146, C-146b, C-147, C-147b, C-148, C-148b, C-151, C-159 | Firma de documentos, IVA incluido a la vista, precio sugerido desde el costo, datos para la factura, relación de ventas, cotizaciones y términos sin promesas falsas. |
 | Crecimiento | C-112, C-113, C-116, C-145, C-149 | ElectroStudio, medición del embudo de compra y el catálogo legible para Google, las redes y las IA. |
 | Equipo y documentos | C-53, C-77, C-86, C-90, C-91, C-93, C-94, C-98, C-99, C-108, C-111, C-152, C-156, C-160, C-164 | Revisiones de Gemini y de ChatGPT, deuda técnica (ESLint en 0), el bloque único de subida y este orden de documentos. |
+| Operación y respaldos | C-165 | Respaldos automáticos cifrados a Google Drive desde Configuración → Respaldos, restauración con clave privada fuera del servidor, `CHANGELOG.md` y versiones con etiqueta de git (primera: `v1.0.0-rc.1`). |
 
 ### 5.2 Lista única de pendientes
 Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
-**En fila (Claude):** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Los menores se cerraron en C-164 (`balance/add` borrado, `seed.ts` sin contraseña por defecto, valoraciones con coma, `RechargeModalV2` sin `fetch`). Lo que queda no es código:
+**En fila (Claude):** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Los menores se cerraron en C-164 (`balance/add` borrado, `seed.ts` sin contraseña por defecto, valoraciones con coma, `RechargeModalV2` sin `fetch`). Lo que queda no es código, salvo **C-166** (Content-Security-Policy en modo "solo reportar": con Analytics, Meta y hCaptcha, activarla de golpe rompería cosas):
+- Un monitor externo de que la tienda está arriba (UptimeRobot o similar a `/robots.txt`) y guardar la clave privada del respaldo y una copia del `.env` fuera del servidor (Andrés, `SIGUIENTE.md` §3).
 - El abogado revisa `/terminos` y `/privacidad` desde Legal → Documentos (`estado/C-160.md`).
 
 **Esperan un dato o una decisión de Andrés:**

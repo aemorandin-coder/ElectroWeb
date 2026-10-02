@@ -16,6 +16,7 @@ import ShippingSection from './_components/ShippingSection';
 import StorefrontSection from './_components/StorefrontSection';
 import SeoSection from './_components/SeoSection';
 import SystemSection from './_components/SystemSection';
+import BackupsSection from './_components/BackupsSection';
 import EmailSettingsPanel from '@/components/admin/EmailSettingsPanel';
 
 // Configuración (C-50b): 6 secciones por tarea, un solo guardado con los cambios de todas.
@@ -237,6 +238,7 @@ export default function SettingsPage() {
             {active === 'seo' && <SeoSection {...sectionProps} />}
             {active === 'sistema' && <SystemSection {...sectionProps} />}
             {active === 'correo' && <EmailSettingsPanel />}
+            {active === 'respaldos' && <BackupsSection />}
           </div>
 
           {/* Barra de guardado: aparece con cambios y queda pegada abajo mientras se edita */}

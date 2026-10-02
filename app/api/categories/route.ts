@@ -106,7 +106,8 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'El nombre debe tener entre 2 y 60 caracteres' }, { status: 400 });
       }
       updateData.name = limpio;
-      updateData.slug = toSlug(limpio);
+      // C-160: el slug NO cambia al renombrar. Es la dirección /categorias/<slug>: cambiarla rompía los enlaces
+      // guardados, los de otras páginas y lo que Google ya conoce de la categoría.
     }
     // Una categoría no puede ser su propia madre ni colgar de una de sus hijas: el árbol quedaba en ciclo
     if (parentId && await esDescendiente(id, parentId)) {

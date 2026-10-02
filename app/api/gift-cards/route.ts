@@ -15,10 +15,6 @@ import {
     hashPin
 } from '@/lib/gift-card-crypto';
 
-/** Tiempo para crear la gift card después de descontar el saldo (la página tarda ~6 s entre ambos pasos). */
-const PAYMENT_WINDOW_MS = 15 * 60 * 1000;
-
-class PaymentAlreadyUsedError extends Error {}
 class InsufficientBalanceError extends Error {}
 
 // GET - Get gift cards (admin) or user's gift cards
@@ -127,30 +123,15 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Monto inválido (min $5, max $500)' }, { status: 400 });
         }
 
-        // SEGURIDAD (C-70/C-71): un cliente solo recibe una gift card si la paga con saldo.
-        // - payWithBalance (C-71): el servidor descuenta el saldo y crea la tarjeta en la misma transacción.
-        // - Compatibilidad: si la página ya descontó con /api/customer/balance/deduct, se usa ese pago reciente y sin usar.
+        // SEGURIDAD (C-70/C-71/C-160): un cliente solo recibe una gift card si la paga con Puntos ES, y el servidor descuenta
+        // el saldo y crea la tarjeta en la misma transacción. Ya no existe el pago en dos pasos (/balance/deduct).
         const payWithBalance = !isAdmin && body.payWithBalance === true;
-        let payment: { id: string } | null = null;
         if (!isAdmin) {
             if (!recipientEmail || typeof recipientEmail !== 'string') {
                 return NextResponse.json({ error: 'Indica el correo de quien recibe la gift card' }, { status: 400 });
             }
-            payment = await prisma.transaction.findFirst({
-                where: {
-                    balance: { userId: session.user.id },
-                    type: 'PURCHASE',
-                    status: 'COMPLETED',
-                    amount: montoDecimal(amountUSD),
-                    metadata: null,
-                    description: { startsWith: 'Gift Card' },
-                    createdAt: { gte: new Date(Date.now() - PAYMENT_WINDOW_MS) },
-                },
-                orderBy: { createdAt: 'desc' },
-                select: { id: true },
-            });
-            if (!payment && !payWithBalance) {
-                return NextResponse.json({ error: 'No encontramos el pago con Puntos ES de esta gift card' }, { status: 402 });
+            if (!payWithBalance) {
+                return NextResponse.json({ error: 'Las gift cards se pagan con Puntos ES desde la página de gift cards' }, { status: 402 });
             }
         }
 
@@ -216,14 +197,7 @@ export async function POST(request: Request) {
                 }
             });
 
-            if (payment) {
-                // Marca el pago como usado: si otra petición ya lo usó, no se crea nada
-                const claimed = await tx.transaction.updateMany({
-                    where: { id: payment.id, metadata: null },
-                    data: { metadata: JSON.stringify({ giftCardId: created.id }) },
-                });
-                if (claimed.count !== 1) throw new PaymentAlreadyUsedError();
-            } else if (payWithBalance) {
+            if (payWithBalance) {
                 // Descuento condicional: solo si alcanza el saldo en este instante (sin lecturas previas que puedan quedar viejas)
                 const charged = await tx.userBalance.updateMany({
                     // Montos como texto exacto (C-96)
@@ -269,7 +243,7 @@ export async function POST(request: Request) {
                 title: `Gift card comprada · ${formatUSD(amountUSD)}`,
                 summary: `${session.user.name || session.user.email || 'Un cliente'} compró una gift card${recipientName ? ` para ${String(recipientName).slice(0, 60)}` : ''}`,
                 fields: [
-                    ['Pago', payWithBalance ? 'Puntos ES' : payment ? 'Puntos ES (pago previo)' : null],
+                    ['Pago', payWithBalance ? 'Puntos ES' : null],
                     ['Diseño', giftCard.design?.name],
                     ['Para', recipientEmail ? String(recipientEmail).slice(0, 120) : null],
                 ],
@@ -313,9 +287,6 @@ export async function POST(request: Request) {
     } catch (error) {
         if (error instanceof InsufficientBalanceError) {
             return NextResponse.json({ error: 'No te alcanzan los Puntos ES para esta gift card' }, { status: 402 });
-        }
-        if (error instanceof PaymentAlreadyUsedError) {
-            return NextResponse.json({ error: 'Ese pago ya se usó para otra gift card' }, { status: 409 });
         }
         console.error('Error creating gift card:', error);
         return NextResponse.json({ error: 'Error al crear gift card' }, { status: 500 });

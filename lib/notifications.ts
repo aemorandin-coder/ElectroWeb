@@ -1,4 +1,4 @@
-import { formatPuntos } from '@/lib/currency';
+import { formatPuntos, formatUSD } from '@/lib/currency';
 import { prisma } from './prisma';
 
 export type NotificationType =
@@ -130,7 +130,7 @@ export async function notifyRechargeRequested(userId: string, amount: number) {
     userId,
     type: 'BALANCE_PENDING',
     title: 'Recarga en Proceso',
-    message: `Tu solicitud de recarga por $${amount.toFixed(2)} ha sido recibida y está pendiente de aprobación.`,
+    message: `Tu solicitud de recarga por ${formatUSD(amount)} ha sido recibida y está pendiente de aprobación.`,
     link: '/customer/balance',
     icon: 'clock',
   });
@@ -159,7 +159,7 @@ export async function notifyRechargeRejected(userId: string, amount: number, rea
     userId,
     type: 'RECHARGE_REJECTED',
     title: 'Recarga Rechazada',
-    message: `Tu solicitud de recarga por $${amount.toFixed(2)} ha sido rechazada.${reasonText}`,
+    message: `Tu solicitud de recarga por ${formatUSD(amount)} ha sido rechazada.${reasonText}`,
     link: '/customer/balance',
     icon: 'x-circle',
   });

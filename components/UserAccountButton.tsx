@@ -262,29 +262,6 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
           </div>
         </div>
       )}
-
-      <style jsx global>{`
-        @keyframes dropdown-enter {
-          from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(100%); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-dropdown-enter {
-          animation: dropdown-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .animate-slideUp {
-          animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .pb-safe {
-          padding-bottom: env(safe-area-inset-bottom);
-        }
-        .mb-safe {
-          margin-bottom: env(safe-area-inset-bottom);
-        }
-      `}</style>
     </div>
   );
 }

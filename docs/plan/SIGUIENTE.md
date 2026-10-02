@@ -1,29 +1,37 @@
-# Lo de ahora (actualizado 2026-10-01, C-159)
+# Lo de ahora (actualizado 2026-10-02, C-160)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** todo lo hecho hasta C-163, más C-157, C-158 y C-159 (cotizaciones, tercera parte). Igual a GitHub cuando se fusione C-159.
+- **`main`:** todo lo hecho hasta C-163, más C-157, C-158, C-159 (cotizaciones, tercera parte) y C-160 (los menores). Igual a GitHub.
 - **Producción: hasta C-158** (debería ser `ba6055c`, o `7f996ef` si se subió un momento antes: los dos tienen C-157 y C-158). Visto desde fuera el 01/10: `/api/cron/resenas` responde 401 y la búsqueda sin acento funciona. **No se sabe** si el SQL de marcado se corrió antes del cron, si la línea del cron está puesta (`crontab -l`), si se corrió el redondeo de C-96 ni si salieron bien las pruebas visuales de C-162: preguntárselo a Andrés.
-- **Falta subir:** C-159 (bloque de abajo). **Cambio de base: tres columnas** en `quotes`. Sin crons ni variables.
+- **Falta subir:** C-159 y C-160, **en un solo lote** (bloque de abajo). **Cambio de base: tres columnas** en `quotes` (todas de C-159; C-160 no cambia la base). Sin crons. Una variable opcional (`SMTP_ALLOW_SELF_SIGNED`).
 - **Gemini:** sin ronda abierta. La próxima la escribe Claude.
 
-## 2. Deploy pendiente: C-159 (cotizaciones, tercera parte)
-La retención del IVA, la cotización por correo y "Mis cotizaciones". Detalle y pruebas en `estado/C-159.md`.
+## 2. Deploy pendiente: C-159 y C-160
+Cotizaciones (retención del IVA, correo, Mis cotizaciones) y los menores (páginas legales editables, buscador, reseñas, SMTP y más). Detalle y pruebas en `estado/C-159.md` y `estado/C-160.md`.
 
-- **Lo que sube:** una tarea. **Cambio de base: tres columnas** en `quotes`. Sin dependencias, variables, crons ni guiones.
-- Verificado: `tsc`, `npm run build`, la prueba propia (57 comprobaciones por HTTP y en el navegador) y la prueba de humo, **59 de 59**.
+- **Lo que sube:** dos tareas. **Cambio de base: tres columnas** en `quotes`. Sin dependencias, crons ni guiones.
+- Verificado: `tsc`, `npm run lint` (0 errores), `npm run build`, las pruebas propias de cada tarea (57 y 84 comprobaciones) y la prueba de humo, **59 de 59**.
 
-**Qué trae:**
+**Qué trae (C-159):**
 - **Retención del IVA:** en el editor de cotizaciones, "Retención del IVA que practica el cliente" (No retiene / 75 % / 100 %), que marca el equipo. El presupuesto muestra el IVA que retiene el cliente y el **neto a pagar** (y el anticipo se calcula sobre el neto). **Ojo:** los órganos del Estado, las gobernaciones, las alcaldías y los entes públicos sin fines empresariales **no** retienen (Providencia SNAT/2025/000054, art. 3); retienen los contribuyentes especiales.
 - **Enviar por correo:** en el editor, dentro de "Enlace para el cliente": el correo del cliente ya puesto, un mensaje opcional y el botón. Le llega el resumen con un botón para ver y aprobar el presupuesto.
 - **Mis cotizaciones:** menú nuevo en el panel del cliente, con las que pidió con su cuenta y las que le enviaste a su correo (verificado).
 
+**Qué trae (C-160):**
+- **`/terminos` y `/privacidad` se editan en el panel** (Legal → Documentos → "Nueva versión") y **el contacto sale de Configuración**. El que estaba escrito a mano no era el de Configuración (decía `electroshopgre@gmail.com` y de lunes a viernes). **Léelas después de subir.**
+- **Buscador:** ordena por relevancia, busca por SKU y código de barras, y las búsquedas del panel (clientes, firmas, garantías, cotizaciones, destinatarios) y de cursos ignoran los acentos.
+- **Precio con oferta:** "menor a mayor" ordena por lo que paga el cliente, no por el precio de lista.
+- **Reseñas:** el formulario solo aparece a quien compró y recibió el producto (antes, un candado que solo se veía con hover y un campo "Título" que no hacía nada).
+- **Correo (SMTP):** la contraseña del servidor de correo del panel se guarda cifrada y la conexión verifica el certificado.
+- Renombrar una categoría **conserva su dirección**; correos y avisos con el formato de precios de la tienda ("$1.250,50"); se borró `balance/deduct`; ESLint en 0 errores.
+
 ### Pasos (en el servidor, `/var/www/electroshopve`)
 1. **Qué hay ahora:** `git log -1 --oneline`. Debe empezar por `ba6055c` (o `7f996ef`). Si dice otra cosa, avisar a Claude antes de seguir.
 2. **Respaldo** (cambia la base):
-   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-c159.dump`
+   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-c159-c160.dump`
 3. **Subir:** `git pull --ff-only` y `bash scripts/deploy.sh`.
    - El guion **para y muestra este SQL** (solo ese): `ALTER TABLE "quotes" ADD COLUMN "emailedAt" TIMESTAMP(3), ADD COLUMN "emailedTo" TEXT, ADD COLUMN "ivaRetentionPercent" INTEGER NOT NULL DEFAULT 0;` (puede salir en varias líneas).
    - Si coincide: `npx prisma db push` y `bash scripts/deploy.sh` otra vez. Si aparece un `DROP` o algo distinto, no seguir y avisar a Claude.
@@ -33,10 +41,14 @@ La retención del IVA, la cotización por correo y "Mis cotizaciones". Detalle y
    `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/redondeo-c96.sql`
    - Muestra tres números. El último debe ser 0. Si el del medio ("diferencia real") no es 0, pasarle la salida a Claude.
 
-### Pruebas después de subir (unos 10 minutos)
-1. **Retención:** Admin → Cotizaciones → Nueva (o una de prueba) → una línea de $116 → Condiciones → "Retención del IVA": 75 % → debajo se ve "Retención del IVA (75 %): −$12,00 · Neto a pagar: $104,00". Guardar y enviar; abrir el enlace: el presupuesto muestra el neto a pagar. Con "No retiene", la hoja queda como antes.
-2. **Correo:** en esa cotización, "Enviar por correo" a tu propio correo: llega con el resumen y un botón que abre el presupuesto. Si intentas mandarla otra vez, pide confirmación.
-3. **Mis cotizaciones:** con una cuenta de cliente (con el correo verificado), en el menú "Mis cotizaciones". Pide una cotización con esa cuenta en `/cotizacion`: aparece "En preparación". Mándale otra a su correo desde el panel y aparece "Lista para revisar" con su botón.
+### Pruebas después de subir (unos 20 minutos)
+1. **Retención (C-159):** Admin → Cotizaciones → Nueva (o una de prueba) → una línea de $116 → Condiciones → "Retención del IVA": 75 % → debajo se ve "Retención del IVA (75 %): −$12,00 · Neto a pagar: $104,00". Guardar y enviar; abrir el enlace: el presupuesto muestra el neto a pagar. Con "No retiene", la hoja queda como antes.
+2. **Correo (C-159):** en esa cotización, "Enviar por correo" a tu propio correo: llega con el resumen y un botón que abre el presupuesto. Si intentas mandarla otra vez, pide confirmación.
+3. **Mis cotizaciones (C-159):** con una cuenta de cliente (con el correo verificado), en el menú "Mis cotizaciones". Pide una cotización con esa cuenta en `/cotizacion`: aparece "En preparación". Mándale otra a su correo desde el panel y aparece "Lista para revisar" con su botón.
+4. **Páginas legales (C-160):** abre `/terminos` y `/privacidad` en el teléfono y en la computadora. Comprueba **el correo, el WhatsApp y el horario del final** (salen de Configuración → Negocio): si algo no es lo que quieres mostrar, se cambia ahí. `/terminos#garantia` baja a "Garantía y devoluciones". En Legal → Documentos aparecen con la etiqueta "Página pública" y "Nueva versión".
+5. **Correo del panel (C-160):** Configuración → Correo → "Probar conexión" (si usas el servidor de correo del panel). Si da un error de certificado, avísame o pon `SMTP_ALLOW_SELF_SIGNED="true"` en el `.env` del servidor y reinicia con el deploy.
+6. **Buscador y catálogo (C-160):** buscar `teclado` y ver que el primero es el que mejor responde; "Menor a mayor" con una oferta puesta (el producto rebajado sale donde le toca por su precio con la oferta).
+7. **Reseña (C-160):** en la ficha de un producto, con una cuenta que no lo compró: una línea ("solo quienes compraron…") y ningún formulario; con una que sí lo recibió, el formulario.
 
 ### Pruebas de lo anterior, si faltan (ya está en producción)
 - **Reseña por correo (C-157):** Admin → Marketing → Correos → "Pedir la reseña" (correo de ejemplo con dos botones); Mi perfil → Notificaciones → "Tus reseñas". **Prueba real:** adelantar una orden tuya entregada y correr el cron:
@@ -49,7 +61,8 @@ La retención del IVA, la cotización por correo y "Mis cotizaciones". Detalle y
 - **Embalaje según el paquete (C-153):** Configuración → Envíos y retiro → encender, corregir las medidas y los precios de tus sobres y cajas, y poner el monto del embalaje gratis. Una compra barata con envío: en la orden, "Cómo empacar".
 
 ### Si algo sale mal
-- **Volver atrás el código:** `git reset --hard ba6055c && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas nuevas no molestan al código anterior (no se quitan).
+- **Volver atrás el código:** `git reset --hard ba6055c && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas nuevas no molestan al código anterior (no se quitan). Las dos páginas legales que se crearon en la base (`terminos` y `privacidad`) tampoco molestan: el código anterior no las lee.
+- **Si el correo del panel deja de salir** (certificado): `SMTP_ALLOW_SELF_SIGNED="true"` en el `.env` y el deploy, o volver atrás.
 - **Si el cron de reseñas manda correos de más:** quitar su línea de `crontab -e` y avisar a Claude con lo que respondió `~/cron-resenas.sh`.
 
 ## 3. Tareas de Andrés (sin código)
@@ -78,7 +91,7 @@ En el orden en que más destraban:
 14. Avisar cuando SADES vuelva (taller).
 
 **Con el abogado y el contador**
-15. Abogado: términos y privacidad (`estado/C-120.md` §7) y las 3 afirmaciones de `estado/C-144.md` (el motivo "comprobante vencido o ilegible", los plazos y los datos de contacto).
+15. Abogado: términos y privacidad (ahora se editan en Legal → Documentos; `estado/C-120.md` §7) y las 3 afirmaciones de `estado/C-144.md` (el motivo "comprobante vencido o ilegible", los plazos y los datos de contacto).
 16. Contador: las preguntas de `estado/C-151.md` (IVA de los digitales), `estado/C-147b.md` (embalaje), `estado/C-120.md` §6 y **`estado/C-159.md` (retención del IVA: quiénes retienen, el comprobante y si hay retención de ISLR en los servicios)**.
 
 **Limpieza opcional, en tu máquina** (todo ya está en `main` o fue reemplazado)
@@ -86,10 +99,10 @@ En el orden en que más destraban:
 - Ramas locales ya fusionadas: `git branch --merged main` las lista; se pueden borrar con `git branch -d <rama>`.
 
 ## 4. Fila de Claude
-La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. Lo próximo, en orden:
-1. **C-160 · Menores** (lista en `PLAN.md` §5.2).
-- En cuanto lleguen los datos de la sección 3: C-154b (plazo de los digitales: ya se sabe que son unas 2 horas, falta el horario), C-107 (seguro) y C-92 (clientes).
+La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **No queda código en fila que no espere un dato tuyo:**
+- Esperan datos: C-154b (plazo de los digitales: ya se sabe que son unas 2 horas, falta el horario), C-107 (seguro), C-92 (clientes) y C-153b (decidir si los "frágiles" llevan más relleno).
 - Lo que salga de la revisión final y de las pruebas del deploy se arregla antes que lo demás.
+- Mientras tanto Claude puede escribir la próxima ronda de Gemini (`RechargeModalV2` y las valoraciones con coma) o revisar `REVISION_FINAL.md` contigo.
 - El plazo de la reseña (C-157) queda en 5 días (2 si es digital), en `lib/resenas-avisos.ts` (`DIAS_FISICO`, `DIAS_DIGITAL`), hasta que Andrés diga otra cosa.
 
 ## 5. Mensaje para empezar (próxima sesión de Claude)

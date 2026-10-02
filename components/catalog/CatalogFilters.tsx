@@ -1,6 +1,6 @@
 import Form from 'next/form';
 import Link from 'next/link';
-import { catalogHref, hasActiveFilters, type CatalogCategoryFacet, type CatalogParams } from '@/lib/queries/catalog';
+import { catalogHref, hasActiveFilters, ordenPorDefecto, type CatalogCategoryFacet, type CatalogParams } from '@/lib/queries/catalog';
 
 interface CatalogFiltersProps {
   params: CatalogParams;
@@ -50,7 +50,7 @@ export default function CatalogFilters({ params, categories, idPrefix }: Catalog
       <Form action="/productos" className="space-y-6">
         {params.search && <input type="hidden" name="search" value={params.search} />}
         {params.category && <input type="hidden" name="category" value={params.category} />}
-        {params.sort !== 'recientes' && <input type="hidden" name="sort" value={params.sort} />}
+        {params.sort !== ordenPorDefecto(params.search) && <input type="hidden" name="sort" value={params.sort} />}
 
         <fieldset>
           <legend className="mb-2 text-sm font-semibold text-ink">Precio (USD)</legend>

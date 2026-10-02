@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
 import nodemailer from 'nodemailer';
+import { cifrarClaveSmtp, leerClaveSmtp, opcionesTlsSmtp } from '@/lib/smtp-seguro';
 
 // Provider presets for quick configuration
 const PROVIDER_PRESETS: Record<string, { host: string; port: number; secure: boolean }> = {
@@ -135,7 +136,7 @@ export async function PUT(request: NextRequest) {
 
         // Only update password if a new one is provided (not the masked version)
         if (smtpPassword && smtpPassword !== '••••••••') {
-            updateData.smtpPassword = smtpPassword; // In production, encrypt this!
+            updateData.smtpPassword = cifrarClaveSmtp(String(smtpPassword)); // C-160: cifrada en la base
         }
 
         if (fromName !== undefined) updateData.fromName = fromName;
@@ -213,6 +214,13 @@ export async function POST(request: NextRequest) {
                 error: 'No se ha configurado la contraseña del email',
             }, { status: 400 });
         }
+        const claveSmtp = leerClaveSmtp(settings.smtpPassword);
+        if (!claveSmtp) {
+            return NextResponse.json({
+                success: false,
+                error: 'No se pudo leer la contraseña guardada. Escríbela otra vez y guarda.',
+            }, { status: 400 });
+        }
 
         // Create transporter with settings
         const transporter = nodemailer.createTransport({
@@ -221,11 +229,10 @@ export async function POST(request: NextRequest) {
             secure: settings.smtpSecure,
             auth: {
                 user: settings.smtpUser,
-                pass: settings.smtpPassword,
+                pass: claveSmtp,
             },
-            tls: {
-                rejectUnauthorized: false, // For self-signed certificates
-            },
+            // Verifica el certificado (C-160). Para uno autofirmado: SMTP_ALLOW_SELF_SIGNED=true en el .env
+            tls: opcionesTlsSmtp(),
         });
 
         try {
@@ -290,9 +297,11 @@ export async function POST(request: NextRequest) {
                 },
             });
 
+            // C-160: ahora se verifica el certificado del servidor; si es propio y autofirmado, se explica qué hacer
+            const certificado = /certificate|self[- ]signed|CERT_|altnames/i.test(`${errorMessage} ${err?.code ?? ''}`);
             return NextResponse.json({
                 success: false,
-                error: `Error de conexión: ${errorMessage}`,
+                error: `Error de conexión: ${errorMessage}${certificado ? '. El certificado del servidor de correo no es de confianza: usa un servidor con certificado válido o, si es tuyo y lo conoces, pon SMTP_ALLOW_SELF_SIGNED=true en el .env del servidor.' : ''}`,
                 details: err?.code || 'UNKNOWN_ERROR',
             }, { status: 400 });
         }

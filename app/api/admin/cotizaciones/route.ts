@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { aCotizacionAdmin, crearCotizacion } from '@/lib/cotizaciones';
 import { ESTADOS_COTIZACION, cotizacionSchema, estaVencida } from '@/lib/cotizaciones/core';
+import { idsPorTexto } from '@/lib/busqueda-sql';
 
 // Cotizaciones del panel (C-148): lista y alta. Quien atiende órdenes atiende cotizaciones.
 
@@ -19,12 +20,8 @@ export async function GET(request: NextRequest) {
   const buscar = (params.get('buscar') ?? '').trim().slice(0, 80);
   const where: Prisma.QuoteWhereInput = {
     ...((ESTADOS_COTIZACION as readonly string[]).includes(estado) ? { status: estado } : {}),
-    ...(buscar ? { OR: [
-      { number: { contains: buscar, mode: 'insensitive' } },
-      { clientName: { contains: buscar, mode: 'insensitive' } },
-      { clientDoc: { contains: buscar, mode: 'insensitive' } },
-      { contactName: { contains: buscar, mode: 'insensitive' } },
-    ] } : {}),
+    // Sin acentos ni mayúsculas (C-160)
+    ...(buscar ? { id: { in: await idsPorTexto('quotes', ['number', 'clientName', 'clientDoc', 'contactName'], buscar) } } : {}),
   };
   const [filas, porEstado] = await Promise.all([
     prisma.quote.findMany({

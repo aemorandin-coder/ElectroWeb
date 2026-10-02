@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { idsPorTexto } from '@/lib/busqueda-sql';
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,10 +26,8 @@ export async function GET(request: NextRequest) {
       role: 'USER', // Only show actual customers, not admins
     };
     if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-      ];
+      // Sin acentos ni mayúsculas (C-160)
+      where.id = { in: await idsPorTexto('users', ['name', 'email'], search) };
     }
 
     // Get customers with order counts and totals

@@ -46,6 +46,8 @@ interface Documento {
   isCurrent: boolean;
   publishedAt: string;
   signatures: number;
+  /** C-160: /terminos o /privacidad: se leen en la tienda, no se firman */
+  publica?: boolean;
 }
 
 const fechaHora = (iso: string) => new Date(iso).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Caracas' });
@@ -73,7 +75,9 @@ export default function LegalPage() {
   const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [legado, setLegado] = useState(0);
   const [opciones, setOpciones] = useState<Record<string, string>>({});
+  const [variables, setVariables] = useState<{ nombre: string; origen: string }[]>([]);
   const [editor, setEditor] = useState<{ slug: string; title: string; content: string; requiredFor: string } | null>(null);
+  const editandoPublica = Boolean(editor && documentos.find((d) => d.slug === editor.slug)?.publica);
   const [vistaPrevia, setVistaPrevia] = useState(false);
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [publicando, setPublicando] = useState(false);
@@ -104,6 +108,7 @@ export default function LegalPage() {
         setDocumentos(data.documents);
         setLegado(data.legacyPending);
         setOpciones(data.requiredOptions ?? {});
+        setVariables(data.variables ?? []);
       })
       .catch(() => { if (vigente) toast.error('No se pudieron cargar los documentos'); });
     return () => { vigente = false; };
@@ -263,7 +268,7 @@ export default function LegalPage() {
       ) : (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm text-muted">{puedePublicar ? 'Publicar una versión nueva pide la firma otra vez a todos. Las firmas anteriores se conservan.' : 'Solo un super admin publica documentos o versiones nuevas.'}</p>
+            <p className="text-sm text-muted">{puedePublicar ? 'Publicar una versión nueva de un documento que se firma pide la firma otra vez a todos. Las firmas anteriores se conservan. Términos y Privacidad se leen en la tienda y no se firman.' : 'Solo un super admin publica documentos o versiones nuevas.'}</p>
             {puedePublicar && (
               <button type="button" onClick={() => { setErrores({}); setVistaPrevia(false); setEditor({ slug: '', title: '', content: '', requiredFor: '' }); }} className={adminPrimaryButton}>
                 <FiPlus className="h-4 w-4" aria-hidden="true" /> Nuevo documento
@@ -281,8 +286,12 @@ export default function LegalPage() {
                         <span className="font-semibold text-ink">{d.title}</span>
                         <span className={adminBadge('brand')}>Versión {d.version}</span>
                         {d.requiredFor && <span className={adminBadge('warning')}>Necesario para: {opciones[d.requiredFor] ?? d.requiredFor}</span>}
+                        {d.publica && <span className={adminBadge('success')}>Página pública</span>}
                       </p>
-                      <p className="text-sm text-muted">Publicada {fechaHora(d.publishedAt)} · {d.signatures} {d.signatures === 1 ? 'firma' : 'firmas'} · Huella {d.contentHash.slice(0, 12)}…</p>
+                      <p className="text-sm text-muted">
+                        Publicada {fechaHora(d.publishedAt)} · {d.publica ? 'se lee en la tienda, no se firma' : `${d.signatures} ${d.signatures === 1 ? 'firma' : 'firmas'}`} · Huella {d.contentHash.slice(0, 12)}…
+                        {d.publica && <> · <a href={`/${d.slug}`} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 hover:underline">Ver en la tienda</a></>}
+                      </p>
                     </div>
                     {puedePublicar && (
                       <button type="button" onClick={() => { setErrores({}); setVistaPrevia(false); setEditor({ slug: d.slug, title: d.title, content: d.content, requiredFor: d.requiredFor ?? '' }); }} className={adminSecondaryButton}>
@@ -363,13 +372,15 @@ export default function LegalPage() {
                   <input id="doc-title" className={adminInput(Boolean(errores.title))} value={editor.title} onChange={(e) => setEditor({ ...editor, title: e.target.value })} maxLength={150} />
                   {errores.title && <p className={adminError}>{errores.title}</p>}
                 </div>
-                <div>
-                  <label htmlFor="doc-req" className={adminLabel}>Se exige para</label>
-                  <select id="doc-req" className={adminInput()} value={editor.requiredFor} onChange={(e) => setEditor({ ...editor, requiredFor: e.target.value })}>
-                    <option value="">Nada (solo constancia)</option>
-                    {Object.entries(opciones).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                  </select>
-                </div>
+                {!editandoPublica && (
+                  <div>
+                    <label htmlFor="doc-req" className={adminLabel}>Se exige para</label>
+                    <select id="doc-req" className={adminInput()} value={editor.requiredFor} onChange={(e) => setEditor({ ...editor, requiredFor: e.target.value })}>
+                      <option value="">Nada (solo constancia)</option>
+                      {Object.entries(opciones).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                    </select>
+                  </div>
+                )}
               </div>
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
@@ -382,10 +393,21 @@ export default function LegalPage() {
                   <textarea id="doc-content" rows={16} className={`${adminInput(Boolean(errores.content))} h-auto py-2 font-mono text-xs`} value={editor.content} onChange={(e) => setEditor({ ...editor, content: e.target.value })} />
                 )}
                 {errores.content ? <p className={adminError}>{errores.content}</p> : (
-                  <p className={adminHint}>&quot;## &quot; al inicio = título · &quot;- &quot; = viñeta · &quot;!! &quot; = aviso en rojo · línea en blanco = párrafo nuevo.</p>
+                  <p className={adminHint}>&quot;## &quot; al inicio = título · &quot;### &quot; = subtítulo · &quot;- &quot; = viñeta · &quot;!! &quot; = aviso en rojo · &quot;**así**&quot; = negrita · línea en blanco = párrafo nuevo.</p>
+                )}
+                {editandoPublica && (
+                  <details className="mt-2 rounded-lg border border-line bg-surface p-3 text-sm">
+                    <summary className="cursor-pointer font-medium text-brand-600">Datos que se llenan solos</summary>
+                    <p className="mt-2 text-muted">Escribe el nombre entre dobles llaves, por ejemplo <code className="font-mono text-xs">{'{{correo}}'}</code>, y la página muestra el dato actual. Un título puede llevar un ancla, como <code className="font-mono text-xs">{'## 6. Garantía {#garantia}'}</code>, para los enlaces (<code className="font-mono text-xs">/terminos#garantia</code>): no la quites de los títulos que ya la tienen.</p>
+                    <ul className="mt-2 space-y-1">
+                      {variables.map((v) => <li key={v.nombre}><code className="font-mono text-xs text-ink">{`{{${v.nombre}}}`}</code> <span className="text-muted">· {v.origen}</span></li>)}
+                    </ul>
+                  </details>
                 )}
               </div>
-              {editor.slug && <p className={adminNotice('warning')}>Al publicar, todos los clientes tendrán que firmar esta versión{editor.requiredFor ? ` antes de ${(opciones[editor.requiredFor] ?? '').toLowerCase()}` : ''}.</p>}
+              {editandoPublica
+                ? <p className={adminNotice('brand')}>Al publicar, la página se actualiza al instante en la tienda. No se pide ninguna firma. Las versiones anteriores quedan en el historial.</p>
+                : editor.slug && <p className={adminNotice('warning')}>Al publicar, todos los clientes tendrán que firmar esta versión{editor.requiredFor ? ` antes de ${(opciones[editor.requiredFor] ?? '').toLowerCase()}` : ''}.</p>}
             </div>
             <div className={adminModalFooter}>
               <button type="button" onClick={() => setEditor(null)} disabled={publicando} className={adminSecondaryButton}>Cancelar</button>

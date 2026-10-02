@@ -7,6 +7,7 @@ import { ipParaRegistro } from '@/lib/ip';
 import { createAuditLog } from '@/lib/audit-log';
 import { documentoVigente, firmaVigente, generarConstancia, guardarArchivos, sha256, validarFirma } from '@/lib/legal-docs';
 import { normalizarCedula } from '@/lib/legal-docs-core';
+import { esPaginaLegalPublica } from '@/lib/legal-publico-textos';
 
 // Firmar la versión vigente de un documento (C-103).
 // - contentHash: la huella del texto que el cliente leyó. Si el documento cambió mientras lo leía, 409 y lo vuelve a leer.
@@ -22,6 +23,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const { slug } = await params;
+  // /terminos y /privacidad se leen en la tienda: no se firman (C-160)
+  if (esPaginaLegalPublica(slug)) return NextResponse.json({ error: 'Documento no encontrado' }, { status: 404 });
   const doc = await documentoVigente(slug.slice(0, 80));
   if (!doc) return NextResponse.json({ error: 'Documento no encontrado' }, { status: 404 });
 

@@ -7,6 +7,8 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 import { escapeHtml } from './html';
+import { formatUSD } from './currency';
+import { cifrarClaveSmtp, claveSmtpCifrada, leerClaveSmtp, opcionesTlsSmtp } from './smtp-seguro';
 
 // TYPES
 
@@ -46,6 +48,14 @@ const getEmailSettings = async () => {
       where: { id: 'default' },
     });
     emailSettingsCacheTime = now;
+    // C-160: una contraseña guardada en texto plano (de antes) se cifra sola la primera vez que se lee. Condicional:
+    // si el panel la cambia en ese instante, no se pisa. Si falla, se sigue con la que hay.
+    const guardada = cachedEmailSettings?.smtpPassword;
+    if (guardada && !claveSmtpCifrada(guardada)) {
+      prisma.emailSettings
+        .updateMany({ where: { id: 'default', smtpPassword: guardada }, data: { smtpPassword: cifrarClaveSmtp(guardada) } })
+        .catch((error) => console.error('[EMAIL] No se pudo cifrar la contraseña SMTP guardada:', error));
+    }
     return cachedEmailSettings;
   } catch (error) {
     console.error('[EMAIL] Error loading email settings from DB:', error);
@@ -65,19 +75,22 @@ const getTransporterWithSettings = async () => {
   const dbSettings = await getEmailSettings();
 
   // If we have database settings and they're configured, use them
-  if (dbSettings && dbSettings.isConfigured && dbSettings.smtpHost && dbSettings.smtpUser && dbSettings.smtpPassword) {
+  const claveSmtp = leerClaveSmtp(dbSettings?.smtpPassword);
+  if (dbSettings?.smtpPassword && !claveSmtp) {
+    console.error('[EMAIL] No se pudo leer la contraseña SMTP guardada (¿cambió NEXTAUTH_SECRET?): vuelve a escribirla en Configuración. Se usan las variables del .env.');
+  }
+  if (dbSettings && dbSettings.isConfigured && dbSettings.smtpHost && dbSettings.smtpUser && claveSmtp) {
     return nodemailer.createTransport({
       host: dbSettings.smtpHost,
       port: dbSettings.smtpPort || 465,
       secure: dbSettings.smtpSecure ?? true,
       auth: {
         user: dbSettings.smtpUser,
-        pass: dbSettings.smtpPassword,
+        pass: claveSmtp,
       },
       connectionTimeout: 10000,
-      tls: {
-        rejectUnauthorized: false, // For self-signed certificates
-      },
+      // Verifica el certificado del servidor (C-160). Para uno autofirmado: SMTP_ALLOW_SELF_SIGNED=true en el .env
+      tls: opcionesTlsSmtp(),
     });
   }
 
@@ -474,7 +487,7 @@ export const sendOrderNotificationEmail = async (
     <h2 style="margin:0 0 20px;color:#212529;font-size:24px;font-weight:600;">Pedido ${statusLabel}</h2>
     <p style="color:#6a6c6b;font-size:14px;">Pedido #${orderData.orderNumber}</p>
     <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:20px 0;">
-      <p style="margin:0;font-weight:700;color:#2a63cd;font-size:18px;">Total: $${orderData.total.toFixed(2)}</p>
+      <p style="margin:0;font-weight:700;color:#2a63cd;font-size:18px;">Total: ${formatUSD(orderData.total)}</p>
     </div>
     ${orderData.trackingNumber ? `<p style="color:#6a6c6b;">Guia: ${orderData.trackingNumber}</p>` : ''}
     <div style="text-align:center;margin:30px 0;">
@@ -571,7 +584,7 @@ export const sendOrderPendingPaymentEmail = async (
     </div>
     <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:20px 0;">
       <p style="margin:0;color:#6a6c6b;font-size:14px;">
-        <strong>Total a pagar:</strong> $${orderData.total.toFixed(2)} USD
+        <strong>Total a pagar:</strong> ${formatUSD(orderData.total)}
       </p>
     </div>
     <div style="text-align:center;margin:30px 0;">

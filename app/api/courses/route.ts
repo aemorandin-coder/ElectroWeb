@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
+import { idsPorTexto } from '@/lib/busqueda-sql';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,11 +16,8 @@ export async function GET(request: NextRequest) {
     if (level) where.level = level;
     if (featured === 'true') where.isFeatured = true;
     if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { shortDesc: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ];
+      // Sin acentos ni mayúsculas (C-160): "programacion" encuentra "Programación"
+      where.id = { in: await idsPorTexto('courses', ['title', 'shortDesc', 'description'], search) };
     }
 
     const courses = await prisma.course.findMany({

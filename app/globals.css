@@ -405,6 +405,27 @@ body {
   }
 }
 
+.animate-slideUp {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Menú de la cuenta en escritorio (UserAccountButton, C-160: antes vivía en un <style jsx global>) */
+@keyframes dropdown-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-dropdown-enter {
+  animation: dropdown-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Float Animation (for floating tech icons) */
 @keyframes float {
 
@@ -622,6 +643,8 @@ html {
   .animate-fade-in,
   .animate-shake,
   .animate-slideInUp,
+  .animate-slideUp,
+  .animate-dropdown-enter,
   .animate-pulse-slow,
   .animate-slideDown,
   .animate-gradient-x {

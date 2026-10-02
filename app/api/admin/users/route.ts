@@ -4,6 +4,7 @@ import type { Prisma } from '@prisma/client';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
+import { idsPorTexto } from '@/lib/busqueda-sql';
 
 // GET /api/admin/users (C-24): lista corta de usuarios para el admin.
 // Usos: Configuración → Sistema (?role=admin) y buscador de influencers en Marketing (?search=…&limit=8).
@@ -32,14 +33,8 @@ export async function GET(request: NextRequest) {
 
   const where: Prisma.UserWhereInput = {
     ...(role ? ROLE_FILTERS[role] : {}),
-    ...(search
-      ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
-        }
-      : {}),
+    // Sin acentos ni mayúsculas (C-160): "jose" encuentra a "José"
+    ...(search ? { id: { in: await idsPorTexto('users', ['name', 'email'], search) } } : {}),
   };
 
   try {

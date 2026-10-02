@@ -6,8 +6,9 @@ import sharp from 'sharp';
 import type { DocumentSignature, LegalDocument, Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { generarPdf, type BloquePdf } from '@/lib/pdf-simple';
-import { parsearDocumento, REQUERIDO_PARA } from '@/lib/legal-docs-core';
+import { parsearDocumento, REQUERIDO_PARA, sinNegrita } from '@/lib/legal-docs-core';
 import { isInside } from '@/lib/private-uploads';
+import { PAGINAS_LEGALES_PUBLICAS } from '@/lib/legal-publico-textos';
 
 export const SLUG_TERMINOS_SALDO = 'terminos-saldo';
 
@@ -266,10 +267,10 @@ export async function generarConstancia(doc: LegalDocument, firma: {
     { tipo: 'linea' },
   ];
   for (const b of parsearDocumento(doc.content)) {
-    if (b.tipo === 'subtitulo') bloques.push({ tipo: 'subtitulo', texto: b.texto });
-    else if (b.tipo === 'aviso') bloques.push({ tipo: 'parrafo', texto: b.texto, bold: true, color: 'rojo' });
-    else if (b.tipo === 'lista') b.items.forEach((texto) => bloques.push({ tipo: 'vineta', texto }));
-    else bloques.push({ tipo: 'parrafo', texto: b.texto });
+    if (b.tipo === 'subtitulo' || b.tipo === 'subsubtitulo') bloques.push({ tipo: 'subtitulo', texto: b.texto });
+    else if (b.tipo === 'aviso') bloques.push({ tipo: 'parrafo', texto: sinNegrita(b.texto), bold: true, color: 'rojo' });
+    else if (b.tipo === 'lista') b.items.forEach((texto) => bloques.push({ tipo: 'vineta', texto: sinNegrita(texto) }));
+    else bloques.push({ tipo: 'parrafo', texto: sinNegrita(b.texto) });
     bloques.push({ tipo: 'espacio', alto: 4 });
   }
   const altoFirma = (220 * info.height) / info.width;
@@ -315,7 +316,8 @@ export function sha256(buffer: Buffer): string {
 /** Documentos vigentes con el estado de firma del cliente, para "Mis documentos" */
 export async function documentosDelCliente(userId: string) {
   await documentoVigente(SLUG_TERMINOS_SALDO);
-  const docs = await prisma.legalDocument.findMany({ where: { isCurrent: true }, orderBy: { publishedAt: 'asc' } });
+  // Las páginas públicas (/terminos y /privacidad, C-160) se leen en la tienda: no se firman ni salen aquí
+  const docs = await prisma.legalDocument.findMany({ where: { isCurrent: true, slug: { notIn: [...PAGINAS_LEGALES_PUBLICAS] } }, orderBy: { publishedAt: 'asc' } });
   const anteriores = await prisma.documentSignature.findMany({
     where: { userId, document: { isCurrent: false } },
     include: { document: { select: { title: true, version: true, slug: true } } },

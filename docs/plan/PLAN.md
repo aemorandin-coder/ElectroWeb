@@ -298,7 +298,7 @@ docs/plan/estado/G-*.md
 
 Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estado/<ID>.md`. Aquí va el mapa.
 
-### 5.1 Lo hecho (128 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 01/10)
+### 5.1 Lo hecho (129 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 02/10)
 
 **Plan original (12/09):**
 | Fase | Tareas | Qué dejó |
@@ -320,16 +320,12 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 | Panel del cliente | C-55, C-128, C-137, C-138 | Marco, inicio con resumen, Mis pedidos, Favoritos, Direcciones y Mi perfil en pestañas. |
 | Legal y facturación | C-103, C-120, C-144, C-146, C-146b, C-147, C-147b, C-148, C-148b, C-151, C-159 | Firma de documentos, IVA incluido a la vista, precio sugerido desde el costo, datos para la factura, relación de ventas, cotizaciones y términos sin promesas falsas. |
 | Crecimiento | C-112, C-113, C-116, C-145, C-149 | ElectroStudio, medición del embudo de compra y el catálogo legible para Google, las redes y las IA. |
-| Equipo y documentos | C-53, C-77, C-86, C-90, C-91, C-93, C-94, C-98, C-99, C-108, C-111, C-152, C-156, C-160 | Revisiones de Gemini y de ChatGPT, deuda técnica (ESLint en 0), el bloque único de subida y este orden de documentos. |
+| Equipo y documentos | C-53, C-77, C-86, C-90, C-91, C-93, C-94, C-98, C-99, C-108, C-111, C-152, C-156, C-160, C-164 | Revisiones de Gemini y de ChatGPT, deuda técnica (ESLint en 0), el bloque único de subida y este orden de documentos. |
 
 ### 5.2 Lista única de pendientes
 Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
-**En fila (Claude):** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Lo menor que queda:
-- `components/modals/RechargeModalV2.tsx` todavía pide `/api/settings/public` (carril Gemini: tarjeta G de la próxima ronda).
-- Las valoraciones de `app/creator` y `app/admin` salen con punto decimal ("4.5"): coma, como el resto de la tienda (tarjeta G).
-- `POST /api/customer/balance/add` (solo admin) no lo llama ninguna pantalla: ver si se borra.
-- `prisma/seed.ts` crea un admin con la contraseña `admin123` por defecto: guion de desarrollo, nunca en producción (cambiar el valor por defecto por un error si falta la variable).
+**En fila (Claude):** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Los menores se cerraron en C-164 (`balance/add` borrado, `seed.ts` sin contraseña por defecto, valoraciones con coma, `RechargeModalV2` sin `fetch`). Lo que queda no es código:
 - El abogado revisa `/terminos` y `/privacidad` desde Legal → Documentos (`estado/C-160.md`).
 
 **Esperan un dato o una decisión de Andrés:**
@@ -352,7 +348,7 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 **Limpieza (sin urgencia):**
 - Máquina de Andrés: la carpeta y las ramas de ChatGPT, y las ramas locales ya fusionadas (comandos en `SIGUIENTE.md`).
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
-- `public/uploads/` tiene 40 archivos versionados aunque está en `.gitignore`: decidir si se sacan del índice (`git rm --cached`).
+- `public/uploads/` tiene 40 archivos versionados (favicons y fotos viejas de productos) aunque está en `.gitignore`: decidir si se sacan del índice (`git rm --cached`). Ojo: el próximo `git pull` en el servidor los borraría del disco; respaldar la carpeta antes (`estado/C-164.md`).
 
 ### 5.3 Crecimiento: qué frena y qué sigue
 La base técnica está: el embudo se mide (C-145), el catálogo es legible para buscadores e IA (C-149), el precio dice su IVA, hay cotizaciones para empresas y la ficha da confianza antes de pagar.

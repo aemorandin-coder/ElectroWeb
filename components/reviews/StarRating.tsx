@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { formatRating } from '@/lib/currency';
 
 interface StarRatingProps {
     rating: number;
@@ -58,7 +59,7 @@ export default function StarRating({
             ))}
             {showNumber && (
                 <span className="ml-2 text-sm font-semibold text-ink">
-                    {rating.toFixed(1)}
+                    {formatRating(rating)}
                 </span>
             )}
         </div>

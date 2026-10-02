@@ -78,3 +78,9 @@ export function formatPuntos(amount: number): string {
 export function formatVES(amount: number): string {
   return `Bs. ${formatAmount(amount)}`;
 }
+
+/** Valoración con una decimal y coma, como el resto de los números de la tienda: 4,5 (C-164). */
+export function formatRating(value: number | string | null | undefined): string {
+  const numero = Number(value);
+  return (Number.isFinite(numero) ? numero : 0).toFixed(1).replace('.', ',');
+}

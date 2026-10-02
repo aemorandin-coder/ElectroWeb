@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { FiStar, FiVideo, FiX, FiExternalLink } from 'react-icons/fi';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { formatRating } from '@/lib/currency';
 
 const CATEGORIES = [
   { value: '', label: 'Todos' },
@@ -264,7 +265,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                   {v.avgRating !== null && (
                     <div className="flex items-center gap-2 mb-2">
                       <StarDisplay rating={v.avgRating} />
-                      <span className="text-xs font-bold text-ink">{v.avgRating.toFixed(1)}</span>
+                      <span className="text-xs font-bold text-ink">{formatRating(v.avgRating)}</span>
                       <span className="text-xs text-muted">({v.reviewCount} reseñas)</span>
                     </div>
                   )}

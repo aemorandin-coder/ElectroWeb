@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FiExternalLink } from 'react-icons/fi';
 import { adminPageHeader, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
+import { formatRating } from '@/lib/currency';
 
 type Course = {
   id: string;
@@ -119,7 +120,7 @@ export default function CreatorCoursesPage() {
 
                   <div className="flex items-center gap-5 text-xs text-muted flex-wrap">
                     <span>{course._count.enrollments} estudiantes</span>
-                    <span>{course.rating?.toFixed(1) ?? '—'} ({course._count.reviews} reseñas)</span>
+                    <span>{course.rating != null ? formatRating(course.rating) : '—'} ({course._count.reviews} reseñas)</span>
                     <span>{course.totalLessons} lecciones</span>
                     <span>{course._count.modules} módulos</span>
                     <span className="whitespace-nowrap text-ink font-bold tabular-nums">{formatUSD(course.priceUSD)}</span>

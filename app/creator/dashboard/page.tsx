@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FiArrowLeft, FiArrowRight } from 'react-icons/fi';
 import { adminPageHeader, adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import { formatRating } from '@/lib/currency';
 
 type Course = {
   id: string;
@@ -101,7 +102,7 @@ export default function CreatorDashboardPage() {
     { label: 'Ingresos', value: formatUSD(creator.totalRevenue), sub: `${creator.commissionRate}% tuyo por venta` },
     { label: 'Estudiantes', value: totalStudents.toString(), sub: 'matriculados en total' },
     { label: 'Cursos Activos', value: `${activeCourses}/${courses.length}`, sub: 'activos de total' },
-    { label: 'Calificación', value: avgRating ? avgRating.toFixed(1) : '—', sub: `${totalReviews} reseñas` },
+    { label: 'Calificación', value: avgRating ? formatRating(avgRating) : '—', sub: `${totalReviews} reseñas` },
   ];
 
   return (
@@ -173,7 +174,7 @@ export default function CreatorDashboardPage() {
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted flex-wrap">
                     <span>{course._count.enrollments} estudiantes</span>
-                    <span>{course.rating?.toFixed(1) ?? '—'} rating</span>
+                    <span>{course.rating != null ? formatRating(course.rating) : '—'} rating</span>
                     <span>{course.totalLessons} lecciones</span>
                     <span className="text-ink font-semibold">{formatUSD(course.priceUSD)}</span>
                   </div>

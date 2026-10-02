@@ -6,9 +6,18 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting seed...');
 
+  // Guion de desarrollo: sus upsert pisan redes sociales, categorías y productos. Nunca contra producción.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('El seed es solo para desarrollo: no se corre con NODE_ENV=production.');
+  }
+  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+  if (!adminPassword || adminPassword.length < 12) {
+    throw new Error('Define ADMIN_DEFAULT_PASSWORD (12 caracteres o más) en el entorno para crear el administrador de desarrollo.');
+  }
+
   // 1. CREATE ADMIN USER
   console.log('👤 Creating admin user...');
-  const hashedPassword = await bcrypt.hash(process.env.ADMIN_DEFAULT_PASSWORD || 'admin123', 10);
+  const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
   await prisma.user.upsert({
     where: { email: 'admin@electroshop.com' },
@@ -262,7 +271,7 @@ async function main() {
   console.log('🎉 Seed completed successfully!');
   console.log('');
   console.log('📋 Credentials:');
-  console.log('   Admin: admin@electroshop.com / admin123');
+  console.log('   Admin: admin@electroshop.com (contraseña: ADMIN_DEFAULT_PASSWORD)');
   console.log('');
 }
 

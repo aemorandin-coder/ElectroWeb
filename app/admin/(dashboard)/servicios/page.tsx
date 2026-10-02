@@ -9,6 +9,7 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useState } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiVideo, FiToggleLeft, FiToggleRight, FiStar, FiX, FiSave, FiImage } from 'react-icons/fi';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { formatRating } from '@/lib/currency';
 
 const CATEGORIES = [
   { value: 'CCTV', label: 'Sistemas CCTV' },
@@ -339,7 +340,7 @@ export default function AdminServiciosPage() {
                   {v.avgRating !== null ? (
                     <div className="flex items-center gap-1">
                       <FiStar className="w-3 h-3 text-warning fill-warning" />
-                      <span className="text-xs font-bold text-ink">{v.avgRating.toFixed(1)}</span>
+                      <span className="text-xs font-bold text-ink">{formatRating(v.avgRating)}</span>
                       <span className="text-xs text-muted">({v.reviewCount})</span>
                     </div>
                   ) : (

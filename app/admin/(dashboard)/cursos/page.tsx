@@ -11,6 +11,7 @@ import { FiBookOpen, FiStar } from 'react-icons/fi';
 import { FaStar } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { formatRating } from '@/lib/currency';
 
 const CATEGORIES = [
   { value: 'DESARROLLO', label: 'Desarrollo' },
@@ -369,7 +370,7 @@ export default function AdminCursosPage() {
                   <span>{formatUSD(Number(course.priceUSD))}</span>
                   <span>{course._count?.enrollments ?? course.enrollmentCount} inscritos</span>
                   <span>{course._count?.modules ?? 0} módulos</span>
-                  {course.rating && <span className="inline-flex items-center gap-1"><FaStar className="h-3 w-3 text-warning shrink-0" aria-hidden="true" />{Number(course.rating).toFixed(1)}</span>}
+                  {course.rating && <span className="inline-flex items-center gap-1"><FaStar className="h-3 w-3 text-warning shrink-0" aria-hidden="true" />{formatRating(course.rating)}</span>}
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => openEdit(course)} className="flex-1 py-1.5 text-xs font-semibold text-brand-500 border border-brand-500 rounded-lg hover:bg-brand-500 hover:text-white transition-colors">Editar</button>

@@ -14,6 +14,7 @@
 - **Crons** (`crontab -l` de `luami`, desde el 30/09). Cada guion lee `CRON_SECRET` del `.env`:
   - `0 * * * * /home/luami/cron-favoritos.sh`: avisos de favoritos (C-138).
   - `15 */2 * * * /home/luami/cron-envios.sh`: rastreo de las guías de ZOOM (C-100).
+  - `5 * * * * /home/luami/cron-respaldos.sh`: respaldo diario a Google Drive (C-165, guion en `docs/plan/scripts/cron-respaldos.sh`).
   - `0 15 * * * /home/luami/cron-resenas.sh`: pide la reseña por correo a quien recibió su pedido hace unos días (C-157, una vez al día). Confirmar con `crontab -l` que la línea está puesta (la ruta ya existe en producción desde el 01/10).
   - Para probar uno a mano se corre el guion: responde JSON (`revisados`, `avisos`…).
 - **Variables de entorno:** todas explicadas en `.env.example`. Opcionales que todavía no están en el servidor: `GROQ_API_KEY` (C-155, la pone Andrés con el deploy), `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_FB_PIXEL_ID` (C-145), `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (C-85) y `SMTP_ALLOW_SELF_SIGNED` (C-160, solo si el servidor de correo del panel tiene un certificado autofirmado).
@@ -45,6 +46,23 @@ DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg
 **Respaldo de archivos:** `tar czf ~/archivos-<fecha>.tgz private-uploads public/uploads`. Incluye las constancias firmadas (`private-uploads/signatures/`), las fotos de garantía (`private-uploads/warranty/`) y las fotos de productos y de ElectroStudio (`public/uploads/`).
 
 **Volver atrás:** `git reset --hard <commit> && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas y tablas nuevas no molestan al código anterior: no se quitan.
+
+### Respaldos automáticos a Google Drive (C-165)
+Configuración → Respaldos (solo el dueño). Cada día, a la hora elegida (Venezuela), la tienda vuelca la base (`pg_dump -Fc`), comprueba que el volcado se lee (`pg_restore --list`), lo **cifra** con la clave pública del dueño, lo sube a la carpeta "Respaldos ElectroShop" de su Drive y comprueba que Drive lo guardó completo (tamaño y MD5). Los domingos, y al pulsar "Respaldar ahora", también empaqueta `private-uploads/` y `public/uploads/` (constancias firmadas, fotos de garantía, de productos y de ElectroStudio). Solo cuenta como hecho lo que pasó todo eso.
+- **Dónde está cada cosa:** código en `lib/respaldos/` (`formato.ts` cifrado, `volcado.ts` pg_dump y tar, `drive.ts` API de Drive, `servicio.ts` el respaldo y la retención); rutas en `app/api/admin/respaldos/**` y `app/api/cron/respaldos`; pantalla en `settings/_components/BackupsSection.tsx`; tablas `backup_settings` (una fila) y `backup_runs` (el historial).
+- **Clave:** RSA-4096 creada desde el panel. La **privada se muestra una sola vez** y no se guarda en ningún lado (ni en la base ni en el `.env`); solo queda la pública. Sin la privada no hay forma de abrir un respaldo: va en el gestor de contraseñas de Andrés, fuera del servidor. Cambiar la clave solo afecta a los respaldos nuevos.
+- **Google:** un cliente OAuth propio, creado por Andrés en Google Cloud (pasos en la pantalla). Permiso `drive.file`: la tienda solo ve lo que ella misma sube. El ID y el secreto se pegan en el panel (el secreto y el permiso se guardan cifrados con `NEXTAUTH_SECRET`; si ese valor cambia, hay que volver a conectar Drive). La dirección de redireccionamiento autorizada es `https://electroshopve.com/api/admin/respaldos/drive/callback`. **Publicar la aplicación** en la pantalla de consentimiento: en modo "Prueba" Google vence el permiso a los 7 días.
+- **Cron** (`docs/plan/scripts/cron-respaldos.sh`): una llamada por hora, `5 * * * *`. La ruta decide si toca (encendido, ya pasó la hora, no hay uno bueno hoy; máximo 3 intentos fallidos al día) y responde enseguida. Un respaldo que falla avisa por los canales de "Respaldo fallido" (panel, correo y Telegram; Notificaciones → Qué avisar).
+- **Retención:** los días elegidos (14 por defecto), y **nunca se borran los últimos 3 buenos** de cada tipo. Solo se borra de Drive lo que la tienda registró.
+- **Dashboard:** el dueño ve un recordatorio si los respaldos están apagados o el último bueno tiene más de 36 horas.
+- **Requisitos del servidor:** `pg_dump`, `pg_restore` y `tar` instalados, y `pg_dump` de la misma versión mayor que PostgreSQL o más nueva (`pg_dump --version` y `psql "$DB" -Atc 'show server_version'`). Espacio libre en `/tmp` (o en `RESPALDOS_DIR_TEMPORAL`) para el volcado y su copia cifrada.
+- **Verificar:** el botón "Verificar el último" pregunta a Drive por el MD5 y el tamaño del último respaldo de cada tipo (Drive calcula el suyo). Lo que **no** comprueba es que se pueda restaurar: eso se prueba con la clave privada, **una vez al trimestre** (abajo).
+
+**Restaurar un respaldo** (nunca desde el panel, a propósito: una sesión robada no debe poder bajar ni pisar la base):
+1. Bajar el `.enc` de la carpeta "Respaldos ElectroShop" de Drive (`electroshop-base-AAAA-MM-DD-HHMM.dump.enc`).
+2. Descifrar, en una computadora con Node y este repositorio, con la clave privada guardada como `clave.pem`: `npx tsx scripts/respaldo-descifrar.ts electroshop-base-….dump.enc clave.pem`. Si el archivo está alterado o la clave no es la suya, no deja nada a medias.
+3. **Prueba de restauración (sin tocar producción):** crear una base nueva y vacía (`createdb prueba_restauracion`) y `pg_restore --no-owner --no-acl -d prueba_restauracion electroshop-base-….dump`; contar filas de `users`, `orders` y `user_balances`. Borrarla después.
+4. **Restauración real** (el servidor se perdió): instalar el servidor, crear la base, `pg_restore --no-owner --no-acl -d <base> …dump`, y desde el paquete de archivos (`electroshop-archivos-….tar.gz.enc`, descifrado igual) `tar -xzf … -C /var/www/electroshopve`. El `.env` no está en el respaldo: guardar una copia aparte (sobre todo `NEXTAUTH_SECRET`, `DATABASE_URL`, `CRON_SECRET` y las claves de pago).
 
 **Emergencias del panel** (en el servidor, C-141 y C-143):
 - La tienda quedó sin super admin, o el dueño quedó como Administrador: `npx tsx scripts/create-master-admin.ts <correo>` (no cambia la contraseña) y volver a entrar.

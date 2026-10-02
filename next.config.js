@@ -9,6 +9,8 @@ const wwwRedirect = SITE_HOST.startsWith('www.')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // C-165: no anunciar con qué está hecha la tienda (cabecera X-Powered-By)
+  poweredByHeader: false,
   // En producción, scripts/deploy.sh alterna .next-a y .next-b: compila en la que no se está sirviendo y solo
   // entonces reinicia. Antes el build borraba .next con la tienda corriendo y PM2 la reiniciaba sin parar
   // ("Could not find a production build", 55.910 veces hasta el 26/09). Next graba este nombre en cada ruta

@@ -138,6 +138,15 @@ export async function getDashboard(): Promise<DashboardData> {
   const etiquetaDia = new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', weekday: 'short', day: 'numeric' });
 
   const tienda: DashboardData['tienda'] = [];
+  // C-165: sin respaldo, un fallo del servidor puede costar las órdenes y los Puntos ES. Si la tabla aún no existe, el Dashboard no se rompe
+  const [respaldoAjustes, respaldoAlDia] = await Promise.all([
+    prisma.backupSettings.findUnique({ where: { id: 'default' }, select: { enabled: true } }).catch(() => undefined),
+    prisma.backupRun.findFirst({ where: { kind: 'DB', status: 'OK', deletedAt: null, startedAt: { gte: new Date(Date.now() - 36 * 60 * 60_000) } }, select: { id: true } }).catch(() => undefined),
+  ]);
+  if (respaldoAjustes !== undefined) {
+    if (!respaldoAjustes?.enabled) tienda.push({ clave: 'respaldos', texto: 'Los respaldos automáticos no están encendidos: si el servidor falla, se pierden las órdenes y los Puntos ES.', href: '/admin/settings#respaldos', soloDueno: true });
+    else if (respaldoAlDia === null) tienda.push({ clave: 'respaldos', texto: 'El último respaldo bueno tiene más de un día o no hay ninguno: revisa el historial de respaldos.', href: '/admin/settings#respaldos', soloDueno: true });
+  }
   if (metodosActivos === 0) tienda.push({ clave: 'pagos', texto: 'No hay ningún método de pago activo: nadie puede pagar.', href: '/admin/payments', soloDueno: true });
   if (!ajustes?.taxEnabled || !(Number(ajustes.taxPercent ?? 0) > 0)) tienda.push({ clave: 'iva', texto: 'Falta el porcentaje del IVA: la tienda no dice "IVA incluido".', href: '/admin/settings', soloDueno: true });
   if (!ajustes?.rif || !ajustes.address) tienda.push({ clave: 'negocio', texto: 'Faltan el RIF o la dirección de la tienda (salen en el pie, los presupuestos y Google).', href: '/admin/settings', soloDueno: true });

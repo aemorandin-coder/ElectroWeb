@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Reels de marketing: páginas de animación con GSAP minificado, no son parte de la tienda
+    "marketing/**",
   ]),
   // Los guiones de Node en CommonJS (.cjs y los .js de scripts/) usan require(): es lo correcto en ese formato
   {

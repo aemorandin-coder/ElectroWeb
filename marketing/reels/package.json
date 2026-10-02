@@ -1,0 +1,9 @@
+{
+  "name": "electroshop-reels",
+  "private": true,
+  "type": "module",
+  "description": "Reels de ElectroShop animados con GSAP y grabados cuadro a cuadro con Chromium + ffmpeg",
+  "dependencies": {
+    "playwright-core": "^1.55.0"
+  }
+}

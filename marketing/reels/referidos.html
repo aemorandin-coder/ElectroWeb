@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Reel Referidos ElectroShop</title>
+<style>
+@font-face { font-family: Inter; src: url(assets/InterVariable.woff2) format('woff2'); font-weight: 100 900; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-500-normal.woff2) format('woff2'); font-weight: 500; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-600-normal.woff2) format('woff2'); font-weight: 600; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-700-normal.woff2) format('woff2'); font-weight: 700; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-800-normal.woff2) format('woff2'); font-weight: 800; }
+@font-face { font-family: Tektrron; src: url(assets/Tektrron.ttf) format('truetype'); }
+
+:root {
+  --brand-50: #f4f7fc; --brand-100: #eaeffa; --brand-200: #d4e0f5; --brand-300: #aac1eb; --brand-400: #7599de;
+  --brand-500: #2a63cd; --brand-600: #1e4ba3; --brand-700: #1a3b7e; --brand-800: #142d61; --brand-900: #0e1f44;
+  --ink: #212529; --ink-soft: #495057; --muted: #6a6c6b; --subtle: #adb5bd; --line: #e9ecef; --line-strong: #dee2e6; --surface: #f8f9fa;
+  --accent: #22d3ee; --success: #10b981; --success-strong: #047857; --warning: #f59e0b; --warning-strong: #b45309;
+  --emoji: "Noto Color Emoji";
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 540px; height: 960px; overflow: hidden; background: #141517; }
+body { font-family: Inter, var(--emoji), sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+svg { display: block; }
+.ic { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+#stage { position: relative; width: 540px; height: 960px; overflow: hidden; }
+
+/* ---------- Fondos ---------- */
+#bgDark { position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 32%, #3b3e44 0%, #24262a 55%, #151618 100%); }
+#bgDark .grid { position: absolute; inset: -40px;
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 28px 28px; }
+#bgBlue { position: absolute; inset: 0; clip-path: circle(0% at 50% 52%);
+  background: linear-gradient(180deg, #2f6ad6 0%, #1e4ba3 52%, #1a3b7e 100%); overflow: hidden; }
+#bgBlue .panel { position: absolute; background: rgba(255,255,255,.07); }
+#bgBlue .pA { width: 700px; height: 420px; left: -330px; top: -170px; transform: rotate(-32deg); }
+#bgBlue .pB { width: 760px; height: 460px; right: -420px; bottom: -150px; transform: rotate(-32deg); background: rgba(255,255,255,.06); }
+#bgBlue .pC { width: 300px; height: 900px; left: 300px; top: -200px; transform: rotate(-32deg); background: rgba(255,255,255,.035); }
+#bgBlue .glow { position: absolute; width: 520px; height: 520px; border-radius: 50%; left: 10px; top: 120px;
+  background: radial-gradient(circle, rgba(34,211,238,.20) 0%, rgba(34,211,238,0) 65%); }
+.noise { position: absolute; inset: 0; opacity: .07; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>"); }
+
+/* ---------- Píldora de texto (como el reel de Vale) ---------- */
+.cap { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 92px; visibility: hidden;
+  display: flex; align-items: center; gap: 10px; white-space: nowrap;
+  padding: 7px 18px 7px 7px; border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff 0%, #e9ebee 100%);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 -1px 0 rgba(0,0,0,.06);
+  font: 700 17px/1.2 Poppins, var(--emoji), sans-serif; color: #15171a; z-index: 30; }
+.cap b { color: var(--brand-600); font-weight: 700; }
+.cap .tx { white-space: pre; }
+.cap .av { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--brand-500); color: #fff; font: 700 17px/1 Poppins; box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--brand-500); margin-left: 3px; }
+.cap .num { background: var(--brand-600); }
+
+/* ---------- Etiquetas tipo sticker ---------- */
+.stk { position: absolute; visibility: hidden; z-index: 25; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-radius: 12px;
+  font: 700 17px/1.15 Poppins, var(--emoji), sans-serif;
+  box-shadow: 0 14px 30px rgba(0,0,0,.35); }
+.stk.dark { background: #16181b; color: #fff; border: 1px solid rgba(255,255,255,.08); }
+.stk.light { background: #fff; color: #15171a; }
+
+/* ---------- Teléfono ---------- */
+#phoneWrap { position: absolute; left: 90px; top: 172px; width: 360px; height: 744px; z-index: 10; visibility: hidden; }
+#phone { position: absolute; inset: 0; border-radius: 58px; background: #0d0e10; padding: 10px;
+  box-shadow: 0 0 0 2px #2c2f34, 0 0 0 3px #0a0a0b, 0 40px 80px rgba(0,0,0,.55), 0 10px 25px rgba(0,0,0,.35); }
+#screen { position: relative; width: 100%; height: 100%; border-radius: 48px; overflow: hidden; background: #fff; }
+.status { position: absolute; left: 0; right: 0; top: 0; height: 46px; z-index: 20; display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 28px 0 34px; font: 600 15px/1 Inter; color: #111; }
+.island { position: absolute; left: 50%; top: 11px; width: 98px; height: 29px; margin-left: -49px; border-radius: 20px; background: #000; z-index: 21; }
+.sicons { display: flex; align-items: center; gap: 5px; font: 700 12.5px/1 Inter; }
+.scr { position: absolute; left: 0; right: 0; top: 0; bottom: 0; padding-top: 46px; background: #fff; overflow: hidden; visibility: hidden; }
+
+/* Encabezado de la web dentro del teléfono */
+.site-h { height: 46px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border-bottom: 1px solid var(--line); background: #fff; }
+.site-h img { height: 19px; }
+.site-h .r { display: flex; align-items: center; gap: 12px; color: var(--ink-soft); }
+.site-h .u { width: 30px; height: 30px; border-radius: 9px; background: var(--brand-500); color: #fff; display: flex; align-items: center; justify-content: center; font: 700 13px/1 Inter; }
+
+/* ---- Pantalla 1: chats ---- */
+#scrChats { background: #fff; }
+.wa-top { padding: 6px 16px 0; }
+.wa-top .row1 { display: flex; justify-content: space-between; align-items: center; color: #0a7c66; font: 500 14px Inter; height: 26px; }
+.wa-top h2 { font: 800 30px/1.1 Inter; letter-spacing: -.5px; color: #111; margin-top: 2px; }
+.wa-search { margin: 10px 16px 6px; height: 34px; border-radius: 10px; background: #f0f1f2; display: flex; align-items: center; gap: 6px; padding: 0 10px; color: #8a8d91; font: 400 14px Inter; }
+.wa-filters { display: flex; gap: 6px; padding: 4px 16px 8px; }
+.wa-filters span { white-space: nowrap; font: 500 12px Inter; padding: 5px 10px; border-radius: 999px; background: #f0f1f2; color: #54575c; }
+.wa-filters span.on { background: #d9fdd3; color: #0a7c66; }
+#chatList { position: relative; height: 560px; overflow: hidden; }
+.crow { position: absolute; left: 0; right: 0; top: 0; height: 70px; display: flex; align-items: center; gap: 11px; padding: 0 14px; background: #fff; }
+.crow .a { width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font: 700 18px Inter; color: #fff; }
+.crow .m { flex: 1; min-width: 0; border-bottom: 1px solid #eef0f1; height: 70px; display: flex; flex-direction: column; justify-content: center; }
+.crow .t1 { display: flex; justify-content: space-between; align-items: baseline; }
+.crow .n { font: 600 15px Inter; color: #111; }
+.crow .tm { font: 400 12px Inter; color: #8a8d91; }
+.crow .t2 { display: flex; justify-content: space-between; align-items: center; margin-top: 3px; gap: 8px; }
+.crow .p { font: 400 13.5px Inter, var(--emoji); color: #6b6f74; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crow.unread .p { color: #111; font-weight: 500; }
+.crow.unread .tm { color: #1fa855; font-weight: 600; }
+.badge { min-width: 21px; height: 21px; border-radius: 999px; background: #25d366; color: #fff; font: 700 11.5px/21px Inter; text-align: center; padding: 0 6px; flex-shrink: 0; }
+
+/* ---- Pantalla 2: Programa de Referidos ---- */
+.crumb { display: flex; align-items: center; gap: 5px; padding: 10px 16px 0; font: 500 11.5px Inter; color: var(--muted); }
+.crumb b { color: var(--ink); font-weight: 600; }
+.ref-body { padding: 0 16px; }
+.ref-hero { text-align: center; padding-top: 12px; }
+.gift { width: 52px; height: 52px; border-radius: 16px; background: var(--brand-50); color: var(--brand-500); display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.ref-hero h1 { font: 700 21px/1.2 Inter; color: var(--ink); margin-top: 10px; letter-spacing: -.2px; }
+.ref-hero p { font: 400 12px/1.5 Inter; color: var(--muted); margin: 6px auto 0; max-width: 290px; }
+.ref-hero p strong { color: var(--brand-500); font-weight: 600; }
+.bens { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.ben { display: flex; gap: 10px; align-items: flex-start; padding: 10px 11px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.ben .t { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ben h4 { font: 600 12.5px/1.3 Inter; color: var(--ink); }
+.ben p { font: 400 11px/1.4 Inter; color: var(--muted); margin-top: 1px; }
+.cta { margin-top: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 12px; text-align: center; }
+.cta h4 { font: 600 12.5px Inter; color: var(--ink); }
+.cta p { font: 400 11px/1.4 Inter; color: var(--muted); margin: 3px 0 11px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 42px; padding: 0 20px; border-radius: 12px; background: var(--brand-500); color: #fff; font: 600 13px Inter; }
+.dim { position: absolute; inset: 0; background: rgba(10,15,30,.38); visibility: hidden; z-index: 5; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 26px 26px 0 0; padding: 12px 18px 34px; z-index: 6; text-align: center; box-shadow: 0 -10px 30px rgba(0,0,0,.15); visibility: hidden; }
+.sheet .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line-strong); margin: 0 auto 14px; }
+.okc { width: 58px; height: 58px; border-radius: 50%; background: var(--success); margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(16,185,129,.35); }
+.sheet h3 { font: 700 17px/1.25 Inter; color: var(--ink); margin-top: 12px; }
+.sheet .sub { font: 400 12px Inter; color: var(--muted); margin-top: 4px; }
+.linkf { margin-top: 14px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; height: 44px; border-radius: 12px; border: 1px solid var(--brand-200); background: var(--brand-50); color: var(--brand-700); font: 600 13px Inter; white-space: nowrap; text-align: left; }
+.linkf span { flex: 1; }
+.linkf .cp { height: 32px; width: 36px; justify-content: center; padding: 0; border-radius: 9px; background: var(--brand-500); color: #fff; display: flex; align-items: center; gap: 5px; font: 600 12px Inter; }
+
+/* ---- Pantalla 3: WhatsApp ---- */
+#scrWa { background: #efeae2; }
+.wa-h { height: 58px; background: #fff; display: flex; align-items: center; gap: 9px; padding: 0 10px; border-bottom: 1px solid #e6e6e6; }
+.wa-h .ga { width: 38px; height: 38px; border-radius: 50%; background: #dfe5e7; color: #8696a0; display: flex; align-items: center; justify-content: center; }
+.wa-h b { font: 600 15px Inter; color: #111; display: block; }
+.wa-h small { font: 400 11.5px Inter; color: #667781; }
+.wa-body { position: relative; padding: 12px 10px; display: flex; flex-direction: column; gap: 7px; }
+.day { align-self: center; font: 500 11px Inter; color: #54656f; background: #fff; padding: 4px 10px; border-radius: 8px; box-shadow: 0 1px 1px rgba(0,0,0,.06); }
+.bub { max-width: 82%; border-radius: 12px; padding: 6px 8px 5px; font: 400 13.5px/1.38 Inter, var(--emoji); color: #111; box-shadow: 0 1px 1px rgba(0,0,0,.08); position: relative; visibility: hidden; }
+.bub.out { align-self: flex-end; background: #d9fdd3; border-top-right-radius: 4px; }
+.bub.in { align-self: flex-start; background: #fff; border-top-left-radius: 4px; }
+.bub .who { font: 600 12.5px Inter; display: block; margin-bottom: 1px; }
+.bub .tm { float: right; font: 400 10.5px Inter; color: #667781; margin: 6px 0 -2px 10px; display: inline-flex; align-items: center; gap: 3px; }
+.bub a { color: #027eb5; text-decoration: none; font-weight: 500; }
+.prev { border-radius: 8px; overflow: hidden; background: rgba(0,0,0,.05); margin-bottom: 6px; }
+.prev .ban { background: linear-gradient(135deg, var(--brand-500), var(--brand-700)); padding: 12px 10px 10px; text-align: center; }
+.prev .pill { background: #fff; border-radius: 999px; height: 36px; display: flex; align-items: center; justify-content: center; }
+.prev .pill img { height: 21px; }
+.prev .ban b { display: block; color: #fff; font: 800 15px Poppins; margin-top: 7px; }
+.prev .tx { padding: 7px 9px 8px; }
+.prev .tx b { font: 600 12px/1.3 Inter; display: block; }
+.prev .tx span { font: 400 11px/1.35 Inter; color: #667781; display: block; margin-top: 2px; }
+.prev .tx i { font: 400 11px Inter; color: #027eb5; font-style: normal; display: block; margin-top: 3px; }
+.wa-in { position: absolute; left: 0; right: 0; bottom: 0; height: 74px; background: #f6f6f6; display: flex; align-items: flex-start; gap: 8px; padding: 10px 10px 0; color: #8696a0; }
+.wa-in .f { flex: 1; height: 36px; border-radius: 18px; background: #fff; border: 1px solid #e3e3e3; display: flex; align-items: center; padding: 0 14px; font: 400 14px Inter; }
+
+/* ---- Pantalla 4: Mi panel ---- */
+.pan { padding: 14px 16px 0; }
+.pan .hi { font: 400 12.5px Inter; color: var(--muted); }
+.pan h1 { font: 700 23px/1.15 Inter; color: var(--ink); }
+.ptsCard { margin-top: 12px; border-radius: 18px; padding: 16px; color: #fff; background: linear-gradient(135deg, var(--brand-600), var(--brand-700)); position: relative; box-shadow: 0 10px 24px rgba(26,59,126,.25); }
+.ptsCard .lb { display: flex; align-items: center; gap: 7px; font: 400 13px Inter; color: rgba(255,255,255,.82); }
+.ptsCard .amt { margin-top: 4px; font: 700 31px/1.15 Inter; font-variant-numeric: tabular-nums; letter-spacing: -.3px; }
+.ptsCard .amt small { font: 600 15px Inter; opacity: .8; }
+.ptsCard .bt { display: flex; gap: 8px; margin-top: 14px; }
+.ptsCard .bt span { flex: 1; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; font: 600 13px Inter; }
+.ptsCard .b1 { background: #fff; color: var(--brand-700); }
+.ptsCard .b2 { border: 1px solid rgba(255,255,255,.4); color: #fff; }
+.plus { position: absolute; right: 14px; top: 12px; background: var(--success); color: #fff; font: 700 13px Inter; padding: 4px 9px; border-radius: 999px; visibility: hidden; box-shadow: 0 6px 14px rgba(4,120,87,.35); }
+.sec { display: flex; justify-content: space-between; align-items: baseline; margin-top: 18px; }
+.sec h3 { font: 600 15px Inter; color: var(--ink); }
+.sec span { font: 500 11.5px Inter; color: var(--brand-600); }
+#sales { position: relative; margin-top: 8px; }
+.sale { display: flex; align-items: center; gap: 10px; height: 54px; padding: 0 10px; border: 1px solid var(--line); border-radius: 12px; background: #fff; margin-bottom: 7px; visibility: hidden; }
+.sale .t { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sale .m { flex: 1; min-width: 0; }
+.sale b { font: 600 12.5px/1.25 Inter; color: var(--ink); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sale small { font: 400 11px Inter; color: var(--muted); }
+.sale .g { font: 700 14px Inter; color: var(--success-strong); font-variant-numeric: tabular-nums; }
+.notif { position: absolute; left: 10px; right: 10px; top: 50px; z-index: 15; display: flex; gap: 10px; align-items: center; padding: 11px 12px; border-radius: 20px;
+  background: rgba(250,250,252,.97); box-shadow: 0 12px 30px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.04); visibility: hidden; }
+.notif .ap { width: 38px; height: 38px; border-radius: 10px; background: var(--brand-500); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.notif .m { flex: 1; min-width: 0; }
+.notif .top { display: flex; justify-content: space-between; font: 500 10.5px Inter; color: #8a8d91; letter-spacing: .2px; }
+.notif b { display: block; font: 600 13px/1.25 Inter; color: #111; margin-top: 1px; }
+.notif span { font: 400 12.5px/1.3 Inter; color: #333; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif span em { font-style: normal; font-weight: 700; color: var(--success-strong); }
+
+/* ---- Pantalla 5: pago ---- */
+.pay { padding: 12px 14px 0; }
+.pay h2 { display: flex; align-items: center; gap: 7px; font: 700 16px Inter; color: var(--ink); }
+.box { border: 1px solid var(--line); border-radius: 14px; background: #fff; padding: 11px; margin-top: 10px; }
+.item { display: flex; gap: 11px; align-items: center; }
+.item .t { width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, #fb923c, #ea580c); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.item b { font: 600 12.5px/1.3 Inter; display: block; color: var(--ink); }
+.item .pr { font: 700 15px Inter; color: var(--ink); margin-top: 2px; }
+.item small { font: 400 11px Inter; color: var(--muted); }
+.box h4 { font: 600 13px Inter; color: var(--ink); }
+.box .h4s { font: 400 11px Inter; color: var(--muted); margin: 1px 0 8px; }
+.opt { display: flex; align-items: center; gap: 10px; height: 48px; border: 1px solid var(--line); border-radius: 11px; padding: 0 11px; margin-top: 6px; }
+.opt.on { border: 1.5px solid var(--brand-500); background: var(--brand-50); }
+.opt .t { width: 30px; height: 30px; border-radius: 8px; background: var(--brand-100); color: var(--brand-600); display: flex; align-items: center; justify-content: center; font: 700 12px Inter; flex-shrink: 0; }
+.opt .m { flex: 1; }
+.opt b { font: 600 12.5px/1.2 Inter; display: block; color: var(--ink); }
+.opt small { font: 400 10.5px Inter; color: var(--muted); }
+.radio { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--subtle); }
+.opt.on .radio { border: 5px solid var(--brand-500); background: #fff; }
+.tot { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; padding: 0 2px; font: 400 12px Inter; color: var(--muted); }
+.tot b { font: 700 17px Inter; color: var(--ink); }
+.payBtn { margin-top: 12px; width: 100%; }
+.okScreen { position: absolute; inset: 0; background: #fff; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 26px; visibility: hidden; }
+.okScreen .okc { width: 84px; height: 84px; }
+.okScreen h3 { font: 700 21px/1.25 Inter; color: var(--ink); margin-top: 18px; }
+.okScreen p { font: 400 14px/1.4 Inter; color: var(--muted); margin-top: 8px; }
+.okScreen p b { color: var(--brand-600); }
+.okScreen .rc { margin-top: 18px; width: 100%; border: 1px dashed var(--line-strong); border-radius: 14px; padding: 12px 14px; font: 400 12px/1.7 Inter; color: var(--muted); text-align: left; }
+.okScreen .rc div { display: flex; justify-content: space-between; }
+.okScreen .rc b { color: var(--ink); font-weight: 600; }
+
+/* ---------- Toque ---------- */
+#tap { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; z-index: 40; visibility: hidden;
+  background: rgba(255,255,255,.35); border: 2.5px solid #fff; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+#ripple { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; z-index: 39; visibility: hidden; border: 3px solid #fff; }
+
+/* ---------- Escena 2: giro ---------- */
+#turn { position: absolute; inset: 0; z-index: 12; }
+#coinWrap { position: absolute; left: 50%; top: 210px; width: 170px; height: 170px; margin-left: -85px; perspective: 700px; }
+#coinGlow { position: absolute; left: 50%; top: 295px; width: 320px; height: 320px; margin: -160px 0 0 -160px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 62%); visibility: hidden; }
+#coin { width: 170px; height: 170px; visibility: hidden; filter: drop-shadow(0 18px 30px rgba(5,15,40,.45)); }
+#turnText { position: absolute; left: 0; right: 0; top: 432px; text-align: center; font: 800 40px/1.18 Poppins, var(--emoji), sans-serif; color: #fff; letter-spacing: -.5px; }
+#turnText .w { display: inline-block; visibility: hidden; }
+.hl { background: #fff; color: var(--brand-600); padding: 0 12px; border-radius: 12px; transform: rotate(-3deg); }
+
+/* ---------- Escena 6: niveles ---------- */
+#tiers { position: absolute; inset: 0; z-index: 12; }
+#medalWrap { position: absolute; left: 50%; top: 205px; width: 250px; height: 300px; margin-left: -125px; }
+.medal { position: absolute; left: 0; top: 0; width: 250px; height: 300px; visibility: hidden; }
+#tierLabel { position: absolute; left: 0; right: 0; margin: 0 auto; top: 530px; height: 50px; width: 190px; border-radius: 999px; background: #fff; box-shadow: 0 12px 30px rgba(5,15,40,.35); visibility: hidden; overflow: hidden; }
+#tierLabel span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 800 22px Poppins; letter-spacing: 3px; visibility: hidden; }
+#tierDots { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 600px; display: flex; gap: 10px; visibility: hidden; }
+#tierDots i { width: 34px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.28); display: block; }
+#tierText { position: absolute; left: 30px; right: 30px; top: 640px; text-align: center; font: 700 24px/1.3 Poppins; color: #fff; visibility: hidden; }
+.spark { position: absolute; left: 50%; top: 400px; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #ffe08a; visibility: hidden; box-shadow: 0 0 12px #ffd24a; }
+#shine { position: absolute; left: 0; top: 0; width: 250px; height: 300px; overflow: hidden; pointer-events: none; -webkit-mask: radial-gradient(circle 98px at 125px 195px, #000 99%, transparent 100%); }
+#shine i { position: absolute; top: -40px; left: -120px; width: 60px; height: 400px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.75), rgba(255,255,255,0)); transform: rotate(20deg); display: block; }
+
+/* ---------- Cierre ---------- */
+#end { position: absolute; inset: 0; z-index: 12; }
+#endLogo { position: absolute; left: 50%; top: 226px; width: 420px; height: 82px; margin-left: -210px; border-radius: 999px; background: linear-gradient(180deg, #fff, #eef1f5); display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 34px rgba(5,15,40,.35); visibility: hidden; }
+#endLogo img { height: 46px; }
+#endHead { position: absolute; left: 20px; right: 20px; top: 338px; text-align: center; font: 800 33px/1.2 Poppins; color: #fff; letter-spacing: -.3px; }
+#endHead .w { display: inline-block; visibility: hidden; }
+#endHead .hl { padding: 0 10px; }
+#endPath { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 464px; white-space: nowrap; height: 62px; padding: 0 24px; border-radius: 16px; background: #fff; color: var(--brand-700);
+  display: flex; align-items: center; gap: 10px; font: 700 19px Poppins; box-shadow: 0 14px 30px rgba(5,15,40,.3); visibility: hidden; }
+#endPath .ar { color: var(--brand-500); display: flex; }
+.ep { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; white-space: nowrap; height: 48px; padding: 0 22px; border-radius: 999px;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28); color: #fff; display: flex; align-items: center; gap: 10px; font: 600 17px Poppins; visibility: hidden; }
+#ep1 { top: 556px; } #ep2 { top: 616px; }
+.ep img { width: 24px; height: 24px; border-radius: 6px; }
+#fine { position: absolute; left: 30px; right: 30px; top: 700px; text-align: center; font: 400 11.5px/1.6 Inter; color: rgba(255,255,255,.82); visibility: hidden; }
+#fine b { font-weight: 600; color: #fff; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bgDark"><div class="grid"></div><div class="noise"></div></div>
+  <div id="bgBlue"><div class="glow"></div><div class="panel pA"></div><div class="panel pC"></div><div class="panel pB"></div><div class="noise"></div></div>
+
+  <!-- Píldoras -->
+  <div class="cap" id="c1"><span class="av">L</span>POV: eres el pana que sabe de tecnología 📱</div>
+  <div class="cap" id="c2"><span class="av">L</span>…y respondes <b>gratis</b> 😮‍💨</div>
+  <div class="cap" id="c3"><span class="av num">1</span>Paso 1 · <b>Únete</b> al programa</div>
+  <div class="cap" id="c4"><span class="av num">2</span>Paso 2 · <b>Comparte</b> tu enlace</div>
+  <div class="cap" id="c5"><span class="av num">3</span>Paso 3 · Gana <b>5% en Puntos ES</b></div>
+  <div class="cap" id="c6"><span class="av num"><i data-ic="award" data-s="19" data-w="2.4"></i></span><b>Más ventas</b>, mejores beneficios</div>
+  <div class="cap" id="c7"><span class="av num">4</span>Paso 4 · <b>Úsalos</b> en la tienda</div>
+
+  <!-- Teléfono -->
+  <div id="phoneWrap"><div id="phone"><div id="screen">
+    <div class="island"></div>
+    <div class="status"><span id="clock">20:12</span><span class="sicons"><i data-ic="signal" data-s="17"></i>5G<i data-ic="battery" data-s="25"></i></span></div>
+
+    <!-- 1. Chats -->
+    <div class="scr" id="scrChats">
+      <div class="wa-top"><div class="row1"><span>Editar</span><span style="display:flex;gap:16px"><i data-ic="camera" data-s="19"></i><i data-ic="edit" data-s="18"></i></span></div><h2>Chats</h2></div>
+      <div class="wa-search"><i data-ic="search" data-s="15"></i>Buscar</div>
+      <div class="wa-filters"><span class="on">Todos</span><span>No leídos <b id="unreadN">0</b></span><span>Favoritos</span><span>Grupos</span></div>
+      <div id="chatList">
+        <!-- nuevos (no leídos) -->
+        <div class="crow unread n" ><div class="a" style="background:#f59e0b">C</div><div class="m"><div class="t1"><span class="n">Primo Carlos</span><span class="tm">20:12</span></div><div class="t2"><span class="p">¿dónde compro un teclado gamer?</span><span class="badge">3</span></div></div></div>
+        <div class="crow unread n" ><div class="a" style="background:#ec4899">M</div><div class="m"><div class="t1"><span class="n">Sra. Marta (vecina)</span><span class="tm">20:12</span></div><div class="t2"><span class="p">¿qué tablet me recomiendas?</span><span class="badge">2</span></div></div></div>
+        <div class="crow unread n" ><div class="a" style="background:#8b5cf6"><i data-ic="users" data-s="22"></i></div><div class="m"><div class="t1"><span class="n">Liceo 5to B</span><span class="tm">20:12</span></div><div class="t2"><span class="p">José: ¿las recargas de Free Fire?</span><span class="badge">14</span></div></div></div>
+        <div class="crow unread n" ><div class="a" style="background:#0ea5e9">A</div><div class="m"><div class="t1"><span class="n">Andrea</span><span class="tm">20:12</span></div><div class="t2"><span class="p">¿dónde venden el GTA?</span><span class="badge">1</span></div></div></div>
+        <!-- viejos (leídos) -->
+        <div class="crow o"><div class="a" style="background:#94a3b8">M</div><div class="m"><div class="t1"><span class="n">Mamá</span><span class="tm">19:40</span></div><div class="t2"><span class="p">¿Vienes a almorzar mañana?</span></div></div></div>
+        <div class="crow o"><div class="a" style="background:#64748b"><i data-ic="users" data-s="22"></i></div><div class="m"><div class="t1"><span class="n">Fútbol de los jueves</span><span class="tm">18:02</span></div><div class="t2"><span class="p">Pedro: ¿quién lleva el balón?</span></div></div></div>
+        <div class="crow o"><div class="a" style="background:#a8a29e">R</div><div class="m"><div class="t1"><span class="n">Ricardo</span><span class="tm">17:15</span></div><div class="t2"><span class="p">Listo, gracias pana</span></div></div></div>
+        <div class="crow o"><div class="a" style="background:#9ca3af">T</div><div class="m"><div class="t1"><span class="n">Tía Luisa</span><span class="tm">ayer</span></div><div class="t2"><span class="p">Bendiciones, mijo</span></div></div></div>
+        <div class="crow o"><div class="a" style="background:#b0b7c0">J</div><div class="m"><div class="t1"><span class="n">Jesús</span><span class="tm">ayer</span></div><div class="t2"><span class="p">Jajaja</span></div></div></div>
+        <div class="crow o"><div class="a" style="background:#a1a1aa">K</div><div class="m"><div class="t1"><span class="n">Karla</span><span class="tm">ayer</span></div><div class="t2"><span class="p">Nos vemos el sábado</span></div></div></div>
+        <div class="crow o"><div class="a" style="background:#9aa5b1">E</div><div class="m"><div class="t1"><span class="n">Edgar</span><span class="tm">lunes</span></div><div class="t2"><span class="p">Ok</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- 2. Programa de Referidos -->
+    <div class="scr" id="scrRef">
+      <div class="site-h"><img src="assets/logo-color.png" alt=""><div class="r"><i data-ic="bell" data-s="18"></i><i data-ic="cart" data-s="18"></i><span class="u">L</span></div></div>
+      <div class="crumb ra">Mi panel <i data-ic="chev" data-s="12"></i> <b>Programa de Referidos</b></div>
+      <div class="ref-body">
+        <div class="ref-hero">
+          <div class="gift ra"><i data-ic="gift" data-s="26"></i></div>
+          <h1 class="ra">Programa de Referidos</h1>
+          <p class="ra">Comparte la tienda con tus amigos y gana <strong>comisiones reales</strong> por cada persona que use tu enlace para comprar o recargarse.</p>
+        </div>
+        <div class="bens">
+          <div class="ben ra" id="ben1"><div class="t" style="background:rgba(16,185,129,.1);color:var(--success-strong)"><i data-ic="dollar" data-s="17"></i></div><div><h4>Comisiones reales</h4><p>Gana un porcentaje por cada venta generada por tus referidos</p></div></div>
+          <div class="ben ra" id="ben2"><div class="t" style="background:rgba(245,158,11,.1);color:var(--warning-strong)"><i data-ic="award" data-s="17"></i></div><div><h4>Sistema de niveles</h4><p>Sube de Bronce a Plata y Oro para desbloquear mejores beneficios</p></div></div>
+          <div class="ben ra" id="ben3"><div class="t" style="background:var(--brand-50);color:var(--brand-500)"><i data-ic="users" data-s="17"></i></div><div><h4>Sin límite de referidos</h4><p>Cuantas más personas invites, más puedes ganar mes a mes</p></div></div>
+        </div>
+        <div class="cta ra"><h4>¿Listo para empezar?</h4><p>Nuestro equipo revisará tu solicitud y activará tu enlace personalizado</p><span class="btn" id="joinBtn"><i data-ic="gift" data-s="15"></i>Solicitar acceso al programa</span></div>
+      </div>
+      <div class="dim" id="dim1"></div>
+      <div class="sheet" id="sheet1"><div class="grab"></div>
+        <div class="okc" id="ok1"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline class="ck" points="20 6 9 17 4 12" stroke-dasharray="24" stroke-dashoffset="24"/></svg></div>
+        <h3 id="okT1">Activamos tu enlace personalizado</h3>
+        <div class="sub" id="okS1">Compártelo y gana con cada venta</div>
+        <div class="linkf" id="lnk1"><i data-ic="link" data-s="16"></i><span>electroshopve.com/?ref=LUIS</span><span class="cp"><i data-ic="copy" data-s="15"></i></span></div>
+      </div>
+    </div>
+
+    <!-- 3. WhatsApp grupo -->
+    <div class="scr" id="scrWa">
+      <div class="wa-h"><i data-ic="back" data-s="22" style="color:#0a7c66"></i><div class="ga"><i data-ic="users" data-s="20"></i></div><div><b>Los Panas del Liceo</b><small>Andrea, Carlos, José, tú</small></div></div>
+      <div class="wa-body">
+        <span class="day">Hoy</span>
+        <div class="bub out" id="bOut">
+          <div class="prev"><div class="ban"><div class="pill"><img src="assets/logo-color.png" alt=""></div><b>¡Tu tienda de Confianza!</b></div>
+            <div class="tx"><b>Electro Shop - Tecnología, Desarrollo y Soporte</b><span>Tecnología, gaming y gift cards con envíos a toda Venezuela</span><i>electroshopve.com</i></div></div>
+          Panas, todo lo que me preguntan lo consiguen aquí 👇<br><a>electroshopve.com/?ref=LUIS</a>
+          <span class="tm">20:31 <i data-ic="dcheck" data-s="15" style="color:#53bdeb"></i></span>
+        </div>
+        <div class="bub in" id="bIn1"><span class="who" style="color:#d97706">José</span>ya lo pedí 🙌<span class="tm">20:33</span></div>
+        <div class="bub in" id="bIn2"><span class="who" style="color:#7c3aed">Andrea</span>¡pago móvil y listo!<span class="tm">20:34</span></div>
+      </div>
+      <div class="wa-in"><i data-ic="plus" data-s="24" style="margin-top:6px"></i><div class="f">Mensaje</div><i data-ic="camera" data-s="22" style="margin-top:7px"></i></div>
+    </div>
+
+    <!-- 4. Mi panel -->
+    <div class="scr" id="scrPanel">
+      <div class="site-h"><img src="assets/logo-color.png" alt=""><div class="r"><i data-ic="bell" data-s="18"></i><i data-ic="cart" data-s="18"></i><span class="u">L</span></div></div>
+      <div class="pan">
+        <div class="hi">Buenas noches,</div>
+        <h1>Luis</h1>
+        <div class="ptsCard" id="ptsCard">
+          <div class="lb"><i data-ic="card" data-s="15"></i>Tus Puntos ES</div>
+          <div class="amt"><span id="pts">$0,00</span> <small>Puntos ES</small></div>
+          <div class="bt"><span class="b1"><i data-ic="plus" data-s="15"></i>Recargar</span><span class="b2">Movimientos</span></div>
+          <span class="plus" id="plus">+$9,50</span>
+        </div>
+        <div class="sec"><h3>Ventas con tu enlace</h3><span>Ver todas</span></div>
+        <div id="sales">
+          <div class="sale"><div class="t" style="background:var(--brand-50);color:var(--brand-600)"><i data-ic="tablet" data-s="18"></i></div><div class="m"><b>Tablet W&amp;O X17 Ultra</b><small>Venta · $190,00</small></div><span class="g">+$9,50</span></div>
+          <div class="sale"><div class="t" style="background:#f3e8ff;color:#7c3aed"><i data-ic="keyboard" data-s="19"></i></div><div class="m"><b>Teclado gaming</b><small>Venta · $28,00</small></div><span class="g">+$1,40</span></div>
+          <div class="sale"><div class="t" style="background:#e0f2fe;color:#0369a1"><i data-ic="game" data-s="19"></i></div><div class="m"><b>GTA V PS5</b><small>Venta · $40,00</small></div><span class="g">+$2,00</span></div>
+          <div class="sale"><div class="t" style="background:#ffedd5;color:#c2410c"><i data-ic="zap" data-s="18"></i></div><div class="m"><b>Free Fire 500 diamantes</b><small>Venta · $8,25</small></div><span class="g">+$0,41</span></div>
+        </div>
+      </div>
+      <div class="notif" id="nt0"><div class="ap"><i data-ic="es" data-s="26"></i></div><div class="m"><div class="top"><span>ELECTROSHOP</span><span>ahora</span></div><b>¡Venta con tu enlace!</b><span>Tablet W&amp;O X17 Ultra · <em>+$9,50 Puntos ES</em></span></div></div>
+      <div class="notif" id="nt1"><div class="ap"><i data-ic="es" data-s="26"></i></div><div class="m"><div class="top"><span>ELECTROSHOP</span><span>ahora</span></div><b>¡Venta con tu enlace!</b><span>Teclado gaming · <em>+$1,40 Puntos ES</em></span></div></div>
+      <div class="notif" id="nt2"><div class="ap"><i data-ic="es" data-s="26"></i></div><div class="m"><div class="top"><span>ELECTROSHOP</span><span>ahora</span></div><b>¡Venta con tu enlace!</b><span>GTA V PS5 · <em>+$2,00 Puntos ES</em></span></div></div>
+      <div class="notif" id="nt3"><div class="ap"><i data-ic="es" data-s="26"></i></div><div class="m"><div class="top"><span>ELECTROSHOP</span><span>ahora</span></div><b>¡Venta con tu enlace!</b><span>Free Fire 500 · <em>+$0,41 Puntos ES</em></span></div></div>
+    </div>
+
+    <!-- 5. Pago -->
+    <div class="scr" id="scrPay">
+      <div class="site-h"><img src="assets/logo-color.png" alt=""><div class="r"><i data-ic="bell" data-s="18"></i><i data-ic="cart" data-s="18"></i><span class="u">L</span></div></div>
+      <div class="pay">
+        <h2><i data-ic="cart" data-s="18"></i>Tu carrito</h2>
+        <div class="box item"><div class="t"><i data-ic="zap" data-s="24" style="color:#fff"></i></div><div><b>Free Fire · 500 diamantes</b><small>Recarga digital · entrega inmediata</small><div class="pr">$8,25</div></div></div>
+        <div class="box"><h4>Formas de pago</h4><div class="h4s">Elige cómo quieres pagar</div>
+          <div class="opt on"><span class="t"><i data-ic="card" data-s="15"></i></span><div class="m"><b>Puntos ES</b><small>Tienes $13,31 Puntos ES</small></div><span class="radio"></span></div>
+          <div class="opt"><span class="t"><i data-ic="phone" data-s="15"></i></span><div class="m"><b>Pago Móvil</b><small>Bolívares · tasa BCV</small></div><span class="radio"></span></div>
+          <div class="opt"><span class="t">B</span><div class="m"><b>Binance Pay</b><small>USDT</small></div><span class="radio"></span></div>
+        </div>
+        <div class="tot"><span>Total</span><b>$8,25</b></div>
+        <span class="btn payBtn" id="payBtn"><i data-ic="lock" data-s="15"></i>Pagar con Puntos ES</span>
+      </div>
+      <div class="okScreen" id="okPay">
+        <div class="okc" id="ok2"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline class="ck" points="20 6 9 17 4 12" stroke-dasharray="24" stroke-dashoffset="24"/></svg></div>
+        <h3 id="okT2">Pagado con Puntos ES</h3>
+        <p id="okS2">Te quedan <b>$5,06 Puntos ES</b></p>
+        <div class="rc" id="okR2"><div><span>Free Fire · 500 diamantes</span><b>$8,25</b></div><div><span>Pagado con</span><b>Puntos ES</b></div></div>
+      </div>
+    </div>
+  </div></div></div>
+
+  <!-- Stickers -->
+  <div class="stk dark" id="sZero" style="left:96px; top:470px">Ganancia de hoy: <span style="color:#f87171">$0,00</span></div>
+  <div class="stk dark" id="sB1" style="left:26px; top:398px"><i data-ic="dollar" data-s="18" style="color:#34d399"></i>Comisiones reales</div>
+  <div class="stk light" id="sB2" style="right:24px; top:478px"><i data-ic="award" data-s="18" style="color:var(--warning)"></i>Sistema de niveles</div>
+  <div class="stk dark" id="sB3" style="left:34px; top:558px"><i data-ic="users" data-s="18" style="color:var(--accent)"></i>Sin límite de referidos</div>
+  <div class="stk light" id="sState" style="right:18px; top:735px; padding:10px 16px 10px 10px">
+    <span style="width:46px;height:46px;border-radius:50%;border:2.5px solid #25d366;padding:2.5px;display:flex"><span style="flex:1;border-radius:50%;background:var(--brand-500);color:#fff;display:flex;align-items:center;justify-content:center;font:700 17px Poppins">L</span></span>
+    <span style="display:flex;flex-direction:column;gap:1px"><span style="font:700 15px Poppins">Publicado en tu estado</span><span style="font:600 12.5px Inter;color:var(--brand-600)">electroshopve.com/?ref=LUIS</span></span>
+  </div>
+  <div class="stk dark" id="sCom" style="left:40px; top:690px"><i data-ic="percent" data-s="18" style="color:#34d399"></i>Comisión estándar: 5% por venta</div>
+  <div class="stk light" id="sRate" style="left:0; right:0; margin:0 auto; width:max-content; top:178px; font-size:25px; font-weight:800; color:var(--brand-600); padding:12px 22px; border-radius:14px">1 Punto ES = $1</div>
+
+  <!-- Escena 2 -->
+  <div id="turn">
+    <div id="coinGlow"></div>
+    <div id="coinWrap"><svg id="coin" viewBox="0 0 170 170">
+      <circle cx="85" cy="85" r="84" fill="#fff"/>
+      <circle cx="85" cy="85" r="72" fill="none" stroke="#1e4ba3" stroke-width="7"/>
+      <rect x="45" y="50" width="80" height="54" rx="9" fill="none" stroke="#1e4ba3" stroke-width="6"/>
+      <rect x="53" y="58" width="64" height="38" rx="5" fill="none" stroke="#1e4ba3" stroke-width="2.5"/>
+      <text x="85" y="88" text-anchor="middle" font-family="Tektrron" font-size="30" fill="#1e4ba3">ES</text>
+      <path d="M50 113 h70" stroke="#1e4ba3" stroke-width="5" stroke-linecap="round"/>
+      <path d="M77 113 l8 9 l8 -9 z" fill="#1e4ba3"/>
+    </svg></div>
+    <div id="turnText"><span class="w">¿Y</span> <span class="w">si</span> <span class="w hl">ganaras</span><br><span class="w">por</span> <span class="w">cada</span><br><span class="w">recomendación?</span></div>
+  </div>
+
+  <!-- Escena 6 -->
+  <div id="tiers">
+    <div id="medalWrap"></div>
+    <div id="tierLabel"><span id="tl0" style="color:#a0612d">BRONCE</span><span id="tl1" style="color:#6b7480">PLATA</span><span id="tl2" style="color:#b7860b">ORO</span></div>
+    <div id="tierDots"><i></i><i></i><i></i></div>
+    <div id="tierText">Sin límite de referidos,<br>mes a mes.</div>
+  </div>
+
+  <!-- Cierre -->
+  <div id="end">
+    <div id="endLogo"><img src="assets/logo-color.png" alt=""></div>
+    <div id="endHead"><span class="w">Recomienda,</span> <span class="w">vende</span> <span class="w">y</span> <span class="w">gana</span><br><span class="w hl">Puntos ES</span></div>
+    <div id="endPath"><i data-ic="user" data-s="20"></i>Mi panel <span class="ar"><i data-ic="arrow" data-s="20" data-w="2.6"></i></span> Programa de Referidos</div>
+    <div class="ep" id="ep1"><i data-ic="globe" data-s="20"></i>electroshopve.com</div>
+    <div class="ep" id="ep2"><img src="assets/whatsapp.png" alt=""><span id="waText">Escríbenos por WhatsApp</span></div>
+    <div id="fine">Comisión estándar 5% en Puntos ES · 1 Punto ES = 1 USD<br>Solo para compras en la tienda · No reembolsables · Aplican términos<br><b>Electro Shop Morandin C.A. · RIF J&#8209;40590333&#8209;3</b></div>
+  </div>
+
+  <div id="ripple"></div>
+  <div id="tap"></div>
+</div>
+
+<script src="assets/gsap.min.js"></script>
+<script>
+// Número de WhatsApp del cierre: si se deja vacío, dice "Escríbenos por WhatsApp".
+const WHATSAPP = new URLSearchParams(location.search).get('wa') || '+58 257 251 1282';
+if (WHATSAPP) document.getElementById('waText').textContent = 'WhatsApp ' + WHATSAPP;
+
+// ---------- Íconos (trazos de Feather, los mismos de react-icons Fi*) ----------
+const P = {
+  gift: '<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
+  dollar: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  award: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  card: '<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  chev: '<polyline points="9 18 15 12 9 6"/>',
+  back: '<polyline points="15 18 9 12 15 6"/>',
+  arrow: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  cart: '<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>',
+  search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+  tablet: '<rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+  phone: '<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+  keyboard: '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
+  game: '<line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/>',
+  zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  percent: '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+  dcheck: '<polyline points="2 12.5 6 16.5 14 7.5"/><polyline points="10 15.5 11 16.5 19.5 7.5"/>',
+};
+document.querySelectorAll('i[data-ic]').forEach(el => {
+  const n = el.dataset.ic, s = +el.dataset.s || 16, w = el.dataset.w || 2;
+  el.classList.add('ic');
+  if (n === 'signal') { el.innerHTML = `<svg width="${s}" height="${s*0.7}" viewBox="0 0 17 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="9" y="3" width="3" height="9" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg>`; return; }
+  if (n === 'battery') { el.innerHTML = `<svg width="${s}" height="${s*0.48}" viewBox="0 0 25 12"><rect x=".5" y=".5" width="21" height="11" rx="3.2" fill="none" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><rect x="23" y="4" width="1.6" height="4" rx=".8" fill="currentColor" opacity=".5"/></svg>`; return; }
+  if (n === 'es') { el.innerHTML = `<svg width="${s}" height="${s}" viewBox="0 0 26 26"><rect x="3" y="5" width="20" height="13" rx="2.5" fill="none" stroke="#fff" stroke-width="2"/><text x="13" y="15" text-anchor="middle" font-family="Tektrron" font-size="8.5" fill="#fff">ES</text><path d="M10 21h6l-3 2.5z" fill="#fff"/></svg>`; return; }
+  el.innerHTML = `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
+});
+
+document.querySelectorAll('.cap').forEach(c => { const tx = document.createElement('span'); tx.className = 'tx'; Array.from(c.childNodes).slice(1).forEach(n => tx.appendChild(n)); c.appendChild(tx); });
+
+// ---------- Medallas ----------
+const MEDALS = [
+  { a: '#f6c79a', b: '#c47a3d', c: '#7a4318', r1: '#2a63cd', r2: '#1a3b7e' },
+  { a: '#ffffff', b: '#c3cad3', c: '#6b7480', r1: '#2a63cd', r2: '#1a3b7e' },
+  { a: '#fff1b8', b: '#f2b632', c: '#9a6a00', r1: '#2a63cd', r2: '#1a3b7e' },
+];
+const medalWrap = document.getElementById('medalWrap');
+MEDALS.forEach((m, i) => {
+  medalWrap.insertAdjacentHTML('beforeend', `<svg class="medal" id="md${i}" viewBox="0 0 250 300">
+    <defs>
+      <radialGradient id="g${i}" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="${m.a}"/><stop offset=".55" stop-color="${m.b}"/><stop offset="1" stop-color="${m.c}"/></radialGradient>
+      <linearGradient id="r${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${m.r1}"/><stop offset="1" stop-color="${m.r2}"/></linearGradient>
+    </defs>
+    <path d="M80 0 h36 l22 110 h-36z" fill="url(#r${i})"/><path d="M170 0 h-36 l-22 110 h36z" fill="url(#r${i})" opacity=".9"/>
+    <path d="M98 0 h8 l22 110 h-8z" fill="#fff" opacity=".35"/><path d="M152 0 h-8 l-22 110 h8z" fill="#fff" opacity=".3"/>
+    <circle cx="125" cy="195" r="100" fill="url(#g${i})"/>
+    <circle cx="125" cy="195" r="100" fill="none" stroke="${m.c}" stroke-opacity=".5" stroke-width="3"/>
+    <circle cx="125" cy="195" r="78" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="3"/>
+    <circle cx="125" cy="195" r="72" fill="none" stroke="${m.c}" stroke-opacity=".35" stroke-width="2"/>
+    <path d="M125 148 l13.5 27.5 30.5 4.4 -22 21.5 5.2 30.3 -27.2 -14.3 -27.2 14.3 5.2 -30.3 -22 -21.5 30.5 -4.4z" fill="${m.c}" fill-opacity=".85"/>
+    <path d="M125 148 l13.5 27.5 30.5 4.4 -22 21.5 5.2 30.3 -27.2 -14.3z" fill="#fff" fill-opacity=".18"/>
+  </svg>`);
+});
+medalWrap.insertAdjacentHTML('beforeend', '<div id="shine"><i></i></div>');
+const tiersEl = document.getElementById('tiers');
+for (let i = 0; i < 10; i++) tiersEl.insertAdjacentHTML('beforeend', '<i class="spark"></i>');
+
+function build() {
+// ---------- Medidas para el toque (antes de cualquier transformación) ----------
+const stageRect = document.getElementById('stage').getBoundingClientRect();
+function center(id) {
+  const el = document.getElementById(id);
+  const scr = el.closest('.scr'); const prev = scr.style.visibility; scr.style.visibility = 'visible';
+  const r = el.getBoundingClientRect(); scr.style.visibility = prev;
+  return { x: r.left - stageRect.left + r.width / 2, y: r.top - stageRect.top + r.height / 2 };
+}
+const joinPt = center('joinBtn');
+const payPt = center('payBtn');
+
+// ---------- Línea de tiempo ----------
+const tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
+const capIn = (id, t) => tl.fromTo(id, { autoAlpha: 0, y: 14, scale: .94 }, { autoAlpha: 1, y: 0, scale: 1, duration: .38, ease: 'back.out(1.6)' }, t);
+const capOut = (id, t) => tl.to(id, { autoAlpha: 0, y: -12, scale: .96, duration: .2, ease: 'power2.in' }, t);
+const stkIn = (id, t, rot, extra = {}) => tl.fromTo(id, { autoAlpha: 0, scale: 1.35, rotation: rot * 2.5, ...extra.from }, { autoAlpha: 1, scale: 1, rotation: rot, duration: .38, ease: 'back.out(2.2)', ...extra.to }, t);
+const stkOut = (id, t) => tl.to(id, { autoAlpha: 0, scale: .85, duration: .2, ease: 'power2.in' }, t);
+const show = (id, t) => tl.set(id, { autoAlpha: 1, xPercent: 0 }, t);
+const hide = (id, t) => tl.set(id, { autoAlpha: 0 }, t);
+const shake = (t, amp = 4) => tl.to('#phone', { keyframes: { x: [0, -amp, amp, -amp * .7, amp * .4, 0], rotation: [0, -.6, .6, -.3, 0, 0] }, duration: .3, ease: 'none' }, t);
+const pushScreen = (from, to, t) => {
+  tl.set(to, { autoAlpha: 1, xPercent: 100 }, t);
+  tl.to(to, { xPercent: 0, duration: .45, ease: 'power3.inOut' }, t);
+  tl.to(from, { xPercent: -30, duration: .45, ease: 'power3.inOut' }, t);
+  tl.set(from, { autoAlpha: 0 }, t + .46);
+};
+function tapAt(pt, btn, t) {
+  tl.set(['#tap', '#ripple'], { left: pt.x, top: pt.y }, t);
+  tl.fromTo('#tap', { autoAlpha: 0, scale: 1.8 }, { autoAlpha: 1, scale: 1, duration: .25, ease: 'power2.out' }, t);
+  tl.to('#tap', { scale: .78, duration: .1, ease: 'power2.in' }, t + .3);
+  tl.to(btn, { scale: .94, duration: .1, ease: 'power2.in' }, t + .3);
+  tl.to(btn, { scale: 1, duration: .3, ease: 'back.out(3)' }, t + .4);
+  tl.fromTo('#ripple', { autoAlpha: .9, scale: .6 }, { autoAlpha: 0, scale: 2.6, duration: .5, ease: 'power2.out', immediateRender: false }, t + .38);
+  tl.to('#tap', { autoAlpha: 0, scale: 1.1, duration: .2, ease: 'power2.in' }, t + .45);
+}
+
+// Ambiente
+tl.to('#bgDark .grid', { x: -28, y: -28, duration: 3.2, ease: 'none' }, 0);
+tl.to('#bgBlue .pA', { x: 40, y: 26, duration: 24, ease: 'sine.inOut' }, 3);
+tl.to('#bgBlue .pB', { x: -46, y: -20, duration: 24, ease: 'sine.inOut' }, 3);
+tl.to('#bgBlue .pC', { x: 60, duration: 24, ease: 'sine.inOut' }, 3);
+tl.fromTo('#bgBlue .glow', { scale: .9, x: -30 }, { scale: 1.15, x: 40, duration: 24, ease: 'sine.inOut' }, 3);
+
+// ===== 1. Gancho (0–3 s) =====
+gsap.set('#scrChats', { autoAlpha: 1 });
+const rows = $$('#chatList .crow');
+const newRows = rows.filter(r => r.classList.contains('n'));
+const oldRows = rows.filter(r => r.classList.contains('o'));
+const RH = 70;
+oldRows.forEach((r, i) => gsap.set(r, { y: i * RH }));
+newRows.forEach(r => gsap.set(r, { y: -RH, autoAlpha: 0 }));
+tl.fromTo('#phoneWrap', { autoAlpha: 1, y: 26, scale: 1.03 }, { autoAlpha: 1, y: 0, scale: 1, duration: .5 }, 0);
+tl.fromTo('#c1', { autoAlpha: 1, scale: .96 }, { autoAlpha: 1, scale: 1, duration: .4, ease: 'back.out(1.6)' }, 0);
+const arrivals = [.42, .8, 1.14, 1.42];
+const unread = { n: 0 }; const unreadEl = $('#unreadN');
+arrivals.forEach((t, k) => {
+  // Lo de abajo baja una fila; el mensaje nuevo entra arriba.
+  oldRows.forEach((r, i) => tl.to(r, { y: (i + k + 1) * RH, duration: .3, ease: 'power2.out' }, t));
+  for (let j = 0; j < k; j++) tl.to(newRows[j], { y: (k - j) * RH, duration: .3, ease: 'power2.out' }, t);
+  tl.fromTo(newRows[k], { y: -RH, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: .32, ease: 'back.out(1.4)' }, t);
+  tl.fromTo(newRows[k].querySelector('.badge'), { scale: 0 }, { scale: 1, duration: .3, ease: 'back.out(3)' }, t + .12);
+  tl.to(unread, { n: [3, 5, 19, 20][k], duration: .25, ease: 'none', onUpdate: () => { unreadEl.textContent = Math.round(unread.n); } }, t);
+  shake(t, 3 + k);
+});
+capOut('#c1', 1.72);
+capIn('#c2', 1.8);
+stkIn('#sZero', 2.0, -4);
+tl.to('#sZero', { keyframes: { x: [0, -5, 5, -3, 0] }, duration: .25, ease: 'none' }, 2.45);
+// Transición al azul
+tl.to(['#phoneWrap', '#sZero'], { autoAlpha: 0, scale: .9, y: 30, duration: .3, ease: 'power2.in' }, 2.72);
+capOut('#c2', 2.72);
+tl.to('#bgBlue', { clipPath: 'circle(125% at 50% 52%)', duration: .62, ease: 'power3.inOut' }, 2.72);
+
+// ===== 2. Giro (3–5 s) =====
+tl.fromTo('#coin', { autoAlpha: 0, scale: .3, rotation: -200 }, { autoAlpha: 1, scale: 1, rotation: 0, duration: .85, ease: 'power3.out' }, 3.02);
+tl.fromTo('#coinGlow', { autoAlpha: 0, scale: .6 }, { autoAlpha: 1, scale: 1, duration: .8, ease: 'power2.out' }, 3.1);
+tl.to('#coinGlow', { scale: 1.15, duration: 1, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 3.6);
+tl.to('#coin', { rotationY: 360, duration: 1.0, ease: 'power2.inOut' }, 3.85);
+tl.fromTo('#turnText .w', { autoAlpha: 0, y: 34 }, { autoAlpha: 1, y: 0, duration: .45, ease: 'back.out(1.7)', stagger: .07 }, 3.28);
+tl.to('#turnText .hl', { keyframes: { scale: [1, 1.14, 1] }, duration: .4, ease: 'power2.out' }, 3.75);
+tl.to(['#coin', '#coinGlow', '#turnText'], { autoAlpha: 0, y: -30, scale: .95, duration: .26, ease: 'power2.in' }, 4.66);
+
+// ===== 3. Paso 1 · Únete (5–9 s) =====
+tl.set('#scrChats', { autoAlpha: 0 }, 4.8);
+show('#scrRef', 4.8);
+tl.call(() => { $('#clock').textContent = '20:28'; }, null, 4.8);
+tl.fromTo('#phoneWrap', { autoAlpha: 0, y: 170, rotation: 5, scale: .95 }, { autoAlpha: 1, y: 0, rotation: 0, scale: 1, duration: .55, immediateRender: false }, 4.92);
+capIn('#c3', 5.0);
+tl.fromTo('#scrRef .ra', { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: .35, stagger: .045, ease: 'power2.out' }, 5.15);
+[['#sB1', '#ben1', -5], ['#sB2', '#ben2', 4], ['#sB3', '#ben3', -3]].forEach(([s, b, r], i) => {
+  const t = 5.68 + i * .22;
+  stkIn(s, t, r);
+  tl.to(b, { borderColor: '#aac1eb', backgroundColor: '#f4f7fc', duration: .2 }, t);
+});
+stkOut(['#sB1', '#sB2', '#sB3'], 6.5);
+tapAt(joinPt, '#joinBtn', 6.55);
+tl.fromTo('#dim1', { autoAlpha: 0 }, { autoAlpha: 1, duration: .25, ease: 'power1.out' }, 7.1);
+tl.fromTo('#sheet1', { autoAlpha: 1, yPercent: 105 }, { yPercent: 0, duration: .45, ease: 'power3.out', immediateRender: false }, 7.1);
+tl.fromTo('#ok1', { scale: 0 }, { scale: 1, duration: .4, ease: 'back.out(2.4)' }, 7.33);
+tl.to('#ok1 .ck', { strokeDashoffset: 0, duration: .3, ease: 'power2.out' }, 7.45);
+tl.fromTo(['#okT1', '#okS1', '#lnk1'], { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: .3, stagger: .07, ease: 'power2.out' }, 7.42);
+tl.fromTo('#lnk1', { boxShadow: '0 0 0 0 rgba(42,99,205,.45)' }, { boxShadow: '0 0 0 10px rgba(42,99,205,0)', duration: .7, ease: 'power2.out' }, 7.85);
+
+// ===== 4. Paso 2 · Comparte (9–12 s) =====
+capOut('#c3', 8.78);
+tl.call(() => { $('#clock').textContent = '20:31'; }, null, 8.85);
+pushScreen('#scrRef', '#scrWa', 8.85);
+capIn('#c4', 8.95);
+tl.fromTo('#bOut', { autoAlpha: 0, scale: .82, y: 20, transformOrigin: '100% 100%' }, { autoAlpha: 1, scale: 1, y: 0, duration: .42, ease: 'back.out(1.5)' }, 9.35);
+stkIn('#sState', 9.95, 3, { from: { x: 70 }, to: { x: 0 } });
+tl.fromTo('#bIn1', { autoAlpha: 0, scale: .8, transformOrigin: '0% 100%' }, { autoAlpha: 1, scale: 1, duration: .36, ease: 'back.out(1.8)' }, 10.55);
+shake(10.55, 2);
+tl.fromTo('#bIn2', { autoAlpha: 0, scale: .8, transformOrigin: '0% 100%' }, { autoAlpha: 1, scale: 1, duration: .36, ease: 'back.out(1.8)' }, 11.05);
+shake(11.05, 2);
+stkOut('#sState', 11.62);
+
+// ===== 5. Paso 3 · Gana 5% (12–17 s) =====
+capOut('#c4', 11.78);
+tl.call(() => { $('#clock').textContent = '21:05'; }, null, 11.85);
+pushScreen('#scrWa', '#scrPanel', 11.85);
+capIn('#c5', 11.95);
+const sales = [[12.45, 9.5, '+$9,50'], [13.4, 10.9, '+$1,40'], [14.3, 12.9, '+$2,00'], [15.12, 13.31, '+$0,41']];
+const pts = { v: 0 }; const ptsEl = $('#pts');
+const fmt = v => '$' + v.toFixed(2).replace('.', ',');
+const saleEls = $$('#sales .sale');
+sales.forEach(([t, total, plus], i) => {
+  tl.fromTo('#nt' + i, { autoAlpha: 0, yPercent: -140, scale: .96 }, { autoAlpha: 1, yPercent: 0, scale: 1, duration: .38, ease: 'back.out(1.3)' }, t);
+  tl.to('#nt' + i, { autoAlpha: 0, yPercent: -140, duration: .24, ease: 'power2.in' }, t + .74);
+  tl.fromTo(saleEls[i], { autoAlpha: 0, x: 24 }, { autoAlpha: 1, x: 0, duration: .35, ease: 'power3.out' }, t + .18);
+  tl.to(pts, { v: total, duration: .55, ease: 'power2.out', onUpdate: () => { ptsEl.textContent = fmt(pts.v); } }, t + .22);
+  tl.to('#ptsCard', { keyframes: { scale: [1, 1.045, 1] }, duration: .42, ease: 'power2.out' }, t + .22);
+  tl.call(() => { $('#plus').textContent = plus; }, null, t + .2);
+  tl.fromTo('#plus', { autoAlpha: 0, y: 6, scale: .7 }, { autoAlpha: 1, y: -6, scale: 1, duration: .3, ease: 'back.out(2)' }, t + .22);
+  tl.to('#plus', { autoAlpha: 0, y: -20, duration: .3, ease: 'power2.in' }, t + .7);
+  shake(t, 2.5);
+});
+stkIn('#sCom', 15.95, -3);
+tl.to(['#phoneWrap'], { autoAlpha: 0, y: 90, scale: .92, duration: .3, ease: 'power2.in' }, 16.75);
+stkOut('#sCom', 16.75);
+capOut('#c5', 16.78);
+
+// ===== 6. Niveles (17–19 s) =====
+capIn('#c6', 16.95);
+tl.fromTo('#md0', { autoAlpha: 0, scale: .2, rotation: -40, transformOrigin: '50% 65%' }, { autoAlpha: 1, scale: 1, rotation: 0, duration: .5, ease: 'back.out(1.7)' }, 17.05);
+tl.fromTo('#tierLabel', { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: .3, ease: 'back.out(2)' }, 17.2);
+tl.set('#tl0', { autoAlpha: 1 }, 17.2);
+tl.fromTo('#tierDots', { autoAlpha: 0 }, { autoAlpha: 1, duration: .3 }, 17.25);
+const dots = $$('#tierDots i');
+tl.to(dots[0], { backgroundColor: '#f6c79a', duration: .2 }, 17.3);
+tl.fromTo('#tierText', { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: .4, ease: 'power3.out' }, 17.38);
+function flip(a, b, la, lb, dot, color, t) {
+  tl.to(a, { scaleX: 0, duration: .13, ease: 'power2.in', transformOrigin: '50% 50%' }, t);
+  tl.set(a, { autoAlpha: 0 }, t + .13);
+  tl.fromTo(b, { autoAlpha: 1, scaleX: 0, transformOrigin: '50% 50%' }, { scaleX: 1, duration: .2, ease: 'back.out(1.6)', immediateRender: false }, t + .13);
+  tl.to(la, { yPercent: -100, autoAlpha: 0, duration: .18, ease: 'power2.in' }, t);
+  tl.fromTo(lb, { autoAlpha: 0, yPercent: 100 }, { autoAlpha: 1, yPercent: 0, duration: .22, ease: 'back.out(1.8)' }, t + .12);
+  tl.to(dot, { backgroundColor: color, duration: .2 }, t + .12);
+}
+flip('#md0', '#md1', '#tl0', '#tl1', dots[1], '#e5e9ee', 17.62);
+flip('#md1', '#md2', '#tl1', '#tl2', dots[2], '#f2b632', 18.12);
+tl.fromTo('#shine i', { x: 0 }, { x: 380, duration: .55, ease: 'power2.inOut' }, 18.36);
+tl.to('#md2', { keyframes: { scale: [1, 1.08, 1] }, duration: .4, ease: 'power2.out' }, 18.3);
+$$('.spark').forEach((s, i) => {
+  const a = (i / 10) * Math.PI * 2, d = 150 + (i % 3) * 22;
+  tl.fromTo(s, { autoAlpha: 1, x: 0, y: 0, scale: 1 }, { x: Math.cos(a) * d, y: Math.sin(a) * d, autoAlpha: 0, scale: .4, duration: .6, ease: 'power3.out', immediateRender: false }, 18.3);
+});
+tl.to(['#medalWrap', '#tierLabel', '#tierDots', '#tierText'], { autoAlpha: 0, y: -24, duration: .25, ease: 'power2.in' }, 18.78);
+capOut('#c6', 18.78);
+
+// ===== 7. Paso 4 · Úsalos (19–21 s) =====
+tl.set('#scrPanel', { autoAlpha: 0 }, 18.9);
+show('#scrPay', 18.9);
+tl.call(() => { $('#clock').textContent = '21:12'; }, null, 18.9);
+tl.fromTo('#phoneWrap', { autoAlpha: 0, y: 160, rotation: -4, scale: .95 }, { autoAlpha: 1, y: 0, rotation: 0, scale: 1, duration: .5, immediateRender: false }, 18.9);
+capIn('#c7', 18.98);
+stkIn('#sRate', 19.12, -4);
+tapAt(payPt, '#payBtn', 19.55);
+tl.fromTo('#okPay', { autoAlpha: 0 }, { autoAlpha: 1, duration: .18, ease: 'power1.out' }, 20.02);
+tl.fromTo('#ok2', { scale: 0 }, { scale: 1, duration: .38, ease: 'back.out(2.4)' }, 20.06);
+tl.to('#ok2 .ck', { strokeDashoffset: 0, duration: .26, ease: 'power2.out' }, 20.16);
+tl.fromTo(['#okT2', '#okS2', '#okR2'], { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: .28, stagger: .07, ease: 'power2.out' }, 20.14);
+tl.to(['#phoneWrap'], { autoAlpha: 0, y: 90, scale: .92, duration: .3, ease: 'power2.in' }, 20.82);
+stkOut('#sRate', 20.82);
+capOut('#c7', 20.82);
+
+// ===== 8. Cierre (21–27 s) =====
+tl.fromTo('#endLogo', { autoAlpha: 0, scale: .8, y: 20 }, { autoAlpha: 1, scale: 1, y: 0, duration: .55, ease: 'back.out(1.6)' }, 21.12);
+tl.fromTo('#endHead .w', { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: .45, ease: 'back.out(1.7)', stagger: .07 }, 21.4);
+tl.to('#endHead .hl', { keyframes: { scale: [1, 1.12, 1] }, duration: .4, ease: 'power2.out' }, 21.85);
+tl.fromTo('#endPath', { autoAlpha: 0, y: 18, scale: .94 }, { autoAlpha: 1, y: 0, scale: 1, duration: .45, ease: 'back.out(1.6)' }, 21.95);
+tl.fromTo(['#ep1', '#ep2'], { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: .4, stagger: .1, ease: 'power3.out' }, 22.25);
+tl.fromTo('#fine', { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: .5, ease: 'power2.out' }, 22.65);
+tl.to('#endLogo', { y: -4, duration: 2, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 22.9);
+tl.fromTo('#endPath', { boxShadow: '0 14px 30px rgba(5,15,40,.3), 0 0 0 0 rgba(255,255,255,.55)' }, { boxShadow: '0 14px 30px rgba(5,15,40,.3), 0 0 0 16px rgba(255,255,255,0)', duration: .9, ease: 'power2.out', repeat: 2, repeatDelay: .6 }, 23.2);
+tl.to({}, { duration: 0 }, 27);
+window.seek = t => { tl.seek(t, false); };
+}
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+window.DURATION = 27;
+window.ready = document.fonts.load('700 17px Poppins').then(() => document.fonts.ready)
+  .then(() => Promise.all(Array.from(document.images).map(i => i.complete ? 1 : new Promise(r => i.onload = r))))
+  .then(() => { build(); return true; });
+</script>
+</body>
+</html>

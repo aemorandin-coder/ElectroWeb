@@ -9,6 +9,11 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - **`-rc.N`** (candidata): la tienda ya vende pero falta cerrar la revisión final (`docs/plan/REVISION_FINAL.md`, en especial el dinero). `1.0.0` es la primera versión sin ese pendiente.
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 
+## [1.0.0-rc.2] - 2026-10-02
+### Seguridad
+- **Content-Security-Policy en modo "solo avisar"** (C-166): la tienda declara de qué dominios puede cargar scripts, conexiones y marcos, y el navegador avisa de lo demás sin bloquear nada. Los avisos se agrupan en Reportes → Seguridad. Pasar a bloquear queda para cuando el panel lleve días limpio.
+- Una tabla nueva (`csp_violations`).
+
 ## [1.0.0-rc.1] - 2026-10-02
 Primera versión numerada. Resume todo lo hecho desde el 03/12/2025 (más de 130 tareas).
 

@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 import { prisma } from '@/lib/prisma';
 import { getBaseTemplate, sendEmail } from '@/lib/email-service';
 

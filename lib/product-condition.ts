@@ -2,7 +2,7 @@
 // la tienda, la orden y los términos, para que todos digan lo mismo.
 // Los grados siguen a Amazon Renewed (distancia de 30 cm) y el empaque, a lo que pidió Andrés (caja original o no).
 
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 
 export const CONDITIONS = ['NEW', 'OPEN_BOX', 'REFURBISHED', 'USED'] as const;
 export type Condition = (typeof CONDITIONS)[number];

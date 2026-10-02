@@ -157,6 +157,8 @@ export default withAuth(
           pathname === '/api/cron/favoritos' ||
           pathname === '/api/cron/resenas' ||
           pathname === '/api/cron/respaldos' ||
+          // Avisos de la Content-Security-Policy (C-166): los manda el navegador del visitante, sin sesión. Límite en el handler
+          pathname === '/api/csp-report' ||
           // Tiempo real (C-127): sin sesión solo recibe el stock; el handler filtra por sesión y permisos
           pathname === '/api/realtime';
 

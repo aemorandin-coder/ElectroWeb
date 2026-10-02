@@ -3,7 +3,7 @@
 // después del captcha, y el servidor aceptaba cédulas con "G" que la pantalla no dejaba escribir.
 // Sin imports del servidor: este archivo también se carga en el navegador.
 
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 
 export const PAISES_TELEFONO = [
   { codigo: '+58', corto: 'VE', pais: 'Venezuela' },

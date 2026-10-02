@@ -2055,3 +2055,26 @@ model BackupRun {
   @@index([status])
   @@map("backup_runs")
 }
+
+/// Avisos de la Content-Security-Policy agrupados (C-166). Los navegadores los mandan a /api/csp-report cuando la página
+/// intenta cargar algo que la política no permite. Una fila por (directiva, a quién se bloquea, página, modo): solo cuenta.
+model CspViolation {
+  id          String   @id @default(cuid())
+  /// script-src, img-src, frame-src, connect-src…
+  directive   String
+  /// El host bloqueado ("www.googletagmanager.com"), o inline, eval, data:, blob:
+  blocked     String
+  /// Ruta de la página con los identificadores cambiados por :id ("/productos/:id")
+  pagePath    String
+  /// "report" (solo avisa) o "enforce" (bloqueó)
+  disposition String
+  count       Int      @default(1)
+  firstSeen   DateTime @default(now())
+  lastSeen    DateTime @default(now())
+  /// Los primeros caracteres del script en línea, para reconocerlo
+  sample      String?
+
+  @@unique([directive, blocked, pagePath, disposition])
+  @@index([lastSeen])
+  @@map("csp_violations")
+}

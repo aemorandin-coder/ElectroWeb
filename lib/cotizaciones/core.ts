@@ -1,5 +1,5 @@
 // Cotizaciones (C-148): lo que comparten el panel, la vista del cliente y el servidor. Sin Prisma ni APIs del navegador.
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 import { ivaIncluido } from '@/lib/pricing';
 
 /**

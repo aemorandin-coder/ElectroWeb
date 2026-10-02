@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 import { PaymentMethodType } from '@prisma/client';
 
 export const paymentMethodTypeEnum = z.nativeEnum(PaymentMethodType);

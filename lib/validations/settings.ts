@@ -3,7 +3,7 @@
 // (textos del hero viejo, estadísticas, bloque CTA, año de fundación, moneda principal, tasa EUR,
 // stock crítico) ya no se aceptan: siguen en la base de datos, pero nadie los lee.
 
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 import { MAX_EMPAQUES } from '@/lib/embalaje';
 
 export const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;

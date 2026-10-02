@@ -5,7 +5,7 @@
 
 import { createHash, randomUUID } from 'crypto';
 import { Prisma } from '@prisma/client';
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 import { prisma } from '@/lib/prisma';
 import { leerDocumento } from '@/lib/validations/registro';
 

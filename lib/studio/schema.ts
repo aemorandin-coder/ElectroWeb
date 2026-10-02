@@ -1,6 +1,6 @@
 // ElectroStudio (C-112): forma de un flyer y de los ajustes de marca. Módulo puro: lo usan la API (validar lo que
 // llega) y el editor (normalizar lo que se lee). Sale del artefacto "Flyers ElectroShop" de Andrés.
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 
 /** photo: la foto del producto es obligatoria, opcional o no se usa */
 export const TEMPLATES = {

@@ -1,5 +1,5 @@
 // Ofertas y cupones creados en el panel (C-102). Valida lo que llega del navegador antes de tocar la base.
-import { z } from 'zod';
+import { z } from '@/lib/zod';
 import { normalizarCodigo, PORCENTAJE_MAXIMO } from '@/lib/promotions-core';
 
 const fecha = z

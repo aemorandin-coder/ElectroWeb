@@ -4,7 +4,9 @@ import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
-import { approveConversion } from '@/lib/influencer-commission';
+import { approveConversion, fechaDeAcreditacion, motivoEfectivo } from '@/lib/influencer-commission';
+import { edicionPromotorSchema } from '@/lib/influencer-admin';
+import { sincronizarCupon } from '@/lib/influencer-cupon';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -14,16 +16,6 @@ const accionSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('approve_conversions'), conversionIds: idsSchema }),
   z.object({ action: z.literal('reject_conversions'), conversionIds: idsSchema }),
 ]);
-
-// Antes se guardaba cualquier % de comisión y cualquier estado
-const edicionSchema = z
-  .object({
-    name: z.string().trim().min(2, 'El nombre es muy corto').max(80).optional(),
-    commissionRate: z.coerce.number().min(0, 'La comisión no puede ser negativa').max(50, 'La comisión máxima es 50%').optional(),
-    status: z.enum(['ACTIVE', 'PAUSED']).optional(),
-    notes: z.string().trim().max(500).nullable().optional(),
-  })
-  .strict();
 
 // GET /api/influencers/[id] — detalle con conversiones y el estado de la orden de cada compra
 export async function GET(_req: NextRequest, { params }: Params) {
@@ -50,7 +42,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const orders = orderIds.length
     ? await prisma.order.findMany({
         where: { id: { in: orderIds } },
-        select: { id: true, orderNumber: true, status: true, paymentStatus: true },
+        select: { id: true, orderNumber: true, status: true, paymentStatus: true, deliveredAt: true },
       })
     : [];
   const porId = new Map(orders.map((o) => [o.id, o]));
@@ -60,20 +52,29 @@ export async function GET(_req: NextRequest, { params }: Params) {
     code: influencer.code,
     name: influencer.name,
     commissionRate: Number(influencer.commissionRate),
+    customerDiscountPercent: influencer.customerDiscountPercent,
     status: influencer.status,
     notes: influencer.notes,
     user: influencer.user,
-    conversions: influencer.conversions.map((c) => ({
-      id: c.id,
-      type: c.type,
-      status: c.status,
-      grossAmount: Number(c.grossAmount),
-      commission: Number(c.commission),
-      createdAt: c.createdAt,
-      approvedAt: c.approvedAt,
-      referredUser: c.referredUser,
-      order: c.orderId ? porId.get(c.orderId) ?? null : null,
-    })),
+    conversions: influencer.conversions.map((c) => {
+      const order = c.orderId ? porId.get(c.orderId) ?? null : null;
+      return {
+        id: c.id,
+        type: c.type,
+        status: c.status,
+        source: c.source,
+        grossAmount: Number(c.grossAmount),
+        baseAmount: c.baseAmount === null ? null : Number(c.baseAmount),
+        commission: Number(c.commission),
+        createdAt: c.createdAt,
+        approvedAt: c.approvedAt,
+        // C-167: por qué espera revisión, o cuándo se acredita sola
+        heldReason: motivoEfectivo(c),
+        creditsAt: fechaDeAcreditacion(c, order)?.toISOString() ?? null,
+        referredUser: c.referredUser,
+        order: order ? { id: order.id, orderNumber: order.orderNumber, status: order.status, paymentStatus: order.paymentStatus } : null,
+      };
+    }),
   });
 }
 
@@ -115,7 +116,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ rejected: rechazadas.count });
   }
 
-  const edicion = edicionSchema.safeParse(body);
+  const edicion = edicionPromotorSchema.safeParse(body);
   if (!edicion.success) {
     return NextResponse.json({ error: edicion.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 });
   }
@@ -128,6 +129,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     data: edicion.data,
     include: { user: { select: { id: true, name: true, email: true } } },
   });
+  // C-167: el cupón sigue al promotor (nombre, % al cliente y pausa)
+  await sincronizarCupon(updated).catch((error) => console.error('[PROMOTORES] Cupón:', error));
   return NextResponse.json({ ...updated, commissionRate: Number(updated.commissionRate) });
 }
 
@@ -150,6 +153,9 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     );
   }
 
+  // Su cupón se va con él (nunca se usó: sin comisiones no hay compras con su código que contar)
+  await prisma.promotion.deleteMany({ where: { influencerId: id, usesCount: 0 } });
+  await prisma.promotion.updateMany({ where: { influencerId: id }, data: { isActive: false } });
   await prisma.influencer.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

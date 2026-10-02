@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { FiX, FiCopy, FiCheck, FiGift, FiInfo, FiExternalLink } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { useDelNavegador } from '@/lib/hooks/useMontado';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface ShareItem {
   url: string;
@@ -23,6 +24,8 @@ interface ReferralData {
   influencer?: {
     code: string;
     commissionRate: number;
+    customerDiscountPercent?: number;
+    codeWorks?: boolean;
     status: string;
   };
 }
@@ -31,6 +34,7 @@ export default function ShareEarnModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [item, setItem] = useState<ShareItem | null>(null);
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
+  const { settings } = useSettings();
   const [, setLoadingReferral] = useState(false);
   const [copied, setCopied] = useState(false);
   const siteUrl = useDelNavegador(() => window.location.origin, '');
@@ -101,8 +105,12 @@ export default function ShareEarnModal() {
   const baseLink = `${siteUrl}${item.url}`;
   const finalLink = hasReferralCode ? `${baseLink}?ref=${referralCode}` : baseLink;
 
-  // Cálculo de ganancias estimadas (porcentaje de comisión)
-  const estimatedEarnings = item.price * (commissionRate / 100);
+  // C-167: la comisión es sobre el producto SIN IVA (los precios lo llevan dentro), en Puntos ES. Los cursos no pagan comisión.
+  const iva = settings?.taxEnabled ? Number(settings.taxPercent) || 0 : 0;
+  const estimatedEarnings = (item.price / (1 + iva / 100)) * (commissionRate / 100);
+  const codigoActivo = Boolean(hasReferralCode && referralData?.influencer?.codeWorks);
+  const descuentoCliente = referralData?.influencer?.customerDiscountPercent ?? 0;
+  const conCodigo = codigoActivo && item.type === 'product' ? ` Con mi código ${referralCode} tienes ${descuentoCliente} % de descuento.` : '';
 
   const handleCopyLink = async () => {
     try {
@@ -118,7 +126,7 @@ export default function ShareEarnModal() {
   // Compartir en WhatsApp
   const handleShareWhatsApp = () => {
     const text = item.type === 'product'
-      ? `¡Te recomiendo este producto de Electro Shop! ${item.title} por solo ${formatUSD(item.price)}. Compra desde este enlace: ${finalLink}`
+      ? `¡Te recomiendo este producto de Electro Shop! ${item.title} por ${formatUSD(item.price)}.${conCodigo} Compra desde este enlace: ${finalLink}`
       : `¡Mira este increíble curso de tecnología en Electro Shop! "${item.title}". Aprende hoy aquí: ${finalLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -126,7 +134,7 @@ export default function ShareEarnModal() {
   // Compartir en Telegram
   const handleShareTelegram = () => {
     const text = item.type === 'product'
-      ? `¡Te recomiendo este producto de Electro Shop! ${item.title}`
+      ? `¡Te recomiendo este producto de Electro Shop! ${item.title}.${conCodigo}`
       : `¡Mira este increíble curso de tecnología en Electro Shop! "${item.title}"`;
     window.open(`https://t.me/share/url?url=${encodeURIComponent(finalLink)}&text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -175,17 +183,17 @@ export default function ShareEarnModal() {
         <div className="p-5 overflow-y-auto space-y-5 flex-1 scrollbar-hide">
           
           {/* Comisión Ganancia Banner (Si está enrolado) */}
-          {hasReferralCode && commissionRate > 0 && (
+          {hasReferralCode && commissionRate > 0 && item.type === 'product' && (
             <div className="bg-success/10 border border-success/30 rounded-xl p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-success/20 flex items-center justify-center text-success-strong flex-shrink-0">
                 <FiGift className="w-5 h-5" />
               </div>
               <div className="flex-1">
                 <p className="text-xs font-bold text-success-strong">
-                  ¡Tu enlace de afiliado está activo!
+                  Tu enlace de promotor está activo
                 </p>
                 <p className="text-xs text-ink mt-0.5">
-                  Gana <strong className="font-bold text-success-strong">{commissionRate}%</strong> de comisión ({formatUSD(estimatedEarnings)}) si alguien compra este artículo a través de tu enlace.
+                  Si alguien compra este producto desde tu enlace{codigoActivo ? ` o con tu código ${referralCode}` : ''}, ganas el <strong className="font-bold text-success-strong">{commissionRate} %</strong> de su valor sin IVA: cerca de {formatUSD(estimatedEarnings)} en Puntos ES.
                 </p>
               </div>
             </div>
@@ -302,17 +310,17 @@ export default function ShareEarnModal() {
               </div>
               <div>
                 <h4 className="text-xs font-bold text-ink">
-                  ¿Quieres ganar comisiones en Electro Shop?
+                  ¿Quieres ganar Puntos ES recomendando la tienda?
                 </h4>
                 <p className="text-xs text-muted mt-0.5 leading-relaxed">
-                  Únete al Programa de Referidos e Influencers. Recomienda nuestros productos o cursos a tus seguidores y gana dinero real por cada venta exitosa.
+                  Entra al programa de promotores: recomienda nuestros productos a tus seguidores con tu código y gana Puntos ES por cada compra, para usarlos en la tienda.
                 </p>
               </div>
             </div>
 
             <div className="pt-2 flex items-center justify-between border-t border-line">
               <span className="text-xs font-semibold text-muted">
-                ¡Es 100% gratis y rápido!
+                Es gratis. Lo revisa el equipo.
               </span>
               
               {referralData === null ? (
@@ -328,7 +336,7 @@ export default function ShareEarnModal() {
                   href="/customer/referrals"
                   className="px-3.5 py-1.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1"
                 >
-                  Activar referidos
+                  Quiero ser promotor
                   <FiExternalLink className="w-3 h-3" />
                 </a>
               )}

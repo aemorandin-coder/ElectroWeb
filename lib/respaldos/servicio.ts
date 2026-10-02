@@ -128,9 +128,10 @@ async function respaldarTipo(a: BackupSettings, drive: DriveListo, tipo: TipoRes
   const run = await prisma.backupRun.create({ data: { kind: tipo, trigger: disparo } });
   let carpetaTemporal: string | null = null;
   try {
-    carpetaTemporal = await mkdtemp(path.join(process.env.RESPALDOS_DIR_TEMPORAL || os.tmpdir(), 'esbk-'));
-    const crudo = path.join(carpetaTemporal, tipo === 'DB' ? 'base.dump' : 'archivos.tar.gz');
-    const cifrado = path.join(carpetaTemporal, 'salida.enc');
+    carpetaTemporal = await mkdtemp(path.join(/* turbopackIgnore: true */ process.env.RESPALDOS_DIR_TEMPORAL || os.tmpdir(), 'esbk-'));
+    // turbopackIgnore: rutas dentro de la carpeta temporal; sin esto el build rastrea todo el proyecto
+    const crudo = path.join(/* turbopackIgnore: true */ carpetaTemporal, tipo === 'DB' ? 'base.dump' : 'archivos.tar.gz');
+    const cifrado = path.join(/* turbopackIgnore: true */ carpetaTemporal, 'salida.enc');
     let items: number;
     if (tipo === 'DB') {
       await volcarBase(process.env.DATABASE_URL, crudo);

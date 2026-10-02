@@ -28,7 +28,10 @@ export type NotificationType =
   | 'FAVORITE_PRICE_DROP'
   | 'FAVORITE_BACK_IN_STOCK'
   // C-138: el equipo aprobó o rechazó la verificación de la empresa
-  | 'BUSINESS_VERIFIED';
+  | 'BUSINESS_VERIFIED'
+  // C-167: comisiones y solicitud del programa de promotores
+  | 'REFERRAL_COMMISSION'
+  | 'PROMOTER_APPLICATION';
 
 interface CreateNotificationParams {
   userId: string;

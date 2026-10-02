@@ -489,6 +489,11 @@ export async function POST(request: NextRequest) {
     const couponCode = typeof body.couponCode === 'string' && body.couponCode.trim() ? body.couponCode.trim().slice(0, 40) : null;
     const quote = await quoteOrder(userId, items, deliveryMethod, couponCode);
     const { calculation, settings } = quote;
+    // C-167: si el código es de un promotor, la compra cuenta para él (aunque el descuento no haya aplicado a ninguna línea).
+    // buscarCupon ya rechazó el código propio y el de un promotor pausado.
+    const promotorDelCodigo = quote.coupon?.promotionId
+      ? (await prisma.promotion.findUnique({ where: { id: quote.coupon.promotionId }, select: { influencerId: true } }))?.influencerId ?? null
+      : null;
 
     if (quote.errors.length > 0) {
       return rechazoDefinitivo('Hay problemas con los productos de tu carrito.', quote.errors);
@@ -775,6 +780,7 @@ export async function POST(request: NextRequest) {
             paymentMethod,
             pointsUSD: montoDecimal(puntosDe[index]),
             paymentReference: referenciaManual,
+            referralInfluencerId: promotorDelCodigo,
             // C-147: copia de los datos de la factura (si después cambia la cuenta, la orden conserva los suyos)
             ...factura.datos,
             // WALLET y MOBILE_PAYMENT verificado (en BD y por monto) se tratan como pagados

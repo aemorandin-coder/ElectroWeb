@@ -91,7 +91,8 @@ export const CARPETAS_DE_ARCHIVOS = ['private-uploads', path.join('public', 'upl
 
 /** Empaqueta (tar.gz) las carpetas que existan. Devuelve false si no hay ninguna. */
 export async function empaquetarArchivos(destino: string, raiz = process.cwd()): Promise<boolean> {
-  const carpetas = CARPETAS_DE_ARCHIVOS.filter((carpeta) => existsSync(path.join(raiz, carpeta)));
+  // turbopackIgnore: la ruta es dinámica a propósito (las carpetas de archivos subidos); sin esto el build rastrea todo el proyecto
+  const carpetas = CARPETAS_DE_ARCHIVOS.filter((carpeta) => existsSync(path.join(/* turbopackIgnore: true */ raiz, carpeta)));
   if (carpetas.length === 0) return false;
   const r = await correr('tar', ['-czf', destino, '-C', raiz, ...carpetas]);
   // tar sale con 1 si un archivo cambió mientras se leía (alguien subió una foto): el resto quedó bien

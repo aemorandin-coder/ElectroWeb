@@ -79,6 +79,7 @@ model User {
   // Influencer system
   referredByCode      String?    // Code of the influencer who referred this user
   influencerProfile   Influencer? @relation("InfluencerUser")
+  influencerApplications InfluencerApplication[] @relation("InfluencerApplications")
   referralConversions ReferralConversion[] @relation("ReferredUser")
 
   @@map("users")
@@ -612,6 +613,8 @@ model Order {
   pointsUSD     Decimal     @default(0)
   // C-132: referencia que escribió el cliente en un pago manual (Binance Pay, PayPal, Zelle…), para verificarla
   paymentReference String?
+  // C-167: promotor cuyo código se escribió en esta compra (manda sobre el enlace con que se registró el cliente)
+  referralInfluencerId String?
 
   exchangeRate  Decimal
   totalVES      Decimal
@@ -1564,6 +1567,9 @@ model Promotion {
   createdById    String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+  /// C-167: cupón de un promotor (su código). La venta con este cupón cuenta para él aunque el cliente ya tenga cuenta
+  influencerId   String?        @unique
+  influencer     Influencer?    @relation(fields: [influencerId], references: [id], onDelete: SetNull)
 
   redemptions PromotionRedemption[]
 
@@ -1789,8 +1795,11 @@ model Influencer {
   status         String   @default("ACTIVE") // ACTIVE | PAUSED
 
   notes          String?           // Internal admin notes
+  /// C-167: % de descuento que da su código al cliente (1 a 30). Su cupón es la Promotion con influencerId = id
+  customerDiscountPercent Int     @default(5)
 
   conversions    ReferralConversion[]
+  coupon         Promotion?
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -1820,6 +1829,12 @@ model ReferralConversion {
 
   approvedAt     DateTime?
   createdAt      DateTime @default(now())
+  /// C-167: LINK (cliente que se registró con su enlace) o CODE (escribió su código en la compra)
+  source         String?
+  /// C-167: base de la comisión (productos menos descuentos, sin IVA ni envío)
+  baseAmount     Decimal?
+  /// C-167: por qué no se aprueba sola (posible autocompra, monto alto). Null = se aprueba sola
+  heldReason     String?
 
   @@index([influencerId])
   @@index([referredUserId])
@@ -2077,4 +2092,29 @@ model CspViolation {
   @@unique([directive, blocked, pagePath, disposition])
   @@index([lastSeen])
   @@map("csp_violations")
+}
+
+/// C-167: solicitud de un cliente para ser promotor. Una abierta por persona; el equipo la aprueba o la rechaza
+model InfluencerApplication {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation("InfluencerApplications", fields: [userId], references: [id], onDelete: Cascade)
+  /// Dónde publica: enlaces o usuarios de Instagram, TikTok, YouTube…
+  channels    String
+  /// Seguidores aproximados (lo que dice la persona)
+  followers   Int?
+  /// Por qué quiere y cómo piensa promocionar
+  message     String?
+  /// Código que le gustaría (se valida al aprobar)
+  wantedCode  String?
+  /// PENDING, APPROVED o REJECTED
+  status      String    @default("PENDING")
+  reviewNote  String?
+  reviewedAt  DateTime?
+  reviewedById String?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@map("influencer_applications")
 }

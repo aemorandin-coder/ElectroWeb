@@ -14,6 +14,7 @@
 - **Crons** (`crontab -l` de `luami`, desde el 30/09). Cada guion lee `CRON_SECRET` del `.env`:
   - `0 * * * * /home/luami/cron-favoritos.sh`: avisos de favoritos (C-138).
   - `15 */2 * * * /home/luami/cron-envios.sh`: rastreo de las guías de ZOOM (C-100).
+  - `30 9 * * * /home/luami/cron-promotores.sh`: acredita en Puntos ES las comisiones de promotores cuya orden lleva 7 días entregada (C-167, guion en `docs/plan/scripts/cron-promotores.sh`; responde `acreditadas`, `rechazadas` y `revisadas`).
   - `5 * * * * /home/luami/cron-respaldos.sh`: respaldo diario a Google Drive (C-165, guion en `docs/plan/scripts/cron-respaldos.sh`).
   - `0 15 * * * /home/luami/cron-resenas.sh`: pide la reseña por correo a quien recibió su pedido hace unos días (C-157, una vez al día). Confirmar con `crontab -l` que la línea está puesta (la ruta ya existe en producción desde el 01/10).
   - Para probar uno a mano se corre el guion: responde JSON (`revisados`, `avisos`…).

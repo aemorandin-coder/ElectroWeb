@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Fragment } from 'react';
+import { useState, Fragment } from 'react';
 import {
   FiGift,
   FiCopy,
@@ -20,6 +20,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { formatUSD } from '@/lib/currency';
+import { adminInput, adminLabel, adminHint, adminNotice } from '@/lib/admin-ui';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import {
   adminCard,
   adminPrimaryButton,
@@ -32,6 +34,8 @@ interface Influencer {
   code: string;
   name: string;
   commissionRate: number;
+  customerDiscountPercent: number;
+  codeWorks: boolean;
   status: string;
   createdAt: string;
 }
@@ -48,22 +52,35 @@ interface Stats {
 interface Conversion {
   id: string;
   type: string;
-  grossAmount: number;
+  source: string | null;
+  baseAmount: number;
   commission: number;
   status: string;
+  enRevision: boolean;
+  creditsAt: string | null;
   createdAt: string;
+}
+
+interface Solicitud {
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+  reviewedAt: string | null;
+  reviewNote: string | null;
 }
 
 interface LeaderboardEntry {
   rank: number;
   name: string;
-  totalEarnings: number;
   conversionsCount: number;
   isCurrentUser: boolean;
 }
 
 interface ReferralData {
   enrolled: boolean;
+  puedePedir?: boolean;
+  correoVerificado?: boolean;
+  solicitud?: Solicitud | null;
+  reglas?: { diasParaAcreditar: number };
   influencer?: Influencer;
   stats?: Stats;
   conversions?: Conversion[];
@@ -127,11 +144,15 @@ const CONVERSION_LABELS: Record<string, { label: string; Icon: React.ElementType
   RECHARGE: { label: 'Recarga', Icon: FiDollarSign, color: 'text-brand-700' },
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: 'Pendiente',
-  APPROVED: 'Aprobado',
-  REJECTED: 'Rechazado',
-};
+/** El estado de una comisión, como lo entiende el promotor: cuándo se acredita o por qué espera. */
+function estadoDeComision(c: Conversion): { texto: string; tono: 'success' | 'warning' | 'danger' | 'brand' } {
+  if (c.type === 'REGISTRATION') return { texto: 'Registro', tono: 'brand' };
+  if (c.status === 'APPROVED') return { texto: 'Acreditada', tono: 'success' };
+  if (c.status === 'REJECTED') return { texto: 'Anulada', tono: 'danger' };
+  if (c.enRevision) return { texto: 'En revisión', tono: 'warning' };
+  if (c.creditsAt) return { texto: `Se acredita el ${format(new Date(c.creditsAt), 'dd/MM', { locale: es })}`, tono: 'warning' };
+  return { texto: 'Espera la entrega', tono: 'warning' };
+}
 
 function StatCard({
   label,
@@ -164,18 +185,50 @@ function StatCard({
   );
 }
 
-function NotEnrolledView() {
+function NotEnrolledView({ data, onEnviada }: { data: ReferralData | null; onEnviada: () => void }) {
+  const [canales, setCanales] = useState('');
+  const [seguidores, setSeguidores] = useState('');
+  const [mensaje, setMensaje] = useState('');
+  const [codigo, setCodigo] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+  const dias = data?.reglas?.diasParaAcreditar ?? 7;
+  const solicitud = data?.solicitud ?? null;
+
+  const enviar = async (evento: React.FormEvent) => {
+    evento.preventDefault();
+    setError('');
+    setEnviando(true);
+    try {
+      const res = await fetch('/api/customer/referrals/solicitud', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channels: canales, followers: seguidores ? Number(seguidores) : null, message: mensaje || null, wantedCode: codigo || null }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(json?.error ?? 'No se pudo enviar la solicitud.');
+        return;
+      }
+      toast.success('Solicitud enviada. Te avisamos cuando la revisemos.');
+      onEnviada();
+    } catch {
+      setError('No se pudo enviar la solicitud. Revisa tu conexión.');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center pt-4 pb-2">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-50 text-brand-500 mb-4 shadow-sm">
           <FiGift className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-bold text-ink mb-2">Programa de Referidos</h1>
+        <h1 className="text-2xl font-bold text-ink mb-2">Programa de promotores</h1>
         <p className="text-muted max-w-md mx-auto text-sm leading-relaxed">
-          Comparte la tienda con tus amigos y gana{' '}
-          <strong className="text-brand-500">comisiones reales</strong> por cada
-          persona que use tu enlace para comprar o recargarse.
+          Recomienda la tienda con tu código: tus seguidores compran con descuento y tú ganas{' '}
+          <strong className="text-brand-500">Puntos ES</strong> por cada compra, para usarlos en lo que quieras de la tienda.
         </p>
       </div>
 
@@ -183,22 +236,22 @@ function NotEnrolledView() {
         {[
           {
             Icon: FiDollarSign,
-            title: 'Comisiones reales',
-            desc: 'Gana un porcentaje por cada venta generada por tus referidos',
+            title: 'Ganas en cada compra',
+            desc: 'Un porcentaje del valor de los productos (sin IVA ni envío) de cada compra hecha con tu código o tu enlace.',
             color: 'text-success-strong',
             bg: 'bg-success/10',
           },
           {
-            Icon: FiAward,
-            title: 'Sistema de niveles',
-            desc: 'Sube de Bronce a Plata y Oro para desbloquear mejores beneficios',
+            Icon: FiGift,
+            title: 'En Puntos ES',
+            desc: `Se acreditan solos ${dias} días después de que el cliente recibe su pedido. No se cambian por dinero: se usan para comprar en la tienda.`,
             color: 'text-warning-strong',
             bg: 'bg-warning/10',
           },
           {
             Icon: FiUsers,
-            title: 'Sin límite de referidos',
-            desc: 'Cuantas más personas invites, más puedes ganar mes a mes',
+            title: 'Descuento para tus seguidores',
+            desc: 'Quien escribe tu código en el carrito paga menos. Sirve aunque ya tenga cuenta, y en todas sus compras.',
             color: 'text-brand-500',
             bg: 'bg-brand-50',
           },
@@ -226,18 +279,18 @@ function NotEnrolledView() {
           {[
             {
               n: '1',
-              title: 'Únete al programa',
-              desc: 'Contáctanos para activar tu cuenta de referidos',
+              title: 'Pide entrar',
+              desc: 'Cuéntanos dónde publicas. Lo revisamos y te avisamos.',
             },
             {
               n: '2',
-              title: 'Comparte tu enlace',
-              desc: 'Envía tu enlace único a amigos y redes sociales',
+              title: 'Comparte tu código',
+              desc: 'En tus historias, tu grupo o tu canal, con tu enlace si quieres.',
             },
             {
               n: '3',
-              title: 'Gana comisiones',
-              desc: 'Recibe pagos por cada compra de tus referidos',
+              title: 'Ganas Puntos ES',
+              desc: 'Por cada compra pagada y entregada con tu código o tu enlace.',
             },
           ].map((step, idx) => (
             <Fragment key={step.n}>
@@ -256,19 +309,58 @@ function NotEnrolledView() {
         </div>
       </div>
 
-      <div className="bg-surface border border-line rounded-xl p-5 text-center">
-        <p className="text-sm font-semibold text-ink mb-1">¿Listo para empezar?</p>
-        <p className="text-xs text-muted mb-4">
-          Nuestro equipo revisará tu solicitud y activará tu enlace personalizado
-        </p>
-        <a
-          href="/contacto"
-          className={`${adminPrimaryButton} inline-flex items-center gap-2 px-6 py-3 text-sm`}
-        >
-          <FiGift className="w-4 h-4" />
-          Solicitar acceso al programa
-        </a>
-      </div>
+      {solicitud?.status === 'PENDING' ? (
+        <div className={`${adminNotice('brand')} flex items-start gap-2`}>
+          <FiClock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>
+            <strong>Tu solicitud está en revisión</strong> (la enviaste el {format(new Date(solicitud.createdAt), "d 'de' MMMM", { locale: es })}). Te avisamos aquí y por correo cuando la revisemos.
+          </span>
+        </div>
+      ) : data?.puedePedir === false ? (
+        <div className={adminNotice('warning')}>Las cuentas del equipo no entran al programa de promotores.</div>
+      ) : (
+        <form onSubmit={enviar} className={`${adminCard} p-5 space-y-4`}>
+          <div>
+            <p className="text-base font-bold text-ink">Pide entrar al programa</p>
+            <p className="text-sm text-muted">Lo revisa una persona del equipo. No hace falta tener miles de seguidores: cuenta que tu público compre tecnología.</p>
+          </div>
+          {solicitud?.status === 'REJECTED' && (
+            <div className={adminNotice('warning')}>
+              Tu solicitud anterior no se aprobó{solicitud.reviewNote ? `: ${solicitud.reviewNote}` : '.'} Puedes volver a pedirlo 30 días después de esa respuesta.
+            </div>
+          )}
+          {data?.correoVerificado === false && (
+            <div className={adminNotice('warning')}>Verifica tu correo antes de pedirlo: revisa tu bandeja o entra a Mi perfil.</div>
+          )}
+          <div>
+            <label htmlFor="promotor-canales" className={adminLabel}>¿Dónde publicas?</label>
+            <textarea id="promotor-canales" required minLength={5} maxLength={300} rows={2} value={canales} onChange={(e) => setCanales(e.target.value)}
+              placeholder="@miusuario en Instagram, mi canal de TikTok, un grupo de WhatsApp de gamers…" className={`${adminInput(false)} h-auto resize-y py-2.5`} />
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="promotor-seguidores" className={adminLabel}>Seguidores (aproximado)</label>
+              <input id="promotor-seguidores" type="number" min={0} max={100000000} inputMode="numeric" value={seguidores} onChange={(e) => setSeguidores(e.target.value)} className={adminInput(false)} />
+              <p className={adminHint}>Opcional.</p>
+            </div>
+            <div>
+              <label htmlFor="promotor-codigo" className={adminLabel}>Código que te gustaría</label>
+              <input id="promotor-codigo" maxLength={20} value={codigo} onChange={(e) => setCodigo(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))} placeholder="TUNOMBRE" className={`${adminInput(false)} font-mono uppercase`} />
+              <p className={adminHint}>Opcional. Es el que escribirán tus seguidores en el carrito.</p>
+            </div>
+          </div>
+          <div>
+            <label htmlFor="promotor-mensaje" className={adminLabel}>¿Cómo piensas recomendar la tienda?</label>
+            <textarea id="promotor-mensaje" maxLength={600} rows={3} value={mensaje} onChange={(e) => setMensaje(e.target.value)} className={`${adminInput(false)} h-auto resize-y py-2.5`} />
+            <p className={adminHint}>Opcional.</p>
+          </div>
+          {error && <p className="text-sm font-semibold text-deal" role="alert">{error}</p>}
+          <button type="submit" disabled={enviando || canales.trim().length < 5} className={`${adminPrimaryButton} w-full sm:w-auto`}>
+            <FiGift className="w-4 h-4" aria-hidden="true" />
+            {enviando ? 'Enviando…' : 'Enviar solicitud'}
+          </button>
+        </form>
+      )}
     </div>
   );
 }
@@ -280,23 +372,18 @@ export default function ReferralsPage() {
   const siteUrl = useDelNavegador(() => window.location.origin, '');
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch('/api/customer/referrals');
-        if (res.ok) {
-          const json = await res.json();
-          setData(json);
-        }
-      } catch (err) {
-        console.error(err);
-        toast.error('No se pudieron cargar los datos de referidos');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const cargar = async () => {
+    try {
+      const res = await fetch('/api/customer/referrals');
+      if (res.ok) setData(await res.json());
+      else toast.error('No se pudieron cargar los datos del programa');
+    } catch {
+      toast.error('No se pudieron cargar los datos del programa');
+    } finally {
+      setLoading(false);
+    }
+  };
+  useCargarAlMontar(cargar);
 
   const referralUrl =
     data?.influencer && siteUrl ? `${siteUrl}/?ref=${data.influencer.code}` : '';
@@ -306,30 +393,42 @@ export default function ReferralsPage() {
     try {
       await navigator.clipboard.writeText(referralUrl);
       setCopied(true);
-      toast.success('¡Enlace copiado!');
+      toast.success('Enlace copiado');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('No se pudo copiar el enlace');
     }
   };
 
+  const copiarCodigo = async () => {
+    if (!data?.influencer) return;
+    try {
+      await navigator.clipboard.writeText(data.influencer.code);
+      toast.success('Código copiado');
+    } catch {
+      toast.error('No se pudo copiar el código');
+    }
+  };
+
+  // Lo que el promotor pega en sus redes: el código y lo que gana quien lo usa
+  const textoParaCompartir = data?.influencer
+    ? `Compra tecnología en Electro Shop con mi código ${data.influencer.code} y recibe ${data.influencer.customerDiscountPercent} % de descuento`
+    : '';
+
   const shareWhatsApp = () => {
-    const text = `¡Te recomiendo esta tienda! Regístrate con mi enlace y obtén beneficios: ${referralUrl}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${textoParaCompartir}: ${referralUrl}`)}`, '_blank');
   };
 
   const shareTelegram = () => {
-    const text = `¡Te recomiendo esta tienda! Regístrate con mi enlace y obtén beneficios: ${referralUrl}`;
     window.open(
-      `https://t.me/share/url?url=${encodeURIComponent(referralUrl)}&text=${encodeURIComponent(text)}`,
+      `https://t.me/share/url?url=${encodeURIComponent(referralUrl)}&text=${encodeURIComponent(textoParaCompartir)}`,
       '_blank'
     );
   };
 
   const shareTwitter = () => {
-    const text = `¡Te recomiendo esta tienda! Regístrate con mi enlace y obtén beneficios`;
     window.open(
-      `https://twitter.com/intent/tweet?url=${encodeURIComponent(referralUrl)}&text=${encodeURIComponent(text)}`,
+      `https://twitter.com/intent/tweet?url=${encodeURIComponent(referralUrl)}&text=${encodeURIComponent(textoParaCompartir)}`,
       '_blank'
     );
   };
@@ -343,11 +442,12 @@ export default function ReferralsPage() {
   }
 
   if (!data?.enrolled) {
-    return <NotEnrolledView />;
+    return <NotEnrolledView data={data} onEnviada={cargar} />;
   }
 
   const { influencer, stats, conversions, leaderboard, currentUserRank } = data;
   if (!influencer || !stats) return null;
+  const dias = data.reglas?.diasParaAcreditar ?? 7;
 
   const tier = getTier(stats.approvedConversions);
   const tierInfo = TIERS[tier];
@@ -370,7 +470,7 @@ export default function ReferralsPage() {
         </div>
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold text-ink">Mi Programa de Referidos</h1>
+            <h1 className="text-xl font-bold text-ink">Mi programa de promotor</h1>
             {influencer.status === 'PAUSED' && (
               <span className={adminBadge('warning')}>
                 Pausado
@@ -378,11 +478,11 @@ export default function ReferralsPage() {
             )}
           </div>
           <p className="text-sm text-muted">
-            Comisión de{' '}
+            Ganas{' '}
             <span className="font-semibold text-brand-500">
-              {influencer.commissionRate}%
+              {influencer.commissionRate} %
             </span>{' '}
-            por cada conversión aprobada
+            en Puntos ES del valor de los productos (sin IVA ni envío) de cada compra con tu código o tu enlace.
           </p>
         </div>
       </div>
@@ -390,33 +490,36 @@ export default function ReferralsPage() {
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
-          label="Pendiente"
+          label="Por acreditar"
           value={formatUSD(stats.pendingEarnings)}
+          suffix=" Puntos ES"
           Icon={FiClock}
           color="text-warning-strong"
           bg="bg-warning/10"
         />
         <StatCard
-          label="Aprobado"
+          label="Acreditado"
           value={formatUSD(stats.approvedEarnings)}
+          suffix=" Puntos ES"
           Icon={FiCheckCircle}
           color="text-success-strong"
           bg="bg-success/10"
         />
         <StatCard
-          label="Este mes"
+          label="Acreditado este mes"
           value={formatUSD(stats.thisMonthEarnings)}
+          suffix=" Puntos ES"
           Icon={FiTrendingUp}
           color="text-brand-500"
           bg="bg-brand-50"
         />
         <StatCard
-          label="Conversiones"
-          value={stats.approvedConversions.toString()}
+          label="Ventas"
+          value={stats.totalConversions.toString()}
           Icon={FiUsers}
           color="text-brand-700"
           bg="bg-surface"
-          suffix=" aprobadas"
+          suffix={` · ${stats.approvedConversions} acreditadas`}
         />
       </div>
 
@@ -424,8 +527,27 @@ export default function ReferralsPage() {
       <div className={`${adminCard} p-5 border-brand-500/30`}>
         <div className="flex items-center gap-2 mb-3">
           <FiShare2 className="w-4 h-4 text-brand-500" />
-          <h3 className="text-sm font-bold text-ink">Tu Enlace de Referido</h3>
+          <h3 className="text-sm font-bold text-ink">Tu código y tu enlace</h3>
         </div>
+
+        {/* El código: lo que más se comparte en historias y videos */}
+        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-brand-700">Tu código</p>
+            <p className="break-all font-mono text-2xl font-bold tracking-wider text-ink">{influencer.code}</p>
+            <p className="mt-0.5 text-xs text-muted">
+              {influencer.codeWorks
+                ? `Quien lo escribe en el carrito recibe ${influencer.customerDiscountPercent} % de descuento (no aplica a productos digitales ni usados), y la compra cuenta para ti aunque ya tenga cuenta.`
+                : 'Por ahora tu código no está activo en el carrito. Escríbenos para revisarlo; tu enlace sigue contando.'}
+            </p>
+          </div>
+          <button type="button" onClick={copiarCodigo} className={`${adminPrimaryButton} shrink-0 text-xs py-2.5 px-4`}>
+            <FiCopy className="w-4 h-4" aria-hidden="true" />
+            Copiar código
+          </button>
+        </div>
+
+        <p className="mb-1.5 text-xs text-muted">Tu enlace: cuenta las compras de quien se registra desde él, aunque no escriba el código.</p>
 
         {/* URL row */}
         <div className="flex items-center gap-2 mb-3">
@@ -440,7 +562,7 @@ export default function ReferralsPage() {
             {copied ? (
               <>
                 <FiCheckCircle className="w-4 h-4 text-white" />
-                ¡Copiado!
+                Copiado
               </>
             ) : (
               <>
@@ -493,24 +615,24 @@ export default function ReferralsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             {
-              title: 'Comparte tu enlace',
-              desc: 'Envía tu enlace único a amigos y seguidores en redes sociales',
+              title: 'Comparte tu código',
+              desc: `Tus seguidores lo escriben en el carrito y reciben ${influencer.customerDiscountPercent} % de descuento. También puedes pasar tu enlace.`,
               Icon: FiShare2,
               color: 'text-brand-500',
               bg: 'bg-brand-50',
               step: '1',
             },
             {
-              title: 'Tu amigo compra',
-              desc: 'Cuando se registran o realizan una compra usando tu enlace',
+              title: 'Compran y reciben su pedido',
+              desc: 'Cuenta cada compra pagada. Un registro sin compra no genera comisión, y una compra cancelada tampoco.',
               Icon: FiShoppingCart,
               color: 'text-success-strong',
               bg: 'bg-success/10',
               step: '2',
             },
             {
-              title: 'Ganas comisión',
-              desc: `Recibes el ${influencer.commissionRate}% de cada conversión aprobada`,
+              title: 'Se acreditan tus Puntos ES',
+              desc: `El ${influencer.commissionRate} % del valor de los productos (sin IVA ni envío), solos, ${dias} días después de la entrega. Los usas para comprar en la tienda; no se cambian por dinero.`,
               Icon: FiDollarSign,
               color: 'text-brand-700',
               bg: 'bg-surface',
@@ -542,7 +664,8 @@ export default function ReferralsPage() {
 
       {/* Tier progression */}
       <div className="bg-surface rounded-xl border border-line p-5">
-        <h3 className="text-base font-bold text-ink mb-4">Progreso de Nivel</h3>
+        <h3 className="text-base font-bold text-ink">Tu nivel</h3>
+        <p className="mb-4 text-xs text-muted">Un reconocimiento por tus ventas acreditadas. No cambia tu comisión.</p>
         <div className="flex items-center justify-between mb-3">
           {(['bronze', 'silver', 'gold'] as Tier[]).map((t, idx) => {
             const info = TIERS[t];
@@ -593,7 +716,7 @@ export default function ReferralsPage() {
         {tierProgress.nextTier && (
           <p className="text-xs text-muted text-center mt-2">
             Te faltan{' '}
-            <strong className="text-ink">{tierProgress.needed} conversiones</strong> para
+            <strong className="text-ink">{tierProgress.needed} {tierProgress.needed === 1 ? 'venta' : 'ventas'}</strong> para
             alcanzar el nivel{' '}
             <strong className="text-brand-500">
               {TIERS[tierProgress.nextTier].label}
@@ -607,7 +730,7 @@ export default function ReferralsPage() {
         {/* Recent conversions */}
         <div>
           <h3 className="text-base font-bold text-ink mb-3">
-            Conversiones Recientes{' '}
+            Tus últimas ventas{' '}
             <span className="text-muted font-normal text-sm">
               ({conversions?.length || 0})
             </span>
@@ -615,16 +738,16 @@ export default function ReferralsPage() {
           {!conversions || conversions.length === 0 ? (
             <div className="text-center py-10 text-muted text-sm bg-surface rounded-xl border border-line">
               <FiUsers className="w-8 h-8 mx-auto mb-2 opacity-25" />
-              <p>Aún no tienes conversiones.</p>
-              <p className="text-xs mt-1">Comparte tu enlace para empezar a ganar.</p>
+              <p>Aún no tienes ventas.</p>
+              <p className="text-xs mt-1">Comparte tu código para empezar a ganar Puntos ES.</p>
             </div>
           ) : (
             <div className={`${adminCard} overflow-hidden`}>
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-line bg-surface text-[11px] font-semibold text-muted uppercase">
-                    <th className="px-3 py-2">Tipo</th>
-                    <th className="px-3 py-2 text-right">Comisión</th>
+                    <th className="px-3 py-2">Venta</th>
+                    <th className="px-3 py-2 text-right">Puntos ES</th>
                     <th className="px-3 py-2 text-center">Estado</th>
                     <th className="px-3 py-2 text-right">Fecha</th>
                   </tr>
@@ -636,7 +759,7 @@ export default function ReferralsPage() {
                       Icon: FiGift,
                       color: 'text-muted',
                     };
-                    const statusTone = conv.status === 'APPROVED' ? 'success' : conv.status === 'PENDING' ? 'warning' : 'danger';
+                    const estado = estadoDeComision(conv);
                     return (
                       <tr key={conv.id} className="hover:bg-surface transition-colors">
                         <td className="px-3 py-2.5">
@@ -645,18 +768,20 @@ export default function ReferralsPage() {
                               className={`w-3.5 h-3.5 ${typeInfo.color}`}
                             />
                             <span className="text-xs text-ink">
-                              {typeInfo.label}
+                              {conv.type === 'PURCHASE'
+                                ? `${formatUSD(conv.baseAmount)} ${conv.source === 'CODE' ? 'con tu código' : 'con tu enlace'}`
+                                : typeInfo.label}
                             </span>
                           </div>
                         </td>
                         <td className="px-3 py-2.5 text-right">
                           <span className="text-xs font-semibold text-ink">
-                            {formatUSD(conv.commission)}
+                            {conv.type === 'PURCHASE' ? formatUSD(conv.commission) : '—'}
                           </span>
                         </td>
                         <td className="px-3 py-2.5 text-center">
-                          <span className={adminBadge(statusTone)}>
-                            {STATUS_LABELS[conv.status] || conv.status}
+                          <span className={adminBadge(estado.tono)}>
+                            {estado.texto}
                           </span>
                         </td>
                         <td className="px-3 py-2.5 text-right text-xs text-muted">
@@ -677,13 +802,13 @@ export default function ReferralsPage() {
         <div>
           <h3 className="text-base font-bold text-ink mb-3">
             Clasificación{' '}
-            <span className="text-muted font-normal text-sm">· Top Referidores</span>
+            <span className="text-muted font-normal text-sm">· por ventas acreditadas</span>
           </h3>
           {!leaderboard || leaderboard.length === 0 ? (
             <div className="text-center py-10 text-muted text-sm bg-surface rounded-xl border border-line">
               <FiAward className="w-8 h-8 mx-auto mb-2 opacity-25" />
-              <p>Sé el primero en el ranking.</p>
-              <p className="text-xs mt-1">El clasificador se actualiza en tiempo real.</p>
+              <p>Todavía no hay ventas acreditadas.</p>
+              <p className="text-xs mt-1">Sé el primero de la clasificación.</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -721,12 +846,9 @@ export default function ReferralsPage() {
                       )}
                     </p>
                     <p className="text-xs text-muted">
-                      {entry.conversionsCount} conversiones
+                      {entry.conversionsCount} {entry.conversionsCount === 1 ? 'venta' : 'ventas'}
                     </p>
                   </div>
-                  <span className="text-sm font-bold text-brand-500">
-                    {formatUSD(entry.totalEarnings)}
-                  </span>
                 </div>
               ))}
               {currentUserRank && currentUserRank > 10 && (

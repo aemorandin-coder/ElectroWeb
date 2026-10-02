@@ -9,6 +9,14 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - **`-rc.N`** (candidata): la tienda ya vende pero falta cerrar la revisión final (`docs/plan/REVISION_FINAL.md`, en especial el dinero). `1.0.0` es la primera versión sin ese pendiente.
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 
+## [1.0.0-rc.3] - 2026-10-02
+### Promotores (C-167)
+- Cada promotor tiene un **código** que el cliente escribe en el carrito: descuento para el cliente y la compra cuenta para el promotor, aunque el cliente ya tuviera cuenta.
+- La comisión es sobre los **productos, sin IVA ni envío**, en **Puntos ES** (nunca en dinero), y se **acredita sola 7 días después de la entrega**. Las que parecen autocompra, pasan de $50 o superan la ganancia de la venta esperan la revisión del equipo.
+- **Solicitud para ser promotor** desde la cuenta del cliente, con aprobación de un clic.
+- La página del promotor y "Compartir y ganar" dejan de prometer dinero, comisión por recargas, por registros o por cursos, y beneficios por nivel.
+- Una tabla nueva (`influencer_applications`) y seis columnas. Un cron nuevo (promotores).
+
 ## [1.0.0-rc.2] - 2026-10-02
 ### Seguridad
 - **Content-Security-Policy en modo "solo avisar"** (C-166): la tienda declara de qué dominios puede cargar scripts, conexiones y marcos, y el navegador avisa de lo demás sin bloquear nada. Los avisos se agrupan en Reportes → Seguridad. Pasar a bloquear queda para cuando el panel lleve días limpio.

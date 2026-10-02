@@ -20,6 +20,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   const { id } = await params;
   const actual = await prisma.promotion.findUnique({ where: { id } });
   if (!actual) return NextResponse.json({ error: 'No existe' }, { status: 404 });
+  // C-167: el cupón de un promotor sigue a su promotor (código, porcentaje y pausa)
+  if (actual.influencerId) return NextResponse.json({ error: 'Este cupón es el código de un promotor: se cambia o se pausa en Marketing → Promotores.' }, { status: 409 });
 
   const body = await request.json().catch(() => null);
   if (body && typeof body === 'object' && Object.keys(body).length === 1 && typeof body.isActive === 'boolean') {
@@ -67,6 +69,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   const { id } = await params;
   const promo = await prisma.promotion.findUnique({ where: { id }, include: { _count: { select: { redemptions: true } } } });
   if (!promo) return NextResponse.json({ error: 'No existe' }, { status: 404 });
+  if (promo.influencerId) return NextResponse.json({ error: 'Este cupón es el código de un promotor: se cambia o se pausa en Marketing → Promotores.' }, { status: 409 });
 
   if (promo._count.redemptions > 0) {
     await prisma.promotion.update({ where: { id }, data: { isActive: false } });

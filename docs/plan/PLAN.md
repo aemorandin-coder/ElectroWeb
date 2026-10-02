@@ -312,7 +312,7 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 **Después del plan, por tema:**
 | Tema | Tareas | Qué dejó |
 |---|---|---|
-| Panel del admin | C-50b, C-51 a C-54, C-60, C-60b, C-71, C-73 a C-75, C-82, C-95, C-97, C-104, C-109, C-110, C-150 | Marco del panel, Configuración, Productos, pedidos digitales, gift cards, notificaciones y Telegram, flujo de órdenes, Marketing, Reportes, el resto de las pantallas, y el menú por secciones con el Dashboard de trabajo. |
+| Panel del admin | C-168, C-50b, C-51 a C-54, C-60, C-60b, C-71, C-73 a C-75, C-82, C-95, C-97, C-104, C-109, C-110, C-150 | Marco del panel, Configuración, Productos, pedidos digitales, gift cards, notificaciones y Telegram, flujo de órdenes, Marketing, Reportes, el resto de las pantallas, y el menú por secciones con el Dashboard de trabajo. |
 | Acceso y cuentas | C-80, C-83 a C-85, C-88, C-89, C-105, C-140, C-141, C-143 | Login con límites en el servidor, registro corto y con Google, una sola regla de contraseñas, IP real, sesiones con nombre, roles, equipo por invitación y verificación en dos pasos. |
 | Dinero: pagos y Puntos ES | C-87, C-96, C-101, C-114, C-115, C-123, C-125, C-129 a C-132, C-135, C-139, C-142 | Montos exactos, métodos de pago bien hechos, Pago Móvil que verifica al primer intento, pagos sin orden, mínimo de compra, checkout con todos los métodos y pago mixto, y "Puntos ES" con sus términos. |
 | Envíos y entrega | C-100, C-106, C-126, C-127, C-153 | ZOOM y MRW con oficinas reales y cobro a destino, rastreo, detalle de la orden, tiempo real y embalaje según el paquete. |
@@ -326,7 +326,9 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 ### 5.2 Lista única de pendientes
 Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
-**En fila (Claude):** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Los menores se cerraron en C-164 (`balance/add` borrado, `seed.ts` sin contraseña por defecto, valoraciones con coma, `RechargeModalV2` sin `fetch`). Lo que queda en código es **C-166b**: pasar la Content-Security-Policy de "solo avisa" a "bloquea" (`CSP_ENFORCE="true"` y un deploy) cuando Reportes → Seguridad lleve una semana de visitas reales sin avisos legítimos. El resto no es código:
+**En curso (aprobado por Andrés el 02/10, `PROPUESTA_C168-C172.md`), en este orden:** C-168 versiones por módulo (**hecha**); C-169 productos sin pérdidas (borrador, papelera, conflicto, presencia); C-170 lo mismo en el resto del panel; C-173 Reportes en vivo con visitantes conectados, con y sin cuenta; C-172 Destacados que rotan; C-171 Dashboard a tu gusto. Lotes de deploy: rc.4 (C-168 y C-169), rc.5 (C-170 y C-173), rc.6 (C-172 y C-171).
+
+**En fila (Claude), aparte de lo anterior:** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Los menores se cerraron en C-164 (`balance/add` borrado, `seed.ts` sin contraseña por defecto, valoraciones con coma, `RechargeModalV2` sin `fetch`). Lo que queda en código es **C-166b**: pasar la Content-Security-Policy de "solo avisa" a "bloquea" (`CSP_ENFORCE="true"` y un deploy) cuando Reportes → Seguridad lleve una semana de visitas reales sin avisos legítimos. El resto no es código:
 - Un monitor externo de que la tienda está arriba (UptimeRobot o similar a `/robots.txt`) y guardar la clave privada del respaldo y una copia del `.env` fuera del servidor (Andrés, `SIGUIENTE.md` §3).
 - El abogado revisa `/terminos` y `/privacidad` desde Legal → Documentos (`estado/C-160.md`).
 

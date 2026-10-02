@@ -46,6 +46,8 @@ model User {
   image         String?
   role          Role      @default(USER)
   sessionVersion Int      @default(0)
+  // C-168: última versión del sistema cuyas novedades vio este administrador (el aviso "Qué hay de nuevo" del panel)
+  panelVersionVista String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

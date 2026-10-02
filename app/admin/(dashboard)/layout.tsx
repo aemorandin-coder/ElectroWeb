@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   FiBarChart2, FiBox, FiClipboard, FiCreditCard, FiDollarSign, FiExternalLink, FiGift, FiGrid, FiLogOut,
-  FiAlertTriangle, FiBell, FiBookOpen, FiChevronDown, FiFileText, FiShoppingBag, FiFilm, FiLifeBuoy, FiLock, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUserPlus, FiUsers, FiX,
+  FiAlertTriangle, FiBell, FiBookOpen, FiChevronDown, FiFileText, FiGitBranch, FiShoppingBag, FiFilm, FiLifeBuoy, FiLock, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUserPlus, FiUsers, FiX,
 } from 'react-icons/fi';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { MdAdminPanelSettings } from 'react-icons/md';
@@ -14,6 +14,9 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 import ControlSesionAdmin, { cerrarSesionAdmin } from '@/components/admin/ControlSesionAdmin';
+import AvisosDeVersion from '@/components/admin/version/AvisosDeVersion';
+import { moduloDeRuta, versionDe } from '@/lib/modulos';
+import { VERSION_BUILD } from '@/lib/version-build';
 import { hasPermission, PAGINAS_SOLO_DUENO } from '@/lib/auth-helpers';
 
 interface NavigationItem {
@@ -249,6 +252,8 @@ export default function AdminLayout({
         { name: 'Equipo', href: '/admin/equipo', icon: <FiUsers className={icono} aria-hidden="true" />, permission: 'MANAGE_TEAM' },
         { name: 'Configuración', href: '/admin/settings', icon: <FiSettings className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
         { name: 'Mi seguridad', href: '/admin/seguridad', icon: <FiLock className={icono} aria-hidden="true" /> },
+        // C-168: qué versión corre y qué cambió en cada módulo
+        { name: 'Versiones', href: '/admin/versiones', icon: <FiGitBranch className={icono} aria-hidden="true" /> },
       ],
     },
   ];
@@ -301,6 +306,7 @@ export default function AdminLayout({
     }
   };
 
+  const modulo = moduloDeRuta(pathname);
   const roleLabel = session.user.role === 'SUPER_ADMIN' ? 'Super Admin'
     : session.user.role === 'ADMIN' ? 'Administrador'
       : session.user.role === 'SUPPORT' ? 'Soporte' : 'Usuario';
@@ -412,6 +418,9 @@ export default function AdminLayout({
             <FiLogOut className="h-4 w-4" aria-hidden="true" />
             Cerrar sesión
           </button>
+          <Link href="/admin/versiones" className="mt-2 block rounded text-center text-xs text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-500">
+            Versión {VERSION_BUILD.version}{VERSION_BUILD.commit && ` · ${VERSION_BUILD.commit}`}
+          </Link>
         </div>
       </aside>
 
@@ -439,6 +448,15 @@ export default function AdminLayout({
           </button>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            {modulo && (
+              <Link
+                href={`/admin/versiones#${modulo.id}`}
+                title={`Versión de este módulo (${modulo.nombre}). Toca para ver qué cambió.`}
+                className="hidden h-8 items-center rounded-full bg-surface px-3 text-xs font-medium text-ink-soft hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-brand-500 md:inline-flex"
+              >
+                {modulo.nombre} {versionDe(modulo)}
+              </Link>
+            )}
             <Link href="/" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-surface">
               <FiExternalLink className="h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">Ver tienda</span>
@@ -454,6 +472,7 @@ export default function AdminLayout({
         {/* Sin transform ni backdrop-filter en los contenedores: si no, los modales `fixed` de las páginas quedan encerrados aquí */}
         <main className="p-3 sm:p-4 lg:p-6">
           <div className="mx-auto min-w-0 max-w-[1600px]">
+            <AvisosDeVersion />
             {sinSuperAdmin && (
               <div className="mb-4 flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning-strong" role="alert">
                 <FiAlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />

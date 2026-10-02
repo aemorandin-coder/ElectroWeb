@@ -1,22 +1,24 @@
-# Lo de ahora (actualizado 2026-10-02, C-167 · versión 1.0.0-rc.3)
+# Lo de ahora (actualizado 2026-10-02, C-168 · versión 1.0.0-rc.4)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** versión **`v1.0.0-rc.3`** (C-166 y C-167), igual a GitHub. **Producción: `v1.0.0-rc.1`** (C-165; `2480457`), comprobado desde fuera el 02/10 por la noche: todavía sin la cabecera `Content-Security-Policy-Report-Only` y sin la ruta `/api/cron/promotores`.
-- **Falta subir, en un solo lote: C-166 y C-167** (bloque de abajo). **Cambio de base: dos tablas nuevas y seis columnas** (todo aditivo). **Un cron nuevo** (promotores). Sin variables obligatorias.
+- **`main`:** versión **`1.0.0-rc.4`** en armado (C-166, C-167 y C-168; la etiqueta `v1.0.0-rc.4` se pone al cerrar el lote con C-169). Antes de esa etiqueta la última es `v1.0.0-rc.3`. Lo que viene después de C-168 está en `PROPUESTA_C168-C172.md` (aprobada el 02/10). **Producción: `v1.0.0-rc.1`** (C-165; `2480457`), comprobado desde fuera el 02/10 por la noche: todavía sin la cabecera `Content-Security-Policy-Report-Only` y sin la ruta `/api/cron/promotores`.
+- **Falta subir, en un solo lote: C-166, C-167 y C-168** (bloque de abajo). **Cambio de base: dos tablas nuevas y siete columnas** (todo aditivo). **Un cron nuevo** (promotores). Sin variables obligatorias.
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos al final de la sección 2). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: C-166 y C-167 (v1.0.0-rc.3)
+## 2. Deploy pendiente: C-166, C-167 y C-168 (v1.0.0-rc.4)
+- **C-168 · Versiones por módulo** (`estado/C-168.md`): cada módulo del panel (Productos, ElectroStudio, Cursos, Configuración…) tiene su versión, que se ve en la barra de arriba, y el pie del menú dice la del sistema. Página nueva **Administración → Versiones** con qué cambió en cada módulo. Si alguien tiene el panel abierto cuando subes una versión, le sale "El panel se actualizó" con el botón para recargar; y cada administrador ve una vez "Qué hay de nuevo".
 - **C-167 · Promotores** (`estado/C-167.md`): cada promotor tiene un **código** que el cliente escribe en el carrito (descuento para el cliente; la compra cuenta para el promotor aunque el cliente ya tuviera cuenta). La comisión es sobre los **productos sin IVA ni envío**, en **Puntos ES**, y se **acredita sola 7 días después de la entrega**; quedan para tu revisión las que parecen autocompra, pasan de $50 o superan la ganancia de la venta. **Solicitud para ser promotor** desde la cuenta del cliente, con aprobación de un clic. La página del promotor ya no promete dinero, ni comisión por recargas, registros o cursos.
 - **C-166 · Content-Security-Policy en modo "solo avisa"** (`estado/C-166.md`): no bloquea nada; los avisos se ven en Reportes → Seguridad.
 - **Verificado:** `tsc`, `npm run lint` (0 errores) y `npm run build` sin avisos; C-167 con **80 comprobaciones con compras reales** y C-166 con un barrido de 65 pantallas; la prueba de humo, **59 de 59**. **No probado:** el correo de "Ya eres promotor" (simulado), el cron en el servidor, Chrome y Safari, y tráfico real de la política de contenido.
 - **SQL total que va a mostrar `deploy.sh`** (solo esto; puede salir en otro orden y en varias líneas). Nada borra ni cambia lo que ya existe:
   - `CREATE TABLE "csp_violations"` con sus dos índices (C-166).
   - `CREATE TABLE "influencer_applications"` con sus dos índices y una llave a `users`.
+  - `ALTER TABLE "users" ADD COLUMN "panelVersionVista" TEXT` (C-168).
   - `ALTER TABLE "orders" ADD COLUMN "referralInfluencerId" TEXT`
   - `ALTER TABLE "promotions" ADD COLUMN "influencerId" TEXT`, con un índice único y una llave a `influencers`.
   - `ALTER TABLE "influencers" ADD COLUMN "customerDiscountPercent" INTEGER NOT NULL DEFAULT 5`
@@ -27,7 +29,7 @@
 2. **Respaldo antes de subir:** Admin → Configuración → **Respaldos** → "Respaldar ahora" y esperar las dos filas "Hecho". Si prefieres a mano:
    `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc3.dump`
 3. **Subir:** `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL de arriba. Si coincide: `npx prisma db push` y `bash scripts/deploy.sh` otra vez. Si aparece un `DROP` o algo distinto, no seguir y avisar a Claude.
-4. **Comprobar:** `git describe --tags` debe decir `v1.0.0-rc.3`, y
+4. **Comprobar:** `git describe --tags` debe decir `v1.0.0-rc.4`, y
    `curl -sI https://electroshopve.com/ | grep -ci content-security-policy-report-only` debe dar `1`.
 5. **El cron de promotores** (una vez al día):
    `cp /var/www/electroshopve/docs/plan/scripts/cron-promotores.sh ~/cron-promotores.sh && chmod +x ~/cron-promotores.sh && ~/cron-promotores.sh`
@@ -41,6 +43,7 @@
 4. **El promotor con su propio código:** en su carrito, su código responde "Este es tu código de promotor…" y no descuenta.
 5. **Página del promotor** (teléfono y computadora): su código con "Copiar código", su enlace, "Tus últimas ventas" con el estado de cada una, y ningún texto que diga dinero, recargas o beneficios por nivel.
 6. **Política de contenido (C-166):** navegar la tienda y el panel unos minutos; todo debe verse igual que antes. Reportes → Seguridad → abajo, "Política de contenido (CSP)": lo esperado es "Sin avisos". Dejarla una semana; si sigue limpia, se pasa a bloquear (C-166b).
+7. **Versiones (C-168):** Administración → **Versiones**: arriba dice `1.0.0-rc.4`, la etiqueta de git, el commit y la hora del build; abajo, los 16 módulos. En cada pantalla del panel, la barra de arriba muestra el módulo y su versión ("Productos 1.0.0"). La primera vez que entra cada administrador sale "Qué hay de nuevo" con **Entendido**.
 
 **Vuelta atrás:** `git reset --hard 2480457 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas y columnas nuevas no molestan al código anterior (no se quitan). Antes, quitar la línea de `cron-promotores.sh` de `crontab -e`. Los cupones de promotor que ya se crearon quedan como cupones normales: pausarlos en Ofertas si no se quieren.
 
@@ -90,7 +93,7 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
 En el orden en que más destraban:
 
 **En producción**
-1. **El deploy de arriba** (versión `v1.0.0-rc.3`: promotores y política de contenido) con sus pruebas y la línea del cron de promotores. De lo anterior siguen pendientes **una restauración de prueba del respaldo** (`OPERACION.md`), el redondeo de C-96, las pruebas de C-157 y las visuales de C-162.
+1. **El deploy de arriba** (versión `v1.0.0-rc.4`: promotores, política de contenido y versiones del panel) con sus pruebas y la línea del cron de promotores. De lo anterior siguen pendientes **una restauración de prueba del respaldo** (`OPERACION.md`), el redondeo de C-96, las pruebas de C-157 y las visuales de C-162.
 2. **Guardar aparte, fuera del servidor, la clave privada del respaldo y una copia del `.env`** (gestor de contraseñas). La clave la muestra el panel una sola vez; el `.env` no va dentro del respaldo y trae `NEXTAUTH_SECRET`, `DATABASE_URL` y las claves de pago.
 3. **Un monitor de que la tienda está arriba** (gratis, sin código): UptimeRobot o similar apuntando a `https://electroshopve.com/robots.txt` cada 5 minutos, con aviso a tu correo y a Telegram. Todo lo demás (avisos, respaldos) vive en el mismo servidor y no puede avisar si se cae.
 4. **El certificado HTTPS vence el 12/11/2026:** comprobar en el servidor que la renovación sigue sola (`systemctl list-timers | grep certbot` debe mostrar una línea) y, si no, avisar a Claude antes de esa fecha.

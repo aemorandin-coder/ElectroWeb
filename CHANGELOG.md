@@ -8,6 +8,16 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - **PARCHE** (1.0.1): arreglos, textos y ajustes internos, sin funciones nuevas.
 - **`-rc.N`** (candidata): la tienda ya vende pero falta cerrar la revisión final (`docs/plan/REVISION_FINAL.md`, en especial el dinero). `1.0.0` es la primera versión sin ese pendiente.
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
+- **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
+
+## [1.0.0-rc.4] - 2026-10-02
+### Marco del panel 1.0.0 (C-168)
+- **Versión por módulo:** Productos, ElectroStudio, Cursos, Configuración y los demás (16) llevan su versión; se ve en la barra de arriba de cada pantalla y en la página nueva **Administración → Versiones**, con qué cambió en cada uno. El pie del menú dice la versión del sistema y el commit.
+- **Aviso de versión nueva:** si se sube una versión mientras alguien tiene el panel abierto, le sale "El panel se actualizó" con el botón para recargar (no recarga sola).
+- **Qué hay de nuevo:** cada administrador ve una vez, después de un deploy, qué módulos cambiaron.
+- Una columna nueva (`users.panelVersionVista`).
+### Arreglos
+- `next dev` no arrancaba por la regla de cabeceras vacía de C-166 (solo en desarrollo; producción no se afectaba).
 
 ## [1.0.0-rc.3] - 2026-10-02
 ### Promotores (C-167)

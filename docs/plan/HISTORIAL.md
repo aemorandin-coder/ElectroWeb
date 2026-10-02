@@ -1,10 +1,35 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `ba6055c`, hasta C-158, el 01/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `2480457`, versión `v1.0.0-rc.1`, el 02/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 02/10 · C-165, C-164 y C-159/C-160 (`2480457`, v1.0.0-rc.1)
+Comprobado desde fuera el 02/10: sin `X-Powered-By` y `POST /api/cron/respaldos` responde 401. El servidor estaba en `d453809` antes de subir C-165. **Cambio de base: dos tablas nuevas** (C-165).
+- **C-165 · Respaldos automáticos a Google Drive** (`estado/C-165.md`): Configuración → Respaldos, cifrado con clave pública (la privada se muestra una vez), Drive con permiso `drive.file`, verificación por MD5, retención, avisos y restauración con guion. Cron `5 * * * * ~/cron-respaldos.sh` (`docs/plan/scripts/cron-respaldos.sh`). Sin `X-Powered-By`. `CHANGELOG.md` y primera etiqueta.
+  ```sql
+  CREATE TABLE "backup_settings" (
+      "id" TEXT NOT NULL DEFAULT 'default', "enabled" BOOLEAN NOT NULL DEFAULT false, "hour" INTEGER NOT NULL DEFAULT 3,
+      "retentionDays" INTEGER NOT NULL DEFAULT 14, "includeFiles" BOOLEAN NOT NULL DEFAULT true, "publicKeyPem" TEXT, "keyFingerprint" TEXT,
+      "keyCreatedAt" TIMESTAMP(3), "driveClientId" TEXT, "driveClientSecret" TEXT, "driveRefreshToken" TEXT, "driveEmail" TEXT,
+      "driveFolderId" TEXT, "driveConnectedAt" TIMESTAMP(3), "driveError" TEXT, "updatedAt" TIMESTAMP(3) NOT NULL,
+      CONSTRAINT "backup_settings_pkey" PRIMARY KEY ("id"));
+  CREATE TABLE "backup_runs" (
+      "id" TEXT NOT NULL, "kind" TEXT NOT NULL, "trigger" TEXT NOT NULL, "status" TEXT NOT NULL DEFAULT 'RUNNING',
+      "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "finishedAt" TIMESTAMP(3), "fileName" TEXT, "sizeBytes" BIGINT, "md5" TEXT,
+      "driveFileId" TEXT, "items" INTEGER, "error" TEXT, "verifiedAt" TIMESTAMP(3), "verifiedOk" BOOLEAN, "deletedAt" TIMESTAMP(3),
+      CONSTRAINT "backup_runs_pkey" PRIMARY KEY ("id"));
+  CREATE INDEX "backup_runs_kind_startedAt_idx" ON "backup_runs"("kind", "startedAt");
+  CREATE INDEX "backup_runs_status_idx" ON "backup_runs"("status");
+  ```
+- **C-164 · Los últimos menores de código** (`estado/C-164.md`): `balance/add` borrado, `seed.ts` sin contraseña por defecto, valoraciones con coma, `RechargeModalV2` sin `fetch`. Sin cambio de base.
+- **C-159 y C-160** (`estado/C-159.md`, `estado/C-160.md`; ya estaban desde `2ccba36`, visto el 02/10 por `/terminos` "Versión 4"): cotizaciones con retención del IVA, correo y Mis cotizaciones, y los menores. C-159 trajo tres columnas en `quotes`:
+  ```sql
+  ALTER TABLE "quotes" ADD COLUMN "emailedAt" TIMESTAMP(3), ADD COLUMN "emailedTo" TEXT, ADD COLUMN "ivaRetentionPercent" INTEGER NOT NULL DEFAULT 0;
+  ```
+- Sin confirmar con Andrés: el primer respaldo contra Google real, la restauración de prueba, la línea del cron, el redondeo de C-96 y las pruebas de `SIGUIENTE.md`.
 
 ## 01/10 (noche) · C-157 y C-158 (`ba6055c`)
 Comprobado desde fuera el 01/10: `POST /api/cron/resenas` responde 401 (la ruta existe y pide la clave) y `/productos?search=audifonos` ya encuentra los productos. **Cambio de base: una columna** (`orders.reviewRequestedAt`).

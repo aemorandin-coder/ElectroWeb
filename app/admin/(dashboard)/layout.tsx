@@ -15,6 +15,7 @@ import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 import ControlSesionAdmin, { cerrarSesionAdmin } from '@/components/admin/ControlSesionAdmin';
 import AvisosDeVersion from '@/components/admin/version/AvisosDeVersion';
+import MarquesinaEquipo from '@/components/admin/edicion/MarquesinaEquipo';
 import { moduloDeRuta, versionDe } from '@/lib/modulos';
 import { VERSION_BUILD } from '@/lib/version-build';
 import { hasPermission, PAGINAS_SOLO_DUENO } from '@/lib/auth-helpers';
@@ -468,6 +469,9 @@ export default function AdminLayout({
             </span>
           </div>
         </header>
+
+        {/* C-174: quién del equipo está conectado y en qué sector (solo si hay alguien más) */}
+        <MarquesinaEquipo pathname={pathname} yo={session.user.id} />
 
         {/* Sin transform ni backdrop-filter en los contenedores: si no, los modales `fixed` de las páginas quedan encerrados aquí */}
         <main className="p-3 sm:p-4 lg:p-6">

@@ -185,7 +185,7 @@ export default function ProductWizard({ productId }: Props) {
   const [bloqueo, setBloqueo] = useState<CambioAjeno | null>(null);
   const [conflicto, setConflicto] = useState<ConflictoPendiente | null>(null);
   const [restaurando, setRestaurando] = useState(false);
-  const { otros, cambio, olvidarCambio } = useEdicionEnVivo(isEditing && productId ? `product:${productId}` : null, yo);
+  const { otros, cambio, olvidarCambio } = useEdicionEnVivo(isEditing && productId ? `product:${productId}` : null, yo, base?.form.name || undefined);
   // Lo grave es lo último que se supo: movido a la papelera (al abrir, al guardar o en vivo) sin que lo hayan restaurado después
   const restauradoDespues = cambio?.accion === 'restaurado' && bloqueo !== null && cambio.en > bloqueo.en;
   const aviso: CambioAjeno | null = cambio && (cambio.accion === 'papelera' || cambio.accion === 'eliminado')

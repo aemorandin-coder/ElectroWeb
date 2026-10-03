@@ -56,6 +56,8 @@ export interface PersonaEnLinea {
   nombre: string;
   /** ISO: desde cuándo lo tiene abierto */
   desde: string;
+  /** Qué está haciendo en ese recurso, en pocas palabras (el nombre del producto que edita). C-174 */
+  donde?: string;
 }
 
 export type TipoEvento = EventoTiempoReal['tipo'];

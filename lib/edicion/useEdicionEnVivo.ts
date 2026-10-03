@@ -28,8 +28,12 @@ function idDePestana(): string {
   return Math.random().toString(36).slice(2, 12).padEnd(10, '0');
 }
 
-/** `recurso` = `product:<id>`. Con null (recurso nuevo, todavía sin id) no hace nada. `yo` = id de la persona que edita. */
-export function useEdicionEnVivo(recurso: string | null, yo: string | undefined) {
+/**
+ * `recurso` = `product:<id>`. Con null (recurso nuevo, todavía sin id) no hace nada. `yo` = id de la persona que edita.
+ * `etiqueta` (C-174): qué está editando, en pocas palabras ("Teclado Redragon K552"): la marquesina del equipo la muestra.
+ * Con la pestaña en segundo plano deja de avisar y a los 60 s la persona sale de la lista; al volver, vuelve a entrar.
+ */
+export function useEdicionEnVivo(recurso: string | null, yo: string | undefined, etiqueta?: string) {
   const [otros, setOtros] = useState<PersonaEnLinea[]>([]);
   const [cambio, setCambio] = useState<CambioAjeno | null>(null);
   const pestana = useRef('');
@@ -42,19 +46,22 @@ export function useEdicionEnVivo(recurso: string | null, yo: string | undefined)
     const res = await fetch('/api/admin/presencia', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ recurso, accion, pestana: pestana.current }),
+      body: JSON.stringify({ recurso, accion, pestana: pestana.current, etiqueta }),
     }).catch(() => null);
     if (res?.ok) {
       const datos = (await res.json().catch(() => null)) as { editores?: PersonaEnLinea[] } | null;
       if (Array.isArray(datos?.editores)) setOtros(datos.editores);
     }
-  }, [recurso, yo]);
+  }, [recurso, yo, etiqueta]);
 
   useCargarAlMontar(() => avisar('entrar'), [avisar]);
 
   useEffect(() => {
     if (!recurso || !yo) return;
-    const cada = setInterval(() => void avisar('latido'), LATIDO_MS);
+    // Solo avisa con la pestaña a la vista: una pestaña olvidada en segundo plano no cuenta como "conectado"
+    const cada = setInterval(() => { if (document.visibilityState === 'visible') void avisar('latido'); }, LATIDO_MS);
+    const alVolver = () => { if (document.visibilityState === 'visible') void avisar('latido'); };
+    document.addEventListener('visibilitychange', alVolver);
     const salir = () => {
       const cuerpo = JSON.stringify({ recurso, accion: 'salir', pestana: pestana.current });
       try {
@@ -66,6 +73,7 @@ export function useEdicionEnVivo(recurso: string | null, yo: string | undefined)
     window.addEventListener('pagehide', salir);
     return () => {
       clearInterval(cada);
+      document.removeEventListener('visibilitychange', alVolver);
       window.removeEventListener('pagehide', salir);
       salir();
     };

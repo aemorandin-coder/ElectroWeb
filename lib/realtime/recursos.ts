@@ -4,6 +4,8 @@
 // permiso hace falta para verlo: sin ese permiso, ni se anota la presencia ni llegan los avisos del recurso.
 
 const PERMISO_POR_TIPO: Record<string, string> = {
+  // C-174: en qué sector del panel está cada persona (la marquesina del equipo). Lo ve cualquier administrador con los dos pasos
+  seccion: 'VIEW_DASHBOARD',
   product: 'MANAGE_PRODUCTS',
   category: 'MANAGE_PRODUCTS',
   // Lo más sensible solo para el dueño (SOLO_DUENO en lib/auth-helpers.ts)

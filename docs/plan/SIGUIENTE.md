@@ -1,32 +1,31 @@
-# Lo de ahora (actualizado 2026-10-03, C-175 · versión 1.0.0-rc.10)
+# Lo de ahora (actualizado 2026-10-03, C-172 · versión 1.0.0-rc.11)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** versión **`v1.0.0-rc.10`** (C-171, C-170 y C-175), igual a GitHub. **Producción: `v1.0.0-rc.6`**, comprobado desde fuera el 03/10. El plan de este ciclo está en `PROPUESTA_C168-C172.md`.
-- **Falta subir, en un solo lote: C-171, C-170 y C-175** (bloque de abajo). **Cambio de base: una tabla nueva** (aditiva). Sin crons ni variables. Trae una dependencia nueva (`@dnd-kit`).
-- **Sigue:** C-172 (Destacados que rotan).
+- **`main`:** versión **`v1.0.0-rc.11`** (C-171, C-170, C-175 y C-172), igual a GitHub. **Producción: `v1.0.0-rc.7`** (captura de Andrés del 03/10: ya tiene C-171 y su tabla). El plan de este ciclo está en `PROPUESTA_C168-C172.md`.
+- **Falta subir, en un solo lote: C-170, C-175 y C-172** (bloque de abajo). **Sin cambio de base** (la tabla de C-171 ya entró con rc.7), sin crons ni variables.
+- **El ciclo C-168 a C-175 está completo.** No queda código en fila que no espere un dato de Andrés.
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos al final de la sección 2). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: C-171, C-170 y C-175 (de rc.6 a v1.0.0-rc.10)
+## 2. Deploy pendiente: C-170, C-175 y C-172 (de rc.7 a v1.0.0-rc.11)
+- **C-172 · Destacados que rotan** (`estado/C-172.md`): en el inicio, el destacado grande cambia cada día y, en la computadora, rota con el siguiente de la columna cada 7 segundos (una vuelta y se detiene; flechas, contador y pausa arriba a la derecha de la tarjeta). En el teléfono no gira. Sin cambio de base.
 - **C-175 · Todos los correos rediseñados, con el logo largo** (`estado/C-175.md`): los 30 correos de la tienda llevan arriba el **logo largo** (antes el logo chiquito en un cuadro), el mismo título, el mismo botón, las mismas cajas y el mismo pie con redes y contacto. Pedido recibido, reseña publicada, los avisos al equipo y la prueba de Configuración dejaron su diseño aparte. Hechos para verse igual en Gmail, Outlook y el teléfono. Sin cambio de base. **El logo largo es el del encabezado de la tienda** (el ícono y "Electro Shop" con la letra y el azul de la marca), hecho imagen para el correo (`public/images/brand/logo-correo.png`).
 - **C-170 · Dos administradores sin pisarse, en el resto del panel** (`estado/C-170.md`): en **Promotores, Categorías, Ofertas y cupones, Cotizaciones y Campañas**, si otra persona guardó antes se combinan los cambios (solo pregunta por lo que las dos tocaron), se ve quién más lo tiene abierto y se pregunta antes de borrar algo que otra persona edita. **ElectroStudio** junta los cambios en su guardado automático. Aprobar a un creador, verificar una empresa o atender una solicitud de producto dos veces a la vez ya no avisa dos veces. Sin cambio de base.
-- **C-171 · Dashboard a tu gusto** (`estado/C-171.md`), el diseño tipo panel rápido de Samsung One UI: en el Dashboard, **Editar** → cada tarjeta se quita con el botón rojo "−" (las necesarias llevan candado: Por atender, Ventas cobradas y Accesos rápidos), se arrastra para ordenar, se le cambia el tamaño y abajo está lo que se puede agregar con "+"; **Listo** guarda. **Cada administrador tiene el suyo.** Accesos rápidos a elección y diez tarjetas nuevas (Visitantes ahora, Embudo de hoy, Meta del mes, Tasa del día, Más vendidos, Actividad del equipo, Promotores, Cotizaciones abiertas, Reseñas recientes, Respaldo).
-- **Verificado:** `tsc`, `npm run lint` (0 errores), `npm run build`, `check:modulos`, **prueba de humo 59 de 59**, 35 comprobaciones del Dashboard, 53 de C-170 (dos administradores en cada pantalla) y 273 sobre 22 correos generados con las funciones reales, más 52 de la vista previa del panel. **No probado:** arrastrar con el dedo en un teléfono real, Chrome y Safari, y **los correos recibidos en Gmail, Outlook y el iPhone de verdad** (no se envió ninguno).
-- **SQL total que va a mostrar `deploy.sh`** (solo esto). Nada borra ni cambia lo que ya existe:
-  - `CREATE TABLE "admin_dashboard_layouts"` con un índice único (`userId`) y una llave a `users`.
-- **Dependencias nuevas** (`@dnd-kit`, para arrastrar): `deploy.sh` las instala solo porque cambió `package-lock.json`.
+- **Ya en producción desde rc.7, falta que lo pruebes: C-171 · Dashboard a tu gusto** (`estado/C-171.md`), el diseño tipo panel rápido de Samsung One UI: en el Dashboard, **Editar** → cada tarjeta se quita con el botón rojo "−" (las necesarias llevan candado: Por atender, Ventas cobradas y Accesos rápidos), se arrastra para ordenar, se le cambia el tamaño y abajo está lo que se puede agregar con "+"; **Listo** guarda. **Cada administrador tiene el suyo.** Accesos rápidos a elección y diez tarjetas nuevas (Visitantes ahora, Embudo de hoy, Meta del mes, Tasa del día, Más vendidos, Actividad del equipo, Promotores, Cotizaciones abiertas, Reseñas recientes, Respaldo).
+- **Verificado:** `tsc`, `npm run lint` (0 errores), `npm run build`, `check:modulos`, **prueba de humo 59 de 59**, 35 comprobaciones del Dashboard, 53 de C-170 (dos administradores en cada pantalla) 273 sobre 22 correos generados con las funciones reales, 52 de la vista previa del panel y 31 de los Destacados. **No probado:** arrastrar con el dedo en un teléfono real, Chrome y Safari, **los correos recibidos en Gmail, Outlook y el iPhone de verdad** (no se envió ninguno), y Lighthouse del inicio (LCP y CLS) después de C-172.
+- **SQL:** ninguno. `deploy.sh` no debería parar a mostrar nada; si muestra SQL, no seguir y avisar a Claude.
 - Sin crons ni variables nuevas.
 
 ### Pasos (en el servidor, `/var/www/electroshopve`)
-1. **Qué hay ahora:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.6`. Si dice otra cosa, avisar a Claude.
+1. **Qué hay ahora:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.7`. Si dice otra cosa, avisar a Claude.
 2. **Respaldo antes de subir:** Admin → Configuración → **Respaldos** → "Respaldar ahora" y esperar las dos filas "Hecho". Si prefieres a mano:
-   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc10.dump`
-3. **Subir:** `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL de arriba (la tabla nueva). Si coincide: `npx prisma db push` y `bash scripts/deploy.sh` otra vez. Si aparece un `DROP` o algo distinto, no seguir y avisar a Claude.
-4. **Comprobar:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.10` y el pie del menú del panel, "Versión 1.0.0-rc.10".
+   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc11.dump`
+3. **Subir:** `git status -sb | head -3` (debe decir `main...origin/main`, sin archivos modificados), `git pull --ff-only` y `bash scripts/deploy.sh`. Si `git pull` da error o dice "Already up to date" y sigue en rc.7, pasarle la salida a Claude.
+4. **Comprobar:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.11` y el pie del menú del panel, "Versión 1.0.0-rc.11".
 
 ### Pruebas después de subir (unos 15 minutos)
 1. **Dashboard:** se ve como siempre. Arriba a la derecha, **Editar**.
@@ -37,12 +36,13 @@
 6. **Sin pisarse (C-170)**, con dos cuentas de administrador: abran la misma **cotización**; uno cambia "Para qué es" y el otro el lugar, y guardan los dos: quedan los dos cambios sin preguntar. Si los dos cambian lo mismo, sale el cuadro para elegir. Lo mismo vale en Promotores (lápiz), Categorías, Ofertas y Campañas. En **ElectroStudio**, escribe en una historia: debe seguir diciendo "Guardado".
 7. **Correos (C-175):** Admin → Marketing → Correos → **Plantillas**: abre "Pedido recibido", "Gift card" y "Reseña publicada": arriba el logo largo, un botón azul y el pie con las redes.
 8. **Un correo de verdad:** Configuración → Correo → **"Probar conexión"** a tu Gmail. Ábrelo en la computadora y en el teléfono (también en modo oscuro): el logo largo se ve completo y nítido, y nada queda cortado. Si puedes, reenvíalo a un Outlook u Hotmail. Si algo se ve mal, manda la captura.
-9. **Otro, de los de siempre:** en una ventana de incógnito, "Olvidé mi contraseña" con tu correo de cliente: llega con el mismo diseño y el botón funciona.
+9. **Destacados (C-172), en la computadora:** abre el inicio y espera 7 segundos: el producto grande cambia por el primero de la columna y arriba a la derecha dice "2 de N". Pon el ratón encima: se detiene. Toca las flechas y la pausa. Déjalo solo: da una vuelta y se queda en el primero. En el teléfono no gira.
+10. **Otro correo, de los de siempre:** en una ventana de incógnito, "Olvidé mi contraseña" con tu correo de cliente: llega con el mismo diseño y el botón funciona.
 
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.6 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla nueva no molesta al código anterior (no se quita).
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.7 && npm install && bash scripts/deploy.sh --sin-pull`.
 
-### Por confirmar del lote anterior (rc.6, ya en producción; detalle en `HISTORIAL.md`)
-Versiones (Administración → Versiones), el caso de dos administradores sobre un producto (papelera, combinar, aviso al instante), la marquesina del equipo, Reportes en vivo y la línea del cron de la papelera en `crontab -l`.
+### Por confirmar de lo ya subido (rc.6 y rc.7; detalle en `HISTORIAL.md`)
+El Dashboard a tu gusto (pruebas 1 a 5 de arriba). Versiones (Administración → Versiones), el caso de dos administradores sobre un producto (papelera, combinar, aviso al instante), la marquesina del equipo, Reportes en vivo y la línea del cron de la papelera en `crontab -l`.
 
 ### Activar "Continuar con Google" (C-85, cuando quieras; no necesita deploy de código)
 1. Google Cloud → proyecto ElectroWeb → Google Auth Platform → **Clientes** → Crear cliente → **Aplicación web**, nombre `ElectroShop inicio de sesión`, y en "URIs de redireccionamiento autorizados": `https://electroshopve.com/api/auth/callback/google`. Es un cliente distinto del de los respaldos.
@@ -90,7 +90,7 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
 En el orden en que más destraban:
 
 **En producción**
-1. **El deploy de arriba** (versión `v1.0.0-rc.10`: el Dashboard a tu gusto, el panel sin pisarse y los correos con el logo largo) con sus pruebas, y confirmar las del lote anterior (rc.6). De antes siguen pendientes **una restauración de prueba del respaldo** (`OPERACION.md`), el redondeo de C-96, las pruebas de C-157 y las visuales de C-162.
+1. **El deploy de arriba** (versión `v1.0.0-rc.11`: el panel sin pisarse, los correos con el logo y los Destacados que rotan) con sus pruebas, y confirmar las del lote anterior (rc.6). De antes siguen pendientes **una restauración de prueba del respaldo** (`OPERACION.md`), el redondeo de C-96, las pruebas de C-157 y las visuales de C-162.
 2. **Guardar aparte, fuera del servidor, la clave privada del respaldo y una copia del `.env`** (gestor de contraseñas). La clave la muestra el panel una sola vez; el `.env` no va dentro del respaldo y trae `NEXTAUTH_SECRET`, `DATABASE_URL` y las claves de pago.
 3. **Un monitor de que la tienda está arriba** (gratis, sin código): UptimeRobot o similar apuntando a `https://electroshopve.com/robots.txt` cada 5 minutos, con aviso a tu correo y a Telegram. Todo lo demás (avisos, respaldos) vive en el mismo servidor y no puede avisar si se cae.
 4. **El certificado HTTPS vence el 12/11/2026:** comprobar en el servidor que la renovación sigue sola (`systemctl list-timers | grep certbot` debe mostrar una línea) y, si no, avisar a Claude antes de esa fecha.

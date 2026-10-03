@@ -10,6 +10,13 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.11] - 2026-10-03
+### Tienda 1.1.0 (C-172)
+- **Destacados que rotan.** En la computadora, cada 7 segundos el primer producto de la columna pasa a ser el grande y el grande anterior se va al final. Da **una sola vuelta** y se queda en el primero. Se detiene con el ratón encima, al usar el teclado, con la pestaña oculta o al tocar un control. Arriba a la derecha de la tarjeta grande: flechas, "2 de 6" y pausa.
+- **La estrella del día.** El destacado grande ya no es siempre el mismo: cambia cada día (hora de Caracas) siguiendo el orden de los destacados. Vale también en el teléfono, donde es el primero de la fila.
+- En el teléfono nada gira solo, y con "reducir movimiento" tampoco (quedan las flechas). Las fotos grandes de los demás destacados solo se piden cuando les va a tocar.
+- Se mide qué se toca (el grande o la columna) y si ya había rotado, para comparar antes y después en Reportes. Sin cambio de base.
+
 ## [1.0.0-rc.10] - 2026-10-03
 ### Correos (C-175)
 - El logo largo de los correos es ahora **el mismo del encabezado de la tienda**: el ícono y "Electro Shop" con mayúscula y minúsculas (la rc.9 lo traía todo en mayúsculas). Solo cambian dos imágenes.

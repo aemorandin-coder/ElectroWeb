@@ -11,7 +11,7 @@ const CADUCA_MS = 60_000;
 const BARRER_CADA_MS = 15_000;
 const MAXIMO_RECURSOS = 2_000;
 
-interface Pestana { userId: string; nombre: string; desde: number; latido: number }
+interface Pestana { userId: string; nombre: string; desde: number; latido: number; detalle?: string }
 
 const global = globalThis as unknown as { __electroshopPresencia?: Map<string, Map<string, Pestana>>; __electroshopPresenciaBarrido?: ReturnType<typeof setInterval> };
 const recursos = global.__electroshopPresencia ?? (global.__electroshopPresencia = new Map());
@@ -20,8 +20,12 @@ function personas(recurso: string): PersonaEnLinea[] {
   const porUsuario = new Map<string, PersonaEnLinea>();
   for (const p of recursos.get(recurso)?.values() ?? []) {
     const previa = porUsuario.get(p.userId);
-    // Dos pestañas de la misma persona cuentan como una; vale la que lo abrió primero
-    if (!previa || new Date(previa.desde).getTime() > p.desde) porUsuario.set(p.userId, { id: p.userId, nombre: p.nombre, desde: new Date(p.desde).toISOString() });
+    // Dos pestañas de la misma persona cuentan como una; vale la que lo abrió primero (y el detalle de la que avisó más reciente)
+    if (!previa || new Date(previa.desde).getTime() > p.desde) {
+      porUsuario.set(p.userId, { id: p.userId, nombre: p.nombre, desde: new Date(p.desde).toISOString(), ...(p.detalle ? { donde: p.detalle } : {}) });
+    } else if (p.detalle && !previa.donde) {
+      previa.donde = p.detalle;
+    }
   }
   return [...porUsuario.values()].sort((a, b) => a.desde.localeCompare(b.desde));
 }
@@ -58,7 +62,7 @@ export function editoresDe(recurso: string, excepto?: string): PersonaEnLinea[] 
 }
 
 /** La pestaña `pestana` de `usuario` abrió el recurso (o sigue ahí). Devuelve quiénes más lo tienen abierto. */
-export function marcarPresente(recurso: string, pestana: string, usuario: { id: string; nombre: string }): PersonaEnLinea[] {
+export function marcarPresente(recurso: string, pestana: string, usuario: { id: string; nombre: string }, detalle?: string): PersonaEnLinea[] {
   asegurarBarrido();
   let pestanas = recursos.get(recurso);
   if (!pestanas) {
@@ -70,9 +74,9 @@ export function marcarPresente(recurso: string, pestana: string, usuario: { id: 
   const ahora = Date.now();
   const previa = pestanas.get(pestana);
   const nueva = !previa || previa.userId !== usuario.id;
-  pestanas.set(pestana, { userId: usuario.id, nombre: usuario.nombre, desde: previa && !nueva ? previa.desde : ahora, latido: ahora });
-  // Solo se avisa cuando se abre una pestaña: los latidos no cambian a nadie
-  if (nueva) avisar(recurso);
+  pestanas.set(pestana, { userId: usuario.id, nombre: usuario.nombre, desde: previa && !nueva ? previa.desde : ahora, latido: ahora, ...(detalle ? { detalle } : {}) });
+  // Se avisa cuando se abre una pestaña o cambia lo que está haciendo: los latidos iguales no cambian a nadie
+  if (nueva || previa?.detalle !== detalle) avisar(recurso);
   return editoresDe(recurso, usuario.id);
 }
 
@@ -89,6 +93,16 @@ export function presentesDeTipo(tipo: string, excepto?: string): Record<string, 
   const salida: Record<string, PersonaEnLinea[]> = {};
   for (const recurso of recursos.keys()) {
     if (!recurso.startsWith(`${tipo}:`)) continue;
+    const editores = editoresDe(recurso, excepto);
+    if (editores.length > 0) salida[recurso] = editores;
+  }
+  return salida;
+}
+
+/** Todo lo que hay abierto ahora, sin contar a `excepto`. Quien lo pide filtra por permisos (cada recurso pide el suyo). */
+export function todosLosPresentes(excepto?: string): Record<string, PersonaEnLinea[]> {
+  const salida: Record<string, PersonaEnLinea[]> = {};
+  for (const recurso of recursos.keys()) {
     const editores = editoresDe(recurso, excepto);
     if (editores.length > 0) salida[recurso] = editores;
   }

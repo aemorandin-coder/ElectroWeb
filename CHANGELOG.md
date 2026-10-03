@@ -10,6 +10,12 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.5] - 2026-10-02
+### Marco del panel 1.2.0 (C-174)
+- **Marquesina del equipo:** una franja debajo de la barra de arriba, en todas las pantallas del panel, dice quién del equipo está conectado y en qué sector: "Luis está en Productos, editando «Teclado Redragon K552»". Corre sola si el texto no cabe, se detiene al pasar el ratón o tocarla, y con "reducir movimiento" no se mueve. Solo aparece si hay alguien más; la ven solo administradores con los dos pasos. Una pestaña en segundo plano sale de la franja al minuto.
+### Productos 1.1.1 (C-174)
+- El editor avisa qué producto tiene abierto, para la marquesina.
+
 ## [1.0.0-rc.4] - 2026-10-02
 ### Marco del panel 1.0.0 (C-168)
 - **Versión por módulo:** Productos, ElectroStudio, Cursos, Configuración y los demás (16) llevan su versión; se ve en la barra de arriba de cada pantalla y en la página nueva **Administración → Versiones**, con qué cambió en cada uno. El pie del menú dice la versión del sistema y el commit.

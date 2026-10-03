@@ -38,6 +38,7 @@ export interface ModuloPanel {
 
 const PRIMERA: Pick<CambioModulo, 'version' | 'sistema' | 'tarea'> = { version: '1.0.0', sistema: '1.0.0-rc.4', tarea: 'C-168' };
 const RC4 = { sistema: '1.0.0-rc.4' } as const;
+const RC5 = { sistema: '1.0.0-rc.5' } as const;
 const primera = (resumen: string): CambioModulo => ({ ...PRIMERA, resumen, silencioso: true });
 
 export const MODULOS: ModuloPanel[] = [
@@ -57,7 +58,7 @@ export const MODULOS: ModuloPanel[] = [
       // C-169: lo que comparten las pantallas que se editan entre varios (presencia, conflictos, borrador, historial)
       'components/admin/edicion/', 'lib/edicion/', 'app/api/admin/presencia/', 'app/api/admin/historial/',
     ],
-    historial: [{ version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Trabajo en equipo: se ve quién más está editando lo mismo, se avisa en vivo cuando otro lo cambia o lo mueve a la papelera, y los borradores sin guardar se conservan en el navegador.' }, { ...PRIMERA, resumen: 'Ahora cada módulo del panel lleva su versión (abajo del menú y en la barra de arriba) y se avisa cuando hay una versión nueva.' }],
+    historial: [{ version: '1.2.0', ...RC5, tarea: 'C-174', resumen: 'Marquesina del equipo: una franja debajo de la barra de arriba dice quién está conectado y en qué sector ("Luis está en Productos, editando…").' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Trabajo en equipo: se ve quién más está editando lo mismo, se avisa en vivo cuando otro lo cambia o lo mueve a la papelera, y los borradores sin guardar se conservan en el navegador.' }, { ...PRIMERA, resumen: 'Ahora cada módulo del panel lleva su versión (abajo del menú y en la barra de arriba) y se avisa cuando hay una versión nueva.' }],
   },
   {
     id: 'dashboard',
@@ -94,7 +95,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/digital-', 'lib/sades.ts', 'lib/review-status.ts', 'lib/resenas-avisos.ts', 'lib/stock-alerts.ts',
       'lib/papelera.ts', 'app/api/cron/papelera/',
     ],
-    historial: [{ version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Eliminar manda a la papelera (30 días, con Deshacer). Si otro administrador guarda o mueve el producto mientras lo editas, se combinan los cambios, se avisa y no se pierde lo que escribiste. Se ve quién lo está editando.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.1', ...RC5, tarea: 'C-174', resumen: 'El editor dice a los demás qué producto tiene abierto (para la marquesina del equipo).' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Eliminar manda a la papelera (30 días, con Deshacer). Si otro administrador guarda o mueve el producto mientras lo editas, se combinan los cambios, se avisa y no se pierde lo que escribiste. Se ve quién lo está editando.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'ofertas',
@@ -211,7 +212,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/queries/home.ts', 'lib/queries/catalog.ts', 'lib/queries/product.ts', 'lib/queries/navigation.ts', 'lib/queries/seo.ts',
       'lib/queries/busqueda-catalogo.ts', 'lib/queries/hot-ad.ts', 'lib/dto/', 'lib/seo.ts', 'lib/feed.ts', 'lib/llms.ts',
     ],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.1', ...RC5, tarea: 'C-174', resumen: 'Estilo de la marquesina del panel en globals.css (no se usa en la tienda).', silencioso: true }, primera('Primera versión registrada.')],
   },
   {
     id: 'cuenta',

@@ -51,3 +51,13 @@ const normalizar = (valor: unknown): unknown => {
 export function clavesCambiadas(antes: Record<string, unknown>, cambios: Record<string, unknown>): string[] {
   return Object.keys(cambios).filter((clave) => JSON.stringify(normalizar(antes[clave])) !== JSON.stringify(normalizar(cambios[clave])));
 }
+
+/** Los caracteres de control (saltos de línea, tabuladores…) no entran a una etiqueta: se arma el patrón con sus códigos */
+const CONTROL = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}]+`, 'g');
+
+/** "Teclado Redragon K552", hasta 80 caracteres y sin saltos de línea; vacío o que no es texto → undefined (C-174) */
+export function limpiarEtiqueta(valor: unknown): string | undefined {
+  if (typeof valor !== 'string') return undefined;
+  const limpia = valor.replace(CONTROL, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+  return limpia || undefined;
+}

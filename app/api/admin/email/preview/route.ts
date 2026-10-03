@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
-import { prisma } from '@/lib/prisma';
 import {
     capturarCorreo, sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail, sendOrderPendingPaymentEmail,
     sendOrderShippedEmail, sendOrderDeliveredEmail, sendDigitalCodeEmail, sendGiftCardEmail, sendTestEmail,
 } from '@/lib/email-service';
 import { generateOrderConfirmationEmail } from '@/lib/email-templates/OrderConfirmation';
+import { generateReviewApprovedEmail } from '@/lib/email-templates/ReviewApproved';
 import { correoPedirResenas } from '@/lib/resenas-avisos';
 import { sendCourseEnrollmentEmail, sendCourseCertificateEmail, sendCreatorStatusEmail } from '@/lib/email-templates/CourseCertificate';
 import { renderCampana } from '@/lib/email-campaigns';
@@ -27,11 +27,9 @@ const PLANTILLAS: { id: string; name: string; description: string; render: () =>
     {
         id: 'order_confirmation', name: 'Pedido recibido', description: 'Cuando el cliente hace una compra',
         render: async () => {
-            const ajustes = await prisma.companySettings.findFirst({ select: { companyName: true, logo: true } });
             return {
                 subject: 'Confirmación de pedido ORD-2026-0001',
-                html: generateOrderConfirmationEmail({
-                    companyName: ajustes?.companyName || 'Electro Shop', companyLogo: ajustes?.logo || undefined,
+                html: await generateOrderConfirmationEmail({
                     orderNumber: 'ORD-2026-0001', customerName: 'María', orderDate: new Date().toLocaleDateString('es-VE'),
                     items: [
                         { name: 'Audífonos inalámbricos', quantity: 1, price: '49.90' },
@@ -55,6 +53,13 @@ const PLANTILLAS: { id: string; name: string; description: string; render: () =>
             ]);
             return { subject: asunto, html };
         },
+    },
+    {
+        id: 'review_approved', name: 'Reseña publicada', description: 'Cuando el equipo aprueba una reseña',
+        render: async () => ({
+            subject: 'Tu reseña ya está publicada - Audífonos inalámbricos',
+            html: await generateReviewApprovedEmail({ customerName: 'María', productName: 'Audífonos inalámbricos', productUrl: `${process.env.NEXTAUTH_URL || ''}/productos/audifonos-inalambricos#resenas`, rating: 5 }),
+        }),
     },
     { id: 'digital_code', name: 'Código digital', description: 'Entrega de un código', render: () => capturarCorreo(() => sendDigitalCodeEmail(DESTINO, { orderNumber: 'ORD-2026-0001', customerName: 'María', productName: 'PlayStation Store $25', code: 'XXXX-XXXX-XXXX', platform: 'PlayStation' })) },
     { id: 'gift_card', name: 'Gift card', description: 'Regalo por correo', render: () => capturarCorreo(() => sendGiftCardEmail(DESTINO, { code: 'GIFT-XXXX-XXXX', amount: 50, senderName: 'José', recipientName: 'María', personalMessage: '¡Feliz cumpleaños!' })) },

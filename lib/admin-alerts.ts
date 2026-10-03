@@ -5,7 +5,9 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { sendEmail } from '@/lib/email-service';
+import { getBaseTemplate, sendEmail } from '@/lib/email-service';
+import { escapeHtml } from '@/lib/html';
+import { CORREO, COLOR, botonCorreo } from '@/lib/email-templates/estilo';
 
 async function getAdminAlertEmails(): Promise<string[]> {
   try {
@@ -28,61 +30,38 @@ async function getAdminAlertEmails(): Promise<string[]> {
   }
 }
 
-// Los valores vienen de clientes (nombres, referencias) o del catálogo: se escapan antes de ir al HTML
-function escapeHtml(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-function buildAlertEmailHtml({
+// Los valores vienen de clientes (nombres, referencias) o del catálogo: se escapan antes de ir al HTML.
+// Mismo marco que los correos de los clientes (C-175): antes era otra plantilla, sin logo.
+async function buildAlertEmailHtml({
   title,
   lines,
   actionUrl,
   actionLabel,
-  companyName = 'Electro Shop',
 }: {
   title: string;
   lines: { label: string; value: string }[];
   actionUrl?: string;
   actionLabel?: string;
-  companyName?: string;
-}): string {
+}): Promise<string> {
   const rows = lines
     .map(
       ({ label, value }) => `
       <tr>
-        <td style="padding:8px 0;color:#6a6c6b;font-size:14px;width:40%;vertical-align:top;">${escapeHtml(label)}</td>
-        <td style="padding:8px 0;color:#212529;font-size:14px;font-weight:600;">${escapeHtml(value)}</td>
+        <td style="padding:10px 12px 10px 0;border-bottom:1px solid ${COLOR.linea};color:${COLOR.suave};font-size:14px;width:38%;vertical-align:top;">${escapeHtml(label)}</td>
+        <td style="padding:10px 0;border-bottom:1px solid ${COLOR.linea};color:${COLOR.tinta};font-size:14px;font-weight:600;">${escapeHtml(value)}</td>
       </tr>`
     )
     .join('');
 
-  const actionBtn = actionUrl
-    ? `<div style="text-align:center;margin-top:28px;">
-        <a href="${escapeHtml(actionUrl)}" style="display:inline-block;background:#2a63cd;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">${escapeHtml(actionLabel || 'Abrir en el panel')}</a>
-      </div>`
-    : '';
-
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <div style="max-width:540px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(42,99,205,0.10);">
-    <div style="background:#2a63cd;padding:28px 32px;text-align:center;">
-      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">${escapeHtml(title)}</h1>
-      <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:13px;">${escapeHtml(companyName)} · Aviso del panel</p>
-    </div>
-    <div style="padding:28px 32px;">
-      <table style="width:100%;border-collapse:collapse;border-top:1px solid #e9ecef;">
-        ${rows}
-      </table>
-      ${actionBtn}
-    </div>
-    <div style="background:#f8f9fa;padding:16px 32px;text-align:center;border-top:1px solid #e9ecef;">
-      <p style="margin:0;color:#6a6c6b;font-size:12px;">Mensaje automático de ${escapeHtml(companyName)}. Cambia qué avisos llegan por correo en el panel → Notificaciones.</p>
-    </div>
-  </div>
-</body>
-</html>`;
+  const contenido = `
+    <p style="${CORREO.rotulo}color:${COLOR.marca};font-weight:700;">Aviso del panel</p>
+    <h2 style="${CORREO.titulo}">${escapeHtml(title)}</h2>
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border-top:1px solid ${COLOR.linea};margin-top:8px;">
+      ${rows}
+    </table>
+    ${actionUrl ? botonCorreo(escapeHtml(actionUrl), escapeHtml(actionLabel || 'Abrir en el panel')) : ''}
+    <p style="${CORREO.nota}text-align:center;">Mensaje automático para el equipo. Cambia qué avisos llegan por correo en el panel, en Notificaciones.</p>`;
+  return getBaseTemplate(contenido, title);
 }
 
 /** Envía un aviso a la lista de correos de alerta. Devuelve false si no hay lista o falló el envío. */
@@ -99,11 +78,10 @@ export async function sendAdminEventEmail({
 }): Promise<boolean> {
   const emails = await getAdminAlertEmails();
   if (emails.length === 0) return false;
-  const settings = await prisma.companySettings.findUnique({ where: { id: 'default' }, select: { companyName: true } }).catch(() => null);
   const result = await sendEmail({
     to: emails,
     subject: subject.slice(0, 150),
-    html: buildAlertEmailHtml({ title, lines, actionUrl, companyName: settings?.companyName || 'Electro Shop' }),
+    html: await buildAlertEmailHtml({ title, lines, actionUrl }),
   }).catch((error) => {
     console.error('[ADMIN-ALERTS] Error sending alert:', error);
     return { success: false };

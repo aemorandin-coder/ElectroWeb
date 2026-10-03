@@ -15,6 +15,7 @@ import { createAuditLog } from '@/lib/audit-log';
 import { ipParaRegistro } from '@/lib/ip';
 import { describirDispositivo } from '@/lib/dispositivo';
 import { getBaseTemplate, sendEmail, sendPasswordResetEmail } from '@/lib/email-service';
+import { CORREO, botonCorreo } from '@/lib/email-templates/estilo';
 import { escapeHtml } from '@/lib/html';
 
 export const DURACION_ADMIN_MS = 12 * 60 * 60 * 1000;
@@ -155,14 +156,14 @@ async function avisarDispositivoNuevo(userId: string, dispositivo: string, metod
   const fecha = cuando.toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' });
   const nombre = (u.name || '').trim().split(/\s+/)[0] || 'cliente';
   const contenido = `
-    <h2 style="margin:0 0 10px;color:#212529;font-size:22px;font-weight:600;">Nuevo inicio de sesión en tu cuenta</h2>
-    <p style="color:#495057;font-size:15px;line-height:1.6;margin:0 0 16px;">Hola ${escapeHtml(nombre)}, alguien entró a tu cuenta desde un dispositivo que no habías usado.</p>
-    <div style="background:#f8f9fa;border-radius:12px;padding:16px 20px;margin:16px 0;border:1px solid #e9ecef;">
-      <p style="margin:0 0 6px;color:#212529;font-size:15px;font-weight:600;">${escapeHtml(dispositivo)}</p>
-      <p style="margin:0;color:#6c757d;font-size:13px;line-height:1.6;">${escapeHtml(fecha)} · ${metodo === 'google' ? 'con Google' : 'con tu contraseña'}</p>
+    <h2 style="${CORREO.titulo}">Nuevo inicio de sesión en tu cuenta</h2>
+    <p style="${CORREO.texto}">Hola ${escapeHtml(nombre)}, alguien entró a tu cuenta desde un dispositivo que no habías usado.</p>
+    <div style="${CORREO.caja}">
+      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">${escapeHtml(dispositivo)}</p>
+      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">${escapeHtml(fecha)} · ${metodo === 'google' ? 'con Google' : 'con tu contraseña'}</p>
     </div>
-    <p style="color:#495057;font-size:15px;line-height:1.6;margin:0 0 16px;">Si fuiste tú, no tienes que hacer nada. Si no, cambia tu contraseña y cierra esa sesión desde Mi perfil.</p>
-    <div style="text-align:center;margin:28px 0;"><a href="${appUrl}/customer/profile?tab=seguridad" style="display:inline-block;background:#2a63cd;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">Revisar mis sesiones</a></div>`;
+    <p style="${CORREO.texto}">Si fuiste tú, no tienes que hacer nada. Si no, cambia tu contraseña y cierra esa sesión desde Mi perfil.</p>
+    ${botonCorreo(`${appUrl}/customer/profile?tab=seguridad`, 'Revisar mis sesiones')}`;
   await sendEmail({
     to: u.email,
     subject: `Nuevo inicio de sesión: ${dispositivo}`,

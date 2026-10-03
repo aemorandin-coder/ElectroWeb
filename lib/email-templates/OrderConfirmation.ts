@@ -1,11 +1,10 @@
 import { porcentajeIva } from '@/lib/pricing';
-import { getEmailStyles, getEmailHeader, getEmailFooter } from './base';
+import { getBaseTemplate } from '@/lib/email-service';
+import { CORREO, COLOR, botonCorreo } from './estilo';
 import { ETIQUETA_ENTREGA } from '@/lib/envios/empresas';
 import { escapeHtml } from '@/lib/html';
 
 interface OrderConfirmationData {
-  companyName: string;
-  companyLogo?: string;
   orderNumber: string;
   customerName: string;
   orderDate: string;
@@ -34,10 +33,9 @@ interface OrderConfirmationData {
   trackingUrl?: string;
 }
 
-export function generateOrderConfirmationEmail(data: OrderConfirmationData): string {
+/** El HTML completo del correo, con el marco de todos los correos (C-175). */
+export async function generateOrderConfirmationEmail(data: OrderConfirmationData): Promise<string> {
   const {
-    companyName,
-    companyLogo,
     orderNumber,
     customerName,
     orderDate,
@@ -81,121 +79,89 @@ export function generateOrderConfirmationEmail(data: OrderConfirmationData): str
     ? `Incluye IVA (${porcentajeIva(totalNum, ivaNum)} %): ${ivaNum.toFixed(2)} ${currency} · Base imponible: ${(totalNum - ivaNum).toFixed(2)} ${currency}`
     : '';
 
-  return `
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Confirmación de Pedido - ${orderNumber}</title>
-      ${getEmailStyles()}
-    </head>
-    <body>
-      <div class="email-container">
-        ${getEmailHeader({ companyName })}
-        
-        <div class="email-body">
-          <h2>¡Gracias por tu compra, ${escapeHtml(customerName)}!</h2>
-          
-          <p>${paid
-            ? 'Recibimos tu pago y tu pedido ya está en preparación.'
-            : 'Recibimos tu pedido. Te avisaremos apenas confirmemos el pago.'}</p>
-          
-          <div class="order-details">
-            <p style="margin: 5px 0;"><strong>Número de Pedido:</strong> ${escapeHtml(orderNumber)}</p>
-            <p style="margin: 5px 0;"><strong>Fecha:</strong> ${escapeHtml(orderDate)}</p>
-            <p style="margin: 5px 0;"><strong>Método de Pago:</strong> ${escapeHtml(paymentMethod)}${paid ? '' : ' (por confirmar)'}</p>
-            <p style="margin: 5px 0;"><strong>Método de Despacho:</strong> ${escapeHtml(getMethodLabel(deliveryMethod))}</p>
-            ${deliveryAddress ? `<p style="margin: 10px 0 0 0;"><strong>Dirección de Entrega:</strong><br><span style="color:#6c757d; font-size:13px;">${escapeHtml(deliveryAddress)}</span></p>` : ''}
-          </div>
-
-          <h3 style="color: #212529; border-bottom: 2px solid #f8f9fa; padding-bottom: 8px; margin-top: 25px;">Recibo Digital</h3>
-          
-          <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-            <thead>
-              <tr style="border-bottom: 2px solid #dee2e6; text-align: left; font-size: 12px; text-transform: uppercase;">
-                <th style="padding: 10px 5px; color: #6c757d;">Producto</th>
-                <th style="padding: 10px 5px; color: #6c757d; text-align: center;">Cant.</th>
-                <th style="padding: 10px 5px; color: #6c757d; text-align: right;">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items.map(item => {
-                const priceNum = parseFloat(item.price.replace(',', '.')) || 0;
-                const qty = item.quantity || 1;
-                const rowTotal = priceNum * qty;
-                return `
-                  <tr style="border-bottom: 1px solid #e9ecef; font-size: 14px;">
-                    <td style="padding: 12px 5px; color: #212529;">
-                      <strong>${escapeHtml(item.name)}</strong>
-                      ${item.condition ? `<br><span style="display: inline-block; margin-top: 4px; padding: 2px 6px; background-color: #212529; color: #ffffff; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase;">${escapeHtml(item.condition)}</span>
-                      <span style="font-size: 12px; color: #6c757d;">Garantía de la tienda: ${item.warrantyDays ?? 30} días</span>` : ''}
-                    </td>
-                    <td style="padding: 12px 5px; text-align: center; color: #495057;">${qty}</td>
-                    <td style="padding: 12px 5px; text-align: right; font-weight: 600; color: #212529;">${rowTotal.toFixed(2)} ${currency}</td>
-                  </tr>
-                `;
-              }).join('')}
-            </tbody>
-          </table>
-
-          ${hasSecondHand ? `
-          <p style="margin-top: 12px; font-size: 12px; color: #6c757d; line-height: 1.5;">
-            Los productos usados, reacondicionados o de caja abierta se venden en el estado descrito en su ficha. Tienen la garantía de la tienda indicada, contada desde la entrega, por fallas de funcionamiento.
-          </p>
-          ` : ''}
-          
-          <div style="margin-top: 20px; padding: 15px; bg-color: #f8f9fa; background-color: #f8f9fa; border-radius: 8px;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+  const celda = `padding:12px 6px;border-bottom:1px solid ${COLOR.linea};font-size:14px;`;
+  const encabezado = `padding:10px 6px;border-bottom:2px solid ${COLOR.linea};color:${COLOR.suave};font-size:12px;text-transform:uppercase;letter-spacing:0.5px;`;
+  const filaTotal = (etiqueta: string, valor: string, color: string = COLOR.texto) => `
               <tr>
-                <td style="padding: 4px 0; color: #6c757d;">Subtotal:</td>
-                <td style="padding: 4px 0; text-align: right; font-weight: 600; color: #495057;">${subtotal} ${currency}</td>
-              </tr>
-              ${hasDiscount ? `
-              <tr>
-                <td style="padding: 4px 0; color: #6c757d;">Descuento:</td>
-                <td style="padding: 4px 0; text-align: right; font-weight: 600; color: #198754;">-${discount} ${currency}</td>
-              </tr>
-              ` : ''}
-              ${shipping && shipping !== '0' && shipping !== '0.00' ? `
-              <tr>
-                <td style="padding: 4px 0; color: #6c757d;">${etiquetaEnvio}</td>
-                <td style="padding: 4px 0; text-align: right; font-weight: 600; color: #495057;">${shipping} ${currency}</td>
-              </tr>
-              ` : ''}
-              <tr style="border-top: 1.5px solid #dee2e6; font-size: 16px; font-weight: bold;">
-                <td style="padding: 12px 0 0 0; color: #2a63cd;">${paid ? 'Total pagado:' : 'Total a pagar:'}</td>
-                <td style="padding: 12px 0 0 0; text-align: right; color: #2a63cd;">${total} ${currency}</td>
-              </tr>
-              ${ivaTexto ? `
-              <tr>
-                <td colspan="2" style="padding: 6px 0 0 0; text-align: right; font-size: 12px; color: #6c757d;">${ivaTexto}</td>
-              </tr>
-              ` : ''}
-            </table>
-          </div>
+                <td style="padding:4px 0;color:${COLOR.suave};font-size:14px;">${etiqueta}</td>
+                <td style="padding:4px 0;text-align:right;font-weight:600;color:${color};font-size:14px;">${valor}</td>
+              </tr>`;
 
-          ${deliveryMethod !== ETIQUETA_ENTREGA.DIGITAL ? `
-          <div style="margin-top: 20px; padding: 12px; background-color: #eef1f6; border-left: 4px solid #2a63cd; border-radius: 4px; font-size: 12px; color: #495057; line-height: 1.5;">
-            <strong>Tu comprobante de compra</strong><br>
-            Va dentro del paquete, junto con tus productos.
-          </div>
-          ` : ''}
+  const content = `
+    <h2 style="${CORREO.titulo}">¡Gracias por tu compra, ${escapeHtml(customerName)}!</h2>
+    <p style="${CORREO.subtitulo}">Orden #${escapeHtml(orderNumber)}</p>
+    <p style="${CORREO.texto}">${paid
+      ? 'Recibimos tu pago y tu pedido ya está en preparación.'
+      : 'Recibimos tu pedido. Te avisaremos apenas confirmemos el pago.'}</p>
 
-          ${trackingUrl ? `
-            <div style="text-align: center; margin-top: 25px;">
-              <a href="${trackingUrl}" class="button" style="color: white !important;">Seguimiento de Envío</a>
-            </div>
-          ` : ''}
+    <div style="${CORREO.caja}">
+      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">
+        <strong style="${CORREO.fuerte}">Fecha:</strong> ${escapeHtml(orderDate)}<br>
+        <strong style="${CORREO.fuerte}">Método de pago:</strong> ${escapeHtml(paymentMethod)}${paid ? '' : ' (por confirmar)'}<br>
+        <strong style="${CORREO.fuerte}">Método de despacho:</strong> ${escapeHtml(getMethodLabel(deliveryMethod))}
+        ${deliveryAddress ? `<br><strong style="${CORREO.fuerte}">Dirección de entrega:</strong> ${escapeHtml(deliveryAddress)}` : ''}
+      </p>
+    </div>
 
-          <p style="margin-top: 30px; font-size: 13px; color: #6c757d; text-align: center;">
-            ¿Tienes alguna duda con tu compra? Escríbenos directamente a nuestro WhatsApp de soporte.
-          </p>
-        </div>
+    <p style="${CORREO.rotulo}margin:24px 0 0;">Recibo digital</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin-top:6px;">
+      <tr>
+        <th align="left" style="${encabezado}">Producto</th>
+        <th align="center" style="${encabezado}">Cant.</th>
+        <th align="right" style="${encabezado}">Total</th>
+      </tr>
+      ${items.map(item => {
+        const priceNum = parseFloat(item.price.replace(',', '.')) || 0;
+        const qty = item.quantity || 1;
+        const rowTotal = priceNum * qty;
+        return `
+      <tr>
+        <td style="${celda}color:${COLOR.tinta};">
+          <strong>${escapeHtml(item.name)}</strong>
+          ${item.condition ? `<br><span style="display:inline-block;margin-top:4px;padding:2px 6px;background-color:${COLOR.tinta};color:#ffffff;border-radius:4px;font-size:11px;font-weight:600;text-transform:uppercase;">${escapeHtml(item.condition)}</span>
+          <span style="font-size:12px;color:${COLOR.suave};">Garantía de la tienda: ${item.warrantyDays ?? 30} días</span>` : ''}
+        </td>
+        <td align="center" style="${celda}color:${COLOR.texto};">${qty}</td>
+        <td align="right" style="${celda}font-weight:600;color:${COLOR.tinta};white-space:nowrap;">${rowTotal.toFixed(2)} ${currency}</td>
+      </tr>`;
+      }).join('')}
+    </table>
 
-        ${getEmailFooter({ companyName, companyLogo })}
-      </div>
-    </body>
-    </html>
-  `;
+    ${hasSecondHand ? `
+    <p style="${CORREO.textoMenor}font-size:12px;margin:12px 0 0;">
+      Los productos usados, reacondicionados o de caja abierta se venden en el estado descrito en su ficha. Tienen la garantía de la tienda indicada, contada desde la entrega, por fallas de funcionamiento.
+    </p>
+    ` : ''}
+
+    <div style="${CORREO.caja}">
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+        ${filaTotal('Subtotal:', `${subtotal} ${currency}`)}
+        ${hasDiscount ? filaTotal('Descuento:', `-${discount} ${currency}`, COLOR.exito) : ''}
+        ${shipping && shipping !== '0' && shipping !== '0.00' ? filaTotal(etiquetaEnvio, `${shipping} ${currency}`) : ''}
+        <tr>
+          <td style="padding:12px 0 0;border-top:2px solid ${COLOR.linea};color:${COLOR.marca};font-size:17px;font-weight:700;">${paid ? 'Total pagado:' : 'Total a pagar:'}</td>
+          <td style="padding:12px 0 0;border-top:2px solid ${COLOR.linea};text-align:right;color:${COLOR.marca};font-size:17px;font-weight:700;white-space:nowrap;">${total} ${currency}</td>
+        </tr>
+        ${ivaTexto ? `
+        <tr>
+          <td colspan="2" style="padding:6px 0 0;text-align:right;font-size:12px;color:${COLOR.suave};">${ivaTexto}</td>
+        </tr>
+        ` : ''}
+      </table>
+    </div>
+
+    ${deliveryMethod !== ETIQUETA_ENTREGA.DIGITAL ? `
+    <div style="${CORREO.cajaInfo}">
+      <p style="${CORREO.cajaTitulo}${CORREO.tonoInfo}">Tu comprobante de compra</p>
+      <p style="${CORREO.cajaTexto}${CORREO.tonoInfo}">Va dentro del paquete, junto con tus productos.</p>
+    </div>
+    ` : ''}
+
+    ${trackingUrl ? botonCorreo(escapeHtml(trackingUrl), 'Seguimiento de envío') : ''}
+
+    <p style="${CORREO.nota}text-align:center;">
+      ¿Tienes alguna duda con tu compra? Escríbenos a nuestro WhatsApp de soporte.
+    </p>`;
+
+  return getBaseTemplate(content, paid ? `Tu pedido ${orderNumber} ya está en preparación` : `Recibimos tu pedido ${orderNumber}`);
 }

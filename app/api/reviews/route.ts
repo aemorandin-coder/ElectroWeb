@@ -235,13 +235,10 @@ export async function PATCH(request: NextRequest) {
             const to = updatedReview.user.email;
             after(async () => {
                 try {
-                    const companySettings = await prisma.companySettings.findFirst({ select: { companyName: true, logo: true } });
                     await sendEmail({
                         to,
                         subject: `Tu reseña ya está publicada - ${updatedReview.product.name}`,
-                        html: generateReviewApprovedEmail({
-                            companyName: companySettings?.companyName || 'Electro Shop',
-                            companyLogo: companySettings?.logo || '',
+                        html: await generateReviewApprovedEmail({
                             customerName: updatedReview.user.name || 'Cliente',
                             productName: updatedReview.product.name,
                             productUrl: `${process.env.NEXTAUTH_URL}/productos/${updatedReview.product.slug}#resenas`,

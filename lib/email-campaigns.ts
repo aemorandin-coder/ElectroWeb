@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { z } from '@/lib/zod';
 import { prisma } from '@/lib/prisma';
 import { getBaseTemplate, sendEmail } from '@/lib/email-service';
+import { CORREO, botonCorreo } from '@/lib/email-templates/estilo';
 
 /**
  * Campañas de correo de Marketing (C-75, decisión de Andrés del 16/09).
@@ -99,11 +100,11 @@ function renderBloque(bloque: Bloque, nombre: string): string {
 
   switch (bloque.tipo) {
     case 'titulo':
-      return `<h2 style="margin:0 0 16px;color:#212529;font-size:24px;line-height:1.3;font-weight:700;">${personalizar(bloque.texto)}</h2>`;
+      return `<h2 style="${CORREO.titulo}">${personalizar(bloque.texto)}</h2>`;
     case 'texto':
       return bloque.texto
         .split(/\n{2,}/)
-        .map((parrafo) => `<p style="margin:0 0 16px;color:#495057;font-size:16px;line-height:1.6;">${personalizar(parrafo).replace(/\n/g, '<br>')}</p>`)
+        .map((parrafo) => `<p style="${CORREO.texto}">${personalizar(parrafo).replace(/\n/g, '<br>')}</p>`)
         .join('');
     case 'imagen': {
       const img = `<img src="${escaparHtml(urlAbsoluta(bloque.url))}" alt="${escaparHtml(bloque.alt)}" width="520" style="display:block;width:100%;max-width:520px;height:auto;border:0;border-radius:12px;margin:0 auto;">`;
@@ -111,8 +112,7 @@ function renderBloque(bloque: Bloque, nombre: string): string {
       return `<div style="margin:0 0 20px;text-align:center;">${contenido}</div>`;
     }
     case 'boton':
-      // Botón en tabla con color sólido: Outlook no pinta degradados ni botones hechos solo con CSS
-      return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px auto 24px;"><tr><td bgcolor="#2a63cd" style="border-radius:8px;"><a href="${escaparHtml(urlAbsoluta(bloque.url))}" style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;">${escaparHtml(bloque.texto)}</a></td></tr></table>`;
+      return botonCorreo(escaparHtml(urlAbsoluta(bloque.url)), escaparHtml(bloque.texto));
   }
 }
 
@@ -122,10 +122,10 @@ export async function renderCampana(
 ): Promise<string> {
   const nombre = (destinatario.nombre || '').trim().split(/\s+/)[0] || 'cliente';
   const aviso = destinatario.prueba
-    ? `<div style="margin:0 0 20px;padding:10px 14px;border-radius:8px;background:#fff7ed;color:#b45309;font-size:13px;font-weight:600;">Correo de prueba: así lo verán los clientes.</div>`
+    ? `<div style="${CORREO.cajaAviso}margin-top:0;"><p style="${CORREO.cajaTexto}${CORREO.tonoAviso}font-weight:600;">Correo de prueba: así lo verán los clientes.</p></div>`
     : '';
-  const baja = `<p style="margin:28px 0 0;padding-top:16px;border-top:1px solid #e9ecef;color:#6a6c6b;font-size:12px;line-height:1.5;text-align:center;">Recibes este correo porque aceptaste recibir promociones.${
-    destinatario.enlaceBaja ? ` <a href="${escaparHtml(destinatario.enlaceBaja)}" style="color:#2a63cd;">Darme de baja</a>` : ''
+  const baja = `<p style="${CORREO.nota}text-align:center;">Recibes este correo porque aceptaste recibir promociones.${
+    destinatario.enlaceBaja ? ` <a href="${escaparHtml(destinatario.enlaceBaja)}" style="${CORREO.enlace}">Darme de baja</a>` : ''
   }</p>`;
   const cuerpo = aviso + campana.bloques.map((b) => renderBloque(b, nombre)).join('') + baja;
   return getBaseTemplate(cuerpo, campana.preheader || undefined);

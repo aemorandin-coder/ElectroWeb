@@ -10,6 +10,18 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.9] - 2026-10-03
+### Marketing 1.2.0 (C-175)
+- **Todos los correos rediseñados, con el logo largo.** Arriba va el logo largo de Electro Shop (antes un logo chiquito dentro de un cuadro, sobre una franja azul con el nombre escrito), y debajo el contenido limpio y el pie con las redes, el teléfono y los enlaces.
+- **Un solo estilo para todos:** el mismo título, el mismo botón azul, las mismas cajas (aviso, éxito, dato) y el mismo pie en los 30 correos de la tienda. Antes había 12 botones y 10 títulos distintos, y tres correos (pedido recibido, reseña publicada y los avisos al equipo) tenían un diseño aparte.
+- **Se ven igual en Gmail, Outlook y el teléfono:** sin degradados, sombras ni trucos que Outlook no pinta; botones que no se rompen; el logo se lee aunque el teléfono esté en modo oscuro.
+- **Marketing → Correos → Plantillas** suma la vista previa del correo de reseña publicada.
+- Arreglos de paso: el texto de vista previa (el que se lee al lado del asunto) estaba mal puesto y algunos clientes de correo no lo mostraban; el nombre del cliente, el mensaje de una Gift Card y la referencia de una recarga ahora van siempre escapados.
+### Marco del panel 1.3.1, Configuración 1.0.1 (C-175)
+- Los avisos al equipo por correo y el correo de prueba de la configuración llevan el mismo diseño.
+### Órdenes 1.0.1, Productos 1.2.1, Promotores 1.1.1, Cotizaciones 1.1.1, Clientes 1.0.2 (C-175)
+- Sus correos salen con el diseño nuevo. Sin cambio de base, crons ni variables.
+
 ## [1.0.0-rc.8] - 2026-10-03
 ### Dos administradores sin pisarse, en el resto del panel (C-170)
 - **Promotores 1.1.0, Productos 1.2.0 (categorías), Ofertas y cupones 1.1.0, Cotizaciones 1.1.0, Marketing 1.1.0 (campañas):** si otra persona guardó antes que tú, ya no se pisa su trabajo: se combinan los cambios y solo se pregunta por lo que las dos tocaron. Se ve quién más tiene abierto lo mismo, y antes de borrar algo que otra persona está editando, se pregunta.

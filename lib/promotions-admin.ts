@@ -38,6 +38,8 @@ export function toAdminPromotion(p: Promotion & { _sum?: number }) {
     /** C-167: es el código de un promotor (se administra en Marketing → Promotores) */
     deUnPromotor: p.influencerId !== null,
     createdAt: p.createdAt.toISOString(),
+    /** C-170: la versión con que se abre el editor; vuelve en el guardado */
+    updatedAt: p.updatedAt.toISOString(),
   };
 }
 

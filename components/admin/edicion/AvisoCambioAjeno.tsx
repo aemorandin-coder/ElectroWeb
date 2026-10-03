@@ -21,6 +21,8 @@ interface Props {
   cambio: CambioAjeno;
   /** "producto", "configuración"… */
   recurso: string;
+  /** "esta categoría" en vez de "este producto" */
+  femenino?: boolean;
   ocupado?: boolean;
   /** Sacarlo de la papelera y seguir editando (si se puede) */
   onRestaurar?: () => void;
@@ -29,8 +31,9 @@ interface Props {
   onCerrar: () => void;
 }
 
-export default function AvisoCambioAjeno({ cambio, recurso, ocupado, onRestaurar, onGuardarComoNuevo, onCerrar }: Props) {
+export default function AvisoCambioAjeno({ cambio, recurso, femenino, ocupado, onRestaurar, onGuardarComoNuevo, onCerrar }: Props) {
   const { accion, por } = cambio;
+  const este = femenino ? 'esta' : 'este';
 
   if (accion === 'papelera' || accion === 'eliminado') {
     const borrado = accion === 'eliminado';
@@ -40,17 +43,17 @@ export default function AvisoCambioAjeno({ cambio, recurso, ocupado, onRestaurar
           <FiAlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
           <div className="min-w-0 flex-1">
             <p className="font-semibold">
-              {por.nombre} {borrado ? `borró para siempre este ${recurso}` : `movió este ${recurso} a la papelera`} {haceCuanto(cambio.en)}.
+              {por.nombre} {borrado ? `borró para siempre ${este} ${recurso}` : `movió ${este} ${recurso} a la papelera`} {haceCuanto(cambio.en)}.
             </p>
             <p className="mt-1">
-              Lo que escribiste no se perdió: sigue en esta pantalla y en el borrador de este navegador. No se puede guardar sobre un {recurso} {borrado ? 'que ya no existe' : 'que está en la papelera'}.
+              Lo que escribiste no se perdió: sigue en esta pantalla y en el borrador de este navegador. No se puede guardar sobre {femenino ? 'una' : 'un'} {recurso} {borrado ? 'que ya no existe' : 'que está en la papelera'}.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {!borrado && onRestaurar && (
                 <button type="button" onClick={onRestaurar} disabled={ocupado} className={adminPrimaryButton}>Restaurar y seguir editando</button>
               )}
               {onGuardarComoNuevo && (
-                <button type="button" onClick={onGuardarComoNuevo} disabled={ocupado} className={adminSecondaryButton}>Guardar como {recurso} nuevo</button>
+                <button type="button" onClick={onGuardarComoNuevo} disabled={ocupado} className={adminSecondaryButton}>Guardar como {recurso} {femenino ? 'nueva' : 'nuevo'}</button>
               )}
             </div>
           </div>
@@ -60,7 +63,7 @@ export default function AvisoCambioAjeno({ cambio, recurso, ocupado, onRestaurar
   }
 
   const texto = accion === 'restaurado'
-    ? `${por.nombre} restauró este ${recurso} de la papelera ${haceCuanto(cambio.en)}.`
+    ? `${por.nombre} restauró ${este} ${recurso} de la papelera ${haceCuanto(cambio.en)}.`
     : `${por.nombre} guardó cambios ${haceCuanto(cambio.en)}${cambio.campos && cambio.campos.length > 0 ? `: ${listaEnTexto(cambio.campos)}` : ''}. Al guardar tú, se combinan con los tuyos.`;
   return (
     <div role="status" className="mb-4 flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-700">

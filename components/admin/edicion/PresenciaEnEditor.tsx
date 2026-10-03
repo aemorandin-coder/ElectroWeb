@@ -9,13 +9,13 @@ import AvisoPresencia from './AvisoPresencia';
 // restauró o lo borró mientras tanto. Se monta dentro del editor (modal o pantalla): al abrirse anota la presencia, y al cerrarse
 // la quita. `etiqueta` es lo que ve la marquesina del equipo ("editando «Código FINDE»").
 
-export default function PresenciaEnEditor({ recurso, etiqueta, nombreRecurso }: { recurso: string; etiqueta?: string; nombreRecurso: string }) {
+export default function PresenciaEnEditor({ recurso, etiqueta, nombreRecurso, femenino }: { recurso: string; etiqueta?: string; nombreRecurso: string; femenino?: boolean }) {
   const { data: sesion } = useSession();
   const { otros, cambio, olvidarCambio } = useEdicionEnVivo(recurso, sesion?.user?.id, etiqueta);
   return (
     <>
-      <AvisoPresencia otros={otros} recurso={`este ${nombreRecurso}`} />
-      {cambio && <AvisoCambioAjeno cambio={cambio} recurso={nombreRecurso} onCerrar={olvidarCambio} />}
+      <AvisoPresencia otros={otros} recurso={`${femenino ? 'esta' : 'este'} ${nombreRecurso}`} />
+      {cambio && <AvisoCambioAjeno cambio={cambio} recurso={nombreRecurso} femenino={femenino} onCerrar={olvidarCambio} />}
     </>
   );
 }

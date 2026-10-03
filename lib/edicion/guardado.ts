@@ -12,7 +12,7 @@ export type ConflictoServidor =
 
 export type ResultadoGuardado<T = unknown> =
   | { ok: true; datos: T }
-  | { ok: false; status: number; error: string; conflicto?: ConflictoServidor };
+  | { ok: false; status: number; error: string; conflicto?: ConflictoServidor; cuerpo?: Record<string, unknown> | null };
 
 export async function enviarConVersion<T = unknown>(
   url: string,
@@ -34,7 +34,8 @@ export async function enviarConVersion<T = unknown>(
   if (res.ok) return { ok: true, datos: datos as T };
   const error = datos?.error || 'No se pudo guardar';
   const tipo = datos?.conflicto;
-  if (tipo === 'cambiado') return { ok: false, status: res.status, error, conflicto: { tipo, error, por: datos?.por ?? null, actual: datos?.actual } };
-  if (tipo === 'no_existe' || tipo === 'ya_resuelto' || tipo === 'sin_version') return { ok: false, status: res.status, error, conflicto: { tipo, error, por: datos?.por ?? null } };
-  return { ok: false, status: res.status, error };
+  const recibido = datos;
+  if (tipo === 'cambiado') return { ok: false, status: res.status, error, cuerpo: recibido, conflicto: { tipo, error, por: datos?.por ?? null, actual: datos?.actual } };
+  if (tipo === 'no_existe' || tipo === 'ya_resuelto' || tipo === 'sin_version') return { ok: false, status: res.status, error, cuerpo: recibido, conflicto: { tipo, error, por: datos?.por ?? null } };
+  return { ok: false, status: res.status, error, cuerpo: recibido };
 }

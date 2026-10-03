@@ -13,6 +13,10 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { formatUSD } from '@/lib/currency';
 import { PORCENTAJE_MAXIMO } from '@/lib/promotions-core';
+import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
+import { valorEnTexto } from '@/components/admin/edicion/DialogoConflicto';
+import { enviarConVersion } from '@/lib/edicion/guardado';
+import { useConflictoDeFormulario } from '@/lib/edicion/useConflictoDeFormulario';
 
 // Ofertas y cupones de la tienda (C-102).
 
@@ -39,6 +43,8 @@ interface Promocion {
     isActive: boolean;
     status: Estado;
     savedUSD: number;
+    /** C-170: la versión con que se abre el editor */
+    updatedAt: string;
 }
 interface ProductoRef { id: string; name: string; priceUSD: number }
 interface Categoria { id: string; name: string }
@@ -91,6 +97,18 @@ function vacio(kind: 'AUTOMATIC' | 'COUPON'): Formulario {
     };
 }
 
+/** La promoción como la edita el formulario (la usan abrir el editor y combinar con lo que otra persona guardó) */
+function aFormulario(p: Promocion, productos: Map<string, ProductoRef>): Formulario {
+    return {
+        kind: p.kind, name: p.name, label: p.label ?? '', code: p.code ?? '', isPublic: p.isPublic,
+        valueType: p.percentOff ? 'PERCENT' : 'AMOUNT', value: String(p.percentOff ?? p.amountOffUSD ?? ''),
+        scope: p.scope, categoryIds: p.categoryIds,
+        products: p.productIds.map((id) => productos.get(id) ?? { id, name: 'Producto', priceUSD: 0 }),
+        minSubtotalUSD: p.minSubtotalUSD ? String(p.minSubtotalUSD) : '', startsAt: aLocal(p.startsAt), endsAt: aLocal(p.endsAt),
+        maxUses: p.maxUses ? String(p.maxUses) : '', maxUsesPerUser: p.maxUsesPerUser ? String(p.maxUsesPerUser) : '',
+    };
+}
+
 function valorTexto(p: Pick<Promocion, 'percentOff' | 'amountOffUSD' | 'kind'>): string {
     if (p.percentOff) return `-${p.percentOff}%`;
     if (p.amountOffUSD) return `-${formatUSD(p.amountOffUSD)}${p.kind === 'AUTOMATIC' ? ' c/u' : ''}`;
@@ -106,9 +124,23 @@ export default function Promociones() {
     const [recargas, setRecargas] = useState(0);
     const [filtro, setFiltro] = useState<(typeof FILTROS)[number]['value']>('vigentes');
     const [form, setForm] = useState<Formulario | null>(null);
+    // C-170: el formulario como se abrió (para combinar si otra persona guardó antes)
+    const [formBase, setFormBase] = useState<Formulario | null>(null);
     const [editando, setEditando] = useState<Promocion | null>(null);
     const [errores, setErrores] = useState<Record<string, string>>({});
     const [guardando, setGuardando] = useState(false);
+    const { resolver: resolverConflicto, dialogo: dialogoConflicto } = useConflictoDeFormulario({
+        kind: 'Tipo', name: 'Nombre', label: 'Etiqueta', code: 'Código', isPublic: 'Público', valueType: 'Tipo de descuento', value: 'Valor del descuento',
+        scope: 'Alcance', categoryIds: 'Categorías', products: 'Productos', minSubtotalUSD: 'Compra mínima', startsAt: 'Inicio', endsAt: 'Fin',
+        maxUses: 'Usos máximos', maxUsesPerUser: 'Usos por cliente',
+    }, (campo, valor) => {
+        if (campo === 'products') return (valor as ProductoRef[]).map((p) => p.name).join(', ') || '(ninguno)';
+        if (campo === 'categoryIds') return (valor as string[]).map((id) => categorias.find((c) => c.id === id)?.name ?? id).join(', ') || '(ninguna)';
+        if (campo === 'valueType') return valor === 'PERCENT' ? 'Porcentaje' : 'Monto fijo';
+        if (campo === 'scope') return valor === 'ALL' ? 'Toda la tienda' : valor === 'CATEGORY' ? 'Categorías' : 'Productos';
+        if (campo === 'startsAt' || campo === 'endsAt') return valor ? new Date(String(valor)).toLocaleString('es-VE', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '(sin fecha)';
+        return valorEnTexto(valor);
+    });
     const [busqueda, setBusqueda] = useState('');
     const [resultados, setResultados] = useState<ProductoRef[]>([]);
 
@@ -158,47 +190,68 @@ export default function Promociones() {
         setBusqueda('');
         setResultados([]);
         setEditando(p ?? null);
-        setForm(p ? {
-            kind: p.kind, name: p.name, label: p.label ?? '', code: p.code ?? '', isPublic: p.isPublic,
-            valueType: p.percentOff ? 'PERCENT' : 'AMOUNT', value: String(p.percentOff ?? p.amountOffUSD ?? ''),
-            scope: p.scope, categoryIds: p.categoryIds,
-            products: p.productIds.map((id) => productos.get(id) ?? { id, name: 'Producto', priceUSD: 0 }),
-            minSubtotalUSD: p.minSubtotalUSD ? String(p.minSubtotalUSD) : '', startsAt: aLocal(p.startsAt), endsAt: aLocal(p.endsAt),
-            maxUses: p.maxUses ? String(p.maxUses) : '', maxUsesPerUser: p.maxUsesPerUser ? String(p.maxUsesPerUser) : '',
-        } : vacio(kind));
+        const inicial = p ? aFormulario(p, productos) : vacio(kind);
+        setForm(inicial);
+        setFormBase(inicial);
     };
     const cerrar = () => { if (!guardando) { setForm(null); setEditando(null); } };
 
-    const guardar = async () => {
-        if (!form) return;
+    /** El cuerpo del guardado a partir del formulario */
+    const cuerpoDe = (f: Formulario) => ({
+        kind: f.kind, name: f.name, label: f.label || null, code: f.kind === 'COUPON' ? f.code : null,
+        isPublic: f.isPublic, valueType: f.valueType, value: f.value, scope: f.scope,
+        categoryIds: f.categoryIds, productIds: f.products.map((p) => p.id),
+        minSubtotalUSD: f.minSubtotalUSD || null,
+        startsAt: f.startsAt ? new Date(f.startsAt).toISOString() : null,
+        endsAt: f.endsAt ? new Date(f.endsAt).toISOString() : null,
+        maxUses: f.maxUses || null, maxUsesPerUser: f.maxUsesPerUser || null,
+        isActive: editando ? editando.isActive : true,
+    });
+
+    /** Crear, o editar con la versión con que se abrió (C-170): si otra persona guardó antes se combina lo de cada una y solo se pregunta por lo que las dos tocaron */
+    const guardar = async (formulario: Formulario | null = form, version: string | undefined = editando?.updatedAt) => {
+        if (!formulario) return;
         setGuardando(true);
         setErrores({});
-        const body = {
-            kind: form.kind, name: form.name, label: form.label || null, code: form.kind === 'COUPON' ? form.code : null,
-            isPublic: form.isPublic, valueType: form.valueType, value: form.value, scope: form.scope,
-            categoryIds: form.categoryIds, productIds: form.products.map((p) => p.id),
-            minSubtotalUSD: form.minSubtotalUSD || null,
-            startsAt: form.startsAt ? new Date(form.startsAt).toISOString() : null,
-            endsAt: form.endsAt ? new Date(form.endsAt).toISOString() : null,
-            maxUses: form.maxUses || null, maxUsesPerUser: form.maxUsesPerUser || null,
-            isActive: editando ? editando.isActive : true,
-        };
         try {
-            const res = await fetch(editando ? `/api/admin/promotions/${editando.id}` : '/api/admin/promotions', {
-                method: editando ? 'PATCH' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                setErrores(data.fields ?? {});
-                toast.error(data.error || 'No se pudo guardar');
+            if (!editando) {
+                const res = await fetch('/api/admin/promotions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cuerpoDe(formulario)),
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    setErrores(data.fields ?? {});
+                    toast.error(data.error || 'No se pudo guardar');
+                    return;
+                }
+                toast.success(formulario.kind === 'COUPON' ? 'Cupón creado' : 'Oferta creada');
+                setForm(null);
+                setEditando(null);
+                setRecargas((n) => n + 1);
                 return;
             }
-            toast.success(editando ? 'Cambios guardados' : form.kind === 'COUPON' ? 'Cupón creado' : 'Oferta creada');
-            setForm(null);
-            setEditando(null);
-            setRecargas((n) => n + 1);
+            const r = await enviarConVersion(`/api/admin/promotions/${editando.id}`, 'PATCH', cuerpoDe(formulario), version);
+            if (r.ok) {
+                toast.success('Cambios guardados');
+                setForm(null);
+                setEditando(null);
+                setRecargas((n) => n + 1);
+                return;
+            }
+            if (r.conflicto?.tipo === 'cambiado') {
+                const actual = r.conflicto.actual as Promocion;
+                const suyo = aFormulario(actual, productos);
+                resolverConflicto({
+                    base: formBase ?? suyo, mio: formulario, suyo, quien: r.conflicto.por?.nombre ?? 'Otra persona',
+                    continuar: (final) => { setForm(final); setFormBase(suyo); return guardar(final, actual.updatedAt); },
+                });
+                return;
+            }
+            setErrores((r.cuerpo?.fields as Record<string, string> | undefined) ?? {});
+            toast.error(r.error);
+            if (r.conflicto?.tipo === 'no_existe') { setForm(null); setEditando(null); setRecargas((n) => n + 1); }
         } finally {
             setGuardando(false);
         }
@@ -223,8 +276,15 @@ export default function Promociones() {
             type: 'danger',
         });
         if (!ok) return;
-        const res = await fetch(`/api/admin/promotions/${p.id}`, { method: 'DELETE' });
-        const data = await res.json().catch(() => ({}));
+        let res = await fetch(`/api/admin/promotions/${p.id}`, { method: 'DELETE' });
+        let data = await res.json().catch(() => ({}));
+        // C-170: otra persona la tiene abierta ahora: se pregunta antes de eliminarla
+        if (res.status === 409 && data?.conflicto === 'en_edicion') {
+            const seguir = await confirm({ title: 'La están editando ahora', message: `${data.error}. Si la eliminas, verá un aviso. ¿Eliminarla igual?`, confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'warning' });
+            if (!seguir) return;
+            res = await fetch(`/api/admin/promotions/${p.id}?forzar=1`, { method: 'DELETE' });
+            data = await res.json().catch(() => ({}));
+        }
         if (res.ok) {
             toast.success(data.message || 'Eliminada');
             setRecargas((n) => n + 1);
@@ -348,6 +408,7 @@ export default function Promociones() {
                             <button type="button" onClick={cerrar} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
                         </div>
                         <div className={`${adminModalBody} space-y-5`}>
+                            {editando && <PresenciaEnEditor recurso={`promotion:${editando.id}`} etiqueta={editando.name} nombreRecurso={editando.kind === 'COUPON' ? 'cupón' : 'oferta'} femenino={editando.kind !== 'COUPON'} />}
                             {!editando && (
                                 <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Tipo">
                                     {(['AUTOMATIC', 'COUPON'] as const).map((k) => (
@@ -504,7 +565,7 @@ export default function Promociones() {
                         </div>
                         <div className={adminModalFooter}>
                             <button type="button" onClick={cerrar} className={adminSecondaryButton} disabled={guardando}>Cancelar</button>
-                            <button type="button" onClick={guardar} className={adminPrimaryButton} disabled={guardando}>
+                            <button type="button" onClick={() => void guardar()} className={adminPrimaryButton} disabled={guardando}>
                                 <FiPlus className="h-4 w-4" aria-hidden="true" />{guardando ? 'Guardando…' : editando ? 'Guardar cambios' : form.kind === 'COUPON' ? 'Crear cupón' : 'Crear oferta'}
                             </button>
                         </div>
@@ -512,6 +573,7 @@ export default function Promociones() {
                 </div>,
                 document.body
             )}
+            {dialogoConflicto}
         </div>
     );
 }

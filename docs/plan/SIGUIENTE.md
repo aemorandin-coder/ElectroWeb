@@ -1,16 +1,17 @@
-# Lo de ahora (actualizado 2026-10-02, C-174 · versión 1.0.0-rc.5)
+# Lo de ahora (actualizado 2026-10-02, C-173 · versión 1.0.0-rc.6)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** versión **`v1.0.0-rc.5`** (C-166, C-167, C-168, C-169 y C-174), igual a GitHub. Lo que viene después de C-168 está en `PROPUESTA_C168-C172.md` (aprobada el 02/10). **Producción: `v1.0.0-rc.1`** (C-165; `2480457`), comprobado desde fuera el 02/10 por la noche: todavía sin la cabecera `Content-Security-Policy-Report-Only` y sin la ruta `/api/cron/promotores`.
-- **Falta subir, en un solo lote: C-166, C-167, C-168, C-169 y C-174** (bloque de abajo). **Cambio de base: dos tablas nuevas, diez columnas y un índice** (todo aditivo). **Dos crons nuevos** (promotores y papelera). Sin variables obligatorias.
+- **`main`:** versión **`v1.0.0-rc.6`** (C-166, C-167, C-168, C-169, C-174 y C-173), igual a GitHub. Lo que viene después de C-168 está en `PROPUESTA_C168-C172.md` (aprobada el 02/10). **Producción: `v1.0.0-rc.1`** (C-165; `2480457`), comprobado desde fuera el 02/10 por la noche: todavía sin la cabecera `Content-Security-Policy-Report-Only` y sin la ruta `/api/cron/promotores`.
+- **Falta subir, en un solo lote: C-166, C-167, C-168, C-169, C-174 y C-173** (bloque de abajo). **Cambio de base: dos tablas nuevas, diez columnas y un índice** (todo aditivo). **Dos crons nuevos** (promotores y papelera). Sin variables obligatorias.
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos al final de la sección 2). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: C-166, C-167, C-168, C-169 y C-174 (v1.0.0-rc.5)
+## 2. Deploy pendiente: C-166, C-167, C-168, C-169, C-174 y C-173 (v1.0.0-rc.6)
+- **C-173 · Reportes en vivo** (`estado/C-173.md`): arriba de Reportes, **cuántas personas están conectadas a la tienda ahora, con cuenta y sin cuenta**, qué miran, de dónde llegaron, desde qué equipo y quién es cada una ("Carlos R.", "Visitante A3F"; nunca IP ni correo). Se actualiza cada 5 s; "Cobrado hoy" y las cifras del reporte se ponen al día solas con cada orden o pago. Sin cambio de base ni de cron.
 - **C-174 · Marquesina del equipo** (`estado/C-174.md`): una franja bajo la barra de arriba, en todas las pantallas del panel, dice **quién del equipo está conectado y en qué sector**: "Luis está en Productos, editando «Teclado Redragon K552»". Corre sola si el texto no cabe y se detiene al pasar el ratón o al tocarla. Sin cambio de base ni de cron.
 - **C-169 · Productos sin pérdidas** (`estado/C-169.md`), el caso de los 20 minutos perdidos: **"Eliminar" manda a la papelera** (pestaña nueva en Productos; 30 días; "Deshacer" al instante; solo el dueño borra para siempre antes), el editor **avisa en vivo** si otro administrador lo está editando, lo cambió o lo movió a la papelera, **combina solo** lo que cada uno cambió (pregunta solo por lo que los dos tocaron), guarda un **borrador en el navegador** y deja **historial** de quién cambió qué. Tres columnas nuevas en productos. **Un cron nuevo** (papelera).
 - **C-168 · Versiones por módulo** (`estado/C-168.md`): cada módulo del panel (Productos, ElectroStudio, Cursos, Configuración…) tiene su versión, que se ve en la barra de arriba, y el pie del menú dice la del sistema. Página nueva **Administración → Versiones** con qué cambió en cada módulo. Si alguien tiene el panel abierto cuando subes una versión, le sale "El panel se actualizó" con el botón para recargar; y cada administrador ve una vez "Qué hay de nuevo".
@@ -32,7 +33,7 @@
 2. **Respaldo antes de subir:** Admin → Configuración → **Respaldos** → "Respaldar ahora" y esperar las dos filas "Hecho". Si prefieres a mano:
    `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc3.dump`
 3. **Subir:** `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL de arriba. Si coincide: `npx prisma db push` y `bash scripts/deploy.sh` otra vez. Si aparece un `DROP` o algo distinto, no seguir y avisar a Claude.
-4. **Comprobar:** `git describe --tags` debe decir `v1.0.0-rc.5`, y
+4. **Comprobar:** `git describe --tags` debe decir `v1.0.0-rc.6`, y
    `curl -sI https://electroshopve.com/ | grep -ci content-security-policy-report-only` debe dar `1`.
 5. **El cron de promotores** (una vez al día):
    `cp /var/www/electroshopve/docs/plan/scripts/cron-promotores.sh ~/cron-promotores.sh && chmod +x ~/cron-promotores.sh && ~/cron-promotores.sh`
@@ -59,6 +60,7 @@
    e. Productos → **Papelera**: el producto con quién lo movió y cuándo se borra solo. "Deshacer" a los pocos segundos de mandar algo a la papelera. Luis (Administrador) ve "Restaurar" pero **no** "Borrar para siempre" (solo tú).
    f. Al final de un producto: **Historial** con quién cambió qué.
 9. **Marquesina del equipo (C-174)** — con dos cuentas de administrador abiertas a la vez: cada una ve, debajo de la barra de arriba, "<el otro> está en <sector>"; al abrir un producto en edición, "…, editando «nombre del producto»". Al cambiar de pantalla, cambia el sector. Con la otra pestaña cerrada (o la ventana en segundo plano) desaparece en un minuto; si no hay nadie más, la franja no existe. En el teléfono, con un nombre largo, el texto corre; tocarla lo detiene. Un cliente no la ve ni la recibe.
+10. **Reportes en vivo (C-173)**: abre la tienda en el teléfono (sin iniciar sesión) y en la computadora (con una cuenta de cliente), y en otro navegador Admin → **Reportes**: arriba, "En vivo" debe mostrar **2 conectados, 1 con cuenta y 1 sin cuenta**, lo que cada uno está mirando y de dónde llegó. Agrega algo al carrito: "con productos en el carrito" sube. Cierra la pestaña de la tienda: baja en segundos. Con una compra o un pago nuevo, "Cobrado hoy" cambia solo. (Tú, como administrador navegando la tienda, **no** cuentas como visitante.)
 
 **Vuelta atrás:** `git reset --hard 2480457 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas y columnas nuevas no molestan al código anterior (no se quitan). Antes, quitar las líneas de `cron-promotores.sh` y `cron-papelera.sh` de `crontab -e`. Lo que esté en la papelera queda como producto archivado (no se ve en la tienda) y se puede reactivar desde la base. Los cupones de promotor que ya se crearon quedan como cupones normales: pausarlos en Ofertas si no se quieren.
 
@@ -108,7 +110,7 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
 En el orden en que más destraban:
 
 **En producción**
-1. **El deploy de arriba** (versión `v1.0.0-rc.5`: promotores, política de contenido, versiones del panel, papelera y marquesina) con sus pruebas y la línea del cron de promotores. De lo anterior siguen pendientes **una restauración de prueba del respaldo** (`OPERACION.md`), el redondeo de C-96, las pruebas de C-157 y las visuales de C-162.
+1. **El deploy de arriba** (versión `v1.0.0-rc.6`: promotores, política de contenido, versiones del panel, papelera, marquesina y Reportes en vivo) con sus pruebas y la línea del cron de promotores. De lo anterior siguen pendientes **una restauración de prueba del respaldo** (`OPERACION.md`), el redondeo de C-96, las pruebas de C-157 y las visuales de C-162.
 2. **Guardar aparte, fuera del servidor, la clave privada del respaldo y una copia del `.env`** (gestor de contraseñas). La clave la muestra el panel una sola vez; el `.env` no va dentro del respaldo y trae `NEXTAUTH_SECRET`, `DATABASE_URL` y las claves de pago.
 3. **Un monitor de que la tienda está arriba** (gratis, sin código): UptimeRobot o similar apuntando a `https://electroshopve.com/robots.txt` cada 5 minutos, con aviso a tu correo y a Telegram. Todo lo demás (avisos, respaldos) vive en el mismo servidor y no puede avisar si se cae.
 4. **El certificado HTTPS vence el 12/11/2026:** comprobar en el servidor que la renovación sigue sola (`systemctl list-timers | grep certbot` debe mostrar una línea) y, si no, avisar a Claude antes de esa fecha.

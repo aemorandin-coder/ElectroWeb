@@ -23,6 +23,7 @@ import {
   sendOrderPendingPaymentEmail
 } from '@/lib/email-service';
 import { generateOrderConfirmationEmail } from '@/lib/email-templates/OrderConfirmation';
+import { CORREO, botonCorreo } from '@/lib/email-templates/estilo';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
@@ -293,11 +294,8 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
   }
 
   try {
-    const companySettings = await prisma.companySettings.findFirst();
 
-    const emailHtml = generateOrderConfirmationEmail({
-      companyName: companySettings?.companyName || 'Electro Shop',
-      companyLogo: companySettings?.logo || undefined,
+    const emailHtml = await generateOrderConfirmationEmail({
       orderNumber: order.orderNumber,
       customerName: order.user?.name || 'Cliente',
       orderDate: format(new Date(order.createdAt), "d 'de' MMMM, yyyy", { locale: es }),
@@ -1398,49 +1396,34 @@ export async function PATCH(request: NextRequest) {
           try {
             const bloqueSaldo = reintegro > 0
               ? `
-              <div style="background:#f0f7f4;border-left:4px solid #047857;padding:15px 20px;margin:20px 0;border-radius:0 8px 8px 0;">
-                <p style="margin:0;color:#047857;font-size:14px;font-weight:600;">Puntos ES devueltos</p>
-                <p style="margin:8px 0 0;color:#047857;font-size:14px;">
-                  Te devolvimos ${escaparHtml(formatPuntos(reintegro))} para tu próxima compra.
-                </p>
+              <div style="${CORREO.cajaExito}">
+                <p style="${CORREO.cajaTitulo}${CORREO.tonoExito}">Puntos ES devueltos</p>
+                <p style="${CORREO.cajaTexto}${CORREO.tonoExito}">Te devolvimos ${escaparHtml(formatPuntos(reintegro))} para tu próxima compra.</p>
               </div>`
               : '';
             // Todo lo que escribe el admin o el cliente va escapado: antes entraba crudo en el HTML
             const cancellationEmailContent = `
-              <h2 style="margin:0 0 20px;color:#dc3545;font-size:24px;font-weight:600;">Orden Cancelada</h2>
-              <p style="color:#6a6c6b;font-size:16px;line-height:1.6;">
-                Hola <strong>${escaparHtml(order.user?.name || 'Cliente')}</strong>,
-              </p>
-              <p style="color:#6a6c6b;font-size:16px;line-height:1.6;">
-                Lamentamos informarte que tu orden <strong>#${escaparHtml(oldOrder.orderNumber)}</strong> ha sido cancelada.
-              </p>
+              <h2 style="${CORREO.titulo}">Orden cancelada</h2>
+              <p style="${CORREO.subtitulo}${CORREO.tonoPeligro}">Orden #${escaparHtml(oldOrder.orderNumber)}</p>
+              <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escaparHtml(order.user?.name || 'Cliente')}</strong>,</p>
+              <p style="${CORREO.texto}">Lamentamos informarte que tu orden fue cancelada.</p>
 
-              <div style="background:#fff3cd;border-left:4px solid #ffc107;padding:15px 20px;margin:20px 0;border-radius:0 8px 8px 0;">
-                <p style="margin:0;color:#856404;font-size:14px;font-weight:600;">Motivo de la cancelación:</p>
-                <p style="margin:8px 0 0;color:#856404;font-size:14px;">${escaparHtml(motivo)}</p>
+              <div style="${CORREO.cajaAviso}">
+                <p style="${CORREO.cajaTitulo}${CORREO.tonoAviso}">Motivo de la cancelación</p>
+                <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}">${escaparHtml(motivo)}</p>
               </div>
               ${bloqueSaldo}
-              <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:20px 0;">
-                <p style="margin:0;color:#6a6c6b;font-size:14px;">
-                  <strong>Número de orden:</strong> ${escaparHtml(oldOrder.orderNumber)}<br>
-                  <strong>Total:</strong> ${escaparHtml(formatUSD(Number(oldOrder.totalUSD)))}<br>
-                  <strong>Fecha de cancelación:</strong> ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              <div style="${CORREO.caja}">
+                <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">
+                  <strong style="${CORREO.fuerte}">Número de orden:</strong> ${escaparHtml(oldOrder.orderNumber)}<br>
+                  <strong style="${CORREO.fuerte}">Total:</strong> ${escaparHtml(formatUSD(Number(oldOrder.totalUSD)))}<br>
+                  <strong style="${CORREO.fuerte}">Fecha de cancelación:</strong> ${new Date().toLocaleDateString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
 
-              <p style="color:#6a6c6b;font-size:14px;line-height:1.6;">
-                Si tienes alguna pregunta, no dudes en contactarnos.
-              </p>
-
-              <div style="text-align:center;margin:30px 0;">
-                <a href="${process.env.NEXTAUTH_URL || ''}/contacto" style="display:inline-block;background:#2a63cd;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-                  Contactar Soporte
-                </a>
-              </div>
-
-              <p style="color:#adb5bd;font-size:12px;margin:30px 0 0;border-top:1px solid #e9ecef;padding-top:20px;">
-                Gracias por tu comprensión. Esperamos poder atenderte en otra oportunidad.
-              </p>
+              <p style="${CORREO.texto}">Si tienes alguna pregunta, escríbenos.</p>
+              ${botonCorreo(`${(process.env.APP_URL || process.env.NEXTAUTH_URL || '').replace(/\/+$/, '')}/contacto`, 'Contactar a soporte')}
+              <p style="${CORREO.nota}">Gracias por tu comprensión. Esperamos poder atenderte en otra oportunidad.</p>
             `;
 
             const { getBaseTemplate } = await import('@/lib/email-service');

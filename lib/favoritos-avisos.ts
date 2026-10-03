@@ -11,6 +11,7 @@ import { montoDecimal } from '@/lib/pricing';
 import { formatUSD } from '@/lib/currency';
 import { createNotification } from '@/lib/notifications';
 import { getBaseTemplate, sendEmail } from '@/lib/email-service';
+import { CORREO, COLOR, botonCorreo } from '@/lib/email-templates/estilo';
 import { enlaceBaja, escaparHtml, urlAbsoluta, urlBase } from '@/lib/email-campaigns';
 
 /** Baja mínima para avisar: 1 %. Un ajuste de centavos no es noticia. */
@@ -179,28 +180,28 @@ async function correoFavoritos(userId: string, nombreCliente: string | null, lis
   const filas = lista.map((a) => {
     const url = escaparHtml(`${urlBase()}/productos/${a.slug}`);
     const foto = a.imagen
-      ? `<img src="${escaparHtml(urlAbsoluta(a.imagen))}" alt="" width="72" height="72" style="display:block;width:72px;height:72px;object-fit:contain;border-radius:8px;background:#ffffff;border:1px solid #e9ecef;">`
+      ? `<img src="${escaparHtml(urlAbsoluta(a.imagen))}" alt="" width="72" height="72" style="display:block;width:72px;height:72px;object-fit:contain;border-radius:8px;background-color:#ffffff;border:1px solid ${COLOR.linea};">`
       : '';
     const etiqueta = a.tipo === 'precio' ? (a.enOferta ? 'En oferta' : 'Bajó de precio') : 'Disponible otra vez';
     const antes = a.tipo === 'precio' && a.antesUSD !== null
-      ? ` <span style="color:#6a6c6b;text-decoration:line-through;font-weight:400;">${escaparHtml(formatUSD(a.antesUSD))}</span>`
+      ? ` <span style="color:${COLOR.suave};text-decoration:line-through;font-weight:400;">${escaparHtml(formatUSD(a.antesUSD))}</span>`
       : '';
     return `<tr>
-      <td style="padding:12px 12px 12px 0;width:72px;vertical-align:top;"><a href="${url}">${foto}</a></td>
-      <td style="padding:12px 0;vertical-align:top;">
-        <p style="margin:0 0 4px;color:#2a63cd;font-size:12px;font-weight:600;">${escaparHtml(etiqueta)}</p>
-        <a href="${url}" style="color:#212529;font-size:15px;font-weight:600;text-decoration:none;">${escaparHtml(a.nombre)}</a>
-        <p style="margin:4px 0 0;color:#212529;font-size:16px;font-weight:700;">${escaparHtml(formatUSD(a.ahoraUSD))}${antes}</p>
+      <td style="padding:12px 12px 12px 0;width:72px;vertical-align:top;border-bottom:1px solid ${COLOR.linea};"><a href="${url}">${foto}</a></td>
+      <td style="padding:12px 0;vertical-align:top;border-bottom:1px solid ${COLOR.linea};">
+        <p style="margin:0 0 4px;color:${COLOR.marca};font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">${escaparHtml(etiqueta)}</p>
+        <a href="${url}" style="color:${COLOR.tinta};font-size:15px;font-weight:600;text-decoration:none;">${escaparHtml(a.nombre)}</a>
+        <p style="margin:4px 0 0;color:${COLOR.tinta};font-size:16px;font-weight:700;">${escaparHtml(formatUSD(a.ahoraUSD))}${antes}</p>
       </td>
     </tr>`;
   }).join('');
   const contenido = `
-    <h2 style="margin:0 0 10px;color:#212529;font-size:22px;font-weight:600;">Novedades de tus favoritos</h2>
-    <p style="color:#495057;font-size:15px;line-height:1.6;margin:0 0 8px;">Hola ${escaparHtml(nombre)}, esto cambió en los productos que guardaste:</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">${filas}</table>
-    <p style="color:#6a6c6b;font-size:13px;line-height:1.6;margin:12px 0 0;">Los precios y la disponibilidad pueden cambiar. Se confirman al pagar.</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;"><tr><td bgcolor="#2a63cd" style="border-radius:8px;"><a href="${escaparHtml(urlBase())}/customer/wishlist" style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;">Ver mis favoritos</a></td></tr></table>
-    <p style="margin:28px 0 0;padding-top:16px;border-top:1px solid #e9ecef;color:#6a6c6b;font-size:12px;line-height:1.5;text-align:center;">Recibes este correo porque guardaste estos productos en Favoritos. <a href="${escaparHtml(enlaceBaja(userId, 'favoritos'))}" style="color:#2a63cd;">No recibir más estos avisos</a></p>`;
+    <h2 style="${CORREO.titulo}">Novedades de tus favoritos</h2>
+    <p style="${CORREO.texto}">Hola ${escaparHtml(nombre)}, esto cambió en los productos que guardaste:</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border-top:1px solid ${COLOR.linea};">${filas}</table>
+    <p style="${CORREO.textoMenor}margin:14px 0 0;">Los precios y la disponibilidad pueden cambiar. Se confirman al pagar.</p>
+    ${botonCorreo(`${escaparHtml(urlBase())}/customer/wishlist`, 'Ver mis favoritos')}
+    <p style="${CORREO.nota}text-align:center;">Recibes este correo porque guardaste estos productos en Favoritos. <a href="${escaparHtml(enlaceBaja(userId, 'favoritos'))}" style="${CORREO.enlace}">No recibir más estos avisos</a></p>`;
   return getBaseTemplate(contenido, asunto(lista));
 }
 

@@ -8,6 +8,7 @@ import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 import { escapeHtml } from './html';
 import { formatUSD } from './currency';
+import { CORREO, COLOR, FUENTE, botonCorreo, selloCorreo } from './email-templates/estilo';
 import { cifrarClaveSmtp, claveSmtpCifrada, leerClaveSmtp, opcionesTlsSmtp } from './smtp-seguro';
 
 // TYPES
@@ -269,25 +270,38 @@ const getCompanySettings = async () => {
   }
 };
 
+/** URL pública de la tienda, sin barra final: los correos no resuelven rutas relativas. */
+const urlDeLaTienda = () => (process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/+$/, '');
+
+/**
+ * Marco de todos los correos (C-175): logo largo sobre blanco, contenido y pie con contacto y redes.
+ * El logo lleva el fondo blanco dentro de la imagen para que se lea igual si el cliente de correo
+ * oscurece la página. `content` es HTML ya armado por quien llama (con sus datos escapados).
+ */
 export const getBaseTemplate = async (content: string, preheader?: string) => {
   const settings = await getCompanySettings();
-  const appUrl = (process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/+$/, '');
+  const appUrl = urlDeLaTienda();
 
-  const companyName = settings?.companyName || 'Electro Shop';
-  const tagline = settings?.tagline || 'Tu tienda de tecnologia de confianza';
-  // Los clientes de correo no resuelven rutas relativas: el logo de Configuración (/api/uploads/…) no cargaba (C-75)
-  const logo = settings?.logo ? (/^https?:\/\//i.test(settings.logo) ? settings.logo : `${appUrl}${settings.logo.startsWith('/') ? '' : '/'}${settings.logo}`) : '';
-  const primaryColor = settings?.primaryColor || '#2a63cd';
-  const secondaryColor = settings?.secondaryColor || '#1e4ba3';
-  const phone = settings?.phone || '';
-  const whatsapp = settings?.whatsapp || '';
-  const email = settings?.email || '';
-  const instagram = settings?.instagram || '';
-  const facebook = settings?.facebook || '';
-  const telegram = settings?.telegram || '';
-  const tiktok = settings?.tiktok || '';
-  const twitter = settings?.twitter || '';
-  const youtube = settings?.youtube || '';
+  const companyName = escapeHtml(settings?.companyName || 'Electro Shop');
+  const tagline = escapeHtml(settings?.tagline || 'Tu tienda de tecnología de confianza');
+  const phone = settings?.phone ? escapeHtml(settings.phone) : '';
+  const email = settings?.email ? escapeHtml(settings.email) : '';
+  const whatsapp = (settings?.whatsapp || '').replace(/\D/g, '');
+
+  const redes: Array<[string, string, string | null | undefined]> = [
+    ['Instagram', 'instagram', settings?.instagram],
+    ['WhatsApp', 'whatsapp', whatsapp ? `https://wa.me/${whatsapp}` : ''],
+    ['Facebook', 'facebook', settings?.facebook],
+    ['Telegram', 'telegram', settings?.telegram],
+    ['TikTok', 'tiktok', settings?.tiktok],
+    ['X', 'twitter', settings?.twitter],
+    ['YouTube', 'youtube', settings?.youtube],
+  ];
+  const iconosDeRedes = redes
+    .filter(([, , url]) => url && /^https?:\/\//i.test(url))
+    .map(([nombre, archivo, url]) => `<a href="${escapeHtml(url as string)}" target="_blank" rel="noopener noreferrer" title="${nombre}" style="display:inline-block;margin:0 5px;text-decoration:none;"><img src="${appUrl}/images/social/${archivo}.png" alt="${nombre}" width="28" height="28" style="display:block;width:28px;height:28px;border:0;outline:none;border-radius:6px;" /></a>`)
+    .join('');
+  const enlacePie = `color:${COLOR.marca};font-size:12px;text-decoration:none;font-weight:600;`;
 
   return `
 <!DOCTYPE html>
@@ -295,83 +309,56 @@ export const getBaseTemplate = async (content: string, preheader?: string) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
   <title>${companyName}</title>
-  ${preheader ? `<span style="display:none;font-size:1px;color:#fff;max-height:0;overflow:hidden;">${preheader}</span>` : ''}
 </head>
-<body style="margin:0;padding:0;background-color:#f4f4f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;padding:40px 20px;">
+<body style="margin:0;padding:0;background-color:${COLOR.fondo};font-family:${FUENTE};">
+  ${preheader ? `<div style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:${COLOR.fondo};">${escapeHtml(preheader)}</div>` : ''}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLOR.fondo};">
     <tr>
-      <td align="center">
+      <td align="center" style="padding:32px 12px;">
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-          
-          <!-- HEADER -->
+
+          <!-- Cabecera: franja de marca y logo largo -->
           <tr>
-            <td bgcolor="${primaryColor}" style="background-color:${primaryColor};background-image:linear-gradient(135deg,${primaryColor} 0%,${secondaryColor} 100%);padding:28px 30px;border-radius:20px 20px 0 0;text-align:center;">
-              ${logo ? `
-              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 14px;border-collapse:collapse;">
-                <tr>
-                  <td style="background-color:#ffffff;padding:8px 16px;border-radius:14px;line-height:0;text-align:center;">
-                    <img src="${logo}" alt="${companyName}" height="48" style="display:inline-block;max-height:48px;max-width:180px;width:auto;height:auto;border:0;outline:none;vertical-align:middle;" />
-                  </td>
-                </tr>
-              </table>
-              ` : ''}
-              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1.2;">${companyName.toUpperCase()}</h1>
-              ${tagline ? `<p style="margin:6px 0 0;color:rgba(255,255,255,0.9);font-size:13px;font-weight:500;line-height:1.4;">${tagline}</p>` : ''}
+            <td bgcolor="${COLOR.marca}" style="background-color:${COLOR.marca};height:6px;line-height:6px;font-size:0;border-radius:16px 16px 0 0;">&nbsp;</td>
+          </tr>
+          <tr>
+            <td bgcolor="#ffffff" align="center" style="background-color:#ffffff;padding:22px 24px 18px;border-left:1px solid ${COLOR.linea};border-right:1px solid ${COLOR.linea};border-bottom:1px solid ${COLOR.linea};">
+              <a href="${appUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+                <img src="${appUrl}/images/brand/logo-correo.png" alt="${companyName}" width="300" style="display:block;margin:0 auto;width:300px;max-width:100%;height:auto;border:0;outline:none;color:${COLOR.marcaOscura};font-size:22px;font-weight:700;" />
+              </a>
+              <p style="margin:6px 0 0;color:${COLOR.suave};font-size:13px;line-height:1.4;">${tagline}</p>
             </td>
           </tr>
-          
-          <!-- CONTENT - Main focus -->
+
+          <!-- Contenido -->
           <tr>
-            <td style="background-color:#ffffff;padding:40px;border-left:1px solid #e9ecef;border-right:1px solid #e9ecef;">
+            <td bgcolor="#ffffff" style="background-color:#ffffff;padding:36px 32px;border-left:1px solid ${COLOR.linea};border-right:1px solid ${COLOR.linea};color:${COLOR.texto};font-size:16px;line-height:1.6;">
               ${content}
             </td>
           </tr>
-          
-          <!-- FOOTER with Company Logo and Social Links -->
+
+          <!-- Pie: redes, contacto y enlaces -->
           <tr>
-            <td style="background:linear-gradient(180deg,#f8f9fa 0%,#e9ecef 100%);padding:30px 40px;border-radius:0 0 20px 20px;border:1px solid #e9ecef;border-top:none;">
-              
-              <!-- Company Logo at bottom (optional, won't break if it doesn't load) -->
-              ${logo ? `
-              <div style="text-align:center;margin-bottom:20px;">
-                <img src="${logo}" alt="${companyName}" height="40" style="max-height:40px;max-width:140px;border-radius:8px;border:0;">
-              </div>
-              ` : ''}
-              
-              <!-- Social Links - All configured networks with brand icons -->
-              <div style="text-align:center;margin-bottom:18px;">
-                ${instagram ? `<a href="${instagram}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="Instagram"><img src="${appUrl}/images/social/instagram.png" alt="Instagram" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
-                ${whatsapp ? `<a href="https://wa.me/${whatsapp.replace(/\D/g, '')}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="WhatsApp"><img src="${appUrl}/images/social/whatsapp.png" alt="WhatsApp" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
-                ${facebook ? `<a href="${facebook}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="Facebook"><img src="${appUrl}/images/social/facebook.png" alt="Facebook" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
-                ${telegram ? `<a href="${telegram}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="Telegram"><img src="${appUrl}/images/social/telegram.png" alt="Telegram" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
-                ${tiktok ? `<a href="${tiktok}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="TikTok"><img src="${appUrl}/images/social/tiktok.png" alt="TikTok" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
-                ${twitter ? `<a href="${twitter}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="X (Twitter)"><img src="${appUrl}/images/social/twitter.png" alt="X" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
-                ${youtube ? `<a href="${youtube}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:0 4px;text-decoration:none;vertical-align:middle;" title="YouTube"><img src="${appUrl}/images/social/youtube.png" alt="YouTube" width="28" height="28" style="display:block;width:28px;height:28px;border-radius:6px;border:0;outline:none;" /></a>` : ''}
-              </div>
-              
-              <!-- Contact Info -->
-              <div style="text-align:center;margin-bottom:12px;">
-                ${phone ? `<p style="margin:3px 0;color:#6a6c6b;font-size:12px;">Teléfono: ${phone}</p>` : ''}
-                ${email ? `<p style="margin:3px 0;color:#6a6c6b;font-size:12px;">Correo: ${email}</p>` : ''}
-              </div>
-              
-              <!-- Links -->
-              <p style="margin:10px 0;text-align:center;">
-                <a href="${appUrl}" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:600;">Visitar Tienda</a>
-                <span style="color:#adb5bd;margin:0 8px;">•</span>
-                <a href="${appUrl}/contacto" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:500;">Contacto</a>
-                <span style="color:#adb5bd;margin:0 8px;">•</span>
-                <a href="${appUrl}/terminos" style="color:${primaryColor};font-size:11px;text-decoration:none;font-weight:500;">Términos</a>
+            <td bgcolor="${COLOR.superficie}" align="center" style="background-color:${COLOR.superficie};padding:26px 32px 28px;border:1px solid ${COLOR.linea};border-radius:0 0 16px 16px;text-align:center;">
+              ${iconosDeRedes ? `<div style="margin:0 0 16px;">${iconosDeRedes}</div>` : ''}
+              ${phone ? `<p style="margin:3px 0;color:${COLOR.suave};font-size:13px;">Teléfono: ${phone}</p>` : ''}
+              ${email ? `<p style="margin:3px 0;color:${COLOR.suave};font-size:13px;">Correo: ${email}</p>` : ''}
+              <p style="margin:14px 0 0;">
+                <a href="${appUrl}" style="${enlacePie}">Visitar la tienda</a>
+                <span style="color:#adb5bd;margin:0 8px;">|</span>
+                <a href="${appUrl}/contacto" style="${enlacePie}">Contacto</a>
+                <span style="color:#adb5bd;margin:0 8px;">|</span>
+                <a href="${appUrl}/terminos" style="${enlacePie}">Términos</a>
               </p>
-              
-              <!-- Copyright -->
-              <p style="margin:12px 0 0;text-align:center;color:#adb5bd;font-size:10px;">
+              <p style="margin:14px 0 0;color:${COLOR.suave};font-size:11px;line-height:1.5;">
                 © ${new Date().getFullYear()} ${companyName}. Todos los derechos reservados.
               </p>
             </td>
           </tr>
-          
+
         </table>
       </td>
     </tr>
@@ -385,19 +372,14 @@ export const sendPasswordResetEmail = async (email: string, token: string, userN
   const resetUrl = `${process.env.NEXTAUTH_URL}/recuperar-contrasena/${token}`;
 
   const content = `
-    <h2 style="margin:0 0 20px;color:#212529;font-size:24px;font-weight:600;">Recuperación de Contraseña</h2>
-    <p style="color:#6a6c6b;font-size:16px;line-height:1.6;margin:0 0 20px;">
-      ${userName ? `Hola ${userName},` : 'Hola,'}<br><br>
-      Hemos recibido una solicitud para restablecer tu contraseña.
-    </p>
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-        Restablecer Contraseña
-      </a>
+    <h2 style="${CORREO.titulo}">Recupera tu contraseña</h2>
+    <p style="${CORREO.texto}">${userName ? `Hola <strong style="${CORREO.fuerte}">${escapeHtml(userName)}</strong>,` : 'Hola,'}</p>
+    <p style="${CORREO.texto}">Recibimos una solicitud para restablecer tu contraseña. Toca el botón para crear una nueva.</p>
+    ${botonCorreo(resetUrl, 'Restablecer contraseña')}
+    <div style="${CORREO.caja}">
+      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Si no pediste este cambio, ignora este mensaje: tu contraseña sigue siendo la misma.</p>
     </div>
-    <p style="color:#adb5bd;font-size:12px;margin:30px 0 0;border-top:1px solid #e9ecef;padding-top:20px;">
-      Este enlace expirará en 1 hora.
-    </p>`;
+    <p style="${CORREO.nota}">Este enlace vence en 1 hora.</p>`;
 
   return sendEmail({
     to: email,
@@ -408,52 +390,37 @@ export const sendPasswordResetEmail = async (email: string, token: string, userN
 
 // WELCOME EMAIL
 export const sendWelcomeEmail = async (email: string, userName: string) => {
-  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL;
+  const appUrl = urlDeLaTienda();
 
   const content = `
-    <h2 style="margin:0 0 20px;color:#212529;font-size:24px;font-weight:600;">Bienvenido a Electro Shop</h2>
-    <p style="color:#6a6c6b;font-size:16px;line-height:1.6;">
-      Hola <strong>${userName}</strong>,<br><br>
-      Gracias por unirte. Tu cuenta esta lista.
-    </p>
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${appUrl}/productos" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-        Explorar Productos
-      </a>
-    </div>`;
+    <h2 style="${CORREO.titulo}">Bienvenido a Electro Shop</h2>
+    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(userName)}</strong>,</p>
+    <p style="${CORREO.texto}">Gracias por unirte. Tu cuenta está lista para comprar.</p>
+    ${botonCorreo(`${appUrl}/productos`, 'Explorar productos')}`;
 
   return sendEmail({
     to: email,
     subject: 'Bienvenido a Electro Shop',
-    html: await getBaseTemplate(content, `Hola ${userName}, tu cuenta esta lista`),
+    html: await getBaseTemplate(content, `Hola ${userName}, tu cuenta está lista`),
   });
 };
 
 // EMAIL VERIFICATION
 export const sendVerificationEmail = async (email: string, token: string, userName?: string) => {
   const verifyUrl = `${process.env.NEXTAUTH_URL}/verificar-email/${token}`;
-  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL;
+  const appUrl = urlDeLaTienda();
 
   const content = `
-    <h2 style="margin:0 0 20px;color:#212529;font-size:24px;font-weight:600;">Verifica tu cuenta</h2>
-    <p style="color:#6a6c6b;font-size:16px;line-height:1.6;margin:0 0 20px;">
-      ${userName ? `Hola ${userName},` : 'Hola,'}<br><br>
-      Gracias por registrarte en Electro Shop. Para activar tu cuenta y comenzar a comprar, 
-      por favor verifica tu correo electronico haciendo clic en el boton de abajo.
-    </p>
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${verifyUrl}" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:16px;">
-        Verificar mi cuenta
-      </a>
+    <h2 style="${CORREO.titulo}">Verifica tu cuenta</h2>
+    <p style="${CORREO.texto}">${userName ? `Hola <strong style="${CORREO.fuerte}">${escapeHtml(userName)}</strong>,` : 'Hola,'}</p>
+    <p style="${CORREO.texto}">Gracias por registrarte en Electro Shop. Para activar tu cuenta y comenzar a comprar, verifica tu correo electrónico con el botón de abajo.</p>
+    ${botonCorreo(verifyUrl, 'Verificar mi cuenta')}
+    <div style="${CORREO.caja}">
+      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Si no creaste esta cuenta, puedes ignorar este mensaje de forma segura.</p>
     </div>
-    <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:25px 0;">
-      <p style="margin:0;color:#6a6c6b;font-size:14px;">
-        Si no creaste esta cuenta, puedes ignorar este mensaje de forma segura.
-      </p>
-    </div>
-    <p style="color:#adb5bd;font-size:12px;margin:30px 0 0;border-top:1px solid #e9ecef;padding-top:20px;">
-      Este enlace expirara en 24 horas. Si tienes problemas, contactanos en 
-      <a href="${appUrl}/contacto" style="color:#2a63cd;">soporte</a>.
+    <p style="${CORREO.nota}">
+      Este enlace vence en 24 horas. Si tienes problemas, escríbenos a
+      <a href="${appUrl}/contacto" style="${CORREO.enlace}">soporte</a>.
     </p>`;
 
   return sendEmail({
@@ -475,7 +442,7 @@ export const sendOrderNotificationEmail = async (
     trackingUrl?: string;
   }
 ) => {
-  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL;
+  const appUrl = urlDeLaTienda();
   const statusLabels: Record<string, string> = {
     PENDING: 'Pendiente', CONFIRMED: 'Confirmado', PAID: 'Pagado',
     PROCESSING: 'Procesando', SHIPPED: 'Enviado', DELIVERED: 'Entregado',
@@ -484,22 +451,19 @@ export const sendOrderNotificationEmail = async (
   const statusLabel = statusLabels[orderData.status] || orderData.status;
 
   const content = `
-    <h2 style="margin:0 0 20px;color:#212529;font-size:24px;font-weight:600;">Pedido ${statusLabel}</h2>
-    <p style="color:#6a6c6b;font-size:14px;">Pedido #${orderData.orderNumber}</p>
-    <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:20px 0;">
-      <p style="margin:0;font-weight:700;color:#2a63cd;font-size:18px;">Total: ${formatUSD(orderData.total)}</p>
+    <h2 style="${CORREO.titulo}">Pedido ${escapeHtml(statusLabel)}</h2>
+    <p style="${CORREO.subtitulo}">Orden #${escapeHtml(orderData.orderNumber)}</p>
+    <div style="${CORREO.caja}text-align:center;">
+      <p style="${CORREO.rotulo}">Total</p>
+      <p style="${CORREO.dato}letter-spacing:0;">${formatUSD(orderData.total)}</p>
     </div>
-    ${orderData.trackingNumber ? `<p style="color:#6a6c6b;">Guia: ${orderData.trackingNumber}</p>` : ''}
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${appUrl}/customer/orders" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-        Ver Pedido
-      </a>
-    </div>`;
+    ${orderData.trackingNumber ? `<p style="${CORREO.texto}">Guía: <strong style="${CORREO.fuerte}">${escapeHtml(orderData.trackingNumber)}</strong></p>` : ''}
+    ${botonCorreo(`${appUrl}/customer/orders`, 'Ver pedido')}`;
 
   return sendEmail({
     to: email,
     subject: `Pedido #${orderData.orderNumber} - ${statusLabel}`,
-    html: await getBaseTemplate(content, `Tu pedido esta ${statusLabel.toLowerCase()}`),
+    html: await getBaseTemplate(content, `Tu pedido está ${statusLabel.toLowerCase()}`),
   });
 };
 
@@ -512,22 +476,15 @@ export const sendLegalDocumentEmail = async (
 ) => {
   void pdfAttachment;
   const titles = {
-    terms_acceptance: 'Constancia de Aceptacion de Terminos',
-    privacy_update: 'Actualizacion de Politica de Privacidad',
-    contract: 'Contrato de Servicios',
+    terms_acceptance: 'Constancia de aceptación de términos',
+    privacy_update: 'Actualización de la política de privacidad',
+    contract: 'Contrato de servicios',
   };
 
   const content = `
-    <h2 style="margin:0 0 20px;color:#212529;font-size:24px;font-weight:600;">${titles[documentType]}</h2>
-    <p style="color:#6a6c6b;font-size:16px;line-height:1.6;">
-      Adjuntamos tu documento legal para tus registros.
-    </p>
-    ${documentUrl ? `
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${documentUrl}" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-        Ver Documento
-      </a>
-    </div>` : ''}`;
+    <h2 style="${CORREO.titulo}">${titles[documentType]}</h2>
+    <p style="${CORREO.texto}">Te enviamos tu documento legal para que lo guardes.</p>
+    ${documentUrl ? botonCorreo(escapeHtml(documentUrl), 'Ver documento') : ''}`;
 
   return sendEmail({
     to: email,
@@ -540,17 +497,15 @@ export const sendLegalDocumentEmail = async (
 export const sendTestEmail = async (email: string) => {
   const content = `
     <div style="text-align:center;">
-      <div style="width:60px;height:60px;background:#10b981;border-radius:50%;margin:0 auto 15px;display:flex;align-items:center;justify-content:center;">
-        <span style="color:white;font-size:24px;font-weight:bold;">OK</span>
-      </div>
-      <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">Email de prueba exitoso</h2>
-      <p style="color:#6a6c6b;font-size:16px;">La configuracion de email esta funcionando.</p>
-      <div style="background:#d1fae5;border-radius:12px;padding:20px;margin:25px 0;border:1px solid #10b981;">
-        <p style="margin:0;color:#065f46;font-size:14px;">
-          Proveedor: ${process.env.RESEND_API_KEY ? 'Resend API' : (process.env.EMAIL_PROVIDER || 'SMTP')}<br>
-          Hora: ${new Date().toLocaleString('es-VE')}
-        </p>
-      </div>
+      ${selloCorreo('exito')}
+      <h2 style="${CORREO.titulo}">Correo de prueba recibido</h2>
+      <p style="${CORREO.texto}">La configuración de correo está funcionando.</p>
+    </div>
+    <div style="${CORREO.cajaExito}">
+      <p style="${CORREO.cajaTexto}${CORREO.tonoExito}">
+        Proveedor: ${process.env.RESEND_API_KEY ? 'Resend API' : escapeHtml(process.env.EMAIL_PROVIDER || 'SMTP')}<br>
+        Hora: ${new Date().toLocaleString('es-VE')}
+      </p>
     </div>`;
 
   return sendEmail({
@@ -565,33 +520,22 @@ export const sendOrderPendingPaymentEmail = async (
   email: string,
   orderData: { orderNumber: string; total: number; customerName: string; }
 ) => {
-  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const appUrl = urlDeLaTienda();
 
   const content = `
-    <div style="text-align:center;margin-bottom:30px;">
-      <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">Pedido en Revisión</h2>
-      <p style="color:#f59e0b;font-size:16px;font-weight:600;">Orden #${orderData.orderNumber}</p>
+    <h2 style="${CORREO.titulo}">Pedido en revisión</h2>
+    <p style="${CORREO.subtitulo}">Orden #${escapeHtml(orderData.orderNumber)}</p>
+    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(orderData.customerName)}</strong>,</p>
+    <p style="${CORREO.texto}">Gracias por tu compra. Recibimos tu pedido y está pendiente de la confirmación del pago.</p>
+    <div style="${CORREO.cajaAviso}">
+      <p style="${CORREO.cajaTitulo}${CORREO.tonoAviso}">Estamos revisando tu pago</p>
+      <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}">Nuestro equipo está verificando tu transacción. Este proceso puede tomar hasta 24 horas hábiles.</p>
     </div>
-    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
-      Hola <strong style="color:#212529;">${orderData.customerName}</strong>,<br><br>
-      Gracias por tu compra. Hemos recibido tu pedido y está pendiente de confirmación de pago.
-    </p>
-    <div style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border-radius:12px;padding:20px;margin:20px 0;border-left:4px solid #f59e0b;">
-      <p style="margin:0 0 8px;color:#92400e;font-size:14px;font-weight:600;">Estamos revisando tu pago</p>
-      <p style="margin:0;color:#78350f;font-size:13px;line-height:1.6;">
-        Nuestro equipo está verificando tu transacción. Este proceso puede tomar hasta 24 horas hábiles.
-      </p>
+    <div style="${CORREO.caja}text-align:center;">
+      <p style="${CORREO.rotulo}">Total a pagar</p>
+      <p style="${CORREO.dato}letter-spacing:0;">${formatUSD(orderData.total)}</p>
     </div>
-    <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:20px 0;">
-      <p style="margin:0;color:#6a6c6b;font-size:14px;">
-        <strong>Total a pagar:</strong> ${formatUSD(orderData.total)}
-      </p>
-    </div>
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${appUrl}/customer/orders" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-        Ver Estado del Pedido
-      </a>
-    </div>`;
+    ${botonCorreo(`${appUrl}/customer/orders`, 'Ver estado del pedido')}`;
 
   return sendEmail({
     to: email,
@@ -613,35 +557,27 @@ export const sendOrderShippedEmail = async (
     payOnDelivery?: boolean;
   }
 ) => {
-  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const appUrl = urlDeLaTienda();
 
   const content = `
-    <div style="text-align:center;margin-bottom:30px;">
-      <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">¡Tu Pedido Está en Camino!</h2>
-      <p style="color:#3b82f6;font-size:16px;font-weight:600;">Orden #${escapeHtml(orderData.orderNumber)}</p>
-    </div>
-    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
-      Hola <strong style="color:#212529;">${escapeHtml(orderData.customerName)}</strong>,<br><br>
-      ¡Buenas noticias! Tu pedido ha sido enviado y está en camino hacia ti.
-    </p>
+    <h2 style="${CORREO.titulo}">Tu pedido está en camino</h2>
+    <p style="${CORREO.subtitulo}">Orden #${escapeHtml(orderData.orderNumber)}</p>
+    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(orderData.customerName)}</strong>,</p>
+    <p style="${CORREO.texto}">Buenas noticias: tu pedido fue enviado y va en camino.</p>
     ${orderData.trackingNumber ? `
-    <div style="background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);border-radius:12px;padding:20px;margin:20px 0;text-align:center;border:1px solid #3b82f6;">
-      <p style="margin:0 0 5px;color:#6a6c6b;font-size:13px;">Número de Guía</p>
-      <p style="margin:0;color:#1d4ed8;font-size:22px;font-weight:700;letter-spacing:2px;">${escapeHtml(orderData.trackingNumber)}</p>
-      ${orderData.shippingCarrier ? `<p style="margin:10px 0 0;color:#6a6c6b;font-size:12px;">Transportista: ${escapeHtml(orderData.shippingCarrier)}</p>` : ''}
+    <div style="${CORREO.cajaInfo}text-align:center;">
+      <p style="${CORREO.rotulo}">Número de guía</p>
+      <p style="${CORREO.dato}">${escapeHtml(orderData.trackingNumber)}</p>
+      ${orderData.shippingCarrier ? `<p style="${CORREO.textoMenor}margin:10px 0 0;">Transportista: ${escapeHtml(orderData.shippingCarrier)}</p>` : ''}
     </div>
     ` : ''}
-    ${orderData.destination ? `<p style="color:#6a6c6b;font-size:14px;line-height:1.6;margin:0 0 12px;"><strong style="color:#212529;">Destino:</strong> ${escapeHtml(orderData.destination)}</p>` : ''}
+    ${orderData.destination ? `<p style="${CORREO.texto}"><strong style="${CORREO.fuerte}">Destino:</strong> ${escapeHtml(orderData.destination)}</p>` : ''}
     ${orderData.payOnDelivery ? `
-    <div style="background:#fffbeb;border-left:4px solid #b45309;padding:14px 18px;margin:16px 0;border-radius:0 8px 8px 0;">
-      <p style="margin:0;color:#b45309;font-size:14px;line-height:1.6;">El envío es con <strong>cobro a destino</strong>: el flete se lo pagas a ${escapeHtml(orderData.shippingCarrier || 'la empresa de envíos')} cuando retires o recibas el paquete. Lleva tu cédula.</p>
+    <div style="${CORREO.cajaAviso}">
+      <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}">El envío es con <strong>cobro a destino</strong>: el flete se lo pagas a ${escapeHtml(orderData.shippingCarrier || 'la empresa de envíos')} cuando retires o recibas el paquete. Lleva tu cédula.</p>
     </div>
     ` : ''}
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${appUrl}/customer/orders" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-        Seguir mi Pedido
-      </a>
-    </div>`;
+    ${botonCorreo(`${appUrl}/customer/orders`, 'Seguir mi pedido')}`;
 
   return sendEmail({
     to: email,
@@ -655,21 +591,13 @@ export const sendShipmentUpdateEmail = async (
   email: string,
   data: { orderNumber: string; customerName: string; title: string; detail: string }
 ) => {
-  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const appUrl = urlDeLaTienda();
   const content = `
-    <div style="text-align:center;margin-bottom:24px;">
-      <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">${escapeHtml(data.title)}</h2>
-      <p style="color:#3b82f6;font-size:16px;font-weight:600;">Orden #${escapeHtml(data.orderNumber)}</p>
-    </div>
-    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
-      Hola <strong style="color:#212529;">${escapeHtml(data.customerName)}</strong>,<br><br>
-      ${escapeHtml(data.detail)}
-    </p>
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${appUrl}/customer/orders" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-        Ver mi pedido
-      </a>
-    </div>`;
+    <h2 style="${CORREO.titulo}">${escapeHtml(data.title)}</h2>
+    <p style="${CORREO.subtitulo}">Orden #${escapeHtml(data.orderNumber)}</p>
+    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(data.customerName)}</strong>,</p>
+    <p style="${CORREO.texto}">${escapeHtml(data.detail)}</p>
+    ${botonCorreo(`${appUrl}/customer/orders`, 'Ver mi pedido')}`;
 
   return sendEmail({
     to: email,
@@ -683,33 +611,23 @@ export const sendOrderDeliveredEmail = async (
   email: string,
   orderData: { orderNumber: string; customerName: string; }
 ) => {
-  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const appUrl = urlDeLaTienda();
 
   const content = `
-    <div style="text-align:center;margin-bottom:30px;">
-      <div style="width:70px;height:70px;background:linear-gradient(135deg,#10b981 0%,#059669 100%);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
-        <span style="color:white;font-size:28px;">&#10003;</span>
-      </div>
-      <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">¡Pedido Entregado!</h2>
-      <p style="color:#10b981;font-size:16px;font-weight:600;">Orden #${orderData.orderNumber}</p>
+    <div style="text-align:center;">
+      ${selloCorreo('exito')}
+      <h2 style="${CORREO.titulo}">Pedido entregado</h2>
+      <p style="${CORREO.subtitulo}">Orden #${escapeHtml(orderData.orderNumber)}</p>
     </div>
-    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
-      Hola <strong style="color:#212529;">${orderData.customerName}</strong>,<br><br>
-      Tu pedido ha sido entregado exitosamente. Esperamos que disfrutes tu compra.
-    </p>
-    <div style="background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-radius:12px;padding:20px;margin:20px 0;text-align:center;border:1px solid #10b981;">
-      <p style="margin:0 0 10px;color:#065f46;font-size:14px;font-weight:600;">Tu opinión es muy importante</p>
-      <p style="margin:0;color:#047857;font-size:13px;">
-        ¿Qué te pareció tu experiencia de compra? Déjanos tu reseña.
-      </p>
+    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(orderData.customerName)}</strong>,</p>
+    <p style="${CORREO.texto}">Tu pedido fue entregado. Esperamos que disfrutes tu compra.</p>
+    <div style="${CORREO.cajaExito}text-align:center;">
+      <p style="${CORREO.cajaTitulo}${CORREO.tonoExito}">Tu opinión es muy importante</p>
+      <p style="${CORREO.cajaTexto}${CORREO.tonoExito}">¿Qué te pareció tu experiencia de compra? Déjanos tu reseña.</p>
     </div>
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${appUrl}/customer/reviews" style="display:inline-block;background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-        Dejar Reseña
-      </a>
-    </div>
-    <p style="color:#adb5bd;font-size:12px;margin:20px 0 0;text-align:center;">
-      Si tienes algún problema con tu pedido, <a href="${appUrl}/contacto" style="color:#2a63cd;">contáctanos</a>.
+    ${botonCorreo(`${appUrl}/customer/reviews`, 'Dejar reseña')}
+    <p style="${CORREO.nota}text-align:center;">
+      Si tienes algún problema con tu pedido, <a href="${appUrl}/contacto" style="${CORREO.enlace}">contáctanos</a>.
     </p>`;
 
   return sendEmail({
@@ -731,7 +649,7 @@ export const sendDigitalCodeEmail = async (
     redemptionInstructions?: string;
   }
 ) => {
-  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const appUrl = urlDeLaTienda();
   // Todo escapado (C-60b): el nombre del producto lleva la cuenta que escribió el cliente y el código lo pega el equipo
   const e = {
     orderNumber: escapeHtml(codeData.orderNumber),
@@ -743,37 +661,25 @@ export const sendDigitalCodeEmail = async (
   };
 
   const content = `
-    <div style="text-align:center;margin-bottom:30px;">
-      <h2 style="margin:0 0 10px;color:#212529;font-size:24px;font-weight:600;">¡Tu Código Digital Está Listo!</h2>
-      <p style="color:#6366f1;font-size:16px;font-weight:600;margin:0;">Orden #${e.orderNumber}</p>
-    </div>
-    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 25px;">
-      Hola <strong style="color:#212529;">${e.customerName}</strong>,<br><br>
-      Aquí tienes tu código digital para <strong>${e.productName}</strong>:
-    </p>
-    <div style="background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border-radius:16px;padding:25px;margin:25px 0;text-align:center;border:2px dashed #3b82f6;">
-      <p style="margin:0 0 8px;color:#6a6c6b;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Tu Código</p>
-      <p style="margin:0;color:#1e40af;font-size:28px;font-weight:800;font-family:monospace;letter-spacing:3px;word-break:break-all;">
-        ${e.code}
-      </p>
-      ${e.platform ? `<p style="margin:12px 0 0;color:#6a6c6b;font-size:13px;">Plataforma: <strong>${e.platform}</strong></p>` : ''}
+    <h2 style="${CORREO.titulo}">Tu código digital está listo</h2>
+    <p style="${CORREO.subtitulo}">Orden #${e.orderNumber}</p>
+    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${e.customerName}</strong>,</p>
+    <p style="${CORREO.texto}">Aquí tienes tu código digital para <strong style="${CORREO.fuerte}">${e.productName}</strong>:</p>
+    <div style="${CORREO.cajaInfo}text-align:center;border-style:dashed;border-width:2px;">
+      <p style="${CORREO.rotulo}">Tu código</p>
+      <p style="${CORREO.dato}font-family:'Courier New',Courier,monospace;">${e.code}</p>
+      ${e.platform ? `<p style="${CORREO.textoMenor}margin:12px 0 0;">Plataforma: <strong style="${CORREO.fuerte}">${e.platform}</strong></p>` : ''}
     </div>
     ${e.redemptionInstructions ? `
-    <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:25px 0;border-left:4px solid #6366f1;">
-      <p style="margin:0 0 10px;color:#212529;font-size:14px;font-weight:600;">Instrucciones de Canje:</p>
-      <p style="margin:0;color:#6a6c6b;font-size:13px;line-height:1.7;">${e.redemptionInstructions}</p>
+    <div style="${CORREO.caja}">
+      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Instrucciones de canje</p>
+      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">${e.redemptionInstructions}</p>
     </div>
     ` : ''}
-    <div style="background:#fef3c7;border-radius:12px;padding:15px;margin:25px 0;border:1px solid #f59e0b;">
-      <p style="margin:0;color:#92400e;font-size:12px;text-align:center;">
-        <strong>Importante:</strong> Guarda este código en un lugar seguro. No lo compartas con nadie.
-      </p>
+    <div style="${CORREO.cajaAviso}">
+      <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}"><strong>Importante:</strong> guarda este código en un lugar seguro y no lo compartas con nadie.</p>
     </div>
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${appUrl}/customer/orders" style="display:inline-block;background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">
-        Ver Mis Códigos
-      </a>
-    </div>`;
+    ${botonCorreo(`${appUrl}/customer/orders`, 'Ver mis códigos')}`;
 
   return sendEmail({
     to: email,
@@ -795,92 +701,75 @@ export const sendGiftCardEmail = async (
     designName?: string;
   }
 ) => {
-  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const appUrl = urlDeLaTienda();
   const redeemUrl = `${appUrl}/canjear-gift-card`;
+  // El remitente, el destinatario y el mensaje los escribe quien regala
+  const e = {
+    senderName: escapeHtml(giftCardData.senderName),
+    recipientName: escapeHtml(giftCardData.recipientName),
+    personalMessage: giftCardData.personalMessage ? escapeHtml(giftCardData.personalMessage) : '',
+    code: escapeHtml(giftCardData.code),
+    pin: giftCardData.pin ? escapeHtml(giftCardData.pin) : '',
+  };
 
   const content = `
-    <div style="text-align:center;margin-bottom:30px;">
-      <h2 style="margin:0 0 10px;color:#212529;font-size:28px;font-weight:700;">¡Te Han Enviado una Gift Card!</h2>
-      <p style="color:#f59e0b;font-size:16px;font-weight:600;margin:0;">De parte de ${giftCardData.senderName}</p>
+    <div style="text-align:center;">
+      <h2 style="${CORREO.titulo}">Te enviaron una Gift Card</h2>
+      <p style="${CORREO.subtitulo}">De parte de ${e.senderName}</p>
     </div>
-    
-    <p style="color:#6a6c6b;font-size:16px;line-height:1.7;margin:0 0 25px;text-align:center;">
-      Hola <strong style="color:#212529;">${giftCardData.recipientName}</strong>,<br><br>
-      <strong>${giftCardData.senderName}</strong> te ha enviado una Gift Card de Electro Shop para que la uses en lo que más te guste.
-    </p>
-    
-    ${giftCardData.personalMessage ? `
-    <div style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border-radius:16px;padding:25px;margin:25px 0;text-align:center;border:2px solid #f59e0b;position:relative;">
-      <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#f59e0b;color:white;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;">MENSAJE PERSONAL</div>
-      <p style="margin:10px 0 0;color:#92400e;font-size:15px;font-style:italic;line-height:1.6;">
-        "${giftCardData.personalMessage}"
-      </p>
+    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${e.recipientName}</strong>,</p>
+    <p style="${CORREO.texto}"><strong style="${CORREO.fuerte}">${e.senderName}</strong> te envió una Gift Card de Electro Shop para que la uses en lo que más te guste.</p>
+
+    ${e.personalMessage ? `
+    <div style="${CORREO.cajaAviso}text-align:center;">
+      <p style="${CORREO.rotulo}${CORREO.tonoAviso}">Mensaje personal</p>
+      <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}font-size:15px;font-style:italic;">"${e.personalMessage}"</p>
     </div>
     ` : ''}
-    
-    <!-- Gift Card Visual -->
-    <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);border-radius:20px;padding:30px;margin:30px 0;box-shadow:0 20px 40px rgba(0,0,0,0.3);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <div>
-          <p style="margin:0;color:rgba(255,255,255,0.6);font-size:12px;letter-spacing:1px;">ELECTRO SHOP</p>
-          <p style="margin:4px 0 0;color:#38bdf8;font-size:11px;letter-spacing:2px;">GIFT CARD</p>
-        </div>
-        <div style="background:rgba(56,189,248,0.2);padding:6px 14px;border-radius:20px;border:1px solid rgba(56,189,248,0.4);">
-          <span style="color:#38bdf8;font-size:12px;font-weight:700;">ACTIVA</span>
-        </div>
-      </div>
-      
-      <div style="text-align:center;padding:20px 0;">
-        <p style="margin:0;color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:1px;">VALOR</p>
-        <p style="margin:8px 0 0;color:#38bdf8;font-size:48px;font-weight:900;text-shadow:0 0 30px rgba(56,189,248,0.5);">
-          $${giftCardData.amount.toFixed(0)}<span style="font-size:24px;opacity:0.8;">.00</span>
-        </p>
-        <p style="margin:8px 0 0;color:rgba(255,255,255,0.4);font-size:12px;">USD</p>
-      </div>
-      
-      <div style="background:rgba(255,255,255,0.1);border-radius:12px;padding:15px;margin-top:20px;">
-        <p style="margin:0 0 8px;color:rgba(255,255,255,0.5);font-size:10px;text-transform:uppercase;letter-spacing:1px;text-align:center;">Código de Canje</p>
-        <p style="margin:0;color:#ffffff;font-size:20px;font-weight:700;font-family:monospace;letter-spacing:3px;text-align:center;word-break:break-all;">
-          ${giftCardData.code}
-        </p>
-        ${giftCardData.pin ? `
-        <p style="margin:12px 0 0;color:rgba(255,255,255,0.5);font-size:10px;text-align:center;">
-          PIN: <span style="color:#fbbf24;font-weight:700;letter-spacing:2px;">${giftCardData.pin}</span>
-        </p>
-        ` : ''}
-      </div>
-    </div>
-    
-    <div style="background:#f0fdf4;border-radius:12px;padding:20px;margin:25px 0;border:1px solid #22c55e;">
-      <p style="margin:0 0 10px;color:#166534;font-size:14px;font-weight:600;">¿Cómo canjear tu Gift Card?</p>
-      <ol style="margin:0;padding:0 0 0 20px;color:#166534;font-size:13px;line-height:1.8;">
-        <li>Ingresa a Electro Shop y crea una cuenta o inicia sesión</li>
+
+    <!-- La tarjeta: tabla y colores planos para que se vea igual en todos los clientes de correo -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+      <tr>
+        <td bgcolor="${COLOR.marcaOscura}" style="background-color:${COLOR.marcaOscura};border-radius:16px;padding:26px 24px;text-align:center;">
+          <p style="margin:0;color:#bfdbfe;font-size:12px;line-height:1.4;letter-spacing:2px;">ELECTRO SHOP · GIFT CARD</p>
+          <p style="margin:14px 0 0;color:#ffffff;font-size:44px;line-height:1.1;font-weight:700;">${formatUSD(giftCardData.amount)}</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;">
+            <tr>
+              <td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:12px;padding:14px 12px;text-align:center;">
+                <p style="${CORREO.rotulo}">Código de canje</p>
+                <p style="${CORREO.dato}font-size:20px;font-family:'Courier New',Courier,monospace;">${e.code}</p>
+                ${e.pin ? `<p style="${CORREO.textoMenor}margin:10px 0 0;">PIN: <strong style="${CORREO.fuerte}letter-spacing:2px;">${e.pin}</strong></p>` : ''}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <div style="${CORREO.cajaExito}">
+      <p style="${CORREO.cajaTitulo}${CORREO.tonoExito}">¿Cómo canjear tu Gift Card?</p>
+      <ol style="margin:0;padding:0 0 0 20px;font-size:14px;line-height:1.8;${CORREO.tonoExito}">
+        <li>Entra a Electro Shop y crea una cuenta o inicia sesión</li>
         <li>Ve a la página de <strong>Canjear Gift Card</strong></li>
-        <li>Ingresa el código mostrado arriba${giftCardData.pin ? ' y el PIN' : ''}</li>
-        <li>¡Los Puntos ES se acreditan al instante en tu cuenta!</li>
+        <li>Escribe el código de arriba${e.pin ? ' y el PIN' : ''}</li>
+        <li>Los Puntos ES se acreditan al instante en tu cuenta</li>
       </ol>
     </div>
-    
-    <div style="text-align:center;margin:35px 0;">
-      <a href="${redeemUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:0 10px 25px rgba(34,197,94,0.3);">
-        Canjear Mi Gift Card
-      </a>
+
+    ${botonCorreo(redeemUrl, 'Canjear mi Gift Card')}
+
+    <div style="${CORREO.cajaAviso}">
+      <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}text-align:center;"><strong>Importante:</strong> guarda este correo. El código es único y no tiene fecha de vencimiento.</p>
     </div>
-    
-    <div style="background:#fef3c7;border-radius:12px;padding:15px;margin:25px 0;border:1px solid #fbbf24;">
-      <p style="margin:0;color:#92400e;font-size:12px;text-align:center;">
-        <strong>Importante:</strong> Guarda este correo. El código es único y no tiene fecha de vencimiento.
-      </p>
-    </div>
-    
-    <p style="color:#adb5bd;font-size:12px;margin:25px 0 0;text-align:center;">
-      ¿Tienes problemas? <a href="${appUrl}/contacto" style="color:#2a63cd;">Contáctanos</a>
+
+    <p style="${CORREO.nota}text-align:center;">
+      ¿Tienes problemas? <a href="${appUrl}/contacto" style="${CORREO.enlace}">Contáctanos</a>
     </p>`;
 
   return sendEmail({
     to: email,
     subject: `¡${giftCardData.senderName} te ha enviado una Gift Card de $${giftCardData.amount}!`,
-    html: await getBaseTemplate(content, `${giftCardData.senderName} te regalo una Gift Card de $${giftCardData.amount}`),
+    html: await getBaseTemplate(content, `${giftCardData.senderName} te regaló una Gift Card de $${giftCardData.amount}`),
   });
 };
 
@@ -889,20 +778,18 @@ export const sendWarrantyUpdateEmail = async (
   email: string,
   data: { customerName: string; code: string; productName: string; status: string; statusHelp: string; message?: string | null },
 ) => {
-  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const appUrl = urlDeLaTienda();
   const content = `
-    <h2 style="margin:0 0 10px;color:#212529;font-size:22px;font-weight:600;">Tu solicitud de garantía ${escapeHtml(data.code)}</h2>
-    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 16px;">
-      Hola <strong style="color:#212529;">${escapeHtml(data.customerName)}</strong>, tenemos novedades sobre <strong style="color:#212529;">${escapeHtml(data.productName)}</strong>.
+    <h2 style="${CORREO.titulo}">Tu solicitud de garantía ${escapeHtml(data.code)}</h2>
+    <p style="${CORREO.texto}">
+      Hola <strong style="${CORREO.fuerte}">${escapeHtml(data.customerName)}</strong>, tenemos novedades sobre <strong style="${CORREO.fuerte}">${escapeHtml(data.productName)}</strong>.
     </p>
-    <div style="background:#f8f9fa;border-radius:12px;padding:16px 20px;margin:16px 0;border:1px solid #e9ecef;">
-      <p style="margin:0 0 6px;color:#212529;font-size:15px;font-weight:600;">Estado: ${escapeHtml(data.status)}</p>
-      <p style="margin:0;color:#6c757d;font-size:13px;line-height:1.6;">${escapeHtml(data.statusHelp)}</p>
+    <div style="${CORREO.caja}">
+      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Estado: ${escapeHtml(data.status)}</p>
+      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">${escapeHtml(data.statusHelp)}</p>
     </div>
-    ${data.message ? `<div style="border-left:4px solid #2a63cd;padding:8px 14px;margin:16px 0;color:#495057;font-size:14px;line-height:1.6;white-space:pre-line;">${escapeHtml(data.message)}</div>` : ''}
-    <div style="text-align:center;margin:28px 0;">
-      <a href="${appUrl}/customer/warranty" style="display:inline-block;background:#2a63cd;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">Ver mi solicitud</a>
-    </div>`;
+    ${data.message ? `<div style="${CORREO.cita}">${escapeHtml(data.message)}</div>` : ''}
+    ${botonCorreo(`${appUrl}/customer/warranty`, 'Ver mi solicitud')}`;
   return sendEmail({
     to: email,
     subject: `Garantía ${data.code}: ${data.status}`,

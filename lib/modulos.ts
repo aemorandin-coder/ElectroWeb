@@ -42,6 +42,7 @@ const RC5 = { sistema: '1.0.0-rc.5' } as const;
 const RC6 = { sistema: '1.0.0-rc.6' } as const;
 const RC7 = { sistema: '1.0.0-rc.7' } as const;
 const RC8 = { sistema: '1.0.0-rc.8' } as const;
+const RC9 = { sistema: '1.0.0-rc.9' } as const;
 const primera = (resumen: string): CambioModulo => ({ ...PRIMERA, resumen, silencioso: true });
 
 export const MODULOS: ModuloPanel[] = [
@@ -61,7 +62,7 @@ export const MODULOS: ModuloPanel[] = [
       // C-169: lo que comparten las pantallas que se editan entre varios (presencia, conflictos, borrador, historial)
       'components/admin/edicion/', 'lib/edicion/', 'app/api/admin/presencia/', 'app/api/admin/historial/',
     ],
-    historial: [{ version: '1.3.0', ...RC8, tarea: 'C-170', resumen: 'Las piezas para que dos administradores no se pisen (versión al guardar, combinar cambios, presencia) ahora sirven a todo el panel.', silencioso: true }, { version: '1.2.0', ...RC5, tarea: 'C-174', resumen: 'Marquesina del equipo: una franja debajo de la barra de arriba dice quién está conectado y en qué sector ("Luis está en Productos, editando…").' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Trabajo en equipo: se ve quién más está editando lo mismo, se avisa en vivo cuando otro lo cambia o lo mueve a la papelera, y los borradores sin guardar se conservan en el navegador.' }, { ...PRIMERA, resumen: 'Ahora cada módulo del panel lleva su versión (abajo del menú y en la barra de arriba) y se avisa cuando hay una versión nueva.' }],
+    historial: [{ version: '1.3.1', ...RC9, tarea: 'C-175', resumen: 'Los avisos al equipo por correo llevan el logo largo y el mismo diseño que los correos de los clientes.' }, { version: '1.3.0', ...RC8, tarea: 'C-170', resumen: 'Las piezas para que dos administradores no se pisen (versión al guardar, combinar cambios, presencia) ahora sirven a todo el panel.', silencioso: true }, { version: '1.2.0', ...RC5, tarea: 'C-174', resumen: 'Marquesina del equipo: una franja debajo de la barra de arriba dice quién está conectado y en qué sector ("Luis está en Productos, editando…").' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Trabajo en equipo: se ve quién más está editando lo mismo, se avisa en vivo cuando otro lo cambia o lo mueve a la papelera, y los borradores sin guardar se conservan en el navegador.' }, { ...PRIMERA, resumen: 'Ahora cada módulo del panel lleva su versión (abajo del menú y en la barra de arriba) y se avisa cuando hay una versión nueva.' }],
   },
   {
     id: 'dashboard',
@@ -84,7 +85,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/order-', 'lib/pago-movil', 'lib/envios/', 'lib/embalaje.ts', 'lib/reservas.ts', 'lib/stock.ts', 'lib/warranty',
       'lib/facturacion.ts', 'lib/pricing.ts',
     ],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.1', ...RC9, tarea: 'C-175', resumen: 'Correos de pedido recibido, cancelado y recarga aprobada con el diseño nuevo (logo largo).', silencioso: true }, primera('Primera versión registrada.')],
   },
   {
     id: 'productos',
@@ -98,7 +99,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/digital-', 'lib/sades.ts', 'lib/review-status.ts', 'lib/resenas-avisos.ts', 'lib/stock-alerts.ts',
       'lib/papelera.ts', 'app/api/cron/papelera/',
     ],
-    historial: [{ version: '1.2.0', ...RC8, tarea: 'C-170', resumen: 'Categorías: si otra persona guardó antes, se combinan los cambios; se ve quién la tiene abierta y se pregunta antes de borrar una que otro edita.' }, { version: '1.1.1', ...RC5, tarea: 'C-174', resumen: 'El editor dice a los demás qué producto tiene abierto (para la marquesina del equipo).' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Eliminar manda a la papelera (30 días, con Deshacer). Si otro administrador guarda o mueve el producto mientras lo editas, se combinan los cambios, se avisa y no se pierde lo que escribiste. Se ve quién lo está editando.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.2.1', ...RC9, tarea: 'C-175', resumen: 'Correos de reseña publicada y de pedir la reseña con el diseño nuevo (logo largo).', silencioso: true }, { version: '1.2.0', ...RC8, tarea: 'C-170', resumen: 'Categorías: si otra persona guardó antes, se combinan los cambios; se ve quién la tiene abierta y se pregunta antes de borrar una que otro edita.' }, { version: '1.1.1', ...RC5, tarea: 'C-174', resumen: 'El editor dice a los demás qué producto tiene abierto (para la marquesina del equipo).' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Eliminar manda a la papelera (30 días, con Deshacer). Si otro administrador guarda o mueve el producto mientras lo editas, se combinan los cambios, se avisa y no se pierde lo que escribiste. Se ve quién lo está editando.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'ofertas',
@@ -118,7 +119,7 @@ export const MODULOS: ModuloPanel[] = [
       'app/admin/(dashboard)/marketing/_components/Plantillas.tsx', 'app/admin/(dashboard)/marketing/_components/Popup.tsx',
       'app/api/admin/campaigns/', 'app/api/admin/email/', 'lib/email-campaigns.ts', 'lib/hot-ad.ts', 'lib/email-templates/',
     ],
-    historial: [{ version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Campañas de correo: el borrador ya no se pisa entre dos personas (se combinan los cambios) y se ve quién lo tiene abierto.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.2.0', ...RC9, tarea: 'C-175', resumen: 'Correos rediseñados: todos llevan el logo largo arriba, el mismo botón, los mismos títulos y cajas, y se ven igual en Gmail, Outlook y el teléfono. La vista previa de Plantillas suma el de reseña publicada.' }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Campañas de correo: el borrador ya no se pisa entre dos personas (se combinan los cambios) y se ve quién lo tiene abierto.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'promotores',
@@ -126,7 +127,7 @@ export const MODULOS: ModuloPanel[] = [
     descripcion: 'Promotores, sus códigos, solicitudes y comisiones en Puntos ES.',
     paginas: [],
     archivos: ['app/admin/(dashboard)/marketing/_components/Promotores.tsx', 'app/api/influencers/', 'app/api/cron/promotores/', 'lib/influencer-'],
-    historial: [{ version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Editar un promotor ya no pisa lo que otra persona guardó; y si alguien ya atendió una comisión o una solicitud, lo dice con su nombre.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.1', ...RC9, tarea: 'C-175', resumen: 'Correo de promotor aprobado con el diseño nuevo (logo largo).', silencioso: true }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Editar un promotor ya no pisa lo que otra persona guardó; y si alguien ya atendió una comisión o una solicitud, lo dice con su nombre.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'studio',
@@ -161,7 +162,7 @@ export const MODULOS: ModuloPanel[] = [
     descripcion: 'Presupuestos para empresas e instituciones, con retención del IVA.',
     paginas: ['/admin/cotizaciones'],
     archivos: ['app/admin/(dashboard)/cotizaciones/', 'app/api/cotizaciones/', 'app/api/admin/cotizaciones/', 'lib/cotizaciones/', 'components/cotizaciones/', 'app/cotizacion/'],
-    historial: [{ version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Dos personas en la misma cotización: se combinan los cambios (también las líneas) y solo se pregunta por lo que las dos tocaron.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.1', ...RC9, tarea: 'C-175', resumen: 'Correo del presupuesto con el diseño nuevo (logo largo).', silencioso: true }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Dos personas en la misma cotización: se combinan los cambios (también las líneas) y solo se pregunta por lo que las dos tocaron.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'clientes',
@@ -174,7 +175,7 @@ export const MODULOS: ModuloPanel[] = [
       'app/api/gift-cards/', 'app/api/contact/', 'app/api/product-requests/', 'components/gift-card/', 'components/contact/',
       'lib/gift-card',
     ],
-    historial: [{ version: '1.0.1', ...RC8, tarea: 'C-170', resumen: 'Verificar una empresa o atender una solicitud de producto dos veces a la vez ya no avisa dos veces al cliente.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.2', ...RC9, tarea: 'C-175', resumen: 'Correo de verificación de empresa con el diseño nuevo (logo largo).', silencioso: true }, { version: '1.0.1', ...RC8, tarea: 'C-170', resumen: 'Verificar una empresa o atender una solicitud de producto dos veces a la vez ya no avisa dos veces al cliente.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'reportes',
@@ -201,7 +202,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/site-settings.ts', 'lib/exchange-rate.ts', 'lib/correo.ts', 'lib/email-service.ts', 'lib/smtp-seguro.ts', 'lib/maintenance.ts',
       'components/admin/EmailSettingsPanel.tsx', 'components/legal/', 'scripts/deploy.sh',
     ],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.1', ...RC9, tarea: 'C-175', resumen: 'El correo de prueba de la configuración sale con el mismo diseño que reciben los clientes: sirve para ver cómo llega el logo.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'tienda',

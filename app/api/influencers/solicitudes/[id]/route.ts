@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { createNotification } from '@/lib/notifications';
 import { getBaseTemplate, sendEmail } from '@/lib/email-service';
+import { CORREO, botonCorreo } from '@/lib/email-templates/estilo';
 import { escapeHtml } from '@/lib/html';
 import { siteUrl } from '@/lib/seo';
 import { aprobarSolicitudSchema, crearPromotor, PromotorError, rechazarSolicitudSchema } from '@/lib/influencer-admin';
@@ -65,16 +66,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       icon: 'gift',
     });
     const contenido = `
-      <h2 style="margin:0 0 12px;color:#212529;font-size:22px;font-weight:600;">Ya eres promotor</h2>
-      <p style="color:#6a6c6b;font-size:15px;line-height:1.6;">Hola <strong style="color:#212529;">${escapeHtml(solicitud.user.name || 'promotor')}</strong>, aprobamos tu solicitud.</p>
-      <div style="background:#f8f9fa;border-radius:12px;padding:20px;margin:20px 0;text-align:center;">
-        <p style="margin:0;color:#6a6c6b;font-size:13px;">Tu código</p>
-        <p style="margin:6px 0 0;color:#212529;font-size:28px;font-weight:700;letter-spacing:2px;">${escapeHtml(promotor.code)}</p>
+      <h2 style="${CORREO.titulo}">Ya eres promotor</h2>
+      <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(solicitud.user.name || 'promotor')}</strong>, aprobamos tu solicitud.</p>
+      <div style="${CORREO.cajaInfo}text-align:center;">
+        <p style="${CORREO.rotulo}">Tu código</p>
+        <p style="${CORREO.dato}">${escapeHtml(promotor.code)}</p>
       </div>
-      <p style="color:#6a6c6b;font-size:15px;line-height:1.6;">Quien lo escriba en el carrito recibe <strong>${promotor.customerDiscountPercent} % de descuento</strong> y tú ganas <strong>${Number(promotor.commissionRate)} %</strong> del valor de los productos (sin IVA ni envío), en <strong>Puntos ES</strong> para comprar en la tienda. Se acreditan ${DIAS_PARA_ACREDITAR} días después de que el cliente recibe su pedido.</p>
-      <div style="text-align:center;margin:28px 0;">
-        <a href="${siteUrl()}/customer/referrals" style="display:inline-block;background:#2a63cd;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">Ver mi panel de promotor</a>
-      </div>`;
+      <p style="${CORREO.texto}">Quien lo escriba en el carrito recibe <strong style="${CORREO.fuerte}">${promotor.customerDiscountPercent} % de descuento</strong> y tú ganas <strong style="${CORREO.fuerte}">${Number(promotor.commissionRate)} %</strong> del valor de los productos (sin IVA ni envío), en <strong style="${CORREO.fuerte}">Puntos ES</strong> para comprar en la tienda. Se acreditan ${DIAS_PARA_ACREDITAR} días después de que el cliente recibe su pedido.</p>
+      ${botonCorreo(`${siteUrl()}/customer/referrals`, 'Ver mi panel de promotor')}`;
     const correo = solicitud.user.email;
     if (correo) {
       void getBaseTemplate(contenido, 'Ya eres promotor de ElectroShop')

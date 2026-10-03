@@ -6,6 +6,7 @@ import { randomBytes } from 'crypto';
 import type { Prisma, Role } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getBaseTemplate, sendEmail } from '@/lib/email-service';
+import { CORREO, botonCorreo } from '@/lib/email-templates/estilo';
 import { escapeHtml } from '@/lib/html';
 
 export const ROLES_EQUIPO = ['ADMIN', 'SUPER_ADMIN'] as const;
@@ -95,11 +96,11 @@ export async function enviarInvitacion(datos: { correo: string; nombre: string; 
   const enlace = `${appUrl}/recuperar-contrasena/${datos.token}?invitacion=1`;
   const nombre = datos.nombre.trim().split(/\s+/)[0] || 'hola';
   const contenido = `
-    <h2 style="margin:0 0 10px;color:#212529;font-size:22px;font-weight:600;">Te invitaron al panel de Electro Shop</h2>
-    <p style="color:#495057;font-size:15px;line-height:1.6;margin:0 0 16px;">Hola ${escapeHtml(nombre)}, ${escapeHtml(datos.invitadoPor)} te dio acceso al panel de administración como <strong>${nombreRol(datos.rol)}</strong>.</p>
-    <p style="color:#495057;font-size:15px;line-height:1.6;margin:0 0 16px;">Para entrar, crea tu contraseña. Después el panel te pedirá configurar la verificación en dos pasos con una app de códigos en tu teléfono (Google Authenticator o Authy).</p>
-    <div style="text-align:center;margin:28px 0;"><a href="${enlace}" style="display:inline-block;background:#2a63cd;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;">Crear mi contraseña</a></div>
-    <p style="color:#6c757d;font-size:13px;line-height:1.6;margin:0;">El enlace sirve 24 horas y una sola vez. Si no esperabas esta invitación, ignora este correo: sin la contraseña nadie puede entrar.</p>`;
+    <h2 style="${CORREO.titulo}">Te invitaron al panel de Electro Shop</h2>
+    <p style="${CORREO.texto}">Hola ${escapeHtml(nombre)}, ${escapeHtml(datos.invitadoPor)} te dio acceso al panel de administración como <strong style="${CORREO.fuerte}">${nombreRol(datos.rol)}</strong>.</p>
+    <p style="${CORREO.texto}">Para entrar, crea tu contraseña. Después el panel te pedirá configurar la verificación en dos pasos con una app de códigos en tu teléfono (Google Authenticator o Authy).</p>
+    ${botonCorreo(enlace, 'Crear mi contraseña')}
+    <p style="${CORREO.nota}">El enlace sirve 24 horas y una sola vez. Si no esperabas esta invitación, ignora este correo: sin la contraseña nadie puede entrar.</p>`;
   try {
     const resultado = await sendEmail({
       to: datos.correo,

@@ -1,4 +1,6 @@
 import { sendEmail, getBaseTemplate } from '@/lib/email-service';
+import { escapeHtml } from '@/lib/html';
+import { CORREO, botonCorreo, selloCorreo } from './estilo';
 
 export async function sendCourseEnrollmentEmail(
   email: string,
@@ -6,23 +8,15 @@ export async function sendCourseEnrollmentEmail(
 ) {
   const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || '';
   const content = `
-    <div style="text-align:center;margin-bottom:30px;">
-      <h2 style="margin:0 0 6px;color:#212529;font-size:22px;font-weight:700;">¡Inscripción Exitosa!</h2>
-      <p style="color:#6a6c6b;font-size:15px;margin:0;">Ya puedes empezar a aprender</p>
+    <h2 style="${CORREO.titulo}">Inscripción confirmada</h2>
+    <p style="${CORREO.subtitulo}">Ya puedes empezar a aprender</p>
+    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(data.studentName)}</strong>,</p>
+    <p style="${CORREO.texto}">Te inscribiste en el curso:</p>
+    <div style="${CORREO.cajaInfo}text-align:center;">
+      <p style="${CORREO.cajaTitulo}${CORREO.tonoInfo}font-size:18px;">${escapeHtml(data.courseTitle)}</p>
+      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Instructor: ${escapeHtml(data.instructorName)}</p>
     </div>
-    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
-      Hola <strong style="color:#212529;">${data.studentName}</strong>,<br><br>
-      Te has inscrito exitosamente en el curso:
-    </p>
-    <div style="background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);border-radius:14px;padding:22px;margin:20px 0;border-left:4px solid #2a63cd;text-align:center;">
-      <p style="margin:0 0 6px;color:#1e40af;font-size:18px;font-weight:700;">${data.courseTitle}</p>
-      <p style="margin:0;color:#6a6c6b;font-size:13px;">Instructor: ${data.instructorName}</p>
-    </div>
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${appUrl}/cursos/${data.courseSlug}/aprender" style="display:inline-block;background:linear-gradient(135deg,#2a63cd 0%,#1e4ba3 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;">
-        Comenzar Ahora →
-      </a>
-    </div>`;
+    ${botonCorreo(`${appUrl}/cursos/${encodeURIComponent(data.courseSlug)}/aprender`, 'Comenzar ahora')}`;
 
   return sendEmail({
     to: email,
@@ -42,37 +36,33 @@ export async function sendCourseCertificateEmail(
   }
 ) {
   const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || '';
-  const certUrl = `${appUrl}/certificado/${data.certificateId}`;
+  const certUrl = `${appUrl}/certificado/${encodeURIComponent(data.certificateId)}`;
   const dateStr = data.completedAt.toLocaleDateString('es-VE', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const content = `
-    <div style="text-align:center;margin-bottom:30px;">
-      <h2 style="margin:0 0 6px;color:#212529;font-size:22px;font-weight:700;">¡Felicitaciones, ${data.studentName}!</h2>
-      <p style="color:#6a6c6b;font-size:15px;margin:0;">Has completado el curso exitosamente</p>
+    <div style="text-align:center;">
+      ${selloCorreo('exito')}
+      <h2 style="${CORREO.titulo}">¡Felicitaciones, ${escapeHtml(data.studentName)}!</h2>
+      <p style="${CORREO.subtitulo}">Completaste el curso</p>
     </div>
 
-    <div style="background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border-radius:14px;padding:22px;margin:20px 0;text-align:center;border:1px solid #f59e0b;">
-      <p style="margin:0 0 6px;color:#92400e;font-size:18px;font-weight:700;">${data.courseTitle}</p>
-      <p style="margin:0;color:#78350f;font-size:13px;">Instructor: ${data.instructorName} · Completado el ${dateStr}</p>
+    <div style="${CORREO.cajaAviso}text-align:center;">
+      <p style="${CORREO.cajaTitulo}${CORREO.tonoAviso}font-size:18px;">${escapeHtml(data.courseTitle)}</p>
+      <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}">Instructor: ${escapeHtml(data.instructorName)} · Completado el ${dateStr}</p>
     </div>
 
-    <div style="background:#f8f9fa;border-radius:14px;padding:20px;margin:20px 0;text-align:center;border:1px solid #e9ecef;">
-      <p style="margin:0 0 8px;color:#6a6c6b;font-size:12px;text-transform:uppercase;letter-spacing:1px;">ID de Verificación</p>
-      <p style="margin:0;color:#212529;font-size:13px;font-family:monospace;font-weight:700;word-break:break-all;">${data.certificateId}</p>
+    <div style="${CORREO.caja}text-align:center;">
+      <p style="${CORREO.rotulo}">ID de verificación</p>
+      <p style="${CORREO.dato}font-size:14px;letter-spacing:0;font-family:'Courier New',Courier,monospace;">${escapeHtml(data.certificateId)}</p>
     </div>
 
-    <p style="color:#6a6c6b;font-size:14px;text-align:center;line-height:1.6;margin:15px 0;">
-      Tu certificado puede verificarse públicamente en nuestra página web.<br>
-      Cualquier persona puede confirmar su autenticidad con el enlace de abajo.
+    <p style="${CORREO.textoMenor}text-align:center;">
+      Tu certificado se puede verificar en nuestra página web: cualquier persona puede confirmar que es auténtico con el enlace de abajo.
     </p>
 
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${certUrl}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 8px 20px rgba(245,158,11,0.3);">
-        Ver mi Certificado
-      </a>
-    </div>
-    <p style="color:#adb5bd;font-size:12px;text-align:center;">
-      También puedes compartir este enlace: <a href="${certUrl}" style="color:#2a63cd;">${certUrl}</a>
+    ${botonCorreo(certUrl, 'Ver mi certificado')}
+    <p style="${CORREO.nota}text-align:center;">
+      También puedes compartir este enlace: <a href="${certUrl}" style="${CORREO.enlace}">${certUrl}</a>
     </p>`;
 
   return sendEmail({
@@ -90,58 +80,44 @@ export async function sendCreatorStatusEmail(
 
   const configs = {
     APPROVED: {
-      emoji: '',
-      title: '¡Solicitud de Creador Aprobada!',
-      body: `Tu solicitud para ser creador de contenido en ElectroShop ha sido <strong style="color:#059669;">aprobada</strong>. Ya puedes acceder a tu panel de creador, crear cursos y comenzar a monetizar tu conocimiento.`,
-      cta: { text: 'Ir a mi Panel de Creador', url: `${appUrl}/creator/dashboard` },
-      color: '#059669',
-      bgColor: '#ecfdf5',
-      borderColor: '#34d399',
-      preheader: '¡Tu solicitud fue aprobada! Bienvenido al equipo de creadores.',
+      title: 'Solicitud de creador aprobada',
+      body: `Tu solicitud para ser creador de contenido en ElectroShop fue <strong style="${CORREO.tonoExito}">aprobada</strong>. Ya puedes entrar a tu panel de creador, crear cursos y empezar a ganar con lo que sabes.`,
+      cta: { text: 'Ir a mi panel de creador', url: `${appUrl}/creator/dashboard` },
+      caja: CORREO.cajaExito,
+      tono: CORREO.tonoExito,
+      preheader: 'Tu solicitud fue aprobada. Bienvenido al equipo de creadores.',
     },
     REJECTED: {
-      emoji: '',
-      title: 'Solicitud de Creador No Aprobada',
-      body: `Hemos revisado tu solicitud y lamentablemente no podemos aprobarte como creador en este momento. Si tienes preguntas, contáctanos.`,
-      cta: { text: 'Contactar Soporte', url: `${appUrl}/contacto` },
-      color: '#dc2626',
-      bgColor: '#fef2f2',
-      borderColor: '#f87171',
-      preheader: 'Tu solicitud de creador ha sido revisada.',
+      title: 'Solicitud de creador no aprobada',
+      body: `Revisamos tu solicitud y por ahora no podemos aprobarte como creador. Si tienes preguntas, contáctanos.`,
+      cta: { text: 'Contactar a soporte', url: `${appUrl}/contacto` },
+      caja: CORREO.cajaPeligro,
+      tono: CORREO.tonoPeligro,
+      preheader: 'Revisamos tu solicitud de creador.',
     },
     SUSPENDED: {
-      emoji: '',
-      title: 'Cuenta de Creador Suspendida',
-      body: `Tu cuenta de creador ha sido suspendida temporalmente. Para más información contáctanos.`,
-      cta: { text: 'Contactar Soporte', url: `${appUrl}/contacto` },
-      color: '#d97706',
-      bgColor: '#fffbeb',
-      borderColor: '#fbbf24',
-      preheader: 'Tu cuenta de creador ha sido suspendida.',
+      title: 'Cuenta de creador suspendida',
+      body: `Tu cuenta de creador fue suspendida temporalmente. Para más información, contáctanos.`,
+      cta: { text: 'Contactar a soporte', url: `${appUrl}/contacto` },
+      caja: CORREO.cajaAviso,
+      tono: CORREO.tonoAviso,
+      preheader: 'Tu cuenta de creador fue suspendida.',
     },
   };
 
   const cfg = configs[data.status];
 
   const content = `
-    <div style="text-align:center;margin-bottom:25px;">
-      <h2 style="margin:0;color:#212529;font-size:22px;font-weight:700;">${cfg.title}</h2>
-    </div>
-    <p style="color:#6a6c6b;font-size:15px;line-height:1.7;margin:0 0 20px;">
-      Hola <strong style="color:#212529;">${data.creatorName}</strong>,<br><br>
-      ${cfg.body}
-    </p>
+    <h2 style="${CORREO.titulo}">${cfg.title}</h2>
+    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(data.creatorName)}</strong>,</p>
+    <p style="${CORREO.texto}">${cfg.body}</p>
     ${data.notes ? `
-    <div style="background:${cfg.bgColor};border-radius:12px;padding:16px;margin:20px 0;border-left:4px solid ${cfg.borderColor};">
-      <p style="margin:0 0 6px;color:#374151;font-size:13px;font-weight:600;">Mensaje del equipo:</p>
-      <p style="margin:0;color:#6a6c6b;font-size:13px;line-height:1.6;">${data.notes}</p>
+    <div style="${cfg.caja}">
+      <p style="${CORREO.cajaTitulo}${cfg.tono}">Mensaje del equipo</p>
+      <p style="${CORREO.cajaTexto}${cfg.tono}">${escapeHtml(data.notes).replace(/\n/g, '<br>')}</p>
     </div>
     ` : ''}
-    <div style="text-align:center;margin:30px 0;">
-      <a href="${cfg.cta.url}" style="display:inline-block;background:${cfg.color};color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;">
-        ${cfg.cta.text}
-      </a>
-    </div>`;
+    ${botonCorreo(cfg.cta.url, cfg.cta.text)}`;
 
   return sendEmail({
     to: email,

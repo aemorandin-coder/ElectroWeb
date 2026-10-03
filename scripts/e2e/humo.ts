@@ -91,9 +91,9 @@ correr(async () => {
     await nav.cookie(dueno.token);
     await nav.tamano(1440, 900);
     await nav.ir('/admin');
-    await nav.hasta(`() => Boolean(document.getElementById('totales-titulo'))`);
+    await nav.hasta(`() => Boolean(document.getElementById('w-totales'))`);
     t('C-150 Dashboard carga con acciones, pendientes y ventas', await nav.js(`() => document.querySelector('main h1').innerText === 'Dashboard' && ['Por atender', 'Órdenes recientes', 'Ventas cobradas', 'En total'].every(x => document.querySelector('main').innerText.includes(x))`));
-    t('C-150 la compra de hoy está en el Dashboard', await nav.js(`() => document.querySelector('[aria-labelledby=recientes-titulo]').innerText.includes('Clienta Bloque')`));
+    t('C-150 la compra de hoy está en el Dashboard', await nav.js(`() => document.querySelector('[aria-labelledby=w-ordenes]').innerText.includes('Clienta Bloque')`));
     t('C-150 menú: Dashboard y seis secciones', await nav.js(`() => document.querySelectorAll('#admin-sidebar nav button[aria-expanded]').length === 6 && document.querySelector('#admin-sidebar nav a').innerText.trim() === 'Dashboard'`));
     await nav.foto('bloque-dashboard-1440');
 

@@ -10,6 +10,14 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.8] - 2026-10-03
+### Dos administradores sin pisarse, en el resto del panel (C-170)
+- **Promotores 1.1.0, Productos 1.2.0 (categorías), Ofertas y cupones 1.1.0, Cotizaciones 1.1.0, Marketing 1.1.0 (campañas):** si otra persona guardó antes que tú, ya no se pisa su trabajo: se combinan los cambios y solo se pregunta por lo que las dos tocaron. Se ve quién más tiene abierto lo mismo, y antes de borrar algo que otra persona está editando, se pregunta.
+- **ElectroStudio 1.1.0:** el guardado automático junta los cambios si dos personas editan la misma historia, y avisa.
+- **Cursos 1.0.1 y Clientes 1.0.1:** aprobar a un creador, verificar una empresa o atender una solicitud de producto dos veces a la vez ya no le manda dos avisos al cliente; la segunda persona lee "ya la atendió…".
+- **Marco del panel 1.3.0, Reportes 1.1.1:** las piezas comunes y la bitácora de "quién cambió qué" para cualquier registro.
+- Sin cambio de base.
+
 ## [1.0.0-rc.7] - 2026-10-03
 ### Dashboard 1.1.0 (C-171)
 - **Dashboard a tu gusto**, como el panel rápido de un teléfono: **Editar** → cada tarjeta se quita con el botón rojo "−" (las necesarias llevan candado: Por atender, Ventas cobradas y Accesos rápidos), se arrastra para ordenar, se le cambia el tamaño, y abajo está lo que se puede agregar con "+". **Listo** guarda.

@@ -1,19 +1,20 @@
-# Lo de ahora (actualizado 2026-10-03, C-171 · versión 1.0.0-rc.7)
+# Lo de ahora (actualizado 2026-10-03, C-170 · versión 1.0.0-rc.8)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** versión **`v1.0.0-rc.7`** (C-171), igual a GitHub. **Producción: `v1.0.0-rc.6`**, comprobado desde fuera el 03/10 (responden el latido de visitantes y la papelera). El plan de este ciclo está en `PROPUESTA_C168-C172.md`.
-- **Falta subir: C-171** (bloque de abajo). **Cambio de base: una tabla nueva** (aditiva). Sin crons ni variables. Trae una dependencia nueva (`@dnd-kit`).
-- **C-170 (edición sin pisarse en el resto del panel) sigue a medias en su rama y NO va en este lote** (sin probar, `estado/C-170.md`). Después: C-172 (Destacados que rotan).
+- **`main`:** versión **`v1.0.0-rc.8`** (C-171 y C-170), igual a GitHub. **Producción: `v1.0.0-rc.6`**, comprobado desde fuera el 03/10. El plan de este ciclo está en `PROPUESTA_C168-C172.md`.
+- **Falta subir, en un solo lote: C-171 y C-170** (bloque de abajo). **Cambio de base: una tabla nueva** (aditiva). Sin crons ni variables. Trae una dependencia nueva (`@dnd-kit`).
+- **Siguen:** C-175 (rediseño de todos los correos con el logo largo, pedido el 03/10) y C-172 (Destacados que rotan).
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos al final de la sección 2). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: C-171 (de rc.6 a v1.0.0-rc.7)
+## 2. Deploy pendiente: C-171 y C-170 (de rc.6 a v1.0.0-rc.8)
+- **C-170 · Dos administradores sin pisarse, en el resto del panel** (`estado/C-170.md`): en **Promotores, Categorías, Ofertas y cupones, Cotizaciones y Campañas**, si otra persona guardó antes se combinan los cambios (solo pregunta por lo que las dos tocaron), se ve quién más lo tiene abierto y se pregunta antes de borrar algo que otra persona edita. **ElectroStudio** junta los cambios en su guardado automático. Aprobar a un creador, verificar una empresa o atender una solicitud de producto dos veces a la vez ya no avisa dos veces. Sin cambio de base.
 - **C-171 · Dashboard a tu gusto** (`estado/C-171.md`), el diseño tipo panel rápido de Samsung One UI: en el Dashboard, **Editar** → cada tarjeta se quita con el botón rojo "−" (las necesarias llevan candado: Por atender, Ventas cobradas y Accesos rápidos), se arrastra para ordenar, se le cambia el tamaño y abajo está lo que se puede agregar con "+"; **Listo** guarda. **Cada administrador tiene el suyo.** Accesos rápidos a elección y diez tarjetas nuevas (Visitantes ahora, Embudo de hoy, Meta del mes, Tasa del día, Más vendidos, Actividad del equipo, Promotores, Cotizaciones abiertas, Reseñas recientes, Respaldo).
-- **Verificado:** `tsc`, `npm run lint` (0 errores), `npm run build`, `check:modulos`, **prueba de humo 59 de 59** y 35 comprobaciones del Dashboard (dueño, Administrador y cliente; computadora y teléfono). **No probado:** arrastrar con el dedo en un teléfono real, Chrome y Safari.
+- **Verificado:** `tsc`, `npm run lint` (0 errores), `npm run build`, `check:modulos`, **prueba de humo 59 de 59**, 35 comprobaciones del Dashboard y 53 de C-170 (dos administradores en cada pantalla). **No probado:** arrastrar con el dedo en un teléfono real, Chrome y Safari.
 - **SQL total que va a mostrar `deploy.sh`** (solo esto). Nada borra ni cambia lo que ya existe:
   - `CREATE TABLE "admin_dashboard_layouts"` con un índice único (`userId`) y una llave a `users`.
 - **Dependencias nuevas** (`@dnd-kit`, para arrastrar): `deploy.sh` las instala solo porque cambió `package-lock.json`.
@@ -22,9 +23,9 @@
 ### Pasos (en el servidor, `/var/www/electroshopve`)
 1. **Qué hay ahora:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.6`. Si dice otra cosa, avisar a Claude.
 2. **Respaldo antes de subir:** Admin → Configuración → **Respaldos** → "Respaldar ahora" y esperar las dos filas "Hecho". Si prefieres a mano:
-   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc7.dump`
+   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc8.dump`
 3. **Subir:** `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL de arriba (la tabla nueva). Si coincide: `npx prisma db push` y `bash scripts/deploy.sh` otra vez. Si aparece un `DROP` o algo distinto, no seguir y avisar a Claude.
-4. **Comprobar:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.7` y el pie del menú del panel, "Versión 1.0.0-rc.7".
+4. **Comprobar:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.8` y el pie del menú del panel, "Versión 1.0.0-rc.8".
 
 ### Pruebas después de subir (unos 10 minutos)
 1. **Dashboard:** se ve como siempre. Arriba a la derecha, **Editar**.
@@ -32,6 +33,7 @@
 3. **Meta del mes:** escribe tu meta en la tarjeta y guarda: muestra el porcentaje y cuánto falta.
 4. **Luis:** su Dashboard sigue siendo el de siempre (no cambió con el tuyo) y en "Agregar" **no** le salen "Meta del mes" ni "Respaldo".
 5. **Restablecer** (dentro de Editar) vuelve al diseño original.
+6. **Sin pisarse (C-170)**, con dos cuentas de administrador: abran la misma **cotización**; uno cambia "Para qué es" y el otro el lugar, y guardan los dos: quedan los dos cambios sin preguntar. Si los dos cambian lo mismo, sale el cuadro para elegir. Lo mismo vale en Promotores (lápiz), Categorías, Ofertas y Campañas. En **ElectroStudio**, escribe en una historia: debe seguir diciendo "Guardado".
 
 **Vuelta atrás:** `git reset --hard v1.0.0-rc.6 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla nueva no molesta al código anterior (no se quita).
 
@@ -84,7 +86,7 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
 En el orden en que más destraban:
 
 **En producción**
-1. **El deploy de arriba** (versión `v1.0.0-rc.7`: el Dashboard a tu gusto) con sus pruebas, y confirmar las del lote anterior (rc.6). De antes siguen pendientes **una restauración de prueba del respaldo** (`OPERACION.md`), el redondeo de C-96, las pruebas de C-157 y las visuales de C-162.
+1. **El deploy de arriba** (versión `v1.0.0-rc.8`: el Dashboard a tu gusto y el panel sin pisarse) con sus pruebas, y confirmar las del lote anterior (rc.6). De antes siguen pendientes **una restauración de prueba del respaldo** (`OPERACION.md`), el redondeo de C-96, las pruebas de C-157 y las visuales de C-162.
 2. **Guardar aparte, fuera del servidor, la clave privada del respaldo y una copia del `.env`** (gestor de contraseñas). La clave la muestra el panel una sola vez; el `.env` no va dentro del respaldo y trae `NEXTAUTH_SECRET`, `DATABASE_URL` y las claves de pago.
 3. **Un monitor de que la tienda está arriba** (gratis, sin código): UptimeRobot o similar apuntando a `https://electroshopve.com/robots.txt` cada 5 minutos, con aviso a tu correo y a Telegram. Todo lo demás (avisos, respaldos) vive en el mismo servidor y no puede avisar si se cae.
 4. **El certificado HTTPS vence el 12/11/2026:** comprobar en el servidor que la renovación sigue sola (`systemctl list-timers | grep certbot` debe mostrar una línea) y, si no, avisar a Claude antes de esa fecha.

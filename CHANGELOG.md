@@ -10,6 +10,10 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.10] - 2026-10-03
+### Correos (C-175)
+- El logo largo de los correos es ahora **el mismo del encabezado de la tienda**: el ícono y "Electro Shop" con mayúscula y minúsculas (la rc.9 lo traía todo en mayúsculas). Solo cambian dos imágenes.
+
 ## [1.0.0-rc.9] - 2026-10-03
 ### Marketing 1.2.0 (C-175)
 - **Todos los correos rediseñados, con el logo largo.** Arriba va el logo largo de Electro Shop (antes un logo chiquito dentro de un cuadro, sobre una franja azul con el nombre escrito), y debajo el contenido limpio y el pie con las redes, el teléfono y los enlaces.

@@ -10,6 +10,15 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.7] - 2026-10-03
+### Dashboard 1.1.0 (C-171)
+- **Dashboard a tu gusto**, como el panel rápido de un teléfono: **Editar** → cada tarjeta se quita con el botón rojo "−" (las necesarias llevan candado: Por atender, Ventas cobradas y Accesos rápidos), se arrastra para ordenar, se le cambia el tamaño, y abajo está lo que se puede agregar con "+". **Listo** guarda.
+- **Cada administrador tiene el suyo** (se guarda en la base: se ve igual en la computadora y en el teléfono) y solo puede poner lo que su rol permite.
+- **Accesos rápidos a elección:** qué botones y en qué orden (16 disponibles).
+- **Diez tarjetas nuevas:** Visitantes ahora (en vivo), Embudo de hoy, Meta del mes (solo el dueño; la meta se escribe en la tarjeta), Tasa del día, Más vendidos de la semana, Actividad del equipo, Promotores, Cotizaciones abiertas, Reseñas recientes y Respaldo.
+- Más vivo: las tarjetas entran escalonadas, las cifras cuentan hasta su valor y el Dashboard se pone al día solo con cada orden o pago. Con "reducir movimiento" no se anima nada.
+- Una tabla nueva (`admin_dashboard_layouts`). Librería nueva solo para el panel: `@dnd-kit` (arrastrar).
+
 ## [1.0.0-rc.6] - 2026-10-02
 ### Reportes y seguridad 1.1.0 (C-173)
 - **Reportes en vivo.** Arriba de todo, un panel que se actualiza solo: cuántas personas están **conectadas a la tienda ahora**, cuántas **con cuenta** y cuántas **sin cuenta**, cuántas llevan productos en el carrito, qué están mirando, de dónde llegaron (Instagram, Google, directo…) y desde qué equipo, con la lista de quién es cada una ("Carlos P.", "Visitante A3F").

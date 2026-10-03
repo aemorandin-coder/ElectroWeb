@@ -253,6 +253,23 @@ La idea es buena **con condiciones**. Un carrusel que gira solo y sin fin baja l
 
 ---
 
+## 6c. C-174 · Marquesina del equipo: quién está y dónde (Lote B, MENOR) — pedido de Andrés del 02/10
+
+**Para qué:** que en cualquier pantalla del panel se vea, de un vistazo, **quién del equipo está conectado y en qué sector**, con efecto marquesina: "Luis está en Productos, editando «Teclado Redragon K552» · Ana está en Órdenes".
+
+**Qué se construye**
+- **Franja de marquesina** (`components/admin/edicion/MarquesinaEquipo.tsx`) justo debajo de la barra de arriba del panel, de 32 px, `bg-brand-50`, texto `text-xs`. **Solo aparece si hay alguien más conectado**; sin nadie, no ocupa lugar. Cada persona lleva su inicial en un círculo y un puntito verde.
+- **Efecto marquesina real:** el texto corre de derecha a izquierda en bucle, pero **solo si no cabe** en la franja (si cabe, queda quieto). Se pausa al pasar el ratón, al enfocarla con el teclado y al tocarla en el teléfono. Con `prefers-reduced-motion` no se mueve: se muestra la lista quieta, partida en líneas. Es del panel (la regla de "sin animaciones infinitas" es de la tienda). El texto animado va con `aria-hidden` y un resumen quieto para lectores de pantalla (`aria-label`), sin `aria-live` (no debe hablar solo).
+- **Sectores:** cada pestaña del panel avisa en qué módulo está (`moduloDeRuta` de `lib/modulos.ts`: "Productos", "Órdenes y pagos", "Configuración"…) usando la presencia de C-169 con un recurso `seccion:<módulo>`. Si además está editando algo, manda una **etiqueta corta** (el nombre del producto, hasta 80 caracteres, limpia de caracteres de control) y la marquesina dice "editando «…»". Un toque en su nombre lleva a esa pantalla.
+- **Quién cuenta como conectado:** quien tiene una pestaña del panel **visible**. Si la pestaña queda en segundo plano deja de avisar y a los 60 s desaparece (sin "fantasmas"). Dos pestañas de la misma persona cuentan como una.
+- **Privacidad:** solo la ven administradores con los dos pasos; nunca llega a clientes. No se muestra IP, dispositivo ni historial: solo nombre, sector y qué edita.
+- **Servidor:** `PersonaEnLinea` gana `donde?: { seccion: string; detalle?: string }`; `POST /api/admin/presencia` acepta `etiqueta`; `GET /api/admin/presencia?tipo=seccion` da el estado inicial; los cambios llegan por el canal en vivo (`admin:presencia`, sin nada nuevo). Permiso del recurso `seccion`: cualquier administrador verificado.
+- Módulos: Marco del panel 1.2.0.
+
+**Aceptación:** con dos cuentas, cada una ve a la otra en la marquesina con su sector y, al abrir un producto, "editando «nombre»"; al cerrar la pestaña o dejarla en segundo plano, desaparece en un minuto; a 360 px la franja no desborda y corre sola si el texto es largo; con `reduced-motion` no se mueve; un cliente no recibe nada de esto. **Casos manipulados:** etiqueta de 5.000 caracteres o con saltos de línea → se recorta y limpia; recurso `seccion:inventado` → 400; sin sesión → 401.
+
+---
+
 ## 7. Fuera de esta propuesta (anotado para después)
 - Combinar dentro de listas (dos admins agregando fotos distintas a la vez): hoy la lista entera es un campo.
 - Notas compartidas del equipo como widget (pide una tabla y moderación).

@@ -1,24 +1,26 @@
-# Lo de ahora (actualizado 2026-10-02, C-168 · versión 1.0.0-rc.4)
+# Lo de ahora (actualizado 2026-10-02, C-169 · versión 1.0.0-rc.4)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** versión **`1.0.0-rc.4`** en armado (C-166, C-167 y C-168; la etiqueta `v1.0.0-rc.4` se pone al cerrar el lote con C-169). Antes de esa etiqueta la última es `v1.0.0-rc.3`. Lo que viene después de C-168 está en `PROPUESTA_C168-C172.md` (aprobada el 02/10). **Producción: `v1.0.0-rc.1`** (C-165; `2480457`), comprobado desde fuera el 02/10 por la noche: todavía sin la cabecera `Content-Security-Policy-Report-Only` y sin la ruta `/api/cron/promotores`.
-- **Falta subir, en un solo lote: C-166, C-167 y C-168** (bloque de abajo). **Cambio de base: dos tablas nuevas y siete columnas** (todo aditivo). **Un cron nuevo** (promotores). Sin variables obligatorias.
+- **`main`:** versión **`1.0.0-rc.4`** en armado (C-166, C-167, C-168 y C-169; la etiqueta `v1.0.0-rc.4` se pone al fusionar C-169). Antes de esa etiqueta la última es `v1.0.0-rc.3`. Lo que viene después de C-168 está en `PROPUESTA_C168-C172.md` (aprobada el 02/10). **Producción: `v1.0.0-rc.1`** (C-165; `2480457`), comprobado desde fuera el 02/10 por la noche: todavía sin la cabecera `Content-Security-Policy-Report-Only` y sin la ruta `/api/cron/promotores`.
+- **Falta subir, en un solo lote: C-166, C-167, C-168 y C-169** (bloque de abajo). **Cambio de base: dos tablas nuevas, diez columnas y un índice** (todo aditivo). **Dos crons nuevos** (promotores y papelera). Sin variables obligatorias.
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos al final de la sección 2). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: C-166, C-167 y C-168 (v1.0.0-rc.4)
+## 2. Deploy pendiente: C-166, C-167, C-168 y C-169 (v1.0.0-rc.4)
+- **C-169 · Productos sin pérdidas** (`estado/C-169.md`), el caso de los 20 minutos perdidos: **"Eliminar" manda a la papelera** (pestaña nueva en Productos; 30 días; "Deshacer" al instante; solo el dueño borra para siempre antes), el editor **avisa en vivo** si otro administrador lo está editando, lo cambió o lo movió a la papelera, **combina solo** lo que cada uno cambió (pregunta solo por lo que los dos tocaron), guarda un **borrador en el navegador** y deja **historial** de quién cambió qué. Tres columnas nuevas en productos. **Un cron nuevo** (papelera).
 - **C-168 · Versiones por módulo** (`estado/C-168.md`): cada módulo del panel (Productos, ElectroStudio, Cursos, Configuración…) tiene su versión, que se ve en la barra de arriba, y el pie del menú dice la del sistema. Página nueva **Administración → Versiones** con qué cambió en cada módulo. Si alguien tiene el panel abierto cuando subes una versión, le sale "El panel se actualizó" con el botón para recargar; y cada administrador ve una vez "Qué hay de nuevo".
 - **C-167 · Promotores** (`estado/C-167.md`): cada promotor tiene un **código** que el cliente escribe en el carrito (descuento para el cliente; la compra cuenta para el promotor aunque el cliente ya tuviera cuenta). La comisión es sobre los **productos sin IVA ni envío**, en **Puntos ES**, y se **acredita sola 7 días después de la entrega**; quedan para tu revisión las que parecen autocompra, pasan de $50 o superan la ganancia de la venta. **Solicitud para ser promotor** desde la cuenta del cliente, con aprobación de un clic. La página del promotor ya no promete dinero, ni comisión por recargas, registros o cursos.
 - **C-166 · Content-Security-Policy en modo "solo avisa"** (`estado/C-166.md`): no bloquea nada; los avisos se ven en Reportes → Seguridad.
-- **Verificado:** `tsc`, `npm run lint` (0 errores) y `npm run build` sin avisos; C-167 con **80 comprobaciones con compras reales** y C-166 con un barrido de 65 pantallas; la prueba de humo, **59 de 59**. **No probado:** el correo de "Ya eres promotor" (simulado), el cron en el servidor, Chrome y Safari, y tráfico real de la política de contenido.
+- **Verificado (lote rc.4):** `tsc`, `npm run lint` (0 errores), `npm run build`, **prueba de humo 59 de 59**, C-168 con 20 comprobaciones y C-169 con 79 (dos administradores y un cliente contra un build de producción). Antes, en C-166 y C-167: `tsc`, `npm run lint` y `npm run build` sin avisos; C-167 con **80 comprobaciones con compras reales** y C-166 con un barrido de 65 pantallas; la prueba de humo, **59 de 59**. **No probado:** el correo de "Ya eres promotor" (simulado), el cron en el servidor, Chrome y Safari, y tráfico real de la política de contenido.
 - **SQL total que va a mostrar `deploy.sh`** (solo esto; puede salir en otro orden y en varias líneas). Nada borra ni cambia lo que ya existe:
   - `CREATE TABLE "csp_violations"` con sus dos índices (C-166).
   - `CREATE TABLE "influencer_applications"` con sus dos índices y una llave a `users`.
   - `ALTER TABLE "users" ADD COLUMN "panelVersionVista" TEXT` (C-168).
+  - `ALTER TABLE "products" ADD COLUMN "deletedAt" TIMESTAMP(3), ADD COLUMN "deletedById" TEXT, ADD COLUMN "statusAntesDePapelera" "ProductStatus"` y `CREATE INDEX "products_deletedAt_idx"` (C-169).
   - `ALTER TABLE "orders" ADD COLUMN "referralInfluencerId" TEXT`
   - `ALTER TABLE "promotions" ADD COLUMN "influencerId" TEXT`, con un índice único y una llave a `influencers`.
   - `ALTER TABLE "influencers" ADD COLUMN "customerDiscountPercent" INTEGER NOT NULL DEFAULT 5`
@@ -35,6 +37,10 @@
    `cp /var/www/electroshopve/docs/plan/scripts/cron-promotores.sh ~/cron-promotores.sh && chmod +x ~/cron-promotores.sh && ~/cron-promotores.sh`
    Debe responder algo como `{"acreditadas":0,"rechazadas":0,"revisadas":0}`. Luego `crontab -e` y agregar:
    `30 9 * * * /home/luami/cron-promotores.sh >> /home/luami/cron-promotores.log 2>&1`
+6. **El cron de la papelera** (una vez al día; borra lo que lleva más de 30 días en la papelera de productos):
+   `cp /var/www/electroshopve/docs/plan/scripts/cron-papelera.sh ~/cron-papelera.sh && chmod +x ~/cron-papelera.sh && ~/cron-papelera.sh`
+   Debe responder `{"revisados":0,"borrados":0,"archivados":0}`. Luego `crontab -e` y agregar:
+   `45 9 * * * /home/luami/cron-papelera.sh >> /home/luami/cron-papelera.log 2>&1`
 
 ### Pruebas después de subir (unos 20 minutos)
 1. **Promotores que ya tengas** (Admin → Marketing → Promotores): cada uno muestra "gana X % · su código descuenta 5 %". Con el lápiz se cambia la comisión y el descuento. Las comisiones pendientes de antes salen **"por revisar"** (se calcularon sobre el total): apruébalas o recházalas a mano.
@@ -44,8 +50,15 @@
 5. **Página del promotor** (teléfono y computadora): su código con "Copiar código", su enlace, "Tus últimas ventas" con el estado de cada una, y ningún texto que diga dinero, recargas o beneficios por nivel.
 6. **Política de contenido (C-166):** navegar la tienda y el panel unos minutos; todo debe verse igual que antes. Reportes → Seguridad → abajo, "Política de contenido (CSP)": lo esperado es "Sin avisos". Dejarla una semana; si sigue limpia, se pasa a bloquear (C-166b).
 7. **Versiones (C-168):** Administración → **Versiones**: arriba dice `1.0.0-rc.4`, la etiqueta de git, el commit y la hora del build; abajo, los 16 módulos. En cada pantalla del panel, la barra de arriba muestra el módulo y su versión ("Productos 1.0.0"). La primera vez que entra cada administrador sale "Qué hay de nuevo" con **Entendido**.
+8. **Papelera y trabajo en equipo (C-169)** — con dos cuentas de administrador (tú y Luis), cada uno en su navegador:
+   a. Tú abres un producto y cambias el nombre **sin guardar**. Luis, en Productos, ve "Andrés lo edita" junto al producto, lo manda a la papelera y le pregunta "Lo están editando ahora… ¿moverlo igual?". En tu pantalla sale **al instante** la franja roja "Luis movió este producto a la papelera", con **lo que escribiste intacto**. "Restaurar y seguir editando" lo devuelve y puedes guardar.
+   b. Recarga la página en medio de una edición: sale "Tienes cambios sin guardar… Recuperar".
+   c. Tú cambias el precio y Luis el stock del mismo producto: al guardar tú, **no pregunta nada** y quedan los dos cambios.
+   d. Los dos cambian el nombre: sale el cuadro con las dos versiones para elegir.
+   e. Productos → **Papelera**: el producto con quién lo movió y cuándo se borra solo. "Deshacer" a los pocos segundos de mandar algo a la papelera. Luis (Administrador) ve "Restaurar" pero **no** "Borrar para siempre" (solo tú).
+   f. Al final de un producto: **Historial** con quién cambió qué.
 
-**Vuelta atrás:** `git reset --hard 2480457 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas y columnas nuevas no molestan al código anterior (no se quitan). Antes, quitar la línea de `cron-promotores.sh` de `crontab -e`. Los cupones de promotor que ya se crearon quedan como cupones normales: pausarlos en Ofertas si no se quieren.
+**Vuelta atrás:** `git reset --hard 2480457 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas y columnas nuevas no molestan al código anterior (no se quitan). Antes, quitar las líneas de `cron-promotores.sh` y `cron-papelera.sh` de `crontab -e`. Lo que esté en la papelera queda como producto archivado (no se ve en la tienda) y se puede reactivar desde la base. Los cupones de promotor que ya se crearon quedan como cupones normales: pausarlos en Ofertas si no se quieren.
 
 ### Activar "Continuar con Google" (C-85, cuando quieras; no necesita deploy de código)
 1. Google Cloud → proyecto ElectroWeb → Google Auth Platform → **Clientes** → Crear cliente → **Aplicación web**, nombre `ElectroShop inicio de sesión`, y en "URIs de redireccionamiento autorizados": `https://electroshopve.com/api/auth/callback/google`. Es un cliente distinto del de los respaldos.

@@ -19,6 +19,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
   const original = await prisma.product.findUnique({ where: { id }, include: { digitalVariants: true } });
   if (!original) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+  if (original.deletedAt) return NextResponse.json({ error: 'Está en la papelera: restáuralo primero' }, { status: 409 });
 
   // SKU y slug libres: "-COPIA", "-COPIA-2", …
   const libre = async (base: string, campo: 'sku' | 'slug') => {
@@ -34,9 +35,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const shortCode = await generateShortCode(prisma);
 
   const {
-    id: _id, sku: _sku, slug: _slug, shortCode: _short, createdAt: _c, updatedAt: _u, digitalVariants, ...resto
+    id: _id, sku: _sku, slug: _slug, shortCode: _short, createdAt: _c, updatedAt: _u, deletedAt: _d, deletedById: _db, statusAntesDePapelera: _sp, digitalVariants, ...resto
   } = original;
-  void _id; void _sku; void _slug; void _short; void _c; void _u;
+  void _id; void _sku; void _slug; void _short; void _c; void _u; void _d; void _db; void _sp;
 
   const copia = await prisma.$transaction(async (tx) => {
     const creado = await tx.product.create({

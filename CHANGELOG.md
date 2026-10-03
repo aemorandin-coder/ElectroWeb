@@ -16,6 +16,14 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - **Aviso de versión nueva:** si se sube una versión mientras alguien tiene el panel abierto, le sale "El panel se actualizó" con el botón para recargar (no recarga sola).
 - **Qué hay de nuevo:** cada administrador ve una vez, después de un deploy, qué módulos cambiaron.
 - Una columna nueva (`users.panelVersionVista`).
+### Productos 1.1.0 (C-169)
+- **Eliminar manda a la papelera** (30 días, con "Deshacer" y una pestaña Papelera en Productos): ya no se pierde nada por un clic. Solo el dueño puede borrar para siempre antes; a los 30 días se borra solo (un cron nuevo). Antes, "Eliminar" borraba de verdad.
+- **Dos administradores sobre el mismo producto:** se ve quién más lo está editando y, en la lista, "Luis lo edita". Si el otro guarda o lo mueve a la papelera mientras lo editas, te avisa al instante y **no pierdes lo que escribiste**: lo que cambió cada uno se combina solo, y solo se pregunta por lo que los dos tocaron.
+- Lo que editas se guarda como borrador en el navegador (si se recarga o se cierra la pestaña, se ofrece recuperarlo).
+- Cada edición queda en la bitácora con los campos cambiados, y el editor muestra el historial y "último cambio: Luis, hace 5 min".
+### Marco del panel 1.1.0 (C-169)
+- Trabajo en equipo en el panel: presencia ("Luis también está editando esto"), avisos en vivo de cambios ajenos, borradores y combinación de cambios. Lo usan Productos y, en las próximas versiones, el resto de las pantallas.
+- Cuatro columnas nuevas (`products.deletedAt`, `deletedById`, `statusAntesDePapelera` y un índice).
 ### Arreglos
 - `next dev` no arrancaba por la regla de cabeceras vacía de C-166 (solo en desarrollo; producción no se afectaba).
 

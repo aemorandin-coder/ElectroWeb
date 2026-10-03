@@ -348,6 +348,12 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime  @updatedAt
 
+  // C-169: papelera. "Eliminar" ya no borra: el producto queda con status ARCHIVED (la tienda solo muestra PUBLISHED, así que
+  // desaparece al instante) y estos tres campos. Se restaura al estado que tenía; a los 30 días lo borra el cron de la papelera.
+  deletedAt             DateTime?
+  deletedById           String?
+  statusAntesDePapelera ProductStatus?
+
   orderItems    OrderItem[]
   reviews       Review[]
   reservations  StockReservation[]
@@ -355,6 +361,7 @@ model Product {
   digitalCodes  DigitalCode[]
   digitalVariants DigitalVariant[]
 
+  @@index([deletedAt])
   @@map("products")
 }
 

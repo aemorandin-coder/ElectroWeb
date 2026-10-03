@@ -79,7 +79,7 @@ export async function getDashboard(): Promise<DashboardData> {
     prisma.order.findMany({ where: { ...VENTA, paidAt: { gte: desdeSemana } }, select: { paidAt: true, totalUSD: true } }),
     prisma.order.aggregate({ where: VENTA, _sum: { totalUSD: true } }),
     prisma.order.count(),
-    prisma.product.count(),
+    prisma.product.count({ where: { deletedAt: null } }),
     prisma.product.count({ where: { status: 'PUBLISHED' } }),
     prisma.user.count({ where: CLIENTES }),
 

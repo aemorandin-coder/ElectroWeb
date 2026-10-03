@@ -37,6 +37,7 @@ export interface ModuloPanel {
 }
 
 const PRIMERA: Pick<CambioModulo, 'version' | 'sistema' | 'tarea'> = { version: '1.0.0', sistema: '1.0.0-rc.4', tarea: 'C-168' };
+const RC4 = { sistema: '1.0.0-rc.4' } as const;
 const primera = (resumen: string): CambioModulo => ({ ...PRIMERA, resumen, silencioso: true });
 
 export const MODULOS: ModuloPanel[] = [
@@ -53,8 +54,10 @@ export const MODULOS: ModuloPanel[] = [
       'app/api/admin/dos-pasos/', 'app/api/admin/sidebar-counts/', 'app/api/admin/version/', 'app/api/realtime/',
       'lib/admin-ui.ts', 'lib/auth-helpers.ts', 'lib/auth.ts', 'lib/sesiones.ts', 'lib/dos-pasos.ts', 'lib/notifications.ts',
       'lib/admin-alerts.ts', 'lib/telegram/', 'lib/realtime/', 'lib/version-build.ts', 'proxy.ts',
+      // C-169: lo que comparten las pantallas que se editan entre varios (presencia, conflictos, borrador, historial)
+      'components/admin/edicion/', 'lib/edicion/', 'app/api/admin/presencia/', 'app/api/admin/historial/',
     ],
-    historial: [{ ...PRIMERA, resumen: 'Ahora cada módulo del panel lleva su versión (abajo del menú y en la barra de arriba) y se avisa cuando hay una versión nueva.' }],
+    historial: [{ version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Trabajo en equipo: se ve quién más está editando lo mismo, se avisa en vivo cuando otro lo cambia o lo mueve a la papelera, y los borradores sin guardar se conservan en el navegador.' }, { ...PRIMERA, resumen: 'Ahora cada módulo del panel lleva su versión (abajo del menú y en la barra de arriba) y se avisa cuando hay una versión nueva.' }],
   },
   {
     id: 'dashboard',
@@ -62,7 +65,7 @@ export const MODULOS: ModuloPanel[] = [
     descripcion: 'La pantalla de trabajo: lo que espera al equipo, las ventas y los accesos rápidos.',
     paginas: [],
     archivos: ['app/admin/(dashboard)/page.tsx', 'components/admin/dashboard/', 'lib/dashboard/', 'lib/queries/dashboard.ts', 'app/api/admin/dashboard/', 'app/api/admin/live-users/'],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.1', ...RC4, tarea: 'C-169', resumen: 'El total de productos ya no cuenta los de la papelera.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'ordenes',
@@ -88,10 +91,10 @@ export const MODULOS: ModuloPanel[] = [
       'app/admin/(dashboard)/products/', 'app/admin/(dashboard)/categories/', 'app/admin/(dashboard)/reviews/',
       'app/api/products/', 'app/api/admin/products/', 'app/api/admin/sades/', 'app/api/categories/', 'app/api/reviews/', 'app/api/digital-codes/',
       'lib/product-', 'lib/busqueda-web/', 'lib/busqueda-sql.ts', 'lib/spec-sugerencias.ts', 'lib/marcas.ts', 'lib/precio-sugerido.ts',
-      'lib/digital-', 'lib/sades.ts', 'lib/review-status.ts', 'lib/resenas-avisos.ts', 'lib/stock-alerts.ts', 'lib/edicion/',
-      'components/admin/edicion/',
+      'lib/digital-', 'lib/sades.ts', 'lib/review-status.ts', 'lib/resenas-avisos.ts', 'lib/stock-alerts.ts',
+      'lib/papelera.ts', 'app/api/cron/papelera/',
     ],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Eliminar manda a la papelera (30 días, con Deshacer). Si otro administrador guarda o mueve el producto mientras lo editas, se combinan los cambios, se avisa y no se pierde lo que escribiste. Se ve quién lo está editando.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'ofertas',
@@ -118,7 +121,7 @@ export const MODULOS: ModuloPanel[] = [
     nombre: 'Promotores',
     descripcion: 'Promotores, sus códigos, solicitudes y comisiones en Puntos ES.',
     paginas: [],
-    archivos: ['app/admin/(dashboard)/marketing/_components/Promotores.tsx', 'app/api/influencers/', 'lib/influencer-'],
+    archivos: ['app/admin/(dashboard)/marketing/_components/Promotores.tsx', 'app/api/influencers/', 'app/api/cron/promotores/', 'lib/influencer-'],
     historial: [primera('Primera versión registrada.')],
   },
   {
@@ -178,7 +181,7 @@ export const MODULOS: ModuloPanel[] = [
       'app/admin/(dashboard)/reports/', 'app/api/admin/reports/', 'app/api/admin/csp/', 'app/api/csp-report/', 'app/api/analytics/',
       'lib/csp-', 'lib/relacion-ventas.ts', 'lib/audit-', 'components/AnalyticsTracker.tsx', 'lib/login-guard.ts', 'lib/rate-limit.ts',
     ],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.1', ...RC4, tarea: 'C-169', resumen: 'La bitácora entiende "movido a la papelera", "restaurado" y "borrado para siempre", y el total de productos no cuenta la papelera.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'configuracion',
@@ -188,7 +191,8 @@ export const MODULOS: ModuloPanel[] = [
     archivos: [
       'app/admin/(dashboard)/settings/', 'app/admin/(dashboard)/payments/', 'app/admin/(dashboard)/equipo/', 'app/admin/(dashboard)/legal/',
       'app/api/settings/', 'app/api/admin/respaldos/', 'app/api/admin/equipo/', 'app/api/admin/legal/', 'app/api/admin/payments/',
-      'app/api/admin/exchange-rate/', 'app/api/exchange-rates/', 'app/api/legal/', 'app/api/cron/', 'lib/respaldos/', 'lib/equipo.ts', 'lib/legal-',
+      'app/api/admin/exchange-rate/', 'app/api/exchange-rates/', 'app/api/legal/', 'app/api/cron/envios/', 'app/api/cron/favoritos/', 'app/api/cron/resenas/',
+      'app/api/cron/respaldos/', 'lib/respaldos/', 'lib/equipo.ts', 'lib/legal-',
       'lib/site-settings.ts', 'lib/exchange-rate.ts', 'lib/correo.ts', 'lib/email-service.ts', 'lib/smtp-seguro.ts', 'lib/maintenance.ts',
       'components/admin/EmailSettingsPanel.tsx', 'components/legal/', 'scripts/deploy.sh',
     ],

@@ -22,7 +22,7 @@ interface DatosServidor {
 }
 
 const REVISAR_CADA_MS = 10 * 60_000;
-const MAXIMO_LINEAS = 6;
+const MAXIMO_LINEAS = 4;
 
 export default function AvisosDeVersion() {
   const [servidor, setServidor] = useState<DatosServidor | null>(null);
@@ -74,25 +74,26 @@ export default function AvisosDeVersion() {
   if (cerradas || servidor.visto === servidor.version) return null;
   const novedades = novedadesDesde(servidor.visto, VERSION_BUILD.version);
   if (novedades.length === 0) return null;
-  const lineas = novedades.flatMap(({ modulo, cambios }) => cambios.map((c) => ({ modulo, cambio: c })));
+  // Compacto: solo lo más nuevo de cada módulo y pocas líneas. El detalle completo está en Administración → Versiones
+  const lineas = novedades.map(({ modulo, cambios }) => ({ modulo, cambio: cambios[0] }));
 
   return (
-    <section aria-labelledby="novedades-titulo" className="mb-4 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-700">
+    <section aria-labelledby="novedades-titulo" className="mb-4 rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-700 sm:p-4">
       <div className="flex items-start gap-3">
         <FiGift className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <h2 id="novedades-titulo" className="font-semibold">Qué hay de nuevo en el panel · versión {servidor.version}</h2>
-          <ul className="mt-2 space-y-1">
+          <h2 id="novedades-titulo" className="font-semibold">Qué hay de nuevo · versión {servidor.version}</h2>
+          <ul className="mt-1.5 space-y-1">
             {lineas.slice(0, MAXIMO_LINEAS).map(({ modulo, cambio }) => (
-              <li key={`${modulo.id}-${cambio.version}`}>
-                <span className="font-semibold">{modulo.nombre} {cambio.version}:</span> {cambio.resumen}
+              <li key={`${modulo.id}-${cambio.version}`} className="line-clamp-2">
+                <span className="font-semibold">{modulo.nombre}:</span> {cambio.resumen}
               </li>
             ))}
           </ul>
           {lineas.length > MAXIMO_LINEAS && <p className="mt-1">Y {lineas.length - MAXIMO_LINEAS} más en Versiones.</p>}
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-2.5 flex flex-wrap gap-2">
             <button type="button" onClick={() => void cerrarNovedades()} className={adminPrimaryButton}>Entendido</button>
-            <Link href="/admin/versiones" onClick={() => void cerrarNovedades()} className={adminSecondaryButton}>Ver todas las versiones</Link>
+            <Link href="/admin/versiones" onClick={() => void cerrarNovedades()} className={adminSecondaryButton}>Ver detalle</Link>
           </div>
         </div>
       </div>

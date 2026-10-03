@@ -14,6 +14,9 @@ import {
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useSession } from 'next-auth/react';
+import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
+import { enviarConVersion } from '@/lib/edicion/guardado';
+import { useConflictoDeFormulario } from '@/lib/edicion/useConflictoDeFormulario';
 
 type Bloque =
   | { tipo: 'titulo'; texto: string }
@@ -136,8 +139,15 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
   const borrar = async (campana: Resumen) => {
     const ok = await confirm({ title: 'Borrar borrador', message: `¿Borrar "${campana.subject}"?`, confirmText: 'Borrar', cancelText: 'Cancelar', type: 'danger' });
     if (!ok) return;
-    const res = await fetch(`/api/admin/campaigns/${campana.id}`, { method: 'DELETE' });
-    const data = await res.json().catch(() => null);
+    let res = await fetch(`/api/admin/campaigns/${campana.id}`, { method: 'DELETE' });
+    let data = await res.json().catch(() => null);
+    // C-170: otra persona la tiene abierta ahora: se pregunta antes de borrarla
+    if (res.status === 409 && data?.conflicto === 'en_edicion') {
+      const seguir = await confirm({ title: 'La están editando ahora', message: `${data.error}. Si la borras, verá un aviso. ¿Borrarla igual?`, confirmText: 'Borrar', cancelText: 'Cancelar', type: 'warning' });
+      if (!seguir) return;
+      res = await fetch(`/api/admin/campaigns/${campana.id}?forzar=1`, { method: 'DELETE' });
+      data = await res.json().catch(() => null);
+    }
     if (!res.ok) return toast.error(data?.error || 'No se pudo borrar');
     recargar();
   };
@@ -271,6 +281,12 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
   const correoPrueba = correoElegido ?? session?.user?.email ?? '';
   const [probando, setProbando] = useState(false);
   const [subiendo, setSubiendo] = useState<number | null>(null);
+  // C-170: la campaña como se abrió (o como quedó al guardar) y su versión: la base para combinar si otra persona guardó antes
+  const base = useRef<{ datos: typeof NUEVO; version: string } | null>(null);
+  const { resolver: resolverConflicto, dialogo: dialogoConflicto } = useConflictoDeFormulario(
+    { subject: 'Asunto', preheader: 'Texto de vista previa', bloques: 'Contenido del correo' },
+    (campo, valor) => (campo === 'bloques' ? `${(valor as Bloque[]).length} ${(valor as Bloque[]).length === 1 ? 'bloque' : 'bloques'}` : String(valor || '(vacío)')),
+  );
   const archivo = useRef<HTMLInputElement>(null);
   const indiceSubida = useRef<number | null>(null);
 
@@ -278,7 +294,11 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
     if (!id) return;
     fetch(`/api/admin/campaigns/${id}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d) => setCampana({ subject: d.subject, preheader: d.preheader || '', bloques: d.bloques }))
+      .then((d) => {
+        const abierta = { subject: d.subject, preheader: d.preheader || '', bloques: d.bloques };
+        setCampana(abierta);
+        base.current = { datos: abierta, version: d.updatedAt };
+      })
       .catch(() => toast.error('No se pudo abrir la campaña'))
       .finally(() => setCargando(false));
   }, [id]);
@@ -343,23 +363,41 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
     }
   };
 
-  const guardar = async (): Promise<string | null> => {
+  /** Guarda el borrador. Al editar lleva la versión con que se abrió (C-170): si otra persona guardó antes, se combina. */
+  const guardar = async (datos: typeof NUEVO = campana, intento = 0): Promise<string | null> => {
     setGuardando(true);
     try {
-      const res = await fetch(campanaId ? `/api/admin/campaigns/${campanaId}` : '/api/admin/campaigns', {
-        method: campanaId ? 'PATCH' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(campana),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        toast.error(data?.error || 'No se pudo guardar');
+      if (!campanaId) {
+        const res = await fetch('/api/admin/campaigns', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          toast.error(data?.error || 'No se pudo guardar');
+          return null;
+        }
+        setCampanaId(data.id);
+        base.current = { datos, version: data.updatedAt };
+        toast.success('Borrador guardado');
+        return data.id as string;
+      }
+      const r = await enviarConVersion<{ updatedAt: string }>(`/api/admin/campaigns/${campanaId}`, 'PATCH', datos, base.current?.version);
+      if (r.ok) {
+        base.current = { datos, version: r.datos.updatedAt };
+        toast.success('Borrador guardado');
+        return campanaId;
+      }
+      if (r.conflicto?.tipo === 'cambiado' && base.current && intento < 3) {
+        const actual = r.conflicto.actual as typeof NUEVO & { updatedAt: string };
+        const suyo = { subject: actual.subject, preheader: actual.preheader, bloques: actual.bloques };
+        const abierta = base.current.datos;
+        base.current = { datos: suyo, version: actual.updatedAt };
+        resolverConflicto({
+          base: abierta, mio: datos, suyo, quien: r.conflicto.por?.nombre ?? 'Otra persona',
+          continuar: async (final) => { setCampana(final); await guardar(final, intento + 1); },
+        });
         return null;
       }
-      const nuevoId = campanaId ?? data.id;
-      setCampanaId(nuevoId);
-      toast.success('Borrador guardado');
-      return nuevoId;
+      toast.error(r.error);
+      return null;
     } finally {
       setGuardando(false);
     }
@@ -388,11 +426,14 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
         <button type="button" onClick={alSalir} className={`${adminSecondaryButton} h-9 px-3 text-xs`}>
           <FiArrowLeft className="h-4 w-4" aria-hidden="true" /> Volver a campañas
         </button>
-        <button type="button" onClick={guardar} disabled={guardando} className={`${adminPrimaryButton} h-9 px-4 text-xs`}>
+        <button type="button" onClick={() => void guardar()} disabled={guardando} className={`${adminPrimaryButton} h-9 px-4 text-xs`}>
           <FiSave className="h-4 w-4" aria-hidden="true" /> {guardando ? 'Guardando…' : 'Guardar borrador'}
         </button>
       </div>
 
+      {/* C-170: quién más tiene abierta esta campaña, y el cuadro para elegir si las dos cambiaron lo mismo */}
+      {campanaId && <PresenciaEnEditor recurso={`campaign:${campanaId}`} etiqueta="una campaña de correo" nombreRecurso="campaña" femenino />}
+      {dialogoConflicto}
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-4">
           <section className={`${adminCard} space-y-4`}>

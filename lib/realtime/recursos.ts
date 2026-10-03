@@ -14,7 +14,8 @@ const PERMISO_POR_TIPO: Record<string, string> = {
   legal: 'MANAGE_USERS',
   // La API de promotores pide MANAGE_USERS (C-167): la presencia pide lo mismo
   influencer: 'MANAGE_USERS',
-  promotion: 'MANAGE_CONTENT',
+  promotion: 'MANAGE_PRODUCTS',
+  campaign: 'MANAGE_CONTENT',
   course: 'MANAGE_CONTENT',
   studio: 'MANAGE_CONTENT',
   quote: 'MANAGE_ORDERS',

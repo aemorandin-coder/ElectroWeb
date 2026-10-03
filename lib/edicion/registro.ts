@@ -38,8 +38,8 @@ export function respuestaNoExiste(etiqueta: string) {
 }
 
 /** Una aprobación, rechazo o cambio de estado que otra persona ya hizo (la segunda no repite correos ni avisos) */
-export async function respuestaYaResuelto(args: { tipo: string; id: string; que: string }) {
-  const por = await ultimoCambio(args.tipo, args.id, ['PANEL_RECORD_UPDATED', 'PANEL_RECORD_RESOLVED']);
+export async function respuestaYaResuelto(args: { tipo: string; id: string; que: string; acciones?: string[] }) {
+  const por = await ultimoCambio(args.tipo, args.id, args.acciones ?? ['PANEL_RECORD_UPDATED', 'PANEL_RECORD_RESOLVED']);
   return NextResponse.json({
     error: `${por?.nombre ?? 'Otra persona'} ya ${args.que}`,
     conflicto: 'ya_resuelto',

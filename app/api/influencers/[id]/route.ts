@@ -7,6 +7,13 @@ import { prisma } from '@/lib/prisma';
 import { approveConversion, fechaDeAcreditacion, motivoEfectivo } from '@/lib/influencer-commission';
 import { edicionPromotorSchema } from '@/lib/influencer-admin';
 import { sincronizarCupon } from '@/lib/influencer-cupon';
+import { exigirVersion, registrarCambio, respuestaCambiado, respuestaNoExiste } from '@/lib/edicion/registro';
+import { clavesCambiadas, nombreDeSesion } from '@/lib/edicion/servidor';
+import { publicarRecursoCambiado } from '@/lib/realtime/bus';
+import { editoresDe } from '@/lib/realtime/presencia';
+
+const CAMPOS_PROMOTOR: Record<string, string> = { name: 'nombre', commissionRate: 'comisión', customerDiscountPercent: 'descuento al cliente', status: 'estado', notes: 'notas' };
+const RESUMEN_PROMOTOR = { user: { select: { id: true, name: true, email: true } } } as const;
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -116,31 +123,55 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ rejected: rechazadas.count });
   }
 
-  const edicion = edicionPromotorSchema.safeParse(body);
+  // C-170: pausar o activar es un cambio de una sola cosa y no pide versión; editar nombre, comisión o descuento sí
+  const { baseUpdatedAt, ...resto } = (body ?? {}) as Record<string, unknown>;
+  const edicion = edicionPromotorSchema.safeParse(resto);
   if (!edicion.success) {
     return NextResponse.json({ error: edicion.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 });
   }
+  const soloEstado = Object.keys(resto).every((clave) => clave === 'status');
+  let base: Date | null = null;
+  if (!soloEstado) {
+    const v = exigirVersion(baseUpdatedAt);
+    if ('respuesta' in v) return v.respuesta;
+    base = v.base;
+  }
 
-  const existe = await prisma.influencer.findUnique({ where: { id }, select: { id: true } });
-  if (!existe) return NextResponse.json({ error: 'Promotor no encontrado' }, { status: 404 });
+  const antes = await prisma.influencer.findUnique({ where: { id } });
+  if (!antes) return respuestaNoExiste('promotor');
 
-  const updated = await prisma.influencer.update({
-    where: { id },
-    data: edicion.data,
-    include: { user: { select: { id: true, name: true, email: true } } },
+  // Se toma el promotor solo si sigue en la versión con que se abrió el editor: dos guardados a la vez no se pisan
+  const updated = await prisma.$transaction(async (tx) => {
+    const tomado = await tx.influencer.updateMany({ where: { id, ...(base ? { updatedAt: base } : {}) }, data: { updatedAt: new Date() } });
+    if (tomado.count === 0) return null;
+    return tx.influencer.update({ where: { id }, data: edicion.data, include: RESUMEN_PROMOTOR });
   });
+  if (!updated) {
+    const actual = await prisma.influencer.findUnique({ where: { id }, include: RESUMEN_PROMOTOR });
+    if (!actual) return respuestaNoExiste('promotor');
+    return respuestaCambiado({ tipo: 'INFLUENCER', id, etiqueta: 'promotor', actual: { ...actual, commissionRate: Number(actual.commissionRate) } });
+  }
   // C-167: el cupón sigue al promotor (nombre, % al cliente y pausa)
   await sincronizarCupon(updated).catch((error) => console.error('[PROMOTORES] Cupón:', error));
+  const cambios = clavesCambiadas(antes as unknown as Record<string, unknown>, edicion.data);
+  if (cambios.length > 0) {
+    await registrarCambio({ session, request: req, recurso: `influencer:${id}`, tipo: 'INFLUENCER', id, nombre: updated.name, campos: cambios.map((c) => CAMPOS_PROMOTOR[c] ?? c) });
+  }
   return NextResponse.json({ ...updated, commissionRate: Number(updated.commissionRate) });
 }
 
 // DELETE /api/influencers/[id] — solo si no tiene historial; si lo tiene, se pausa
-export async function DELETE(_req: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!isAuthorized(session, 'MANAGE_USERS')) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
   const { id } = await params;
+  // C-170: otra persona tiene abierto su editor ahora: se avisa antes de borrarlo (con ?forzar=1 se sigue)
+  const editores = editoresDe(`influencer:${id}`, session?.user?.id);
+  if (editores.length > 0 && new URL(req.url).searchParams.get('forzar') !== '1') {
+    return NextResponse.json({ error: `${editores.map((e) => e.nombre).join(' y ')} lo está editando ahora mismo`, conflicto: 'en_edicion', editores }, { status: 409 });
+  }
 
   const influencer = await prisma.influencer.findUnique({ where: { id }, select: { id: true, _count: { select: { conversions: true } } } });
   if (!influencer) return NextResponse.json({ error: 'Promotor no encontrado' }, { status: 404 });
@@ -157,5 +188,6 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   await prisma.promotion.deleteMany({ where: { influencerId: id, usesCount: 0 } });
   await prisma.promotion.updateMany({ where: { influencerId: id }, data: { isActive: false } });
   await prisma.influencer.delete({ where: { id } });
+  publicarRecursoCambiado(`influencer:${id}`, 'eliminado', { id: session?.user?.id ?? '', nombre: nombreDeSesion(session) });
   return NextResponse.json({ ok: true });
 }

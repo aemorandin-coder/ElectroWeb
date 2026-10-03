@@ -29,6 +29,7 @@ import StepDesign from './StepDesign';
 import StepPhoto from './StepPhoto';
 import StepPublish from './StepPublish';
 import { useStudioContext } from './StudioContext';
+import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
 import { toggleButton } from './ui';
 import { useDownloadGate } from './useDownloadGate';
 import type { SaveStatus } from './useStudio';
@@ -464,6 +465,8 @@ export default function Studio({ id }: { id: string }) {
       <section ref={editorRef} className="order-2 scroll-mt-20 rounded-2xl border border-line bg-white p-4 lg:order-1" aria-label="Editor">
         {current ? (
           <div className="flex flex-col gap-4">
+            {/* C-170: quién más tiene abierta esta historia y si la cambiaron mientras tanto */}
+            {currentId && <PresenciaEnEditor recurso={`studio:${currentId}`} nombreRecurso="historia" femenino />}
             <div className="flex items-center justify-between gap-2">
               <h1 className="truncate text-base font-bold text-ink">{current.name || 'Sin nombre'}</h1>
               <span className="flex shrink-0 items-center gap-1">

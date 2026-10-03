@@ -69,13 +69,14 @@ export async function crearCotizacion(datos: CotizacionEntrada, extra: { status:
 }
 
 /** Guarda los cambios del panel. Una cotización aprobada ya no se toca. Devuelve null si no existe o está cerrada. */
-export async function guardarCotizacion(id: string, datos: CotizacionEntrada) {
+/** `base` (C-170): la versión (`updatedAt`) con que se abrió el editor; si otra persona guardó antes, no se guarda y devuelve null */
+export async function guardarCotizacion(id: string, datos: CotizacionEntrada, base?: Date) {
   const taxPercent = await ivaVigente();
   const { totalUSD } = totalesCotizacion(datos.items, taxPercent, datos.advancePercent, datos.ivaRetentionPercent);
   const { items, ...campos } = datos;
   return prisma.$transaction(async (tx) => {
     const r = await tx.quote.updateMany({
-      where: { id, status: { not: 'APPROVED' } },
+      where: { id, status: { not: 'APPROVED' }, ...(base ? { updatedAt: base } : {}) },
       data: { ...campos, totalUSD: montoDecimal(totalUSD), taxPercent: montoDecimal(taxPercent) },
     });
     if (r.count !== 1) return null;

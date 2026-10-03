@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import { combinar } from '@/lib/edicion/combinar';
 import { exportSnapshot, linkedIds, refreshCoupon, refreshLinked, refreshRate } from '@/lib/studio/live';
 import {
   TEMPLATES,
@@ -79,9 +81,16 @@ export function useStudio() {
   const latestStore = useRef<{ coupons: Record<string, StudioCoupon> | null; store: StudioStoreInfo | null }>({ coupons: null, store: null });
 
   // Lo último, para los temporizadores de guardado (no se leen durante el render)
-  const latest = useRef({ current, currentId, brand });
+  // `flyers` es lo último que se sabe del servidor de cada historia (con su `updatedAt`): la base para el guardado con versión (C-170)
+  const latest = useRef({ current, currentId, brand, flyers });
   useEffect(() => {
-    latest.current = { current, currentId, brand };
+    latest.current = { current, currentId, brand, flyers };
+  });
+  // La confirmación cambia en cada render: se lee por referencia para no rehacer `remove`
+  const { confirm } = useConfirm();
+  const confirmar = useRef(confirm);
+  useEffect(() => {
+    confirmar.current = confirm;
   });
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const brandTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -99,16 +108,41 @@ export function useStudio() {
     setStatus('saving');
     const run = (async () => {
       try {
-        const res = await fetch(`/api/admin/studio/flyers/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(f),
-          keepalive,
-        });
-        if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'No se pudo guardar');
-        const { flyer } = (await res.json()) as { flyer: StudioFlyer };
-        setFlyers((list) => list.map((x) => (x.id === flyer.id ? flyer : x)));
-        setStatus(dirty.current ? 'dirty' : 'saved');
+        // C-170: el guardado lleva la versión con que se conoce la historia. Si otra persona guardó antes (409), se juntan los
+        // cambios de las dos: lo que solo cambió ella entra, lo que solo cambié yo se queda y, en lo que tocamos las dos, queda
+        // lo mío (es un guardado automático: no se interrumpe con una pregunta, se avisa). Hasta 3 intentos.
+        let datos = f;
+        for (let intento = 0; intento < 3; intento++) {
+          const conocida = latest.current.flyers.find((x) => x.id === id);
+          const res = await fetch(`/api/admin/studio/flyers/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...datos, baseUpdatedAt: conocida?.updatedAt }),
+            keepalive,
+          });
+          if (res.status === 409) {
+            const cuerpo = (await res.json().catch(() => null)) as { conflicto?: string; por?: { nombre: string } | null; actual?: { flyer: StudioFlyer } } | null;
+            const suya = cuerpo?.conflicto === 'cambiado' ? cuerpo.actual?.flyer : undefined;
+            if (suya && conocida) {
+              const r = combinar(normalizeFlyer(conocida), datos, normalizeFlyer(suya));
+              datos = r.combinado;
+              const lista = latest.current.flyers.map((x) => (x.id === suya.id ? suya : x));
+              latest.current = { ...latest.current, flyers: lista, current: datos };
+              setFlyers(lista);
+              setCurrent(datos);
+              toast(`${cuerpo?.por?.nombre ?? 'Otra persona'} también cambió esta historia. ${r.conflictos.length > 0 ? 'Se juntaron los cambios; en lo que tocaron las dos quedó lo tuyo.' : 'Sus cambios se sumaron a los tuyos.'}`, { id: `studio-conflicto-${id}` });
+              continue;
+            }
+          }
+          if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'No se pudo guardar');
+          const { flyer } = (await res.json()) as { flyer: StudioFlyer };
+          const lista = latest.current.flyers.map((x) => (x.id === flyer.id ? flyer : x));
+          latest.current = { ...latest.current, flyers: lista };
+          setFlyers(lista);
+          setStatus(dirty.current ? 'dirty' : 'saved');
+          return;
+        }
+        throw new Error('Otra persona sigue cambiando esta historia. Se vuelve a intentar con tu próximo cambio.');
       } catch (e) {
         dirty.current = true;
         setStatus('error');
@@ -323,12 +357,21 @@ export function useStudio() {
       const target = id ?? latest.current.currentId;
       if (!target) return false;
       const isOpen = target === latest.current.currentId;
-      if (isOpen) {
+      let res = await fetch(`/api/admin/studio/flyers/${target}`, { method: 'DELETE' });
+      // C-170: otra persona la tiene abierta ahora: se pregunta antes de eliminarla
+      if (res.status === 409) {
+        const aviso = (await res.clone().json().catch(() => null)) as { conflicto?: string; error?: string } | null;
+        if (aviso?.conflicto === 'en_edicion') {
+          const seguir = await confirmar.current({ title: 'La están editando ahora', message: `${aviso.error}. Si la eliminas, verá un aviso. ¿Eliminarla igual?`, confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'warning' });
+          if (!seguir) return false;
+          res = await fetch(`/api/admin/studio/flyers/${target}?forzar=1`, { method: 'DELETE' });
+        }
+      }
+      if (res.ok && isOpen) {
         if (saveTimer.current) clearTimeout(saveTimer.current);
         openId.current = null;
         dirty.current = false;
       }
-      const res = await fetch(`/api/admin/studio/flyers/${target}`, { method: 'DELETE' });
       if (!res.ok) {
         toast.error('No se pudo eliminar');
         return false;
@@ -366,7 +409,7 @@ export function useStudio() {
         others.map(async (f) => {
           const { id, ...rest } = f;
           const data = { ...normalizeFlyer(rest), exported: exportSnapshot(normalizeFlyer(rest)) };
-          const res = await fetch(`/api/admin/studio/flyers/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).catch(() => null);
+          const res = await fetch(`/api/admin/studio/flyers/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, baseUpdatedAt: f.updatedAt }) }).catch(() => null);
           return res?.ok ? ((await res.json()) as { flyer: StudioFlyer }).flyer : null;
         }),
       );

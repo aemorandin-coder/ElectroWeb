@@ -41,6 +41,7 @@ const RC4 = { sistema: '1.0.0-rc.4' } as const;
 const RC5 = { sistema: '1.0.0-rc.5' } as const;
 const RC6 = { sistema: '1.0.0-rc.6' } as const;
 const RC7 = { sistema: '1.0.0-rc.7' } as const;
+const RC8 = { sistema: '1.0.0-rc.8' } as const;
 const primera = (resumen: string): CambioModulo => ({ ...PRIMERA, resumen, silencioso: true });
 
 export const MODULOS: ModuloPanel[] = [
@@ -60,7 +61,7 @@ export const MODULOS: ModuloPanel[] = [
       // C-169: lo que comparten las pantallas que se editan entre varios (presencia, conflictos, borrador, historial)
       'components/admin/edicion/', 'lib/edicion/', 'app/api/admin/presencia/', 'app/api/admin/historial/',
     ],
-    historial: [{ version: '1.2.0', ...RC5, tarea: 'C-174', resumen: 'Marquesina del equipo: una franja debajo de la barra de arriba dice quién está conectado y en qué sector ("Luis está en Productos, editando…").' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Trabajo en equipo: se ve quién más está editando lo mismo, se avisa en vivo cuando otro lo cambia o lo mueve a la papelera, y los borradores sin guardar se conservan en el navegador.' }, { ...PRIMERA, resumen: 'Ahora cada módulo del panel lleva su versión (abajo del menú y en la barra de arriba) y se avisa cuando hay una versión nueva.' }],
+    historial: [{ version: '1.3.0', ...RC8, tarea: 'C-170', resumen: 'Las piezas para que dos administradores no se pisen (versión al guardar, combinar cambios, presencia) ahora sirven a todo el panel.', silencioso: true }, { version: '1.2.0', ...RC5, tarea: 'C-174', resumen: 'Marquesina del equipo: una franja debajo de la barra de arriba dice quién está conectado y en qué sector ("Luis está en Productos, editando…").' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Trabajo en equipo: se ve quién más está editando lo mismo, se avisa en vivo cuando otro lo cambia o lo mueve a la papelera, y los borradores sin guardar se conservan en el navegador.' }, { ...PRIMERA, resumen: 'Ahora cada módulo del panel lleva su versión (abajo del menú y en la barra de arriba) y se avisa cuando hay una versión nueva.' }],
   },
   {
     id: 'dashboard',
@@ -97,7 +98,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/digital-', 'lib/sades.ts', 'lib/review-status.ts', 'lib/resenas-avisos.ts', 'lib/stock-alerts.ts',
       'lib/papelera.ts', 'app/api/cron/papelera/',
     ],
-    historial: [{ version: '1.1.1', ...RC5, tarea: 'C-174', resumen: 'El editor dice a los demás qué producto tiene abierto (para la marquesina del equipo).' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Eliminar manda a la papelera (30 días, con Deshacer). Si otro administrador guarda o mueve el producto mientras lo editas, se combinan los cambios, se avisa y no se pierde lo que escribiste. Se ve quién lo está editando.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.2.0', ...RC8, tarea: 'C-170', resumen: 'Categorías: si otra persona guardó antes, se combinan los cambios; se ve quién la tiene abierta y se pregunta antes de borrar una que otro edita.' }, { version: '1.1.1', ...RC5, tarea: 'C-174', resumen: 'El editor dice a los demás qué producto tiene abierto (para la marquesina del equipo).' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Eliminar manda a la papelera (30 días, con Deshacer). Si otro administrador guarda o mueve el producto mientras lo editas, se combinan los cambios, se avisa y no se pierde lo que escribiste. Se ve quién lo está editando.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'ofertas',
@@ -105,7 +106,7 @@ export const MODULOS: ModuloPanel[] = [
     descripcion: 'Ofertas, cupones y las solicitudes de descuento.',
     paginas: ['/admin/discount-requests'],
     archivos: ['app/admin/(dashboard)/discount-requests/', 'app/api/admin/discount-requests/', 'app/api/admin/promotions/', 'lib/promotions'],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Ofertas y cupones: si otra persona guardó antes, se combinan los cambios y solo se pregunta por lo que las dos tocaron; se ve quién la tiene abierta.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'marketing',
@@ -117,7 +118,7 @@ export const MODULOS: ModuloPanel[] = [
       'app/admin/(dashboard)/marketing/_components/Plantillas.tsx', 'app/admin/(dashboard)/marketing/_components/Popup.tsx',
       'app/api/admin/campaigns/', 'app/api/admin/email/', 'lib/email-campaigns.ts', 'lib/hot-ad.ts', 'lib/email-templates/',
     ],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Campañas de correo: el borrador ya no se pisa entre dos personas (se combinan los cambios) y se ve quién lo tiene abierto.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'promotores',
@@ -125,7 +126,7 @@ export const MODULOS: ModuloPanel[] = [
     descripcion: 'Promotores, sus códigos, solicitudes y comisiones en Puntos ES.',
     paginas: [],
     archivos: ['app/admin/(dashboard)/marketing/_components/Promotores.tsx', 'app/api/influencers/', 'app/api/cron/promotores/', 'lib/influencer-'],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Editar un promotor ya no pisa lo que otra persona guardó; y si alguien ya atendió una comisión o una solicitud, lo dice con su nombre.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'studio',
@@ -133,7 +134,7 @@ export const MODULOS: ModuloPanel[] = [
     descripcion: 'Historias e imágenes para redes sociales.',
     paginas: ['/admin/studio'],
     archivos: ['app/admin/(dashboard)/studio/', 'app/api/admin/studio/', 'lib/studio/', 'components/social/'],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'El guardado automático junta los cambios si dos personas editan la misma historia, y avisa quién más la tiene abierta.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'cursos',
@@ -144,7 +145,7 @@ export const MODULOS: ModuloPanel[] = [
       'app/admin/(dashboard)/cursos/', 'app/admin/(dashboard)/creators/', 'app/api/admin/courses/', 'app/api/admin/creators/',
       'app/api/courses/', 'app/api/creator/', 'app/creator/', 'app/cursos/', 'components/cursos/',
     ],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.1', ...RC8, tarea: 'C-170', resumen: 'Aprobar o rechazar a un creador dos veces a la vez ya no manda el correo dos veces.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'servicios',
@@ -160,7 +161,7 @@ export const MODULOS: ModuloPanel[] = [
     descripcion: 'Presupuestos para empresas e instituciones, con retención del IVA.',
     paginas: ['/admin/cotizaciones'],
     archivos: ['app/admin/(dashboard)/cotizaciones/', 'app/api/cotizaciones/', 'app/api/admin/cotizaciones/', 'lib/cotizaciones/', 'components/cotizaciones/', 'app/cotizacion/'],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Dos personas en la misma cotización: se combinan los cambios (también las líneas) y solo se pregunta por lo que las dos tocaron.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'clientes',
@@ -173,7 +174,7 @@ export const MODULOS: ModuloPanel[] = [
       'app/api/gift-cards/', 'app/api/contact/', 'app/api/product-requests/', 'components/gift-card/', 'components/contact/',
       'lib/gift-card',
     ],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.1', ...RC8, tarea: 'C-170', resumen: 'Verificar una empresa o atender una solicitud de producto dos veces a la vez ya no avisa dos veces al cliente.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'reportes',
@@ -185,7 +186,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/csp-', 'lib/relacion-ventas.ts', 'lib/audit-', 'components/AnalyticsTracker.tsx', 'lib/login-guard.ts', 'lib/rate-limit.ts',
       'lib/visitantes.ts', 'lib/analytics-bots.ts', 'app/api/admin/visitantes/', 'app/api/admin/hoy/',
     ],
-    historial: [{ version: '1.1.0', ...RC6, tarea: 'C-173', resumen: 'Reportes en vivo: arriba de todo, cuántas personas están conectadas a la tienda ahora (con cuenta y sin cuenta), qué miran, de dónde llegaron y quién es cada una; lo cobrado hoy se actualiza con cada orden o pago; las cifras se ponen al día solas.' }, { version: '1.0.1', ...RC4, tarea: 'C-169', resumen: 'La bitácora entiende "movido a la papelera", "restaurado" y "borrado para siempre", y el total de productos no cuenta la papelera.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.1', ...RC8, tarea: 'C-170', resumen: 'La bitácora entiende los cambios de cualquier registro del panel (quién cambió qué).', silencioso: true }, { version: '1.1.0', ...RC6, tarea: 'C-173', resumen: 'Reportes en vivo: arriba de todo, cuántas personas están conectadas a la tienda ahora (con cuenta y sin cuenta), qué miran, de dónde llegaron y quién es cada una; lo cobrado hoy se actualiza con cada orden o pago; las cifras se ponen al día solas.' }, { version: '1.0.1', ...RC4, tarea: 'C-169', resumen: 'La bitácora entiende "movido a la papelera", "restaurado" y "borrado para siempre", y el total de productos no cuenta la papelera.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'configuracion',

@@ -24,6 +24,9 @@ export type AuditAction =
     | 'PRODUCT_CREATED'
     | 'PRODUCT_UPDATED'
     | 'PRODUCT_DELETED'
+    // C-170: cualquier registro editable del panel (promotor, categoría, oferta, cotización…)
+    | 'PANEL_RECORD_UPDATED'
+    | 'PANEL_RECORD_RESOLVED'
     // C-169: papelera de productos
     | 'PRODUCT_TRASHED'
     | 'PRODUCT_RESTORED'

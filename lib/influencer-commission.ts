@@ -284,7 +284,7 @@ export async function approveConversion(conversionId: string, influencerId: stri
       where: { id: conversionId, influencerId, status: 'PENDING' },
       data: { status: 'APPROVED', approvedAt: new Date() },
     });
-    if (marcada.count === 0) throw new Error('La comisión ya no está pendiente');
+    if (marcada.count === 0) throw new Error('Otra persona ya atendió esta comisión (ya no está pendiente)');
 
     const monto = Number(conversion.commission);
     if (monto > 0) {

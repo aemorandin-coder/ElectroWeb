@@ -14,6 +14,9 @@ import {
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { formatUSD } from '@/lib/currency';
+import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
+import { enviarConVersion } from '@/lib/edicion/guardado';
+import { useConflictoDeFormulario } from '@/lib/edicion/useConflictoDeFormulario';
 
 interface Promotor {
   id: string;
@@ -23,6 +26,8 @@ interface Promotor {
   customerDiscountPercent: number;
   hasCoupon: boolean;
   status: 'ACTIVE' | 'PAUSED';
+  /** C-170: la versión con que se abre el editor */
+  updatedAt: string;
   user: { id: string; name: string | null; email: string | null };
   stats: { totalConversions: number; pendingConversions: number; toReview: number; pendingCommission: number; approvedCommission: number; totalGross: number };
 }
@@ -85,6 +90,11 @@ export default function Promotores() {
   const [revision, setRevision] = useState({ code: '', name: '', commissionRate: '5', customerDiscountPercent: '5', note: '' });
   const [editando, setEditando] = useState<Promotor | null>(null);
   const [edicion, setEdicion] = useState({ name: '', commissionRate: '5', customerDiscountPercent: '5' });
+  // C-170: lo que había al abrir el editor (para combinar si otra persona guardó antes)
+  const [edicionBase, setEdicionBase] = useState({ name: '', commissionRate: '5', customerDiscountPercent: '5' });
+  const { resolver: resolverConflicto, dialogo: dialogoConflicto } = useConflictoDeFormulario({
+    name: 'Nombre para mostrar', commissionRate: 'Comisión %', customerDiscountPercent: 'Descuento al cliente %',
+  });
   const [busqueda, setBusqueda] = useState('');
   const [resultados, setResultados] = useState<Usuario[]>([]);
   const [guardando, setGuardando] = useState(false);
@@ -178,8 +188,15 @@ export default function Promotores() {
       confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger',
     });
     if (!ok) return;
-    const res = await fetch(`/api/influencers/${promotor.id}`, { method: 'DELETE' });
-    const data = await res.json().catch(() => null);
+    let res = await fetch(`/api/influencers/${promotor.id}`, { method: 'DELETE' });
+    let data = await res.json().catch(() => null);
+    // C-170: otra persona tiene abierto su editor ahora: se pregunta antes de borrarlo
+    if (res.status === 409 && data?.conflicto === 'en_edicion') {
+      const seguir = await confirm({ title: 'Lo están editando ahora', message: `${data.error}. Si lo eliminas, verá un aviso. ¿Eliminarlo igual?`, confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'warning' });
+      if (!seguir) return;
+      res = await fetch(`/api/influencers/${promotor.id}?forzar=1`, { method: 'DELETE' });
+      data = await res.json().catch(() => null);
+    }
     if (!res.ok) return toast.error(data?.error || 'No se pudo eliminar');
     toast.success('Promotor eliminado');
     cargar();
@@ -230,20 +247,36 @@ export default function Promotores() {
   };
 
   const abrirEdicion = (promotor: Promotor) => {
+    const formulario = { name: promotor.name, commissionRate: String(promotor.commissionRate), customerDiscountPercent: String(promotor.customerDiscountPercent) };
     setEditando(promotor);
-    setEdicion({ name: promotor.name, commissionRate: String(promotor.commissionRate), customerDiscountPercent: String(promotor.customerDiscountPercent) });
+    setEdicion(formulario);
+    setEdicionBase(formulario);
   };
 
-  const guardarEdicion = async () => {
+  /** Guarda con la versión con que se abrió. Si otra persona guardó antes, se combina lo de cada una y solo se pregunta por lo que las dos tocaron (C-170). */
+  const guardarEdicion = async (formulario = edicion, version = editando?.updatedAt) => {
     if (!editando) return;
     setGuardando(true);
     try {
-      const res = await fetch(`/api/influencers/${editando.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(edicion) });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) return toast.error(data?.error || 'No se pudo guardar');
-      toast.success('Promotor actualizado. Las comisiones ya creadas no cambian.');
-      setEditando(null);
-      cargar();
+      const r = await enviarConVersion(`/api/influencers/${editando.id}`, 'PATCH', formulario, version);
+      if (r.ok) {
+        toast.success('Promotor actualizado. Las comisiones ya creadas no cambian.');
+        setEditando(null);
+        cargar();
+        return;
+      }
+      if (r.conflicto?.tipo === 'cambiado') {
+        const actual = r.conflicto.actual as { name: string; commissionRate: number | string; customerDiscountPercent: number; updatedAt: string };
+        const suyo = { name: actual.name, commissionRate: String(actual.commissionRate), customerDiscountPercent: String(actual.customerDiscountPercent) };
+        resolverConflicto({
+          base: edicionBase, mio: formulario, suyo, quien: r.conflicto.por?.nombre ?? 'Otra persona',
+          continuar: (final) => { setEdicion(final); setEdicionBase(suyo); return guardarEdicion(final, actual.updatedAt); },
+        });
+        return;
+      }
+      toast.error(r.error);
+      // Ya no existe: se cierra y se vuelve a pedir la lista
+      if (r.conflicto?.tipo === 'no_existe') { setEditando(null); cargar(); }
     } finally {
       setGuardando(false);
     }
@@ -645,6 +678,7 @@ export default function Promotores() {
               <button type="button" onClick={() => setEditando(null)} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" /></button>
             </div>
             <div className={`${adminModalBody} space-y-4`}>
+              <PresenciaEnEditor recurso={`influencer:${editando.id}`} etiqueta={editando.name} nombreRecurso="promotor" />
               <div>
                 <label htmlFor="editar-nombre" className={adminLabel}>Nombre para mostrar</label>
                 <input id="editar-nombre" value={edicion.name} onChange={(e) => setEdicion((d) => ({ ...d, name: e.target.value }))} className={adminInput()} />
@@ -663,12 +697,13 @@ export default function Promotores() {
             </div>
             <div className={adminModalFooter}>
               <button type="button" onClick={() => setEditando(null)} className={adminSecondaryButton}>Cancelar</button>
-              <button type="button" onClick={guardarEdicion} disabled={guardando || !edicion.name} className={adminPrimaryButton}>{guardando ? 'Guardando…' : 'Guardar'}</button>
+              <button type="button" onClick={() => void guardarEdicion()} disabled={guardando || !edicion.name} className={adminPrimaryButton}>{guardando ? 'Guardando…' : 'Guardar'}</button>
             </div>
           </div>
         </div>,
         document.body
       )}
+      {dialogoConflicto}
     </div>
   );
 }

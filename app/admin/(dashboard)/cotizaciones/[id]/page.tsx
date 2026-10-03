@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
@@ -18,6 +18,10 @@ import { CONDICIONES_POR_DEFECTO, ESTADO_TEXTO, RETENCIONES_IVA, TERMINOS_POR_DE
 import type { CotizacionAdmin } from '@/lib/cotizaciones';
 import type { ProductoParaCotizar } from '@/lib/cotizaciones/productos';
 import { BuscadorProductos } from '@/components/cotizaciones/BuscadorProductos';
+import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
+import { combinar } from '@/lib/edicion/combinar';
+import { enviarConVersion } from '@/lib/edicion/guardado';
+import { useConflictoDeFormulario } from '@/lib/edicion/useConflictoDeFormulario';
 
 // Editor de una cotización (C-148). El servidor recalcula el total cada vez que se guarda: lo de aquí es una vista.
 // Orden de la pantalla: lo que pidió el cliente (si la pidió), datos del cliente, líneas (primero el buscador del
@@ -89,8 +93,24 @@ export default function EditorCotizacion() {
   // Lo que se sabe de los productos del catálogo que están en las líneas (código y disponible)
   const [catalogo, setCatalogo] = useState<Record<string, ProductoParaCotizar>>({});
 
+  // C-170: la cotización como se abrió (formulario, líneas y versión). Es la BASE para combinar si otra persona guardó antes.
+  const base = useRef<{ form: Formulario; lineas: Linea[]; version: string } | null>(null);
+  const { resolver: resolverConflicto, dialogo: dialogoConflicto } = useConflictoDeFormulario({
+    clientName: 'Cliente', clientDoc: 'RIF o cédula', contactName: 'Contacto', contactEmail: 'Correo', contactPhone: 'Teléfono', location: 'Lugar',
+    subject: 'Asunto', validityDays: 'Validez (días)', advancePercent: 'Anticipo %', ivaRetentionPercent: 'Retención del IVA', conditions: 'Condiciones',
+    terms: 'Términos', lineas: 'Líneas de la cotización',
+  }, (campo, valor) => {
+    if (campo === 'lineas') {
+      const ls = valor as Array<{ title: string; quantity: string }>;
+      return ls.length === 0 ? '(sin líneas)' : ls.map((l) => `${l.quantity} × ${l.title}`).join(', ');
+    }
+    if (campo === 'ivaRetentionPercent') return valor === '0' ? 'Sin retención' : `${valor} %`;
+    return valor === '' || valor === null || valor === undefined ? '(vacío)' : String(valor).length > 120 ? `${String(valor).slice(0, 117)}…` : String(valor);
+  });
+
   const aplicar = (c: CotizacionAdmin) => {
     const { form: f, lineas: l } = aFormulario(c);
+    base.current = { form: f, lineas: l, version: c.updatedAt };
     setCotizacion(c);
     setForm(f);
     setLineas(l);
@@ -128,32 +148,70 @@ export default function EditorCotizacion() {
   for (const l of lineas) if (l.productId) enCotizacion.set(l.productId, (enCotizacion.get(l.productId) ?? 0) + cantidadDe(l));
   const totales = totalesCotizacion(lineas.map((l) => ({ quantity: Math.max(1, Math.floor(numero(l.quantity))), unitPriceUSD: numero(l.unitPriceUSD) })), taxPercent, numero(form.advancePercent) || null, Number(form.ivaRetentionPercent));
 
-  const cuerpo = () => ({
-    ...form,
-    validityDays: Math.floor(numero(form.validityDays)),
-    advancePercent: form.advancePercent.trim() ? Math.floor(numero(form.advancePercent)) : null,
-    ivaRetentionPercent: Number(form.ivaRetentionPercent),
-    items: lineas.map((l) => ({ productId: l.productId, title: l.title, description: l.description, quantity: Math.floor(numero(l.quantity)), unitPriceUSD: numero(l.unitPriceUSD) })),
+  const cuerpo = (f: Formulario = form, ls: Linea[] = lineas) => ({
+    ...f,
+    validityDays: Math.floor(numero(f.validityDays)),
+    advancePercent: f.advancePercent.trim() ? Math.floor(numero(f.advancePercent)) : null,
+    ivaRetentionPercent: Number(f.ivaRetentionPercent),
+    items: ls.map((l) => ({ productId: l.productId, title: l.title, description: l.description, quantity: Math.floor(numero(l.quantity)), unitPriceUSD: numero(l.unitPriceUSD) })),
   });
 
-  /** Guarda y devuelve la cotización guardada (o null si falló, con el error en pantalla). */
-  const guardar = async (): Promise<CotizacionAdmin | null> => {
+  /** Las líneas sin su `clave` interna (cambia en cada carga): así se comparan al combinar */
+  const sinClave = (ls: Linea[]) => ls.map(({ clave: _clave, ...resto }) => { void _clave; return resto; });
+  const conClave = (ls: Array<Omit<Linea, 'clave'>>): Linea[] => ls.map((l) => ({ clave: clave(), ...l }));
+
+  /**
+   * Guarda y devuelve la cotización guardada (o null si falló, con el error en pantalla). Al editar lleva la versión con que se
+   * abrió (C-170): si otra persona guardó antes, se combina lo de cada una; solo se pregunta por lo que las dos tocaron.
+   */
+  const guardar = async (intento = 0, f: Formulario = form, ls: Linea[] = lineas): Promise<CotizacionAdmin | null> => {
     setOcupado(true);
     setError('');
     try {
-      const res = await fetch(esNueva ? '/api/admin/cotizaciones' : `/api/admin/cotizaciones/${id}`, {
-        method: esNueva ? 'POST' : 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cuerpo()),
-      });
-      const datos = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(datos.error || 'No se pudo guardar.');
+      if (esNueva) {
+        const res = await fetch('/api/admin/cotizaciones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo(f, ls)) });
+        const datos = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setError(datos.error || 'No se pudo guardar.');
+          return null;
+        }
+        return datos.cotizacion as CotizacionAdmin;
+      }
+      const r = await enviarConVersion<{ cotizacion: CotizacionAdmin }>(`/api/admin/cotizaciones/${id}`, 'PUT', cuerpo(f, ls), base.current?.version);
+      if (r.ok) return r.datos.cotizacion;
+      if (r.conflicto?.tipo === 'cambiado' && intento < 3 && base.current) {
+        const actual = r.conflicto.actual as CotizacionAdmin;
+        const suyo = aFormulario(actual);
+        const abierto = base.current;
+        const resultado = combinar(
+          { ...abierto.form, lineas: sinClave(abierto.lineas) },
+          { ...f, lineas: sinClave(ls) },
+          { ...suyo.form, lineas: sinClave(suyo.lineas) },
+        );
+        const aplicarYGuardar = async (final: typeof resultado.combinado): Promise<CotizacionAdmin | null> => {
+          const { lineas: lineasFinal, ...formFinal } = final;
+          const nuevasLineas = conClave(lineasFinal);
+          // Desde aquí la base es lo que hay en el servidor
+          base.current = { form: suyo.form, lineas: suyo.lineas, version: actual.updatedAt };
+          setForm(formFinal);
+          setLineas(nuevasLineas);
+          return guardar(intento + 1, formFinal, nuevasLineas);
+        };
+        if (resultado.conflictos.length === 0) return await aplicarYGuardar(resultado.combinado);
+        // Las dos tocaron lo mismo: se pregunta. El guardado sigue cuando se elige; quien tocó "Enviar" lo toca otra vez
+        setError(`${r.conflicto.por?.nombre ?? 'Otra persona'} y tú cambiaron lo mismo: elige qué queda.`);
+        resolverConflicto({
+          base: { ...abierto.form, lineas: sinClave(abierto.lineas) }, mio: { ...f, lineas: sinClave(ls) }, suyo: { ...suyo.form, lineas: sinClave(suyo.lineas) },
+          quien: r.conflicto.por?.nombre ?? 'Otra persona',
+          continuar: async (final) => {
+            const guardada = await aplicarYGuardar(final);
+            if (guardada) { setError(''); toast.success('Cotización guardada'); aplicar(guardada); }
+          },
+        });
         return null;
       }
-      return datos.cotizacion as CotizacionAdmin;
-    } catch {
-      setError('Sin conexión. Intenta de nuevo.');
+      if (r.conflicto?.tipo === 'no_existe') setNoExiste(true);
+      setError(r.error);
       return null;
     } finally {
       setOcupado(false);
@@ -251,7 +309,16 @@ export default function EditorCotizacion() {
     if (!cotizacion) return;
     const ok = await confirm({ title: 'Borrar la cotización', message: `Se borra ${cotizacion.number}. El cliente nunca la vio.`, confirmText: 'Borrar', cancelText: 'Cancelar', type: 'danger' });
     if (!ok) return;
-    const res = await fetch(`/api/admin/cotizaciones/${cotizacion.id}`, { method: 'DELETE' }).catch(() => null);
+    let res = await fetch(`/api/admin/cotizaciones/${cotizacion.id}`, { method: 'DELETE' }).catch(() => null);
+    // C-170: otra persona la tiene abierta ahora: se pregunta antes de borrarla
+    if (res?.status === 409) {
+      const aviso = await res.clone().json().catch(() => ({}));
+      if (aviso?.conflicto === 'en_edicion') {
+        const seguir = await confirm({ title: 'La están editando ahora', message: `${aviso.error}. Si la borras, verá un aviso. ¿Borrarla igual?`, confirmText: 'Borrar', cancelText: 'Cancelar', type: 'warning' });
+        if (!seguir) return;
+        res = await fetch(`/api/admin/cotizaciones/${cotizacion.id}?forzar=1`, { method: 'DELETE' }).catch(() => null);
+      }
+    }
     if (!res?.ok) {
       setError((await res?.json().catch(() => ({})))?.error || 'No se pudo borrar.');
       return;
@@ -343,6 +410,9 @@ export default function EditorCotizacion() {
         <h1 className={adminPageTitle}>{cotizacion ? cotizacion.number : 'Nueva cotización'}</h1>
         {cotizacion && <span className={adminBadge(ESTADO_TEXTO[cotizacion.status].tono)}>{ESTADO_TEXTO[cotizacion.status].texto}</span>}
       </div>
+
+      {/* C-170: quién más la tiene abierta y si alguien la cambió mientras tanto */}
+      {cotizacion && !soloLectura && <PresenciaEnEditor recurso={`quote:${cotizacion.id}`} etiqueta={`Cotización ${cotizacion.number}`} nombreRecurso="cotización" femenino />}
 
       {cotizacion?.requestNote && (
         <section className={`${adminNotice('brand')} mb-4`} aria-labelledby="pidio-titulo">
@@ -605,6 +675,7 @@ export default function EditorCotizacion() {
           )}
         </div>
       )}
+      {dialogoConflicto}
     </div>
   );
 }

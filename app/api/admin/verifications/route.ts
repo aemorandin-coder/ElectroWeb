@@ -1,3 +1,4 @@
+import { respuestaYaResuelto } from '@/lib/edicion/registro';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -77,14 +78,25 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
         }
 
-        const updatedProfile = await prisma.profile.update({
-            where: { id: profileId },
+        // C-170: dos administradores revisando la misma empresa. El cambio entra solo si sigue en el estado que se vio: la
+        // segunda persona recibe "ya la revisó…" y el cliente no recibe el aviso ni el correo dos veces.
+        const antes = await prisma.profile.findUnique({ where: { id: profileId }, select: { businessVerificationStatus: true, userId: true } });
+        if (!antes) return NextResponse.json({ error: 'Perfil no encontrado', conflicto: 'no_existe' }, { status: 404 });
+        const cambiaEstado = antes.businessVerificationStatus !== status;
+        const tomado = await prisma.profile.updateMany({
+            where: { id: profileId, businessVerificationStatus: antes.businessVerificationStatus },
             data: {
                 businessVerificationStatus: status,
                 businessVerificationNotes: notes,
                 businessVerified: status === 'APPROVED',
                 businessVerifiedAt: status === 'APPROVED' ? new Date() : null,
             },
+        });
+        if (tomado.count === 0) {
+            return respuestaYaResuelto({ tipo: 'USER', id: antes.userId, que: 'revisó esta empresa', acciones: ['VERIFICATION_REVIEWED'] });
+        }
+        const updatedProfile = await prisma.profile.findUniqueOrThrow({
+            where: { id: profileId },
             include: {
                 user: {
                     select: {
@@ -102,7 +114,7 @@ export async function PATCH(request: NextRequest) {
         }, request);
 
         // C-138: el cliente se entera en la campana y por correo (antes era un TODO y Mi perfil decía "te avisaremos")
-        if (status === 'APPROVED' || status === 'REJECTED') {
+        if (cambiaEstado && (status === 'APPROVED' || status === 'REJECTED')) {
             const aprobada = status === 'APPROVED';
             const motivo = typeof notes === 'string' && notes.trim() ? notes.trim().slice(0, 300) : null;
             // "Demo C.A." ya trae su punto: sin "C.A.." ni un motivo sin punto final

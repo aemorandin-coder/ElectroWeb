@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { FiAlertTriangle, FiArrowLeft, FiArrowRight, FiSave } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -11,7 +12,6 @@ import {
   DEFAULT_WIZARD_DATA,
   PHYSICAL_STEPS,
   DIGITAL_STEPS,
-  newVariantRow,
   validatePhysicalStep1,
   validatePhysicalStep2,
   validatePhysicalStep3,
@@ -20,12 +20,17 @@ import {
   validateDigitalStep3,
   validatePublish,
   leerNumero,
-  type VariantRow,
 } from './wizard/types';
-import { formatFaceValue, guessLegacyUnit, isDigitalUnit, type DigitalProvider } from '@/lib/digital-catalog';
-
-import { parseProductImages, parseProductTags } from '@/lib/product-utils';
-import { digitalMarginFromSpecs, INTERNAL_SPEC_KEYS } from '@/lib/product-specs';
+import { estadoDeProducto, productoAFormulario, type EstadoProducto, type ProductoApi } from './wizard/producto-a-formulario';
+import { combinar, type ConflictoDeCampo } from '@/lib/edicion/combinar';
+import { ETIQUETA_CAMPO_FORMULARIO } from '@/lib/edicion/producto';
+import { useBorradorLocal } from '@/lib/edicion/useBorrador';
+import { useEdicionEnVivo, type CambioAjeno } from '@/lib/edicion/useEdicionEnVivo';
+import AvisoPresencia from '@/components/admin/edicion/AvisoPresencia';
+import AvisoCambioAjeno from '@/components/admin/edicion/AvisoCambioAjeno';
+import BorradorRecuperado from '@/components/admin/edicion/BorradorRecuperado';
+import HistorialRecurso from '@/components/admin/edicion/HistorialRecurso';
+import DialogoConflicto, { valorEnTexto, type Eleccion } from '@/components/admin/edicion/DialogoConflicto';
 import WizardProgress from './wizard/WizardProgress';
 import ImagePanel from './wizard/ImagePanel';
 import StepTypeSelector from './wizard/StepTypeSelector';
@@ -34,58 +39,118 @@ import PhysicalStep2Prices from './wizard/physical/Step2Prices';
 import PhysicalStep3Specs from './wizard/physical/Step3Specs';
 import DigitalStep1Platform from './wizard/digital/Step1Platform';
 import DigitalStep2Variants from './wizard/digital/Step2Variants';
-import { wizardPrimaryButton, wizardSecondaryButton } from './wizard/ui';
-
-interface ApiVariant {
-  id: string;
-  faceValue: number;
-  unit: string;
-  label: string;
-  costUSD: number;
-  priceUSD: number;
-  provider: string | null;
-  isActive: boolean;
-}
-interface LegacyPricing { amount: number; cost?: number; salePrice: number; enabled?: boolean }
-
-/** Filas del paso "Montos" desde la API (C-60) o, en productos sin migrar, desde specs.digitalPricing. */
-function toVariantRows(apiVariants: ApiVariant[] | undefined, legacy: LegacyPricing[] | null, platform: string): VariantRow[] {
-  if (apiVariants && apiVariants.length > 0) {
-    return apiVariants.map((v) => ({
-      key: v.id,
-      id: v.id,
-      faceValue: String(v.faceValue),
-      unit: isDigitalUnit(v.unit) ? v.unit : 'USD',
-      label: v.label,
-      labelEdited: isDigitalUnit(v.unit) ? v.label !== formatFaceValue(v.faceValue, v.unit) : true,
-      costUSD: v.costUSD ? String(v.costUSD) : '',
-      priceUSD: String(v.priceUSD),
-      provider: (v.provider as DigitalProvider | null) ?? '',
-      isActive: v.isActive,
-    }));
-  }
-  return (legacy ?? []).map((p) => {
-    const unit = guessLegacyUnit(platform, Number(p.amount));
-    return { ...newVariantRow(unit, Number(p.amount)), costUSD: p.cost ? String(p.cost) : '', priceUSD: String(p.salePrice), isActive: p.enabled !== false };
-  });
-}
 import DigitalStep3Delivery from './wizard/digital/Step3Delivery';
 import StepSEO from './wizard/StepSEO';
 import StepPublish from './wizard/StepPublish';
+import { wizardPrimaryButton, wizardSecondaryButton } from './wizard/ui';
 
 // STEP INDEX (after type selector):
 // Physical:  0=Info, 1=Prices, 2=Specs, 3=SEO, 4=Publish
 // Digital:   0=Platform, 1=Denominations, 2=Delivery, 3=SEO, 4=Publish
 const PUBLISH_STEP = 4;
 
-type EstadoProducto = 'PUBLISHED' | 'DRAFT' | 'ARCHIVED';
-
 interface Props {
   productId?: string;
 }
 
+/**
+ * C-169: lo que el editor sabe del producto tal como lo abrió: el formulario, su versión (`updatedAt`) y su estado.
+ * Es la BASE para combinar si otra persona lo cambia mientras tanto.
+ */
+interface BaseEdicion { form: WizardData; version: string | null; estado: EstadoProducto }
+
+/** Al combinar, el estado (publicado, borrador…) viaja con el formulario como un campo más */
+type Mezcla = WizardData & { __estado: EstadoProducto };
+const ETIQUETAS: Record<string, string> = { ...ETIQUETA_CAMPO_FORMULARIO, __estado: 'Estado (publicado, borrador o archivado)' };
+const NOMBRE_ESTADO: Record<string, string> = { PUBLISHED: 'Publicado', DRAFT: 'Borrador', ARCHIVED: 'Archivado' };
+
+interface ConflictoPendiente {
+  quien: string;
+  conflictos: Array<ConflictoDeCampo<Mezcla>>;
+  combinado: Mezcla;
+  terminar: (mezcla: Mezcla) => Promise<void>;
+}
+
+/** El cuerpo del PATCH o del POST: lo que el servidor espera, armado desde el formulario */
+function construirPayload(data: WizardData, publishStatus: EstadoProducto): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    name: data.name.trim(),
+    sku: data.sku.trim(),
+    description: data.description.trim(),
+    categoryId: data.categoryId,
+    images: data.images,
+    // Solo el estado: el servidor prefiere isActive y un producto archivado volvía a borrador al editarlo (C-134)
+    status: publishStatus,
+    isFeatured: data.isFeatured,
+    barcode: data.barcode || null,
+    tags: data.tags,
+    seoTitle: data.seoTitle || null,
+    seoDescription: data.seoDescription || null,
+    productType: data.productType,
+  };
+
+  if (data.productType === 'PHYSICAL') {
+    // C-134: con coma o punto ("12,50"). Antes parseFloat("12,50") mandaba 12
+    payload.priceUSD = leerNumero(data.priceUSD);
+    payload.compareAtPriceUSD = data.compareAtPriceUSD.trim() ? leerNumero(data.compareAtPriceUSD) : null;
+    payload.costPerItem = data.costPerItem.trim() ? leerNumero(data.costPerItem) : null;
+    payload.stock = leerNumero(data.stock);
+    payload.weightKg = data.weightKg.trim() ? leerNumero(data.weightKg) : 0;
+    payload.isConsolidable = data.isConsolidable;
+    payload.shippingCost = data.isConsolidable ? 0 : (data.shippingCost.trim() ? leerNumero(data.shippingCost) : 0);
+    payload.freeShipping = data.freeShipping;
+    // C-155: la marca por su nombre; vacía, el producto queda sin marca
+    payload.brandName = data.brand.trim();
+    payload.specifications = Object.keys(data.specifications).length > 0 ? data.specifications : null;
+    // C-119: condición; el servidor la valida y, si es nuevo, guarda vacío lo de usado
+    Object.assign(payload, {
+      condition: data.condition,
+      conditionGrade: data.conditionGrade || null,
+      packaging: data.packaging || null,
+      includedItems: data.includedItems,
+      missingItems: data.missingItems,
+      usageHours: data.usageHours,
+      batteryHealth: data.batteryHealth,
+      cosmeticNotes: data.cosmeticNotes,
+      testNotes: data.testNotes,
+      warrantyDays: data.warrantyDays,
+      serialNumber: data.serialNumber,
+    });
+    if (data.dimensionLength || data.dimensionWidth || data.dimensionHeight) {
+      payload.dimensions = JSON.stringify({
+        length: leerNumero(data.dimensionLength) || 0,
+        width: leerNumero(data.dimensionWidth) || 0,
+        height: leerNumero(data.dimensionHeight) || 0,
+      });
+    }
+  } else {
+    // El precio "desde" y la validación final los hace el servidor (C-60)
+    payload.stock = 999;
+    payload.digitalPlatform = data.digitalPlatform;
+    payload.digitalRegion = data.digitalRegion;
+    payload.deliveryMethod = data.deliveryMethod;
+    payload.redemptionInstructions = data.redemptionInstructions || null;
+    payload.accountFieldLabel = data.deliveryMethod === 'MANUAL' ? data.accountFieldLabel.trim() || null : null;
+    payload.accountFieldHint = data.deliveryMethod === 'MANUAL' ? data.accountFieldHint.trim() || null : null;
+    payload.digitalMarginPercent = data.marginPercent;
+    payload.digitalVariants = data.digitalVariants.map((v) => ({
+      id: v.id,
+      faceValue: Number.parseFloat(v.faceValue.replace(',', '.')),
+      unit: v.unit,
+      label: v.label.trim(),
+      costUSD: Number.parseFloat(v.costUSD.replace(',', '.')) || 0,
+      priceUSD: Number.parseFloat(v.priceUSD.replace(',', '.')) || 0,
+      provider: v.provider || null,
+      isActive: v.isActive,
+    }));
+  }
+  return payload;
+}
+
 export default function ProductWizard({ productId }: Props) {
   const router = useRouter();
+  const { data: sesion } = useSession();
+  const yo = sesion?.user?.id;
   const isEditing = !!productId;
 
   type WizardStep = -1 | 0 | 1 | 2 | 3 | 4;
@@ -107,6 +172,39 @@ export default function ProductWizard({ productId }: Props) {
    * Lo esencial (precio, stock, categoría, SKU) lo sigue validando el servidor.
    */
   const [pasosTocados, setPasosTocados] = useState<Set<number>>(() => new Set());
+
+  // ─── Trabajo en equipo (C-169) ────────────────────────────────────────────
+  // La base con que se abrió el producto, en una referencia para los guardados que reintentan (leen siempre la última) y en
+  // estado para el borrador. `bloqueo`: el producto ya estaba en la papelera al abrirlo, o el guardado lo descubrió.
+  const baseRef = useRef<BaseEdicion | null>(null);
+  const [base, setBase] = useState<BaseEdicion | null>(null);
+  const fijarBase = useCallback((nueva: BaseEdicion) => {
+    baseRef.current = nueva;
+    setBase(nueva);
+  }, []);
+  const [bloqueo, setBloqueo] = useState<CambioAjeno | null>(null);
+  const [conflicto, setConflicto] = useState<ConflictoPendiente | null>(null);
+  const [restaurando, setRestaurando] = useState(false);
+  const { otros, cambio, olvidarCambio } = useEdicionEnVivo(isEditing && productId ? `product:${productId}` : null, yo);
+  // Lo grave es lo último que se supo: movido a la papelera (al abrir, al guardar o en vivo) sin que lo hayan restaurado después
+  const restauradoDespues = cambio?.accion === 'restaurado' && bloqueo !== null && cambio.en > bloqueo.en;
+  const aviso: CambioAjeno | null = cambio && (cambio.accion === 'papelera' || cambio.accion === 'eliminado')
+    ? cambio
+    : (bloqueo && !restauradoDespues ? bloqueo : cambio);
+  const bloqueado = aviso !== null && (aviso.accion === 'papelera' || aviso.accion === 'eliminado');
+
+  // Borrador en este navegador: cada 2 s mientras haya cambios sin guardar (con uno viejo por decidir, no se pisa)
+  const clave = yo && !isFetching ? `product:${productId ?? 'nuevo'}:${yo}` : null;
+  const hayCambios = isEditing
+    ? datosCargados !== null && JSON.stringify(data) !== datosCargados
+    : step >= 0 && JSON.stringify(data) !== JSON.stringify(DEFAULT_WIZARD_DATA);
+  const { borrador, limpiar: limpiarBorrador } = useBorradorLocal<WizardData>({
+    clave,
+    datos: data,
+    base: isEditing ? base?.form ?? null : DEFAULT_WIZARD_DATA,
+    baseVersion: base?.version ?? null,
+    sucio: hayCambios,
+  });
 
   const merge = (updates: Partial<WizardData>) => {
     setData((prev) => ({ ...prev, ...updates }));
@@ -131,88 +229,19 @@ export default function ProductWizard({ productId }: Props) {
     fetch(`/api/products/${productId}`)
       .then((r) => {
         if (!r.ok) throw new Error('Product not found');
-        return r.json();
+        return r.json() as Promise<ProductoApi>;
       })
       .then((product) => {
-        const parsedImages = parseProductImages(product.images);
-        const parsedTags = parseProductTags(product.tags);
-
-        let parsedSpecs: Record<string, string> = {};
-        let savedDigitalPricing: LegacyPricing[] | null = null;
-        const rawSpecs = product.specs || product.specifications;
-        // Último margen usado en este producto (C-95); si nunca se guardó, el de siempre
-        const savedMarginPercent = digitalMarginFromSpecs(rawSpecs) ?? DEFAULT_WIZARD_DATA.marginPercent;
-        try {
-          const parsed = typeof rawSpecs === 'string' ? JSON.parse(rawSpecs) : (rawSpecs ?? {});
-          savedDigitalPricing = parsed?.digitalPricing ?? null;
-          const cleanSpecs = { ...(parsed ?? {}) };
-          for (const key of INTERNAL_SPEC_KEYS) delete cleanSpecs[key];
-          parsedSpecs = cleanSpecs;
-        } catch { parsedSpecs = {}; }
-
-
-        let dimLength = '', dimWidth = '', dimHeight = '';
-        if (product.dimensions) {
-          try {
-            const d = typeof product.dimensions === 'string' ? JSON.parse(product.dimensions) : product.dimensions;
-            dimLength = d.length?.toString() || '';
-            dimWidth = d.width?.toString() || '';
-            dimHeight = d.height?.toString() || '';
-          } catch { /* empty */ }
-        }
-
-        const productType: 'PHYSICAL' | 'DIGITAL' = product.productType === 'DIGITAL' ? 'DIGITAL' : 'PHYSICAL';
-
-        const cargado: WizardData = {
-          productType,
-          name: product.name || '',
-          sku: product.sku || '',
-          description: product.description || '',
-          categoryId: product.categoryId || '',
-          brand: product.brand?.name || '',
-          tags: parsedTags,
-          images: parsedImages,
-          isFeatured: product.isFeatured ?? false,
-          isActive: product.status === 'PUBLISHED' || product.isActive === true,
-          seoTitle: product.seoTitle || '',
-          seoDescription: product.seoDescription || '',
-          priceUSD: product.priceUSD?.toString() || '',
-          compareAtPriceUSD: product.compareAtPriceUSD?.toString() || '',
-          costPerItem: product.costPerItem?.toString() || '',
-          stock: product.stock?.toString() || '0',
-          barcode: product.barcode || '',
-          weightKg: product.weightKg?.toString() || '',
-          dimensionLength: dimLength,
-          dimensionWidth: dimWidth,
-          dimensionHeight: dimHeight,
-          medidasEstimadas: false,
-          isConsolidable: product.isConsolidable !== false,
-          shippingCost: product.shippingCost?.toString() || '',
-          freeShipping: product.freeShipping === true,
-          specifications: parsedSpecs,
-          condition: product.condition || 'NEW',
-          conditionGrade: product.conditionGrade || '',
-          packaging: product.packaging || '',
-          includedItems: product.includedItems || '',
-          missingItems: product.missingItems || '',
-          usageHours: product.usageHours?.toString() || '',
-          batteryHealth: product.batteryHealth?.toString() || '',
-          cosmeticNotes: product.cosmeticNotes || '',
-          testNotes: product.testNotes || '',
-          warrantyDays: product.warrantyDays?.toString() || '',
-          serialNumber: product.serialNumber || '',
-          digitalPlatform: product.digitalPlatform || '',
-          digitalRegion: product.digitalRegion || 'GLOBAL',
-          deliveryMethod: product.deliveryMethod === 'MANUAL' ? 'MANUAL' : 'INSTANT',
-          digitalVariants: toVariantRows(product.digitalVariants, Array.isArray(savedDigitalPricing) ? savedDigitalPricing : null, product.digitalPlatform || ''),
-          marginPercent: savedMarginPercent,
-          accountFieldLabel: product.accountFieldLabel || '',
-          accountFieldHint: product.accountFieldHint || '',
-          redemptionInstructions: product.redemptionInstructions || '',
-        };
+        const cargado = productoAFormulario(product);
+        const estado = estadoDeProducto(product);
         setData(cargado);
         setDatosCargados(JSON.stringify(cargado));
-        setEstadoGuardado(product.status === 'PUBLISHED' || product.status === 'ARCHIVED' ? product.status : 'DRAFT');
+        setEstadoGuardado(estado);
+        fijarBase({ form: cargado, version: product.updatedAt, estado });
+        // C-169: en la papelera. Se abre igual (el trabajo no se pierde) pero avisa y no deja guardar encima
+        if (product.deletedAt) {
+          setBloqueo({ accion: 'papelera', por: { id: '', nombre: product.deletedByName ?? 'Alguien del equipo' }, en: product.deletedAt });
+        }
 
         // Skip type selector in edit mode, start at step 0
         setStep(0);
@@ -222,7 +251,7 @@ export default function ProductWizard({ productId }: Props) {
         setTimeout(() => router.push('/admin/products'), 2000);
       })
       .finally(() => setIsFetching(false));
-  }, [productId, isEditing, router]);
+  }, [productId, isEditing, router, fijarBase]);
 
   // ─── Step validation ───────────────────────────────────────────────────────
   const validate = (s: number): Record<string, string> | null => {
@@ -258,8 +287,135 @@ export default function ProductWizard({ productId }: Props) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // ─── Combinar con lo que otra persona guardó (C-169) ───────────────────────
+  /**
+   * `actual` es el producto como está ahora en el servidor. Se combina con lo que tengo (`propios`) usando como base lo que
+   * abrí: lo que solo cambió la otra persona entra solo, lo que solo cambié yo se queda, y solo lo que los dos tocamos se
+   * pregunta. Después `alTerminar` recibe el formulario combinado (para guardar o solo para seguir editando).
+   */
+  const aplicarActual = async (
+    actual: ProductoApi,
+    quien: string,
+    propios: WizardData,
+    estadoPropio: EstadoProducto,
+    alTerminar: (datos: WizardData, estado: EstadoProducto) => Promise<void> | void,
+  ): Promise<void> => {
+    const suyoForm = productoAFormulario(actual);
+    const suyoEstado = estadoDeProducto(actual);
+    const abierto = baseRef.current;
+    const resultado = combinar<Mezcla>(
+      { ...(abierto?.form ?? suyoForm), __estado: abierto?.estado ?? suyoEstado },
+      { ...propios, __estado: estadoPropio },
+      { ...suyoForm, __estado: suyoEstado },
+    );
+    const terminar = async (mezcla: Mezcla) => {
+      const { __estado: estado, ...formulario } = mezcla;
+      // Desde aquí la base es lo que hay en el servidor: lo siguiente que se guarde parte de esa versión
+      fijarBase({ form: suyoForm, version: actual.updatedAt, estado: suyoEstado });
+      setDatosCargados(JSON.stringify(suyoForm));
+      setEstadoGuardado(estado);
+      setData(formulario);
+      await alTerminar(formulario, estado);
+    };
+    if (resultado.conflictos.length === 0) {
+      await terminar(resultado.combinado);
+      return;
+    }
+    setConflicto({ quien, conflictos: resultado.conflictos, combinado: resultado.combinado, terminar });
+  };
+
+  const resolverConflicto = async (elecciones: Record<string, Eleccion>) => {
+    if (!conflicto) return;
+    const elegido: Mezcla = { ...conflicto.combinado };
+    for (const c of conflicto.conflictos) {
+      if (elecciones[c.campo] === 'suyo') (elegido as unknown as Record<string, unknown>)[c.campo] = c.suyo;
+    }
+    const pendiente = conflicto;
+    setConflicto(null);
+    await pendiente.terminar(elegido);
+  };
+
+  const formatearConflicto = (campo: string, valor: unknown): string => {
+    if (campo === 'categoryId') return categories.find((c) => c.id === valor)?.name ?? valorEnTexto(valor);
+    if (campo === '__estado') return NOMBRE_ESTADO[String(valor)] ?? valorEnTexto(valor);
+    if (campo === 'specifications' && valor && typeof valor === 'object') {
+      const n = Object.keys(valor as object).length;
+      return `${n} ${n === 1 ? 'especificación' : 'especificaciones'}`;
+    }
+    return valorEnTexto(valor);
+  };
+
   // ─── Submit ────────────────────────────────────────────────────────────────
+  /** Manda el formulario. Al editar lleva la versión con que se abrió; si otra persona guardó antes, combina y reintenta (hasta 3 veces). */
+  const enviar = async (datos: WizardData, publishStatus: EstadoProducto, intento: number): Promise<void> => {
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      const payload = construirPayload(datos, publishStatus);
+      if (isEditing) payload.baseUpdatedAt = baseRef.current?.version ?? undefined;
+
+      const url = isEditing ? `/api/products/${productId}` : '/api/products';
+      const method = isEditing ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        // C-133: sin cuadro ni espera. Antes se esperaban 2,5 s a propósito, y el cuadro decía "¡Producto Publicado!
+        // Ya está disponible en la tienda" también al guardar un borrador
+        const guardado = (await res.json().catch(() => null)) as { slug?: string } | null;
+        limpiarBorrador();
+        const texto = isEditing
+          ? 'Cambios guardados'
+          : publishStatus === 'PUBLISHED' ? 'Producto publicado' : 'Guardado como borrador: no se ve en la tienda';
+        toast.success((t) => (
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            {texto}
+            {publishStatus === 'PUBLISHED' && guardado?.slug && (
+              <a href={`/productos/${guardado.slug}`} target="_blank" rel="noopener" onClick={() => toast.dismiss(t.id)} className="font-semibold text-brand-600 underline">
+                Ver en la tienda
+              </a>
+            )}
+          </span>
+        ), { duration: 6000 });
+        router.push('/admin/products');
+        return;
+      }
+
+      const cuerpo = (await res.json().catch(() => ({}))) as {
+        error?: string; details?: string; conflicto?: string; actual?: ProductoApi; por?: { nombre?: string; en?: string };
+      };
+      // Otra persona guardó mientras se editaba: se combina y se reintenta
+      if (isEditing && res.status === 409 && cuerpo.conflicto === 'cambiado' && cuerpo.actual && intento < 3) {
+        await aplicarActual(cuerpo.actual, cuerpo.por?.nombre ?? 'Otra persona', datos, publishStatus, (d, e) => enviar(d, e, intento + 1));
+        return;
+      }
+      // Lo movieron a la papelera (410) o ya no existe (404): no se puede guardar encima, pero nada se pierde
+      if (isEditing && (res.status === 410 || cuerpo.conflicto === 'no_existe')) {
+        setBloqueo({
+          accion: res.status === 410 ? 'papelera' : 'eliminado',
+          por: { id: '', nombre: cuerpo.por?.nombre ?? 'Alguien del equipo' },
+          en: cuerpo.por?.en ?? new Date().toISOString(),
+        });
+        return;
+      }
+      setErrors({ general: cuerpo.details ? `${cuerpo.error}: ${cuerpo.details}` : (cuerpo.error || 'Error al guardar el producto.') });
+    } catch {
+      setErrors({ general: 'Error de conexión. Verifica tu internet.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (publishStatus: EstadoProducto) => {
+    if (bloqueado) {
+      toast.error('Este producto está en la papelera: restáuralo o guárdalo como producto nuevo');
+      return;
+    }
     // Al editar se puede saltar pasos desde la barra: si alguno de los que se tocaron quedó incompleto, se vuelve a él
     for (let s = 0; s < PUBLISH_STEP; s++) {
       if (isEditing && !pasosTocados.has(s)) continue;
@@ -278,125 +434,83 @@ export default function ProductWizard({ productId }: Props) {
       toast.error(Object.values(errsFinal).find(Boolean) ?? 'Revisa los datos del producto');
       return;
     }
-    setIsLoading(true);
-    setErrors({});
-
-    try {
-      const payload: Record<string, unknown> = {
-        name: data.name.trim(),
-        sku: data.sku.trim(),
-        description: data.description.trim(),
-        categoryId: data.categoryId,
-        images: data.images,
-        // Solo el estado: el servidor prefiere isActive y un producto archivado volvía a borrador al editarlo (C-134)
-        status: publishStatus,
-        isFeatured: data.isFeatured,
-        barcode: data.barcode || null,
-        tags: data.tags,
-        seoTitle: data.seoTitle || null,
-        seoDescription: data.seoDescription || null,
-        productType: data.productType,
-      };
-
-      if (data.productType === 'PHYSICAL') {
-        // C-134: con coma o punto ("12,50"). Antes parseFloat("12,50") mandaba 12
-        payload.priceUSD = leerNumero(data.priceUSD);
-        payload.compareAtPriceUSD = data.compareAtPriceUSD.trim() ? leerNumero(data.compareAtPriceUSD) : null;
-        payload.costPerItem = data.costPerItem.trim() ? leerNumero(data.costPerItem) : null;
-        payload.stock = leerNumero(data.stock);
-        payload.weightKg = data.weightKg.trim() ? leerNumero(data.weightKg) : 0;
-        payload.isConsolidable = data.isConsolidable;
-        payload.shippingCost = data.isConsolidable ? 0 : (data.shippingCost.trim() ? leerNumero(data.shippingCost) : 0);
-        payload.freeShipping = data.freeShipping;
-        // C-155: la marca por su nombre; vacía, el producto queda sin marca
-        payload.brandName = data.brand.trim();
-        payload.specifications = Object.keys(data.specifications).length > 0 ? data.specifications : null;
-        // C-119: condición; el servidor la valida y, si es nuevo, guarda vacío lo de usado
-        Object.assign(payload, {
-          condition: data.condition,
-          conditionGrade: data.conditionGrade || null,
-          packaging: data.packaging || null,
-          includedItems: data.includedItems,
-          missingItems: data.missingItems,
-          usageHours: data.usageHours,
-          batteryHealth: data.batteryHealth,
-          cosmeticNotes: data.cosmeticNotes,
-          testNotes: data.testNotes,
-          warrantyDays: data.warrantyDays,
-          serialNumber: data.serialNumber,
-        });
-        if (data.dimensionLength || data.dimensionWidth || data.dimensionHeight) {
-          payload.dimensions = JSON.stringify({
-            length: leerNumero(data.dimensionLength) || 0,
-            width: leerNumero(data.dimensionWidth) || 0,
-            height: leerNumero(data.dimensionHeight) || 0,
-          });
-        }
-      } else {
-        // El precio "desde" y la validación final los hace el servidor (C-60)
-        payload.stock = 999;
-        payload.digitalPlatform = data.digitalPlatform;
-        payload.digitalRegion = data.digitalRegion;
-        payload.deliveryMethod = data.deliveryMethod;
-        payload.redemptionInstructions = data.redemptionInstructions || null;
-        payload.accountFieldLabel = data.deliveryMethod === 'MANUAL' ? data.accountFieldLabel.trim() || null : null;
-        payload.accountFieldHint = data.deliveryMethod === 'MANUAL' ? data.accountFieldHint.trim() || null : null;
-        payload.digitalMarginPercent = data.marginPercent;
-        payload.digitalVariants = data.digitalVariants.map((v) => ({
-          id: v.id,
-          faceValue: Number.parseFloat(v.faceValue.replace(',', '.')),
-          unit: v.unit,
-          label: v.label.trim(),
-          costUSD: Number.parseFloat(v.costUSD.replace(',', '.')) || 0,
-          priceUSD: Number.parseFloat(v.priceUSD.replace(',', '.')) || 0,
-          provider: v.provider || null,
-          isActive: v.isActive,
-        }));
-      }
-
-      const url = isEditing ? `/api/products/${productId}` : '/api/products';
-      const method = isEditing ? 'PATCH' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        // C-133: sin cuadro ni espera. Antes se esperaban 2,5 s a propósito, y el cuadro decía "¡Producto Publicado!
-        // Ya está disponible en la tienda" también al guardar un borrador
-        const guardado = (await res.json().catch(() => null)) as { slug?: string } | null;
-        const texto = isEditing
-          ? 'Cambios guardados'
-          : publishStatus === 'PUBLISHED' ? 'Producto publicado' : 'Guardado como borrador: no se ve en la tienda';
-        toast.success((t) => (
-          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            {texto}
-            {publishStatus === 'PUBLISHED' && guardado?.slug && (
-              <a href={`/productos/${guardado.slug}`} target="_blank" rel="noopener" onClick={() => toast.dismiss(t.id)} className="font-semibold text-brand-600 underline">
-                Ver en la tienda
-              </a>
-            )}
-          </span>
-        ), { duration: 6000 });
-        router.push('/admin/products');
-      } else {
-        const body = await res.json();
-        const msg = body.details ? `${body.error}: ${body.details}` : (body.error || 'Error al guardar el producto.');
-        setErrors({ general: msg });
-      }
-    } catch {
-      setErrors({ general: 'Error de conexión. Verifica tu internet.' });
-    } finally {
-      setIsLoading(false);
-    }
+    await enviar(data, publishStatus, 0);
   };
 
   /** C-133: guardar lo editado desde cualquier paso, sin cambiar si estaba publicado o en borrador */
   const guardarCambios = () => {
-    if (sinCambios || isLoading) return;
+    if (sinCambios || isLoading || bloqueado) return;
     void handleSubmit(estadoGuardado);
+  };
+
+  // ─── Papelera: restaurar y seguir, o guardar lo escrito como producto nuevo ──
+  const restaurarYSeguir = async () => {
+    setRestaurando(true);
+    try {
+      const res = await fetch(`/api/products/${productId}/restaurar`, { method: 'POST' });
+      if (!res.ok) {
+        toast.error((await res.json().catch(() => ({}))).error || 'No se pudo restaurar el producto');
+        return;
+      }
+      const actualRes = await fetch(`/api/products/${productId}`);
+      if (!actualRes.ok) {
+        toast.error('Se restauró, pero no se pudo recargar. Recarga la página.');
+        return;
+      }
+      const actual = (await actualRes.json()) as ProductoApi;
+      setBloqueo(null);
+      olvidarCambio();
+      // Lo que otra persona haya cambiado antes de moverlo se combina con lo que escribí
+      await aplicarActual(actual, 'Otra persona', data, estadoGuardado, () => undefined);
+      toast.success('Producto restaurado. Puedes seguir editando.');
+    } finally {
+      setRestaurando(false);
+    }
+  };
+
+  const guardarComoNuevo = async () => {
+    setRestaurando(true);
+    try {
+      // El SKU del original sigue siendo suyo (aunque esté en la papelera): la copia lleva "-COPIA", "-COPIA-2"…
+      const candidatos = [1, 2, 3].map((n) => `${data.sku.trim()}-COPIA${n === 1 ? '' : `-${n}`}`.slice(0, 60));
+      for (const sku of candidatos) {
+        const payload: Record<string, unknown> = { ...construirPayload(data, 'DRAFT'), sku };
+        // Los montos digitales de la copia son nuevos: sin los ids del original
+        if (Array.isArray(payload.digitalVariants)) {
+          payload.digitalVariants = (payload.digitalVariants as Array<Record<string, unknown>>).map((v) => {
+            const copia = { ...v };
+            delete copia.id;
+            return copia;
+          });
+        }
+        const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) {
+          const nuevo = (await res.json()) as { id: string };
+          limpiarBorrador();
+          toast.success('Guardado como producto nuevo, en borrador');
+          router.push(`/admin/products/${nuevo.id}`);
+          return;
+        }
+        const cuerpo = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!/SKU/i.test(cuerpo.error ?? '')) {
+          toast.error(cuerpo.error || 'No se pudo guardar como producto nuevo');
+          return;
+        }
+      }
+      toast.error('No se encontró un SKU libre para la copia');
+    } finally {
+      setRestaurando(false);
+    }
+  };
+
+  // ─── Borrador recuperado ───────────────────────────────────────────────────
+  const recuperarBorrador = () => {
+    if (!borrador) return;
+    setData(borrador.datos);
+    // La base del borrador, no la de ahora: si otra persona cambió algo mientras tanto, al guardar se combina
+    fijarBase({ form: borrador.base, version: borrador.baseVersion, estado: baseRef.current?.estado ?? estadoGuardado });
+    setDatosCargados(JSON.stringify(borrador.base));
+    if (!isEditing) setStep(borrador.datos.productType ? 0 : -1);
   };
 
   // ─── Step labels ────────────────────────────────────────────────────────────
@@ -431,7 +545,7 @@ export default function ProductWizard({ productId }: Props) {
       <StepPublish
         data={data}
         errors={errors}
-        isLoading={isLoading}
+        isLoading={isLoading || bloqueado}
         isEditing={isEditing}
         estadoActual={isEditing ? estadoGuardado : undefined}
         onPublish={() => handleSubmit('PUBLISHED')}
@@ -490,13 +604,13 @@ export default function ProductWizard({ productId }: Props) {
               {/* En el teléfono la flecha de la izquierda ya vuelve: al editar, "Descartar" sobra y no cabía con "Guardar" */}
               <button
                 type="button"
-                onClick={() => router.back()}
+                onClick={() => { if (!sinCambios) limpiarBorrador(); router.back(); }}
                 className={`${isEditing ? 'hidden sm:inline-flex' : 'inline-flex'} rounded-lg px-3 py-1.5 text-sm font-medium text-muted hover:bg-surface hover:text-ink`}
               >
                 {sinCambios ? 'Volver' : 'Descartar'}
               </button>
               {isEditing && (
-                <button type="button" onClick={guardarCambios} disabled={isLoading || sinCambios} className={`${wizardPrimaryButton} disabled:opacity-50`}>
+                <button type="button" onClick={guardarCambios} disabled={isLoading || sinCambios || bloqueado} className={`${wizardPrimaryButton} disabled:opacity-50`}>
                   <FiSave className="h-4 w-4" aria-hidden="true" />
                   <span className="hidden sm:inline">{isLoading ? 'Guardando…' : 'Guardar cambios'}</span>
                   <span className="sm:hidden">{isLoading ? '…' : 'Guardar'}</span>
@@ -521,6 +635,22 @@ export default function ProductWizard({ productId }: Props) {
 
       {/* ── Body ───────────────────────────────────────────────────────────── */}
       <div className="max-w-[1300px] mx-auto px-2 sm:px-4 md:px-8 py-4 sm:py-6">
+
+        {/* C-169: trabajo en equipo. Quién más está aquí, qué cambió, borrador del navegador y, si lo movieron a la papelera, la salida */}
+        <AvisoPresencia otros={otros} recurso="este producto" />
+        {borrador && (
+          <BorradorRecuperado guardadoEn={borrador.guardadoEn} que={isEditing ? 'cambios sin guardar en este producto' : 'un producto sin terminar'} onRecuperar={recuperarBorrador} onDescartar={limpiarBorrador} />
+        )}
+        {aviso && (
+          <AvisoCambioAjeno
+            cambio={aviso}
+            recurso="producto"
+            ocupado={restaurando}
+            onRestaurar={restaurarYSeguir}
+            onGuardarComoNuevo={guardarComoNuevo}
+            onCerrar={olvidarCambio}
+          />
+        )}
 
         {errors.general && (
           <div className="mb-6 flex items-center gap-3 rounded-xl border border-deal/30 bg-deal-bg p-4 text-sm font-semibold text-deal" role="alert">
@@ -597,6 +727,24 @@ export default function ProductWizard({ productId }: Props) {
           )}
         </div>
       </div>
+
+      {isEditing && productId && (
+        <div className="mx-auto max-w-[1300px] px-2 sm:px-4 md:px-8">
+          <HistorialRecurso recurso={`product:${productId}`} recargar={cambio?.en} />
+        </div>
+      )}
+
+      {conflicto && (
+        <DialogoConflicto
+          quien={conflicto.quien}
+          conflictos={conflicto.conflictos}
+          etiquetas={ETIQUETAS}
+          formatear={formatearConflicto}
+          guardando={isLoading}
+          onGuardar={resolverConflicto}
+          onCancelar={() => setConflicto(null)}
+        />
+      )}
     </div>
   );
 }

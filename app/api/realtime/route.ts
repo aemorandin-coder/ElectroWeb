@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
 import { sesionValida } from '@/lib/sesiones';
 import { authOptions } from '@/lib/auth';
-import { isAuthorized } from '@/lib/auth-helpers';
+import { esAdminVerificado, isAuthorized } from '@/lib/auth-helpers';
+import { permisoDeRecurso } from '@/lib/realtime/recursos';
 import { ipParaRegistro } from '@/lib/ip';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 import { conectados, suscribir } from '@/lib/realtime/bus';
@@ -50,6 +51,12 @@ export async function GET(request: NextRequest) {
       case 'order:status_updated':
       case 'payment:verified':
         return equipo || (userId !== null && evento.userId === userId);
+      // C-169: solo el equipo con el permiso del recurso; nunca un cliente ni un administrador sin los dos pasos
+      case 'admin:presencia':
+      case 'admin:recurso_cambiado': {
+        const permiso = permisoDeRecurso(evento.recurso);
+        return permiso !== null && esAdminVerificado(session) && isAuthorized(session, permiso);
+      }
     }
   };
 

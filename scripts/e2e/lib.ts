@@ -139,6 +139,15 @@ const QUIETO = `() => { const s = document.createElement('style'); s.textContent
 export async function abrirNavegador(carpeta: string, puerto = 9333): Promise<Navegador> {
   const perfil = `${carpeta}/ffprofile-bidi`;
   mkdirSync(perfil, { recursive: true });
+  // Poca memoria: un solo proceso de contenido, sin caché en memoria ni restauración de sesión (la prueba corre junto al servidor)
+  writeFileSync(`${perfil}/user.js`, [
+    'user_pref("dom.ipc.processCount", 1);',
+    'user_pref("fission.autostart", false);',
+    'user_pref("browser.cache.memory.enable", false);',
+    'user_pref("browser.sessionstore.max_tabs_undo", 0);',
+    'user_pref("browser.tabs.unloadOnLowMemory", true);',
+    'user_pref("media.memory_cache_max_size", 8192);',
+  ].join('\n'));
   const firefox: ChildProcess = spawn('firefox', ['--headless', '--no-remote', '-profile', perfil, '--remote-debugging-port', String(puerto)], { stdio: 'ignore' });
   // Node 20 no trae WebSocket: se usa el que empaqueta Next
   const WebSocket = createRequire(import.meta.url)('next/dist/compiled/ws') as new (url: string) => WsLike;

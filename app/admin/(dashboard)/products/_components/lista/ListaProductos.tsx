@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiBox, FiCopy, FiEdit2, FiEye, FiMoreHorizontal, FiStar, FiTrash2, FiZap } from 'react-icons/fi';
+import { FiBox, FiCopy, FiEdit2, FiEye, FiMoreHorizontal, FiStar, FiTrash2, FiUsers, FiZap } from 'react-icons/fi';
 import { adminBadge, adminIconButton, type AdminTone } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { ETIQUETA_ESTADO, type EstadoProducto, type ProductoLista } from './tipos';
@@ -30,6 +30,8 @@ interface Props {
   onEstado: (p: ProductoLista) => void;
   onEliminar: (p: ProductoLista) => void;
   duplicando: string | null;
+  /** C-169: id del producto → quiénes lo están editando ahora */
+  editando?: Record<string, string[]>;
 }
 
 function Miniatura({ p, size }: { p: ProductoLista; size: number }) {
@@ -47,9 +49,10 @@ function Miniatura({ p, size }: { p: ProductoLista; size: number }) {
 }
 
 /** "Destacado" solo si la tienda lo muestra; si está inactivo, se aclara que no se ve (antes decía "Destacado" igual) */
-function Etiquetas({ p }: { p: ProductoLista }) {
+function Etiquetas({ p, editando }: { p: ProductoLista; editando?: string[] }) {
   return (
     <span className="flex flex-wrap items-center gap-1">
+      {editando && editando.length > 0 && <span className={adminBadge('brand')} title="Tiene este producto abierto para editarlo ahora mismo"><FiUsers className="h-3 w-3" aria-hidden="true" />{editando.join(' y ')} {editando.length === 1 ? 'lo edita' : 'lo editan'}</span>}
       {p.productType === 'DIGITAL' && <span className={adminBadge('brand')}><FiZap className="h-3 w-3" aria-hidden="true" />Digital</span>}
       {p.isFeatured && (p.status === 'PUBLISHED'
         ? <span className={adminBadge('warning')}><FiStar className="h-3 w-3" aria-hidden="true" />Destacado</span>
@@ -89,7 +92,7 @@ function CampoRapido({ p, campo, cambios, onCambio }: { p: ProductoLista; campo:
 }
 
 export default function ListaProductos(props: Props) {
-  const { productos, seleccion, onSeleccionar, onSeleccionarTodos, tasaVES, stockBajo, edicionRapida, cambios, onCambio, onVer, onDuplicar, onEstado, onEliminar, duplicando } = props;
+  const { productos, seleccion, onSeleccionar, onSeleccionarTodos, tasaVES, stockBajo, edicionRapida, cambios, onCambio, onVer, onDuplicar, onEstado, onEliminar, duplicando, editando } = props;
   const [abierto, setAbierto] = useState<string | null>(null);
   const todos = productos.length > 0 && productos.every((p) => seleccion.has(p.id));
   const algunos = !todos && productos.some((p) => seleccion.has(p.id));
@@ -112,7 +115,7 @@ export default function ListaProductos(props: Props) {
               <div className="min-w-0 flex-1 space-y-1">
                 <Link href={`/admin/products/${p.id}`} className="line-clamp-2 text-sm font-semibold text-ink hover:text-brand-600">{p.name}</Link>
                 <p className="truncate font-mono text-xs text-muted">{p.sku}{p.category ? ` · ${p.category.name}` : ''}</p>
-                <Etiquetas p={p} />
+                <Etiquetas p={p} editando={editando?.[p.id]} />
                 <div className="flex flex-wrap items-end justify-between gap-2 pt-1">
                   {edicionRapida && p.productType !== 'DIGITAL' ? <CampoRapido p={p} campo="priceUSD" cambios={cambios} onCambio={onCambio} /> : <Precio p={p} tasaVES={tasaVES} />}
                   {edicionRapida && p.productType !== 'DIGITAL' ? <CampoRapido p={p} campo="stock" cambios={cambios} onCambio={onCambio} /> : <Stock p={p} stockBajo={stockBajo} />}
@@ -136,7 +139,7 @@ export default function ListaProductos(props: Props) {
               <div className="mt-1 grid grid-cols-3 gap-2">
                 <button type="button" onClick={() => onDuplicar(p)} disabled={duplicando === p.id} className="min-h-11 rounded-lg border border-line text-sm text-ink hover:bg-surface">{duplicando === p.id ? 'Duplicando…' : 'Duplicar'}</button>
                 <button type="button" onClick={() => onEstado(p)} className="min-h-11 rounded-lg border border-line text-sm text-ink hover:bg-surface">{p.status === 'PUBLISHED' ? 'Desactivar' : 'Activar'}</button>
-                <button type="button" onClick={() => onEliminar(p)} className="min-h-11 rounded-lg border border-deal/30 text-sm text-deal hover:bg-deal-bg">Eliminar</button>
+                <button type="button" onClick={() => onEliminar(p)} className="min-h-11 rounded-lg border border-deal/30 text-sm text-deal hover:bg-deal-bg">A la papelera</button>
               </div>
             )}
           </li>
@@ -169,7 +172,7 @@ export default function ListaProductos(props: Props) {
                     <div className="min-w-0">
                       <Link href={`/admin/products/${p.id}`} className="line-clamp-1 max-w-80 font-medium text-ink hover:text-brand-600" title={p.name}>{p.name}</Link>
                       <p className="font-mono text-xs text-muted">{p.sku}</p>
-                      <Etiquetas p={p} />
+                      <Etiquetas p={p} editando={editando?.[p.id]} />
                     </div>
                   </div>
                 </td>
@@ -190,7 +193,7 @@ export default function ListaProductos(props: Props) {
                     <button type="button" onClick={() => onVer(p)} className={`${adminIconButton} h-11 w-11`} aria-label={`Vista rápida de ${p.name}`} title="Vista rápida"><FiEye className="h-4 w-4" aria-hidden="true" /></button>
                     <Link href={`/admin/products/${p.id}`} className={`${adminIconButton} h-11 w-11`} aria-label={`Editar ${p.name}`} title="Editar"><FiEdit2 className="h-4 w-4" aria-hidden="true" /></Link>
                     <button type="button" onClick={() => onDuplicar(p)} disabled={duplicando === p.id} className={`${adminIconButton} h-11 w-11`} aria-label={`Duplicar ${p.name}`} title="Duplicar"><FiCopy className="h-4 w-4" aria-hidden="true" /></button>
-                    <button type="button" onClick={() => onEliminar(p)} className={`${adminIconButton} h-11 w-11 hover:text-deal`} aria-label={`Eliminar ${p.name}`} title="Eliminar"><FiTrash2 className="h-4 w-4" aria-hidden="true" /></button>
+                    <button type="button" onClick={() => onEliminar(p)} className={`${adminIconButton} h-11 w-11 hover:text-deal`} aria-label={`Mover ${p.name} a la papelera`} title="Mover a la papelera"><FiTrash2 className="h-4 w-4" aria-hidden="true" /></button>
                   </div>
                 </td>
               </tr>

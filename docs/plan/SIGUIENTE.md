@@ -4,13 +4,14 @@
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** versión **`v1.0.0-rc.6`** (C-166, C-167, C-168, C-169, C-174 y C-173), igual a GitHub. Lo que viene después de C-168 está en `PROPUESTA_C168-C172.md` (aprobada el 02/10). **Producción: `v1.0.0-rc.1`** (C-165; `2480457`), comprobado desde fuera el 02/10 por la noche: todavía sin la cabecera `Content-Security-Policy-Report-Only` y sin la ruta `/api/cron/promotores`.
-- **Falta subir, en un solo lote: C-166, C-167, C-168, C-169, C-174 y C-173** (bloque de abajo). **Cambio de base: dos tablas nuevas, diez columnas y un índice** (todo aditivo). **Dos crons nuevos** (promotores y papelera). Sin variables obligatorias.
+- **`main`:** versión **`v1.0.0-rc.6`** (C-166, C-167, C-168, C-169, C-174 y C-173), igual a GitHub. Lo que viene después de C-168 está en `PROPUESTA_C168-C172.md` (aprobada el 02/10). **Producción: `v1.0.0-rc.3`** (C-166 y C-167 ya subidos), comprobado desde fuera el 02/10: tiene la cabecera `Content-Security-Policy-Report-Only` y la ruta `/api/cron/promotores`, y **todavía no** tiene la papelera, Reportes en vivo ni la marquesina (esas rutas responden 404).
+- **Falta subir, en un solo lote: C-168, C-169, C-174 y C-173** (bloque de abajo; C-166 y C-167 ya están arriba). **Cambio de base: cuatro columnas y un índice** (todo aditivo). **Un cron nuevo** (papelera). Sin variables obligatorias.
+- **C-170 (edición sin pisarse en el resto del panel) está a medias en su rama y NO va en este lote** (sin probar, `estado/C-170.md`).
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos al final de la sección 2). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: C-166, C-167, C-168, C-169, C-174 y C-173 (v1.0.0-rc.6)
+## 2. Deploy pendiente: C-168, C-169, C-174 y C-173 (de rc.3 a v1.0.0-rc.6)
 - **C-173 · Reportes en vivo** (`estado/C-173.md`): arriba de Reportes, **cuántas personas están conectadas a la tienda ahora, con cuenta y sin cuenta**, qué miran, de dónde llegaron, desde qué equipo y quién es cada una ("Carlos R.", "Visitante A3F"; nunca IP ni correo). Se actualiza cada 5 s; "Cobrado hoy" y las cifras del reporte se ponen al día solas con cada orden o pago. Sin cambio de base ni de cron.
 - **C-174 · Marquesina del equipo** (`estado/C-174.md`): una franja bajo la barra de arriba, en todas las pantallas del panel, dice **quién del equipo está conectado y en qué sector**: "Luis está en Productos, editando «Teclado Redragon K552»". Corre sola si el texto no cabe y se detiene al pasar el ratón o al tocarla. Sin cambio de base ni de cron.
 - **C-169 · Productos sin pérdidas** (`estado/C-169.md`), el caso de los 20 minutos perdidos: **"Eliminar" manda a la papelera** (pestaña nueva en Productos; 30 días; "Deshacer" al instante; solo el dueño borra para siempre antes), el editor **avisa en vivo** si otro administrador lo está editando, lo cambió o lo movió a la papelera, **combina solo** lo que cada uno cambió (pregunta solo por lo que los dos tocaron), guarda un **borrador en el navegador** y deja **historial** de quién cambió qué. Tres columnas nuevas en productos. **Un cron nuevo** (papelera).
@@ -18,24 +19,25 @@
 - **C-167 · Promotores** (`estado/C-167.md`): cada promotor tiene un **código** que el cliente escribe en el carrito (descuento para el cliente; la compra cuenta para el promotor aunque el cliente ya tuviera cuenta). La comisión es sobre los **productos sin IVA ni envío**, en **Puntos ES**, y se **acredita sola 7 días después de la entrega**; quedan para tu revisión las que parecen autocompra, pasan de $50 o superan la ganancia de la venta. **Solicitud para ser promotor** desde la cuenta del cliente, con aprobación de un clic. La página del promotor ya no promete dinero, ni comisión por recargas, registros o cursos.
 - **C-166 · Content-Security-Policy en modo "solo avisa"** (`estado/C-166.md`): no bloquea nada; los avisos se ven en Reportes → Seguridad.
 - **Verificado (lote rc.4):** `tsc`, `npm run lint` (0 errores), `npm run build`, **prueba de humo 59 de 59**, C-168 con 20 comprobaciones y C-169 con 79 (dos administradores y un cliente contra un build de producción). Antes, en C-166 y C-167: `tsc`, `npm run lint` y `npm run build` sin avisos; C-167 con **80 comprobaciones con compras reales** y C-166 con un barrido de 65 pantallas; la prueba de humo, **59 de 59**. **No probado:** el correo de "Ya eres promotor" (simulado), el cron en el servidor, Chrome y Safari, y tráfico real de la política de contenido.
-- **SQL total que va a mostrar `deploy.sh`** (solo esto; puede salir en otro orden y en varias líneas). Nada borra ni cambia lo que ya existe:
-  - `CREATE TABLE "csp_violations"` con sus dos índices (C-166).
-  - `CREATE TABLE "influencer_applications"` con sus dos índices y una llave a `users`.
+- **SQL total que va a mostrar `deploy.sh`** desde rc.3 (solo esto; puede salir en otro orden y en varias líneas). Nada borra ni cambia lo que ya existe:
   - `ALTER TABLE "users" ADD COLUMN "panelVersionVista" TEXT` (C-168).
   - `ALTER TABLE "products" ADD COLUMN "deletedAt" TIMESTAMP(3), ADD COLUMN "deletedById" TEXT, ADD COLUMN "statusAntesDePapelera" "ProductStatus"` y `CREATE INDEX "products_deletedAt_idx"` (C-169).
+  - **Lo de abajo ya lo aplicó rc.3**; solo saldría si la base estuviera en rc.1 (en ese caso avísale a Claude antes de seguir):
+  - `CREATE TABLE "csp_violations"` con sus dos índices (C-166).
+  - `CREATE TABLE "influencer_applications"` con sus dos índices y una llave a `users`.
   - `ALTER TABLE "orders" ADD COLUMN "referralInfluencerId" TEXT`
   - `ALTER TABLE "promotions" ADD COLUMN "influencerId" TEXT`, con un índice único y una llave a `influencers`.
   - `ALTER TABLE "influencers" ADD COLUMN "customerDiscountPercent" INTEGER NOT NULL DEFAULT 5`
   - `ALTER TABLE "referral_conversions" ADD COLUMN "baseAmount" DECIMAL(65,30), ADD COLUMN "heldReason" TEXT, ADD COLUMN "source" TEXT`
 
 ### Pasos (en el servidor, `/var/www/electroshopve`)
-1. **Qué hay ahora:** `git log -1 --oneline` debe empezar por `2480457` (o `4cbaca1`). Si dice otra cosa, avisar a Claude.
+1. **Qué hay ahora:** `git describe --tags` debe decir `v1.0.0-rc.3`. Si dice otra cosa, avisar a Claude.
 2. **Respaldo antes de subir:** Admin → Configuración → **Respaldos** → "Respaldar ahora" y esperar las dos filas "Hecho". Si prefieres a mano:
-   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc3.dump`
+   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc6.dump`
 3. **Subir:** `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL de arriba. Si coincide: `npx prisma db push` y `bash scripts/deploy.sh` otra vez. Si aparece un `DROP` o algo distinto, no seguir y avisar a Claude.
-4. **Comprobar:** `git describe --tags` debe decir `v1.0.0-rc.6`, y
+4. **Comprobar:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.6` (y el pie del menú del panel, "Versión 1.0.0-rc.6"), y
    `curl -sI https://electroshopve.com/ | grep -ci content-security-policy-report-only` debe dar `1`.
-5. **El cron de promotores** (una vez al día):
+5. **El cron de promotores** (una vez al día). **Si ya lo pusiste al subir rc.3, sáltate este paso** (`crontab -l` lo muestra):
    `cp /var/www/electroshopve/docs/plan/scripts/cron-promotores.sh ~/cron-promotores.sh && chmod +x ~/cron-promotores.sh && ~/cron-promotores.sh`
    Debe responder algo como `{"acreditadas":0,"rechazadas":0,"revisadas":0}`. Luego `crontab -e` y agregar:
    `30 9 * * * /home/luami/cron-promotores.sh >> /home/luami/cron-promotores.log 2>&1`
@@ -62,7 +64,7 @@
 9. **Marquesina del equipo (C-174)** — con dos cuentas de administrador abiertas a la vez: cada una ve, debajo de la barra de arriba, "<el otro> está en <sector>"; al abrir un producto en edición, "…, editando «nombre del producto»". Al cambiar de pantalla, cambia el sector. Con la otra pestaña cerrada (o la ventana en segundo plano) desaparece en un minuto; si no hay nadie más, la franja no existe. En el teléfono, con un nombre largo, el texto corre; tocarla lo detiene. Un cliente no la ve ni la recibe.
 10. **Reportes en vivo (C-173)**: abre la tienda en el teléfono (sin iniciar sesión) y en la computadora (con una cuenta de cliente), y en otro navegador Admin → **Reportes**: arriba, "En vivo" debe mostrar **2 conectados, 1 con cuenta y 1 sin cuenta**, lo que cada uno está mirando y de dónde llegó. Agrega algo al carrito: "con productos en el carrito" sube. Cierra la pestaña de la tienda: baja en segundos. Con una compra o un pago nuevo, "Cobrado hoy" cambia solo. (Tú, como administrador navegando la tienda, **no** cuentas como visitante.)
 
-**Vuelta atrás:** `git reset --hard 2480457 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas y columnas nuevas no molestan al código anterior (no se quitan). Antes, quitar las líneas de `cron-promotores.sh` y `cron-papelera.sh` de `crontab -e`. Lo que esté en la papelera queda como producto archivado (no se ve en la tienda) y se puede reactivar desde la base. Los cupones de promotor que ya se crearon quedan como cupones normales: pausarlos en Ofertas si no se quieren.
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.3 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas y columnas nuevas no molestan al código anterior (no se quitan). Antes, quitar la línea de `cron-papelera.sh` de `crontab -e` (la de promotores se queda: rc.3 también la usa). Lo que esté en la papelera queda como producto archivado (no se ve en la tienda) y se puede reactivar desde la base. Los cupones de promotor que ya se crearon quedan como cupones normales: pausarlos en Ofertas si no se quieren.
 
 ### Activar "Continuar con Google" (C-85, cuando quieras; no necesita deploy de código)
 1. Google Cloud → proyecto ElectroWeb → Google Auth Platform → **Clientes** → Crear cliente → **Aplicación web**, nombre `ElectroShop inicio de sesión`, y en "URIs de redireccionamiento autorizados": `https://electroshopve.com/api/auth/callback/google`. Es un cliente distinto del de los respaldos.

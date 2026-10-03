@@ -4,14 +4,14 @@
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** versión **`v1.0.0-rc.11`** (C-171, C-170, C-175 y C-172), igual a GitHub. **Producción: `v1.0.0-rc.7`** (captura de Andrés del 03/10: ya tiene C-171 y su tabla). El plan de este ciclo está en `PROPUESTA_C168-C172.md`.
-- **Falta subir, en un solo lote: C-170, C-175 y C-172** (bloque de abajo). **Sin cambio de base** (la tabla de C-171 ya entró con rc.7), sin crons ni variables.
+- **`main`:** versión **`v1.0.0-rc.11`** (C-171, C-170, C-175 y C-172), igual a GitHub. **Producción: `v1.0.0-rc.10`** (captura de Andrés del 03/10 y comprobado desde fuera: ya tiene C-171, C-170 y C-175). El plan de este ciclo está en `PROPUESTA_C168-C172.md`.
+- **Falta subir solo C-172** (bloque de abajo). **Sin cambio de base** (la tabla de C-171 ya entró con rc.7), sin crons ni variables.
 - **El ciclo C-168 a C-175 está completo.** No queda código en fila que no espere un dato de Andrés.
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos al final de la sección 2). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: C-170, C-175 y C-172 (de rc.7 a v1.0.0-rc.11)
+## 2. Deploy pendiente: C-172 (de rc.10 a v1.0.0-rc.11). C-170 y C-175 ya están en producción y falta probarlos
 - **C-172 · Destacados que rotan** (`estado/C-172.md`): en el inicio, el destacado grande cambia cada día y, en la computadora, rota con el siguiente de la columna cada 7 segundos (una vuelta y se detiene; flechas, contador y pausa arriba a la derecha de la tarjeta). En el teléfono no gira. Sin cambio de base.
 - **C-175 · Todos los correos rediseñados, con el logo largo** (`estado/C-175.md`): los 30 correos de la tienda llevan arriba el **logo largo** (antes el logo chiquito en un cuadro), el mismo título, el mismo botón, las mismas cajas y el mismo pie con redes y contacto. Pedido recibido, reseña publicada, los avisos al equipo y la prueba de Configuración dejaron su diseño aparte. Hechos para verse igual en Gmail, Outlook y el teléfono. Sin cambio de base. **El logo largo es el del encabezado de la tienda** (el ícono y "Electro Shop" con la letra y el azul de la marca), hecho imagen para el correo (`public/images/brand/logo-correo.png`).
 - **C-170 · Dos administradores sin pisarse, en el resto del panel** (`estado/C-170.md`): en **Promotores, Categorías, Ofertas y cupones, Cotizaciones y Campañas**, si otra persona guardó antes se combinan los cambios (solo pregunta por lo que las dos tocaron), se ve quién más lo tiene abierto y se pregunta antes de borrar algo que otra persona edita. **ElectroStudio** junta los cambios en su guardado automático. Aprobar a un creador, verificar una empresa o atender una solicitud de producto dos veces a la vez ya no avisa dos veces. Sin cambio de base.
@@ -21,10 +21,10 @@
 - Sin crons ni variables nuevas.
 
 ### Pasos (en el servidor, `/var/www/electroshopve`)
-1. **Qué hay ahora:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.7`. Si dice otra cosa, avisar a Claude.
+1. **Qué hay ahora:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.10`. Si dice otra cosa, avisar a Claude.
 2. **Respaldo antes de subir:** Admin → Configuración → **Respaldos** → "Respaldar ahora" y esperar las dos filas "Hecho". Si prefieres a mano:
    `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc11.dump`
-3. **Subir:** `git status -sb | head -3` (debe decir `main...origin/main`, sin archivos modificados), `git pull --ff-only` y `bash scripts/deploy.sh`. Si `git pull` da error o dice "Already up to date" y sigue en rc.7, pasarle la salida a Claude.
+3. **Subir:** `git status -sb | head -3` (debe decir `main...origin/main`, sin archivos modificados), `git pull --ff-only` y `bash scripts/deploy.sh`. Si `git pull` da error o dice "Already up to date" y sigue en rc.10, pasarle la salida a Claude.
 4. **Comprobar:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.11` y el pie del menú del panel, "Versión 1.0.0-rc.11".
 
 ### Pruebas después de subir (unos 15 minutos)
@@ -39,7 +39,7 @@
 9. **Destacados (C-172), en la computadora:** abre el inicio y espera 7 segundos: el producto grande cambia por el primero de la columna y arriba a la derecha dice "2 de N". Pon el ratón encima: se detiene. Toca las flechas y la pausa. Déjalo solo: da una vuelta y se queda en el primero. En el teléfono no gira.
 10. **Otro correo, de los de siempre:** en una ventana de incógnito, "Olvidé mi contraseña" con tu correo de cliente: llega con el mismo diseño y el botón funciona.
 
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.7 && npm install && bash scripts/deploy.sh --sin-pull`.
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.10 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de lo ya subido (rc.6 y rc.7; detalle en `HISTORIAL.md`)
 El Dashboard a tu gusto (pruebas 1 a 5 de arriba). Versiones (Administración → Versiones), el caso de dos administradores sobre un producto (papelera, combinar, aviso al instante), la marquesina del equipo, Reportes en vivo y la línea del cron de la papelera en `crontab -l`.

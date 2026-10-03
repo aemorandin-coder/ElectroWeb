@@ -10,6 +10,12 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.6] - 2026-10-02
+### Reportes y seguridad 1.1.0 (C-173)
+- **Reportes en vivo.** Arriba de todo, un panel que se actualiza solo: cuántas personas están **conectadas a la tienda ahora**, cuántas **con cuenta** y cuántas **sin cuenta**, cuántas llevan productos en el carrito, qué están mirando, de dónde llegaron (Instagram, Google, directo…) y desde qué equipo, con la lista de quién es cada una ("Carlos P.", "Visitante A3F").
+- **Lo cobrado hoy y este mes** se pone al día solo con cada orden nueva o pago confirmado; las cifras del reporte se actualizan cada minuto y con cada orden, sin parpadeos.
+- Antes "en vivo" contaba eventos de los últimos 5 minutos: quien leía una ficha sin hacer clic desaparecía. Ahora cada pestaña de la tienda avisa que sigue ahí (cada 30 s, a la vista); solo vive en la memoria del servidor (no guarda IP ni correo de nadie) y caduca a los 90 s.
+
 ## [1.0.0-rc.5] - 2026-10-02
 ### Marco del panel 1.2.0 (C-174)
 - **Marquesina del equipo:** una franja debajo de la barra de arriba, en todas las pantallas del panel, dice quién del equipo está conectado y en qué sector: "Luis está en Productos, editando «Teclado Redragon K552»". Corre sola si el texto no cabe, se detiene al pasar el ratón o tocarla, y con "reducir movimiento" no se mueve. Solo aparece si hay alguien más; la ven solo administradores con los dos pasos. Una pestaña en segundo plano sale de la franja al minuto.

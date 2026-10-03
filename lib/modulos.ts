@@ -39,6 +39,7 @@ export interface ModuloPanel {
 const PRIMERA: Pick<CambioModulo, 'version' | 'sistema' | 'tarea'> = { version: '1.0.0', sistema: '1.0.0-rc.4', tarea: 'C-168' };
 const RC4 = { sistema: '1.0.0-rc.4' } as const;
 const RC5 = { sistema: '1.0.0-rc.5' } as const;
+const RC6 = { sistema: '1.0.0-rc.6' } as const;
 const primera = (resumen: string): CambioModulo => ({ ...PRIMERA, resumen, silencioso: true });
 
 export const MODULOS: ModuloPanel[] = [
@@ -66,7 +67,7 @@ export const MODULOS: ModuloPanel[] = [
     descripcion: 'La pantalla de trabajo: lo que espera al equipo, las ventas y los accesos rápidos.',
     paginas: [],
     archivos: ['app/admin/(dashboard)/page.tsx', 'components/admin/dashboard/', 'lib/dashboard/', 'lib/queries/dashboard.ts', 'app/api/admin/dashboard/', 'app/api/admin/live-users/'],
-    historial: [{ version: '1.0.1', ...RC4, tarea: 'C-169', resumen: 'El total de productos ya no cuenta los de la papelera.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.2', ...RC6, tarea: 'C-173', resumen: 'Los visitantes en vivo salen de quién está conectado, no de contar eventos de 5 minutos.', silencioso: true }, { version: '1.0.1', ...RC4, tarea: 'C-169', resumen: 'El total de productos ya no cuenta los de la papelera.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'ordenes',
@@ -181,8 +182,9 @@ export const MODULOS: ModuloPanel[] = [
     archivos: [
       'app/admin/(dashboard)/reports/', 'app/api/admin/reports/', 'app/api/admin/csp/', 'app/api/csp-report/', 'app/api/analytics/',
       'lib/csp-', 'lib/relacion-ventas.ts', 'lib/audit-', 'components/AnalyticsTracker.tsx', 'lib/login-guard.ts', 'lib/rate-limit.ts',
+      'lib/visitantes.ts', 'lib/analytics-bots.ts', 'app/api/admin/visitantes/', 'app/api/admin/hoy/',
     ],
-    historial: [{ version: '1.0.1', ...RC4, tarea: 'C-169', resumen: 'La bitácora entiende "movido a la papelera", "restaurado" y "borrado para siempre", y el total de productos no cuenta la papelera.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.0', ...RC6, tarea: 'C-173', resumen: 'Reportes en vivo: arriba de todo, cuántas personas están conectadas a la tienda ahora (con cuenta y sin cuenta), qué miran, de dónde llegaron y quién es cada una; lo cobrado hoy se actualiza con cada orden o pago; las cifras se ponen al día solas.' }, { version: '1.0.1', ...RC4, tarea: 'C-169', resumen: 'La bitácora entiende "movido a la papelera", "restaurado" y "borrado para siempre", y el total de productos no cuenta la papelera.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'configuracion',

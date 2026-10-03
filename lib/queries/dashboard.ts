@@ -54,6 +54,26 @@ export interface DashboardData {
   tienda: Array<{ clave: string; texto: string; href: string; soloDueno: boolean }>;
 }
 
+/** Lo cobrado hoy y este mes, y los pagos por confirmar: la franja "Hoy" de Reportes (C-173). Mismas reglas que el Dashboard. */
+export async function getVentasDeHoy() {
+  const hoy = hoyCaracas();
+  const desdeHoy = inicioDia(hoy);
+  const desdeMes = inicioDia(`${hoy.slice(0, 7)}-01`);
+  const [ventasHoy, ventasMes, pagosPorConfirmar] = await Promise.all([
+    prisma.order.aggregate({ where: { ...VENTA, paidAt: { gte: desdeHoy } }, _sum: { totalUSD: true }, _count: true }),
+    prisma.order.aggregate({ where: { ...VENTA, paidAt: { gte: desdeMes } }, _sum: { totalUSD: true }, _count: true }),
+    prisma.order.count({ where: { status: OrderStatus.PENDING, paymentStatus: PaymentStatus.PENDING } }),
+  ]);
+  return {
+    hoyUSD: Number(ventasHoy._sum.totalUSD ?? 0),
+    hoyOrdenes: ventasHoy._count,
+    mesUSD: Number(ventasMes._sum.totalUSD ?? 0),
+    mesOrdenes: ventasMes._count,
+    pagosPorConfirmar,
+    actualizado: new Date().toISOString(),
+  };
+}
+
 export async function getDashboard(): Promise<DashboardData> {
   const hoy = hoyCaracas();
   const desdeHoy = inicioDia(hoy);

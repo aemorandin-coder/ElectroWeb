@@ -10,6 +10,8 @@ interface FeaturedHeroCardProps {
   product: ProductCardData;
   exchangeRateVES?: number | null;
   lowStockThreshold: number;
+  /** Solo la primera estrella se pide con prioridad (es la imagen grande del inicio); las que rotan después, no (C-172). */
+  priority?: boolean;
 }
 
 /**
@@ -17,7 +19,7 @@ interface FeaturedHeroCardProps {
  * La foto es cuadrada y ocupa la mitad de la tarjeta: con la estrella en 8 de 12 columnas mide lo mismo que el alto
  * de la fila (C-162). Se ajusta con object-contain: cualquier proporción llena su espacio sin recortarse.
  */
-export default function FeaturedHeroCard({ product, exchangeRateVES, lowStockThreshold }: FeaturedHeroCardProps) {
+export default function FeaturedHeroCard({ product, exchangeRateVES, lowStockThreshold, priority = true }: FeaturedHeroCardProps) {
   const image = product.mainImage || product.images?.[0] || '/images/no-image.png';
   const href = `/productos/${product.slug}`;
   const meta = [product.brand?.name, product.category?.name].filter(Boolean).join(' · ');
@@ -29,7 +31,7 @@ export default function FeaturedHeroCard({ product, exchangeRateVES, lowStockThr
       {/* C-133: la foto cuadrada y de borde a borde, pegada a la esquina de abajo: la cinta ES cae en la esquina de la foto.
           C-162: tope de ancho para cuando la estrella está sola y ocupa toda la fila */}
       <div className="relative aspect-square w-1/2 max-w-[26rem] shrink-0 self-end bg-white">
-        <Image src={image} alt={product.name} fill priority sizes="420px" className="object-contain" />
+        <Image src={image} alt={product.name} fill priority={priority} {...(priority ? {} : { fetchPriority: 'low' as const })} sizes="420px" className="object-contain" />
       </div>
       {/* C-162: las etiquetas van en la esquina de la tarjeta, no de la foto: si la tarjeta es más alta que la foto
           (una tarjeta vecina con oferta), no quedan flotando a media altura */}

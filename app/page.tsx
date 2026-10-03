@@ -6,6 +6,7 @@ import CategoryChips from '@/components/home/CategoryChips';
 import CategoryRail from '@/components/home/CategoryRail';
 import DigitalStrip from '@/components/home/DigitalStrip';
 import FeaturedShowcase from '@/components/home/FeaturedShowcase';
+import { estrellaDelDia } from '@/lib/destacados';
 import MoreFromElectroShop from '@/components/home/MoreFromElectroShop';
 import ProductSection from '@/components/home/ProductSection';
 import TrustBar from '@/components/home/TrustBar';
@@ -64,9 +65,9 @@ export default async function Home() {
 
   // Si hay pocos destacados, la vitrina se completa con ofertas y recién llegados:
   // el primer pantallazo siempre muestra productos.
-  const showcase = uniqueById([...featured, ...deals, ...newArrivals]).slice(
-    0,
-    Math.max(SHOWCASE_MIN, homeSettings.maxFeaturedProducts)
+  // C-172: la estrella cambia cada día siguiendo el orden de los destacados (la página se regenera cada minuto)
+  const showcase = estrellaDelDia(
+    uniqueById([...featured, ...deals, ...newArrivals]).slice(0, Math.max(SHOWCASE_MIN, homeSettings.maxFeaturedProducts))
   );
   const rate = settings.exchangeRateVES;
   const lowStock = homeSettings.lowStockThreshold;

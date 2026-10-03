@@ -43,6 +43,7 @@ const RC6 = { sistema: '1.0.0-rc.6' } as const;
 const RC7 = { sistema: '1.0.0-rc.7' } as const;
 const RC8 = { sistema: '1.0.0-rc.8' } as const;
 const RC9 = { sistema: '1.0.0-rc.9' } as const;
+const RC11 = { sistema: '1.0.0-rc.11' } as const;
 const primera = (resumen: string): CambioModulo => ({ ...PRIMERA, resumen, silencioso: true });
 
 export const MODULOS: ModuloPanel[] = [
@@ -217,7 +218,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/queries/home.ts', 'lib/queries/catalog.ts', 'lib/queries/product.ts', 'lib/queries/navigation.ts', 'lib/queries/seo.ts',
       'lib/queries/busqueda-catalogo.ts', 'lib/queries/hot-ad.ts', 'lib/dto/', 'lib/seo.ts', 'lib/feed.ts', 'lib/llms.ts',
     ],
-    historial: [{ version: '1.0.1', ...RC5, tarea: 'C-174', resumen: 'Estilo de la marquesina del panel en globals.css (no se usa en la tienda).', silencioso: true }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.0', ...RC11, tarea: 'C-172', resumen: 'Destacados del inicio: la estrella cambia cada día y, en la computadora, rota con el siguiente de la columna (una vuelta y se detiene; con flechas y pausa).' }, { version: '1.0.1', ...RC5, tarea: 'C-174', resumen: 'Estilo de la marquesina del panel en globals.css (no se usa en la tienda).', silencioso: true }, primera('Primera versión registrada.')],
   },
   {
     id: 'cuenta',

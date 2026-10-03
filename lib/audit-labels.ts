@@ -16,6 +16,8 @@ export const ETIQUETA_ACCION: Record<string, string> = {
     PRODUCT_CREATED: 'Producto creado',
     PRODUCT_UPDATED: 'Producto modificado',
     PRODUCT_DELETED: 'Producto eliminado',
+    PANEL_RECORD_UPDATED: 'Registro modificado',
+    PANEL_RECORD_RESOLVED: 'Solicitud o estado resuelto',
     PRODUCT_TRASHED: 'Producto movido a la papelera',
     PRODUCT_RESTORED: 'Producto restaurado de la papelera',
     PRODUCT_PURGED: 'Producto borrado para siempre',

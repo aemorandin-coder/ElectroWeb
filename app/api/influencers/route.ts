@@ -42,6 +42,8 @@ export async function GET() {
       status: inf.status,
       notes: inf.notes,
       createdAt: inf.createdAt,
+      // C-170: la versión con que se abre el editor; vuelve en el guardado
+      updatedAt: inf.updatedAt,
       user: inf.user,
       stats: {
         totalConversions: inf.conversions.length,

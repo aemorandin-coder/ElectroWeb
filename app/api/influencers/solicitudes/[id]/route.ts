@@ -10,6 +10,7 @@ import { escapeHtml } from '@/lib/html';
 import { siteUrl } from '@/lib/seo';
 import { aprobarSolicitudSchema, crearPromotor, PromotorError, rechazarSolicitudSchema } from '@/lib/influencer-admin';
 import { DIAS_PARA_ACREDITAR } from '@/lib/influencer-commission';
+import { nombrePorId } from '@/lib/edicion/servidor';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -22,7 +23,10 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   const solicitud = await prisma.influencerApplication.findUnique({ where: { id }, include: { user: { select: { id: true, name: true, email: true } } } });
   if (!solicitud) return NextResponse.json({ error: 'La solicitud no existe' }, { status: 404 });
-  if (solicitud.status !== 'PENDING') return NextResponse.json({ error: 'Esta solicitud ya se atendió' }, { status: 409 });
+  if (solicitud.status !== 'PENDING') {
+    const quien = await nombrePorId(solicitud.reviewedById);
+    return NextResponse.json({ error: quien ? `${quien} ya atendió esta solicitud` : 'Esta solicitud ya se atendió', conflicto: 'ya_resuelto' }, { status: 409 });
+  }
   const revisor = (session?.user as { id?: string } | undefined)?.id ?? null;
 
   if (body?.action === 'reject') {
@@ -33,7 +37,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       where: { id, status: 'PENDING' },
       data: { status: 'REJECTED', reviewNote: datos.data.note || null, reviewedAt: new Date(), reviewedById: revisor },
     });
-    if (hecha.count === 0) return NextResponse.json({ error: 'Esta solicitud ya se atendió' }, { status: 409 });
+    if (hecha.count === 0) return NextResponse.json({ error: 'Otra persona ya atendió esta solicitud', conflicto: 'ya_resuelto' }, { status: 409 });
     void createNotification({
       userId: solicitud.userId,
       type: 'PROMOTER_APPLICATION',

@@ -12,7 +12,8 @@ const PERMISO_POR_TIPO: Record<string, string> = {
   setting: 'MANAGE_SETTINGS',
   payment: 'MANAGE_SETTINGS',
   legal: 'MANAGE_USERS',
-  influencer: 'MANAGE_CONTENT',
+  // La API de promotores pide MANAGE_USERS (C-167): la presencia pide lo mismo
+  influencer: 'MANAGE_USERS',
   promotion: 'MANAGE_CONTENT',
   course: 'MANAGE_CONTENT',
   studio: 'MANAGE_CONTENT',

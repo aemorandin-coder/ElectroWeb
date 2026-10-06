@@ -272,28 +272,27 @@ svg { display: block; }
 /* ---------- Propio de este reel ---------- */
 .cap .av svg { display: block; }
 .legal { position: absolute; left: 20px; right: 20px; text-align: center; font: 400 9.5px/1.4 Inter; color: rgba(255,255,255,.6); visibility: hidden; z-index: 26; }
+img.clip { display: block; width: 100%; height: 100%; object-fit: cover; }
+.vcard { position: absolute; border-radius: 24px; overflow: hidden; background: #111; border: 6px solid #fff; box-shadow: 0 30px 70px rgba(5,15,40,.5); visibility: hidden; z-index: 10; }
+.real { position: absolute; left: 12px; top: 12px; display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(0,0,0,.6); color: #fff; font: 600 12px Inter; z-index: 2; }
+.real i.live { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: block; }
 
-/* Gancho: TV, consola y temperatura */
+/* Gancho: TV y consola reales, temperatura */
 #hook { position: absolute; inset: 0; z-index: 10; }
-#tv { position: absolute; left: 40px; top: 186px; width: 460px; height: 270px; border-radius: 16px; background: #0b0c0e; padding: 9px; box-shadow: 0 0 0 2px #2c2f34, 0 30px 60px rgba(0,0,0,.55); }
+#tv { position: absolute; left: 40px; top: 176px; width: 460px; height: 286px; border-radius: 16px; background: #0b0c0e; padding: 9px; box-shadow: 0 0 0 2px #2c2f34, 0 30px 60px rgba(0,0,0,.55); }
 #tvScr { position: relative; width: 100%; height: 100%; border-radius: 9px; overflow: hidden; background: #000; }
-#tvImg { position: absolute; inset: -10px; background: url(assets/p-gta.png) center 35% / cover; filter: saturate(1.2) contrast(1.05); }
-#tvImg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.55)); }
-.hud { position: absolute; left: 12px; bottom: 10px; color: #fff; font: 700 13px Poppins; display: flex; align-items: center; gap: 8px; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
-.hud i.rec { width: 9px; height: 9px; border-radius: 50%; background: #ef4444; display: block; }
-#glitch { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(255,255,255,.12) 0 2px, transparent 2px 5px); mix-blend-mode: screen; visibility: hidden; }
+#glitch { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(255,255,255,.14) 0 2px, transparent 2px 5px); mix-blend-mode: screen; visibility: hidden; }
 #noSig { position: absolute; inset: 0; background: #050505; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #9ca3af; font: 600 16px Inter; visibility: hidden; }
 #noSig b { font: 800 22px Poppins; color: #e5e7eb; }
-#tvStand { position: absolute; left: 230px; top: 456px; width: 80px; height: 14px; border-radius: 0 0 8px 8px; background: #1a1b1e; }
-#ps5 { position: absolute; left: 110px; top: 512px; width: 320px; }
-.heat { position: absolute; left: 150px; top: 470px; width: 240px; height: 70px; }
-.heat path { fill: none; stroke: rgba(255,120,60,.55); stroke-width: 3; stroke-linecap: round; }
-#gauge { position: absolute; left: 0; right: 0; margin: 0 auto; top: 640px; width: 250px; height: 170px; }
-#gNum { position: absolute; left: 0; right: 0; top: 92px; text-align: center; font: 800 38px Poppins; color: #fff; font-variant-numeric: tabular-nums; }
-#gNum small { font-size: 18px; opacity: .8; }
-#fan { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 820px; display: flex; align-items: center; gap: 10px; font: 700 15px Poppins; color: #fca5a5; }
-#fan .bars { display: flex; gap: 4px; align-items: flex-end; height: 22px; }
-#fan .bars i { width: 5px; border-radius: 3px; background: #f87171; display: block; }
+#cons { position: absolute; left: 70px; top: 494px; width: 400px; height: 278px; border-radius: 20px; overflow: hidden; border: 5px solid #26292e; box-shadow: 0 24px 50px rgba(0,0,0,.5); }
+#consDim { position: absolute; inset: 0; background: rgba(0,0,0,.55); visibility: hidden; }
+.heat { position: absolute; left: 150px; top: 452px; width: 240px; height: 70px; z-index: 3; }
+.heat path { fill: none; stroke: rgba(255,120,60,.75); stroke-width: 3.5; stroke-linecap: round; }
+#gauge { position: absolute; left: 110px; top: 790px; width: 180px; height: 122px; }
+#gNum { position: absolute; left: 304px; top: 834px; font: 800 34px Poppins; color: #fff; font-variant-numeric: tabular-nums; }
+#gNum small { font-size: 15px; opacity: .8; }
+#redFlash { position: absolute; inset: 0; z-index: 24; pointer-events: none; visibility: hidden;
+  background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(220,38,38,0) 30%, rgba(220,38,38,.55) 100%); }
 
 /* Señales */
 .sig { position: absolute; left: 34px; right: 34px; height: 92px; border-radius: 20px; background: #fff; display: flex; align-items: center; gap: 16px; padding: 0 20px; box-shadow: 0 18px 40px rgba(5,15,40,.35); visibility: hidden; z-index: 12; }
@@ -302,27 +301,20 @@ svg { display: block; }
 .sig .bang { width: 34px; height: 34px; border-radius: 50%; background: #dc2626; color: #fff; font: 800 20px/34px Poppins; text-align: center; flex-shrink: 0; }
 
 /* Taller (foto real) */
-#photo { position: absolute; left: 70px; top: 172px; width: 400px; height: 712px; border-radius: 26px; overflow: hidden; background: #111; border: 8px solid #fff; box-shadow: 0 30px 70px rgba(5,15,40,.5); visibility: hidden; z-index: 10; }
+#photo { left: 70px; top: 172px; width: 400px; height: 712px; }
 #photo img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; transform-origin: 60% 38%; }
-#photo .lbl { position: absolute; left: 14px; bottom: 14px; display: flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 999px; background: rgba(0,0,0,.6); color: #fff; font: 600 13px Inter; }
-#photo .lbl i.live { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: block; }
 .big { font-size: 26px !important; }
 
-/* Orden de servicio */
-#order { position: absolute; left: 34px; right: 34px; top: 176px; border-radius: 22px; background: #fff; padding: 18px; box-shadow: 0 24px 50px rgba(5,15,40,.4); visibility: hidden; z-index: 10; }
-#order .hd { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
-#order .hd .lg { width: 46px; height: 46px; border-radius: 12px; background: var(--brand-500); display: flex; align-items: center; justify-content: center; }
-#order .hd b { display: block; font: 700 17px Inter; color: var(--ink); }
-#order .hd small { font: 400 13px Inter; color: var(--muted); }
-#order .hd .st { margin-left: auto; font: 600 12px Inter; padding: 5px 10px; border-radius: 999px; background: var(--brand-50); color: var(--brand-700); border: 1px solid var(--brand-200); }
-.ck { display: flex; align-items: center; gap: 12px; height: 58px; border-bottom: 1px solid var(--line); font: 600 16px Inter; color: var(--ink); }
-.ck .box { width: 30px; height: 30px; border-radius: 9px; border: 2px solid var(--line-strong); position: relative; flex-shrink: 0; }
-.ck .box i.f { position: absolute; inset: -2px; border-radius: 9px; background: var(--success); display: flex; align-items: center; justify-content: center; color: #fff; transform: scale(0); }
-.temp { margin-top: 16px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
-.temp svg { flex-shrink: 0; }
-.temp .m b { display: block; font: 700 15px Inter; color: var(--ink); }
-.temp .m span { font: 500 13px Inter; color: var(--muted); }
-#tNum { font: 800 30px Poppins; font-variant-numeric: tabular-nums; margin-left: auto; color: #dc2626; }
+/* Proceso real */
+#proc { left: 50px; top: 170px; width: 440px; height: 502px; }
+#steps { position: absolute; left: 0; right: 0; top: 690px; height: 64px; z-index: 12; }
+.step { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 22px 0 10px; border-radius: 999px; background: #fff; box-shadow: 0 16px 34px rgba(5,15,40,.35); font: 700 19px Poppins; color: #15171a; visibility: hidden; }
+.step .n { width: 40px; height: 40px; border-radius: 50%; background: var(--brand-500); color: #fff; font: 800 18px/40px Poppins; text-align: center; }
+#dots { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 772px; display: flex; gap: 10px; visibility: hidden; z-index: 12; }
+#dots i { width: 40px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.28); display: block; }
+
+/* Vuelve a funcionar */
+#fin { left: 50px; top: 170px; width: 440px; height: 470px; }
 
 /* Más servicios */
 .svc { position: absolute; width: 222px; height: 196px; border-radius: 22px; background: #fff; padding: 18px; box-shadow: 0 20px 44px rgba(5,15,40,.35); visibility: hidden; z-index: 10; }
@@ -334,8 +326,6 @@ svg { display: block; }
 #endLogos { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 676px; display: flex; align-items: center; gap: 16px; padding: 10px 20px; border-radius: 14px; background: #fff; visibility: hidden; box-shadow: 0 10px 24px rgba(5,15,40,.25); }
 #endLogos small { font: 600 12px Inter; color: var(--muted); }
 #endLogos img { height: 18px; }
-#redFlash { position: absolute; inset: 0; z-index: 24; pointer-events: none; visibility: hidden;
-  background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(220,38,38,0) 30%, rgba(220,38,38,.55) 100%); }
 </style>
 </head>
 <body>
@@ -343,32 +333,25 @@ svg { display: block; }
   <div id="bgDark"><div class="grid"></div><div class="noise"></div></div>
   <div id="bgBlue"><div class="glow"></div><div class="panel pA"></div><div class="panel pC"></div><div class="panel pB"></div><div class="noise"></div></div>
 
-  <div class="cap" id="c1"><span class="av">L</span>POV: tu PS5 suena como avión en pleno GTA 😵</div>
+  <div class="cap" id="c1"><span class="av">L</span>POV: tu Xbox suena como avión en plena partida 😵</div>
   <div class="cap" id="c3"><span class="av num"><i data-ic="alert" data-s="19" data-w="2.4"></i></span>Si tiene <b>una</b>, necesita mantenimiento</div>
   <div class="cap" id="c4"><span class="av num"><i data-ic="tool" data-s="19" data-w="2.4"></i></span>Nuestro taller en <b>Guanare</b></div>
-  <div class="cap" id="c5"><span class="av num"><i data-ic="check" data-s="19" data-w="2.6"></i></span>Así te la <b>devolvemos</b></div>
+  <div class="cap" id="c5"><span class="av num"><i data-ic="tool" data-s="19" data-w="2.4"></i></span>Así es el <b>mantenimiento</b></div>
+  <div class="cap" id="c7"><span class="av num"><i data-ic="game" data-s="19" data-w="2.4"></i></span>¡Y a jugar <b>otra vez</b>!</div>
   <div class="cap" id="c6"><span class="av num"><i data-ic="cpu" data-s="19" data-w="2.4"></i></span>Y <b>no solo</b> consolas</div>
 
   <!-- 1. Gancho -->
   <div id="hook">
-    <div id="tv"><div id="tvScr"><div id="tvImg"></div><div class="hud"><i class="rec"></i>GTA V · Misión en curso</div><div id="glitch"></div><div id="noSig"><i data-ic="tv" data-s="34"></i><b>Sin señal</b></div></div></div>
-    <div id="tvStand"></div>
+    <div id="tv"><div id="tvScr"><img class="clip" id="tvClip" alt=""><div id="glitch"></div><div id="noSig"><i data-ic="tv" data-s="34"></i><b>Sin señal</b></div></div></div>
+    <div id="cons"><img class="clip" id="consClip" alt=""><div id="consDim"></div><span class="real"><i class="live"></i>Xbox One en el taller</span></div>
     <svg class="heat" viewBox="0 0 240 70"><path class="h1" d="M40 70 q10 -12 0 -24 q-10 -12 0 -24"/><path class="h2" d="M120 70 q10 -12 0 -24 q-10 -12 0 -24"/><path class="h3" d="M200 70 q10 -12 0 -24 q-10 -12 0 -24"/></svg>
-    <svg id="ps5" viewBox="0 0 320 90">
-      <path d="M8 30 C 60 6, 120 2, 160 10 C 200 2, 260 6, 312 30 L 300 44 L 20 44 Z" fill="#f5f6f8"/>
-      <rect x="20" y="44" width="280" height="14" rx="3" fill="#121316"/>
-      <rect id="ps5Light" x="40" y="49" width="240" height="3" rx="1.5" fill="#3b82f6"/>
-      <path d="M20 58 L 300 58 L 312 72 C 260 88, 200 90, 160 82 C 120 90, 60 88, 8 72 Z" fill="#e9ebef"/>
-      <path d="M8 30 C 60 6, 120 2, 160 10 C 200 2, 260 6, 312 30" fill="none" stroke="#fff" stroke-width="2"/>
-    </svg>
     <svg id="gauge" viewBox="0 0 250 170">
       <defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#10b981"/><stop offset=".55" stop-color="#f59e0b"/><stop offset="1" stop-color="#ef4444"/></linearGradient></defs>
       <path d="M25 135 A100 100 0 0 1 225 135" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="18" stroke-linecap="round"/>
       <path d="M25 135 A100 100 0 0 1 225 135" fill="none" stroke="url(#gg)" stroke-width="18" stroke-linecap="round"/>
-      <g id="needle"><line x1="125" y1="135" x2="125" y2="52" stroke="#fff" stroke-width="5" stroke-linecap="round"/><circle cx="125" cy="135" r="10" fill="#fff"/></g>
+      <g id="needle"><line x1="125" y1="135" x2="125" y2="55" stroke="#fff" stroke-width="5" stroke-linecap="round"/><circle cx="125" cy="135" r="10" fill="#fff"/></g>
     </svg>
-    <div id="gNum" style="top:742px">62<small> °C</small></div>
-    <div id="fan"><i data-ic="volume" data-s="20"></i><span id="fanTxt">Ventilador</span><span class="bars"><i></i><i></i><i></i><i></i><i></i></span></div>
+    <div id="gNum"><i data-ic="thermometer" data-s="22" style="vertical-align:-3px"></i> <span id="gVal">62</span><small> °C</small></div>
   </div>
 
   <!-- 3. Señales -->
@@ -377,19 +360,22 @@ svg { display: block; }
   <div class="sig" id="sg3" style="top:524px"><span class="t"><i data-ic="wind" data-s="28"></i></span><b>Polvo en las rejillas</b><span class="bang">!</span></div>
 
   <!-- 4. Taller -->
-  <div id="photo"><img src="assets/taller.jpg" alt=""><span class="lbl"><i class="live"></i>Taller Electro Shop · Guanare</span></div>
+  <div class="vcard" id="photo"><img src="assets/taller.jpg" alt=""><span class="real" style="top:auto;bottom:14px"><i class="live"></i>Taller Electro Shop · Guanare</span></div>
 
-  <!-- 5. Orden de servicio -->
-  <div id="order">
-    <div class="hd"><span class="lg"><i data-ic="es" data-s="30"></i></span><div><b>Orden de servicio</b><small>PlayStation 5 · Mantenimiento</small></div><span class="st" id="oSt">En taller</span></div>
-    <div class="ck" id="ck0"><span class="box"><i class="f"><i data-ic="check" data-s="18" data-w="3"></i></i></span>Diagnóstico del equipo</div>
-    <div class="ck" id="ck1"><span class="box"><i class="f"><i data-ic="check" data-s="18" data-w="3"></i></i></span>Limpieza interna completa</div>
-    <div class="ck" id="ck2" style="border-bottom:0"><span class="box"><i class="f"><i data-ic="check" data-s="18" data-w="3"></i></i></span>Cambio de pasta térmica</div>
-    <div class="temp"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="tIco"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg><div class="m"><b>Temperatura al jugar</b><span id="tTxt">Antes del mantenimiento</span></div><span id="tNum">89 °C</span></div>
-    <div class="temp"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#6a6c6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07" id="w1"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14" id="w2"/></svg><div class="m"><b>Ventilador</b><span id="fTxt">Suena como avión</span></div></div>
+  <!-- 5. Proceso real -->
+  <div class="vcard" id="proc"><img class="clip" id="procClip" alt=""><span class="real"><i class="live"></i>Video real del taller</span></div>
+  <div id="steps">
+    <div class="step" id="st0"><span class="n">1</span>Abrimos con cuidado</div>
+    <div class="step" id="st1"><span class="n">2</span>Limpieza interna completa</div>
+    <div class="step" id="st2"><span class="n">3</span>Retiramos la pasta vieja</div>
+    <div class="step" id="st3"><span class="n">4</span>Pasta térmica nueva</div>
   </div>
+  <div id="dots"><i></i><i></i><i></i><i></i></div>
 
-  <!-- 6. Más servicios -->
+  <!-- 6. Vuelve a funcionar -->
+  <div class="vcard" id="fin"><img class="clip" id="finClip" alt=""><span class="real"><i class="live"></i>Probada en el taller</span></div>
+
+  <!-- 7. Más servicios -->
   <div class="svc" id="sv0" style="left:36px; top:182px"><span class="t"><i data-ic="cpu" data-s="28"></i></span><b>PC gamer</b><span>Ensamblaje y optimización de alto rendimiento</span></div>
   <div class="svc" id="sv1" style="right:36px; top:182px"><span class="t"><i data-ic="video" data-s="28"></i></span><b>Cámaras de seguridad</b><span>Instalación de CCTV para tu casa o negocio</span></div>
   <div class="svc" id="sv2" style="left:36px; top:398px"><span class="t"><i data-ic="wifi" data-s="28"></i></span><b>Redes</b><span>Cableado estructurado y conexión estable</span></div>
@@ -397,13 +383,14 @@ svg { display: block; }
 
   <!-- Stickers -->
   <div id="redFlash"></div>
-  <div class="stk dark" id="sFiu" style="right:30px; top:470px; font-size:24px; color:#fca5a5">¡FIUUUUUUM! ✈️</div>
+  <div class="stk dark" id="sFiu" style="right:24px; top:452px; font-size:24px; color:#fca5a5">¡FIUUUUUUM! ✈️</div>
   <div class="stk" id="sOff" style="left:0; right:0; margin:0 auto; width:max-content; top:300px; background:#dc2626; color:#fff; font-size:36px; font-weight:800; padding:14px 26px; border-radius:18px; box-shadow:0 20px 50px rgba(0,0,0,.55)">¡SE APAGÓ! 😱</div>
-  <div class="stk light" id="sMis" style="left:0; right:0; margin:0 auto; width:max-content; top:384px; font-size:20px">…en plena misión</div>
+  <div class="stk light" id="sMis" style="left:0; right:0; margin:0 auto; width:max-content; top:384px; font-size:20px">…en plena partida</div>
   <div class="stk light big" id="sYrs" style="left:24px; top:236px"><span style="color:var(--brand-600)">14 años</span> de experiencia</div>
   <div class="stk dark" id="sEng" style="right:22px; top:700px"><i data-ic="award" data-s="20" style="color:var(--warning)"></i>Atendido por ingeniero</div>
   <div class="stk light" id="sShip" style="left:26px; top:790px"><i data-ic="truck" data-s="20" style="color:var(--brand-500)"></i>En tienda o por envío*</div>
-  <div class="stk dark" id="sCon" style="left:0; right:0; margin:0 auto; width:max-content; top:760px"><i data-ic="game" data-s="20" style="color:var(--accent)"></i>PlayStation · Xbox · Switch · Steam Deck</div>
+  <div class="stk light" id="sTest" style="right:24px; top:600px"><i data-ic="check" data-s="20" style="color:var(--success-strong)"></i>Probada antes de entregar</div>
+  <div class="stk dark" id="sCon" style="left:0; right:0; margin:0 auto; width:max-content; top:690px"><i data-ic="game" data-s="20" style="color:var(--accent)"></i>PlayStation · Xbox · Nintendo · Steam Deck</div>
   <div class="legal" id="lgShip" style="top:928px">*Equipos por envío: aplican condiciones. Escríbenos antes de enviarlo.</div>
 
   <!-- Giro -->
@@ -429,7 +416,7 @@ svg { display: block; }
     <div class="ep" id="ep2" style="top:530px"><img src="assets/whatsapp.png" alt="">Cotiza por WhatsApp +58 257 251 1282</div>
     <div class="ep" id="ep3" style="top:590px"><i data-ic="mapPin" data-s="20"></i>Taller en Guanare · Recibimos por envío*</div>
     <div id="endLogos"><small>Envíos por</small><img src="assets/zoom.png" alt=""><img src="assets/mrw.png" alt=""></div>
-    <div id="fine" style="top:752px"><b>Electro Shop Morandin C.A. · RIF J&#8209;40590333&#8209;3</b><br>*Equipos por envío al servicio técnico: aplican condiciones. ZOOM, MRW, PlayStation, Xbox, Nintendo Switch, Steam Deck y WhatsApp son marcas de sus respectivos dueños.</div>
+    <div id="fine" style="top:752px"><b>Electro Shop Morandin C.A. · RIF J&#8209;40590333&#8209;3</b><br>*Equipos por envío al servicio técnico: aplican condiciones. ZOOM, MRW, PlayStation, Xbox, Nintendo, Steam Deck, Fortnite y WhatsApp son marcas de sus respectivos dueños.</div>
   </div>
 </div>
 
@@ -496,6 +483,34 @@ document.querySelectorAll('.cap').forEach(c => { const tx = document.createEleme
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 
+// ---------- Clips reales: cada <img class="clip"> muestra el cuadro que toca (clips/<nombre>/0001.jpg…) ----------
+const FRAMES = { consola: 84, tv: 96, abrir: 78, polvo: 81, vieja: 72, nueva: 78, enciende: 72, mariokart: 78 };
+// [elemento, clip, segundo en que empieza, velocidad]; cada elemento muestra el último clip que ya empezó y se queda en su último cuadro
+const SCHEDULE = [
+  ['#tvClip', 'tv', 0, 1], ['#consClip', 'consola', 0, 1],
+  ['#procClip', 'abrir', 14.9, 1], ['#procClip', 'polvo', 16.9, 1], ['#procClip', 'vieja', 18.9, 1], ['#procClip', 'nueva', 20.9, 1],
+  ['#finClip', 'enciende', 22.95, 1], ['#finClip', 'mariokart', 24.6, 1],
+];
+const FREEZE = { '#tvClip': 3.55, '#consClip': 4.0 }; // se congelan cuando la consola "se apaga"
+const pad = n => String(n).padStart(4, '0');
+function frameFor(sel, t) {
+  let cur = null;
+  for (const e of SCHEDULE) if (e[0] === sel && t >= e[2] - 0.001) cur = e;
+  if (!cur) cur = SCHEDULE.find(e => e[0] === sel);
+  const tt = Math.min(t, FREEZE[sel] ?? Infinity);
+  const i = Math.max(0, Math.min(FRAMES[cur[1]] - 1, Math.floor((tt - cur[2]) * 30 * cur[3])));
+  return `clips/${cur[1]}/${pad(i + 1)}.jpg`;
+}
+let pending = [];
+function showClips(t) {
+  pending = [];
+  for (const sel of new Set(SCHEDULE.map(e => e[0]))) {
+    const el = $(sel), src = frameFor(sel, t);
+    if (el.getAttribute('src') !== src) { el.setAttribute('src', src); pending.push(el.decode().catch(() => {})); }
+  }
+}
+window.settle = () => Promise.all(pending);
+
 function build() {
 const tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
 const capIn = (id, t) => tl.fromTo(id, { autoAlpha: 0, y: 14, scale: .94 }, { autoAlpha: 1, y: 0, scale: 1, duration: .38, ease: 'back.out(1.6)' }, t);
@@ -505,41 +520,30 @@ const stkOut = (id, t) => tl.to(id, { autoAlpha: 0, scale: .85, duration: .2, ea
 
 // Ambiente
 tl.to('#bgDark .grid', { x: -28, y: -28, duration: 6, ease: 'none' }, 0);
-tl.to('#bgBlue .pA', { x: 40, y: 26, duration: 25, ease: 'sine.inOut' }, 5.5);
-tl.to('#bgBlue .pB', { x: -46, y: -20, duration: 25, ease: 'sine.inOut' }, 5.5);
-tl.to('#bgBlue .pC', { x: 60, duration: 25, ease: 'sine.inOut' }, 5.5);
-tl.fromTo('#bgBlue .glow', { scale: .9, x: -30 }, { scale: 1.15, x: 40, duration: 25, ease: 'sine.inOut' }, 5.5);
+tl.to('#bgBlue .pA', { x: 40, y: 26, duration: 29, ease: 'sine.inOut' }, 5.5);
+tl.to('#bgBlue .pB', { x: -46, y: -20, duration: 29, ease: 'sine.inOut' }, 5.5);
+tl.to('#bgBlue .pC', { x: 60, duration: 29, ease: 'sine.inOut' }, 5.5);
+tl.fromTo('#bgBlue .glow', { scale: .9, x: -30 }, { scale: 1.15, x: 40, duration: 29, ease: 'sine.inOut' }, 5.5);
 
-// ===== 1. Gancho (0–5,6 s): la consola sufre y se apaga =====
+// ===== 1. Gancho (0–5,6 s): la consola se recalienta y se apaga =====
 gsap.set('#c1', { autoAlpha: 1 });
 gsap.set('#needle', { rotation: -40, svgOrigin: '125 135' });
-const temp = { v: 62 }; const gNum = $('#gNum');
-const showTemp = () => { gNum.innerHTML = Math.round(temp.v) + '<small> °C</small>'; gNum.style.color = temp.v > 80 ? '#fca5a5' : '#fff'; };
-tl.fromTo('#tvImg', { scale: 1.02 }, { scale: 1.12, x: -10, duration: 3.6, ease: 'sine.inOut' }, 0);
-tl.to(temp, { v: 89, duration: 3.3, ease: 'power1.in', onUpdate: showTemp }, .2);
+const temp = { v: 62 }; const gVal = $('#gVal'), gNum = $('#gNum');
+tl.to(temp, { v: 89, duration: 3.3, ease: 'power1.in', onUpdate: () => { gVal.textContent = Math.round(temp.v); gNum.style.color = temp.v > 80 ? '#fca5a5' : '#fff'; } }, .2);
 tl.to('#needle', { rotation: 72, duration: 3.3, ease: 'power1.in' }, .2);
-// barras del ventilador: cada vez más altas
-$$('#fan .bars i').forEach((b, i) => {
-  tl.fromTo(b, { height: 4 + i * 2 }, { height: 22, duration: .18, ease: 'none', repeat: 17, yoyo: true, delay: i * .04 }, .1);
-});
-tl.call(() => { $('#fanTxt').textContent = 'Ventilador al máximo'; }, null, 1.6);
-// la consola vibra más y más
 for (let k = 0; k < 11; k++) {
-  const a = 1 + k * .45;
-  tl.to('#ps5', { keyframes: { x: [0, -a, a, -a * .6, 0], y: [0, a * .3, -a * .3, 0, 0] }, duration: .3, ease: 'none' }, .2 + k * .3);
+  const a = 1 + k * .4;
+  tl.to('#cons', { keyframes: { x: [0, -a, a, -a * .6, 0], y: [0, a * .3, -a * .3, 0, 0] }, duration: .3, ease: 'none' }, .2 + k * .3);
 }
 ['.h1', '.h2', '.h3'].forEach((h, i) => tl.fromTo('.heat ' + h, { y: 18, opacity: 0 }, { y: -22, opacity: 1, duration: 1, ease: 'sine.inOut', repeat: 2, delay: i * .25 }, .4));
 stkIn('#sFiu', 1.3, 5);
 tl.to('#sFiu', { keyframes: { x: [0, -4, 4, -3, 3, 0] }, duration: .4, ease: 'none', repeat: 2 }, 1.7);
-// se congela y se apaga
 tl.set('#glitch', { autoAlpha: 1 }, 3.55);
-tl.to('#tvImg', { keyframes: { x: [-10, 14, -18, 8, -4], filter: ['saturate(1.2) contrast(1.05)', 'saturate(3) hue-rotate(40deg)', 'grayscale(1) contrast(2)', 'saturate(2) hue-rotate(-60deg)', 'grayscale(1)'] }, duration: .45, ease: 'none' }, 3.55);
+tl.to('#tvClip', { keyframes: { x: [0, 14, -18, 8, -4], filter: ['saturate(1) hue-rotate(0deg)', 'saturate(3) hue-rotate(40deg)', 'grayscale(1) contrast(2)', 'saturate(2) hue-rotate(-60deg)', 'grayscale(1)'] }, duration: .45, ease: 'none' }, 3.55);
 tl.set('#noSig', { autoAlpha: 1 }, 4.0);
 tl.set('#glitch', { autoAlpha: 0 }, 4.0);
-tl.set('#ps5Light', { attr: { fill: '#3a3d42' } }, 4.0);
+tl.set('#consDim', { autoAlpha: 1 }, 4.0);
 tl.to('#needle', { rotation: 90, duration: .2 }, 3.9);
-tl.call(() => { $('#fanTxt').textContent = 'Silencio total'; }, null, 4.0);
-tl.to('#fan .bars i', { height: 3, duration: .15 }, 4.0);
 stkOut('#sFiu', 3.9);
 tl.to('.heat', { autoAlpha: 0, duration: .2 }, 4.0);
 tl.fromTo('#redFlash', { autoAlpha: 0 }, { keyframes: { autoAlpha: [0, 1, .45] }, duration: .6, ease: 'power2.out' }, 4.05);
@@ -558,53 +562,61 @@ tl.fromTo('#turnText .w', { autoAlpha: 0, y: 34 }, { autoAlpha: 1, y: 0, duratio
 tl.to('#turnText .hl', { keyframes: { scale: [1, 1.12, 1] }, duration: .4, ease: 'power2.out' }, 6.65);
 tl.to(['#coin', '#coinGlow', '#turnText'], { autoAlpha: 0, y: -30, scale: .95, duration: .26, ease: 'power2.in' }, 7.5);
 
-// ===== 3. Señales (7,7–11,8 s) =====
+// ===== 3. Señales (7,7–11,6 s) =====
 capIn('#c3', 7.75);
 [['#sg1', -60, 8.15], ['#sg2', 60, 8.85], ['#sg3', -60, 9.55]].forEach(([id, x, t]) => {
   tl.fromTo(id, { autoAlpha: 0, x, rotation: x > 0 ? 4 : -4 }, { autoAlpha: 1, x: 0, rotation: x > 0 ? 1 : -1, duration: .42, ease: 'back.out(1.6)' }, t);
   tl.fromTo(id + ' .bang', { scale: 0 }, { scale: 1, duration: .3, ease: 'back.out(3)' }, t + .25);
 });
 tl.to(['#sg1', '#sg2', '#sg3'], { keyframes: { scale: [1, 1.03, 1] }, duration: .35, stagger: .08 }, 10.5);
-tl.to(['#sg1', '#sg2', '#sg3'], { autoAlpha: 0, x: 40, duration: .25, stagger: .05, ease: 'power2.in' }, 11.45);
-capOut('#c3', 11.55);
+tl.to(['#sg1', '#sg2', '#sg3'], { autoAlpha: 0, x: 40, duration: .25, stagger: .05, ease: 'power2.in' }, 11.3);
+capOut('#c3', 11.45);
 
-// ===== 4. El taller (11,8–16,6 s): foto real =====
-capIn('#c4', 11.8);
-tl.fromTo('#photo', { autoAlpha: 0, y: 120, rotation: 5, scale: .92 }, { autoAlpha: 1, y: 0, rotation: -2, scale: 1, duration: .6 }, 11.85);
-tl.fromTo('#photo img', { scale: 1.02 }, { scale: 1.16, duration: 4.8, ease: 'sine.inOut' }, 11.85);
-stkIn('#sYrs', 12.7, -4);
-stkIn('#sEng', 13.35, 3);
-stkIn('#sShip', 14.0, -3);
-tl.fromTo('#lgShip', { autoAlpha: 0 }, { autoAlpha: 1, duration: .3 }, 14.0);
-tl.to(['#photo', '#sYrs', '#sEng', '#sShip', '#lgShip'], { autoAlpha: 0, y: -40, duration: .3, ease: 'power2.in' }, 16.35);
-capOut('#c4', 16.35);
+// ===== 4. El taller (11,6–14,8 s): foto real =====
+capIn('#c4', 11.65);
+tl.fromTo('#photo', { autoAlpha: 0, y: 120, rotation: 5, scale: .92 }, { autoAlpha: 1, y: 0, rotation: -2, scale: 1, duration: .55 }, 11.65);
+tl.fromTo('#photo img', { scale: 1.02 }, { scale: 1.14, duration: 3.2, ease: 'sine.inOut' }, 11.65);
+stkIn('#sYrs', 12.25, -4);
+stkIn('#sEng', 12.75, 3);
+stkIn('#sShip', 13.25, -3);
+tl.fromTo('#lgShip', { autoAlpha: 0 }, { autoAlpha: 1, duration: .3 }, 13.25);
+tl.to(['#photo', '#sYrs', '#sEng', '#sShip', '#lgShip'], { autoAlpha: 0, y: -40, duration: .3, ease: 'power2.in' }, 14.5);
+capOut('#c4', 14.5);
 
-// ===== 5. Orden de servicio (16,6–21,6 s) =====
-capIn('#c5', 16.6);
-tl.fromTo('#order', { autoAlpha: 0, y: 80, scale: .95 }, { autoAlpha: 1, y: 0, scale: 1, duration: .5 }, 16.65);
-['#ck0', '#ck1', '#ck2'].forEach((c, i) => tl.to(c + ' .f', { scale: 1, duration: .3, ease: 'back.out(2.4)' }, 17.25 + i * .5));
-const tt = { v: 89 }; const tNum = $('#tNum');
-tl.to(tt, { v: 62, duration: 1.2, ease: 'power2.inOut', onUpdate: () => { tNum.textContent = Math.round(tt.v) + ' °C'; } }, 18.9);
-tl.to('#tNum', { color: '#047857', duration: 1.2 }, 18.9);
-tl.to('#tIco', { attr: { stroke: '#047857' }, duration: 1.2 }, 18.9);
-tl.call(() => { $('#tTxt').textContent = 'Después: temperatura normal'; }, null, 19.5);
-tl.call(() => { $('#fTxt').textContent = 'Silencioso, como nuevo'; }, null, 19.7);
-tl.to(['#w1', '#w2'], { opacity: 0, duration: .3 }, 19.7);
-tl.call(() => { $('#oSt').textContent = 'Listo para entregar'; }, null, 20.0);
-tl.fromTo('#oSt', { backgroundColor: '#f4f7fc' }, { backgroundColor: '#ecfdf5', color: '#047857', borderColor: '#a7f3d0', duration: .3 }, 20.0);
-stkIn('#sCon', 20.3, -2);
-tl.to(['#order', '#sCon'], { autoAlpha: 0, y: -40, duration: .3, ease: 'power2.in' }, 21.35);
-capOut('#c5', 21.35);
+// ===== 5. El proceso, con video real (14,8–22,9 s) =====
+capIn('#c5', 14.75);
+tl.fromTo('#proc', { autoAlpha: 0, y: 100, scale: .93, rotation: 3 }, { autoAlpha: 1, y: 0, scale: 1, rotation: 0, duration: .5 }, 14.8);
+tl.fromTo('#dots', { autoAlpha: 0 }, { autoAlpha: 1, duration: .3 }, 15.0);
+const dots = $$('#dots i');
+[14.95, 16.9, 18.9, 20.9].forEach((t, i) => {
+  if (i > 0) {
+    tl.to('#st' + (i - 1), { autoAlpha: 0, y: -16, duration: .18, ease: 'power2.in' }, t - .05);
+    tl.fromTo('#proc', { scale: 1.035 }, { scale: 1, duration: .3, ease: 'power2.out' }, t);
+  }
+  tl.fromTo('#st' + i, { autoAlpha: 0, y: 16, scale: .9 }, { autoAlpha: 1, y: 0, scale: 1, duration: .35, ease: 'back.out(2)' }, t + .08);
+  tl.to(dots[i], { backgroundColor: '#ffffff', duration: .2 }, t);
+});
+tl.to(['#proc', '#st3', '#dots'], { autoAlpha: 0, y: -40, duration: .28, ease: 'power2.in' }, 22.65);
+capOut('#c5', 22.65);
 
-// ===== 6. Más servicios (21,6–25,4 s) =====
-capIn('#c6', 21.6);
-['#sv0', '#sv1', '#sv2', '#sv3'].forEach((s, i) => tl.fromTo(s, { autoAlpha: 0, y: 40, scale: .9 }, { autoAlpha: 1, y: 0, scale: 1, duration: .45, ease: 'back.out(1.7)' }, 21.95 + i * .22));
-tl.to(['#sv0', '#sv1', '#sv2', '#sv3'], { keyframes: { y: [0, -6, 0] }, duration: .6, stagger: .1, ease: 'sine.inOut' }, 23.4);
-tl.to(['#sv0', '#sv1', '#sv2', '#sv3'], { autoAlpha: 0, scale: .9, duration: .25, stagger: .04, ease: 'power2.in' }, 25.05);
-capOut('#c6', 25.1);
+// ===== 6. Vuelve a funcionar (22,9–26,2 s) =====
+capIn('#c7', 22.9);
+tl.fromTo('#fin', { autoAlpha: 0, y: 100, scale: .93, rotation: -3 }, { autoAlpha: 1, y: 0, scale: 1, rotation: 0, duration: .5 }, 22.9);
+stkIn('#sTest', 23.5, 3);
+tl.fromTo('#fin', { scale: 1.035 }, { scale: 1, duration: .3, ease: 'power2.out' }, 24.6);
+stkIn('#sCon', 24.85, -2);
+tl.to(['#fin', '#sTest', '#sCon'], { autoAlpha: 0, y: -40, duration: .28, ease: 'power2.in' }, 26.0);
+capOut('#c7', 26.0);
 
-// ===== 7. Cierre de la serie (25,4–30,4 s), el mismo de "¿Y si es estafa?" =====
-const E = 25.4 - 22.6;
+// ===== 7. Más servicios (26,2–29,4 s) =====
+capIn('#c6', 26.25);
+['#sv0', '#sv1', '#sv2', '#sv3'].forEach((s, i) => tl.fromTo(s, { autoAlpha: 0, y: 40, scale: .9 }, { autoAlpha: 1, y: 0, scale: 1, duration: .45, ease: 'back.out(1.7)' }, 26.5 + i * .2));
+tl.to(['#sv0', '#sv1', '#sv2', '#sv3'], { keyframes: { y: [0, -6, 0] }, duration: .6, stagger: .1, ease: 'sine.inOut' }, 27.9);
+tl.to(['#sv0', '#sv1', '#sv2', '#sv3'], { autoAlpha: 0, scale: .9, duration: .25, stagger: .04, ease: 'power2.in' }, 29.05);
+capOut('#c6', 29.1);
+
+// ===== 8. Cierre de la serie (29,4–34 s), el mismo de "¿Y si es estafa?" =====
+const E = 29.4 - 22.6;
 tl.fromTo('#endLogo', { autoAlpha: 0, scale: .8, y: 20 }, { autoAlpha: 1, scale: 1, y: 0, duration: .55, ease: 'back.out(1.6)' }, 22.75 + E);
 tl.fromTo('#endHead .w', { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: .45, ease: 'back.out(1.7)', stagger: .09 }, 23.0 + E);
 tl.to('#endHead .hl', { keyframes: { scale: [1, 1.12, 1] }, duration: .4, ease: 'power2.out' }, 23.45 + E);
@@ -613,14 +625,14 @@ tl.fromTo('#endLogos', { autoAlpha: 0, y: 14, scale: .95 }, { autoAlpha: 1, y: 0
 tl.fromTo('#fine', { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: .5, ease: 'power2.out' }, 24.2 + E);
 tl.to('#endLogo', { y: -4, duration: 1.4, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 24.3 + E);
 tl.fromTo('#endHead .hl', { boxShadow: '0 0 0 0 rgba(255,255,255,.55)' }, { boxShadow: '0 0 0 14px rgba(255,255,255,0)', duration: .9, ease: 'power2.out', repeat: 1, repeatDelay: .5 }, 24.6 + E);
-tl.to({}, { duration: 0 }, 30.4);
-window.seek = t => { tl.seek(t, false); };
+tl.to({}, { duration: 0 }, 34.0);
+window.seek = t => { tl.seek(t, false); showClips(t); };
 }
 
-window.DURATION = 30.4;
+window.DURATION = 34.0;
 window.ready = document.fonts.load('700 17px Poppins').then(() => document.fonts.ready)
-  .then(() => Promise.all(Array.from(document.images).map(i => i.complete ? 1 : new Promise(r => i.onload = r))))
-  .then(() => { build(); return true; });
+  .then(() => Promise.all(Array.from(document.images).filter(i => i.getAttribute('src')).map(i => i.complete ? 1 : new Promise(r => i.onload = r))))
+  .then(() => { build(); showClips(0); return window.settle(); }).then(() => true);
 </script>
 </body>
 </html>

@@ -52,11 +52,35 @@ img.clip { display: block; width: 100%; height: 100%; object-fit: cover; }
 /* Vuelve a funcionar */
 #fin { left: 50px; top: 170px; width: 440px; height: 470px; }
 
+/* Giro con el emblema nuevo */
+#coinWrap { top: 236px !important; width: 190px !important; height: 190px !important; margin-left: -95px !important; }
+#coin { width: 190px !important; height: 190px !important; border-radius: 50%; box-shadow: 0 0 0 6px rgba(255,255,255,.9), 0 24px 50px rgba(5,15,40,.5); filter: none !important; }
+#coinRing { position: absolute; inset: -18px; border-radius: 50%; border: 3px solid rgba(255,255,255,.55); }
+#coinGlow { top: 331px !important; }
+#turnText { top: 488px !important; }
+#turnSub { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 640px; display: flex; gap: 10px; }
+#turnSub span { display: flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 999px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3); color: #fff; font: 600 14px Poppins; visibility: hidden; }
+
 /* Más servicios */
-.svc { position: absolute; width: 222px; height: 196px; border-radius: 22px; background: #fff; padding: 18px; box-shadow: 0 20px 44px rgba(5,15,40,.35); visibility: hidden; z-index: 10; }
-.svc .t { width: 56px; height: 56px; border-radius: 16px; background: var(--brand-50); color: var(--brand-600); display: flex; align-items: center; justify-content: center; }
-.svc b { display: block; font: 700 18px/1.2 Poppins; color: #15171a; margin-top: 14px; }
-.svc span { display: block; font: 400 13px/1.35 Inter; color: var(--muted); margin-top: 5px; }
+.svc { position: absolute; width: 226px; height: 218px; border-radius: 24px; background: #fff; overflow: hidden; box-shadow: 0 22px 46px rgba(5,15,40,.38); visibility: hidden; z-index: 10; }
+.svc .top { position: relative; height: 112px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.svc .top::before { content: ''; position: absolute; inset: 0; opacity: .22;
+  background-image: linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px); background-size: 18px 18px; }
+.svc .top .halo { position: absolute; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.45), rgba(255,255,255,0) 65%); }
+.svc .top .ico { position: relative; width: 66px; height: 66px; border-radius: 20px; background: rgba(255,255,255,.18); border: 1.5px solid rgba(255,255,255,.55); color: #fff; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.svc .top .tag { position: absolute; right: 10px; top: 10px; font: 700 10px Inter; letter-spacing: .6px; color: #fff; background: rgba(0,0,0,.25); padding: 4px 8px; border-radius: 999px; }
+.svc .bd { padding: 12px 14px 0; }
+.svc b { display: block; font: 700 18px/1.15 Poppins; color: #15171a; }
+.svc .ch { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.svc .ch span { font: 600 11px Inter; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line); padding: 4px 8px; border-radius: 999px; }
+.g1 { background: linear-gradient(135deg, #7c3aed, #2a63cd); }
+.g2 { background: linear-gradient(135deg, #0f766e, #0ea5e9); }
+.g3 { background: linear-gradient(135deg, #2a63cd, #22d3ee); }
+.g4 { background: linear-gradient(135deg, #ea580c, #f59e0b); }
+#onsite { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 664px; display: flex; align-items: center; gap: 12px; padding: 12px 20px 12px 12px; border-radius: 18px; background: #fff; box-shadow: 0 16px 34px rgba(5,15,40,.35); visibility: hidden; z-index: 12; }
+#onsite .t { width: 44px; height: 44px; border-radius: 12px; background: var(--brand-500); color: #fff; display: flex; align-items: center; justify-content: center; }
+#onsite b { display: block; font: 700 16px Poppins; color: #15171a; }
+#onsite small { font: 500 12.5px Inter; color: var(--muted); }
 
 /* Cierre */
 #endLogos { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 676px; display: flex; align-items: center; gap: 16px; padding: 10px 20px; border-radius: 14px; background: #fff; visibility: hidden; box-shadow: 0 10px 24px rgba(5,15,40,.25); }
@@ -91,9 +115,9 @@ img.clip { display: block; width: 100%; height: 100%; object-fit: cover; }
   </div>
 
   <!-- 3. Señales -->
-  <div class="sig" id="sg1" style="top:300px"><span class="t"><i data-ic="volume" data-s="28"></i></span><b>Suena como avión al jugar</b><span class="bang">!</span></div>
-  <div class="sig" id="sg2" style="top:412px"><span class="t"><i data-ic="thermometer" data-s="28"></i></span><b>Se calienta y se apaga sola</b><span class="bang">!</span></div>
-  <div class="sig" id="sg3" style="top:524px"><span class="t"><i data-ic="wind" data-s="28"></i></span><b>Polvo en las rejillas</b><span class="bang">!</span></div>
+  <div class="sig" id="sg1" style="top:330px"><span class="t"><i data-ic="volume" data-s="28"></i></span><b>Suena como avión al jugar</b><span class="bang">!</span></div>
+  <div class="sig" id="sg2" style="top:446px"><span class="t"><i data-ic="thermometer" data-s="28"></i></span><b>Se calienta y se apaga sola</b><span class="bang">!</span></div>
+  <div class="sig" id="sg3" style="top:562px"><span class="t"><i data-ic="wind" data-s="28"></i></span><b>Polvo en las rejillas</b><span class="bang">!</span></div>
 
   <!-- 4. Taller -->
   <div class="vcard" id="photo"><img src="assets/taller.jpg" alt=""><span class="real" style="top:auto;bottom:14px"><i class="live"></i>Taller Electro Shop · Guanare</span></div>
@@ -112,10 +136,11 @@ img.clip { display: block; width: 100%; height: 100%; object-fit: cover; }
   <div class="vcard" id="fin"><img class="clip" id="finClip" alt=""><span class="real"><i class="live"></i>Probada en el taller</span></div>
 
   <!-- 7. Más servicios -->
-  <div class="svc" id="sv0" style="left:36px; top:182px"><span class="t"><i data-ic="cpu" data-s="28"></i></span><b>PC gamer</b><span>Ensamblaje y optimización de alto rendimiento</span></div>
-  <div class="svc" id="sv1" style="right:36px; top:182px"><span class="t"><i data-ic="video" data-s="28"></i></span><b>Cámaras de seguridad</b><span>Instalación de CCTV para tu casa o negocio</span></div>
-  <div class="svc" id="sv2" style="left:36px; top:398px"><span class="t"><i data-ic="wifi" data-s="28"></i></span><b>Redes</b><span>Cableado estructurado y conexión estable</span></div>
-  <div class="svc" id="sv3" style="right:36px; top:398px"><span class="t"><i data-ic="card" data-s="28"></i></span><b>Puntos de venta</b><span>Facturación y control para tu negocio</span></div>
+  <div class="svc" id="sv0" style="left:34px; top:180px"><div class="top g1"><span class="halo"></span><span class="ico"><i data-ic="cpu" data-s="34"></i></span><span class="tag">GAMING</span></div><div class="bd"><b>PC gamer</b><div class="ch"><span>Ensamblaje</span><span>Optimización</span><span>Alto rendimiento</span></div></div></div>
+  <div class="svc" id="sv1" style="right:34px; top:180px"><div class="top g2"><span class="halo"></span><span class="ico"><i data-ic="video" data-s="34"></i></span><span class="tag">CCTV</span></div><div class="bd"><b>Cámaras de seguridad</b><div class="ch"><span>Instalación</span><span>Casa o negocio</span></div></div></div>
+  <div class="svc" id="sv2" style="left:34px; top:416px"><div class="top g3"><span class="halo"></span><span class="ico"><i data-ic="wifi" data-s="34"></i></span><span class="tag">REDES</span></div><div class="bd"><b>Redes</b><div class="ch"><span>Cableado estructurado</span><span>Conexión estable</span></div></div></div>
+  <div class="svc" id="sv3" style="right:34px; top:416px"><div class="top g4"><span class="halo"></span><span class="ico"><i data-ic="card" data-s="34"></i></span><span class="tag">NEGOCIOS</span></div><div class="bd"><b>Puntos de venta</b><div class="ch"><span>Facturación</span><span>Control comercial</span></div></div></div>
+  <div id="onsite"><span class="t"><i data-ic="mapPin" data-s="22"></i></span><div><b>Vamos a tu negocio</b><small>Instalación y soporte en el sitio</small></div></div>
 
   <!-- Stickers -->
   <div id="redFlash"></div>
@@ -132,16 +157,9 @@ img.clip { display: block; width: 100%; height: 100%; object-fit: cover; }
   <!-- Giro -->
   <div id="turn">
     <div id="coinGlow"></div>
-    <div id="coinWrap"><svg id="coin" viewBox="0 0 170 170">
-      <circle cx="85" cy="85" r="84" fill="#fff"/>
-      <circle cx="85" cy="85" r="72" fill="none" stroke="#1e4ba3" stroke-width="7"/>
-      <rect x="45" y="50" width="80" height="54" rx="9" fill="none" stroke="#1e4ba3" stroke-width="6"/>
-      <rect x="53" y="58" width="64" height="38" rx="5" fill="none" stroke="#1e4ba3" stroke-width="2.5"/>
-      <text x="85" y="88" text-anchor="middle" font-family="Tektrron" font-size="30" fill="#1e4ba3">ES</text>
-      <path d="M50 113 h70" stroke="#1e4ba3" stroke-width="5" stroke-linecap="round"/>
-      <path d="M77 113 l8 9 l8 -9 z" fill="#1e4ba3"/>
-    </svg></div>
+    <div id="coinWrap"><img id="coin" src="assets/logo-es-circulo.png" alt=""><span id="coinRing"></span></div>
     <div id="turnText"><span class="w">¿Hace</span> <span class="w">cuánto</span> <span class="w">no</span> <span class="w">le</span> <span class="w">haces</span><br><span class="w hl">mantenimiento?</span></div>
+    <div id="turnSub"><span><i data-ic="thermometer" data-s="16"></i>Menos calor</span><span><i data-ic="volume" data-s="16"></i>Menos ruido</span><span><i data-ic="zap" data-s="16"></i>Más vida útil</span></div>
   </div>
 
   <!-- Cierre de la serie -->
@@ -169,6 +187,7 @@ window.EXTRA_IC = {
   thermometer: '<path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>',
   wind: '<path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>',
   wifi: '<path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>',
+  zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
   video: '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>',
   tv: '<rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/>',
 };
@@ -255,7 +274,9 @@ tl.fromTo('#coinGlow', { autoAlpha: 0, scale: .6 }, { autoAlpha: 1, scale: 1, du
 tl.to('#coin', { rotationY: 360, duration: 1.0, ease: 'power2.inOut' }, 6.55);
 tl.fromTo('#turnText .w', { autoAlpha: 0, y: 34 }, { autoAlpha: 1, y: 0, duration: .45, ease: 'back.out(1.7)', stagger: .07 }, 6.0);
 tl.to('#turnText .hl', { keyframes: { scale: [1, 1.12, 1] }, duration: .4, ease: 'power2.out' }, 6.65);
-tl.to(['#coin', '#coinGlow', '#turnText'], { autoAlpha: 0, y: -30, scale: .95, duration: .26, ease: 'power2.in' }, 7.5);
+tl.fromTo('#coinRing', { scale: .8, opacity: 0 }, { scale: 1.25, opacity: 0, keyframes: { opacity: [0, 1, 0] }, duration: 1.1, ease: 'power2.out', repeat: 1 }, 5.95);
+tl.fromTo('#turnSub span', { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: .35, stagger: .12, ease: 'back.out(2)' }, 6.75);
+tl.to(['#coin', '#coinRing', '#coinGlow', '#turnText', '#turnSub'], { autoAlpha: 0, y: -30, scale: .95, duration: .26, ease: 'power2.in' }, 7.5);
 
 // ===== 3. Señales (7,7–11,6 s) =====
 capIn('#c3', 7.75);
@@ -305,9 +326,16 @@ capOut('#c7', 26.0);
 
 // ===== 7. Más servicios (26,2–29,4 s) =====
 capIn('#c6', 26.25);
-['#sv0', '#sv1', '#sv2', '#sv3'].forEach((s, i) => tl.fromTo(s, { autoAlpha: 0, y: 40, scale: .9 }, { autoAlpha: 1, y: 0, scale: 1, duration: .45, ease: 'back.out(1.7)' }, 26.5 + i * .2));
-tl.to(['#sv0', '#sv1', '#sv2', '#sv3'], { keyframes: { y: [0, -6, 0] }, duration: .6, stagger: .1, ease: 'sine.inOut' }, 27.9);
-tl.to(['#sv0', '#sv1', '#sv2', '#sv3'], { autoAlpha: 0, scale: .9, duration: .25, stagger: .04, ease: 'power2.in' }, 29.05);
+['#sv0', '#sv1', '#sv2', '#sv3'].forEach((s, i) => {
+  const t = 26.45 + i * .2;
+  tl.fromTo(s, { autoAlpha: 0, y: 50, rotationX: -35, scale: .9, transformPerspective: 600 }, { autoAlpha: 1, y: 0, rotationX: 0, scale: 1, duration: .5, ease: 'back.out(1.5)' }, t);
+  tl.fromTo(s + ' .ico', { scale: 0, rotation: -25 }, { scale: 1, rotation: 0, duration: .45, ease: 'back.out(2.6)' }, t + .2);
+  tl.fromTo(s + ' .halo', { scale: .4, opacity: 0 }, { scale: 1.3, opacity: 1, duration: .8, ease: 'power2.out' }, t + .2);
+  tl.fromTo(s + ' .ch span', { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: .25, stagger: .06, ease: 'power2.out' }, t + .35);
+});
+tl.fromTo('#onsite', { autoAlpha: 0, y: 20, scale: .92 }, { autoAlpha: 1, y: 0, scale: 1, duration: .4, ease: 'back.out(2)' }, 27.6);
+tl.to(['#sv0', '#sv1', '#sv2', '#sv3'], { keyframes: { y: [0, -6, 0] }, duration: .6, stagger: .1, ease: 'sine.inOut' }, 28.0);
+tl.to(['#sv0', '#sv1', '#sv2', '#sv3', '#onsite'], { autoAlpha: 0, scale: .9, duration: .25, stagger: .04, ease: 'power2.in' }, 29.0);
 capOut('#c6', 29.1);
 
 // ===== 8. Cierre de la serie (29,4–34 s), el mismo de "¿Y si es estafa?" =====

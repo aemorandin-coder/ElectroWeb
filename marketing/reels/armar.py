@@ -1,4 +1,7 @@
-# Arma sin-miedo.html a partir de sin-miedo.src.html + base.css + icons.js (estilos e íconos compartidos de la serie).
-s = open('sin-miedo.src.html').read()
+# Arma <reel>.html a partir de <reel>.src.html + base.css + icons.js (estilos e íconos compartidos de la serie).
+# Uso: python3 armar.py sin-miedo taller
+import sys
 icons = open('icons.js').read().replace("document.querySelectorAll('i[data-ic]')", "Object.assign(P, window.EXTRA_IC || {});\ndocument.querySelectorAll('i[data-ic]')", 1)
-open('sin-miedo.html', 'w').write(s.replace('/*BASE*/', open('base.css').read()).replace('/*ICONS*/', icons))
+for name in sys.argv[1:] or ['sin-miedo']:
+    s = open(name + '.src.html').read()
+    open(name + '.html', 'w').write(s.replace('/*BASE*/', open('base.css').read()).replace('/*ICONS*/', icons))

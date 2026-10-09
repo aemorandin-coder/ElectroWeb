@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Reel La ficha de Electro Shop</title>
+<style>
+@font-face { font-family: Inter; src: url(assets/InterVariable.woff2) format('woff2'); font-weight: 100 900; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-600-normal.woff2); font-weight: 600; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-700-normal.woff2); font-weight: 700; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-800-normal.woff2); font-weight: 800; }
+@font-face { font-family: Serif; src: url(assets/instrument-serif-latin-400-italic.woff2); font-style: italic; }
+@font-face { font-family: Tektrron; src: url(assets/Tektrron.ttf); }
+:root { --ink: #111317; --cream: #f4efe4; --blue: #2a63cd; --blue2: #1e4ba3; --muted: #6a6c6b; --green: #0f9d58; --emoji: "Noto Color Emoji"; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 540px; height: 960px; overflow: hidden; background: var(--cream); }
+body { font-family: Inter, var(--emoji), sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+svg { display: block; }
+.ic { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#stage { position: relative; width: 540px; height: 960px; overflow: hidden; background: var(--cream); }
+#grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(17,19,23,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(17,19,23,.05) 1px, transparent 1px); background-size: 27px 27px; }
+#bgBlue { position: absolute; inset: 0; background: var(--blue); opacity: 0; }
+#bgBlue::after { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px); background-size: 27px 27px; }
+
+/* Cabecera */
+#head { position: absolute; left: 26px; right: 26px; top: 26px; display: flex; justify-content: space-between; align-items: center; z-index: 30; }
+#head .brand { display: flex; align-items: center; gap: 7px; padding: 5px 10px 5px 6px; border-radius: 999px; background: #fff; border: 1.5px solid var(--ink); }
+#head .brand img { height: 15px; }
+#head .chip { font: 700 10px Inter; letter-spacing: 1.2px; padding: 5px 9px; border-radius: 6px; border: 1.5px solid var(--ink); background: #fff; }
+
+/* Título */
+.title { position: absolute; left: 26px; right: 26px; top: 66px; font: 700 37px/1.05 Poppins; letter-spacing: -1px; color: var(--ink); z-index: 20; visibility: hidden; }
+.title em { font: italic 400 46px/1 Serif; letter-spacing: 0; position: relative; padding: 0 2px; }
+.title em::after { content: ''; position: absolute; left: 0; right: 0; bottom: 4px; height: 12px; background: var(--hl, #ffd54a); z-index: -1; border-radius: 3px; }
+.onblue .title, .title.w { color: #fff; }
+.title.w em::after { background: rgba(255,255,255,.28); }
+
+/* Tarjetas estilo ficha */
+.card { position: absolute; background: #fff; border: 2.5px solid var(--ink); border-radius: 14px; box-shadow: 5px 5px 0 var(--ink); visibility: hidden; z-index: 12; }
+.lbl { font: 600 9.5px Inter; letter-spacing: 1.1px; color: var(--muted); text-transform: uppercase; }
+
+/* Subtítulos */
+#sub { position: absolute; left: 0; right: 0; top: 498px; display: flex; justify-content: center; z-index: 40; }
+#sub .pill { display: flex; gap: 6px; padding: 6px 10px; border-radius: 8px; background: var(--ink); color: #fff; font: 700 17px Poppins; visibility: hidden; }
+#sub span { padding: 1px 5px; border-radius: 5px; }
+#sub span.on { background: var(--blue); }
+.onblue #sub span.on { background: #ffd54a; color: var(--ink); }
+
+/* Chispa */
+#disc, #chispa { position: absolute; left: 70px; top: 548px; width: 400px; height: 420px; }
+#chispa { transform-origin: 50% 100%; z-index: 10; }
+#disc { z-index: 9; }
+#chispa svg, #disc svg { width: 400px; height: 420px; }
+
+/* Piezas */
+.chipx { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 10px; border: 2px solid var(--ink); background: #fff; font: 700 15px Poppins; visibility: hidden; box-shadow: 3px 3px 0 var(--ink); }
+.row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1.5px dashed #d8d2c4; visibility: hidden; }
+.row:last-child { border-bottom: 0; }
+.row b { font: 700 15px Poppins; }
+.row small { display: block; font: 500 11.5px Inter; color: var(--muted); }
+.tick { width: 26px; height: 26px; border-radius: 7px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stamp { position: absolute; padding: 6px 12px; border: 3px solid var(--green); color: var(--green); border-radius: 8px; font: 800 15px Poppins; letter-spacing: .5px; text-transform: uppercase; transform: rotate(-8deg); background: rgba(255,255,255,.9); visibility: hidden; }
+.qm { position: absolute; font: italic 400 64px Serif; color: var(--ink); visibility: hidden; z-index: 14; }
+
+/* Teléfono de Pista Rides */
+#pphone { position: absolute; left: 160px; top: 132px; width: 190px; height: 360px; border-radius: 34px; background: #0a0a0a; padding: 7px; box-shadow: 0 0 0 2px #2c2f34, 6px 6px 0 var(--ink); visibility: hidden; z-index: 12; }
+#pphone .scr { position: relative; width: 100%; height: 100%; border-radius: 28px; background: #ffea00; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+#pphone .isl { position: absolute; left: 50%; top: 8px; width: 56px; height: 16px; margin-left: -28px; border-radius: 10px; background: #000; }
+#pphone .sym { width: 92px; }
+#pphone .word { width: 150px; }
+#pphone .soon { font: 700 11px Inter; letter-spacing: 2px; color: #0a0a0a; opacity: .7; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="grid"></div>
+  <div id="bgBlue"></div>
+  <div id="head"><span class="brand"><img src="assets/logo-color.png" alt=""></span><span class="chip">ELECTROSHOPVE.COM</span></div>
+
+  <!-- Títulos por capítulo -->
+  <div class="title" id="t0">¿Una <em>tienda</em>?</div>
+  <div class="title" id="t1">La <em>ficha.</em></div>
+  <div class="title w" id="t2"><em>Vendemos.</em></div>
+  <div class="title" id="t3"><em>Reparamos.</em></div>
+  <div class="title w" id="t4"><em>Desarrollamos.</em></div>
+  <div class="title" id="t5">¿Quién lo <em>usa</em>?</div>
+  <div class="title" id="t6">Lo que <em>viene.</em></div>
+  <div class="title w" id="t7">No solo una <em>tienda.</em></div>
+  <div class="title w" id="t8">¡Gracias <em>por verlo!</em></div>
+
+  <!-- 0. La tienda web -->
+  <div class="card" id="web" style="left:60px; top:150px; width:420px; height:300px; overflow:hidden">
+    <div style="height:34px; border-bottom:2px solid var(--ink); display:flex; align-items:center; gap:6px; padding:0 12px; background:#f6f6f6">
+      <i style="width:10px;height:10px;border-radius:50%;background:#ff5f57;display:block"></i><i style="width:10px;height:10px;border-radius:50%;background:#febc2e;display:block"></i><i style="width:10px;height:10px;border-radius:50%;background:#28c840;display:block"></i>
+      <span style="margin-left:10px; flex:1; height:20px; border-radius:6px; background:#fff; border:1.5px solid #ccc; font:600 11px Inter; display:flex; align-items:center; padding:0 8px">electroshopve.com</span></div>
+    <div style="padding:14px"><img src="assets/logo-color.png" style="height:22px"><div style="margin-top:12px; height:96px; border-radius:12px; background:linear-gradient(135deg,#2a63cd,#142d61); color:#fff; padding:14px; font:800 18px/1.15 Poppins">Tecnología aquí<br>en Venezuela</div>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:10px">
+        <div style="height:80px;border-radius:10px;background:#eef2ff"></div><div style="height:80px;border-radius:10px;background:#ecfeff"></div><div style="height:80px;border-radius:10px;background:#fff7ed"></div><div style="height:80px;border-radius:10px;background:#f0fdf4"></div></div></div>
+  </div>
+  <div class="stamp" id="sParte" style="left:268px; top:396px; z-index:14">Solo una parte</div>
+
+  <!-- 1. Ficha de empresa -->
+  <div class="card" id="ficha" style="left:34px; top:142px; width:472px; height:330px">
+    <div style="display:flex; justify-content:space-between; padding:10px 14px; border-bottom:2px solid var(--ink)"><span class="lbl" style="color:var(--ink)">Ficha de empresa</span><span class="lbl" style="color:var(--blue)">Electro Shop · 2026</span></div>
+    <div style="display:flex; gap:14px; padding:14px">
+      <div style="width:96px; height:96px; border-radius:12px; border:2px solid var(--ink); display:flex; align-items:center; justify-content:center; background:#f4f7fc; flex-shrink:0"><img src="assets/logo-es-circulo.png" style="width:78px"></div>
+      <div style="flex:1; display:grid; gap:9px">
+        <div class="frow" id="f0"><div class="lbl">Nombre</div><b class="typ" data-t="Electro Shop Morandin C.A." style="font:700 16px Poppins"></b></div>
+        <div class="frow" id="f1"><div class="lbl">Sede</div><b class="typ" data-t="Guanare, Portuguesa" style="font:700 16px Poppins"></b></div>
+        <div class="frow" id="f2"><div class="lbl">Experiencia</div><b class="typ" data-t="14 años en tecnología" style="font:700 16px Poppins"></b></div>
+      </div>
+    </div>
+    <div style="padding:0 14px"><div class="lbl">Lo nuestro</div>
+      <div style="display:flex; gap:8px; margin-top:8px"><span class="chipx" id="lo0"><i data-ic="cart" data-s="15"></i>Tecnología</span><span class="chipx" id="lo1"><i data-ic="cpu" data-s="15"></i>Desarrollo</span><span class="chipx" id="lo2"><i data-ic="tool" data-s="15"></i>Soporte</span></div></div>
+  </div>
+
+  <!-- 2. Vendemos -->
+  <div id="vend" style="position:absolute; left:34px; right:34px; top:150px; z-index:12">
+    <div style="display:flex; flex-wrap:wrap; gap:10px">
+      <span class="chipx" id="v0"><i data-ic="tablet" data-s="16"></i>Tecnología</span><span class="chipx" id="v1"><i data-ic="game" data-s="16"></i>Gaming</span>
+      <span class="chipx" id="v2"><i data-ic="gift" data-s="16"></i>Gift cards</span><span class="chipx" id="v3"><i data-ic="zap" data-s="16"></i>Recargas</span></div>
+    <div class="card" id="vPago" style="position:relative; margin-top:22px; padding:12px 14px; display:flex; align-items:center; gap:12px">
+      <span class="tick" style="width:40px;height:40px;border-radius:10px"><i data-ic="phone" data-s="20"></i></span><div><b style="font:700 18px Poppins">Pagas con Pago Móvil</b><div style="font:500 12px Inter;color:var(--muted)">Bolívares a tasa BCV · Binance · PayPal</div></div></div>
+    <div class="card" id="vEnv" style="position:relative; margin-top:16px; padding:12px 14px; display:flex; align-items:center; gap:12px">
+      <span class="tick" style="width:40px;height:40px;border-radius:10px;background:var(--green)"><i data-ic="truck" data-s="20"></i></span><div style="flex:1"><b style="font:700 18px Poppins">Envíos a toda Venezuela</b><div style="display:flex;gap:10px;margin-top:5px;align-items:center"><img src="assets/zoom.png" style="height:13px"><img src="assets/mrw.png" style="height:13px"></div></div></div>
+  </div>
+
+  <!-- 3. Reparamos -->
+  <div class="card" id="rep" style="left:34px; top:142px; width:472px; height:332px; display:flex; overflow:hidden">
+    <div style="width:180px; flex-shrink:0; border-right:2.5px solid var(--ink); position:relative; background:#111"><img src="assets/taller.jpg" style="width:100%;height:100%;object-fit:cover;object-position:50% 40%">
+      <span class="stamp" id="sIng" style="left:12px; bottom:18px; border-color:#fff; color:#fff; background:var(--blue); font-size:13px">Con ingeniero</span></div>
+    <div style="flex:1; padding:8px 14px">
+      <div class="row" id="r0"><span class="tick"><i data-ic="game" data-s="15"></i></span><div><b>Consolas</b><small>Mantenimiento</small></div></div>
+      <div class="row" id="r1"><span class="tick"><i data-ic="cpu" data-s="15"></i></span><div><b>PC gamer</b><small>Ensamblaje</small></div></div>
+      <div class="row" id="r2"><span class="tick"><i data-ic="video" data-s="15"></i></span><div><b>Cámaras</b><small>Instalación</small></div></div>
+      <div class="row" id="r3"><span class="tick"><i data-ic="wifi" data-s="15"></i></span><div><b>Redes</b><small>Cableado</small></div></div>
+      <div class="row" id="r4"><span class="tick"><i data-ic="card" data-s="15"></i></span><div><b>Puntos de venta</b><small>Para tu negocio</small></div></div>
+    </div>
+  </div>
+
+  <!-- 4. Desarrollamos: L2 Control -->
+  <div class="card" id="l2" style="left:34px; top:142px; width:472px; height:332px; padding:16px">
+    <div style="display:flex; align-items:center; gap:12px"><img src="assets/logo-l2.png" style="height:58px"><div><div class="lbl">Software de Electro Shop</div><b style="font:800 30px/1 Poppins">L2 Control</b></div></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px">
+      <span class="chipx" id="m0"><i data-ic="coffee" data-s="16"></i>Restaurante</span><span class="chipx" id="m1"><i data-ic="card" data-s="16"></i>Caja</span>
+      <span class="chipx" id="m2"><i data-ic="box" data-s="16"></i>Inventario</span><span class="chipx" id="m3"><i data-ic="shield" data-s="16"></i>Permisos</span></div>
+    <div id="l2shot" style="margin-top:14px; height:104px; border-radius:10px; border:2px solid var(--ink); overflow:hidden; visibility:hidden"><img src="clips/l2-caja/0300.jpg" style="width:100%; transform:scale(1.6); transform-origin:100% 0"></div>
+  </div>
+  <div class="stamp" id="sSecreto" style="left:290px; top:120px; z-index:14; border-color:#e8590c; color:#e8590c">Casi nadie lo sabe</div>
+
+  <!-- 5. Abby Kingdom -->
+  <div class="card" id="abby" style="left:60px; top:150px; width:420px; height:300px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px">
+    <img src="assets/abby-logo.png" style="width:300px">
+    <span class="lbl" style="font-size:11px">Guanare · Parque y restaurante</span>
+  </div>
+  <div class="stamp" id="sOpera" style="left:250px; top:400px; z-index:14">Ya opera con L2 Control</div>
+
+  <!-- 6. Pista Rides -->
+  <div id="pphone"><div class="scr"><span class="isl"></span><img class="sym" src="assets/simbolo-negro.svg" alt=""><img class="word" src="assets/logo-claro.svg" alt="" style="width:150px; clip-path: inset(0 0 0 24%)"><span class="soon">MUY PRONTO</span></div></div>
+  <div class="chipx" id="pApp" style="position:absolute; left:28px; top:200px; z-index:14; transform:rotate(-4deg)"><i data-ic="mapPin" data-s="16"></i>Una app para<br>pedir viajes</div>
+  <div class="chipx" id="pWeb" style="position:absolute; right:22px; top:400px; z-index:14; transform:rotate(3deg)"><i data-ic="globe" data-s="16"></i>pistarides.com</div>
+  <div class="qm" id="q0" style="left:380px; top:150px">?</div>
+  <div class="qm" id="q1" style="left:96px; top:330px; font-size:48px">?</div>
+  <div class="qm" id="q2" style="left:420px; top:260px; font-size:40px">?</div>
+
+  <!-- 7. Cierre -->
+  <div id="tres" style="position:absolute; left:34px; right:34px; top:148px; display:flex; flex-direction:column; gap:12px; z-index:12">
+    <span class="chipx" id="x0" style="font-size:20px"><span class="tick"><i data-ic="cart" data-s="15"></i></span>Vendemos</span>
+    <span class="chipx" id="x1" style="font-size:20px"><span class="tick"><i data-ic="tool" data-s="15"></i></span>Reparamos</span>
+    <span class="chipx" id="x2" style="font-size:20px"><span class="tick"><i data-ic="cpu" data-s="15"></i></span>Desarrollamos</span>
+  </div>
+  <div class="card" id="esLogo" style="left:60px; top:330px; width:420px; height:110px; display:flex; align-items:center; justify-content:center"><img src="assets/logo-color.png" style="height:52px"></div>
+  <div class="card" id="cta" style="left:50px; top:160px; width:440px; padding:18px; text-align:center">
+    <div class="lbl">Habla con nosotros</div>
+    <div id="ctaBtn" style="margin:12px auto 0; width:max-content; display:flex; align-items:center; gap:10px; padding:12px 20px; border-radius:12px; background:#25d366; border:2.5px solid var(--ink); box-shadow:4px 4px 0 var(--ink); font:800 19px Poppins; color:#fff"><img src="assets/whatsapp.png" style="width:26px;height:26px;border-radius:6px"><span id="ctaTxt">Escríbenos</span></div>
+    <div style="margin-top:14px; font:700 15px Poppins">electroshopve.com · Guanare</div>
+    <div style="margin-top:6px; font:500 10.5px Inter; color:var(--muted)">Electro Shop Morandin C.A. · RIF J&#8209;40590333&#8209;3</div>
+  </div>
+  <svg id="cursor" width="34" height="34" viewBox="0 0 24 24" style="position:absolute; left:300px; top:330px; z-index:50; visibility:hidden"><path d="M4 2 L4 20 L9 15 L12 22 L15 21 L12 14 L19 14 Z" fill="#fff" stroke="#111317" stroke-width="1.6" stroke-linejoin="round"/></svg>
+
+  <div id="sub"><div class="pill" id="pill"></div></div>
+  <div id="disc"><svg viewBox="0 0 400 420"><circle id="discC" cx="200" cy="232" r="150" fill="#2a63cd"/><circle cx="200" cy="232" r="166" fill="none" stroke="#111317" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" opacity=".5" id="discR"/></svg></div>
+  <div id="chispa"></div>
+</div>
+
+<script src="assets/gsap.min.js"></script>
+<script src="assets/mascota/chispa.js"></script>
+<script>
+const VOZ = {"duracion": 77.296327, "palabras": [{"w": "¿Electro", "t0": 0.0, "t1": 0.58, "b": 0}, {"w": "Shop?", "t0": 0.58, "t1": 0.773, "b": 0}, {"w": "Seguro", "t0": 1.29, "t1": 1.525, "b": 0}, {"w": "nos", "t0": 1.525, "t1": 1.603, "b": 0}, {"w": "conoces", "t0": 1.603, "t1": 1.838, "b": 0}, {"w": "por", "t0": 1.838, "t1": 1.916, "b": 0}, {"w": "la", "t0": 1.916, "t1": 1.994, "b": 0}, {"w": "tienda", "t0": 1.994, "t1": 2.151, "b": 0}, {"w": "web…", "t0": 2.151, "t1": 2.228, "b": 0}, {"w": "pero", "t0": 2.228, "t1": 2.385, "b": 0}, {"w": "eso", "t0": 2.385, "t1": 2.541, "b": 0}, {"w": "es", "t0": 2.541, "t1": 2.619, "b": 0}, {"w": "solo", "t0": 2.619, "t1": 2.775, "b": 0}, {"w": "una", "t0": 2.775, "t1": 2.932, "b": 0}, {"w": "parte.", "t0": 2.932, "t1": 3.088, "b": 0}, {"w": "Te", "t0": 4.441, "t1": 4.615, "b": 1}, {"w": "presento", "t0": 4.615, "t1": 5.137, "b": 1}, {"w": "la", "t0": 5.137, "t1": 5.311, "b": 1}, {"w": "ficha", "t0": 5.311, "t1": 5.658, "b": 1}, {"w": "completa.", "t0": 5.658, "t1": 6.181, "b": 1}, {"w": "Electro", "t0": 6.642, "t1": 7.454, "b": 1}, {"w": "Shop", "t0": 7.454, "t1": 7.724, "b": 1}, {"w": "Morandin:", "t0": 7.724, "t1": 8.535, "b": 1}, {"w": "una", "t0": 9.067, "t1": 9.201, "b": 1}, {"w": "empresa", "t0": 9.201, "t1": 9.404, "b": 1}, {"w": "de", "t0": 9.404, "t1": 9.472, "b": 1}, {"w": "Guanare", "t0": 9.472, "t1": 9.674, "b": 1}, {"w": "con", "t0": 9.674, "t1": 9.742, "b": 1}, {"w": "catorce", "t0": 9.742, "t1": 9.944, "b": 1}, {"w": "años", "t0": 9.944, "t1": 10.08, "b": 1}, {"w": "en", "t0": 10.08, "t1": 10.147, "b": 1}, {"w": "tecnología.", "t0": 10.147, "t1": 10.417, "b": 1}, {"w": "Lo", "t0": 10.889, "t1": 11.094, "b": 1}, {"w": "nuestro:", "t0": 11.094, "t1": 11.504, "b": 1}, {"w": "tecnología,", "t0": 11.504, "t1": 12.324, "b": 1}, {"w": "desarrollo", "t0": 12.324, "t1": 13.144, "b": 1}, {"w": "y", "t0": 13.144, "t1": 13.349, "b": 1}, {"w": "soporte.", "t0": 13.349, "t1": 13.965, "b": 1}, {"w": "Primero,", "t0": 15.259, "t1": 15.837, "b": 2}, {"w": "vendemos.", "t0": 16.144, "t1": 16.917, "b": 2}, {"w": "Tecnología,", "t0": 16.917, "t1": 17.949, "b": 2}, {"w": "gaming,", "t0": 17.949, "t1": 18.466, "b": 2}, {"w": "gift", "t0": 18.97, "t1": 19.196, "b": 2}, {"w": "cards", "t0": 19.196, "t1": 19.42, "b": 2}, {"w": "y", "t0": 19.42, "t1": 19.645, "b": 2}, {"w": "recargas.", "t0": 19.645, "t1": 20.32, "b": 2}, {"w": "Pagas", "t0": 20.615, "t1": 20.925, "b": 2}, {"w": "con", "t0": 20.925, "t1": 21.08, "b": 2}, {"w": "Pago", "t0": 21.08, "t1": 21.389, "b": 2}, {"w": "Móvil", "t0": 21.389, "t1": 21.7, "b": 2}, {"w": "y", "t0": 21.7, "t1": 21.855, "b": 2}, {"w": "te", "t0": 21.855, "t1": 22.01, "b": 2}, {"w": "lo", "t0": 22.01, "t1": 22.165, "b": 2}, {"w": "enviamos", "t0": 22.165, "t1": 22.63, "b": 2}, {"w": "a", "t0": 22.63, "t1": 22.785, "b": 2}, {"w": "toda", "t0": 22.785, "t1": 23.095, "b": 2}, {"w": "Venezuela.", "t0": 23.095, "t1": 23.715, "b": 2}, {"w": "Segundo,", "t0": 24.933, "t1": 25.766, "b": 3}, {"w": "reparamos.", "t0": 25.766, "t1": 26.875, "b": 3}, {"w": "Nuestro", "t0": 26.875, "t1": 27.43, "b": 3}, {"w": "taller,", "t0": 27.43, "t1": 27.985, "b": 3}, {"w": "con", "t0": 28.458, "t1": 28.777, "b": 3}, {"w": "ingeniero,", "t0": 28.777, "t1": 30.052, "b": 3}, {"w": "le", "t0": 30.337, "t1": 30.573, "b": 3}, {"w": "da", "t0": 30.573, "t1": 30.81, "b": 3}, {"w": "mantenimiento", "t0": 30.81, "t1": 31.994, "b": 3}, {"w": "a", "t0": 31.994, "t1": 32.23, "b": 3}, {"w": "consolas,", "t0": 32.23, "t1": 32.94, "b": 3}, {"w": "arma", "t0": 32.94, "t1": 33.413, "b": 3}, {"w": "PC", "t0": 33.413, "t1": 33.887, "b": 3}, {"w": "gamer", "t0": 33.887, "t1": 34.36, "b": 3}, {"w": "e", "t0": 34.36, "t1": 34.597, "b": 3}, {"w": "instala", "t0": 34.597, "t1": 35.306, "b": 3}, {"w": "cámaras,", "t0": 35.306, "t1": 36.016, "b": 3}, {"w": "redes", "t0": 36.016, "t1": 36.49, "b": 3}, {"w": "y", "t0": 36.49, "t1": 36.727, "b": 3}, {"w": "puntos", "t0": 36.727, "t1": 37.2, "b": 3}, {"w": "de", "t0": 37.2, "t1": 37.437, "b": 3}, {"w": "venta.", "t0": 37.437, "t1": 37.91, "b": 3}, {"w": "Y", "t0": 39.185, "t1": 39.392, "b": 4}, {"w": "tercero,", "t0": 39.392, "t1": 40.498, "b": 4}, {"w": "lo", "t0": 40.498, "t1": 40.705, "b": 4}, {"w": "que", "t0": 40.705, "t1": 40.913, "b": 4}, {"w": "casi", "t0": 40.913, "t1": 41.327, "b": 4}, {"w": "nadie", "t0": 41.327, "t1": 41.742, "b": 4}, {"w": "sabe:", "t0": 41.742, "t1": 42.156, "b": 4}, {"w": "desarrollamos", "t0": 42.886, "t1": 43.878, "b": 4}, {"w": "software.", "t0": 43.878, "t1": 44.275, "b": 4}, {"w": "Este", "t0": 44.678, "t1": 45.111, "b": 4}, {"w": "es", "t0": 45.111, "t1": 45.327, "b": 4}, {"w": "L2", "t0": 45.327, "t1": 45.975, "b": 4}, {"w": "Control:", "t0": 45.975, "t1": 46.408, "b": 4}, {"w": "maneja", "t0": 46.727, "t1": 47.241, "b": 4}, {"w": "el", "t0": 47.241, "t1": 47.412, "b": 4}, {"w": "restaurante,", "t0": 47.412, "t1": 48.097, "b": 4}, {"w": "la", "t0": 48.097, "t1": 48.268, "b": 4}, {"w": "caja,", "t0": 48.268, "t1": 48.61, "b": 4}, {"w": "el", "t0": 48.61, "t1": 48.781, "b": 4}, {"w": "inventario", "t0": 48.781, "t1": 49.466, "b": 4}, {"w": "y", "t0": 49.466, "t1": 49.637, "b": 4}, {"w": "los", "t0": 49.637, "t1": 49.809, "b": 4}, {"w": "permisos", "t0": 49.809, "t1": 50.322, "b": 4}, {"w": "de", "t0": 50.322, "t1": 50.492, "b": 4}, {"w": "todo", "t0": 50.492, "t1": 50.835, "b": 4}, {"w": "tu", "t0": 50.835, "t1": 51.006, "b": 4}, {"w": "equipo.", "t0": 51.006, "t1": 51.52, "b": 4}, {"w": "¿Y", "t0": 52.774, "t1": 52.93, "b": 5}, {"w": "quién", "t0": 52.93, "t1": 53.086, "b": 5}, {"w": "lo", "t0": 53.086, "t1": 53.242, "b": 5}, {"w": "usa?", "t0": 53.242, "t1": 53.554, "b": 5}, {"w": "Abby", "t0": 53.874, "t1": 54.223, "b": 5}, {"w": "Kingdom,", "t0": 54.223, "t1": 54.571, "b": 5}, {"w": "en", "t0": 54.571, "t1": 54.745, "b": 5}, {"w": "Guanare,", "t0": 54.745, "t1": 55.268, "b": 5}, {"w": "ya", "t0": 55.268, "t1": 55.442, "b": 5}, {"w": "opera", "t0": 55.442, "t1": 55.965, "b": 5}, {"w": "todo", "t0": 55.965, "t1": 56.313, "b": 5}, {"w": "su", "t0": 56.313, "t1": 56.487, "b": 5}, {"w": "negocio", "t0": 56.487, "t1": 57.01, "b": 5}, {"w": "con", "t0": 57.01, "t1": 57.184, "b": 5}, {"w": "L2", "t0": 57.184, "t1": 57.706, "b": 5}, {"w": "Control.", "t0": 57.706, "t1": 58.055, "b": 5}, {"w": "Y", "t0": 59.367, "t1": 59.549, "b": 6}, {"w": "esto", "t0": 59.549, "t1": 59.915, "b": 6}, {"w": "no", "t0": 59.915, "t1": 60.098, "b": 6}, {"w": "se", "t0": 60.098, "t1": 60.281, "b": 6}, {"w": "detiene.", "t0": 60.281, "t1": 60.829, "b": 6}, {"w": "Muy", "t0": 61.612, "t1": 61.826, "b": 6}, {"w": "pronto", "t0": 61.826, "t1": 62.252, "b": 6}, {"w": "llega", "t0": 62.252, "t1": 63.0, "b": 6}, {"w": "Pista", "t0": 63.0, "t1": 63.427, "b": 6}, {"w": "Rides:", "t0": 63.427, "t1": 63.64, "b": 6}, {"w": "una", "t0": 63.64, "t1": 64.066, "b": 6}, {"w": "app", "t0": 64.066, "t1": 64.278, "b": 6}, {"w": "para", "t0": 64.278, "t1": 64.704, "b": 6}, {"w": "pedir", "t0": 64.704, "t1": 65.131, "b": 6}, {"w": "viajes.", "t0": 65.131, "t1": 65.557, "b": 6}, {"w": "¿Qué", "t0": 66.313, "t1": 66.515, "b": 6}, {"w": "más", "t0": 66.515, "t1": 66.718, "b": 6}, {"w": "trae?", "t0": 66.718, "t1": 66.92, "b": 6}, {"w": "Pronto", "t0": 67.254, "t1": 67.641, "b": 6}, {"w": "lo", "t0": 67.641, "t1": 67.835, "b": 6}, {"w": "sabrás.", "t0": 67.835, "t1": 68.223, "b": 6}, {"w": "Así", "t0": 69.432, "t1": 69.842, "b": 7}, {"w": "que", "t0": 69.842, "t1": 70.047, "b": 7}, {"w": "ya", "t0": 70.047, "t1": 70.252, "b": 7}, {"w": "sabes:", "t0": 70.252, "t1": 70.662, "b": 7}, {"w": "no", "t0": 70.662, "t1": 70.867, "b": 7}, {"w": "somos", "t0": 70.867, "t1": 71.277, "b": 7}, {"w": "solo", "t0": 71.277, "t1": 71.687, "b": 7}, {"w": "una", "t0": 71.687, "t1": 72.097, "b": 7}, {"w": "tienda.", "t0": 72.097, "t1": 72.508, "b": 7}, {"w": "Somos", "t0": 72.508, "t1": 72.917, "b": 7}, {"w": "Electro", "t0": 72.917, "t1": 73.532, "b": 7}, {"w": "Shop.", "t0": 73.532, "t1": 73.738, "b": 7}, {"w": "¡Gracias", "t0": 74.578, "t1": 74.986, "b": 7}, {"w": "por", "t0": 74.986, "t1": 75.189, "b": 7}, {"w": "verlo!", "t0": 75.189, "t1": 75.597, "b": 7}, {"w": "Escríbenos", "t0": 75.597, "t1": 76.412, "b": 7}, {"w": "y", "t0": 76.412, "t1": 76.615, "b": 7}, {"w": "hablamos.", "t0": 76.615, "t1": 77.226, "b": 7}], "bloques": {"0": [0.0, 3.088], "1": [4.441, 13.965], "2": [15.259, 23.715], "3": [24.933, 37.91], "4": [39.185, 51.52], "5": [52.774, 58.055], "6": [59.367, 68.223], "7": [69.432, 77.226]}, "rms": [-60, -45.0, -17.8, -16.1, -17.7, -18.7, -18.7, -17.3, -30.7, -44.6, -48.8, -14.7, -14.8, -13.8, -18.8, -18.4, -17.6, -21.5, -17.0, -12.2, -10.2, -9.9, -11.5, -36.2, -41.8, -40.0, -43.5, -38.7, -45.7, -59.2, -60, -60, -60, -60, -60, -60, -60, -60, -21.6, -15.5, -14.6, -12.3, -14.5, -24.1, -18.2, -12.1, -13.3, -13.3, -12.9, -18.4, -11.1, -9.8, -15.6, -23.0, -21.9, -9.2, -10.0, -14.7, -12.6, -10.5, -14.0, -15.2, -14.8, -12.0, -17.5, -26.3, -43.7, -24.0, -11.2, -13.8, -17.9, -17.3, -15.5, -14.8, -28.4, -38.7, -18.9, -14.2, -14.7, -17.8, -18.3, -17.0, -12.2, -13.5, -15.9, -16.3, -9.6, -12.7, -12.1, -22.7, -34.5, -32.9, -33.0, -34.7, -38.5, -48.0, -58.0, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -53.3, -12.6, -13.5, -15.2, -19.4, -15.2, -15.9, -16.7, -18.2, -17.5, -18.8, -29.8, -47.6, -48.3, -17.2, -17.9, -17.8, -15.1, -17.1, -17.4, -23.2, -12.7, -13.0, -15.6, -13.0, -12.6, -14.5, -16.1, -15.0, -9.0, -11.2, -10.2, -12.8, -14.5, -9.8, -12.2, -14.4, -17.0, -17.7, -15.9, -14.8, -21.8, -41.7, -17.1, -12.1, -16.3, -28.1, -24.5, -36.2, -49.3, -35.2, -28.8, -33.6, -33.8, -43.3, -46.4, -58.8, -60, -60, -60, -53.2, -45.0, -40.4, -41.6, -52.3, -60, -35.9, -10.9, -13.5, -27.0, -18.5, -12.7, -12.1, -15.1, -13.9, -13.4, -12.2, -12.7, -15.4, -16.6, -17.7, -25.8, -33.1, -8.4, -10.2, -10.1, -17.5, -32.7, -24.1, -14.9, -13.7, -16.6, -16.2, -19.2, -23.6, -33.8, -28.4, -26.9, -24.5, -12.4, -10.8, -14.6, -27.2, -14.5, -12.5, -11.5, -20.3, -28.1, -15.5, -13.2, -18.3, -20.0, -36.5, -18.5, -14.6, -15.9, -22.2, -33.3, -42.5, -27.9, -24.8, -24.1, -30.4, -36.5, -37.8, -36.9, -55.6, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -18.9, -12.9, -13.5, -17.2, -17.1, -14.3, -15.3, -28.1, -38.4, -42.6, -28.9, -15.9, -14.8, -20.0, -15.9, -13.8, -14.2, -15.1, -9.7, -15.4, -14.9, -27.7, -38.1, -33.5, -42.4, -17.0, -12.7, -11.2, -10.2, -10.2, -11.6, -12.6, -13.6, -19.3, -18.6, -16.7, -24.0, -12.9, -13.5, -19.3, -26.8, -31.5, -36.5, -39.5, -37.8, -38.4, -40.0, -50.2, -60, -60, -60, -60, -60, -60, -60, -11.4, -9.5, -10.9, -13.1, -10.2, -12.4, -13.7, -18.9, -17.5, -11.1, -10.3, -12.4, -17.0, -15.8, -18.1, -9.1, -12.7, -12.8, -12.7, -17.6, -22.2, -16.1, -14.4, -17.4, -19.4, -13.4, -12.1, -12.4, -14.6, -12.6, -12.0, -15.7, -35.5, -34.4, -13.1, -11.6, -14.3, -17.9, -21.0, -30.9, -28.5, -15.1, -14.7, -18.1, -30.5, -43.0, -45.2, -47.1, -8.6, -7.8, -9.4, -14.7, -15.6, -16.4, -15.2, -18.0, -13.2, -11.6, -13.3, -13.6, -14.1, -13.9, -15.9, -16.3, -16.1, -15.9, -18.8, -19.8, -18.5, -16.1, -16.2, -19.0, -30.0, -22.0, -16.0, -29.1, -26.9, -21.0, -20.2, -19.6, -21.3, -20.1, -28.1, -34.7, -34.8, -26.0, -21.1, -25.3, -28.3, -28.5, -25.8, -33.0, -36.1, -36.9, -40.6, -50.2, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -23.2, -19.8, -17.4, -20.1, -26.4, -18.9, -12.9, -10.2, -10.9, -13.8, -14.9, -17.1, -25.5, -12.6, -12.5, -8.8, -12.5, -20.6, -33.7, -37.8, -44.1, -53.6, -60, -60, -60, -60, -31.0, -11.7, -15.8, -30.1, -28.3, -20.0, -19.2, -20.6, -22.5, -24.2, -24.1, -30.5, -31.6, -27.5, -13.9, -10.1, -11.4, -12.8, -11.5, -11.0, -12.2, -13.5, -16.2, -25.9, -37.5, -30.7, -25.0, -26.8, -14.7, -13.2, -19.4, -18.5, -17.7, -22.7, -18.3, -19.7, -21.6, -18.9, -13.4, -11.0, -12.5, -12.9, -20.6, -20.0, -11.6, -10.6, -12.1, -17.2, -39.8, -45.4, -49.5, -16.0, -12.0, -14.6, -16.0, -16.9, -18.5, -13.9, -20.3, -41.4, -28.7, -13.0, -12.1, -16.2, -26.3, -26.4, -43.0, -43.2, -27.5, -30.1, -36.6, -39.2, -41.3, -46.9, -56.8, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -27.5, -13.7, -13.3, -13.3, -18.0, -13.0, -11.5, -9.0, -6.9, -12.0, -6.4, -10.2, -14.3, -22.8, -35.9, -41.2, -44.8, -28.4, -22.6, -23.0, -17.1, -12.5, -16.2, -21.7, -21.4, -20.4, -22.9, -15.8, -14.6, -18.8, -24.6, -31.9, -33.0, -31.4, -35.0, -35.7, -36.2, -22.8, -22.7, -22.3, -25.7, -35.7, -52.5, -60, -60, -60, -60, -60, -60, -51.0, -13.5, -17.8, -33.2, -26.2, -19.6, -20.3, -21.1, -24.4, -22.3, -28.1, -32.3, -28.0, -19.4, -10.8, -10.8, -12.1, -13.7, -9.7, -9.5, -12.7, -13.8, -16.1, -17.5, -21.5, -24.9, -37.6, -34.4, -27.5, -27.1, -28.5, -22.7, -11.7, -14.0, -14.5, -14.4, -14.1, -15.7, -17.2, -17.5, -15.2, -15.4, -16.4, -18.3, -18.4, -18.9, -23.4, -36.0, -35.1, -30.0, -32.3, -26.3, -15.0, -13.8, -10.7, -20.0, -25.6, -41.2, -38.5, -25.4, -14.1, -10.1, -9.6, -11.4, -13.8, -21.0, -34.9, -14.0, -19.2, -43.8, -37.3, -12.7, -11.3, -15.1, -16.8, -16.6, -13.6, -15.5, -32.6, -29.0, -13.9, -13.9, -17.3, -25.7, -23.8, -32.6, -27.8, -26.3, -27.6, -30.2, -28.3, -21.8, -21.9, -25.6, -39.7, -57.7, -60, -60, -55.8, -58.7, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -55.7, -53.8, -56.9, -60, -60, -12.2, -9.9, -12.4, -18.6, -20.8, -14.6, -17.4, -17.7, -22.5, -29.9, -11.1, -11.7, -16.8, -26.2, -34.6, -10.9, -13.7, -17.5, -21.4, -10.8, -8.7, -15.2, -14.0, -10.4, -9.6, -12.7, -15.3, -13.7, -11.2, -12.2, -14.1, -18.0, -34.5, -49.1, -18.6, -12.1, -16.5, -37.5, -17.1, -11.8, -15.2, -15.1, -14.7, -17.0, -21.1, -19.1, -21.9, -11.6, -11.0, -13.1, -16.6, -18.0, -16.2, -14.2, -16.6, -17.0, -18.6, -39.9, -47.8, -19.3, -13.9, -16.8, -26.0, -40.8, -44.3, -51.7, -56.9, -51.6, -9.0, -9.7, -11.3, -11.5, -10.7, -10.6, -12.9, -14.5, -16.2, -16.8, -18.8, -21.6, -21.1, -23.8, -19.3, -20.6, -27.0, -18.8, -19.6, -23.4, -28.7, -28.5, -28.0, -36.2, -36.2, -33.0, -41.0, -54.5, -60, -60, -60, -60, -60, -60, -60, -60, -60, -50.0, -28.7, -20.5, -15.2, -14.2, -13.1, -15.0, -21.4, -12.3, -10.3, -10.5, -11.3, -12.2, -13.8, -12.4, -8.2, -7.0, -11.6, -27.0, -35.8, -42.5, -46.5, -33.1, -24.2, -15.0, -14.8, -14.3, -13.4, -13.5, -16.0, -30.0, -36.2, -15.0, -16.2, -15.9, -14.8, -14.2, -18.3, -23.8, -31.1, -33.6, -32.4, -32.7, -34.1, -37.1, -26.4, -21.4, -22.6, -25.9, -35.0, -47.3, -60, -60, -60, -60, -60, -60, -27.2, -16.9, -12.1, -9.7, -11.3, -18.0, -30.1, -26.8, -13.3, -10.7, -12.9, -28.6, -11.2, -9.4, -12.8, -19.5, -14.4, -9.7, -9.1, -13.6, -16.7, -17.5, -19.1, -18.8, -21.5, -43.7, -50.5, -57.5, -26.9, -15.0, -17.7, -19.5, -20.2, -21.6, -24.2, -34.7, -36.7, -25.9, -18.7, -17.4, -15.1, -13.2, -11.8, -12.3, -14.7, -21.3, -16.5, -16.6, -16.3, -22.0, -42.0, -43.6, -41.7, -41.4, -51.7, -41.2, -15.8, -12.2, -10.7, -13.2, -13.8, -10.4, -14.9, -15.4, -12.6, -13.3, -15.5, -22.1, -24.5, -10.3, -16.5, -18.3, -17.7, -18.3, -18.6, -17.8, -14.5, -14.8, -16.5, -17.9, -29.0, -23.6, -12.3, -10.0, -15.9, -34.0, -33.5, -22.9, -24.3, -27.0, -28.3, -24.1, -19.5, -16.9, -11.1, -9.1, -9.4, -12.2, -16.5, -16.7, -12.9, -14.1, -15.1, -18.0, -19.2, -20.0, -25.9, -42.3, -52.9, -60, -60, -19.2, -13.5, -15.0, -18.7, -21.2, -19.0, -16.5, -15.6, -23.2, -42.5, -20.9, -19.2, -21.8, -18.7, -19.8, -18.6, -16.7, -20.4, -16.1, -10.9, -12.8, -14.9, -15.3, -19.0, -18.1, -15.7, -12.6, -13.2, -18.6, -26.6, -39.8, -48.3, -36.5, -12.4, -13.2, -15.0, -16.6, -17.8, -19.3, -18.1, -16.8, -27.5, -28.6, -11.4, -11.6, -15.2, -15.6, -14.2, -17.9, -29.4, -43.4, -27.9, -14.3, -11.1, -12.9, -13.6, -16.8, -16.4, -12.2, -11.7, -12.8, -14.2, -11.8, -13.4, -13.8, -18.6, -20.4, -26.5, -47.8, -38.2, -26.6, -25.6, -22.8, -18.3, -13.0, -12.3, -12.0, -13.9, -15.4, -15.3, -12.1, -13.2, -17.7, -16.6, -20.1, -42.8, -48.6, -21.4, -17.2, -18.2, -35.2, -44.2, -39.6, -12.9, -12.4, -14.2, -16.8, -20.9, -32.1, -15.1, -13.3, -19.2, -22.6, -22.0, -14.8, -16.9, -18.8, -18.4, -20.0, -25.3, -29.9, -31.7, -38.6, -54.4, -26.4, -26.6, -30.1, -35.1, -36.3, -45.4, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -57.9, -16.1, -12.6, -16.1, -35.8, -26.5, -12.2, -14.1, -21.1, -18.7, -13.2, -12.1, -10.3, -7.9, -12.1, -14.0, -21.2, -14.5, -13.2, -13.3, -16.8, -26.9, -48.0, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -46.3, -44.0, -55.3, -56.0, -18.0, -13.2, -10.9, -10.6, -9.7, -11.9, -18.0, -38.4, -31.8, -19.0, -17.6, -23.2, -38.8, -47.1, -55.2, -60, -22.6, -12.3, -14.8, -14.0, -18.3, -14.8, -15.8, -15.1, -18.8, -12.1, -12.3, -14.2, -15.8, -18.4, -16.1, -13.8, -13.6, -14.6, -16.0, -21.4, -16.1, -16.9, -16.7, -20.1, -16.7, -16.8, -19.3, -16.3, -16.2, -18.5, -24.5, -27.6, -30.1, -31.2, -35.6, -40.3, -43.7, -52.1, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -34.3, -25.7, -23.3, -12.6, -13.6, -18.5, -17.9, -17.9, -12.2, -13.5, -20.8, -19.6, -18.1, -18.5, -19.5, -27.5, -20.8, -10.4, -13.8, -14.9, -18.2, -17.1, -15.2, -13.1, -13.8, -19.5, -17.3, -16.5, -17.2, -16.9, -9.9, -12.1, -21.1, -30.1, -33.4, -41.4, -29.4, -25.7, -26.3, -27.2, -27.8, -32.3, -31.0, -34.9, -37.3, -50.0, -60, -60, -60, -60, -60, -60, -60, -60, -31.4, -11.1, -8.9, -13.4, -20.1, -18.6, -21.4, -37.6, -30.9, -11.3, -9.6, -10.6, -12.1, -24.4, -38.5, -43.3, -21.6, -11.5, -13.2, -17.0, -15.5, -19.1, -41.7, -48.2, -52.6, -17.0, -11.0, -10.1, -10.9, -16.5, -12.9, -12.8, -14.5, -19.4, -12.9, -11.1, -12.8, -17.1, -17.1, -19.9, -29.8, -20.0, -13.3, -18.6, -19.9, -26.4, -26.8, -18.4, -15.5, -18.0, -20.7, -24.8, -31.8, -34.8, -38.3, -44.1, -45.1, -60, -60, -60, -60, -60, -19.7, -16.8, -13.3, -15.0, -21.5, -17.4, -14.0, -14.0, -26.3, -17.0, -10.7, -10.8, -16.7, -12.2, -15.1, -14.1, -18.2, -17.9, -20.5, -29.3, -15.4, -17.7, -20.2, -21.5, -20.9, -11.6, -12.5, -14.3, -16.0, -17.5, -18.1, -20.1, -33.7, -42.1, -15.6, -13.9, -14.3, -17.5, -25.6, -40.4, -24.7, -20.7, -23.2, -20.7, -22.3, -31.5, -50.0, -43.1, -14.3, -11.6, -13.8, -17.3, -24.6, -31.3, -35.9, -25.9, -17.8, -16.3, -17.9, -23.5, -43.2, -48.2, -50.8, -17.7, -14.2, -16.0, -17.8, -15.5, -16.9, -19.2, -24.4, -19.0, -18.3, -21.9, -23.1, -29.9, -50.5, -11.5, -11.7, -11.7, -13.2, -20.8, -15.9, -15.3, -12.5, -10.9, -16.9, -39.8, -46.7, -17.4, -12.7, -13.6, -16.6, -12.5, -17.2, -17.5, -20.2, -45.3, -21.5, -14.8, -15.9, -17.3, -20.5, -18.5, -18.4, -17.9, -18.0, -17.7, -22.5, -13.6, -14.1, -16.5, -20.4, -21.5, -25.2, -16.5, -14.4, -20.9, -34.9, -45.5, -49.3, -57.9, -9.7, -9.8, -9.9, -11.5, -19.1, -13.0, -13.6, -17.6, -32.8, -25.7, -18.0, -17.3, -22.6, -36.6, -30.3, -19.2, -21.5, -27.5, -48.1, -34.0, -30.1, -30.5, -33.2, -41.9, -46.9, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -32.4, -17.8, -16.1, -26.9, -35.1, -31.2, -23.4, -13.8, -15.4, -16.6, -14.2, -12.6, -10.4, -8.5, -10.6, -11.2, -10.6, -14.3, -14.3, -15.4, -17.5, -11.0, -12.5, -20.1, -27.1, -42.9, -49.0, -55.3, -60, -60, -60, -60, -60, -19.1, -10.3, -10.6, -12.7, -20.1, -14.3, -11.0, -12.0, -25.3, -24.6, -19.6, -8.9, -10.7, -15.4, -15.0, -16.8, -18.7, -23.0, -16.8, -20.1, -25.1, -28.0, -29.1, -37.2, -26.2, -15.4, -14.4, -16.1, -18.9, -17.1, -9.1, -9.3, -15.6, -15.7, -13.0, -14.1, -15.9, -21.5, -18.7, -17.7, -17.9, -22.2, -37.7, -28.7, -23.6, -21.6, -20.3, -11.7, -10.2, -13.3, -13.9, -12.2, -15.7, -33.4, -23.3, -8.7, -9.7, -13.0, -13.4, -11.6, -15.1, -29.9, -40.4, -44.7, -51.3, -53.5, -12.9, -8.1, -9.6, -12.8, -21.0, -11.9, -10.3, -15.1, -17.9, -24.8, -13.8, -13.9, -16.0, -14.5, -14.9, -21.9, -17.0, -11.1, -11.5, -17.3, -19.9, -19.4, -25.7, -12.5, -10.7, -16.7, -39.1, -26.2, -10.8, -13.4, -18.3, -19.5, -28.4, -43.0, -46.1, -15.8, -10.6, -11.7, -14.1, -15.2, -12.3, -12.4, -16.0, -15.1, -12.2, -12.5, -19.4, -18.7, -24.5, -28.2, -18.9, -17.1, -21.8, -23.7, -37.5, -21.3, -21.5, -19.3, -23.5, -24.2, -33.5, -36.8, -38.0, -44.2, -50.8, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -28.1, -20.5, -18.8, -15.3, -13.8, -12.0, -10.2, -12.0, -15.6, -16.2, -22.0, -40.1, -17.3, -7.9, -7.3, -14.6, -16.3, -12.5, -11.4, -11.1, -10.5, -10.6, -8.7, -8.4, -12.2, -15.1, -13.8, -12.5, -13.4, -11.7, -14.2, -14.6, -13.9, -15.5, -22.3, -43.9, -19.6, -13.7, -15.7, -18.5, -24.5, -33.7, -30.9, -31.7, -31.4, -38.6, -40.7, -49.8, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -45.0, -18.0, -12.6, -10.0, -10.0, -12.1, -13.3, -25.2, -27.9, -10.4, -11.3, -11.8, -14.0, -17.8, -17.9, -27.6, -14.9, -7.7, -9.1, -19.3, -22.6, -13.0, -11.3, -13.0, -22.0, -14.1, -10.9, -13.6, -29.0, -38.9, -44.9, -52.6, -60, -60, -60, -60, -60, -60, -60, -60, -59.6, -35.2, -10.5, -10.2, -9.5, -13.5, -14.8, -19.9, -22.7, -11.9, -14.7, -17.7, -19.2, -18.4, -15.7, -19.1, -23.5, -24.9, -29.9, -35.2, -45.0, -27.1, -17.4, -17.8, -22.2, -40.3, -51.2, -54.4, -51.3, -58.9, -60, -60, -11.7, -11.1, -12.9, -13.7, -9.9, -11.2, -11.7, -12.7, -12.0, -11.0, -15.5, -31.9, -34.1, -41.8, -50.6, -55.3, -13.3, -12.5, -18.6, -16.3, -16.5, -29.0, -37.1, -14.6, -14.1, -15.5, -17.0, -12.1, -11.6, -17.9, -14.5, -24.9, -17.2, -14.8, -15.7, -19.8, -26.6, -26.9, -31.4, -31.8, -30.8, -35.0, -36.1, -24.8, -23.9, -26.4, -29.0, -33.9, -51.9, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -47.1, -19.5, -12.4, -15.9, -20.0, -14.8, -13.6, -15.8, -16.3, -25.1, -19.0, -13.0, -10.1, -11.5, -13.2, -16.4, -18.6, -16.9, -20.6, -26.1, -42.4, -51.2, -59.3, -60, -60, -60, -60, -60, -60, -14.5, -10.4, -13.5, -8.3, -10.2, -14.3, -19.9, -30.1, -12.0, -10.1, -14.5, -13.2, -10.2, -17.9, -16.3, -19.2, -13.8, -14.9, -17.7, -18.8, -19.4, -19.5, -26.0, -33.3, -33.7, -23.7, -21.7, -23.3, -26.0, -33.5, -51.1, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -53.2, -17.2, -14.6, -17.3, -14.0, -13.1, -10.1, -15.4, -32.2, -15.3, -11.2, -14.8, -15.0, -8.3, -13.0, -18.5, -16.0, -16.2, -11.0, -15.3, -14.6, -13.2, -17.1, -24.1, -24.2, -32.9, -22.5, -18.6, -21.2, -28.8, -45.2, -57.7, -60, -60, -46.5, -21.8, -17.3, -14.6, -14.6, -14.5, -14.4, -16.2, -15.9, -15.6, -15.2, -15.7, -7.1, -10.2, -14.4, -21.4, -17.8, -12.3, -13.7, -16.9, -15.9, -16.1, -15.5, -10.2, -11.0, -11.2, -11.8, -12.1, -13.0, -15.7, -17.9, -17.6, -16.7, -19.7, -36.3, -32.3, -17.5, -17.5, -19.5, -26.3, -29.7, -34.3, -36.7, -27.5, -27.7, -33.2, -36.4, -40.9, -45.9, -60, -60, -60, -25.9, -18.1, -16.4, -15.9, -11.1, -7.9, -12.3, -16.8, -21.2, -17.5, -16.1, -13.2, -15.7, -16.5, -16.2, -25.2, -43.2, -51.4, -57.2, -18.7, -13.4, -17.4, -21.0, -21.1, -20.4, -19.7, -23.6, -38.9, -47.1, -51.7, -27.9, -22.0, -22.7, -25.7, -23.8, -16.5, -13.9, -12.2, -10.8, -17.3, -24.0, -25.2, -40.5, -48.6, -38.4, -42.0, -32.3, -35.4, -50.0, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -60, -31.0, -24.0, -20.0, -13.3, -10.6, -12.6, -16.2, -18.4, -19.1, -10.7, -10.8, -18.7, -29.7, -33.2, -8.4, -9.2, -13.4, -13.3, -18.4, -8.4, -10.1, -13.0, -16.3, -16.9, -14.5, -15.7, -22.7, -25.4, -29.5, -41.3, -50.1, -56.3, -60, -60, -60, -25.1, -14.4, -16.4, -18.4, -14.4, -36.3, -12.4, -12.5, -10.2, -11.5, -13.1, -15.5, -9.9, -9.1, -17.7, -11.0, -10.6, -13.0, -18.9, -17.5, -27.6, -44.5, -19.8, -14.4, -11.0, -13.5, -15.0, -16.2, -13.9, -13.1, -14.5, -19.3, -25.6, -35.0, -33.2, -32.5, -34.0, -39.0, -29.7, -24.0, -25.1, -26.9, -33.3, -49.1, -60, -60, -60, -60]};
+window.EXTRA_IC = {
+  tool: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  cpu: '<rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>',
+  truck: '<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',
+  video: '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>',
+  wifi: '<path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>',
+  coffee: '<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>',
+  box: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  mapPin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+};
+// ---------- Íconos (trazos de Feather, los mismos de react-icons Fi*) ----------
+const P = {
+  gift: '<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
+  dollar: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  award: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  card: '<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  chev: '<polyline points="9 18 15 12 9 6"/>',
+  back: '<polyline points="15 18 9 12 15 6"/>',
+  arrow: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  cart: '<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>',
+  search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+  tablet: '<rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+  phone: '<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+  keyboard: '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
+  game: '<line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/>',
+  zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  percent: '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+  dcheck: '<polyline points="2 12.5 6 16.5 14 7.5"/><polyline points="10 15.5 11 16.5 19.5 7.5"/>',
+};
+Object.assign(P, window.EXTRA_IC || {});
+document.querySelectorAll('i[data-ic]').forEach(el => {
+  const n = el.dataset.ic, s = +el.dataset.s || 16, w = el.dataset.w || 2;
+  el.classList.add('ic');
+  if (n === 'signal') { el.innerHTML = `<svg width="${s}" height="${s*0.7}" viewBox="0 0 17 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor"/><rect x="4.5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="9" y="3" width="3" height="9" rx="1" fill="currentColor"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg>`; return; }
+  if (n === 'battery') { el.innerHTML = `<svg width="${s}" height="${s*0.48}" viewBox="0 0 25 12"><rect x=".5" y=".5" width="21" height="11" rx="3.2" fill="none" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><rect x="23" y="4" width="1.6" height="4" rx=".8" fill="currentColor" opacity=".5"/></svg>`; return; }
+  if (n === 'es') { el.innerHTML = `<svg width="${s}" height="${s}" viewBox="0 0 26 26"><rect x="3" y="5" width="20" height="13" rx="2.5" fill="none" stroke="#fff" stroke-width="2"/><text x="13" y="15" text-anchor="middle" font-family="Tektrron" font-size="8.5" fill="#fff">ES</text><path d="M10 21h6l-3 2.5z" fill="#fff"/></svg>`; return; }
+  el.innerHTML = `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
+});
+
+document.querySelectorAll('.cap').forEach(c => { const tx = document.createElement('span'); tx.className = 'tx'; Array.from(c.childNodes).slice(1).forEach(n => tx.appendChild(n)); c.appendChild(tx); });
+
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const norm = w => w.toLowerCase().replace(/[^a-z0-9áéíóúñü]/g, '');
+// W('Guanare', 1) → instante en que se dice esa palabra en ese bloque
+const W = (w, b, n = 0) => { const m = VOZ.palabras.filter(p => p.b === b && norm(p.w) === norm(w)); if (!m[n]) throw new Error('falta ' + w + ' ' + b); return m[n].t0; };
+const B = VOZ.bloques;
+
+// ---------- Subtítulos: ventanas de hasta 4 palabras por frase ----------
+const ventanas = []; let cur = [];
+VOZ.palabras.forEach((p, i) => { cur.push(i); const fin = /[.,:?!…]$/.test(p.w) || cur.length >= 4 || !VOZ.palabras[i + 1] || VOZ.palabras[i + 1].b !== p.b; if (fin) { ventanas.push(cur); cur = []; } });
+const pill = $('#pill'); let lastV = -1;
+function subtitulos(t) {
+  let wi = -1; for (let i = 0; i < VOZ.palabras.length; i++) if (t >= VOZ.palabras[i].t0 - .02) wi = i;
+  const visible = wi >= 0 && t < VOZ.palabras[wi].t1 + .45;
+  pill.style.visibility = visible ? 'visible' : 'hidden';
+  if (!visible) return;
+  const v = ventanas.findIndex(vs => vs.includes(wi));
+  if (v !== lastV) { pill.innerHTML = ventanas[v].map(i => `<span data-i="${i}">${VOZ.palabras[i].w.replace(/[.,:…]$/, '')}</span>`).join(''); lastV = v; }
+  pill.querySelectorAll('span').forEach(s => s.classList.toggle('on', +s.dataset.i === wi));
+}
+
+// ---------- Chispa: pose, boca por volumen, parpadeo ----------
+const C = { vista: 0, pose: 'habla', ojos: 'abiertos', cejas: 'normal', feliz: false, codoX: 284, codoY: 370, mX: 288, mY: 446, lcX: 116, lcY: 370, lmX: 112, lmY: 446 };
+const chEl = $('#chispa'); let lastSvg = '';
+function boca(t) {
+  const i = Math.floor(t * 30), r = VOZ.rms[i] ?? -60, r2 = VOZ.rms[i - 1] ?? -60;
+  if (r < -38) return C.feliz ? 'feliz' : 'sonrisa';
+  if (r < -26) return (i % 2) ? 'e' : 'sonrisa';
+  if (r < -19) return r > r2 ? 'a' : 'e';
+  return (i % 3 === 0) ? 'o' : 'a';
+}
+function dibujar(t) {
+  let svg;
+  const parpadea = (t % 3.4) < .12 && C.ojos === 'abiertos';
+  if (C.vista < 1) svg = chispa({ pose: C.pose, boca: boca(t), ojos: parpadea ? 'cerrados' : C.ojos, cejas: C.cejas, fondo: false });
+  else { window.CHISPA_R = { codo: [C.codoX, C.codoY], muñeca: [C.mX, C.mY] }; window.CHISPA_L = { codo: [C.lcX, C.lcY], muñeca: [C.lmX, C.lmY], giro: -70 }; svg = chispa({ pose: 'espalda-libre', fondo: false }); }
+  if (svg !== lastSvg) { chEl.innerHTML = svg; lastSvg = svg; }
+}
+
+function build() {
+const tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
+const set = (vars, t) => tl.set(C, vars, t);
+const pop = (id, t, from = { y: 18, scale: .9 }) => tl.fromTo(id, { autoAlpha: 0, ...from }, { autoAlpha: 1, y: 0, x: 0, scale: 1, duration: .38, ease: 'back.out(1.8)' }, t);
+const off = (ids, t) => tl.to(ids, { autoAlpha: 0, y: -16, duration: .22, ease: 'power2.in' }, t);
+const titulo = (id, t) => tl.fromTo(id, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: .35, ease: 'back.out(1.6)' }, t);
+const fondo = (azul, t) => {
+  tl.to('#bgBlue', { opacity: azul ? 1 : 0, duration: .35, ease: 'power2.inOut' }, t);
+  tl.to('#discC', { attr: { fill: azul ? '#f4efe4' : '#2a63cd' }, duration: .35 }, t);
+  tl.call(() => document.getElementById('stage').classList.toggle('onblue', azul), null, t + .17);
+};
+const flip = (vista, t) => { tl.to('#chispa', { scaleX: 0, duration: .16, ease: 'power2.in' }, t); set({ vista }, t + .16); tl.to('#chispa', { scaleX: 1, duration: .22, ease: 'back.out(1.6)' }, t + .16); };
+const typ = (id, t) => { const el = $(id + ' .typ'), txt = el.dataset.t; for (let i = 0; i <= txt.length; i++) tl.call(() => { el.textContent = txt.slice(0, i); }, null, t + i * .035); };
+
+// Chispa entra y respira
+tl.fromTo('#chispa', { y: 120 }, { y: 0, duration: .55, ease: 'back.out(1.5)' }, 0);
+tl.fromTo('#disc', { scale: .6, autoAlpha: 0, transformOrigin: '50% 55%' }, { scale: 1, autoAlpha: 1, duration: .5, ease: 'back.out(1.7)' }, 0);
+tl.to('#chispa', { y: -4, duration: 1.6, ease: 'sine.inOut', yoyo: true, repeat: 23 }, .6);
+
+// ===== 0. ¿Una tienda? =====
+titulo('#t0', 0.05); set({ pose: 'hombros', cejas: 'duda' }, 0);
+pop('#web', .25);
+set({ pose: 'explica', cejas: 'normal' }, W('pero', 0) - .1);
+tl.fromTo('#sParte', { autoAlpha: 0, scale: 2.2, rotation: -20 }, { autoAlpha: 1, scale: 1, rotation: -8, duration: .3, ease: 'back.out(2)' }, W('parte', 0));
+off(['#t0', '#web', '#sParte'], B[1][0] - .45);
+
+// ===== 1. La ficha =====
+titulo('#t1', B[1][0] - .15); set({ pose: 'señala', cejas: 'arriba' }, W('presento', 1));
+pop('#ficha', W('ficha', 1) - .1);
+typ('#f0', W('electro', 1)); typ('#f1', W('guanare', 1) - .1); typ('#f2', W('catorce', 1) - .1);
+set({ pose: 'explica', cejas: 'normal' }, W('nuestro', 1));
+pop('#lo0', W('tecnología', 1, 1)); pop('#lo1', W('desarrollo', 1)); pop('#lo2', W('soporte', 1));
+off(['#t1', '#ficha'], B[2][0] - .5);
+
+// ===== 2. Vendemos (azul) =====
+fondo(true, B[2][0] - .35); titulo('#t2', B[2][0] - .05); set({ pose: 'pulgar', ojos: 'guino', feliz: true }, W('vendemos', 2));
+set({ pose: 'explica', ojos: 'abiertos', feliz: false }, W('tecnología', 2) + .3);
+pop('#v0', W('tecnología', 2)); pop('#v1', W('gaming', 2)); pop('#v2', W('gift', 2)); pop('#v3', W('recargas', 2));
+pop('#vPago', W('pagas', 2), { x: -40 }); pop('#vEnv', W('enviamos', 2), { x: 40 });
+set({ pose: 'pulgar' }, W('venezuela', 2));
+off(['#t2', '#v0', '#v1', '#v2', '#v3', '#vPago', '#vEnv'], B[3][0] - .5);
+
+// ===== 3. Reparamos =====
+fondo(false, B[3][0] - .35); titulo('#t3', B[3][0] - .05); set({ pose: 'brazos', ojos: 'abiertos' }, W('segundo', 3));
+pop('#rep', W('nuestro', 3) - .1);
+tl.fromTo('#sIng', { autoAlpha: 0, scale: 2, rotation: -16 }, { autoAlpha: 1, scale: 1, rotation: -6, duration: .3, ease: 'back.out(2)' }, W('ingeniero', 3));
+set({ pose: 'explica' }, W('mantenimiento', 3) - .2);
+['consolas', 'pc', 'cámaras', 'redes', 'puntos'].forEach((w, i) => pop('#r' + i, W(w, 3) - .05, { x: 24 }));
+set({ pose: 'pulgar', feliz: true }, W('venta', 3));
+off(['#t3', '#rep'], B[4][0] - .5);
+
+// ===== 4. Desarrollamos (azul) =====
+fondo(true, B[4][0] - .35); set({ pose: 'habla', feliz: false }, B[4][0] - .3);
+set({ pose: 'hombros', ojos: 'sorpresa', cejas: 'arriba' }, W('casi', 4));
+tl.fromTo('#sSecreto', { autoAlpha: 0, scale: 2, rotation: 14 }, { autoAlpha: 1, scale: 1, rotation: 6, duration: .3, ease: 'back.out(2)' }, W('casi', 4) + .1);
+titulo('#t4', W('desarrollamos', 4)); tl.to('#sSecreto', { autoAlpha: 0, duration: .2 }, W('desarrollamos', 4) + 1.3);
+set({ pose: 'señala', ojos: 'abiertos', cejas: 'normal' }, W('este', 4));
+pop('#l2', W('este', 4));
+['restaurante', 'caja', 'inventario', 'permisos'].forEach((w, i) => pop('#m' + i, W(w, 4) - .05));
+tl.fromTo('#l2shot', { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: .35 }, W('restaurante', 4) + .3);
+set({ pose: 'explica' }, W('equipo', 4) - .4);
+off(['#t4', '#l2'], B[5][0] - .5);
+
+// ===== 5. ¿Quién lo usa? =====
+fondo(false, B[5][0] - .35); titulo('#t5', B[5][0] - .05); set({ pose: 'hombros', cejas: 'duda' }, B[5][0]);
+pop('#abby', W('abby', 5) - .1, { scale: .7, y: 0 }); set({ pose: 'explica', cejas: 'normal' }, W('abby', 5));
+tl.fromTo('#sOpera', { autoAlpha: 0, scale: 2.4, rotation: -20 }, { autoAlpha: 1, scale: 1, rotation: -8, duration: .3, ease: 'back.out(2)' }, W('opera', 5));
+set({ pose: 'pulgar', ojos: 'guino', feliz: true }, W('opera', 5));
+off(['#t5', '#abby', '#sOpera'], B[6][0] - .5);
+
+// ===== 6. Lo que viene: Pista Rides =====
+titulo('#t6', B[6][0] - .05); set({ pose: 'habla', ojos: 'abiertos', feliz: false }, B[6][0]);
+const tg = W('muy', 6) - .25;
+flip(1, tg);
+// se afinca del círculo y se impulsa para señalar el teléfono
+tl.to(C, { lcX: 48, lcY: 236, lmX: 117, lmY: 158, duration: .35, ease: 'power3.out' }, tg + .4);
+tl.to('#chispa', { y: -40, rotation: -5, duration: .45, ease: 'back.out(1.8)' }, tg + .55);
+tl.to(C, { codoX: 330, codoY: 236, mX: 318, mY: 120, duration: .45, ease: 'back.out(1.7)' }, tg + .6);
+tl.fromTo('#pphone', { autoAlpha: 0, y: 60, rotation: 8, scale: .8 }, { autoAlpha: 1, y: 0, rotation: 3, scale: 1, duration: .5, ease: 'back.out(1.7)' }, W('pista', 6) - .15);
+tl.fromTo('#pphone .sym', { scale: 0, rotation: -40 }, { scale: 1, rotation: 0, duration: .5, ease: 'back.out(2.4)' }, W('pista', 6) + .1);
+tl.fromTo('#pphone .word', { autoAlpha: 0, x: -20 }, { autoAlpha: 1, x: 0, duration: .35 }, W('rides', 6));
+tl.to(C, { mX: 324, mY: 112, duration: .22, ease: 'sine.inOut', yoyo: true, repeat: 5 }, W('pista', 6) + .5);
+pop('#pApp', W('app', 6), { x: -30, rotation: -12 });
+['#q0', '#q1', '#q2'].forEach((q, i) => tl.fromTo(q, { autoAlpha: 0, scale: 0, rotation: -30 }, { autoAlpha: 1, scale: 1, rotation: i % 2 ? 12 : -10, duration: .3, ease: 'back.out(3)' }, W('qué', 6) + i * .12));
+pop('#pWeb', W('pronto', 6, 1), { x: 30, rotation: 10 });
+tl.to('#chispa', { y: 0, rotation: 0, duration: .35, ease: 'power2.inOut' }, W('pronto', 6, 1) - .1);
+tl.to(C, { codoX: 284, codoY: 370, mX: 288, mY: 446, lcX: 116, lcY: 370, lmX: 112, lmY: 446, duration: .35, ease: 'power2.inOut' }, W('pronto', 6, 1) - .1);
+flip(0, W('sabrás', 6) - .1); set({ pose: 'pulgar', ojos: 'guino', feliz: true }, W('sabrás', 6) + .1);
+off(['#t6', '#pphone', '#pApp', '#pWeb', '#q0', '#q1', '#q2'], B[7][0] - .5);
+
+// ===== 7. No solo una tienda (azul) =====
+fondo(true, B[7][0] - .35); titulo('#t7', W('solo', 7) - .1); set({ pose: 'brazos', ojos: 'abiertos', feliz: false }, B[7][0]);
+pop('#x0', W('tienda', 7) - .2, { x: -40 }); pop('#x1', W('tienda', 7) + .05, { x: -40 }); pop('#x2', W('tienda', 7) + .3, { x: -40 });
+pop('#esLogo', W('somos', 7, 1), { scale: .6, y: 0 });
+set({ pose: 'explica', feliz: true }, W('somos', 7, 1));
+off(['#t7', '#x0', '#x1', '#x2', '#esLogo'], W('gracias', 7) - .25);
+titulo('#t8', W('gracias', 7) - .1); set({ pose: 'señala', cejas: 'arriba' }, W('gracias', 7));
+pop('#cta', W('gracias', 7) + .1);
+tl.fromTo('#cursor', { autoAlpha: 0, x: 120, y: 120 }, { autoAlpha: 1, x: 0, y: 0, duration: .5, ease: 'power2.out' }, W('escríbenos', 7));
+tl.to('#cursor', { scale: .85, duration: .08, yoyo: true, repeat: 1 }, W('escríbenos', 7) + .55);
+tl.to('#ctaBtn', { scale: .94, duration: .08, yoyo: true, repeat: 1 }, W('escríbenos', 7) + .55);
+const T_CTA = W('escríbenos', 7) + .65;
+set({ pose: 'pulgar', ojos: 'guino' }, W('hablamos', 7));
+tl.to({}, { duration: 0 }, window.DURATION);
+window.seek = t => { tl.seek(t, false); subtitulos(t); dibujar(t); $('#ctaTxt').textContent = t >= T_CTA ? '+58 257 251 1282' : 'Escríbenos'; };
+}
+window.DURATION = Math.ceil((VOZ.duracion + 1.6) * 10) / 10;
+window.ready = document.fonts.load('700 17px Poppins').then(() => document.fonts.load('italic 40px Serif')).then(() => document.fonts.ready)
+  .then(() => Promise.all(Array.from(document.images).map(i => i.complete ? 1 : new Promise(r => { i.onload = r; i.onerror = r; }))))
+  .then(() => { build(); window.seek(0); return true; });
+</script>
+</body>
+</html>

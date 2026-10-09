@@ -7,6 +7,9 @@ No dependen de ningún servicio de pago. Cada reel es una página HTML con una l
 |---|---|---|---|
 | "El pana que sabe de tecnología" (referidos y Puntos ES) | `referidos.html` | 27 s | Subido a Instagram (02/10) |
 | "¿Y si es estafa?" (confianza: empresa real, Pago Móvil, pedido, garantía, WhatsApp) | `sin-miedo.src.html` → `sin-miedo.html` | 30,6 s | v3 entregada (02/10) |
+| Taller (14 años, con ingeniero) | `taller.src.html` → `taller.html` | — | v2 entregada |
+| L2 Control (Abby Kingdom y pantallas reales) | `l2control.src.html` → `l2control.html` | 45 s | v1 entregada |
+| "La ficha de Electro Shop" (Chispa con voz: vendemos, reparamos, desarrollamos y Pista Rides) | `ficha.src.html` → `ficha.html` | 79 s | v1 entregada (09/10) |
 
 ## El cierre de la serie (aprobado por Andrés el 02/10)
 
@@ -25,6 +28,20 @@ píldora blanca arriba (`.cap`), iPhone al centro (`#phoneWrap`), etiquetas incl
 Las pantallas de la web se reconstruyen con los textos reales del código (`components/checkout/CheckoutPagoMovilForm.tsx`, `lib/order-pasos.ts`, `lib/warranty.ts`, `components/Footer.tsx`).
 
 Reglas: "Puntos ES", nunca "saldo"; montos con el formato de `formatUSD` ("$13,31 Puntos ES"); nada de cuentas reales de terceros (el vendedor estafador es inventado).
+
+## Chispa y la voz ("La ficha")
+
+- Chispa es la mascota (`assets/mascota/chispa.js`, hoja de poses en `assets/mascota/hoja.html`). El círculo azul va en una capa fija (`#disc`) y Chispa se dibuja con `fondo: false` para que el giro no lo mueva.
+- La voz la generó Andrés en ElevenLabs (`assets/voz/chispa-ficha-original.mp3`). `chispa-ficha.mp3` es la versión con pausas entre ideas, al 93 % de velocidad y normalizada a -14 LUFS.
+- `assets/voz/chispa-ficha.json` tiene el tiempo de cada palabra, los bloques del guion y el volumen por cuadro (la boca de Chispa). `alinear.py` lo saca del audio sin servicios externos (silencios + sílabas del guion conocido).
+- `armar.py` mete el JSON en la página (`/*VOZ*/`) y `sonido-ficha.py` usa las mismas palabras para los efectos, así que si cambia la voz todo se mueve solo.
+- Pista Rides: solo el logo oficial (`assets/simbolo-negro.svg`, `assets/logo-claro.svg`), el amarillo de la marca, "una app para pedir viajes" y pistarides.com. Nada más hasta el lanzamiento.
+
+Mezcla final de "La ficha":
+
+```bash
+ffmpeg -i mudo.mp4 -i assets/voz/chispa-ficha.mp3 -i sonido-ficha.wav -filter_complex "[1:a][2:a]amix=inputs=2:duration=longest:normalize=0[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -movflags +faststart reel.mp4
+```
 
 ## Fotos y precios
 

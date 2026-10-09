@@ -77,7 +77,19 @@
       <path d="M-10 -6 L22 -6 M-10 6 L22 6 M-10 17 L22 17" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/></g>`;
   // Cada brazo: hombro → codo → muñeca, con su mano orientada según el antebrazo. null en mano = la mano queda fuera del cuadro.
   const ang = (e, w) => Math.atan2(w[0] - e[0], -(w[1] - e[1])) * 180 / Math.PI;
-  const MANOS = { palma: palmaAbierta, indice: señalando, pulgar: pulgarArriba,
+  // Manos vistas por detrás: dorso del puño con nudillos; índice arriba con la uña
+  const nudillos = (y) => `<path d="M-20 ${y} C-20 ${y-7} -12 ${y-7} -11 ${y} M-10 ${y} C-10 ${y-8} -1 ${y-8} 0 ${y} M1 ${y} C1 ${y-8} 10 ${y-8} 11 ${y} M12 ${y} C12 ${y-7} 20 ${y-7} 20 ${y}" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>`;
+  const puñoAtras = (x, y, r) => `<g transform="translate(${x} ${y}) rotate(${r})">
+      <path d="M-24 -14 C-24 -24 24 -24 24 -14 L24 12 C24 24 -24 24 -24 12 Z" fill="${SKIN}" ${S}/>
+      ${nudillos(-12)}
+      <path d="M-14 4 L-12 14 M0 4 L0 15 M14 4 L12 14" stroke="${INK}" stroke-width="2.5" stroke-linecap="round" opacity=".45"/></g>`;
+  const indiceAtras = (x, y, r) => `<g transform="translate(${x} ${y}) rotate(${r})">
+      ${dedo(-12, -12, -12, -62)}
+      <path d="M-18 -66 C-18 -74 -6 -74 -6 -66 L-6 -58 C-9 -55 -15 -55 -18 -58 Z" fill="#fff" stroke="${INK}" stroke-width="2.5"/>
+      <path d="M-24 -14 C-24 -24 24 -24 24 -14 L24 12 C24 24 -24 24 -24 12 Z" fill="${SKIN}" ${S}/>
+      <path d="M-4 -12 C-4 -19 4 -19 5 -12 M6 -12 C6 -19 14 -19 15 -12 M16 -12 C16 -18 22 -18 22 -12" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M-14 4 L-12 14 M0 4 L0 15 M14 4 L12 14" stroke="${INK}" stroke-width="2.5" stroke-linecap="round" opacity=".45"/></g>`;
+  const MANOS = { palma: palmaAbierta, indice: señalando, pulgar: pulgarArriba, puñoAtras, indiceAtras,
     puño: (x, y, r) => `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-24" y="-22" width="48" height="44" rx="18" fill="${SKIN}" ${S}/><path d="M-12 -6 L12 -6 M-12 6 L12 6" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/></g>` };
   const arm = (lado, codo, muñeca, mano, giro = 0) => {
     const [hx, hy] = HOMBRO[lado];
@@ -120,15 +132,15 @@
   // Brazos libres para animar (vista de espalda): CHISPA_L / CHISPA_R = { codo, muñeca, mano, giro }
   const libre = () => {
     const l = window.CHISPA_L || { codo: [116, 370], muñeca: [112, 446] }, r = window.CHISPA_R || { codo: [284, 370], muñeca: [288, 446] };
-    const m = (b, def) => b.muñeca[1] < 420 ? (b.mano || def) : null;
-    return `${arm('L', l.codo, l.muñeca, m(l, 'palma'), l.giro || 0)}${arm('R', r.codo, r.muñeca, m(r, 'indice'), r.giro || 0)}`;
+    const m = (b, def) => b.muñeca[1] < 420 ? (b.mano || def) : null; // en la espalda, por defecto el dorso
+    return `${arm('L', l.codo, l.muñeca, m(l, 'puñoAtras'), l.giro || 0)}${arm('R', r.codo, r.muñeca, m(r, 'indiceAtras'), r.giro || 0)}`;
   };
   const POSES_ESPALDA = {
     'espalda-libre': '',
     espalda: `${reposoL}${reposoR}`,
-    'espalda-señala': `${reposoL}${arm('R', [326, 300], [332, 214], 'indice')}`,
-    'espalda-señala-alto': `${reposoL}${arm('R', [300, 250], [312, 166], 'indice')}`,
-    'espalda-dos': `${arm('L', [76, 300], [70, 220], 'palma', -10)}${arm('R', [324, 300], [330, 220], 'palma', 10)}`,
+    'espalda-señala': `${reposoL}${arm('R', [326, 300], [332, 214], 'indiceAtras')}`,
+    'espalda-señala-alto': `${reposoL}${arm('R', [300, 250], [312, 166], 'indiceAtras')}`,
+    'espalda-dos': `${arm('L', [76, 300], [70, 220], 'puñoAtras', -10)}${arm('R', [324, 300], [330, 220], 'puñoAtras', 10)}`,
   };
 
   window.chispa = ({ pose = 'habla', boca = 'sonrisa', ojos = 'abiertos', cejas = 'normal', fondo = true } = {}) => `

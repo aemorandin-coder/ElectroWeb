@@ -117,7 +117,12 @@
     <g transform="translate(166 326)"><rect x="0" y="0" width="68" height="48" rx="10" fill="#fff" ${s4}/>
       <text x="34" y="34" text-anchor="middle" font-family="Tektrron, Poppins" font-size="24" font-weight="700" fill="${BLUE}">ES</text></g>
     <path d="M200 380 L200 420" stroke="#2b3a5c" stroke-width="3" stroke-linecap="round"/>`;
-  const libre = () => { const r = window.CHISPA_R || { codo: [284, 370], muñeca: [288, 446] }; return `${reposoL}${arm('R', r.codo, r.muñeca, r.muñeca[1] < 420 ? 'indice' : null)}`; };
+  // Brazos libres para animar (vista de espalda): CHISPA_L / CHISPA_R = { codo, muñeca, mano, giro }
+  const libre = () => {
+    const l = window.CHISPA_L || { codo: [116, 370], muñeca: [112, 446] }, r = window.CHISPA_R || { codo: [284, 370], muñeca: [288, 446] };
+    const m = (b, def) => b.muñeca[1] < 420 ? (b.mano || def) : null;
+    return `${arm('L', l.codo, l.muñeca, m(l, 'palma'), l.giro || 0)}${arm('R', r.codo, r.muñeca, m(r, 'indice'), r.giro || 0)}`;
+  };
   const POSES_ESPALDA = {
     'espalda-libre': '',
     espalda: `${reposoL}${reposoR}`,

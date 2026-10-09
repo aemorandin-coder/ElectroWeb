@@ -98,10 +98,38 @@
     hombros: `${arm('L', [94, 372], [84, 290], 'palma', -10)}${arm('R', [306, 372], [316, 290], 'palma', 10)}`,
   };
 
+  // ---------- Vista de espalda: nuca con corte en V, camisa con la placa ES grande ----------
+  const cabezaEspalda = `
+    <path d="M128 176 C112 170 106 188 114 200 C120 210 130 210 134 204" fill="${SKIN}" ${S}/>
+    <path d="M272 176 C288 170 294 188 286 200 C280 210 270 210 266 204" fill="${SKIN}" ${S}/>
+    <path d="M128 140 C124 196 140 248 200 262 C260 248 276 196 272 140 C262 120 240 112 200 112 C160 112 138 120 128 140 Z" fill="${SKIN}" ${S}/>
+    <path d="M116 168 C104 114 128 70 170 58 C192 40 236 40 262 56 C300 72 298 116 284 168
+             C280 184 272 194 262 198 L244 204 L200 240 L156 204 L138 198 C128 194 120 184 116 168 Z" fill="${INK}"/>
+    <path d="M178 62 C186 40 206 34 222 40 C210 44 202 52 200 62 Z M226 60 C240 44 262 44 274 54 C258 54 248 58 240 66 Z" fill="${INK}"/>
+    <path d="M156 204 L200 240 L244 204" fill="none" stroke="#3a3f4a" stroke-width="3" stroke-linecap="round"/>
+    <path d="M164 192 L200 222 L236 192 M172 178 L200 202 L228 178" fill="none" stroke="#2c3038" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M150 226 C160 238 170 246 184 252 M250 226 C240 238 230 246 216 252" fill="none" stroke="#e9d9c4" stroke-width="4" stroke-linecap="round"/>
+    <path d="M150 96 C166 82 186 76 204 76 M232 82 C250 88 264 100 270 116 M140 130 C150 116 162 108 176 104" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".4"/>`;
+  const torsoEspalda = `
+    <path d="M186 256 L186 290 L214 290 L214 256" fill="${SKIN}" ${S}/>
+    <path d="M104 420 L108 340 C110 310 128 292 160 284 L240 284 C272 292 290 310 292 340 L296 420 Z" fill="${SHIRT}" ${S}/>
+    <path d="M164 284 C176 296 224 296 236 284 L240 276 C222 288 178 288 160 276 Z" fill="${BLUE}" ${s4}/>
+    <g transform="translate(166 326)"><rect x="0" y="0" width="68" height="48" rx="10" fill="#fff" ${s4}/>
+      <text x="34" y="34" text-anchor="middle" font-family="Tektrron, Poppins" font-size="24" font-weight="700" fill="${BLUE}">ES</text></g>
+    <path d="M200 380 L200 420" stroke="#2b3a5c" stroke-width="3" stroke-linecap="round"/>`;
+  const libre = () => { const r = window.CHISPA_R || { codo: [284, 370], muñeca: [288, 446] }; return `${reposoL}${arm('R', r.codo, r.muñeca, r.muñeca[1] < 420 ? 'indice' : null)}`; };
+  const POSES_ESPALDA = {
+    'espalda-libre': '',
+    espalda: `${reposoL}${reposoR}`,
+    'espalda-señala': `${reposoL}${arm('R', [326, 300], [332, 214], 'indice')}`,
+    'espalda-señala-alto': `${reposoL}${arm('R', [300, 250], [312, 166], 'indice')}`,
+    'espalda-dos': `${arm('L', [76, 300], [70, 220], 'palma', -10)}${arm('R', [324, 300], [330, 220], 'palma', 10)}`,
+  };
+
   window.chispa = ({ pose = 'habla', boca = 'sonrisa', ojos = 'abiertos', cejas = 'normal', fondo = true } = {}) => `
 <svg viewBox="0 0 400 420" xmlns="http://www.w3.org/2000/svg">
   ${fondo ? `<circle cx="200" cy="232" r="150" fill="${BLUE}"/><circle cx="200" cy="232" r="166" fill="none" stroke="${INK}" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" opacity=".5"/>` : ''}
-  <g>${peloAtras}${torso}${cara}${peloDelante}${OJOS[ojos]}${CEJAS[cejas]}${BOCAS[boca]}${POSES[pose]}</g>
+  ${pose === 'espalda-libre' ? `<g>${torsoEspalda}${cabezaEspalda}${libre()}</g>` : POSES_ESPALDA[pose] !== undefined ? `<g>${torsoEspalda}${cabezaEspalda}${POSES_ESPALDA[pose]}</g>` : `<g>${peloAtras}${torso}${cara}${peloDelante}${OJOS[ojos]}${CEJAS[cejas]}${BOCAS[boca]}${POSES[pose]}</g>`}
 </svg>`;
-  window.CHISPA = { POSES: Object.keys(POSES), BOCAS: Object.keys(BOCAS), OJOS: Object.keys(OJOS), CEJAS: Object.keys(CEJAS), CREAM, BLUE };
+  window.CHISPA = { POSES: Object.keys(POSES).concat(Object.keys(POSES_ESPALDA)), BOCAS: Object.keys(BOCAS), OJOS: Object.keys(OJOS), CEJAS: Object.keys(CEJAS), CREAM, BLUE };
 })();

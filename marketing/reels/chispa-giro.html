@@ -1,0 +1,38 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><style>
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-800-normal.woff2); font-weight: 800; }
+@font-face { font-family: Tektrron; src: url(assets/Tektrron.ttf); }
+html, body { margin: 0; width: 540px; height: 960px; overflow: hidden; background: #f4efe4; }
+#stage { position: relative; width: 540px; height: 960px; overflow: hidden;
+  background-image: linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px); background-size: 28px 28px; }
+#t { position: absolute; left: 30px; top: 70px; font: 800 40px/1.1 Poppins; color: #111317; }
+#t i { font-style: italic; color: #2a63cd; }
+#card { position: absolute; left: 60px; top: 190px; width: 300px; height: 190px; border-radius: 18px; background: #fff; border: 3px solid #111317; box-shadow: 6px 6px 0 #111317; display: flex; align-items: center; justify-content: center; visibility: hidden; }
+#card img { width: 240px; }
+#ch { position: absolute; left: 70px; top: 470px; width: 400px; height: 420px; transform-origin: 50% 100%; }
+#ch svg { width: 400px; height: 420px; }
+</style></head><body><div id="stage"><div id="t">Lo que <i>viene.</i></div><div id="card"><img src="assets/pista-rides.png"></div><div id="ch"></div></div>
+<script src="assets/gsap.min.js"></script><script src="assets/mascota/chispa.js"></script><script>
+const ch = document.getElementById('ch');
+const st = { vista: 0, codoX: 284, codoY: 370, mX: 288, mY: 446 };
+let last = '';
+function draw() {
+  let svg;
+  if (st.vista < 1) svg = chispa({ pose: 'habla', boca: 'a' });
+  else { window.CHISPA_R = { codo: [st.codoX, st.codoY], muñeca: [st.mX, st.mY] }; svg = chispa({ pose: 'espalda-libre' }); }
+  if (svg !== last) { ch.innerHTML = svg; last = svg; }
+}
+const tl = gsap.timeline({ paused: true, onUpdate: draw });
+tl.to(ch, { scaleX: 0, duration: .22, ease: 'power2.in' }, .5)
+  .set(st, { vista: 1 }, .72)
+  .to(ch, { scaleX: 1, duration: .26, ease: 'back.out(1.6)' }, .72)
+  .to(st, { codoX: 330, codoY: 290, mX: 318, mY: 196, duration: .45, ease: 'back.out(1.7)' }, 1.15)
+  .fromTo('#card', { autoAlpha: 0, y: 30, rotation: -6 }, { autoAlpha: 1, y: 0, rotation: -3, duration: .4, ease: 'back.out(2)' }, 1.35)
+  .to(st, { mX: 326, mY: 188, duration: .25, ease: 'sine.inOut', yoyo: true, repeat: 3 }, 1.7)
+  .to(ch, { scaleX: 0, duration: .22, ease: 'power2.in' }, 3.0)
+  .set(st, { vista: 0, codoX: 284, codoY: 370, mX: 288, mY: 446 }, 3.22)
+  .to(ch, { scaleX: 1, duration: .26, ease: 'back.out(1.6)' }, 3.22)
+  .to({}, { duration: .5 }, 3.5);
+window.DURATION = 4;
+window.seek = t => { tl.seek(t, false); draw(); };
+window.ready = document.fonts.ready.then(() => { draw(); return true; });
+</script></body></html>

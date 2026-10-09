@@ -7,6 +7,6 @@ body { margin: 0; background: #f4efe4; font: 700 15px Poppins; }
 </style></head><body><div class="g" id="g"></div>
 <script src="chispa.js"></script><script>
 const v = [['habla','a','abiertos','normal'],['señala','e','abiertos','arriba'],['explica','sonrisa','abiertos','normal'],['pulgar','feliz','guino','normal'],
-           ['brazos','sonrisa','cerrados','normal'],['hombros','o','sorpresa','duda'],['habla','seria','abiertos','duda'],['habla','feliz','abiertos','arriba']];
+           ['brazos','sonrisa','cerrados','normal'],['hombros','o','sorpresa','duda'],['habla','seria','abiertos','duda'],['habla','feliz','abiertos','arriba'],['espalda','sonrisa','abiertos','normal'],['espalda-señala','sonrisa','abiertos','normal'],['espalda-señala-alto','sonrisa','abiertos','normal'],['espalda-dos','sonrisa','abiertos','normal']];
 document.getElementById('g').innerHTML = v.map(([pose,boca,ojos,cejas]) => `<div class="c">${chispa({pose,boca,ojos,cejas})}<div>${pose} · ${boca}</div></div>`).join('');
 </script></body></html>

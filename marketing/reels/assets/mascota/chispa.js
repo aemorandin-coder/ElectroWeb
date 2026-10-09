@@ -102,14 +102,13 @@
       <path d="M-14 2 L-12 12 M0 2 L0 13 M14 2 L12 12" stroke="${INK}" stroke-width="2.5" stroke-linecap="round" opacity=".45"/>`),
   };
   const ang = (e, w) => Math.atan2(w[0] - e[0], -(w[1] - e[1])) * 180 / Math.PI;
-  // Brazo: hombro -> codo -> muñeca (tubo de tinta con camisa adentro), mano según el antebrazo y puño de camisa azul.
+  // Brazo: hombro -> codo -> muñeca (tubo de tinta con camisa adentro) y la mano según el antebrazo.
   const brazo = (lado, b) => {
     const [hx, hy] = HOMBRO[lado], c = b.codo, m = b.muñeca, a = ang(c, m);
     const d = `M${hx} ${hy} Q${f(c[0])} ${f(c[1])} ${f(m[0])} ${f(m[1])}`;
     const mano = b.mano && MANOS[b.mano] ? MANOS[b.mano](m[0], m[1], a + (b.giro || 0)) : '';
-    const puño = g(m[0], m[1], a, `<rect x="-24" y="2" width="48" height="13" rx="5" fill="${BLUE}" ${s4}/>`);
     return `<path d="${d}" fill="none" stroke="${INK}" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="${d}" fill="none" stroke="${SHIRT}" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>${mano}${puño}`;
+            <path d="${d}" fill="none" stroke="${SHIRT}" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>${mano}`;
   };
 
   // ---------- Vista de espalda: nuca con corte en V, camisa con la placa ES grande ----------

@@ -83,6 +83,7 @@ svg { display: block; }
   <div class="title" id="t0">¿Una <em>tienda</em>?</div>
   <div class="title" id="t1">La <em>ficha.</em></div>
   <div class="title w" id="t2"><em>Vendemos.</em></div>
+  <div class="title w" id="t2b">Pago y <em>envíos.</em></div>
   <div class="title" id="t3"><em>Reparamos.</em></div>
   <div class="title w" id="t4"><em>Desarrollamos.</em></div>
   <div class="title" id="t5">¿Quién lo <em>usa</em>?</div>
@@ -135,7 +136,7 @@ svg { display: block; }
     <div class="card" id="vPago" style="position:relative; padding:16px; display:flex; align-items:center; gap:14px">
       <span class="ico"><i data-ic="phone" data-s="28"></i></span><b style="font:800 24px Poppins">Pagas con Pago Móvil</b></div>
     <div class="card" id="vEnv" style="position:relative; margin-top:18px; padding:16px; display:flex; align-items:center; gap:14px">
-      <span class="ico" style="background:var(--green)"><i data-ic="truck" data-s="28"></i></span><div style="flex:1"><b style="font:800 22px/1.15 Poppins">Envíos a toda Venezuela</b><div style="display:flex;gap:12px;margin-top:8px;align-items:center"><img src="assets/zoom.png" style="height:16px"><img src="assets/mrw.png" style="height:16px"></div></div></div>
+      <span class="ico" style="background:var(--green)"><i data-ic="truck" data-s="28"></i></span><div style="flex:1"><b style="font:800 22px/1.15 Poppins">Envíos a toda Venezuela</b><div style="display:flex;gap:12px;margin-top:8px;align-items:center"><img id="vZoom" src="assets/zoom.png" style="height:18px; transform-origin:50% 50%"><img id="vMrw" src="assets/mrw.png" style="height:18px; transform-origin:50% 50%"></div></div></div>
   </div>
 
   <!-- 3. Reparamos -->
@@ -284,7 +285,7 @@ off(['#t0', '#web', '#sParte'], B[1][0] - .45);
 // ===== 1. La ficha =====
 titulo('#t1', B[1][0] - .15); set({ pose: 'señala', cejas: 'arriba' }, W('presento', 1));
 pop('#ficha', W('ficha', 1) - .1);
-typ('#f0', W('electro', 1)); typ('#f1', W('guanare', 1) - .1); typ('#f2', W('catorce', 1) - .1);
+typ('#f0', W('electro', 1)); typ('#f1', W('guanare', 1) - .1); typ('#f2', W('14', 1) - .1);
 set({ pose: 'explica', cejas: 'normal' }, W('nuestro', 1));
 pop('#lo0', W('tecnología', 1, 1)); pop('#lo1', W('desarrollo', 1)); pop('#lo2', W('soporte', 1));
 off(['#t1', '#ficha'], B[2][0] - .5);
@@ -293,17 +294,21 @@ off(['#t1', '#ficha'], B[2][0] - .5);
 fondo(true, B[2][0] - .35); titulo('#t2', W('vendemos', 2) - .05); set({ pose: 'habla' }, B[2][0]);
 set({ pose: 'señala', cejas: 'arriba' }, W('vendemos', 2));
 ['tecnología', 'gaming', 'gift', 'recargas'].forEach((w, i) => { pop('#v' + i, W(w, 2) - .05, { y: 24, scale: .7 }); set({ cejas: 'normal' }, W(w, 2) - .05); tl.fromTo('#chispa', { rotation: 0 }, { rotation: i % 2 ? -3 : 3, duration: .18, yoyo: true, repeat: 1, ease: 'sine.inOut' }, W(w, 2) - .05); });
-off(['#v0', '#v1', '#v2', '#v3'], W('energía', 2) - .55);
-set({ pose: 'hombros', cejas: 'arriba' }, W('falta', 2) - .2);
-pop('#vEnergia', W('energía', 2) - .1, { y: 30, scale: .85 }); set({ pose: 'señala', cejas: 'normal' }, W('energía', 2));
-pop('#eUps', W('ups', 2) - .05, { y: 20, scale: .7 }); pop('#eInv', W('inversores', 2) - .05, { y: 20, scale: .7 });
+off(['#v0', '#v1', '#v2', '#v3'], W('energía', 2) - .5);
+pop('#vEnergia', W('energía', 2) - .1, { y: 30, scale: .85 }); set({ pose: 'señala', cejas: 'arriba' }, W('energía', 2) - .1);
+pop('#eUps', W('ups', 2) - .05, { y: 20, scale: .7 }); set({ pose: 'señala', cejas: 'normal' }, W('ups', 2) - .05);
+pop('#eInv', W('inversores', 2) - .05, { y: 20, scale: .7 });
 tl.fromTo('#sInst', { autoAlpha: 0, scale: 2.2, rotation: -20 }, { autoAlpha: 1, scale: 1, rotation: -8, duration: .3, ease: 'back.out(2)' }, W('instalamos', 2));
 set({ pose: 'pulgar', ojos: 'guino', feliz: true }, W('instalamos', 2));
-off(['#vEnergia', '#sInst'], W('pagas', 2) - .45);
-set({ pose: 'señala', ojos: 'abiertos', feliz: false }, W('pagas', 2) - .1);
-pop('#vPago', W('pagas', 2) - .05, { x: -40 }); pop('#vEnv', W('enviamos', 2) - .05, { x: 40 });
-set({ pose: 'pulgar', feliz: true }, W('venezuela', 2));
-off(['#t2', '#vPago', '#vEnv'], B[3][0] - .5);
+// "Pago y envíos: pagas con Pago Móvil y envíos a toda Venezuela con ZOOM y MRW."
+off(['#t2', '#vEnergia', '#sInst'], W('pago', 2) - .45);
+titulo('#t2b', W('pago', 2) - .1); set({ pose: 'habla', ojos: 'abiertos', feliz: false }, W('pago', 2) - .1);
+pop('#vPago', W('pagas', 2) - .05, { x: -40 }); set({ pose: 'señala' }, W('pagas', 2) - .05);
+pop('#vEnv', W('envíos', 2, 1) - .05, { x: 40 });
+tl.fromTo('#vZoom', { scale: 1 }, { scale: 1.35, duration: .16, yoyo: true, repeat: 1, ease: 'power2.out' }, W('zoom', 2));
+tl.fromTo('#vMrw', { scale: 1 }, { scale: 1.35, duration: .16, yoyo: true, repeat: 1, ease: 'power2.out' }, W('mrw', 2));
+set({ pose: 'pulgar', feliz: true }, W('mrw', 2));
+off(['#t2b', '#vPago', '#vEnv'], B[3][0] - .5);
 
 // ===== 3. Reparamos =====
 fondo(false, B[3][0] - .35); titulo('#t3', B[3][0] - .05); set({ pose: 'brazos', ojos: 'abiertos' }, W('segundo', 3));

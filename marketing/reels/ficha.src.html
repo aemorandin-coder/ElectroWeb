@@ -136,7 +136,7 @@ svg { display: block; }
     <div class="card" id="vPago" style="position:relative; padding:16px; display:flex; align-items:center; gap:14px">
       <span class="ico"><i data-ic="phone" data-s="28"></i></span><b style="font:800 24px Poppins">Pagas con Pago Móvil</b></div>
     <div class="card" id="vEnv" style="position:relative; margin-top:18px; padding:16px; display:flex; align-items:center; gap:14px">
-      <span class="ico" style="background:var(--green)"><i data-ic="truck" data-s="28"></i></span><div style="flex:1"><b style="font:800 22px/1.15 Poppins">Envíos a toda Venezuela</b><div style="display:flex;gap:12px;margin-top:8px;align-items:center"><img id="vZoom" src="assets/zoom.png" style="height:18px; transform-origin:50% 50%"><img id="vMrw" src="assets/mrw.png" style="height:18px; transform-origin:50% 50%"></div></div></div>
+      <span class="ico" style="background:var(--green)"><i data-ic="truck" data-s="28"></i></span><div style="flex:1"><b style="font:800 22px/1.15 Poppins">Envíos a toda Venezuela</b><div style="display:flex;gap:26px;margin-top:8px;align-items:center"><img id="vZoom" src="assets/zoom.png" style="height:18px; transform-origin:50% 50%"><img id="vMrw" src="assets/mrw.png" style="height:18px; transform-origin:50% 50%"></div></div></div>
   </div>
 
   <!-- 3. Reparamos -->
@@ -305,8 +305,8 @@ off(['#t2', '#vEnergia', '#sInst'], W('pago', 2) - .45);
 titulo('#t2b', W('pago', 2) - .1); set({ pose: 'habla', ojos: 'abiertos', feliz: false }, W('pago', 2) - .1);
 pop('#vPago', W('pagas', 2) - .05, { x: -40 }); set({ pose: 'señala' }, W('pagas', 2) - .05);
 pop('#vEnv', W('envíos', 2, 1) - .05, { x: 40 });
-tl.fromTo('#vZoom', { scale: 1 }, { scale: 1.35, duration: .16, yoyo: true, repeat: 1, ease: 'power2.out' }, W('zoom', 2));
-tl.fromTo('#vMrw', { scale: 1 }, { scale: 1.35, duration: .16, yoyo: true, repeat: 1, ease: 'power2.out' }, W('mrw', 2));
+tl.fromTo('#vZoom', { scale: 1 }, { scale: 1.2, duration: .16, yoyo: true, repeat: 1, ease: 'power2.out' }, W('zoom', 2));
+tl.fromTo('#vMrw', { scale: 1 }, { scale: 1.2, duration: .16, yoyo: true, repeat: 1, ease: 'power2.out' }, W('mrw', 2));
 set({ pose: 'pulgar', feliz: true }, W('mrw', 2));
 off(['#t2b', '#vPago', '#vEnv'], B[3][0] - .5);
 

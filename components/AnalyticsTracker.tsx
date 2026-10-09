@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { isFlyerCode } from '@/lib/studio/code';
+import { useCartSafe } from '@/contexts/CartContext';
 
 // Declare global window properties for TypeScript
 declare global {
@@ -77,6 +78,36 @@ function trackStudioVisit() {
     trackEvent({ eventType: 'studio_visit', eventCategory: 'navigation', eventAction: 'visit', eventLabel: code });
 }
 
+// C-173: "sigo aquí". Le dice al servidor que esta pestaña sigue abierta (qué página y cuántos productos lleva en el carrito) para
+// que Reportes muestre quién está conectado ahora. No guarda nada en la base. `salir` avisa al cerrar la pestaña.
+const LATIDO_MS = 30_000;
+
+function origenDeLaVisita(): string | null {
+    try {
+        let origen = sessionStorage.getItem('analytics_origen');
+        if (origen === null) {
+            origen = document.referrer ? new URL(document.referrer).hostname : '';
+            sessionStorage.setItem('analytics_origen', origen);
+        }
+        return origen || null;
+    } catch {
+        return null;
+    }
+}
+
+function enviarLatido(pagina: string, carrito: number, salir = false) {
+    const cuerpo = JSON.stringify({ sesion: getSessionId(), pagina, carrito, origen: origenDeLaVisita(), salir: salir || undefined });
+    try {
+        if (salir && navigator.sendBeacon) {
+            navigator.sendBeacon('/api/analytics/presencia', new Blob([cuerpo], { type: 'application/json' }));
+            return;
+        }
+        void fetch('/api/analytics/presencia', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: cuerpo, keepalive: true }).catch(() => undefined);
+    } catch {
+        // Medir no puede romper la tienda
+    }
+}
+
 // Track click
 function trackClick(target: string, category: string = 'interaction') {
     trackEvent({
@@ -91,6 +122,27 @@ function trackClick(target: string, category: string = 'interaction') {
 export default function AnalyticsTracker() {
     const pathname = usePathname();
     const lastPathname = useRef<string>('');
+    const { totalItems } = useCartSafe();
+
+    // Latido de presencia (C-173): al abrir una página, al cambiar el carrito y cada 30 s mientras la pestaña está a la vista
+    useEffect(() => {
+        if (!pathname || pathname.startsWith('/admin')) return;
+        enviarLatido(pathname, totalItems);
+        const cada = setInterval(() => {
+            if (document.visibilityState === 'visible') enviarLatido(window.location.pathname, totalItems);
+        }, LATIDO_MS);
+        const alVolver = () => {
+            if (document.visibilityState === 'visible') enviarLatido(window.location.pathname, totalItems);
+        };
+        const alSalir = () => enviarLatido(window.location.pathname, totalItems, true);
+        document.addEventListener('visibilitychange', alVolver);
+        window.addEventListener('pagehide', alSalir);
+        return () => {
+            clearInterval(cada);
+            document.removeEventListener('visibilitychange', alVolver);
+            window.removeEventListener('pagehide', alSalir);
+        };
+    }, [pathname, totalItems]);
 
     // Inject scripts on mount
     useEffect(() => {

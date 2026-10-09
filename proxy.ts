@@ -152,11 +152,13 @@ export default withAuth(
           pathname.startsWith('/api/uploads') ||
           pathname.startsWith('/api/analytics') ||
           pathname.startsWith('/api/webhooks') ||
-          // El cron del servidor: se autoriza con CRON_SECRET dentro del handler (C-100, C-138, C-157, C-165)
+          // El cron del servidor: se autoriza con CRON_SECRET dentro del handler (C-100, C-138, C-157, C-165, C-167, C-169)
           pathname === '/api/cron/envios' ||
           pathname === '/api/cron/favoritos' ||
           pathname === '/api/cron/resenas' ||
           pathname === '/api/cron/respaldos' ||
+          pathname === '/api/cron/promotores' ||
+          pathname === '/api/cron/papelera' ||
           // Avisos de la Content-Security-Policy (C-166): los manda el navegador del visitante, sin sesión. Límite en el handler
           pathname === '/api/csp-report' ||
           // Tiempo real (C-127): sin sesión solo recibe el stock; el handler filtra por sesión y permisos

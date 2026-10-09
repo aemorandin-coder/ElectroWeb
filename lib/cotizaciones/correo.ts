@@ -5,6 +5,7 @@
 import { getBaseTemplate, sendEmail } from '@/lib/email-service';
 import { escaparHtml, urlBase } from '@/lib/email-campaigns';
 import { formatUSD } from '@/lib/currency';
+import { CORREO, COLOR, botonCorreo } from '@/lib/email-templates/estilo';
 import { getPublicSettings } from '@/lib/site-settings';
 import type { CotizacionAdmin } from '@/lib/cotizaciones';
 
@@ -20,8 +21,8 @@ export async function correoCotizacion(c: CotizacionAdmin, mensaje: string | nul
   const { totales } = c;
 
   const fila = (etiqueta: string, valor: string, fuerte = false) => `<tr>
-      <td style="padding:6px 0;color:#6a6c6b;font-size:14px;">${escaparHtml(etiqueta)}</td>
-      <td style="padding:6px 0;text-align:right;color:#212529;font-size:${fuerte ? 18 : 14}px;font-weight:${fuerte ? 700 : 600};">${escaparHtml(valor)}</td>
+      <td style="padding:8px 0;color:${COLOR.suave};font-size:14px;">${escaparHtml(etiqueta)}</td>
+      <td style="padding:8px 0;text-align:right;color:${COLOR.tinta};font-size:${fuerte ? 18 : 14}px;font-weight:${fuerte ? 700 : 600};">${escaparHtml(valor)}</td>
     </tr>`;
   const filas = [
     c.subject ? fila('Para', c.subject) : '',
@@ -33,17 +34,17 @@ export async function correoCotizacion(c: CotizacionAdmin, mensaje: string | nul
   ].join('');
 
   const nota = mensaje
-    ? `<p style="color:#212529;font-size:15px;line-height:1.6;margin:0 0 16px;padding:12px 16px;background:#f8f9fa;border-left:4px solid #2a63cd;border-radius:0 8px 8px 0;">${escaparHtml(mensaje).replace(/\n/g, '<br>')}</p>`
+    ? `<div style="${CORREO.cita}">${escaparHtml(mensaje)}</div>`
     : '';
 
   const contenido = `
-    <h2 style="margin:0 0 10px;color:#212529;font-size:22px;font-weight:600;">Presupuesto N.º ${escaparHtml(c.number)}</h2>
-    <p style="color:#495057;font-size:15px;line-height:1.6;margin:0 0 12px;">Hola ${escaparHtml(nombre)}, te enviamos el presupuesto${c.subject ? ` para ${escaparHtml(c.subject)}` : ''}. Puedes verlo, imprimirlo o guardarlo en PDF, y aprobarlo ahí mismo con tu nombre y tu cédula o RIF.</p>
+    <h2 style="${CORREO.titulo}">Presupuesto N.º ${escaparHtml(c.number)}</h2>
+    <p style="${CORREO.texto}">Hola ${escaparHtml(nombre)}, te enviamos el presupuesto${c.subject ? ` para ${escaparHtml(c.subject)}` : ''}. Puedes verlo, imprimirlo o guardarlo en PDF, y aprobarlo ahí mismo con tu nombre y tu cédula o RIF.</p>
     ${nota}
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border-top:1px solid #e9ecef;border-bottom:1px solid #e9ecef;margin:8px 0;">${filas}</table>
-    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;"><tr><td bgcolor="#2a63cd" style="border-radius:8px;"><a href="${escaparHtml(enlace)}" style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;">Ver y aprobar el presupuesto</a></td></tr></table>
-    <p style="color:#6a6c6b;font-size:13px;line-height:1.6;margin:0;">Este presupuesto no es una factura. El enlace es personal: quien lo tenga puede verlo y aprobarlo, así que no lo reenvíes a quien no corresponda.</p>`;
-  return { asunto, html: await getBaseTemplate(contenido, escaparHtml(asunto)) };
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border-top:1px solid ${COLOR.linea};border-bottom:1px solid ${COLOR.linea};margin:8px 0;">${filas}</table>
+    ${botonCorreo(escaparHtml(enlace), 'Ver y aprobar el presupuesto')}
+    <p style="${CORREO.nota}">Este presupuesto no es una factura. El enlace es personal: quien lo tenga puede verlo y aprobarlo, así que no lo reenvíes a quien no corresponda.</p>`;
+  return { asunto, html: await getBaseTemplate(contenido, asunto) };
 }
 
 /** Envía la cotización a `para`. `success` false si el servicio de correo no la aceptó. */

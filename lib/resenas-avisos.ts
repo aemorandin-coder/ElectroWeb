@@ -6,6 +6,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getBaseTemplate, sendEmail } from '@/lib/email-service';
+import { CORREO, COLOR } from '@/lib/email-templates/estilo';
 import { enlaceBaja, escaparHtml, urlAbsoluta, urlBase } from '@/lib/email-campaigns';
 import { primeraImagen } from '@/lib/favoritos-avisos';
 
@@ -186,22 +187,22 @@ export async function correoPedirResenas(
     const url = escaparHtml(`${urlBase()}/productos/${p.slug}#resenas`);
     // Sin foto no se deja el hueco de la columna
     const foto = p.imagen
-      ? `<td style="padding:12px 12px 12px 0;width:72px;vertical-align:top;"><a href="${url}"><img src="${escaparHtml(urlAbsoluta(p.imagen))}" alt="" width="72" height="72" style="display:block;width:72px;height:72px;object-fit:contain;border-radius:8px;background:#ffffff;border:1px solid #e9ecef;"></a></td>`
+      ? `<td style="padding:12px 12px 12px 0;width:72px;vertical-align:top;border-bottom:1px solid ${COLOR.linea};"><a href="${url}"><img src="${escaparHtml(urlAbsoluta(p.imagen))}" alt="" width="72" height="72" style="display:block;width:72px;height:72px;object-fit:contain;border-radius:8px;background-color:#ffffff;border:1px solid ${COLOR.linea};"></a></td>`
       : '';
     return `<tr>
       ${foto}
-      <td style="padding:12px 0;vertical-align:middle;">
-        <a href="${url}" style="color:#212529;font-size:15px;font-weight:600;text-decoration:none;">${escaparHtml(p.nombre)}</a>
-        <p style="margin:8px 0 0;"><a href="${url}" style="display:inline-block;padding:8px 16px;border-radius:8px;background-color:#2a63cd;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">Dejar mi reseña</a></p>
+      <td style="padding:12px 0;vertical-align:middle;border-bottom:1px solid ${COLOR.linea};">
+        <a href="${url}" style="color:${COLOR.tinta};font-size:15px;font-weight:600;text-decoration:none;">${escaparHtml(p.nombre)}</a>
+        <p style="margin:8px 0 0;"><a href="${url}" style="display:inline-block;padding:9px 18px;border-radius:8px;background-color:${COLOR.marca};color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;">Dejar mi reseña</a></p>
       </td>
     </tr>`;
   }).join('');
 
   const contenido = `
-    <h2 style="margin:0 0 10px;color:#212529;font-size:22px;font-weight:600;">¿Qué te pareció tu compra?</h2>
-    <p style="color:#495057;font-size:15px;line-height:1.6;margin:0 0 8px;">Hola ${escaparHtml(nombre)}, ya pasaron unos días desde que recibiste tu pedido. Tu opinión ayuda a otros clientes a decidir y a nosotros a mejorar.</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">${filas}</table>
-    <p style="color:#6a6c6b;font-size:13px;line-height:1.6;margin:12px 0 0;">Solo opinan quienes compraron y recibieron el producto. El equipo revisa cada reseña antes de publicarla.</p>
-    <p style="margin:28px 0 0;padding-top:16px;border-top:1px solid #e9ecef;color:#6a6c6b;font-size:12px;line-height:1.5;text-align:center;">Recibes este correo porque compraste en nuestra tienda. <a href="${escaparHtml(enlaceBaja(userId, 'resenas'))}" style="color:#2a63cd;">No recibir más este pedido de reseñas</a></p>`;
-  return { asunto, html: await getBaseTemplate(contenido, escaparHtml(asunto)) };
+    <h2 style="${CORREO.titulo}">¿Qué te pareció tu compra?</h2>
+    <p style="${CORREO.texto}">Hola ${escaparHtml(nombre)}, ya pasaron unos días desde que recibiste tu pedido. Tu opinión ayuda a otros clientes a decidir y a nosotros a mejorar.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border-top:1px solid ${COLOR.linea};">${filas}</table>
+    <p style="${CORREO.textoMenor}margin:14px 0 0;">Solo opinan quienes compraron y recibieron el producto. El equipo revisa cada reseña antes de publicarla.</p>
+    <p style="${CORREO.nota}text-align:center;">Recibes este correo porque compraste en nuestra tienda. <a href="${escaparHtml(enlaceBaja(userId, 'resenas'))}" style="${CORREO.enlace}">No recibir más este pedido de reseñas</a></p>`;
+  return { asunto, html: await getBaseTemplate(contenido, asunto) };
 }

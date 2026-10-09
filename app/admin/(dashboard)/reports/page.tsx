@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -21,6 +21,8 @@ import { formatUSD } from '@/lib/currency';
 import { ETIQUETA_GRAVEDAD } from '@/lib/audit-labels';
 import RelacionVentas from './_components/RelacionVentas';
 import CspPanel from './_components/CspPanel';
+import EnVivo from './_components/EnVivo';
+import { useTiempoReal } from '@/lib/realtime/hooks';
 
 // Reportes (C-104). Cada número lleva debajo "de dónde sale": la misma regla que usa la API.
 
@@ -68,12 +70,6 @@ interface ReferralsData {
     conversionsByStatus: Array<{ status: string; count: number; commission: number; gross: number }>;
     approvedRevenue: { gross: number; commission: number };
     topInfluencers: Array<{ id: string; name: string; code: string; status: string; totalCommission: number; totalGross: number; conversionsCount: number }>;
-}
-interface LiveUsersData {
-    liveCount: number;
-    authenticatedCount: number;
-    devices: Record<string, number>;
-    topPages: Array<{ page: string; count: number }>;
 }
 type Tab = 'overview' | 'products' | 'interactions' | 'security' | 'referrals';
 
@@ -205,7 +201,10 @@ export default function ReportsPage() {
     const [interactions, setInteractions] = useState<InteractionsData | null>(null);
     const [security, setSecurity] = useState<SecurityData | null>(null);
     const [referrals, setReferrals] = useState<ReferralsData | null>(null);
-    const [liveUsers, setLiveUsers] = useState<LiveUsersData | null>(null);
+    // C-173: refrescos en segundo plano (cada minuto y con cada orden o pago nuevo): no cambian `clave`, así que no muestran el cargando
+    const [refrescos, setRefrescos] = useState(0);
+    const [actualizado, setActualizado] = useState<Date | null>(null);
+    const temporizadorRefresco = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const clave = `${period}|${activeTab}|${grupo}|${recargas}`;
     const loading = cargada !== clave;
@@ -221,6 +220,7 @@ export default function ReportsPage() {
             .then(({ ok, data }) => {
                 if (!vigente) return;
                 setCargada(clave);
+                if (ok && data) setActualizado(new Date());
                 if (!ok || !data) {
                     toast.error(data?.error || 'No se pudieron cargar los reportes');
                     return;
@@ -232,23 +232,20 @@ export default function ReportsPage() {
                 if (activeTab === 'referrals') setReferrals(data.referrals);
             });
         return () => { vigente = false; };
-    }, [period, activeTab, grupo, clave]);
+    }, [period, activeTab, grupo, clave, refrescos]);
 
     useEffect(() => {
-        let activo = true;
-        const cargarEnVivo = async () => {
-            try {
-                const response = await fetch('/api/admin/live-users');
-                if (response.ok && activo) setLiveUsers(await response.json());
-            } catch {
-                // El recuadro "en vivo" es secundario: sin aviso cada 30 s si falla la red
-            }
-        };
         const montar = setTimeout(() => setMounted(true), 0);
-        void cargarEnVivo();
-        const interval = setInterval(cargarEnVivo, 30000);
-        return () => { activo = false; clearTimeout(montar); clearInterval(interval); };
+        // Cada minuto, con la pestaña a la vista, las cifras se ponen al día solas
+        const minuto = setInterval(() => { if (document.visibilityState === 'visible') setRefrescos((n) => n + 1); }, 60_000);
+        return () => { clearTimeout(montar); clearInterval(minuto); };
     }, []);
+    // Una orden nueva o un pago confirmado ponen al día las cifras en 2 s (varios seguidos cuentan como uno)
+    useTiempoReal((evento) => {
+        if (evento.tipo !== 'order:status_updated' && evento.tipo !== 'payment:verified') return;
+        if (temporizadorRefresco.current) clearTimeout(temporizadorRefresco.current);
+        temporizadorRefresco.current = setTimeout(() => setRefrescos((n) => n + 1), 2000);
+    });
 
     const exportToCSV = () => {
         let filas: string[] = [];
@@ -290,6 +287,9 @@ export default function ReportsPage() {
                 </div>
             </div>
 
+            {/* C-173: quién está conectado ahora (con cuenta y sin ella) y lo cobrado hoy, en vivo */}
+            <EnVivo />
+
             {/* C-147: la descarga del mes para el contador (no depende del período de abajo) */}
             <RelacionVentas />
 
@@ -319,6 +319,7 @@ export default function ReportsPage() {
                         aria-label="Actualizar reporte" title="Actualizar reporte">
                         <FiRefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
                     </button>
+                    {actualizado && <span className="text-xs text-muted">Actualizado a las {format(actualizado, 'h:mm:ss a', { locale: es })}</span>}
                     <button type="button" onClick={exportToCSV} className={adminSecondaryButton}>
                         <FiDownload className="h-4 w-4" aria-hidden="true" /> Exportar CSV
                     </button>
@@ -715,35 +716,6 @@ export default function ReportsPage() {
                     )}
                 </>
             )}
-
-            <section className="rounded-xl border border-line bg-white p-3" aria-label="Actividad en vivo">
-                <div className="flex flex-wrap items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10"><FiActivity className="h-4 w-4 text-success-strong" aria-hidden="true" /></span>
-                    <div className="min-w-0">
-                        <h2 className="text-sm font-semibold text-ink">En vivo ahora</h2>
-                        <p className="text-xs text-muted">{liveUsers?.liveCount ?? '…'} visitantes en los últimos 5 minutos</p>
-                    </div>
-                    <div className="ml-auto flex flex-wrap items-center gap-3 text-xs text-ink-soft">
-                        <span>{liveUsers?.authenticatedCount ?? 0} con sesión</span>
-                        <span className="inline-flex items-center gap-1" title="Computadora"><FiMonitor aria-hidden="true" /><span className="sr-only">Computadora:</span>{liveUsers?.devices?.desktop ?? 0}</span>
-                        <span className="inline-flex items-center gap-1" title="Teléfono"><FiSmartphone aria-hidden="true" /><span className="sr-only">Teléfono:</span>{liveUsers?.devices?.mobile ?? 0}</span>
-                        <span className="inline-flex items-center gap-1" title="Tableta"><FiTablet aria-hidden="true" /><span className="sr-only">Tableta:</span>{liveUsers?.devices?.tablet ?? 0}</span>
-                    </div>
-                </div>
-                {liveUsers?.topPages && liveUsers.topPages.length > 0 && (
-                    <details className="mt-2">
-                        <summary className="cursor-pointer text-xs font-medium text-brand-600">Ver páginas abiertas</summary>
-                        <ul className="mt-2 space-y-1">
-                            {liveUsers.topPages.slice(0, 4).map((page) => (
-                                <li key={page.page} className="flex justify-between gap-2 text-xs">
-                                    <span className="truncate font-mono text-ink-soft">{page.page}</span>
-                                    <span className="font-semibold tabular-nums">{page.count}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </details>
-                )}
-            </section>
         </div>
     );
 }

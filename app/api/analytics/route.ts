@@ -3,9 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { checkRateLimit, getClientIP, getRateLimitHeaders } from '@/lib/rate-limit';
 import { ipParaRegistro } from '@/lib/ip';
 import { getToken } from 'next-auth/jwt';
+import { BOT_UA } from '@/lib/analytics-bots';
 
-// Buscadores y monitores: no son visitas de personas (C-104)
-const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|whatsapp|telegram|preview|headless|lighthouse|monitor|curl|wget|python|axios|node-fetch/i;
 
 // Rate limit for analytics endpoint - prevent DoS
 const ANALYTICS_RATE_LIMIT = {

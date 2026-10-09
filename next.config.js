@@ -20,8 +20,34 @@ const CSP_HEADERS = process.env.NODE_ENV === 'production'
     ]
   : [];
 
+// C-168: versión que corre. Se calcula una vez al compilar (version de package.json, commit y hora del build) y queda dentro del
+// código del navegador y del servidor: el panel compara la suya con la del servidor para avisar cuando se subió una versión nueva.
+// Sin archivos generados: no ensucian el árbol de git del servidor (un `git pull` con archivos cambiados se negaría).
+// La hora va por process.env para que todos los procesos del build (que cargan esta configuración de nuevo) usen la misma.
+function datosDelBuild() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- next.config.js es CommonJS
+  const { execSync } = require('child_process');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { version } = require('./package.json');
+  const git = (args) => {
+    try {
+      return execSync(`git ${args}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    } catch {
+      return '';
+    }
+  };
+  process.env.ES_BUILT_AT = process.env.ES_BUILT_AT || new Date().toISOString();
+  return {
+    NEXT_PUBLIC_APP_VERSION: version,
+    NEXT_PUBLIC_APP_COMMIT: git('rev-parse --short HEAD'),
+    NEXT_PUBLIC_APP_DESCRIBE: git('describe --tags --always'),
+    NEXT_PUBLIC_APP_BUILT_AT: process.env.ES_BUILT_AT,
+  };
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: datosDelBuild(),
   // C-165: no anunciar con qué está hecha la tienda (cabecera X-Powered-By)
   poweredByHeader: false,
   // En producción, scripts/deploy.sh alterna .next-a y .next-b: compila en la que no se está sirviendo y solo
@@ -97,12 +123,10 @@ const nextConfig = {
           { key: 'Permissions-Policy',           value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
         ],
       },
-      {
-        // C-166: la política solo viaja con las PÁGINAS. La API y los archivos de Next no la necesitan, y son ~1,3 KB más en
-        // cada respuesta: junto con las cookies de sesión (el login) podrían pasar el límite de cabeceras de nginx (4 KB)
-        source: '/((?!api/|_next/).*)',
-        headers: CSP_HEADERS,
-      },
+      // C-166: la política solo viaja con las PÁGINAS. La API y los archivos de Next no la necesitan, y son ~1,3 KB más en
+      // cada respuesta: junto con las cookies de sesión (el login) podrían pasar el límite de cabeceras de nginx (4 KB).
+      // C-168: en desarrollo no hay política (lista vacía) y Next se niega a arrancar con una regla sin cabeceras
+      ...(CSP_HEADERS.length > 0 ? [{ source: '/((?!api/|_next/).*)', headers: CSP_HEADERS }] : []),
       {
         // Las respuestas de la API no se guardan, salvo los archivos subidos (C-33) y la imagen versionada del popup (C-23b)
         source: '/api/:path((?!uploads/|public/hot-ad-image).*)',

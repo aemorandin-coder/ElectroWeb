@@ -16,6 +16,10 @@ import {
   parseImportStatement, loadIconDynamic,
 } from '@/lib/category-icons';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
+import { enviarConVersion } from '@/lib/edicion/guardado';
+import { useConflictoDeFormulario } from '@/lib/edicion/useConflictoDeFormulario';
 
 interface Category {
   id: string;
@@ -25,6 +29,8 @@ interface Category {
   icon?: string | null;
   color?: string | null;
   parentId?: string | null;
+  /** C-170: la versión con que se abre el editor */
+  updatedAt?: string;
   _count?: { products: number };
   children?: Category[];
 }
@@ -44,6 +50,12 @@ export default function CategoriesPage() {
     parentId: '' as string | null,
     icon: '',
     color: '',
+  });
+  // C-170: lo que había al abrir el editor, para combinar si otra persona guardó antes
+  const [formBase, setFormBase] = useState<typeof formData | null>(null);
+  const { confirm } = useConfirm();
+  const { resolver: resolverConflicto, dialogo: dialogoConflicto } = useConflictoDeFormulario({
+    name: 'Nombre', description: 'Descripción', image: 'Imagen', parentId: 'Categoría principal', icon: 'Ícono', color: 'Color',
   });
   const [saveLoading, setSaveLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -110,37 +122,76 @@ export default function CategoriesPage() {
   };
 
   const handleEdit = (category: Category) => {
-    setSelectedCategory(category);
-    setFormData({
+    const formulario = {
       name: category.name,
       description: category.description || '',
       image: category.image || '',
       parentId: category.parentId || null,
       icon: category.icon || '',
       color: category.color || '',
-    });
+    };
+    setSelectedCategory(category);
+    setFormData(formulario);
+    setFormBase(formulario);
     setIsEditing(true);
     setIsCreating(false);
+  };
+
+  /** El cuerpo del guardado: lo vacío viaja como null */
+  const cuerpoDe = (formulario: typeof formData) => ({
+    ...formulario,
+    parentId: formulario.parentId || null,
+    icon: formulario.icon || null,
+    color: formulario.color || null,
+  });
+
+  /** Edición con la versión con que se abrió (C-170): si otra persona guardó antes, se combina lo de cada una y solo se pregunta por lo que las dos tocaron */
+  const guardarEdicion = async (formulario: typeof formData, version: string | undefined) => {
+    if (!selectedCategory) return;
+    setSaveLoading(true);
+    try {
+      const r = await enviarConVersion<Category>('/api/categories', 'PATCH', { id: selectedCategory.id, ...cuerpoDe(formulario) }, version);
+      if (r.ok) {
+        await fetchCategories();
+        setIsCreating(false);
+        setIsEditing(false);
+        setSelectedCategory(r.datos);
+        toast.success('Categoría guardada');
+        return;
+      }
+      if (r.conflicto?.tipo === 'cambiado') {
+        const actual = r.conflicto.actual as Category;
+        const suyo = { name: actual.name, description: actual.description || '', image: actual.image || '', parentId: actual.parentId || null, icon: actual.icon || '', color: actual.color || '' };
+        resolverConflicto({
+          base: formBase ?? suyo, mio: formulario, suyo, quien: r.conflicto.por?.nombre ?? 'Otra persona',
+          continuar: (final) => { setFormData(final); setFormBase(suyo); return guardarEdicion(final, actual.updatedAt); },
+        });
+        return;
+      }
+      toast.error(r.error);
+      if (r.conflicto?.tipo === 'no_existe') {
+        await fetchCategories();
+        setIsEditing(false);
+        setSelectedCategory(null);
+      }
+    } finally {
+      setSaveLoading(false);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
+    if (isEditing && selectedCategory) {
+      await guardarEdicion(formData, selectedCategory.updatedAt);
+      return;
+    }
     setSaveLoading(true);
     try {
-      const method = isEditing && selectedCategory ? 'PATCH' : 'POST';
-      const body: Record<string, unknown> = isEditing && selectedCategory
-        ? { id: selectedCategory.id, ...formData }
-        : { ...formData };
-
-      if (body.parentId === '') body.parentId = null;
-      if (body.icon === '') body.icon = null;
-      if (body.color === '') body.color = null;
-
       const response = await fetch('/api/categories', {
-        method,
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(cuerpoDe(formData)),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -166,7 +217,16 @@ export default function CategoriesPage() {
     if (!selectedCategory) return;
     setDeleteLoading(true);
     try {
-      const response = await fetch(`/api/categories?id=${selectedCategory.id}`, { method: 'DELETE' });
+      let response = await fetch(`/api/categories?id=${selectedCategory.id}`, { method: 'DELETE' });
+      // C-170: otra persona la tiene abierta ahora: se pregunta antes de eliminarla
+      if (response.status === 409) {
+        const aviso = await response.clone().json().catch(() => ({}));
+        if (aviso?.conflicto === 'en_edicion') {
+          const seguir = await confirm({ title: 'La están editando ahora', message: `${aviso.error}. Si la eliminas, verá un aviso. ¿Eliminarla igual?`, confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'warning' });
+          if (!seguir) { setShowDeleteModal(false); return; }
+          response = await fetch(`/api/categories?id=${selectedCategory.id}&forzar=1`, { method: 'DELETE' });
+        }
+      }
       if (response.ok) {
         await fetchCategories();
         setSelectedCategory(null);
@@ -368,6 +428,9 @@ export default function CategoriesPage() {
                 </div>
 
                 <form onSubmit={handleSave} className="space-y-6">
+                  {isEditing && selectedCategory && (
+                    <PresenciaEnEditor recurso={`category:${selectedCategory.id}`} etiqueta={selectedCategory.name} nombreRecurso="categoría" femenino />
+                  )}
 
                   {/* ── Preview ── */}
                   <div className="flex items-center gap-4 p-4 bg-surface rounded-2xl border border-line">
@@ -785,6 +848,7 @@ export default function CategoriesPage() {
           </div>
         </div>
       )}
+      {dialogoConflicto}
     </div>
   );
 }

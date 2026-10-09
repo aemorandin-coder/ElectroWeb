@@ -1,3 +1,4 @@
+import { respuestaYaResuelto } from '@/lib/edicion/registro';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -44,11 +45,16 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
     }
 
-    const creator = await prisma.courseCreator.update({
-      where: { id },
-      data: { status, notes: notes || null },
-      include: { user: { select: { email: true } } },
-    });
+    // C-170: dos administradores resolviendo la misma solicitud. El cambio entra solo si el creador sigue en el estado que se vio:
+    // la segunda persona recibe "ya la atendió…" y el creador no recibe el correo dos veces.
+    const antes = await prisma.courseCreator.findUnique({ where: { id }, select: { status: true } });
+    if (!antes) return NextResponse.json({ error: 'Creador no encontrado', conflicto: 'no_existe' }, { status: 404 });
+    const cambiaEstado = antes.status !== status;
+    const tomado = await prisma.courseCreator.updateMany({ where: { id, status: antes.status }, data: { status, notes: notes || null } });
+    if (tomado.count === 0) {
+      return respuestaYaResuelto({ tipo: 'CREATOR', id, que: 'atendió esta solicitud', acciones: ['CREATOR_STATUS_CHANGED'] });
+    }
+    const creator = await prisma.courseCreator.findUniqueOrThrow({ where: { id }, include: { user: { select: { email: true } } } });
 
     await registrarAccionAdmin(session, 'CREATOR_STATUS_CHANGED', { type: 'CREATOR', id }, {
       creador: creator.displayName,
@@ -57,7 +63,8 @@ export async function PATCH(request: NextRequest) {
     }, request);
 
     // Send email notification to creator asynchronously
-    if (status === 'APPROVED' || status === 'REJECTED' || status === 'SUSPENDED') {
+    // Solo si el estado cambió de verdad: guardar otra vez el mismo (o solo la nota) no vuelve a avisar
+    if (cambiaEstado && (status === 'APPROVED' || status === 'REJECTED' || status === 'SUSPENDED')) {
       sendCreatorStatusEmail(creator.user.email ?? '', {
         creatorName: creator.displayName,
         status: status as 'APPROVED' | 'REJECTED' | 'SUSPENDED',

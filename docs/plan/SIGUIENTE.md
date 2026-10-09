@@ -1,32 +1,53 @@
-# Lo de ahora (actualizado 2026-10-02, C-166 · versión 1.0.0-rc.2)
+# Lo de ahora (actualizado 2026-10-03, C-172 · versión 1.0.0-rc.11)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **`main`:** versión **`v1.0.0-rc.2`** (C-166), igual a GitHub. **Producción: `v1.0.0-rc.1`** (C-165; `2480457`), comprobado desde fuera el 02/10 (sin `X-Powered-By`, `POST /api/cron/respaldos` responde 401). En `main` hay además un commit de solo documentos (`4cbaca1`) que da igual si se sube.
-- **Falta subir: C-166** (bloque de abajo). **Cambio de base: una tabla nueva** (`csp_violations`). Sin crons ni variables obligatorias. Solo avisa: no puede romper nada.
-- **Sin confirmar con Andrés** (decía que sí a lo esencial el 02/10: Google conectado, primer respaldo bueno y cron): la restauración de prueba, el redondeo de C-96 y las pruebas visuales de C-162.
+- **`main`:** versión **`v1.0.0-rc.11`** (C-171, C-170, C-175 y C-172), igual a GitHub. **Producción: `v1.0.0-rc.10`** (captura de Andrés del 03/10 y comprobado desde fuera: ya tiene C-171, C-170 y C-175). El plan de este ciclo está en `PROPUESTA_C168-C172.md`.
+- **Falta subir solo C-172** (bloque de abajo). **Sin cambio de base** (la tabla de C-171 ya entró con rc.7), sin crons ni variables.
+- **El ciclo C-168 a C-175 está completo.** No queda código en fila que no espere un dato de Andrés.
+- **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos al final de la sección 2). No cambia código.
+- **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: C-166 (v1.0.0-rc.2)
-**La Content-Security-Policy, en modo "solo avisa".** Es la defensa que limita de qué dominios puede cargar la tienda scripts, conexiones y marcos. Hoy **no bloquea nada**: el navegador avisa y el aviso se guarda agrupado en Reportes → Seguridad. Detalle y pruebas en `estado/C-166.md`.
-- **Verificado:** `tsc`, `npm run lint` (0 errores), `npm run build`; 19 comprobaciones de la lectura de avisos; un barrido de **65 pantallas con Firefox** (públicas, del cliente y del admin) con Analytics, el píxel de Meta y hCaptcha cargando de verdad: **cero avisos legítimos**, también en modo bloqueo, donde lo ajeno sí se bloquea. **No probado:** tráfico real (clics de compra, comprobantes, videos de cursos), Chrome y Safari.
-- **SQL que va a mostrar `deploy.sh`** (solo este): `CREATE TABLE "csp_violations"` (9 columnas), `CREATE INDEX "csp_violations_lastSeen_idx"` y `CREATE UNIQUE INDEX "csp_violations_directive_blocked_pagePath_disposition_key"`. Nada que borre o cambie lo que ya existe.
+## 2. Deploy pendiente: C-172 (de rc.10 a v1.0.0-rc.11). C-170 y C-175 ya están en producción y falta probarlos
+- **C-172 · Destacados que rotan** (`estado/C-172.md`): en el inicio, el destacado grande cambia cada día y, en la computadora, rota con el siguiente de la columna cada 7 segundos (una vuelta y se detiene; flechas, contador y pausa arriba a la derecha de la tarjeta). En el teléfono no gira. Sin cambio de base.
+- **C-175 · Todos los correos rediseñados, con el logo largo** (`estado/C-175.md`): los 30 correos de la tienda llevan arriba el **logo largo** (antes el logo chiquito en un cuadro), el mismo título, el mismo botón, las mismas cajas y el mismo pie con redes y contacto. Pedido recibido, reseña publicada, los avisos al equipo y la prueba de Configuración dejaron su diseño aparte. Hechos para verse igual en Gmail, Outlook y el teléfono. Sin cambio de base. **El logo largo es el del encabezado de la tienda** (el ícono y "Electro Shop" con la letra y el azul de la marca), hecho imagen para el correo (`public/images/brand/logo-correo.png`).
+- **C-170 · Dos administradores sin pisarse, en el resto del panel** (`estado/C-170.md`): en **Promotores, Categorías, Ofertas y cupones, Cotizaciones y Campañas**, si otra persona guardó antes se combinan los cambios (solo pregunta por lo que las dos tocaron), se ve quién más lo tiene abierto y se pregunta antes de borrar algo que otra persona edita. **ElectroStudio** junta los cambios en su guardado automático. Aprobar a un creador, verificar una empresa o atender una solicitud de producto dos veces a la vez ya no avisa dos veces. Sin cambio de base.
+- **Ya en producción desde rc.7, falta que lo pruebes: C-171 · Dashboard a tu gusto** (`estado/C-171.md`), el diseño tipo panel rápido de Samsung One UI: en el Dashboard, **Editar** → cada tarjeta se quita con el botón rojo "−" (las necesarias llevan candado: Por atender, Ventas cobradas y Accesos rápidos), se arrastra para ordenar, se le cambia el tamaño y abajo está lo que se puede agregar con "+"; **Listo** guarda. **Cada administrador tiene el suyo.** Accesos rápidos a elección y diez tarjetas nuevas (Visitantes ahora, Embudo de hoy, Meta del mes, Tasa del día, Más vendidos, Actividad del equipo, Promotores, Cotizaciones abiertas, Reseñas recientes, Respaldo).
+- **Verificado:** `tsc`, `npm run lint` (0 errores), `npm run build`, `check:modulos`, **prueba de humo 59 de 59**, 35 comprobaciones del Dashboard, 53 de C-170 (dos administradores en cada pantalla) 273 sobre 22 correos generados con las funciones reales, 52 de la vista previa del panel y 31 de los Destacados. **No probado:** arrastrar con el dedo en un teléfono real, Chrome y Safari, **los correos recibidos en Gmail, Outlook y el iPhone de verdad** (no se envió ninguno), y Lighthouse del inicio (LCP y CLS) después de C-172.
+- **SQL:** ninguno. `deploy.sh` no debería parar a mostrar nada; si muestra SQL, no seguir y avisar a Claude.
+- Sin crons ni variables nuevas.
 
 ### Pasos (en el servidor, `/var/www/electroshopve`)
-1. **Qué hay ahora:** `git log -1 --oneline` debe empezar por `2480457` (o `4cbaca1`). Si dice otra cosa, avisar a Claude.
-2. **Respaldo antes de subir:** Admin → Configuración → **Respaldos** → "Respaldar ahora" y esperar las dos filas "Hecho" (así de paso se prueba el respaldo automático). Si prefieres a mano:
-   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-c166.dump`
-3. **Subir:** `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL de arriba. Si coincide: `npx prisma db push` y `bash scripts/deploy.sh` otra vez. Si aparece un `DROP` o algo distinto, no seguir y avisar a Claude.
-4. **Comprobar:** `git describe --tags` debe decir `v1.0.0-rc.2` y
-   `curl -sI https://electroshopve.com/ | grep -i content-security`
-   debe mostrar una línea que empieza por `Content-Security-Policy-Report-Only: default-src 'self'; script-src …`. Además `curl -sI https://electroshopve.com/api/settings/public | grep -ci content-security` debe dar `0` (la API no la lleva).
-5. **Probar (10 minutos)**, en el teléfono y en la computadora: inicio, un producto, agregar al carrito, `/registro` (debe verse el captcha), iniciar sesión, y en el panel el Dashboard, Pedidos y Configuración → Respaldos. **Todo debe verse y funcionar igual que antes.**
-6. **Mirar el panel:** Reportes → pestaña **Seguridad** → hasta abajo, **"Política de contenido (CSP)"**. Lo esperado: "Sin avisos" o casi. Si hay una lista, mandar una captura a Claude.
-7. **Dejarla una semana** con visitas reales. Si el panel sigue limpio, se pasa a bloquear (C-166b: `CSP_ENFORCE="true"` en el `.env` y un deploy, avisar a Claude). Cuando pongas las claves de Analytics y del píxel de Meta (`NEXT_PUBLIC_GA_ID`, `NEXT_PUBLIC_FB_PIXEL_ID`), volver a mirar el panel esa semana.
+1. **Qué hay ahora:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.10`. Si dice otra cosa, avisar a Claude.
+2. **Respaldo antes de subir:** Admin → Configuración → **Respaldos** → "Respaldar ahora" y esperar las dos filas "Hecho". Si prefieres a mano:
+   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc11.dump`
+3. **Subir:** `git status -sb | head -3` (debe decir `main...origin/main`, sin archivos modificados), `git pull --ff-only` y `bash scripts/deploy.sh`. Si `git pull` da error o dice "Already up to date" y sigue en rc.10, pasarle la salida a Claude.
+4. **Comprobar:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.11` y el pie del menú del panel, "Versión 1.0.0-rc.11".
 
-**Vuelta atrás:** `git reset --hard 2480457 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla nueva no molesta al código anterior (no se quita). Nada de lo que hace C-166 puede dejar la tienda sin funcionar: en modo "solo avisa" el navegador no bloquea nada.
+### Pruebas después de subir (unos 15 minutos)
+1. **Dashboard:** se ve como siempre. Arriba a la derecha, **Editar**.
+2. **Editar:** quita "Órdenes recientes" con el botón rojo; en "Agregar" toca "Visitantes ahora" y "Meta del mes"; cambia el tamaño de una tarjeta; arrastra una con el ícono de la cruz (o usa las flechas); en "Tus accesos rápidos" agrega "Clientes". **Listo**. Recarga: sigue igual. Ábrelo en el teléfono: es el mismo.
+3. **Meta del mes:** escribe tu meta en la tarjeta y guarda: muestra el porcentaje y cuánto falta.
+4. **Luis:** su Dashboard sigue siendo el de siempre (no cambió con el tuyo) y en "Agregar" **no** le salen "Meta del mes" ni "Respaldo".
+5. **Restablecer** (dentro de Editar) vuelve al diseño original.
+6. **Sin pisarse (C-170)**, con dos cuentas de administrador: abran la misma **cotización**; uno cambia "Para qué es" y el otro el lugar, y guardan los dos: quedan los dos cambios sin preguntar. Si los dos cambian lo mismo, sale el cuadro para elegir. Lo mismo vale en Promotores (lápiz), Categorías, Ofertas y Campañas. En **ElectroStudio**, escribe en una historia: debe seguir diciendo "Guardado".
+7. **Correos (C-175):** Admin → Marketing → Correos → **Plantillas**: abre "Pedido recibido", "Gift card" y "Reseña publicada": arriba el logo largo, un botón azul y el pie con las redes.
+8. **Un correo de verdad:** Configuración → Correo → **"Probar conexión"** a tu Gmail. Ábrelo en la computadora y en el teléfono (también en modo oscuro): el logo largo se ve completo y nítido, y nada queda cortado. Si puedes, reenvíalo a un Outlook u Hotmail. Si algo se ve mal, manda la captura.
+9. **Destacados (C-172), en la computadora:** abre el inicio y espera 7 segundos: el producto grande cambia por el primero de la columna y arriba a la derecha dice "2 de N". Pon el ratón encima: se detiene. Toca las flechas y la pausa. Déjalo solo: da una vuelta y se queda en el primero. En el teléfono no gira.
+10. **Otro correo, de los de siempre:** en una ventana de incógnito, "Olvidé mi contraseña" con tu correo de cliente: llega con el mismo diseño y el botón funciona.
+
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.10 && npm install && bash scripts/deploy.sh --sin-pull`.
+
+### Por confirmar de lo ya subido (rc.6 y rc.7; detalle en `HISTORIAL.md`)
+El Dashboard a tu gusto (pruebas 1 a 5 de arriba). Versiones (Administración → Versiones), el caso de dos administradores sobre un producto (papelera, combinar, aviso al instante), la marquesina del equipo, Reportes en vivo y la línea del cron de la papelera en `crontab -l`.
+
+### Activar "Continuar con Google" (C-85, cuando quieras; no necesita deploy de código)
+1. Google Cloud → proyecto ElectroWeb → Google Auth Platform → **Clientes** → Crear cliente → **Aplicación web**, nombre `ElectroShop inicio de sesión`, y en "URIs de redireccionamiento autorizados": `https://electroshopve.com/api/auth/callback/google`. Es un cliente distinto del de los respaldos.
+2. En el servidor, `nano .env` y agregar `GOOGLE_CLIENT_ID="…"` y `GOOGLE_CLIENT_SECRET="…"`; luego `bash scripts/deploy.sh --sin-pull`.
+3. En una ventana de incógnito, `/login` y `/registro` muestran "Continuar con Google". Probar con un Gmail que **no** sea el de administrador (los administradores no entran con Google, a propósito). Nunca se probó con Google real (`estado/C-85.md`): si falla, mandar la captura.
 
 ### Por confirmar de lo que ya está en producción (C-165 y anteriores)
 No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés debe dar por buenas (o avisar a Claude con lo que falle). Detalle en `estado/C-165.md`, `estado/C-164.md`, `estado/C-159.md` y `estado/C-160.md`; lo subido, con su SQL, en `HISTORIAL.md`.
@@ -69,7 +90,7 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
 En el orden en que más destraban:
 
 **En producción**
-1. **El deploy de arriba** (versión `v1.0.0-rc.1`), con el respaldo conectado y **una restauración de prueba** (pasos 7 y 8), el redondeo de C-96, las pruebas de C-157 y las visuales de C-162.
+1. **El deploy de arriba** (versión `v1.0.0-rc.11`: el panel sin pisarse, los correos con el logo y los Destacados que rotan) con sus pruebas, y confirmar las del lote anterior (rc.6). De antes siguen pendientes **una restauración de prueba del respaldo** (`OPERACION.md`), el redondeo de C-96, las pruebas de C-157 y las visuales de C-162.
 2. **Guardar aparte, fuera del servidor, la clave privada del respaldo y una copia del `.env`** (gestor de contraseñas). La clave la muestra el panel una sola vez; el `.env` no va dentro del respaldo y trae `NEXTAUTH_SECRET`, `DATABASE_URL` y las claves de pago.
 3. **Un monitor de que la tienda está arriba** (gratis, sin código): UptimeRobot o similar apuntando a `https://electroshopve.com/robots.txt` cada 5 minutos, con aviso a tu correo y a Telegram. Todo lo demás (avisos, respaldos) vive en el mismo servidor y no puede avisar si se cae.
 4. **El certificado HTTPS vence el 12/11/2026:** comprobar en el servidor que la renovación sigue sola (`systemctl list-timers | grep certbot` debe mostrar una línea) y, si no, avisar a Claude antes de esa fecha.
@@ -104,6 +125,7 @@ En el orden en que más destraban:
 ## 4. Fila de Claude
 La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **No queda código en fila que no espere un dato tuyo:**
 - Esperan datos: C-154b (plazo de los digitales: ya se sabe que son unas 2 horas, falta el horario), C-107 (seguro), C-92 (clientes) y C-153b (decidir si los "frágiles" llevan más relleno).
+- **Decisiones abiertas de promotores** (`PLAN.md` §7.1, A13 y A14): si los digitales pagan comisión, los % por defecto y los términos del programa para el abogado.
 - **C-166b (después de una semana con C-166 limpia):** pasar la Content-Security-Policy a "bloquea" (`CSP_ENFORCE="true"` y un deploy) y, con una restauración probada, evaluar subir el volcado directo a Drive sin pasar por disco si la base crece.
 - Lo que salga de la revisión final y de las pruebas del deploy se arregla antes que lo demás.
 - Mientras tanto Claude puede revisar `REVISION_FINAL.md` contigo (en el teléfono, punto por punto) o escribir la próxima ronda de Gemini cuando haya una tarea mecánica.

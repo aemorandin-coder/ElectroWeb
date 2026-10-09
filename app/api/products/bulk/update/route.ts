@@ -7,6 +7,7 @@ import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { montoDecimal, precioValido } from '@/lib/pricing';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 
+// C-169: los productos en la papelera no se tocan (un "Activar" los sacaría de ahí sin restaurarlos).
 // C-97: valores de la edición rápida y de los masivos. Antes "abc" daba 500 y se aceptaban negativos.
 const ESTADOS = ['PUBLISHED', 'DRAFT', 'ARCHIVED'];
 function stockValido(valor: unknown): number | null {
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
                 type Fila = { id: string; priceUSD?: number | string; stock?: number | string; categoryId?: string; status?: string; isActive?: boolean };
                 const filas = updates as Fila[];
                 const tipos = new Map((await prisma.product.findMany({
-                    where: { id: { in: filas.map((u) => String(u.id)) } },
+                    where: { id: { in: filas.map((u) => String(u.id)) }, deletedAt: null },
                     select: { id: true, productType: true, name: true, priceUSD: true },
                 })).map((p) => [p.id, p]));
 
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
             if (isNaN(pct) || pct <= -100 || pct > 1000) return NextResponse.json({ error: 'Porcentaje inválido' }, { status: 400 });
 
             // Solo físicos: el precio de un digital sale de sus montos (C-97)
-            const products = await prisma.product.findMany({ where: { id: { in: productIds }, productType: 'PHYSICAL' }, select: { id: true, name: true, priceUSD: true } });
+            const products = await prisma.product.findMany({ where: { id: { in: productIds }, productType: 'PHYSICAL', deletedAt: null }, select: { id: true, name: true, priceUSD: true } });
             const digitales = await prisma.product.count({ where: { id: { in: productIds }, productType: 'DIGITAL' } });
             await prisma.$transaction(
                 products.map(p => prisma.product.update({
@@ -160,10 +161,10 @@ export async function POST(request: NextRequest) {
         // El precio fijo tampoco toca a los digitales (C-97)
         const soloFisicos = field === 'price';
         const preciosAntes = soloFisicos
-            ? await prisma.product.findMany({ where: { id: { in: productIds }, productType: 'PHYSICAL' }, select: { id: true, name: true, priceUSD: true }, take: 30 })
+            ? await prisma.product.findMany({ where: { id: { in: productIds }, productType: 'PHYSICAL', deletedAt: null }, select: { id: true, name: true, priceUSD: true }, take: 30 })
             : [];
         const result = await prisma.product.updateMany({
-            where: { id: { in: productIds }, ...(soloFisicos ? { productType: 'PHYSICAL' as const } : {}) },
+            where: { id: { in: productIds }, deletedAt: null, ...(soloFisicos ? { productType: 'PHYSICAL' as const } : {}) },
             data: updateData,
         });
         const digitales = soloFisicos ? await prisma.product.count({ where: { id: { in: productIds }, productType: 'DIGITAL' } }) : 0;

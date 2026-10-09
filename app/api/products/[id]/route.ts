@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { isAuthorized } from '@/lib/auth-helpers';
+import { hasPermission, isAuthorized } from '@/lib/auth-helpers';
 import { digitalVariantsInputSchema, minActivePrice, syncDigitalVariants, type DigitalVariantInput } from '@/lib/digital-variants';
 import { parseDigitalMargin, specsForUpdate } from '@/lib/product-specs';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
-import { publicarStock } from '@/lib/realtime/bus';
+import { publicarRecursoCambiado, publicarStock } from '@/lib/realtime/bus';
+import { editoresDe } from '@/lib/realtime/presencia';
+import { clavesCambiadas, leerVersionBase, nombreDeSesion, nombrePorId, ultimoCambio } from '@/lib/edicion/servidor';
+import { nombresDeColumnas } from '@/lib/edicion/producto';
+import { borrarParaSiempre } from '@/lib/papelera';
 import { precioValido } from '@/lib/pricing';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { conditionInputSchema, pickConditionInput } from '@/lib/product-condition';
@@ -16,6 +20,32 @@ import { leerNombreMarca, resolverMarca } from '@/lib/marcas';
 const adminVariantsInclude = { orderBy: [{ sortOrder: 'asc' as const }] };
 function formatVariants(variants: { faceValue: unknown; costUSD: unknown; priceUSD: unknown }[]) {
   return variants.map((v) => ({ ...v, faceValue: Number(v.faceValue), costUSD: Number(v.costUSD), priceUSD: Number(v.priceUSD) }));
+}
+
+const incluirParaAdmin = { category: true, brand: { select: { name: true } }, digitalVariants: adminVariantsInclude } as const;
+
+// Decimal → número para que viaje por JSON
+const safeNumber = (val: unknown): number | null => {
+  if (val === null || val === undefined) return null;
+  const num = Number(val);
+  return isNaN(num) ? null : num;
+};
+
+type ProductoConRelaciones = NonNullable<Awaited<ReturnType<typeof leerProducto>>>;
+function leerProducto(id: string) {
+  return prisma.product.findUnique({ where: { id }, include: incluirParaAdmin });
+}
+function formatearProducto(product: ProductoConRelaciones) {
+  return {
+    ...product,
+    priceUSD: safeNumber(product.priceUSD) ?? 0,
+    priceVES: safeNumber(product.priceVES),
+    compareAtPriceUSD: safeNumber(product.compareAtPriceUSD),
+    costPerItem: safeNumber(product.costPerItem),
+    weightKg: safeNumber(product.weightKg),
+    shippingCost: safeNumber(product.shippingCost),
+    digitalVariants: formatVariants(product.digitalVariants),
+  };
 }
 
 // GET /api/products/[id] - Get a single product
@@ -40,15 +70,7 @@ export async function GET(
       );
     }
 
-    const product = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        category: true,
-        // C-155: el asistente muestra la marca
-        brand: { select: { name: true } },
-        digitalVariants: adminVariantsInclude,
-      },
-    });
+    const product = await leerProducto(id);
 
     if (!product) {
       return NextResponse.json(
@@ -57,25 +79,9 @@ export async function GET(
       );
     }
 
-    // Safely convert Decimal fields to Number for proper JSON serialization
-    const safeNumber = (val: unknown): number | null => {
-      if (val === null || val === undefined) return null;
-      const num = Number(val);
-      return isNaN(num) ? null : num;
-    };
-
-    const formattedProduct = {
-      ...product,
-      priceUSD: safeNumber(product.priceUSD) ?? 0,
-      priceVES: safeNumber(product.priceVES),
-      compareAtPriceUSD: safeNumber(product.compareAtPriceUSD),
-      costPerItem: safeNumber(product.costPerItem),
-      weightKg: safeNumber(product.weightKg),
-      shippingCost: safeNumber(product.shippingCost),
-      digitalVariants: formatVariants(product.digitalVariants),
-    };
-
-    return NextResponse.json(formattedProduct);
+    // C-169: si está en la papelera, el editor lo dice (quién lo movió) en vez de dejar editar como si nada
+    const deletedByName = product.deletedAt ? await nombrePorId(product.deletedById) : null;
+    return NextResponse.json({ ...formatearProducto(product), deletedByName });
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };
     console.error('Error fetching product:', error);
@@ -93,6 +99,36 @@ export async function GET(
       { status: 500 }
     );
   }
+}
+
+/** Alguien más guardó (o movió a la papelera) el producto mientras este editor lo tenía abierto (C-169) */
+class ConflictoEdicion extends Error {}
+
+/** Cambios de una sola cosa (activar, desactivar, destacar desde la lista): no pisan nada más, no necesitan la versión con que se abrió */
+const CLAVES_SOLO_ESTADO = ['status', 'isActive', 'isFeatured', 'baseUpdatedAt'];
+
+/**
+ * Qué responder cuando el guardado no puede seguir: 404 si ya no existe, 410 si está en la papelera, 409 con el producto como
+ * está ahora (para que el editor combine lo suyo con lo de la otra persona).
+ */
+async function respuestaDeConflicto(id: string) {
+  const actual = await leerProducto(id);
+  if (!actual) return NextResponse.json({ error: 'Este producto ya no existe', conflicto: 'no_existe' }, { status: 404 });
+  if (actual.deletedAt) {
+    const nombre = (await nombrePorId(actual.deletedById)) ?? 'Alguien del equipo';
+    return NextResponse.json({
+      error: `${nombre} movió este producto a la papelera`,
+      conflicto: 'en_papelera',
+      por: { nombre, en: actual.deletedAt.toISOString() },
+    }, { status: 410 });
+  }
+  const por = await ultimoCambio('PRODUCT', id, ['PRODUCT_UPDATED', 'PRODUCT_PRICE_CHANGED', 'PRODUCT_RESTORED']);
+  return NextResponse.json({
+    error: `${por?.nombre ?? 'Otra persona'} cambió este producto mientras lo editabas`,
+    conflicto: 'cambiado',
+    por,
+    actual: formatearProducto(actual),
+  }, { status: 409 });
 }
 
 // PATCH /api/products/[id] - Update a product (admin only)
@@ -113,8 +149,19 @@ export async function PATCH(
     const oldProduct = await prisma.product.findUnique({ where: { id } });
 
     if (!oldProduct) {
-      return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+      return NextResponse.json({ error: 'Producto no encontrado', conflicto: 'no_existe' }, { status: 404 });
     }
+
+    // C-169: dos administradores sobre el mismo producto. Antes ganaba el último que guardaba, sin aviso, y un producto
+    // movido o borrado por otro hacía perder todo el trabajo. Ahora el editor manda la versión (`updatedAt`) con que lo abrió.
+    if (oldProduct.deletedAt) return respuestaDeConflicto(id);
+    const base = leerVersionBase(body.baseUpdatedAt);
+    if (base === 'invalida') return NextResponse.json({ error: 'Versión inválida' }, { status: 400 });
+    const soloEstado = Object.keys(body).every((clave) => CLAVES_SOLO_ESTADO.includes(clave));
+    if (base === null && !soloEstado) {
+      return NextResponse.json({ error: 'Falta la versión con la que abriste el producto. Recarga la página para editarlo.', conflicto: 'sin_version' }, { status: 428 });
+    }
+    if (base && oldProduct.updatedAt.getTime() !== base.getTime()) return respuestaDeConflicto(id);
 
     // Validar imágenes si se están actualizando
     if (body.images && Array.isArray(body.images) && body.images.length > 8) {
@@ -260,6 +307,10 @@ export async function PATCH(
     }
 
     const product = await prisma.$transaction(async (tx) => {
+      // Lo primero: tomar el producto solo si sigue en la versión con que se abrió y fuera de la papelera. Es lo que impide
+      // que dos guardados a la vez se pisen (el segundo no cuenta ninguna fila y se le devuelve el conflicto).
+      const tomado = await tx.product.updateMany({ where: { id, deletedAt: null, ...(base ? { updatedAt: base } : {}) }, data: { updatedAt: new Date() } });
+      if (tomado.count === 0) throw new ConflictoEdicion();
       if (body.brandName !== undefined) updateData.brandId = await resolverMarca(tx, marca.nombre);
       await tx.product.update({ where: { id }, data: updateData });
       if (variants) await syncDigitalVariants(tx, id, variants);
@@ -285,6 +336,14 @@ export async function PATCH(
       }, request);
     }
 
+    // C-169: quién cambió qué, y aviso en vivo a quien lo tenga abierto
+    const columnas = clavesCambiadas(oldProduct as unknown as Record<string, unknown>, updateData);
+    if (columnas.length > 0) {
+      const campos = nombresDeColumnas(columnas);
+      await registrarAccionAdmin(session, 'PRODUCT_UPDATED', { type: 'PRODUCT', id }, { producto: product.name, campos }, request);
+      publicarRecursoCambiado(`product:${id}`, 'actualizado', { id: session!.user.id, nombre: nombreDeSesion(session) }, campos);
+    }
+
     const safeNum = (v: unknown) => v != null ? Number(v) : null;
     const formattedProduct = {
       ...product,
@@ -299,6 +358,7 @@ export async function PATCH(
 
     return NextResponse.json(formattedProduct);
   } catch (err: unknown) {
+    if (err instanceof ConflictoEdicion) return respuestaDeConflicto((await params).id);
     const error = err as { code?: string; message?: string };
     console.error('Error updating product:', error);
 
@@ -315,7 +375,9 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/products/[id] - Delete a product (admin only)
+// DELETE /api/products/[id] - Mueve el producto a la papelera (C-169). Ya no borra.
+//   ?forzar=1     mover aunque otra persona lo esté editando (el editor pregunta antes)
+//   ?definitivo=1 borrar para siempre: solo el dueño, y solo desde la papelera
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -328,75 +390,59 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const quien = { id: session!.user.id, nombre: nombreDeSesion(session) };
 
-    // Check if product exists and get relations
-    const product = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        orderItems: { select: { id: true }, take: 1 },
-        reviews: { select: { id: true } },
-        reservations: { select: { id: true } },
-        wishlistItems: { select: { id: true } },
-        digitalCodes: { select: { id: true } },
-      },
-    });
-
+    const product = await prisma.product.findUnique({ where: { id }, select: { id: true, name: true, sku: true, status: true, priceUSD: true, deletedAt: true } });
     if (!product) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
 
-    // Check if product has orders - we can't delete if it has order history
-    if (product.orderItems && product.orderItems.length > 0) {
-      // Instead of deleting, archive the product
-      await prisma.product.update({
-        where: { id },
-        data: { status: 'ARCHIVED' },
-      });
+    if (searchParams.get('definitivo') === '1') {
+      // Borrar datos de verdad: solo el dueño (decisión del 02/10, igual que Configuración)
+      if (!hasPermission(session, 'MANAGE_SETTINGS')) {
+        return NextResponse.json({ error: 'Solo el dueño puede borrar para siempre' }, { status: 403 });
+      }
+      if (!product.deletedAt) {
+        return NextResponse.json({ error: 'Primero muévelo a la papelera' }, { status: 409 });
+      }
+      const resultado = await borrarParaSiempre(id);
+      await registrarAccionAdmin(session, 'PRODUCT_PURGED', { type: 'PRODUCT', id }, { producto: product.name, sku: product.sku, resultado }, request);
+      publicarRecursoCambiado(`product:${id}`, 'eliminado', quien);
       revalidateStorefront();
-      return NextResponse.json({
-        message: 'El producto tiene órdenes asociadas. Ha sido archivado en lugar de eliminado.',
-        archived: true
-      });
+      if (resultado === 'archivado') {
+        return NextResponse.json({ message: 'El producto tiene órdenes: no se puede borrar. Quedó archivado.', archived: true });
+      }
+      return NextResponse.json({ message: 'Producto borrado para siempre' });
     }
 
-    // Delete related records that don't have critical data
-    // Use a transaction to ensure atomicity
-    await prisma.$transaction(async (tx) => {
-      // Delete reviews
-      if (product.reviews && product.reviews.length > 0) {
-        await tx.review.deleteMany({ where: { productId: id } });
-      }
+    if (product.deletedAt) {
+      return NextResponse.json({ papelera: true, yaEstaba: true, id });
+    }
 
-      // Delete stock reservations
-      if (product.reservations && product.reservations.length > 0) {
-        await tx.stockReservation.deleteMany({ where: { productId: id } });
-      }
+    // Otra persona lo está editando ahora: se avisa antes de sacárselo (con la papelera no se pierde nada, pero se entera)
+    const editores = editoresDe(`product:${id}`, quien.id);
+    if (editores.length > 0 && searchParams.get('forzar') !== '1') {
+      return NextResponse.json({
+        error: `${editores.map((e) => e.nombre).join(' y ')} ${editores.length === 1 ? 'lo está' : 'lo están'} editando ahora mismo`,
+        conflicto: 'en_edicion',
+        editores,
+      }, { status: 409 });
+    }
 
-      // Delete wishlist items
-      if (product.wishlistItems && product.wishlistItems.length > 0) {
-        await tx.wishlistItem.deleteMany({ where: { productId: id } });
-      }
-
-      // Delete digital codes (only if not sold/delivered)
-      if (product.digitalCodes && product.digitalCodes.length > 0) {
-        await tx.digitalCode.deleteMany({
-          where: {
-            productId: id,
-            status: { in: ['AVAILABLE', 'RESERVED', 'EXPIRED', 'INVALID'] }
-          }
-        });
-      }
-
-      // Now delete the product
-      await tx.product.delete({ where: { id } });
+    const movido = await prisma.product.updateMany({
+      where: { id, deletedAt: null },
+      data: { status: 'ARCHIVED', deletedAt: new Date(), deletedById: quien.id, statusAntesDePapelera: product.status },
     });
-
-    revalidateStorefront();
-    await registrarAccionAdmin(session, 'PRODUCT_DELETED', { type: 'PRODUCT', id }, { producto: product.name, precio: Number(product.priceUSD) }, request);
-    return NextResponse.json({ message: 'Producto eliminado correctamente' });
+    if (movido.count > 0) {
+      revalidateStorefront();
+      await registrarAccionAdmin(session, 'PRODUCT_TRASHED', { type: 'PRODUCT', id }, { producto: product.name, sku: product.sku, precio: Number(product.priceUSD), eraEstado: product.status }, request);
+      publicarRecursoCambiado(`product:${id}`, 'papelera', quien);
+    }
+    return NextResponse.json({ papelera: true, id, message: 'Producto movido a la papelera' });
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };
-    console.error('Error deleting product:', error);
+    console.error('Error moving product to trash:', error);
 
     // Handle foreign key constraint errors
     if (error.code === 'P2003') {

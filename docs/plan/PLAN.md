@@ -298,7 +298,7 @@ docs/plan/estado/G-*.md
 
 Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estado/<ID>.md`. Aquí va el mapa.
 
-### 5.1 Lo hecho (131 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 02/10)
+### 5.1 Lo hecho (132 tareas de Claude, 82 de Gemini y 6 de ChatGPT, al 02/10)
 
 **Plan original (12/09):**
 | Fase | Tareas | Qué dejó |
@@ -312,21 +312,23 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 **Después del plan, por tema:**
 | Tema | Tareas | Qué dejó |
 |---|---|---|
-| Panel del admin | C-50b, C-51 a C-54, C-60, C-60b, C-71, C-73 a C-75, C-82, C-95, C-97, C-104, C-109, C-110, C-150 | Marco del panel, Configuración, Productos, pedidos digitales, gift cards, notificaciones y Telegram, flujo de órdenes, Marketing, Reportes, el resto de las pantallas, y el menú por secciones con el Dashboard de trabajo. |
+| Panel del admin | C-168, C-50b, C-51 a C-54, C-60, C-60b, C-71, C-73 a C-75, C-82, C-95, C-97, C-104, C-109, C-110, C-150 | Marco del panel, Configuración, Productos, pedidos digitales, gift cards, notificaciones y Telegram, flujo de órdenes, Marketing, Reportes, el resto de las pantallas, y el menú por secciones con el Dashboard de trabajo. |
 | Acceso y cuentas | C-80, C-83 a C-85, C-88, C-89, C-105, C-140, C-141, C-143 | Login con límites en el servidor, registro corto y con Google, una sola regla de contraseñas, IP real, sesiones con nombre, roles, equipo por invitación y verificación en dos pasos. |
 | Dinero: pagos y Puntos ES | C-87, C-96, C-101, C-114, C-115, C-123, C-125, C-129 a C-132, C-135, C-139, C-142 | Montos exactos, métodos de pago bien hechos, Pago Móvil que verifica al primer intento, pagos sin orden, mínimo de compra, checkout con todos los métodos y pago mixto, y "Puntos ES" con sus términos. |
 | Envíos y entrega | C-100, C-106, C-126, C-127, C-153 | ZOOM y MRW con oficinas reales y cobro a destino, rastreo, detalle de la orden, tiempo real y embalaje según el paquete. |
 | Catálogo que vende | C-78, C-102, C-117 a C-119, C-121, C-122, C-124, C-133, C-134, C-136, C-154, C-155, C-157, C-158, C-161, C-162, C-163 | Ofertas y cupones, cinta ES, carga masiva, usados y reacondicionados, garantías, reseñas, el asistente de productos, la confianza junto al botón de compra y el correo que pide la reseña. |
 | Panel del cliente | C-55, C-128, C-137, C-138 | Marco, inicio con resumen, Mis pedidos, Favoritos, Direcciones y Mi perfil en pestañas. |
 | Legal y facturación | C-103, C-120, C-144, C-146, C-146b, C-147, C-147b, C-148, C-148b, C-151, C-159 | Firma de documentos, IVA incluido a la vista, precio sugerido desde el costo, datos para la factura, relación de ventas, cotizaciones y términos sin promesas falsas. |
-| Crecimiento | C-112, C-113, C-116, C-145, C-149 | ElectroStudio, medición del embudo de compra y el catálogo legible para Google, las redes y las IA. |
+| Crecimiento | C-112, C-113, C-116, C-145, C-149, C-167 | ElectroStudio, medición del embudo de compra y el catálogo legible para Google, las redes y las IA. |
 | Equipo y documentos | C-53, C-77, C-86, C-90, C-91, C-93, C-94, C-98, C-99, C-108, C-111, C-152, C-156, C-160, C-164 | Revisiones de Gemini y de ChatGPT, deuda técnica (ESLint en 0), el bloque único de subida y este orden de documentos. |
 | Operación y respaldos | C-165, C-166 | Respaldos automáticos cifrados a Google Drive desde Configuración → Respaldos, restauración con clave privada fuera del servidor, `CHANGELOG.md` y versiones con etiqueta de git (primera: `v1.0.0-rc.1`), y la Content-Security-Policy en modo "solo avisa" con sus avisos en Reportes → Seguridad. |
 
 ### 5.2 Lista única de pendientes
 Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
-**En fila (Claude):** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Los menores se cerraron en C-164 (`balance/add` borrado, `seed.ts` sin contraseña por defecto, valoraciones con coma, `RechargeModalV2` sin `fetch`). Lo que queda en código es **C-166b**: pasar la Content-Security-Policy de "solo avisa" a "bloquea" (`CSP_ENFORCE="true"` y un deploy) cuando Reportes → Seguridad lleve una semana de visitas reales sin avisos legítimos. El resto no es código:
+**En curso (aprobado por Andrés el 02/10, `PROPUESTA_C168-C172.md`), en este orden:** C-168 versiones por módulo (**hecha**); C-169 productos sin pérdidas (borrador, papelera, conflicto, presencia) (**hecha**); C-174 marquesina del equipo (quién está conectado y en qué sector) (**hecha**); C-170 lo mismo en el resto del panel (**hecha**); C-173 Reportes en vivo con visitantes conectados, con y sin cuenta (**hecha**); C-172 Destacados que rotan (**hecha**); C-171 Dashboard a tu gusto (**hecha**, adelantada el 03/10 a pedido de Andrés). Lotes de deploy: rc.4 (C-168 y C-169, **etiquetada**), rc.5 (C-174, **etiquetada**), rc.6 (C-173, **etiquetada**), rc.7 (C-171, **etiquetada**); rc.8 (C-170, **etiquetada**); rc.9 (C-175, rediseño de todos los correos con el logo largo, pedido el 03/10; **hecha y etiquetada**; rc.10 corrige el logo para que sea el del encabezado); rc.11 (C-172, **hecha y etiquetada**). **El ciclo de `PROPUESTA_C168-C172.md` está completo.** Ideas opcionales que quedaron sin pedir: orden y fechas de los destacados desde el panel, estrella fija y cuenta regresiva de oferta en la estrella.
+
+**En fila (Claude), aparte de lo anterior:** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Los menores se cerraron en C-164 (`balance/add` borrado, `seed.ts` sin contraseña por defecto, valoraciones con coma, `RechargeModalV2` sin `fetch`). Lo que queda en código es **C-166b**: pasar la Content-Security-Policy de "solo avisa" a "bloquea" (`CSP_ENFORCE="true"` y un deploy) cuando Reportes → Seguridad lleve una semana de visitas reales sin avisos legítimos. El resto no es código:
 - Un monitor externo de que la tienda está arriba (UptimeRobot o similar a `/robots.txt`) y guardar la clave privada del respaldo y una copia del `.env` fuera del servidor (Andrés, `SIGUIENTE.md` §3).
 - El abogado revisa `/terminos` y `/privacidad` desde Legal → Documentos (`estado/C-160.md`).
 
@@ -343,6 +345,7 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 - Binance Pay y PayPal automáticos: piden cuenta de comercio (KYB) y cuenta Business. Hoy son manuales con reserva de 2 horas.
 - Crear la guía de ZOOM desde el panel: pide cuenta corporativa de ZOOM. MRW no tiene API pública.
 - Importador de las historias del artefacto viejo a ElectroStudio, si Andrés las quiere.
+- Vista previa en Marketing → Plantillas de los correos que aún no la tienen (orden cancelada, recarga aprobada, promotor aprobado, empresa verificada, invitación al panel, inicio de sesión nuevo, favoritos, presupuesto, garantía y avisos al equipo), si Andrés la quiere (`estado/C-175.md`).
 - Firma dibujada con el dedo al aprobar una cotización (hoy la aprobación es digital, con nombre y cédula).
 - Entrar con Facebook o Apple: no va por ahora (24/09).
 - Búsqueda de productos en la web (C-155): un buscador con API gratuita (Brave o Google) como tercera fuente, si en producción los buscadores no le responden al servidor; buscar por código de barras desde el teléfono; proponer también la categoría y las etiquetas.
@@ -406,6 +409,8 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 | A9 | ¿Teléfono opcional en el registro? ¿Captcha? (`AUDITORIA_REGISTRO.md` §2) | Registro todavía más corto. |
 | A10 | ¿Poner el repositorio en privado? (recomendado) | Hoy es público. |
 | A12 | En las tarjetas chicas, ¿la etiqueta de un usado dice solo la condición ("CAJA ABIERTA") y el grado se lee en la ficha? | Hoy "CAJA ABIERTA · EXCELENTE" ocupa dos líneas y tapa parte de la foto (`estado/C-162.md`). |
+| A13 | Promotores: ¿los productos digitales (códigos y recargas) pagan comisión? Hoy sí, pero no se acredita sola si supera la ganancia de la venta | `estado/C-167.md`. Opciones: no pagar en digitales, un % menor, o dejarlo. |
+| A14 | Promotores: % por defecto de la comisión y del descuento del código (quedó 5 % y 5 %), y los términos del programa para el abogado | `estado/C-167.md`. |
 | A11 | ¿La cinta ES también en los productos que no son nuevos (al menos en "Caja abierta")? | Hoy llevan su etiqueta de condición y no la cinta (decisión del 28/09). Andrés la echó de menos el 01/10 (`estado/C-161.md`). |
 
 ### 7.2 Tomadas (no volver a preguntar)
@@ -431,6 +436,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 - **Dinero:**
   - Nunca sale de la empresa.
   - Comisiones de promotores solo por compras pagadas (16/09).
+  - **Promotores (02/10, C-167):** la comisión es sobre los **productos, sin IVA ni envío**; se paga en **Puntos ES, nunca en efectivo** (en efectivo se presta para lavar dinero; en Puntos ES compran en la tienda); cada promotor tiene un **código con descuento para el cliente** que cuenta la compra aunque el cliente ya tuviera cuenta; se entra con una **solicitud** que aprueba el equipo; la comisión se **acredita sola 7 días después de la entrega**, salvo las que parecen autocompra, pasan de $50 o superan la ganancia de la venta (esas las revisa el equipo).
   - Pago Móvil sin orden: pasa a los Puntos ES del cliente (28/09). Lo pagado de más se acredita completo (29/09).
   - Mínimo de compra solo sobre los productos, sin embalaje ni envío. Máximo sobre todo lo que paga el cliente (28/09).
   - Sin subir capturas: se usa la verificación con el BDV (29/09).

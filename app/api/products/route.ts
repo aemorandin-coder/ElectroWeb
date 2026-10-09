@@ -38,7 +38,18 @@ export async function GET(request: NextRequest) {
     const all = searchParams.get('all') === 'true'; // For admin panel that needs all products
     const skip = (page - 1) * limit;
 
+    // C-169: la papelera es aparte. Por defecto no sale en el listado; `papelera=true` lista solo lo que está en ella
+    // y `papelera=conteo` dice cuántos hay. Solo quien administra productos la ve.
+    const papelera = searchParams.get('papelera');
+    if (papelera && !canManageProducts) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+    }
+    if (papelera === 'conteo') {
+      return NextResponse.json({ conteo: await prisma.product.count({ where: { deletedAt: { not: null } } }) });
+    }
+
     const where: Prisma.ProductWhereInput = {
+      deletedAt: papelera === 'true' ? { not: null } : null,
       OR: search ? [
         { name: { contains: search, mode: 'insensitive' } },
         { sku: { contains: search, mode: 'insensitive' } },
@@ -72,6 +83,11 @@ export async function GET(request: NextRequest) {
       ...(all ? {} : { take: limit, skip }),
     });
 
+    const idsQuienBorro = [...new Set(products.map((p) => p.deletedById).filter((x): x is string => !!x))];
+    const nombres = new Map((idsQuienBorro.length > 0
+      ? await prisma.user.findMany({ where: { id: { in: idsQuienBorro } }, select: { id: true, name: true, email: true } })
+      : []).map((u) => [u.id, u.name?.trim() || u.email?.split('@')[0] || 'Alguien del equipo']));
+
     const safeNum = (v: unknown) => v != null ? Number(v) : null;
     const formattedProducts = products.map(p => ({
       ...p,
@@ -82,6 +98,8 @@ export async function GET(request: NextRequest) {
       costPerItem: canManageProducts ? safeNum(p.costPerItem) : null,
       weightKg: safeNum(p.weightKg),
       shippingCost: safeNum(p.shippingCost),
+      // Quién lo movió a la papelera (solo se llena en esa lista)
+      deletedByName: p.deletedById ? nombres.get(p.deletedById) ?? null : null,
     }));
 
     // BACKWARD COMPATIBILITY: Return array directly when all=true (for admin panel)
@@ -137,7 +155,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingSku) {
-      return NextResponse.json({ error: 'El SKU ya existe' }, { status: 400 });
+      // C-169: un producto en la papelera sigue siendo dueño de su SKU
+      return NextResponse.json({
+        error: existingSku.deletedAt ? 'Ese SKU lo tiene un producto en la papelera. Restáuralo, o bórralo para siempre, desde Productos → Papelera.' : 'El SKU ya existe',
+      }, { status: 400 });
     }
 
     // Check if slug already exists and append random string if so

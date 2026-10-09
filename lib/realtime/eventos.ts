@@ -31,8 +31,37 @@ export type EventoTiempoReal =
       aprobado: boolean;
       /** La recarga resuelta, si es una recarga */
       transactionId?: string | null;
+    }
+  // C-169: trabajo en equipo en el panel. Solo los reciben administradores con el permiso del recurso (lib/realtime/recursos.ts)
+  | {
+      tipo: 'admin:presencia';
+      /** `product:<id>`, `setting:envios`… */
+      recurso: string;
+      /** Quiénes tienen ese recurso abierto para editarlo, ahora */
+      editores: PersonaEnLinea[];
+    }
+  | {
+      tipo: 'admin:recurso_cambiado';
+      recurso: string;
+      accion: 'creado' | 'actualizado' | 'papelera' | 'restaurado' | 'eliminado';
+      por: { id: string; nombre: string };
+      /** ISO */
+      en: string;
+      /** En lenguaje del equipo ("precio", "stock"), no nombres de columnas */
+      campos?: string[];
     };
+
+export interface PersonaEnLinea {
+  id: string;
+  nombre: string;
+  /** ISO: desde cuándo lo tiene abierto */
+  desde: string;
+  /** Qué está haciendo en ese recurso, en pocas palabras (el nombre del producto que edita). C-174 */
+  donde?: string;
+}
 
 export type TipoEvento = EventoTiempoReal['tipo'];
 
-export const TIPOS_EVENTO: TipoEvento[] = ['order:status_updated', 'inventory:stock_changed', 'payment:verified'];
+export const TIPOS_EVENTO: TipoEvento[] = [
+  'order:status_updated', 'inventory:stock_changed', 'payment:verified', 'admin:presencia', 'admin:recurso_cambiado',
+];

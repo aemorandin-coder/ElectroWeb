@@ -68,7 +68,8 @@ export const ADMIN_EVENTS = {
   COURSE_SUBMITTED: { category: 'cursos', label: 'Curso por revisar', description: 'Un creador subió un curso nuevo que espera aprobación.', defaults: on(true, false, true) },
   COURSE_ENROLLED: { category: 'cursos', label: 'Inscripción a curso', description: 'Un cliente se inscribió en un curso.', defaults: on(true, false, true), silent: true },
 
-  REFERRAL_CONVERSION: { category: 'promotores', label: 'Venta de un promotor', description: 'Un cliente referido por un promotor pagó una compra y hay una comisión por aprobar.', defaults: on(true, false, true), silent: true },
+  PROMOTER_APPLICATION: { category: 'promotores', label: 'Solicitud para ser promotor', description: 'Un cliente pidió entrar al programa de promotores: se aprueba o se rechaza en Marketing → Promotores.', defaults: on(true, true, true) },
+  REFERRAL_CONVERSION: { category: 'promotores', label: 'Venta de un promotor', description: 'Alguien compró con el código o el enlace de un promotor. La comisión se acredita sola 7 días después de la entrega, salvo las que piden revisión.', defaults: on(true, false, true), silent: true },
 
   EMAIL_CAMPAIGN_STARTED: { category: 'marketing', label: 'Campaña de correo enviándose', description: 'Alguien empezó a enviar una campaña a los clientes que aceptan promociones.', defaults: on(true, false, true), silent: true },
 

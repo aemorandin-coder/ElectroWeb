@@ -60,6 +60,12 @@ export async function buscarCupon(rawCode: unknown, userId: string, db: Prisma.T
   const promo = await db.promotion.findUnique({ where: { code } });
   const now = new Date();
   if (!promo || promo.kind !== 'COUPON' || !promo.isActive) return { ok: false, mensaje: 'Ese cupón no existe o ya no está activo.' };
+  // C-167: el código de un promotor no le sirve a él mismo (sería comprarse con descuento y cobrarse la comisión)
+  if (promo.influencerId) {
+    const promotor = await db.influencer.findUnique({ where: { id: promo.influencerId }, select: { userId: true, status: true } });
+    if (!promotor || promotor.status !== 'ACTIVE') return { ok: false, mensaje: 'Ese cupón no existe o ya no está activo.' };
+    if (promotor.userId === userId) return { ok: false, mensaje: 'Este es tu código de promotor: compártelo con tus seguidores, pero no se puede usar en tus propias compras.' };
+  }
   if (promo.startsAt > now) return { ok: false, mensaje: 'Ese cupón todavía no está disponible.' };
   if (promo.endsAt && promo.endsAt <= now) return { ok: false, mensaje: 'Ese cupón ya venció.' };
   if (agotada(promo)) return { ok: false, mensaje: 'Ese cupón se agotó.' };

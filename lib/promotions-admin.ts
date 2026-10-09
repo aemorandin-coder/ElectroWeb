@@ -35,7 +35,11 @@ export function toAdminPromotion(p: Promotion & { _sum?: number }) {
     isActive: p.isActive,
     status: estado(p),
     savedUSD: p._sum ?? 0,
+    /** C-167: es el código de un promotor (se administra en Marketing → Promotores) */
+    deUnPromotor: p.influencerId !== null,
     createdAt: p.createdAt.toISOString(),
+    /** C-170: la versión con que se abre el editor; vuelve en el guardado */
+    updatedAt: p.updatedAt.toISOString(),
   };
 }
 

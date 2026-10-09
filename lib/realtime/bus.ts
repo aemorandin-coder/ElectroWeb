@@ -64,3 +64,16 @@ export async function publicarStock(productIds: string[]): Promise<void> {
     console.error('[realtime] publicarStock', error);
   }
 }
+
+/**
+ * C-169: avisa al equipo que alguien cambió un recurso del panel (un producto, una configuración…), para que quien lo tiene
+ * abierto lo sepa al instante. Nunca lanza errores: un fallo aquí no puede romper un guardado.
+ */
+export function publicarRecursoCambiado(
+  recurso: string,
+  accion: 'creado' | 'actualizado' | 'papelera' | 'restaurado' | 'eliminado',
+  por: { id: string; nombre: string },
+  campos?: string[],
+): void {
+  publicar({ tipo: 'admin:recurso_cambiado', recurso, accion, por, en: new Date().toISOString(), ...(campos && campos.length > 0 ? { campos } : {}) });
+}

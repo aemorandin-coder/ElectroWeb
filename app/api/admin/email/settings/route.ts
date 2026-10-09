@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
 import nodemailer from 'nodemailer';
 import { cifrarClaveSmtp, leerClaveSmtp, opcionesTlsSmtp } from '@/lib/smtp-seguro';
+import { getBaseTemplate } from '@/lib/email-service';
+import { escapeHtml } from '@/lib/html';
+import { CORREO, selloCorreo } from '@/lib/email-templates/estilo';
 
 // Provider presets for quick configuration
 const PROVIDER_PRESETS: Record<string, { host: string; port: number; secure: boolean }> = {
@@ -245,26 +248,22 @@ export async function POST(request: NextRequest) {
                 from: `"${settings.fromName || 'Test'}" <${settings.fromEmail || settings.smtpUser}>`,
                 to: targetEmail,
                 subject: 'Prueba de Email - Electro Shop',
-                html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                        <div style="background: linear-gradient(135deg, #2a63cd 0%, #1e4ba3 100%); color: white; padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
-                            <h1 style="margin: 0; font-size: 24px;">Configuración Exitosa</h1>
-                        </div>
-                        <div style="background: #ffffff; padding: 30px; border: 1px solid #e9ecef; border-top: none; border-radius: 0 0 16px 16px;">
-                            <p style="font-size: 16px; color: #212529;">
-                                ¡Tu configuración de email funciona correctamente!
-                            </p>
-                            <p style="font-size: 14px; color: #6a6c6b;">
-                                Proveedor: <strong>${settings.provider.toUpperCase()}</strong><br>
-                                Host: <strong>${settings.smtpHost}</strong><br>
-                                Puerto: <strong>${settings.smtpPort}</strong>
-                            </p>
-                            <p style="font-size: 12px; color: #adb5bd; margin-top: 20px;">
-                                Este email fue enviado automáticamente como prueba de configuración.
-                            </p>
-                        </div>
+                // Mismo marco que los demás correos (C-175): así la prueba también enseña cómo llega el logo
+                html: await getBaseTemplate(`
+                    <div style="text-align:center;">
+                        ${selloCorreo('exito')}
+                        <h2 style="${CORREO.titulo}">La configuración funciona</h2>
+                        <p style="${CORREO.texto}">Este correo salió con los datos que guardaste en el panel.</p>
                     </div>
-                `,
+                    <div style="${CORREO.cajaExito}">
+                        <p style="${CORREO.cajaTexto}${CORREO.tonoExito}">
+                            Proveedor: <strong>${escapeHtml(settings.provider.toUpperCase())}</strong><br>
+                            Servidor: <strong>${escapeHtml(String(settings.smtpHost))}</strong><br>
+                            Puerto: <strong>${settings.smtpPort}</strong>
+                        </p>
+                    </div>
+                    <p style="${CORREO.nota}text-align:center;">Correo automático de prueba de la configuración.</p>
+                `, 'La configuración de correo funciona'),
             });
 
             // Update test status

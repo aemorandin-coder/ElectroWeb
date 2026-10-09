@@ -47,7 +47,7 @@ function pagadasDesde(desde: Date): Prisma.OrderWhereInput {
 const GRUPOS: Record<string, Prisma.AuditLogWhereInput> = {
     alertas: { severity: { in: ['WARNING', 'CRITICAL'] } },
     accesos: { action: { startsWith: 'AUTH_' } },
-    precios: { action: { in: ['PRODUCT_PRICE_CHANGED', 'PRODUCT_DELETED', 'DISCOUNT_CHANGED'] } },
+    precios: { action: { in: ['PRODUCT_PRICE_CHANGED', 'PRODUCT_DELETED', 'PRODUCT_TRASHED', 'PRODUCT_PURGED', 'DISCOUNT_CHANGED'] } },
     aprobaciones: {
         action: {
             in: [
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
                 prisma.order.count({ where: { createdAt: enPeriodo, status: { notIn: [...ORDEN_NO_VALIDA] } } }),
                 prisma.order.count({ where: { createdAt: enPeriodo, paymentStatus: 'PENDING', status: { notIn: [...ORDEN_NO_VALIDA] } } }),
                 prisma.order.aggregate({ _sum: { totalUSD: true }, _count: true, where: pagadasDesde(startDate) }),
-                prisma.product.count(),
+                prisma.product.count({ where: { deletedAt: null } }),
                 prisma.product.count({ where: { status: 'PUBLISHED' } }),
                 prisma.productRequest.count({ where: { status: 'PENDING' } }),
                 prisma.analyticsEvent.count({ where: { eventType: 'page_view', createdAt: enPeriodo } }),

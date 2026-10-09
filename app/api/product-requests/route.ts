@@ -166,13 +166,19 @@ export async function PATCH(request: NextRequest) {
     const antes = await prisma.productRequest.findUnique({ where: { id }, select: { status: true } });
     if (!antes) return NextResponse.json({ error: 'Solicitud no encontrada' }, { status: 404 });
 
-    const productRequest = await prisma.productRequest.update({
-      where: { id },
+    // C-170: el cambio entra solo si la solicitud sigue en el estado que se vio. Dos administradores marcándola a la vez: la
+    // segunda persona recibe "ya la atendió otra persona" y el cliente no recibe el aviso dos veces.
+    const tomada = await prisma.productRequest.updateMany({
+      where: { id, status: antes.status },
       data: {
         ...(body?.status !== undefined ? { status: body.status } : {}),
         ...(body?.adminNotes !== undefined ? { adminNotes: typeof body.adminNotes === 'string' ? body.adminNotes.trim().slice(0, 1000) || null : null } : {}),
       },
     });
+    if (tomada.count === 0) {
+      return NextResponse.json({ error: 'Otra persona ya atendió esta solicitud. Recarga para ver cómo quedó.', conflicto: 'ya_resuelto' }, { status: 409 });
+    }
+    const productRequest = await prisma.productRequest.findUniqueOrThrow({ where: { id } });
 
     // El cliente se entera cuando su pedido se consigue o se descarta (antes nunca sabía nada)
     if (productRequest.userId && body?.status && body.status !== antes.status && (body.status === 'FULFILLED' || body.status === 'REJECTED')) {

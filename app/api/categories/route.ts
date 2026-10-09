@@ -3,7 +3,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { exigirVersion, registrarCambio, respuestaCambiado, respuestaNoExiste } from '@/lib/edicion/registro';
+import { clavesCambiadas, nombreDeSesion } from '@/lib/edicion/servidor';
+import { publicarRecursoCambiado } from '@/lib/realtime/bus';
+import { editoresDe } from '@/lib/realtime/presencia';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
+
+const CAMPOS_CATEGORIA: Record<string, string> = { name: 'nombre', description: 'descripción', image: 'imagen', icon: 'ícono', color: 'color', parentId: 'categoría principal' };
 
 const WITH_COUNT = {
   _count: { select: { products: true } },
@@ -97,6 +103,11 @@ export async function PATCH(request: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'ID es requerido' }, { status: 400 });
     }
+    // C-170: la versión con que se abrió el editor; si otra persona guardó antes, se avisa en vez de pisarla
+    const v = exigirVersion(body.baseUpdatedAt);
+    if ('respuesta' in v) return v.respuesta;
+    const antes = await prisma.category.findUnique({ where: { id } });
+    if (!antes) return respuestaNoExiste('categoría');
 
     const updateData: Record<string, unknown> = {};
 
@@ -119,13 +130,22 @@ export async function PATCH(request: NextRequest) {
     if (color !== undefined)       updateData.color = color || null;
     if (parentId !== undefined)    updateData.parentId = parentId || null;
 
-    const category = await prisma.category.update({
-      where: { id },
-      data: updateData,
-      include: WITH_COUNT,
+    const category = await prisma.$transaction(async (tx) => {
+      const tomada = await tx.category.updateMany({ where: { id, updatedAt: v.base }, data: { updatedAt: new Date() } });
+      if (tomada.count === 0) return null;
+      return tx.category.update({ where: { id }, data: updateData, include: WITH_COUNT });
     });
+    if (!category) {
+      const actual = await prisma.category.findUnique({ where: { id }, include: WITH_COUNT });
+      if (!actual) return respuestaNoExiste('categoría');
+      return respuestaCambiado({ tipo: 'CATEGORY', id, etiqueta: 'categoría', femenino: true, actual });
+    }
 
     revalidateStorefront();
+    const cambios = clavesCambiadas(antes as unknown as Record<string, unknown>, updateData);
+    if (cambios.length > 0) {
+      await registrarCambio({ session, request, recurso: `category:${id}`, tipo: 'CATEGORY', id, nombre: category.name, campos: cambios.map((c) => CAMPOS_CATEGORIA[c] ?? c) });
+    }
     return NextResponse.json(category);
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };
@@ -152,6 +172,11 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'ID es requerido' }, { status: 400 });
     }
+    // C-170: otra persona tiene abierta esta categoría: se avisa antes de borrarla (con ?forzar=1 se sigue)
+    const editores = editoresDe(`category:${id}`, session?.user?.id);
+    if (editores.length > 0 && searchParams.get('forzar') !== '1') {
+      return NextResponse.json({ error: `${editores.map((e) => e.nombre).join(' y ')} la está editando ahora mismo`, conflicto: 'en_edicion', editores }, { status: 409 });
+    }
 
     // Con productos o subcategorías, decirlo (antes: 500 genérico por la llave foránea)
     const cat = await prisma.category.findUnique({ where: { id }, select: { _count: { select: { products: true, children: true } } } });
@@ -165,6 +190,7 @@ export async function DELETE(request: NextRequest) {
     await prisma.category.delete({ where: { id } });
 
     revalidateStorefront();
+    publicarRecursoCambiado(`category:${id}`, 'eliminado', { id: session?.user?.id ?? '', nombre: nombreDeSesion(session) });
     return NextResponse.json({ message: 'Categoría eliminada exitosamente' });
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };

@@ -40,6 +40,10 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'Revisa los campos marcados', fields: erroresZod(parsed.error) }, { status: 400 });
   }
+  // C-167: el código de un promotor es suyo aunque todavía no tenga cupón
+  if (parsed.data.code && (await prisma.influencer.findUnique({ where: { code: parsed.data.code }, select: { id: true } }))) {
+    return NextResponse.json({ error: 'Ese código es de un promotor', fields: { code: 'Ese código es de un promotor' } }, { status: 409 });
+  }
   try {
     const promo = await prisma.promotion.create({
       data: { ...datosPromocion(parsed.data), createdById: session?.user?.id ?? null },

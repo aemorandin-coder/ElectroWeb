@@ -38,7 +38,7 @@ const MENU = [
   { href: '/customer/warranty', icon: FiShield, label: 'Garantía' },
   { href: '/customer/documentos', icon: FiFileText, label: 'Mis documentos' },
   { href: '/customer/mis-cursos', icon: FiBook, label: 'Mis Cursos' },
-  { href: '/customer/referrals', icon: FiGift, label: 'Programa de Referidos' },
+  { href: '/customer/referrals', icon: FiGift, label: 'Promotores' },
   { href: '/customer/profile', icon: FiUser, label: 'Mi perfil' },
 ];
 

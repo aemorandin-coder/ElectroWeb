@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { FiDatabase, FiDownload, FiEdit3, FiMoreHorizontal, FiPercent, FiPlus, FiSearch, FiTag, FiTrash2, FiUpload, FiX, FiBox } from 'react-icons/fi';
@@ -11,8 +12,13 @@ import {
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { parseProductImages } from '@/lib/product-utils';
 import { normalizar } from '@/lib/cotizaciones/busqueda';
+import { hasPermission } from '@/lib/auth-helpers';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import type { PersonaEnLinea } from '@/lib/realtime/eventos';
+import { useTiempoReal } from '@/lib/realtime/hooks';
 import ListaProductos, { type CambiosRapidos } from './_components/lista/ListaProductos';
 import { EdicionMasiva, VistaRapida } from './_components/lista/Modales';
+import PapeleraProductos from './_components/lista/PapeleraProductos';
 import SadesPanel from './_components/lista/SadesPanel';
 import { sinStock, type CampoMasivo, type Categoria, type EstadoProducto, type FiltroEstado, type ProductoLista } from './_components/lista/tipos';
 
@@ -63,7 +69,13 @@ const csv = (v: string | number | boolean | null | undefined) => `"${String(v ??
 export default function ProductsPage() {
   const router = useRouter();
   const { confirm } = useConfirm();
-  const [tab, setTab] = useState<'local' | 'sades'>('local');
+  const { data: sesion } = useSession();
+  const yo = sesion?.user?.id;
+  const [tab, setTab] = useState<'local' | 'sades' | 'papelera'>('local');
+  const [enPapelera, setEnPapelera] = useState(0);
+  // C-169: quién está editando cada producto ahora (id → nombres), por el canal en vivo
+  const [editando, setEditando] = useState<Record<string, string[]>>({});
+  const temporizadorRecarga = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [productos, setProductos] = useState<ProductoLista[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [tasaVES, setTasaVES] = useState(0);
@@ -89,10 +101,12 @@ export default function ProductsPage() {
     let vigente = true;
     Promise.all([
       fetch('/api/products?all=true').then((r) => (r.ok ? r.json() : null)),
+      fetch('/api/products?papelera=conteo').then((r) => (r.ok ? r.json() : null)).catch(() => null),
       fetch('/api/categories').then((r) => (r.ok ? r.json() : [])),
       fetch('/api/settings').then((r) => (r.ok ? r.json() : null)).catch(() => null),
-    ]).then(([lista, cats, ajustes]) => {
+    ]).then(([lista, conteoPapelera, cats, ajustes]) => {
       if (!vigente) return;
+      setEnPapelera(Number(conteoPapelera?.conteo) || 0);
       if (!Array.isArray(lista)) {
         toast.error('No se pudieron cargar los productos');
       } else {
@@ -107,6 +121,32 @@ export default function ProductsPage() {
   }, [recargas]);
 
   const recargar = () => setRecargas((n) => n + 1);
+
+  // C-169: quién está editando qué, y avisos de lo que otros mueven o restauran. Cada cambio ajeno vuelve a pedir la lista.
+  useCargarAlMontar(async () => {
+    const r = await fetch('/api/admin/presencia?tipo=product').catch(() => null);
+    if (!r?.ok) return;
+    const datos = (await r.json().catch(() => null)) as { presentes?: Record<string, PersonaEnLinea[]> } | null;
+    setEditando(Object.fromEntries(Object.entries(datos?.presentes ?? {}).map(([recurso, personas]) => [recurso.slice('product:'.length), personas.map((x) => x.nombre)])));
+  });
+  useTiempoReal((evento) => {
+    if (evento.tipo === 'admin:presencia' && evento.recurso.startsWith('product:')) {
+      const id = evento.recurso.slice('product:'.length);
+      const nombres = evento.editores.filter((e) => e.id !== yo).map((e) => e.nombre);
+      setEditando((previo) => {
+        const siguiente = { ...previo };
+        if (nombres.length > 0) siguiente[id] = nombres;
+        else delete siguiente[id];
+        return siguiente;
+      });
+    }
+    if (evento.tipo === 'admin:recurso_cambiado' && evento.recurso.startsWith('product:') && evento.por.id !== yo) {
+      if (evento.accion === 'papelera') toast(`${evento.por.nombre} movió un producto a la papelera`);
+      if (evento.accion === 'restaurado') toast(`${evento.por.nombre} restauró un producto`);
+      if (temporizadorRecarga.current) clearTimeout(temporizadorRecarga.current);
+      temporizadorRecarga.current = setTimeout(() => setRecargas((n) => n + 1), 800);
+    }
+  });
 
   const conteo = useMemo(() => ({
     todos: productos.length,
@@ -144,24 +184,58 @@ export default function ProductsPage() {
     toast.success(nuevo === 'PUBLISHED' ? `"${p.name}" ya se ve en la tienda` : `"${p.name}" quedó en borrador`);
   };
 
+  /** Mueve un producto a la papelera. Si otra persona lo está editando, se pregunta antes. Devuelve true si quedó en la papelera. */
+  const moverAPapelera = async (p: ProductoLista): Promise<boolean> => {
+    let r = await fetch(`/api/products/${p.id}`, { method: 'DELETE' });
+    let data = await r.json().catch(() => ({}));
+    if (r.status === 409 && data.conflicto === 'en_edicion') {
+      const seguir = await confirm({
+        title: 'Lo están editando ahora',
+        message: `${data.error}. Si lo mueves a la papelera, verá un aviso con la opción de restaurarlo y no perderá lo que escribió. ¿Moverlo igual?`,
+        confirmText: 'Mover a la papelera', cancelText: 'Cancelar', type: 'warning',
+      });
+      if (!seguir) return false;
+      r = await fetch(`/api/products/${p.id}?forzar=1`, { method: 'DELETE' });
+      data = await r.json().catch(() => ({}));
+    }
+    if (!r.ok) { toast.error(data.error || 'No se pudo mover a la papelera'); return false; }
+    return true;
+  };
+
+  const restaurarVarios = async (ids: string[]) => {
+    const resultados = await Promise.all(ids.map((id) => fetch(`/api/products/${id}/restaurar`, { method: 'POST' }).then((r) => r.ok).catch(() => false)));
+    const listos = resultados.filter(Boolean).length;
+    toast[listos === ids.length ? 'success' : 'error'](listos === ids.length ? (ids.length === 1 ? 'Producto restaurado' : `${listos} productos restaurados`) : `Se restauraron ${listos} de ${ids.length}`);
+    recargar();
+  };
+
+  /** Aviso con "Deshacer" durante 10 segundos: lo movido a la papelera vuelve con un toque */
+  const avisarConDeshacer = (ids: string[], texto: string) => {
+    toast((t) => (
+      <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        {texto}
+        <button type="button" onClick={() => { toast.dismiss(t.id); void restaurarVarios(ids); }} className="font-semibold text-brand-600 underline">Deshacer</button>
+      </span>
+    ), { duration: 10_000 });
+  };
+
   const eliminar = async (p: ProductoLista) => {
-    const ok = await confirm({ title: 'Eliminar producto', message: `¿Eliminar "${p.name}"? Si tiene órdenes, se archiva en vez de borrarse.`, confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+    const ok = await confirm({ title: 'Mover a la papelera', message: `¿Mover "${p.name}" a la papelera? Deja de verse en la tienda y se puede restaurar durante 30 días.`, confirmText: 'Mover a la papelera', cancelText: 'Cancelar', type: 'danger' });
     if (!ok) return;
-    const r = await fetch(`/api/products/${p.id}`, { method: 'DELETE' });
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) { toast.error(data.error || 'No se pudo eliminar'); return; }
-    toast.success(data.archived ? 'Tenía órdenes: quedó archivado' : 'Producto eliminado');
+    if (!(await moverAPapelera(p))) return;
+    avisarConDeshacer([p.id], `"${p.name}" está en la papelera`);
     setSeleccion((s) => { const n = new Set(s); n.delete(p.id); return n; });
     recargar();
   };
 
   const eliminarSeleccion = async () => {
-    const ok = await confirm({ title: `Eliminar ${seleccionados.length} productos`, message: 'Los que tengan órdenes se archivan en vez de borrarse.', confirmText: 'Eliminar', cancelText: 'Cancelar', type: 'danger' });
+    const ok = await confirm({ title: `Mover ${seleccionados.length} productos a la papelera`, message: 'Dejan de verse en la tienda y se pueden restaurar durante 30 días.', confirmText: 'Mover a la papelera', cancelText: 'Cancelar', type: 'danger' });
     if (!ok) return;
-    const resultados = await Promise.all(seleccionados.map((p) => fetch(`/api/products/${p.id}`, { method: 'DELETE' }).then(async (r) => ({ ok: r.ok, archived: (await r.json().catch(() => ({}))).archived }))));
-    const fallos = resultados.filter((r) => !r.ok).length;
-    const archivados = resultados.filter((r) => r.ok && r.archived).length;
-    toast[fallos ? 'error' : 'success'](`${resultados.length - fallos} listos${archivados ? ` (${archivados} archivados por tener órdenes)` : ''}${fallos ? ` · ${fallos} con error` : ''}`);
+    const movidos: string[] = [];
+    for (const p of seleccionados) {
+      if (await moverAPapelera(p)) movidos.push(p.id);
+    }
+    if (movidos.length > 0) avisarConDeshacer(movidos, movidos.length === 1 ? '1 producto está en la papelera' : `${movidos.length} productos están en la papelera`);
     setSeleccion(new Set());
     recargar();
   };
@@ -268,10 +342,15 @@ export default function ProductsPage() {
       <div className="flex gap-1 overflow-x-auto border-b border-line pb-2" role="tablist" aria-label="Origen de los productos">
         <button type="button" role="tab" aria-selected={tab === 'local'} onClick={() => setTab('local')} className={adminTab(tab === 'local')}><FiBox className="h-4 w-4" aria-hidden="true" /> Catálogo</button>
         <button type="button" role="tab" aria-selected={tab === 'sades'} onClick={() => setTab('sades')} className={adminTab(tab === 'sades')}><FiDatabase className="h-4 w-4" aria-hidden="true" /> ElectroCaja / SADES</button>
+        <button type="button" role="tab" aria-selected={tab === 'papelera'} onClick={() => setTab('papelera')} className={adminTab(tab === 'papelera')}>
+          <FiTrash2 className="h-4 w-4" aria-hidden="true" /> Papelera{enPapelera > 0 && <span className="rounded-full bg-surface px-2 text-xs font-semibold tabular-nums text-muted">{enPapelera}</span>}
+        </button>
       </div>
 
       {tab === 'sades' ? (
         <SadesPanel onSincronizado={recargar} />
+      ) : tab === 'papelera' ? (
+        <PapeleraProductos puedeBorrarParaSiempre={hasPermission(sesion ?? null, 'MANAGE_SETTINGS')} recargas={recargas} onCambio={recargar} />
       ) : (
         <>
           {/* Estados como filtros rápidos: tocar "Sin stock" filtra */}
@@ -317,7 +396,7 @@ export default function ProductsPage() {
                 <button type="button" onClick={() => setMasivo({ campo: 'pricePercent', valor: '' })} className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15"><FiPercent className="h-4 w-4" aria-hidden="true" /> Precio</button>
                 <button type="button" onClick={() => setMasivo({ campo: 'category', valor: '' })} className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15"><FiTag className="h-4 w-4" aria-hidden="true" /> Categoría</button>
                 <button type="button" onClick={() => setMasivo({ campo: 'stock', valor: '' })} className="min-h-11 shrink-0 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15">Más cambios</button>
-                <button type="button" onClick={eliminarSeleccion} className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15"><FiTrash2 className="h-4 w-4" aria-hidden="true" /> Eliminar</button>
+                <button type="button" onClick={eliminarSeleccion} className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15"><FiTrash2 className="h-4 w-4" aria-hidden="true" /> A la papelera</button>
               </div>
             </div>
           )}
@@ -349,6 +428,7 @@ export default function ProductsPage() {
                 onEstado={cambiarEstado}
                 onEliminar={eliminar}
                 duplicando={duplicando}
+                editando={editando}
               />
             </>
           )}

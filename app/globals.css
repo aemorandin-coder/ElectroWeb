@@ -124,6 +124,47 @@ body:has(#mobile-bottom-nav) [data-site-footer] {
   animation: marquee-text 12s linear infinite;
 }
 
+/* C-174: marquesina del equipo en el panel (quién está conectado y en qué sector). Es del panel, no de la tienda.
+   La pista lleva el contenido dos veces: al correr la mitad de su ancho vuelve al inicio sin salto. Corre solo si el texto
+   no cabe (lo decide el componente con data-corre) y se detiene al pasar el ratón, al enfocar o al tocar. Con
+   "reducir movimiento" no se mueve: el texto se parte en líneas. */
+@keyframes marquesina-equipo {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquesina-pista[data-corre="true"] {
+  animation: marquesina-equipo var(--marquesina-duracion, 30s) linear infinite;
+}
+
+.marquesina-banda:hover .marquesina-pista,
+.marquesina-banda:focus-within .marquesina-pista,
+.marquesina-banda[data-pausada="true"] .marquesina-pista {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquesina-pista[data-corre="true"] {
+    animation: none;
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+
+  .marquesina-copia {
+    display: none;
+  }
+
+  .marquesina-banda {
+    height: auto;
+    min-height: 2rem;
+  }
+}
+
 /* Reset & Base Styles */
 * {
   box-sizing: border-box;

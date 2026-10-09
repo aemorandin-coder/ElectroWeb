@@ -2,11 +2,13 @@
 @font-face { font-family: Poppins; src: url(../poppins-latin-700-normal.woff2); font-weight: 700; }
 @font-face { font-family: Tektrron; src: url(../Tektrron.ttf); }
 body { margin: 0; background: #f4efe4; font: 700 15px Poppins; }
-.g { display: grid; grid-template-columns: repeat(4, 300px); gap: 10px; padding: 16px; }
-.c { text-align: center; } .c svg { width: 300px; height: 315px; }
+.g { display: grid; grid-template-columns: repeat(5, 260px); gap: 10px; padding: 16px; }
+.c { text-align: center; } .c svg { width: 260px; height: 273px; }
 </style></head><body><div class="g" id="g"></div>
 <script src="chispa.js"></script><script>
-const v = [['habla','a','abiertos','normal'],['señala','e','abiertos','arriba'],['explica','sonrisa','abiertos','normal'],['pulgar','feliz','guino','normal'],
-           ['brazos','sonrisa','cerrados','normal'],['hombros','o','sorpresa','duda'],['habla','seria','abiertos','duda'],['habla','feliz','abiertos','arriba'],['espalda','sonrisa','abiertos','normal'],['espalda-señala','sonrisa','abiertos','normal'],['espalda-señala-alto','sonrisa','abiertos','normal'],['espalda-dos','sonrisa','abiertos','normal']];
+// Hoja de poses y gestos de Chispa
+const v = [['habla','a','abiertos','normal'],['señala','e','abiertos','arriba'],['explica','sonrisa','abiertos','normal'],['pulgar','feliz','guino','normal'],['saluda','feliz','feliz','arriba'],
+           ['brazos','sonrisa','abiertos','normal'],['hombros','o','sorpresa','duda'],['piensa','seria','abiertos','duda'],['celebra','feliz','feliz','arriba'],['habla','i','abiertos','enojo'],
+           ['espalda','sonrisa','abiertos','normal'],['espalda-señala','sonrisa','abiertos','normal'],['espalda-señala-alto','sonrisa','abiertos','normal'],['espalda-dos','sonrisa','abiertos','normal'],['habla','u','cerrados','normal']];
 document.getElementById('g').innerHTML = v.map(([pose,boca,ojos,cejas]) => `<div class="c">${chispa({pose,boca,ojos,cejas})}<div>${pose} · ${boca}</div></div>`).join('');
 </script></body></html>

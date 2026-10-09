@@ -47,16 +47,16 @@
     seria: `<path d="M186 234 L216 234" fill="none" ${S}/>`,
   };
 
-  // Torso: camisa oscura con cuello azul y la placa ES
+  // Torso: cuello, hombros redondeados y pecho; los brazos salen de los hombros (ver ARMS)
+  const HOMBRO = { L: [136, 306], R: [264, 306] };
   const torso = `
-    <path d="M200 262 L200 290" ${S}/>
-    <path d="M86 420 C84 340 120 292 176 280 L224 280 C280 292 316 340 314 420 Z" fill="${SHIRT}" ${S}/>
-    <path d="M176 280 L200 312 L224 280 Z" fill="${SKIN}" ${s4}/>
-    <path d="M168 278 L200 316 L188 330 L158 290 Z M232 278 L200 316 L212 330 L242 290 Z" fill="${BLUE}" ${s4}/>
-    <g transform="translate(236 334)"><rect x="0" y="0" width="40" height="30" rx="6" fill="#fff" ${s4}/>
-      <text x="20" y="21" text-anchor="middle" font-family="Tektrron, Poppins" font-size="15" font-weight="700" fill="${BLUE}">ES</text></g>
-    <path d="M120 360 C126 380 128 400 128 420 M280 360 C274 380 272 400 272 420" fill="none" stroke="#2b3a5c" stroke-width="4" stroke-linecap="round"/>
-    <path d="M150 300 L140 312 M162 296 L150 312 M246 296 L258 312 M258 300 L268 312" stroke="#2b3a5c" stroke-width="3" stroke-linecap="round"/>`;
+    <path d="M186 256 L186 290 L214 290 L214 256" fill="${SKIN}" ${S}/>
+    <path d="M104 420 L108 340 C110 310 128 292 160 284 L240 284 C272 292 290 310 292 340 L296 420 Z" fill="${SHIRT}" ${S}/>
+    <path d="M176 282 L200 312 L224 282 Z" fill="${SKIN}" ${s4}/>
+    <path d="M168 280 L200 316 L188 330 L158 290 Z M232 280 L200 316 L212 330 L242 290 Z" fill="${BLUE}" ${s4}/>
+    <path d="M200 330 L200 420" stroke="#2b3a5c" stroke-width="3" stroke-linecap="round"/>
+    <g transform="translate(220 344)"><rect x="0" y="0" width="38" height="28" rx="6" fill="#fff" ${s4}/>
+      <text x="19" y="20" text-anchor="middle" font-family="Tektrron, Poppins" font-size="14" font-weight="700" fill="${BLUE}">ES</text></g>`;
 
   // Brazos: tubo con contorno de tinta (dos trazos superpuestos) y manos grandes
   const brazo = (d) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${SHIRT}" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>`;
@@ -75,16 +75,27 @@
       ${dedo(-12, -16, -14, -60)}
       <rect x="-26" y="-20" width="52" height="46" rx="17" fill="${SKIN}" ${S}/>
       <path d="M-10 -6 L22 -6 M-10 6 L22 6 M-10 17 L22 17" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/></g>`;
+  // Cada brazo: hombro → codo → muñeca, con su mano orientada según el antebrazo. null en mano = la mano queda fuera del cuadro.
+  const ang = (e, w) => Math.atan2(w[0] - e[0], -(w[1] - e[1])) * 180 / Math.PI;
+  const MANOS = { palma: palmaAbierta, indice: señalando, pulgar: pulgarArriba,
+    puño: (x, y, r) => `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-24" y="-22" width="48" height="44" rx="18" fill="${SKIN}" ${S}/><path d="M-12 -6 L12 -6 M-12 6 L12 6" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/></g>` };
+  const arm = (lado, codo, muñeca, mano, giro = 0) => {
+    const [hx, hy] = HOMBRO[lado];
+    const d = `M${hx} ${hy} Q${codo[0]} ${codo[1]} ${muñeca[0]} ${muñeca[1]}`;
+    const extremo = mano ? MANOS[mano](muñeca[0], muñeca[1], ang(codo, muñeca) + giro) : '';
+    const puñoManga = mano ? `<path d="M${muñeca[0]} ${muñeca[1]} L${muñeca[0]} ${muñeca[1]}" stroke="${INK}" stroke-width="50" stroke-linecap="round"/>` : '';
+    return `<path d="${d}" fill="none" stroke="${INK}" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="${d}" fill="none" stroke="${SHIRT}" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="${d}" fill="none" stroke="#2b3a5c" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 999" />${extremo}`;
+  };
+  const reposoL = arm('L', [116, 370], [112, 446], null), reposoR = arm('R', [284, 370], [288, 446], null);
   const POSES = {
-    habla: ``,
-    señala: `${brazo('M262 330 C306 318 324 278 320 236')}${señalando(320, 214, 6)}`,
-    explica: `${brazo('M140 340 C108 330 100 300 108 276')}${palmaAbierta(108, 258, -14)}
-              ${brazo('M262 344 C246 352 228 352 214 344')}${palmaAbierta(208, 330, 64)}`,
-    pulgar: `${brazo('M262 340 C304 330 320 300 318 276')}${pulgarArriba(318, 254, 0)}`,
-    brazos: `${brazo('M120 360 C150 380 226 376 270 352')}${brazo('M280 360 C250 380 174 376 130 352')}
-             ${puño(126, 352, -30)}${puño(274, 352, 30)}`,
-    hombros: `${brazo('M118 344 C86 330 76 302 84 274')}${palmaAbierta(84, 256, -30)}
-              ${brazo('M282 344 C314 330 324 302 316 274')}${palmaAbierta(316, 256, 30)}`,
+    habla: `${reposoL}${reposoR}`,
+    señala: `${reposoL}${arm('R', [318, 330], [318, 250], 'indice')}`,
+    explica: `${arm('L', [104, 384], [150, 334], 'palma', -20)}${arm('R', [296, 384], [250, 334], 'palma', 20)}`,
+    pulgar: `${reposoL}${arm('R', [306, 392], [300, 318], 'pulgar')}`,
+    brazos: `${arm('R', [292, 396], [124, 356], 'puño', -90)}${arm('L', [108, 404], [276, 372], 'puño', 90)}`,
+    hombros: `${arm('L', [94, 372], [84, 290], 'palma', -10)}${arm('R', [306, 372], [316, 290], 'palma', 10)}`,
   };
 
   window.chispa = ({ pose = 'habla', boca = 'sonrisa', ojos = 'abiertos', cejas = 'normal', fondo = true } = {}) => `

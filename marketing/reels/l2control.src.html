@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Reel L2 Control</title>
+<style>
+/*BASE*/
+/* ---------- L2 Control: azul a verde del logo ---------- */
+:root { --l2a: #1565c0; --l2b: #1e88e5; --l2c: #43a047; --l2d: #7cb342; }
+.cap .av svg { display: block; }
+.cap .av.l2 { background: linear-gradient(135deg, var(--l2a), var(--l2c)); box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--l2c); }
+.cap b { color: var(--l2a); }
+.legal { position: absolute; left: 20px; right: 20px; text-align: center; font: 400 9.5px/1.4 Inter; color: rgba(255,255,255,.7); visibility: hidden; z-index: 26; }
+img.clip { display: block; width: 100%; height: 100%; object-fit: cover; }
+#bgL2 { position: absolute; inset: 0; clip-path: circle(0% at 50% 50%); overflow: hidden;
+  background: linear-gradient(160deg, #0d47a1 0%, #1565c0 38%, #1b7f6a 70%, #2e7d32 100%); }
+#bgL2 .panel { position: absolute; background: rgba(255,255,255,.07); }
+#bgL2 .pA { width: 700px; height: 420px; left: -330px; top: -170px; transform: rotate(-32deg); }
+#bgL2 .pB { width: 760px; height: 460px; right: -420px; bottom: -150px; transform: rotate(-32deg); background: rgba(255,255,255,.06); }
+#bgL2 .pC { width: 300px; height: 900px; left: 300px; top: -200px; transform: rotate(-32deg); background: rgba(255,255,255,.035); }
+#bgL2 .glow { position: absolute; width: 560px; height: 560px; border-radius: 50%; left: -10px; top: 160px; background: radial-gradient(circle, rgba(124,179,66,.28) 0%, rgba(124,179,66,0) 65%); }
+
+/* Video a pantalla completa */
+.full { position: absolute; inset: 0; z-index: 8; visibility: hidden; overflow: hidden; }
+.full::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 62%, rgba(0,0,0,.6) 100%); }
+#lower { position: absolute; left: 22px; bottom: 120px; z-index: 20; display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 10px; border-radius: 18px; background: #fff; box-shadow: 0 16px 36px rgba(0,0,0,.4); visibility: hidden; }
+#lower img { width: 48px; height: 48px; border-radius: 50%; }
+#lower b { display: block; font: 700 18px Poppins; color: #15171a; }
+#lower span { font: 500 13px Inter; color: var(--l2a); }
+
+/* Revelación */
+#reveal { position: absolute; inset: 0; z-index: 12; }
+#l2logo { position: absolute; left: 50%; top: 250px; width: 210px; margin-left: -105px; visibility: hidden; filter: drop-shadow(0 22px 40px rgba(0,0,0,.4)); }
+#l2name { position: absolute; left: 0; right: 0; top: 460px; text-align: center; font: 800 54px Poppins; color: #fff; letter-spacing: -1px; visibility: hidden; }
+#l2tag { position: absolute; left: 30px; right: 30px; top: 534px; text-align: center; font: 600 21px/1.3 Poppins; color: rgba(255,255,255,.92); visibility: hidden; }
+#l2chips { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 612px; display: flex; gap: 8px; }
+#l2chips span { padding: 8px 14px; border-radius: 999px; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); color: #fff; font: 600 14px Poppins; visibility: hidden; }
+#bymark { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 680px; display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 8px; border-radius: 999px; background: #fff; visibility: hidden; }
+#bymark img { height: 26px; }
+#bymark small { font: 600 13px Inter; color: var(--muted); }
+
+/* Teléfono */
+.phoneM { position: absolute; width: 300px; height: 620px; border-radius: 48px; background: #0d0e10; padding: 9px; box-shadow: 0 0 0 2px #2c2f34, 0 40px 80px rgba(0,0,0,.5); visibility: hidden; z-index: 10; }
+.phoneM .scrn { position: relative; width: 100%; height: 100%; border-radius: 40px; overflow: hidden; background: #fff; }
+.phoneM .scrn img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.phoneM .isl { position: absolute; left: 50%; top: 10px; width: 84px; height: 24px; margin-left: -42px; border-radius: 14px; background: #000; z-index: 2; }
+
+/* Laptop */
+.lapM { position: absolute; left: 20px; width: 500px; visibility: hidden; z-index: 10; }
+.lapM .lid { background: #111317; border-radius: 16px 16px 6px 6px; padding: 12px 12px 14px; box-shadow: 0 30px 60px rgba(0,0,0,.45), 0 0 0 2px #2b2e34; }
+.lapM .scrn { width: 476px; height: 297.5px; overflow: hidden; border-radius: 4px; background: #fff; position: relative; }
+.lapM .scrn img { width: 100%; height: 100%; object-fit: cover; object-position: top left; transform-origin: 0 0; }
+.lapM .base { height: 16px; margin: 0 -26px; border-radius: 0 0 18px 18px; background: linear-gradient(180deg, #d4d7dc, #9da3ab); position: relative; }
+.lapM .base::after { content: ''; position: absolute; left: 50%; top: 0; width: 90px; height: 6px; margin-left: -45px; border-radius: 0 0 8px 8px; background: #8a9099; }
+
+/* Tarjeta de video real */
+.vcard { position: absolute; border-radius: 22px; overflow: hidden; background: #111; border: 5px solid #fff; box-shadow: 0 26px 60px rgba(0,0,0,.5); visibility: hidden; z-index: 11; }
+.real { position: absolute; left: 10px; top: 10px; display: flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; background: rgba(0,0,0,.6); color: #fff; font: 600 11px Inter; z-index: 2; }
+.real i.live { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: block; }
+
+/* Impresora y tickets */
+#printer { position: absolute; left: 50%; top: 200px; width: 330px; margin-left: -165px; z-index: 10; visibility: hidden; }
+#printer .body { position: relative; height: 150px; border-radius: 28px 28px 18px 18px; background: linear-gradient(180deg, #3a3f47, #1d2025); box-shadow: 0 24px 50px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.12); }
+#printer .slot { position: absolute; left: 34px; right: 34px; bottom: 26px; height: 10px; border-radius: 6px; background: #0b0c0e; box-shadow: inset 0 2px 4px rgba(0,0,0,.8); }
+#printer .led { position: absolute; right: 28px; top: 26px; width: 10px; height: 10px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+#printer .brand { position: absolute; left: 28px; top: 22px; font: 700 12px Inter; letter-spacing: 2px; color: rgba(255,255,255,.5); }
+.paperWrap { position: absolute; left: 50%; top: 320px; width: 300px; margin-left: -150px; overflow: hidden; z-index: 9; visibility: hidden; }
+.paper { background: #fbfbf8; padding: 16px 12px 22px; box-shadow: 0 18px 40px rgba(0,0,0,.35); font: 500 10.6px/1.42 "DejaVu Sans Mono", ui-monospace, monospace; color: #1a1a1a; }
+.paper .l { white-space: pre; overflow: hidden; }
+.paper .a1 { text-align: center; } .paper .a2 { text-align: right; }
+.paper .b { font-weight: 800; }
+.paper .x2 { font-size: 1.85em; line-height: 1.15; font-weight: 800; }
+.paper::after { content: ''; display: block; height: 10px; margin: 14px -12px -22px; background: linear-gradient(-45deg, transparent 6px, #fbfbf8 0) 0 0 / 12px 12px repeat-x, linear-gradient(45deg, transparent 6px, #fbfbf8 0) 0 0 / 12px 12px repeat-x; transform: translateY(10px); }
+#recWrap .paper { font-size: 9.6px; }
+
+/* Abby */
+#abby { position: absolute; left: 50%; top: 220px; width: 440px; margin-left: -220px; visibility: hidden; z-index: 10; filter: drop-shadow(0 20px 40px rgba(0,0,0,.4)); }
+#abbyT { position: absolute; left: 24px; right: 24px; top: 470px; text-align: center; font: 800 30px/1.22 Poppins; color: #fff; z-index: 10; }
+#abbyT .w { display: inline-block; visibility: hidden; }
+#abbyS { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 580px; padding: 10px 18px; border-radius: 14px; background: #fff; color: var(--l2a); font: 700 17px Poppins; visibility: hidden; z-index: 10; box-shadow: 0 14px 30px rgba(0,0,0,.3); }
+.hl { background: #fff; color: var(--l2a); padding: 0 12px; border-radius: 12px; transform: rotate(-3deg); }
+
+/* Cierre */
+#end { position: absolute; inset: 0; z-index: 12; }
+#endLogo { position: absolute; left: 50%; top: 160px; width: 360px; height: 96px; margin-left: -180px; border-radius: 999px; background: linear-gradient(180deg, #fff, #eef1f5); display: flex; align-items: center; justify-content: center; gap: 14px; box-shadow: 0 14px 34px rgba(5,15,40,.35); visibility: hidden; }
+#endLogo img { height: 62px; }
+#endLogo b { font: 800 34px Poppins; color: #0f1d33; letter-spacing: -.5px; }
+#endBy { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 274px; display: flex; align-items: center; gap: 10px; color: #fff; font: 600 15px Poppins; visibility: hidden; }
+#endBy span { display: flex; align-items: center; padding: 6px 12px; border-radius: 999px; background: #fff; }
+#endBy img { height: 22px; }
+#endHead { position: absolute; left: 20px; right: 20px; top: 330px; text-align: center; font: 800 33px/1.2 Poppins; color: #fff; letter-spacing: -.3px; }
+#endHead .w { display: inline-block; visibility: hidden; }
+#endHead .hl { padding: 0 10px; }
+.ep { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; height: 48px; padding: 0 22px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.3); color: #fff; display: flex; align-items: center; gap: 10px; font: 600 16px Poppins; visibility: hidden; }
+.ep img { width: 24px; height: 24px; border-radius: 6px; }
+#endChips { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 650px; display: flex; gap: 8px; visibility: hidden; }
+#endChips span { padding: 8px 14px; border-radius: 12px; background: #fff; color: var(--l2a); font: 700 14px Poppins; }
+#fine { position: absolute; left: 28px; right: 28px; top: 726px; text-align: center; font: 400 11px/1.6 Inter; color: rgba(255,255,255,.82); visibility: hidden; }
+#fine b { color: #fff; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bgDark"><div class="grid"></div><div class="noise"></div></div>
+  <div id="bgL2"><div class="glow"></div><div class="panel pA"></div><div class="panel pC"></div><div class="panel pB"></div><div class="noise"></div></div>
+
+  <!-- 1. Llegada (video real) -->
+  <div class="full" id="llegada"><img class="clip" id="llegadaClip" alt=""></div>
+  <div id="lower"><img src="assets/logo-es-circulo.png" alt=""><div><b>Ing. Luis Morandin</b><span>CEO de ElectroShop</span></div></div>
+
+  <div class="cap" id="c1"><span class="av"><i data-ic="box" data-s="19" data-w="2.4"></i></span>Llegamos a <b>Abby Kingdom</b> con una caja… 📦</div>
+  <div class="cap" id="c2"><span class="av l2">1</span>El mesero pide desde su <b>teléfono</b></div>
+  <div class="cap" id="c3"><span class="av l2">2</span>La comanda sale <b>impresa</b> en cocina</div>
+  <div class="cap" id="c4"><span class="av l2">3</span><b>Multi caja</b>: dólares y bolívares</div>
+  <div class="cap" id="c5"><span class="av l2">4</span>Control de <b>inventario</b></div>
+  <div class="cap" id="c6"><span class="av l2">5</span>Protección por <b>roles</b></div>
+  <div class="cap" id="c7"><span class="av l2">6</span><b>Reportes</b> y tu local en vivo</div>
+  <div class="cap" id="c8"><span class="av l2"><i data-ic="smile" data-s="19" data-w="2.4"></i></span>¿Tienes <b>parque</b>? También</div>
+  <div class="cap" id="c9"><span class="av l2"><i data-ic="users" data-s="19" data-w="2.4"></i></span>Instalamos y <b>capacitamos</b> a tu equipo</div>
+
+  <!-- 2. Revelación -->
+  <div id="reveal">
+    <img id="l2logo" src="assets/logo-l2.png" alt="">
+    <div id="l2name">L2 Control</div>
+    <div id="l2tag">El sistema que pone orden<br>en tu restaurante y tu negocio</div>
+    <div id="l2chips"><span>Restaurante</span><span>Caja</span><span>Inventario</span><span>Reportes</span></div>
+    <div id="bymark"><img src="assets/logo-color.png" alt=""><small>lo desarrolla</small></div>
+  </div>
+
+  <!-- Teléfonos -->
+  <div class="phoneM" id="phMesero" style="left:120px; top:168px"><div class="scrn"><span class="isl"></span><img class="clip" id="meseroClip" alt=""></div></div>
+  <div class="phoneM" id="phSala" style="left:40px; top:168px"><div class="scrn"><span class="isl"></span><img class="clip" id="salaClip" alt=""></div></div>
+
+  <!-- Laptop -->
+  <div class="lapM" id="lap" style="top:200px"><div class="lid"><div class="scrn"><img class="clip" id="lapClip" alt=""></div></div><div class="base"></div></div>
+
+  <!-- Tarjetas con video real -->
+  <div class="vcard" id="vMostrador" style="left:300px; top:560px; width:200px; height:300px"><img class="clip" id="mostradorClip" alt=""><span class="real"><i class="live"></i>En Abby Kingdom</span></div>
+  <div class="vcard" id="vEquipos" style="left:310px; top:540px; width:190px; height:330px"><img class="clip" id="equiposClip" alt=""><span class="real"><i class="live"></i>En Abby Kingdom</span></div>
+  <div class="vcard" id="vParque" style="left:300px; top:470px; width:210px; height:360px"><img class="clip" id="parqueClip" alt=""><span class="real"><i class="live"></i>Parque de Abby Kingdom</span></div>
+  <div class="vcard" id="vCapa" style="left:70px; top:160px; width:400px; height:690px"><img class="clip" id="capaClip" alt=""><span class="real"><i class="live"></i>Capacitación en el local</span></div>
+
+  <!-- Impresora y tickets reales de L2 -->
+  <div id="printer"><div class="body"><span class="brand">80 MM</span><span class="led"></span><span class="slot"></span></div></div>
+  <div class="paperWrap" id="comWrap"><div class="paper" id="comPaper">/*COMANDA*/</div></div>
+  <div class="paperWrap" id="recWrap"><div class="paper" id="recPaper">/*RECIBO*/</div></div>
+
+  <!-- Abby -->
+  <img id="abby" src="assets/abby-logo.png" alt="">
+  <div id="abbyT"><span class="w">Abby</span> <span class="w">Kingdom</span> <span class="w">ya</span> <span class="w">opera</span><br><span class="w">con</span> <span class="w hl">L2 Control</span></div>
+  <div id="abbyS">Gracias por confiar en nosotros</div>
+
+  <!-- Stickers -->
+  <div class="stk dark" id="sBox" style="right:24px; top:300px; font-size:22px">¿Qué traía? 👀</div>
+  <div class="stk light" id="sCom" style="right:16px; top:240px"><i data-ic="zap" data-s="18" style="color:var(--l2c)"></i>Directo a cocina</div>
+  <div class="stk dark" id="sCarta" style="left:14px; top:700px"><i data-ic="list" data-s="18" style="color:#a5d6a7"></i>Carta con fotos, precios y notas</div>
+  <div class="stk light" id="sTk" style="left:0; right:0; margin:0 auto; width:max-content; top:760px"><i data-ic="printer" data-s="18" style="color:var(--l2a)"></i>Comanda #0006 · Mesa 6</div>
+  <div class="stk dark" id="sBcv" style="left:24px; top:560px"><i data-ic="trend" data-s="18" style="color:#a5d6a7"></i>Tasa BCV del día, sola</div>
+  <div class="stk light" id="sIva" style="right:22px; top:630px"><i data-ic="percent" data-s="18" style="color:var(--l2a)"></i>IVA e IGTF incluidos</div>
+  <div class="stk dark" id="sMix" style="left:30px; top:700px"><i data-ic="card" data-s="18" style="color:#a5d6a7"></i>$20 efectivo + Pago Móvil</div>
+  <div class="stk light" id="sCajas" style="right:28px; top:770px"><i data-ic="grid" data-s="18" style="color:var(--l2a)"></i>Varias cajas, cada una con su turno</div>
+  <div class="stk dark" id="sRec" style="left:0; right:0; margin:0 auto; width:max-content; top:200px"><i data-ic="check" data-s="18" style="color:#a5d6a7"></i>Recibo al instante</div>
+  <div class="stk light" id="sInv1" style="left:22px; top:560px"><i data-ic="box" data-s="18" style="color:var(--l2a)"></i>Cada venta descuenta del stock</div>
+  <div class="stk dark" id="sInv2" style="left:22px; top:630px"><i data-ic="alert" data-s="18" style="color:#ffd54f"></i>Avisa los mínimos</div>
+  <div class="stk light" id="sInv3" style="left:22px; top:700px"><i data-ic="trend" data-s="18" style="color:var(--l2c)"></i>Costo y margen por producto</div>
+  <div class="stk light" id="sRol1" style="left:20px; top:560px"><i data-ic="users" data-s="18" style="color:var(--l2a)"></i>Cada quien con su rol y su PIN</div>
+  <div class="stk dark" id="sRol2" style="left:20px; top:630px"><i data-ic="shield" data-s="18" style="color:#a5d6a7"></i>Anular pide autorización</div>
+  <div class="stk light" id="sRol3" style="left:20px; top:700px"><i data-ic="lock" data-s="18" style="color:var(--l2c)"></i>Nada se borra: todo queda registrado</div>
+  <div class="stk dark" id="sRep1" style="left:24px; top:580px"><i data-ic="file" data-s="18" style="color:#a5d6a7"></i>Ventas, inventario y movimientos en PDF</div>
+  <div class="stk light" id="sRep2" style="right:22px; top:650px"><i data-ic="phone" data-s="18" style="color:var(--l2a)"></i>Míralo desde tu teléfono</div>
+  <div class="stk light" id="sPar" style="left:14px; top:810px"><i data-ic="clock" data-s="18" style="color:var(--l2a)"></i>Tiempo por niño con pulsera</div>
+
+  <!-- Cierre -->
+  <div id="end">
+    <div id="endLogo"><img src="assets/logo-l2.png" alt=""><b>L2 Control</b></div>
+    <div id="endBy">Un producto de <span><img src="assets/logo-color.png" alt=""></span></div>
+    <div id="endHead"><span class="w">Pon</span> <span class="w">orden</span> <span class="w">en</span> <span class="w">tu</span><br><span class="w hl">negocio</span></div>
+    <div class="ep" id="ep1" style="top:470px"><img src="assets/whatsapp.png" alt="">Habla con nosotros: +58 257 251 1282</div>
+    <div class="ep" id="ep2" style="top:530px"><i data-ic="mapPin" data-s="20"></i>Visítanos en la tienda · Guanare</div>
+    <div class="ep" id="ep3" style="top:590px"><i data-ic="globe" data-s="20"></i>electroshopve.com</div>
+    <div id="endChips"><span>Restaurantes</span><span>Parques</span><span>Comercios</span></div>
+    <div id="fine"><b>L2 Control es un producto de Electro Shop Morandin C.A. · RIF J&#8209;40590333&#8209;3</b><br>Pantallas reales del sistema con datos de demostración. Abby Kingdom aparece con su permiso. Pago Móvil, WhatsApp y las demás marcas pertenecen a sus dueños.</div>
+  </div>
+</div>
+
+<script src="assets/gsap.min.js"></script>
+<script>
+window.EXTRA_IC = {
+  box: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+  list: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+  printer: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+  trend: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  grid: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  alert: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  mapPin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+};
+/*ICONS*/
+document.querySelectorAll('.cap').forEach(c => { const tx = document.createElement('span'); tx.className = 'tx'; Array.from(c.childNodes).slice(1).forEach(n => tx.appendChild(n)); c.appendChild(tx); });
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+// ---------- Clips: cada <img class="clip"> muestra el cuadro que toca ----------
+const FRAMES = { 'l2-llegada': 141, 'l2-capacitacion': 135, 'l2-parque': 135, 'l2-mostrador': 91, 'l2-equipos': 63, 'l2-mesero': 450, 'l2-sala': 240, 'l2-caja': 540, 'l2-panel': 180, 'l2-inventario': 165, 'l2-usuarios': 210, 'l2-reportes': 180 };
+// [elemento, clip, segundo en que empieza, velocidad]
+const SCHEDULE = [
+  ['#llegadaClip', 'l2-llegada', 0, 1],
+  ['#meseroClip', 'l2-mesero', 7.3, 3.4],
+  ['#lapClip', 'l2-caja', 14.3, 3.6], ['#lapClip', 'l2-inventario', 21.7, 1.6], ['#lapClip', 'l2-usuarios', 25.1, 2.0], ['#lapClip', 'l2-panel', 28.7, 1.8], ['#lapClip', 'l2-reportes', 30.4, 1.6],
+  ['#mostradorClip', 'l2-mostrador', 22.2, 1], ['#equiposClip', 'l2-equipos', 25.6, 1],
+  ['#salaClip', 'l2-sala', 32.1, 3], ['#parqueClip', 'l2-parque', 32.3, 1],
+  ['#capaClip', 'l2-capacitacion', 34.6, 1],
+];
+const pad = n => String(n).padStart(4, '0');
+function frameFor(sel, t) {
+  let cur = null;
+  for (const e of SCHEDULE) if (e[0] === sel && t >= e[2] - 0.001) cur = e;
+  if (!cur) cur = SCHEDULE.find(e => e[0] === sel);
+  const i = Math.max(0, Math.min(FRAMES[cur[1]] - 1, Math.floor((t - cur[2]) * 30 * cur[3])));
+  return `clips/${cur[1]}/${pad(i + 1)}.jpg`;
+}
+let pending = [];
+function showClips(t) {
+  pending = [];
+  for (const sel of new Set(SCHEDULE.map(e => e[0]))) {
+    const el = $(sel), src = frameFor(sel, t);
+    if (el.getAttribute('src') !== src) { el.setAttribute('src', src); pending.push(el.decode().catch(() => {})); }
+  }
+}
+window.settle = () => Promise.all(pending);
+
+function build() {
+const tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
+const capIn = (id, t) => tl.fromTo(id, { autoAlpha: 0, y: 14, scale: .94 }, { autoAlpha: 1, y: 0, scale: 1, duration: .38, ease: 'back.out(1.6)' }, t);
+const capOut = (id, t) => tl.to(id, { autoAlpha: 0, y: -12, scale: .96, duration: .2, ease: 'power2.in' }, t);
+const stkIn = (id, t, rot) => tl.fromTo(id, { autoAlpha: 0, scale: 1.35, rotation: rot * 2.5 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: .38, ease: 'back.out(2.2)' }, t);
+const out = (ids, t) => tl.to(ids, { autoAlpha: 0, y: -30, duration: .28, ease: 'power2.in' }, t);
+const lapIn = (t) => tl.fromTo('#lap', { autoAlpha: 0, y: 80, scale: .94 }, { autoAlpha: 1, y: 0, scale: 1, duration: .5 }, t);
+const pulse = (id, t) => tl.fromTo(id, { scale: 1.03 }, { scale: 1, duration: .3, ease: 'power2.out' }, t);
+
+// Ambiente
+tl.to('#bgL2 .pA', { x: 40, y: 26, duration: 40, ease: 'sine.inOut' }, 4.6);
+tl.to('#bgL2 .pB', { x: -46, y: -20, duration: 40, ease: 'sine.inOut' }, 4.6);
+tl.to('#bgL2 .pC', { x: 60, duration: 40, ease: 'sine.inOut' }, 4.6);
+tl.fromTo('#bgL2 .glow', { scale: .9, x: -30 }, { scale: 1.2, x: 50, duration: 40, ease: 'sine.inOut' }, 4.6);
+
+// ===== 1. Llegada (0–4,6 s) =====
+gsap.set(['#llegada', '#c1'], { autoAlpha: 1 });
+tl.fromTo('#llegadaClip', { scale: 1.08 }, { scale: 1, duration: 4.6, ease: 'sine.out' }, 0);
+tl.fromTo('#c1', { scale: .96 }, { scale: 1, duration: .4, ease: 'back.out(1.6)' }, 0);
+tl.fromTo('#lower', { autoAlpha: 0, x: -40 }, { autoAlpha: 1, x: 0, duration: .5, ease: 'back.out(1.6)' }, 1.0);
+stkIn('#sBox', 3.0, 5);
+tl.to(['#lower', '#sBox'], { autoAlpha: 0, duration: .25 }, 4.35);
+capOut('#c1', 4.35);
+tl.to('#bgL2', { clipPath: 'circle(125% at 50% 50%)', duration: .65, ease: 'power3.inOut' }, 4.4);
+tl.set('#llegada', { autoAlpha: 0 }, 5.05);
+
+// ===== 2. Revelación (4,6–7,2 s) =====
+tl.fromTo('#l2logo', { autoAlpha: 0, scale: .3, rotationY: -180 }, { autoAlpha: 1, scale: 1, rotationY: 0, duration: .9, ease: 'back.out(1.4)' }, 4.75);
+tl.fromTo('#l2name', { autoAlpha: 0, y: 26 }, { autoAlpha: 1, y: 0, duration: .45, ease: 'back.out(1.7)' }, 5.25);
+tl.fromTo('#l2tag', { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: .4 }, 5.5);
+tl.fromTo('#l2chips span', { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: .3, stagger: .08, ease: 'back.out(2)' }, 5.75);
+tl.fromTo('#bymark', { autoAlpha: 0, scale: .9 }, { autoAlpha: 1, scale: 1, duration: .35, ease: 'back.out(2)' }, 6.1);
+out(['#l2logo', '#l2name', '#l2tag', '#l2chips span', '#bymark'], 7.0);
+
+// ===== 3. Restaurante (7,2–11,4 s) =====
+capIn('#c2', 7.2);
+tl.fromTo('#phMesero', { autoAlpha: 0, y: 140, rotation: 5 }, { autoAlpha: 1, y: 0, rotation: 0, duration: .55 }, 7.25);
+stkIn('#sCarta', 8.4, -3);
+stkIn('#sCom', 10.2, 4);
+out(['#phMesero', '#sCarta', '#sCom'], 11.2); capOut('#c2', 11.2);
+
+// ===== 4. Comanda impresa (11,4–14,2 s) =====
+capIn('#c3', 11.4);
+tl.fromTo('#printer', { autoAlpha: 0, y: 60 }, { autoAlpha: 1, y: 0, duration: .45 }, 11.45);
+tl.set('#comWrap', { autoAlpha: 1 }, 11.9);
+tl.fromTo('#comPaper', { yPercent: -100 }, { yPercent: 0, duration: 1.3, ease: 'steps(26)' }, 11.95);
+tl.to('#printer .led', { keyframes: { opacity: [1, .2, 1, .2, 1] }, duration: 1.2, ease: 'none' }, 11.95);
+stkIn('#sTk', 13.1, -2);
+out(['#printer', '#comWrap', '#sTk'], 14.0); capOut('#c3', 14.0);
+
+// ===== 5. Multi caja (14,2–19,2 s) =====
+capIn('#c4', 14.2);
+lapIn(14.25);
+tl.fromTo('#lapClip', { scale: 1, x: 0, y: 0 }, { scale: 1.7, x: -300, y: -40, duration: 1.2, ease: 'power2.inOut' }, 15.0);
+tl.to('#lapClip', { x: -260, y: -60, duration: 3.4, ease: 'sine.inOut' }, 16.2);
+stkIn('#sBcv', 15.2, -3); stkIn('#sIva', 16.0, 3); stkIn('#sMix', 16.9, -3); stkIn('#sCajas', 17.8, 2);
+out(['#lap', '#sBcv', '#sIva', '#sMix', '#sCajas'], 19.0);
+
+// ===== 6. Recibo (19,2–21,6 s) =====
+tl.fromTo('#printer', { autoAlpha: 0, y: 60 }, { autoAlpha: 1, y: 0, duration: .4, immediateRender: false }, 19.2);
+tl.set('#recWrap', { autoAlpha: 1 }, 19.5);
+tl.fromTo('#recPaper', { yPercent: -100 }, { yPercent: 0, duration: 1.5, ease: 'steps(34)' }, 19.55);
+stkIn('#sRec', 20.4, -2);
+out(['#printer', '#recWrap', '#sRec'], 21.4); capOut('#c4', 21.4);
+
+// ===== 7. Inventario (21,6–25 s) =====
+capIn('#c5', 21.6);
+lapIn(21.65);
+tl.set('#lapClip', { scale: 1, x: 0, y: 0 }, 21.65);
+tl.to('#lapClip', { scale: 1.45, x: -120, y: -70, duration: 2.6, ease: 'sine.inOut' }, 22.2);
+tl.fromTo('#vMostrador', { autoAlpha: 0, x: 60, rotation: 6 }, { autoAlpha: 1, x: 0, rotation: 3, duration: .5, ease: 'back.out(1.5)' }, 22.2);
+stkIn('#sInv1', 22.6, -3); stkIn('#sInv2', 23.2, 2); stkIn('#sInv3', 23.8, -2);
+out(['#vMostrador', '#sInv1', '#sInv2', '#sInv3'], 24.8); capOut('#c5', 24.8);
+
+// ===== 8. Roles (25–28,6 s) =====
+capIn('#c6', 25.0);
+pulse('#lap', 25.1);
+tl.set('#lapClip', { scale: 1, x: 0, y: 0 }, 25.1);
+tl.to('#lapClip', { scale: 1.4, x: -110, y: -30, duration: 3, ease: 'sine.inOut' }, 25.4);
+tl.fromTo('#vEquipos', { autoAlpha: 0, x: 60, rotation: 6 }, { autoAlpha: 1, x: 0, rotation: 3, duration: .5, ease: 'back.out(1.5)' }, 25.6);
+stkIn('#sRol1', 25.9, -3); stkIn('#sRol2', 26.6, 2); stkIn('#sRol3', 27.3, -2);
+out(['#vEquipos', '#sRol1', '#sRol2', '#sRol3'], 28.4); capOut('#c6', 28.4);
+
+// ===== 9. Reportes y panel (28,6–32 s) =====
+capIn('#c7', 28.6);
+pulse('#lap', 28.7); pulse('#lap', 30.4);
+tl.set('#lapClip', { scale: 1, x: 0, y: 0 }, 28.7);
+tl.to('#lapClip', { scale: 1.35, x: -80, y: -20, duration: 1.6, ease: 'sine.inOut' }, 28.8);
+tl.set('#lapClip', { scale: 1, x: 0, y: 0 }, 30.4);
+tl.to('#lapClip', { scale: 1.5, x: -120, y: -50, duration: 1.4, ease: 'sine.inOut' }, 30.5);
+stkIn('#sRep2', 29.2, 3); stkIn('#sRep1', 30.7, -3);
+out(['#lap', '#sRep1', '#sRep2'], 31.8); capOut('#c7', 31.8);
+
+// ===== 10. Parque (32–34,6 s) =====
+capIn('#c8', 32.0);
+tl.fromTo('#phSala', { autoAlpha: 0, y: 140, rotation: -5 }, { autoAlpha: 1, y: 0, rotation: 0, duration: .5 }, 32.05);
+tl.fromTo('#vParque', { autoAlpha: 0, x: 60, rotation: 7 }, { autoAlpha: 1, x: 0, rotation: 4, duration: .5, ease: 'back.out(1.5)' }, 32.3);
+stkIn('#sPar', 32.9, -2);
+out(['#phSala', '#vParque', '#sPar'], 34.4); capOut('#c8', 34.4);
+
+// ===== 11. Capacitación (34,6–37,4 s) =====
+capIn('#c9', 34.6);
+tl.fromTo('#vCapa', { autoAlpha: 0, y: 100, scale: .92, rotation: -3 }, { autoAlpha: 1, y: 0, scale: 1, rotation: -1.5, duration: .55 }, 34.65);
+out(['#vCapa'], 37.2); capOut('#c9', 37.2);
+
+// ===== 12. Abby Kingdom (37,4–40 s) =====
+tl.fromTo('#abby', { autoAlpha: 0, scale: .6, rotation: -6 }, { autoAlpha: 1, scale: 1, rotation: 0, duration: .6, ease: 'back.out(1.7)' }, 37.45);
+tl.fromTo('#abbyT .w', { autoAlpha: 0, y: 26 }, { autoAlpha: 1, y: 0, duration: .4, stagger: .07, ease: 'back.out(1.7)' }, 37.8);
+tl.fromTo('#abbyS', { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: .35, ease: 'back.out(2)' }, 38.6);
+out(['#abby', '#abbyT', '#abbyS'], 39.8);
+
+// ===== 13. Cierre de la serie (40–45 s) =====
+const E = 40.0 - 22.6;
+tl.fromTo('#endLogo', { autoAlpha: 0, scale: .8, y: 20 }, { autoAlpha: 1, scale: 1, y: 0, duration: .55, ease: 'back.out(1.6)' }, 22.75 + E);
+tl.fromTo('#endBy', { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: .35 }, 23.0 + E);
+tl.fromTo('#endHead .w', { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: .45, ease: 'back.out(1.7)', stagger: .08 }, 23.15 + E);
+tl.to('#endHead .hl', { keyframes: { scale: [1, 1.12, 1] }, duration: .4, ease: 'power2.out' }, 23.6 + E);
+tl.fromTo(['#ep1', '#ep2', '#ep3'], { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: .4, stagger: .1, ease: 'power3.out' }, 23.7 + E);
+tl.fromTo('#endChips', { autoAlpha: 0, y: 14, scale: .95 }, { autoAlpha: 1, y: 0, scale: 1, duration: .4, ease: 'back.out(1.6)' }, 24.1 + E);
+tl.fromTo('#fine', { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: .5, ease: 'power2.out' }, 24.3 + E);
+tl.to('#endLogo', { y: -4, duration: 1.4, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 24.4 + E);
+tl.fromTo('#endHead .hl', { boxShadow: '0 0 0 0 rgba(255,255,255,.55)' }, { boxShadow: '0 0 0 14px rgba(255,255,255,0)', duration: .9, ease: 'power2.out', repeat: 1, repeatDelay: .5 }, 24.7 + E);
+tl.to({}, { duration: 0 }, 45.0);
+window.seek = t => { tl.seek(t, false); showClips(t); };
+}
+
+window.DURATION = 45.0;
+window.ready = document.fonts.load('700 17px Poppins').then(() => document.fonts.ready)
+  .then(() => Promise.all(Array.from(document.images).filter(i => i.getAttribute('src')).map(i => i.complete ? 1 : new Promise(r => i.onload = r))))
+  .then(() => { build(); showClips(0); return window.settle(); }).then(() => true);
+</script>
+</body>
+</html>

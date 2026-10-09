@@ -123,7 +123,10 @@ En el orden en que más destraban:
 - Ramas locales ya fusionadas: `git branch --merged main` las lista; se pueden borrar con `git branch -d <rama>`.
 
 ## 4. Fila de Claude
-La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **No queda código en fila que no espere un dato tuyo:**
+La lista completa, con lo que espera datos, está en `PLAN.md` §5.2.
+- **C-176 · Chispa en la tienda (aprobada por Andrés el 09/10, solo plan: pidió no mover código todavía).** Chispa se asoma en la esquina izquierda, saluda y ofrece **Buscar** (ilumina el buscador del encabezado) o **WhatsApp**; una vez por visita, no sale en carrito, checkout, admin ni login, y quieta para quien pide menos movimiento. Todo el plan, con lo técnico, la verificación y **4 preguntas para Andrés** (texto del saludo, interruptor en Configuración, frecuencia y si va en la ficha de producto), en [`PROPUESTA_C176_CHISPA.md`](./PROPUESTA_C176_CHISPA.md). Se empieza cuando Andrés responda esas preguntas o diga "con lo propuesto".
+
+**Aparte de C-176, no queda código en fila que no espere un dato tuyo:**
 - Esperan datos: C-154b (plazo de los digitales: ya se sabe que son unas 2 horas, falta el horario), C-107 (seguro), C-92 (clientes) y C-153b (decidir si los "frágiles" llevan más relleno).
 - **Decisiones abiertas de promotores** (`PLAN.md` §7.1, A13 y A14): si los digitales pagan comisión, los % por defecto y los términos del programa para el abogado.
 - **C-166b (después de una semana con C-166 limpia):** pasar la Content-Security-Policy a "bloquea" (`CSP_ENFORCE="true"` y un deploy) y, con una restauración probada, evaluar subir el volcado directo a Drive sin pasar por disco si la base crece.

@@ -88,8 +88,10 @@ for w, n in [('electro', 0), ('guanare', 0), ('catorce', 0)]:
 for w, n in [('tecnología', 1), ('desarrollo', 0), ('soporte', 0)]: pop(W(w, 1, n), .35 * G, 900, 1300)
 # 2. Vendemos
 whoosh(B[2][0] - .4, .55, .55 * G, 3200)
-for i, w in enumerate(['tecnología', 'gaming', 'gift', 'recargas']): pop(W(w, 2), .35 * G, 800 + i * 90, 1200 + i * 90)
-coin(W('pagas', 2), .3 * G); whoosh(W('enviamos', 2), .35, .35 * G)
+for i, w in enumerate(['tecnología', 'gaming', 'gift', 'recargas']): pop(W(w, 2) - .05, .38 * G, 800 + i * 90, 1200 + i * 90)
+whoosh(W('energía', 2) - .55, .35, .35 * G); riser(W('energía', 2) - .5, .45, .25 * G); slam(W('energía', 2) - .1, .4 * G)
+pop(W('ups', 2) - .05, .35 * G, 900, 1300); pop(W('inversores', 2) - .05, .35 * G, 1000, 1400); slam(W('instalamos', 2), .5 * G)
+whoosh(W('pagas', 2) - .45, .35, .35 * G); coin(W('pagas', 2), .3 * G); whoosh(W('enviamos', 2), .35, .35 * G)
 # 3. Reparamos
 whoosh(B[3][0] - .4, .55, .55 * G, 3200); pop(W('nuestro', 3) - .1, .4 * G); slam(W('ingeniero', 3), .5 * G)
 for i, w in enumerate(['consolas', 'pc', 'cámaras', 'redes', 'puntos']): pop(W(w, 3) - .05, .3 * G, 850 + i * 60, 1150 + i * 60)

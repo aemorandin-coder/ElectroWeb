@@ -1,10 +1,10 @@
 # Alinea el guion con la voz: frases ↔ tramos de habla (entre silencios) y palabras repartidas por sílabas.
 import re, json, subprocess, sys
-AUDIO = 'assets/voz/chispa-ficha.mp3'
+AUDIO = 'assets/voz/chispa-ficha-v1.mp3'  # alineación de la voz original; la v2 cambia el bloque 2 con empalmar.py
 GUION = [
  "¿Electro Shop? Seguro nos conoces por la tienda web... pero eso es solo una parte.",
  "Te presento la ficha completa. Electro Shop Morandin: una empresa de Guanare con catorce años en tecnología. Lo nuestro: tecnología, desarrollo y soporte.",
- "Primero, vendemos. Tecnología, gaming, gift cards y recargas. Pagas con Pago Móvil y te lo enviamos a toda Venezuela.",
+ "Primero, vendemos. Tecnología, gaming, gift cards y recargas. Pagas con Pago Móvil y te lo enviamos a toda Venezuela.",  # v1; en v2 este bloque lo arma empalmar.py
  "Segundo, reparamos. Nuestro taller, con ingeniero, le da mantenimiento a consolas, arma PC gamer e instala cámaras, redes y puntos de venta.",
  "Y tercero, lo que casi nadie sabe: desarrollamos software. Este es L2 Control: maneja el restaurante, la caja, el inventario y los permisos de todo tu equipo.",
  "¿Y quién lo usa? Abby Kingdom, en Guanare, ya opera todo su negocio con L2 Control.",
@@ -57,5 +57,5 @@ for pi, k, j in asign:
         d = (b - a) * sil(w) / tot; palabras.append({'w': w, 't0': round(t, 3), 't1': round(t + d, 3), 'b': bi}); t += d
         bloques.setdefault(bi, [t - d, t]); bloques[bi][1] = t
 for bi in sorted(bloques): print(bi, round(bloques[bi][0], 2), round(bloques[bi][1], 2), GUION[bi][:50])
-json.dump({'duracion': dur, 'palabras': palabras, 'bloques': {k: [round(v[0], 3), round(v[1], 3)] for k, v in bloques.items()}}, open('assets/voz/chispa-ficha.json', 'w'), ensure_ascii=False, indent=0)
+json.dump({'duracion': dur, 'palabras': palabras, 'bloques': {k: [round(v[0], 3), round(v[1], 3)] for k, v in bloques.items()}}, open('assets/voz/chispa-ficha-v1.json', 'w'), ensure_ascii=False, indent=0)
 print(len(palabras), 'palabras', len(segs), 'tramos', len(frases), 'frases')

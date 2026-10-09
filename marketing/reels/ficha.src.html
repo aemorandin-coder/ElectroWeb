@@ -59,6 +59,9 @@ svg { display: block; }
 .row small { display: block; font: 500 11.5px Inter; color: var(--muted); }
 .tick { width: 26px; height: 26px; border-radius: 7px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .stamp { position: absolute; padding: 6px 12px; border: 3px solid var(--green); color: var(--green); border-radius: 8px; font: 800 15px Poppins; letter-spacing: .5px; text-transform: uppercase; transform: rotate(-8deg); background: rgba(255,255,255,.9); visibility: hidden; }
+.tile { height: 150px; border-radius: 14px; border: 2.5px solid var(--ink); background: #fff; box-shadow: 5px 5px 0 var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; visibility: hidden; }
+.tile b { font: 800 22px Poppins; color: var(--ink); }
+.ico { width: 58px; height: 58px; border-radius: 14px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid var(--ink); }
 .qm { position: absolute; font: italic 400 64px Serif; color: var(--ink); visibility: hidden; z-index: 14; }
 
 /* Teléfono de Pista Rides */
@@ -113,15 +116,26 @@ svg { display: block; }
       <div style="display:flex; gap:8px; margin-top:8px"><span class="chipx" id="lo0"><i data-ic="cart" data-s="15"></i>Tecnología</span><span class="chipx" id="lo1"><i data-ic="cpu" data-s="15"></i>Desarrollo</span><span class="chipx" id="lo2"><i data-ic="tool" data-s="15"></i>Soporte</span></div></div>
   </div>
 
-  <!-- 2. Vendemos -->
-  <div id="vend" style="position:absolute; left:34px; right:34px; top:150px; z-index:12">
-    <div style="display:flex; flex-wrap:wrap; gap:10px">
-      <span class="chipx" id="v0"><i data-ic="tablet" data-s="16"></i>Tecnología</span><span class="chipx" id="v1"><i data-ic="game" data-s="16"></i>Gaming</span>
-      <span class="chipx" id="v2"><i data-ic="gift" data-s="16"></i>Gift cards</span><span class="chipx" id="v3"><i data-ic="zap" data-s="16"></i>Recargas</span></div>
-    <div class="card" id="vPago" style="position:relative; margin-top:22px; padding:12px 14px; display:flex; align-items:center; gap:12px">
-      <span class="tick" style="width:40px;height:40px;border-radius:10px"><i data-ic="phone" data-s="20"></i></span><div><b style="font:700 18px Poppins">Pagas con Pago Móvil</b><div style="font:500 12px Inter;color:var(--muted)">Bolívares a tasa BCV · Binance · PayPal</div></div></div>
-    <div class="card" id="vEnv" style="position:relative; margin-top:16px; padding:12px 14px; display:flex; align-items:center; gap:12px">
-      <span class="tick" style="width:40px;height:40px;border-radius:10px;background:var(--green)"><i data-ic="truck" data-s="20"></i></span><div style="flex:1"><b style="font:700 18px Poppins">Envíos a toda Venezuela</b><div style="display:flex;gap:10px;margin-top:5px;align-items:center"><img src="assets/zoom.png" style="height:13px"><img src="assets/mrw.png" style="height:13px"></div></div></div>
+  <!-- 2. Vendemos: cuatro productos, energía (y la instalamos), pago y envío -->
+  <div id="vend" style="position:absolute; left:34px; right:34px; top:140px; display:grid; grid-template-columns:1fr 1fr; gap:14px; z-index:12">
+    <div class="tile" id="v0"><span class="ico"><i data-ic="monitor" data-s="30"></i></span><b>Tecnología</b></div>
+    <div class="tile" id="v1"><span class="ico"><i data-ic="game" data-s="30"></i></span><b>Gaming</b></div>
+    <div class="tile" id="v2"><span class="ico"><i data-ic="gift" data-s="30"></i></span><b>Gift cards</b></div>
+    <div class="tile" id="v3"><span class="ico"><i data-ic="signal" data-s="30"></i></span><b>Recargas</b></div>
+  </div>
+  <div class="card" id="vEnergia" style="left:34px; top:150px; width:472px; height:282px; padding:18px">
+    <div style="display:flex; align-items:center; gap:14px"><span class="ico" style="background:#f59f00"><i data-ic="zap" data-s="34"></i></span><div><div class="lbl">También vendemos</div><b style="font:800 34px/1 Poppins">Energía</b></div></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px">
+      <div class="tile" id="eUps" style="height:118px"><span class="ico"><i data-ic="battery" data-s="30"></i></span><b>UPS</b></div>
+      <div class="tile" id="eInv" style="height:118px"><span class="ico"><i data-ic="power" data-s="30"></i></span><b>Inversores</b></div>
+    </div>
+  </div>
+  <div class="stamp" id="sInst" style="left:300px; top:128px; z-index:14; font-size:17px">Lo instalamos</div>
+  <div id="vPagoEnv" style="position:absolute; left:34px; right:34px; top:180px; z-index:12">
+    <div class="card" id="vPago" style="position:relative; padding:16px; display:flex; align-items:center; gap:14px">
+      <span class="ico"><i data-ic="phone" data-s="28"></i></span><b style="font:800 24px Poppins">Pagas con Pago Móvil</b></div>
+    <div class="card" id="vEnv" style="position:relative; margin-top:18px; padding:16px; display:flex; align-items:center; gap:14px">
+      <span class="ico" style="background:var(--green)"><i data-ic="truck" data-s="28"></i></span><div style="flex:1"><b style="font:800 22px/1.15 Poppins">Envíos a toda Venezuela</b><div style="display:flex;gap:12px;margin-top:8px;align-items:center"><img src="assets/zoom.png" style="height:16px"><img src="assets/mrw.png" style="height:16px"></div></div></div>
   </div>
 
   <!-- 3. Reparamos -->
@@ -195,6 +209,10 @@ window.EXTRA_IC = {
   coffee: '<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>',
   box: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
   shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  monitor: '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+  signal: '<line x1="4" y1="20" x2="4" y2="16"/><line x1="9" y1="20" x2="9" y2="12"/><line x1="14" y1="20" x2="14" y2="8"/><line x1="19" y1="20" x2="19" y2="4"/>',
+  battery: '<rect x="2" y="7" width="17" height="10" rx="2" ry="2"/><line x1="22" y1="11" x2="22" y2="13"/><polyline points="11.5 8.5 8.5 12 11.5 12 8.5 15.5"/>',
+  power: '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>',
   mapPin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
 };
 /*ICONS*/
@@ -271,13 +289,21 @@ set({ pose: 'explica', cejas: 'normal' }, W('nuestro', 1));
 pop('#lo0', W('tecnología', 1, 1)); pop('#lo1', W('desarrollo', 1)); pop('#lo2', W('soporte', 1));
 off(['#t1', '#ficha'], B[2][0] - .5);
 
-// ===== 2. Vendemos (azul) =====
-fondo(true, B[2][0] - .35); titulo('#t2', B[2][0] - .05); set({ pose: 'pulgar', ojos: 'guino', feliz: true }, W('vendemos', 2));
-set({ pose: 'explica', ojos: 'abiertos', feliz: false }, W('tecnología', 2) + .3);
-pop('#v0', W('tecnología', 2)); pop('#v1', W('gaming', 2)); pop('#v2', W('gift', 2)); pop('#v3', W('recargas', 2));
-pop('#vPago', W('pagas', 2), { x: -40 }); pop('#vEnv', W('enviamos', 2), { x: 40 });
-set({ pose: 'pulgar' }, W('venezuela', 2));
-off(['#t2', '#v0', '#v1', '#v2', '#v3', '#vPago', '#vEnv'], B[3][0] - .5);
+// ===== 2. Vendemos (azul): cada cosa aparece cuando Chispa la nombra y él la señala =====
+fondo(true, B[2][0] - .35); titulo('#t2', W('vendemos', 2) - .05); set({ pose: 'habla' }, B[2][0]);
+set({ pose: 'señala', cejas: 'arriba' }, W('vendemos', 2));
+['tecnología', 'gaming', 'gift', 'recargas'].forEach((w, i) => { pop('#v' + i, W(w, 2) - .05, { y: 24, scale: .7 }); set({ cejas: 'normal' }, W(w, 2) - .05); tl.fromTo('#chispa', { rotation: 0 }, { rotation: i % 2 ? -3 : 3, duration: .18, yoyo: true, repeat: 1, ease: 'sine.inOut' }, W(w, 2) - .05); });
+off(['#v0', '#v1', '#v2', '#v3'], W('energía', 2) - .55);
+set({ pose: 'hombros', cejas: 'arriba' }, W('falta', 2) - .2);
+pop('#vEnergia', W('energía', 2) - .1, { y: 30, scale: .85 }); set({ pose: 'señala', cejas: 'normal' }, W('energía', 2));
+pop('#eUps', W('ups', 2) - .05, { y: 20, scale: .7 }); pop('#eInv', W('inversores', 2) - .05, { y: 20, scale: .7 });
+tl.fromTo('#sInst', { autoAlpha: 0, scale: 2.2, rotation: -20 }, { autoAlpha: 1, scale: 1, rotation: -8, duration: .3, ease: 'back.out(2)' }, W('instalamos', 2));
+set({ pose: 'pulgar', ojos: 'guino', feliz: true }, W('instalamos', 2));
+off(['#vEnergia', '#sInst'], W('pagas', 2) - .45);
+set({ pose: 'señala', ojos: 'abiertos', feliz: false }, W('pagas', 2) - .1);
+pop('#vPago', W('pagas', 2) - .05, { x: -40 }); pop('#vEnv', W('enviamos', 2) - .05, { x: 40 });
+set({ pose: 'pulgar', feliz: true }, W('venezuela', 2));
+off(['#t2', '#vPago', '#vEnv'], B[3][0] - .5);
 
 // ===== 3. Reparamos =====
 fondo(false, B[3][0] - .35); titulo('#t3', B[3][0] - .05); set({ pose: 'brazos', ojos: 'abiertos' }, W('segundo', 3));

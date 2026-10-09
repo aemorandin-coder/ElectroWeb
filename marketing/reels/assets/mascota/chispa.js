@@ -45,9 +45,14 @@
   const ojos = (o) => `${ojo(166, 176, o.abre, o.mx, o.my, o.forma === 'guino' ? 'normal' : o.forma)}${ojo(234, 176, o.abre, o.mx, o.my, o.forma === 'guino' ? 'feliz' : o.forma)}`;
 
   // Cejas: alto (sube las dos), duda (una arriba, otra abajo), enojo (puntas de adentro abajo)
+  const ceja = (pts, gr) => { // pts: 4 puntos de la curva; gr: grosor arriba/abajo en cada punto
+    const up = pts.map((p, i) => `${f(p[0])} ${f(p[1] - gr[i])}`), dn = pts.map((p, i) => `${f(p[0])} ${f(p[1] + gr[i] * .7)}`);
+    return `<path d="M${up[0]} C${up[1]} ${up[2]} ${up[3]} L${dn[3]} C${dn[2]} ${dn[1]} ${dn[0]} Z" fill="${INK}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  };
   const cejas = (c) => {
     const a = c.alto * 8, dL = c.duda * 2, dR = -c.duda * 7, e = c.enojo * 6;
-    return `<path d="M150 ${f(150 - a + dL)} C158 ${f(144 - a + dL)} 172 ${f(144 - a + dL)} 180 ${f(148 - a + dL + e)} M220 ${f(148 - a + dR + e)} C228 ${f(144 - a + dR)} 242 ${f(144 - a + dR)} 250 ${f(150 - a + dR)}" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/>`;
+    return ceja([[150, 150 - a + dL], [158, 144 - a + dL], [172, 144 - a + dL], [180, 148 - a + dL + e]], [2.2, 3.6, 4.6, 5]) +
+           ceja([[220, 148 - a + dR + e], [228, 144 - a + dR], [242, 144 - a + dR], [250, 150 - a + dR]], [5, 4.6, 3.6, 2.2]);
   };
 
   // Boca: abre 0..1, ancho 0..1, sonrisa -1..1, dientes
@@ -103,12 +108,15 @@
   };
   const ang = (e, w) => Math.atan2(w[0] - e[0], -(w[1] - e[1])) * 180 / Math.PI;
   // Brazo: hombro -> codo -> muñeca (tubo de tinta con camisa adentro) y la mano según el antebrazo.
-  const brazo = (lado, b) => {
+  const brazo = (lado, b, id = 0) => {
     const [hx, hy] = HOMBRO[lado], c = b.codo, m = b.muñeca, a = ang(c, m);
     const d = `M${hx} ${hy} Q${f(c[0])} ${f(c[1])} ${f(m[0])} ${f(m[1])}`;
     const mano = b.mano && MANOS[b.mano] ? MANOS[b.mano](m[0], m[1], a + (b.giro || 0)) : '';
     return `<path d="${d}" fill="none" stroke="${INK}" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="${d}" fill="none" stroke="${SHIRT}" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>${mano}`;
+            <path d="${d}" fill="none" stroke="${SHIRT}" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+            <mask id="manga${id}${lado}"><path d="${d}" fill="none" stroke="#fff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/></mask>
+            <g mask="url(#manga${id}${lado})"><path d="${d}" transform="translate(17 11)" fill="none" stroke="${SHIRT_SOMBRA}" stroke-width="40" stroke-linecap="round"/>
+              <path d="${d}" transform="translate(-12 -7)" fill="none" stroke="#2a3b63" stroke-width="7" stroke-linecap="round"/></g>${mano}`;
   };
 
   // ---------- Vista de espalda: nuca con corte en V, camisa con la placa ES grande ----------
@@ -147,6 +155,7 @@
     celebra: { L: { codo: [84, 300], muñeca: [100, 214], mano: 'puño', giro: 0 }, R: { codo: [316, 300], muñeca: [300, 214], mano: 'puño', giro: 0 } },
     piensa: { L: REPOSO_L, R: { codo: [306, 392], muñeca: [212, 288], mano: 'puño', giro: 44 } },
   };
+  const INC_POSE = { señala: 3, pulgar: 2, brazos: -2, hombros: -5, saluda: 4, piensa: -7, celebra: 0, explica: 0 };
   const R_ATRAS = { codo: [284, 370], muñeca: [288, 446], mano: 'indiceAtras', giro: 0 }, L_ATRAS = { codo: [116, 370], muñeca: [112, 446], mano: 'puñoAtras', giro: 0 };
   const POSES_ESPALDA = {
     espalda: { L: L_ATRAS, R: R_ATRAS },
@@ -169,14 +178,15 @@
   const BOCAS = {
     sonrisa: { abre: 0, ancho: .5, sonrisa: .6, dientes: false }, seria: { abre: 0, ancho: .45, sonrisa: 0, dientes: false },
     a: { abre: .85, ancho: .55, sonrisa: .2, dientes: true }, e: { abre: .45, ancho: .85, sonrisa: .3, dientes: true },
-    i: { abre: .28, ancho: .95, sonrisa: .5, dientes: true }, o: { abre: .7, ancho: .25, sonrisa: 0, dientes: false },
+    i: { abre: .28, ancho: .95, sonrisa: .5, dientes: true }, o: { abre: .72, ancho: .08, sonrisa: 0, dientes: false },
     u: { abre: .42, ancho: .12, sonrisa: 0, dientes: false }, feliz: { abre: .55, ancho: .8, sonrisa: 1, dientes: true },
   };
   const brazosDe = (vista, pose) => (vista === 'espalda' ? POSES_ESPALDA[pose] || POSES_ESPALDA.espalda : POSES[pose] || POSES.habla);
 
   const rig = (e) => {
-    const brazos = () => e.orden === 'RL' ? brazo('R', e.R) + brazo('L', e.L) : brazo('L', e.L) + brazo('R', e.R);
-    const id = ++uid, cab = e.cabeza, sy = e.cuerpo, sx = 1 + (1 - sy) * .6;
+    const id = ++uid;
+    const brazos = () => e.orden === 'RL' ? brazo('R', e.R, id) + brazo('L', e.L, id) : brazo('L', e.L, id) + brazo('R', e.R, id);
+    const cab = e.cabeza, sy = e.cuerpo, sx = 1 + (1 - sy) * .6;
     const cuerpo = `translate(200 420) scale(${f(sx * 1000) / 1000} ${f(sy * 1000) / 1000}) translate(-200 -420)`;
     const cabeza = `rotate(${f(cab.inc)} 200 258) translate(${f(cab.dx)} ${f(cab.dy)})`;
     let dentro;
@@ -207,7 +217,7 @@
       const l = window.CHISPA_L || {}, r = window.CHISPA_R || {};
       b = { L: { ...L_ATRAS, giro: 0, ...l }, R: { ...R_ATRAS, giro: 0, ...r } };
     }
-    e.L = b.L; e.R = b.R; e.orden = b.orden || 'LR';
+    e.L = b.L; e.R = b.R; e.orden = b.orden || 'LR'; e.cabeza.inc = INC_POSE[pose] || 0;
     Object.assign(e.ojos, OJOS[ojos] || OJOS.abiertos); Object.assign(e.cejas, CEJAS[cejas] || CEJAS.normal); Object.assign(e.boca, BOCAS[boca] || BOCAS.sonrisa);
     return rig(e);
   };
@@ -244,7 +254,7 @@
       Object.assign(e.ojos, oj);
       const c = valor('cejas', 'normal', t); Object.assign(e.cejas, mezcla(CEJAS[c.prev] || CEJAS.normal, CEJAS[c.cur] || CEJAS.normal, backOut(clamp(c.x / .25), 1.2)));
       const m = valor('mirar', [0, 0], t), mm = mezcla(m.prev, m.cur, easeInOut(clamp(m.x / .18))); e.ojos.mx = mm[0]; e.ojos.my = mm[1];
-      const i = valor('inc', 0, t); e.cabeza.inc = mezcla(i.prev, i.cur, easeInOut(clamp(i.x / .4)));
+      const i = valor('inc', 0, t); e.cabeza.inc = mezcla(i.prev, i.cur, easeInOut(clamp(i.x / .4))) + mezcla(INC_POSE[p.prev] || 0, INC_POSE[p.cur] || 0, easeInOut(clamp(p.x / .45)));
       const fz = valor('feliz', false, t); e.boca.sonrisa = mezcla(fz.prev ? 1 : .5, fz.cur ? 1 : .5, clamp(fz.x / .2)); e.rubor = .45 + (fz.cur ? .25 : 0);
       const bo = valor('boca', 'sonrisa', t); Object.assign(e.boca, mezcla(BOCAS[bo.prev] || BOCAS.sonrisa, BOCAS[bo.cur] || BOCAS.sonrisa, easeInOut(clamp(bo.x / .1))));
       e.cambioPose = p.x;
@@ -282,6 +292,7 @@
     // al cambiar de pose, el cuerpo hace un pequeño rebote
     if (e.cambioPose !== undefined && e.cambioPose < .3) e.cuerpo *= 1 - Math.sin(e.cambioPose / .3 * Math.PI) * .025;
     e.pelo = -Math.cos(t * 1.3) * 1.1 - Math.cos(t * 7.1) * habla * 1.2;
+    if (e.cambioPose !== undefined && e.cambioPose < .8) e.pelo += Math.sin(e.cambioPose * 24) * Math.exp(-e.cambioPose * 6) * 4;
     return e;
   };
 

@@ -1,8 +1,9 @@
 # Efectos de "La ficha de Electro Shop": suaves, debajo de la voz de Chispa. Los tiempos salen de assets/voz/chispa-ficha.json
 # (las mismas palabras que usa la línea de tiempo de ficha.src.html), así que si cambia la voz, los efectos se mueven solos.
-import math, random, wave, struct, json, re
+import math, random, wave, struct, json, re, os
 VOZ = json.load(open('assets/voz/chispa-ficha.json'))
-SR = 44100; DUR = math.ceil(VOZ['duracion'] + 1.6)
+SR = 44100; DUR = math.ceil(VOZ['duracion'] + float(os.environ.get('EXTRA', '1.6')))  # EXTRA=12 para la versión de YouTube
+SALIDA = os.environ.get('SALIDA', 'sonido-ficha.wav')
 N = int(SR * DUR); buf = [0.0] * N
 random.seed(7)
 TAU = 2 * math.pi
@@ -116,7 +117,10 @@ whoosh(W('gracias', 7) - .25, .4, .4 * G); pop(W('gracias', 7) + .1, .4 * G)
 tap(W('escríbenos', 7) + .55, .5 * G); ding(W('escríbenos', 7) + .65, .3 * G)
 
 pk = max(abs(v) for v in buf) or 1
-with wave.open('sonido-ficha.wav', 'w') as f:
+if float(os.environ.get('EXTRA', '1.6')) > 5:  # pantalla final de YouTube
+    tf = B[7][1] + 1.3; whoosh(tf - .3, .5, .5 * G, 3000); pop(tf, .4 * G); ting(tf + .1, 1318, .22 * G); pop(tf + .3, .3 * G, 800, 1200); pop(tf + .42, .3 * G, 900, 1300)
+
+with wave.open(SALIDA, 'w') as f:
     f.setnchannels(1); f.setsampwidth(2); f.setframerate(SR)
     f.writeframes(b''.join(struct.pack('<h', int(max(-1, min(1, v * .5 / pk if pk > .5 else v)) * 32767)) for v in buf))
-print('sonido-ficha.wav', DUR, 's, pico', round(pk, 3))
+print(SALIDA, DUR, 's, pico', round(pk, 3))

@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>La ficha de Electro Shop (YouTube, 16:9)</title>
+<style>
+@font-face { font-family: Inter; src: url(assets/InterVariable.woff2) format('woff2'); font-weight: 100 900; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-600-normal.woff2); font-weight: 600; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-700-normal.woff2); font-weight: 700; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-800-normal.woff2); font-weight: 800; }
+@font-face { font-family: Serif; src: url(assets/instrument-serif-latin-400-italic.woff2); font-style: italic; }
+@font-face { font-family: Tektrron; src: url(assets/Tektrron.ttf); }
+:root { --ink: #111317; --cream: #f4efe4; --blue: #2a63cd; --blue2: #1e4ba3; --muted: #6a6c6b; --green: #0f9d58; --emoji: "Noto Color Emoji"; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 960px; height: 540px; overflow: hidden; background: var(--cream); }
+body { font-family: Inter, var(--emoji), sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+svg { display: block; }
+.ic { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#stage { position: relative; width: 960px; height: 540px; overflow: hidden; background: var(--cream); }
+#grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(17,19,23,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(17,19,23,.05) 1px, transparent 1px); background-size: 27px 27px; }
+#bgBlue { position: absolute; inset: 0; background: var(--blue); opacity: 0; }
+#bgBlue::after { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px); background-size: 27px 27px; }
+
+/* Cabecera */
+#head { position: absolute; left: 26px; right: 26px; top: 26px; display: flex; justify-content: space-between; align-items: center; z-index: 30; }
+#head .brand { display: flex; align-items: center; gap: 7px; padding: 5px 10px 5px 6px; border-radius: 999px; background: #fff; border: 1.5px solid var(--ink); }
+#head .brand img { height: 15px; }
+#head .chip { font: 700 10px Inter; letter-spacing: 1.2px; padding: 5px 9px; border-radius: 6px; border: 1.5px solid var(--ink); background: #fff; }
+
+/* Título */
+.title { position: absolute; left: 26px; right: 26px; top: 66px; font: 700 37px/1.05 Poppins; letter-spacing: -1px; color: var(--ink); z-index: 20; visibility: hidden; }
+.title em { font: italic 400 46px/1 Serif; letter-spacing: 0; position: relative; padding: 0 2px; }
+.title em::after { content: ''; position: absolute; left: 0; right: 0; bottom: 4px; height: 12px; background: var(--hl, #ffd54a); z-index: -1; border-radius: 3px; }
+.onblue .title, .title.w { color: #fff; }
+.title.w em::after { background: rgba(255,255,255,.28); }
+
+/* Tarjetas estilo ficha */
+.card { position: absolute; background: #fff; border: 2.5px solid var(--ink); border-radius: 14px; box-shadow: 5px 5px 0 var(--ink); visibility: hidden; z-index: 12; }
+.lbl { font: 600 9.5px Inter; letter-spacing: 1.1px; color: var(--muted); text-transform: uppercase; }
+
+/* Subtítulos */
+#sub { position: absolute; left: 0; right: 0; top: 498px; display: flex; justify-content: center; z-index: 40; }
+#sub .pill { display: flex; gap: 6px; padding: 6px 10px; border-radius: 8px; background: var(--ink); color: #fff; font: 700 17px Poppins; visibility: hidden; }
+#sub span { padding: 1px 5px; border-radius: 5px; }
+#sub span.on { background: var(--blue); }
+.onblue #sub span.on { background: #ffd54a; color: var(--ink); }
+
+/* Chispa */
+#disc, #chispa { position: absolute; left: 70px; top: 548px; width: 400px; height: 420px; }
+#chispa { transform-origin: 50% 100%; z-index: 10; }
+#disc { z-index: 9; }
+#chispa svg, #disc svg { width: 400px; height: 420px; }
+
+/* Piezas */
+.chipx { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 10px; border: 2px solid var(--ink); background: #fff; font: 700 15px Poppins; visibility: hidden; box-shadow: 3px 3px 0 var(--ink); }
+.row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1.5px dashed #d8d2c4; visibility: hidden; }
+.row:last-child { border-bottom: 0; }
+.row b { font: 700 15px Poppins; }
+.row small { display: block; font: 500 11.5px Inter; color: var(--muted); }
+.tick { width: 26px; height: 26px; border-radius: 7px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stamp { position: absolute; padding: 6px 12px; border: 3px solid var(--green); color: var(--green); border-radius: 8px; font: 800 15px Poppins; letter-spacing: .5px; text-transform: uppercase; transform: rotate(-8deg); background: rgba(255,255,255,.9); visibility: hidden; }
+.tile { height: 150px; border-radius: 14px; border: 2.5px solid var(--ink); background: #fff; box-shadow: 5px 5px 0 var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; visibility: hidden; }
+.tile b { font: 800 22px Poppins; color: var(--ink); }
+.ico { width: 58px; height: 58px; border-radius: 14px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid var(--ink); }
+.qm { position: absolute; font: italic 400 64px Serif; color: var(--ink); visibility: hidden; z-index: 14; }
+
+/* Teléfono de Pista Rides */
+#pphone { position: absolute; left: 160px; top: 132px; width: 190px; height: 360px; border-radius: 34px; background: #0a0a0a; padding: 7px; box-shadow: 0 0 0 2px #2c2f34, 6px 6px 0 var(--ink); visibility: hidden; z-index: 12; }
+#pphone .scr { position: relative; width: 100%; height: 100%; border-radius: 28px; background: #ffea00; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+#pphone .isl { position: absolute; left: 50%; top: 8px; width: 56px; height: 16px; margin-left: -28px; border-radius: 10px; background: #000; }
+#pphone .sym { width: 92px; }
+#pphone .word { width: 150px; }
+#pphone .soon { font: 700 11px Inter; letter-spacing: 2px; color: #0a0a0a; opacity: .7; }
+
+/* Versión YouTube 16:9: Chispa a la izquierda, capítulos a la derecha */
+#der { position: absolute; left: 404px; top: -6px; width: 540px; height: 560px; }
+#sub { left: 404px !important; right: auto !important; width: 540px; top: 488px !important; }
+#disc, #chispa { left: 4px !important; top: 126px !important; }
+#fin { position: absolute; left: 430px; top: 70px; width: 490px; z-index: 26; }
+.finLogo, .finVideo, .finSub, .finDatos { visibility: hidden; }
+.finLogo { display: inline-flex; padding: 12px 22px; background: #fff; border: 2.5px solid var(--ink); border-radius: 999px; box-shadow: 5px 5px 0 var(--ink); }
+.finLogo img { height: 40px; }
+.finFila { display: flex; gap: 22px; margin-top: 34px; align-items: center; }
+.finVideo { width: 300px; height: 169px; border-radius: 16px; border: 3px dashed rgba(255,255,255,.75); display: flex; align-items: flex-end; padding: 12px; }
+.finSub { width: 150px; height: 150px; border-radius: 50%; border: 3px dashed rgba(255,255,255,.75); display: flex; align-items: center; justify-content: center; }
+.finVideo span, .finSub span { font: 700 16px Poppins; color: #fff; }
+.finDatos { margin-top: 34px; font: 600 14px Inter; color: rgba(255,255,255,.9); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="grid"></div>
+  <div id="bgBlue"></div>
+  <div id="head"><span class="brand"><img src="assets/logo-color.png" alt=""></span><span class="chip">ELECTROSHOPVE.COM</span></div>
+
+  <div id="der">
+  <!-- Títulos por capítulo -->
+  <div class="title" id="t0">¿Una <em>tienda</em>?</div>
+  <div class="title" id="t1">La <em>ficha.</em></div>
+  <div class="title w" id="t2"><em>Vendemos.</em></div>
+  <div class="title w" id="t2b">Pago y <em>envíos.</em></div>
+  <div class="title" id="t3"><em>Reparamos.</em></div>
+  <div class="title w" id="t4"><em>Desarrollamos.</em></div>
+  <div class="title" id="t5">¿Quién lo <em>usa</em>?</div>
+  <div class="title" id="t6">Lo que <em>viene.</em></div>
+  <div class="title w" id="t7">No solo una <em>tienda.</em></div>
+  <div class="title w" id="t8">¡Gracias <em>por verlo!</em></div>
+
+  <!-- 0. La tienda web -->
+  <div class="card" id="web" style="left:60px; top:150px; width:420px; height:300px; overflow:hidden">
+    <div style="height:34px; border-bottom:2px solid var(--ink); display:flex; align-items:center; gap:6px; padding:0 12px; background:#f6f6f6">
+      <i style="width:10px;height:10px;border-radius:50%;background:#ff5f57;display:block"></i><i style="width:10px;height:10px;border-radius:50%;background:#febc2e;display:block"></i><i style="width:10px;height:10px;border-radius:50%;background:#28c840;display:block"></i>
+      <span style="margin-left:10px; flex:1; height:20px; border-radius:6px; background:#fff; border:1.5px solid #ccc; font:600 11px Inter; display:flex; align-items:center; padding:0 8px">electroshopve.com</span></div>
+    <div style="padding:14px"><img src="assets/logo-color.png" style="height:22px"><div style="margin-top:12px; height:96px; border-radius:12px; background:linear-gradient(135deg,#2a63cd,#142d61); color:#fff; padding:14px; font:800 18px/1.15 Poppins">Tecnología aquí<br>en Venezuela</div>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:10px">
+        <div style="height:80px;border-radius:10px;background:#eef2ff"></div><div style="height:80px;border-radius:10px;background:#ecfeff"></div><div style="height:80px;border-radius:10px;background:#fff7ed"></div><div style="height:80px;border-radius:10px;background:#f0fdf4"></div></div></div>
+  </div>
+  <div class="stamp" id="sParte" style="left:268px; top:396px; z-index:14">Solo una parte</div>
+
+  <!-- 1. Ficha de empresa -->
+  <div class="card" id="ficha" style="left:34px; top:142px; width:472px; height:330px">
+    <div style="display:flex; justify-content:space-between; padding:10px 14px; border-bottom:2px solid var(--ink)"><span class="lbl" style="color:var(--ink)">Ficha de empresa</span><span class="lbl" style="color:var(--blue)">Electro Shop · 2026</span></div>
+    <div style="display:flex; gap:14px; padding:14px">
+      <div style="width:96px; height:96px; border-radius:12px; border:2px solid var(--ink); display:flex; align-items:center; justify-content:center; background:#f4f7fc; flex-shrink:0"><img src="assets/logo-es-circulo.png" style="width:78px"></div>
+      <div style="flex:1; display:grid; gap:9px">
+        <div class="frow" id="f0"><div class="lbl">Nombre</div><b class="typ" data-t="Electro Shop Morandin C.A." style="font:700 16px Poppins"></b></div>
+        <div class="frow" id="f1"><div class="lbl">Sede</div><b class="typ" data-t="Guanare, Portuguesa" style="font:700 16px Poppins"></b></div>
+        <div class="frow" id="f2"><div class="lbl">Experiencia</div><b class="typ" data-t="14 años en tecnología" style="font:700 16px Poppins"></b></div>
+      </div>
+    </div>
+    <div style="padding:0 14px"><div class="lbl">Lo nuestro</div>
+      <div style="display:flex; gap:8px; margin-top:8px"><span class="chipx" id="lo0"><i data-ic="cart" data-s="15"></i>Tecnología</span><span class="chipx" id="lo1"><i data-ic="cpu" data-s="15"></i>Desarrollo</span><span class="chipx" id="lo2"><i data-ic="tool" data-s="15"></i>Soporte</span></div></div>
+  </div>
+
+  <!-- 2. Vendemos: cuatro productos, energía (y la instalamos), pago y envío -->
+  <div id="vend" style="position:absolute; left:34px; right:34px; top:140px; display:grid; grid-template-columns:1fr 1fr; gap:14px; z-index:12">
+    <div class="tile" id="v0"><span class="ico"><i data-ic="monitor" data-s="30"></i></span><b>Tecnología</b></div>
+    <div class="tile" id="v1"><span class="ico"><i data-ic="game" data-s="30"></i></span><b>Gaming</b></div>
+    <div class="tile" id="v2"><span class="ico"><i data-ic="gift" data-s="30"></i></span><b>Gift cards</b></div>
+    <div class="tile" id="v3"><span class="ico"><i data-ic="signal" data-s="30"></i></span><b>Recargas</b></div>
+  </div>
+  <div class="card" id="vEnergia" style="left:34px; top:150px; width:472px; height:282px; padding:18px">
+    <div style="display:flex; align-items:center; gap:14px"><span class="ico" style="background:#f59f00"><i data-ic="zap" data-s="34"></i></span><div><div class="lbl">También vendemos</div><b style="font:800 34px/1 Poppins">Energía</b></div></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px">
+      <div class="tile" id="eUps" style="height:118px"><span class="ico"><i data-ic="battery" data-s="30"></i></span><b>UPS</b></div>
+      <div class="tile" id="eInv" style="height:118px"><span class="ico"><i data-ic="power" data-s="30"></i></span><b>Inversores</b></div>
+    </div>
+  </div>
+  <div class="stamp" id="sInst" style="left:300px; top:128px; z-index:14; font-size:17px">Lo instalamos</div>
+  <div id="vPagoEnv" style="position:absolute; left:34px; right:34px; top:180px; z-index:12">
+    <div class="card" id="vPago" style="position:relative; padding:16px; display:flex; align-items:center; gap:14px">
+      <span class="ico"><i data-ic="phone" data-s="28"></i></span><b style="font:800 24px Poppins">Pagas con Pago Móvil</b></div>
+    <div class="card" id="vEnv" style="position:relative; margin-top:18px; padding:16px; display:flex; align-items:center; gap:14px">
+      <span class="ico" style="background:var(--green)"><i data-ic="truck" data-s="28"></i></span><div style="flex:1"><b style="font:800 22px/1.15 Poppins">Envíos a toda Venezuela</b><div style="display:flex;gap:26px;margin-top:8px;align-items:center"><img id="vZoom" src="assets/zoom.png" style="height:18px; transform-origin:50% 50%"><img id="vMrw" src="assets/mrw.png" style="height:18px; transform-origin:50% 50%"></div></div></div>
+  </div>
+
+  <!-- 3. Reparamos -->
+  <div class="card" id="rep" style="left:34px; top:142px; width:472px; height:332px; display:flex; overflow:hidden">
+    <div style="width:180px; flex-shrink:0; border-right:2.5px solid var(--ink); position:relative; background:#111"><img src="assets/taller.jpg" style="width:100%;height:100%;object-fit:cover;object-position:50% 40%">
+      <span class="stamp" id="sIng" style="left:12px; bottom:18px; border-color:#fff; color:#fff; background:var(--blue); font-size:13px">Con ingeniero</span></div>
+    <div style="flex:1; padding:8px 14px">
+      <div class="row" id="r0"><span class="tick"><i data-ic="game" data-s="15"></i></span><div><b>Consolas</b><small>Mantenimiento</small></div></div>
+      <div class="row" id="r1"><span class="tick"><i data-ic="cpu" data-s="15"></i></span><div><b>PC gamer</b><small>Ensamblaje</small></div></div>
+      <div class="row" id="r2"><span class="tick"><i data-ic="video" data-s="15"></i></span><div><b>Cámaras</b><small>Instalación</small></div></div>
+      <div class="row" id="r3"><span class="tick"><i data-ic="wifi" data-s="15"></i></span><div><b>Redes</b><small>Cableado</small></div></div>
+      <div class="row" id="r4"><span class="tick"><i data-ic="card" data-s="15"></i></span><div><b>Puntos de venta</b><small>Para tu negocio</small></div></div>
+    </div>
+  </div>
+
+  <!-- 4. Desarrollamos: L2 Control -->
+  <div class="card" id="l2" style="left:34px; top:142px; width:472px; height:332px; padding:16px">
+    <div style="display:flex; align-items:center; gap:12px"><img src="assets/logo-l2.png" style="height:58px"><div><div class="lbl">Software de Electro Shop</div><b style="font:800 30px/1 Poppins">L2 Control</b></div></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px">
+      <span class="chipx" id="m0"><i data-ic="coffee" data-s="16"></i>Restaurante</span><span class="chipx" id="m1"><i data-ic="card" data-s="16"></i>Caja</span>
+      <span class="chipx" id="m2"><i data-ic="box" data-s="16"></i>Inventario</span><span class="chipx" id="m3"><i data-ic="shield" data-s="16"></i>Permisos</span></div>
+    <div id="l2shot" style="margin-top:14px; height:104px; border-radius:10px; border:2px solid var(--ink); overflow:hidden; visibility:hidden"><img src="clips/l2-caja/0300.jpg" style="width:100%; transform:scale(1.6); transform-origin:100% 0"></div>
+  </div>
+  <div class="stamp" id="sSecreto" style="left:290px; top:120px; z-index:14; border-color:#e8590c; color:#e8590c">Casi nadie lo sabe</div>
+
+  <!-- 5. Abby Kingdom -->
+  <div class="card" id="abby" style="left:60px; top:150px; width:420px; height:300px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px">
+    <img src="assets/abby-logo.png" style="width:300px">
+    <span class="lbl" style="font-size:11px">Guanare · Parque y restaurante</span>
+  </div>
+  <div class="stamp" id="sOpera" style="left:250px; top:400px; z-index:14">Ya opera con L2 Control</div>
+
+  <!-- 6. Pista Rides -->
+  <div id="pphone"><div class="scr"><span class="isl"></span><img class="sym" src="assets/simbolo-negro.svg" alt=""><img class="word" src="assets/logo-claro.svg" alt="" style="width:150px; clip-path: inset(0 0 0 24%)"><span class="soon">MUY PRONTO</span></div></div>
+  <div class="chipx" id="pApp" style="position:absolute; left:28px; top:200px; z-index:14; transform:rotate(-4deg)"><i data-ic="mapPin" data-s="16"></i>Una app para<br>pedir viajes</div>
+  <div class="chipx" id="pWeb" style="position:absolute; right:22px; top:400px; z-index:14; transform:rotate(3deg)"><i data-ic="globe" data-s="16"></i>pistarides.com</div>
+  <div class="qm" id="q0" style="left:380px; top:150px">?</div>
+  <div class="qm" id="q1" style="left:96px; top:330px; font-size:48px">?</div>
+  <div class="qm" id="q2" style="left:420px; top:260px; font-size:40px">?</div>
+
+  <!-- 7. Cierre -->
+  <div id="tres" style="position:absolute; left:34px; right:34px; top:148px; display:flex; flex-direction:column; gap:12px; z-index:12">
+    <span class="chipx" id="x0" style="font-size:20px"><span class="tick"><i data-ic="cart" data-s="15"></i></span>Vendemos</span>
+    <span class="chipx" id="x1" style="font-size:20px"><span class="tick"><i data-ic="tool" data-s="15"></i></span>Reparamos</span>
+    <span class="chipx" id="x2" style="font-size:20px"><span class="tick"><i data-ic="cpu" data-s="15"></i></span>Desarrollamos</span>
+  </div>
+  <div class="card" id="esLogo" style="left:60px; top:330px; width:420px; height:110px; display:flex; align-items:center; justify-content:center"><img src="assets/logo-color.png" style="height:52px"></div>
+  <div class="card" id="cta" style="left:50px; top:160px; width:440px; padding:18px; text-align:center">
+    <div class="lbl">Habla con nosotros</div>
+    <div id="ctaBtn" style="margin:12px auto 0; width:max-content; display:flex; align-items:center; gap:10px; padding:12px 20px; border-radius:12px; background:#25d366; border:2.5px solid var(--ink); box-shadow:4px 4px 0 var(--ink); font:800 19px Poppins; color:#fff"><img src="assets/whatsapp.png" style="width:26px;height:26px;border-radius:6px"><span id="ctaTxt">Escríbenos</span></div>
+    <div style="margin-top:14px; font:700 15px Poppins">electroshopve.com · Guanare</div>
+    <div style="margin-top:6px; font:500 10.5px Inter; color:var(--muted)">Electro Shop Morandin C.A. · RIF J&#8209;40590333&#8209;3</div>
+  </div>
+  <svg id="cursor" width="34" height="34" viewBox="0 0 24 24" style="position:absolute; left:300px; top:330px; z-index:50; visibility:hidden"><path d="M4 2 L4 20 L9 15 L12 22 L15 21 L12 14 L19 14 Z" fill="#fff" stroke="#111317" stroke-width="1.6" stroke-linejoin="round"/></svg>
+
+  </div>
+  <!-- Pantalla final para YouTube: espacio libre para los elementos de la pantalla final (video y suscribirse) -->
+  <div id="fin">
+    <div class="finLogo"><img src="assets/logo-color.png" alt=""></div>
+    <div class="finFila"><div class="finVideo" id="fV"><span>Mira otro video</span></div><div class="finSub" id="fS"><span>Suscríbete</span></div></div>
+    <div class="finDatos" id="fD">electroshopve.com · WhatsApp +58 257 251 1282 · Guanare, Portuguesa</div>
+  </div>
+  <div id="sub"><div class="pill" id="pill"></div></div>
+  <div id="disc"><svg viewBox="0 0 400 420"><circle id="discC" cx="200" cy="232" r="150" fill="#2a63cd"/><circle cx="200" cy="232" r="166" fill="none" stroke="#111317" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" opacity=".5" id="discR"/></svg></div>
+  <div id="chispa"></div>
+</div>
+
+<script src="assets/gsap.min.js"></script>
+<script src="assets/mascota/chispa.js"></script>
+<script>
+const VOZ = /*VOZ*/;
+window.EXTRA_IC = {
+  tool: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  cpu: '<rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>',
+  truck: '<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',
+  video: '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>',
+  wifi: '<path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>',
+  coffee: '<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>',
+  box: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  monitor: '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+  signal: '<line x1="4" y1="20" x2="4" y2="16"/><line x1="9" y1="20" x2="9" y2="12"/><line x1="14" y1="20" x2="14" y2="8"/><line x1="19" y1="20" x2="19" y2="4"/>',
+  battery: '<rect x="2" y="7" width="17" height="10" rx="2" ry="2"/><line x1="22" y1="11" x2="22" y2="13"/><polyline points="11.5 8.5 8.5 12 11.5 12 8.5 15.5"/>',
+  power: '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>',
+  mapPin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+};
+/*ICONS*/
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const norm = w => w.toLowerCase().replace(/[^a-z0-9áéíóúñü]/g, '');
+// W('Guanare', 1) → instante en que se dice esa palabra en ese bloque
+const W = (w, b, n = 0) => { const m = VOZ.palabras.filter(p => p.b === b && norm(p.w) === norm(w)); if (!m[n]) throw new Error('falta ' + w + ' ' + b); return m[n].t0; };
+const B = VOZ.bloques;
+
+// ---------- Subtítulos: ventanas de hasta 4 palabras por frase ----------
+const ventanas = []; let cur = [];
+VOZ.palabras.forEach((p, i) => { cur.push(i); const fin = /[.,:?!…]$/.test(p.w) || cur.length >= 4 || !VOZ.palabras[i + 1] || VOZ.palabras[i + 1].b !== p.b; if (fin) { ventanas.push(cur); cur = []; } });
+const pill = $('#pill'); let lastV = -1;
+function subtitulos(t) {
+  let wi = -1; for (let i = 0; i < VOZ.palabras.length; i++) if (t >= VOZ.palabras[i].t0 - .02) wi = i;
+  const visible = wi >= 0 && t < VOZ.palabras[wi].t1 + .45;
+  pill.style.visibility = visible ? 'visible' : 'hidden';
+  if (!visible) return;
+  const v = ventanas.findIndex(vs => vs.includes(wi));
+  if (v !== lastV) { pill.innerHTML = ventanas[v].map(i => `<span data-i="${i}">${VOZ.palabras[i].w.replace(/[.,:…]$/, '')}</span>`).join(''); lastV = v; }
+  pill.querySelectorAll('span').forEach(s => s.classList.toggle('on', +s.dataset.i === wi));
+}
+
+// ---------- Chispa: pose, boca por volumen, parpadeo ----------
+const C = { vista: 0, pose: 'habla', ojos: 'abiertos', cejas: 'normal', feliz: false, codoX: 284, codoY: 370, mX: 288, mY: 446, lcX: 116, lcY: 370, lmX: 112, lmY: 446 };
+const chEl = $('#chispa'); let lastSvg = '';
+function boca(t) {
+  const i = Math.floor(t * 30), r = VOZ.rms[i] ?? -60, r2 = VOZ.rms[i - 1] ?? -60;
+  if (r < -38) return C.feliz ? 'feliz' : 'sonrisa';
+  if (r < -26) return (i % 2) ? 'e' : 'sonrisa';
+  if (r < -19) return r > r2 ? 'a' : 'e';
+  return (i % 3 === 0) ? 'o' : 'a';
+}
+function dibujarViejo(t) {
+  let svg;
+  const parpadea = (t % 3.4) < .12 && C.ojos === 'abiertos';
+  if (C.vista < 1) svg = chispa({ pose: C.pose, boca: boca(t), ojos: parpadea ? 'cerrados' : C.ojos, cejas: C.cejas, fondo: false });
+  else { window.CHISPA_R = { codo: [C.codoX, C.codoY], muñeca: [C.mX, C.mY] }; window.CHISPA_L = { codo: [C.lcX, C.lcY], muñeca: [C.lmX, C.lmY], giro: -70 }; svg = chispa({ pose: 'espalda-libre', fondo: false }); }
+  if (svg !== lastSvg) { chEl.innerHTML = svg; lastSvg = svg; }
+}
+
+// Chispa 2.0: cada set() de la línea de tiempo también queda como clave; dibujar() interpola entre claves
+const claves = []; let linea = null, T_FIN = 1e9;
+const labios = chispa.labios(VOZ);
+function dibujar(t) {
+  const e = linea(t);
+  const i = Math.floor(t * 30), r = VOZ.rms[i] ?? -60;
+  const p = VOZ.palabras.find(q => t >= q.t0 - .03 && t < q.t1 + .05);
+  if (p && e.vista === 'frente') { const b = labios(t); Object.assign(e.boca, b, { sonrisa: Math.max(b.sonrisa, e.boca.sonrisa * .6) }); }
+  chispa.vida(e, t, { rms: p ? r : null });
+  if (e.vista === 'espalda') { e.L = { codo: [C.lcX, C.lcY], muñeca: [C.lmX, C.lmY], mano: 'puñoAtras', giro: -70 }; e.R = { codo: [C.codoX, C.codoY], muñeca: [C.mX, C.mY], mano: 'indiceAtras', giro: 0 }; e.orden = 'LR'; }
+  if (t > T_FIN + .3) { const w = Math.sin((t - T_FIN) * 10); e.R.giro += w * 20; e.R.muñeca = [e.R.muñeca[0] + w * 7, e.R.muñeca[1]]; }
+  e.fondo = false;
+  chEl.innerHTML = chispa.rig(e);
+}
+
+function build() {
+const tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
+const set = (vars, t) => {
+  tl.set(C, vars, t);
+  const k = { t };
+  for (const c of ['pose', 'ojos', 'cejas', 'feliz']) if (c in vars) k[c] = vars[c];
+  if ('vista' in vars) k.vista = vars.vista >= 1 ? 'espalda' : 'frente';
+  claves.push(k);
+};
+const pop = (id, t, from = { y: 18, scale: .9 }) => tl.fromTo(id, { autoAlpha: 0, ...from }, { autoAlpha: 1, y: 0, x: 0, scale: 1, duration: .38, ease: 'back.out(1.8)' }, t);
+const off = (ids, t) => tl.to(ids, { autoAlpha: 0, y: -16, duration: .22, ease: 'power2.in' }, t);
+const titulo = (id, t) => tl.fromTo(id, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: .35, ease: 'back.out(1.6)' }, t);
+const fondo = (azul, t) => {
+  tl.to('#bgBlue', { opacity: azul ? 1 : 0, duration: .35, ease: 'power2.inOut' }, t);
+  tl.to('#discC', { attr: { fill: azul ? '#f4efe4' : '#2a63cd' }, duration: .35 }, t);
+  tl.call(() => document.getElementById('stage').classList.toggle('onblue', azul), null, t + .17);
+};
+const flip = (vista, t) => { tl.to('#chispa', { scaleX: 0, duration: .16, ease: 'power2.in' }, t); set({ vista }, t + .16); tl.to('#chispa', { scaleX: 1, duration: .22, ease: 'back.out(1.6)' }, t + .16); };
+const typ = (id, t) => { const el = $(id + ' .typ'), txt = el.dataset.t; for (let i = 0; i <= txt.length; i++) tl.call(() => { el.textContent = txt.slice(0, i); }, null, t + i * .035); };
+
+// Chispa entra y respira
+tl.fromTo('#chispa', { y: 120 }, { y: 0, duration: .55, ease: 'back.out(1.5)' }, 0);
+tl.fromTo('#disc', { scale: .6, autoAlpha: 0, transformOrigin: '50% 55%' }, { scale: 1, autoAlpha: 1, duration: .5, ease: 'back.out(1.7)' }, 0);
+tl.to('#chispa', { y: -4, duration: 1.6, ease: 'sine.inOut', yoyo: true, repeat: 23 }, .6);
+
+// ===== 0. ¿Una tienda? =====
+titulo('#t0', 0.05); set({ pose: 'hombros', cejas: 'duda' }, 0);
+pop('#web', .25);
+set({ pose: 'explica', cejas: 'normal' }, W('pero', 0) - .1);
+tl.fromTo('#sParte', { autoAlpha: 0, scale: 2.2, rotation: -20 }, { autoAlpha: 1, scale: 1, rotation: -8, duration: .3, ease: 'back.out(2)' }, W('parte', 0));
+off(['#t0', '#web', '#sParte'], B[1][0] - .45);
+
+// ===== 1. La ficha =====
+titulo('#t1', B[1][0] - .15); set({ pose: 'señala', cejas: 'arriba' }, W('presento', 1));
+pop('#ficha', W('ficha', 1) - .1);
+typ('#f0', W('electro', 1)); typ('#f1', W('guanare', 1) - .1); typ('#f2', W('14', 1) - .1);
+set({ pose: 'explica', cejas: 'normal' }, W('nuestro', 1));
+pop('#lo0', W('tecnología', 1, 1)); pop('#lo1', W('desarrollo', 1)); pop('#lo2', W('soporte', 1));
+off(['#t1', '#ficha'], B[2][0] - .5);
+
+// ===== 2. Vendemos (azul): cada cosa aparece cuando Chispa la nombra y él la señala =====
+fondo(true, B[2][0] - .35); titulo('#t2', W('vendemos', 2) - .05); set({ pose: 'habla' }, B[2][0]);
+set({ pose: 'señala', cejas: 'arriba' }, W('vendemos', 2));
+['tecnología', 'gaming', 'gift', 'recargas'].forEach((w, i) => { pop('#v' + i, W(w, 2) - .05, { y: 24, scale: .7 }); set({ cejas: 'normal' }, W(w, 2) - .05); tl.fromTo('#chispa', { rotation: 0 }, { rotation: i % 2 ? -3 : 3, duration: .18, yoyo: true, repeat: 1, ease: 'sine.inOut' }, W(w, 2) - .05); });
+off(['#v0', '#v1', '#v2', '#v3'], W('energía', 2) - .5);
+pop('#vEnergia', W('energía', 2) - .1, { y: 30, scale: .85 }); set({ pose: 'señala', cejas: 'arriba' }, W('energía', 2) - .1);
+pop('#eUps', W('ups', 2) - .05, { y: 20, scale: .7 }); set({ pose: 'señala', cejas: 'normal' }, W('ups', 2) - .05);
+pop('#eInv', W('inversores', 2) - .05, { y: 20, scale: .7 });
+tl.fromTo('#sInst', { autoAlpha: 0, scale: 2.2, rotation: -20 }, { autoAlpha: 1, scale: 1, rotation: -8, duration: .3, ease: 'back.out(2)' }, W('instalamos', 2));
+set({ pose: 'pulgar', ojos: 'guino', feliz: true }, W('instalamos', 2));
+// "Pago y envíos: pagas con Pago Móvil y envíos a toda Venezuela con ZOOM y MRW."
+off(['#t2', '#vEnergia', '#sInst'], W('pago', 2) - .45);
+titulo('#t2b', W('pago', 2) - .1); set({ pose: 'habla', ojos: 'abiertos', feliz: false }, W('pago', 2) - .1);
+pop('#vPago', W('pagas', 2) - .05, { x: -40 }); set({ pose: 'señala' }, W('pagas', 2) - .05);
+pop('#vEnv', W('envíos', 2, 1) - .05, { x: 40 });
+tl.fromTo('#vZoom', { scale: 1 }, { scale: 1.2, duration: .16, yoyo: true, repeat: 1, ease: 'power2.out' }, W('zoom', 2));
+tl.fromTo('#vMrw', { scale: 1 }, { scale: 1.2, duration: .16, yoyo: true, repeat: 1, ease: 'power2.out' }, W('mrw', 2));
+set({ pose: 'pulgar', feliz: true }, W('mrw', 2));
+off(['#t2b', '#vPago', '#vEnv'], B[3][0] - .5);
+
+// ===== 3. Reparamos =====
+fondo(false, B[3][0] - .35); titulo('#t3', B[3][0] - .05); set({ pose: 'brazos', ojos: 'abiertos' }, W('segundo', 3));
+pop('#rep', W('nuestro', 3) - .1);
+tl.fromTo('#sIng', { autoAlpha: 0, scale: 2, rotation: -16 }, { autoAlpha: 1, scale: 1, rotation: -6, duration: .3, ease: 'back.out(2)' }, W('ingeniero', 3));
+set({ pose: 'explica' }, W('mantenimiento', 3) - .2);
+['consolas', 'pc', 'cámaras', 'redes', 'puntos'].forEach((w, i) => pop('#r' + i, W(w, 3) - .05, { x: 24 }));
+set({ pose: 'pulgar', feliz: true }, W('venta', 3));
+off(['#t3', '#rep'], B[4][0] - .5);
+
+// ===== 4. Desarrollamos (azul) =====
+fondo(true, B[4][0] - .35); set({ pose: 'habla', feliz: false }, B[4][0] - .3);
+set({ pose: 'hombros', ojos: 'sorpresa', cejas: 'arriba' }, W('casi', 4));
+tl.fromTo('#sSecreto', { autoAlpha: 0, scale: 2, rotation: 14 }, { autoAlpha: 1, scale: 1, rotation: 6, duration: .3, ease: 'back.out(2)' }, W('casi', 4) + .1);
+titulo('#t4', W('desarrollamos', 4)); tl.to('#sSecreto', { autoAlpha: 0, duration: .2 }, W('desarrollamos', 4) + 1.3);
+set({ pose: 'señala', ojos: 'abiertos', cejas: 'normal' }, W('este', 4));
+pop('#l2', W('este', 4));
+['restaurante', 'caja', 'inventario', 'permisos'].forEach((w, i) => pop('#m' + i, W(w, 4) - .05));
+tl.fromTo('#l2shot', { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: .35 }, W('restaurante', 4) + .3);
+set({ pose: 'explica' }, W('equipo', 4) - .4);
+off(['#t4', '#l2'], B[5][0] - .5);
+
+// ===== 5. ¿Quién lo usa? =====
+fondo(false, B[5][0] - .35); titulo('#t5', B[5][0] - .05); set({ pose: 'hombros', cejas: 'duda' }, B[5][0]);
+pop('#abby', W('abby', 5) - .1, { scale: .7, y: 0 }); set({ pose: 'explica', cejas: 'normal' }, W('abby', 5));
+tl.fromTo('#sOpera', { autoAlpha: 0, scale: 2.4, rotation: -20 }, { autoAlpha: 1, scale: 1, rotation: -8, duration: .3, ease: 'back.out(2)' }, W('opera', 5));
+set({ pose: 'pulgar', ojos: 'guino', feliz: true }, W('opera', 5));
+off(['#t5', '#abby', '#sOpera'], B[6][0] - .5);
+
+// ===== 6. Lo que viene: Pista Rides =====
+titulo('#t6', B[6][0] - .05); set({ pose: 'habla', ojos: 'abiertos', feliz: false }, B[6][0]);
+const tg = W('muy', 6) - .25;
+flip(1, tg);
+// se afinca del círculo y se impulsa para señalar el teléfono
+tl.to(C, { lcX: 48, lcY: 236, lmX: 117, lmY: 158, duration: .35, ease: 'power3.out' }, tg + .4);
+tl.to('#chispa', { y: -40, rotation: -5, duration: .45, ease: 'back.out(1.8)' }, tg + .55);
+tl.to(C, { codoX: 330, codoY: 236, mX: 318, mY: 120, duration: .45, ease: 'back.out(1.7)' }, tg + .6);
+tl.fromTo('#pphone', { autoAlpha: 0, y: 60, rotation: 8, scale: .8 }, { autoAlpha: 1, y: 0, rotation: 3, scale: 1, duration: .5, ease: 'back.out(1.7)' }, W('pista', 6) - .15);
+tl.fromTo('#pphone .sym', { scale: 0, rotation: -40 }, { scale: 1, rotation: 0, duration: .5, ease: 'back.out(2.4)' }, W('pista', 6) + .1);
+tl.fromTo('#pphone .word', { autoAlpha: 0, x: -20 }, { autoAlpha: 1, x: 0, duration: .35 }, W('rides', 6));
+tl.to(C, { mX: 324, mY: 112, duration: .22, ease: 'sine.inOut', yoyo: true, repeat: 5 }, W('pista', 6) + .5);
+pop('#pApp', W('app', 6), { x: -30, rotation: -12 });
+['#q0', '#q1', '#q2'].forEach((q, i) => tl.fromTo(q, { autoAlpha: 0, scale: 0, rotation: -30 }, { autoAlpha: 1, scale: 1, rotation: i % 2 ? 12 : -10, duration: .3, ease: 'back.out(3)' }, W('qué', 6) + i * .12));
+pop('#pWeb', W('pronto', 6, 1), { x: 30, rotation: 10 });
+tl.to('#chispa', { y: 0, rotation: 0, duration: .35, ease: 'power2.inOut' }, W('pronto', 6, 1) - .1);
+tl.to(C, { codoX: 284, codoY: 370, mX: 288, mY: 446, lcX: 116, lcY: 370, lmX: 112, lmY: 446, duration: .35, ease: 'power2.inOut' }, W('pronto', 6, 1) - .1);
+flip(0, W('sabrás', 6) - .1); set({ pose: 'pulgar', ojos: 'guino', feliz: true }, W('sabrás', 6) + .1);
+off(['#t6', '#pphone', '#pApp', '#pWeb', '#q0', '#q1', '#q2'], B[7][0] - .5);
+
+// ===== 7. No solo una tienda (azul) =====
+fondo(true, B[7][0] - .35); titulo('#t7', W('solo', 7) - .1); set({ pose: 'brazos', ojos: 'abiertos', feliz: false }, B[7][0]);
+pop('#x0', W('tienda', 7) - .2, { x: -40 }); pop('#x1', W('tienda', 7) + .05, { x: -40 }); pop('#x2', W('tienda', 7) + .3, { x: -40 });
+pop('#esLogo', W('somos', 7, 1), { scale: .6, y: 0 });
+set({ pose: 'explica', feliz: true }, W('somos', 7, 1));
+off(['#t7', '#x0', '#x1', '#x2', '#esLogo'], W('gracias', 7) - .25);
+titulo('#t8', W('gracias', 7) - .1); set({ pose: 'señala', cejas: 'arriba' }, W('gracias', 7));
+pop('#cta', W('gracias', 7) + .1);
+tl.fromTo('#cursor', { autoAlpha: 0, x: 120, y: 120 }, { autoAlpha: 1, x: 0, y: 0, duration: .5, ease: 'power2.out' }, W('escríbenos', 7));
+tl.to('#cursor', { scale: .85, duration: .08, yoyo: true, repeat: 1 }, W('escríbenos', 7) + .55);
+tl.to('#ctaBtn', { scale: .94, duration: .08, yoyo: true, repeat: 1 }, W('escríbenos', 7) + .55);
+const T_CTA = W('escríbenos', 7) + .65;
+set({ pose: 'pulgar', ojos: 'guino' }, W('hablamos', 7));
+// ===== Pantalla final (YouTube) =====
+T_FIN = B[7][1] + 1.3;
+off(['#t8', '#cta', '#cursor'], T_FIN - .3);
+tl.fromTo('.finLogo', { autoAlpha: 0, y: 20, scale: .8 }, { autoAlpha: 1, y: 0, scale: 1, duration: .45, ease: 'back.out(1.8)' }, T_FIN);
+tl.fromTo(['#fV', '#fS'], { autoAlpha: 0, scale: .85 }, { autoAlpha: 1, scale: 1, duration: .4, stagger: .12, ease: 'back.out(1.6)' }, T_FIN + .3);
+tl.fromTo('#fD', { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: .35 }, T_FIN + .6);
+set({ pose: 'saluda', ojos: 'feliz', feliz: true }, T_FIN);
+linea = chispa.linea(claves);
+tl.to({}, { duration: 0 }, window.DURATION);
+window.seek = t => { tl.seek(t, false); subtitulos(t); dibujar(t); $('#ctaTxt').textContent = t >= T_CTA ? '+58 257 251 1282' : 'Escríbenos'; };
+}
+window.DURATION = Math.ceil((VOZ.duracion + 12) * 10) / 10; // 10 s de pantalla final para YouTube
+window.ready = document.fonts.load('700 17px Poppins').then(() => document.fonts.load('italic 40px Serif')).then(() => document.fonts.ready)
+  .then(() => Promise.all(Array.from(document.images).map(i => i.complete ? 1 : new Promise(r => { i.onload = r; i.onerror = r; }))))
+  .then(() => { build(); window.seek(0); return true; });
+</script>
+</body>
+</html>

@@ -8,7 +8,8 @@ const out = process.argv[3] || 'out';
 const query = process.argv[4] || '';
 const exe = fs.existsSync('/opt/pw-browsers/chromium-1194/chrome-linux/chrome') ? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' : undefined;
 const browser = await chromium.launch({ executablePath: exe, args: ['--font-render-hinting=none', '--disable-gpu'] });
-const page = await browser.newPage({ viewport: { width: 540, height: 960 }, deviceScaleFactor: 2 });
+const [VW, VH] = (process.env.VIEWPORT || '540x960').split('x').map(Number); // VIEWPORT=960x540 para YouTube
+const page = await browser.newPage({ viewport: { width: VW, height: VH }, deviceScaleFactor: 2 });
 page.on('pageerror', e => console.error('PAGE ERROR', e.message));
 page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') console.error('console', m.text()); });
 await page.goto('file://' + path.resolve(process.env.PAGE || 'sin-miedo.html') + query);

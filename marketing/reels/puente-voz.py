@@ -1,12 +1,13 @@
 # Voz de la entrada de Chispa en "El nuevo del equipo": de la frase de ElevenLabs y su transcripción (Speech to Text) a assets/voz/chispa-puente.json.
 # Uso: python3 puente-voz.py audio.mp3 transcripcion.json   (sin argumentos: tiempos de prueba repartidos, para armar la animación antes del audio)
-import sys, json, math, array, subprocess, re
+import sys, json, math, array, subprocess, re, os
+NOMBRE = os.environ.get('NOMBRE', 'chispa-puente')  # NOMBRE=chispa-medio para la escena del medio
 SR, FPS = 44100, 30
-TEXTO = '¡Epa! ¿Ya sabes qué hacemos en Electro Shop? Vendemos tecnología, reparamos con ingeniero… y en software: licencias de Windows original, Microsoft 365 y planes de IA. ¡Todo lo encuentras con nosotros! Pero ven, que te presento al jefe.'
+TEXTO = os.environ.get('TEXTO') or '¡Epa! ¿Ya sabes qué hacemos en Electro Shop? Vendemos tecnología, reparamos con ingeniero… y en software: licencias de Windows original, Microsoft 365 y planes de IA. ¡Todo lo encuentras con nosotros! Pero ven, que te presento al jefe.'
 if len(sys.argv) > 2:
     mp3, js = sys.argv[1], sys.argv[2]
-    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', mp3, '-ac', '1', '-ar', str(SR), '-c:a', 'libmp3lame', '-b:a', '128k', 'assets/voz/chispa-puente.mp3'], check=True)
-    a = array.array('h'); a.frombytes(subprocess.run(['ffmpeg', '-v', 'error', '-i', 'assets/voz/chispa-puente.mp3', '-ac', '1', '-ar', str(SR), '-f', 's16le', '-'], capture_output=True, check=True).stdout)
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', mp3, '-ac', '1', '-ar', str(SR), '-c:a', 'libmp3lame', '-b:a', '128k', f'assets/voz/{NOMBRE}.mp3'], check=True)
+    a = array.array('h'); a.frombytes(subprocess.run(['ffmpeg', '-v', 'error', '-i', f'assets/voz/{NOMBRE}.mp3', '-ac', '1', '-ar', str(SR), '-f', 's16le', '-'], capture_output=True, check=True).stdout)
     pal = [{'w': w['text'], 't0': w['start_time'], 't1': w['end_time'], 'b': 0} for s in json.load(open(js))['segments'] for w in s['words'] if w['text'].strip() and not w['text'].startswith('[')]
     # pausas de más de 0,6 s quedan en 0,45 s (se recorta el medio del silencio y se corren las palabras)
     sal, corr, prev = array.array('h'), 0.0, 0.0
@@ -20,7 +21,7 @@ if len(sys.argv) > 2:
     def mover(t): return t - sum(min(c1, t) - c0 for c0, c1 in cortes if t > c0)
     for q in pal: q['t0'], q['t1'] = round(mover(q['t0']), 3), round(mover(q['t1']), 3)
     a = sal
-    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-f', 's16le', '-ar', str(SR), '-ac', '1', '-i', '-', '-c:a', 'libmp3lame', '-b:a', '128k', 'assets/voz/chispa-puente.mp3'], input=a.tobytes(), check=True)
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-f', 's16le', '-ar', str(SR), '-ac', '1', '-i', '-', '-c:a', 'libmp3lame', '-b:a', '128k', f'assets/voz/{NOMBRE}.mp3'], input=a.tobytes(), check=True)
     # cómo se escribe en pantalla
     VER = {'Electroshop?': ['Electro', 'Shop?'], 'Todo': ['¡Todo'], 'nosotros.': ['nosotros!'], 'y,': ['y'], 'software,': ['software:']}
     nuevo = []
@@ -38,5 +39,5 @@ else:
         d = .1 + .05 * len(re.sub(r'[^\wáéíóú]', '', w)); pal.append({'w': w, 't0': round(t, 3), 't1': round(t + d, 3), 'b': 0}); t += d + .04
     dur = max(dur, t + .3)
     rms = [(-18 if any(p['t0'] <= i / FPS < p['t1'] for p in pal) else -60) for i in range(int(dur * FPS))]
-json.dump({'duracion': round(dur, 3), 'palabras': pal, 'bloques': {'0': [pal[0]['t0'], pal[-1]['t1']]}, 'rms': rms}, open('assets/voz/chispa-puente.json', 'w'), ensure_ascii=False, separators=(',', ':'))
+json.dump({'duracion': round(dur, 3), 'palabras': pal, 'bloques': {'0': [pal[0]['t0'], pal[-1]['t1']]}, 'rms': rms}, open(f'assets/voz/{NOMBRE}.json', 'w'), ensure_ascii=False, separators=(',', ':'))
 print(round(dur, 2), 's,', len(pal), 'palabras:', ' '.join(f"{p['w']}@{p['t0']:.2f}" for p in pal))

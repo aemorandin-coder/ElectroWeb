@@ -10,6 +10,8 @@ No dependen de ningún servicio de pago. Cada reel es una página HTML con una l
 | Taller (14 años, con ingeniero) | `taller.src.html` → `taller.html` | — | v2 entregada |
 | L2 Control (Abby Kingdom y pantallas reales) | `l2control.src.html` → `l2control.html` | 45 s | v1 entregada |
 | "La ficha de Electro Shop" (Chispa con voz: vendemos, reparamos, desarrollamos y Pista Rides) | `ficha.src.html` → `ficha.html` | 89 s | v2 entregada (09/10): Vendemos con Energía y tiempos de la transcripción |
+| "La ficha" para YouTube (16:9) | `ficha-yt.src.html`, miniatura `miniatura-ficha.html` | 1:38 | Entregada (10/10) |
+| "El nuevo del equipo" (Andrés real en Google Flow + Chispa animado) | `chispa-entrada.src.html`, `chispa-medio.src.html`, `andres-chispa-capa.html`, portada `portada-andres-chispa.html`; guion en `guion-andres-chispa.md` | 55 s | v3 entregada (11/10) |
 
 ## El cierre de la serie (aprobado por Andrés el 02/10)
 
@@ -20,6 +22,11 @@ No dependen de ningún servicio de pago. Cada reel es una página HTML con una l
 - Tarjeta blanca "Envíos por" con los logos de ZOOM y MRW.
 - Letra pequeña: "Electro Shop Morandin C.A. · RIF J-40590333-3" y el aviso de marcas de sus dueños.
 - En el código: el bloque `<div id="end">` de `sin-miedo.src.html` y la sección `// ===== 8. Cierre` de su línea de tiempo. Para un reel nuevo se copia y solo cambia la frase.
+
+## Reglas de Andrés para cada reel
+- **Cada reel se entrega con su portada** (1080 x 1920, con lo importante en el centro 1080 x 1440, que es lo que muestra la cuadrícula del perfil). Pedido del 11/10. Ejemplo: `portada-andres-chispa.html`.
+- **Voces sin límite:** si una escena queda mejor con una frase nueva de Chispa, se le pide a Andrés (ElevenLabs, voz Diego, con su transcripción en JSON). Dicho el 11/10.
+- Los tiempos de cada palabra salen de la transcripción de ElevenLabs, nunca calculados (`voz.py`, `puente-voz.py`).
 
 ## Estilo de la serie
 

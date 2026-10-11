@@ -30,6 +30,10 @@ if len(sys.argv) > 2:
         for k, txt in enumerate(partes):
             d = (q['t1'] - q['t0']) / len(partes); nuevo.append({**q, 'w': txt, 't0': round(q['t0'] + d * k, 3), 't1': round(q['t0'] + d * (k + 1), 3)})
     pal = nuevo
+    # la transcripción a veces mete la pausa dentro de una palabra corta ("¿Eres" de casi 1 s): se corre su inicio
+    for q in pal:
+        letras = len(re.sub(r'[^\wáéíóúñ]', '', q['w'])); largo = .15 + .085 * letras
+        if q['t1'] - q['t0'] > largo + .35: q['t0'] = round(q['t1'] - largo, 3)
     paso = SR // FPS
     rms = [round(max(-60.0, 20 * math.log10(math.sqrt(sum(x * x for x in a[i:i + paso]) / max(1, len(a[i:i + paso]))) / 32768 + 1e-9)), 1) for i in range(0, len(a), paso)]
     dur = len(a) / SR

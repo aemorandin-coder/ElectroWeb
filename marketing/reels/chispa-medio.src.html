@@ -46,6 +46,16 @@ html, body { width: 540px; height: 960px; overflow: hidden; background: #f4efe4;
 #sello small { display: block; margin-top: 4px; font: 700 12px Inter; letter-spacing: 1.5px; }
 #discC { fill: #f4efe4; }
 #pill span.on { background: #ffd54a; color: #111317; }
+#pro { position: absolute; left: 34px; right: 34px; top: 78px; z-index: 13; }
+#pT { font: 800 36px/1.05 Poppins; color: #fff; letter-spacing: -1px; }
+#pT em { font: italic 400 46px/1 Serif; color: #ffd54a; }
+#pChips { display: flex; gap: 10px; margin-top: 14px; }
+#pChips span { font: 800 20px Poppins; padding: 8px 16px; border-radius: 12px; background: #fff; color: #111317; border: 2.5px solid #111317; box-shadow: 4px 4px 0 #111317; }
+.pCard { display: flex; align-items: center; gap: 14px; margin-top: 16px; padding: 14px 16px; background: #fff; border: 2.5px solid #111317; border-radius: 16px; box-shadow: 5px 5px 0 #111317; }
+.pCard .ic { width: 44px; height: 44px; border-radius: 12px; background: #2a63cd; border: 2px solid #111317; display: flex; align-items: center; justify-content: center; color: #fff; font: 800 24px Poppins; flex-shrink: 0; }
+.pCard b { font: 800 20px/1.1 Poppins; color: #111317; }
+#pBtn { margin-top: 18px; padding: 14px 18px; text-align: center; background: #ffd54a; color: #111317; border: 3px solid #111317; border-radius: 16px; box-shadow: 6px 6px 0 #111317; font: 800 24px/1 Poppins; }
+#pBtn small { display: block; margin-top: 6px; font: 700 14px Inter; letter-spacing: .3px; }
 </style></head>
 <body>
 <div id="stage">
@@ -53,6 +63,13 @@ html, body { width: 540px; height: 960px; overflow: hidden; background: #f4efe4;
   <div id="head"><span class="brand"><img src="assets/logo-color.png" alt=""></span><span class="chip">ELECTROSHOPVE.COM</span></div>
     <div id="tel" class="o"><div id="scr"><img src="assets/web-movil.jpg" alt=""></div></div>
   <div id="sello" class="o">Cursos<small>MUY PRONTO</small></div>
+  <div id="pro">
+    <div id="pT" class="o">¿Eres <em>especialista?</em></div>
+    <div id="pChips"><span id="pc0" class="o">Tecnología</span><span id="pc1" class="o">Energía</span></div>
+    <div class="pCard o" id="pM"><span class="ic">$</span><b>Monetiza tu conocimiento</b></div>
+    <div class="pCard o" id="pD"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span><b>Dicta tus cursos con nosotros</b></div>
+    <div id="pBtn" class="o">Postúlate como creador<small>electroshopve.com/creator</small></div>
+  </div>
   <div id="sub"><div id="pill"></div></div>
   <div id="disc"><svg viewBox="0 0 400 420"><circle id="discC" cx="200" cy="232" r="150"/><circle cx="200" cy="232" r="166" fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" opacity=".6"/></svg></div>
   <div id="chispa"></div>
@@ -83,6 +100,10 @@ const linea = chispa.linea([
   { t: W('pronto') - .1, pose: 'explica', cejas: 'normal', mirar: [.5, -1] },
   { t: W('cursos') - .15, pose: 'celebra', ojos: 'feliz', feliz: true, mirar: [0, 0] },
   { t: W('web') - .1, pose: 'pulgar', ojos: 'guino' },
+  { t: W('eres') - .1, pose: 'hombros', ojos: 'abiertos', cejas: 'arriba', feliz: false, mirar: [0, -.5] },
+  { t: W('monetizar') - .1, pose: 'explica', cejas: 'normal' },
+  { t: W('podrás') - .1, pose: 'señala', mirar: [.5, -1] },
+  { t: W('postúlate') - .1, pose: 'pulgar', ojos: 'guino', feliz: true, mirar: [0, 0] },
 ]);
 const labios = chispa.labios(VOZ);
 const ease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
@@ -103,9 +124,14 @@ window.seek = (t) => {
   // entra desde abajo con rebote
   const y = (1 - back(t / .55)) * 160; $('#chispa').style.transform = `translateY(${y.toFixed(1)}px)`;
   $('#disc').style.transform = `scale(${(.6 + .4 * back(t / .5)).toFixed(3)})`; $('#disc').style.opacity = Math.min(1, t / .25).toFixed(2);
-  ver('#tel', t, .05, 99, 40);
+  ver('#tel', t, .05, W('eres') - .35, 40);
   document.querySelector('#scr img').style.transform = `scale(${(1 + .08 * Math.min(1, Math.max(0, t / 5))).toFixed(4)})`;
-  ver('#sello', t, W('cursos') - .05, 99, 20);
+  ver('#sello', t, W('cursos') - .05, W('eres') - .35, 20);
+  ver('#pT', t, W('eres') - .05, 99, 16);
+  ver('#pc0', t, W('tecnología') - .05, 99, 12); ver('#pc1', t, W('energía') - .05, 99, 12);
+  ver('#pM', t, W('monetizar') - .05, 99, 20);
+  ver('#pD', t, W('podrás') - .05, 99, 20);
+  ver('#pBtn', t, W('postúlate') - .05, 99, 20);
   subtitulos(t);
   // destello blanco al final: empata con el corte al clip real
   $('#flash').style.opacity = t < .15 ? (1 - t / .15).toFixed(2) : t > FIN + .45 ? Math.min(1, (t - FIN - .45) / .12).toFixed(2) : 0;

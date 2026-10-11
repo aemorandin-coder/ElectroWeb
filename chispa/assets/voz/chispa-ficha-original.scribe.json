@@ -1,0 +1,1729 @@
+{
+  "language_code": null,
+  "segments": [
+    {
+      "text": "Electroshop. Seguro nos conoces por la",
+      "start_time": 0.12,
+      "end_time": 2.3,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "Electroshop.",
+          "start_time": 0.12,
+          "end_time": 0.82
+        },
+        {
+          "text": " ",
+          "start_time": 0.82,
+          "end_time": 1.26
+        },
+        {
+          "text": "Seguro",
+          "start_time": 1.26,
+          "end_time": 1.5
+        },
+        {
+          "text": " ",
+          "start_time": 1.5,
+          "end_time": 1.56
+        },
+        {
+          "text": "nos",
+          "start_time": 1.56,
+          "end_time": 1.68
+        },
+        {
+          "text": " ",
+          "start_time": 1.68,
+          "end_time": 1.7
+        },
+        {
+          "text": "conoces",
+          "start_time": 1.7,
+          "end_time": 2.08
+        },
+        {
+          "text": " ",
+          "start_time": 2.08,
+          "end_time": 2.1
+        },
+        {
+          "text": "por",
+          "start_time": 2.1,
+          "end_time": 2.22
+        },
+        {
+          "text": " ",
+          "start_time": 2.22,
+          "end_time": 2.24
+        },
+        {
+          "text": "la",
+          "start_time": 2.24,
+          "end_time": 2.3
+        }
+      ]
+    },
+    {
+      "text": "tienda web, pero eso es solo una parte. Te",
+      "start_time": 2.36,
+      "end_time": 5.46,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "tienda",
+          "start_time": 2.36,
+          "end_time": 2.58
+        },
+        {
+          "text": " ",
+          "start_time": 2.58,
+          "end_time": 2.66
+        },
+        {
+          "text": "web,",
+          "start_time": 2.66,
+          "end_time": 2.86
+        },
+        {
+          "text": " ",
+          "start_time": 2.86,
+          "end_time": 3.34
+        },
+        {
+          "text": "pero",
+          "start_time": 3.34,
+          "end_time": 3.72
+        },
+        {
+          "text": " ",
+          "start_time": 3.72,
+          "end_time": 3.8
+        },
+        {
+          "text": "eso",
+          "start_time": 3.8,
+          "end_time": 3.98
+        },
+        {
+          "text": " ",
+          "start_time": 3.98,
+          "end_time": 4.0
+        },
+        {
+          "text": "es",
+          "start_time": 4.0,
+          "end_time": 4.12
+        },
+        {
+          "text": " ",
+          "start_time": 4.12,
+          "end_time": 4.18
+        },
+        {
+          "text": "solo",
+          "start_time": 4.18,
+          "end_time": 4.42
+        },
+        {
+          "text": " ",
+          "start_time": 4.42,
+          "end_time": 4.46
+        },
+        {
+          "text": "una",
+          "start_time": 4.46,
+          "end_time": 4.56
+        },
+        {
+          "text": " ",
+          "start_time": 4.56,
+          "end_time": 4.66
+        },
+        {
+          "text": "parte.",
+          "start_time": 4.66,
+          "end_time": 5.0
+        },
+        {
+          "text": " ",
+          "start_time": 5.0,
+          "end_time": 5.38
+        },
+        {
+          "text": "Te",
+          "start_time": 5.38,
+          "end_time": 5.46
+        }
+      ]
+    },
+    {
+      "text": "presento la ficha completa. Electroshop",
+      "start_time": 5.48,
+      "end_time": 8.32,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "presento",
+          "start_time": 5.48,
+          "end_time": 6.06
+        },
+        {
+          "text": " ",
+          "start_time": 6.06,
+          "end_time": 6.14
+        },
+        {
+          "text": "la",
+          "start_time": 6.14,
+          "end_time": 6.22
+        },
+        {
+          "text": " ",
+          "start_time": 6.22,
+          "end_time": 6.36
+        },
+        {
+          "text": "ficha",
+          "start_time": 6.36,
+          "end_time": 6.58
+        },
+        {
+          "text": " ",
+          "start_time": 6.58,
+          "end_time": 6.66
+        },
+        {
+          "text": "completa.",
+          "start_time": 6.66,
+          "end_time": 7.16
+        },
+        {
+          "text": " ",
+          "start_time": 7.16,
+          "end_time": 7.7
+        },
+        {
+          "text": "Electroshop",
+          "start_time": 7.7,
+          "end_time": 8.32
+        }
+      ]
+    },
+    {
+      "text": "Morand\u00edn, una empresa de Guanare con 14",
+      "start_time": 8.46,
+      "end_time": 11.14,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "Morand\u00edn,",
+          "start_time": 8.46,
+          "end_time": 9.0
+        },
+        {
+          "text": " ",
+          "start_time": 9.0,
+          "end_time": 9.38
+        },
+        {
+          "text": "una",
+          "start_time": 9.38,
+          "end_time": 9.44
+        },
+        {
+          "text": " ",
+          "start_time": 9.44,
+          "end_time": 9.48
+        },
+        {
+          "text": "empresa",
+          "start_time": 9.48,
+          "end_time": 9.82
+        },
+        {
+          "text": " ",
+          "start_time": 9.82,
+          "end_time": 9.84
+        },
+        {
+          "text": "de",
+          "start_time": 9.84,
+          "end_time": 9.92
+        },
+        {
+          "text": " ",
+          "start_time": 9.92,
+          "end_time": 9.96
+        },
+        {
+          "text": "Guanare",
+          "start_time": 9.96,
+          "end_time": 10.28
+        },
+        {
+          "text": " ",
+          "start_time": 10.28,
+          "end_time": 10.38
+        },
+        {
+          "text": "con",
+          "start_time": 10.38,
+          "end_time": 10.56
+        },
+        {
+          "text": " ",
+          "start_time": 10.56,
+          "end_time": 10.58
+        },
+        {
+          "text": "14",
+          "start_time": 10.58,
+          "end_time": 11.14
+        }
+      ]
+    },
+    {
+      "text": "a\u00f1os en tecnolog\u00eda. Lo nuestro:",
+      "start_time": 11.22,
+      "end_time": 13.08,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "a\u00f1os",
+          "start_time": 11.22,
+          "end_time": 11.44
+        },
+        {
+          "text": " ",
+          "start_time": 11.44,
+          "end_time": 11.48
+        },
+        {
+          "text": "en",
+          "start_time": 11.48,
+          "end_time": 11.54
+        },
+        {
+          "text": " ",
+          "start_time": 11.54,
+          "end_time": 11.6
+        },
+        {
+          "text": "tecnolog\u00eda.",
+          "start_time": 11.6,
+          "end_time": 12.2
+        },
+        {
+          "text": " ",
+          "start_time": 12.2,
+          "end_time": 12.62
+        },
+        {
+          "text": "Lo",
+          "start_time": 12.62,
+          "end_time": 12.68
+        },
+        {
+          "text": " ",
+          "start_time": 12.68,
+          "end_time": 12.74
+        },
+        {
+          "text": "nuestro:",
+          "start_time": 12.74,
+          "end_time": 13.08
+        }
+      ]
+    },
+    {
+      "text": "tecnolog\u00eda, desarrollo y soporte. Primero,",
+      "start_time": 13.42,
+      "end_time": 16.4,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "tecnolog\u00eda,",
+          "start_time": 13.42,
+          "end_time": 14.06
+        },
+        {
+          "text": " ",
+          "start_time": 14.06,
+          "end_time": 14.26
+        },
+        {
+          "text": "desarrollo",
+          "start_time": 14.26,
+          "end_time": 14.96
+        },
+        {
+          "text": " ",
+          "start_time": 14.96,
+          "end_time": 15.0
+        },
+        {
+          "text": "y",
+          "start_time": 15.0,
+          "end_time": 15.02
+        },
+        {
+          "text": " ",
+          "start_time": 15.02,
+          "end_time": 15.12
+        },
+        {
+          "text": "soporte.",
+          "start_time": 15.12,
+          "end_time": 15.6
+        },
+        {
+          "text": " ",
+          "start_time": 15.6,
+          "end_time": 16.04
+        },
+        {
+          "text": "Primero,",
+          "start_time": 16.04,
+          "end_time": 16.4
+        }
+      ]
+    },
+    {
+      "text": "vendemos tecnolog\u00eda, \"gaming\", \"gift",
+      "start_time": 16.66,
+      "end_time": 19.34,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "vendemos",
+          "start_time": 16.66,
+          "end_time": 17.26
+        },
+        {
+          "text": " ",
+          "start_time": 17.26,
+          "end_time": 17.56
+        },
+        {
+          "text": "tecnolog\u00eda,",
+          "start_time": 17.56,
+          "end_time": 18.26
+        },
+        {
+          "text": " ",
+          "start_time": 18.26,
+          "end_time": 18.5
+        },
+        {
+          "text": "\"gaming\",",
+          "start_time": 18.5,
+          "end_time": 18.92
+        },
+        {
+          "text": " ",
+          "start_time": 18.92,
+          "end_time": 19.12
+        },
+        {
+          "text": "\"gift",
+          "start_time": 19.12,
+          "end_time": 19.34
+        }
+      ]
+    },
+    {
+      "text": "cards\" y recargas. Pagas con pago m\u00f3vil y",
+      "start_time": 19.4,
+      "end_time": 21.88,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "cards\"",
+          "start_time": 19.4,
+          "end_time": 19.64
+        },
+        {
+          "text": " ",
+          "start_time": 19.64,
+          "end_time": 19.76
+        },
+        {
+          "text": "y",
+          "start_time": 19.76,
+          "end_time": 19.8
+        },
+        {
+          "text": " ",
+          "start_time": 19.8,
+          "end_time": 19.88
+        },
+        {
+          "text": "recargas.",
+          "start_time": 19.88,
+          "end_time": 20.44
+        },
+        {
+          "text": " ",
+          "start_time": 20.44,
+          "end_time": 20.78
+        },
+        {
+          "text": "Pagas",
+          "start_time": 20.78,
+          "end_time": 21.04
+        },
+        {
+          "text": " ",
+          "start_time": 21.04,
+          "end_time": 21.06
+        },
+        {
+          "text": "con",
+          "start_time": 21.06,
+          "end_time": 21.16
+        },
+        {
+          "text": " ",
+          "start_time": 21.16,
+          "end_time": 21.22
+        },
+        {
+          "text": "pago",
+          "start_time": 21.24,
+          "end_time": 21.4
+        },
+        {
+          "text": " ",
+          "start_time": 21.4,
+          "end_time": 21.46
+        },
+        {
+          "text": "m\u00f3vil",
+          "start_time": 21.46,
+          "end_time": 21.74
+        },
+        {
+          "text": " ",
+          "start_time": 21.74,
+          "end_time": 21.86
+        },
+        {
+          "text": "y",
+          "start_time": 21.86,
+          "end_time": 21.88
+        }
+      ]
+    },
+    {
+      "text": "te lo enviamos a toda Venezuela. Segundo,",
+      "start_time": 21.94,
+      "end_time": 24.54,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "te",
+          "start_time": 21.94,
+          "end_time": 22.02
+        },
+        {
+          "text": " ",
+          "start_time": 22.02,
+          "end_time": 22.04
+        },
+        {
+          "text": "lo",
+          "start_time": 22.04,
+          "end_time": 22.1
+        },
+        {
+          "text": " ",
+          "start_time": 22.1,
+          "end_time": 22.12
+        },
+        {
+          "text": "enviamos",
+          "start_time": 22.12,
+          "end_time": 22.6
+        },
+        {
+          "text": " ",
+          "start_time": 22.6,
+          "end_time": 22.66
+        },
+        {
+          "text": "a",
+          "start_time": 22.66,
+          "end_time": 22.7
+        },
+        {
+          "text": " ",
+          "start_time": 22.7,
+          "end_time": 22.88
+        },
+        {
+          "text": "toda",
+          "start_time": 22.88,
+          "end_time": 23.08
+        },
+        {
+          "text": " ",
+          "start_time": 23.08,
+          "end_time": 23.14
+        },
+        {
+          "text": "Venezuela.",
+          "start_time": 23.14,
+          "end_time": 23.66
+        },
+        {
+          "text": " ",
+          "start_time": 23.66,
+          "end_time": 24.14
+        },
+        {
+          "text": "Segundo,",
+          "start_time": 24.14,
+          "end_time": 24.54
+        }
+      ]
+    },
+    {
+      "text": "reparamos. Nuestro taller, con ingeniero,",
+      "start_time": 24.86,
+      "end_time": 27.28,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "reparamos.",
+          "start_time": 24.86,
+          "end_time": 25.52
+        },
+        {
+          "text": " ",
+          "start_time": 25.52,
+          "end_time": 25.84
+        },
+        {
+          "text": "Nuestro",
+          "start_time": 25.84,
+          "end_time": 26.1
+        },
+        {
+          "text": " ",
+          "start_time": 26.1,
+          "end_time": 26.16
+        },
+        {
+          "text": "taller,",
+          "start_time": 26.16,
+          "end_time": 26.5
+        },
+        {
+          "text": " ",
+          "start_time": 26.5,
+          "end_time": 26.68
+        },
+        {
+          "text": "con",
+          "start_time": 26.68,
+          "end_time": 26.78
+        },
+        {
+          "text": " ",
+          "start_time": 26.78,
+          "end_time": 26.82
+        },
+        {
+          "text": "ingeniero,",
+          "start_time": 26.82,
+          "end_time": 27.28
+        }
+      ]
+    },
+    {
+      "text": "le da mantenimiento a consolas, arma PC",
+      "start_time": 27.56,
+      "end_time": 29.76,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "le",
+          "start_time": 27.56,
+          "end_time": 27.62
+        },
+        {
+          "text": " ",
+          "start_time": 27.62,
+          "end_time": 27.66
+        },
+        {
+          "text": "da",
+          "start_time": 27.66,
+          "end_time": 27.7
+        },
+        {
+          "text": " ",
+          "start_time": 27.7,
+          "end_time": 27.76
+        },
+        {
+          "text": "mantenimiento",
+          "start_time": 27.76,
+          "end_time": 28.36
+        },
+        {
+          "text": " ",
+          "start_time": 28.36,
+          "end_time": 28.38
+        },
+        {
+          "text": "a",
+          "start_time": 28.38,
+          "end_time": 28.42
+        },
+        {
+          "text": " ",
+          "start_time": 28.42,
+          "end_time": 28.48
+        },
+        {
+          "text": "consolas,",
+          "start_time": 28.48,
+          "end_time": 29.06
+        },
+        {
+          "text": " ",
+          "start_time": 29.06,
+          "end_time": 29.3
+        },
+        {
+          "text": "arma",
+          "start_time": 29.3,
+          "end_time": 29.46
+        },
+        {
+          "text": " ",
+          "start_time": 29.46,
+          "end_time": 29.54
+        },
+        {
+          "text": "PC",
+          "start_time": 29.54,
+          "end_time": 29.76
+        }
+      ]
+    },
+    {
+      "text": "\"gamer\" e instala c\u00e1maras, redes y puntos",
+      "start_time": 29.76,
+      "end_time": 32.42,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "\"gamer\"",
+          "start_time": 29.76,
+          "end_time": 30.12
+        },
+        {
+          "text": " ",
+          "start_time": 30.12,
+          "end_time": 30.26
+        },
+        {
+          "text": "e",
+          "start_time": 30.26,
+          "end_time": 30.3
+        },
+        {
+          "text": " ",
+          "start_time": 30.3,
+          "end_time": 30.36
+        },
+        {
+          "text": "instala",
+          "start_time": 30.36,
+          "end_time": 30.74
+        },
+        {
+          "text": " ",
+          "start_time": 30.74,
+          "end_time": 30.86
+        },
+        {
+          "text": "c\u00e1maras,",
+          "start_time": 30.86,
+          "end_time": 31.3
+        },
+        {
+          "text": " ",
+          "start_time": 31.3,
+          "end_time": 31.52
+        },
+        {
+          "text": "redes",
+          "start_time": 31.52,
+          "end_time": 31.84
+        },
+        {
+          "text": " ",
+          "start_time": 31.84,
+          "end_time": 31.96
+        },
+        {
+          "text": "y",
+          "start_time": 31.96,
+          "end_time": 32.0
+        },
+        {
+          "text": " ",
+          "start_time": 32.0,
+          "end_time": 32.119
+        },
+        {
+          "text": "puntos",
+          "start_time": 32.119,
+          "end_time": 32.42
+        }
+      ]
+    },
+    {
+      "text": "de venta. Y tercero, lo que casi nadie",
+      "start_time": 32.439,
+      "end_time": 35.22,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "de",
+          "start_time": 32.439,
+          "end_time": 32.5
+        },
+        {
+          "text": " ",
+          "start_time": 32.5,
+          "end_time": 32.54
+        },
+        {
+          "text": "venta.",
+          "start_time": 32.54,
+          "end_time": 32.9
+        },
+        {
+          "text": " ",
+          "start_time": 32.9,
+          "end_time": 33.26
+        },
+        {
+          "text": "Y",
+          "start_time": 33.26,
+          "end_time": 33.3
+        },
+        {
+          "text": " ",
+          "start_time": 33.3,
+          "end_time": 33.38
+        },
+        {
+          "text": "tercero,",
+          "start_time": 33.38,
+          "end_time": 33.82
+        },
+        {
+          "text": " ",
+          "start_time": 33.82,
+          "end_time": 34.1
+        },
+        {
+          "text": "lo",
+          "start_time": 34.1,
+          "end_time": 34.18
+        },
+        {
+          "text": " ",
+          "start_time": 34.18,
+          "end_time": 34.26
+        },
+        {
+          "text": "que",
+          "start_time": 34.26,
+          "end_time": 34.48
+        },
+        {
+          "text": " ",
+          "start_time": 34.48,
+          "end_time": 34.52
+        },
+        {
+          "text": "casi",
+          "start_time": 34.52,
+          "end_time": 34.82
+        },
+        {
+          "text": " ",
+          "start_time": 34.82,
+          "end_time": 34.92
+        },
+        {
+          "text": "nadie",
+          "start_time": 34.92,
+          "end_time": 35.22
+        }
+      ]
+    },
+    {
+      "text": "sabe: desarrollamos software. Este es L2",
+      "start_time": 35.3,
+      "end_time": 38.76,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "sabe:",
+          "start_time": 35.3,
+          "end_time": 35.6
+        },
+        {
+          "text": " ",
+          "start_time": 35.6,
+          "end_time": 35.94
+        },
+        {
+          "text": "desarrollamos",
+          "start_time": 35.94,
+          "end_time": 36.7
+        },
+        {
+          "text": " ",
+          "start_time": 36.7,
+          "end_time": 36.76
+        },
+        {
+          "text": "software.",
+          "start_time": 36.76,
+          "end_time": 37.22
+        },
+        {
+          "text": " ",
+          "start_time": 37.22,
+          "end_time": 37.62
+        },
+        {
+          "text": "Este",
+          "start_time": 37.62,
+          "end_time": 38.02
+        },
+        {
+          "text": " ",
+          "start_time": 38.02,
+          "end_time": 38.08
+        },
+        {
+          "text": "es",
+          "start_time": 38.08,
+          "end_time": 38.28
+        },
+        {
+          "text": " ",
+          "start_time": 38.28,
+          "end_time": 38.44
+        },
+        {
+          "text": "L2",
+          "start_time": 38.44,
+          "end_time": 38.76
+        }
+      ]
+    },
+    {
+      "text": "Control. Maneja el restaurante, la caja,",
+      "start_time": 38.8,
+      "end_time": 41.26,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "Control.",
+          "start_time": 38.8,
+          "end_time": 39.22
+        },
+        {
+          "text": " ",
+          "start_time": 39.22,
+          "end_time": 39.5
+        },
+        {
+          "text": "Maneja",
+          "start_time": 39.5,
+          "end_time": 39.74
+        },
+        {
+          "text": " ",
+          "start_time": 39.74,
+          "end_time": 39.76
+        },
+        {
+          "text": "el",
+          "start_time": 39.76,
+          "end_time": 39.82
+        },
+        {
+          "text": " ",
+          "start_time": 39.82,
+          "end_time": 39.88
+        },
+        {
+          "text": "restaurante,",
+          "start_time": 39.88,
+          "end_time": 40.58
+        },
+        {
+          "text": " ",
+          "start_time": 40.58,
+          "end_time": 40.76
+        },
+        {
+          "text": "la",
+          "start_time": 40.76,
+          "end_time": 40.84
+        },
+        {
+          "text": " ",
+          "start_time": 40.84,
+          "end_time": 40.94
+        },
+        {
+          "text": "caja,",
+          "start_time": 40.94,
+          "end_time": 41.26
+        }
+      ]
+    },
+    {
+      "text": "el inventario y los permisos de todo tu",
+      "start_time": 41.42,
+      "end_time": 43.56,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "el",
+          "start_time": 41.42,
+          "end_time": 41.5
+        },
+        {
+          "text": " ",
+          "start_time": 41.5,
+          "end_time": 41.54
+        },
+        {
+          "text": "inventario",
+          "start_time": 41.54,
+          "end_time": 42.1
+        },
+        {
+          "text": " ",
+          "start_time": 42.1,
+          "end_time": 42.22
+        },
+        {
+          "text": "y",
+          "start_time": 42.22,
+          "end_time": 42.26
+        },
+        {
+          "text": " ",
+          "start_time": 42.26,
+          "end_time": 42.3
+        },
+        {
+          "text": "los",
+          "start_time": 42.3,
+          "end_time": 42.42
+        },
+        {
+          "text": " ",
+          "start_time": 42.42,
+          "end_time": 42.5
+        },
+        {
+          "text": "permisos",
+          "start_time": 42.5,
+          "end_time": 42.98
+        },
+        {
+          "text": " ",
+          "start_time": 42.98,
+          "end_time": 43.02
+        },
+        {
+          "text": "de",
+          "start_time": 43.02,
+          "end_time": 43.08
+        },
+        {
+          "text": " ",
+          "start_time": 43.08,
+          "end_time": 43.22
+        },
+        {
+          "text": "todo",
+          "start_time": 43.22,
+          "end_time": 43.44
+        },
+        {
+          "text": " ",
+          "start_time": 43.44,
+          "end_time": 43.5
+        },
+        {
+          "text": "tu",
+          "start_time": 43.5,
+          "end_time": 43.56
+        }
+      ]
+    },
+    {
+      "text": "equipo. \u00bfY qui\u00e9n lo usa? Abbey Kingdom, en",
+      "start_time": 43.58,
+      "end_time": 46.14,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "equipo.",
+          "start_time": 43.58,
+          "end_time": 43.92
+        },
+        {
+          "text": " ",
+          "start_time": 43.92,
+          "end_time": 44.28
+        },
+        {
+          "text": "\u00bfY",
+          "start_time": 44.28,
+          "end_time": 44.34
+        },
+        {
+          "text": " ",
+          "start_time": 44.34,
+          "end_time": 44.44
+        },
+        {
+          "text": "qui\u00e9n",
+          "start_time": 44.44,
+          "end_time": 44.58
+        },
+        {
+          "text": " ",
+          "start_time": 44.58,
+          "end_time": 44.62
+        },
+        {
+          "text": "lo",
+          "start_time": 44.62,
+          "end_time": 44.7
+        },
+        {
+          "text": " ",
+          "start_time": 44.7,
+          "end_time": 44.78
+        },
+        {
+          "text": "usa?",
+          "start_time": 44.78,
+          "end_time": 44.98
+        },
+        {
+          "text": " ",
+          "start_time": 44.98,
+          "end_time": 45.34
+        },
+        {
+          "text": "Abbey",
+          "start_time": 45.34,
+          "end_time": 45.56
+        },
+        {
+          "text": " ",
+          "start_time": 45.56,
+          "end_time": 45.58
+        },
+        {
+          "text": "Kingdom,",
+          "start_time": 45.58,
+          "end_time": 45.96
+        },
+        {
+          "text": " ",
+          "start_time": 45.96,
+          "end_time": 46.06
+        },
+        {
+          "text": "en",
+          "start_time": 46.06,
+          "end_time": 46.14
+        }
+      ]
+    },
+    {
+      "text": "Guanare, ya opera todo su negocio con L2",
+      "start_time": 46.18,
+      "end_time": 48.84,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "Guanare,",
+          "start_time": 46.18,
+          "end_time": 46.54
+        },
+        {
+          "text": " ",
+          "start_time": 46.54,
+          "end_time": 46.72
+        },
+        {
+          "text": "ya",
+          "start_time": 46.72,
+          "end_time": 46.82
+        },
+        {
+          "text": " ",
+          "start_time": 46.82,
+          "end_time": 46.86
+        },
+        {
+          "text": "opera",
+          "start_time": 46.86,
+          "end_time": 47.14
+        },
+        {
+          "text": " ",
+          "start_time": 47.14,
+          "end_time": 47.32
+        },
+        {
+          "text": "todo",
+          "start_time": 47.32,
+          "end_time": 47.52
+        },
+        {
+          "text": " ",
+          "start_time": 47.52,
+          "end_time": 47.6
+        },
+        {
+          "text": "su",
+          "start_time": 47.6,
+          "end_time": 47.66
+        },
+        {
+          "text": " ",
+          "start_time": 47.66,
+          "end_time": 47.7
+        },
+        {
+          "text": "negocio",
+          "start_time": 47.7,
+          "end_time": 48.14
+        },
+        {
+          "text": " ",
+          "start_time": 48.14,
+          "end_time": 48.18
+        },
+        {
+          "text": "con",
+          "start_time": 48.18,
+          "end_time": 48.4
+        },
+        {
+          "text": " ",
+          "start_time": 48.4,
+          "end_time": 48.52
+        },
+        {
+          "text": "L2",
+          "start_time": 48.52,
+          "end_time": 48.84
+        }
+      ]
+    },
+    {
+      "text": "Control. Y esto no se detiene. Muy pronto",
+      "start_time": 48.86,
+      "end_time": 51.78,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "Control.",
+          "start_time": 48.86,
+          "end_time": 49.28
+        },
+        {
+          "text": " ",
+          "start_time": 49.28,
+          "end_time": 49.66
+        },
+        {
+          "text": "Y",
+          "start_time": 49.66,
+          "end_time": 49.72
+        },
+        {
+          "text": " ",
+          "start_time": 49.72,
+          "end_time": 49.8
+        },
+        {
+          "text": "esto",
+          "start_time": 49.8,
+          "end_time": 50.06
+        },
+        {
+          "text": " ",
+          "start_time": 50.06,
+          "end_time": 50.26
+        },
+        {
+          "text": "no",
+          "start_time": 50.26,
+          "end_time": 50.36
+        },
+        {
+          "text": " ",
+          "start_time": 50.36,
+          "end_time": 50.44
+        },
+        {
+          "text": "se",
+          "start_time": 50.44,
+          "end_time": 50.54
+        },
+        {
+          "text": " ",
+          "start_time": 50.54,
+          "end_time": 50.56
+        },
+        {
+          "text": "detiene.",
+          "start_time": 50.56,
+          "end_time": 51.02
+        },
+        {
+          "text": " ",
+          "start_time": 51.02,
+          "end_time": 51.3
+        },
+        {
+          "text": "Muy",
+          "start_time": 51.3,
+          "end_time": 51.42
+        },
+        {
+          "text": " ",
+          "start_time": 51.42,
+          "end_time": 51.5
+        },
+        {
+          "text": "pronto",
+          "start_time": 51.5,
+          "end_time": 51.78
+        }
+      ]
+    },
+    {
+      "text": "llega Pista Rides, una \"app\" para pedir",
+      "start_time": 51.84,
+      "end_time": 54.08,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "llega",
+          "start_time": 51.84,
+          "end_time": 52.06
+        },
+        {
+          "text": " ",
+          "start_time": 52.06,
+          "end_time": 52.22
+        },
+        {
+          "text": "Pista",
+          "start_time": 52.22,
+          "end_time": 52.48
+        },
+        {
+          "text": " ",
+          "start_time": 52.48,
+          "end_time": 52.56
+        },
+        {
+          "text": "Rides,",
+          "start_time": 52.56,
+          "end_time": 52.9
+        },
+        {
+          "text": " ",
+          "start_time": 52.9,
+          "end_time": 53.2
+        },
+        {
+          "text": "una",
+          "start_time": 53.2,
+          "end_time": 53.36
+        },
+        {
+          "text": " ",
+          "start_time": 53.36,
+          "end_time": 53.38
+        },
+        {
+          "text": "\"app\"",
+          "start_time": 53.38,
+          "end_time": 53.54
+        },
+        {
+          "text": " ",
+          "start_time": 53.54,
+          "end_time": 53.66
+        },
+        {
+          "text": "para",
+          "start_time": 53.66,
+          "end_time": 53.78
+        },
+        {
+          "text": " ",
+          "start_time": 53.78,
+          "end_time": 53.86
+        },
+        {
+          "text": "pedir",
+          "start_time": 53.86,
+          "end_time": 54.08
+        }
+      ]
+    },
+    {
+      "text": "viajes. \u00bfQu\u00e9 m\u00e1s trae? Pronto lo sabr\u00e1s.",
+      "start_time": 54.14,
+      "end_time": 56.66,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "viajes.",
+          "start_time": 54.14,
+          "end_time": 54.58
+        },
+        {
+          "text": " ",
+          "start_time": 54.58,
+          "end_time": 54.9
+        },
+        {
+          "text": "\u00bfQu\u00e9",
+          "start_time": 54.9,
+          "end_time": 55.0
+        },
+        {
+          "text": " ",
+          "start_time": 55.0,
+          "end_time": 55.04
+        },
+        {
+          "text": "m\u00e1s",
+          "start_time": 55.04,
+          "end_time": 55.18
+        },
+        {
+          "text": " ",
+          "start_time": 55.18,
+          "end_time": 55.22
+        },
+        {
+          "text": "trae?",
+          "start_time": 55.22,
+          "end_time": 55.44
+        },
+        {
+          "text": " ",
+          "start_time": 55.44,
+          "end_time": 55.8
+        },
+        {
+          "text": "Pronto",
+          "start_time": 55.8,
+          "end_time": 56.1
+        },
+        {
+          "text": " ",
+          "start_time": 56.1,
+          "end_time": 56.12
+        },
+        {
+          "text": "lo",
+          "start_time": 56.12,
+          "end_time": 56.18
+        },
+        {
+          "text": " ",
+          "start_time": 56.18,
+          "end_time": 56.26
+        },
+        {
+          "text": "sabr\u00e1s.",
+          "start_time": 56.26,
+          "end_time": 56.66
+        }
+      ]
+    },
+    {
+      "text": "As\u00ed que ya sabes, no somos solo una",
+      "start_time": 57.04,
+      "end_time": 59.06,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "As\u00ed",
+          "start_time": 57.04,
+          "end_time": 57.2
+        },
+        {
+          "text": " ",
+          "start_time": 57.2,
+          "end_time": 57.24
+        },
+        {
+          "text": "que",
+          "start_time": 57.24,
+          "end_time": 57.32
+        },
+        {
+          "text": " ",
+          "start_time": 57.32,
+          "end_time": 57.36
+        },
+        {
+          "text": "ya",
+          "start_time": 57.36,
+          "end_time": 57.42
+        },
+        {
+          "text": " ",
+          "start_time": 57.42,
+          "end_time": 57.5
+        },
+        {
+          "text": "sabes,",
+          "start_time": 57.5,
+          "end_time": 57.86
+        },
+        {
+          "text": " ",
+          "start_time": 57.86,
+          "end_time": 58.16
+        },
+        {
+          "text": "no",
+          "start_time": 58.16,
+          "end_time": 58.24
+        },
+        {
+          "text": " ",
+          "start_time": 58.24,
+          "end_time": 58.38
+        },
+        {
+          "text": "somos",
+          "start_time": 58.38,
+          "end_time": 58.66
+        },
+        {
+          "text": " ",
+          "start_time": 58.66,
+          "end_time": 58.7
+        },
+        {
+          "text": "solo",
+          "start_time": 58.7,
+          "end_time": 58.9
+        },
+        {
+          "text": " ",
+          "start_time": 58.9,
+          "end_time": 58.94
+        },
+        {
+          "text": "una",
+          "start_time": 58.94,
+          "end_time": 59.06
+        }
+      ]
+    },
+    {
+      "text": "tienda, somos Electroshop. Gracias por",
+      "start_time": 59.14,
+      "end_time": 61.88,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "tienda,",
+          "start_time": 59.14,
+          "end_time": 59.44
+        },
+        {
+          "text": " ",
+          "start_time": 59.44,
+          "end_time": 59.76
+        },
+        {
+          "text": "somos",
+          "start_time": 59.76,
+          "end_time": 60.1
+        },
+        {
+          "text": " ",
+          "start_time": 60.1,
+          "end_time": 60.3
+        },
+        {
+          "text": "Electroshop.",
+          "start_time": 60.3,
+          "end_time": 61.04
+        },
+        {
+          "text": " ",
+          "start_time": 61.04,
+          "end_time": 61.4
+        },
+        {
+          "text": "Gracias",
+          "start_time": 61.4,
+          "end_time": 61.72
+        },
+        {
+          "text": " ",
+          "start_time": 61.72,
+          "end_time": 61.76
+        },
+        {
+          "text": "por",
+          "start_time": 61.76,
+          "end_time": 61.88
+        }
+      ]
+    },
+    {
+      "text": "verlo. Escr\u00edbenos y hablamos.",
+      "start_time": 61.9,
+      "end_time": 63.7,
+      "speaker": {
+        "id": "speaker_0",
+        "name": "Speaker 0"
+      },
+      "words": [
+        {
+          "text": "verlo.",
+          "start_time": 61.9,
+          "end_time": 62.2
+        },
+        {
+          "text": " ",
+          "start_time": 62.2,
+          "end_time": 62.46
+        },
+        {
+          "text": "Escr\u00edbenos",
+          "start_time": 62.46,
+          "end_time": 63.08
+        },
+        {
+          "text": " ",
+          "start_time": 63.08,
+          "end_time": 63.12
+        },
+        {
+          "text": "y",
+          "start_time": 63.12,
+          "end_time": 63.16
+        },
+        {
+          "text": " ",
+          "start_time": 63.16,
+          "end_time": 63.2
+        },
+        {
+          "text": "hablamos.",
+          "start_time": 63.2,
+          "end_time": 63.7
+        }
+      ]
+    }
+  ]
+}

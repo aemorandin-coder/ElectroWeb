@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Escena del medio: cursos muy pronto (El nuevo del equipo)</title>
+<style>
+/* Escena entre los dos clips reales: Chispa muestra la tienda web en un teléfono y anuncia que muy pronto habrá cursos. */
+@font-face { font-family: Inter; src: url(../assets/InterVariable.woff2) format('woff2'); font-weight: 100 900; }
+@font-face { font-family: Poppins; src: url(../assets/poppins-latin-600-normal.woff2); font-weight: 600; }
+@font-face { font-family: Poppins; src: url(../assets/poppins-latin-700-normal.woff2); font-weight: 700; }
+@font-face { font-family: Poppins; src: url(../assets/poppins-latin-800-normal.woff2); font-weight: 800; }
+@font-face { font-family: Serif; src: url(../assets/instrument-serif-latin-400-italic.woff2); font-style: italic; }
+@font-face { font-family: Tektrron; src: url(../assets/Tektrron.ttf); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 540px; height: 960px; overflow: hidden; background: #f4efe4; }
+#stage { position: relative; width: 540px; height: 960px; overflow: hidden; background: #2a63cd; color: #111317; font-family: Inter, sans-serif; }
+#grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px); background-size: 27px 27px; }
+#head { position: absolute; left: 26px; right: 26px; top: 26px; display: flex; justify-content: space-between; align-items: center; z-index: 30; }
+#head .brand { display: flex; padding: 5px 10px 5px 6px; border-radius: 999px; background: #fff; border: 1.5px solid #111317; }
+#head .brand img { height: 15px; }
+#head .chip { font: 700 10px Inter; letter-spacing: 1.2px; padding: 5px 9px; border-radius: 6px; border: 1.5px solid #111317; background: #fff; }
+.o { opacity: 0; }
+#titulo { position: absolute; left: 26px; right: 26px; top: 70px; font: 700 40px/1.05 Poppins; letter-spacing: -1px; }
+#titulo em { font: italic 400 50px/1 Serif; position: relative; padding: 0 2px; }
+#titulo em::after { content: ''; position: absolute; left: 0; right: 0; bottom: 5px; height: 13px; background: #ffd54a; z-index: -1; border-radius: 3px; }
+.card { position: absolute; left: 34px; right: 34px; height: 92px; background: #fff; border: 2.5px solid #111317; border-radius: 16px; box-shadow: 5px 5px 0 #111317; display: flex; align-items: center; gap: 16px; padding: 0 18px; }
+.card .ico { width: 58px; height: 58px; border-radius: 14px; background: #2a63cd; border: 2px solid #111317; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.card b { display: block; font: 800 26px/1.05 Poppins; }
+.card small { display: block; margin-top: 4px; font: 500 14px Inter; color: #495057; }
+#c0 { top: 140px; } #c1 { top: 244px; } #c2 { top: 348px; height: 112px; }
+.lic { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.lic span { font: 700 12.5px Poppins; padding: 4px 9px; border-radius: 8px; background: #eaeffa; color: #1e4ba3; border: 1.5px solid #2a63cd; opacity: 0; }
+#todo { position: absolute; right: 18px; top: 436px; font: 800 18px Poppins; color: #fff; z-index: 20; }
+#todo { width: max-content; padding: 6px 14px; background: #2a63cd; border: 2.5px solid #111317; border-radius: 12px; box-shadow: 4px 4px 0 #111317; transform: rotate(-2deg); }
+#marcas { position: absolute; left: 50%; bottom: 8px; width: max-content; margin-left: -150px; padding: 2px 8px; border-radius: 6px; background: rgba(244,239,228,.92); font: 500 10px Inter; color: #495057; z-index: 50; }
+#sub { position: absolute; left: 0; right: 0; top: 498px; display: flex; justify-content: center; z-index: 40; }
+#pill { display: flex; gap: 6px; padding: 6px 10px; border-radius: 8px; background: #111317; color: #fff; font: 700 17px Poppins; visibility: hidden; }
+#pill span { padding: 1px 5px; border-radius: 5px; }
+#pill span.on { background: #2a63cd; }
+#disc, #chispa { position: absolute; left: 70px; top: 548px; width: 400px; height: 420px; }
+#chispa { transform-origin: 50% 100%; z-index: 10; }
+#disc svg, #chispa svg { width: 400px; height: 420px; display: block; }
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; z-index: 60; }
+#tel { position: absolute; left: 145px; top: 78px; width: 250px; height: 400px; border-radius: 34px; background: #0a0a0a; padding: 8px; box-shadow: 0 0 0 2px #2c2f34, 7px 7px 0 #111317; z-index: 12; }
+#scr { position: relative; width: 100%; height: 100%; border-radius: 27px; overflow: hidden; background: #fff; }
+#web { position: absolute; inset: 0; transform-origin: 50% 0; background: #f8f9fa; }
+#web .hdr { height: 62px; overflow: hidden; background: #fff; border-bottom: 1px solid #e9ecef; }
+#web .hdr img { width: 100%; display: block; }
+#web .cw { padding: 10px 10px 0; }
+#web .eb { font: 700 7.5px Inter; letter-spacing: 1px; color: #2a63cd; }
+#web .h1 { margin-top: 2px; font: 800 19px/1.1 Inter; color: #212529; }
+#web .h2 { margin-top: 10px; font: 700 11px Inter; color: #212529; }
+#web .cg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 7px; }
+#web .cc { background: #fff; border: 1px solid #e9ecef; border-radius: 9px; overflow: hidden; padding-bottom: 6px; }
+#web .th { position: relative; height: 62px; display: flex; align-items: center; justify-content: center; }
+#web .th svg { width: 26px; height: 26px; }
+#web .th span { position: absolute; left: 5px; top: 5px; font: 800 6px Inter; letter-spacing: .5px; padding: 2px 4px; border-radius: 3px; background: #ffd54a; color: #212529; }
+#web .cc b { display: block; margin: 5px 6px 0; font: 700 9.5px Inter; color: #212529; }
+#web .cc i { display: block; margin: 1px 6px 0; font: 500 7.5px Inter; font-style: normal; color: #6a6c6b; }
+#isla { position: absolute; left: 50%; top: 9px; width: 64px; height: 18px; margin-left: -32px; border-radius: 10px; background: #000; z-index: 2; }
+#sello { position: absolute; right: 40px; top: 300px; z-index: 14; padding: 8px 14px; background: #ffd54a; color: #111317; border: 3px solid #111317; border-radius: 12px; box-shadow: 5px 5px 0 #111317; font: 800 22px/1 Poppins; text-align: center; }
+#sello small { display: block; margin-top: 4px; font: 700 12px Inter; letter-spacing: 1.5px; }
+#discC { fill: #f4efe4; }
+#pill span.on { background: #ffd54a; color: #111317; }
+#pro { position: absolute; left: 34px; right: 34px; top: 78px; z-index: 13; }
+#pT { font: 800 36px/1.05 Poppins; color: #fff; letter-spacing: -1px; }
+#pT em { font: italic 400 46px/1 Serif; color: #ffd54a; }
+#pChips { display: flex; gap: 10px; margin-top: 14px; }
+#pChips span { font: 800 20px Poppins; padding: 8px 16px; border-radius: 12px; background: #fff; color: #111317; border: 2.5px solid #111317; box-shadow: 4px 4px 0 #111317; }
+.pCard { display: flex; align-items: center; gap: 14px; margin-top: 16px; padding: 14px 16px; background: #fff; border: 2.5px solid #111317; border-radius: 16px; box-shadow: 5px 5px 0 #111317; }
+.pCard .ic { width: 44px; height: 44px; border-radius: 12px; background: #2a63cd; border: 2px solid #111317; display: flex; align-items: center; justify-content: center; color: #fff; font: 800 24px Poppins; flex-shrink: 0; }
+.pCard b { font: 800 20px/1.1 Poppins; color: #111317; }
+#pBtn { margin-top: 18px; padding: 14px 18px; text-align: center; background: #ffd54a; color: #111317; border: 3px solid #111317; border-radius: 16px; box-shadow: 6px 6px 0 #111317; font: 800 24px/1 Poppins; }
+#pBtn small { display: block; margin-top: 6px; font: 700 14px Inter; letter-spacing: .3px; }
+</style></head>
+<body>
+<div id="stage">
+  <div id="grid"></div>
+  <div id="head"><span class="brand"><img src="../assets/logo-color.png" alt=""></span><span class="chip">ELECTROSHOPVE.COM</span></div>
+    <div id="tel" class="o"><div id="scr"><div id="web">
+    <div class="hdr"><img src="../assets/web-movil.jpg" alt=""></div>
+    <div class="cw">
+      <div class="eb">APRENDE CON EXPERTOS</div>
+      <div class="h1">Cursos online</div>
+      <div class="h2">Todos los cursos</div>
+      <div class="cg">
+        <div class="cc"><div class="th" style="background:linear-gradient(135deg,#2a63cd,#142d61)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg><span>MUY PRONTO</span></div><b>Tecnología</b><i>Electro Shop</i></div>
+        <div class="cc"><div class="th" style="background:linear-gradient(135deg,#f59f00,#b45309)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>MUY PRONTO</span></div><b>Energía</b><i>Electro Shop</i></div>
+        <div class="cc"><div class="th" style="background:linear-gradient(135deg,#0f9d58,#047857)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>MUY PRONTO</span></div><b>Reparación</b><i>Electro Shop</i></div>
+        <div class="cc"><div class="th" style="background:linear-gradient(135deg,#7599de,#1e4ba3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>MUY PRONTO</span></div><b>Software</b><i>Electro Shop</i></div>
+      </div>
+    </div>
+  </div></div></div>
+  <div id="sello" class="o">Cursos<small>MUY PRONTO</small></div>
+  <div id="pro">
+    <div id="pT" class="o">¿Eres <em>especialista?</em></div>
+    <div id="pChips"><span id="pc0" class="o">Tecnología</span><span id="pc1" class="o">Energía</span></div>
+    <div class="pCard o" id="pM"><span class="ic">$</span><b>Monetiza tu conocimiento</b></div>
+    <div class="pCard o" id="pD"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span><b>Dicta tus cursos con nosotros</b></div>
+    <div id="pBtn" class="o">Postúlate como creador<small>electroshopve.com/creator</small></div>
+  </div>
+  <div id="sub"><div id="pill"></div></div>
+  <div id="disc"><svg viewBox="0 0 400 420"><circle id="discC" cx="200" cy="232" r="150"/><circle cx="200" cy="232" r="166" fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" opacity=".6"/></svg></div>
+  <div id="chispa"></div>
+  <div id="flash"></div>
+</div>
+<script src="../mascota/chispa.js"></script>
+<script>
+const VOZ = /*VOZ_MEDIO*/;
+const $ = s => document.querySelector(s);
+const norm = w => w.toLowerCase().replace(/[^a-z0-9áéíóúñü]/g, '');
+const W = (w, n = 0) => { const m = VOZ.palabras.filter(p => norm(p.w) === norm(w)); if (!m[n]) throw new Error('falta ' + w); return m[n].t0; };
+const FIN = VOZ.palabras[VOZ.palabras.length - 1].t1;
+window.DURATION = Math.ceil((FIN + .6) * 10) / 10;
+
+// Subtítulos: ventanas de hasta 4 palabras, cortadas en la puntuación
+const ventanas = []; let cur = [];
+VOZ.palabras.forEach((p, i) => { cur.push(i); if (/[.,:?!…]$/.test(p.w) || cur.length >= 4 || i === VOZ.palabras.length - 1) { ventanas.push(cur); cur = []; } });
+function subtitulos(t) {
+  let wi = -1; VOZ.palabras.forEach((p, i) => { if (t >= p.t0 - .02) wi = i; });
+  const vis = wi >= 0 && t < VOZ.palabras[wi].t1 + .45; $('#pill').style.visibility = vis ? 'visible' : 'hidden'; if (!vis) return;
+  const v = ventanas.find(vs => vs.includes(wi));
+  $('#pill').innerHTML = v.map(i => `<span class="${i === wi ? 'on' : ''}">${VOZ.palabras[i].w.replace(/[.,:…]$/, '')}</span>`).join('');
+}
+
+// Chispa 2.0: poses por palabra, boca por vocal, parpadeo y respiración
+const linea = chispa.linea([
+  { t: 0, pose: 'señala', cejas: 'arriba', mirar: [.3, -1] },
+  { t: W('pronto') - .1, pose: 'explica', cejas: 'normal', mirar: [.5, -1] },
+  { t: W('cursos') - .15, pose: 'celebra', ojos: 'feliz', feliz: true, mirar: [0, 0] },
+  { t: W('web') - .1, pose: 'pulgar', ojos: 'guino' },
+  { t: W('eres') - .1, pose: 'hombros', ojos: 'abiertos', cejas: 'arriba', feliz: false, mirar: [0, -.5] },
+  { t: W('monetizar') - .1, pose: 'explica', cejas: 'normal' },
+  { t: W('podrás') - .1, pose: 'señala', mirar: [.5, -1] },
+  { t: W('postúlate') - .1, pose: 'pulgar', ojos: 'guino', feliz: true, mirar: [0, 0] },
+]);
+const labios = chispa.labios(VOZ);
+const ease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+const back = x => { x = Math.min(1, Math.max(0, x)); return 1 + 2.4 * Math.pow(x - 1, 3) + 1.4 * Math.pow(x - 1, 2); };
+const ver = (sel, t, a, b, desde = 18) => {
+  const el = $(sel), k = t < a ? 0 : t < b ? back((t - a) / .38) : 1 - ease((t - b) / .25);
+  el.style.opacity = (t < a ? 0 : t < b ? Math.min(1, (t - a) / .2) : Math.max(0, 1 - (t - b) / .25)).toFixed(3);
+  el.style.transform = `translateY(${(desde * (1 - k)).toFixed(1)}px) scale(${(.9 + .1 * k).toFixed(3)})`;
+};
+window.seek = (t) => {
+  const e = linea(t);
+  const p = VOZ.palabras.find(q => t >= q.t0 - .03 && t < q.t1 + .05);
+  if (p) { const b = labios(t); Object.assign(e.boca, b, { sonrisa: Math.max(b.sonrisa, e.boca.sonrisa * .6) }); }
+  chispa.vida(e, t, { rms: p ? VOZ.rms[Math.floor(t * 30)] : null });
+  // la web se acerca despacio dentro del teléfono
+  e.fondo = false;
+  $('#chispa').innerHTML = chispa.rig(e);
+  // entra desde abajo con rebote
+  const y = (1 - back(t / .55)) * 160; $('#chispa').style.transform = `translateY(${y.toFixed(1)}px)`;
+  $('#disc').style.transform = `scale(${(.6 + .4 * back(t / .5)).toFixed(3)})`; $('#disc').style.opacity = Math.min(1, t / .25).toFixed(2);
+  ver('#tel', t, .05, W('eres') - .35, 40);
+  document.querySelector('#web').style.transform = `scale(${(1 + .06 * Math.min(1, Math.max(0, t / 4))).toFixed(4)})`;
+  ver('#sello', t, W('cursos') - .05, W('eres') - .35, 20);
+  ver('#pT', t, W('eres') - .05, 99, 16);
+  ver('#pc0', t, W('tecnología') - .05, 99, 12); ver('#pc1', t, W('energía') - .05, 99, 12);
+  ver('#pM', t, W('monetizar') - .05, 99, 20);
+  ver('#pD', t, W('podrás') - .05, 99, 20);
+  ver('#pBtn', t, W('postúlate') - .05, 99, 20);
+  subtitulos(t);
+  // destello blanco al final: empata con el corte al clip real
+  $('#flash').style.opacity = t < .15 ? (1 - t / .15).toFixed(2) : t > FIN + .45 ? Math.min(1, (t - FIN - .45) / .12).toFixed(2) : 0;
+};
+window.ready = document.fonts.ready.then(() => Promise.all(Array.from(document.images).map(i => i.complete ? 1 : new Promise(r => { i.onload = r; i.onerror = r; })))).then(() => { window.seek(0); return true; });
+</script>
+</body></html>

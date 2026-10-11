@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Escena del medio: cursos muy pronto (El nuevo del equipo)</title>
+<style>
+/* Escena entre los dos clips reales: Chispa muestra la tienda web en un teléfono y anuncia que muy pronto habrá cursos. */
+@font-face { font-family: Inter; src: url(../assets/InterVariable.woff2) format('woff2'); font-weight: 100 900; }
+@font-face { font-family: Poppins; src: url(../assets/poppins-latin-600-normal.woff2); font-weight: 600; }
+@font-face { font-family: Poppins; src: url(../assets/poppins-latin-700-normal.woff2); font-weight: 700; }
+@font-face { font-family: Poppins; src: url(../assets/poppins-latin-800-normal.woff2); font-weight: 800; }
+@font-face { font-family: Serif; src: url(../assets/instrument-serif-latin-400-italic.woff2); font-style: italic; }
+@font-face { font-family: Tektrron; src: url(../assets/Tektrron.ttf); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 540px; height: 960px; overflow: hidden; background: #f4efe4; }
+#stage { position: relative; width: 540px; height: 960px; overflow: hidden; background: #2a63cd; color: #111317; font-family: Inter, sans-serif; }
+#grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px); background-size: 27px 27px; }
+#head { position: absolute; left: 26px; right: 26px; top: 26px; display: flex; justify-content: space-between; align-items: center; z-index: 30; }
+#head .brand { display: flex; padding: 5px 10px 5px 6px; border-radius: 999px; background: #fff; border: 1.5px solid #111317; }
+#head .brand img { height: 15px; }
+#head .chip { font: 700 10px Inter; letter-spacing: 1.2px; padding: 5px 9px; border-radius: 6px; border: 1.5px solid #111317; background: #fff; }
+.o { opacity: 0; }
+#titulo { position: absolute; left: 26px; right: 26px; top: 70px; font: 700 40px/1.05 Poppins; letter-spacing: -1px; }
+#titulo em { font: italic 400 50px/1 Serif; position: relative; padding: 0 2px; }
+#titulo em::after { content: ''; position: absolute; left: 0; right: 0; bottom: 5px; height: 13px; background: #ffd54a; z-index: -1; border-radius: 3px; }
+.card { position: absolute; left: 34px; right: 34px; height: 92px; background: #fff; border: 2.5px solid #111317; border-radius: 16px; box-shadow: 5px 5px 0 #111317; display: flex; align-items: center; gap: 16px; padding: 0 18px; }
+.card .ico { width: 58px; height: 58px; border-radius: 14px; background: #2a63cd; border: 2px solid #111317; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.card b { display: block; font: 800 26px/1.05 Poppins; }
+.card small { display: block; margin-top: 4px; font: 500 14px Inter; color: #495057; }
+#c0 { top: 140px; } #c1 { top: 244px; } #c2 { top: 348px; height: 112px; }
+.lic { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.lic span { font: 700 12.5px Poppins; padding: 4px 9px; border-radius: 8px; background: #eaeffa; color: #1e4ba3; border: 1.5px solid #2a63cd; opacity: 0; }
+#todo { position: absolute; right: 18px; top: 436px; font: 800 18px Poppins; color: #fff; z-index: 20; }
+#todo { width: max-content; padding: 6px 14px; background: #2a63cd; border: 2.5px solid #111317; border-radius: 12px; box-shadow: 4px 4px 0 #111317; transform: rotate(-2deg); }
+#marcas { position: absolute; left: 50%; bottom: 8px; width: max-content; margin-left: -150px; padding: 2px 8px; border-radius: 6px; background: rgba(244,239,228,.92); font: 500 10px Inter; color: #495057; z-index: 50; }
+#sub { position: absolute; left: 0; right: 0; top: 498px; display: flex; justify-content: center; z-index: 40; }
+#pill { display: flex; gap: 6px; padding: 6px 10px; border-radius: 8px; background: #111317; color: #fff; font: 700 17px Poppins; visibility: hidden; }
+#pill span { padding: 1px 5px; border-radius: 5px; }
+#pill span.on { background: #2a63cd; }
+#disc, #chispa { position: absolute; left: 70px; top: 548px; width: 400px; height: 420px; }
+#chispa { transform-origin: 50% 100%; z-index: 10; }
+#disc svg, #chispa svg { width: 400px; height: 420px; display: block; }
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; z-index: 60; }
+#tel { position: absolute; left: 145px; top: 78px; width: 250px; height: 400px; border-radius: 34px; background: #0a0a0a; padding: 8px; box-shadow: 0 0 0 2px #2c2f34, 7px 7px 0 #111317; z-index: 12; }
+#scr { position: relative; width: 100%; height: 100%; border-radius: 27px; overflow: hidden; background: #fff; }
+#web { position: absolute; inset: 0; transform-origin: 50% 0; background: #f8f9fa; }
+#web .hdr { height: 62px; overflow: hidden; background: #fff; border-bottom: 1px solid #e9ecef; }
+#web .hdr img { width: 100%; display: block; }
+#web .cw { padding: 10px 10px 0; }
+#web .eb { font: 700 7.5px Inter; letter-spacing: 1px; color: #2a63cd; }
+#web .h1 { margin-top: 2px; font: 800 19px/1.1 Inter; color: #212529; }
+#web .h2 { margin-top: 10px; font: 700 11px Inter; color: #212529; }
+#web .cg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 7px; }
+#web .cc { background: #fff; border: 1px solid #e9ecef; border-radius: 9px; overflow: hidden; padding-bottom: 6px; }
+#web .th { position: relative; height: 62px; display: flex; align-items: center; justify-content: center; }
+#web .th svg { width: 26px; height: 26px; }
+#web .th span { position: absolute; left: 5px; top: 5px; font: 800 6px Inter; letter-spacing: .5px; padding: 2px 4px; border-radius: 3px; background: #ffd54a; color: #212529; }
+#web .cc b { display: block; margin: 5px 6px 0; font: 700 9.5px Inter; color: #212529; }
+#web .cc i { display: block; margin: 1px 6px 0; font: 500 7.5px Inter; font-style: normal; color: #6a6c6b; }
+#isla { position: absolute; left: 50%; top: 9px; width: 64px; height: 18px; margin-left: -32px; border-radius: 10px; background: #000; z-index: 2; }
+#sello { position: absolute; right: 40px; top: 300px; z-index: 14; padding: 8px 14px; background: #ffd54a; color: #111317; border: 3px solid #111317; border-radius: 12px; box-shadow: 5px 5px 0 #111317; font: 800 22px/1 Poppins; text-align: center; }
+#sello small { display: block; margin-top: 4px; font: 700 12px Inter; letter-spacing: 1.5px; }
+#discC { fill: #f4efe4; }
+#pill span.on { background: #ffd54a; color: #111317; }
+#pro { position: absolute; left: 34px; right: 34px; top: 78px; z-index: 13; }
+#pT { font: 800 36px/1.05 Poppins; color: #fff; letter-spacing: -1px; }
+#pT em { font: italic 400 46px/1 Serif; color: #ffd54a; }
+#pChips { display: flex; gap: 10px; margin-top: 14px; }
+#pChips span { font: 800 20px Poppins; padding: 8px 16px; border-radius: 12px; background: #fff; color: #111317; border: 2.5px solid #111317; box-shadow: 4px 4px 0 #111317; }
+.pCard { display: flex; align-items: center; gap: 14px; margin-top: 16px; padding: 14px 16px; background: #fff; border: 2.5px solid #111317; border-radius: 16px; box-shadow: 5px 5px 0 #111317; }
+.pCard .ic { width: 44px; height: 44px; border-radius: 12px; background: #2a63cd; border: 2px solid #111317; display: flex; align-items: center; justify-content: center; color: #fff; font: 800 24px Poppins; flex-shrink: 0; }
+.pCard b { font: 800 20px/1.1 Poppins; color: #111317; }
+#pBtn { margin-top: 18px; padding: 14px 18px; text-align: center; background: #ffd54a; color: #111317; border: 3px solid #111317; border-radius: 16px; box-shadow: 6px 6px 0 #111317; font: 800 24px/1 Poppins; }
+#pBtn small { display: block; margin-top: 6px; font: 700 14px Inter; letter-spacing: .3px; }
+</style></head>
+<body>
+<div id="stage">
+  <div id="grid"></div>
+  <div id="head"><span class="brand"><img src="../assets/logo-color.png" alt=""></span><span class="chip">ELECTROSHOPVE.COM</span></div>
+    <div id="tel" class="o"><div id="scr"><div id="web">
+    <div class="hdr"><img src="../assets/web-movil.jpg" alt=""></div>
+    <div class="cw">
+      <div class="eb">APRENDE CON EXPERTOS</div>
+      <div class="h1">Cursos online</div>
+      <div class="h2">Todos los cursos</div>
+      <div class="cg">
+        <div class="cc"><div class="th" style="background:linear-gradient(135deg,#2a63cd,#142d61)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg><span>MUY PRONTO</span></div><b>Tecnología</b><i>Electro Shop</i></div>
+        <div class="cc"><div class="th" style="background:linear-gradient(135deg,#f59f00,#b45309)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>MUY PRONTO</span></div><b>Energía</b><i>Electro Shop</i></div>
+        <div class="cc"><div class="th" style="background:linear-gradient(135deg,#0f9d58,#047857)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>MUY PRONTO</span></div><b>Reparación</b><i>Electro Shop</i></div>
+        <div class="cc"><div class="th" style="background:linear-gradient(135deg,#7599de,#1e4ba3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>MUY PRONTO</span></div><b>Software</b><i>Electro Shop</i></div>
+      </div>
+    </div>
+  </div></div></div>
+  <div id="sello" class="o">Cursos<small>MUY PRONTO</small></div>
+  <div id="pro">
+    <div id="pT" class="o">¿Eres <em>especialista?</em></div>
+    <div id="pChips"><span id="pc0" class="o">Tecnología</span><span id="pc1" class="o">Energía</span></div>
+    <div class="pCard o" id="pM"><span class="ic">$</span><b>Monetiza tu conocimiento</b></div>
+    <div class="pCard o" id="pD"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span><b>Dicta tus cursos con nosotros</b></div>
+    <div id="pBtn" class="o">Postúlate como creador<small>electroshopve.com/creator</small></div>
+  </div>
+  <div id="sub"><div id="pill"></div></div>
+  <div id="disc"><svg viewBox="0 0 400 420"><circle id="discC" cx="200" cy="232" r="150"/><circle cx="200" cy="232" r="166" fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" opacity=".6"/></svg></div>
+  <div id="chispa"></div>
+  <div id="flash"></div>
+</div>
+<script src="../mascota/chispa.js"></script>
+<script>
+const VOZ = {"duracion":13.034,"palabras":[{"w":"¡Y","t0":0.04,"t1":0.14,"b":0},{"w":"prepárate!","t0":0.24,"t1":0.86,"b":0},{"w":"Muy","t0":1.34,"t1":1.46,"b":0},{"w":"pronto","t0":1.58,"t1":1.9,"b":0},{"w":"vas","t0":1.92,"t1":2.06,"b":0},{"w":"a","t0":2.1,"t1":2.12,"b":0},{"w":"tener","t0":2.18,"t1":2.38,"b":0},{"w":"cursos","t0":2.54,"t1":2.86,"b":0},{"w":"en","t0":2.9,"t1":2.98,"b":0},{"w":"nuestra","t0":3.02,"t1":3.28,"b":0},{"w":"web.","t0":3.34,"t1":3.62,"b":0},{"w":"¿Eres","t0":4.09,"t1":4.58,"b":0},{"w":"especialista","t0":4.64,"t1":5.22,"b":0},{"w":"en","t0":5.24,"t1":5.28,"b":0},{"w":"tecnología","t0":5.34,"t1":6.02,"b":0},{"w":"o","t0":6.06,"t1":6.1,"b":0},{"w":"energía","t0":6.14,"t1":6.8,"b":0},{"w":"y","t0":6.86,"t1":6.88,"b":0},{"w":"quieres","t0":7.04,"t1":7.32,"b":0},{"w":"monetizar","t0":7.36,"t1":7.84,"b":0},{"w":"tu","t0":7.9,"t1":7.94,"b":0},{"w":"conocimiento?","t0":8.0,"t1":8.58,"b":0},{"w":"Podrás","t0":9.03,"t1":9.33,"b":0},{"w":"dictar","t0":9.37,"t1":9.67,"b":0},{"w":"tus","t0":9.73,"t1":9.91,"b":0},{"w":"cursos","t0":9.95,"t1":10.27,"b":0},{"w":"con","t0":10.29,"t1":10.39,"b":0},{"w":"nosotros!","t0":10.43,"t1":10.97,"b":0},{"w":"Postúlate","t0":11.41,"t1":11.97,"b":0},{"w":"como","t0":12.03,"t1":12.23,"b":0},{"w":"creador.","t0":12.25,"t1":12.69,"b":0}],"bloques":{"0":[0.04,12.69]},"rms":[-60.0,-26.5,-18.6,-18.4,-24.8,-37.1,-47.6,-18.0,-19.8,-20.2,-26.4,-37.1,-47.8,-23.9,-16.1,-17.9,-17.1,-20.2,-12.9,-17.3,-27.7,-39.8,-27.8,-24.8,-30.4,-36.2,-37.4,-43.0,-48.0,-60.0,-60.0,-58.3,-55.3,-52.6,-53.8,-60.0,-38.8,-26.9,-22.9,-21.7,-22.6,-22.8,-24.0,-24.0,-26.3,-44.3,-49.8,-27.5,-19.7,-18.7,-19.6,-27.9,-28.3,-37.2,-29.7,-14.5,-20.5,-29.4,-20.7,-21.7,-27.5,-28.8,-21.6,-20.4,-37.6,-27.9,-23.5,-30.1,-24.6,-20.0,-24.8,-23.6,-41.0,-53.4,-56.1,-28.8,-21.9,-19.6,-20.8,-23.0,-25.2,-26.3,-22.6,-17.4,-24.9,-26.9,-22.7,-19.8,-26.0,-26.4,-27.2,-22.7,-21.1,-25.3,-28.9,-40.7,-26.4,-20.0,-21.6,-29.5,-26.8,-24.4,-25.6,-30.0,-36.8,-43.5,-57.8,-45.4,-49.5,-55.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-31.3,-24.0,-24.4,-26.3,-23.3,-27.7,-31.0,-24.8,-25.6,-28.0,-42.6,-34.4,-20.8,-25.6,-29.2,-32.4,-24.4,-25.2,-30.2,-27.0,-26.8,-29.6,-28.8,-37.9,-28.4,-22.6,-26.1,-27.8,-40.5,-26.5,-25.3,-39.9,-34.4,-30.4,-30.3,-31.3,-32.2,-33.6,-43.1,-46.2,-41.4,-36.1,-28.3,-29.0,-29.1,-24.7,-24.7,-23.9,-25.1,-23.9,-25.4,-26.3,-26.2,-29.0,-32.3,-31.8,-31.2,-41.5,-39.3,-45.7,-40.2,-38.7,-31.1,-28.0,-28.0,-26.7,-24.5,-24.0,-25.6,-26.1,-34.5,-48.7,-56.2,-36.4,-30.0,-34.9,-45.2,-58.7,-55.1,-37.8,-35.1,-24.1,-23.9,-24.9,-25.4,-22.9,-25.2,-30.2,-47.9,-27.4,-25.7,-26.1,-28.8,-26.5,-29.8,-48.7,-33.3,-32.2,-31.7,-29.4,-33.2,-28.1,-27.5,-32.0,-35.4,-54.6,-25.8,-33.7,-39.8,-25.6,-27.3,-28.9,-30.3,-30.1,-29.7,-35.0,-34.3,-36.3,-37.1,-37.9,-37.0,-35.9,-35.9,-44.2,-33.4,-25.2,-29.1,-36.9,-56.3,-59.4,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-54.1,-26.2,-24.0,-28.5,-30.3,-28.1,-24.8,-24.3,-26.6,-31.8,-44.9,-23.4,-26.3,-36.4,-50.7,-59.4,-25.7,-21.4,-24.0,-32.1,-44.2,-56.2,-26.0,-25.5,-31.8,-32.3,-44.7,-60.0,-31.8,-24.6,-24.3,-29.7,-32.1,-33.1,-26.9,-28.2,-33.8,-41.0,-36.8,-29.4,-33.1,-33.7,-35.1,-34.6,-38.4,-35.1,-33.5,-33.9,-33.2,-38.2,-50.1,-47.7,-50.3,-40.6,-41.6,-51.2,-37.2,-35.1,-36.6,-42.6,-57.8,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-26.1,-20.3,-27.2,-30.3,-26.1,-28.2,-46.9,-50.7,-20.4,-18.9,-19.8,-26.9,-14.5,-17.6,-26.2,-40.3,-17.5,-22.8,-38.0,-20.1,-19.3,-26.9,-22.2,-22.4,-40.7,-32.2,-20.8,-18.9,-19.3,-19.8,-21.7,-24.1,-23.8,-25.0,-29.9,-32.4,-37.4,-37.7,-48.7,-47.1,-50.3,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0,-60.0]};
+const $ = s => document.querySelector(s);
+const norm = w => w.toLowerCase().replace(/[^a-z0-9áéíóúñü]/g, '');
+const W = (w, n = 0) => { const m = VOZ.palabras.filter(p => norm(p.w) === norm(w)); if (!m[n]) throw new Error('falta ' + w); return m[n].t0; };
+const FIN = VOZ.palabras[VOZ.palabras.length - 1].t1;
+window.DURATION = Math.ceil((FIN + .6) * 10) / 10;
+
+// Subtítulos: ventanas de hasta 4 palabras, cortadas en la puntuación
+const ventanas = []; let cur = [];
+VOZ.palabras.forEach((p, i) => { cur.push(i); if (/[.,:?!…]$/.test(p.w) || cur.length >= 4 || i === VOZ.palabras.length - 1) { ventanas.push(cur); cur = []; } });
+function subtitulos(t) {
+  let wi = -1; VOZ.palabras.forEach((p, i) => { if (t >= p.t0 - .02) wi = i; });
+  const vis = wi >= 0 && t < VOZ.palabras[wi].t1 + .45; $('#pill').style.visibility = vis ? 'visible' : 'hidden'; if (!vis) return;
+  const v = ventanas.find(vs => vs.includes(wi));
+  $('#pill').innerHTML = v.map(i => `<span class="${i === wi ? 'on' : ''}">${VOZ.palabras[i].w.replace(/[.,:…]$/, '')}</span>`).join('');
+}
+
+// Chispa 2.0: poses por palabra, boca por vocal, parpadeo y respiración
+const linea = chispa.linea([
+  { t: 0, pose: 'señala', cejas: 'arriba', mirar: [.3, -1] },
+  { t: W('pronto') - .1, pose: 'explica', cejas: 'normal', mirar: [.5, -1] },
+  { t: W('cursos') - .15, pose: 'celebra', ojos: 'feliz', feliz: true, mirar: [0, 0] },
+  { t: W('web') - .1, pose: 'pulgar', ojos: 'guino' },
+  { t: W('eres') - .1, pose: 'hombros', ojos: 'abiertos', cejas: 'arriba', feliz: false, mirar: [0, -.5] },
+  { t: W('monetizar') - .1, pose: 'explica', cejas: 'normal' },
+  { t: W('podrás') - .1, pose: 'señala', mirar: [.5, -1] },
+  { t: W('postúlate') - .1, pose: 'pulgar', ojos: 'guino', feliz: true, mirar: [0, 0] },
+]);
+const labios = chispa.labios(VOZ);
+const ease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+const back = x => { x = Math.min(1, Math.max(0, x)); return 1 + 2.4 * Math.pow(x - 1, 3) + 1.4 * Math.pow(x - 1, 2); };
+const ver = (sel, t, a, b, desde = 18) => {
+  const el = $(sel), k = t < a ? 0 : t < b ? back((t - a) / .38) : 1 - ease((t - b) / .25);
+  el.style.opacity = (t < a ? 0 : t < b ? Math.min(1, (t - a) / .2) : Math.max(0, 1 - (t - b) / .25)).toFixed(3);
+  el.style.transform = `translateY(${(desde * (1 - k)).toFixed(1)}px) scale(${(.9 + .1 * k).toFixed(3)})`;
+};
+window.seek = (t) => {
+  const e = linea(t);
+  const p = VOZ.palabras.find(q => t >= q.t0 - .03 && t < q.t1 + .05);
+  if (p) { const b = labios(t); Object.assign(e.boca, b, { sonrisa: Math.max(b.sonrisa, e.boca.sonrisa * .6) }); }
+  chispa.vida(e, t, { rms: p ? VOZ.rms[Math.floor(t * 30)] : null });
+  // la web se acerca despacio dentro del teléfono
+  e.fondo = false;
+  $('#chispa').innerHTML = chispa.rig(e);
+  // entra desde abajo con rebote
+  const y = (1 - back(t / .55)) * 160; $('#chispa').style.transform = `translateY(${y.toFixed(1)}px)`;
+  $('#disc').style.transform = `scale(${(.6 + .4 * back(t / .5)).toFixed(3)})`; $('#disc').style.opacity = Math.min(1, t / .25).toFixed(2);
+  ver('#tel', t, .05, W('eres') - .35, 40);
+  document.querySelector('#web').style.transform = `scale(${(1 + .06 * Math.min(1, Math.max(0, t / 4))).toFixed(4)})`;
+  ver('#sello', t, W('cursos') - .05, W('eres') - .35, 20);
+  ver('#pT', t, W('eres') - .05, 99, 16);
+  ver('#pc0', t, W('tecnología') - .05, 99, 12); ver('#pc1', t, W('energía') - .05, 99, 12);
+  ver('#pM', t, W('monetizar') - .05, 99, 20);
+  ver('#pD', t, W('podrás') - .05, 99, 20);
+  ver('#pBtn', t, W('postúlate') - .05, 99, 20);
+  subtitulos(t);
+  // destello blanco al final: empata con el corte al clip real
+  $('#flash').style.opacity = t < .15 ? (1 - t / .15).toFixed(2) : t > FIN + .45 ? Math.min(1, (t - FIN - .45) / .12).toFixed(2) : 0;
+};
+window.ready = document.fonts.ready.then(() => Promise.all(Array.from(document.images).map(i => i.complete ? 1 : new Promise(r => { i.onload = r; i.onerror = r; })))).then(() => { window.seek(0); return true; });
+</script>
+</body></html>

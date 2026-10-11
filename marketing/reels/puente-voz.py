@@ -8,6 +8,27 @@ if len(sys.argv) > 2:
     subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', mp3, '-ac', '1', '-ar', str(SR), '-c:a', 'libmp3lame', '-b:a', '128k', 'assets/voz/chispa-puente.mp3'], check=True)
     a = array.array('h'); a.frombytes(subprocess.run(['ffmpeg', '-v', 'error', '-i', 'assets/voz/chispa-puente.mp3', '-ac', '1', '-ar', str(SR), '-f', 's16le', '-'], capture_output=True, check=True).stdout)
     pal = [{'w': w['text'], 't0': w['start_time'], 't1': w['end_time'], 'b': 0} for s in json.load(open(js))['segments'] for w in s['words'] if w['text'].strip() and not w['text'].startswith('[')]
+    # pausas de más de 0,6 s quedan en 0,45 s (se recorta el medio del silencio y se corren las palabras)
+    sal, corr, prev = array.array('h'), 0.0, 0.0
+    cortes = []
+    for i in range(1, len(pal)):
+        g0, g1 = pal[i - 1]['t1'], pal[i]['t0']
+        if g1 - g0 > .6: cortes.append((g0 + .2, g1 - .25))
+    for c0, c1 in cortes:
+        sal.extend(a[int(prev * SR):int(c0 * SR)]); prev = c1
+    sal.extend(a[int(prev * SR):])
+    def mover(t): return t - sum(min(c1, t) - c0 for c0, c1 in cortes if t > c0)
+    for q in pal: q['t0'], q['t1'] = round(mover(q['t0']), 3), round(mover(q['t1']), 3)
+    a = sal
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-f', 's16le', '-ar', str(SR), '-ac', '1', '-i', '-', '-c:a', 'libmp3lame', '-b:a', '128k', 'assets/voz/chispa-puente.mp3'], input=a.tobytes(), check=True)
+    # cómo se escribe en pantalla
+    VER = {'Electroshop?': ['Electro', 'Shop?'], 'Todo': ['¡Todo'], 'nosotros.': ['nosotros!'], 'y,': ['y'], 'software,': ['software:']}
+    nuevo = []
+    for q in pal:
+        partes = VER.get(q['w'], [q['w']])
+        for k, txt in enumerate(partes):
+            d = (q['t1'] - q['t0']) / len(partes); nuevo.append({**q, 'w': txt, 't0': round(q['t0'] + d * k, 3), 't1': round(q['t0'] + d * (k + 1), 3)})
+    pal = nuevo
     paso = SR // FPS
     rms = [round(max(-60.0, 20 * math.log10(math.sqrt(sum(x * x for x in a[i:i + paso]) / max(1, len(a[i:i + paso]))) / 32768 + 1e-9)), 1) for i in range(0, len(a), paso)]
     dur = len(a) / SR

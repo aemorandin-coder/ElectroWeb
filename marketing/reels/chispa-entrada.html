@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Entrada de Chispa (El nuevo del equipo)</title>
+<style>
+/* Chispa entra solo, cuenta qué hace Electro Shop y le pasa la palabra a Andrés (después viene el clip real de Google Flow). */
+@font-face { font-family: Inter; src: url(assets/InterVariable.woff2) format('woff2'); font-weight: 100 900; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-600-normal.woff2); font-weight: 600; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-700-normal.woff2); font-weight: 700; }
+@font-face { font-family: Poppins; src: url(assets/poppins-latin-800-normal.woff2); font-weight: 800; }
+@font-face { font-family: Serif; src: url(assets/instrument-serif-latin-400-italic.woff2); font-style: italic; }
+@font-face { font-family: Tektrron; src: url(assets/Tektrron.ttf); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 540px; height: 960px; overflow: hidden; background: #f4efe4; }
+#stage { position: relative; width: 540px; height: 960px; overflow: hidden; background: #f4efe4; color: #111317; font-family: Inter, sans-serif; }
+#grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(17,19,23,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(17,19,23,.05) 1px, transparent 1px); background-size: 27px 27px; }
+#head { position: absolute; left: 26px; right: 26px; top: 26px; display: flex; justify-content: space-between; align-items: center; z-index: 30; }
+#head .brand { display: flex; padding: 5px 10px 5px 6px; border-radius: 999px; background: #fff; border: 1.5px solid #111317; }
+#head .brand img { height: 15px; }
+#head .chip { font: 700 10px Inter; letter-spacing: 1.2px; padding: 5px 9px; border-radius: 6px; border: 1.5px solid #111317; background: #fff; }
+.o { opacity: 0; }
+#titulo { position: absolute; left: 26px; right: 26px; top: 70px; font: 700 40px/1.05 Poppins; letter-spacing: -1px; }
+#titulo em { font: italic 400 50px/1 Serif; position: relative; padding: 0 2px; }
+#titulo em::after { content: ''; position: absolute; left: 0; right: 0; bottom: 5px; height: 13px; background: #ffd54a; z-index: -1; border-radius: 3px; }
+.card { position: absolute; left: 34px; right: 34px; height: 92px; background: #fff; border: 2.5px solid #111317; border-radius: 16px; box-shadow: 5px 5px 0 #111317; display: flex; align-items: center; gap: 16px; padding: 0 18px; }
+.card .ico { width: 58px; height: 58px; border-radius: 14px; background: #2a63cd; border: 2px solid #111317; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.card b { display: block; font: 800 26px/1.05 Poppins; }
+.card small { display: block; margin-top: 4px; font: 500 14px Inter; color: #495057; }
+#c0 { top: 150px; } #c1 { top: 260px; } #c2 { top: 370px; }
+#sub { position: absolute; left: 0; right: 0; top: 498px; display: flex; justify-content: center; z-index: 40; }
+#pill { display: flex; gap: 6px; padding: 6px 10px; border-radius: 8px; background: #111317; color: #fff; font: 700 17px Poppins; visibility: hidden; }
+#pill span { padding: 1px 5px; border-radius: 5px; }
+#pill span.on { background: #2a63cd; }
+#disc, #chispa { position: absolute; left: 70px; top: 548px; width: 400px; height: 420px; }
+#chispa { transform-origin: 50% 100%; z-index: 10; }
+#disc svg, #chispa svg { width: 400px; height: 420px; display: block; }
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; z-index: 60; }
+</style></head>
+<body>
+<div id="stage">
+  <div id="grid"></div>
+  <div id="head"><span class="brand"><img src="assets/logo-color.png" alt=""></span><span class="chip">ELECTROSHOPVE.COM</span></div>
+  <div id="titulo" class="o">¿Qué <em>hacemos?</em></div>
+  <div class="card o" id="c0"><span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg></span><div><b>Vendemos</b><small>Tecnología, gaming, gift cards y energía</small></div></div>
+  <div class="card o" id="c1"><span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span><div><b>Reparamos</b><small>Taller con ingeniero</small></div></div>
+  <div class="card o" id="c2"><span class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg></span><div><b>Desarrollamos</b><small>Software como L2 Control</small></div></div>
+  <div id="sub"><div id="pill"></div></div>
+  <div id="disc"><svg viewBox="0 0 400 420"><circle cx="200" cy="232" r="150" fill="#2a63cd"/><circle cx="200" cy="232" r="166" fill="none" stroke="#111317" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" opacity=".5"/></svg></div>
+  <div id="chispa"></div>
+  <div id="flash"></div>
+</div>
+<script src="assets/mascota/chispa.js"></script>
+<script>
+const VOZ = {"duracion":9.91,"palabras":[{"w":"¡Epa!","t0":0.3,"t1":0.55,"b":0},{"w":"¿Ya","t0":0.59,"t1":0.79,"b":0},{"w":"sabes","t0":0.83,"t1":1.18,"b":0},{"w":"qué","t0":1.22,"t1":1.47,"b":0},{"w":"hacemos","t0":1.51,"t1":1.96,"b":0},{"w":"en","t0":2.0,"t1":2.2,"b":0},{"w":"Electro","t0":2.24,"t1":2.69,"b":0},{"w":"Shop?","t0":2.73,"t1":3.03,"b":0},{"w":"Vendemos","t0":3.07,"t1":3.57,"b":0},{"w":"tecnología,","t0":3.61,"t1":4.21,"b":0},{"w":"reparamos","t0":4.25,"t1":4.8,"b":0},{"w":"con","t0":4.84,"t1":5.09,"b":0},{"w":"ingeniero…","t0":5.13,"t1":5.68,"b":0},{"w":"¡y","t0":5.72,"t1":5.87,"b":0},{"w":"hasta","t0":5.91,"t1":6.26,"b":0},{"w":"creamos","t0":6.3,"t1":6.75,"b":0},{"w":"software!","t0":6.79,"t1":7.29,"b":0},{"w":"Pero","t0":7.33,"t1":7.63,"b":0},{"w":"ven,","t0":7.67,"t1":7.92,"b":0},{"w":"que","t0":7.96,"t1":8.21,"b":0},{"w":"te","t0":8.25,"t1":8.45,"b":0},{"w":"presento","t0":8.49,"t1":8.99,"b":0},{"w":"al","t0":9.03,"t1":9.23,"b":0},{"w":"jefe.","t0":9.27,"t1":9.57,"b":0}],"bloques":{"0":[0.3,9.57]},"rms":[-60,-60,-60,-60,-60,-60,-60,-60,-60,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-60,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-60,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-60,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-18,-18,-18,-18,-18,-18,-60,-60,-18,-18,-18,-18,-18,-18,-18,-18,-18,-60,-60,-60,-60,-60,-60,-60,-60,-60]};
+const $ = s => document.querySelector(s);
+const norm = w => w.toLowerCase().replace(/[^a-z0-9áéíóúñü]/g, '');
+const W = (w, n = 0) => { const m = VOZ.palabras.filter(p => norm(p.w) === norm(w)); if (!m[n]) throw new Error('falta ' + w); return m[n].t0; };
+const FIN = VOZ.palabras[VOZ.palabras.length - 1].t1;
+window.DURATION = Math.ceil((FIN + .6) * 10) / 10;
+
+// Subtítulos: ventanas de hasta 4 palabras, cortadas en la puntuación
+const ventanas = []; let cur = [];
+VOZ.palabras.forEach((p, i) => { cur.push(i); if (/[.,:?!…]$/.test(p.w) || cur.length >= 4 || i === VOZ.palabras.length - 1) { ventanas.push(cur); cur = []; } });
+function subtitulos(t) {
+  let wi = -1; VOZ.palabras.forEach((p, i) => { if (t >= p.t0 - .02) wi = i; });
+  const vis = wi >= 0 && t < VOZ.palabras[wi].t1 + .45; $('#pill').style.visibility = vis ? 'visible' : 'hidden'; if (!vis) return;
+  const v = ventanas.find(vs => vs.includes(wi));
+  $('#pill').innerHTML = v.map(i => `<span class="${i === wi ? 'on' : ''}">${VOZ.palabras[i].w.replace(/[.,:…]$/, '')}</span>`).join('');
+}
+
+// Chispa 2.0: poses por palabra, boca por vocal, parpadeo y respiración
+const linea = chispa.linea([
+  { t: 0, pose: 'saluda', ojos: 'feliz', feliz: true },
+  { t: W('ya') - .1, pose: 'hombros', ojos: 'abiertos', cejas: 'arriba', feliz: false },
+  { t: W('vendemos') - .1, pose: 'explica', cejas: 'normal', mirar: [.4, -1] },
+  { t: W('reparamos') - .1, pose: 'señala', mirar: [.6, -1] },
+  { t: W('software') - .15, pose: 'celebra', ojos: 'feliz', feliz: true, mirar: [0, 0] },
+  { t: W('pero') - .1, pose: 'habla', ojos: 'abiertos', feliz: false },
+  { t: W('jefe') - .25, pose: 'pulgar', ojos: 'guino', feliz: true },
+]);
+const labios = chispa.labios(VOZ);
+const ease = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+const back = x => { x = Math.min(1, Math.max(0, x)); return 1 + 2.4 * Math.pow(x - 1, 3) + 1.4 * Math.pow(x - 1, 2); };
+const ver = (sel, t, a, b, desde = 18) => {
+  const el = $(sel), k = t < a ? 0 : t < b ? back((t - a) / .38) : 1 - ease((t - b) / .25);
+  el.style.opacity = (t < a ? 0 : t < b ? Math.min(1, (t - a) / .2) : Math.max(0, 1 - (t - b) / .25)).toFixed(3);
+  el.style.transform = `translateY(${(desde * (1 - k)).toFixed(1)}px) scale(${(.9 + .1 * k).toFixed(3)})`;
+};
+window.seek = (t) => {
+  const e = linea(t);
+  const p = VOZ.palabras.find(q => t >= q.t0 - .03 && t < q.t1 + .05);
+  if (p) { const b = labios(t); Object.assign(e.boca, b, { sonrisa: Math.max(b.sonrisa, e.boca.sonrisa * .6) }); }
+  chispa.vida(e, t, { rms: p ? VOZ.rms[Math.floor(t * 30)] : null });
+  if (t < W('ya') - .1) { const w = Math.sin(t * 10); e.R.giro += w * 20; e.R.muñeca = [e.R.muñeca[0] + w * 7, e.R.muñeca[1]]; }
+  e.fondo = false;
+  $('#chispa').innerHTML = chispa.rig(e);
+  // entra desde abajo con rebote
+  const y = (1 - back(t / .55)) * 160; $('#chispa').style.transform = `translateY(${y.toFixed(1)}px)`;
+  $('#disc').style.transform = `scale(${(.6 + .4 * back(t / .5)).toFixed(3)})`; $('#disc').style.opacity = Math.min(1, t / .25).toFixed(2);
+  ver('#titulo', t, W('hacemos') - .1, W('pero') - .3);
+  ver('#c0', t, W('vendemos') - .05, W('pero') - .3, 30);
+  ver('#c1', t, W('reparamos') - .05, W('pero') - .3, 30);
+  ver('#c2', t, W('software') - .1, W('pero') - .3, 30);
+  subtitulos(t);
+  // destello blanco al final: empata con el corte al clip real
+  $('#flash').style.opacity = t > FIN + .45 ? Math.min(1, (t - FIN - .45) / .12).toFixed(2) : 0;
+};
+window.ready = document.fonts.ready.then(() => Promise.all(Array.from(document.images).map(i => i.complete ? 1 : new Promise(r => { i.onload = r; i.onerror = r; })))).then(() => { window.seek(0); return true; });
+</script>
+</body></html>

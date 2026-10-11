@@ -95,7 +95,8 @@
       <path d="M-14 -6 L12 -6 M-14 5 L12 5" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>${dedo(-21, 0, -32, -15)}`),
     pulgar: (x, y, r) => g(x, y, r, `${dedo(-12, -18, -14, -62)}<path d="M-26 -18 C-26 -28 26 -28 26 -18 L26 14 C26 26 -26 26 -26 14 Z" fill="${SKIN}" ${S}/>
       <path d="M-8 -7 L22 -7 M-8 4 L22 4 M-8 15 L22 15" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>`),
-    puño: (x, y, r) => g(x, y, r, `<path d="${PUÑO}" fill="${SKIN}" ${S}/><path d="M-12 -7 L12 -7 M-12 4 L12 4" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>`),
+    puño: (x, y, r) => g(x, y, r, `<path d="${PUÑO}" fill="${SKIN}" ${S}/><path d="M-12 -7 L12 -7 M-12 4 L12 4" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M-20 8 C-14 2 2 2 10 6 C14 8 12 14 6 14 L-14 14 C-20 14 -22 11 -20 8 Z" fill="${SKIN}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`),
     // vistas por detrás: dorso del puño con nudillos; índice arriba con la uña
     puñoAtras: (x, y, r) => g(x, y, r, `<path d="${PUÑO}" fill="${SKIN}" ${S}/>
       <path d="M-20 -14 C-20 -21 -12 -21 -11 -14 M-10 -14 C-10 -22 -1 -22 0 -14 M1 -14 C1 -22 10 -22 11 -14 M12 -14 C12 -21 20 -21 20 -14" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
@@ -152,7 +153,7 @@
     brazos: { L: { codo: [108, 404], muñeca: [276, 372], mano: 'puño', giro: 90 }, R: { codo: [292, 396], muñeca: [124, 356], mano: 'puño', giro: -90 }, orden: 'RL' },
     hombros: { L: { codo: [94, 372], muñeca: [84, 290], mano: 'palma', giro: -10 }, R: { codo: [306, 372], muñeca: [316, 290], mano: 'palma', giro: 10 } },
     saluda: { L: REPOSO_L, R: { codo: [334, 318], muñeca: [330, 232], mano: 'palma', giro: 8 } },
-    celebra: { L: { codo: [84, 300], muñeca: [100, 214], mano: 'puño', giro: 0 }, R: { codo: [316, 300], muñeca: [300, 214], mano: 'puño', giro: 0 } },
+    celebra: { L: { codo: [94, 392], muñeca: [102, 318], mano: 'pulgar', giro: 0 }, R: { codo: [306, 392], muñeca: [298, 318], mano: 'pulgar', giro: 0 } },
     piensa: { L: REPOSO_L, R: { codo: [306, 392], muñeca: [212, 288], mano: 'puño', giro: 44 } },
   };
   const INC_POSE = { señala: 3, pulgar: 2, brazos: -2, hombros: -5, saluda: 4, piensa: -7, celebra: 0, explica: 0 };

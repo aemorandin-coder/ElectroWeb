@@ -40,7 +40,20 @@ html, body { width: 540px; height: 960px; overflow: hidden; background: #f4efe4;
 #flash { position: absolute; inset: 0; background: #fff; opacity: 0; z-index: 60; }
 #tel { position: absolute; left: 145px; top: 78px; width: 250px; height: 400px; border-radius: 34px; background: #0a0a0a; padding: 8px; box-shadow: 0 0 0 2px #2c2f34, 7px 7px 0 #111317; z-index: 12; }
 #scr { position: relative; width: 100%; height: 100%; border-radius: 27px; overflow: hidden; background: #fff; }
-#scr img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; transform-origin: 50% 0; }
+#web { position: absolute; inset: 0; transform-origin: 50% 0; background: #f8f9fa; }
+#web .hdr { height: 62px; overflow: hidden; background: #fff; border-bottom: 1px solid #e9ecef; }
+#web .hdr img { width: 100%; display: block; }
+#web .cw { padding: 10px 10px 0; }
+#web .eb { font: 700 7.5px Inter; letter-spacing: 1px; color: #2a63cd; }
+#web .h1 { margin-top: 2px; font: 800 19px/1.1 Inter; color: #212529; }
+#web .h2 { margin-top: 10px; font: 700 11px Inter; color: #212529; }
+#web .cg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 7px; }
+#web .cc { background: #fff; border: 1px solid #e9ecef; border-radius: 9px; overflow: hidden; padding-bottom: 6px; }
+#web .th { position: relative; height: 62px; display: flex; align-items: center; justify-content: center; }
+#web .th svg { width: 26px; height: 26px; }
+#web .th span { position: absolute; left: 5px; top: 5px; font: 800 6px Inter; letter-spacing: .5px; padding: 2px 4px; border-radius: 3px; background: #ffd54a; color: #212529; }
+#web .cc b { display: block; margin: 5px 6px 0; font: 700 9.5px Inter; color: #212529; }
+#web .cc i { display: block; margin: 1px 6px 0; font: 500 7.5px Inter; font-style: normal; color: #6a6c6b; }
 #isla { position: absolute; left: 50%; top: 9px; width: 64px; height: 18px; margin-left: -32px; border-radius: 10px; background: #000; z-index: 2; }
 #sello { position: absolute; right: 40px; top: 300px; z-index: 14; padding: 8px 14px; background: #ffd54a; color: #111317; border: 3px solid #111317; border-radius: 12px; box-shadow: 5px 5px 0 #111317; font: 800 22px/1 Poppins; text-align: center; }
 #sello small { display: block; margin-top: 4px; font: 700 12px Inter; letter-spacing: 1.5px; }
@@ -61,7 +74,20 @@ html, body { width: 540px; height: 960px; overflow: hidden; background: #f4efe4;
 <div id="stage">
   <div id="grid"></div>
   <div id="head"><span class="brand"><img src="assets/logo-color.png" alt=""></span><span class="chip">ELECTROSHOPVE.COM</span></div>
-    <div id="tel" class="o"><div id="scr"><img src="assets/web-movil.jpg" alt=""></div></div>
+    <div id="tel" class="o"><div id="scr"><div id="web">
+    <div class="hdr"><img src="assets/web-movil.jpg" alt=""></div>
+    <div class="cw">
+      <div class="eb">APRENDE CON EXPERTOS</div>
+      <div class="h1">Cursos online</div>
+      <div class="h2">Todos los cursos</div>
+      <div class="cg">
+        <div class="cc"><div class="th" style="background:linear-gradient(135deg,#2a63cd,#142d61)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg><span>MUY PRONTO</span></div><b>Tecnología</b><i>Electro Shop</i></div>
+        <div class="cc"><div class="th" style="background:linear-gradient(135deg,#f59f00,#b45309)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>MUY PRONTO</span></div><b>Energía</b><i>Electro Shop</i></div>
+        <div class="cc"><div class="th" style="background:linear-gradient(135deg,#0f9d58,#047857)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>MUY PRONTO</span></div><b>Reparación</b><i>Electro Shop</i></div>
+        <div class="cc"><div class="th" style="background:linear-gradient(135deg,#7599de,#1e4ba3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>MUY PRONTO</span></div><b>Software</b><i>Electro Shop</i></div>
+      </div>
+    </div>
+  </div></div></div>
   <div id="sello" class="o">Cursos<small>MUY PRONTO</small></div>
   <div id="pro">
     <div id="pT" class="o">¿Eres <em>especialista?</em></div>
@@ -125,7 +151,7 @@ window.seek = (t) => {
   const y = (1 - back(t / .55)) * 160; $('#chispa').style.transform = `translateY(${y.toFixed(1)}px)`;
   $('#disc').style.transform = `scale(${(.6 + .4 * back(t / .5)).toFixed(3)})`; $('#disc').style.opacity = Math.min(1, t / .25).toFixed(2);
   ver('#tel', t, .05, W('eres') - .35, 40);
-  document.querySelector('#scr img').style.transform = `scale(${(1 + .08 * Math.min(1, Math.max(0, t / 5))).toFixed(4)})`;
+  document.querySelector('#web').style.transform = `scale(${(1 + .06 * Math.min(1, Math.max(0, t / 4))).toFixed(4)})`;
   ver('#sello', t, W('cursos') - .05, W('eres') - .35, 20);
   ver('#pT', t, W('eres') - .05, 99, 16);
   ver('#pc0', t, W('tecnología') - .05, 99, 12); ver('#pc1', t, W('energía') - .05, 99, 12);

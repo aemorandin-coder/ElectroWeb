@@ -1,0 +1,10 @@
+# Nada de video en el repositorio (Andrés los tiene respaldados), salvo el cierre de la serie (assets/cierre.mp4).
+*.mp4
+*.mov
+*.webm
+!assets/cierre.mp4
+*.wav
+node_modules
+clips/
+salida/
+cuadros/

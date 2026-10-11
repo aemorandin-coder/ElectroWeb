@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Estudio de video de Chispa: herramientas aparte de la tienda (y gsap.min.js minificado)
+    "chispa/**",
   ]),
   // Los guiones de Node en CommonJS (.cjs y los .js de scripts/) usan require(): es lo correcto en ese formato
   {

@@ -2,7 +2,7 @@
 # Uso: python3 puente-voz.py audio.mp3 transcripcion.json   (sin argumentos: tiempos de prueba repartidos, para armar la animación antes del audio)
 import sys, json, math, array, subprocess, re
 SR, FPS = 44100, 30
-TEXTO = '¡Epa! ¿Ya sabes qué hacemos en Electro Shop? Vendemos tecnología, reparamos con ingeniero… ¡y hasta creamos software! Pero ven, que te presento al jefe.'
+TEXTO = '¡Epa! ¿Ya sabes qué hacemos en Electro Shop? Vendemos tecnología, reparamos con ingeniero… y en software: licencias de Windows original, Microsoft 365 y planes de IA. ¡Todo lo encuentras con nosotros! Pero ven, que te presento al jefe.'
 if len(sys.argv) > 2:
     mp3, js = sys.argv[1], sys.argv[2]
     subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', mp3, '-ac', '1', '-ar', str(SR), '-c:a', 'libmp3lame', '-b:a', '128k', 'assets/voz/chispa-puente.mp3'], check=True)

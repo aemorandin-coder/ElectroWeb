@@ -10,7 +10,7 @@ import fs from 'node:fs';
 const mode = process.argv[2] || 'preview';           // preview | video
 const out = process.argv[3] || 'out';
 const query = process.argv[4] || '';
-const exe = fs.existsSync('/opt/pw-browsers/chromium-1194/chrome-linux/chrome') ? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' : undefined;
+const exe = process.env.CHROME || (fs.existsSync('/opt/pw-browsers/chromium-1194/chrome-linux/chrome') ? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' : undefined);
 const browser = await chromium.launch({ executablePath: exe, args: ['--font-render-hinting=none', '--disable-gpu'] });
 const [VW, VH] = (process.env.VIEWPORT || '540x960').split('x').map(Number); // VIEWPORT=960x540 para YouTube
 const page = await browser.newPage({ viewport: { width: VW, height: VH }, deviceScaleFactor: 2 });

@@ -7,6 +7,11 @@ Un video es **una página HTML con una línea de tiempo**. `herramientas/render.
 - `npm install` dentro de `chispa/` (instala `playwright-core`).
 - `numpy` solo para `herramientas/quien-habla.py`.
 - **Todo se corre desde `chispa/`.** Los scripts de Python se niegan a correr desde otra carpeta.
+- **En Windows** (la PC de trabajo, 12/10):
+  - Los comandos se corren en **Git Bash**, no en PowerShell. PowerShell 5.1 se come el argumento vacío `""` de `render.mjs preview` y no entiende `PAGE=... node ...`.
+  - Se pasa siempre `CHROME="/c/Program Files/Google/Chrome/Application/chrome.exe"`, porque Playwright no trae su navegador.
+  - ffmpeg se instala con `winget install Gyan.FFmpeg`; la versión completa trae `libwebp` para los stickers.
+  - Se usa `python` en lugar de `python3`.
 
 ## El contrato de una página
 Cada `videos/*.src.html` expone cuatro cosas:

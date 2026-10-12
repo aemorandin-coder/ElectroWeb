@@ -56,6 +56,46 @@ ffmpeg -i salida/banner.png -vf "crop=2560:423:0:508" salida/banner-computadora.
 ffmpeg -i salida/banner.png -vf "crop=1546:423:507:508" salida/banner-telefono.png
 ```
 
+## WhatsApp: stickers animados
+| Pieza | Medida | Lo importante | Ejemplo |
+|---|---|---|---|
+| **Sticker animado** | 512 x 512, WebP animado, **menos de 500 KB**, 10 s como máximo | Fondo transparente, 16 px de margen, borde blanco recortado (se lee en chats claros y oscuros), bucle que empalma | `piezas/sticker.html` |
+
+```bash
+# el paquete completo (cada uno saca .webp para WhatsApp y .gif para las apps de stickers del teléfono)
+for s in hola gracias pago revisar direccion reparacion; do node herramientas/sticker.mjs "piezas/sticker.html?s=$s" salida/stickers/$s.webp; done
+# ícono de bandeja del paquete: 96 x 96, Chispa sin globo
+node herramientas/captura.mjs "piezas/sticker.html?s=hola&globo=0" salida/stickers/bandeja.png 512 512 0.1875 t
+```
+
+| Sticker | Texto | Escena | Qué se mueve |
+|---|---|---|---|
+| `hola` | ¡Hola! | saluda con la mano | la mano |
+| `gracias` | ¡Gracias! | pulgar arriba al lado de la cara, guiño | el pulgar |
+| `pago` | ¡Pago recibido! | detrás del mostrador, con una miniimpresora que saca el recibo; pulgar arriba | el recibo (sale, le aparece el cheque, lo arranca) y el pulgar |
+| `revisar` | Déjame revisar… | lupa frente al ojo, con el ojo agrandado adentro | la mirada, la lupa y los puntos |
+| `direccion` | Nuestra dirección es: | señala un pin de ubicación | el índice y el pin |
+| `reparacion` | Aún en reparación | detrás del mostrador, aprieta con una llave la tuerca de un control | la llave y unas chispitas |
+
+- Un sticker nuevo es una entrada más en `STICKERS` (dentro de `piezas/sticker.html`): líneas del globo, expresión, brazos y qué se mueve. Con dos líneas, Chispa se achica para dejarle sitio al globo.
+- **Manos sin amontonar.** Cada mano hace una sola cosa y no se pegan al pecho. Si una mano no hace nada, se esconde (detrás del mostrador o del aparato). Pedido del 12/10.
+- **Gesticular con objetos** cuando el texto lo permite: el aparato va con `e.entre` (entre los dos brazos), lo que agarra la mano con `objeto` y la mano izquierda de frente con `espejo` (ver `02-chispa-el-personaje.md`). El mostrador tapa el cuerpo en las escenas (`corte: 390`).
+- "Nuestra dirección es:" va sin la dirección: no se leería a ese tamaño y el cliente no la puede copiar ni abrir en el mapa. Se manda el sticker y después la ubicación.
+- La página sigue el mismo contrato que los videos (`DURATION`, `seek`, `ready`), y `DURATION` es **un ciclo**: el último cuadro empalma con el primero.
+- **El peso depende de cuánto cambia entre cuadros, no de la calidad.** El WebP guarda en cada cuadro solo el rectángulo que cambió. Con la cabeza, el cuerpo y el globo moviéndose a la vez, ese rectángulo es casi todo el sticker y pesó 1,7 MB. Con solo la mano (y un parpadeo), 245 KB con calidad 80. Lo que se mueve tiene que quedar junto.
+- **`sticker.mjs` graba con `--disable-gpu`.** Con la GPU, el borde blanco (desenfoque más umbral) salía un poco distinto en cada cuadro, aunque nada se moviera ahí. El WebP tenía que volver a guardar el cuadro entero: "reparación" pesó 835 KB, y sin GPU 219 KB.
+- El primer cuadro tiene que verse bien solo: es el que aparece donde el sticker no se anima.
+- Textos cortos y grandes (Poppins 800): en el chat el sticker se ve de unos 170 px.
+- Un paquete de WhatsApp lleva de 3 a 30 stickers y un ícono de bandeja de 96 x 96 PNG (menos de 50 KB).
+
+## Ícono de la carpeta (Windows)
+`mascota/chispa.ico`: la cara de Chispa saliendo de su círculo, en 7 tamaños (16 a 256 px) para que se vea nítida en cualquier vista del Explorador. Fuente: `piezas/icono.html`.
+```bash
+for s in 256 128 64 48 32 24 16; do node herramientas/captura.mjs piezas/icono.html salida/icono/$s.png 512 512 $(python -c "print($s/512)") t; done
+python -c "from PIL import Image; S=[256,128,64,48,32,24,16]; ims=[Image.open(f'salida/icono/{s}.png') for s in S]; ims[0].save('mascota/chispa.ico', format='ICO', bitmap_format='bmp', sizes=[(s,s) for s in S], append_images=ims[1:])"
+```
+Para ponerlo en la carpeta: `desktop.ini` en `chispa/` con `IconResource=mascota\chispa.ico,0` (ruta relativa: sigue funcionando si se mueve la carpeta), `attrib +s +h desktop.ini` y `attrib +r` a la carpeta. `desktop.ini` no se sube (está en `.gitignore`).
+
 ## Textos para publicar
 Cuando Andrés pide la descripción de Instagram:
 - un gancho en la primera línea, que es lo que se ve sin abrir;

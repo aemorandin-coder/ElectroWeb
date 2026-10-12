@@ -1,0 +1,179 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Stickers de WhatsApp</title><style>
+/* Stickers animados de WhatsApp: 512 x 512, fondo transparente. Se graban con herramientas/sticker.mjs (WebP en bucle).
+   Chispa sale de su círculo azul, con globo de texto y borde blanco recortado para que se lea en chats claros y oscuros.
+   ?s=hola | gracias | pago | revisar | direccion | reparacion   (ver STICKERS abajo)   &globo=0 lo quita (ícono de bandeja).
+   El ciclo dura window.DURATION y cierra exacto: el último cuadro empalma con el primero. */
+@font-face { font-family: Poppins; src: url(../assets/poppins-latin-800-normal.woff2) format('woff2'); font-weight: 800; }
+@font-face { font-family: Tektrron; src: url(../assets/Tektrron.ttf); }
+* { margin: 0; } html, body { width: 512px; height: 512px; overflow: hidden; }
+#s { display: block; width: 512px; height: 512px; }
+</style></head><body>
+<svg id="s" viewBox="-22.5 -14.5 440 440" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- por encima del corte se ve todo (cabeza, manos); por debajo, solo lo que cae dentro del círculo: Chispa sale del círculo como de una insignia.
+         En las escenas con mostrador el corte baja, porque el mostrador tapa el cuerpo. -->
+    <clipPath id="recorte"><circle cx="200" cy="232" r="147"/><rect id="corte" x="-100" y="-100" width="600" height="440"/></clipPath>
+    <!-- borde blanco redondeado (desenfoque + umbral) y sombra suave debajo -->
+    <filter id="borde" filterUnits="userSpaceOnUse" x="-60" y="-60" width="540" height="540" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="b"/>
+      <feComponentTransfer in="b" result="silueta"><feFuncA type="linear" slope="24" intercept="-0.9"/></feComponentTransfer>
+      <feFlood flood-color="#fff"/><feComposite in2="silueta" operator="in" result="blanco"/>
+      <feGaussianBlur in="silueta" stdDeviation="3"/><feOffset dy="4" result="so"/>
+      <feFlood flood-color="#0b1220" flood-opacity=".3"/><feComposite in2="so" operator="in" result="sombra"/>
+      <feMerge><feMergeNode in="sombra"/><feMergeNode in="blanco"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#borde)">
+    <g id="cuerpo">
+      <circle cx="200" cy="232" r="150" fill="#2a63cd" stroke="#111317" stroke-width="6"/>
+      <g id="ch" clip-path="url(#recorte)"></g>
+      <g id="extra"></g>
+    </g>
+    <g id="globo"><path id="globoP" fill="#fff" stroke="#111317" stroke-width="6" stroke-linejoin="round"/>
+      <text id="globoT" font-family="Poppins" font-weight="800" fill="#111317"></text><g id="puntos"></g></g>
+  </g>
+</svg>
+<script src="../mascota/chispa.js"></script>
+<script>
+const L = 2.4, V = (n) => 2 * Math.PI * n / L; // V(n): n vueltas por ciclo, así todo empalma al repetir
+const $ = (id) => document.getElementById(id);
+const INK = '#111317', BLUE = '#2a63cd', SKIN = '#fff8ee', CIAN = '#22d3ee', VERDE = '#10b981', ACERO = '#b8c0cc';
+const grados = (r) => r * 180 / Math.PI, rad = (d) => d * Math.PI / 180, n1 = (x) => x.toFixed(1);
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const pulso = (t, n) => Math.max(0, Math.sin(V(n) * t)); // n golpes por ciclo, con pausa entre uno y otro
+const rebote = (x) => 1 + 2.7 * Math.pow(x - 1, 3) + 1.7 * Math.pow(x - 1, 2);
+
+// Un punto de Chispa visto desde su mano (muñeca en 0,0): para dibujar lo que agarra apuntando a ese punto
+const enMano = (b, [x, y]) => { const a = rad(chispa.anguloMano(b)), dx = x - b.muñeca[0], dy = y - b.muñeca[1];
+  return [dx * Math.cos(a) + dy * Math.sin(a), -dx * Math.sin(a) + dy * Math.cos(a)]; };
+
+// ---------- Utilería (en coordenadas de Chispa: viewBox 0 0 400 420) ----------
+const pin = (dy) => `<g transform="translate(318 ${n1(120 + dy)})"><path d="M0 38 C-10 24 -30 8 -30 -8 A30 30 0 0 1 30 -8 C30 8 10 24 0 38 Z" fill="${BLUE}" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
+  <circle cy="-8" r="11" fill="#fff" stroke="${INK}" stroke-width="5"/></g>`;
+const mostrador = `<path d="M26 364 Q26 352 38 352 H362 Q374 352 374 364 V394 H26 Z" fill="#f4efe4" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M31 369 H369" stroke="${INK}" stroke-width="3" opacity=".15"/>`;
+const destello = (x, y, s) => `<path transform="translate(${n1(x)} ${n1(y)}) scale(${s.toFixed(2)})" d="M0 -12 L3 -3 L12 0 L3 3 L0 12 L-3 3 L-12 0 L-3 -3 Z" fill="${CIAN}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>`;
+
+// Control de videojuegos sobre el mostrador, con una tuerca en el centro
+const TUERCA = [164, 300];
+const control = `<path d="M80 286 Q80 268 100 268 H234 Q254 268 254 286 L264 330 Q270 354 248 354 Q236 354 228 342 L222 330 H112 L106 342 Q98 354 86 354 Q64 354 70 330 Z" fill="#e9ecef" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M90 298 H122 M106 282 V314" stroke="${INK}" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="224" cy="284" r="7" fill="${BLUE}" stroke="${INK}" stroke-width="3"/><circle cx="238" cy="298" r="7" fill="${CIAN}" stroke="${INK}" stroke-width="3"/>
+  <circle cx="224" cy="312" r="7" fill="${VERDE}" stroke="${INK}" stroke-width="3"/><circle cx="210" cy="298" r="7" fill="#fff" stroke="${INK}" stroke-width="3"/>`;
+// Llave de anillo a lo largo de +x: el mango sale por detrás del puño y el anillo abraza la tuerca a la distancia d
+const llave = (d) => { const h = Array.from({ length: 6 }, (_, i) => `${n1(d + 11 * Math.cos(i * Math.PI / 3))},${n1(11 * Math.sin(i * Math.PI / 3))}`).join(' ');
+  return `<path d="M-34 -8 H${n1(d - 18)} V8 H-34 Q-42 8 -42 0 Q-42 -8 -34 -8 Z" fill="${ACERO}" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M-30 -2.5 H${n1(d - 22)}" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+  <circle cx="${n1(d)}" r="21" fill="${ACERO}" stroke="${INK}" stroke-width="5"/><polygon points="${h}" fill="#7d8796" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`; };
+
+// Miniimpresora de recibos a la derecha, con el papel saliendo por la ranura de arriba
+const impresora = `<path d="M242 356 V290 Q242 272 260 272 H352 Q370 272 370 290 V356 Z" fill="#e3e8f0" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M246 312 H366" stroke="${INK}" stroke-width="3" opacity=".2"/><rect x="264" y="277" width="84" height="10" rx="5" fill="${INK}"/>
+  <rect x="258" y="326" width="32" height="12" rx="6" fill="${BLUE}" stroke="${INK}" stroke-width="3"/><circle cx="350" cy="332" r="6" fill="${VERDE}" stroke="${INK}" stroke-width="2.5"/>`;
+const RANURA = 282, LARGO = 104;
+const papel = (largo, sello, { dx = 0, dy = 0, giro = 0, op = 1 } = {}) => {
+  if (largo < 2) return '';
+  const x0 = 274, x1 = 338, top = RANURA - largo, dientes = Array.from({ length: 8 }, (_, i) => `L${n1(x0 + (i + .5) * 7.5)} ${n1(top + (i % 2 ? 5 : 0))}`).join(' ');
+  const raya = (y, w, alto = 5) => y + alto < RANURA - top ? `<rect x="${x0 + 9}" y="${n1(top + y)}" width="${w}" height="${alto}" rx="2.5" fill="#c9ced6"/>` : '';
+  const s = sello > 0 ? `<g transform="translate(306 ${n1(top + 78)}) scale(${sello.toFixed(3)})"><circle r="16" fill="${VERDE}" stroke="${INK}" stroke-width="3.5"/>
+    <polyline points="-7,0 -2,5 8,-6" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>` : '';
+  return `<g transform="translate(${n1(dx)} ${n1(dy)}) rotate(${n1(giro)} 306 ${n1(top)})" opacity="${op.toFixed(2)}" clip-path="url(#ranura)">
+    <path d="M${x0} ${RANURA + 4} V${n1(top + 3)} ${dientes} L${x1} ${n1(top + 3)} V${RANURA + 4} Z" fill="#fff" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+    ${raya(15, 36)}${raya(26, 26)}${raya(37, 42)}${raya(50, 46, 3)}${s}</g>`;
+};
+// el ciclo del recibo: completo con el cheque, Chispa lo arranca, imprime otro y le sale el cheque (empalma con el primer cuadro)
+const recibo = (t) => {
+  const ranura = `<clipPath id="ranura"><rect x="200" y="-200" width="260" height="${RANURA + 200}"/></clipPath>`;
+  if (t < .5) return ranura + papel(LARGO, 1);
+  if (t < .8) { const k = (t - .5) / .3; return ranura + papel(LARGO, 1, { dx: 18 * k, dy: -46 * k, giro: 16 * k, op: 1 - k }); }
+  if (t < 2) { const k = (t - .8) / 1.2; return ranura + papel(LARGO * (1 - Math.pow(1 - k, 2)), 0); }
+  return ranura + papel(LARGO, rebote(clamp((t - 2) / .25)));
+};
+
+// Lupa en la mano: el mango sale del puño y el lente queda sobre el ojo, con el ojo agrandado adentro
+const lupa = (b, centro, mx) => {
+  const [lx, ly] = enMano(b, centro), d = Math.hypot(lx, ly), fi = grados(Math.atan2(ly, lx)), a = chispa.anguloMano(b);
+  return `<g transform="rotate(${n1(fi)})"><path d="M-30 0 H${n1(d - 30)}" stroke="${INK}" stroke-width="20" stroke-linecap="round"/><path d="M-30 0 H${n1(d - 30)}" stroke="${BLUE}" stroke-width="9" stroke-linecap="round"/></g>
+    <g transform="translate(${n1(lx)} ${n1(ly)}) rotate(${n1(-a)})">
+      <circle r="38" fill="${INK}"/><circle r="33" fill="${BLUE}"/><circle r="27" fill="${SKIN}" stroke="${INK}" stroke-width="4"/>
+      <ellipse cx="${n1(mx * 6)}" cy="-2" rx="15" ry="20" fill="${INK}"/><circle cx="${n1(mx * 6 + 6)}" cy="-10" r="6" fill="#fff"/><circle cx="${n1(mx * 6 - 5)}" cy="6" r="2.6" fill="#fff" opacity=".85"/>
+      <path d="M-19 -9 A20 20 0 0 1 -6 -20" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".75"/></g>`;
+};
+
+// ---------- Los stickers ----------
+// clave: expresión y pose de Chispa. mueve: qué cambia con el tiempo (manos, ojos). entre: aparato entre los dos brazos (ver e.orden).
+// extra: lo que va encima de todo. corte: hasta dónde se ve el cuerpo sin recortar por el círculo.
+// Se mueve una zona chica: el WebP guarda en cada cuadro el rectángulo que cambió, y si cambian cosas lejanas pasa de los 500 KB.
+const mira = (t) => clamp(Math.sin(V(1) * t) * 2.2, -1, 1) * .9; // mira a un lado, se queda, mira al otro
+const STICKERS = {
+  hola: { lineas: ['¡Hola!'], clave: { pose: 'saluda', ojos: 'abiertos', boca: 'feliz', cejas: 'arriba', feliz: true },
+    mueve: (e, t) => { const w = Math.sin(V(4) * t); e.R.giro += w * 22; e.R.muñeca = [e.R.muñeca[0] + w * 8, e.R.muñeca[1] - Math.abs(w) * 3]; } },
+  gracias: { lineas: ['¡Gracias!'], clave: { pose: 'pulgar', ojos: 'guino', boca: 'feliz', cejas: 'arriba', feliz: true },
+    // el pulgar arriba, al lado de la cara y separado del cuerpo
+    mueve: (e, t) => { const b = pulso(t, 3); e.R = { codo: [340, 322], muñeca: [326, 258 - b * 12], mano: 'pulgar', giro: b * 8 }; } },
+  pago: { lineas: ['¡Pago', 'recibido!'], corte: 390, clave: { pose: 'habla', ojos: 'feliz', boca: 'feliz', cejas: 'arriba', feliz: true },
+    // la impresora saca el recibo y Chispa hace el pulgar arriba cuando sale el cheque (la otra mano queda detrás del mostrador)
+    mueve: (e, t) => { const b = t > 2 ? Math.sin((t - 2) / .4 * Math.PI) : 0;
+      e.L = { codo: [70, 318], muñeca: [80, 250 - b * 10], mano: 'pulgar', giro: b * -8, espejo: true }; e.orden = 'RL'; },
+    entre: (t) => impresora + recibo(t), extra: () => mostrador },
+  revisar: { lineas: ['Déjame', 'revisar'], puntos: true, clave: { pose: 'habla', ojos: 'abiertos', boca: 'seria', cejas: 'duda', mirar: [0, -.3] },
+    // la lupa frente al ojo: se mueve con la mirada
+    mueve: (e, t) => { const mx = mira(t); e.ojos.mx = mx;
+      e.R = { codo: [334, 324], muñeca: [302 + mx * 4, 262], mano: 'puño', giro: 0 };
+      e.R.objeto = lupa(e.R, [240 + mx * 4, 180], mx); } },
+  direccion: { lineas: ['Nuestra', 'dirección es:'], clave: { pose: 'señala', ojos: 'abiertos', boca: 'sonrisa', cejas: 'arriba', feliz: true, mirar: [.6, -1] },
+    mueve: (e, t) => { const b = pulso(t, 3); e.R.muñeca = [e.R.muñeca[0], e.R.muñeca[1] - b * 8]; },
+    extra: (t) => pin(-pulso(t, 3) * 12) },
+  reparacion: { lineas: ['Aún en', 'reparación'], corte: 390, clave: { pose: 'habla', ojos: 'abiertos', boca: 'u', cejas: 'normal', mirar: [-.5, 1] },
+    // el control descansa en el mostrador y Chispa aprieta la tuerca con la llave (la otra mano queda detrás del control)
+    mueve: (e, t) => { const th = rad(-8 + Math.sin(V(3) * t) * 14), d = 120;
+      e.R = { codo: [356, 352], muñeca: [TUERCA[0] + d * Math.cos(th), TUERCA[1] + d * Math.sin(th)], mano: 'puño', giro: 0 };
+      const [lx, ly] = enMano(e.R, TUERCA);
+      e.R.objeto = `<g transform="rotate(${n1(grados(Math.atan2(ly, lx)))})">${llave(Math.hypot(lx, ly))}</g>`; },
+    entre: () => control,
+    // chispitas en la tuerca cuando la llave llega al final de cada vuelta
+    extra: (t) => { const s = Math.abs(Math.sin(V(3) * t)), k = clamp((s - .7) / .3);
+      return mostrador + (k > 0 ? destello(TUERCA[0] - 30, TUERCA[1] - 30, k * 1.5) + destello(TUERCA[0] - 6, TUERCA[1] - 46, k * 1.1) + destello(TUERCA[0] - 46, TUERCA[1] - 6, k) : ''); } },
+};
+
+const q = new URLSearchParams(location.search);
+const S = STICKERS[q.get('s') || 'hola'], GLOBO = q.get('globo') !== '0';
+const pose = chispa.linea([{ t: -10, ...S.clave }]); // la clave en t = -10 deja la pose ya asentada desde el primer cuadro
+window.DURATION = L;
+
+// Globo: rectángulo redondeado medido al texto, con la cola hacia la cara de Chispa.
+// Con dos líneas el globo es más alto y Chispa se achica un poco hacia abajo para dejarle sitio.
+let puntos = null;
+const globo = () => {
+  if (!GLOBO) { $('globo').style.display = 'none'; return; }
+  const dos = S.lineas.length > 1, fs = dos ? 40 : 44, alto = 44, T = $('globoT');
+  T.setAttribute('font-size', fs);
+  T.innerHTML = S.lineas.map((l, i) => `<tspan y="${(dos ? (i - .5) * alto : 0) + fs * .34}">${l}</tspan>`).join('');
+  const spans = [...T.children], extra = S.puntos ? 43 : 0;
+  const anchos = spans.map((s, i) => s.getComputedTextLength() + (i === spans.length - 1 ? extra : 0));
+  spans.forEach((s, i) => s.setAttribute('x', -anchos[i] / 2));
+  if (S.puntos) { const s = spans[spans.length - 1]; puntos = { x: -anchos[spans.length - 1] / 2 + s.getComputedTextLength() + 9, y: +s.getAttribute('y') - 5 }; }
+  const w = Math.max(...anchos) + (dos ? 44 : 40), h = dos ? 2 * alto + 26 : 66, r = 22, x = w / 2, y = h / 2;
+  const cx = Math.max(96, x + 6), cy = dos ? y + 10 + x * Math.sin(rad(5)) : 66; // con dos líneas, bajo lo justo para que la esquina girada no se salga
+  const punta = Math.max(-x + 60, Math.min(x - 4, 178 - cx));
+  $('globo').setAttribute('transform', `translate(${n1(cx)} ${n1(cy)}) rotate(${w < 200 ? -8 : -5})`);
+  $('globoP').setAttribute('d', `M${-x + r} ${-y} H${x - r} A${r} ${r} 0 0 1 ${x} ${-y + r} V${y - r} A${r} ${r} 0 0 1 ${x - r} ${y}
+    H${punta - 22} L${punta} ${y + 28} L${punta - 52} ${y} H${-x + r} A${r} ${r} 0 0 1 ${-x} ${y - r} V${-y + r} A${r} ${r} 0 0 1 ${-x + r} ${-y} Z`);
+  if (dos) $('cuerpo').setAttribute('transform', 'translate(228 385) scale(.86) translate(-200 -385)');
+};
+$('corte').setAttribute('height', (S.corte || 340) + 100);
+
+window.seek = (t) => {
+  t = ((t % L) + L) % L;
+  const e = pose(t);
+  S.mueve(e, t);
+  const p = t - 1.5; if (e.ojos.forma === 'normal' && p >= 0 && p < .16) e.ojos.abre *= 1 - Math.sin(p / .16 * Math.PI); // un parpadeo por ciclo
+  e.fondo = false;
+  e.entre = S.entre ? S.entre(t) : '';
+  $('ch').innerHTML = chispa.rig(e).replace(/^<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+  $('extra').innerHTML = S.extra ? S.extra(t) : '';
+  // "..." que saltan, como cuando alguien escribe
+  if (puntos) $('puntos').innerHTML = [0, 1, 2].map(k => `<circle cx="${n1(puntos.x + k * 14)}" cy="${n1(puntos.y - Math.max(0, Math.sin(V(3) * t - k * .9)) * 7)}" r="4.5" fill="${INK}"/>`).join('');
+};
+window.ready = document.fonts.load('800 44px Poppins').then(() => document.fonts.ready).then(() => { globo(); window.seek(0); return true; });
+</script></body></html>

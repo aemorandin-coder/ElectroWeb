@@ -60,4 +60,4 @@ node herramientas/captura.mjs mascota/hoja.html salida/hoja.png 1600 900 2
 Cómo se escriben los prompts para que no lo redibuje distinto: ver `05-videos-reales-con-flow.md`.
 
 ## Chispa en la tienda web
-Andrés aprobó (09/10) que Chispa se asome en la esquina de la tienda, salude y ofrezca "Buscar" o "WhatsApp" (tarea C-176), pero pidió dejarlo como plan, sin código. Es trabajo de la web (`components/`, `lib/`), no de esta carpeta, y lo hace Claude con las reglas de `CLAUDE.md`.
+Andrés aprobó (09/10) que Chispa se asome en la esquina de la tienda, salude y ofrezca "Buscar" o "WhatsApp" (tarea C-179; antes figuraba como C-176, número que el 16/10 se usó para el mantenimiento del servidor), pero pidió dejarlo como plan, sin código. Es trabajo de la web (`components/`, `lib/`), no de esta carpeta, y lo hace Claude con las reglas de `CLAUDE.md`.

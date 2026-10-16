@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { compartirPagina } from '@/lib/og/datos';
 import Link from 'next/link';
 import { FiGrid } from 'react-icons/fi';
 import Footer from '@/components/Footer';
@@ -10,10 +11,14 @@ import CategoriasClient from './CategoriasClient';
 
 export const revalidate = 0;
 
-export const metadata: Metadata = {
-  title: 'Categorías',
-  description: 'Todas las categorías de Electro Shop: componentes, gaming, consolas, software y más, con envíos a toda Venezuela.',
-};
+// C-178: con su imagen para compartir; sin Open Graph propio heredaba el de la portada
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Categorías',
+    description: 'Todas las categorías de Electro Shop: componentes, gaming, consolas, software y más, con envíos a toda Venezuela.',
+    ...(await compartirPagina('categorias', '/categorias')),
+  };
+}
 
 export default async function CategoriasPage() {
   const categories = await prisma.category.findMany({

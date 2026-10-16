@@ -319,7 +319,7 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 | Catálogo que vende | C-78, C-102, C-117 a C-119, C-121, C-122, C-124, C-133, C-134, C-136, C-154, C-155, C-157, C-158, C-161, C-162, C-163 | Ofertas y cupones, cinta ES, carga masiva, usados y reacondicionados, garantías, reseñas, el asistente de productos, la confianza junto al botón de compra y el correo que pide la reseña. |
 | Panel del cliente | C-55, C-128, C-137, C-138 | Marco, inicio con resumen, Mis pedidos, Favoritos, Direcciones y Mi perfil en pestañas. |
 | Legal y facturación | C-103, C-120, C-144, C-146, C-146b, C-147, C-147b, C-148, C-148b, C-151, C-159 | Firma de documentos, IVA incluido a la vista, precio sugerido desde el costo, datos para la factura, relación de ventas, cotizaciones y términos sin promesas falsas. |
-| Crecimiento | C-112, C-113, C-116, C-145, C-149, C-167 | ElectroStudio, medición del embudo de compra y el catálogo legible para Google, las redes y las IA. |
+| Crecimiento | C-112, C-113, C-116, C-145, C-149, C-167, C-178 | ElectroStudio, medición del embudo de compra y el catálogo legible para Google, las redes y las IA. |
 | Equipo y documentos | C-53, C-77, C-86, C-90, C-91, C-93, C-94, C-98, C-99, C-108, C-111, C-152, C-156, C-160, C-164 | Revisiones de Gemini y de ChatGPT, deuda técnica (ESLint en 0), el bloque único de subida y este orden de documentos. |
 | Operación y respaldos | C-165, C-166, C-176 | Respaldos automáticos cifrados a Google Drive desde Configuración → Respaldos, restauración con clave privada fuera del servidor, `CHANGELOG.md` y versiones con etiqueta de git (primera: `v1.0.0-rc.1`), y la Content-Security-Policy en modo "solo avisa" con sus avisos en Reportes → Seguridad. |
 
@@ -331,7 +331,7 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 **En curso (pedido del 16/10: salud del servidor e imágenes para compartir; primero el plan y después el código), en este orden:**
 - **C-176** mantenimiento del servidor (**hecha**).
 - **C-177** dependencias seguras: Next, sharp y nodemailer sin las fallas conocidas, y la tienda escuchando solo en `127.0.0.1` (**hecha y en producción** el 16/10, versión `rc.12`).
-- **C-178** imágenes para compartir los enlaces (Open Graph). Las decisiones de Andrés están en §7.2.
+- **C-178** imágenes para compartir los enlaces (Open Graph) (**hecha**, versión `rc.13`). Las decisiones de Andrés están en §7.2. Ideas que no se pidieron: la imagen generada en el paso SEO del editor de productos y una por curso cuando haya cursos publicados.
 
 Quedan para después de C-177 (`estado/C-177.md`):
 - **Prisma 7.** La falla que le queda a Prisma 6 está en su configuración de línea de comandos y no en la tienda, y pasar a Prisma 7 es un cambio grande.
@@ -350,6 +350,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
 | **C-107** | Seguro del envío a elección del cliente | Cuánto cobran ZOOM y MRW en Guanare y si aplica con cobro a destino. Una columna nueva en `orders`. |
 | **C-154b** | Plazo de entrega de los digitales en la ficha | Andrés dijo el 01/10: unas 2 horas, con la meta de 30 minutos. Falta el horario en que se atiende. |
 | **C-153b** | Productos "frágiles" con más relleno | Decidir si se quiere. Una columna en productos. |
+| **C-179** | Chispa (la mascota) se asoma en la esquina de la tienda, saluda y ofrece "Buscar" o "WhatsApp" | Andrés lo aprobó el 09/10 como plan, sin código (`chispa/conocimiento/02-chispa-el-personaje.md`). Se programa cuando Andrés lo pida. Figuraba como C-176 en los documentos de Chispa; ese número se usó el 16/10 para el mantenimiento del servidor. |
 | — | Taller (equipos en reparación) | SADES arriba: los datos están ahí. |
 
 **Sin fecha (dependen de terceros o no se pidieron):**
@@ -439,7 +440,8 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - De los volcados hechos a mano en el servidor se guarda solo el último.
   - Node 24 LTS.
   - En la imagen que se comparte de un producto, el precio va **solo en dólares**, tachado si está en oferta. En bolívares no, porque la vista previa de WhatsApp queda guardada para siempre.
-  - El estilo de las imágenes se elige viendo dos maquetas reales.
+  - El estilo de las imágenes se eligió viendo dos maquetas reales. Es **mixto**: los productos en claro, y la portada, las categorías y las páginas en oscuro.
+  - Los nombres de los productos van tal cual están cargados, en mayúsculas. "(SALDO)" se quita solo en la imagen.
   - Si hay una imagen subida a mano en SEO (la del producto o la de Configuración), esa manda sobre la generada.
   - Para el diseño se usan las skills ya instaladas, sin agregar otra.
 - **Registro y acceso:**

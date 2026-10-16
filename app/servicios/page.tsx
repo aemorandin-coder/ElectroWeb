@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
-import { absoluteUrl } from '@/lib/seo';
+import { imagenDePagina } from '@/lib/og/datos';
 import PublicHeader from '@/components/public/PublicHeader';
 import PageHeader from '@/components/ui/PageHeader';
 import { getPublicSettings } from '@/lib/site-settings';
@@ -21,7 +21,6 @@ export async function generateMetadata(): Promise<Metadata> {
       servicesMetaDescription: true,
       servicesMetaKeywords: true,
       servicesMetaImage: true,
-      logo: true,
     }
   });
 
@@ -30,9 +29,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = settings?.servicesMetaDescription || 'Servicios profesionales tecnológicos para tu negocio. Instalación de CCTV, redes, puntos de venta y mantenimiento técnico.';
   const keywords = settings?.servicesMetaKeywords ? settings.servicesMetaKeywords.split(',').map(k => k.trim()) : undefined;
 
-  // Sin el respaldo a /og-image.png, que no existe (C-06)
-  const absoluteShareImage = absoluteUrl(settings?.servicesMetaImage || settings?.logo);
-  const images = absoluteShareImage ? [{ url: absoluteShareImage }] : undefined;
+  // C-178: la imagen de Configuración → SEO si se subió; si no, la que arma la tienda (antes, el logo cuadrado)
+  const images = [await imagenDePagina('servicios', settings?.servicesMetaImage)];
 
   return {
     title: settings?.servicesMetaTitle ? { absolute: title } : title,

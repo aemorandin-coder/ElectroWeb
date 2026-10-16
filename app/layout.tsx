@@ -10,6 +10,7 @@ import MobileNavBar from "@/components/public/MobileNavBar";
 import { GuidedTourWrapper } from "@/components/onboarding/GuidedTourWrapper";
 import { getPublicSettings, getSiteSettings } from "@/lib/site-settings";
 import { getNavCategories } from "@/lib/queries/navigation";
+import { imagenDePagina } from "@/lib/og/datos";
 import { absoluteUrl, siteUrl } from "@/lib/seo";
 
 // Los settings públicos se leen aquí para todo el sitio: cada ruta se regenera como mucho
@@ -56,11 +57,9 @@ export async function generateMetadata(): Promise<Metadata> {
     icons.shortcut = absoluteFavicon;
   }
 
-  // Open Graph image: homeMetaImage, logo o favicon (no hay imagen por defecto en public/)
-  // C-149: ya no se declara "JPEG de 1200 × 630" (el logo es un PNG cuadrado): el tipo y el tamaño los lee quien la muestra.
-  // La imagen ancha se sube en Configuración → SEO; con el logo cuadrado, la tarjeta de Twitter es la chica.
-  const socialImage = ensureAbsoluteUrl(settings.homeMetaImage);
-  const ogImage = socialImage || ensureAbsoluteUrl(settings.logo) || ensureAbsoluteUrl(settings.favicon);
+  // C-178: la imagen al compartir es la de Configuración → SEO → Inicio si se subió; si no, la que arma la tienda
+  // (1200 × 630, lib/og). Antes, sin imagen subida, salía el logo cuadrado.
+  const ogImage = await imagenDePagina('inicio', settings.homeMetaImage);
 
   const titleText = settings.metaTitle || settings.companyName || "Electro Shop Morandin C.A. | Gaming, Laptops & Tecnología";
   const descText = settings.metaDescription || settings.tagline || "Tienda de tecnología especializada en Guanare. Computadoras gaming, laptops, consolas, CCTV y más.";
@@ -82,25 +81,17 @@ export async function generateMetadata(): Promise<Metadata> {
       description: descText,
       // Sin `url`: lo heredaban todas las páginas sin Open Graph propio y decían ser la portada (C-149)
       siteName: settings.companyName || "Electro Shop",
-      images: ogImage ? [
-        {
-          url: ogImage,             // URL absoluta requerida para WhatsApp
-          secureUrl: ogImage,       // HTTPS requerido para iOS preview
-          alt: `${settings.companyName || 'Electro Shop'} — Tecnología especializada en Venezuela`,
-        },
-      ] : undefined,
+      // URL absoluta y HTTPS: WhatsApp y la vista previa de iOS no aceptan otra cosa
+      images: [{ ...ogImage, secureUrl: ogImage.url }],
       locale: 'es_VE',
       type: 'website',
     },
     // Twitter Card
     twitter: {
-      card: socialImage ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title: titleText,
       description: descText,
-      images: ogImage ? [{
-        url: ogImage,
-        alt: settings.companyName || 'Electro Shop',
-      }] : undefined,
+      images: [{ url: ogImage.url, alt: ogImage.alt }],
     },
     robots: {
       index: true,

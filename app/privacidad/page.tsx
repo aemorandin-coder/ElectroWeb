@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { compartirPagina } from '@/lib/og/datos';
 import Link from 'next/link';
 import { FiShield } from 'react-icons/fi';
 import PublicHeader from '@/components/public/PublicHeader';
@@ -9,11 +10,15 @@ import DocumentoLegal from '@/components/legal/DocumentoLegal';
 import { paginaLegal, SLUG_PRIVACIDAD } from '@/lib/legal-publico';
 
 // C-149: título y descripción propios (salía con los de la portada)
-export const metadata: Metadata = {
-  title: 'Política de privacidad',
-  description: 'Qué datos personales guarda Electro Shop, para qué los usa y cómo se protegen.',
-  alternates: { canonical: '/privacidad' },
-};
+// C-178: con su imagen para compartir; sin Open Graph propio heredaba el de la portada
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Política de privacidad',
+    description: 'Qué datos personales guarda Electro Shop, para qué los usa y cómo se protegen.',
+    alternates: { canonical: '/privacidad' },
+    ...(await compartirPagina('privacidad', '/privacidad')),
+  };
+}
 
 // C-160: el texto es un documento que se edita en el panel (Legal → Documentos); los datos de contacto salen de
 // Configuración. Siempre al día: una versión nueva se ve al instante.

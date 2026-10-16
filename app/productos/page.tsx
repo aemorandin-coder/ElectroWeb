@@ -31,7 +31,7 @@ import { getAutoIcon } from '@/lib/category-icons';
 import { getHomeSettings } from '@/lib/queries/home';
 import { getPublicSettings } from '@/lib/site-settings';
 import JsonLd from '@/components/seo/JsonLd';
-import { compartirPagina, imagenGenerada, versionDeCategoria } from '@/lib/og/datos';
+import { compartirPagina, imagenDeCategoria } from '@/lib/og/datos';
 import { breadcrumbJsonLd, plainText, productListJsonLd } from '@/lib/seo';
 
 type PageProps = { searchParams: Promise<Record<string, string | string[] | undefined>> };
@@ -53,11 +53,9 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   // La dirección propia de la categoría es /categorias/<slug>: /productos?category=<slug> apunta a ella
   const canonical = category ? `/categorias/${category.slug}` : '/productos';
   // C-178: la categoría lleva su tarjeta con sus productos; el catálogo, la imagen de Configuración → SEO o la generada
-  const compartir = category
-    ? (() => {
-      const imagen = imagenGenerada('categoria', category.slug, versionDeCategoria(category), category.name);
-      return { openGraph: { url: canonical, type: 'website' as const, locale: 'es_VE', images: [imagen] }, twitter: { card: 'summary_large_image' as const, images: [imagen.url] } };
-    })()
+  const imagenCategoria = category ? await imagenDeCategoria(category) : null;
+  const compartir = imagenCategoria
+    ? { openGraph: { url: canonical, type: 'website' as const, locale: 'es_VE', images: [imagenCategoria] }, twitter: { card: 'summary_large_image' as const, images: [imagenCategoria.url] } }
     : await compartirPagina('productos', canonical, settings?.productsMetaImage);
 
   // El layout agrega " | Empresa": el título propio del admin se usa tal cual para no repetirla

@@ -10,6 +10,11 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.14] - 2026-10-16
+### Tienda 1.2.1 (C-178)
+- La imagen de la portada al compartir dice **"Todo lo encuentras con nosotros."** en vez de la lista de categorías.
+- Cuando cambian los productos destacados o llegan productos nuevos, cambia también la dirección de las imágenes de la portada, el catálogo y las categorías, así WhatsApp y Facebook bajan la nueva. Sin cambio de base, crons ni variables.
+
 ## [1.0.0-rc.13] - 2026-10-16
 ### Tienda 1.2.0 (C-178)
 - **Imágenes para compartir los enlaces.** Al pegar un enlace de la tienda en WhatsApp, Facebook, Telegram o X sale una imagen de 1200 × 630 hecha para eso:

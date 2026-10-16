@@ -33,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ tipo
   if (!tarjeta) return new NextResponse('No encontrado', { status: 404 });
 
   try {
-    const jpeg = await dibujarUnaVez(`${tipo}/${clave}/${tarjeta.llave}`, async () => renderizarTarjeta(await tarjeta.dibujar()));
+    const jpeg = await dibujarUnaVez(`${tipo}/${clave}/${tarjeta.version}`, async () => renderizarTarjeta(await tarjeta.dibujar()));
     const vigente = req.nextUrl.searchParams.get('v') === tarjeta.version;
     // ?vista: la vista previa de Configuración → SEO, que tiene que mostrar lo recién guardado
     const vista = req.nextUrl.searchParams.has('vista');

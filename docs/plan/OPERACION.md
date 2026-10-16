@@ -15,6 +15,7 @@
   - Los volcados y paquetes a mano (`~/respaldo-antes-*.dump`, `~/archivos-*.tgz`) **no están cifrados**: se guarda solo el último. Los respaldos de verdad son los cifrados de Drive (abajo).
 - **nginx:**
   - HTTP/2 (`listen 443 ssl http2`) y sin mostrar su versión (`server_tokens off` en `nginx.conf`), desde el 16/10. Copias de antes del cambio en `/etc/nginx/*.bak-16-10`.
+  - **La tienda escucha solo en `127.0.0.1:3000`** (`npm start` = `next start -H 127.0.0.1`, desde C-177): `proxy_pass http://127.0.0.1:3000;`. No `localhost`: en el servidor también resuelve a `::1`, donde ya no hay nadie escuchando.
   - Pasa la IP real del cliente (`X-Real-IP` y `X-Forwarded-For`). Confirmado por Andrés el 01/10 (C-105). De eso dependen los límites de intentos, el modo mantenimiento y la bitácora.
   - `www.electroshopve.com` debe redirigir a `electroshopve.com` (C-149). Si `curl -sI https://www.electroshopve.com/` responde `200` en vez de `308`, falta un bloque `server` para `www` con `return 301 https://electroshopve.com$request_uri;`.
   - **Tiempo real (C-127):** `/api/realtime` usa Server-Sent Events y manda `X-Accel-Buffering: no`. Si el panel dice "Reconectando…" todo el tiempo: `proxy_read_timeout` de 60 s o más (el latido es cada 25 s) y sin `proxy_buffering on` forzado.
@@ -109,6 +110,13 @@ Una política de qué puede cargar la tienda: scripts, conexiones y marcos solo 
 
 ## 3. Entorno local de Claude
 - **Node:** `export PATH="$HOME/.local/lib/nodejs/node-v20.18.0-linux-x64/bin:$PATH"`.
+- **Otra máquina, Windows (desde el 16/10):** la laptop del equipo con Node 24, Docker Desktop y sin Firefox, así que la prueba de humo con navegador no corre. Para el build y las pruebas por HTTP, una base de prueba en Docker:
+  - `docker run -d --name prueba-pg -e POSTGRES_PASSWORD=<una> -e POSTGRES_DB=electroshop -p 127.0.0.1:55432:5432 postgres:16-alpine`
+  - `DATABASE_URL=…/electroshop?schema=<algo>_test`, después `npx prisma db push` y el `seed` con `NODE_ENV=development` y `ADMIN_DEFAULT_PASSWORD`.
+  - Sin una base, el build falla al prerenderizar.
+  - **Al terminar:** borrar el contenedor.
+  - **Commits:** git tiene configurado otro nombre global, así que también la fusión lleva `-c user.name=… -c user.email=…`.
+  - **Conexión al servidor de la tienda:** con la llave de esa laptop. Ningún alias del `~/.ssh/config` apunta a la tienda: `electroshop-vps` es el servidor de SADES.
 - **Antes de tocar nada:** `git status`, `git log -3 --format='%h %an %s'` y `git branch --show-current`. Gemini a veces trabaja en la carpeta principal.
 - **Commits de Claude:** `git -c user.name="Claude" -c user.email="claude@electroshop.local" commit …` (la carpeta tiene configurado el nombre de Gemini).
 - **Merge:** `git merge --no-ff --no-edit claude/C-XX`, después `git diff main claude/C-XX` vacío, buscar credenciales y `git push`.

@@ -44,6 +44,7 @@ const RC7 = { sistema: '1.0.0-rc.7' } as const;
 const RC8 = { sistema: '1.0.0-rc.8' } as const;
 const RC9 = { sistema: '1.0.0-rc.9' } as const;
 const RC11 = { sistema: '1.0.0-rc.11' } as const;
+const RC12 = { sistema: '1.0.0-rc.12' } as const;
 const primera = (resumen: string): CambioModulo => ({ ...PRIMERA, resumen, silencioso: true });
 
 export const MODULOS: ModuloPanel[] = [
@@ -100,7 +101,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/digital-', 'lib/sades.ts', 'lib/review-status.ts', 'lib/resenas-avisos.ts', 'lib/stock-alerts.ts',
       'lib/papelera.ts', 'app/api/cron/papelera/',
     ],
-    historial: [{ version: '1.2.1', ...RC9, tarea: 'C-175', resumen: 'Correos de reseña publicada y de pedir la reseña con el diseño nuevo (logo largo).', silencioso: true }, { version: '1.2.0', ...RC8, tarea: 'C-170', resumen: 'Categorías: si otra persona guardó antes, se combinan los cambios; se ve quién la tiene abierta y se pregunta antes de borrar una que otro edita.' }, { version: '1.1.1', ...RC5, tarea: 'C-174', resumen: 'El editor dice a los demás qué producto tiene abierto (para la marquesina del equipo).' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Eliminar manda a la papelera (30 días, con Deshacer). Si otro administrador guarda o mueve el producto mientras lo editas, se combinan los cambios, se avisa y no se pierde lo que escribiste. Se ve quién lo está editando.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.2.2', ...RC12, tarea: 'C-177', resumen: 'Las fotos de producto se arman con la versión nueva de la librería de imágenes, que corrige fallas de seguridad. Se ven igual.', silencioso: true }, { version: '1.2.1', ...RC9, tarea: 'C-175', resumen: 'Correos de reseña publicada y de pedir la reseña con el diseño nuevo (logo largo).', silencioso: true }, { version: '1.2.0', ...RC8, tarea: 'C-170', resumen: 'Categorías: si otra persona guardó antes, se combinan los cambios; se ve quién la tiene abierta y se pregunta antes de borrar una que otro edita.' }, { version: '1.1.1', ...RC5, tarea: 'C-174', resumen: 'El editor dice a los demás qué producto tiene abierto (para la marquesina del equipo).' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Eliminar manda a la papelera (30 días, con Deshacer). Si otro administrador guarda o mueve el producto mientras lo editas, se combinan los cambios, se avisa y no se pierde lo que escribiste. Se ve quién lo está editando.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'ofertas',
@@ -203,7 +204,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/site-settings.ts', 'lib/exchange-rate.ts', 'lib/correo.ts', 'lib/email-service.ts', 'lib/smtp-seguro.ts', 'lib/maintenance.ts',
       'components/admin/EmailSettingsPanel.tsx', 'components/legal/', 'scripts/deploy.sh',
     ],
-    historial: [{ version: '1.0.1', ...RC9, tarea: 'C-175', resumen: 'El correo de prueba de la configuración sale con el mismo diseño que reciben los clientes: sirve para ver cómo llega el logo.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.2', ...RC12, tarea: 'C-177', resumen: 'Los correos salen con la versión nueva de la librería de envío, que corrige fallas de seguridad. Para quien los recibe no cambia nada.', silencioso: true }, { version: '1.0.1', ...RC9, tarea: 'C-175', resumen: 'El correo de prueba de la configuración sale con el mismo diseño que reciben los clientes: sirve para ver cómo llega el logo.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'tienda',

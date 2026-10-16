@@ -4,7 +4,7 @@
 
 import { readFile } from 'fs/promises';
 import path from 'path';
-import sharp from 'sharp';
+import sharp, { type OverlayOptions } from 'sharp';
 
 /** Lado de la foto final (cuadrada) */
 export const PRODUCT_IMAGE_SIZE = 1200;
@@ -109,7 +109,7 @@ export async function composeProductImage(buffer: Buffer, { cinta = true }: { ci
   const trimmed = await sharp(buffer).rotate().trim().png().toBuffer();
   const product = await sharp(trimmed).resize(inner, inner, { fit: 'inside', withoutEnlargement: false }).png().toBuffer();
   const { width = inner, height = inner } = await sharp(product).metadata();
-  const capas: sharp.OverlayOptions[] = [{ input: product, left: Math.round((S - width) / 2), top: Math.round((S - height) / 2) }];
+  const capas: OverlayOptions[] = [{ input: product, left: Math.round((S - width) / 2), top: Math.round((S - height) / 2) }];
   if (cinta) capas.push(...(await badgeOverlay()));
   return sharp({ create: { width: S, height: S, channels: 3, background: '#ffffff' } })
     .composite(capas)

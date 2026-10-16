@@ -32,7 +32,8 @@ carpeta_pm2() {
 }
 
 responde() {
-  [ "$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$PUERTO/")" = "200" ]
+  # C-177: la tienda escucha solo en 127.0.0.1 (package.json, "start"); "localhost" también resuelve a ::1
+  [ "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PUERTO/")" = "200" ]
 }
 
 main() {

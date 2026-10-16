@@ -4,7 +4,7 @@
  */
 
 import { AsyncLocalStorage } from 'node:async_hooks';
-import nodemailer from 'nodemailer';
+import nodemailer, { type SMTPTransportOptions } from 'nodemailer';
 import { Resend } from 'resend';
 import { escapeHtml } from './html';
 import { formatUSD } from './currency';
@@ -105,35 +105,35 @@ const getTransporterWithSettings = async () => {
     },
   };
 
-  const providerConfigs: Record<string, nodemailer.TransportOptions> = {
+  const providerConfigs: Record<string, SMTPTransportOptions> = {
     gmail: {
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: Number(process.env.SMTP_PORT) || 465,
       secure: process.env.SMTP_SECURE === 'true',
       connectionTimeout: 10000,
       ...baseConfig,
-    } as nodemailer.TransportOptions,
+    } as SMTPTransportOptions,
     contabo: {
       host: process.env.SMTP_HOST || 'mail.contabo.net',
       port: Number(process.env.SMTP_PORT) || 465,
       secure: true,
       connectionTimeout: 10000,
       ...baseConfig,
-    } as nodemailer.TransportOptions,
+    } as SMTPTransportOptions,
     godaddy: {
       host: process.env.SMTP_HOST || 'smtpout.secureserver.net',
       port: Number(process.env.SMTP_PORT) || 465,
       secure: true,
       connectionTimeout: 10000,
       ...baseConfig,
-    } as nodemailer.TransportOptions,
+    } as SMTPTransportOptions,
     custom: {
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT) || 587,
       secure: process.env.SMTP_SECURE === 'true',
       connectionTimeout: 10000,
       ...baseConfig,
-    } as nodemailer.TransportOptions,
+    } as SMTPTransportOptions,
   };
 
   return nodemailer.createTransport(providerConfigs[provider] || providerConfigs.custom);

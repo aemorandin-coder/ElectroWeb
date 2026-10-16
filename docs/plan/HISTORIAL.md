@@ -1,10 +1,22 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `19b07c0`, versión `v1.0.0-rc.12`, el 16/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `2c274a0`, versión `v1.0.0-rc.13`, el 16/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 16/10 · C-178 (de rc.12 a `v1.0.0-rc.13`)
+Subido el 16/10 con Claude conectado (`estado/C-178.md`). La tienda no se cortó.
+- **C-178 · Imágenes para compartir:** cada enlace de la tienda lleva su imagen de 1200 × 630 (`/og/<tipo>/<clave>`). Productos en claro, con foto, condición y precio en USD; portada, categorías y páginas en oscuro. Configuración → SEO muestra la imagen generada.
+- **Pasos:** `git pull --ff-only` y `bash scripts/deploy.sh`. Instaló dependencias (en `package-lock.json` solo cambió la versión), compiló 185 de 185 en `.next-a` y cambió.
+- **Comprobado en producción:**
+  - `v1.0.0-rc.13`, sin errores en el registro.
+  - Inicio, Assassin's Creed (oferta), Steam (sin "(SALDO)", con "Desde"), la categoría Gift Cards, contacto y servicios, pedidos como los lectores de Facebook y WhatsApp: cada una con su `og:image` de ancho 1200, `200` image/jpeg de 35 a 100 KB y caché de un año.
+  - Contacto con su propio título.
+- **SQL:** ninguno. Sin crons ni variables.
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.12 && npm install && bash scripts/deploy.sh --sin-pull`.
+- **Pruebas de Andrés por confirmar:** en `SIGUIENTE.md` §2.
 
 ## 16/10 · C-177 (de rc.11 a `v1.0.0-rc.12`)
 Subido el 16/10 con Claude conectado (`estado/C-177.md`). La tienda no se cortó.

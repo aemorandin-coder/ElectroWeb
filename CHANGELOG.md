@@ -10,6 +10,12 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.12] - 2026-10-16
+### Productos 1.2.2, Configuración 1.0.2 (C-177)
+- **Dependencias sin fallas conocidas:** Next 16.3.8, sharp 0.35.5 y nodemailer 10.0.13. Se quitó `@auth/prisma-adapter`, que no se usaba. `npm audit` pasa de 11 fallas (3 críticas) a 3 altas, todas de Prisma 6 y solo de su línea de comandos.
+- **La tienda escucha solo en `127.0.0.1`.** nginx tiene que apuntar a `127.0.0.1:3000` (paso del deploy).
+- Para los clientes y el equipo no cambia nada: las fotos de producto se arman igual y los correos salen igual. Sin cambio de base, crons ni variables.
+
 ## [1.0.0-rc.11] - 2026-10-03
 ### Tienda 1.1.0 (C-172)
 - **Destacados que rotan.** En la computadora, cada 7 segundos el primer producto de la columna pasa a ser el grande y el grande anterior se va al final. Da **una sola vuelta** y se queda en el primero. Se detiene con el ratón encima, al usar el teclado, con la pestaña oculta o al tocar un control. Arriba a la derecha de la tarjeta grande: flechas, "2 de 6" y pausa.

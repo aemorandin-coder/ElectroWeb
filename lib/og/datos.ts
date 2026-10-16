@@ -65,12 +65,14 @@ export function versionDeProducto(p: PublicProduct): string {
 
 // ---------- Categoría
 
-export const versionDeCategoria = (c: Pick<CategorySummary, 'slug' | 'name'>) => version('categoria', c.slug, c.name);
+export const versionDeCategoria = (c: Pick<CategorySummary, 'slug' | 'name'>, fotos: string[]) => version('categoria', c.slug, c.name, ...fotos);
 
 // ---------- Páginas
 
 interface ContenidoPagina {
   titulo: string;
+  /** Frase corta y destacada bajo el título (solo la portada) */
+  lema?: string | null;
   bajada: string | null;
   /** De dónde salen las fotos del mosaico; sin fotos, la tarjeta lleva el ícono de la marca */
   fotos: 'destacados' | 'recientes' | null;
@@ -107,14 +109,15 @@ export const contenidoDePagina = cache(async (pagina: PaginaCompartida): Promise
   const envios = publicos.deliveryEnabled ? ' Envíos a toda Venezuela.' : '';
   const corta = (texto: string | null | undefined) => (texto ? plainText(texto, 110) : null);
   switch (pagina) {
-    case 'inicio': {
-      const categorias = await categoriasPrincipales(3);
+    case 'inicio':
+      // La frase es de Andrés (chispa/conocimiento/01-reglas-de-marca.md); se eligió el 16/10 en vez de la lista de
+      // categorías, para que la portada diga "aquí lo encuentras", como Amazon o Walmart
       return {
         titulo: ajustes?.tagline || 'Tu tienda de tecnología en Venezuela',
-        bajada: categorias.length > 0 ? `${listaEs(categorias)}.${envios}` : null,
+        lema: 'Todo lo encuentras con nosotros.',
+        bajada: envios.trim() || null,
         fotos: 'destacados',
       };
-    }
     case 'productos':
       return { titulo: ajustes?.productsMetaTitle || 'Todos los productos', bajada: corta(ajustes?.productsMetaDescription) ?? `Precios en dólares y bolívares.${envios}`, fotos: 'recientes' };
     case 'categorias': {
@@ -128,7 +131,7 @@ export const contenidoDePagina = cache(async (pagina: PaginaCompartida): Promise
   }
 });
 
-export const versionDePagina = (pagina: PaginaCompartida, c: ContenidoPagina) => version('pagina', pagina, c.titulo, c.bajada, c.fotos);
+export const versionDePagina = (pagina: PaginaCompartida, c: ContenidoPagina, fotos: string[]) => version('pagina', pagina, c.titulo, c.lema, c.bajada, ...fotos);
 
 // ---------- Fotos
 
@@ -160,24 +163,32 @@ async function fotoOIcono(url: string | null, lado: number): Promise<string> {
   return prepararFoto(Buffer.from(icono.split(',')[1], 'base64'), lado);
 }
 
-async function fotosDelMosaico(donde: Parameters<typeof visibleProducts>[0], orden: 'destacados' | 'recientes'): Promise<string[]> {
+/**
+ * Los productos del mosaico: hasta 4 a la vista, los destacados primero (o los más nuevos). Cambian con el catálogo,
+ * y por eso sus fotos entran en la versión: si cambian, cambia la dirección y las redes piden la imagen nueva.
+ */
+const fotosElegidas = cache(async (categoriaId: string | null, orden: 'destacados' | 'recientes'): Promise<string[]> => {
   const filas = await prisma.product.findMany({
-    where: await visibleProducts({ AND: [donde ?? {}, { mainImage: { not: null } }] }),
+    where: await visibleProducts({ AND: [categoriaId ? { categoryId: categoriaId } : {}, { mainImage: { not: null } }] }),
     orderBy: orden === 'destacados' ? [{ isFeatured: 'desc' }, { createdAt: 'desc' }] : [{ createdAt: 'desc' }],
     select: { mainImage: true },
     take: 4,
   });
-  const fotos = await Promise.all(filas.map((f) => leerFoto(f.mainImage)));
+  return filas.map((f) => f.mainImage).filter((url): url is string => Boolean(url));
+});
+
+async function fotosDelMosaico(urls: string[]): Promise<string[]> {
+  const fotos = await Promise.all(urls.map(leerFoto));
   return Promise.all(fotos.filter((f): f is Buffer => f !== null).map((f) => prepararFoto(f, LADO_MOSAICO)));
 }
+
+const idDeCategoria = cache(async (slug: string) => (await prisma.category.findUnique({ where: { slug }, select: { id: true } }))?.id ?? null);
 
 // ---------- La tarjeta pedida
 
 export interface TarjetaLista {
-  /** La que va en la dirección */
+  /** La que va en la dirección y la llave de la memoria del servidor: cambia con todo lo que se ve */
   version: string;
-  /** Para la memoria del servidor: la versión más lo que no va en la dirección (las fotos del mosaico) */
-  llave: string;
   dibujar: () => Promise<ReactElement>;
 }
 
@@ -190,7 +201,6 @@ export async function tarjetaPara(tipo: TipoTarjeta, clave: string): Promise<Tar
     const v = versionDeProducto(producto);
     return {
       version: v,
-      llave: v,
       dibujar: async () => {
         const [marca, foto] = await Promise.all([marcaCompleta(), fotoOIcono(fotoPrincipal(producto), LADO_PRODUCTO)]);
         return TarjetaProducto({ estilo: 'claro', marca, datos: { ...datosDeProducto(producto), foto } });
@@ -201,15 +211,12 @@ export async function tarjetaPara(tipo: TipoTarjeta, clave: string): Promise<Tar
   if (tipo === 'categoria') {
     const categoria = await getCategorySummary(clave);
     if (!categoria) return null;
-    const v = versionDeCategoria(categoria);
-    const fila = await prisma.category.findUnique({ where: { slug: clave }, select: { id: true } });
-    const donde = { categoryId: fila?.id };
-    const muestra = await prisma.product.findMany({ where: await visibleProducts(donde), orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }], select: { mainImage: true }, take: 4 });
+    const urls = await fotosElegidas(await idDeCategoria(clave), 'destacados');
+    const v = versionDeCategoria(categoria, urls);
     return {
       version: v,
-      llave: version(v, ...muestra.map((m) => m.mainImage)),
       dibujar: async () => {
-        const [marca, publicos, fotos] = await Promise.all([marcaCompleta(), getPublicSettings(), fotosDelMosaico(donde, 'destacados')]);
+        const [marca, publicos, fotos] = await Promise.all([marcaCompleta(), getPublicSettings(), fotosDelMosaico(urls)]);
         const bajada = plainText(categoryText(categoria, publicos.deliveryEnabled), 110);
         return fotos.length > 0
           ? TarjetaVitrina({ estilo: 'oscuro', marca, titulo: categoria.name, bajada, fotos })
@@ -220,16 +227,15 @@ export async function tarjetaPara(tipo: TipoTarjeta, clave: string): Promise<Tar
 
   if (!esPagina(clave)) return null;
   const contenido = await contenidoDePagina(clave);
-  const v = versionDePagina(clave, contenido);
+  const urls = contenido.fotos ? await fotosElegidas(null, contenido.fotos) : [];
+  const v = versionDePagina(clave, contenido, urls);
   return {
     version: v,
-    // Las fotos del mosaico cambian con el catálogo: la memoria se renueva cada hora para tomarlas
-    llave: version(v, Math.floor(Date.now() / 3_600_000)),
     dibujar: async () => {
-      const [marca, fotos] = await Promise.all([marcaCompleta(), contenido.fotos ? fotosDelMosaico(undefined, contenido.fotos) : Promise.resolve([])]);
+      const [marca, fotos] = await Promise.all([marcaCompleta(), fotosDelMosaico(urls)]);
       return fotos.length > 0
-        ? TarjetaVitrina({ estilo: 'oscuro', marca, titulo: contenido.titulo, bajada: contenido.bajada, fotos })
-        : TarjetaPagina({ marca, titulo: contenido.titulo, bajada: contenido.bajada });
+        ? TarjetaVitrina({ estilo: 'oscuro', marca, titulo: contenido.titulo, lema: contenido.lema, bajada: contenido.bajada, fotos })
+        : TarjetaPagina({ marca, titulo: contenido.titulo, lema: contenido.lema, bajada: contenido.bajada });
     },
   };
 }
@@ -251,7 +257,14 @@ export async function imagenDePagina(pagina: PaginaCompartida, subidaAMano?: str
   const contenido = await contenidoDePagina(pagina);
   const propia = absoluteUrl(subidaAMano);
   if (propia) return { url: propia, alt: contenido.titulo };
-  return imagenGenerada('pagina', pagina, versionDePagina(pagina, contenido), contenido.titulo);
+  const urls = contenido.fotos ? await fotosElegidas(null, contenido.fotos) : [];
+  return imagenGenerada('pagina', pagina, versionDePagina(pagina, contenido, urls), contenido.titulo);
+}
+
+/** La imagen de una categoría, con la versión de sus productos de hoy */
+export async function imagenDeCategoria(categoria: Pick<CategorySummary, 'slug' | 'name'>): Promise<ImagenCompartida> {
+  const urls = await fotosElegidas(await idDeCategoria(categoria.slug), 'destacados');
+  return imagenGenerada('categoria', categoria.slug, versionDeCategoria(categoria, urls), categoria.name);
 }
 
 /**

@@ -180,7 +180,7 @@ export function TarjetaProducto({ datos, marca, estilo }: { datos: DatosProducto
 const tamanoDeTitulo = (titulo: string) => (titulo.length <= 16 ? 76 : titulo.length <= 28 ? 62 : 52);
 
 /** Páginas sin productos que mostrar (servicios, contacto, términos…): el título y el ícono de la marca en la vitrina */
-export function TarjetaPagina({ titulo, bajada, marca }: { titulo: string; bajada?: string | null; marca: Marca }): ReactElement {
+export function TarjetaPagina({ titulo, lema, bajada, marca }: { titulo: string; lema?: string | null; bajada?: string | null; marca: Marca }): ReactElement {
   const t = tema('oscuro');
   return (
     <div style={{ width: ANCHO, height: ALTO, display: 'flex', fontFamily: 'Inter', color: t.texto, background: t.fondo, ...luzDeVitrina(true) }}>
@@ -188,7 +188,8 @@ export function TarjetaPagina({ titulo, bajada, marca }: { titulo: string; bajad
         <Wordmark estilo="oscuro" marca={marca} alto={50} />
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', fontSize: tamanoDeTitulo(titulo), fontWeight: 800, lineHeight: 1.05, letterSpacing: -1.5 }}>{titulo}</div>
-          {bajada && <div style={{ display: 'flex', fontSize: 30, fontWeight: 500, color: t.suave, lineHeight: 1.3, marginTop: 20 }}>{bajada}</div>}
+          {lema && <div style={{ display: 'flex', fontSize: 34, fontWeight: 700, color: t.precio, lineHeight: 1.2, letterSpacing: -0.5, marginTop: 24 }}>{lema}</div>}
+          {bajada && <div style={{ display: 'flex', fontSize: 30, fontWeight: 500, color: t.suave, lineHeight: 1.3, marginTop: lema ? 10 : 20 }}>{bajada}</div>}
         </div>
         <div style={{ display: 'flex', fontSize: 26, fontWeight: 500, color: t.suave }}>{marca.dominio}</div>
       </div>
@@ -200,7 +201,7 @@ export function TarjetaPagina({ titulo, bajada, marca }: { titulo: string; bajad
 }
 
 /** Categoría, portada y páginas con productos: el título a la izquierda y un mosaico de hasta 4 productos */
-export function TarjetaVitrina({ titulo, bajada, fotos, marca, estilo }: { titulo: string; bajada?: string | null; fotos: string[]; marca: Marca; estilo: EstiloTarjeta }): ReactElement {
+export function TarjetaVitrina({ titulo, lema, bajada, fotos, marca, estilo }: { titulo: string; lema?: string | null; bajada?: string | null; fotos: string[]; marca: Marca; estilo: EstiloTarjeta }): ReactElement {
   const t = tema(estilo);
   const oscuro = estilo === 'oscuro';
   const hueco = 12;
@@ -220,7 +221,8 @@ export function TarjetaVitrina({ titulo, bajada, fotos, marca, estilo }: { titul
         <Wordmark estilo={estilo} marca={marca} alto={50} />
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', fontSize: tamanoTitulo, fontWeight: 800, lineHeight: 1.05, letterSpacing: -1.5 }}>{titulo}</div>
-          {bajada && <div style={{ display: 'flex', fontSize: 30, fontWeight: 500, color: t.suave, lineHeight: 1.3, marginTop: 20 }}>{bajada}</div>}
+          {lema && <div style={{ display: 'flex', fontSize: 34, fontWeight: 700, color: t.precio, lineHeight: 1.2, letterSpacing: -0.5, marginTop: 24 }}>{lema}</div>}
+          {bajada && <div style={{ display: 'flex', fontSize: 30, fontWeight: 500, color: t.suave, lineHeight: 1.3, marginTop: lema ? 10 : 20 }}>{bajada}</div>}
         </div>
         <div style={{ display: 'flex', fontSize: 26, fontWeight: 500, color: t.suave }}>{marca.dominio}</div>
       </div>

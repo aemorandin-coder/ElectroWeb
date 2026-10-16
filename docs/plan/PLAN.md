@@ -442,6 +442,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - En la imagen que se comparte de un producto, el precio va **solo en dólares**, tachado si está en oferta. En bolívares no, porque la vista previa de WhatsApp queda guardada para siempre.
   - El estilo de las imágenes se eligió viendo dos maquetas reales. Es **mixto**: los productos en claro, y la portada, las categorías y las páginas en oscuro.
   - Los nombres de los productos van tal cual están cargados, en mayúsculas. "(SALDO)" se quita solo en la imagen.
+  - La imagen de la portada dice "Todo lo encuentras con nosotros." (elegida el 16/10 entre cuatro frases verdaderas; sin promesas de precio ni de plazo).
   - Si hay una imagen subida a mano en SEO (la del producto o la de Configuración), esa manda sobre la generada.
   - Para el diseño se usan las skills ya instaladas, sin agregar otra.
 - **Registro y acceso:**

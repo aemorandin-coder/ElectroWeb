@@ -464,3 +464,10 @@ Mueven datos de facturación: **no los cambies ni los "limpies".**
 - **El asistente de productos tiene un campo nuevo, "Marca"** (`WizardData.brand`), y un bloque "Buscar este producto en la web" (`wizard/BusquedaWeb.tsx`). `products/**` sigue fuera de tu carril.
 - `lib/busqueda-web/**`, `lib/marcas.ts` y `app/api/admin/products/**` son carril Claude: leen páginas ajenas y llaman a una IA con una clave. No copies ese patrón a otra pantalla ni uses `fetch` hacia direcciones que no sean de la tienda.
 - `uploadProductPhoto` devuelve ahora `framed` además de `badged` (C-161). Si una tarjeta te pide tocar la subida de fotos, no cambies el `purpose` que se manda.
+
+## 14. Cambios de Claude del 16/10 que te afectan (C-177 y C-178)
+- **Imágenes para compartir (C-178):** cada página pública lleva su imagen de 1200 × 630 y su Open Graph propio, que salen de `lib/og/` y `app/og/` (carril Claude). Si una tarjeta tuya crea una página pública nueva, **avísale a Claude** para que le ponga su imagen. Sin eso, al compartirla dice ser la portada.
+- **No cambies `generateMetadata` ni `metadata`** de las páginas públicas (portada, productos, categorías, servicios, cursos, gift cards, contacto, cotización, solicitar producto, términos y privacidad): llevan `compartirPagina`, `imagenDePagina` o `imagenGenerada`.
+- **`<img>` en lugar de `next/image`** solo en `lib/og/tarjetas.tsx`, porque Satori lo exige. No copies ese `eslint-disable` a otros archivos.
+- **Dependencias nuevas (C-177):** Next 16.3.8, sharp 0.35 y nodemailer 10. Los tipos de sharp y de nodemailer ahora se importan por nombre (`import sharp, { type OverlayOptions } from 'sharp'`, `import nodemailer, { type SMTPTransportOptions } from 'nodemailer'`). No agregues dependencias ni subas versiones en `package.json` (carril Claude).
+- **La tienda escucha solo en `127.0.0.1`** (`npm start`). Para probar en local, usa `npm run dev` como siempre.

@@ -120,10 +120,27 @@ Una política de qué puede cargar la tienda: scripts, conexiones y marcos solo 
   - **Al terminar:** borrar el contenedor.
   - **Commits:** git tiene configurado otro nombre global, así que también la fusión lleva `-c user.name=… -c user.email=…`.
   - **Conexión al servidor de la tienda:** con la llave de esa laptop. Ningún alias del `~/.ssh/config` apunta a la tienda: `electroshop-vps` es el servidor de SADES.
+  - **Trampas que ya costaron tiempo (16/10):**
+    - **Saltos de línea de Windows (CRLF):** varios archivos los tienen. Un reemplazo con `node`, `sed` o una expresión regular que busca `\n` no entra y no da error. Hay que usar la herramienta de edición exacta, o `\r?\n`, y después confirmar con `grep` que el cambio está.
+    - **`scripts/` está fuera del `tsconfig`:** un guion con JSX que se corre con `tsx` necesita `/** @jsxRuntime automatic */` en la primera línea (si no, "React is not defined").
+    - **El build agrega la carpeta `.next-test` a `tsconfig.json`:** al terminar, `git checkout -- tsconfig.json`.
+    - **sharp 0.35** no deja leer su `package.json` con `require`. La versión se lee con `grep '"version"' node_modules/sharp/package.json`.
+    - **Por SSH, `pgrep -f` o `grep` encuentran su propio comando** (un `kill` así cortó la sesión). Para saber si algo escucha, `ss -tlnH | grep ':PUERTO '`.
+    - **Los registros de nginx** (`/var/log/nginx/`) solo se leen con `sudo`, que pide clave: no se ven desde la sesión de Claude.
+    - **npm 11.19 del servidor:** avisa "not yet covered by allowScripts". Es normal y no frena nada (se bloqueará en npm 12: `PLAN.md` §5.2).
+- **Deploy desde la laptop, con la aprobación del equipo para ese deploy** (`CLAUDE.md`, regla 2):
+  - **Antes:** `git describe --tags --abbrev=0`, `git status -sb` y la memoria libre.
+  - **Respaldo** (si hace falta): el `pg_dump` del bloque.
+  - **Subir:** `ssh … 'cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull'`, guardando la salida en un archivo, porque el build tarda.
+  - **Después:** la versión, `ss -tln` con `127.0.0.1:3000`, páginas y API con `200`, y el registro de errores de PM2 sin líneas nuevas.
+- **Comprobar lo que se comparte, como los lectores:**
+  - **Metadatos:** `curl -s -A "facebookexternalhit/1.1" https://electroshopve.com/<ruta> | grep og:image`.
+  - **La imagen:** `curl -s -A "WhatsApp/2.24" -o x.jpg -w "%{http_code} %{content_type} %{size_download}" <og:image>`.
+  - **Dónde están las etiquetas:** con `grep -bo`; WhatsApp exige que estén en los primeros 300 KB del HTML.
 - **Antes de tocar nada:** `git status`, `git log -3 --format='%h %an %s'` y `git branch --show-current`. Gemini a veces trabaja en la carpeta principal.
 - **Commits de Claude:** `git -c user.name="Claude" -c user.email="claude@electroshop.local" commit …` (la carpeta tiene configurado el nombre de Gemini).
 - **Merge:** `git merge --no-ff --no-edit claude/C-XX`, después `git diff main claude/C-XX` vacío, buscar credenciales y `git push`.
-- **Verificación de código:** `npm run lint`, `npx tsc --noEmit` y `npm run build`. ESLint: 0 errores en `app`, `components`, `lib` y `contexts`, y 6 avisos a propósito.
+- **Verificación de código:** `npm run lint`, `npx tsc --noEmit` y `npm run build`. ESLint: 0 errores en `app`, `components`, `lib` y `contexts`, y 5 avisos a propósito (16/10).
 
 ### Tienda de ejemplo
 - Esquema `rev10_demo` de la base local, con las columnas de cada tarea hasta C-153.

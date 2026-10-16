@@ -339,6 +339,19 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **Antes de npm 12:** aprobar los scripts de instalación (`npm install-scripts approve <paquete>`) de Prisma, esbuild y unrs-resolver.
 - **SSH solo con llave**, que espera las llaves de Andrés (`SIGUIENTE.md` §3).
 
+**C-180 · El catálogo de la web en el perfil de WhatsApp** (investigado el 16/10, sin código todavía):
+- **Cómo funciona:**
+  - El catálogo de Commerce Manager se llena solo con `/feed/productos.xml` (URL programada, cada hora).
+  - Se conecta desde la app: Herramientas → Catálogo → "Conectar un catálogo de Meta Business Suite".
+  - Hay un catálogo por número.
+- **Hecho el 16/10 (Luis):** se creó el catálogo y se cargó el feed. Todavía no está conectado a la app.
+- **Espera la captura de Commerce Manager:** cuántos productos entraron y la pestaña de problemas.
+- **La tarea de código:** que el feed entregue fotos en JPEG de 1200 × 1200, sobre blanco y **sin la cinta ES**. Meta pide JPEG o PNG y rechaza logos o marcas de agua, y 13 de las 19 fotos del feed son WebP con la cinta.
+  - Se arman desde el `.orig.png` que la tienda guarda al subir cada foto (7 de los 9 productos lo tienen).
+  - La dirección lleva versión, porque Meta guarda las imágenes por dirección.
+- **Fotos para volver a subir:** el SSD Hiksemi y el teclado AOAS tienen la cinta dibujada a mano y no tienen original. Hay que subirlas de nuevo desde el panel.
+- **Lo que ya está bien:** el feed trae solo productos físicos, que es lo que permite la política de comercio de WhatsApp (sin moneda virtual ni digitales).
+
 **En fila (Claude), aparte de lo anterior:** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Los menores se cerraron en C-164 (`balance/add` borrado, `seed.ts` sin contraseña por defecto, valoraciones con coma, `RechargeModalV2` sin `fetch`). Lo que queda en código es **C-166b**: pasar la Content-Security-Policy de "solo avisa" a "bloquea" (`CSP_ENFORCE="true"` y un deploy) cuando Reportes → Seguridad lleve una semana de visitas reales sin avisos legítimos. El resto no es código:
 - Un monitor externo de que la tienda está arriba (UptimeRobot o similar a `/robots.txt`) y guardar la clave privada del respaldo y una copia del `.env` fuera del servidor (Andrés, `SIGUIENTE.md` §3).
 - El abogado revisa `/terminos` y `/privacidad` desde Legal → Documentos (`estado/C-160.md`).
@@ -354,6 +367,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
 | — | Taller (equipos en reparación) | SADES arriba: los datos están ahí. |
 
 **Sin fecha (dependen de terceros o no se pidieron):**
+- **La miniatura de la portada en Google** (16/10): hoy Google elige sola una foto de producto de la portada (salió GTA V). Para influir, un `primaryImageOfPage` en los datos estructurados con una imagen cuadrada y sin texto (el mosaico de destacados sin título). Es la señal que Google mira primero, aunque no promete usarla. La tarjeta de compartir no sirve para esto: tiene texto y es ancha.
 - Binance Pay y PayPal automáticos: piden cuenta de comercio (KYB) y cuenta Business. Hoy son manuales con reserva de 2 horas.
 - Crear la guía de ZOOM desde el panel: pide cuenta corporativa de ZOOM. MRW no tiene API pública.
 - Importador de las historias del artefacto viejo a ElectroStudio, si Andrés las quiere.
@@ -434,7 +448,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - Migraciones autorizadas siempre que sean aditivas y con respaldo (29/09).
   - Sin emojis en la web ni en el código (14/09).
   - Cuidado con los términos: ninguna promesa escrita a mano que la tienda no cumpla; ante la duda, preguntar (30/09).
-- **Servidor e imágenes para compartir (16/10, C-176 a C-178):**
+- **Servidor e imágenes para compartir (16/10, C-176 a C-178; las decidió Luis, del equipo, con Claude):**
   - El mantenimiento del servidor se hace en vivo, con Claude conectado: Claude corre lo que no pide `sudo`, y lo que sí lo pide lo corre el equipo con los bloques que prepara Claude.
   - SSH solo con llave y con fail2ban.
   - De los volcados hechos a mano en el servidor se guarda solo el último.

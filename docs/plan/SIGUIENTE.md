@@ -13,14 +13,15 @@
     - Estilo mixto: los productos en claro; la portada, las categorías y las páginas en oscuro.
     - Nombres tal cual, sin "(SALDO)" en la imagen.
     - Lo subido a mano en SEO manda.
+    - La portada dice "Todo lo encuentras con nosotros." (ajuste rc.14, después de verla en WhatsApp).
   - **Aparte:** la portada del perfil de WhatsApp Business, con Chispa, en el estudio de Chispa (`C:\Users\W11\chispa\salida\portada-whatsapp.png`).
 - **El ciclo C-168 a C-175 está completo.**
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos más abajo). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.13`)
-El bloque de C-178, con lo que se comprobó y su vuelta atrás, pasó a `HISTORIAL.md`.
+## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.14`)
+Los bloques de C-178 (rc.13 y su ajuste, rc.14), con lo que se comprobó y su vuelta atrás, pasaron a `HISTORIAL.md`.
 
 ### Por confirmar de rc.13 y rc.14 (C-178, unos 10 minutos)
 Claude ya comprobó en producción, pidiendo como los lectores de Facebook y WhatsApp, que cada página tiene su imagen. Falta verlo en las apps de verdad:

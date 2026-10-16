@@ -1,10 +1,30 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `2480457`, versión `v1.0.0-rc.1`, el 02/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `f47bb08`, versión `v1.0.0-rc.11`, comprobado el 16/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 16/10 · Mantenimiento del servidor (C-176, sin código)
+Hecho el 16/10 con Claude conectado al servidor y los pasos con `sudo` corridos a mano (`estado/C-176.md`). La tienda estuvo caída unos 10 segundos (el reinicio).
+- Respaldo antes de empezar: `~/respaldo-antes-mantenimiento-16-10.dump` (72 tablas, se lee con `pg_restore --list`).
+- Sistema al día (43 paquetes; los 3 que faltan los libera Ubuntu de a poco), **Node 20 → 24 LTS** (probado antes con la compilación de producción en un puerto aparte) y reinicio al kernel nuevo.
+- fail2ban en SSH, SSH sin `root`, nginx con HTTP/2 y sin versión, registros del sistema con tope de 500 MB (de 3,6 GB a 462 MB) y rotación de los registros de PM2.
+- Limpieza aprobada: 17 volcados viejos, 2 paquetes de fotos, el de firmas y la carpeta `.next` vieja (809 MB, sin uso). Quedan `respaldo-antes-rc7.dump`, `archivos-30-09.tgz` y el de hoy.
+- **Comprobado después:** kernel nuevo, tienda en Node 24 sirviendo `.next-a`, 11 páginas con `200`, tiempo real, fotos optimizadas, `www` con `308`, HTTP/2, los servicios y los 6 crons.
+- **Vuelta atrás de nginx:** `sudo cp /etc/nginx/electroshopve.bak-16-10 /etc/nginx/sites-available/electroshopve && sudo cp /etc/nginx/nginx.conf.bak-16-10 /etc/nginx/nginx.conf && sudo nginx -t && sudo systemctl reload nginx`.
+
+## 16/10 · C-171, C-170, C-175 y C-172 (de rc.6 a `v1.0.0-rc.11`)
+Subido por Andrés entre el 03 y el 16/10. Comprobado en el servidor el 16/10: `git describe --tags` dice `v1.0.0-rc.11` (`f47bb08`), sin archivos modificados. **Pruebas de Andrés sin confirmar** (en `SIGUIENTE.md` §2).
+
+- **C-172 · Destacados que rotan** (`estado/C-172.md`): en el inicio, el destacado grande cambia cada día y, en la computadora, rota con el siguiente de la columna cada 7 segundos (una vuelta y se detiene; flechas, contador y pausa arriba a la derecha de la tarjeta). En el teléfono no gira. Sin cambio de base.
+- **C-175 · Todos los correos rediseñados, con el logo largo** (`estado/C-175.md`): los 30 correos de la tienda llevan arriba el logo largo del encabezado de la tienda, el mismo título, el mismo botón, las mismas cajas y el mismo pie con redes y contacto. Sin cambio de base.
+- **C-170 · Dos administradores sin pisarse, en el resto del panel** (`estado/C-170.md`): Promotores, Categorías, Ofertas y cupones, Cotizaciones y Campañas combinan los cambios, muestran quién más lo tiene abierto y preguntan antes de borrar lo que otra persona edita. Sin cambio de base.
+- **C-171 · Dashboard a tu gusto** (`estado/C-171.md`), desde rc.7: editar, quitar, agregar, ordenar y cambiar el tamaño de las tarjetas; un diseño por administrador. Una tabla nueva (con rc.7).
+- **Verificado entonces:** `tsc`, `npm run lint` (0 errores), `npm run build`, `check:modulos`, prueba de humo 59 de 59, 35 comprobaciones del Dashboard, 53 de C-170, 273 sobre 22 correos, 52 de la vista previa del panel y 31 de los Destacados. **No probado:** arrastrar con el dedo en un teléfono real, Chrome y Safari, los correos recibidos en Gmail, Outlook y el iPhone, y Lighthouse del inicio después de C-172.
+- **SQL:** ninguno desde rc.7. Sin crons ni variables nuevas.
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.10 && npm install && bash scripts/deploy.sh --sin-pull` (solo C-172).
 
 ## 03/10 · C-168, C-169, C-174 y C-173 (de rc.3 a `v1.0.0-rc.6`)
 Subido por Andrés entre el 02 y el 03/10 (comprobado desde fuera el 03/10: responden `/api/analytics/presencia` y las rutas de la papelera). **Pruebas de Andrés sin confirmar** (las de abajo).

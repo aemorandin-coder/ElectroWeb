@@ -4,10 +4,17 @@
 > El repositorio es público: aquí no va ninguna clave, ni datos fiscales o financieros de la empresa.
 
 ## 1. Servidor
-- Carpeta `/var/www/electroshopve`, proceso de PM2 `electroshop`, usuario `luami`. PM2 en **una sola instancia**: el bus de eventos del tiempo real vive en memoria.
+- Carpeta `/var/www/electroshopve`, proceso de PM2 `electroshop`, usuario `luami`. PM2 en **una sola instancia**: el bus de eventos del tiempo real vive en memoria. Los guiones lo buscan por nombre (desde el reinicio del 16/10 su número en `pm2 ls` es el 1, no el 0).
 - `ecosystem.config.js` está desactualizado (otro nombre y otra carpeta) y no se usa: nunca `pm2 start ecosystem.config.js`.
 - **Memoria:** 7,8 GB y 4 GB de swap (28/09). El build usa unos 2,7 GB.
+- **Sistema (C-176, 16/10):** Ubuntu 24.04 y **Node 24 LTS** (repositorio de NodeSource `node_24.x`; Node 20 quedó sin soporte el 30/04/2026). PostgreSQL 16.
+  - Las actualizaciones de seguridad se instalan solas (`unattended-upgrades`). El resto se instala a mano con un respaldo antes: `sudo apt-get update && sudo apt-get full-upgrade`. Si después existe `/var/run/reboot-required`, el kernel nuevo recién corre con un reinicio (`sudo reboot`, la tienda vuelve sola en unos segundos: PM2 arranca con el sistema).
+  - Antes de reiniciar: `pm2 save` (guarda `NEXT_DIST_DIR`) y `systemctl is-enabled pm2-luami` debe decir `enabled`. Después: `uname -r`, `pm2 ls`, la tienda y `crontab -l`.
+  - Registros: los del sistema con tope de 500 MB (`/etc/systemd/journald.conf.d/limite.conf`); los de PM2 rotan con `pm2-logrotate` (10 MB, 7 archivos, comprimidos).
+  - **fail2ban** protege SSH (bloquea una hora tras 5 intentos fallidos en 10 minutos; `sudo fail2ban-client status sshd`). SSH no acepta `root` (`/etc/ssh/sshd_config.d/00-sin-root.conf`). Para entrar al servidor hace falta una llave autorizada en `~/.ssh/authorized_keys`.
+  - Los volcados y paquetes a mano (`~/respaldo-antes-*.dump`, `~/archivos-*.tgz`) **no están cifrados**: se guarda solo el último. Los respaldos de verdad son los cifrados de Drive (abajo).
 - **nginx:**
+  - HTTP/2 (`listen 443 ssl http2`) y sin mostrar su versión (`server_tokens off` en `nginx.conf`), desde el 16/10. Copias de antes del cambio en `/etc/nginx/*.bak-16-10`.
   - Pasa la IP real del cliente (`X-Real-IP` y `X-Forwarded-For`). Confirmado por Andrés el 01/10 (C-105). De eso dependen los límites de intentos, el modo mantenimiento y la bitácora.
   - `www.electroshopve.com` debe redirigir a `electroshopve.com` (C-149). Si `curl -sI https://www.electroshopve.com/` responde `200` en vez de `308`, falta un bloque `server` para `www` con `return 301 https://electroshopve.com$request_uri;`.
   - **Tiempo real (C-127):** `/api/realtime` usa Server-Sent Events y manda `X-Accel-Buffering: no`. Si el panel dice "Reconectando…" todo el tiempo: `proxy_read_timeout` de 60 s o más (el latido es cada 25 s) y sin `proxy_buffering on` forzado.
@@ -16,7 +23,8 @@
   - `15 */2 * * * /home/luami/cron-envios.sh`: rastreo de las guías de ZOOM (C-100).
   - `30 9 * * * /home/luami/cron-promotores.sh`: acredita en Puntos ES las comisiones de promotores cuya orden lleva 7 días entregada (C-167, guion en `docs/plan/scripts/cron-promotores.sh`; responde `acreditadas`, `rechazadas` y `revisadas`).
   - `5 * * * * /home/luami/cron-respaldos.sh`: respaldo diario a Google Drive (C-165, guion en `docs/plan/scripts/cron-respaldos.sh`).
-  - `0 15 * * * /home/luami/cron-resenas.sh`: pide la reseña por correo a quien recibió su pedido hace unos días (C-157, una vez al día). Confirmar con `crontab -l` que la línea está puesta (la ruta ya existe en producción desde el 01/10).
+  - `0 15 * * * /home/luami/cron-resenas.sh`: pide la reseña por correo a quien recibió su pedido hace unos días (C-157, una vez al día). Puesta (comprobado el 16/10).
+  - `45 9 * * * /home/luami/cron-papelera.sh`: borra para siempre los productos que llevan 30 días en la papelera (C-169). Puesta (comprobado el 16/10).
   - Para probar uno a mano se corre el guion: responde JSON (`revisados`, `avisos`…).
 - **Variables de entorno:** todas explicadas en `.env.example`. Opcionales que todavía no están en el servidor: `GROQ_API_KEY` (C-155, la pone Andrés con el deploy), `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_FB_PIXEL_ID` (C-145), `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (C-85) y `SMTP_ALLOW_SELF_SIGNED` (C-160, solo si el servidor de correo del panel tiene un certificado autofirmado).
 
@@ -81,6 +89,8 @@ Una política de qué puede cargar la tienda: scripts, conexiones y marcos solo 
 ### Deploys hechos
 | Fecha | Qué subió | Commit | Base |
 |---|---|---|---|
+| 16/10 | Mantenimiento del servidor (C-176): sistema al día, Node 24, kernel nuevo con reinicio, fail2ban, HTTP/2 y registros con tope | — (sin código) | sin cambio; respaldo `~/respaldo-antes-mantenimiento-16-10.dump` |
+| 03/10 a 16/10 | rc.7 a rc.11 (C-171, C-170, C-175 y C-172) | `f47bb08` (`v1.0.0-rc.11`) | 1 tabla (la de C-171, con rc.7) |
 | 01/10 (noche) | C-157 y C-158 | `ba6055c` | 1 columna (`orders.reviewRequestedAt`); cron nuevo |
 | 01/10 (noche) | C-162 y C-163 | `71703ab` | sin cambio; guion de categorías |
 | 01/10 (noche) | C-161 y C-155 (con C-156, documentos) | `57840db` | sin cambio; variable `GROQ_API_KEY` |

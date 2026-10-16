@@ -1,14 +1,28 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `f47bb08`, versión `v1.0.0-rc.11`, comprobado el 16/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `19b07c0`, versión `v1.0.0-rc.12`, el 16/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
 
+## 16/10 · C-177 (de rc.11 a `v1.0.0-rc.12`)
+Subido el 16/10 con Claude conectado (`estado/C-177.md`). La tienda no se cortó.
+- **C-177 · Dependencias seguras:** Next 16.3.8, sharp 0.35.5 y nodemailer 10.0.13. Fuera `@auth/prisma-adapter`. La tienda escucha solo en `127.0.0.1:3000` y nginx apunta ahí. `npm audit` pasa de 11 fallas (3 críticas) a 3 altas de Prisma 6 (solo su línea de comandos).
+- **Pasos que se dieron:**
+  1. nginx: `proxy_pass http://localhost:3000;` → `proxy_pass http://127.0.0.1:3000;` (`sudo sed -i … /etc/nginx/sites-available/electroshopve`, `nginx -t` y `reload`).
+  2. Antes: `v1.0.0-rc.11`, sin archivos modificados.
+  3. Respaldo `~/respaldo-antes-rc12.dump` (72 tablas).
+  4. `git pull --ff-only` y `bash scripts/deploy.sh`: instaló dependencias, compiló 185 de 185 en `.next-b` y cambió.
+- **Comprobado:** `v1.0.0-rc.12`; `ss -tln` muestra `127.0.0.1:3000` y el puerto no responde desde afuera; 10 páginas con `200`, el tiempo real, las fotos en WebP y `/admin` sin sesión manda al login; ninguna línea nueva en el registro de errores.
+- **SQL:** ninguno. Sin crons ni variables.
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.11 && npm install && bash scripts/deploy.sh --sin-pull`. nginx en `127.0.0.1` sirve igual a la versión anterior.
+- **Pruebas de Andrés por confirmar:** en `SIGUIENTE.md` §2.
+
+
 ## 16/10 · Mantenimiento del servidor (C-176, sin código)
 Hecho el 16/10 con Claude conectado al servidor y los pasos con `sudo` corridos a mano (`estado/C-176.md`). La tienda estuvo caída unos 10 segundos (el reinicio).
-- Respaldo antes de empezar: `~/respaldo-antes-mantenimiento-16-10.dump` (72 tablas, se lee con `pg_restore --list`).
+- Respaldo antes de empezar: `~/respaldo-antes-mantenimiento-16-10.dump` (72 tablas, se lee con `pg_restore --list`). Se borró después del deploy de rc.12, que dejó el suyo.
 - Sistema al día (43 paquetes; los 3 que faltan los libera Ubuntu de a poco), **Node 20 → 24 LTS** (probado antes con la compilación de producción en un puerto aparte) y reinicio al kernel nuevo.
 - fail2ban en SSH, SSH sin `root`, nginx con HTTP/2 y sin versión, registros del sistema con tope de 500 MB (de 3,6 GB a 462 MB) y rotación de los registros de PM2.
 - Limpieza aprobada: 17 volcados viejos, 2 paquetes de fotos, el de firmas y la carpeta `.next` vieja (809 MB, sin uso). Quedan `respaldo-antes-rc7.dump`, `archivos-30-09.tgz` y el de hoy.

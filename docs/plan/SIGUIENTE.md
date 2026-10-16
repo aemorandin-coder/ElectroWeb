@@ -5,10 +5,10 @@
 
 ## 1. Cómo está todo
 - **Producción: `v1.0.0-rc.14`** (`535bbb8`, C-178 con su ajuste), subida el 16/10 con Claude conectado. Es igual a `main` y a GitHub. **No hay código por subir.**
-- **Pedido de Andrés del 16/10:** la salud del servidor y las imágenes que se ven al compartir un enlace de la tienda. Primero el plan y después el código. Tareas:
+- **Pedido del 16/10 (Luis, del equipo, trabajando con Claude desde su laptop):** la salud del servidor y las imágenes que se ven al compartir un enlace de la tienda. Primero el plan y después el código. Tareas:
   - **C-176 · Mantenimiento del servidor:** hecha el 16/10 (`estado/C-176.md`, `HISTORIAL.md`). El sistema quedó al día, con Node 24, kernel nuevo, fail2ban, HTTP/2 y registros con tope. La tienda estuvo caída unos 10 segundos.
   - **C-177 · Dependencias seguras:** hecha y en producción el 16/10. Next, sharp y nodemailer quedaron en versiones sin las fallas conocidas, y la tienda escucha solo en `127.0.0.1`.
-  - **C-178 · Imágenes para compartir:** hecha y en producción el 16/10. Decisiones de Andrés con maquetas reales:
+  - **C-178 · Imágenes para compartir:** hecha y en producción el 16/10. Decisiones de Luis con maquetas reales (Andrés puede cambiarlas):
     - Precio solo en dólares.
     - Estilo mixto: los productos en claro; la portada, las categorías y las páginas en oscuro.
     - Nombres tal cual, sin "(SALDO)" en la imagen.
@@ -94,17 +94,26 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/redondeo-c96.sql`
   Muestra tres números: el último debe ser 0; si el del medio ("diferencia real") no es 0, pasarle la salida a Claude.
 
-## 3. Tareas de Andrés (sin código)
+## 3. Tareas del equipo (Andrés y Luis, sin código)
 En el orden en que más destraban:
 
 **En producción**
-1. **El deploy de arriba** (versión `v1.0.0-rc.11`: el panel sin pisarse, los correos con el logo y los Destacados que rotan) con sus pruebas, y confirmar las del lote anterior (rc.6). De antes siguen pendientes **una restauración de prueba del respaldo** (`OPERACION.md`), el redondeo de C-96, las pruebas de C-157 y las visuales de C-162.
+1. **Las pruebas de la sección 2:**
+   - rc.12: el correo y la foto de producto.
+   - rc.13 y rc.14: el depurador de Facebook, desde el teléfono.
+   - rc.7 a rc.11: el Dashboard.
+   - De antes siguen pendientes **una restauración de prueba del respaldo** (`OPERACION.md`), el redondeo de C-96, las pruebas de C-157 y las visuales de C-162.
+1b. **El catálogo de WhatsApp (C-180, `PLAN.md` §5.2):**
+   - **Hecho el 16/10:** la portada del perfil de WhatsApp Business (con Chispa), y el catálogo creado en Commerce Manager con el feed.
+   - **Falta mandarle a Claude la captura de Commerce Manager:** cuántos productos entraron y la pestaña de problemas.
+   - **Falta volver a subir desde el panel la foto original, sin cinta, del SSD Hiksemi y del teclado AOAS:** quitar la foto principal y subir el original. La tienda le pone sola la cinta para la web.
+   - **Todavía no se conecta el catálogo a la app:** se hace cuando Claude suba C-180.
 2. **Guardar aparte, fuera del servidor, la clave privada del respaldo y una copia del `.env`** (gestor de contraseñas). La clave la muestra el panel una sola vez; el `.env` no va dentro del respaldo y trae `NEXTAUTH_SECRET`, `DATABASE_URL` y las claves de pago.
 3. **Un monitor de que la tienda está arriba** (gratis, sin código): UptimeRobot o similar apuntando a `https://electroshopve.com/robots.txt` cada 5 minutos, con aviso a tu correo y a Telegram. Todo lo demás (avisos, respaldos) vive en el mismo servidor y no puede avisar si se cae.
 4. **Tus llaves para entrar al servidor (C-176):** en tu laptop y en tu PC, en PowerShell, `ssh-keygen -t ed25519` (Enter a todo) y mandarle a Claude el contenido de `C:\Users\<tu usuario>\.ssh\id_ed25519.pub`. Es la llave **pública** y se puede compartir; la privada (`id_ed25519`, sin `.pub`) no sale de tu computadora. Cuando las dos estén puestas, el servidor deja de aceptar contraseña. El certificado HTTPS ya se renueva solo: se renovó el 13/10 y vence el 11/01/2027.
 5. **La revisión final** ([`REVISION_FINAL.md`](./REVISION_FINAL.md)): en el teléfono real, marcando cada punto. Pendiente desde el 26/09. **Antes de `v1.0.0`, al menos el dinero:** una compra con Pago Móvil, una con Puntos ES, recargar Puntos ES, un cupón y cancelar una orden (que vuelvan el stock y el cupón).
 6. Pasar a borrador el **"Producto Test"** (Consolas) y renombrar los productos digitales que dicen **"(SALDO)"** (`estado/C-136.md`).
-7. **Marca** en cada producto físico (campo nuevo, junto a la categoría) e **imagen para compartir** de 1200 × 630 px (Configuración → SEO → Inicio). El Dashboard lo recuerda.
+7. **Marca** en cada producto físico (campo nuevo, junto a la categoría). La **imagen para compartir** ya la arma la tienda (C-178); subir una propia en Configuración → SEO es opcional.
 8. **Cargar catálogo:** con la búsqueda en la web (C-155) o con la carga masiva (Productos → Más → "Importar (.json)").
 
 **Medición (antes de pagar un anuncio)**
@@ -131,7 +140,7 @@ En el orden en que más destraban:
 - Ramas locales ya fusionadas: `git branch --merged main` las lista; se pueden borrar con `git branch -d <rama>`.
 
 ## 4. Fila de Claude
-La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedido del 16/10 está hecho** (C-176, C-177 y C-178). Quedan de ahí: SSH solo con llave (tus llaves, §3), Prisma 7, Next 16.4 y el aviso de npm 12 (`PLAN.md` §5.2). Lo que espera un dato tuyo:
+La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedido del 16/10 está hecho** (C-176, C-177 y C-178). **Sigue C-180** (fotos del feed para el catálogo de WhatsApp) cuando llegue la captura de Commerce Manager (§3, 1b). Quedan de ahí: SSH solo con llave (tus llaves, §3), Prisma 7, Next 16.4 y el aviso de npm 12 (`PLAN.md` §5.2). Lo que espera un dato tuyo:
 - Esperan datos: C-154b (plazo de los digitales: ya se sabe que son unas 2 horas, falta el horario), C-107 (seguro), C-92 (clientes) y C-153b (decidir si los "frágiles" llevan más relleno).
 - **Decisiones abiertas de promotores** (`PLAN.md` §7.1, A13 y A14): si los digitales pagan comisión, los % por defecto y los términos del programa para el abogado.
 - **C-166b (después de una semana con C-166 limpia):** pasar la Content-Security-Policy a "bloquea" (`CSP_ENFORCE="true"` y un deploy) y, con una restauración probada, evaluar subir el volcado directo a Drive sin pasar por disco si la base crece.
@@ -142,6 +151,10 @@ La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedid
 ## 5. Mensaje para empezar (próxima sesión de Claude)
 > Continúa ElectroShopVe (tienda en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` completo y tu memoria del proyecto; `docs/plan/PLAN.md` §5 y §7 para la lista de pendientes y las decisiones, y `docs/plan/OPERACION.md` antes de probar o de dar pasos de deploy.
 > 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
-> 2. Pregúntame si ya subí lo que falta (sección 2), cómo salieron las pruebas (sobre todo la búsqueda en la web desde el servidor) y el redondeo de C-96, y si tengo alguno de los datos de la sección 3.
+> 2. Fíjate quién escribe (Andrés o Luis: `CLAUDE.md`). Pregunta:
+>    - Si ya llegó **la captura de Commerce Manager** para C-180 y si se volvieron a subir las fotos del SSD y del teclado.
+>    - Cómo salieron las pruebas de la sección 2 (rc.12 a rc.14), si se subió algo sin Claude y el redondeo de C-96.
+>    - Si hay alguno de los datos de la sección 3 (también las llaves de SSH de Andrés).
+>    - Producción se comprueba con `git describe --tags` por SSH (`OPERACION.md` §3).
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
 > 4. Sigue con la fila (sección 4). Al terminar cada tarea: estado HECHO, su fila en `PLAN_CLAUDE.md`, `PLAN.md` §5 y `SIGUIENTE.md` al día (un solo bloque de deploy con el SQL total y las pruebas), merge y push.

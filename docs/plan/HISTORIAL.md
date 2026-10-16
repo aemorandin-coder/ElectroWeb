@@ -1,10 +1,16 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `2c274a0`, versión `v1.0.0-rc.13`, el 16/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `535bbb8`, versión `v1.0.0-rc.14`, el 16/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 16/10 · C-178, ajuste (de rc.13 a `v1.0.0-rc.14`)
+Subido el 16/10 con Claude conectado, después de que la portada se probó en WhatsApp (`estado/C-178.md`, "Ajuste del 16/10").
+- La portada dice "Todo lo encuentras con nosotros." (lema en cian) y "Envíos a toda Venezuela."; las fotos del mosaico entran en la versión de la portada, el catálogo y las categorías.
+- **Comprobado en producción:** `v1.0.0-rc.14`; la portada con la dirección nueva (`v=ec8d495830`, antes `ae2ec2b2e0`), `200` image/jpeg de 97 KB, con los 4 destacados y el lema; catálogo, categoría y producto con su imagen.
+- **SQL:** ninguno. **Vuelta atrás:** `git reset --hard v1.0.0-rc.13 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ## 16/10 · C-178 (de rc.12 a `v1.0.0-rc.13`)
 Subido el 16/10 con Claude conectado (`estado/C-178.md`). La tienda no se cortó.

@@ -90,6 +90,7 @@ Una política de qué puede cargar la tienda: scripts, conexiones y marcos solo 
 ### Deploys hechos
 | Fecha | Qué subió | Commit | Base |
 |---|---|---|---|
+| 16/10 | C-178, ajuste (`v1.0.0-rc.14`): lema de la portada y fotos en la versión | `535bbb8` | sin cambio |
 | 16/10 | C-178 (`v1.0.0-rc.13`): imágenes para compartir | `2c274a0` | sin cambio |
 | 16/10 | C-177 (`v1.0.0-rc.12`): dependencias seguras y la tienda en `127.0.0.1` (nginx apunta ahí) | `19b07c0` | sin cambio |
 | 16/10 | Mantenimiento del servidor (C-176): sistema al día, Node 24, kernel nuevo con reinicio, fail2ban, HTTP/2 y registros con tope | — (sin código) | sin cambio; respaldo `~/respaldo-antes-mantenimiento-16-10.dump` |

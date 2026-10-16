@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-10-16, C-178 · producción en 1.0.0-rc.13)
+# Lo de ahora (actualizado 2026-10-16, C-178 · producción en 1.0.0-rc.14)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.13`** (`2c274a0`, C-178), subida el 16/10 con Claude conectado. Es igual a `main` y a GitHub. **No hay código por subir.**
+- **Producción: `v1.0.0-rc.14`** (`535bbb8`, C-178 con su ajuste), subida el 16/10 con Claude conectado. Es igual a `main` y a GitHub. **No hay código por subir.**
 - **Pedido de Andrés del 16/10:** la salud del servidor y las imágenes que se ven al compartir un enlace de la tienda. Primero el plan y después el código. Tareas:
   - **C-176 · Mantenimiento del servidor:** hecha el 16/10 (`estado/C-176.md`, `HISTORIAL.md`). El sistema quedó al día, con Node 24, kernel nuevo, fail2ban, HTTP/2 y registros con tope. La tienda estuvo caída unos 10 segundos.
   - **C-177 · Dependencias seguras:** hecha y en producción el 16/10. Next, sharp y nodemailer quedaron en versiones sin las fallas conocidas, y la tienda escucha solo en `127.0.0.1`.
@@ -22,10 +22,10 @@
 ## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.13`)
 El bloque de C-178, con lo que se comprobó y su vuelta atrás, pasó a `HISTORIAL.md`.
 
-### Por confirmar de rc.13 (C-178, unos 10 minutos)
+### Por confirmar de rc.13 y rc.14 (C-178, unos 10 minutos)
 Claude ya comprobó en producción, pidiendo como los lectores de Facebook y WhatsApp, que cada página tiene su imagen. Falta verlo en las apps de verdad:
 1. **Facebook:** en [el depurador de Facebook](https://developers.facebook.com/tools/debug/), pega `https://electroshopve.com` y un producto, y toca **"Volver a extraer"**. Debe salir la imagen nueva, ancha, sin advertencias de tamaño.
-2. **WhatsApp:** pega un enlace de un producto en un chat contigo mismo. Sale la tarjeta con la foto, el nombre y el precio. Los enlaces que ya se habían compartido conservan su vista previa vieja: eso no se puede cambiar.
+2. **WhatsApp:** pega un enlace de un producto en un chat contigo mismo. WhatsApp guarda un rato la vista previa de cada enlace: para ver la portada nueva enseguida, prueba con `https://electroshopve.com/?w=2`. Sale la tarjeta con la foto, el nombre y el precio. Los enlaces que ya se habían compartido conservan su vista previa vieja: eso no se puede cambiar.
 3. **Configuración → SEO:** en Inicio, Productos, Servicios y Cursos, "Así se ve en WhatsApp" muestra la imagen generada.
 4. **Un precio:** cambia el precio de un producto, guarda y vuelve a pasarlo por el depurador de Facebook. La imagen dice el precio nuevo.
 

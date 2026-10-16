@@ -321,12 +321,19 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 | Legal y facturación | C-103, C-120, C-144, C-146, C-146b, C-147, C-147b, C-148, C-148b, C-151, C-159 | Firma de documentos, IVA incluido a la vista, precio sugerido desde el costo, datos para la factura, relación de ventas, cotizaciones y términos sin promesas falsas. |
 | Crecimiento | C-112, C-113, C-116, C-145, C-149, C-167 | ElectroStudio, medición del embudo de compra y el catálogo legible para Google, las redes y las IA. |
 | Equipo y documentos | C-53, C-77, C-86, C-90, C-91, C-93, C-94, C-98, C-99, C-108, C-111, C-152, C-156, C-160, C-164 | Revisiones de Gemini y de ChatGPT, deuda técnica (ESLint en 0), el bloque único de subida y este orden de documentos. |
-| Operación y respaldos | C-165, C-166 | Respaldos automáticos cifrados a Google Drive desde Configuración → Respaldos, restauración con clave privada fuera del servidor, `CHANGELOG.md` y versiones con etiqueta de git (primera: `v1.0.0-rc.1`), y la Content-Security-Policy en modo "solo avisa" con sus avisos en Reportes → Seguridad. |
+| Operación y respaldos | C-165, C-166, C-176 | Respaldos automáticos cifrados a Google Drive desde Configuración → Respaldos, restauración con clave privada fuera del servidor, `CHANGELOG.md` y versiones con etiqueta de git (primera: `v1.0.0-rc.1`), y la Content-Security-Policy en modo "solo avisa" con sus avisos en Reportes → Seguridad. |
 
 ### 5.2 Lista única de pendientes
 Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
 **En curso (aprobado por Andrés el 02/10, `PROPUESTA_C168-C172.md`), en este orden:** C-168 versiones por módulo (**hecha**); C-169 productos sin pérdidas (borrador, papelera, conflicto, presencia) (**hecha**); C-174 marquesina del equipo (quién está conectado y en qué sector) (**hecha**); C-170 lo mismo en el resto del panel (**hecha**); C-173 Reportes en vivo con visitantes conectados, con y sin cuenta (**hecha**); C-172 Destacados que rotan (**hecha**); C-171 Dashboard a tu gusto (**hecha**, adelantada el 03/10 a pedido de Andrés). Lotes de deploy: rc.4 (C-168 y C-169, **etiquetada**), rc.5 (C-174, **etiquetada**), rc.6 (C-173, **etiquetada**), rc.7 (C-171, **etiquetada**); rc.8 (C-170, **etiquetada**); rc.9 (C-175, rediseño de todos los correos con el logo largo, pedido el 03/10; **hecha y etiquetada**; rc.10 corrige el logo para que sea el del encabezado); rc.11 (C-172, **hecha y etiquetada**). **El ciclo de `PROPUESTA_C168-C172.md` está completo.** Ideas opcionales que quedaron sin pedir: orden y fechas de los destacados desde el panel, estrella fija y cuenta regresiva de oferta en la estrella.
+
+**En curso (pedido del 16/10: salud del servidor e imágenes para compartir; primero el plan y después el código), en este orden:**
+- **C-176** mantenimiento del servidor (**hecha**).
+- **C-177** dependencias seguras: Next, sharp y nodemailer sin las fallas conocidas, y la tienda escuchando solo en `127.0.0.1`.
+- **C-178** imágenes para compartir los enlaces (Open Graph). Las decisiones de Andrés están en §7.2.
+
+Queda para después de C-177: **Prisma 7**. La falla que le queda a Prisma 6 está en su configuración de línea de comandos y no en la tienda, y pasar a Prisma 7 es un cambio grande. También **SSH solo con llave**, que espera las llaves de Andrés (`SIGUIENTE.md` §3).
 
 **En fila (Claude), aparte de lo anterior:** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Los menores se cerraron en C-164 (`balance/add` borrado, `seed.ts` sin contraseña por defecto, valoraciones con coma, `RechargeModalV2` sin `fetch`). Lo que queda en código es **C-166b**: pasar la Content-Security-Policy de "solo avisa" a "bloquea" (`CSP_ENFORCE="true"` y un deploy) cuando Reportes → Seguridad lleve una semana de visitas reales sin avisos legítimos. El resto no es código:
 - Un monitor externo de que la tienda está arriba (UptimeRobot o similar a `/robots.txt`) y guardar la clave privada del respaldo y una copia del `.env` fuera del servidor (Andrés, `SIGUIENTE.md` §3).
@@ -422,6 +429,15 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - Migraciones autorizadas siempre que sean aditivas y con respaldo (29/09).
   - Sin emojis en la web ni en el código (14/09).
   - Cuidado con los términos: ninguna promesa escrita a mano que la tienda no cumpla; ante la duda, preguntar (30/09).
+- **Servidor e imágenes para compartir (16/10, C-176 a C-178):**
+  - El mantenimiento del servidor se hace en vivo, con Claude conectado: Claude corre lo que no pide `sudo`, y lo que sí lo pide lo corre el equipo con los bloques que prepara Claude.
+  - SSH solo con llave y con fail2ban.
+  - De los volcados hechos a mano en el servidor se guarda solo el último.
+  - Node 24 LTS.
+  - En la imagen que se comparte de un producto, el precio va **solo en dólares**, tachado si está en oferta. En bolívares no, porque la vista previa de WhatsApp queda guardada para siempre.
+  - El estilo de las imágenes se elige viendo dos maquetas reales.
+  - Si hay una imagen subida a mano en SEO (la del producto o la de Configuración), esa manda sobre la generada.
+  - Para el diseño se usan las skills ya instaladas, sin agregar otra.
 - **Registro y acceso:**
   - Google: se vincula por correo; teléfono y cédula en la primera compra; los admin nunca entran con Google.
   - Cédula fuera del registro. Onboarding con física.

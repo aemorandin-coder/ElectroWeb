@@ -1,48 +1,27 @@
-# Lo de ahora (actualizado 2026-10-16, C-177 · versión 1.0.0-rc.12)
+# Lo de ahora (actualizado 2026-10-16, C-177 · producción en 1.0.0-rc.12)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.11`** (`f47bb08`), comprobado en el servidor el 16/10: ya tiene C-172. **`main`: `v1.0.0-rc.12`** (C-177) y la carpeta de marketing `chispa/`, que no toca la tienda. **Falta subir C-177** (bloque de abajo).
+- **Producción: `v1.0.0-rc.12`** (`19b07c0`, C-177), subida el 16/10 con Claude conectado. Es igual a `main` y a GitHub. **No hay código por subir.**
 - **Pedido de Andrés del 16/10:** la salud del servidor y las imágenes que se ven al compartir un enlace de la tienda. Primero el plan y después el código. Tareas:
   - **C-176 · Mantenimiento del servidor:** hecha el 16/10 (`estado/C-176.md`, `HISTORIAL.md`). El sistema quedó al día, con Node 24, kernel nuevo, fail2ban, HTTP/2 y registros con tope. La tienda estuvo caída unos 10 segundos.
-  - **C-177 · Dependencias seguras:** hecha, falta subirla. Next, sharp y nodemailer quedan en versiones sin las fallas conocidas, y la tienda escucha solo en `127.0.0.1`.
-  - **C-178 · Imágenes para compartir:** después de C-177. Decisiones de Andrés: precio solo en dólares, el estilo se elige viendo dos maquetas, y lo subido a mano en SEO manda.
+  - **C-177 · Dependencias seguras:** hecha y en producción el 16/10. Next, sharp y nodemailer quedaron en versiones sin las fallas conocidas, y la tienda escucha solo en `127.0.0.1`.
+  - **C-178 · Imágenes para compartir:** en curso, empezando por las maquetas. Decisiones de Andrés: precio solo en dólares, el estilo se elige viendo dos maquetas, y lo subido a mano en SEO manda.
 - **El ciclo C-168 a C-175 está completo.**
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos más abajo). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: C-177 (de rc.11 a `v1.0.0-rc.12`)
-- **C-177 · Dependencias seguras** (`estado/C-177.md`): Next 16.3.8, sharp 0.35.5 y nodemailer 10.0.13 cierran las 3 fallas críticas y casi todas las altas. Se quita `@auth/prisma-adapter`, que no se usaba. La tienda pasa a escuchar solo en `127.0.0.1`, detrás de nginx. **Para los clientes y el equipo no cambia nada.**
-- **Verificado:**
-  - `npm audit`: de 11 fallas a 3 altas, de Prisma y solo de su línea de comandos.
-  - `tsc`, `lint` (0 errores) y `check:modulos`.
-  - Build con Node 24 contra una base de prueba: 185 de 185.
-  - 25 comprobaciones de la foto de producto y de los correos con las funciones reales, y 43 del panel y de la cuenta con sesión.
-  - **No probado:** la prueba de humo con navegador y un correo por el SMTP de producción (pruebas 2 y 3 de abajo).
-- **SQL:** ninguno. Sin crons ni variables nuevas. `deploy.sh` instala dependencias (cambió `package-lock.json`), así que tarda unos minutos más. npm puede avisar "not yet covered by allowScripts": es normal y no frena nada.
+## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.12`)
+El bloque de C-177, con sus pasos y su vuelta atrás, pasó a `HISTORIAL.md`.
 
-### Pasos (en el servidor, `/var/www/electroshopve`)
-1. **nginx a `127.0.0.1` (antes del deploy):** con esto nginx ya no pasa por `localhost`. Funciona igual con la versión de ahora.
-   `sudo sed -i 's#proxy_pass http://localhost:3000;#proxy_pass http://127.0.0.1:3000;#' /etc/nginx/sites-available/electroshopve && grep -n proxy_pass /etc/nginx/sites-available/electroshopve && sudo nginx -t && sudo systemctl reload nginx`
-   Debe mostrar `proxy_pass http://127.0.0.1:3000;` y "test is successful".
-2. **Qué hay ahora:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.11`, y `git status -sb | head -3`, `main...origin/main` sin archivos modificados. Si no, avisar a Claude.
-3. **Respaldo:** Configuración → Respaldos → "Respaldar ahora" y esperar las dos filas "Hecho". O a mano:
-   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc12.dump`
-4. **Subir:** `git pull --ff-only && bash scripts/deploy.sh`.
-5. **Comprobar:** `git describe --tags --abbrev=0` dice `v1.0.0-rc.12`, el pie del menú del panel "Versión 1.0.0-rc.12", y `ss -tln | grep ':3000 '` muestra `127.0.0.1:3000` (no `*:3000`).
-
-### Pruebas después de subir (unos 10 minutos)
-1. **La tienda:** el inicio, un producto, el carrito y el login abren. El panel no dice "Reconectando…".
-2. **Correo del panel (nodemailer nuevo):** Configuración → Correo → "Probar conexión" a tu correo: llega.
-3. **Correo a un cliente:** en una ventana de incógnito, "Olvidé mi contraseña" con tu correo de cliente: llega y el botón funciona.
-4. **Foto de producto (sharp nuevo):** edita un producto y sube una foto con fondo transparente o blanco liso. Sale con fondo blanco, el producto centrado y la cinta ES.
-5. **Fotos de la tienda:** las del catálogo y del inicio cargan, porque las optimiza el sharp nuevo.
-
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.11 && npm install && bash scripts/deploy.sh --sin-pull`. nginx en `127.0.0.1` sirve igual a la versión anterior: no hace falta volverlo.
-Si todo salió bien e hiciste el volcado a mano: según C-176 se guarda uno solo, así que `rm ~/respaldo-antes-mantenimiento-16-10.dump ~/respaldo-antes-rc7.dump` (queda el de rc12).
+### Por confirmar de rc.12 (C-177, unos 5 minutos)
+Claude ya comprobó la tienda, el panel sin sesión, el tiempo real y las fotos. Falta lo que solo se ve con tu cuenta:
+1. **Correo del panel (nodemailer nuevo):** Configuración → Correo → "Probar conexión" a tu correo: llega.
+2. **Correo a un cliente:** en una ventana de incógnito, "Olvidé mi contraseña" con tu correo de cliente: llega y el botón funciona.
+3. **Foto de producto (sharp nuevo):** edita un producto y sube una foto con fondo transparente o blanco liso. Sale con fondo blanco, el producto centrado y la cinta ES.
 
 ### Por confirmar de rc.7 a rc.11 (ya en producción, unos 15 minutos)
 El bloque de rc.7 a rc.11 (C-171, C-170, C-175 y C-172), con su verificación y su vuelta atrás, pasó a `HISTORIAL.md`. Falta que Andrés dé por buenas sus pruebas:

@@ -330,13 +330,13 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 
 **En curso (pedido del 16/10: salud del servidor e imágenes para compartir; primero el plan y después el código), en este orden:**
 - **C-176** mantenimiento del servidor (**hecha**).
-- **C-177** dependencias seguras: Next, sharp y nodemailer sin las fallas conocidas, y la tienda escuchando solo en `127.0.0.1` (**hecha**, versión `rc.12`).
+- **C-177** dependencias seguras: Next, sharp y nodemailer sin las fallas conocidas, y la tienda escuchando solo en `127.0.0.1` (**hecha y en producción** el 16/10, versión `rc.12`).
 - **C-178** imágenes para compartir los enlaces (Open Graph). Las decisiones de Andrés están en §7.2.
 
 Quedan para después de C-177 (`estado/C-177.md`):
 - **Prisma 7.** La falla que le queda a Prisma 6 está en su configuración de línea de comandos y no en la tienda, y pasar a Prisma 7 es un cambio grande.
 - **Next 16.4**, revisando las rutas por la coincidencia estricta.
-- **Antes de npm 12:** aprobar los scripts de instalación (`npm approve-scripts`) de Prisma, esbuild y unrs-resolver.
+- **Antes de npm 12:** aprobar los scripts de instalación (`npm install-scripts approve <paquete>`) de Prisma, esbuild y unrs-resolver.
 - **SSH solo con llave**, que espera las llaves de Andrés (`SIGUIENTE.md` §3).
 
 **En fila (Claude), aparte de lo anterior:** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Los menores se cerraron en C-164 (`balance/add` borrado, `seed.ts` sin contraseña por defecto, valoraciones con coma, `RechargeModalV2` sin `fetch`). Lo que queda en código es **C-166b**: pasar la Content-Security-Policy de "solo avisa" a "bloquea" (`CSP_ENFORCE="true"` y un deploy) cuando Reportes → Seguridad lleve una semana de visitas reales sin avisos legítimos. El resto no es código:

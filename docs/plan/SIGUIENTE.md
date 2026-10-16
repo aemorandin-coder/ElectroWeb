@@ -1,14 +1,14 @@
-# Lo de ahora (actualizado 2026-10-16, C-178 · versión 1.0.0-rc.13)
+# Lo de ahora (actualizado 2026-10-16, C-178 · producción en 1.0.0-rc.13)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.12`** (`19b07c0`, C-177), subida el 16/10 con Claude conectado. **`main`: `v1.0.0-rc.13`** (C-178). **Falta subir C-178** (bloque de abajo).
+- **Producción: `v1.0.0-rc.13`** (`2c274a0`, C-178), subida el 16/10 con Claude conectado. Es igual a `main` y a GitHub. **No hay código por subir.**
 - **Pedido de Andrés del 16/10:** la salud del servidor y las imágenes que se ven al compartir un enlace de la tienda. Primero el plan y después el código. Tareas:
   - **C-176 · Mantenimiento del servidor:** hecha el 16/10 (`estado/C-176.md`, `HISTORIAL.md`). El sistema quedó al día, con Node 24, kernel nuevo, fail2ban, HTTP/2 y registros con tope. La tienda estuvo caída unos 10 segundos.
   - **C-177 · Dependencias seguras:** hecha y en producción el 16/10. Next, sharp y nodemailer quedaron en versiones sin las fallas conocidas, y la tienda escucha solo en `127.0.0.1`.
-  - **C-178 · Imágenes para compartir:** hecha, falta subirla. Decisiones de Andrés con maquetas reales:
+  - **C-178 · Imágenes para compartir:** hecha y en producción el 16/10. Decisiones de Andrés con maquetas reales:
     - Precio solo en dólares.
     - Estilo mixto: los productos en claro; la portada, las categorías y las páginas en oscuro.
     - Nombres tal cual, sin "(SALDO)" en la imagen.
@@ -19,29 +19,15 @@
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: C-178 (de rc.12 a `v1.0.0-rc.13`)
-- **C-178 · Imágenes para compartir** (`estado/C-178.md`): al pegar un enlace de la tienda en WhatsApp, Facebook, Telegram o X sale una imagen de 1200 × 630, y no el logo cuadrado.
-  - **Producto:** la foto con su cinta ES, el nombre, la condición y el precio en dólares, tachado con "Ahorra" si hay oferta.
-  - **Portada, categorías y páginas:** su título y sus productos.
-  - **Configuración → SEO** muestra la imagen generada cuando no se sube una.
-- **Verificado:**
-  - `tsc`, `lint` (0 errores), `check:modulos` y build: 185 de 185.
-  - 85 comprobaciones contra el build (metadatos, imagen, caché, versión al cambiar el precio, lo subido a mano, rutas maliciosas y `404`) y 2 del panel.
-  - **No probado:** el depurador de Facebook y un WhatsApp de verdad (pruebas de abajo).
-- **SQL:** ninguno. Sin crons ni variables. Sin dependencias nuevas: `deploy.sh` no instala nada.
+## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.13`)
+El bloque de C-178, con lo que se comprobó y su vuelta atrás, pasó a `HISTORIAL.md`.
 
-### Pasos (en el servidor, `/var/www/electroshopve`; sin `sudo`)
-1. **Qué hay ahora:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.12`, sin archivos modificados.
-2. **Subir:** `git pull --ff-only && bash scripts/deploy.sh`.
-3. **Comprobar:** `git describe --tags --abbrev=0` dice `v1.0.0-rc.13`, y `curl -sI https://electroshopve.com/og/pagina/inicio | head -3` responde `200` con `image/jpeg`.
-
-### Pruebas después de subir (unos 10 minutos)
+### Por confirmar de rc.13 (C-178, unos 10 minutos)
+Claude ya comprobó en producción, pidiendo como los lectores de Facebook y WhatsApp, que cada página tiene su imagen. Falta verlo en las apps de verdad:
 1. **Facebook:** en [el depurador de Facebook](https://developers.facebook.com/tools/debug/), pega `https://electroshopve.com` y un producto, y toca **"Volver a extraer"**. Debe salir la imagen nueva, ancha, sin advertencias de tamaño.
 2. **WhatsApp:** pega un enlace de un producto en un chat contigo mismo. Sale la tarjeta con la foto, el nombre y el precio. Los enlaces que ya se habían compartido conservan su vista previa vieja: eso no se puede cambiar.
 3. **Configuración → SEO:** en Inicio, Productos, Servicios y Cursos, "Así se ve en WhatsApp" muestra la imagen generada.
 4. **Un precio:** cambia el precio de un producto, guarda y vuelve a pasarlo por el depurador de Facebook. La imagen dice el precio nuevo.
-
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.12 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de rc.12 (C-177, unos 5 minutos)
 Claude ya comprobó la tienda, el panel sin sesión, el tiempo real y las fotos. Falta lo que solo se ve con tu cuenta:

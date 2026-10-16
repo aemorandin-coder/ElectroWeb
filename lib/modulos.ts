@@ -45,6 +45,7 @@ const RC8 = { sistema: '1.0.0-rc.8' } as const;
 const RC9 = { sistema: '1.0.0-rc.9' } as const;
 const RC11 = { sistema: '1.0.0-rc.11' } as const;
 const RC12 = { sistema: '1.0.0-rc.12' } as const;
+const RC13 = { sistema: '1.0.0-rc.13' } as const;
 const primera = (resumen: string): CambioModulo => ({ ...PRIMERA, resumen, silencioso: true });
 
 export const MODULOS: ModuloPanel[] = [
@@ -148,7 +149,7 @@ export const MODULOS: ModuloPanel[] = [
       'app/admin/(dashboard)/cursos/', 'app/admin/(dashboard)/creators/', 'app/api/admin/courses/', 'app/api/admin/creators/',
       'app/api/courses/', 'app/api/creator/', 'app/creator/', 'app/cursos/', 'components/cursos/',
     ],
-    historial: [{ version: '1.0.1', ...RC8, tarea: 'C-170', resumen: 'Aprobar o rechazar a un creador dos veces a la vez ya no manda el correo dos veces.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.2', ...RC13, tarea: 'C-178', resumen: 'Al compartir el enlace de Cursos sale su propia imagen de 1200 × 630, o la de Configuración → SEO si se subió una.', silencioso: true }, { version: '1.0.1', ...RC8, tarea: 'C-170', resumen: 'Aprobar o rechazar a un creador dos veces a la vez ya no manda el correo dos veces.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'servicios',
@@ -156,7 +157,7 @@ export const MODULOS: ModuloPanel[] = [
     descripcion: 'Videos y trabajos del taller que se muestran en la tienda.',
     paginas: ['/admin/servicios'],
     archivos: ['app/admin/(dashboard)/servicios/', 'app/api/admin/service-videos/', 'app/api/tech-service-videos/', 'app/api/service-reviews/', 'app/servicios/', 'components/servicios/'],
-    historial: [primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.1', ...RC13, tarea: 'C-178', resumen: 'Al compartir el enlace de Servicios sale su propia imagen de 1200 × 630, o la de Configuración → SEO si se subió una.', silencioso: true }, primera('Primera versión registrada.')],
   },
   {
     id: 'cotizaciones',
@@ -164,7 +165,7 @@ export const MODULOS: ModuloPanel[] = [
     descripcion: 'Presupuestos para empresas e instituciones, con retención del IVA.',
     paginas: ['/admin/cotizaciones'],
     archivos: ['app/admin/(dashboard)/cotizaciones/', 'app/api/cotizaciones/', 'app/api/admin/cotizaciones/', 'lib/cotizaciones/', 'components/cotizaciones/', 'app/cotizacion/'],
-    historial: [{ version: '1.1.1', ...RC9, tarea: 'C-175', resumen: 'Correo del presupuesto con el diseño nuevo (logo largo).', silencioso: true }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Dos personas en la misma cotización: se combinan los cambios (también las líneas) y solo se pregunta por lo que las dos tocaron.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.2', ...RC13, tarea: 'C-178', resumen: 'Al compartir el enlace de Cotizaciones sale su propia imagen, en vez de la de la portada.', silencioso: true }, { version: '1.1.1', ...RC9, tarea: 'C-175', resumen: 'Correo del presupuesto con el diseño nuevo (logo largo).', silencioso: true }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Dos personas en la misma cotización: se combinan los cambios (también las líneas) y solo se pregunta por lo que las dos tocaron.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'clientes',
@@ -204,7 +205,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/site-settings.ts', 'lib/exchange-rate.ts', 'lib/correo.ts', 'lib/email-service.ts', 'lib/smtp-seguro.ts', 'lib/maintenance.ts',
       'components/admin/EmailSettingsPanel.tsx', 'components/legal/', 'scripts/deploy.sh',
     ],
-    historial: [{ version: '1.0.2', ...RC12, tarea: 'C-177', resumen: 'Los correos salen con la versión nueva de la librería de envío, que corrige fallas de seguridad. Para quien los recibe no cambia nada.', silencioso: true }, { version: '1.0.1', ...RC9, tarea: 'C-175', resumen: 'El correo de prueba de la configuración sale con el mismo diseño que reciben los clientes: sirve para ver cómo llega el logo.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.0', ...RC13, tarea: 'C-178', resumen: 'Configuración → SEO: si no subes una imagen para compartir, la vista previa muestra la que arma la tienda (antes, el logo o nada).' }, { version: '1.0.2', ...RC12, tarea: 'C-177', resumen: 'Los correos salen con la versión nueva de la librería de envío, que corrige fallas de seguridad. Para quien los recibe no cambia nada.', silencioso: true }, { version: '1.0.1', ...RC9, tarea: 'C-175', resumen: 'El correo de prueba de la configuración sale con el mismo diseño que reciben los clientes: sirve para ver cómo llega el logo.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'tienda',
@@ -213,13 +214,13 @@ export const MODULOS: ModuloPanel[] = [
     paginas: [],
     archivos: [
       'app/page.tsx', 'app/layout.tsx', 'app/globals.css', 'app/productos/', 'app/categorias/', 'app/p/', 'app/feed/', 'app/llms.txt/',
-      'app/robots.ts', 'app/sitemap.ts', 'app/contacto/', 'app/terminos/', 'app/privacidad/', 'app/solicitar-producto/',
+      'app/robots.ts', 'app/sitemap.ts', 'app/contacto/', 'app/terminos/', 'app/privacidad/', 'app/solicitar-producto/', 'app/gift-cards/', 'app/og/',
       'components/home/', 'components/catalog/', 'components/product/', 'components/public/', 'components/ui/', 'components/seo/',
       'components/Footer.tsx', 'components/WhatsAppButton.tsx', 'components/HotAdOverlay.tsx', 'components/reviews/', 'components/modals/',
       'lib/queries/home.ts', 'lib/queries/catalog.ts', 'lib/queries/product.ts', 'lib/queries/navigation.ts', 'lib/queries/seo.ts',
-      'lib/queries/busqueda-catalogo.ts', 'lib/queries/hot-ad.ts', 'lib/dto/', 'lib/seo.ts', 'lib/feed.ts', 'lib/llms.ts',
+      'lib/queries/busqueda-catalogo.ts', 'lib/queries/hot-ad.ts', 'lib/dto/', 'lib/seo.ts', 'lib/og/', 'lib/feed.ts', 'lib/llms.ts',
     ],
-    historial: [{ version: '1.1.0', ...RC11, tarea: 'C-172', resumen: 'Destacados del inicio: la estrella cambia cada día y, en la computadora, rota con el siguiente de la columna (una vuelta y se detiene; con flechas y pausa).' }, { version: '1.0.1', ...RC5, tarea: 'C-174', resumen: 'Estilo de la marquesina del panel en globals.css (no se usa en la tienda).', silencioso: true }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.2.0', ...RC13, tarea: 'C-178', resumen: 'Al compartir un enlace de la tienda sale una imagen hecha para eso: el producto con su foto, el precio en dólares (tachado si hay oferta) y su condición; las categorías y las páginas, con su título y sus productos. Antes era el logo cuadrado o la foto suelta.' }, { version: '1.1.0', ...RC11, tarea: 'C-172', resumen: 'Destacados del inicio: la estrella cambia cada día y, en la computadora, rota con el siguiente de la columna (una vuelta y se detiene; con flechas y pausa).' }, { version: '1.0.1', ...RC5, tarea: 'C-174', resumen: 'Estilo de la marquesina del panel en globals.css (no se usa en la tienda).', silencioso: true }, primera('Primera versión registrada.')],
   },
   {
     id: 'cuenta',

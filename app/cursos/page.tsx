@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
-import { absoluteUrl } from '@/lib/seo';
+import { imagenDePagina } from '@/lib/og/datos';
 import PublicHeader from '@/components/public/PublicHeader';
 import PageHeader from '@/components/ui/PageHeader';
 import Footer from '@/components/Footer';
@@ -18,7 +18,6 @@ export async function generateMetadata(): Promise<Metadata> {
       coursesMetaDescription: true,
       coursesMetaKeywords: true,
       coursesMetaImage: true,
-      logo: true,
     }
   });
 
@@ -27,9 +26,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = settings?.coursesMetaDescription || 'Aprende redes, electrónica, CCTV, gaming y más con nuestros cursos online.';
   const keywords = settings?.coursesMetaKeywords ? settings.coursesMetaKeywords.split(',').map(k => k.trim()) : undefined;
 
-  // Sin el respaldo a /og-image.png, que no existe (C-06)
-  const absoluteShareImage = absoluteUrl(settings?.coursesMetaImage || settings?.logo);
-  const images = absoluteShareImage ? [{ url: absoluteShareImage }] : undefined;
+  // C-178: la imagen de Configuración → SEO si se subió; si no, la que arma la tienda (antes, el logo cuadrado)
+  const images = [await imagenDePagina('cursos', settings?.coursesMetaImage)];
 
   return {
     title: settings?.coursesMetaTitle ? { absolute: title } : title,

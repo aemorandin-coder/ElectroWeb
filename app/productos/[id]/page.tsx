@@ -29,6 +29,7 @@ import { calculateOrder, toPricingSettings } from '@/lib/pricing';
 import { resumenEmbalaje } from '@/lib/embalaje';
 import { INTERNAL_SPEC_KEYS } from '@/lib/product-specs';
 import JsonLd from '@/components/seo/JsonLd';
+import { imagenGenerada, versionDeProducto } from '@/lib/og/datos';
 import { absoluteUrl, breadcrumbJsonLd, plainText, productJsonLd } from '@/lib/seo';
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -44,7 +45,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   // Sin descripción no se promete el envío: depende de Configuración y del producto (C-149)
   const description = plainText(product.seoDescription || product.description || `${product.name} en ${product.category.name}. Precio en dólares y bolívares.`, 160);
-  const image = absoluteUrl(product.seoImage) || absoluteUrl(product.mainImage) || absoluteUrl(product.images[0]);
+  // C-178: la imagen SEO subida a mano manda; si no hay, la tarjeta con foto, precio y condición (lib/og). Antes era la
+  // foto suelta en WebP, que no todas las apps muestran
+  const propia = absoluteUrl(product.seoImage);
+  const image = propia ? { url: propia, alt: product.name } : imagenGenerada('producto', product.slug, versionDeProducto(product), product.name);
   // Una sola definición de metadatos (antes había otra en layout.tsx que la pisaba)
   return {
     title: product.seoTitle ? { absolute: product.seoTitle } : product.name,
@@ -56,9 +60,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url: `/productos/${product.slug}`,
       type: 'website',
       locale: 'es_VE',
-      images: image ? [{ url: image, alt: product.name }] : undefined,
+      images: [image],
     },
-    twitter: { card: 'summary_large_image', title: product.name, description, images: image ? [image] : undefined },
+    twitter: { card: 'summary_large_image', title: product.name, description, images: [image.url] },
     other: {
       'product:price:amount': product.priceUSD.toFixed(2),
       'product:price:currency': 'USD',

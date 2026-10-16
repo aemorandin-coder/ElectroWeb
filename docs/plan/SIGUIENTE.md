@@ -1,21 +1,47 @@
-# Lo de ahora (actualizado 2026-10-16, C-177 · producción en 1.0.0-rc.12)
+# Lo de ahora (actualizado 2026-10-16, C-178 · versión 1.0.0-rc.13)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.12`** (`19b07c0`, C-177), subida el 16/10 con Claude conectado. Es igual a `main` y a GitHub. **No hay código por subir.**
+- **Producción: `v1.0.0-rc.12`** (`19b07c0`, C-177), subida el 16/10 con Claude conectado. **`main`: `v1.0.0-rc.13`** (C-178). **Falta subir C-178** (bloque de abajo).
 - **Pedido de Andrés del 16/10:** la salud del servidor y las imágenes que se ven al compartir un enlace de la tienda. Primero el plan y después el código. Tareas:
   - **C-176 · Mantenimiento del servidor:** hecha el 16/10 (`estado/C-176.md`, `HISTORIAL.md`). El sistema quedó al día, con Node 24, kernel nuevo, fail2ban, HTTP/2 y registros con tope. La tienda estuvo caída unos 10 segundos.
   - **C-177 · Dependencias seguras:** hecha y en producción el 16/10. Next, sharp y nodemailer quedaron en versiones sin las fallas conocidas, y la tienda escucha solo en `127.0.0.1`.
-  - **C-178 · Imágenes para compartir:** en curso, empezando por las maquetas. Decisiones de Andrés: precio solo en dólares, el estilo se elige viendo dos maquetas, y lo subido a mano en SEO manda.
+  - **C-178 · Imágenes para compartir:** hecha, falta subirla. Decisiones de Andrés con maquetas reales:
+    - Precio solo en dólares.
+    - Estilo mixto: los productos en claro; la portada, las categorías y las páginas en oscuro.
+    - Nombres tal cual, sin "(SALDO)" en la imagen.
+    - Lo subido a mano en SEO manda.
+  - **Aparte:** la portada del perfil de WhatsApp Business, con Chispa, en el estudio de Chispa (`C:\Users\W11\chispa\salida\portada-whatsapp.png`).
 - **El ciclo C-168 a C-175 está completo.**
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos más abajo). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.12`)
-El bloque de C-177, con sus pasos y su vuelta atrás, pasó a `HISTORIAL.md`.
+## 2. Deploy pendiente: C-178 (de rc.12 a `v1.0.0-rc.13`)
+- **C-178 · Imágenes para compartir** (`estado/C-178.md`): al pegar un enlace de la tienda en WhatsApp, Facebook, Telegram o X sale una imagen de 1200 × 630, y no el logo cuadrado.
+  - **Producto:** la foto con su cinta ES, el nombre, la condición y el precio en dólares, tachado con "Ahorra" si hay oferta.
+  - **Portada, categorías y páginas:** su título y sus productos.
+  - **Configuración → SEO** muestra la imagen generada cuando no se sube una.
+- **Verificado:**
+  - `tsc`, `lint` (0 errores), `check:modulos` y build: 185 de 185.
+  - 85 comprobaciones contra el build (metadatos, imagen, caché, versión al cambiar el precio, lo subido a mano, rutas maliciosas y `404`) y 2 del panel.
+  - **No probado:** el depurador de Facebook y un WhatsApp de verdad (pruebas de abajo).
+- **SQL:** ninguno. Sin crons ni variables. Sin dependencias nuevas: `deploy.sh` no instala nada.
+
+### Pasos (en el servidor, `/var/www/electroshopve`; sin `sudo`)
+1. **Qué hay ahora:** `git describe --tags --abbrev=0` debe decir `v1.0.0-rc.12`, sin archivos modificados.
+2. **Subir:** `git pull --ff-only && bash scripts/deploy.sh`.
+3. **Comprobar:** `git describe --tags --abbrev=0` dice `v1.0.0-rc.13`, y `curl -sI https://electroshopve.com/og/pagina/inicio | head -3` responde `200` con `image/jpeg`.
+
+### Pruebas después de subir (unos 10 minutos)
+1. **Facebook:** en [el depurador de Facebook](https://developers.facebook.com/tools/debug/), pega `https://electroshopve.com` y un producto, y toca **"Volver a extraer"**. Debe salir la imagen nueva, ancha, sin advertencias de tamaño.
+2. **WhatsApp:** pega un enlace de un producto en un chat contigo mismo. Sale la tarjeta con la foto, el nombre y el precio. Los enlaces que ya se habían compartido conservan su vista previa vieja: eso no se puede cambiar.
+3. **Configuración → SEO:** en Inicio, Productos, Servicios y Cursos, "Así se ve en WhatsApp" muestra la imagen generada.
+4. **Un precio:** cambia el precio de un producto, guarda y vuelve a pasarlo por el depurador de Facebook. La imagen dice el precio nuevo.
+
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.12 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de rc.12 (C-177, unos 5 minutos)
 Claude ya comprobó la tienda, el panel sin sesión, el tiempo real y las fotos. Falta lo que solo se ve con tu cuenta:
@@ -118,7 +144,7 @@ En el orden en que más destraban:
 - Ramas locales ya fusionadas: `git branch --merged main` las lista; se pueden borrar con `git branch -d <rama>`.
 
 ## 4. Fila de Claude
-La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **En curso (pedido del 16/10):** C-177 dependencias seguras y después C-178 imágenes para compartir (primero dos maquetas para elegir). Lo que espera un dato tuyo:
+La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedido del 16/10 está hecho** (C-176, C-177 y C-178). Quedan de ahí: SSH solo con llave (tus llaves, §3), Prisma 7, Next 16.4 y el aviso de npm 12 (`PLAN.md` §5.2). Lo que espera un dato tuyo:
 - Esperan datos: C-154b (plazo de los digitales: ya se sabe que son unas 2 horas, falta el horario), C-107 (seguro), C-92 (clientes) y C-153b (decidir si los "frágiles" llevan más relleno).
 - **Decisiones abiertas de promotores** (`PLAN.md` §7.1, A13 y A14): si los digitales pagan comisión, los % por defecto y los términos del programa para el abogado.
 - **C-166b (después de una semana con C-166 limpia):** pasar la Content-Security-Policy a "bloquea" (`CSP_ENFORCE="true"` y un deploy) y, con una restauración probada, evaluar subir el volcado directo a Drive sin pasar por disco si la base crece.

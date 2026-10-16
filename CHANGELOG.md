@@ -10,6 +10,19 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.13] - 2026-10-16
+### Tienda 1.2.0 (C-178)
+- **Imágenes para compartir los enlaces.** Al pegar un enlace de la tienda en WhatsApp, Facebook, Telegram o X sale una imagen de 1200 × 630 hecha para eso:
+  - **Producto:** la foto con su cinta ES, el nombre, la condición o "Entrega digital", y el precio en dólares, tachado con "Ahorra $X" si hay oferta.
+  - **Categorías, portada y páginas:** su título y sus productos.
+  - **Antes:** el logo cuadrado, o la foto suelta en WebP.
+- La imagen cambia sola cuando cambian el precio o la foto, y las redes la vuelven a pedir. Lo subido a mano en SEO sigue mandando.
+- Gift cards, contacto, términos y las demás páginas fijas ya no dicen ser la portada al compartirlas.
+### Configuración 1.1.0 (C-178)
+- Configuración → SEO: "Así se ve en WhatsApp" muestra la imagen que arma la tienda cuando no se sube una.
+### Cursos 1.0.2, Trabajos realizados 1.0.1, Cotizaciones 1.1.2 (C-178)
+- Sus páginas tienen su propia imagen para compartir. Sin cambio de base, crons ni variables.
+
 ## [1.0.0-rc.12] - 2026-10-16
 ### Productos 1.2.2, Configuración 1.0.2 (C-177)
 - **Dependencias sin fallas conocidas:** Next 16.3.8, sharp 0.35.5 y nodemailer 10.0.13. Se quitó `@auth/prisma-adapter`, que no se usaba. `npm audit` pasa de 11 fallas (3 críticas) a 3 altas, todas de Prisma 6 y solo de su línea de comandos.

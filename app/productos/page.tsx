@@ -31,7 +31,8 @@ import { getAutoIcon } from '@/lib/category-icons';
 import { getHomeSettings } from '@/lib/queries/home';
 import { getPublicSettings } from '@/lib/site-settings';
 import JsonLd from '@/components/seo/JsonLd';
-import { absoluteUrl, breadcrumbJsonLd, plainText, productListJsonLd } from '@/lib/seo';
+import { compartirPagina, imagenGenerada, versionDeCategoria } from '@/lib/og/datos';
+import { breadcrumbJsonLd, plainText, productListJsonLd } from '@/lib/seo';
 
 type PageProps = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -39,7 +40,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const params = parseCatalogParams(await searchParams);
   const [settings, publicSettings, category] = await Promise.all([
     prisma.companySettings.findFirst({
-      select: { productsMetaTitle: true, productsMetaDescription: true, productsMetaKeywords: true, productsMetaImage: true, logo: true },
+      select: { productsMetaTitle: true, productsMetaDescription: true, productsMetaKeywords: true, productsMetaImage: true },
     }),
     getPublicSettings(),
     params.category ? getCategorySummary(params.category) : null,
@@ -49,9 +50,15 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const description = category
     ? plainText(categoryText(category, publicSettings.deliveryEnabled), 160)
     : settings?.productsMetaDescription || 'Tecnología, gaming, gift cards y recargas digitales con envíos a toda Venezuela. Precios en dólares y bolívares.';
-  const absoluteShareImage = absoluteUrl(settings?.productsMetaImage || settings?.logo);
   // La dirección propia de la categoría es /categorias/<slug>: /productos?category=<slug> apunta a ella
   const canonical = category ? `/categorias/${category.slug}` : '/productos';
+  // C-178: la categoría lleva su tarjeta con sus productos; el catálogo, la imagen de Configuración → SEO o la generada
+  const compartir = category
+    ? (() => {
+      const imagen = imagenGenerada('categoria', category.slug, versionDeCategoria(category), category.name);
+      return { openGraph: { url: canonical, type: 'website' as const, locale: 'es_VE', images: [imagen] }, twitter: { card: 'summary_large_image' as const, images: [imagen.url] } };
+    })()
+    : await compartirPagina('productos', canonical, settings?.productsMetaImage);
 
   // El layout agrega " | Empresa": el título propio del admin se usa tal cual para no repetirla
   const title: Metadata['title'] = params.search
@@ -70,7 +77,8 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     alternates: { canonical },
     // Búsquedas, filtros y páginas siguientes no se indexan; la categoría sí
     robots: isIndexableCatalog(params) ? undefined : { index: false, follow: true },
-    openGraph: { description, url: canonical, images: absoluteShareImage ? [{ url: absoluteShareImage }] : undefined, type: 'website' },
+    openGraph: { ...compartir.openGraph, description },
+    twitter: compartir.twitter,
   };
 }
 

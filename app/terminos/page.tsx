@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { compartirPagina } from '@/lib/og/datos';
 import Link from 'next/link';
 import { FiFileText } from 'react-icons/fi';
 import PublicHeader from '@/components/public/PublicHeader';
@@ -9,11 +10,15 @@ import DocumentoLegal from '@/components/legal/DocumentoLegal';
 import { paginaLegal, SLUG_TERMINOS } from '@/lib/legal-publico';
 
 // C-149: título y descripción propios (salía con los de la portada)
-export const metadata: Metadata = {
-  title: 'Términos y condiciones',
-  description: 'Condiciones de compra en Electro Shop: cuenta, Puntos ES, pagos y precios, envíos, garantía y devoluciones, productos usados y productos digitales.',
-  alternates: { canonical: '/terminos' },
-};
+// C-178: con su imagen para compartir; sin Open Graph propio heredaba el de la portada
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Términos y condiciones',
+    description: 'Condiciones de compra en Electro Shop: cuenta, Puntos ES, pagos y precios, envíos, garantía y devoluciones, productos usados y productos digitales.',
+    alternates: { canonical: '/terminos' },
+    ...(await compartirPagina('terminos', '/terminos')),
+  };
+}
 
 // C-160: el texto es un documento que se edita en el panel (Legal → Documentos); los datos de contacto y los plazos
 // salen de Configuración. Siempre al día: una versión nueva se ve al instante.

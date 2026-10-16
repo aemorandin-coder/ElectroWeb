@@ -58,4 +58,4 @@ Las fechas son de 2026. Los MP4 los tiene Andrés; aquí quedan las fuentes.
 ## Ideas pendientes (Andrés no las ha pedido todavía)
 - Plantilla de historias "Domingo de web".
 - Calendario de contenido de dos semanas.
-- Chispa en la tienda web (C-176): aprobado como plan, sin código.
+- Chispa en la tienda web (C-179, antes C-176): aprobado como plan, sin código.

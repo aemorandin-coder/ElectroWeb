@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { compartirPagina } from '@/lib/og/datos';
 import { FiFileText } from 'react-icons/fi';
 import PublicHeader from '@/components/public/PublicHeader';
 import Footer from '@/components/Footer';
@@ -7,10 +8,14 @@ import PageHeader from '@/components/ui/PageHeader';
 import PedirCotizacion from '@/components/cotizaciones/PedirCotizacion';
 
 // Cotizaciones para empresas e instituciones (C-148).
-export const metadata: Metadata = {
-  title: 'Cotizaciones para empresas e instituciones',
-  description: 'Pide un presupuesto formal para tu empresa o institución: equipos de tecnología, cantidades y condiciones, con el RIF de tu empresa.',
-};
+// C-178: con su imagen para compartir; sin Open Graph propio heredaba el de la portada
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Cotizaciones para empresas e instituciones',
+    description: 'Pide un presupuesto formal para tu empresa o institución: equipos de tecnología, cantidades y condiciones, con el RIF de tu empresa.',
+    ...(await compartirPagina('cotizacion', '/cotizacion')),
+  };
+}
 
 export default function PedirCotizacionPage() {
   return (

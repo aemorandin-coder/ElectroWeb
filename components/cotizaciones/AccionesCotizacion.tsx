@@ -33,7 +33,8 @@ export function MarcarVista({ token }: { token: string }) {
  */
 export function BotonImprimir({ pendiente = false }: { pendiente?: boolean }) {
   const { confirm } = useConfirm();
-  const imprimir = async () => {
+  /** `bn`: para impresoras sin color (C-182). Los fondos de color pasan a bordes y todo sale en tinta negra. */
+  const imprimir = async (bn = false) => {
     if (pendiente) {
       const seguir = await confirm({
         title: 'Todavía no está aprobado',
@@ -48,13 +49,24 @@ export function BotonImprimir({ pendiente = false }: { pendiente?: boolean }) {
         return;
       }
     }
+    const documento = document.querySelector<HTMLElement>('[data-documento]');
+    if (bn && documento) {
+      documento.dataset.tinta = 'bn';
+      window.addEventListener('afterprint', () => { delete documento.dataset.tinta; }, { once: true });
+    }
     window.print();
   };
   return (
-    <button type="button" onClick={() => void imprimir()} className={adminSecondaryButton}>
-      <FiPrinter className="h-4 w-4" aria-hidden="true" />
-      Imprimir o guardar en PDF
-    </button>
+    <div className="flex flex-wrap gap-2">
+      <button type="button" onClick={() => void imprimir()} className={adminSecondaryButton}>
+        <FiPrinter className="h-4 w-4" aria-hidden="true" />
+        Imprimir o guardar en PDF
+      </button>
+      <button type="button" onClick={() => void imprimir(true)} className={adminSecondaryButton}>
+        <FiPrinter className="h-4 w-4" aria-hidden="true" />
+        En blanco y negro
+      </button>
+    </div>
   );
 }
 

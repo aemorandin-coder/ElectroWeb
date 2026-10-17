@@ -5,8 +5,6 @@
 
 import type { Metadata } from 'next';
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { cache, type ReactElement } from 'react';
 import { hasPriceRange } from '@/components/ui/productCardData';
 import { formatUSD } from '@/lib/currency';
@@ -18,6 +16,7 @@ import { visibleProducts } from '@/lib/queries/home';
 import { getProductBySlug } from '@/lib/queries/product';
 import { absoluteUrl, plainText, siteUrl } from '@/lib/seo';
 import { getPublicSettings } from '@/lib/site-settings';
+import { leerSubida as leerFoto } from '@/lib/subidas';
 import { cargarMarca, prepararFoto } from './imagen';
 import { ALTO, ANCHO, TarjetaPagina, TarjetaProducto, TarjetaVitrina, type DatosProducto } from './tarjetas';
 
@@ -134,24 +133,6 @@ export const contenidoDePagina = cache(async (pagina: PaginaCompartida): Promise
 export const versionDePagina = (pagina: PaginaCompartida, c: ContenidoPagina, fotos: string[]) => version('pagina', pagina, c.titulo, c.lema, c.bajada, ...fotos);
 
 // ---------- Fotos
-
-const SUBIDAS = path.join(process.cwd(), 'public', 'uploads');
-
-/** Una foto de la tienda desde el disco. Solo de public/uploads: nunca se pide nada a otro sitio */
-async function leerFoto(url: string | null): Promise<Buffer | null> {
-  if (!url) return null;
-  let ruta = url;
-  if (/^https?:\/\//i.test(ruta)) {
-    const propia = siteUrl();
-    if (!ruta.startsWith(`${propia}/`)) return null;
-    ruta = ruta.slice(propia.length);
-  }
-  const relativa = ruta.split('?')[0].replace(/^\/(api\/)?uploads\//, '');
-  if (relativa === ruta.split('?')[0]) return null;
-  const archivo = path.resolve(SUBIDAS, decodeURIComponent(relativa));
-  if (!archivo.startsWith(SUBIDAS + path.sep)) return null;
-  return readFile(archivo).catch(() => null);
-}
 
 /** Sin foto: el ícono de la marca sobre blanco */
 async function fotoOIcono(url: string | null, lado: number): Promise<string> {

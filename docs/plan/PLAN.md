@@ -354,7 +354,15 @@ Quedan para después de C-177 (`estado/C-177.md`):
 
 **Cotizaciones desde Numen** (pedido de Luis del 16 y 17/10; Andrés puede cambiarlo). Numen es la app de precios y proveedores del equipo, en un repositorio privado aparte. Las cotizaciones las arma Numen y las emite la web; el costo, el proveedor y el margen se quedan en Numen.
 - **C-181** la entrada de servidor a servidor y la "vista" del cliente (**hecha y en producción** el 17/10, versión `rc.15`). El código se sube sin la variable nueva (responde 503); `NUMEN_API_KEY` va en el `.env` cuando Numen esté instalado, con la confirmación de Andrés.
-- **C-182** el documento de la cotización y su PDF con el estilo del presupuesto técnico que mandó Luis: membrete, recuadro del documento, partidas con encabezado azul noche, anticipo y saldo, nota de lo que no incluye, garantía, firmas y anexo técnico opcional. Con los montos de la tienda, sin emojis y con sus letras y colores. **Luis eligió el 17/10 la maqueta A (la fiel), con la opción de imprimir en blanco y negro** (para impresoras sin color). El PDF es para mandarlo por watencion (el WhatsApp de la tienda).
+- **C-182** el documento de la cotización y su PDF con el estilo del presupuesto técnico que mandó Luis. **Luis eligió el 17/10 la maqueta A (la fiel), con la opción de imprimir en blanco y negro** (para impresoras sin color). **Hecha el 17/10 (versión `rc.16`, falta subirla: `SIGUIENTE.md` §2).** Trae:
+  - El membrete y el recuadro del documento, y las partidas con el encabezado azul noche.
+  - El anticipo en verde y el saldo en rojo.
+  - Lo que no incluye y el anexo técnico (campos nuevos y opcionales).
+  - El botón "En blanco y negro".
+  - El PDF armado en el servidor: "Descargar PDF" en el enlace del cliente, y la ruta para Numen.
+- **Del lado de Numen (su repositorio):**
+  - Los campos "Lo que no incluye" y "Anexo técnico" en su cotización.
+  - Pedir el PDF y mandarlo por watencion (el WhatsApp de la tienda) con el enlace, con vista previa y confirmación antes de enviar.
 
 **En fila (Claude), aparte de lo anterior:** nada con código pendiente que no espere un dato de Andrés (tabla de abajo). Los menores se cerraron en C-164 (`balance/add` borrado, `seed.ts` sin contraseña por defecto, valoraciones con coma, `RechargeModalV2` sin `fetch`). Lo que queda en código es **C-166b**: pasar la Content-Security-Policy de "solo avisa" a "bloquea" (`CSP_ENFORCE="true"` y un deploy) cuando Reportes → Seguridad lleve una semana de visitas reales sin avisos legítimos. El resto no es código:
 - Un monitor externo de que la tienda está arriba (UptimeRobot o similar a `/robots.txt`) y guardar la clave privada del respaldo y una copia del `.env` fuera del servidor (Andrés, `SIGUIENTE.md` §3).

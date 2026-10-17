@@ -50,11 +50,16 @@ interface Formulario {
   ivaRetentionPercent: string;
   conditions: string;
   terms: string;
+  /** C-182: lo que no incluye (nota en ámbar) y el anexo técnico */
+  notice: string;
+  annexTitle: string;
+  annex: string;
 }
 
 const VACIO: Formulario = {
   clientName: '', clientDoc: '', contactName: '', contactEmail: '', contactPhone: '', location: '', subject: '',
   validityDays: '15', advancePercent: '', ivaRetentionPercent: '0', conditions: CONDICIONES_POR_DEFECTO, terms: TERMINOS_POR_DEFECTO,
+  notice: '', annexTitle: '', annex: '',
 };
 
 let siguienteClave = 0;
@@ -68,6 +73,7 @@ function aFormulario(c: CotizacionAdmin): { form: Formulario; lineas: Linea[] } 
       clientName: c.clientName, clientDoc: c.clientDoc ?? '', contactName: c.contactName ?? '', contactEmail: c.contactEmail ?? '',
       contactPhone: c.contactPhone ?? '', location: c.location ?? '', subject: c.subject ?? '', validityDays: String(c.validityDays),
       advancePercent: c.advancePercent ? String(c.advancePercent) : '', ivaRetentionPercent: String(c.ivaRetentionPercent), conditions: c.conditions ?? '', terms: c.terms ?? '',
+      notice: c.notice ?? '', annexTitle: c.annexTitle ?? '', annex: c.annex ?? '',
     },
     lineas: c.items.map((l) => ({ clave: clave(), productId: l.productId, title: l.title, description: l.description ?? '', quantity: String(l.quantity), unitPriceUSD: String(l.unitPriceUSD) })),
   };
@@ -98,7 +104,7 @@ export default function EditorCotizacion() {
   const { resolver: resolverConflicto, dialogo: dialogoConflicto } = useConflictoDeFormulario({
     clientName: 'Cliente', clientDoc: 'RIF o cédula', contactName: 'Contacto', contactEmail: 'Correo', contactPhone: 'Teléfono', location: 'Lugar',
     subject: 'Asunto', validityDays: 'Validez (días)', advancePercent: 'Anticipo %', ivaRetentionPercent: 'Retención del IVA', conditions: 'Condiciones',
-    terms: 'Términos', lineas: 'Líneas de la cotización',
+    terms: 'Términos', notice: 'Lo que no incluye', annexTitle: 'Título del anexo', annex: 'Anexo técnico', lineas: 'Líneas de la cotización',
   }, (campo, valor) => {
     if (campo === 'lineas') {
       const ls = valor as Array<{ title: string; quantity: string }>;
@@ -645,6 +651,20 @@ export default function EditorCotizacion() {
               <label htmlFor="c-terms" className={adminLabel}>Entrega y garantía</label>
               <textarea id="c-terms" rows={4} value={form.terms} onChange={(e) => cambiar('terms', e.target.value)} maxLength={3000} className={`${adminInput()} h-auto py-2`} />
               <p className={adminHint}>Una por línea. Escribe solo lo que la tienda va a cumplir.</p>
+            </div>
+            {/* C-182: la nota en ámbar y la segunda hoja del presupuesto */}
+            <div className="sm:col-span-2">
+              <label htmlFor="c-notice" className={adminLabel}>Lo que no incluye <span className="font-normal text-muted">(opcional)</span></label>
+              <textarea id="c-notice" rows={3} value={form.notice} onChange={(e) => cambiar('notice', e.target.value)} maxLength={2000} className={`${adminInput()} h-auto py-2`}
+                placeholder="Ej.: No incluye el cableado de larga distancia ni la mano de obra del electricista." />
+              <p className={adminHint}>Sale en un recuadro ámbar, &ldquo;Nota importante&rdquo;, debajo de los totales.</p>
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="c-annexTitle" className={adminLabel}>Anexo técnico <span className="font-normal text-muted">(opcional, va en una segunda hoja)</span></label>
+              <input id="c-annexTitle" value={form.annexTitle} onChange={(e) => cambiar('annexTitle', e.target.value)} maxLength={120} className={adminInput()} placeholder="Título: Levantamiento de consumo" />
+              <textarea id="c-annex" aria-label="Texto del anexo técnico" rows={6} value={form.annex} onChange={(e) => cambiar('annex', e.target.value)} maxLength={8000} className={`${adminInput()} mt-2 h-auto py-2 font-mono text-xs`}
+                placeholder={'Párrafos separados por una línea en blanco.\nUna tabla: líneas con | entre columnas (la primera es el encabezado).\nEquipo | Tensión | Consumo\nAire 18.000 BTU | 220 V | ~1.750 W'} />
+              <p className={adminHint}>Párrafos, listas con &ldquo;- &rdquo; y tablas con &ldquo;|&rdquo;. Sin anexo, el presupuesto es de una hoja.</p>
             </div>
           </div>
         </section>

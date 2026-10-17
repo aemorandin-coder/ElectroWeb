@@ -1142,6 +1142,11 @@ model Quote {
   advancePercent Int?      // anticipo, si lo hay
   conditions     String?   // condiciones comerciales, una por línea
   terms          String?   // entrega y garantía, una por línea
+  // C-182: la nota de lo que no incluye (va en ámbar) y el anexo técnico, una segunda hoja con su título. En el anexo,
+  // las líneas con "|" se arman como tabla (la primera es el encabezado) y las que empiezan con "- ", como lista
+  notice         String?
+  annexTitle     String?
+  annex          String?
   // Totales (se recalculan en el servidor cada vez que se guarda)
   totalUSD       Decimal   @default(0)
   taxPercent     Decimal   @default(0) // IVA que ya va dentro de los precios al emitirla (C-146)

@@ -47,6 +47,7 @@ const RC11 = { sistema: '1.0.0-rc.11' } as const;
 const RC12 = { sistema: '1.0.0-rc.12' } as const;
 const RC13 = { sistema: '1.0.0-rc.13' } as const;
 const RC14 = { sistema: '1.0.0-rc.14' } as const;
+const RC15 = { sistema: '1.0.0-rc.15' } as const;
 const primera = (resumen: string): CambioModulo => ({ ...PRIMERA, resumen, silencioso: true });
 
 export const MODULOS: ModuloPanel[] = [
@@ -66,7 +67,7 @@ export const MODULOS: ModuloPanel[] = [
       // C-169: lo que comparten las pantallas que se editan entre varios (presencia, conflictos, borrador, historial)
       'components/admin/edicion/', 'lib/edicion/', 'app/api/admin/presencia/', 'app/api/admin/historial/',
     ],
-    historial: [{ version: '1.3.1', ...RC9, tarea: 'C-175', resumen: 'Los avisos al equipo por correo llevan el logo largo y el mismo diseño que los correos de los clientes.' }, { version: '1.3.0', ...RC8, tarea: 'C-170', resumen: 'Las piezas para que dos administradores no se pisen (versión al guardar, combinar cambios, presencia) ahora sirven a todo el panel.', silencioso: true }, { version: '1.2.0', ...RC5, tarea: 'C-174', resumen: 'Marquesina del equipo: una franja debajo de la barra de arriba dice quién está conectado y en qué sector ("Luis está en Productos, editando…").' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Trabajo en equipo: se ve quién más está editando lo mismo, se avisa en vivo cuando otro lo cambia o lo mueve a la papelera, y los borradores sin guardar se conservan en el navegador.' }, { ...PRIMERA, resumen: 'Ahora cada módulo del panel lleva su versión (abajo del menú y en la barra de arriba) y se avisa cuando hay una versión nueva.' }],
+    historial: [{ version: '1.3.2', ...RC15, tarea: 'C-181', resumen: 'Las rutas de Numen y el aviso de que el cliente abrió su cotización pasan sin sesión (cada una se autoriza adentro).', silencioso: true }, { version: '1.3.1', ...RC9, tarea: 'C-175', resumen: 'Los avisos al equipo por correo llevan el logo largo y el mismo diseño que los correos de los clientes.' }, { version: '1.3.0', ...RC8, tarea: 'C-170', resumen: 'Las piezas para que dos administradores no se pisen (versión al guardar, combinar cambios, presencia) ahora sirven a todo el panel.', silencioso: true }, { version: '1.2.0', ...RC5, tarea: 'C-174', resumen: 'Marquesina del equipo: una franja debajo de la barra de arriba dice quién está conectado y en qué sector ("Luis está en Productos, editando…").' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Trabajo en equipo: se ve quién más está editando lo mismo, se avisa en vivo cuando otro lo cambia o lo mueve a la papelera, y los borradores sin guardar se conservan en el navegador.' }, { ...PRIMERA, resumen: 'Ahora cada módulo del panel lleva su versión (abajo del menú y en la barra de arriba) y se avisa cuando hay una versión nueva.' }],
   },
   {
     id: 'dashboard',
@@ -165,8 +166,8 @@ export const MODULOS: ModuloPanel[] = [
     nombre: 'Cotizaciones',
     descripcion: 'Presupuestos para empresas e instituciones, con retención del IVA.',
     paginas: ['/admin/cotizaciones'],
-    archivos: ['app/admin/(dashboard)/cotizaciones/', 'app/api/cotizaciones/', 'app/api/admin/cotizaciones/', 'lib/cotizaciones/', 'components/cotizaciones/', 'app/cotizacion/'],
-    historial: [{ version: '1.1.2', ...RC13, tarea: 'C-178', resumen: 'Al compartir el enlace de Cotizaciones sale su propia imagen, en vez de la de la portada.', silencioso: true }, { version: '1.1.1', ...RC9, tarea: 'C-175', resumen: 'Correo del presupuesto con el diseño nuevo (logo largo).', silencioso: true }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Dos personas en la misma cotización: se combinan los cambios (también las líneas) y solo se pregunta por lo que las dos tocaron.' }, primera('Primera versión registrada.')],
+    archivos: ['app/admin/(dashboard)/cotizaciones/', 'app/api/cotizaciones/', 'app/api/admin/cotizaciones/', 'lib/cotizaciones/', 'components/cotizaciones/', 'app/cotizacion/', 'app/api/numen/', 'lib/numen-auth.ts'],
+    historial: [{ version: '1.2.0', ...RC15, tarea: 'C-181', resumen: 'Numen, la app de precios del equipo, arma cotizaciones y sigue cómo van. En el detalle se ve cuándo el cliente abrió su enlace y cuántas veces.' }, { version: '1.1.2', ...RC13, tarea: 'C-178', resumen: 'Al compartir el enlace de Cotizaciones sale su propia imagen, en vez de la de la portada.', silencioso: true }, { version: '1.1.1', ...RC9, tarea: 'C-175', resumen: 'Correo del presupuesto con el diseño nuevo (logo largo).', silencioso: true }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Dos personas en la misma cotización: se combinan los cambios (también las líneas) y solo se pregunta por lo que las dos tocaron.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'clientes',

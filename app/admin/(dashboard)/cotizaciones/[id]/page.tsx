@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { FaWhatsapp } from 'react-icons/fa6';
-import { FiAlertTriangle, FiArrowLeft, FiBox, FiCheckCircle, FiCopy, FiExternalLink, FiMail, FiPlus, FiSend, FiTrash2 } from 'react-icons/fi';
+import { FiAlertTriangle, FiArrowLeft, FiBox, FiCheckCircle, FiCopy, FiExternalLink, FiEye, FiMail, FiPlus, FiSend, FiTrash2 } from 'react-icons/fi';
 import {
   adminBadge, adminCard, adminDangerButton, adminError, adminHint, adminIconButton, adminInput, adminLabel, adminNotice, adminPageSubtitle, adminPageTitle,
   adminPrimaryButton, adminSecondaryButton, adminSectionTitle, adminSpinner,
@@ -446,6 +446,16 @@ export default function EditorCotizacion() {
         <section className={`${adminCard} mb-4`} aria-labelledby="enlace-titulo">
           <h2 id="enlace-titulo" className={adminSectionTitle}>Enlace para el cliente</h2>
           <p className={adminPageSubtitle}>Con este enlace la ve, la imprime o la guarda en PDF y la aprueba. No necesita cuenta.</p>
+          {/* C-181: si el cliente ya la abrió (la vista previa de WhatsApp y el equipo no cuentan) */}
+          <p className="mt-2 flex items-start gap-2 text-sm text-ink-soft" data-vista>
+            <FiEye className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>
+              {cotizacion.viewedAt
+                ? `El cliente la abrió el ${new Date(cotizacion.viewedAt).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })}${cotizacion.viewCount > 1 && cotizacion.lastViewedAt ? ` (${cotizacion.viewCount} veces; la última, el ${new Date(cotizacion.lastViewedAt).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })})` : ''}.`
+                : 'El cliente todavía no la abrió.'}
+              {cotizacion.deNumen && ' La armó Numen.'}
+            </span>
+          </p>
           <p className="mt-3 break-all rounded-lg border border-line bg-surface px-3 py-2 font-mono text-xs text-ink" data-enlace>{enlace}</p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <button type="button" onClick={copiar} className={adminSecondaryButton}><FiCopy className="h-4 w-4" aria-hidden="true" />Copiar enlace</button>

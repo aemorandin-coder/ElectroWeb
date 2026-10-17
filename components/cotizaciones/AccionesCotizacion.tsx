@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { FiCheckCircle, FiPrinter } from 'react-icons/fi';
@@ -8,6 +8,24 @@ import { adminCard, adminError, adminInput, adminLabel, adminPrimaryButton, admi
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 // Lo que el cliente hace con su cotización (C-148): imprimirla o guardarla en PDF, y dar su conformidad.
+
+/**
+ * Avisa que el cliente abrió su enlace (C-181), una vez por pestaña: recargar no suma otra vista. Va después de cargar,
+ * así la vista previa de WhatsApp (que no corre JavaScript) no cuenta. No muestra nada.
+ */
+export function MarcarVista({ token }: { token: string }) {
+  useEffect(() => {
+    const clave = `cotizacion-vista:${token}`;
+    try {
+      if (sessionStorage.getItem(clave)) return;
+      sessionStorage.setItem(clave, '1');
+    } catch {
+      // Sin sessionStorage (ventana privada estricta): se anota igual
+    }
+    void fetch(`/api/cotizaciones/${encodeURIComponent(token)}/vista`, { method: 'POST', keepalive: true, credentials: 'same-origin' }).catch(() => {});
+  }, [token]);
+  return null;
+}
 
 /**
  * Imprimir sin haberla aprobado se permite (una empresa la hace circular antes de decidir), pero se avisa:

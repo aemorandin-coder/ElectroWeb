@@ -1,10 +1,14 @@
-# Lo de ahora (actualizado 2026-10-16, C-178 · producción en 1.0.0-rc.14)
+# Lo de ahora (actualizado 2026-10-17, C-181 · producción en 1.0.0-rc.14, `main` en rc.15)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.14`** (`535bbb8`, C-178 con su ajuste), subida el 16/10 con Claude conectado. Es igual a `main` y a GitHub. **No hay código por subir.**
+- **Producción: `v1.0.0-rc.14`** (`535bbb8`, C-178 con su ajuste), subida el 16/10 con Claude conectado.
+- **En `main` sin subir: `v1.0.0-rc.15` (C-181),** bloque en la sección 2.
+- **Pedido del 16 y 17/10 (Luis): cotizaciones desde Numen.** Numen es la app de precios y proveedores del equipo, en un repositorio privado aparte. Las cotizaciones las arma Numen y las emite la web.
+  - **C-181:** la entrada de servidor a servidor, y cuándo el cliente abre su enlace. Hecha (`estado/C-181.md`).
+  - **C-182:** el documento y su PDF con el estilo del presupuesto técnico. Primero maquetas para que Luis elija.
 - **Pedido del 16/10 (Luis, del equipo, trabajando con Claude desde su laptop):** la salud del servidor y las imágenes que se ven al compartir un enlace de la tienda. Primero el plan y después el código. Tareas:
   - **C-176 · Mantenimiento del servidor:** hecha el 16/10 (`estado/C-176.md`, `HISTORIAL.md`). El sistema quedó al día, con Node 24, kernel nuevo, fail2ban, HTTP/2 y registros con tope. La tienda estuvo caída unos 10 segundos.
   - **C-177 · Dependencias seguras:** hecha y en producción el 16/10. Next, sharp y nodemailer quedaron en versiones sin las fallas conocidas, y la tienda escucha solo en `127.0.0.1`.
@@ -20,7 +24,44 @@
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.14`)
+## 2. Deploy pendiente: `v1.0.0-rc.15` (C-181)
+Después del deploy, `git describe --tags` en el servidor debe decir `v1.0.0-rc.15`. Lo puede subir Claude conectado, con la aprobación de quien esté en la sesión, o Andrés. **El código no necesita la variable nueva:** sin `NUMEN_API_KEY`, la entrada de Numen responde 503 y nadie entra. La variable se pone después (paso 6), con la confirmación de Andrés, cuando Numen esté instalado.
+
+**Qué trae:**
+- Numen puede crear cotizaciones y seguir cómo van, de servidor a servidor.
+- El detalle de cada cotización dice cuándo el cliente abrió su enlace y cuántas veces.
+- Enviar, aprobar, cerrar y reabrir siguen igual en el panel (la lógica pasó a un archivo compartido).
+
+Pasos, en la **terminal del servidor de la tienda** (`/var/www/electroshopve`):
+1. Anotar qué hay: `git log -1 --oneline` (debe decir `535bbb8` o el merge de C-178).
+2. **Respaldo** (cambia la base):
+   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-c181.dump`
+3. `git pull --ff-only` y `bash scripts/deploy.sh`. El guion para y muestra el SQL. Tiene que ser exactamente esto (solo `ADD COLUMN` y `CREATE UNIQUE INDEX`):
+   ```sql
+   ALTER TABLE "quotes" ADD COLUMN "externalRef" TEXT,
+   ADD COLUMN "lastViewedAt" TIMESTAMP(3),
+   ADD COLUMN "viewCount" INTEGER NOT NULL DEFAULT 0,
+   ADD COLUMN "viewedAt" TIMESTAMP(3);
+   CREATE UNIQUE INDEX "quotes_externalRef_key" ON "quotes"("externalRef");
+   ```
+   Si coincide: `npx prisma db push` y `bash scripts/deploy.sh` otra vez.
+4. Comprobar:
+   - `git describe --tags` dice `v1.0.0-rc.15`.
+   - `curl -s -o /dev/null -w "%{http_code}\n" -X POST https://electroshopve.com/api/numen/cotizaciones` da `503` (todavía sin clave).
+   - El registro de errores de PM2 sin líneas nuevas.
+5. **Pruebas en el panel y el teléfono** (unos 5 minutos):
+   1. **Panel:** Admin → Cotizaciones → una enviada. Debajo de "Enlace para el cliente" dice "El cliente todavía no la abrió" (las de antes no tienen el dato).
+   2. **WhatsApp:** pega ese enlace en un chat contigo mismo y deja que arme la vista previa, sin abrirlo. Recarga el panel: sigue diciendo que no la abrió.
+   3. **Teléfono:** abre el enlace en una ventana de incógnito, sin la sesión del panel. Recarga el panel: dice "El cliente la abrió el …".
+   4. **Lo de siempre:** en una cotización de prueba, "Enviar", "Aprobar" (registrada por ti) y "No se concretó". Si tenía un producto del catálogo, el inventario baja y vuelve como antes.
+6. **La clave de Numen**, más adelante: cuando Numen esté instalado y **con la confirmación de Andrés**, porque es una variable nueva de producción.
+   1. **Terminal del servidor de la tienda:** `openssl rand -hex 32`.
+   2. Pegar el resultado en `.env` con `nano .env`, en una línea `NUMEN_API_KEY="…"`.
+   3. Correr `bash scripts/deploy.sh --sin-pull`.
+   4. Guardar la misma clave en el gestor de contraseñas. Claude la pone en Numen.
+   5. Comprobar con el `curl` del paso 4: ahora da `401`.
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.14 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas nuevas no molestan al código anterior y no se quitan.
+
 Los bloques de C-178 (rc.13 y su ajuste, rc.14), con lo que se comprobó y su vuelta atrás, pasaron a `HISTORIAL.md`.
 
 ### Por confirmar de rc.13 y rc.14 (C-178, unos 10 minutos)
@@ -140,7 +181,7 @@ En el orden en que más destraban:
 - Ramas locales ya fusionadas: `git branch --merged main` las lista; se pueden borrar con `git branch -d <rama>`.
 
 ## 4. Fila de Claude
-La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedido del 16/10 está hecho** (C-176, C-177 y C-178). **Sigue C-180** (fotos del feed para el catálogo de WhatsApp) cuando llegue la captura de Commerce Manager (§3, 1b). Quedan de ahí: SSH solo con llave (tus llaves, §3), Prisma 7, Next 16.4 y el aviso de npm 12 (`PLAN.md` §5.2). Lo que espera un dato tuyo:
+La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedido del 16/10 está hecho** (C-176, C-177 y C-178). **Cotizaciones desde Numen:** C-181 hecha (falta subir rc.15); sigue **C-182**, el documento y el PDF con el estilo del presupuesto, con maquetas primero para que Luis elija. **Sigue C-180** (fotos del feed para el catálogo de WhatsApp) cuando llegue la captura de Commerce Manager (§3, 1b). Quedan de ahí: SSH solo con llave (tus llaves, §3), Prisma 7, Next 16.4 y el aviso de npm 12 (`PLAN.md` §5.2). Lo que espera un dato tuyo:
 - Esperan datos: C-154b (plazo de los digitales: ya se sabe que son unas 2 horas, falta el horario), C-107 (seguro), C-92 (clientes) y C-153b (decidir si los "frágiles" llevan más relleno).
 - **Decisiones abiertas de promotores** (`PLAN.md` §7.1, A13 y A14): si los digitales pagan comisión, los % por defecto y los términos del programa para el abogado.
 - **C-166b (después de una semana con C-166 limpia):** pasar la Content-Security-Policy a "bloquea" (`CSP_ENFORCE="true"` y un deploy) y, con una restauración probada, evaluar subir el volcado directo a Drive sin pasar por disco si la base crece.
@@ -153,7 +194,8 @@ La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedid
 > 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
 > 2. Fíjate quién escribe (Andrés o Luis: `CLAUDE.md`). Pregunta:
 >    - Si ya llegó **la captura de Commerce Manager** para C-180 y si se volvieron a subir las fotos del SSD y del teclado.
->    - Cómo salieron las pruebas de la sección 2 (rc.12 a rc.14), si se subió algo sin Claude y el redondeo de C-96.
+>    - Si ya se subió rc.15 (C-181) y cómo salieron las pruebas de la sección 2 (rc.12 a rc.15), si se subió algo sin Claude y el redondeo de C-96.
+>    - Qué maqueta del presupuesto eligió Luis para C-182, si ya las vio.
 >    - Si hay alguno de los datos de la sección 3 (también las llaves de SSH de Andrés).
 >    - Producción se comprueba con `git describe --tags` por SSH (`OPERACION.md` §3).
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.

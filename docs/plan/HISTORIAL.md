@@ -1,10 +1,39 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `535bbb8`, versión `v1.0.0-rc.14`, el 16/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `d4cb51c`, versión `v1.0.0-rc.15`, el 17/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 17/10 · C-181 (de rc.14 a `v1.0.0-rc.15`)
+Subido el 17/10 con Claude conectado, con la aprobación de Luis para este deploy (`estado/C-181.md`). La tienda no se cortó.
+- **C-181 · Cotizaciones desde Numen y la vista del cliente:**
+  - La entrada de servidor a servidor para Numen (`/api/numen/cotizaciones`), que sin `NUMEN_API_KEY` responde 503.
+  - Cuándo el cliente abre su cotización (no cuentan la vista previa de WhatsApp ni el equipo), visible en el detalle del panel.
+  - Enviar, aprobar, cerrar y reabrir pasaron a `lib/cotizaciones/acciones.ts`.
+- **Pasos que se dieron:**
+  1. Respaldo `~/respaldo-antes-c181.dump` (1,1 MB).
+  2. `git pull --ff-only` y `bash scripts/deploy.sh --sin-pull`: se detuvo y mostró el SQL, igual al del bloque.
+  3. `npx prisma db push` pidió `--accept-data-loss` por el índice único: es un aviso genérico, y la columna es nueva y está toda en NULL. En vez de esa opción se aplicó **el mismo SQL a mano, en una transacción**, con `psql -v ON_ERROR_STOP=1`.
+  4. `bash scripts/deploy.sh --sin-pull` otra vez: compiló en `.next-a` y cambió.
+- **SQL aplicado:**
+  ```sql
+  ALTER TABLE "quotes" ADD COLUMN "externalRef" TEXT,
+  ADD COLUMN "lastViewedAt" TIMESTAMP(3),
+  ADD COLUMN "viewCount" INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN "viewedAt" TIMESTAMP(3);
+  CREATE UNIQUE INDEX "quotes_externalRef_key" ON "quotes"("externalRef");
+  ```
+- **Comprobado en producción:**
+  - `v1.0.0-rc.15`, escuchando en `127.0.0.1:3000`.
+  - Inicio, productos, `/cotizacion`, los ajustes públicos y `/llms.txt` con `200`.
+  - `POST /api/numen/cotizaciones` da `503` (todavía sin clave). La vista con un token que no existe da `404`. `/admin` sin sesión manda al login.
+  - La única cotización de producción quedó igual (sin referencia y con 0 vistas). En el registro de errores, solo el ruido conocido de los bots.
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.14 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas nuevas no molestan al código anterior y no se quitan.
+- **Falta:**
+  - La clave de Numen, cuando Numen esté instalado y con la confirmación de Andrés (`SIGUIENTE.md` §2).
+  - Las pruebas del equipo en el panel y el teléfono (`SIGUIENTE.md` §2).
 
 ## 16/10 · C-178, ajuste (de rc.13 a `v1.0.0-rc.14`)
 Subido el 16/10 con Claude conectado, después de que la portada se probó en WhatsApp (`estado/C-178.md`, "Ajuste del 16/10").

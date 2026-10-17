@@ -10,6 +10,15 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.15] - 2026-10-17
+### Cotizaciones 1.2.0 (C-181)
+- **Numen arma las cotizaciones.** Numen es la app de precios y proveedores del equipo. Ahora puede crear cotizaciones en la tienda, mandarlas al cliente (con el correo de siempre) y seguir cómo van, de servidor a servidor con una clave (`NUMEN_API_KEY`). La tienda pone el número, los totales y el IVA. El costo, el proveedor y el margen nunca llegan a la tienda.
+- **Cuándo el cliente abrió su enlace.** El detalle de la cotización dice cuándo la abrió y cuántas veces, o que todavía no la abrió. No cuentan la vista previa que arma WhatsApp con el enlace, el equipo ni un borrador.
+- Las del panel siguen igual: enviar, aprobar, cerrar y reabrir siguen las mismas reglas desde el panel y desde Numen.
+- **Base:** 4 columnas nuevas en `quotes` (aditivo). **Variable nueva:** `NUMEN_API_KEY`. Sin ella, la entrada de Numen responde 503 y lo demás funciona igual.
+### Marco del panel 1.3.2 (C-181)
+- Las rutas de Numen y el aviso de la vista pasan sin sesión; cada una se autoriza adentro.
+
 ## [1.0.0-rc.14] - 2026-10-16
 ### Tienda 1.2.1 (C-178)
 - La imagen de la portada al compartir dice **"Todo lo encuentras con nosotros."** en vez de la lista de categorías.

@@ -47,7 +47,7 @@ async function ivaVigente(): Promise<number> {
   return s.taxEnabled ? s.taxPercent : 0;
 }
 
-export async function crearCotizacion(datos: CotizacionEntrada, extra: { status: EstadoCotizacion; createdById?: string | null; userId?: string | null; requestNote?: string | null }) {
+export async function crearCotizacion(datos: CotizacionEntrada, extra: { status: EstadoCotizacion; createdById?: string | null; userId?: string | null; requestNote?: string | null; externalRef?: string | null; sentAt?: Date | null }) {
   const taxPercent = await ivaVigente();
   const { totalUSD } = totalesCotizacion(datos.items, taxPercent, datos.advancePercent, datos.ivaRetentionPercent);
   const { items, ...campos } = datos;
@@ -60,6 +60,8 @@ export async function crearCotizacion(datos: CotizacionEntrada, extra: { status:
       createdById: extra.createdById ?? null,
       userId: extra.userId ?? null,
       requestNote: extra.requestNote ?? null,
+      externalRef: extra.externalRef ?? null,
+      sentAt: extra.sentAt ?? null,
       totalUSD: montoDecimal(totalUSD),
       taxPercent: montoDecimal(taxPercent),
       items: { create: lineasParaGuardar(items) },
@@ -147,10 +149,65 @@ export function aCotizacionAdmin(q: CotizacionConLineas) {
     requestNote: q.requestNote,
     emailedAt: q.emailedAt?.toISOString() ?? null,
     emailedTo: q.emailedTo,
+    // C-181: si el cliente ya abrió su enlace, y si la armó Numen
+    viewedAt: q.viewedAt?.toISOString() ?? null,
+    lastViewedAt: q.lastViewedAt?.toISOString() ?? null,
+    viewCount: q.viewCount,
+    deNumen: q.externalRef !== null,
     updatedAt: q.updatedAt.toISOString(),
   };
 }
 export type CotizacionAdmin = ReturnType<typeof aCotizacionAdmin>;
+
+/**
+ * Lo que ve Numen (C-181): el estado para el seguimiento, el enlace y los totales. Lista blanca: sin la cédula ni la IP
+ * de quien la aprobó y sin el correo ni el teléfono del cliente (Numen ya los tiene).
+ */
+export function aCotizacionNumen(q: CotizacionConLineas) {
+  const c = comun(q);
+  return {
+    id: q.id,
+    number: q.number,
+    ref: q.externalRef,
+    url: `${(process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com').replace(/\/$/, '')}/cotizacion/${q.token}`,
+    status: c.status,
+    estadoGuardado: q.status as EstadoCotizacion,
+    totales: c.totales,
+    taxPercent: c.taxPercent,
+    lineas: c.items.length,
+    sentAt: c.sentAt,
+    venceEl: c.venceEl,
+    viewedAt: q.viewedAt?.toISOString() ?? null,
+    lastViewedAt: q.lastViewedAt?.toISOString() ?? null,
+    viewCount: q.viewCount,
+    approvedAt: c.approvedAt,
+    approvedName: c.approvedName,
+    emailedAt: q.emailedAt?.toISOString() ?? null,
+    createdAt: c.createdAt,
+    updatedAt: q.updatedAt.toISOString(),
+  };
+}
+export type CotizacionNumen = ReturnType<typeof aCotizacionNumen>;
+
+/**
+ * El cliente abrió su enlace (C-181). Solo cuenta una cotización que el cliente puede ver (enviada o aprobada).
+ * Con SQL directo para no cambiar `updatedAt`: esa es la versión con que el equipo edita (C-170) y con la que el cliente
+ * aprueba, y una vista no es un cambio.
+ */
+export async function marcarVista(token: string): Promise<boolean> {
+  const q = await cotizacionPorToken(token);
+  if (!q) return false;
+  await prisma.$executeRaw`UPDATE quotes SET "viewedAt" = COALESCE("viewedAt", NOW()), "lastViewedAt" = NOW(), "viewCount" = "viewCount" + 1 WHERE id = ${q.id}`;
+  return true;
+}
+
+export function buscarCotizacionPorRef(ref: string) {
+  return prisma.quote.findUnique({ where: { externalRef: ref }, include: conLineas });
+}
+
+export function buscarCotizaciones(where: Prisma.QuoteWhereInput, take: number) {
+  return prisma.quote.findMany({ where, include: conLineas, orderBy: { createdAt: 'desc' }, take });
+}
 
 /** La cotización de un enlace, solo si ya se envió (un borrador no se ve con el enlace). */
 export async function cotizacionPorToken(token: string) {

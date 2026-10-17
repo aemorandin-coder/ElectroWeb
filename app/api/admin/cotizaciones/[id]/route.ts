@@ -5,7 +5,8 @@ import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { registrarAccionAdmin } from '@/lib/audit-log';
-import { aCotizacionAdmin, aprobarCotizacion, buscarCotizacion, cerrarCotizacion, guardarCotizacion, resumenInventario } from '@/lib/cotizaciones';
+import { aCotizacionAdmin, buscarCotizacion, guardarCotizacion } from '@/lib/cotizaciones';
+import { ACCIONES_COTIZACION, aplicarAccion } from '@/lib/cotizaciones/acciones';
 import { cotizacionSchema } from '@/lib/cotizaciones/core';
 import { exigirVersion, registrarCambio, respuestaCambiado } from '@/lib/edicion/registro';
 import { nombreDeSesion } from '@/lib/edicion/servidor';
@@ -59,7 +60,7 @@ export async function PUT(request: NextRequest, { params }: Contexto) {
   return NextResponse.json({ cotizacion: aCotizacionAdmin(cotizacion) });
 }
 
-const accionSchema = z.object({ accion: z.enum(['enviar', 'rechazar', 'reabrir', 'aprobar']) });
+const accionSchema = z.object({ accion: z.enum(ACCIONES_COTIZACION) });
 
 export async function PATCH(request: NextRequest, { params }: Contexto) {
   const session = await autorizado();
@@ -70,49 +71,13 @@ export async function PATCH(request: NextRequest, { params }: Contexto) {
   const datos = accionSchema.safeParse(await request.json().catch(() => null));
   if (!datos.success) return NextResponse.json({ error: 'Acción inválida' }, { status: 400 });
   const { accion } = datos.data;
-  const yaAprobada = () => NextResponse.json({ error: 'Esta cotización ya fue aprobada. Si no se concretó, márcala así para devolver el inventario.' }, { status: 409 });
-  const responder = async (extra: Record<string, unknown> = {}) => {
-    const cotizacion = await buscarCotizacion(id);
-    return NextResponse.json({ cotizacion: cotizacion ? aCotizacionAdmin(cotizacion) : null, ...extra });
-  };
-
-  if (accion === 'enviar' || accion === 'aprobar') {
-    if (actual.status === 'APPROVED') return yaAprobada();
-    if (actual.items.length === 0) return NextResponse.json({ error: 'Agrega al menos una línea antes.' }, { status: 400 });
-    if (!(Number(actual.totalUSD) > 0)) return NextResponse.json({ error: 'El total no puede ser $0: revisa los precios.' }, { status: 400 });
-  }
-
-  if (accion === 'aprobar') {
-    // El cliente aprobó por WhatsApp o en persona: lo registra el equipo. Descuenta el inventario igual que el enlace (C-148b)
-    const persona = actual.contactName || actual.clientName;
-    const aprobada = await aprobarCotizacion(
-      id,
-      { nombre: `${persona} (registrada por ${session.user.name || session.user.email || 'el equipo'})`, documento: actual.clientDoc, ip: null },
-      { estados: ['REQUESTED', 'DRAFT', 'SENT'] },
-    );
-    if (!aprobada) return yaAprobada();
-    const inventario = resumenInventario(aprobada.movimientos);
-    await registrarAccionAdmin(session, 'ORDER_STATUS_CHANGED', { type: 'QUOTE', id }, { numero: actual.number, de: actual.status, a: 'APPROVED', ...inventario }, request);
-    return responder({ inventario });
-  }
-
-  if (accion === 'rechazar') {
-    // También desde aprobada: devuelve al inventario lo que se había descontado
-    const cerrada = await cerrarCotizacion(id);
-    if (!cerrada) return NextResponse.json({ error: 'Esta cotización ya estaba cerrada.' }, { status: 409 });
-    const devuelto = cerrada.devuelto.map((m) => `${m.descontado} × ${m.title}`).join(', ');
-    await registrarAccionAdmin(session, 'ORDER_STATUS_CHANGED', { type: 'QUOTE', id }, { numero: actual.number, de: actual.status, a: 'REJECTED', ...(devuelto ? { devuelto } : {}) }, request);
-    return responder({ devuelto });
-  }
-
-  // enviar o reabrir: nunca sobre una aprobada (tiene inventario descontado)
-  if (actual.status === 'APPROVED') return yaAprobada();
-  // Enviar de nuevo reinicia la validez. Volver a borrador apaga el enlace, pero conserva que el cliente ya la vio
-  const cambio = accion === 'enviar' ? { status: 'SENT', sentAt: new Date() } : { status: 'DRAFT' };
-  const r = await prisma.quote.updateMany({ where: { id, status: { not: 'APPROVED' } }, data: cambio });
-  if (r.count !== 1) return yaAprobada();
-  await registrarAccionAdmin(session, 'ORDER_STATUS_CHANGED', { type: 'QUOTE', id }, { numero: actual.number, de: actual.status, a: cambio.status }, request);
-  return responder();
+  // Las reglas de cada acción son las mismas para el panel y para Numen (C-181, lib/cotizaciones/acciones.ts)
+  const r = await aplicarAccion(actual, accion, session.user.name || session.user.email || 'el equipo');
+  if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+  await registrarAccionAdmin(session, 'ORDER_STATUS_CHANGED', { type: 'QUOTE', id }, { numero: actual.number, de: r.de, a: r.a, ...r.extra.inventario, ...(r.extra.devuelto ? { devuelto: r.extra.devuelto } : {}) }, request);
+  const cotizacion = await buscarCotizacion(id);
+  const extra = accion === 'aprobar' ? { inventario: r.extra.inventario } : accion === 'rechazar' ? { devuelto: r.extra.devuelto ?? '' } : {};
+  return NextResponse.json({ cotizacion: cotizacion ? aCotizacionAdmin(cotizacion) : null, ...extra });
 }
 
 export async function DELETE(request: NextRequest, { params }: Contexto) {

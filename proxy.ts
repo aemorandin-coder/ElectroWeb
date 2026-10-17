@@ -146,6 +146,10 @@ export default withAuth(
           // Cotizaciones (C-148): pedirla desde la tienda y aprobarla con el enlace, sin cuenta. Captcha y límite en el handler
           pathname === '/api/cotizaciones' ||
           /^\/api\/cotizaciones\/[A-Za-z0-9_-]{16,40}$/.test(pathname) ||
+          // C-181: la página del cliente avisa que se abrió (límite en el handler)
+          /^\/api\/cotizaciones\/[A-Za-z0-9_-]{16,40}\/vista$/.test(pathname) ||
+          // C-181: Numen, de servidor a servidor. Se autoriza con NUMEN_API_KEY dentro del handler (lib/numen-auth.ts)
+          pathname.startsWith('/api/numen/') ||
           // Exige sesión dentro del handler y responde 401 en JSON (sin redirigir al login)
           pathname.startsWith('/api/product-requests') ||
           pathname.startsWith('/api/reviews') ||

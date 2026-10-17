@@ -11,7 +11,7 @@ import { getPublicSettings } from '@/lib/site-settings';
 import { qrSvg } from '@/lib/qr';
 import { aCotizacionPublica, cotizacionPorToken } from '@/lib/cotizaciones';
 import DocumentoCotizacion, { type EmpresaCotizacion } from '@/components/cotizaciones/DocumentoCotizacion';
-import { AprobarCotizacion, BotonImprimir } from '@/components/cotizaciones/AccionesCotizacion';
+import { AprobarCotizacion, BotonImprimir, MarcarVista } from '@/components/cotizaciones/AccionesCotizacion';
 import { adminNotice } from '@/lib/admin-ui';
 
 // La cotización que abre el cliente con su enlace (C-148): la lee, la imprime y la aprueba, sin cuenta.
@@ -116,6 +116,7 @@ export default async function CotizacionPage({ params }: { params: Promise<{ tok
       )}
 
       <DocumentoCotizacion cotizacion={publica} empresa={empresa} qr={qr} />
+      {!vistaPrevia && <MarcarVista token={token} />}
 
       {pendiente && <AprobarCotizacion token={token} total={formatUSD(publica.totales.totalUSD)} />}
     </main>

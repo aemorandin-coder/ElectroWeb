@@ -1159,6 +1159,13 @@ model Quote {
   // C-159: la última vez que el equipo la mandó por correo, y a qué dirección
   emailedAt      DateTime?
   emailedTo      String?
+  // C-181: cuándo el cliente abrió su enlace por primera vez, la última y cuántas veces. Lo anota la página del cliente
+  // al abrirse (la vista previa que arma WhatsApp con el enlace no cuenta, ni el equipo)
+  viewedAt       DateTime?
+  lastViewedAt   DateTime?
+  viewCount      Int       @default(0)
+  // C-181: la cotización de Numen (la app de precios del equipo) que la creó. Si Numen reintenta, no se duplica
+  externalRef    String?   @unique
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

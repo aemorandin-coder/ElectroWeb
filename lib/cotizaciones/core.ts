@@ -76,6 +76,15 @@ export function totalesCotizacion(
   return { totalUSD, baseUSD, ivaUSD, retencionUSD, netoUSD, anticipoUSD, saldoUSD: anticipoUSD === null ? null : centimos(netoUSD - anticipoUSD) };
 }
 
+/** "Viernes, 17 de octubre de 2026" y "17 de octubre de 2026", en hora de Venezuela (la hoja y el PDF, C-182) */
+export const fechaLarga = (iso: string) => {
+  const texto = new Date(iso).toLocaleDateString('es-VE', { timeZone: 'America/Caracas', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+};
+export const fechaCorta = (iso: string) => new Date(iso).toLocaleDateString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', year: 'numeric' });
+export const fechaHora = (iso: string) => new Date(iso).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+export const totalLinea = (precio: number, cantidad: number) => centimos(precio * cantidad);
+
 /** Hasta cuándo vale una cotización enviada. */
 export function venceEl(sentAt: string | Date | null, validityDays: number): Date | null {
   if (!sentAt) return null;
@@ -119,6 +128,10 @@ export const cotizacionSchema = z.object({
   ivaRetentionPercent: z.union([z.literal(0), z.literal(75), z.literal(100)], { message: 'La retención del IVA es 0, 75 o 100 %' }).default(0),
   conditions: opcional(3000),
   terms: opcional(3000),
+  // C-182: lo que no incluye y el anexo técnico (opcionales)
+  notice: opcional(2000),
+  annexTitle: opcional(120),
+  annex: z.string().max(8000, 'El anexo admite hasta 8.000 letras').optional().nullable().transform((v) => (v && v.trim() ? v.replace(/\r\n/g, '\n').trim() : null)),
   items: z.array(lineaSchema).max(60, 'Máximo 60 líneas'),
 });
 export type CotizacionEntrada = z.infer<typeof cotizacionSchema>;

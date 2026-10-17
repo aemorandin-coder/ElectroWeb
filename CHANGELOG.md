@@ -10,6 +10,28 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.16] - 2026-10-17
+### Cotizaciones 1.3.0 (C-182)
+- **El presupuesto con el estilo que eligió Luis**, el del presupuesto técnico de referencia:
+  - Arriba, el membrete con el recuadro del documento (número, fecha, validez y estado).
+  - El cliente en un recuadro y las partidas con el encabezado azul noche.
+  - Las condiciones y las formas de pago al lado de los totales, con el anticipo en verde y el saldo en rojo.
+  - Sigue mostrando todo lo de antes.
+- **Lo que no incluye y el anexo técnico.** Dos campos nuevos y opcionales en el editor:
+  - "Lo que no incluye" sale en un recuadro ámbar debajo de los totales.
+  - El anexo técnico va en una segunda hoja, con su título. Arma párrafos, listas ("- ") y tablas (líneas con "|").
+- **Imprimir en blanco y negro.** Al lado de "Imprimir o guardar en PDF" está "En blanco y negro", para impresoras sin color. Los fondos de color pasan a bordes y todo sale en tinta.
+- **Descargar PDF.** El enlace del cliente trae "Descargar PDF": el mismo presupuesto armado por la tienda, en hoja carta.
+  - Mientras está pendiente lleva el código QR, y en el teléfono se toca para aprobarlo.
+  - Numen lo pide para mandarlo por WhatsApp. Con `?tinta=bn` sale en blanco y negro.
+- **Base:** 3 columnas nuevas en `quotes` (aditivo). Sin variables ni crons nuevos.
+### Marco del panel 1.3.3 (C-182)
+- El PDF del presupuesto pasa sin sesión: la llave es el enlace del cliente, con límite.
+### Tienda 1.2.2 (C-182)
+- La hoja impresa del presupuesto pasa de 15 a 14 px de letra, para que quepa en una carta con el membrete nuevo, y tiene sus reglas de blanco y negro.
+- Leer una foto subida para las imágenes de compartir pasó a una pieza compartida.
+- Para los clientes no cambia nada.
+
 ## [1.0.0-rc.15] - 2026-10-17
 ### Cotizaciones 1.2.0 (C-181)
 - **Numen arma las cotizaciones.** Numen es la app de precios y proveedores del equipo. Ahora puede crear cotizaciones en la tienda, mandarlas al cliente (con el correo de siempre) y seguir cómo van, de servidor a servidor con una clave (`NUMEN_API_KEY`). La tienda pone el número, los totales y el IVA. El costo, el proveedor y el margen nunca llegan a la tienda.

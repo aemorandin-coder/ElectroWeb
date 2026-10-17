@@ -2,17 +2,17 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getServerSession } from 'next-auth';
-import { FiAlertTriangle, FiCheckCircle, FiEdit3, FiEye } from 'react-icons/fi';
+import { FiAlertTriangle, FiCheckCircle, FiDownload, FiEdit3, FiEye } from 'react-icons/fi';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { formatUSD } from '@/lib/currency';
-import { getPublicSettings } from '@/lib/site-settings';
 import { qrSvg } from '@/lib/qr';
 import { aCotizacionPublica, cotizacionPorToken } from '@/lib/cotizaciones';
-import DocumentoCotizacion, { type EmpresaCotizacion } from '@/components/cotizaciones/DocumentoCotizacion';
+import { empresaCotizacion, enlaceCotizacion } from '@/lib/cotizaciones/empresa';
+import DocumentoCotizacion from '@/components/cotizaciones/DocumentoCotizacion';
 import { AprobarCotizacion, BotonImprimir, MarcarVista } from '@/components/cotizaciones/AccionesCotizacion';
-import { adminNotice } from '@/lib/admin-ui';
+import { adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
 
 // La cotización que abre el cliente con su enlace (C-148): la lee, la imprime y la aprueba, sin cuenta.
 // Un borrador solo lo ve el equipo (vista previa antes de enviarla).
@@ -33,57 +33,24 @@ export default async function CotizacionPage({ params }: { params: Promise<{ tok
   }
   if (!cotizacion) notFound();
 
-  // Los datos para pagar: los métodos activos de Métodos de Pago, con los mismos campos que ve el cliente al pagar en
-  // la tienda (sin notas internas). Los ve quien tenga el enlace: decisión de Andrés del 01/10.
-  const [settings, sello, metodos] = await Promise.all([
-    getPublicSettings(),
-    // El sello firmado no va en los settings públicos: solo lo ve quien abre un presupuesto
-    prisma.companySettings.findUnique({ where: { id: 'default' }, select: { quoteStamp: true } }),
-    prisma.companyPaymentMethod.findMany({
-      where: { isActive: true },
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-      select: { name: true, bankName: true, accountNumber: true, accountType: true, holderName: true, holderId: true, phone: true, email: true, payId: true, walletAddress: true, network: true },
-    }),
-  ]);
-  const pagos = metodos.map((m) => ({
-    nombre: m.name,
-    lineas: [
-      m.bankName && `Banco: ${m.bankName}`,
-      m.accountNumber && `Cuenta${m.accountType ? ` ${m.accountType.toLowerCase()}` : ''}: ${m.accountNumber}`,
-      m.holderName && `Titular: ${m.holderName}`,
-      m.holderId && `Cédula o RIF: ${m.holderId}`,
-      m.phone && `Teléfono: ${m.phone}`,
-      m.email && `Correo: ${m.email}`,
-      m.payId && `ID de pago: ${m.payId}`,
-      m.walletAddress && `Dirección${m.network ? ` (${m.network})` : ''}: ${m.walletAddress}`,
-    ].filter((linea): linea is string => Boolean(linea)),
-  }));
-  const empresa: EmpresaCotizacion = {
-    marca: settings.companyName,
-    logo: settings.logo,
-    nombre: settings.legalName || settings.companyName,
-    lema: settings.tagline,
-    rif: settings.rif,
-    direccion: [settings.address, settings.city, settings.state].filter(Boolean).join(', ') || null,
-    telefono: settings.phone,
-    whatsapp: settings.whatsapp,
-    correo: settings.email,
-    sitio: (process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com').replace(/^https?:\/\//, ''),
-    tasaVES: settings.exchangeRateVES,
-    pagos,
-    lugar: [settings.city, settings.state].filter(Boolean).join(' - ') || null,
-    selloFirmado: sello?.quoteStamp || null,
-  };
+  const empresa = await empresaCotizacion();
   const publica = aCotizacionPublica(cotizacion);
   const pendiente = publica.status === 'SENT';
   // En la hoja impresa sin aprobar: el código que lleva de vuelta a esta página
-  const qr = pendiente ? qrSvg(`${(process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com').replace(/\/$/, '')}/cotizacion/${token}`) : null;
+  const qr = pendiente ? qrSvg(enlaceCotizacion(token)) : null;
 
   return (
     <main className="documento-imprimible min-h-dvh bg-surface px-3 pb-28 pt-4 sm:px-6 sm:pt-8 lg:pb-8 print:min-h-0 print:bg-white print:p-0">
       <div className="mx-auto mb-4 flex max-w-4xl flex-wrap items-center justify-between gap-3 print:hidden">
         <Link href="/" className="text-sm font-semibold text-brand-600 hover:text-brand-700">{empresa.nombre}</Link>
-        <BotonImprimir pendiente={pendiente} />
+        <div className="flex flex-wrap gap-2">
+          {/* C-182: el mismo presupuesto en PDF, para guardarlo o reenviarlo desde el teléfono */}
+          <a href={`/api/cotizaciones/${token}/pdf`} className={adminSecondaryButton} data-pdf>
+            <FiDownload className="h-4 w-4" aria-hidden="true" />
+            Descargar PDF
+          </a>
+          <BotonImprimir pendiente={pendiente} />
+        </div>
       </div>
 
       {vistaPrevia && (

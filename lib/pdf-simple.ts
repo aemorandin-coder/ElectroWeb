@@ -108,6 +108,15 @@ export function generarPdf(bloques: BloquePdf[], pie: string): Buffer {
     }
   }
 
+  return armar(paginas.map((ops, i) => [...ops,
+    `BT /F1 7.5 Tf 0.45 0.48 0.52 rg ${PAGINA.margen} 28 Td (${escapar(`${pie} · Página ${i + 1} de ${paginas.length}`)}) Tj ET`]), imagenes, PAGINA.ancho, PAGINA.alto);
+}
+
+interface Enlace { x: number; y: number; w: number; h: number; url: string }
+
+/** Escribe el archivo: las páginas (operaciones de dibujo), las imágenes JPEG, el tamaño de la hoja y los enlaces
+ *  de cada página (en coordenadas del PDF). */
+function armar(paginas: string[][], imagenes: Array<{ jpeg: Buffer; ancho: number; alto: number }>, anchoHoja: number, altoHoja: number, enlaces: Enlace[][] = []): Buffer {
   // Objetos: 1 catálogo, 2 páginas, 3 y 4 fuentes, luego imágenes, luego (contenido, página) por página
   const objetos: Buffer[] = [];
   const agregar = (contenido: Buffer | string) => {
@@ -126,10 +135,11 @@ export function generarPdf(bloques: BloquePdf[], pie: string): Buffer {
   const xobjects = idsImagen.map((id, i) => `/Im${i + 1} ${id} 0 R`).join(' ');
   const idsPagina: number[] = [];
   paginas.forEach((ops, i) => {
-    const pieOps = `BT /F1 7.5 Tf 0.45 0.48 0.52 rg ${PAGINA.margen} 28 Td (${escapar(`${pie} · Página ${i + 1} de ${paginas.length}`)}) Tj ET`;
-    const stream = Buffer.from([...ops, pieOps].join('\n'), 'latin1');
+    const stream = Buffer.from(ops.join('\n'), 'latin1');
     const idContenido = agregar(Buffer.concat([Buffer.from(`<< /Length ${stream.length} >>\nstream\n`, 'latin1'), stream, Buffer.from('\nendstream', 'latin1')]));
-    idsPagina.push(agregar(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGINA.ancho} ${PAGINA.alto}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>${xobjects ? ` /XObject << ${xobjects} >>` : ''} >> /Contents ${idContenido} 0 R >>`));
+    const idsEnlace = (enlaces[i] ?? []).map((e) => agregar(`<< /Type /Annot /Subtype /Link /Rect [${[e.x, e.y, e.x + e.w, e.y + e.h].map((n) => n.toFixed(2)).join(' ')}] /Border [0 0 0] /A << /S /URI /URI (${escapar(e.url)}) >> >>`));
+    const anotaciones = idsEnlace.length ? ` /Annots [${idsEnlace.map((id) => `${id} 0 R`).join(' ')}]` : '';
+    idsPagina.push(agregar(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${anchoHoja} ${altoHoja}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>${xobjects ? ` /XObject << ${xobjects} >>` : ''} >>${anotaciones} /Contents ${idContenido} 0 R >>`));
   });
   objetos[1] = Buffer.from(`<< /Type /Pages /Kids [${idsPagina.map((id) => `${id} 0 R`).join(' ')}] /Count ${idsPagina.length} >>`, 'latin1');
 
@@ -145,4 +155,153 @@ export function generarPdf(bloques: BloquePdf[], pie: string): Buffer {
   const xref = [`xref\n0 ${objetos.length + 1}\n0000000000 65535 f \n`, ...offsets.map((o) => `${String(o).padStart(10, '0')} 00000 n \n`)].join('');
   partes.push(Buffer.from(`${xref}trailer\n<< /Size ${objetos.length + 1} /Root 1 0 R >>\nstartxref\n${pos}\n%%EOF\n`, 'latin1'));
   return Buffer.concat(partes);
+}
+
+/* ── Lienzo libre (C-182): para documentos con diseño, como el presupuesto ──
+ * Las coordenadas van desde la esquina de arriba a la izquierda, en puntos (72 por pulgada). La hoja es carta. */
+
+export type Rgb = [number, number, number];
+
+/** "#0a1530" → [0.04, 0.08, 0.19] */
+export function rgb(hex: string): Rgb {
+  const n = Number.parseInt(hex.replace('#', ''), 16);
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+}
+const color = (c: Rgb) => c.map((v) => v.toFixed(3)).join(' ');
+
+export interface EstiloTexto { tam: number; negrita?: boolean; color?: Rgb; alinear?: 'izq' | 'der' | 'centro' }
+export interface MarcaLienzo { ops: number; enlaces: number }
+
+export class Lienzo {
+  readonly ancho = 612;
+  readonly alto = 792;
+  private paginas: string[][] = [[]];
+  private enlaces: Enlace[][] = [[]];
+  private actual = 0;
+  private imagenes: Array<{ jpeg: Buffer; ancho: number; alto: number }> = [];
+
+  get numeroDePaginas() { return this.paginas.length; }
+  pagina() {
+    this.paginas.push([]);
+    this.enlaces.push([]);
+    this.actual = this.paginas.length - 1;
+  }
+  /** Dibuja en una página ya hecha (para el pie con "Página 1 de 2", al final) */
+  enPagina(n: number, dibujar: () => void) {
+    const antes = this.actual;
+    this.actual = n;
+    dibujar();
+    this.actual = antes;
+  }
+  /** Hasta dónde va dibujada la página. Con `deshacer` se borra lo que vino después (para mantener juntos un bloque:
+   *  se dibuja y, si no cupo, se borra y se dibuja en la hoja siguiente); con `debajo`, se dibuja debajo de eso (el
+   *  fondo de un recuadro, que se mide después de escribirlo). */
+  get posicion(): MarcaLienzo { return { ops: this.paginas[this.actual].length, enlaces: this.enlaces[this.actual].length }; }
+  deshacer(m: MarcaLienzo) {
+    this.paginas[this.actual].length = m.ops;
+    this.enlaces[this.actual].length = m.enlaces;
+  }
+  debajo(m: MarcaLienzo, dibujar: () => void) {
+    const ops = this.paginas[this.actual];
+    const antes = ops.length;
+    dibujar();
+    ops.splice(m.ops, 0, ...ops.splice(antes));
+  }
+  private op(s: string) { this.paginas[this.actual].push(s); }
+  private yPdf(y: number) { return this.alto - y; }
+
+  /** Lo que se dibuje dentro sale girado `grados` (positivo: en el sentido de las agujas del reloj) alrededor de (x, y) */
+  girado(x: number, y: number, grados: number, dibujar: () => void) {
+    const a = (-grados * Math.PI) / 180;
+    const [c, s] = [Math.cos(a), Math.sin(a)];
+    const yp = this.yPdf(y);
+    this.op(`q 1 0 0 1 ${x.toFixed(2)} ${yp.toFixed(2)} cm ${c.toFixed(4)} ${s.toFixed(4)} ${(-s).toFixed(4)} ${c.toFixed(4)} 0 0 cm 1 0 0 1 ${(-x).toFixed(2)} ${(-yp).toFixed(2)} cm`);
+    dibujar();
+    this.op('Q');
+  }
+
+  poligono(puntos: Array<[number, number]>, relleno: Rgb) {
+    this.op(`q ${color(relleno)} rg ${puntos.map(([x, y], i) => `${x.toFixed(2)} ${this.yPdf(y).toFixed(2)} ${i ? 'l' : 'm'}`).join(' ')} h f Q`);
+  }
+
+  /** Un código QR (matriz de módulos oscuros) en un cuadrado de `lado` puntos, con su margen blanco */
+  qr(x: number, y: number, lado: number, matriz: boolean[][], c: Rgb) {
+    const n = matriz.length + 8;
+    const m = lado / n;
+    const cuadros: string[] = [];
+    matriz.forEach((fila, f) => fila.forEach((oscuro, k) => {
+      if (oscuro) cuadros.push(`${(x + (k + 4) * m).toFixed(2)} ${this.yPdf(y + (f + 5) * m).toFixed(2)} ${(m + 0.05).toFixed(2)} ${(m + 0.05).toFixed(2)} re`);
+    }));
+    this.op(`q ${color(c)} rg ${cuadros.join(' ')} f Q`);
+  }
+
+  /** Una zona que se toca o se pulsa para abrir `url` (en el teléfono, el PDF abre el enlace) */
+  enlace(x: number, y: number, w: number, h: number, url: string) {
+    this.enlaces[this.actual].push({ x, y: this.yPdf(y + h), w, h, url });
+  }
+
+  medir(t: string, tam: number, negrita = false) { return ancho(t, negrita, tam); }
+  lineas(t: string, anchoMax: number, tam: number, negrita = false) { return partirLineas(t, anchoMax, negrita, tam); }
+
+  /** Rectángulo (con esquinas redondeadas si `radio`): relleno, borde o los dos */
+  rect(x: number, y: number, w: number, h: number, o: { relleno?: Rgb; borde?: Rgb; grosor?: number; radio?: number }) {
+    const r = Math.min(o.radio ?? 0, w / 2, h / 2);
+    const x0 = x, y0 = this.yPdf(y + h), x1 = x + w, y1 = this.yPdf(y);
+    let camino: string;
+    if (r > 0) {
+      const k = 0.5523 * r;
+      camino = [
+        `${(x0 + r).toFixed(2)} ${y0.toFixed(2)} m`, `${(x1 - r).toFixed(2)} ${y0.toFixed(2)} l`,
+        `${(x1 - r + k).toFixed(2)} ${y0.toFixed(2)} ${x1.toFixed(2)} ${(y0 + r - k).toFixed(2)} ${x1.toFixed(2)} ${(y0 + r).toFixed(2)} c`,
+        `${x1.toFixed(2)} ${(y1 - r).toFixed(2)} l`,
+        `${x1.toFixed(2)} ${(y1 - r + k).toFixed(2)} ${(x1 - r + k).toFixed(2)} ${y1.toFixed(2)} ${(x1 - r).toFixed(2)} ${y1.toFixed(2)} c`,
+        `${(x0 + r).toFixed(2)} ${y1.toFixed(2)} l`,
+        `${(x0 + r - k).toFixed(2)} ${y1.toFixed(2)} ${x0.toFixed(2)} ${(y1 - r + k).toFixed(2)} ${x0.toFixed(2)} ${(y1 - r).toFixed(2)} c`,
+        `${x0.toFixed(2)} ${(y0 + r).toFixed(2)} l`,
+        `${x0.toFixed(2)} ${(y0 + r - k).toFixed(2)} ${(x0 + r - k).toFixed(2)} ${y0.toFixed(2)} ${(x0 + r).toFixed(2)} ${y0.toFixed(2)} c h`,
+      ].join(' ');
+    } else {
+      camino = `${x0.toFixed(2)} ${y0.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re`;
+    }
+    const pintar = o.relleno && o.borde ? 'B' : o.relleno ? 'f' : 'S';
+    this.op(`q ${o.relleno ? `${color(o.relleno)} rg ` : ''}${o.borde ? `${color(o.borde)} RG ${(o.grosor ?? 1).toFixed(2)} w ` : ''}${camino} ${pintar} Q`);
+  }
+
+  linea(x1: number, y1: number, x2: number, y2: number, c: Rgb, grosor = 1) {
+    this.op(`q ${color(c)} RG ${grosor.toFixed(2)} w ${x1.toFixed(2)} ${this.yPdf(y1).toFixed(2)} m ${x2.toFixed(2)} ${this.yPdf(y2).toFixed(2)} l S Q`);
+  }
+
+  /** Una línea de texto con la base en `y` (alineada a la izquierda, a la derecha o centrada en `x`) */
+  texto(x: number, y: number, t: string, e: EstiloTexto) {
+    const w = ancho(t, Boolean(e.negrita), e.tam);
+    const xx = e.alinear === 'der' ? x - w : e.alinear === 'centro' ? x - w / 2 : x;
+    this.op(`BT /${e.negrita ? 'F2' : 'F1'} ${e.tam} Tf ${color(e.color ?? [0.13, 0.15, 0.16])} rg ${xx.toFixed(2)} ${this.yPdf(y).toFixed(2)} Td (${escapar(t)}) Tj ET`);
+    return w;
+  }
+
+  /** Un párrafo cortado al ancho, desde `y` (arriba de la primera línea). Devuelve dónde termina. */
+  parrafo(x: number, y: number, anchoMax: number, t: string, e: EstiloTexto & { interlinea?: number }) {
+    const alto = e.tam * (e.interlinea ?? 1.35);
+    let yy = y;
+    for (const linea of partirLineas(t, anchoMax, Boolean(e.negrita), e.tam)) {
+      yy += alto;
+      this.texto(e.alinear === 'der' ? x + anchoMax : e.alinear === 'centro' ? x + anchoMax / 2 : x, yy - alto * 0.25, linea, e);
+    }
+    return yy;
+  }
+
+  altoParrafo(anchoMax: number, t: string, e: EstiloTexto & { interlinea?: number }) {
+    return partirLineas(t, anchoMax, Boolean(e.negrita), e.tam).length * e.tam * (e.interlinea ?? 1.35);
+  }
+
+  /** Una imagen JPEG (RGB). La misma imagen dibujada varias veces va una sola vez en el archivo. */
+  imagen(jpeg: Buffer, anchoPx: number, altoPx: number, x: number, y: number, w: number, h: number) {
+    let n = this.imagenes.findIndex((im) => im.jpeg === jpeg) + 1;
+    if (!n) n = this.imagenes.push({ jpeg, ancho: anchoPx, alto: altoPx });
+    this.op(`q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${this.yPdf(y + h).toFixed(2)} cm /Im${n} Do Q`);
+  }
+
+  pdf(): Buffer {
+    return armar(this.paginas, this.imagenes, this.ancho, this.alto, this.enlaces);
+  }
 }

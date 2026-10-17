@@ -823,10 +823,48 @@ html, body { overflow-x: clip; }
     padding: 0 !important;
     background: white !important;
   }
-  /* Un punto menos de letra y de espacios (todo va en rem): un presupuesto normal, con sus formas de pago y sus
-     firmas, cabe en una hoja carta */
+  /* Letra y espacios al 87,5 % (todo va en rem; C-182): el presupuesto con su membrete, sus formas de pago y sus
+     firmas cabe en una hoja carta, como el presupuesto técnico de referencia. En pantalla la letra no baja de 12 px. */
   html:has(.documento-imprimible) {
-    font-size: 15px;
+    font-size: 14px;
+  }
+  /* C-182: en blanco y negro (impresoras sin color). Los fondos de color pasan a bordes y todo sale en tinta: el
+     encabezado azul noche gastaría tinta negra y se perdería el contraste de los recuadros de color. */
+  [data-tinta='bn'] [data-bn='cabeza'] {
+    background: transparent !important;
+    color: var(--color-ink) !important;
+    border-bottom: 2px solid var(--color-ink);
+  }
+  [data-tinta='bn'] [data-bn='resaltado'] {
+    background: transparent !important;
+    color: var(--color-ink) !important;
+  }
+  [data-tinta='bn'] [data-bn='resaltado'] td {
+    border-top: 1px solid var(--color-ink);
+    border-bottom: 1px solid var(--color-ink);
+  }
+  [data-tinta='bn'] [data-bn='nota'],
+  [data-tinta='bn'] [data-bn='sello'],
+  [data-tinta='bn'] [data-bn='recuadro'] {
+    background: transparent !important;
+    border-color: var(--color-ink) !important;
+    color: var(--color-ink) !important;
+  }
+  [data-tinta='bn'] [data-bn='tinta'],
+  [data-tinta='bn'] [data-bn='tinta'] * {
+    color: var(--color-ink) !important;
+    border-color: var(--color-ink) !important;
+  }
+  [data-tinta='bn'] [data-bn='raya'] {
+    border-color: var(--color-ink) !important;
+  }
+  [data-tinta='bn'] [data-bn='imagen'] {
+    filter: grayscale(1) contrast(1.2);
+  }
+  [data-tinta='bn'] .text-brand-950,
+  [data-tinta='bn'] .text-brand-500,
+  [data-tinta='bn'] .text-brand-600 {
+    color: var(--color-ink) !important;
   }
 }
 

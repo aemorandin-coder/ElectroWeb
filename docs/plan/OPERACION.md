@@ -128,6 +128,17 @@ Una política de qué puede cargar la tienda: scripts, conexiones y marcos solo 
     - **Por SSH, `pgrep -f` o `grep` encuentran su propio comando** (un `kill` así cortó la sesión). Para saber si algo escucha, `ss -tlnH | grep ':PUERTO '`.
     - **Los registros de nginx** (`/var/log/nginx/`) solo se leen con `sudo`, que pide clave: no se ven desde la sesión de Claude.
     - **npm 11.19 del servidor:** avisa "not yet covered by allowScripts". Es normal y no frena nada (se bloqueará en npm 12: `PLAN.md` §5.2).
+  - **Más trampas (17 y 18/10, al probar C-182 y C-183):**
+    - **Playwright no está en el repositorio.** Se usa el Chrome instalado (`channel: 'chrome'`) con `NODE_PATH=C:/tmp/pw_test/node_modules`.
+      - `waitUntil: 'networkidle'` nunca llega en la tienda, porque el canal en vivo queda abierto.
+      - En su lugar, `load` y una espera.
+    - **Git Bash convierte en ruta de Windows** una variable que empieza con `/`, por ejemplo una `/api/uploads/…` para la prueba del sello.
+      - No da error: el valor llega cambiado, y el PDF salió sin el sello que se quería probar.
+      - Se evita con `MSYS_NO_PATHCONV=1 MSYS2_ENV_CONV_EXCL=<VARIABLE>`.
+    - **El PDF del servidor se revisa viéndolo**, pasado a imagen con `uv run --with pymupdf==1.24.10`.
+      - El QR se lee con `opencv-python-headless==4.10.0.84` y tiene que dar el enlace exacto.
+    - **Un `next start` en segundo plano puede seguir vivo** después de detener la tarea, con el puerto tomado.
+      - Se busca por su línea de comando y se corta por PID.
 - **Deploy desde la laptop, con la aprobación del equipo para ese deploy** (`CLAUDE.md`, regla 2):
   - **Antes:** `git describe --tags --abbrev=0`, `git status -sb` y la memoria libre.
   - **Respaldo** (si hace falta): el `pg_dump` del bloque.
@@ -139,6 +150,8 @@ Una política de qué puede cargar la tienda: scripts, conexiones y marcos solo 
   - **Dónde están las etiquetas:** con `grep -bo`; WhatsApp exige que estén en los primeros 300 KB del HTML.
 - **Antes de tocar nada:** `git status`, `git log -3 --format='%h %an %s'` y `git branch --show-current`. Gemini a veces trabaja en la carpeta principal.
 - **Commits de Claude:** `git -c user.name="Claude" -c user.email="claude@electroshop.local" commit …` (la carpeta tiene configurado el nombre de Gemini).
+  - Antes del push, `git log --format='%h %an %s' origin/main..` tiene que decir solo Claude.
+  - Los commits de C-182 salieron con el nombre global de la laptop, y ya no se cambian (habría que forzar el push).
 - **Merge:** `git merge --no-ff --no-edit claude/C-XX`, después `git diff main claude/C-XX` vacío, buscar credenciales y `git push`.
 - **Verificación de código:** `npm run lint`, `npx tsc --noEmit` y `npm run build`. ESLint: 0 errores en `app`, `components`, `lib` y `contexts`, y 5 avisos a propósito (16/10).
 

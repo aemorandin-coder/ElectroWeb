@@ -1,10 +1,25 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `0ce73f7`, versión `v1.0.0-rc.16`, el 18/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `2b5a5fd`, versión `v1.0.0-rc.17`, el 18/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 18/10 · C-183 (de rc.16 a `v1.0.0-rc.17`)
+Subido el 18/10 con Claude conectado y la aprobación de Luis para este deploy (`estado/C-183.md`). La tienda no se cortó.
+- **C-183 · Las condiciones y las formas de pago, a lo ancho:**
+  - Los totales quedan pegados a las partidas.
+  - Las condiciones (dos columnas desde tres) y las formas de pago (una por línea) van debajo, a lo ancho.
+  - Igual en la página, la hoja impresa y el PDF.
+- **Pasos:** `git pull --ff-only` y `bash scripts/deploy.sh --sin-pull`: compiló 185 de 185 en `.next-a` y cambió.
+- **Comprobado en producción:**
+  - `v1.0.0-rc.17`, escuchando en `127.0.0.1:3000`.
+  - Inicio y `/cotizacion` con `200`.
+  - La cotización de producción (PRES-2026-0001) con las secciones nuevas. Su PDF da `200 application/pdf`, en una hoja, con los totales al lado de las partidas y las formas de pago una por línea.
+  - En el registro de errores, solo el ruido conocido de los bots.
+- **SQL:** ninguno. Sin variables ni crons.
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.16 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ## 18/10 · C-182 (de rc.15 a `v1.0.0-rc.16`)
 Subido el 18/10 con Claude conectado y la aprobación de Luis para este deploy (`estado/C-182.md`). La tienda no se cortó.

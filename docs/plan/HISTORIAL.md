@@ -1,10 +1,35 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `d4cb51c`, versión `v1.0.0-rc.15`, el 17/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `0ce73f7`, versión `v1.0.0-rc.16`, el 18/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 18/10 · C-182 (de rc.15 a `v1.0.0-rc.16`)
+Subido el 18/10 con Claude conectado y la aprobación de Luis para este deploy (`estado/C-182.md`). La tienda no se cortó.
+- **C-182 · El presupuesto con el estilo de la referencia, en blanco y negro y en PDF:**
+  - El documento con la maqueta A que eligió Luis.
+  - "Lo que no incluye" y el anexo técnico en el editor.
+  - El botón "En blanco y negro".
+  - "Descargar PDF" en el enlace del cliente (`/api/cotizaciones/<token>/pdf`), y el PDF para Numen (`/api/numen/cotizaciones/<id>/pdf`).
+- **Pasos que se dieron:**
+  1. Respaldo `~/respaldo-antes-c182.dump` (1,1 MB, 72 tablas).
+  2. `git pull --ff-only` y `bash scripts/deploy.sh --sin-pull`: se detuvo y mostró el SQL, igual al del bloque.
+  3. El SQL, a mano y en una transacción (`psql -v ON_ERROR_STOP=1 -1`): las 3 columnas quedaron como `text` y aceptan vacío.
+  4. `bash scripts/deploy.sh --sin-pull` otra vez: compiló 185 de 185 en `.next-b` y cambió.
+- **SQL aplicado:**
+  ```sql
+  ALTER TABLE "quotes" ADD COLUMN "annex" TEXT, ADD COLUMN "annexTitle" TEXT, ADD COLUMN "notice" TEXT;
+  ```
+- **Comprobado en producción:**
+  - `v1.0.0-rc.16`, escuchando en `127.0.0.1:3000`.
+  - Inicio, `/cotizacion` y los ajustes públicos con `200`.
+  - El PDF con un token que no existe da `404`, y el de Numen sin clave, `503` (todavía no hay clave).
+  - **La cotización de producción** (aprobada, del panel) abre con "Descargar PDF" y "En blanco y negro". Su PDF da `200 application/pdf`, una hoja, en color y en blanco y negro, con el sello dibujado, la aprobación y las formas de pago.
+  - En el registro de errores, solo el ruido conocido de los bots.
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.15 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas nuevas no molestan al código anterior y no se quitan.
+- **Falta:** las pruebas del equipo (`SIGUIENTE.md` §2) y, del lado de Numen, mandar los campos nuevos y el PDF por watencion.
 
 ## 17/10 · C-181 (de rc.14 a `v1.0.0-rc.15`)
 Subido el 17/10 con Claude conectado, con la aprobación de Luis para este deploy (`estado/C-181.md`). La tienda no se cortó.

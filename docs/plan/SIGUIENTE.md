@@ -1,13 +1,14 @@
-# Lo de ahora (actualizado 2026-10-18, C-182 · producción en 1.0.0-rc.16)
+# Lo de ahora (actualizado 2026-10-18, C-183 · producción en 1.0.0-rc.16, por subir 1.0.0-rc.17)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.16`** (`0ce73f7`, C-182), subida el 18/10 con Claude conectado y la aprobación de Luis. Es igual al código de `main`. **No hay código por subir.**
+- **Producción: `v1.0.0-rc.16`** (`0ce73f7`, C-182), subida el 18/10 con Claude conectado y la aprobación de Luis. **Por subir: `v1.0.0-rc.17` (C-183)**, sin cambio de base (§2).
 - **Pedido del 16 y 17/10 (Luis): cotizaciones desde Numen.** Numen es la app de precios y proveedores del equipo, en un repositorio privado aparte. Las cotizaciones las arma Numen y las emite la web.
   - **C-181:** la entrada de servidor a servidor, y cuándo el cliente abre su enlace. Hecha (`estado/C-181.md`).
   - **C-182:** el documento con el estilo del presupuesto técnico (Luis eligió la maqueta A, con impresión en blanco y negro) y su PDF. Hecha y en producción el 18/10 (`estado/C-182.md`).
+  - **C-183:** las condiciones y las formas de pago a lo ancho, debajo de los totales (Luis eligió la variante A el 18/10). Hecha, por subir (`estado/C-183.md`).
 - **Pedido del 16/10 (Luis, del equipo, trabajando con Claude desde su laptop):** la salud del servidor y las imágenes que se ven al compartir un enlace de la tienda. Primero el plan y después el código. Tareas:
   - **C-176 · Mantenimiento del servidor:** hecha el 16/10 (`estado/C-176.md`, `HISTORIAL.md`). El sistema quedó al día, con Node 24, kernel nuevo, fail2ban, HTTP/2 y registros con tope. La tienda estuvo caída unos 10 segundos.
   - **C-177 · Dependencias seguras:** hecha y en producción el 16/10. Next, sharp y nodemailer quedaron en versiones sin las fallas conocidas, y la tienda escucha solo en `127.0.0.1`.
@@ -23,7 +24,24 @@
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.16`)
+## 2. Deploy pendiente: `v1.0.0-rc.17` (C-183)
+**Las condiciones y las formas de pago, a lo ancho** (`estado/C-183.md`).
+- Los totales quedan pegados a las partidas, y las condiciones y las formas de pago van debajo, a lo ancho.
+- Aplica a la página, a la hoja impresa y al PDF.
+- **Commit que debe tener producción:** el merge de `claude/C-183` en `main`. En el servidor, `git describe --tags` debe mostrar `v1.0.0-rc.17`.
+- **Sin cambio de base,** variables, crons ni nginx. Luis aprobó subirla.
+
+**Pasos (en la terminal del servidor de la tienda, en la carpeta de la tienda):** `git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+
+**Comprobar (Claude, desde afuera):**
+- `v1.0.0-rc.17`.
+- Inicio y `/cotizacion` con `200`.
+- La cotización de producción con "Formas de pago" a lo ancho, y su PDF con `200 application/pdf`.
+
+**Prueba del equipo (2 minutos):** abrir el enlace de una cotización, "Imprimir o guardar en PDF". Los totales están al lado de las partidas, y las condiciones y las formas de pago van debajo, a lo ancho.
+
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.16 && npm install && bash scripts/deploy.sh --sin-pull`.
+
 Los bloques de C-182 (rc.16) y C-181 (rc.15), con el SQL, lo comprobado y su vuelta atrás, pasaron a `HISTORIAL.md`.
 
 ### Por confirmar de rc.16 (C-182, unos 10 minutos)

@@ -265,42 +265,17 @@ export async function presupuestoPdf(c: CotizacionPublica, empresa: EmpresaCotiz
   });
   y += 10;
 
-  // Las condiciones al lado de los totales
+  // Los totales, a la derecha y pegados a las partidas (C-183, variante A que eligió Luis). Antes iban al lado de una
+  // columna angosta con las condiciones y las formas de pago: con pocos totales quedaba un hueco, y con muchas
+  // condiciones el bloque entero saltaba de hoja.
   const { totales } = c;
   const condiciones = lineasDeTexto(c.conditions);
   const conRetencion = totales.retencionUSD > 0;
   junto(() => {
-    const top = y;
-    const wc = ((W - 16) * 0.95) / 2.25;
-    const xc = MX + 10;
-    const anchoC = wc - 20;
-    const finCondiciones = recuadro(MX, top, wc, { fondo: P.fondo, borde: P.linea }, () => {
-      let yy = top + 7;
-      const texto = { tam: T.xs, color: P.suave };
-      if (condiciones.length > 0) {
-        fila(xc, yy, 'Condiciones comerciales', { tam: T.sm, negrita: true, color: P.noche });
-        yy += T.sm * 1.4;
-        for (const linea of condiciones) {
-          fila(xc, yy, '•', texto);
-          yy = escribir(xc + 8, yy, anchoC - 8, linea, texto, 1.35);
-        }
-        yy += 4;
-      }
-      fila(xc, yy, 'Formas de pago', { tam: T.sm, negrita: true, color: P.noche });
-      yy += T.sm * 1.4;
-      if (empresa.pagos.length > 0) {
-        for (const pago of empresa.pagos) yy = conEtiqueta(xc, yy, anchoC, `${pago.nombre}:`, pago.lineas.map((x) => x.replace(/^[^:]+: /, '')).join(' · '), { tam: T.xs, colorEtiqueta: P.tinta, color: P.suave });
-      } else {
-        yy = escribir(xc, yy, anchoC, 'Las que la tienda tenga activas al momento de pagar.', texto, 1.35);
-      }
-      yy += 3;
-      return escribir(xc, yy, anchoC, `Al pagar, avísanos${empresa.whatsapp ? ` por WhatsApp al ${empresa.whatsapp}` : ''} con el número de este presupuesto (${c.number}) para confirmar el pedido.`, texto, 1.35);
-    });
-
-    const xt = MX + wc + 16;
-    const wt = W - wc - 16;
+    const wt = (W * 7) / 12;
+    const xt = MX + W - wt;
     const derT = xt + wt - 8;
-    let yy = top;
+    let yy = y;
     /** Una fila de los totales: la etiqueta a la izquierda (cortada si no cabe) y el monto a la derecha */
     const total = (etiqueta: string, valor: string, e: { tamE: number; negritaE?: boolean; colorE: Rgb; tamV: number; colorV: Rgb; negritaV?: boolean }, alto = 1.6) => {
       const wv = L.medir(valor, e.tamV, e.negritaV ?? true);
@@ -341,7 +316,7 @@ export async function presupuestoPdf(c: CotizacionPublica, empresa: EmpresaCotiz
       resaltado(`Anticipo (${c.advancePercent} %${conRetencion ? ' del neto' : ''})`, formatUSD(totales.anticipoUSD), P.verde, COLOR.verdeFondo, T.base);
       resaltado(`Saldo contra entrega (${100 - (c.advancePercent ?? 0)} %)`, formatUSD(totales.saldoUSD), P.rojo, COLOR.rojoFondo, T.sm);
     }
-    return Math.max(finCondiciones, yy) + 10;
+    return yy + 10;
   });
 
   // Lo que no incluye, en ámbar
@@ -360,6 +335,75 @@ export async function presupuestoPdf(c: CotizacionPublica, empresa: EmpresaCotiz
       L.rect(MX, top, 3.5, fin - top, { relleno: P.ambarBarra });
       return fin + 10;
     });
+  }
+
+  // Las condiciones y las formas de pago, a lo ancho (C-183). Cada condición y cada forma de pago es una pieza: si no
+  // cabe, sigue en la otra hoja, sin dejar huecos.
+  const texto = { tam: T.xs, color: P.suave };
+  /** El título de una sección con su raya arriba, como "Entrega y garantía". `alto`: lo que tiene que caber debajo */
+  const seccion = (titulo: string, alto: number) => {
+    asegurar(7 + T.sm * 1.4 + alto);
+    if (y > ARRIBA + 30) L.linea(MX, y, MX + W, y, P.linea, 0.75);
+    y += 7;
+    fila(MX, y, titulo, { tam: T.sm, negrita: true, color: P.noche });
+    y += T.sm * 1.4;
+  };
+  const vineta = (x: number, top: number, ancho: number, linea: string) => {
+    fila(x, top, '•', texto);
+    return escribir(x + 8, top, ancho - 8, linea, texto, 1.35) + 1.5;
+  };
+  const altoVineta = (linea: string, ancho: number) => L.altoParrafo(ancho - 8, linea, { ...texto, interlinea: 1.35 }) + 1.5;
+
+  if (condiciones.length > 0) {
+    // Desde tres condiciones, en dos columnas (como la hoja), si caben en lo que queda de la hoja; si no, una debajo de otra
+    const wcol = (W - 24) / 2;
+    const altos = condiciones.map((linea) => altoVineta(linea, wcol));
+    let corte = 1;
+    let mejor = Infinity;
+    for (let k = 1; k < condiciones.length; k++) {
+      const alto = Math.max(altos.slice(0, k).reduce((s, h) => s + h, 0), altos.slice(k).reduce((s, h) => s + h, 0));
+      if (alto < mejor) { mejor = alto; corte = k; }
+    }
+    if (condiciones.length > 2 && y + 7 + T.sm * 1.4 + mejor <= ABAJO) {
+      seccion('Condiciones comerciales', mejor);
+      let yIzq = y;
+      let yDer = y;
+      condiciones.slice(0, corte).forEach((linea) => { yIzq = vineta(MX, yIzq, wcol, linea); });
+      condiciones.slice(corte).forEach((linea) => { yDer = vineta(MX + wcol + 24, yDer, wcol, linea); });
+      y = Math.max(yIzq, yDer);
+    } else {
+      seccion('Condiciones comerciales', altoVineta(condiciones[0], W));
+      for (const linea of condiciones) {
+        asegurar(altoVineta(linea, W));
+        y = vineta(MX, y, W, linea);
+      }
+    }
+    y += 6;
+  }
+
+  // Las formas de pago: una fila por método, con el nombre a la izquierda y sus datos a lo ancho
+  {
+    const wNombre = 104;
+    const filas = empresa.pagos.map((pago) => {
+      const datos = pago.lineas.map((x) => x.replace(/^[^:]+: /, '')).join(' · ');
+      const alto = Math.max(L.altoParrafo(wNombre - 10, pago.nombre, { tam: T.xs, negrita: true, interlinea: 1.35 }), L.altoParrafo(W - wNombre, datos, { ...texto, interlinea: 1.35 })) + 4;
+      return { nombre: pago.nombre, datos, alto };
+    });
+    seccion('Formas de pago', filas[0]?.alto ?? T.xs * 1.35);
+    if (filas.length > 0) {
+      filas.forEach((f, i) => {
+        asegurar(f.alto);
+        const finNombre = escribir(MX, y + 2, wNombre - 10, f.nombre, { tam: T.xs, negrita: true, color: P.tinta }, 1.35);
+        const finDatos = escribir(MX + wNombre, y + 2, W - wNombre, f.datos, texto, 1.35);
+        y = Math.max(finNombre, finDatos) + 2;
+        if (i < filas.length - 1) L.linea(MX, y, MX + W, y, P.linea, 0.5);
+      });
+    } else {
+      y = escribir(MX, y, W, 'Las que la tienda tenga activas al momento de pagar.', texto, 1.35);
+    }
+    const aviso = `Al pagar, avísanos${empresa.whatsapp ? ` por WhatsApp al ${empresa.whatsapp}` : ''} con el número de este presupuesto (${c.number}) para confirmar el pedido.`;
+    asegurar(L.altoParrafo(W, aviso, { ...texto, interlinea: 1.35 }) + 3);
+    y = escribir(MX, y + 3, W, aviso, texto, 1.35) + 8;
   }
 
   // La garantía y las firmas van juntas (con una garantía muy larga, la garantía se deja partir)

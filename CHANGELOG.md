@@ -10,6 +10,14 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.17] - 2026-10-18
+### Cotizaciones 1.3.1 (C-183)
+- **Las condiciones y las formas de pago, a lo ancho** (pedido de Luis, que eligió la variante A). Los totales quedan a la derecha, pegados a las partidas. Debajo van:
+  - las condiciones comerciales a lo ancho, en dos columnas desde tres;
+  - las formas de pago, una por línea, con el nombre del método y sus datos seguidos.
+- **Por qué:** antes iban en una columna angosta al lado de los totales. Con pocos totales quedaba un hueco, y con muchas condiciones o formas de pago el bloque crecía y saltaba entero a la otra hoja. Ahora las listas siguen en la otra hoja sin dejar huecos.
+- Igual en la página, en la hoja impresa (en color y en blanco y negro) y en el PDF. Sin cambio de base, variables ni crons.
+
 ## [1.0.0-rc.16] - 2026-10-17
 ### Cotizaciones 1.3.0 (C-182)
 - **El presupuesto con el estilo que eligió Luis**, el del presupuesto técnico de referencia:

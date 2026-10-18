@@ -1,13 +1,13 @@
-# Lo de ahora (actualizado 2026-10-17, C-182 · producción en 1.0.0-rc.15, por subir 1.0.0-rc.16)
+# Lo de ahora (actualizado 2026-10-18, C-182 · producción en 1.0.0-rc.16)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.15`** (`d4cb51c`, C-181), subida el 17/10 con Claude conectado y la aprobación de Luis. **Por subir: `v1.0.0-rc.16` (C-182)**, con 3 columnas nuevas en `quotes` (§2).
+- **Producción: `v1.0.0-rc.16`** (`0ce73f7`, C-182), subida el 18/10 con Claude conectado y la aprobación de Luis. Es igual al código de `main`. **No hay código por subir.**
 - **Pedido del 16 y 17/10 (Luis): cotizaciones desde Numen.** Numen es la app de precios y proveedores del equipo, en un repositorio privado aparte. Las cotizaciones las arma Numen y las emite la web.
   - **C-181:** la entrada de servidor a servidor, y cuándo el cliente abre su enlace. Hecha (`estado/C-181.md`).
-  - **C-182:** el documento con el estilo del presupuesto técnico (Luis eligió la maqueta A, con impresión en blanco y negro) y su PDF. Hecha, por subir (`estado/C-182.md`).
+  - **C-182:** el documento con el estilo del presupuesto técnico (Luis eligió la maqueta A, con impresión en blanco y negro) y su PDF. Hecha y en producción el 18/10 (`estado/C-182.md`).
 - **Pedido del 16/10 (Luis, del equipo, trabajando con Claude desde su laptop):** la salud del servidor y las imágenes que se ven al compartir un enlace de la tienda. Primero el plan y después el código. Tareas:
   - **C-176 · Mantenimiento del servidor:** hecha el 16/10 (`estado/C-176.md`, `HISTORIAL.md`). El sistema quedó al día, con Node 24, kernel nuevo, fail2ban, HTTP/2 y registros con tope. La tienda estuvo caída unos 10 segundos.
   - **C-177 · Dependencias seguras:** hecha y en producción el 16/10. Next, sharp y nodemailer quedaron en versiones sin las fallas conocidas, y la tienda escucha solo en `127.0.0.1`.
@@ -23,43 +23,13 @@
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta.
 
-## 2. Deploy pendiente: `v1.0.0-rc.16` (C-182)
-**El presupuesto con el estilo de la referencia, en blanco y negro y en PDF** (`estado/C-182.md`).
-- Lo que no incluye y el anexo técnico en el editor.
-- El botón "En blanco y negro".
-- "Descargar PDF" en el enlace del cliente, y el PDF para Numen.
-- **Commit que debe tener producción:** el merge de `claude/C-182` en `main`. En el servidor, `git describe --tags` debe mostrar `v1.0.0-rc.16`.
-- **Cambia la base** (aditivo: 3 columnas que pueden quedar vacías). Sin variables, crons ni pasos de nginx.
+## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.16`)
+Los bloques de C-182 (rc.16) y C-181 (rc.15), con el SQL, lo comprobado y su vuelta atrás, pasaron a `HISTORIAL.md`.
 
-**Pasos (en la terminal del servidor de la tienda, en la carpeta de la tienda):**
-1. Respaldo antes de subir:
-   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-c182.dump && ls -lh ~/respaldo-antes-c182.dump`
-2. `git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se detiene porque cambia la base y muestra el SQL: debe ser el de abajo.
-3. Aplicar el SQL en una transacción:
-   `DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -v ON_ERROR_STOP=1 -1 -c 'ALTER TABLE "quotes" ADD COLUMN "annex" TEXT, ADD COLUMN "annexTitle" TEXT, ADD COLUMN "notice" TEXT;'`
-4. `bash scripts/deploy.sh --sin-pull` otra vez: compila y cambia.
-
-**SQL total:**
-```sql
-ALTER TABLE "quotes" ADD COLUMN     "annex" TEXT,
-ADD COLUMN     "annexTitle" TEXT,
-ADD COLUMN     "notice" TEXT;
-```
-
-**Comprobar (Claude, desde afuera):**
-- `git describe --tags` en el servidor: `v1.0.0-rc.16`.
-- Inicio, `/cotizacion` y los ajustes públicos con `200`.
-- `GET /api/cotizaciones/<token que no existe>/pdf` da `404`, y `GET /api/numen/cotizaciones/x/pdf` da `503` (todavía sin clave).
-- La cotización de producción abre igual, y su PDF da `200 application/pdf`.
-
-**Pruebas del equipo (unos 10 minutos):**
+### Por confirmar de rc.16 (C-182, unos 10 minutos)
 1. **Panel:** Admin → Cotizaciones → una cotización → abajo, "Lo que no incluye" y "Anexo técnico" (con una tabla: `Equipo | Consumo` y una fila). Guardar y ver la vista previa: el recuadro ámbar y la segunda hoja.
 2. **Impresora sin color:** en el enlace, "En blanco y negro". La hoja sale sin fondos de color y se lee completa.
 3. **Teléfono:** en el enlace, "Descargar PDF". Abre el presupuesto en hoja carta; si está pendiente, tocar el QR abre el enlace.
-
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.15 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas nuevas no molestan al código anterior y no se quitan.
-
-El bloque de C-181 (rc.15), con el SQL, lo comprobado y su vuelta atrás, pasó a `HISTORIAL.md`.
 
 ### Por confirmar de rc.15 (C-181, unos 5 minutos)
 1. **Panel:** Admin → Cotizaciones → una enviada. Debajo de "Enlace para el cliente" dice "El cliente todavía no la abrió" (las de antes no tienen el dato).
@@ -153,6 +123,8 @@ En el orden en que más destraban:
 
 **En producción**
 1. **Las pruebas de la sección 2:**
+   - rc.16: el anexo en el panel, la hoja en blanco y negro y el PDF en el teléfono.
+   - rc.15: la vista del cliente en el panel.
    - rc.12: el correo y la foto de producto.
    - rc.13 y rc.14: el depurador de Facebook, desde el teléfono.
    - rc.7 a rc.11: el Dashboard.

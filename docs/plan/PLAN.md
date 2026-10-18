@@ -354,7 +354,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
 
 **Cotizaciones desde Numen** (pedido de Luis del 16 y 17/10; Andrés puede cambiarlo). Numen es la app de precios y proveedores del equipo, en un repositorio privado aparte. Las cotizaciones las arma Numen y las emite la web; el costo, el proveedor y el margen se quedan en Numen.
 - **C-181** la entrada de servidor a servidor y la "vista" del cliente (**hecha y en producción** el 17/10, versión `rc.15`). El código se sube sin la variable nueva (responde 503); `NUMEN_API_KEY` va en el `.env` cuando Numen esté instalado, con la confirmación de Andrés.
-- **C-182** el documento de la cotización y su PDF con el estilo del presupuesto técnico que mandó Luis. **Luis eligió el 17/10 la maqueta A (la fiel), con la opción de imprimir en blanco y negro** (para impresoras sin color). **Hecha el 17/10 (versión `rc.16`, falta subirla: `SIGUIENTE.md` §2).** Trae:
+- **C-182** el documento de la cotización y su PDF con el estilo del presupuesto técnico que mandó Luis. **Luis eligió el 17/10 la maqueta A (la fiel), con la opción de imprimir en blanco y negro** (para impresoras sin color). **Hecha y en producción el 18/10 (versión `rc.16`).** Trae:
   - El membrete y el recuadro del documento, y las partidas con el encabezado azul noche.
   - El anticipo en verde y el saldo en rojo.
   - Lo que no incluye y el anexo técnico (campos nuevos y opcionales).

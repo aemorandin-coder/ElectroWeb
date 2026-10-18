@@ -360,7 +360,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - Lo que no incluye y el anexo técnico (campos nuevos y opcionales).
   - El botón "En blanco y negro".
   - El PDF armado en el servidor: "Descargar PDF" en el enlace del cliente, y la ruta para Numen.
-- **C-183** (18/10, pedido de Luis, que eligió la variante A): las condiciones y las formas de pago van a lo ancho, debajo de los totales, que quedan pegados a las partidas. Con pocos datos no queda hueco, y con muchos las listas siguen en la otra hoja. Versión `rc.17`.
+- **C-183** (18/10, pedido de Luis, que eligió la variante A): las condiciones y las formas de pago van a lo ancho, debajo de los totales, que quedan pegados a las partidas. Con pocos datos no queda hueco, y con muchos las listas siguen en la otra hoja. **En producción el 18/10** (versión `rc.17`).
 - **Del lado de Numen (su repositorio):**
   - Los campos "Lo que no incluye" y "Anexo técnico" en su cotización.
   - Pedir el PDF y mandarlo por watencion (el WhatsApp de la tienda) con el enlace, con vista previa y confirmación antes de enviar.

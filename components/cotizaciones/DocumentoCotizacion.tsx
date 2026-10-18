@@ -208,71 +208,50 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
           ))}
         </ul>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-[0.95fr_1.3fr] sm:items-start print:mt-3 print:grid-cols-[0.95fr_1.3fr]">
-          <section aria-labelledby="cot-condiciones" className="break-inside-avoid rounded-lg border border-line bg-surface px-3.5 py-3 text-xs leading-relaxed text-ink-soft" data-bn="recuadro">
-            {condiciones.length > 0 && (
-              <>
-                <h2 id="cot-condiciones" className="text-sm font-bold text-brand-950">Condiciones comerciales</h2>
-                <ul className="mt-1 list-disc space-y-0.5 pl-4">{condiciones.map((linea) => <li key={linea}>{linea}</li>)}</ul>
-              </>
-            )}
-            <div data-pagos>
-              <h2 className={`text-sm font-bold text-brand-950 ${condiciones.length > 0 ? 'mt-2.5' : ''}`}>Formas de pago</h2>
-              {empresa.pagos.length > 0 ? (
-                <ul className="mt-1 space-y-0.5">
-                  {empresa.pagos.map((pago) => (
-                    <li key={pago.nombre} className="break-words"><strong className="font-semibold text-ink">{pago.nombre}:</strong> {pago.lineas.map((x) => x.replace(/^[^:]+: /, '')).join(' · ')}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-1">Las que la tienda tenga activas al momento de pagar.</p>
+        {/* C-183 (Luis eligió la variante A): los totales a la derecha, pegados a las partidas, y las condiciones y las
+            formas de pago a lo ancho, debajo. Antes iban en una columna angosta al lado de los totales: con pocos totales
+            quedaba un hueco, y con muchas condiciones o formas de pago la columna crecía y el bloque entero saltaba de hoja. */}
+        <section aria-label="Total" className="mt-3 break-inside-avoid sm:ml-auto sm:w-7/12 print:ml-auto print:w-7/12">
+          <table className="w-full text-sm">
+            <tbody>
+              {totales.ivaUSD > 0 && (
+                <>
+                  <tr><td className="px-3 py-1 text-ink-soft">Base imponible</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-950">{formatUSD(totales.baseUSD)}</td></tr>
+                  <tr data-iva><td className="px-3 py-1 text-ink-soft">IVA ({c.taxPercent} %), incluido en los precios</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-950">{formatUSD(totales.ivaUSD)}</td></tr>
+                </>
               )}
-              <p className="mt-1.5">Al pagar, avísanos{empresa.whatsapp ? ` por WhatsApp al ${empresa.whatsapp}` : ''} con el número de este presupuesto ({c.number}) para confirmar el pedido.</p>
-            </div>
-          </section>
-
-          <section aria-label="Total" className="break-inside-avoid">
-            <table className="w-full text-sm">
-              <tbody>
-                {totales.ivaUSD > 0 && (
-                  <>
-                    <tr><td className="px-3 py-1 text-ink-soft">Base imponible</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-950">{formatUSD(totales.baseUSD)}</td></tr>
-                    <tr data-iva><td className="px-3 py-1 text-ink-soft">IVA ({c.taxPercent} %), incluido en los precios</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-950">{formatUSD(totales.ivaUSD)}</td></tr>
-                  </>
-                )}
-                <tr className="border-t-[1.5px] border-brand-950" data-bn="raya">
-                  <td className="px-3 pb-0.5 pt-2 text-base font-bold text-brand-950">Monto total</td>
-                  <td className="whitespace-nowrap px-3 pb-0.5 pt-2 text-right text-xl font-bold tabular-nums text-brand-950" data-total>{formatUSD(totales.totalUSD)}</td>
-                </tr>
-                {empresa.tasaVES > 0 && (
-                  <tr><td colSpan={2} className="px-3 pb-1 text-right text-xs tabular-nums text-muted">{formatVES(Math.round(totales.totalUSD * empresa.tasaVES * 100) / 100)} a la tasa BCV de hoy ({formatVES(empresa.tasaVES)})</td></tr>
-                )}
-                {conRetencion && (
-                  <>
-                    <tr data-retencion><td className="px-3 py-1 text-ink-soft">Retención del IVA ({c.ivaRetentionPercent} %), la practica el cliente</td><td className="whitespace-nowrap px-3 py-1 text-right tabular-nums text-ink-soft">−{formatUSD(totales.retencionUSD)}</td></tr>
-                    <tr><td className="px-3 py-1 font-bold text-ink">Neto a pagar a {empresa.marca}</td><td className="whitespace-nowrap px-3 py-1 text-right text-lg font-bold tabular-nums text-brand-950" data-neto>{formatUSD(totales.netoUSD)}</td></tr>
-                    {empresa.tasaVES > 0 && <tr><td colSpan={2} className="px-3 text-right text-xs tabular-nums text-muted">{formatVES(Math.round(totales.netoUSD * empresa.tasaVES * 100) / 100)} a la tasa BCV de hoy</td></tr>}
-                    <tr><td colSpan={2} className="px-3 pb-1 text-xs leading-relaxed text-muted">El cliente retiene ese monto del IVA al pagar y le entrega a {empresa.nombre} su comprobante de retención.</td></tr>
-                  </>
-                )}
-                {totales.anticipoUSD !== null && totales.saldoUSD !== null && (
-                  <>
-                    <tr aria-hidden="true"><td colSpan={2} className="h-1.5 p-0" /></tr>
-                    <tr className="bg-success/10 text-success-strong" data-bn="resaltado">
-                      <td className="rounded-l-md px-3 py-1.5 font-bold">Anticipo ({c.advancePercent} %{conRetencion ? ' del neto' : ''})</td>
-                      <td className="whitespace-nowrap rounded-r-md px-3 py-1.5 text-right text-base font-bold tabular-nums">{formatUSD(totales.anticipoUSD)}</td>
-                    </tr>
-                    <tr aria-hidden="true"><td colSpan={2} className="h-1.5 p-0" /></tr>
-                    <tr className="bg-deal-bg text-deal" data-bn="resaltado">
-                      <td className="rounded-l-md px-3 py-1.5 font-bold">Saldo contra entrega ({100 - (c.advancePercent ?? 0)} %)</td>
-                      <td className="whitespace-nowrap rounded-r-md px-3 py-1.5 text-right font-bold tabular-nums">{formatUSD(totales.saldoUSD)}</td>
-                    </tr>
-                  </>
-                )}
-              </tbody>
-            </table>
-          </section>
-        </div>
+              <tr className="border-t-[1.5px] border-brand-950" data-bn="raya">
+                <td className="px-3 pb-0.5 pt-2 text-base font-bold text-brand-950">Monto total</td>
+                <td className="whitespace-nowrap px-3 pb-0.5 pt-2 text-right text-xl font-bold tabular-nums text-brand-950" data-total>{formatUSD(totales.totalUSD)}</td>
+              </tr>
+              {empresa.tasaVES > 0 && (
+                <tr><td colSpan={2} className="px-3 pb-1 text-right text-xs tabular-nums text-muted">{formatVES(Math.round(totales.totalUSD * empresa.tasaVES * 100) / 100)} a la tasa BCV de hoy ({formatVES(empresa.tasaVES)})</td></tr>
+              )}
+              {conRetencion && (
+                <>
+                  <tr data-retencion><td className="px-3 py-1 text-ink-soft">Retención del IVA ({c.ivaRetentionPercent} %), la practica el cliente</td><td className="whitespace-nowrap px-3 py-1 text-right tabular-nums text-ink-soft">−{formatUSD(totales.retencionUSD)}</td></tr>
+                  <tr><td className="px-3 py-1 font-bold text-ink">Neto a pagar a {empresa.marca}</td><td className="whitespace-nowrap px-3 py-1 text-right text-lg font-bold tabular-nums text-brand-950" data-neto>{formatUSD(totales.netoUSD)}</td></tr>
+                  {empresa.tasaVES > 0 && <tr><td colSpan={2} className="px-3 text-right text-xs tabular-nums text-muted">{formatVES(Math.round(totales.netoUSD * empresa.tasaVES * 100) / 100)} a la tasa BCV de hoy</td></tr>}
+                  <tr><td colSpan={2} className="px-3 pb-1 text-xs leading-relaxed text-muted">El cliente retiene ese monto del IVA al pagar y le entrega a {empresa.nombre} su comprobante de retención.</td></tr>
+                </>
+              )}
+              {totales.anticipoUSD !== null && totales.saldoUSD !== null && (
+                <>
+                  <tr aria-hidden="true"><td colSpan={2} className="h-1.5 p-0" /></tr>
+                  <tr className="bg-success/10 text-success-strong" data-bn="resaltado">
+                    <td className="rounded-l-md px-3 py-1.5 font-bold">Anticipo ({c.advancePercent} %{conRetencion ? ' del neto' : ''})</td>
+                    <td className="whitespace-nowrap rounded-r-md px-3 py-1.5 text-right text-base font-bold tabular-nums">{formatUSD(totales.anticipoUSD)}</td>
+                  </tr>
+                  <tr aria-hidden="true"><td colSpan={2} className="h-1.5 p-0" /></tr>
+                  <tr className="bg-deal-bg text-deal" data-bn="resaltado">
+                    <td className="rounded-l-md px-3 py-1.5 font-bold">Saldo contra entrega ({100 - (c.advancePercent ?? 0)} %)</td>
+                    <td className="whitespace-nowrap rounded-r-md px-3 py-1.5 text-right font-bold tabular-nums">{formatUSD(totales.saldoUSD)}</td>
+                  </tr>
+                </>
+              )}
+            </tbody>
+          </table>
+        </section>
 
         {c.notice && (
           <section className="mt-4 break-inside-avoid rounded-lg border border-l-4 border-warning/45 border-l-warning bg-warning/10 px-3.5 py-2.5 text-xs leading-relaxed text-ink-soft print:mt-3" data-bn="nota" data-nota>
@@ -282,6 +261,35 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
             <p className="mt-0.5 whitespace-pre-line">{c.notice}</p>
           </section>
         )}
+
+        {/* Cada condición y cada forma de pago es una pieza: la lista puede seguir en la otra hoja sin dejar huecos */}
+        {condiciones.length > 0 && (
+          <section aria-labelledby="cot-condiciones" className="mt-4 border-t border-line pt-3 text-xs leading-relaxed text-ink-soft print:mt-3">
+            <h2 id="cot-condiciones" className="text-sm font-bold text-brand-950">Condiciones comerciales</h2>
+            <ul className={`mt-1 list-disc pl-4 ${condiciones.length > 2 ? 'gap-8 sm:columns-2 print:columns-2' : ''}`}>
+              {condiciones.map((linea) => <li key={linea} className="mb-0.5 break-inside-avoid">{linea}</li>)}
+            </ul>
+          </section>
+        )}
+
+        <section aria-labelledby="cot-pagos" className="mt-4 border-t border-line pt-3 text-xs leading-relaxed text-ink-soft print:mt-3" data-pagos>
+          <h2 id="cot-pagos" className="text-sm font-bold text-brand-950">Formas de pago</h2>
+          {empresa.pagos.length > 0 ? (
+            <table className="mt-1 w-full">
+              <tbody>
+                {empresa.pagos.map((pago) => (
+                  <tr key={pago.nombre} className="break-inside-avoid border-b border-line align-top last:border-0">
+                    <th scope="row" className="w-28 py-1 pr-3 text-left font-semibold text-ink sm:w-36">{pago.nombre}</th>
+                    <td className="py-1 wrap-anywhere">{pago.lineas.map((x) => x.replace(/^[^:]+: /, '')).join(' · ')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="mt-1">Las que la tienda tenga activas al momento de pagar.</p>
+          )}
+          <p className="mt-1.5">Al pagar, avísanos{empresa.whatsapp ? ` por WhatsApp al ${empresa.whatsapp}` : ''} con el número de este presupuesto ({c.number}) para confirmar el pedido.</p>
+        </section>
 
         {/* Al imprimir, la garantía y las firmas van juntas: si no caben, pasan las dos a la otra hoja (unas firmas
             solas en una hoja parecen un papel suelto). Con una garantía muy larga se deja partir. */}

@@ -8,3 +8,5 @@ node_modules
 clips/
 salida/
 cuadros/
+# Ícono de la carpeta en Windows (apunta a mascota/chispa.ico); es de cada máquina
+desktop.ini

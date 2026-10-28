@@ -1147,6 +1147,9 @@ model Quote {
   notice         String?
   annexTitle     String?
   annex          String?
+  // C-184: cómo se llama el descuento en los totales ("Descuento del convenio CCIET (10 %)"), cuando las líneas traen
+  // su precio de lista. Lo manda Numen; el panel no lo cambia
+  discountLabel  String?
   // Totales (se recalculan en el servidor cada vez que se guarda)
   totalUSD       Decimal   @default(0)
   taxPercent     Decimal   @default(0) // IVA que ya va dentro de los precios al emitirla (C-146)
@@ -1190,6 +1193,10 @@ model QuoteItem {
   quantity     Int     @default(1)
   unitPriceUSD Decimal
   position     Int     @default(0)
+  // C-184 (las del convenio CCIET, que arma Numen): el precio de lista del equipo antes del descuento, que el
+  // presupuesto muestra tachado al lado del precio, y "LABOR" en la mano de obra, que va en su propia tabla
+  listPriceUSD Decimal?
+  kind         String?
   // C-148b: unidades que se descontaron del inventario al aprobarse la cotización (se devuelven si no se concreta)
   stockDeducted Int    @default(0)
   // …y las que faltaron porque no había (el equipo tiene que conseguirlas antes de entregar)

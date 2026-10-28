@@ -10,7 +10,7 @@ import { formatUSD, formatVES } from '@/lib/currency';
 import { Lienzo, rgb, type EstiloTexto, type Rgb } from '@/lib/pdf-simple';
 import { qrMatriz } from '@/lib/qr';
 import { leerSubida } from '@/lib/subidas';
-import { fechaCorta, fechaHora, fechaLarga, lineasDeTexto, totalLinea } from './core';
+import { conPrecioDeLista, fechaCorta, fechaHora, fechaLarga, lineasDeTexto, textosDesglose, totalLinea } from './core';
 import type { EmpresaCotizacion } from './empresa';
 import type { CotizacionPublica } from './index';
 
@@ -233,36 +233,63 @@ export async function presupuestoPdf(c: CotizacionPublica, empresa: EmpresaCotiz
     }) + 9;
   }
 
-  // Las partidas
+  // Las partidas. C-184 (Luis eligió la variante C sin la franja, 28/10): en las del convenio CCIET los equipos y la
+  // mano de obra van en tablas separadas, con las columnas alineadas, y cada equipo con precio de lista lo muestra
+  // tachado al lado de su precio. Las demás cotizaciones, como siempre.
+  const { desglose } = c;
+  const textos = textosDesglose(c.discountLabel);
+  const conLista = Boolean(desglose?.conLista);
   const wCant = 46;
-  const wPrecio = 80;
-  const wDesc = W - wCant - wPrecio * 2;
-  const columnas = [
-    { x: MX, w: wDesc, texto: 'Descripción', alinear: 'izq' as const },
-    { x: MX + wDesc, w: wCant, texto: 'Cant.', alinear: 'centro' as const },
-    { x: MX + wDesc + wCant, w: wPrecio, texto: 'Precio unit.', alinear: 'der' as const },
-    { x: MX + wDesc + wCant + wPrecio, w: wPrecio, texto: 'Total', alinear: 'der' as const },
+  const wTotal = 80;
+  const wLista = conLista ? 86 : 0;
+  const wPrecio = conLista ? 72 : 80;
+  const wDesc = W - wCant - wLista - wPrecio - wTotal;
+  const xCant = MX + wDesc;
+  const xLista = xCant + wCant;
+  const xPrecio = xLista + wLista;
+  const columnasDe = (primera: string, precio: string, lista: boolean) => [
+    { x: MX, w: wDesc, texto: primera, alinear: 'izq' as const },
+    { x: xCant, w: wCant, texto: 'Cant.', alinear: 'centro' as const },
+    ...(lista ? [{ x: xLista, w: wLista, texto: 'Precio de lista', alinear: 'der' as const }] : []),
+    { x: xPrecio, w: wPrecio, texto: precio, alinear: 'der' as const },
+    { x: xPrecio + wPrecio, w: wTotal, texto: 'Total', alinear: 'der' as const },
   ];
-  asegurar(60);
-  cabezaTabla(columnas);
-  c.items.forEach((l, i) => {
-    const titulo = L.lineas(l.title, wDesc - 16, T.sm, true);
-    const descripcion = l.description ? L.lineas(l.description, wDesc - 16, T.xs) : [];
-    const alto = 9 + titulo.length * T.sm * 1.3 + (descripcion.length ? 1.5 + descripcion.length * T.xs * 1.4 : 0);
-    asegurar(alto, () => cabezaTabla(columnas));
-    if (i % 2 === 1 && P.relleno) L.rect(MX, y, W, alto, { relleno: P.fondo });
-    let yy = y + 5;
-    for (const t of titulo) { fila(MX + 8, yy, t, { tam: T.sm, negrita: true, color: P.noche }); yy += T.sm * 1.3; }
-    if (descripcion.length) {
-      yy += 1.5;
-      for (const t of descripcion) { fila(MX + 8, yy, t, { tam: T.xs, color: P.suave }); yy += T.xs * 1.4; }
-    }
-    fila(MX + wDesc + wCant / 2, y + 5, String(l.quantity), { tam: T.sm, color: P.tinta, alinear: 'centro' });
-    fila(MX + wDesc + wCant + wPrecio - 8, y + 5, formatUSD(l.unitPriceUSD), { tam: T.sm, color: P.tinta, alinear: 'der' });
-    fila(MX + W - 8, y + 5, l.unitPriceUSD === 0 ? 'Incluido' : formatUSD(totalLinea(l.unitPriceUSD, l.quantity)), { tam: T.sm, negrita: true, color: P.tinta, alinear: 'der' });
-    y += alto;
-    L.linea(MX, y, MX + W, y, P.linea, 0.75);
-  });
+  /** El precio de lista, en gris y tachado */
+  const tachado = (der: number, top: number, texto: string) => {
+    fila(der, top, texto, { tam: T.sm, color: P.gris, alinear: 'der' });
+    const raya = top + T.sm * 1.01 - T.sm * 0.32;
+    L.linea(der - L.medir(texto, T.sm), raya, der, raya, P.gris, 0.7);
+  };
+  const tabla = (lineas: typeof c.items, columnas: ReturnType<typeof columnasDe>) => {
+    asegurar(60);
+    cabezaTabla(columnas);
+    lineas.forEach((l, i) => {
+      const titulo = L.lineas(l.title, wDesc - 16, T.sm, true);
+      const descripcion = l.description ? L.lineas(l.description, wDesc - 16, T.xs) : [];
+      const alto = 9 + titulo.length * T.sm * 1.3 + (descripcion.length ? 1.5 + descripcion.length * T.xs * 1.4 : 0);
+      asegurar(alto, () => cabezaTabla(columnas));
+      if (i % 2 === 1 && P.relleno) L.rect(MX, y, W, alto, { relleno: P.fondo });
+      let yy = y + 5;
+      for (const t of titulo) { fila(MX + 8, yy, t, { tam: T.sm, negrita: true, color: P.noche }); yy += T.sm * 1.3; }
+      if (descripcion.length) {
+        yy += 1.5;
+        for (const t of descripcion) { fila(MX + 8, yy, t, { tam: T.xs, color: P.suave }); yy += T.xs * 1.4; }
+      }
+      fila(xCant + wCant / 2, y + 5, String(l.quantity), { tam: T.sm, color: P.tinta, alinear: 'centro' });
+      if (conLista && conPrecioDeLista(l)) tachado(xLista + wLista - 8, y + 5, formatUSD(l.listPriceUSD as number));
+      fila(xPrecio + wPrecio - 8, y + 5, formatUSD(l.unitPriceUSD), { tam: T.sm, color: P.tinta, alinear: 'der' });
+      fila(MX + W - 8, y + 5, l.unitPriceUSD === 0 ? 'Incluido' : formatUSD(totalLinea(l.unitPriceUSD, l.quantity)), { tam: T.sm, negrita: true, color: P.tinta, alinear: 'der' });
+      y += alto;
+      L.linea(MX, y, MX + W, y, P.linea, 0.75);
+    });
+  };
+  const obra = desglose?.conObra ? c.items.filter((l) => l.kind === 'LABOR') : [];
+  const equipos = obra.length > 0 ? c.items.filter((l) => l.kind !== 'LABOR') : c.items;
+  if (equipos.length > 0) tabla(equipos, columnasDe(obra.length > 0 ? 'Equipos' : 'Descripción', conLista ? textos.columnaPrecio : 'Precio unit.', conLista));
+  if (obra.length > 0) {
+    if (equipos.length > 0) y += 10;
+    tabla(obra, columnasDe('Mano de obra', 'Precio unit.', false));
+  }
   y += 10;
 
   // Los totales, a la derecha y pegados a las partidas (C-183, variante A que eligió Luis). Antes iban al lado de una
@@ -287,6 +314,34 @@ export async function presupuestoPdf(c: CotizacionPublica, empresa: EmpresaCotiz
       yy += lh + (lineas.length - 1) * e.tamE * 1.3;
     };
     const nota = (texto: string) => { yy = escribir(xt + 8, yy, wt - 16, texto, { tam: T.xs, color: P.gris, alinear: 'der' }, 1.4) + 2; };
+    /** Una fila resaltada con fondo de color (en blanco y negro, entre dos rayas): el descuento, el anticipo y el saldo */
+    const resaltado = (etiqueta: string, valor: string, color: Rgb, fondo: Rgb, tamV: number) => {
+      yy += 4;
+      const h = 18;
+      if (P.relleno) L.rect(xt, yy, wt, h, { relleno: fondo, radio: 4 });
+      else { L.linea(xt, yy, xt + wt, yy, P.tinta, 0.75); L.linea(xt, yy + h, xt + wt, yy + h, P.tinta, 0.75); }
+      const base = yy + h / 2 + T.sm * 0.36;
+      L.texto(xt + 8, base, etiqueta, { tam: T.sm, negrita: true, color });
+      L.texto(derT, base + (tamV - T.sm) * 0.36, valor, { tam: tamV, negrita: true, color, alinear: 'der' });
+      yy += h;
+    };
+
+    // C-184: los equipos a precio de lista, el descuento en verde y la mano de obra; debajo, lo fiscal
+    if (desglose) {
+      const fina = { tamE: T.sm, colorE: P.suave, tamV: T.sm, colorV: P.noche };
+      if (desglose.conLista) total('Equipos a precio de lista', formatUSD(desglose.listaUSD), fina);
+      else if (desglose.equiposUSD > 0) total('Equipos', formatUSD(desglose.equiposUSD), fina);
+      if (desglose.conLista) {
+        resaltado(textos.descuento, `-${formatUSD(desglose.descuentoUSD)}`, P.verde, COLOR.verdeFondo, T.sm);
+        yy += 2;
+      }
+      if (desglose.conObra) total('Mano de obra', formatUSD(desglose.manoDeObraUSD), fina);
+      if (totales.ivaUSD > 0) {
+        yy += 2;
+        L.linea(xt, yy, xt + wt, yy, P.linea, 0.75);
+        yy += 3;
+      }
+    }
 
     if (totales.ivaUSD > 0) {
       total('Base imponible', formatUSD(totales.baseUSD), { tamE: T.sm, colorE: P.suave, tamV: T.sm, colorV: P.noche });
@@ -303,16 +358,6 @@ export async function presupuestoPdf(c: CotizacionPublica, empresa: EmpresaCotiz
       yy = escribir(xt + 8, yy, wt - 16, `El cliente retiene ese monto del IVA al pagar y le entrega a ${empresa.nombre} su comprobante de retención.`, { tam: T.xs, color: P.gris }, 1.4) + 2;
     }
     if (totales.anticipoUSD !== null && totales.saldoUSD !== null) {
-      const resaltado = (etiqueta: string, valor: string, color: Rgb, fondo: Rgb, tamV: number) => {
-        yy += 4;
-        const h = 18;
-        if (P.relleno) L.rect(xt, yy, wt, h, { relleno: fondo, radio: 4 });
-        else { L.linea(xt, yy, xt + wt, yy, P.tinta, 0.75); L.linea(xt, yy + h, xt + wt, yy + h, P.tinta, 0.75); }
-        const base = yy + h / 2 + T.sm * 0.36;
-        L.texto(xt + 8, base, etiqueta, { tam: T.sm, negrita: true, color });
-        L.texto(derT, base + (tamV - T.sm) * 0.36, valor, { tam: tamV, negrita: true, color, alinear: 'der' });
-        yy += h;
-      };
       resaltado(`Anticipo (${c.advancePercent} %${conRetencion ? ' del neto' : ''})`, formatUSD(totales.anticipoUSD), P.verde, COLOR.verdeFondo, T.base);
       resaltado(`Saldo contra entrega (${100 - (c.advancePercent ?? 0)} %)`, formatUSD(totales.saldoUSD), P.rojo, COLOR.rojoFondo, T.sm);
     }

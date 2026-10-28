@@ -10,6 +10,16 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.18] - 2026-10-28
+### Cotizaciones 1.4.0 (C-184)
+- **El descuento del convenio CCIET, a la vista** (Luis eligió la variante C sin la franja, viendo las maquetas con una cotización real). En las cotizaciones que arma Numen para el convenio:
+  - Los equipos y la mano de obra van en tablas separadas, con las columnas alineadas.
+  - Cada equipo muestra su **precio de lista** tachado al lado del precio del convenio.
+  - En los totales: los equipos a precio de lista, el descuento resaltado en verde y la mano de obra. Debajo, la base imponible, el IVA y el monto total de siempre.
+- Igual en la página del enlace (también en el teléfono), en la hoja impresa (en color y en blanco y negro) y en el PDF. Las demás cotizaciones se ven como antes.
+- El editor del panel conserva lo que trae Numen (el precio de lista y la mano de obra) al guardar, y lo dice debajo de cada línea.
+- **Base:** 3 columnas nuevas (aditivo): `listPriceUSD` y `kind` en `quote_items`, `discountLabel` en `quotes`. Sin variables ni crons.
+
 ## [1.0.0-rc.17] - 2026-10-18
 ### Cotizaciones 1.3.1 (C-183)
 - **Las condiciones y las formas de pago, a lo ancho** (pedido de Luis, que eligió la variante A). Los totales quedan a la derecha, pegados a las partidas. Debajo van:

@@ -1,10 +1,36 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `2b5a5fd`, versión `v1.0.0-rc.17`, el 18/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `e3479bc`, versión `v1.0.0-rc.18`, el 28/10/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 28/10 · C-184 (de rc.17 a `v1.0.0-rc.18`)
+Subido el 28/10 con Claude conectado y la aprobación de Luis para este deploy (`estado/C-184.md`). La tienda no se cortó.
+- **C-184 · El descuento del convenio y la mano de obra, a la vista:**
+  - En las cotizaciones del convenio CCIET que arma Numen, los equipos y la mano de obra van en tablas separadas.
+  - Cada equipo lleva su precio de lista tachado, y en los totales va el descuento en verde.
+  - Igual en la página, la hoja impresa y el PDF.
+- **Pasos que se dieron:**
+  1. Respaldo `~/respaldo-antes-c184.dump` (1,1 MB, 72 tablas con datos).
+  2. `git pull --ff-only` y `bash scripts/deploy.sh --sin-pull`: se detuvo y mostró el SQL, igual al del bloque.
+  3. El SQL, a mano y en una transacción (`psql -v ON_ERROR_STOP=1 -1`).
+  4. `bash scripts/deploy.sh --sin-pull` otra vez: compiló en `.next-b` y cambió.
+- **SQL aplicado:**
+  ```sql
+  ALTER TABLE "quotes" ADD COLUMN "discountLabel" TEXT;
+  ALTER TABLE "quote_items" ADD COLUMN "kind" TEXT, ADD COLUMN "listPriceUSD" DECIMAL(65,30);
+  ```
+- **Comprobado en producción:**
+  - `v1.0.0-rc.18`, escuchando en `127.0.0.1:3000`.
+  - Inicio, `/cotizacion` y `/productos` con `200`.
+  - Dos cotizaciones de producción, una enviada y una aprobada, abren con `200` y su PDF da `200 application/pdf`. Se ven como antes, porque no traen precio de lista ni mano de obra.
+  - La entrada de Numen sin clave da `401`.
+  - Las columnas nuevas existen, y en las líneas que ya había están vacías.
+  - En el registro de errores, solo el ruido conocido de los bots.
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.17 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas nuevas no molestan al código anterior y no se quitan.
+- **Después:** el mismo 28/10 se instaló Numen 0.3.5, que manda los campos nuevos.
 
 ## 18/10 · C-183 (de rc.16 a `v1.0.0-rc.17`)
 Subido el 18/10 con Claude conectado y la aprobación de Luis para este deploy (`estado/C-183.md`). La tienda no se cortó.

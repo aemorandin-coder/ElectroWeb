@@ -1,7 +1,8 @@
+import { Fragment } from 'react';
 import Image from 'next/image';
 import { FiAlertTriangle, FiCheckCircle, FiClock } from 'react-icons/fi';
 import { formatUSD, formatVES } from '@/lib/currency';
-import { fechaCorta, fechaHora, fechaLarga, lineasDeTexto, totalLinea } from '@/lib/cotizaciones/core';
+import { conPrecioDeLista, fechaCorta, fechaHora, fechaLarga, lineasDeTexto, textosDesglose, totalLinea } from '@/lib/cotizaciones/core';
 import type { CotizacionPublica } from '@/lib/cotizaciones';
 import type { EmpresaCotizacion } from '@/lib/cotizaciones/empresa';
 
@@ -137,6 +138,17 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
   const aprobada = Boolean(c.approvedAt && c.approvedName);
   const fechaAprobacion = c.approvedAt ? fechaHora(c.approvedAt) : '';
   const conRetencion = totales.retencionUSD > 0;
+  // C-184: en las del convenio CCIET, los equipos y la mano de obra por separado, y el precio de lista tachado
+  const { desglose } = c;
+  const textos = textosDesglose(c.discountLabel);
+  const conLista = Boolean(desglose?.conLista);
+  const obra = desglose?.conObra ? c.items.filter((l) => l.kind === 'LABOR') : [];
+  const equipos = obra.length > 0 ? c.items.filter((l) => l.kind !== 'LABOR') : c.items;
+  const grupos = [
+    { titulo: obra.length > 0 ? 'Equipos' : 'Descripción', lineas: equipos, precio: conLista ? textos.columnaPrecio : 'Precio unit.', lista: conLista },
+    { titulo: 'Mano de obra', lineas: obra, precio: 'Precio unit.', lista: false },
+  ].filter((g) => g.lineas.length > 0);
+  if (grupos.length === 0) grupos.push({ titulo: 'Descripción', lineas: [], precio: 'Precio unit.', lista: false });
 
   const estado = aprobada ? (
     <p className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-success/45 bg-success/10 px-2.5 py-0.5 text-xs font-bold text-success-strong" data-bn="sello">
@@ -171,42 +183,69 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
           </div>
         </div>
 
-        {/* Las partidas: tabla desde tabletas y al imprimir; en el teléfono, una debajo de otra */}
+        {/* Las partidas: tabla desde tabletas y al imprimir; en el teléfono, una debajo de otra. C-184 (Luis eligió la
+            variante C sin la franja, 28/10): en las del convenio CCIET, los equipos y la mano de obra van por separado, en
+            la misma tabla para que las columnas queden alineadas, y cada equipo con precio de lista lo muestra tachado. */}
         <table className="mt-4 hidden w-full text-sm sm:table print:mt-3 print:table">
-          <thead>
-            <tr className="bg-brand-950 text-left text-xs font-semibold uppercase tracking-wide text-white" data-bn="cabeza">
-              <th scope="col" className="rounded-tl-md px-3 py-2">Descripción</th>
-              <th scope="col" className="px-3 py-2 text-center">Cant.</th>
-              <th scope="col" className="px-3 py-2 text-right">Precio unit.</th>
-              <th scope="col" className="rounded-tr-md px-3 py-2 text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {c.items.map((l) => (
-              <tr key={l.id} className="break-inside-avoid border-b border-line align-top even:bg-surface">
-                <td className="px-3 py-2.5 print:py-1.5">
-                  <p className="font-bold text-brand-950">{l.title}</p>
-                  {l.description && <p className="mt-0.5 whitespace-pre-line text-xs leading-relaxed text-ink-soft">{l.description}</p>}
-                </td>
-                <td className="px-3 py-2.5 text-center tabular-nums print:py-1.5">{l.quantity}</td>
-                <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums print:py-1.5">{formatUSD(l.unitPriceUSD)}</td>
-                <td className="whitespace-nowrap px-3 py-2.5 text-right font-bold tabular-nums print:py-1.5">{l.unitPriceUSD === 0 ? 'Incluido' : formatUSD(totalLinea(l.unitPriceUSD, l.quantity))}</td>
+          {grupos.map((g, n) => {
+            const cabeza = (
+              <tr className="bg-brand-950 text-left text-xs font-semibold uppercase tracking-wide text-white" data-bn="cabeza">
+                <th scope="col" className="rounded-tl-md px-3 py-2">{g.titulo}</th>
+                <th scope="col" className="px-3 py-2 text-center">Cant.</th>
+                {conLista && <th scope="col" className="whitespace-nowrap px-3 py-2 text-right">{g.lista ? 'Precio de lista' : ''}</th>}
+                <th scope="col" className="whitespace-nowrap px-3 py-2 text-right">{g.precio}</th>
+                <th scope="col" className="rounded-tr-md px-3 py-2 text-right">Total</th>
               </tr>
-            ))}
-          </tbody>
+            );
+            return (
+              <Fragment key={g.titulo}>
+                {n === 0 ? <thead>{cabeza}</thead> : (
+                  <tbody>
+                    <tr aria-hidden="true"><td colSpan={conLista ? 5 : 4} className="h-3 p-0 print:h-2" /></tr>
+                    {cabeza}
+                  </tbody>
+                )}
+                <tbody>
+                  {g.lineas.map((l) => (
+                    <tr key={l.id} className="break-inside-avoid border-b border-line align-top even:bg-surface">
+                      <td className="px-3 py-2.5 print:py-1.5">
+                        <p className="font-bold text-brand-950">{l.title}</p>
+                        {l.description && <p className="mt-0.5 whitespace-pre-line text-xs leading-relaxed text-ink-soft">{l.description}</p>}
+                      </td>
+                      <td className="px-3 py-2.5 text-center tabular-nums print:py-1.5">{l.quantity}</td>
+                      {conLista && <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums text-muted line-through print:py-1.5" data-lista>{conPrecioDeLista(l) ? formatUSD(l.listPriceUSD as number) : ''}</td>}
+                      <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums print:py-1.5">{formatUSD(l.unitPriceUSD)}</td>
+                      <td className="whitespace-nowrap px-3 py-2.5 text-right font-bold tabular-nums print:py-1.5">{l.unitPriceUSD === 0 ? 'Incluido' : formatUSD(totalLinea(l.unitPriceUSD, l.quantity))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Fragment>
+            );
+          })}
         </table>
-        <ul className="mt-4 divide-y divide-line border-y border-line sm:hidden print:hidden">
-          {c.items.map((l) => (
-            <li key={l.id} className="py-3">
-              <p className="font-bold text-brand-950">{l.title}</p>
-              {l.description && <p className="mt-0.5 whitespace-pre-line text-xs leading-relaxed text-ink-soft">{l.description}</p>}
-              <p className="mt-1.5 flex items-baseline justify-between gap-3 text-sm">
-                <span className="tabular-nums text-ink-soft"><strong className="font-bold text-ink">{l.quantity}</strong> × {formatUSD(l.unitPriceUSD)} c/u</span>
-                <strong className="tabular-nums">{l.unitPriceUSD === 0 ? 'Incluido' : formatUSD(totalLinea(l.unitPriceUSD, l.quantity))}</strong>
-              </p>
-            </li>
+        <div className="mt-4 space-y-4 sm:hidden print:hidden">
+          {grupos.map((g) => (
+            <div key={g.titulo}>
+              {grupos.length > 1 && <h2 className="mb-1 text-xs font-bold uppercase tracking-wide text-brand-950">{g.titulo}</h2>}
+              <ul className="divide-y divide-line border-y border-line">
+                {g.lineas.map((l) => (
+                  <li key={l.id} className="py-3">
+                    <p className="font-bold text-brand-950">{l.title}</p>
+                    {l.description && <p className="mt-0.5 whitespace-pre-line text-xs leading-relaxed text-ink-soft">{l.description}</p>}
+                    <p className="mt-1.5 flex items-baseline justify-between gap-3 text-sm">
+                      <span className="tabular-nums text-ink-soft">
+                        <strong className="font-bold text-ink">{l.quantity}</strong> ×{' '}
+                        {conPrecioDeLista(l) && <><s className="text-muted" data-lista><span className="sr-only">Precio de lista: </span>{formatUSD(l.listPriceUSD as number)}</s>{' '}</>}
+                        {formatUSD(l.unitPriceUSD)} c/u
+                      </span>
+                      <strong className="tabular-nums">{l.unitPriceUSD === 0 ? 'Incluido' : formatUSD(totalLinea(l.unitPriceUSD, l.quantity))}</strong>
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
 
         {/* C-183 (Luis eligió la variante A): los totales a la derecha, pegados a las partidas, y las condiciones y las
             formas de pago a lo ancho, debajo. Antes iban en una columna angosta al lado de los totales: con pocos totales
@@ -214,6 +253,24 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
         <section aria-label="Total" className="mt-3 break-inside-avoid sm:ml-auto sm:w-7/12 print:ml-auto print:w-7/12">
           <table className="w-full text-sm">
             <tbody>
+              {/* C-184: los equipos a precio de lista, el descuento en verde y la mano de obra; debajo, lo fiscal */}
+              {desglose && (
+                <>
+                  {(desglose.conLista || desglose.equiposUSD > 0) && (
+                    <tr><td className="px-3 py-1 text-ink-soft">{desglose.conLista ? 'Equipos a precio de lista' : 'Equipos'}</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-950">{formatUSD(desglose.conLista ? desglose.listaUSD : desglose.equiposUSD)}</td></tr>
+                  )}
+                  {desglose.conLista && (
+                    <tr className="bg-success/10 text-success-strong" data-bn="resaltado" data-descuento>
+                      <td className="rounded-l-md px-3 py-1.5 font-bold">{textos.descuento}</td>
+                      <td className="whitespace-nowrap rounded-r-md px-3 py-1.5 text-right font-bold tabular-nums">−{formatUSD(desglose.descuentoUSD)}</td>
+                    </tr>
+                  )}
+                  {desglose.conObra && (
+                    <tr><td className="px-3 py-1 text-ink-soft">Mano de obra</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-950">{formatUSD(desglose.manoDeObraUSD)}</td></tr>
+                  )}
+                  {totales.ivaUSD > 0 && <tr aria-hidden="true"><td colSpan={2} className="px-0 pb-1 pt-1.5"><div className="border-t border-line" /></td></tr>}
+                </>
+              )}
               {totales.ivaUSD > 0 && (
                 <>
                   <tr><td className="px-3 py-1 text-ink-soft">Base imponible</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-950">{formatUSD(totales.baseUSD)}</td></tr>

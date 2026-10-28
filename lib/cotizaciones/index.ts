@@ -8,7 +8,7 @@ import { apartadoPorOtros, descontarDisponible } from '@/lib/reservas';
 import { publicarStock } from '@/lib/realtime/bus';
 import { notifyStockCrossings } from '@/lib/stock-alerts';
 import { createAuditLog } from '@/lib/audit-log';
-import { estaVencida, totalesCotizacion, venceEl, type CotizacionEntrada, type EstadoCotizacion } from './core';
+import { desgloseCotizacion, estaVencida, totalesCotizacion, venceEl, type CotizacionEntrada, type EstadoCotizacion, type TipoLinea } from './core';
 
 const conLineas = { items: { orderBy: { position: 'asc' } } } satisfies Prisma.QuoteInclude;
 type CotizacionConLineas = Prisma.QuoteGetPayload<{ include: typeof conLineas }>;
@@ -39,6 +39,8 @@ const lineasParaGuardar = (items: CotizacionEntrada['items']) => items.map((l, p
   quantity: l.quantity,
   unitPriceUSD: montoDecimal(l.unitPriceUSD),
   position,
+  listPriceUSD: l.listPriceUSD == null ? null : montoDecimal(l.listPriceUSD),
+  kind: l.kind ?? null,
 }));
 
 /** El IVA que va dentro de los precios hoy (Configuración → Precios). */
@@ -103,6 +105,8 @@ function comun(q: CotizacionConLineas) {
     description: l.description,
     quantity: l.quantity,
     unitPriceUSD: Number(l.unitPriceUSD),
+    listPriceUSD: l.listPriceUSD === null ? null : Number(l.listPriceUSD),
+    kind: (l.kind === 'LABOR' ? 'LABOR' : null) as TipoLinea | null,
   }));
   return {
     number: q.number,
@@ -123,6 +127,9 @@ function comun(q: CotizacionConLineas) {
     items,
     ivaRetentionPercent: q.ivaRetentionPercent,
     totales: totalesCotizacion(items, taxPercent, q.advancePercent, q.ivaRetentionPercent),
+    // C-184: el precio de lista, el descuento y la mano de obra aparte (null si la cotización no los tiene)
+    discountLabel: q.discountLabel,
+    desglose: desgloseCotizacion(items),
     sentAt: q.sentAt?.toISOString() ?? null,
     venceEl: venceEl(q.sentAt, q.validityDays)?.toISOString() ?? null,
     approvedAt: q.approvedAt?.toISOString() ?? null,

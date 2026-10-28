@@ -14,7 +14,7 @@ import { formatUSD } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
-import { CONDICIONES_POR_DEFECTO, ESTADO_TEXTO, RETENCIONES_IVA, TERMINOS_POR_DEFECTO, totalesCotizacion } from '@/lib/cotizaciones/core';
+import { CONDICIONES_POR_DEFECTO, ESTADO_TEXTO, RETENCIONES_IVA, TERMINOS_POR_DEFECTO, totalesCotizacion, type TipoLinea } from '@/lib/cotizaciones/core';
 import type { CotizacionAdmin } from '@/lib/cotizaciones';
 import type { ProductoParaCotizar } from '@/lib/cotizaciones/productos';
 import { BuscadorProductos } from '@/components/cotizaciones/BuscadorProductos';
@@ -34,6 +34,10 @@ interface Linea {
   description: string;
   quantity: string;
   unitPriceUSD: string;
+  /** C-184: los trae Numen en las del convenio (precio de lista tachado, mano de obra en su tabla). Aquí no se editan:
+   *  se conservan al guardar */
+  listPriceUSD: number | null;
+  kind: TipoLinea | null;
 }
 
 interface Formulario {
@@ -75,7 +79,7 @@ function aFormulario(c: CotizacionAdmin): { form: Formulario; lineas: Linea[] } 
       advancePercent: c.advancePercent ? String(c.advancePercent) : '', ivaRetentionPercent: String(c.ivaRetentionPercent), conditions: c.conditions ?? '', terms: c.terms ?? '',
       notice: c.notice ?? '', annexTitle: c.annexTitle ?? '', annex: c.annex ?? '',
     },
-    lineas: c.items.map((l) => ({ clave: clave(), productId: l.productId, title: l.title, description: l.description ?? '', quantity: String(l.quantity), unitPriceUSD: String(l.unitPriceUSD) })),
+    lineas: c.items.map((l) => ({ clave: clave(), productId: l.productId, title: l.title, description: l.description ?? '', quantity: String(l.quantity), unitPriceUSD: String(l.unitPriceUSD), listPriceUSD: l.listPriceUSD, kind: l.kind })),
   };
 }
 
@@ -142,7 +146,7 @@ export default function EditorCotizacion() {
 
   const soloLectura = cotizacion?.estadoGuardado === 'APPROVED';
   const cambiar = (campo: keyof Formulario, valor: string) => { setForm((f) => ({ ...f, [campo]: valor })); setError(''); };
-  const cambiarLinea = (k: string, campo: keyof Omit<Linea, 'clave' | 'productId'>, valor: string) => {
+  const cambiarLinea = (k: string, campo: keyof Omit<Linea, 'clave' | 'productId' | 'listPriceUSD' | 'kind'>, valor: string) => {
     setLineas((ls) => ls.map((l) => (l.clave === k ? { ...l, [campo]: valor } : l)));
     setError('');
   };
@@ -159,7 +163,7 @@ export default function EditorCotizacion() {
     validityDays: Math.floor(numero(f.validityDays)),
     advancePercent: f.advancePercent.trim() ? Math.floor(numero(f.advancePercent)) : null,
     ivaRetentionPercent: Number(f.ivaRetentionPercent),
-    items: ls.map((l) => ({ productId: l.productId, title: l.title, description: l.description, quantity: Math.floor(numero(l.quantity)), unitPriceUSD: numero(l.unitPriceUSD) })),
+    items: ls.map((l) => ({ productId: l.productId, title: l.title, description: l.description, quantity: Math.floor(numero(l.quantity)), unitPriceUSD: numero(l.unitPriceUSD), listPriceUSD: l.listPriceUSD, kind: l.kind })),
   });
 
   /** Las líneas sin su `clave` interna (cambia en cada carga): así se comparan al combinar */
@@ -339,7 +343,7 @@ export default function EditorCotizacion() {
     setCatalogo((c) => ({ ...c, [p.id]: p }));
     setLineas((ls) => {
       const i = ls.findIndex((l) => l.productId === p.id);
-      if (i === -1) return [...ls, { clave: clave(), productId: p.id, title: p.name, description: '', quantity: '1', unitPriceUSD: String(p.priceUSD) }];
+      if (i === -1) return [...ls, { clave: clave(), productId: p.id, title: p.name, description: '', quantity: '1', unitPriceUSD: String(p.priceUSD), listPriceUSD: null, kind: null }];
       return ls.map((l, j) => (j === i ? { ...l, quantity: String(Math.min(9999, Math.max(1, Math.floor(numero(l.quantity))) + 1)) } : l));
     });
     setError('');
@@ -541,7 +545,7 @@ export default function EditorCotizacion() {
               <BuscadorProductos enCotizacion={enCotizacion} onAgregar={agregarProducto} bloqueado={ocupado} />
               <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-ink-soft">¿Un servicio o algo que no está en el catálogo?</p>
-                <button type="button" onClick={() => setLineas((ls) => [...ls, { clave: clave(), productId: null, title: '', description: '', quantity: '1', unitPriceUSD: '' }])} className={`${adminSecondaryButton} shrink-0`} data-linea-libre>
+                <button type="button" onClick={() => setLineas((ls) => [...ls, { clave: clave(), productId: null, title: '', description: '', quantity: '1', unitPriceUSD: '', listPriceUSD: null, kind: null }])} className={`${adminSecondaryButton} shrink-0`} data-linea-libre>
                   <FiPlus className="h-4 w-4" aria-hidden="true" />
                   Agregar una línea libre
                 </button>
@@ -591,6 +595,12 @@ export default function EditorCotizacion() {
                       </div>
                       <p className="pb-2.5 text-right text-sm font-semibold tabular-nums text-ink">{formatUSD(Math.round(numero(l.unitPriceUSD) * cantidadDe(l) * 100) / 100)}</p>
                     </div>
+                    {/* C-184: lo que trae Numen en las del convenio */}
+                    {(l.kind === 'LABOR' || (l.listPriceUSD !== null && l.listPriceUSD > numero(l.unitPriceUSD))) && (
+                      <p className="mt-2 text-xs text-ink-soft" data-convenio>
+                        {l.kind === 'LABOR' ? 'Mano de obra: en el presupuesto va en su propia tabla.' : `Precio de lista ${formatUSD(l.listPriceUSD ?? 0)}: en el presupuesto sale tachado al lado del precio.`}
+                      </p>
+                    )}
                     {faltan > 0 && !soloLectura && (
                       <p className="mt-2 flex items-start gap-1.5 text-xs font-semibold text-warning-strong" data-falta-inventario>
                         <FiAlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />

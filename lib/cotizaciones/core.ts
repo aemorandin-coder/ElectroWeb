@@ -22,6 +22,10 @@ export const ESTADO_TEXTO: Record<EstadoCotizacion | 'EXPIRED', { texto: string;
   EXPIRED: { texto: 'Vencida', tono: 'danger' },
 };
 
+/** C-184: la mano de obra ("LABOR") va en su propia tabla. Las demás líneas (sin tipo) son equipos o productos. */
+export const TIPOS_LINEA = ['LABOR'] as const;
+export type TipoLinea = (typeof TIPOS_LINEA)[number];
+
 export interface LineaCotizacion {
   id?: string;
   productId?: string | null;
@@ -29,6 +33,9 @@ export interface LineaCotizacion {
   description?: string | null;
   quantity: number;
   unitPriceUSD: number;
+  /** C-184: el precio de lista antes del descuento (los equipos del convenio CCIET) */
+  listPriceUSD?: number | null;
+  kind?: TipoLinea | null;
 }
 
 /**
@@ -85,6 +92,45 @@ export const fechaCorta = (iso: string) => new Date(iso).toLocaleDateString('es-
 export const fechaHora = (iso: string) => new Date(iso).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 export const totalLinea = (precio: number, cantidad: number) => centimos(precio * cantidad);
 
+/** C-184: el precio de lista sale tachado solo en un equipo cuyo precio de lista es mayor que su precio */
+export const conPrecioDeLista = (l: Pick<LineaCotizacion, 'unitPriceUSD' | 'listPriceUSD' | 'kind'>) =>
+  l.kind !== 'LABOR' && typeof l.listPriceUSD === 'number' && l.listPriceUSD > l.unitPriceUSD;
+
+export interface DesgloseCotizacion {
+  /** Los equipos a precio de lista (los que no lo traen, a su precio) */
+  listaUSD: number;
+  /** Los equipos a precio de lista menos los equipos a su precio */
+  descuentoUSD: number;
+  equiposUSD: number;
+  manoDeObraUSD: number;
+  /** Algún equipo trae precio de lista: va su columna y la fila del descuento */
+  conLista: boolean;
+  /** Hay mano de obra: va en su propia tabla */
+  conObra: boolean;
+}
+
+/**
+ * C-184 (Luis eligió la variante C sin la franja, 28/10): en las del convenio CCIET, lo que suman los equipos a precio
+ * de lista, el descuento y la mano de obra aparte. null si no hay ni precio de lista ni mano de obra: la cotización se
+ * muestra como siempre. El total sigue siendo la suma de las líneas (totalesCotizacion).
+ */
+export function desgloseCotizacion(lineas: Pick<LineaCotizacion, 'quantity' | 'unitPriceUSD' | 'listPriceUSD' | 'kind'>[]): DesgloseCotizacion | null {
+  const equipos = lineas.filter((l) => l.kind !== 'LABOR');
+  const obra = lineas.filter((l) => l.kind === 'LABOR');
+  const conLista = equipos.some(conPrecioDeLista);
+  if (!conLista && obra.length === 0) return null;
+  const suma = (ls: typeof lineas, precio: (l: (typeof lineas)[number]) => number) => centimos(ls.reduce((s, l) => s + totalLinea(precio(l), l.quantity), 0));
+  const equiposUSD = suma(equipos, (l) => l.unitPriceUSD);
+  const listaUSD = suma(equipos, (l) => (conPrecioDeLista(l) ? (l.listPriceUSD as number) : l.unitPriceUSD));
+  return { listaUSD, descuentoUSD: centimos(listaUSD - equiposUSD), equiposUSD, manoDeObraUSD: suma(obra, (l) => l.unitPriceUSD), conLista, conObra: obra.length > 0 };
+}
+
+/** C-184: cómo se llaman el descuento y la columna del precio con descuento ("Convenio" en las del convenio) */
+export const textosDesglose = (discountLabel: string | null | undefined) => ({
+  descuento: discountLabel?.trim() || 'Descuento',
+  columnaPrecio: /convenio/i.test(discountLabel ?? '') ? 'Convenio' : 'Con descuento',
+});
+
 /** Hasta cuándo vale una cotización enviada. */
 export function venceEl(sentAt: string | Date | null, validityDays: number): Date | null {
   if (!sentAt) return null;
@@ -112,6 +158,9 @@ export const lineaSchema = z.object({
   description: opcional(1200),
   quantity: z.number().int('La cantidad va en enteros').min(1, 'La cantidad mínima es 1').max(9999),
   unitPriceUSD: z.number().min(0, 'El precio no puede ser negativo').max(1_000_000),
+  // C-184: los manda Numen y el panel los conserva al guardar
+  listPriceUSD: z.number().min(0, 'El precio de lista no puede ser negativo').max(1_000_000).nullish(),
+  kind: z.enum(TIPOS_LINEA).nullish(),
 });
 
 /** Lo que guarda el equipo desde el panel. */
@@ -132,6 +181,8 @@ export const cotizacionSchema = z.object({
   notice: opcional(2000),
   annexTitle: opcional(120),
   annex: z.string().max(8000, 'El anexo admite hasta 8.000 letras').optional().nullable().transform((v) => (v && v.trim() ? v.replace(/\r\n/g, '\n').trim() : null)),
+  // C-184: lo manda Numen. Si no llega (el panel no lo edita), al guardar queda el que tenía
+  discountLabel: z.string().trim().max(80).nullish(),
   items: z.array(lineaSchema).max(60, 'Máximo 60 líneas'),
 });
 export type CotizacionEntrada = z.infer<typeof cotizacionSchema>;

@@ -101,7 +101,7 @@ Trabajas en tu propia carpeta (worktree), **nunca** en la carpeta principal del 
 ⚠️ **Todos los comandos de este archivo son para `bash`.** El sistema de Andrés usa fish/zsh, donde `$RUTAS` no funciona igual. Ejecuta cada bloque así: `bash -c '<comandos>'`, o abre `bash` primero.
 
 ```bash
-# Solo la primera vez (lo hace Andrés desde la carpeta principal "ElectroShopVe WEB"):
+# La primera vez, o si la carpeta no existe (se quitó el 06/11/2026, C-185). Lo hace Andrés desde la carpeta principal "ElectroShopVe WEB":
 git worktree add "../ElectroShopVe-gemini" -b gemini/base
 ln -s "$PWD/node_modules" "../ElectroShopVe-gemini/node_modules"   # reutiliza dependencias, sin npm install
 cp .env "../ElectroShopVe-gemini/.env"                              # solo si Gemini va a levantar el servidor

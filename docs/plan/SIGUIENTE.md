@@ -1,10 +1,11 @@
-# Lo de ahora (actualizado 2026-10-28, C-184 · producción en 1.0.0-rc.18)
+# Lo de ahora (actualizado 2026-11-06, C-185 · producción en 1.0.0-rc.18)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.18`** (`e3479bc`, C-184), subida el 28/10 con Claude conectado y la aprobación de Luis. Es igual al código de `main`. **No hay código por subir.**
+- **Producción: `v1.0.0-rc.18`** (`e3479bc`, C-184), subida el 28/10 con Claude conectado y la aprobación de Luis. **No hay código de la tienda por subir:** después de rc.18, `main` solo suma la limpieza de C-185 y los stickers de Chispa de Luis (`chispa/`), que no cambian la tienda. **Antes del próximo `git pull` en el servidor** va el paso de los uploads (sección 2).
+- **C-185 · Limpieza (06/11, con el OK de Andrés):** la carpeta de Andrés estaba 41 commits atrás (lo de Luis del 11 al 28/10) y se puso al día. Se borraron las 178 ramas locales viejas, el stash y los worktrees de ChatGPT y de Gemini, 8 archivos sin uso y los 40 uploads de 2025 que estaban versionados. En GitHub quedan `main` y las etiquetas. Detalle en `estado/C-185.md`.
 - **Pedido del 16 y 17/10 (Luis): cotizaciones desde Numen.** Numen es la app de precios y proveedores del equipo, en un repositorio privado aparte. Las cotizaciones las arma Numen y las emite la web.
   - **C-181:** la entrada de servidor a servidor, y cuándo el cliente abre su enlace. Hecha (`estado/C-181.md`).
   - **C-182:** el documento con el estilo del presupuesto técnico (Luis eligió la maqueta A, con impresión en blanco y negro) y su PDF. Hecha y en producción el 18/10 (`estado/C-182.md`).
@@ -23,10 +24,23 @@
 - **El ciclo C-168 a C-175 está completo.**
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos más abajo). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
-- **Gemini:** sin ronda abierta.
+- **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.18`)
 El bloque de C-184 (rc.18), con el SQL, lo comprobado y su vuelta atrás, pasó a `HISTORIAL.md`.
+
+### Antes del próximo `git pull` en el servidor (C-185, 1 minuto)
+C-185 sacó de git 40 archivos viejos de `public/uploads/` (logos, favicons y fotos de noviembre y diciembre de 2025). Producción no usa ninguno, pero el `git pull` los borraría del disco del servidor. Se respaldan antes y se devuelven después, ya fuera de git. No hace falta un deploy solo para esto: va con el próximo bloque.
+```bash
+cd /var/www/electroshopve
+git ls-files public/uploads | tar czf ~/uploads-versionados-C185.tgz -T -   # ANTES del pull: después ya no los lista
+tar tzf ~/uploads-versionados-C185.tgz | wc -l                              # 40
+bash scripts/deploy.sh                                                      # el deploy del próximo bloque
+tar xzf ~/uploads-versionados-C185.tgz                                      # vuelven al disco, ignorados por .gitignore
+git status --short                                                          # vacío
+```
+- **Vuelta atrás:** los 40 archivos están en `~/uploads-versionados-C185.tgz`. El código de la tienda no cambia.
+- `ecosystem.config.js` también desaparece del servidor con ese pull: no se usaba (`OPERACION.md` §1).
 
 ### Por confirmar de rc.18 (C-184, 2 minutos)
 1. **Teléfono:** abre el enlace de la próxima cotización del convenio que mande Numen. Equipos y mano de obra van por separado, con el precio de lista tachado y el descuento en verde. "Descargar PDF" sale igual.
@@ -175,9 +189,7 @@ En el orden en que más destraban:
 18. Abogado: términos y privacidad (ahora se editan en Legal → Documentos; `estado/C-120.md` §7) y las 3 afirmaciones de `estado/C-144.md` (el motivo "comprobante vencido o ilegible", los plazos y los datos de contacto).
 19. Contador: las preguntas de `estado/C-151.md` (IVA de los digitales), `estado/C-147b.md` (embalaje), `estado/C-120.md` §6 y **`estado/C-159.md` (retención del IVA: quiénes retienen, el comprobante y si hay retención de ISLR en los servicios)**.
 
-**Limpieza opcional, en tu máquina** (todo ya está en `main` o fue reemplazado)
-- ChatGPT: `git worktree remove ../ElectroShopVe-chatgpt`, `git branch -D chatgpt/R1 chatgpt/product-fixes chatgpt/product-fixes-main` y `git stash drop stash@{0}`.
-- Ramas locales ya fusionadas: `git branch --merged main` las lista; se pueden borrar con `git branch -d <rama>`.
+**Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
 La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedido del 16/10 está hecho** (C-176, C-177 y C-178). **Cotizaciones desde Numen:** C-181 hecha y en producción (rc.15). Sigue **C-182**: el documento y el PDF con el estilo del presupuesto. Luis eligió la maqueta A (la fiel), con la opción de imprimir en blanco y negro. **Sigue C-180** (fotos del feed para el catálogo de WhatsApp) cuando llegue la captura de Commerce Manager (§3, 1b). Quedan de ahí: SSH solo con llave (tus llaves, §3), Prisma 7, Next 16.4 y el aviso de npm 12 (`PLAN.md` §5.2). Lo que espera un dato tuyo:
@@ -190,7 +202,7 @@ La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedid
 
 ## 5. Mensaje para empezar (próxima sesión de Claude)
 > Continúa ElectroShopVe (tienda en producción). Lee `CLAUDE.md`, `docs/plan/SIGUIENTE.md` completo y tu memoria del proyecto; `docs/plan/PLAN.md` §5 y §7 para la lista de pendientes y las decisiones, y `docs/plan/OPERACION.md` antes de probar o de dar pasos de deploy.
-> 1. Antes de tocar nada: `git status`, `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
+> 1. Antes de tocar nada: `git fetch --all --tags` y `git status -sb` (Luis también sube desde su laptop: si `main` está detrás, `git merge --ff-only origin/main` y `npm ci` si cambió `package-lock.json`), `git log -5 --format='%h %an %s'`, `git branch --show-current` y `git branch -a`.
 > 2. Fíjate quién escribe (Andrés o Luis: `CLAUDE.md`). Pregunta:
 >    - Si ya llegó **la captura de Commerce Manager** para C-180 y si se volvieron a subir las fotos del SSD y del teclado.
 >    - Cómo salieron las pruebas de la sección 2 (rc.12 a rc.15), si se subió algo sin Claude y el redondeo de C-96.

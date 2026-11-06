@@ -14,3 +14,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **Gemini:** `GEMINI.md` y `docs/plan/PLAN_GEMINI.md`.
 - **Claude:** `CLAUDE.md` y `docs/plan/PLAN_CLAUDE.md`.
 - Punto de partida de todos: `docs/plan/SIGUIENTE.md`.
+
+## Diseño (skills globales)
+
+Las skills de diseño instaladas (`impeccable`, `design-taste-frontend` y variantes de Taste, `ui-ux-pro-max`) y el MCP de Refero Styles **sí se pueden usar** para criticar, pulir y elevar la UI de ElectroShopVe, pero **el sistema de diseño de este repo manda siempre**:
+
+- Colores: solo los tokens de `app/globals.css` (`brand-*`, `ink`, `muted`, `line`, `surface`, `success`, `deal`…). Nunca un hex nuevo en un `className`, aunque una skill o un DESIGN.md de Refero lo proponga.
+- Tipografía: nada de `text-[7px]`…`text-[10px]`, `font-black` ni `font-extrabold`. No se cambia la fuente del sitio.
+- Sin dependencias nuevas (ni Framer Motion, ni GSAP, ni librerías de íconos): animaciones con CSS/Tailwind e íconos de `react-icons/fi`.
+- Las skills proponen; la tarjeta de la ronda decide el alcance. Si una mejora visual no está en tu tarjeta, anótala como sugerencia en tu estado, no la apliques.
+- Si una regla de una skill choca con `GEMINI.md`, `CLAUDE.md` o el plan, gana el archivo del repo.

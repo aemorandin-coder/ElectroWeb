@@ -390,9 +390,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - Búsqueda de productos en la web (C-155): un buscador con API gratuita (Brave o Google) como tercera fuente, si en producción los buscadores no le responden al servidor; buscar por código de barras desde el teléfono; proponer también la categoría y las etiquetas.
 
 **Limpieza (sin urgencia):**
-- Máquina de Andrés: la carpeta y las ramas de ChatGPT, y las ramas locales ya fusionadas (comandos en `SIGUIENTE.md`).
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
-- `public/uploads/` tiene 40 archivos versionados (favicons y fotos viejas de productos) aunque está en `.gitignore`: decidir si se sacan del índice (`git rm --cached`). Ojo: el próximo `git pull` en el servidor los borraría del disco; respaldar la carpeta antes (`estado/C-164.md`).
+- Hecho en C-185 (06/11): las ramas, el stash y los worktrees viejos de la máquina de Andrés, y los 40 uploads versionados (en el servidor se respaldan antes del próximo `git pull`, `SIGUIENTE.md` §2).
 
 ### 5.3 Crecimiento: qué frena y qué sigue
 La base técnica está: el embudo se mide (C-145), el catálogo es legible para buscadores e IA (C-149), el precio dice su IVA, hay cotizaciones para empresas y la ficha da confianza antes de pagar.

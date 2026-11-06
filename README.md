@@ -90,6 +90,6 @@ El guion hace `git pull`, compila en la carpeta que no se está sirviendo (`.nex
 - **Si el deploy cambia la base, el guion para** y muestra el SQL. Se revisa, se aplica con `npx prisma db push` y se corre de nuevo.
 - **No uses `npm run build` a mano con la tienda corriendo:** borra la carpeta que se está sirviendo y PM2 entra en un ciclo de reinicios. Hasta el 26/09/2026 pasó 55.910 veces.
 
-`ecosystem.config.js` está desactualizado (nombre `electroshop-web` y otra carpeta): no lo uses con `pm2 start`, porque levantaría un segundo proceso en el puerto 3000.
+PM2 corre un solo proceso, `electroshop`, y lo reinicia el guion. No hay `ecosystem.config.js`: el viejo estaba desactualizado (levantaba un segundo proceso en el puerto 3000) y se borró en C-185.
 
 nginx debe pasar la IP real (`X-Real-IP` y `X-Forwarded-For`): los límites de intentos y la bitácora dependen de ella.

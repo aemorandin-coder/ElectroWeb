@@ -1,155 +1,125 @@
 import {
-  IconoAudifonos, IconoBateria, IconoCableUsb, IconoCamaraFotos, IconoCamaraSeguridad, IconoCelularTableta, IconoChip,
-  IconoCircuito, IconoConfiguracion, IconoConsola, IconoControl, IconoCuadricula, IconoDiscoDuro, IconoGarantia,
-  IconoGiftCard, IconoImpresora, IconoLaptop, IconoMicrofono, IconoMonitor, IconoMouse, IconoPaquete, IconoParlante,
-  IconoPcEscritorio, IconoRelojInteligente, IconoRouter, IconoServidor, IconoSoftware, IconoVideojuegos,
+  IconoAudifonos, IconoBateria, IconoCableUsb, IconoCamaraFotos, IconoCamaraSeguridad, IconoCelular, IconoCelularTableta,
+  IconoChip, IconoCircuito, IconoClave, IconoConfiguracion, IconoConsola, IconoControl, IconoCuadricula, IconoDigital,
+  IconoDiscoDuro, IconoGarantia, IconoGiftCard, IconoImpresora, IconoLaptop, IconoMicrofono, IconoMonitor, IconoMouse,
+  IconoPaquete, IconoParlante, IconoPcEscritorio, IconoPcGaming, IconoRegalo, IconoRelojInteligente, IconoRouter,
+  IconoServicioTecnico, IconoServidor, IconoSoftware, IconoTableta, IconoVideojuegos,
+  type IconType,
 } from '@/components/iconos';
-import type { ComponentType, SVGAttributes } from 'react';
 
-type IconComponent = ComponentType<SVGAttributes<SVGElement> & { className?: string }>;
+// ─── Íconos de categoría: solo los del pack propio (C-189) ──────────────────
+// Una categoría guarda el nombre de su ícono. El selector del panel ofrece solo estos y guarda el nombre del componente
+// ("IconoConsola"). Las categorías de antes guardan el de react-icons ("GiGameConsole"): se leen con NOMBRES_ANTERIORES y
+// se ven con el mismo dibujo, sin tocar la base. Un nombre que no está en ninguna de las dos listas se ve como "Otros".
+// No se carga ninguna librería: antes un cargador importaba familias enteras de react-icons y lucide, y toda página con
+// un logo de esas familias bajaba la familia completa (el checkout, 4,97 MB de Simple Icons).
+export interface CategoryIconOption {
+  name: string;
+  label: string;
+  Icon: IconType;
+}
 
-// ─── Preset icon list ───────────────────────────────────────────────────────
-// C-188: las opciones fijas se dibujan con los íconos propios de Electro Shop. La categoría sigue guardando el mismo
-// nombre (el de react-icons, "FiMonitor"), así que la base no cambia. Con el significado de categoría: FiSmartphone es
-// "Celulares y tablets" y FiGift es "Gift cards". Las ocho últimas son los nombres que ya usan categorías de producción
-// (antes no eran opciones y la tienda los bajaba de react-icons al abrir la página; FiGift salía como "Otros").
-export const ICON_OPTIONS: { name: string; label: string; Icon: IconComponent }[] = [
-  { name: 'FiMonitor',       label: 'PC / Monitor',   Icon: IconoMonitor },
-  { name: 'FiSmartphone',    label: 'Smartphones',    Icon: IconoCelularTableta },
-  { name: 'FiCpu',           label: 'Componentes',    Icon: IconoChip },
-  { name: 'FiHardDrive',     label: 'Almacenamiento', Icon: IconoDiscoDuro },
-  { name: 'FiHeadphones',    label: 'Audio',          Icon: IconoAudifonos },
-  { name: 'FiWifi',          label: 'Redes',          Icon: IconoRouter },
-  { name: 'FiCamera',        label: 'Fotografía',     Icon: IconoCamaraFotos },
-  { name: 'FiPrinter',       label: 'Impresoras',     Icon: IconoImpresora },
-  { name: 'FiBattery',       label: 'Energía',        Icon: IconoBateria },
-  { name: 'FiSliders',       label: 'Accesorios',     Icon: IconoMouse },
-  { name: 'FiMic',           label: 'Micrófonos',     Icon: IconoMicrofono },
-  { name: 'FiVolume2',       label: 'Parlantes',      Icon: IconoParlante },
-  { name: 'FiPackage',       label: 'General',        Icon: IconoPaquete },
-  { name: 'FiShield',        label: 'Seguridad',      Icon: IconoGarantia },
-  { name: 'FiWatch',         label: 'Wearables',      Icon: IconoRelojInteligente },
-  { name: 'FiServer',        label: 'Servidores',     Icon: IconoServidor },
-  { name: 'FiSettings',      label: 'Herramientas',   Icon: IconoConfiguracion },
-  { name: 'FiGrid',          label: 'Otros',          Icon: IconoCuadricula },
-  { name: 'MdGamepad',       label: 'Gaming',         Icon: IconoVideojuegos },
-  { name: 'MdSportsEsports', label: 'Esports',        Icon: IconoControl },
-  { name: 'FiGift',          label: 'Gift cards',     Icon: IconoGiftCard },
-  { name: 'GiGameConsole',   label: 'Consolas',       Icon: IconoConsola },
-  { name: 'FaLaptop',        label: 'Laptops',        Icon: IconoLaptop },
-  { name: 'BsPcDisplay',     label: 'PC de escritorio', Icon: IconoPcEscritorio },
-  { name: 'TbDeviceCctv',    label: 'CCTV',           Icon: IconoCamaraSeguridad },
-  { name: 'FaMicrochip',     label: 'Electrónica',    Icon: IconoCircuito },
-  { name: 'BsPlugin',        label: 'Adaptadores',    Icon: IconoCableUsb },
-  { name: 'IoLogoWindows',   label: 'Software',       Icon: IconoSoftware },
+export const ICON_OPTIONS: CategoryIconOption[] = [
+  // Gaming y digital
+  { name: 'IconoGiftCard',         label: 'Gift cards y recargas',   Icon: IconoGiftCard },
+  { name: 'IconoVideojuegos',      label: 'Videojuegos',             Icon: IconoVideojuegos },
+  { name: 'IconoConsola',          label: 'Consolas',                Icon: IconoConsola },
+  { name: 'IconoControl',          label: 'Controles y mandos',      Icon: IconoControl },
+  { name: 'IconoMouse',            label: 'Accesorios gaming',       Icon: IconoMouse },
+  { name: 'IconoPcGaming',         label: 'PC gaming',               Icon: IconoPcGaming },
+  { name: 'IconoSoftware',         label: 'Software',                Icon: IconoSoftware },
+  { name: 'IconoClave',            label: 'Licencias',               Icon: IconoClave },
+  { name: 'IconoDigital',          label: 'Códigos digitales',       Icon: IconoDigital },
+  // Computación
+  { name: 'IconoLaptop',           label: 'Laptops',                 Icon: IconoLaptop },
+  { name: 'IconoPcEscritorio',     label: 'PC de escritorio',        Icon: IconoPcEscritorio },
+  { name: 'IconoMonitor',          label: 'Monitores',               Icon: IconoMonitor },
+  { name: 'IconoChip',             label: 'Componentes de PC',       Icon: IconoChip },
+  { name: 'IconoDiscoDuro',        label: 'Almacenamiento',          Icon: IconoDiscoDuro },
+  { name: 'IconoImpresora',        label: 'Impresoras',              Icon: IconoImpresora },
+  { name: 'IconoServidor',         label: 'Servidores',              Icon: IconoServidor },
+  // Celulares, audio y foto
+  { name: 'IconoCelularTableta',   label: 'Celulares y tablets',     Icon: IconoCelularTableta },
+  { name: 'IconoCelular',          label: 'Celulares',               Icon: IconoCelular },
+  { name: 'IconoTableta',          label: 'Tablets',                 Icon: IconoTableta },
+  { name: 'IconoRelojInteligente', label: 'Wearables',               Icon: IconoRelojInteligente },
+  { name: 'IconoAudifonos',        label: 'Audio',                   Icon: IconoAudifonos },
+  { name: 'IconoMicrofono',        label: 'Micrófonos',              Icon: IconoMicrofono },
+  { name: 'IconoParlante',         label: 'Parlantes',               Icon: IconoParlante },
+  { name: 'IconoCamaraFotos',      label: 'Fotografía',              Icon: IconoCamaraFotos },
+  // Electrónica, redes y energía
+  { name: 'IconoCircuito',         label: 'Electrónica y repuestos', Icon: IconoCircuito },
+  { name: 'IconoCableUsb',         label: 'Cables y adaptadores',    Icon: IconoCableUsb },
+  { name: 'IconoBateria',          label: 'Energía',                 Icon: IconoBateria },
+  { name: 'IconoRouter',           label: 'Redes',                   Icon: IconoRouter },
+  { name: 'IconoCamaraSeguridad',  label: 'CCTV y seguridad',        Icon: IconoCamaraSeguridad },
+  { name: 'IconoGarantia',         label: 'Protección',              Icon: IconoGarantia },
+  // General
+  { name: 'IconoServicioTecnico',  label: 'Servicio técnico',        Icon: IconoServicioTecnico },
+  { name: 'IconoConfiguracion',    label: 'Herramientas',            Icon: IconoConfiguracion },
+  { name: 'IconoRegalo',           label: 'Regalos',                 Icon: IconoRegalo },
+  { name: 'IconoPaquete',          label: 'General',                 Icon: IconoPaquete },
+  { name: 'IconoCuadricula',       label: 'Otros',                   Icon: IconoCuadricula },
 ];
 
-// Synchronous lookup map for preset icons
-const ICON_MAP: Record<string, IconComponent> = Object.fromEntries(
-  ICON_OPTIONS.map(o => [o.name, o.Icon])
-);
+/**
+ * Los nombres de react-icons que guardan las categorías de antes, con su dibujo del pack (el mismo que C-188).
+ * Las 28 opciones del selector viejo (entre ellas los 14 nombres que usan las categorías de producción) y los de
+ * categoría de la tabla de equivalencias de C-188.
+ */
+const NOMBRES_ANTERIORES = new Map<string, string>([
+  ['FiMonitor', 'IconoMonitor'], ['FiSmartphone', 'IconoCelularTableta'], ['FiCpu', 'IconoChip'],
+  ['FiHardDrive', 'IconoDiscoDuro'], ['FiHeadphones', 'IconoAudifonos'], ['FiWifi', 'IconoRouter'],
+  ['FiCamera', 'IconoCamaraFotos'], ['FiPrinter', 'IconoImpresora'], ['FiBattery', 'IconoBateria'],
+  ['FiSliders', 'IconoMouse'], ['FiMic', 'IconoMicrofono'], ['FiVolume2', 'IconoParlante'],
+  ['FiPackage', 'IconoPaquete'], ['FiShield', 'IconoGarantia'], ['FiWatch', 'IconoRelojInteligente'],
+  ['FiServer', 'IconoServidor'], ['FiSettings', 'IconoConfiguracion'], ['FiGrid', 'IconoCuadricula'],
+  ['MdGamepad', 'IconoVideojuegos'], ['MdSportsEsports', 'IconoControl'], ['FiGift', 'IconoGiftCard'],
+  ['GiGameConsole', 'IconoConsola'], ['FaLaptop', 'IconoLaptop'], ['BsPcDisplay', 'IconoPcEscritorio'],
+  ['TbDeviceCctv', 'IconoCamaraSeguridad'], ['FaMicrochip', 'IconoCircuito'], ['BsPlugin', 'IconoCableUsb'],
+  ['IoLogoWindows', 'IconoSoftware'],
+  ['FaGamepad', 'IconoControl'], ['GiLaptop', 'IconoLaptop'], ['FiTablet', 'IconoTableta'], ['FaEthernet', 'IconoRouter'],
+  ['PiSecurityCameraDuotone', 'IconoCamaraSeguridad'], ['SiPcgamingwiki', 'IconoPcGaming'], ['FiTool', 'IconoServicioTecnico'],
+]);
 
-/** Synchronous lookup — devuelve la cuadrícula ("Otros") si el nombre no es una opción fija. */
-export function getCategoryIcon(name: string | null | undefined): IconComponent {
-  return (name && ICON_MAP[name]) ? ICON_MAP[name] : IconoCuadricula;
+const POR_NOMBRE = new Map(ICON_OPTIONS.map((o) => [o.name, o]));
+
+/** La opción del selector que corresponde a un nombre guardado, del pack ("IconoConsola") o de antes ("GiGameConsole"). */
+export function getCategoryIconOption(name: string | null | undefined): CategoryIconOption | null {
+  if (!name) return null;
+  return POR_NOMBRE.get(name) ?? POR_NOMBRE.get(NOMBRES_ANTERIORES.get(name) ?? '') ?? null;
 }
 
+/** El dibujo de una categoría; la cuadrícula ("Otros") si no tiene o si el nombre no se conoce. */
+export function getCategoryIcon(name: string | null | undefined): IconType {
+  return getCategoryIconOption(name)?.Icon ?? IconoCuadricula;
+}
+
+/** El ícono que se usa cuando la categoría no eligió ninguno (no se guarda: se calcula al mostrarla). */
 export function getAutoIcon(categoryName: string): string {
   const n = categoryName.toLowerCase();
-  if (/laptop|notebook|computad|desktop|pc\b|monitor/.test(n)) return 'FiMonitor';
-  if (/celular|móvil|movil|teléfono|telefono|smartphone/.test(n)) return 'FiSmartphone';
-  if (/componente|procesador|cpu|tarjeta (madre|gráfica|video)/.test(n)) return 'FiCpu';
-  if (/disco|almacen|ssd|hdd|memoria/.test(n)) return 'FiHardDrive';
-  if (/audio|auricular|headphone|audifonos/.test(n)) return 'FiHeadphones';
-  if (/\bred\b|router|wifi|switch\b|cable|internet|modem/.test(n)) return 'FiWifi';
-  if (/cámara|camara|foto|video/.test(n)) return 'FiCamera';
-  if (/impres|printer|toner|cartucho/.test(n)) return 'FiPrinter';
-  if (/batería|bateria|ups|pila|carga|energía|energia/.test(n)) return 'FiBattery';
-  if (/gaming|gamer|juego|consola|videojuego/.test(n)) return 'MdGamepad';
-  if (/micrófono|microfono/.test(n)) return 'FiMic';
-  if (/parlan|speaker|sonido/.test(n)) return 'FiVolume2';
-  if (/seguridad|vigilancia/.test(n)) return 'FiShield';
-  if (/smartwatch|reloj|wearable/.test(n)) return 'FiWatch';
-  if (/servidor|server|nas/.test(n)) return 'FiServer';
-  if (/acceso|periféri|teclado|mouse|ratón/.test(n)) return 'FiSliders';
-  return 'FiGrid';
-}
-
-// ─── Dynamic icon loading (any react-icons / lucide library) ────────────────
-
-// Icon name prefix → react-icons sub-package key
-const PREFIX_LIBRARY: Record<string, string> = {
-  Fi: 'fi', Gi: 'gi', Md: 'md', Si: 'si', Fa: 'fa',
-  Bs: 'bs', Hi: 'hi', Io: 'io5', Ri: 'ri', Tb: 'tb',
-  Bi: 'bi', Ai: 'ai', Ci: 'ci', Pi: 'pi', Ti: 'ti',
-  Wi: 'wi', Cg: 'cg', Im: 'im', Sl: 'sl', Di: 'di',
-  Gr: 'gr', Lu: 'lu', Vsc: 'vsc', Lia: 'lia',
-};
-
-export function getIconLibrary(iconName: string): string | null {
-  // Check 3-letter prefixes first (Vsc, Lia…)
-  if (PREFIX_LIBRARY[iconName.substring(0, 3)]) return PREFIX_LIBRARY[iconName.substring(0, 3)];
-  return PREFIX_LIBRARY[iconName.substring(0, 2)] || null;
-}
-
-/** Parse "import { GiLaptop } from 'react-icons/gi'" OR just "GiLaptop" */
-export function parseImportStatement(input: string): { iconName: string; library: string } | null {
-  const full = input.match(/\{\s*([A-Za-z0-9]+)\s*\}\s+from\s+['"]([^'"]+)['"]/);
-  if (full) return { iconName: full[1].trim(), library: full[2].trim() };
-  if (/^[A-Z][A-Za-z0-9]+$/.test(input.trim())) {
-    const name = input.trim();
-    const lib = getIconLibrary(name);
-    if (lib) return { iconName: name, library: `react-icons/${lib}` };
-  }
-  return null;
-}
-
-/**
- * Dynamically load any react-icons icon by name.
- * Works in both browser (client components) and Node.js (server components).
- * Each library is a separate webpack chunk — only downloaded when needed.
- */
-export async function loadIconDynamic(iconName: string): Promise<IconComponent | null> {
-  // Preset cache hit — no async needed
-  if (ICON_MAP[iconName]) return ICON_MAP[iconName];
-
-  const lib = getIconLibrary(iconName);
-  if (!lib) return null;
-
-  try {
-    // Static import() paths so webpack can create per-library code-split chunks.
-    // Ojo (C-188): una familia que se importa aquí entera no se puede recortar en ningún otro lado: si un componente usa un
-    // logo de esa familia, la página baja la familia completa. Por eso ya no está 'fa6' (ningún nombre llegaba: "Fa" es
-    // 'fa') y los logos de marca de la tienda (FaWhatsapp en el pie y en el botón flotante) vienen de 'react-icons/fa6'.
-    let mod: Record<string, unknown>;
-    switch (lib) {
-      case 'gi':  mod = await import('react-icons/gi');  break;
-      case 'fa':  mod = await import('react-icons/fa');  break;
-      case 'bs':  mod = await import('react-icons/bs');  break;
-      case 'hi':  mod = await import('react-icons/hi');  break;
-      case 'io5': mod = await import('react-icons/io5'); break;
-      case 'ri':  mod = await import('react-icons/ri');  break;
-      case 'tb':  mod = await import('react-icons/tb');  break;
-      case 'bi':  mod = await import('react-icons/bi');  break;
-      case 'ai':  mod = await import('react-icons/ai');  break;
-      case 'si':  mod = await import('react-icons/si');  break;
-      case 'pi':  mod = await import('react-icons/pi');  break;
-      case 'ti':  mod = await import('react-icons/ti');  break;
-      case 'wi':  mod = await import('react-icons/wi');  break;
-      case 'cg':  mod = await import('react-icons/cg');  break;
-      case 'ci':  mod = await import('react-icons/ci');  break;
-      case 'di':  mod = await import('react-icons/di');  break;
-      case 'gr':  mod = await import('react-icons/gr');  break;
-      case 'im':  mod = await import('react-icons/im');  break;
-      case 'sl':  mod = await import('react-icons/sl');  break;
-      case 'vsc': mod = await import('react-icons/vsc'); break;
-      case 'lu': mod = await import('lucide-react'); break;
-      default: return null;
-    }
-    return (mod[iconName] as IconComponent) ?? null;
-  } catch {
-    return null;
-  }
+  if (/gift ?card|recarga/.test(n)) return 'IconoGiftCard';
+  if (/consola/.test(n)) return 'IconoConsola';
+  if (/laptop|notebook|port[aá]til/.test(n)) return 'IconoLaptop';
+  if (/software|licencia|antivirus/.test(n)) return 'IconoSoftware';
+  if (/cctv|vigilancia|c[aá]maras? de seguridad/.test(n)) return 'IconoCamaraSeguridad';
+  if (/computad|desktop|pc\b|monitor/.test(n)) return 'IconoMonitor';
+  if (/celular|móvil|movil|teléfono|telefono|smartphone/.test(n)) return 'IconoCelularTableta';
+  if (/componente|procesador|cpu|tarjeta (madre|gráfica|video)/.test(n)) return 'IconoChip';
+  if (/disco|almacen|ssd|hdd|memoria/.test(n)) return 'IconoDiscoDuro';
+  if (/audio|auricular|headphone|audifonos/.test(n)) return 'IconoAudifonos';
+  if (/\bred\b|router|wifi|switch\b|cable|internet|modem/.test(n)) return 'IconoRouter';
+  if (/cámara|camara|foto|video/.test(n)) return 'IconoCamaraFotos';
+  if (/impres|printer|toner|cartucho/.test(n)) return 'IconoImpresora';
+  if (/batería|bateria|ups|pila|carga|energía|energia/.test(n)) return 'IconoBateria';
+  if (/gaming|gamer|juego|videojuego/.test(n)) return 'IconoVideojuegos';
+  if (/micrófono|microfono/.test(n)) return 'IconoMicrofono';
+  if (/parlan|speaker|sonido/.test(n)) return 'IconoParlante';
+  if (/seguridad/.test(n)) return 'IconoGarantia';
+  if (/smartwatch|reloj|wearable/.test(n)) return 'IconoRelojInteligente';
+  if (/servidor|server|nas/.test(n)) return 'IconoServidor';
+  if (/acceso|periféri|teclado|mouse|ratón/.test(n)) return 'IconoMouse';
+  return 'IconoCuadricula';
 }
 
 // ─── Color system ────────────────────────────────────────────────────────────

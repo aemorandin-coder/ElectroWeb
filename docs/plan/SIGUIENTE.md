@@ -76,9 +76,7 @@ npx tsx scripts/campanas-navidad.ts --aplicar  # crea los 2 borradores (otra vez
 - El código: `git reset --hard v1.0.0-rc.20 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas no molestan al código anterior.
 - Una categoría guardada con un ícono del pack se vería como "Otros" con el código anterior, hasta volver a elegirlo.
 
-**Para que Andrés confirme (C-190):**
-- Las gift cards con varios montos aparecen en cada presupuesto donde tienen un monto. La alternativa es dejarlas solo en "Hasta $20", y entonces los otros dos tramos quedan con pocos productos.
-- La fecha de corte se acepta solo hasta el 24 de diciembre. Para Reyes habría que cambiar el texto.
+**Decidido por Andrés (06/11, C-190):** las gift cards con varios montos salen en cada presupuesto donde tienen un monto, y la franja es solo para Navidad, sin versión de Reyes.
 
 ### Por confirmar de rc.20 (C-186 y C-188)
 Los íconos en la tienda, el panel y el teléfono; el gorro y la tarjeta navideña. Las pruebas están en `HISTORIAL.md`, 06/11.

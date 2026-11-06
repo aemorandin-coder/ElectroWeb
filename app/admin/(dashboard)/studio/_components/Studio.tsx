@@ -4,7 +4,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { FiAlertTriangle, FiArrowLeft, FiCheck, FiCloud, FiCopy, FiCornerUpLeft, FiCornerUpRight, FiDownload, FiPause, FiPlay, FiTrash2 } from 'react-icons/fi';
+import {
+  IconoAdvertencia, IconoCheck, IconoCopiar, IconoDescargar, IconoDeshacer, IconoEliminar, IconoFlechaIzquierda,
+  IconoNube, IconoPausa, IconoPlay, IconoRehacer,
+} from '@/components/iconos';
 import { adminEmpty, adminHint, adminIconButton, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useDelNavegador } from '@/lib/hooks/useMontado';
@@ -386,7 +389,7 @@ export default function Studio({ id }: { id: string }) {
 
   const back = (
     <Link href="/admin/studio" className="mb-3 inline-flex h-10 items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline">
-      <FiArrowLeft className="h-4 w-4" aria-hidden="true" />
+      <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" />
       Historias
     </Link>
   );
@@ -423,11 +426,11 @@ export default function Studio({ id }: { id: string }) {
           </button>
           <div className="flex flex-wrap justify-center gap-2">
             <button type="button" aria-pressed={playing} onClick={() => setPlaying((p) => !p)} className={toggleButton(playing)}>
-              {playing ? <FiPause className="mr-1.5 h-4 w-4" aria-hidden="true" /> : <FiPlay className="mr-1.5 h-4 w-4" aria-hidden="true" />}
+              {playing ? <IconoPausa className="mr-1.5 h-4 w-4" aria-hidden="true" /> : <IconoPlay className="mr-1.5 h-4 w-4" aria-hidden="true" />}
               {playing ? 'Detener' : 'Ver animación'}
             </button>
             <button type="button" onClick={() => void exportPng()} disabled={busy} className={`${adminSecondaryButton} h-9 px-3`}>
-              <FiDownload className="h-4 w-4" aria-hidden="true" />
+              <IconoDescargar className="h-4 w-4" aria-hidden="true" />
               Imagen
             </button>
           </div>
@@ -471,25 +474,25 @@ export default function Studio({ id }: { id: string }) {
               <h1 className="truncate text-base font-bold text-ink">{current.name || 'Sin nombre'}</h1>
               <span className="flex shrink-0 items-center gap-1">
                 <button type="button" onClick={studio.undo} disabled={!studio.canUndo} className={adminIconButton} aria-label="Deshacer (Ctrl+Z)" title="Deshacer (Ctrl+Z)">
-                  <FiCornerUpLeft className="h-4 w-4" aria-hidden="true" />
+                  <IconoDeshacer className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button type="button" onClick={studio.redo} disabled={!studio.canRedo} className={adminIconButton} aria-label="Rehacer (Ctrl+Mayús+Z)" title="Rehacer (Ctrl+Mayús+Z)">
-                  <FiCornerUpRight className="h-4 w-4" aria-hidden="true" />
+                  <IconoRehacer className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <span className="mx-1 h-6 w-px bg-line" aria-hidden="true" />
                 <button type="button" onClick={() => void onDuplicate()} className={adminIconButton} aria-label="Duplicar esta historia" title="Duplicar">
-                  <FiCopy className="h-4 w-4" aria-hidden="true" />
+                  <IconoCopiar className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button type="button" onClick={() => void onRemove()} className={`${adminIconButton} text-deal hover:bg-deal-bg`} aria-label="Eliminar esta historia" title="Eliminar">
-                  <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                  <IconoEliminar className="h-4 w-4" aria-hidden="true" />
                 </button>
               </span>
             </div>
             <div className="-mt-3 flex justify-end">
               <span className="flex shrink-0 items-center gap-1 text-xs text-muted" aria-live="polite">
-                {status === 'saved' && <FiCheck className="h-3.5 w-3.5 text-success-strong" aria-hidden="true" />}
-                {status === 'saving' && <FiCloud className="h-3.5 w-3.5" aria-hidden="true" />}
-                {status === 'error' && <FiAlertTriangle className="h-3.5 w-3.5 text-deal" aria-hidden="true" />}
+                {status === 'saved' && <IconoCheck className="h-3.5 w-3.5 text-success-strong" aria-hidden="true" />}
+                {status === 'saving' && <IconoNube className="h-3.5 w-3.5" aria-hidden="true" />}
+                {status === 'error' && <IconoAdvertencia className="h-3.5 w-3.5 text-deal" aria-hidden="true" />}
                 {STATUS_TEXT[status]}
               </span>
             </div>
@@ -511,7 +514,7 @@ export default function Studio({ id }: { id: string }) {
                         done ? 'border-success-strong bg-success-strong text-white' : 'border-line-strong bg-white'
                       }`}
                     >
-                      {done ? <FiCheck className="h-3.5 w-3.5" aria-label="Listo" /> : k}
+                      {done ? <IconoCheck className="h-3.5 w-3.5" aria-label="Listo" /> : k}
                     </span>
                     {label}
                   </button>

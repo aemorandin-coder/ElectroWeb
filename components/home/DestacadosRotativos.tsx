@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { FiChevronLeft, FiChevronRight, FiPause, FiPlay } from 'react-icons/fi';
+import { IconoChevronDerecha, IconoChevronIzquierda, IconoPausa, IconoPlay } from '@/components/iconos';
 import ProductShelf from '@/components/ui/ProductShelf';
 import { trackEvent } from '@/components/AnalyticsTracker';
 
@@ -111,11 +111,11 @@ export default function DestacadosRotativos({ estrellas, tarjetas, nombres }: De
         {total > 1 && (
           <div data-controles className="absolute right-3 top-3 z-10 flex items-center gap-0.5 rounded-full border border-line bg-white/95 p-0.5 shadow-sm">
             <button type="button" className={boton} onClick={() => ir(actual - 1)} aria-label="Destacado anterior">
-              <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
+              <IconoChevronIzquierda className="h-4 w-4" aria-hidden="true" />
             </button>
             <span className="min-w-12 text-center text-xs font-medium text-muted" aria-hidden="true">{actual + 1} de {total}</span>
             <button type="button" className={boton} onClick={() => ir(actual + 1)} aria-label="Destacado siguiente">
-              <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+              <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
             </button>
             {permitido && (
               <button
@@ -124,7 +124,7 @@ export default function DestacadosRotativos({ estrellas, tarjetas, nombres }: De
                 onClick={() => setEstado((e) => (e === 'girando' ? 'pausa' : 'girando'))}
                 aria-label={estado === 'girando' ? 'Pausar la rotación de destacados' : 'Rotar los destacados'}
               >
-                {estado === 'girando' ? <FiPause className="h-4 w-4" aria-hidden="true" /> : <FiPlay className="h-4 w-4" aria-hidden="true" />}
+                {estado === 'girando' ? <IconoPausa className="h-4 w-4" aria-hidden="true" /> : <IconoPlay className="h-4 w-4" aria-hidden="true" />}
               </button>
             )}
           </div>

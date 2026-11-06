@@ -4,7 +4,7 @@ import { formatPuntos, formatUSD } from '@/lib/currency';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiCheck } from 'react-icons/fi';
+import { IconoCandado, IconoCerrar, IconoCheck, IconoChevronDerecha, IconoEstrellaLlena, IconoPlay } from '@/components/iconos';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatRating } from '@/lib/currency';
 
@@ -89,9 +89,7 @@ function StarRow({ rating }: { rating: number }) {
   return (
     <span className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((s) => (
-        <svg key={s} className={`w-4 h-4 ${s <= Math.round(rating) ? 'text-warning fill-warning' : 'text-line fill-line'}`} viewBox="0 0 20 20">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
+        <IconoEstrellaLlena key={s} className={`w-4 h-4 ${s <= Math.round(rating) ? 'text-warning' : 'text-line'}`} />
       ))}
     </span>
   );
@@ -235,9 +233,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
                       className="w-full flex items-center justify-between px-4 py-3 bg-surface text-left hover:bg-line transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <svg className={`w-4 h-4 text-muted transition-transform ${openModule === mod.id ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                        <IconoChevronDerecha className={`w-4 h-4 text-muted transition-transform ${openModule === mod.id ? 'rotate-90' : ''}`} />
                         <span className="font-semibold text-sm text-ink">{mod.title}</span>
                       </div>
                       <span className="text-xs text-muted">{mod.lessons.length} lecciones</span>
@@ -253,16 +249,12 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
                                   onClick={() => setActiveLesson(lesson)}
                                   className="flex items-center gap-2 text-sm text-brand-500 hover:underline"
                                 >
-                                  <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M8 5v14l11-7z" />
-                                  </svg>
+                                  <IconoPlay lleno className="w-4 h-4 shrink-0" />
                                   {lesson.title}
                                 </button>
                               ) : (
                                 <div className="flex items-center gap-2 text-sm text-muted">
-                                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                  </svg>
+                                  <IconoCandado className="w-4 h-4 shrink-0" />
                                   {lesson.title}
                                 </div>
                               )}
@@ -321,9 +313,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
                 <div className="flex items-center gap-1 mb-3">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <button key={s} onClick={() => setMyRating(s)}>
-                      <svg className={`w-7 h-7 transition-colors ${s <= myRating ? 'text-warning fill-warning' : 'text-line fill-line hover:text-warning hover:fill-warning'}`} viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
+                      <IconoEstrellaLlena className={`w-7 h-7 transition-colors ${s <= myRating ? 'text-warning' : 'text-line hover:text-warning'}`} />
                     </button>
                   ))}
                 </div>
@@ -356,7 +346,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-semibold text-ink">{review.user.name || 'Usuario'}</span>
-                        {review.isVerified && <span className="inline-flex items-center gap-1 text-xs text-success-strong font-medium"><FiCheck className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />Verificado</span>}
+                        {review.isVerified && <span className="inline-flex items-center gap-1 text-xs text-success-strong font-medium"><IconoCheck className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />Verificado</span>}
                       </div>
                       <StarRow rating={review.rating} />
                       {review.comment && <p className="text-sm text-muted mt-1">{review.comment}</p>}
@@ -399,7 +389,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-white font-semibold">{activeLesson.title}</h3>
               <button onClick={() => setActiveLesson(null)} className="text-white/70 hover:text-white">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <IconoCerrar className="w-6 h-6" />
               </button>
             </div>
             {activeLesson.videoUrl && getEmbedUrl(activeLesson.videoUrl) ? (
@@ -468,9 +458,7 @@ function EnrollCard({
               <Image src={thumbnail} alt="Miniatura del curso" width={640} height={360} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-brand-950">
-                <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <IconoPlay className="w-12 h-12 text-white/20" />
               </div>
             )}
             {trailerUrl && (
@@ -479,9 +467,7 @@ function EnrollCard({
                 className="absolute inset-0 flex flex-col items-center justify-center bg-ink/40 hover:bg-ink/50 transition-colors group"
               >
                 <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform mb-2">
-                  <svg className="w-6 h-6 text-brand-500 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
+                  <IconoPlay lleno className="w-6 h-6 text-brand-500 ml-1" />
                 </div>
                 <span className="text-white text-sm font-semibold">Ver tráiler del curso</span>
               </button>

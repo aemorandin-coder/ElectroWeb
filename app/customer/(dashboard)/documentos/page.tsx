@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FiCheckCircle, FiClock, FiDownload, FiFileText } from 'react-icons/fi';
+import { IconoConfirmado, IconoDescargar, IconoDocumento, IconoReloj } from '@/components/iconos';
 import { adminBadge, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import SignDocumentModal from '@/components/legal/SignDocumentModal';
 
@@ -42,7 +42,7 @@ export default function DocumentosPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 lg:p-6">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><FiFileText className="h-6 w-6" aria-hidden="true" /></span>
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><IconoDocumento className="h-6 w-6" aria-hidden="true" /></span>
         <div>
           <h1 className="text-lg font-bold text-ink lg:text-2xl">Mis documentos</h1>
           <p className="text-sm text-muted">Los documentos que firmaste, con su constancia en PDF.</p>
@@ -67,7 +67,7 @@ export default function DocumentosPage() {
             {docs.map((d) => (
               <li key={d.slug} className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 sm:flex-row sm:items-center">
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${d.signed ? 'bg-success-strong/10 text-success-strong' : 'bg-warning/15 text-warning-strong'}`}>
-                  {d.signed ? <FiCheckCircle className="h-5 w-5" aria-hidden="true" /> : <FiClock className="h-5 w-5" aria-hidden="true" />}
+                  {d.signed ? <IconoConfirmado className="h-5 w-5" aria-hidden="true" /> : <IconoReloj className="h-5 w-5" aria-hidden="true" />}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-ink">{d.title}</p>
@@ -83,7 +83,7 @@ export default function DocumentosPage() {
                 {d.signed ? (
                   d.signatureId && (
                     <a href={`/api/legal/firmas/${d.signatureId}/pdf`} className={adminSecondaryButton}>
-                      <FiDownload className="h-4 w-4" aria-hidden="true" /> Descargar PDF
+                      <IconoDescargar className="h-4 w-4" aria-hidden="true" /> Descargar PDF
                     </a>
                   )
                 ) : (
@@ -101,7 +101,7 @@ export default function DocumentosPage() {
                   <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
                     <span className="text-ink-soft">{f.title} · v{f.version} · {fecha(f.signedAt)}</span>
                     <a href={`/api/legal/firmas/${f.id}/pdf`} className="inline-flex min-h-11 items-center gap-1 font-semibold text-brand-600">
-                      <FiDownload className="h-4 w-4" aria-hidden="true" /> PDF
+                      <IconoDescargar className="h-4 w-4" aria-hidden="true" /> PDF
                     </a>
                   </li>
                 ))}

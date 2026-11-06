@@ -1,4 +1,4 @@
-import { FiAlertTriangle, FiInfo } from 'react-icons/fi';
+import { IconoAdvertencia, IconoInfo } from '@/components/iconos';
 import { adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { listaEnTexto } from '@/lib/edicion/producto';
 import type { CambioAjeno } from '@/lib/edicion/useEdicionEnVivo';
@@ -40,7 +40,7 @@ export default function AvisoCambioAjeno({ cambio, recurso, femenino, ocupado, o
     return (
       <div role="alert" className="mb-4 rounded-xl border border-deal/30 bg-deal-bg p-4 text-sm text-deal">
         <div className="flex items-start gap-3">
-          <FiAlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+          <IconoAdvertencia className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
           <div className="min-w-0 flex-1">
             <p className="font-semibold">
               {por.nombre} {borrado ? `borró para siempre ${este} ${recurso}` : `movió ${este} ${recurso} a la papelera`} {haceCuanto(cambio.en)}.
@@ -67,7 +67,7 @@ export default function AvisoCambioAjeno({ cambio, recurso, femenino, ocupado, o
     : `${por.nombre} guardó cambios ${haceCuanto(cambio.en)}${cambio.campos && cambio.campos.length > 0 ? `: ${listaEnTexto(cambio.campos)}` : ''}. Al guardar tú, se combinan con los tuyos.`;
   return (
     <div role="status" className="mb-4 flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-700">
-      <FiInfo className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+      <IconoInfo className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
       <p className="min-w-0 flex-1">{texto}</p>
       <button type="button" onClick={onCerrar} className="shrink-0 rounded-lg px-2 py-1 font-semibold hover:bg-white">Entendido</button>
     </div>

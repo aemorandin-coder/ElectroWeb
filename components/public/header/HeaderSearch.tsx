@@ -2,7 +2,7 @@
 
 import Form from 'next/form';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { FiSearch } from 'react-icons/fi';
+import { IconoBuscar } from '@/components/iconos';
 
 interface HeaderSearchProps {
   id: string;
@@ -43,7 +43,7 @@ export function SearchForm({ id, compact = false, defaultValue = '' }: HeaderSea
         className={INPUT}
       />
       <button type="submit" className={BUTTON} aria-label={compact ? 'Buscar' : undefined}>
-        <FiSearch className="h-4 w-4" aria-hidden="true" />
+        <IconoBuscar className="h-4 w-4" aria-hidden="true" />
         {!compact && <span>Buscar</span>}
       </button>
     </Form>

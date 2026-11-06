@@ -4,19 +4,9 @@ import { useEffect, useRef, useState, type ComponentType } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  FiBookOpen,
-  FiGift,
-  FiGrid,
-  FiHome,
-  FiLayers,
-  FiMail,
-  FiMoreHorizontal,
-  FiPackage,
-  FiShoppingCart,
-  FiTag,
-  FiTool,
-  FiX,
-} from 'react-icons/fi';
+  IconoCarrito, IconoCerrar, IconoCorreo, IconoCuadricula, IconoCursos, IconoGiftCard, IconoInicio, IconoMasOpciones,
+  IconoOferta, IconoPaquete, IconoServicioTecnico, IconoVariantes,
+} from '@/components/iconos';
 import { useCart } from '@/contexts/CartContext';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { esRutaDeAcceso } from '@/lib/rutas';
@@ -24,20 +14,20 @@ import { esRutaDeAcceso } from '@/lib/rutas';
 type IconType = ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
 
 const MAIN_ITEMS: Array<{ href: string; label: string; Icon: IconType }> = [
-  { href: '/', label: 'Inicio', Icon: FiHome },
-  { href: '/productos', label: 'Productos', Icon: FiGrid },
-  { href: '/categorias', label: 'Categorías', Icon: FiLayers },
-  { href: '/carrito', label: 'Carrito', Icon: FiShoppingCart },
+  { href: '/', label: 'Inicio', Icon: IconoInicio },
+  { href: '/productos', label: 'Productos', Icon: IconoCuadricula },
+  { href: '/categorias', label: 'Categorías', Icon: IconoVariantes },
+  { href: '/carrito', label: 'Carrito', Icon: IconoCarrito },
 ];
 
 const DRAWER_ITEMS: Array<{ href: string; label: string; Icon: IconType }> = [
   // C-102: ofertas de la tienda a la vista, como el "Deals" de Best Buy
-  { href: '/productos?oferta=1', label: 'Ofertas', Icon: FiTag },
-  { href: '/gift-cards', label: 'Gift Cards', Icon: FiGift },
-  { href: '/servicios', label: 'Servicios', Icon: FiTool },
-  { href: '/cursos', label: 'Cursos', Icon: FiBookOpen },
-  { href: '/contacto', label: 'Contacto', Icon: FiMail },
-  { href: '/solicitar-producto', label: 'Solicitar un producto', Icon: FiPackage },
+  { href: '/productos?oferta=1', label: 'Ofertas', Icon: IconoOferta },
+  { href: '/gift-cards', label: 'Gift Cards', Icon: IconoGiftCard },
+  { href: '/servicios', label: 'Servicios', Icon: IconoServicioTecnico },
+  { href: '/cursos', label: 'Cursos', Icon: IconoCursos },
+  { href: '/contacto', label: 'Contacto', Icon: IconoCorreo },
+  { href: '/solicitar-producto', label: 'Solicitar un producto', Icon: IconoPaquete },
 ];
 
 /**
@@ -139,7 +129,7 @@ export default function MobileNavBar() {
                 aria-label="Cerrar menú"
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-white"
               >
-                <FiX className="h-5 w-5" aria-hidden="true" />
+                <IconoCerrar className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
             <ul className="grid grid-cols-2 gap-3">
@@ -209,7 +199,7 @@ export default function MobileNavBar() {
               aria-controls="mobile-more-menu"
               className={`${itemClass} ${isDrawerOpen ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white'}`}
             >
-              <FiMoreHorizontal className="h-5 w-5" aria-hidden="true" />
+              <IconoMasOpciones className="h-5 w-5" aria-hidden="true" />
               <span>Más</span>
             </button>
           </li>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { FiAlertTriangle, FiCheck, FiRotateCcw, FiSave } from 'react-icons/fi';
+import { IconoAdvertencia, IconoCheck, IconoGuardar, IconoRestablecer } from '@/components/iconos';
 import {
   adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminSpinner, adminTab,
 } from '@/lib/admin-ui';
@@ -177,7 +177,7 @@ export default function SettingsPage() {
 
       {initial.maintenanceMode && active !== 'sistema' && (
         <button type="button" onClick={() => goTo('sistema')} className={`${adminNotice('warning')} mb-5 flex w-full items-center gap-2 text-left`}>
-          <FiAlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoAdvertencia className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="flex-1"><strong>La tienda está en mantenimiento.</strong> Los clientes no pueden comprar.</span>
           <span className="font-semibold underline">Ver</span>
         </button>
@@ -251,18 +251,18 @@ export default function SettingsPage() {
                 </p>
                 <div className="grid grid-cols-2 gap-2 sm:flex">
                   <button type="button" onClick={discard} disabled={saving} className={`${adminSecondaryButton} whitespace-nowrap px-3 sm:px-5`}>
-                    <FiRotateCcw className="hidden h-4 w-4 sm:block" aria-hidden="true" />
+                    <IconoRestablecer className="hidden h-4 w-4 sm:block" aria-hidden="true" />
                     Descartar
                   </button>
                   <button type="button" onClick={save} disabled={saving} className={`${adminPrimaryButton} whitespace-nowrap px-3 sm:px-5`}>
-                    {saving ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" /> : <FiSave className="hidden h-4 w-4 sm:block" aria-hidden="true" />}
+                    {saving ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" /> : <IconoGuardar className="hidden h-4 w-4 sm:block" aria-hidden="true" />}
                     {saving ? 'Guardando…' : <>Guardar<span className="hidden sm:inline"> cambios</span></>}
                   </button>
                 </div>
               </div>
             ) : justSaved ? (
               <p className="flex items-center justify-center gap-2 text-sm font-semibold text-success-strong">
-                <FiCheck className="h-4 w-4" aria-hidden="true" />
+                <IconoCheck className="h-4 w-4" aria-hidden="true" />
                 Todo guardado
               </p>
             ) : null}

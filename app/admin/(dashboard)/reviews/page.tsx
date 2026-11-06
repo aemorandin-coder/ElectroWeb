@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
-import { FiCheck, FiExternalLink, FiRefreshCw, FiStar, FiTrash2, FiX } from 'react-icons/fi';
+import { IconoAbrirAparte, IconoActualizar, IconoCerrar, IconoCheck, IconoEliminar, IconoEstrella } from '@/components/iconos';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -76,7 +76,7 @@ function Estrellas({ rating }: { rating: number }) {
     return (
         <span className="inline-flex items-center gap-0.5" role="img" aria-label={`${rating} de 5 estrellas`}>
             {[1, 2, 3, 4, 5].map((n) => (
-                <FiStar key={n} className={`h-4 w-4 ${n <= rating ? 'fill-warning text-warning' : 'text-subtle'}`} aria-hidden="true" />
+                <IconoEstrella key={n} lleno={n <= rating} className={`h-4 w-4 ${n <= rating ? 'text-warning' : 'text-subtle'}`} aria-hidden="true" />
             ))}
         </span>
     );
@@ -197,7 +197,7 @@ export default function AdminReviewsPage() {
             <div className="flex items-center gap-2 lg:justify-end [&>button:not(:last-child)]:flex-1 lg:[&>button:not(:last-child)]:flex-none">
                 {estado !== 'APPROVED' && (
                     <button type="button" onClick={() => aprobar(review)} disabled={busy} className={adminSuccessButton}>
-                        <FiCheck className="h-4 w-4" aria-hidden="true" /> Publicar
+                        <IconoCheck className="h-4 w-4" aria-hidden="true" /> Publicar
                     </button>
                 )}
                 {estado !== 'REJECTED' && (
@@ -207,11 +207,11 @@ export default function AdminReviewsPage() {
                         disabled={busy}
                         className={adminSecondaryButton}
                     >
-                        <FiX className="h-4 w-4" aria-hidden="true" /> {estado === 'APPROVED' ? 'Retirar' : 'Rechazar'}
+                        <IconoCerrar className="h-4 w-4" aria-hidden="true" /> {estado === 'APPROVED' ? 'Retirar' : 'Rechazar'}
                     </button>
                 )}
                 <button type="button" onClick={() => eliminar(review)} disabled={busy} className={`${adminIconButton} h-11 w-11`} aria-label="Eliminar reseña" title="Eliminar">
-                    <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                    <IconoEliminar className="h-4 w-4" aria-hidden="true" />
                 </button>
             </div>
         );
@@ -226,7 +226,7 @@ export default function AdminReviewsPage() {
                 className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700"
             >
                 <span className="line-clamp-1">{review.product.name}</span>
-                <FiExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <IconoAbrirAparte className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             </a>
         ) : (
             <span className="text-muted">Producto eliminado</span>
@@ -245,7 +245,7 @@ export default function AdminReviewsPage() {
                     <p className={adminPageSubtitle}>Solo las publicadas se ven en la tienda y cuentan para las estrellas.</p>
                 </div>
                 <button type="button" onClick={fetchReviews} disabled={loading} className={adminSecondaryButton}>
-                    <FiRefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" /> Actualizar
+                    <IconoActualizar className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" /> Actualizar
                 </button>
             </div>
 
@@ -336,7 +336,7 @@ export default function AdminReviewsPage() {
                                 {rechazando.isApproved ? 'Retirar reseña publicada' : 'Rechazar reseña'}
                             </h2>
                             <button type="button" onClick={() => setRechazando(null)} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar">
-                                <FiX className="h-5 w-5" aria-hidden="true" />
+                                <IconoCerrar className="h-5 w-5" aria-hidden="true" />
                             </button>
                         </div>
                         <div className={`${adminModalBody} space-y-3`}>
@@ -360,7 +360,7 @@ export default function AdminReviewsPage() {
                         <div className={adminModalFooter}>
                             <button type="button" onClick={() => setRechazando(null)} className={adminSecondaryButton}>Volver</button>
                             <button type="button" onClick={confirmarRechazo} disabled={ocupada === rechazando.id} className={adminDangerButton}>
-                                <FiX className="h-4 w-4" aria-hidden="true" /> {rechazando.isApproved ? 'Retirar' : 'Rechazar'}
+                                <IconoCerrar className="h-4 w-4" aria-hidden="true" /> {rechazando.isApproved ? 'Retirar' : 'Rechazar'}
                             </button>
                         </div>
                     </div>

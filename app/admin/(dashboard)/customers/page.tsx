@@ -27,13 +27,15 @@ import {
   adminBadge,
   adminCardFlush,
 } from '@/lib/admin-ui';
-import { FiCalendar, FiZap } from 'react-icons/fi';
+import {
+  IconoActualizar, IconoAdvertencia, IconoBuscar, IconoCalendario, IconoCargando, IconoCerrar, IconoCheck, IconoClientes,
+  IconoCuenta, IconoDescargar, IconoDocumento, IconoError, IconoGarantia, IconoMaletin, IconoOrdenes, IconoReportes,
+} from '@/components/iconos';
 
 import { useState, useEffect, useRef } from 'react';
 import { EmptyState } from '@/components/ui/EmptyState';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiUser, FiBriefcase, FiBarChart2, FiCheck, FiX, FiFileText, FiDownload, FiShield } from 'react-icons/fi';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface CustomerOrder {
@@ -271,11 +273,11 @@ export default function CustomersPage() {
   const getVerificationStatusBadge = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return <span className={adminBadge('success')}><FiCheck className="w-3 h-3" /> Verificado</span>;
+        return <span className={adminBadge('success')}><IconoCheck className="w-3 h-3" /> Verificado</span>;
       case 'PENDING':
         return <span className={adminBadge('warning')}>Pendiente</span>;
       case 'REJECTED':
-        return <span className={adminBadge('danger')}><FiX className="w-3 h-3" /> Rechazado</span>;
+        return <span className={adminBadge('danger')}><IconoCerrar className="w-3 h-3" /> Rechazado</span>;
       default:
         return <span className={adminBadge('neutral')}>No verificado</span>;
     }
@@ -288,7 +290,7 @@ export default function CustomersPage() {
         <div className={adminPageHeader}>
           <div className="flex items-center gap-3">
             <div className={`${adminIconChip('brand')} hidden sm:flex`}>
-              <FiUser className="w-6 h-6 text-brand-600" />
+              <IconoCuenta className="w-6 h-6 text-brand-600" />
             </div>
             <div>
               <h1 className={adminPageTitle}>Clientes</h1>
@@ -304,7 +306,7 @@ export default function CustomersPage() {
                 }`}
               title="Verificaciones Empresariales"
             >
-              <FiShield className="w-4 h-4" />
+              <IconoGarantia className="w-4 h-4" />
               <span>Verificaciones</span>
               {pendingVerifications > 0 && (
                 <span className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1.5 bg-deal text-white text-xs font-bold rounded-full shadow-md">
@@ -318,18 +320,14 @@ export default function CustomersPage() {
               aria-label="Actualizar clientes"
               title="Actualizar"
             >
-              <svg className={`w-5 h-5 text-muted ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+              <IconoActualizar className={`w-5 h-5 text-muted ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
 
         {error && (
           <div className="bg-deal-bg border border-deal/30 text-deal px-4 py-3 rounded-lg text-sm flex items-center gap-2">
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <IconoError className="w-5 h-5 flex-shrink-0" />
             {error}
           </div>
         )}
@@ -337,9 +335,7 @@ export default function CustomersPage() {
           <div className="rounded-xl border border-line bg-white p-2">
             <div className="flex items-center gap-3">
               <div className="relative flex-1">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <IconoBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input
                   type="text"
                   value={search}
@@ -356,7 +352,7 @@ export default function CustomersPage() {
         <div className="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-3">
           <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
             <span className={`${adminIconChip('brand')} hidden sm:flex`}>
-              <FiUser className="w-5 h-5" />
+              <IconoCuenta className="w-5 h-5" />
             </span>
             <div>
               <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.total}</p>
@@ -366,7 +362,7 @@ export default function CustomersPage() {
 
           <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
             <span className={`${adminIconChip('success')} hidden sm:flex`}>
-              <FiCalendar className="w-5 h-5" />
+              <IconoCalendario className="w-5 h-5" />
             </span>
             <div>
               <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.thisMonth}</p>
@@ -376,7 +372,7 @@ export default function CustomersPage() {
 
           <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
             <span className={`${adminIconChip('brand')} hidden sm:flex`}>
-              <FiZap className="w-5 h-5" />
+              <IconoOrdenes className="w-5 h-5" />
             </span>
             <div>
               <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.active}</p>
@@ -392,19 +388,14 @@ export default function CustomersPage() {
           {loading ? (
             <div className="p-8 text-center">
               <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface mb-2">
-                <svg className="animate-spin h-5 w-5 text-brand-600" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <IconoCargando className="animate-spin h-5 w-5 text-brand-600" />
               </div>
               <p className="text-xs text-muted">Cargando clientes...</p>
             </div>
           ) : customers.length === 0 ? (
             <EmptyState
               icon={
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+                <IconoClientes className="w-8 h-8" />
               }
               title="No hay clientes"
               description={search ? 'No se encontraron clientes con ese criterio de búsqueda' : 'Aún no hay clientes registrados'}
@@ -431,11 +422,11 @@ export default function CustomersPage() {
                       </div>
                       {customer.profile?.customerType === 'COMPANY' ? (
                         <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 bg-brand-50 text-brand-700 rounded-full">
-                          <FiBriefcase className="w-3.5 h-3.5" />
+                          <IconoMaletin className="w-3.5 h-3.5" />
                         </span>
                       ) : (
                         <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 bg-surface text-ink-soft rounded-full">
-                          <FiUser className="w-3.5 h-3.5" />
+                          <IconoCuenta className="w-3.5 h-3.5" />
                         </span>
                       )}
                     </div>
@@ -508,11 +499,11 @@ export default function CustomersPage() {
                         <td className={adminTd}>
                           {customer.profile?.customerType === 'COMPANY' ? (
                             <span className={adminBadge('brand')}>
-                              <FiBriefcase className="w-3 h-3" /> Empresa
+                              <IconoMaletin className="w-3 h-3" /> Empresa
                             </span>
                           ) : (
                             <span className={adminBadge('neutral')}>
-                              <FiUser className="w-3 h-3" /> Persona
+                              <IconoCuenta className="w-3 h-3" /> Persona
                             </span>
                           )}
                         </td>
@@ -596,7 +587,7 @@ export default function CustomersPage() {
                   aria-label="Cerrar"
                   title="Cerrar" className={`${adminIconButton} h-11 w-11 shrink-0`}
                 >
-                  <FiX className="w-5 h-5" />
+                  <IconoCerrar className="w-5 h-5" />
                 </button>
               </div>
 
@@ -608,7 +599,7 @@ export default function CustomersPage() {
                     aria-pressed={activeTab === 'PERSONAL'} className={`${adminTab(activeTab === 'PERSONAL')} h-11 shrink-0`}
                   >
                     <div className="flex items-center gap-2">
-                      <FiUser className="w-4 h-4" />
+                      <IconoCuenta className="w-4 h-4" />
                       Personal
                     </div>
                   </button>
@@ -617,7 +608,7 @@ export default function CustomersPage() {
                     aria-pressed={activeTab === 'COMPANY'} className={`${adminTab(activeTab === 'COMPANY')} h-11 shrink-0`}
                   >
                     <div className="flex items-center gap-2">
-                      <FiBriefcase className="w-4 h-4" />
+                      <IconoMaletin className="w-4 h-4" />
                       Empresa
                     </div>
                   </button>
@@ -626,7 +617,7 @@ export default function CustomersPage() {
                     aria-pressed={activeTab === 'STATS'} className={`${adminTab(activeTab === 'STATS')} h-11 shrink-0`}
                   >
                     <div className="flex items-center gap-2">
-                      <FiBarChart2 className="w-4 h-4" />
+                      <IconoReportes className="w-4 h-4" />
                       Estadísticas
                     </div>
                   </button>
@@ -639,9 +630,7 @@ export default function CustomersPage() {
                 {isDeleting ? (
                   <div className="text-center py-8">
                     <div className="w-16 h-16 mx-auto mb-4 bg-deal-bg rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-deal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
+                      <IconoAdvertencia className="w-8 h-8 text-deal" />
                     </div>
                     <h4 className="text-lg font-semibold text-ink mb-2">¿Eliminar cliente?</h4>
                     <p className="text-sm text-muted mb-6">
@@ -801,12 +790,12 @@ export default function CustomersPage() {
                             <div className="flex items-center gap-2">
                               {selectedCustomer.profile?.customerType === 'COMPANY' ? (
                                 <>
-                                  <FiBriefcase className="w-5 h-5 text-brand-600" />
+                                  <IconoMaletin className="w-5 h-5 text-brand-600" />
                                   <span className="font-bold text-ink">Empresa</span>
                                 </>
                               ) : (
                                 <>
-                                  <FiUser className="w-5 h-5 text-muted" />
+                                  <IconoCuenta className="w-5 h-5 text-muted" />
                                   <span className="font-bold text-ink">Persona Natural</span>
                                 </>
                               )}
@@ -835,7 +824,7 @@ export default function CustomersPage() {
 
                             <div>
                               <h4 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
-                                <FiFileText className="w-4 h-4" /> Documentos
+                                <IconoDocumento className="w-4 h-4" /> Documentos
                               </h4>
                               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="p-3 border border-line rounded-lg hover:bg-surface transition-colors">
@@ -854,7 +843,7 @@ export default function CustomersPage() {
                                       rel="noopener noreferrer"
                                       className="text-brand-600 text-xs font-bold hover:underline flex items-center gap-1"
                                     >
-                                      <FiDownload className="w-3 h-3" /> Descargar
+                                      <IconoDescargar className="w-3 h-3" /> Descargar
                                     </a>
                                   )}
                                 </div>
@@ -874,7 +863,7 @@ export default function CustomersPage() {
                                       rel="noopener noreferrer"
                                       className="text-brand-600 text-xs font-bold hover:underline flex items-center gap-1"
                                     >
-                                      <FiDownload className="w-3 h-3" /> Descargar
+                                      <IconoDescargar className="w-3 h-3" /> Descargar
                                     </a>
                                   )}
                                 </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FiBell, FiCheck, FiCheckCircle } from 'react-icons/fi';
+import { IconoCheck, IconoConfirmado, IconoNotificaciones } from '@/components/iconos';
 import { useNotifications } from '@/components/notifications/NotificationProvider';
 import { notificationMeta, timeAgo } from '@/components/notifications/notification-meta';
 import { adminTab, adminIconChip } from '@/lib/admin-ui';
@@ -47,7 +47,7 @@ export default function NotificationsPage() {
                             onClick={markAllAsRead}
                             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-brand-600 bg-brand-50 rounded-lg hover:bg-brand-100 transition-colors"
                         >
-                            <FiCheckCircle className="w-4 h-4" />
+                            <IconoConfirmado className="w-4 h-4" />
                             Marcar todas como leídas
                         </button>
                     )}
@@ -74,7 +74,7 @@ export default function NotificationsPage() {
             {filteredNotifications.length === 0 ? (
                 <div className="bg-white rounded-xl border border-line p-12 text-center">
                     <div className="w-16 h-16 bg-surface rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <FiBell className="w-8 h-8 text-subtle" />
+                        <IconoNotificaciones className="w-8 h-8 text-subtle" />
                     </div>
                     <h3 className="text-lg font-bold text-ink mb-2">
                         {filter === 'unread' ? 'No hay notificaciones sin leer' : 'No hay notificaciones'}
@@ -134,7 +134,7 @@ export default function NotificationsPage() {
                                                     onClick={() => handleMarkAsRead(notification.id)}
                                                     className="text-xs font-medium text-muted hover:text-ink flex items-center gap-1"
                                                 >
-                                                    <FiCheck className="w-3 h-3" />
+                                                    <IconoCheck className="w-3 h-3" />
                                                     Marcar como leída
                                                 </button>
                                             )}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { FiX, FiSearch, FiDownload, FiPackage } from 'react-icons/fi';
+import { IconoBuscar, IconoCerrar, IconoDescargar, IconoPaquete } from '@/components/iconos';
 import { WizardData } from './types';
 import { formatUSD } from '@/lib/currency';
 
@@ -94,14 +94,14 @@ export default function SadesSearchModal({ onImport, onClose }: Props) {
             onClick={onClose}
             className="p-2 text-muted hover:text-ink-soft hover:bg-surface rounded-xl transition-colors"
           >
-            <FiX className="w-5 h-5" />
+            <IconoCerrar className="w-5 h-5" />
           </button>
         </div>
 
         {/* Search */}
         <div className="px-6 py-4 border-b border-line">
           <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+            <IconoBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
             <input
               ref={inputRef}
               type="text"
@@ -124,7 +124,7 @@ export default function SadesSearchModal({ onImport, onClose }: Props) {
 
           {!loading && results.length === 0 && !error && (
             <div className="flex flex-col items-center justify-center py-16 text-muted">
-              <FiSearch className="w-10 h-10 mb-3" />
+              <IconoBuscar className="w-10 h-10 mb-3" />
               <p className="text-sm">No se encontraron productos</p>
             </div>
           )}
@@ -145,7 +145,7 @@ export default function SadesSearchModal({ onImport, onClose }: Props) {
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                 ) : (
-                  <FiPackage className="h-5 w-5 text-muted" aria-hidden="true" />
+                  <IconoPaquete className="h-5 w-5 text-muted" aria-hidden="true" />
                 )}
               </div>
 
@@ -175,7 +175,7 @@ export default function SadesSearchModal({ onImport, onClose }: Props) {
                 {importing === product.sku ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <FiDownload className="w-4 h-4" />
+                  <IconoDescargar className="w-4 h-4" />
                 )}
                 Importar
               </button>

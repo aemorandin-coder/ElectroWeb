@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FiBriefcase, FiFileText, FiUser } from 'react-icons/fi';
+import { IconoCuenta, IconoDocumento, IconoMaletin } from '@/components/iconos';
 import { adminCard, adminHint, adminInput, adminLabel } from '@/lib/admin-ui';
 import { DOMICILIO_MAX } from '@/lib/facturacion';
 
@@ -47,7 +47,7 @@ export default function DatosFactura({
     <section id="datos-factura" aria-labelledby="datos-factura-titulo" className={`${adminCard} scroll-mt-24 space-y-3 p-5 shadow-sm`}>
       <h2 id="datos-factura-titulo" className="flex items-center gap-2 text-lg font-bold text-ink">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500/10 text-brand-600">
-          <FiFileText className="h-4 w-4" aria-hidden="true" />
+          <IconoDocumento className="h-4 w-4" aria-hidden="true" />
         </span>
         Datos de la factura
       </h2>
@@ -58,7 +58,7 @@ export default function DatosFactura({
           <label className={opcion(value.tipo === 'PERSON')}>
             <input type="radio" name="factura-a-nombre" className="mt-1 h-4 w-4 shrink-0 accent-brand-500" checked={value.tipo === 'PERSON'} onChange={() => onChange({ ...value, tipo: 'PERSON' })} />
             <span className="min-w-0 text-sm [overflow-wrap:anywhere]">
-              <span className="flex items-center gap-1.5 font-semibold text-ink"><FiUser className="h-4 w-4 shrink-0" aria-hidden="true" /> A mi nombre</span>
+              <span className="flex items-center gap-1.5 font-semibold text-ink"><IconoCuenta className="h-4 w-4 shrink-0" aria-hidden="true" /> A mi nombre</span>
               <span className="block text-ink-soft">{nombre || 'Tu nombre'}</span>
               {cedula && <span className="block tabular-nums text-muted">Cédula {cedula}</span>}
             </span>
@@ -66,7 +66,7 @@ export default function DatosFactura({
           <label className={opcion(value.tipo === 'COMPANY')}>
             <input type="radio" name="factura-a-nombre" className="mt-1 h-4 w-4 shrink-0 accent-brand-500" checked={value.tipo === 'COMPANY'} onChange={() => onChange({ ...value, tipo: 'COMPANY' })} />
             <span className="min-w-0 text-sm [overflow-wrap:anywhere]">
-              <span className="flex items-center gap-1.5 font-semibold text-ink"><FiBriefcase className="h-4 w-4 shrink-0" aria-hidden="true" /> A nombre de mi empresa</span>
+              <span className="flex items-center gap-1.5 font-semibold text-ink"><IconoMaletin className="h-4 w-4 shrink-0" aria-hidden="true" /> A nombre de mi empresa</span>
               <span className="block text-ink-soft">{empresa.nombre}</span>
               <span className="block tabular-nums text-muted">RIF {empresa.rif}</span>
               {empresa.domicilio && <span className="block text-muted">{empresa.domicilio}</span>}

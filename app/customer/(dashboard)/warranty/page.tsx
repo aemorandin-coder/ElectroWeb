@@ -3,20 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import {
-  FiShield,
-  FiPackage,
-  FiRefreshCw,
-  FiCheck,
-  FiAlertCircle,
-  FiArrowLeft,
-  FiCamera,
-  FiChevronRight,
-  FiFileText,
-  FiHelpCircle,
-  FiMail,
-  FiTrash2,
-  FiX,
-} from 'react-icons/fi';
+  IconoActualizar, IconoAyuda, IconoCamaraFotos, IconoCerrar, IconoCheck, IconoChevronDerecha, IconoCorreo,
+  IconoDocumento, IconoEliminar, IconoError, IconoFlechaIzquierda, IconoGarantia, IconoPaquete,
+} from '@/components/iconos';
 import { FaWhatsapp } from 'react-icons/fa6';
 import { toast } from 'react-hot-toast';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -112,13 +101,13 @@ function SelectorFotos({ fotos, onChange }: { fotos: string[]; onChange: (fotos:
             <Image src={url} alt={`Foto ${i + 1}`} fill sizes="80px" className="object-cover" unoptimized />
             <button type="button" onClick={() => onChange(fotos.filter((f) => f !== url))} aria-label={`Quitar foto ${i + 1}`}
               className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-ink/70 text-white">
-              <FiTrash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              <IconoEliminar className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </div>
         ))}
         {fotos.length < WARRANTY_MAX_PHOTOS && (
           <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-line text-xs text-muted hover:border-brand-500 focus-within:border-brand-500">
-            <FiCamera className="h-5 w-5" aria-hidden="true" />
+            <IconoCamaraFotos className="h-5 w-5" aria-hidden="true" />
             {subiendo ? 'Subiendo…' : 'Agregar'}
             <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" disabled={subiendo} onChange={(e) => void elegir(e.target.files)} />
           </label>
@@ -169,7 +158,7 @@ function DetalleSolicitud({ id, onVolver, onCambio }: { id: string; onVolver: ()
   return (
     <div className="space-y-3">
       <button type="button" onClick={onVolver} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
-        <FiArrowLeft className="h-4 w-4" aria-hidden="true" /> Mis solicitudes
+        <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Mis solicitudes
       </button>
       {error && <p className="text-sm font-semibold text-deal" role="alert">{error}</p>}
       {claim && (
@@ -322,7 +311,7 @@ export default function WarrantyPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-brand-50 text-brand-500 rounded-xl flex items-center justify-center flex-shrink-0">
-          <FiShield className="w-5 h-5" aria-hidden="true" />
+          <IconoGarantia className="w-5 h-5" aria-hidden="true" />
         </div>
         <div>
           <h1 className="text-base lg:text-lg font-bold text-ink">Garantía</h1>
@@ -333,16 +322,16 @@ export default function WarrantyPage() {
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 border-b border-line" role="tablist" aria-label="Garantía">
         <button type="button" role="tab" aria-selected={selectedTab === 'info'} onClick={() => setSelectedTab('info')} className={adminTab(selectedTab === 'info')}>
-          <span className="inline-flex items-center gap-1.5"><FiHelpCircle className="w-3.5 h-3.5" aria-hidden="true" />Info</span>
+          <span className="inline-flex items-center gap-1.5"><IconoAyuda className="w-3.5 h-3.5" aria-hidden="true" />Info</span>
         </button>
         <button type="button" role="tab" aria-selected={selectedTab === 'requests'} onClick={() => { setSelectedTab('requests'); setAbierta(null); }} className={adminTab(selectedTab === 'requests')}>
           <span className="inline-flex items-center gap-1.5">
-            <FiFileText className="w-3.5 h-3.5" aria-hidden="true" />Mis Solicitudes
+            <IconoDocumento className="w-3.5 h-3.5" aria-hidden="true" />Mis Solicitudes
             {claims.some((c) => c.status === 'WAITING_CUSTOMER') && <span className="h-2 w-2 rounded-full bg-deal" aria-label="Hay una solicitud esperando tu respuesta" />}
           </span>
         </button>
         <button type="button" role="tab" aria-selected={selectedTab === 'new'} onClick={() => setSelectedTab('new')} className={adminTab(selectedTab === 'new')}>
-          <span className="inline-flex items-center gap-1.5"><FiRefreshCw className="w-3.5 h-3.5" aria-hidden="true" />Nueva</span>
+          <span className="inline-flex items-center gap-1.5"><IconoActualizar className="w-3.5 h-3.5" aria-hidden="true" />Nueva</span>
         </button>
       </div>
 
@@ -353,7 +342,7 @@ export default function WarrantyPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className={`${adminCard} p-4`}>
               <div className="w-9 h-9 bg-success/10 text-success-strong rounded-lg flex items-center justify-center mb-2">
-                <FiShield className="w-4 h-4" aria-hidden="true" />
+                <IconoGarantia className="w-4 h-4" aria-hidden="true" />
               </div>
               <h3 className="font-bold text-ink text-sm mb-0.5">Garantía de la tienda</h3>
               <p className="text-xs text-muted">
@@ -362,7 +351,7 @@ export default function WarrantyPage() {
             </div>
             <div className={`${adminCard} p-4`}>
               <div className="w-9 h-9 bg-brand-50 text-brand-500 rounded-lg flex items-center justify-center mb-2">
-                <FiRefreshCw className="w-4 h-4" aria-hidden="true" />
+                <IconoActualizar className="w-4 h-4" aria-hidden="true" />
               </div>
               <h3 className="font-bold text-ink text-sm mb-0.5">Sin devoluciones por cambio de opinión</h3>
               <p className="text-xs text-muted">
@@ -371,7 +360,7 @@ export default function WarrantyPage() {
             </div>
             <div className={`${adminCard} p-4`}>
               <div className="w-9 h-9 bg-surface text-ink-soft rounded-lg flex items-center justify-center mb-2">
-                <FiPackage className="w-4 h-4" aria-hidden="true" />
+                <IconoPaquete className="w-4 h-4" aria-hidden="true" />
               </div>
               <h3 className="font-bold text-ink text-sm mb-0.5">Soporte Técnico</h3>
               <p className="text-xs text-muted">
@@ -417,7 +406,7 @@ export default function WarrantyPage() {
                 )}
                 {settings?.email && (
                   <a href={`mailto:${settings.email}`} className={adminSecondaryButton}>
-                    <FiMail className="w-4 h-4" aria-hidden="true" />
+                    <IconoCorreo className="w-4 h-4" aria-hidden="true" />
                     {settings.email}
                   </a>
                 )}
@@ -433,10 +422,10 @@ export default function WarrantyPage() {
         <div className="space-y-3">
           {claims.length === 0 ? (
             <div className={`${adminCard} text-center py-10`}>
-              <FiFileText className="w-8 h-8 text-subtle mx-auto mb-2" aria-hidden="true" />
+              <IconoDocumento className="w-8 h-8 text-subtle mx-auto mb-2" aria-hidden="true" />
               <p className="text-xs text-muted mb-3">No tienes solicitudes de garantía</p>
               <button type="button" onClick={() => setSelectedTab('new')} className={`${adminPrimaryButton} text-xs inline-flex items-center gap-1.5`}>
-                <FiRefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                <IconoActualizar className="w-3.5 h-3.5" aria-hidden="true" />
                 Nueva Solicitud
               </button>
             </div>
@@ -454,7 +443,7 @@ export default function WarrantyPage() {
                     </div>
                     <p className="mt-1 flex items-center justify-between gap-2 text-xs text-muted">
                       <span>{c.status === 'RESOLVED' && c.resolution ? RESOLUTION_LABEL[c.resolution] : CLAIM_STATUS_HELP[c.status]}</span>
-                      <FiChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <IconoChevronDerecha className="h-4 w-4 shrink-0" aria-hidden="true" />
                     </p>
                     <p className="mt-1 text-xs text-subtle">Actualizada el {fecha(c.updatedAt)}</p>
                   </button>
@@ -476,7 +465,7 @@ export default function WarrantyPage() {
               </div>
             ) : pedidos.length === 0 ? (
               <div className={`${adminCard} text-center py-8`}>
-                <FiAlertCircle className="w-6 h-6 text-subtle mx-auto mb-1" aria-hidden="true" />
+                <IconoError className="w-6 h-6 text-subtle mx-auto mb-1" aria-hidden="true" />
                 <p className="text-xs text-muted">No tienes pedidos entregados elegibles para garantía</p>
               </div>
             ) : (
@@ -498,14 +487,14 @@ export default function WarrantyPage() {
                       >
                         <span className="flex items-center gap-3">
                           <span className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center flex-shrink-0">
-                            <FiPackage className="w-4 h-4 text-muted" aria-hidden="true" />
+                            <IconoPaquete className="w-4 h-4 text-muted" aria-hidden="true" />
                           </span>
                           <span className="flex-1 min-w-0">
                             <span className="flex items-center gap-1.5 mb-0.5">
                               <span className="font-bold text-ink text-xs">#{order.orderNumber}</span>
                               {withinWarranty ? (
                                 <span className={adminBadge('success')}>
-                                  <FiCheck className="w-2.5 h-2.5" aria-hidden="true" />
+                                  <IconoCheck className="w-2.5 h-2.5" aria-hidden="true" />
                                   Elegible
                                 </span>
                               ) : (
@@ -519,7 +508,7 @@ export default function WarrantyPage() {
                               {withinWarranty && ` · garantía hasta ${Math.max(...coveredItems(order).map(itemWarrantyDays))} días`}
                             </span>
                           </span>
-                          {withinWarranty && <FiChevronRight className="w-4 h-4 text-brand-500 shrink-0" aria-hidden="true" />}
+                          {withinWarranty && <IconoChevronDerecha className="w-4 h-4 text-brand-500 shrink-0" aria-hidden="true" />}
                         </span>
                       </button>
                     </li>
@@ -531,7 +520,7 @@ export default function WarrantyPage() {
 
           {/* Info Note */}
           <div className="flex items-start gap-2.5 p-3.5 bg-surface border border-line rounded-xl">
-            <FiAlertCircle className="w-4 h-4 text-warning-strong flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <IconoError className="w-4 h-4 text-warning-strong flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="text-xs">
               <p className="font-semibold text-ink mb-0.5">Importante</p>
               <p className="text-muted">
@@ -553,7 +542,7 @@ export default function WarrantyPage() {
                 <p className="text-xs text-muted">Pedido #{selectedOrderForWarranty.orderNumber}</p>
               </div>
               <button type="button" onClick={() => setShowFormModal(false)} className="flex h-11 w-11 items-center justify-center text-muted hover:bg-surface rounded-lg transition-colors" aria-label="Cerrar">
-                <FiX className="w-5 h-5" aria-hidden="true" />
+                <IconoCerrar className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
             <div className="p-5 overflow-y-auto flex-1">

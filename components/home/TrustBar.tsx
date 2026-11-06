@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
+import { IconoBillete, IconoChevronDerecha, IconoEnvio, IconoGarantia, IconoPagoMovil, IconoTarjeta } from '@/components/iconos';
 import { FaWhatsapp } from 'react-icons/fa6';
-import { FiChevronRight, FiCreditCard, FiDollarSign, FiShield, FiSmartphone, FiTruck } from 'react-icons/fi';
 import { SiBinance, SiPaypal, SiZelle } from 'react-icons/si';
 import Container from '@/components/ui/Container';
 import type { PaymentMethodKind } from '@/lib/queries/home';
@@ -9,15 +9,15 @@ type IconType = ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
 
 // Etiqueta e ícono por tipo de método de pago (el tipo lo elige el admin en Métodos de pago)
 export const PAYMENT_LABELS: Record<PaymentMethodKind, { label: string; Icon: IconType }> = {
-  MOBILE_PAYMENT: { label: 'Pago Móvil', Icon: FiSmartphone },
-  BANK_TRANSFER: { label: 'Transferencia', Icon: FiCreditCard },
+  MOBILE_PAYMENT: { label: 'Pago Móvil', Icon: IconoPagoMovil },
+  BANK_TRANSFER: { label: 'Transferencia', Icon: IconoTarjeta },
   BINANCE_PAY: { label: 'Binance Pay', Icon: SiBinance },
   ZELLE: { label: 'Zelle', Icon: SiZelle },
-  ZINLI: { label: 'Zinli', Icon: FiCreditCard },
+  ZINLI: { label: 'Zinli', Icon: IconoTarjeta },
   PAYPAL: { label: 'PayPal', Icon: SiPaypal },
   CRYPTO: { label: 'Cripto', Icon: SiBinance },
-  CASH: { label: 'Efectivo', Icon: FiDollarSign },
-  MERCANTIL_PANAMA: { label: 'Mercantil Panamá', Icon: FiCreditCard },
+  CASH: { label: 'Efectivo', Icon: IconoBillete },
+  MERCANTIL_PANAMA: { label: 'Mercantil Panamá', Icon: IconoTarjeta },
 };
 
 interface TrustBarProps {
@@ -30,8 +30,8 @@ interface TrustBarProps {
 export default function TrustBar({ whatsapp, paymentMethods }: TrustBarProps) {
   const waNumber = whatsapp?.replace(/\D/g, '');
   const promises: Array<{ Icon: IconType; title: string; text: string; href?: string }> = [
-    { Icon: FiTruck, title: 'Envíos nacionales', text: 'Despachamos a toda Venezuela' },
-    { Icon: FiShield, title: 'Garantía', text: 'Respaldo en todas tus compras' },
+    { Icon: IconoEnvio, title: 'Envíos nacionales', text: 'Despachamos a toda Venezuela' },
+    { Icon: IconoGarantia, title: 'Garantía', text: 'Respaldo en todas tus compras' },
     { Icon: FaWhatsapp, title: 'Soporte por WhatsApp', text: 'Te ayudamos a elegir', href: waNumber ? `https://wa.me/${waNumber}` : undefined },
   ];
 
@@ -44,14 +44,14 @@ export default function TrustBar({ whatsapp, paymentMethods }: TrustBarProps) {
           {promises.map(({ Icon, title, text, href }) => {
             const content = (
               <>
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                <span className="iconos-marca flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-950">
                   <Icon className="h-5 w-5" aria-hidden />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold text-ink">{title}</span>
                   <span className="block text-xs text-muted">{text}</span>
                 </span>
-                {href && <FiChevronRight className="h-4 w-4 shrink-0 text-brand-500" aria-hidden />}
+                {href && <IconoChevronDerecha className="h-4 w-4 shrink-0 text-brand-500" aria-hidden />}
               </>
             );
             const boxClass = 'flex h-full items-center gap-3 rounded-xl border border-line bg-white p-4';

@@ -21,6 +21,6 @@ Las skills de diseño instaladas (`impeccable`, `design-taste-frontend` y varian
 
 - Colores: solo los tokens de `app/globals.css` (`brand-*`, `ink`, `muted`, `line`, `surface`, `success`, `deal`…). Nunca un hex nuevo en un `className`, aunque una skill o un DESIGN.md de Refero lo proponga.
 - Tipografía: nada de `text-[7px]`…`text-[10px]`, `font-black` ni `font-extrabold`. No se cambia la fuente del sitio.
-- Sin dependencias nuevas (ni Framer Motion, ni GSAP, ni librerías de íconos): animaciones con CSS/Tailwind e íconos de `react-icons/fi`.
+- Sin dependencias nuevas (ni Framer Motion, ni GSAP, ni librerías de íconos): animaciones con CSS/Tailwind e íconos propios de `@/components/iconos` (C-188). De `react-icons` solo los logos de marca.
 - Las skills proponen; la tarjeta de la ronda decide el alcance. Si una mejora visual no está en tu tarjeta, anótala como sugerencia en tu estado, no la apliques.
 - Si una regla de una skill choca con `GEMINI.md`, `CLAUDE.md` o el plan, gana el archivo del repo.

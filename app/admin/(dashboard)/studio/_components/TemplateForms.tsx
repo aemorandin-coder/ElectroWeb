@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { FiCheckCircle, FiPlus, FiRefreshCw, FiStar, FiTrash2 } from 'react-icons/fi';
+import { IconoActualizar, IconoConfirmado, IconoEliminar, IconoEstrella, IconoMas } from '@/components/iconos';
 import { adminBadge, adminEmpty, adminHint, adminIconButton, adminInput, adminLabel, adminNotice } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -51,7 +51,7 @@ export function CouponForm({ studio }: { studio: Studio }) {
         <div className="mb-1.5 flex items-center justify-between gap-2">
           <p className="text-sm font-semibold text-ink">Cupón de Descuentos</p>
           <button type="button" onClick={() => void load()} className={smallButton} aria-label="Volver a cargar los cupones">
-            <FiRefreshCw className="h-4 w-4" aria-hidden="true" />
+            <IconoActualizar className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
         {list === null ? (
@@ -98,7 +98,7 @@ function Stars({ rating }: { rating: number }) {
   return (
     <span className="flex gap-0.5" aria-label={`${rating} de 5 estrellas`}>
       {[0, 1, 2, 3, 4].map((i) => (
-        <FiStar key={i} className={`h-3.5 w-3.5 ${i < rating ? 'fill-tag text-tag' : 'text-subtle'}`} aria-hidden="true" />
+        <IconoEstrella key={i} lleno={i < rating} className={`h-3.5 w-3.5 ${i < rating ? 'text-tag' : 'text-subtle'}`} aria-hidden="true" />
       ))}
     </span>
   );
@@ -148,7 +148,7 @@ export function ReviewForm({ studio }: { studio: Studio }) {
                       <span className="font-semibold text-ink">{r.author}</span>
                       {r.verified && (
                         <span className={adminBadge('success')}>
-                          <FiCheckCircle className="h-3 w-3" aria-hidden="true" />
+                          <IconoConfirmado className="h-3 w-3" aria-hidden="true" />
                           Verificada
                         </span>
                       )}
@@ -239,13 +239,13 @@ export function VariantsEditor({ variants, linked, onChange }: { variants: Studi
               <input type="text" aria-label={`Monto ${i + 1}`} value={v.label} onChange={(e) => set(i, { label: e.target.value })} placeholder="Ej: $10 o 800 Robux" className={adminInput()} />
               <input type="number" inputMode="decimal" step="0.01" min="0" aria-label={`Precio ${i + 1}`} value={v.price || ''} onChange={(e) => set(i, { price: Number(e.target.value || 0) })} placeholder="Precio" className={adminInput()} />
               <button type="button" onClick={() => onChange(variants.filter((_, k) => k !== i))} className={adminIconButton} aria-label={`Quitar monto ${i + 1}`}>
-                <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                <IconoEliminar className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           ))}
           {variants.length < 8 && (
             <button type="button" onClick={() => onChange([...variants, { label: '', price: 0 }])} className={`${smallButton} self-start`}>
-              <FiPlus className="h-4 w-4" aria-hidden="true" />
+              <IconoMas className="h-4 w-4" aria-hidden="true" />
               Agregar monto
             </button>
           )}

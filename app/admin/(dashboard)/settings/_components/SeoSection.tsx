@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { FiGlobe } from 'react-icons/fi';
+import { IconoWeb } from '@/components/iconos';
 import { adminTab } from '@/lib/admin-ui';
 import type { SectionProps, SettingsKey } from './settings-form';
 import { ImageField, SettingsCard, TextAreaField, TextField } from './fields';
@@ -94,7 +94,7 @@ export default function SeoSection({ form, set, errors }: SectionProps) {
                   // La generada ya sale del tamaño justo y cambia al guardar: sin optimizar (la optimización la guarda 30 días)
                   <Image src={image} alt="" fill sizes="352px" className="object-cover" unoptimized={!subida || !image.startsWith('/')} />
                 ) : (
-                  <FiGlobe className="h-10 w-10 text-subtle" aria-hidden="true" />
+                  <IconoWeb className="h-10 w-10 text-subtle" aria-hidden="true" />
                 )}
               </div>
               <div className="space-y-0.5 p-3">

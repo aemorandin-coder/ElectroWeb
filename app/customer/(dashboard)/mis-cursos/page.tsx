@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
-import { FiBookOpen, FiAward } from 'react-icons/fi';
+import { IconoCheck, IconoCursos, IconoPremio } from '@/components/iconos';
 import { adminTab } from '@/lib/admin-ui';
 
 type EnrolledCourse = {
@@ -101,7 +101,7 @@ export default function MisCursosPage() {
         <div className="text-center py-16 text-muted">Cargando cursos...</div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <FiBookOpen className="mx-auto mb-4 h-12 w-12 text-muted" aria-hidden="true" />
+          <IconoCursos className="mx-auto mb-4 h-12 w-12 text-muted" aria-hidden="true" />
           <p className="text-muted font-medium mb-2">
             {filter === 'all'
               ? 'No estás inscrito en ningún curso aún'
@@ -133,9 +133,7 @@ export default function MisCursosPage() {
                     <Image src={course.thumbnail} alt={course.title} width={128} height={80} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-brand-500/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
+                      <IconoCursos className="w-8 h-8 text-brand-500/30" />
                     </div>
                   )}
                 </div>
@@ -146,9 +144,7 @@ export default function MisCursosPage() {
                     <h3 className="font-semibold text-ink text-sm line-clamp-2">{course.title}</h3>
                     {isCompleted && (
                       <span className="shrink-0 flex items-center gap-1 px-2 py-0.5 bg-success-strong/10 text-success-strong text-xs font-bold rounded-full">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                        </svg>
+                        <IconoCheck className="w-3 h-3" />
                         Completado
                       </span>
                     )}
@@ -186,7 +182,7 @@ export default function MisCursosPage() {
                     </Link>
                     {isCompleted && (
                       <span className="flex items-center gap-1 text-xs text-warning-strong font-semibold ml-1">
-                        <FiAward className="inline h-4 w-4 shrink-0" aria-hidden="true" /> Certificado disponible
+                        <IconoPremio className="inline h-4 w-4 shrink-0" aria-hidden="true" /> Certificado disponible
                       </span>
                     )}
                   </div>

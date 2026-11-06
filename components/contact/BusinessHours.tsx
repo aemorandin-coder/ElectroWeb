@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { IconoChevronAbajo, IconoReloj } from '@/components/iconos';
 
 interface BusinessHoursProps {
     businessHours?: string | null;
@@ -98,9 +99,7 @@ export default function BusinessHours({ businessHours }: BusinessHoursProps) {
             >
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center text-brand-600">
-                        <svg className="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <IconoReloj className="w-5 h-5 text-brand-600" />
                     </div>
                     <div className="text-left">
                         <h3 className="text-base font-bold text-ink">Horario de Atención</h3>
@@ -113,9 +112,7 @@ export default function BusinessHours({ businessHours }: BusinessHoursProps) {
                     </div>
                 </div>
                 <div className={`w-7 h-7 bg-surface rounded-lg flex items-center justify-center transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
-                    <svg className="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                    <IconoChevronAbajo className="w-4 h-4 text-muted" />
                 </div>
             </button>
 

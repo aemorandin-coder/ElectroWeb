@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiMenu, FiTag } from 'react-icons/fi';
+import { IconoMenu, IconoOferta } from '@/components/iconos';
 import CartIcon from '@/components/CartIcon';
 import UserAccountButton from '@/components/UserAccountButton';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -100,7 +100,7 @@ function PublicHeader() {
       <nav aria-label="Principal" className="pointer-events-auto hidden bg-brand-600 lg:block">
         <Container className="flex h-10 items-center gap-1">
           <HeaderDropdown
-            label={<><FiMenu className="h-4 w-4" aria-hidden="true" /> Categorías</>}
+            label={<><IconoMenu className="h-4 w-4" aria-hidden="true" /> Categorías</>}
             panelClassName="w-[min(56rem,calc(100vw-4rem))]"
           >
             {(close) => <CategoriesMenuPanel categories={categories} onNavigate={close} />}
@@ -112,7 +112,7 @@ function PublicHeader() {
           </Link>
           {/* C-102: ofertas a la vista (el catálogo filtrado; no se marca activo porque comparte ruta con Productos) */}
           <Link href="/productos?oferta=1" className={navLinkClass('/ofertas')}>
-            <FiTag className="mr-1 h-4 w-4" aria-hidden="true" /> Ofertas
+            <IconoOferta className="mr-1 h-4 w-4" aria-hidden="true" /> Ofertas
           </Link>
           <Link href="/gift-cards" className={navLinkClass('/gift-cards')} aria-current={isActive('/gift-cards') ? 'page' : undefined}>
             Gift Cards

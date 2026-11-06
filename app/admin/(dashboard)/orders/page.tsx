@@ -5,7 +5,11 @@ import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { FiPrinter, FiUser, FiUserX, FiPackage, FiClock, FiCheck, FiTruck, FiX, FiEye, FiDollarSign, FiSearch, FiRefreshCw, FiArrowRight, FiCheckCircle, FiLoader, FiMonitor, FiSend } from 'react-icons/fi';
+import {
+  IconoActualizar, IconoBillete, IconoBuscar, IconoCargando, IconoCerrar, IconoCheck, IconoConfirmado, IconoCuenta,
+  IconoCuentaBorrada, IconoEnviar, IconoEnvio, IconoFlechaDerecha, IconoImpresora, IconoMonitor, IconoPaquete, IconoReloj,
+  IconoVer,
+} from '@/components/iconos';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -164,21 +168,21 @@ interface OrdersSummary {
 
 // Order flow statuses in sequence - PHYSICAL PRODUCTS
 const ORDER_FLOW = [
-  { status: 'PENDING', label: 'Pedido', icon: FiPackage },
-  { status: 'CONFIRMED', label: 'Confirmado', icon: FiCheckCircle },
-  { status: 'PAID', label: 'Pagado', icon: FiDollarSign },
-  { status: 'PROCESSING', label: 'Preparando', icon: FiPackage },
-  { status: 'SHIPPED', label: 'Enviado', icon: FiTruck },
-  { status: 'DELIVERED', label: 'Entregado', icon: FiCheck },
+  { status: 'PENDING', label: 'Pedido', icon: IconoPaquete },
+  { status: 'CONFIRMED', label: 'Confirmado', icon: IconoConfirmado },
+  { status: 'PAID', label: 'Pagado', icon: IconoBillete },
+  { status: 'PROCESSING', label: 'Preparando', icon: IconoPaquete },
+  { status: 'SHIPPED', label: 'Enviado', icon: IconoEnvio },
+  { status: 'DELIVERED', label: 'Entregado', icon: IconoCheck },
 ];
 
 // Order flow for DIGITAL ONLY products (no shipping step)
 const DIGITAL_ORDER_FLOW = [
-  { status: 'PENDING', label: 'Pedido', icon: FiPackage },
-  { status: 'CONFIRMED', label: 'Confirmado', icon: FiCheckCircle },
-  { status: 'PAID', label: 'Pagado', icon: FiDollarSign },
-  { status: 'PROCESSING', label: 'Preparando', icon: FiLoader },
-  { status: 'DELIVERED', label: 'Entregado', icon: FiCheck },
+  { status: 'PENDING', label: 'Pedido', icon: IconoPaquete },
+  { status: 'CONFIRMED', label: 'Confirmado', icon: IconoConfirmado },
+  { status: 'PAID', label: 'Pagado', icon: IconoBillete },
+  { status: 'PROCESSING', label: 'Preparando', icon: IconoCargando },
+  { status: 'DELIVERED', label: 'Entregado', icon: IconoCheck },
 ];
 
 export default function OrdersPage() {
@@ -471,7 +475,7 @@ export default function OrdersPage() {
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="flex w-full items-center gap-3 flex-1 sm:w-auto">
           <div className="relative min-w-0 flex-1 sm:max-w-xs">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+            <IconoBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
             <input
               type="text"
               aria-label="Buscar orden o cliente"
@@ -501,7 +505,7 @@ export default function OrdersPage() {
           disabled={loading}
           className={adminSecondaryButton}
         >
-          <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          <IconoActualizar className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Actualizar
         </button>
       </div>
@@ -524,7 +528,7 @@ export default function OrdersPage() {
       <div className="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-4">
         <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
           <span className={`${adminIconChip('brand')} hidden`}>
-            <FiDollarSign className="w-5 h-5" />
+            <IconoBillete className="w-5 h-5" />
           </span>
           <div>
             <span className={adminStatLabel}>Cobrado</span>
@@ -533,7 +537,7 @@ export default function OrdersPage() {
         </div>
         <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
           <span className={`${adminIconChip('warning')} hidden`}>
-            <FiClock className="w-5 h-5" />
+            <IconoReloj className="w-5 h-5" />
           </span>
           <div>
             <span className={adminStatLabel}>Pendientes</span>
@@ -542,7 +546,7 @@ export default function OrdersPage() {
         </div>
         <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
           <span className={`${adminIconChip('brand')} hidden`}>
-            <FiPackage className="w-5 h-5" />
+            <IconoPaquete className="w-5 h-5" />
           </span>
           <div>
             <span className={adminStatLabel}>En proceso</span>
@@ -551,7 +555,7 @@ export default function OrdersPage() {
         </div>
         <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
           <span className={`${adminIconChip('success')} hidden`}>
-            <FiCheck className="w-5 h-5" />
+            <IconoCheck className="w-5 h-5" />
           </span>
           <div>
             <span className={adminStatLabel}>Completadas</span>
@@ -571,7 +575,7 @@ export default function OrdersPage() {
         </div>
       ) : filteredOrders.length === 0 ? (
         <EmptyState
-          icon={<FiPackage className="w-8 h-8" />}
+          icon={<IconoPaquete className="w-8 h-8" />}
           title="No hay órdenes"
           description={filterStatus !== 'all' ? 'No hay órdenes con este estado' : 'Aún no se han realizado pedidos'}
         />
@@ -596,7 +600,7 @@ export default function OrdersPage() {
                         </span>
                         {order.hasDigital && (
                           <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 flex items-center gap-1">
-                            <FiMonitor className="w-2.5 h-2.5" />
+                            <IconoMonitor className="w-2.5 h-2.5" />
                             Digital
                           </span>
                         )}
@@ -612,7 +616,7 @@ export default function OrdersPage() {
                         ) : order.guestEmail ? (
                           <span className="font-medium text-ink">Invitado</span>
                         ) : (
-                          <span className={adminBadge('neutral')}><FiUserX className="h-3.5 w-3.5" aria-hidden="true" /> Cliente eliminado</span>
+                          <span className={adminBadge('neutral')}><IconoCuentaBorrada className="h-3.5 w-3.5" aria-hidden="true" /> Cliente eliminado</span>
                         )}
                         <span>•</span>
                         <span>{getTimeSince(order.createdAt)}</span>
@@ -639,7 +643,7 @@ export default function OrdersPage() {
                         disabled={updatingStatus}
                         className={`${adminSecondaryButton} relative min-h-11 w-full sm:w-auto`}
                       >
-                        {paso.pideGuia ? <FiTruck className="w-3 h-3" aria-hidden="true" /> : <FiArrowRight className="w-3 h-3" aria-hidden="true" />}
+                        {paso.pideGuia ? <IconoEnvio className="w-3 h-3" aria-hidden="true" /> : <IconoFlechaDerecha className="w-3 h-3" aria-hidden="true" />}
                         {paso.accion}
                       </button>
                     )}
@@ -652,7 +656,7 @@ export default function OrdersPage() {
                         className={`${adminSecondaryButton} relative`}
                         title="Enviar códigos digitales"
                       >
-                        <FiMonitor className="w-3.5 h-3.5" />
+                        <IconoMonitor className="w-3.5 h-3.5" />
                         Códigos
                       </a>
                     )}
@@ -667,7 +671,7 @@ export default function OrdersPage() {
                       aria-label="Ver detalles"
                       title="Ver detalles"
                     >
-                      <FiEye className="w-4 h-4" />
+                      <IconoVer className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -680,7 +684,7 @@ export default function OrdersPage() {
       {!loading && hasMore && (
         <div className="flex justify-center">
           <button type="button" onClick={() => fetchOrders(page + 1)} disabled={loadingMore} className={adminSecondaryButton}>
-            {loadingMore ? <FiLoader className="h-4 w-4 animate-spin" aria-hidden="true" /> : <FiArrowRight className="h-4 w-4 rotate-90" aria-hidden="true" />}
+            {loadingMore ? <IconoCargando className="h-4 w-4 animate-spin" aria-hidden="true" /> : <IconoFlechaDerecha className="h-4 w-4 rotate-90" aria-hidden="true" />}
             {loadingMore ? 'Cargando…' : `Cargar más órdenes (${orders.length} de ${filterStatus === 'all' ? stats.total : summary?.byStatus[filterStatus] ?? '…'})`}
           </button>
         </div>
@@ -704,17 +708,17 @@ export default function OrdersPage() {
                       {!selectedOrder.isOnlyDigital && ` · ${describirEntrega(selectedOrder)}`}
                     </span>
                     <span className={adminBadge(estadoPago(selectedOrder.paymentStatus).tono)}>
-                      {selectedOrder.paymentStatus === 'PAID' ? <FiCheckCircle className="h-3.5 w-3.5" aria-hidden="true" /> : <FiClock className="h-3.5 w-3.5" aria-hidden="true" />}
+                      {selectedOrder.paymentStatus === 'PAID' ? <IconoConfirmado className="h-3.5 w-3.5" aria-hidden="true" /> : <IconoReloj className="h-3.5 w-3.5" aria-hidden="true" />}
                       {estadoPago(selectedOrder.paymentStatus).label}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => toast('Próximamente')} className={adminSecondaryButton}>
-                    <FiPrinter className="w-4 h-4" /> Imprimir
+                    <IconoImpresora className="w-4 h-4" /> Imprimir
                   </button>
                   <button onClick={closeModal} aria-label="Cerrar" title="Cerrar" className={`${adminIconButton} h-11 w-11`}>
-                    <FiX className="w-5 h-5" />
+                    <IconoCerrar className="w-5 h-5" />
                   </button>
                 </div>
               </div>
@@ -726,7 +730,7 @@ export default function OrdersPage() {
                 {/* Facturación (C-147): a nombre de quién va la factura, los datos para emitirla y su número. Quién recibe va en Envío */}
                 <section className="rounded-xl border border-line p-4" aria-labelledby="orden-facturacion">
                   <h4 id="orden-facturacion" className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
-                    <FiUser className="h-4 w-4" aria-hidden="true" /> Facturación
+                    <IconoCuenta className="h-4 w-4" aria-hidden="true" /> Facturación
                   </h4>
                   <FacturaOrden
                     key={selectedOrder.id}
@@ -741,7 +745,7 @@ export default function OrdersPage() {
                 {/* Pago: método en palabras, origen de los fondos y estado */}
                 <section className="rounded-xl border border-line p-4" aria-labelledby="orden-pago">
                   <h4 id="orden-pago" className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
-                    <FiDollarSign className="h-4 w-4" aria-hidden="true" /> Pago
+                    <IconoBillete className="h-4 w-4" aria-hidden="true" /> Pago
                   </h4>
                   {(() => {
                     const pago = describirPago(selectedOrder.paymentMethod, selectedOrder.pagosMovil, { puntosUSD: selectedOrder.pointsUSD, referencia: selectedOrder.paymentReference });
@@ -785,16 +789,16 @@ export default function OrdersPage() {
               <div className="flex flex-wrap gap-2 mb-6">
                 {pasoDetalle && (
                   <button type="button" onClick={() => avanzar(selectedOrder, pasoDetalle)} disabled={updatingStatus} className={adminPrimaryButton}>
-                    {pasoDetalle.estado === 'PAID' ? <FiDollarSign className="w-4 h-4" aria-hidden="true" />
-                      : pasoDetalle.pideGuia || pasoDetalle.estado === 'SHIPPED' ? <FiTruck className="w-4 h-4" aria-hidden="true" />
-                        : pasoDetalle.estado === 'DELIVERED' ? <FiCheckCircle className="w-4 h-4" aria-hidden="true" />
-                          : <FiCheck className="w-4 h-4" aria-hidden="true" />}
+                    {pasoDetalle.estado === 'PAID' ? <IconoBillete className="w-4 h-4" aria-hidden="true" />
+                      : pasoDetalle.pideGuia || pasoDetalle.estado === 'SHIPPED' ? <IconoEnvio className="w-4 h-4" aria-hidden="true" />
+                        : pasoDetalle.estado === 'DELIVERED' ? <IconoConfirmado className="w-4 h-4" aria-hidden="true" />
+                          : <IconoCheck className="w-4 h-4" aria-hidden="true" />}
                     {pasoDetalle.accion}
                   </button>
                 )}
                 {!['CANCELLED', 'DELIVERED', 'REFUNDED', 'SHIPPED'].includes(selectedOrder.status) && (
                   <button onClick={() => { setCancelReason(''); setShowCancelModal(true); }} disabled={updatingStatus} className="px-4 py-2 bg-deal-bg text-deal text-sm font-medium rounded-lg hover:bg-deal/15 disabled:opacity-50 flex items-center gap-2">
-                    <FiX className="w-4 h-4" /> Cancelar Orden
+                    <IconoCerrar className="w-4 h-4" /> Cancelar Orden
                   </button>
                 )}
                 {/* Digital Codes Button */}
@@ -803,7 +807,7 @@ export default function OrdersPage() {
                     href={`/admin/orders/${selectedOrder.id}/digital`}
                     className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 flex items-center gap-2"
                   >
-                    <FiSend className="w-4 h-4" /> Enviar Códigos Digitales
+                    <IconoEnviar className="w-4 h-4" /> Enviar Códigos Digitales
                   </a>
                 )}
               </div>
@@ -870,7 +874,7 @@ export default function OrdersPage() {
                   <h4 className="text-xs font-bold text-muted uppercase">Progreso del Pedido</h4>
                   {selectedOrder.isOnlyDigital && (
                     <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-500 text-white flex items-center gap-1">
-                      <FiMonitor className="w-2.5 h-2.5" /> Solo Digital
+                      <IconoMonitor className="w-2.5 h-2.5" /> Solo Digital
                     </span>
                   )}
                 </div>
@@ -924,7 +928,7 @@ export default function OrdersPage() {
             {/* Header */}
             <div className={`${adminModalHeader} flex-wrap text-ink`}>
               <h3 className="text-lg font-bold flex items-center gap-2 mb-1">
-                <FiTruck className="w-5 h-5" />
+                <IconoEnvio className="w-5 h-5" />
                 Información de Envío
               </h3>
               <p className="text-sm opacity-80">Orden #{selectedOrder.orderNumber}</p>
@@ -1028,7 +1032,7 @@ export default function OrdersPage() {
                   </>
                 ) : (
                   <>
-                    <FiTruck className="w-4 h-4" />
+                    <IconoEnvio className="w-4 h-4" />
                     Marcar como Enviado
                   </>
                 )}
@@ -1044,7 +1048,7 @@ export default function OrdersPage() {
           <div className={`${adminModalPanel} sm:max-w-md`}>
             <div className={`${adminModalHeader} flex-col items-start`}>
               <h3 className="text-lg font-bold text-ink flex items-center gap-2">
-                <FiX className="w-5 h-5 text-deal" />
+                <IconoCerrar className="w-5 h-5 text-deal" />
                 Cancelar orden
               </h3>
               <p className="text-sm text-muted mt-1">Orden #{selectedOrder.orderNumber}</p>
@@ -1099,7 +1103,7 @@ export default function OrdersPage() {
                   </>
                 ) : (
                   <>
-                    <FiX className="w-4 h-4" />
+                    <IconoCerrar className="w-4 h-4" />
                     Cancelar orden
                   </>
                 )}

@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Image from 'next/image';
 import StarRating from './StarRating';
+import { IconoChat, IconoConfirmado, IconoCuenta } from '@/components/iconos';
 
 interface Review {
     id: string;
@@ -36,17 +37,13 @@ export default function ReviewList({ reviews, showLoginPrompt = false }: ReviewL
                         <div className="absolute top-full left-1/2 -translate-x-1/2 w-3 h-3 bg-brand-500 transform rotate-45 -mt-1.5 -z-10"></div>
                         {/* Badge - in front */}
                         <div className="relative bg-brand-500 text-white px-4 py-2 rounded-full shadow-md text-xs font-semibold flex items-center gap-2 whitespace-nowrap">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
+                            <IconoCuenta className="w-4 h-4" />
                             <a href="/login" className="hover:underline">Inicia sesión para dejar una reseña</a>
                         </div>
                     </div>
                 )}
                 <div className="text-center py-12 mt-8">
-                    <svg className="w-16 h-16 text-line mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                    </svg>
+                    <IconoChat className="w-16 h-16 text-line mx-auto mb-4" />
                     <p className="text-sm text-muted">Aún no hay reseñas para este producto</p>
                     <p className="text-xs text-subtle mt-1">Sé el primero en compartir tu opinión</p>
                 </div>
@@ -82,9 +79,7 @@ export default function ReviewList({ reviews, showLoginPrompt = false }: ReviewL
                                         <h4 className="text-sm font-bold text-ink">{review.user?.name || review.userName || 'Usuario'}</h4>
                                         {review.isVerifiedPurchase && (
                                             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-success/15 text-success-strong text-xs font-semibold rounded-full">
-                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                </svg>
+                                                <IconoConfirmado className="w-3 h-3" />
                                                 Compra verificada
                                             </span>
                                         )}

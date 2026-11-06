@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { FiArrowLeft, FiCheckCircle, FiMail } from 'react-icons/fi';
+import { IconoConfirmado, IconoCorreo, IconoFlechaIzquierda } from '@/components/iconos';
 import AuthShell from '@/components/auth/AuthShell';
 import HCaptchaWrapper, { type HCaptchaRefMethods } from '@/components/HCaptchaWrapper';
 import { adminError, adminInput, adminLabel, adminPrimaryButton } from '@/lib/admin-ui';
@@ -69,7 +69,7 @@ export default function RecuperarContrasenaPage() {
     <AuthShell volver={{ href: '/', texto: 'Volver al inicio' }}>
       {success ? (
         <div className="text-center">
-          <FiCheckCircle className="mx-auto h-12 w-12 text-success-strong" aria-hidden="true" />
+          <IconoConfirmado className="mx-auto h-12 w-12 text-success-strong" aria-hidden="true" />
           <h1 className="mt-4 text-2xl font-bold text-ink">Revisa tu correo</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted">
             Enviamos un enlace de recuperación a <strong className="break-all text-ink">{email}</strong>. Sigue las instrucciones para cambiar tu contraseña.
@@ -84,7 +84,7 @@ export default function RecuperarContrasenaPage() {
             <div>
               <label htmlFor="email" className={adminLabel}>Correo electrónico</label>
               <div className="relative">
-                <FiMail className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted" aria-hidden="true" />
+                <IconoCorreo className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted" aria-hidden="true" />
                 <input id="email" ref={emailRef} type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false}
                   required value={email} onChange={(event) => { setEmail(event.target.value); if (error?.field === 'email') setError(null); }}
                   aria-invalid={error?.field === 'email'} aria-describedby="email-error"
@@ -105,7 +105,7 @@ export default function RecuperarContrasenaPage() {
             </button>
           </form>
           <Link href="/login" className="mt-6 inline-flex h-11 items-center gap-2 text-sm font-semibold text-brand-600 hover:underline">
-            <FiArrowLeft className="h-4 w-4" aria-hidden="true" /> Volver al Login
+            <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Volver al Login
           </Link>
         </>
       )}

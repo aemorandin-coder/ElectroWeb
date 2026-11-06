@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
-import { FiHeart } from 'react-icons/fi';
+import { IconoFavoritos } from '@/components/iconos';
 
 /** Guardar en favoritos. Sin sesión avisa; con sesión consulta y cambia el estado en /api/customer/wishlist. */
 export default function WishlistButton({ productId, productName }: { productId: string; productName: string }) {
@@ -60,7 +60,7 @@ export default function WishlistButton({ productId, productName }: { productId: 
         saved ? 'border-deal bg-deal text-white' : 'border-line bg-white text-ink-soft hover:text-deal'
       }`}
     >
-      <FiHeart className={`h-5 w-5 ${saved ? 'fill-current' : ''}`} aria-hidden="true" />
+      <IconoFavoritos lleno={saved} className="h-5 w-5" aria-hidden="true" />
     </button>
   );
 }

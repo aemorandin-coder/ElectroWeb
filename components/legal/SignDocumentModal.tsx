@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
-import { FiAlertTriangle, FiCheck, FiDownload, FiFileText, FiX } from 'react-icons/fi';
+import { IconoAdvertencia, IconoCerrar, IconoCheck, IconoDescargar, IconoDocumento } from '@/components/iconos';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import {
   adminError, adminHint, adminInput, adminLabel, adminModalOverlay, adminModalPanel, adminPrimaryButton, adminSecondaryButton,
@@ -70,7 +70,7 @@ function CheckRebote() {
   }, []);
   return (
     <span ref={ref} className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success-strong text-white" style={{ transform: 'scale(0.3)' }}>
-      <FiCheck className="h-8 w-8" aria-hidden="true" />
+      <IconoCheck className="h-8 w-8" aria-hidden="true" />
     </span>
   );
 }
@@ -173,7 +173,7 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
       <div className={`${adminModalPanel} max-w-2xl`}>
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><FiFileText className="h-5 w-5" aria-hidden="true" /></span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><IconoDocumento className="h-5 w-5" aria-hidden="true" /></span>
             <div className="min-w-0">
               <h2 id={tituloId} className="truncate text-base font-bold text-ink">{doc?.title ?? 'Documento'}</h2>
               <p className="text-xs text-muted">
@@ -183,13 +183,13 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
             </div>
           </div>
           <button type="button" onClick={onClose} disabled={enviando} className="flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-surface" aria-label="Cerrar">
-            <FiX className="h-5 w-5" aria-hidden="true" />
+            <IconoCerrar className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
         {error ? (
           <div className="p-6 text-center">
-            <FiAlertTriangle className="mx-auto mb-2 h-8 w-8 text-warning-strong" aria-hidden="true" />
+            <IconoAdvertencia className="mx-auto mb-2 h-8 w-8 text-warning-strong" aria-hidden="true" />
             <p className="text-sm text-ink">{error}</p>
             <button type="button" onClick={() => setRecargas((n) => n + 1)} className={`${adminSecondaryButton} mt-4`}>Reintentar</button>
           </div>
@@ -265,7 +265,7 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
             <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
               {firmaId && (
                 <a href={`/api/legal/firmas/${firmaId}/pdf`} className={adminSecondaryButton}>
-                  <FiDownload className="h-4 w-4" aria-hidden="true" /> Descargar PDF
+                  <IconoDescargar className="h-4 w-4" aria-hidden="true" /> Descargar PDF
                 </a>
               )}
               <button type="button" onClick={onSigned} className={adminPrimaryButton}>Continuar</button>

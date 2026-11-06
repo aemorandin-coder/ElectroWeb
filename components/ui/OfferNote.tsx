@@ -1,4 +1,4 @@
-import { FiClock, FiTag } from 'react-icons/fi';
+import { IconoOferta, IconoReloj } from '@/components/iconos';
 import type { PublicOffer } from '@/lib/dto/product';
 import { textoFinOferta } from '@/lib/promotions-core';
 
@@ -15,13 +15,13 @@ export default function OfferNote({ oferta, size = 'card' }: { oferta: PublicOff
     <p className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 ${text} font-semibold text-deal`}>
       {oferta.label && (
         <span className="inline-flex items-center gap-1">
-          <FiTag className="h-3.5 w-3.5" aria-hidden="true" />
+          <IconoOferta className="h-3.5 w-3.5" aria-hidden="true" />
           {oferta.label}
         </span>
       )}
       {fin && (
         <span className="inline-flex items-center gap-1" suppressHydrationWarning>
-          <FiClock className="h-3.5 w-3.5" aria-hidden="true" />
+          <IconoReloj className="h-3.5 w-3.5" aria-hidden="true" />
           {fin}
         </span>
       )}

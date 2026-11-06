@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import Image from 'next/image';
-import { FiSearch, FiX } from 'react-icons/fi';
+import { IconoBuscar, IconoCerrar } from '@/components/iconos';
 import { adminBadge, adminInput } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import type { StudioStoreProduct } from '@/lib/studio/schema';
@@ -39,7 +39,7 @@ export default function ProductPicker({ onPick, onCancel }: { onPick: (p: Studio
       </label>
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+          <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
           <input
             id={inputId}
             type="search"
@@ -52,7 +52,7 @@ export default function ProductPicker({ onPick, onCancel }: { onPick: (p: Studio
         </div>
         {onCancel && (
           <button type="button" onClick={onCancel} className={smallButton} aria-label="Cerrar búsqueda">
-            <FiX className="h-4 w-4" aria-hidden="true" />
+            <IconoCerrar className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
       </div>

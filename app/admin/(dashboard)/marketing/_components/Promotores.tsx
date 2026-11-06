@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import {
-  FiAlertTriangle, FiCheck, FiCopy, FiDollarSign, FiEdit2, FiEye, FiInbox, FiInfo, FiLink, FiPause, FiPlay, FiPlus, FiTrash2, FiTrendingUp, FiUserCheck, FiUsers, FiX,
-} from 'react-icons/fi';
+  IconoAdvertencia, IconoBandeja, IconoBillete, IconoCerrar, IconoCheck, IconoClientes, IconoCopiar, IconoEditar,
+  IconoEliminar, IconoEnlace, IconoInfo, IconoMas, IconoPausa, IconoPlay, IconoVentas, IconoVer, IconoVerificado,
+} from '@/components/iconos';
 import {
   adminBadge, adminCardFlush, adminDangerButton, adminEmpty, adminHint, adminIconButton, adminIconChip, adminInput, adminLabel,
   adminModalBody, adminModalFooter, adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice,
@@ -316,7 +317,7 @@ export default function Promotores() {
   return (
     <div className="space-y-5">
       <div className={`${adminNotice('brand')} flex gap-3`}>
-        <FiInfo className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <IconoInfo className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <p>
           Cada promotor tiene un <strong>código</strong> (el cliente lo escribe en el carrito y recibe un descuento) y un enlace. Cuenta para él la compra
           hecha con su código, aunque el cliente ya tuviera cuenta, y la de quien se registró desde su enlace. La comisión es sobre los{' '}
@@ -327,7 +328,7 @@ export default function Promotores() {
 
       {porRevisar > 0 && (
         <div className={`${adminNotice('warning')} flex items-start gap-2`} role="alert">
-          <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span><strong>{porRevisar} {porRevisar === 1 ? 'comisión espera' : 'comisiones esperan'} tu revisión.</strong> Abre las comisiones del promotor marcado para aprobarla o rechazarla.</span>
         </div>
       )}
@@ -335,7 +336,7 @@ export default function Promotores() {
       {solicitudesPendientes.length > 0 && (
         <div className={adminCardFlush}>
           <div className="flex items-center gap-2 border-b border-line px-4 py-3">
-            <FiInbox className="h-4 w-4 text-brand-500" aria-hidden="true" />
+            <IconoBandeja className="h-4 w-4 text-brand-500" aria-hidden="true" />
             <h2 className="text-base font-semibold text-ink">Solicitudes para ser promotor</h2>
             <span className={adminBadge('warning')}>{solicitudesPendientes.length}</span>
           </div>
@@ -360,10 +361,10 @@ export default function Promotores() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
-          { icono: <FiUserCheck className="h-5 w-5" />, tono: 'brand' as const, label: 'Promotores', valor: String(promotores.length) },
-          { icono: <FiTrendingUp className="h-5 w-5" />, tono: 'neutral' as const, label: 'Conversiones', valor: String(promotores.reduce((s, p) => s + p.stats.totalConversions, 0)) },
-          { icono: <FiDollarSign className="h-5 w-5" />, tono: 'warning' as const, label: 'Por acreditar', valor: formatUSD(pendienteTotal) },
-          { icono: <FiDollarSign className="h-5 w-5" />, tono: 'success' as const, label: 'Ventas referidas', valor: formatUSD(generadoTotal) },
+          { icono: <IconoVerificado className="h-5 w-5" />, tono: 'brand' as const, label: 'Promotores', valor: String(promotores.length) },
+          { icono: <IconoVentas className="h-5 w-5" />, tono: 'neutral' as const, label: 'Conversiones', valor: String(promotores.reduce((s, p) => s + p.stats.totalConversions, 0)) },
+          { icono: <IconoBillete className="h-5 w-5" />, tono: 'warning' as const, label: 'Por acreditar', valor: formatUSD(pendienteTotal) },
+          { icono: <IconoBillete className="h-5 w-5" />, tono: 'success' as const, label: 'Ventas referidas', valor: formatUSD(generadoTotal) },
         ].map((stat) => (
           <div key={stat.label} className={`${adminStatCard} p-4`}>
             {/* En el teléfono el ícono se oculta: sin él, el monto cabe completo */}
@@ -380,7 +381,7 @@ export default function Promotores() {
         <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
           <h2 className="text-base font-semibold text-ink">Promotores</h2>
           <button type="button" onClick={() => setCreando(true)} className={`${adminPrimaryButton} h-9 px-3 text-xs`}>
-            <FiPlus className="h-4 w-4" aria-hidden="true" /> Nuevo promotor
+            <IconoMas className="h-4 w-4" aria-hidden="true" /> Nuevo promotor
           </button>
         </div>
 
@@ -388,7 +389,7 @@ export default function Promotores() {
           <div className="flex justify-center py-12"><span className={adminSpinner} aria-label="Cargando" /></div>
         ) : promotores.length === 0 ? (
           <div className={`${adminEmpty} m-4`}>
-            <FiUsers className="mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
+            <IconoClientes className="mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
             <p className="font-semibold text-ink">Sin promotores</p>
             <p className="mt-1 text-sm text-muted">Crea el primero para empezar a medir sus ventas.</p>
           </div>
@@ -418,14 +419,14 @@ export default function Promotores() {
                     <p className={`text-sm font-bold ${p.stats.pendingCommission > 0 ? 'text-warning-strong' : 'text-ink'}`}>{formatUSD(p.stats.pendingCommission)}</p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => copiar(p.code)} className={adminIconButton} aria-label={`Copiar enlace de ${p.name}`} title="Copiar enlace de referido"><FiLink className="h-4 w-4" /></button>
-                    <button type="button" onClick={() => abrirDetalle(p)} className={adminIconButton} aria-label={`Ver comisiones de ${p.name}`} title="Ver comisiones"><FiEye className="h-4 w-4" /></button>
-                    <button type="button" onClick={() => abrirEdicion(p)} className={adminIconButton} aria-label={`Editar a ${p.name}`} title="Editar comisión y descuento"><FiEdit2 className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => copiar(p.code)} className={adminIconButton} aria-label={`Copiar enlace de ${p.name}`} title="Copiar enlace de referido"><IconoEnlace className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => abrirDetalle(p)} className={adminIconButton} aria-label={`Ver comisiones de ${p.name}`} title="Ver comisiones"><IconoVer className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => abrirEdicion(p)} className={adminIconButton} aria-label={`Editar a ${p.name}`} title="Editar comisión y descuento"><IconoEditar className="h-4 w-4" /></button>
                     <button type="button" onClick={() => cambiarEstado(p)} className={adminIconButton} aria-label={p.status === 'ACTIVE' ? `Pausar a ${p.name}` : `Activar a ${p.name}`} title={p.status === 'ACTIVE' ? 'Pausar' : 'Activar'}>
-                      {p.status === 'ACTIVE' ? <FiPause className="h-4 w-4" /> : <FiPlay className="h-4 w-4" />}
+                      {p.status === 'ACTIVE' ? <IconoPausa className="h-4 w-4" /> : <IconoPlay className="h-4 w-4" />}
                     </button>
                     {p.stats.totalConversions === 0 && (
-                      <button type="button" onClick={() => eliminar(p)} className={`${adminIconButton} hover:text-deal`} aria-label={`Eliminar a ${p.name}`} title="Eliminar"><FiTrash2 className="h-4 w-4" /></button>
+                      <button type="button" onClick={() => eliminar(p)} className={`${adminIconButton} hover:text-deal`} aria-label={`Eliminar a ${p.name}`} title="Eliminar"><IconoEliminar className="h-4 w-4" /></button>
                     )}
                   </div>
                 </div>
@@ -446,11 +447,11 @@ export default function Promotores() {
                 <p className="text-xs text-muted">
                   <span className="font-mono">{detalle.code}</span> · {detalle.commissionRate}% ·{' '}
                   <button type="button" onClick={() => copiar(detalle.code)} className="inline-flex items-center gap-1 font-semibold text-brand-600 hover:underline">
-                    <FiCopy className="h-3 w-3" aria-hidden="true" /> copiar enlace
+                    <IconoCopiar className="h-3 w-3" aria-hidden="true" /> copiar enlace
                   </button>
                 </p>
               </div>
-              <button type="button" onClick={() => setDetalle(null)} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" /></button>
+              <button type="button" onClick={() => setDetalle(null)} className={adminIconButton} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" /></button>
             </div>
 
             <div className={`${adminModalBody} p-0`}>
@@ -458,7 +459,7 @@ export default function Promotores() {
                 <div className="flex justify-center py-12"><span className={adminSpinner} aria-label="Cargando" /></div>
               ) : comisiones.length === 0 ? (
                 <div className={`${adminEmpty} m-4`}>
-                  <FiTrendingUp className="mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
+                  <IconoVentas className="mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
                   <p className="text-sm text-muted">Todavía no hay conversiones.</p>
                 </div>
               ) : (
@@ -524,10 +525,10 @@ export default function Promotores() {
 
             <div className={adminModalFooter}>
               <button type="button" onClick={() => resolver('reject_conversions')} disabled={procesando || seleccion.length === 0} className={adminDangerButton}>
-                <FiX className="h-4 w-4" aria-hidden="true" /> Rechazar
+                <IconoCerrar className="h-4 w-4" aria-hidden="true" /> Rechazar
               </button>
               <button type="button" onClick={() => resolver('approve_conversions')} disabled={procesando || seleccion.length === 0} className={adminSuccessButton}>
-                <FiCheck className="h-4 w-4" aria-hidden="true" /> Aprobar y acreditar{seleccion.length > 0 ? ` (${seleccion.length})` : ''}
+                <IconoCheck className="h-4 w-4" aria-hidden="true" /> Aprobar y acreditar{seleccion.length > 0 ? ` (${seleccion.length})` : ''}
               </button>
             </div>
           </div>
@@ -541,7 +542,7 @@ export default function Promotores() {
           <div className={`${adminModalPanel} sm:max-w-md`} role="dialog" aria-modal="true" aria-labelledby="titulo-nuevo-promotor">
             <div className={adminModalHeader}>
               <h3 id="titulo-nuevo-promotor" className={adminModalTitle}>Nuevo promotor</h3>
-              <button type="button" onClick={() => setCreando(false)} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" /></button>
+              <button type="button" onClick={() => setCreando(false)} className={adminIconButton} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" /></button>
             </div>
             <div className={`${adminModalBody} space-y-4`}>
               <div>
@@ -610,7 +611,7 @@ export default function Promotores() {
             <div className={adminModalFooter}>
               <button type="button" onClick={() => setCreando(false)} className={adminSecondaryButton}>Cancelar</button>
               <button type="button" onClick={crear} disabled={guardando || !form.userId || !form.code || !form.name} className={adminPrimaryButton}>
-                <FiPlus className="h-4 w-4" aria-hidden="true" /> {guardando ? 'Creando…' : 'Crear promotor'}
+                <IconoMas className="h-4 w-4" aria-hidden="true" /> {guardando ? 'Creando…' : 'Crear promotor'}
               </button>
             </div>
           </div>
@@ -624,7 +625,7 @@ export default function Promotores() {
           <div className={`${adminModalPanel} sm:max-w-md`} role="dialog" aria-modal="true" aria-labelledby="titulo-solicitud">
             <div className={adminModalHeader}>
               <h3 id="titulo-solicitud" className={adminModalTitle}>Solicitud de {revisando.user.name || revisando.user.email}</h3>
-              <button type="button" onClick={() => setRevisando(null)} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" /></button>
+              <button type="button" onClick={() => setRevisando(null)} className={adminIconButton} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" /></button>
             </div>
             <div className={`${adminModalBody} space-y-4`}>
               <div className={adminNotice('neutral')}>
@@ -658,10 +659,10 @@ export default function Promotores() {
             </div>
             <div className={adminModalFooter}>
               <button type="button" onClick={() => resolverSolicitud('reject')} disabled={guardando} className={adminDangerButton}>
-                <FiX className="h-4 w-4" aria-hidden="true" /> Rechazar
+                <IconoCerrar className="h-4 w-4" aria-hidden="true" /> Rechazar
               </button>
               <button type="button" onClick={() => resolverSolicitud('approve')} disabled={guardando || !revision.code || !revision.name} className={adminSuccessButton}>
-                <FiCheck className="h-4 w-4" aria-hidden="true" /> {guardando ? 'Guardando…' : 'Aprobar'}
+                <IconoCheck className="h-4 w-4" aria-hidden="true" /> {guardando ? 'Guardando…' : 'Aprobar'}
               </button>
             </div>
           </div>
@@ -675,7 +676,7 @@ export default function Promotores() {
           <div className={`${adminModalPanel} sm:max-w-md`} role="dialog" aria-modal="true" aria-labelledby="titulo-editar-promotor">
             <div className={adminModalHeader}>
               <h3 id="titulo-editar-promotor" className={adminModalTitle}>Editar a {editando.name}</h3>
-              <button type="button" onClick={() => setEditando(null)} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" /></button>
+              <button type="button" onClick={() => setEditando(null)} className={adminIconButton} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" /></button>
             </div>
             <div className={`${adminModalBody} space-y-4`}>
               <PresenciaEnEditor recurso={`influencer:${editando.id}`} etiqueta={editando.name} nombreRecurso="promotor" />

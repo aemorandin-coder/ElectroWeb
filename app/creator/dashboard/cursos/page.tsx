@@ -4,7 +4,7 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FiExternalLink } from 'react-icons/fi';
+import { IconoAbrirAparte, IconoMas } from '@/components/iconos';
 import { adminPageHeader, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 import { formatRating } from '@/lib/currency';
 
@@ -71,9 +71,7 @@ export default function CreatorCoursesPage() {
           href="/creator/dashboard/cursos/nuevo"
           className={`${adminPrimaryButton} flex items-center gap-2 text-sm`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
+          <IconoMas className="w-4 h-4" />
           Nuevo Curso
         </Link>
       </div>
@@ -135,7 +133,7 @@ export default function CreatorCoursesPage() {
                       className="inline-flex min-h-10 items-center rounded-lg border border-line bg-surface px-3 text-xs font-semibold text-ink-soft transition-colors hover:bg-line/50 hover:text-ink"
                       title="Ver en catálogo"
                     >
-                      <FiExternalLink className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" /> Ver
+                      <IconoAbrirAparte className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" /> Ver
                     </Link>
                   )}
                   <Link

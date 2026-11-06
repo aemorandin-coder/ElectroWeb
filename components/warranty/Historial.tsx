@@ -3,7 +3,7 @@
 // Historial de una solicitud de garantía (C-122). Lo usan el panel del cliente y el del equipo.
 
 import Image from 'next/image';
-import { FiLock } from 'react-icons/fi';
+import { IconoCandado } from '@/components/iconos';
 import { CLAIM_STATUS_CUSTOMER, CLAIM_STATUS_LABEL, type ClaimStatus } from '@/lib/warranty';
 
 export interface EventoGarantia {
@@ -59,7 +59,7 @@ export function Historial({ eventos, vista }: { eventos: EventoGarantia[]; vista
           <li key={e.id} className={`rounded-xl border p-3 ${nota ? 'border-warning/40 bg-warning/10' : deCliente ? 'border-line bg-white' : 'border-brand-200 bg-brand-50'}`}>
             <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
               <span className="font-semibold text-ink-soft">{quien}</span>
-              {nota && <span className="inline-flex items-center gap-1 font-semibold text-warning-strong"><FiLock className="h-3 w-3" aria-hidden="true" /> Nota interna</span>}
+              {nota && <span className="inline-flex items-center gap-1 font-semibold text-warning-strong"><IconoCandado className="h-3 w-3" aria-hidden="true" /> Nota interna</span>}
               {e.kind === 'CREATED' && <span>· abrió la solicitud</span>}
               <span>· {cuando(e.createdAt)}</span>
             </p>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { FiCheckCircle, FiLock, FiMail, FiSend } from 'react-icons/fi';
+import { IconoCandado, IconoConfirmado, IconoCorreo, IconoEnviar } from '@/components/iconos';
 import { adminBadge, adminError, adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { ControlDocumento, ControlTelefono, AYUDA_DOCUMENTO } from '@/components/forms/ControlesDatos';
 import { leerDocumento, leerTelefono } from '@/lib/validations/registro';
@@ -141,7 +141,7 @@ export default function DatosPersonales({ datos, onGuardado }: { datos: DatosPer
               placeholder="Ej: María Pérez"
             />
             {errores.nombre ? <p className={adminError}>{errores.nombre}</p> : nombreFijo && (
-              <p className={`${adminHint} flex items-center gap-1`}><FiLock className="h-3 w-3" aria-hidden="true" /> Para corregirlo, escríbenos: es el nombre de tus recibos.</p>
+              <p className={`${adminHint} flex items-center gap-1`}><IconoCandado className="h-3 w-3" aria-hidden="true" /> Para corregirlo, escríbenos: es el nombre de tus recibos.</p>
             )}
           </div>
 
@@ -150,7 +150,7 @@ export default function DatosPersonales({ datos, onGuardado }: { datos: DatosPer
             {cedulaGuardada ? (
               <>
                 <input id="perfil-cedula" value={cedulaGuardada} disabled className={adminInput()} />
-                <p className={`${adminHint} flex items-center gap-1`}><FiLock className="h-3 w-3" aria-hidden="true" /> Para corregirla, escríbenos.</p>
+                <p className={`${adminHint} flex items-center gap-1`}><IconoCandado className="h-3 w-3" aria-hidden="true" /> Para corregirla, escríbenos.</p>
               </>
             ) : (
               <>
@@ -183,10 +183,10 @@ export default function DatosPersonales({ datos, onGuardado }: { datos: DatosPer
           <div className="sm:col-span-2">
             <span className={adminLabel}>Correo</span>
             <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2.5">
-              <FiMail className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+              <IconoCorreo className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
               <span className="min-w-0 flex-1 truncate text-sm text-ink">{datos.user.email}</span>
               {datos.user.emailVerified ? (
-                <span className={adminBadge('success')}><FiCheckCircle className="h-3.5 w-3.5" aria-hidden="true" /> Verificado</span>
+                <span className={adminBadge('success')}><IconoConfirmado className="h-3.5 w-3.5" aria-hidden="true" /> Verificado</span>
               ) : (
                 <span className={adminBadge('warning')}>Sin verificar</span>
               )}
@@ -195,7 +195,7 @@ export default function DatosPersonales({ datos, onGuardado }: { datos: DatosPer
               <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-ink-soft">Verifícalo para poder comprar y recuperar tu cuenta.</p>
                 <button type="button" onClick={reenviarVerificacion} disabled={reenviando} className={`${adminSecondaryButton} shrink-0`}>
-                  <FiSend className="h-4 w-4" aria-hidden="true" /> {reenviando ? 'Enviando…' : 'Reenviar correo'}
+                  <IconoEnviar className="h-4 w-4" aria-hidden="true" /> {reenviando ? 'Enviando…' : 'Reenviar correo'}
                 </button>
               </div>
             )}

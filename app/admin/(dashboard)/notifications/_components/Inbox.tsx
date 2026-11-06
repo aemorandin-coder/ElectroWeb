@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { FiBell, FiCheck, FiTrash2 } from 'react-icons/fi';
+import { IconoCheck, IconoEliminar, IconoNotificaciones } from '@/components/iconos';
 import { adminCardFlush, adminEmpty, adminIconChip, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
 import { CATEGORY_LABELS, type AdminEventCategory } from '@/lib/admin-events/catalog';
 import { notificationMeta, timeAgo } from '@/components/notifications/notification-meta';
@@ -129,7 +129,7 @@ export default function Inbox({ puedeElegir }: { puedeElegir: boolean }) {
             Solo sin leer
           </label>
           <button type="button" onClick={markAll} disabled={unreadCount === 0} className={`${adminSecondaryButton} h-9 px-3`}>
-            <FiCheck className="h-4 w-4" aria-hidden="true" />
+            <IconoCheck className="h-4 w-4" aria-hidden="true" />
             Marcar todo leído{unreadCount > 0 ? ` (${unreadCount})` : ''}
           </button>
         </div>
@@ -139,7 +139,7 @@ export default function Inbox({ puedeElegir }: { puedeElegir: boolean }) {
         <div className="flex justify-center py-16"><span className={adminSpinner} aria-label="Cargando" /></div>
       ) : items.length === 0 ? (
         <div className={adminEmpty}>
-          <FiBell className="h-10 w-10 text-subtle" aria-hidden="true" />
+          <IconoNotificaciones className="h-10 w-10 text-subtle" aria-hidden="true" />
           <p className="mt-3 font-semibold text-ink">{unreadOnly ? 'Nada sin leer' : 'Sin notificaciones'}</p>
           <p className="mt-1 max-w-sm text-sm text-muted">
             Aquí llegan las ventas, recargas, solicitudes y alertas de la tienda.{puedeElegir ? ' Elige qué llega en la pestaña Qué avisar.' : ''}
@@ -175,7 +175,7 @@ export default function Inbox({ puedeElegir }: { puedeElegir: boolean }) {
                   aria-label={`Eliminar: ${item.title}`}
                   className="relative z-10 inline-flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg text-muted hover:bg-white hover:text-deal lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
                 >
-                  <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                  <IconoEliminar className="h-4 w-4" aria-hidden="true" />
                 </button>
               </li>
             );

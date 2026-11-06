@@ -1,6 +1,6 @@
 'use client';
 
-import type { IconType } from 'react-icons';
+import type { IconType } from '@/components/iconos';
 import { FiFacebook, FiInstagram, FiYoutube } from 'react-icons/fi';
 import { FaTelegram, FaTiktok, FaXTwitter } from 'react-icons/fa6';
 import { adminInput } from '@/lib/admin-ui';

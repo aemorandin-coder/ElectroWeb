@@ -19,7 +19,7 @@ export default function CategoryRail({ categories }: { categories: HomeCategory[
                 href={`/categorias/${category.slug}`}
                 className="flex h-full flex-col items-center gap-2 rounded-xl border border-line bg-white p-4 text-center hover:border-brand-200 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500"
               >
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                <span className="iconos-marca flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-950">
                   <CategoryIconRenderer iconName={category.icon} className="h-6 w-6" />
                 </span>
                 <span className="text-sm font-semibold text-ink">{category.name}</span>

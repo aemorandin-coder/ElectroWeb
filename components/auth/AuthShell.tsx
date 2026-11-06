@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiArrowLeft, FiShoppingBag } from 'react-icons/fi';
+import { IconoBolsa, IconoFlechaIzquierda } from '@/components/iconos';
 import { useSettings } from '@/contexts/SettingsContext';
 
 /**
@@ -31,7 +31,7 @@ export default function AuthShell({
           href={volver.href}
           className="-ml-2 inline-flex h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-muted transition-colors hover:text-ink"
         >
-          <FiArrowLeft className="h-4 w-4" aria-hidden="true" />
+          <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" />
           {volver.texto}
         </Link>
 
@@ -41,7 +41,7 @@ export default function AuthShell({
               <Image src={settings.logo} alt={nombre} fill sizes="96px" className="object-contain" priority />
             ) : (
               <span className="flex h-full w-full items-center justify-center rounded-2xl border border-brand-200 bg-brand-50 text-brand-600">
-                <FiShoppingBag className="h-9 w-9" aria-hidden="true" />
+                <IconoBolsa className="h-9 w-9" aria-hidden="true" />
               </span>
             )}
           </Link>

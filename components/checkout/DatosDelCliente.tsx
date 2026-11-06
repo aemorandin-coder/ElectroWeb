@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FiAlertCircle, FiUserCheck } from 'react-icons/fi';
+import { IconoError, IconoVerificado } from '@/components/iconos';
 import { toast } from 'react-hot-toast';
 import { ControlDocumento, ControlTelefono, AYUDA_DOCUMENTO } from '@/components/forms/ControlesDatos';
 import { adminCard, adminError, adminHint, adminLabel, adminNotice, adminPrimaryButton } from '@/lib/admin-ui';
@@ -77,7 +77,7 @@ export default function DatosDelCliente({
     <section id="datos-del-cliente" aria-labelledby="datos-del-cliente-titulo" className={`${adminCard} scroll-mt-24 border-warning/40 p-5 lg:p-6`}>
       <div className="mb-4 flex items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning/15 text-warning-strong">
-          <FiUserCheck className="h-5 w-5" aria-hidden="true" />
+          <IconoVerificado className="h-5 w-5" aria-hidden="true" />
         </span>
         <div>
           <h2 id="datos-del-cliente-titulo" className="text-lg font-bold text-ink">
@@ -155,7 +155,7 @@ export default function DatosDelCliente({
 
       {errorServidor && (
         <div role="alert" className={`${adminNotice('danger')} mt-4 flex items-start gap-2`}>
-          <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoError className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <p>{errorServidor}</p>
         </div>
       )}

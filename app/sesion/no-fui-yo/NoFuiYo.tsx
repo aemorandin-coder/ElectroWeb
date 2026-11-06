@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FiAlertTriangle, FiCheckCircle } from 'react-icons/fi';
+import { IconoAdvertencia, IconoConfirmado } from '@/components/iconos';
 import { adminDangerButton, adminError } from '@/lib/admin-ui';
 
 export default function NoFuiYo({ s, t, cuenta, dispositivo, ip, fecha }: { s: string; t: string; cuenta: string; dispositivo: string; ip: string | null; fecha: string }) {
@@ -30,7 +30,7 @@ export default function NoFuiYo({ s, t, cuenta, dispositivo, ip, fecha }: { s: s
   if (estado === 'hecho') {
     return (
       <div role="status">
-        <FiCheckCircle className="h-8 w-8 text-success-strong" aria-hidden="true" />
+        <IconoConfirmado className="h-8 w-8 text-success-strong" aria-hidden="true" />
         <h1 className="mt-3 text-xl font-bold text-ink">Cuenta bloqueada</h1>
         <p className="mt-2 text-sm text-ink-soft">
           Cerramos todas las sesiones de <strong className="text-ink">{cuenta}</strong> y cambiamos su contraseña por una que nadie conoce.
@@ -42,7 +42,7 @@ export default function NoFuiYo({ s, t, cuenta, dispositivo, ip, fecha }: { s: s
 
   return (
     <>
-      <FiAlertTriangle className="h-8 w-8 text-warning-strong" aria-hidden="true" />
+      <IconoAdvertencia className="h-8 w-8 text-warning-strong" aria-hidden="true" />
       <h1 className="mt-3 text-xl font-bold text-ink">¿No fuiste tú?</h1>
       <p className="mt-2 text-sm text-ink-soft">Alguien entró al panel con la cuenta <strong className="text-ink">{cuenta}</strong>:</p>
       <dl className="mt-3 space-y-1 rounded-xl border border-line bg-surface p-3 text-sm">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FiStar, FiPackage, FiClock, FiCheck, FiX } from 'react-icons/fi';
+import { IconoCerrar, IconoCheck, IconoEstrella, IconoPaquete, IconoReloj } from '@/components/iconos';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import {
@@ -61,7 +61,7 @@ export default function MyReviewsPage() {
     if (estado === 'APPROVED') {
       return (
         <span className={adminBadge('success')}>
-          <FiCheck className="w-3 h-3" />
+          <IconoCheck className="w-3 h-3" />
           Publicada
         </span>
       );
@@ -69,14 +69,14 @@ export default function MyReviewsPage() {
     if (estado === 'REJECTED') {
       return (
         <span className={adminBadge('danger')}>
-          <FiX className="w-3 h-3" />
+          <IconoCerrar className="w-3 h-3" />
           No publicada
         </span>
       );
     }
     return (
       <span className={adminBadge('warning')}>
-        <FiClock className="w-3 h-3" />
+        <IconoReloj className="w-3 h-3" />
         Pendiente
       </span>
     );
@@ -121,7 +121,7 @@ export default function MyReviewsPage() {
       ) : filteredReviews.length === 0 ? (
         <div className={`${adminCard} text-center py-16`}>
           <div className="w-16 h-16 bg-surface border border-line rounded-full flex items-center justify-center mx-auto mb-4">
-            <FiStar className="w-8 h-8 text-subtle" />
+            <IconoEstrella className="w-8 h-8 text-subtle" />
           </div>
           <h3 className="text-lg font-bold text-ink mb-2">No hay reseñas</h3>
           <p className="text-sm text-muted mb-6">
@@ -135,7 +135,7 @@ export default function MyReviewsPage() {
             href="/productos"
             className={`${adminPrimaryButton} inline-flex items-center gap-2`}
           >
-            <FiPackage className="w-5 h-5" />
+            <IconoPaquete className="w-5 h-5" />
             Ver Productos
           </Link>
         </div>
@@ -157,11 +157,12 @@ export default function MyReviewsPage() {
                   <div className="flex items-center gap-3 mt-2">
                     <div className="flex items-center gap-0.5">
                       {[...Array(5)].map((_, i) => (
-                        <FiStar
+                        <IconoEstrella
                           key={i}
+                          lleno={i < review.rating}
                           className={`w-4 h-4 ${
                             i < review.rating
-                              ? 'fill-warning-strong text-warning-strong'
+                              ? 'text-warning-strong'
                               : 'text-line-strong'
                           }`}
                         />
@@ -191,7 +192,7 @@ export default function MyReviewsPage() {
               {reviewStatus(review) === 'PENDING' && (
                 <div className="mt-4 p-3 bg-surface border border-line rounded-xl">
                   <p className="text-xs text-ink-soft flex items-center gap-2">
-                    <FiClock className="w-4 h-4 text-warning-strong flex-shrink-0" />
+                    <IconoReloj className="w-4 h-4 text-warning-strong flex-shrink-0" />
                     Tu reseña está siendo revisada por nuestro equipo. Será publicada pronto.
                   </p>
                 </div>

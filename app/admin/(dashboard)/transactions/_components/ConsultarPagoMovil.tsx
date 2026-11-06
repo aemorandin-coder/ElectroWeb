@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
-import { FiAlertCircle, FiCheckCircle, FiLoader, FiSearch, FiX } from 'react-icons/fi';
+import { IconoBuscar, IconoCargando, IconoCerrar, IconoConfirmado, IconoError } from '@/components/iconos';
 import { BANCOS_VENEZUELA } from '@/lib/pago-movil/bancos-venezuela';
 import { hoyCaracas } from '@/lib/pago-movil/monto';
 import { formatVES } from '@/lib/currency';
@@ -84,7 +84,7 @@ export default function ConsultarPagoMovil() {
   return (
     <>
       <button type="button" onClick={abrir} className={adminSecondaryButton}>
-        <FiSearch className="h-4 w-4" aria-hidden="true" /> Consultar Pago Móvil
+        <IconoBuscar className="h-4 w-4" aria-hidden="true" /> Consultar Pago Móvil
       </button>
 
       {mounted && abierto && createPortal(
@@ -96,7 +96,7 @@ export default function ConsultarPagoMovil() {
                 <p className="text-sm text-muted">Le pregunta al Banco de Venezuela. No registra ni acredita nada.</p>
               </div>
               <button type="button" onClick={() => setAbierto(false)} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar">
-                <FiX className="h-5 w-5" aria-hidden="true" />
+                <IconoCerrar className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
 
@@ -136,7 +136,7 @@ export default function ConsultarPagoMovil() {
                 <div className="space-y-3" aria-live="polite">
                   <div className={adminNotice(resultado.encontrado ? 'success' : 'warning')}>
                     <p className="flex items-center gap-2 font-semibold">
-                      {resultado.encontrado ? <FiCheckCircle className="h-4 w-4" aria-hidden="true" /> : <FiAlertCircle className="h-4 w-4" aria-hidden="true" />}
+                      {resultado.encontrado ? <IconoConfirmado className="h-4 w-4" aria-hidden="true" /> : <IconoError className="h-4 w-4" aria-hidden="true" />}
                       {resultado.encontrado ? `El banco confirma ${formatVES(resultado.montoBanco ?? 0)}` : 'El banco no encuentra ese pago'}
                     </p>
                     <p className="mt-1">{resultado.explicacion}</p>
@@ -166,7 +166,7 @@ export default function ConsultarPagoMovil() {
             <div className={adminModalFooter}>
               <button type="button" onClick={() => setAbierto(false)} className={adminSecondaryButton}>Cerrar</button>
               <button type="submit" disabled={consultando} className={adminPrimaryButton}>
-                {consultando ? <FiLoader className="h-4 w-4 animate-spin" aria-hidden="true" /> : <FiSearch className="h-4 w-4" aria-hidden="true" />}
+                {consultando ? <IconoCargando className="h-4 w-4 animate-spin" aria-hidden="true" /> : <IconoBuscar className="h-4 w-4" aria-hidden="true" />}
                 {consultando ? 'Consultando…' : 'Consultar al banco'}
               </button>
             </div>

@@ -3,7 +3,7 @@ import { formatUSD } from '@/lib/currency';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FiArrowLeft, FiArrowRight } from 'react-icons/fi';
+import { IconoFlechaDerecha, IconoFlechaIzquierda, IconoMas } from '@/components/iconos';
 import { adminPageHeader, adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatRating } from '@/lib/currency';
 
@@ -84,7 +84,7 @@ export default function CreatorDashboardPage() {
             : 'Necesitas ser un creador aprobado para acceder a este panel.'}
         </p>
         <Link href="/creator" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:underline">
-          <FiArrowLeft className="h-4 w-4" aria-hidden="true" /> Volver a la página de creadores
+          <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Volver a la página de creadores
         </Link>
       </div>
     );
@@ -117,9 +117,7 @@ export default function CreatorDashboardPage() {
           href="/creator/dashboard/cursos/nuevo"
           className={`${adminPrimaryButton} flex items-center gap-2 text-sm w-fit`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
+          <IconoMas className="w-4 h-4" />
           Nuevo Curso
         </Link>
       </div>
@@ -140,7 +138,7 @@ export default function CreatorDashboardPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-ink">Mis Cursos</h2>
           <Link href="/creator/dashboard/cursos" className="text-brand-600 text-sm hover:underline">
-            Ver todos <FiArrowRight className="inline h-4 w-4" aria-hidden="true" />
+            Ver todos <IconoFlechaDerecha className="inline h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
 

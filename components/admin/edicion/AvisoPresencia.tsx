@@ -1,4 +1,4 @@
-import { FiUsers } from 'react-icons/fi';
+import { IconoClientes } from '@/components/iconos';
 import type { PersonaEnLinea } from '@/lib/realtime/eventos';
 
 // C-169: "Luis también está editando esto". Se pone arriba de cualquier editor que use useEdicionEnVivo.
@@ -19,7 +19,7 @@ export default function AvisoPresencia({ otros, recurso = 'esto' }: { otros: Per
         ))}
       </span>
       <p className="min-w-0 flex-1">
-        <FiUsers className="mr-1 inline h-4 w-4 align-text-bottom" aria-hidden="true" />
+        <IconoClientes className="mr-1 inline h-4 w-4 align-text-bottom" aria-hidden="true" />
         <span className="font-semibold">{quienes}</span> {otros.length === 1 ? 'también está' : 'también están'} editando {recurso} ahora mismo.
         Si los dos guardan, se combinan los cambios y solo se pregunta por lo que ambos tocaron.
       </p>

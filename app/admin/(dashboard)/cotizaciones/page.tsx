@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import Link from 'next/link';
-import { FiChevronRight, FiFileText, FiPlus, FiSearch } from 'react-icons/fi';
+import { IconoBuscar, IconoChevronDerecha, IconoDocumento, IconoMas } from '@/components/iconos';
 import {
   adminBadge, adminCard, adminEmpty, adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSpinner,
 } from '@/lib/admin-ui';
@@ -66,7 +66,7 @@ export default function CotizacionesPage() {
           <p className={adminPageSubtitle}>Presupuestos para empresas e instituciones, con enlace para verlos, imprimirlos y aprobarlos.</p>
         </div>
         <Link href="/admin/cotizaciones/nueva" className={adminPrimaryButton}>
-          <FiPlus className="h-4 w-4" aria-hidden="true" />
+          <IconoMas className="h-4 w-4" aria-hidden="true" />
           Nueva cotización
         </Link>
       </div>
@@ -74,7 +74,7 @@ export default function CotizacionesPage() {
       <form className="mb-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); void cargar(); }} role="search">
         <label className="relative block flex-1">
           <span className="sr-only">Buscar por número, cliente o RIF</span>
-          <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+          <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
           <input type="search" value={buscar} onChange={(e) => setBuscar(e.target.value)} placeholder="Número, cliente o RIF" className={`${adminInput()} pl-9`} />
         </label>
       </form>
@@ -99,7 +99,7 @@ export default function CotizacionesPage() {
         <div className="flex justify-center py-16" role="status" aria-label="Cargando"><span className={adminSpinner} aria-hidden="true" /></div>
       ) : filas.length === 0 ? (
         <div className={adminEmpty}>
-          <FiFileText className="h-10 w-10 text-subtle" aria-hidden="true" />
+          <IconoDocumento className="h-10 w-10 text-subtle" aria-hidden="true" />
           <p className="mt-3 font-semibold text-ink">{estado || buscar ? 'Nada con ese filtro' : 'Todavía no hay cotizaciones'}</p>
           <p className="mt-1 max-w-sm text-sm text-muted">Crea una con &quot;Nueva cotización&quot;. Las que pidan los clientes desde la tienda también llegan aquí.</p>
         </div>
@@ -119,7 +119,7 @@ export default function CotizacionesPage() {
                   </p>
                 </div>
                 <p className="shrink-0 text-base font-bold tabular-nums text-ink">{q.totalUSD > 0 ? formatUSD(q.totalUSD) : 'Sin precios'}</p>
-                <FiChevronRight className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
               </Link>
             </li>
           ))}

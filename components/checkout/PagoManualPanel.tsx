@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import { FiCheck, FiClock, FiCopy, FiInfo } from 'react-icons/fi';
+import { IconoCheck, IconoCopiar, IconoInfo, IconoReloj } from '@/components/iconos';
 import { montoBs, montoParaCopiar } from '@/lib/pago-movil/monto';
 import { RESERVA_PAGO_MANUAL_HORAS, ayudaReferencia, leerReferenciaManual, monedaPagoManual, type TipoPagoManual } from '@/lib/checkout-pago';
 import { fueraDeRango, montoEnMoneda, type MetodoPagoEmpresa } from '@/components/checkout/PaymentMethodSelector';
@@ -29,7 +29,7 @@ function BotonCopiar({ etiqueta, texto }: { etiqueta: string; texto: string }) {
       aria-label={`Copiar ${etiqueta.toLowerCase()}`}
       className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-brand-600 hover:bg-brand-50"
     >
-      {copiado ? <FiCheck className="h-4 w-4" aria-hidden="true" /> : <FiCopy className="h-4 w-4" aria-hidden="true" />}
+      {copiado ? <IconoCheck className="h-4 w-4" aria-hidden="true" /> : <IconoCopiar className="h-4 w-4" aria-hidden="true" />}
     </button>
   );
 }
@@ -111,7 +111,7 @@ export default function PagoManualPanel({
           </dl>
           {metodo.displayNote && (
             <p className="mt-2 flex items-start gap-2 text-xs text-ink-soft">
-              <FiInfo className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" /> {metodo.displayNote}
+              <IconoInfo className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" /> {metodo.displayNote}
             </p>
           )}
         </div>
@@ -144,7 +144,7 @@ export default function PagoManualPanel({
       </div>
 
       <p className="flex items-start gap-2 text-xs text-ink-soft">
-        <FiClock className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+        <IconoReloj className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
         <span>
           <strong className="font-semibold text-ink">3. Completa el pedido.</strong> Te apartamos los productos {RESERVA_PAGO_MANUAL_HORAS} horas
           mientras el equipo confirma tu pago, y te avisamos al confirmarlo.

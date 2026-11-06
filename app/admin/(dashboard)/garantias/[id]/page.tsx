@@ -5,7 +5,7 @@
 import { use, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { FiArrowLeft, FiLock, FiMail } from 'react-icons/fi';
+import { IconoCandado, IconoCorreo, IconoFlechaIzquierda } from '@/components/iconos';
 import { FaWhatsapp } from 'react-icons/fa6';
 import {
   adminBadge, adminCard, adminError, adminHint, adminInput, adminLabel, adminNotice, adminPageTitle, adminPrimaryButton,
@@ -115,7 +115,7 @@ export default function GarantiaDetallePage({ params }: { params: Promise<{ id: 
     <div className="min-w-0 space-y-4">
       <div>
         <Link href="/admin/garantias" className="mb-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
-          <FiArrowLeft className="h-4 w-4" aria-hidden="true" /> Garantías
+          <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Garantías
         </Link>
         <div className="flex flex-wrap items-center gap-2">
           <h1 className={adminPageTitle}>{claim.code}</h1>
@@ -171,7 +171,7 @@ export default function GarantiaDetallePage({ params }: { params: Promise<{ id: 
               <p className={adminHint}>Lo ve en su panel y le llega por correo.{estado === 'REJECTED' ? ' Obligatorio si no lo cubre la garantía.' : ''}</p>
             </div>
             <div>
-              <label htmlFor="g-nota" className={`${adminLabel} flex items-center gap-1.5`}><FiLock className="h-3.5 w-3.5" aria-hidden="true" /> Nota interna</label>
+              <label htmlFor="g-nota" className={`${adminLabel} flex items-center gap-1.5`}><IconoCandado className="h-3.5 w-3.5" aria-hidden="true" /> Nota interna</label>
               <textarea id="g-nota" rows={2} maxLength={WARRANTY_MESSAGE_MAX} className={`${adminInput()} h-auto py-2`} value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Solo la ve el equipo" />
             </div>
             {errorForm && <p className={adminError} role="alert">{errorForm}</p>}
@@ -193,7 +193,7 @@ export default function GarantiaDetallePage({ params }: { params: Promise<{ id: 
               )}
               {claim.user.email && (
                 <a href={`mailto:${claim.user.email}`} className={`${adminSecondaryButton} max-w-full`}>
-                  <FiMail className="h-4 w-4 shrink-0" aria-hidden="true" /> <span className="truncate">{claim.user.email}</span>
+                  <IconoCorreo className="h-4 w-4 shrink-0" aria-hidden="true" /> <span className="truncate">{claim.user.email}</span>
                 </a>
               )}
             </div>

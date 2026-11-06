@@ -6,7 +6,7 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FiCheckCircle, FiXCircle, FiClock, FiFileText, FiDownload, FiEye, FiUsers } from 'react-icons/fi';
+import { IconoClientes, IconoConfirmado, IconoDescargar, IconoDocumento, IconoRechazado, IconoReloj, IconoVer } from '@/components/iconos';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -93,11 +93,11 @@ export default function VerificationsPage() {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'APPROVED':
-                return <span className="px-2 py-1 bg-success/10 text-success-strong rounded-full text-xs font-bold flex items-center gap-1"><FiCheckCircle /> Aprobado</span>;
+                return <span className="px-2 py-1 bg-success/10 text-success-strong rounded-full text-xs font-bold flex items-center gap-1"><IconoConfirmado /> Aprobado</span>;
             case 'REJECTED':
-                return <span className="px-2 py-1 bg-deal/10 text-deal rounded-full text-xs font-bold flex items-center gap-1"><FiXCircle /> Rechazado</span>;
+                return <span className="px-2 py-1 bg-deal/10 text-deal rounded-full text-xs font-bold flex items-center gap-1"><IconoRechazado /> Rechazado</span>;
             default:
-                return <span className="px-2 py-1 bg-warning/10 text-warning-strong rounded-full text-xs font-bold flex items-center gap-1"><FiClock /> Pendiente</span>;
+                return <span className="px-2 py-1 bg-warning/10 text-warning-strong rounded-full text-xs font-bold flex items-center gap-1"><IconoReloj /> Pendiente</span>;
         }
     };
 
@@ -109,7 +109,7 @@ export default function VerificationsPage() {
                         href="/admin/customers"
                         className="flex items-center gap-2 px-3 py-2 bg-white border border-line rounded-lg hover:bg-surface transition-colors text-sm text-muted hover:text-brand-600"
                     >
-                        <FiUsers className="w-4 h-4" />
+                        <IconoClientes className="w-4 h-4" />
                         <span>Clientes</span>
                     </Link>
                     <h1 className="text-2xl font-bold text-ink">Verificación de Empresas</h1>
@@ -192,7 +192,7 @@ export default function VerificationsPage() {
                                                 onClick={() => setSelectedRequest(req)}
                                                 className="text-brand-600 hover:text-brand-700 font-medium text-sm flex items-center gap-1"
                                             >
-                                                <FiEye /> Ver detalles
+                                                <IconoVer /> Ver detalles
                                             </button>
                                         </td>
                                     </tr>
@@ -213,7 +213,7 @@ export default function VerificationsPage() {
                                 onClick={() => setSelectedRequest(null)}
                                 className="text-subtle hover:text-muted"
                             >
-                                <FiXCircle className="w-6 h-6" />
+                                <IconoRechazado className="w-6 h-6" />
                             </button>
                         </div>
 
@@ -239,13 +239,13 @@ export default function VerificationsPage() {
                                         className="flex items-center gap-3 p-4 rounded-xl border border-line hover:border-brand-200 hover:bg-brand-50 transition-all group"
                                     >
                                         <div className="w-10 h-10 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center group-hover:bg-brand-100">
-                                            <FiFileText className="w-5 h-5" />
+                                            <IconoDocumento className="w-5 h-5" />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-ink truncate">Acta Constitutiva</p>
                                             <p className="text-xs text-muted">Clic para ver</p>
                                         </div>
-                                        <FiDownload className="text-subtle group-hover:text-brand-600" />
+                                        <IconoDescargar className="text-subtle group-hover:text-brand-600" />
                                     </a>
 
                                     <a
@@ -255,13 +255,13 @@ export default function VerificationsPage() {
                                         className="flex items-center gap-3 p-4 rounded-xl border border-line hover:border-brand-200 hover:bg-brand-50 transition-all group"
                                     >
                                         <div className="w-10 h-10 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center group-hover:bg-brand-100">
-                                            <FiFileText className="w-5 h-5" />
+                                            <IconoDocumento className="w-5 h-5" />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-ink truncate">Documento RIF</p>
                                             <p className="text-xs text-muted">Clic para ver</p>
                                         </div>
-                                        <FiDownload className="text-subtle group-hover:text-brand-600" />
+                                        <IconoDescargar className="text-subtle group-hover:text-brand-600" />
                                     </a>
                                 </div>
                             </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import toast from 'react-hot-toast';
-import { FiCheck, FiScissors } from 'react-icons/fi';
+import { IconoCheck, IconoCupon } from '@/components/iconos';
 import { useCart } from '@/contexts/CartContext';
 import { formatUSD } from '@/lib/currency';
 import type { CuponPublico } from '@/lib/promotions';
@@ -21,7 +21,7 @@ export default function CouponOffers({ coupons }: { coupons: CuponPublico[] }) {
         const aplicado = couponCode === c.code;
         return (
           <li key={c.code} className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-dashed border-success-strong/50 bg-success/5 px-3 py-2">
-            <FiScissors className="h-4 w-4 shrink-0 text-success-strong" aria-hidden="true" />
+            <IconoCupon className="h-4 w-4 shrink-0 text-success-strong" aria-hidden="true" />
             <div className="min-w-0 flex-1 text-sm">
               <p className="font-semibold text-ink">
                 Cupón: {valor} de descuento{c.label ? ` · ${c.label}` : ''}
@@ -34,7 +34,7 @@ export default function CouponOffers({ coupons }: { coupons: CuponPublico[] }) {
             </div>
             {aplicado ? (
               <span className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-success-strong">
-                <FiCheck className="h-4 w-4" aria-hidden="true" /> Aplicado
+                <IconoCheck className="h-4 w-4" aria-hidden="true" /> Aplicado
               </span>
             ) : (
               <button

@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FiLifeBuoy, FiSearch } from 'react-icons/fi';
+import { IconoBuscar, IconoSalvavidas } from '@/components/iconos';
 import {
   adminBadge, adminCard, adminEmpty, adminInput, adminPageHeader, adminPageSubtitle, adminPageTitle, adminSpinner, adminTab,
 } from '@/lib/admin-ui';
@@ -91,7 +91,7 @@ export default function GarantiasPage() {
         </div>
         <label className="relative block lg:w-80">
           <span className="sr-only">Buscar</span>
-          <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
+          <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
           <input value={q} onChange={(e) => { setCargando(true); setQ(e.target.value); }} placeholder="G-0012, pedido, cliente o producto" className={`${adminInput()} pl-9`} />
         </label>
       </div>
@@ -102,7 +102,7 @@ export default function GarantiasPage() {
         <div className="flex justify-center py-12" role="status" aria-label="Cargando"><div className={adminSpinner} /></div>
       ) : claims.length === 0 ? (
         <div className={adminEmpty}>
-          <FiLifeBuoy className="h-8 w-8 text-subtle" aria-hidden="true" />
+          <IconoSalvavidas className="h-8 w-8 text-subtle" aria-hidden="true" />
           <p className="mt-2 text-sm text-muted">{filtro === 'atender' ? 'No hay solicitudes por atender.' : 'No hay solicitudes aquí.'}</p>
         </div>
       ) : (

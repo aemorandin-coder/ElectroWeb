@@ -24,7 +24,7 @@ export default function CategoriesMenuPanel({ categories, onNavigate }: Categori
                 onClick={onNavigate}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                <span className="iconos-marca flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-950">
                   <CategoryIconRenderer iconName={category.icon} className="h-5 w-5" />
                 </span>
                 <span className="min-w-0">

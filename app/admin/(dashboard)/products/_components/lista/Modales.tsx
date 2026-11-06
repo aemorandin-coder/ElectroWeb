@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiBox, FiExternalLink, FiStar, FiX, FiZap, FiPackage } from 'react-icons/fi';
+import { IconoAbrirAparte, IconoCerrar, IconoDigital, IconoEstrella, IconoPaquete } from '@/components/iconos';
 import {
   adminBadge, adminHint, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter, adminModalHeader,
   adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPrimaryButton, adminSecondaryButton,
@@ -20,7 +20,7 @@ function Modal({ titulo, onClose, children, pie, ancho = 'max-w-lg' }: { titulo:
       <div className={`${adminModalPanel} ${ancho}`}>
         <div className={adminModalHeader}>
           <h2 className={adminModalTitle}>{titulo}</h2>
-          <button type="button" onClick={onClose} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+          <button type="button" onClick={onClose} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
         </div>
         <div className={adminModalBody}>{children}</div>
         {pie && <div className={adminModalFooter}>{pie}</div>}
@@ -38,7 +38,7 @@ export function VistaRapida({ p, tasaVES, onClose, onEstado }: { p: ProductoList
         <button type="button" onClick={() => { onEstado(p); onClose(); }} className={adminSecondaryButton}>{p.status === 'PUBLISHED' ? 'Desactivar' : 'Activar'}</button>
         {/* C-187: un borrador o un archivado no se ve en la tienda: el enlace llevaba a "Producto no encontrado" */}
         {p.status === 'PUBLISHED'
-          ? <a href={`/productos/${p.slug || p.id}`} target="_blank" rel="noopener noreferrer" className={adminSecondaryButton}><FiExternalLink className="h-4 w-4" aria-hidden="true" /> Ver en tienda</a>
+          ? <a href={`/productos/${p.slug || p.id}`} target="_blank" rel="noopener noreferrer" className={adminSecondaryButton}><IconoAbrirAparte className="h-4 w-4" aria-hidden="true" /> Ver en tienda</a>
           : <span className="inline-flex h-11 items-center justify-center px-2 text-sm text-muted">No se ve en la tienda</span>}
         <Link href={`/admin/products/${p.id}`} className={adminPrimaryButton}>Editar producto</Link>
       </>
@@ -46,7 +46,7 @@ export function VistaRapida({ p, tasaVES, onClose, onEstado }: { p: ProductoList
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[12rem_1fr]">
         <div className="relative aspect-square overflow-hidden rounded-xl border border-line bg-white">
           {src ? <Image src={src} alt={p.name} fill sizes="192px" className="object-contain p-2" unoptimized={!src.startsWith('/')} /> : (
-            <div className="flex h-full items-center justify-center text-subtle"><FiBox className="h-10 w-10" aria-hidden="true" /></div>
+            <div className="flex h-full items-center justify-center text-subtle"><IconoPaquete className="h-10 w-10" aria-hidden="true" /></div>
           )}
         </div>
         <div className="min-w-0 space-y-3">
@@ -59,7 +59,7 @@ export function VistaRapida({ p, tasaVES, onClose, onEstado }: { p: ProductoList
             {/* C-187: un archivado no se destaca (archivar le quita la estrella) */}
             {p.isFeatured && p.status !== 'ARCHIVED' && (
               <p className="mt-1 flex items-center gap-1 text-sm text-warning-strong">
-                <FiStar className="h-4 w-4" aria-hidden="true" /> Destacado{p.status !== 'PUBLISHED' && ' (no se ve mientras esté en borrador)'}
+                <IconoEstrella className="h-4 w-4" aria-hidden="true" /> Destacado{p.status !== 'PUBLISHED' && ' (no se ve mientras esté en borrador)'}
               </p>
             )}
           </div>
@@ -67,7 +67,7 @@ export function VistaRapida({ p, tasaVES, onClose, onEstado }: { p: ProductoList
             <div className="rounded-lg bg-surface p-2"><dt className="text-xs text-muted">Precio</dt><dd className="font-semibold text-ink">{p.hasVariants && 'desde '}{formatUSD(p.priceUSD)}{tasaVES > 0 && <span className="block text-xs font-normal text-muted">{formatVES(p.priceUSD * tasaVES)}</span>}</dd></div>
             <div className="rounded-lg bg-surface p-2"><dt className="text-xs text-muted">Stock</dt><dd className="font-semibold text-ink">{p.productType === 'DIGITAL' ? 'Digital' : `${p.stock} u.`}</dd></div>
             <div className="rounded-lg bg-surface p-2"><dt className="text-xs text-muted">Categoría</dt><dd className="text-ink">{p.category?.name ?? '—'}</dd></div>
-            <div className="rounded-lg bg-surface p-2"><dt className="text-xs text-muted">Tipo</dt><dd className="flex items-center gap-1 text-ink">{p.productType === 'DIGITAL' ? <><FiZap className="h-4 w-4" aria-hidden="true" />Digital</> : <><FiPackage className="h-4 w-4" aria-hidden="true" />Físico</>}</dd></div>
+            <div className="rounded-lg bg-surface p-2"><dt className="text-xs text-muted">Tipo</dt><dd className="flex items-center gap-1 text-ink">{p.productType === 'DIGITAL' ? <><IconoDigital className="h-4 w-4" aria-hidden="true" />Digital</> : <><IconoPaquete className="h-4 w-4" aria-hidden="true" />Físico</>}</dd></div>
           </dl>
           {p.description && <p className="line-clamp-6 whitespace-pre-line text-sm text-ink-soft">{p.description}</p>}
         </div>

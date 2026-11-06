@@ -1,6 +1,6 @@
 'use client';
 
-import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { IconoEliminar, IconoMas } from '@/components/iconos';
 import { adminError, adminIconButton, adminInput, adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import { MAX_EMPAQUES, armarPaquetes, empaquesSugeridos, leerReglasEmbalaje, resumenEmbalaje, type LineaEmbalaje } from '@/lib/embalaje';
@@ -184,7 +184,7 @@ export default function ShippingSection({ form, set, errors }: SectionProps) {
                             className={adminIconButton}
                             aria-label={`Quitar ${empaque.nombre || 'el empaque'}`}
                           >
-                            <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                            <IconoEliminar className="h-4 w-4" aria-hidden="true" />
                           </button>
                         </div>
                       </li>
@@ -193,7 +193,7 @@ export default function ShippingSection({ form, set, errors }: SectionProps) {
                   {errors.packagingRules && <p className={adminError} role="alert">{errors.packagingRules}</p>}
                   {reglas.empaques.length < MAX_EMPAQUES && (
                     <button type="button" onClick={agregarEmpaque} className={`${adminSecondaryButton} mt-3`}>
-                      <FiPlus className="h-4 w-4" aria-hidden="true" /> Agregar empaque
+                      <IconoMas className="h-4 w-4" aria-hidden="true" /> Agregar empaque
                     </button>
                   )}
                 </div>

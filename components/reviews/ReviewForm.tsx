@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
-import { FiLock } from 'react-icons/fi';
+import { IconoCandado, IconoCheck } from '@/components/iconos';
 import StarRating from './StarRating';
 import { Button } from '@/components/ui/Button';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -94,7 +94,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
     if (estado === 'no_compro') {
         return (
             <p className="flex items-start gap-2 rounded-xl border border-line bg-surface p-4 text-sm text-muted">
-                <FiLock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <IconoCandado className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 <span>Opiniones verificadas: solo quienes compraron y recibieron este producto pueden opinar.</span>
             </p>
         );
@@ -104,9 +104,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
         <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-line p-6 space-y-4">
             <div className="flex items-center gap-2 mb-2">
                 <div className="w-8 h-8 bg-success/15 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-success-strong" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <IconoCheck className="w-5 h-5 text-success-strong" aria-hidden="true" />
                 </div>
                 <h3 className="text-xl font-bold text-ink">Escribe una reseña</h3>
             </div>

@@ -1,13 +1,15 @@
 'use client';
 
-import { FiAlertTriangle, FiCheckCircle, FiClock, FiCopy, FiDownload, FiFilm, FiShare2, FiZap } from 'react-icons/fi';
+import {
+  IconoAdvertencia, IconoClaqueta, IconoCompartir, IconoConfirmado, IconoCopiar, IconoDescargar, IconoEnlace,
+  IconoNovedad, IconoReloj,
+} from '@/components/iconos';
 import { toast } from 'react-hot-toast';
 import { adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { buildCaption } from '@/lib/studio/caption';
 import type { FlyerCheck } from '@/lib/studio/checks';
 import { qrUrlFor } from '@/lib/studio/engine';
-import { FiLink } from 'react-icons/fi';
 import { sectionSummary, smallButton } from './ui';
 import type { Studio } from './useStudio';
 
@@ -65,11 +67,11 @@ export default function StepPublish({ studio, checks, busy, canShare, onPng, onV
         {checks.map((c) => (
           <li key={c.text} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${CHECK_STYLE[c.level]}`}>
             {c.level === 'ok' ? (
-              <FiCheckCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <IconoConfirmado className="h-4 w-4 shrink-0" aria-hidden="true" />
             ) : c.level === 'block' ? (
-              <FiAlertTriangle className="h-4 w-4 shrink-0" aria-label="Impide descargar" />
+              <IconoAdvertencia className="h-4 w-4 shrink-0" aria-label="Impide descargar" />
             ) : (
-              <FiClock className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <IconoReloj className="h-4 w-4 shrink-0" aria-hidden="true" />
             )}
             <span className="flex-1">{c.text}</span>
             {c.level !== 'ok' && c.step && c.step !== 4 && (
@@ -83,16 +85,16 @@ export default function StepPublish({ studio, checks, busy, canShare, onPng, onV
 
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={onPng} disabled={busy} className={adminPrimaryButton}>
-          <FiDownload className="h-4 w-4" aria-hidden="true" />
+          <IconoDescargar className="h-4 w-4" aria-hidden="true" />
           Descargar imagen
         </button>
         <button type="button" onClick={onVideo} disabled={busy} className={adminSecondaryButton}>
-          <FiFilm className="h-4 w-4" aria-hidden="true" />
+          <IconoClaqueta className="h-4 w-4" aria-hidden="true" />
           Descargar video
         </button>
         {canShare && (
           <button type="button" onClick={onShare} disabled={busy} className={adminSecondaryButton}>
-            <FiShare2 className="h-4 w-4" aria-hidden="true" />
+            <IconoCompartir className="h-4 w-4" aria-hidden="true" />
             Compartir
           </button>
         )}
@@ -101,13 +103,13 @@ export default function StepPublish({ studio, checks, busy, canShare, onPng, onV
       {link && (
         <div className="rounded-xl border border-line bg-surface p-3">
           <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
-            <FiLink className="h-4 w-4 text-brand-500" aria-hidden="true" />
+            <IconoEnlace className="h-4 w-4 text-brand-500" aria-hidden="true" />
             Enlace de esta historia
           </p>
           <div className="mt-2 flex gap-2">
             <input type="text" readOnly value={link} aria-label="Enlace de esta historia" onFocus={(e) => e.target.select()} className={`${adminInput()} h-9 font-mono text-xs`} />
             <button type="button" onClick={() => void copyText(link, 'Enlace copiado')} className={smallButton}>
-              <FiCopy className="h-4 w-4" aria-hidden="true" />
+              <IconoCopiar className="h-4 w-4" aria-hidden="true" />
               Copiar
             </button>
           </div>
@@ -121,7 +123,7 @@ export default function StepPublish({ studio, checks, busy, canShare, onPng, onV
             Texto para la publicación
           </label>
           <button type="button" onClick={() => void generate()} className={smallButton}>
-            <FiZap className="h-4 w-4" aria-hidden="true" />
+            <IconoNovedad className="h-4 w-4" aria-hidden="true" />
             Escribirlo con los datos
           </button>
         </div>
@@ -134,7 +136,7 @@ export default function StepPublish({ studio, checks, busy, canShare, onPng, onV
           className={`${adminInput()} h-auto py-2`}
         />
         <button type="button" onClick={() => void copy()} className={`${smallButton} mt-2`}>
-          <FiCopy className="h-4 w-4" aria-hidden="true" />
+          <IconoCopiar className="h-4 w-4" aria-hidden="true" />
           Copiar texto
         </button>
       </div>

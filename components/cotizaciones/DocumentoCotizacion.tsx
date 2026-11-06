@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import Image from 'next/image';
-import { FiAlertTriangle, FiCheckCircle, FiClock } from 'react-icons/fi';
+import { IconoAdvertencia, IconoConfirmado, IconoReloj } from '@/components/iconos';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { conPrecioDeLista, fechaCorta, fechaHora, fechaLarga, lineasDeTexto, textosDesglose, totalLinea } from '@/lib/cotizaciones/core';
 import type { CotizacionPublica } from '@/lib/cotizaciones';
@@ -152,13 +152,13 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
 
   const estado = aprobada ? (
     <p className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-success/45 bg-success/10 px-2.5 py-0.5 text-xs font-bold text-success-strong" data-bn="sello">
-      <FiCheckCircle className="h-3.5 w-3.5" aria-hidden="true" /> Aprobado el {new Date(c.approvedAt!).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}
+      <IconoConfirmado className="h-3.5 w-3.5" aria-hidden="true" /> Aprobado el {new Date(c.approvedAt!).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}
     </p>
   ) : c.status === 'EXPIRED' ? (
     <p className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-deal/40 bg-deal-bg px-2.5 py-0.5 text-xs font-bold text-deal" data-bn="sello">Vencido</p>
   ) : c.status === 'SENT' ? (
     <p className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-warning/45 bg-warning/10 px-2.5 py-0.5 text-xs font-bold text-warning-strong" data-bn="sello">
-      <FiClock className="h-3.5 w-3.5" aria-hidden="true" /> Pendiente de aprobación
+      <IconoReloj className="h-3.5 w-3.5" aria-hidden="true" /> Pendiente de aprobación
     </p>
   ) : null;
 
@@ -313,7 +313,7 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
         {c.notice && (
           <section className="mt-4 break-inside-avoid rounded-lg border border-l-4 border-warning/45 border-l-warning bg-warning/10 px-3.5 py-2.5 text-xs leading-relaxed text-ink-soft print:mt-3" data-bn="nota" data-nota>
             <h2 className="flex items-center gap-1.5 text-sm font-bold text-warning-strong" data-bn="tinta">
-              <FiAlertTriangle className="h-4 w-4" aria-hidden="true" /> Nota importante: lo que no incluye
+              <IconoAdvertencia className="h-4 w-4" aria-hidden="true" /> Nota importante: lo que no incluye
             </h2>
             <p className="mt-0.5 whitespace-pre-line">{c.notice}</p>
           </section>
@@ -380,7 +380,7 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
               <div className="flex flex-1 items-end justify-center pb-1 sm:min-h-24 print:min-h-16">
                 {aprobada ? (
                   <div className="-rotate-2 rounded-xl border-2 border-success-strong px-3 py-1.5 text-success-strong" data-aprobada data-bn="tinta">
-                    <p className="flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wide"><FiCheckCircle className="h-3.5 w-3.5" aria-hidden="true" /> Aprobado</p>
+                    <p className="flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wide"><IconoConfirmado className="h-3.5 w-3.5" aria-hidden="true" /> Aprobado</p>
                     <p className="text-xs font-semibold leading-tight text-ink">{c.approvedName}</p>
                     {c.approvedDoc && <p className="text-xs leading-tight text-ink">{c.approvedDoc}</p>}
                     <p className="text-xs leading-tight text-ink-soft">{fechaAprobacion}</p>

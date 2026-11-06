@@ -2,20 +2,9 @@
 
 import { useState, Fragment } from 'react';
 import {
-  FiGift,
-  FiCopy,
-  FiShare2,
-  FiUsers,
-  FiDollarSign,
-  FiCheckCircle,
-  FiClock,
-  FiAward,
-  FiTrendingUp,
-  FiUserPlus,
-  FiShoppingCart,
-  FiChevronRight,
-} from 'react-icons/fi';
-import { FaMedal } from 'react-icons/fa';
+  IconoBillete, IconoCarrito, IconoChevronDerecha, IconoClientes, IconoCompartir, IconoConfirmado, IconoCopiar,
+  IconoPremio, IconoRegalo, IconoRegistrarse, IconoReloj, IconoVentas,
+} from '@/components/iconos';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -102,21 +91,21 @@ const TIERS: Record<Tier, {
     color: 'text-warning-strong',
     bg: 'bg-warning/10',
     border: 'border-warning/30',
-    icon: <FaMedal className="h-5 w-5 text-warning-strong" aria-hidden="true" />,
+    icon: <IconoPremio className="h-5 w-5 text-warning-strong" aria-hidden="true" />,
   },
   silver: {
     label: 'Plata',
     color: 'text-muted',
     bg: 'bg-surface',
     border: 'border-line',
-    icon: <FaMedal className="h-5 w-5 text-muted" aria-hidden="true" />,
+    icon: <IconoPremio className="h-5 w-5 text-muted" aria-hidden="true" />,
   },
   gold: {
     label: 'Oro',
     color: 'text-warning-strong',
     bg: 'bg-warning/15',
     border: 'border-warning/40',
-    icon: <FaMedal className="h-5 w-5 text-warning" aria-hidden="true" />,
+    icon: <IconoPremio className="h-5 w-5 text-warning" aria-hidden="true" />,
   },
 };
 
@@ -139,9 +128,9 @@ function getTierProgress(approvedConversions: number) {
 }
 
 const CONVERSION_LABELS: Record<string, { label: string; Icon: React.ElementType; color: string }> = {
-  REGISTRATION: { label: 'Registro', Icon: FiUserPlus, color: 'text-brand-500' },
-  PURCHASE: { label: 'Compra', Icon: FiShoppingCart, color: 'text-success-strong' },
-  RECHARGE: { label: 'Recarga', Icon: FiDollarSign, color: 'text-brand-700' },
+  REGISTRATION: { label: 'Registro', Icon: IconoRegistrarse, color: 'text-brand-500' },
+  PURCHASE: { label: 'Compra', Icon: IconoCarrito, color: 'text-success-strong' },
+  RECHARGE: { label: 'Recarga', Icon: IconoBillete, color: 'text-brand-700' },
 };
 
 /** El estado de una comisión, como lo entiende el promotor: cuándo se acredita o por qué espera. */
@@ -223,7 +212,7 @@ function NotEnrolledView({ data, onEnviada }: { data: ReferralData | null; onEnv
     <div className="space-y-6">
       <div className="text-center pt-4 pb-2">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-50 text-brand-500 mb-4 shadow-sm">
-          <FiGift className="w-8 h-8" />
+          <IconoRegalo className="w-8 h-8" />
         </div>
         <h1 className="text-2xl font-bold text-ink mb-2">Programa de promotores</h1>
         <p className="text-muted max-w-md mx-auto text-sm leading-relaxed">
@@ -235,21 +224,21 @@ function NotEnrolledView({ data, onEnviada }: { data: ReferralData | null; onEnv
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           {
-            Icon: FiDollarSign,
+            Icon: IconoBillete,
             title: 'Ganas en cada compra',
             desc: 'Un porcentaje del valor de los productos (sin IVA ni envío) de cada compra hecha con tu código o tu enlace.',
             color: 'text-success-strong',
             bg: 'bg-success/10',
           },
           {
-            Icon: FiGift,
+            Icon: IconoRegalo,
             title: 'En Puntos ES',
             desc: `Se acreditan solos ${dias} días después de que el cliente recibe su pedido. No se cambian por dinero: se usan para comprar en la tienda.`,
             color: 'text-warning-strong',
             bg: 'bg-warning/10',
           },
           {
-            Icon: FiUsers,
+            Icon: IconoClientes,
             title: 'Descuento para tus seguidores',
             desc: 'Quien escribe tu código en el carrito paga menos. Sirve aunque ya tenga cuenta, y en todas sus compras.',
             color: 'text-brand-500',
@@ -302,7 +291,7 @@ function NotEnrolledView({ data, onEnviada }: { data: ReferralData | null; onEnv
                 <p className="text-xs text-muted mt-0.5">{step.desc}</p>
               </div>
               {idx < 2 && (
-                <FiChevronRight className="hidden sm:block w-5 h-5 text-line-strong flex-shrink-0 self-center" />
+                <IconoChevronDerecha className="hidden sm:block w-5 h-5 text-line-strong flex-shrink-0 self-center" />
               )}
             </Fragment>
           ))}
@@ -311,7 +300,7 @@ function NotEnrolledView({ data, onEnviada }: { data: ReferralData | null; onEnv
 
       {solicitud?.status === 'PENDING' ? (
         <div className={`${adminNotice('brand')} flex items-start gap-2`}>
-          <FiClock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoReloj className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span>
             <strong>Tu solicitud está en revisión</strong> (la enviaste el {format(new Date(solicitud.createdAt), "d 'de' MMMM", { locale: es })}). Te avisamos aquí y por correo cuando la revisemos.
           </span>
@@ -356,7 +345,7 @@ function NotEnrolledView({ data, onEnviada }: { data: ReferralData | null; onEnv
           </div>
           {error && <p className="text-sm font-semibold text-deal" role="alert">{error}</p>}
           <button type="submit" disabled={enviando || canales.trim().length < 5} className={`${adminPrimaryButton} w-full sm:w-auto`}>
-            <FiGift className="w-4 h-4" aria-hidden="true" />
+            <IconoRegalo className="w-4 h-4" aria-hidden="true" />
             {enviando ? 'Enviando…' : 'Enviar solicitud'}
           </button>
         </form>
@@ -493,7 +482,7 @@ export default function ReferralsPage() {
           label="Por acreditar"
           value={formatUSD(stats.pendingEarnings)}
           suffix=" Puntos ES"
-          Icon={FiClock}
+          Icon={IconoReloj}
           color="text-warning-strong"
           bg="bg-warning/10"
         />
@@ -501,7 +490,7 @@ export default function ReferralsPage() {
           label="Acreditado"
           value={formatUSD(stats.approvedEarnings)}
           suffix=" Puntos ES"
-          Icon={FiCheckCircle}
+          Icon={IconoConfirmado}
           color="text-success-strong"
           bg="bg-success/10"
         />
@@ -509,14 +498,14 @@ export default function ReferralsPage() {
           label="Acreditado este mes"
           value={formatUSD(stats.thisMonthEarnings)}
           suffix=" Puntos ES"
-          Icon={FiTrendingUp}
+          Icon={IconoVentas}
           color="text-brand-500"
           bg="bg-brand-50"
         />
         <StatCard
           label="Ventas"
           value={stats.totalConversions.toString()}
-          Icon={FiUsers}
+          Icon={IconoClientes}
           color="text-brand-700"
           bg="bg-surface"
           suffix={` · ${stats.approvedConversions} acreditadas`}
@@ -526,7 +515,7 @@ export default function ReferralsPage() {
       {/* Referral link card */}
       <div className={`${adminCard} p-5 border-brand-500/30`}>
         <div className="flex items-center gap-2 mb-3">
-          <FiShare2 className="w-4 h-4 text-brand-500" />
+          <IconoCompartir className="w-4 h-4 text-brand-500" />
           <h3 className="text-sm font-bold text-ink">Tu código y tu enlace</h3>
         </div>
 
@@ -542,7 +531,7 @@ export default function ReferralsPage() {
             </p>
           </div>
           <button type="button" onClick={copiarCodigo} className={`${adminPrimaryButton} shrink-0 text-xs py-2.5 px-4`}>
-            <FiCopy className="w-4 h-4" aria-hidden="true" />
+            <IconoCopiar className="w-4 h-4" aria-hidden="true" />
             Copiar código
           </button>
         </div>
@@ -561,12 +550,12 @@ export default function ReferralsPage() {
           >
             {copied ? (
               <>
-                <FiCheckCircle className="w-4 h-4 text-white" />
+                <IconoConfirmado className="w-4 h-4 text-white" />
                 Copiado
               </>
             ) : (
               <>
-                <FiCopy className="w-4 h-4" />
+                <IconoCopiar className="w-4 h-4" />
                 Copiar
               </>
             )}
@@ -617,7 +606,7 @@ export default function ReferralsPage() {
             {
               title: 'Comparte tu código',
               desc: `Tus seguidores lo escriben en el carrito y reciben ${influencer.customerDiscountPercent} % de descuento. También puedes pasar tu enlace.`,
-              Icon: FiShare2,
+              Icon: IconoCompartir,
               color: 'text-brand-500',
               bg: 'bg-brand-50',
               step: '1',
@@ -625,7 +614,7 @@ export default function ReferralsPage() {
             {
               title: 'Compran y reciben su pedido',
               desc: 'Cuenta cada compra pagada. Un registro sin compra no genera comisión, y una compra cancelada tampoco.',
-              Icon: FiShoppingCart,
+              Icon: IconoCarrito,
               color: 'text-success-strong',
               bg: 'bg-success/10',
               step: '2',
@@ -633,7 +622,7 @@ export default function ReferralsPage() {
             {
               title: 'Se acreditan tus Puntos ES',
               desc: `El ${influencer.commissionRate} % del valor de los productos (sin IVA ni envío), solos, ${dias} días después de la entrega. Los usas para comprar en la tienda; no se cambian por dinero.`,
-              Icon: FiDollarSign,
+              Icon: IconoBillete,
               color: 'text-brand-700',
               bg: 'bg-surface',
               step: '3',
@@ -737,7 +726,7 @@ export default function ReferralsPage() {
           </h3>
           {!conversions || conversions.length === 0 ? (
             <div className="text-center py-10 text-muted text-sm bg-surface rounded-xl border border-line">
-              <FiUsers className="w-8 h-8 mx-auto mb-2 opacity-25" />
+              <IconoClientes className="w-8 h-8 mx-auto mb-2 opacity-25" />
               <p>Aún no tienes ventas.</p>
               <p className="text-xs mt-1">Comparte tu código para empezar a ganar Puntos ES.</p>
             </div>
@@ -756,7 +745,7 @@ export default function ReferralsPage() {
                   {conversions.slice(0, 10).map((conv) => {
                     const typeInfo = CONVERSION_LABELS[conv.type] || {
                       label: conv.type,
-                      Icon: FiGift,
+                      Icon: IconoRegalo,
                       color: 'text-muted',
                     };
                     const estado = estadoDeComision(conv);
@@ -806,7 +795,7 @@ export default function ReferralsPage() {
           </h3>
           {!leaderboard || leaderboard.length === 0 ? (
             <div className="text-center py-10 text-muted text-sm bg-surface rounded-xl border border-line">
-              <FiAward className="w-8 h-8 mx-auto mb-2 opacity-25" />
+              <IconoPremio className="w-8 h-8 mx-auto mb-2 opacity-25" />
               <p>Todavía no hay ventas acreditadas.</p>
               <p className="text-xs mt-1">Sé el primero de la clasificación.</p>
             </div>
@@ -833,7 +822,7 @@ export default function ReferralsPage() {
                     }`}
                   >
                     {entry.rank <= 3
-                      ? <FaMedal className={`h-5 w-5 ${['text-warning', 'text-muted', 'text-warning-strong'][entry.rank - 1]}`} aria-hidden="true" />
+                      ? <IconoPremio className={`h-5 w-5 ${['text-warning', 'text-muted', 'text-warning-strong'][entry.rank - 1]}`} aria-hidden="true" />
                       : `#${entry.rank}`}
                   </div>
                   <div className="flex-1 min-w-0">

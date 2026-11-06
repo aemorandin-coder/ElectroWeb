@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import {
-  FiAlertTriangle, FiBarChart2, FiBox, FiCheckCircle, FiChevronRight, FiClipboard, FiClock, FiDollarSign, FiFileText, FiFilm,
-  FiLayers, FiLifeBuoy, FiMail, FiMessageSquare, FiPercent, FiPlus, FiSettings, FiShare2, FiShield, FiStar, FiTag, FiTool, FiTruck,
-  FiUpload, FiUsers,
-} from 'react-icons/fi';
+  IconoAdvertencia, IconoBillete, IconoChat, IconoChevronDerecha, IconoClaqueta, IconoClientes, IconoCompartir,
+  IconoConfiguracion, IconoConfirmado, IconoCorreo, IconoDocumento, IconoEnvio, IconoEstrella, IconoGarantia, IconoMas,
+  IconoOrdenes, IconoPaquete, IconoPorcentaje, IconoReloj, IconoReportes, IconoSalvavidas, IconoServicioTecnico,
+  IconoSubir, IconoVariantes,
+} from '@/components/iconos';
 import { adminBadge } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
 import type { DatosEmbudo, FilaActividad } from '@/lib/dashboard/datos';
@@ -47,9 +48,9 @@ const Vacio = ({ children }: { children: ReactNode }) => <p className="px-4 pb-4
 
 /* ── Accesos rápidos ── */
 const ICONO_ACCESO: Record<string, ReactNode> = {
-  'nuevo-producto': <FiPlus />, ordenes: <FiClipboard />, 'nueva-cotizacion': <FiFileText />, 'consultar-pago': <FiDollarSign />, oferta: <FiPercent />,
-  'nueva-historia': <FiFilm />, importar: <FiUpload />, categorias: <FiTag />, 'relacion-ventas': <FiBarChart2 />, configuracion: <FiSettings />,
-  productos: <FiBox />, clientes: <FiUsers />, mensajes: <FiMessageSquare />, promotores: <FiShare2 />, resenas: <FiStar />, garantias: <FiLifeBuoy />,
+  'nuevo-producto': <IconoMas />, ordenes: <IconoOrdenes />, 'nueva-cotizacion': <IconoDocumento />, 'consultar-pago': <IconoBillete />, oferta: <IconoPorcentaje />,
+  'nueva-historia': <IconoClaqueta />, importar: <IconoSubir />, categorias: <IconoVariantes />, 'relacion-ventas': <IconoReportes />, configuracion: <IconoConfiguracion />,
+  productos: <IconoPaquete />, clientes: <IconoClientes />, mensajes: <IconoChat />, promotores: <IconoCompartir />, resenas: <IconoEstrella />, garantias: <IconoSalvavidas />,
 };
 
 export function WidgetAccesos({ accesos }: { accesos: AccesoDef[] }) {
@@ -61,7 +62,7 @@ export function WidgetAccesos({ accesos }: { accesos: AccesoDef[] }) {
           {accesos.map((a) => (
             <li key={a.id}>
               <Link href={a.href} className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-line bg-white px-3 py-2 text-sm font-semibold text-ink transition-colors hover:border-brand-500 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 [&_svg]:h-4 [&_svg]:w-4" aria-hidden="true">{ICONO_ACCESO[a.id] ?? <FiChevronRight />}</span>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 [&_svg]:h-4 [&_svg]:w-4" aria-hidden="true">{ICONO_ACCESO[a.id] ?? <IconoChevronDerecha />}</span>
                 <span className="min-w-0 leading-tight">{a.titulo}</span>
               </Link>
             </li>
@@ -78,22 +79,22 @@ type Pendiente = { clave: keyof DashboardData['porAtender']; uno: string; varios
 
 // En el orden en que conviene atenderlos: primero el dinero y lo que espera un cliente
 const PENDIENTES: Pendiente[] = [
-  { clave: 'pagosPorConfirmar', uno: 'pago por confirmar', varios: 'pagos por confirmar', href: '/admin/orders', icono: <FiClock />, permiso: 'MANAGE_ORDERS', urgente: true },
-  { clave: 'porPreparar', uno: 'pedido pagado por preparar o entregar', varios: 'pedidos pagados por preparar o entregar', href: '/admin/orders', icono: <FiTruck />, permiso: 'MANAGE_ORDERS', urgente: true },
-  { clave: 'recargas', uno: 'recarga de Puntos ES por confirmar', varios: 'recargas de Puntos ES por confirmar', href: '/admin/transactions', icono: <FiDollarSign />, permiso: 'MANAGE_ORDERS', urgente: true },
-  { clave: 'pagosSinOrden', uno: 'Pago Móvil sin orden', varios: 'Pagos Móvil sin orden', href: '/admin/transactions', icono: <FiAlertTriangle />, permiso: 'MANAGE_ORDERS', urgente: true },
-  { clave: 'cotizaciones', uno: 'cotización por armar', varios: 'cotizaciones por armar', href: '/admin/cotizaciones', icono: <FiFileText />, permiso: 'MANAGE_ORDERS' },
-  { clave: 'garantias', uno: 'garantía por atender', varios: 'garantías por atender', href: '/admin/garantias', icono: <FiLifeBuoy />, permiso: 'MANAGE_ORDERS' },
-  { clave: 'facturasEmpresa', uno: 'compra de empresa sin número de factura', varios: 'compras de empresa sin número de factura', href: '/admin/orders', icono: <FiFileText />, permiso: 'MANAGE_ORDERS' },
-  { clave: 'mensajes', uno: 'mensaje de cliente', varios: 'mensajes de clientes', href: '/admin/inquiries', icono: <FiMail />, permiso: 'MANAGE_CONTENT' },
-  { clave: 'solicitudes', uno: 'solicitud de producto', varios: 'solicitudes de producto', href: '/admin/inquiries?tab=requests', icono: <FiLayers />, permiso: 'MANAGE_CONTENT' },
-  { clave: 'sinStock', uno: 'producto publicado sin existencias', varios: 'productos publicados sin existencias', href: '/admin/products', icono: <FiBox />, permiso: 'MANAGE_PRODUCTS' },
-  { clave: 'resenas', uno: 'reseña por moderar', varios: 'reseñas por moderar', href: '/admin/reviews', icono: <FiStar />, permiso: 'MANAGE_CONTENT' },
-  { clave: 'descuentos', uno: 'descuento por aprobar', varios: 'descuentos por aprobar', href: '/admin/discount-requests', icono: <FiPercent />, permiso: 'MANAGE_CONTENT' },
-  { clave: 'verificaciones', uno: 'empresa por verificar', varios: 'empresas por verificar', href: '/admin/verifications', icono: <FiShield />, permiso: 'MANAGE_USERS' },
-  { clave: 'referidos', uno: 'comisión de promotor por aprobar', varios: 'comisiones de promotores por aprobar', href: '/admin/marketing', icono: <FiShare2 />, permiso: 'MANAGE_CONTENT' },
-  { clave: 'creadores', uno: 'solicitud de creador de cursos', varios: 'solicitudes de creadores de cursos', href: '/admin/creators', icono: <FiUsers />, permiso: 'MANAGE_USERS' },
-  { clave: 'cursos', uno: 'curso por aprobar', varios: 'cursos por aprobar', href: '/admin/cursos', icono: <FiTool />, permiso: 'MANAGE_CONTENT' },
+  { clave: 'pagosPorConfirmar', uno: 'pago por confirmar', varios: 'pagos por confirmar', href: '/admin/orders', icono: <IconoReloj />, permiso: 'MANAGE_ORDERS', urgente: true },
+  { clave: 'porPreparar', uno: 'pedido pagado por preparar o entregar', varios: 'pedidos pagados por preparar o entregar', href: '/admin/orders', icono: <IconoEnvio />, permiso: 'MANAGE_ORDERS', urgente: true },
+  { clave: 'recargas', uno: 'recarga de Puntos ES por confirmar', varios: 'recargas de Puntos ES por confirmar', href: '/admin/transactions', icono: <IconoBillete />, permiso: 'MANAGE_ORDERS', urgente: true },
+  { clave: 'pagosSinOrden', uno: 'Pago Móvil sin orden', varios: 'Pagos Móvil sin orden', href: '/admin/transactions', icono: <IconoAdvertencia />, permiso: 'MANAGE_ORDERS', urgente: true },
+  { clave: 'cotizaciones', uno: 'cotización por armar', varios: 'cotizaciones por armar', href: '/admin/cotizaciones', icono: <IconoDocumento />, permiso: 'MANAGE_ORDERS' },
+  { clave: 'garantias', uno: 'garantía por atender', varios: 'garantías por atender', href: '/admin/garantias', icono: <IconoSalvavidas />, permiso: 'MANAGE_ORDERS' },
+  { clave: 'facturasEmpresa', uno: 'compra de empresa sin número de factura', varios: 'compras de empresa sin número de factura', href: '/admin/orders', icono: <IconoDocumento />, permiso: 'MANAGE_ORDERS' },
+  { clave: 'mensajes', uno: 'mensaje de cliente', varios: 'mensajes de clientes', href: '/admin/inquiries', icono: <IconoCorreo />, permiso: 'MANAGE_CONTENT' },
+  { clave: 'solicitudes', uno: 'solicitud de producto', varios: 'solicitudes de producto', href: '/admin/inquiries?tab=requests', icono: <IconoVariantes />, permiso: 'MANAGE_CONTENT' },
+  { clave: 'sinStock', uno: 'producto publicado sin existencias', varios: 'productos publicados sin existencias', href: '/admin/products', icono: <IconoPaquete />, permiso: 'MANAGE_PRODUCTS' },
+  { clave: 'resenas', uno: 'reseña por moderar', varios: 'reseñas por moderar', href: '/admin/reviews', icono: <IconoEstrella />, permiso: 'MANAGE_CONTENT' },
+  { clave: 'descuentos', uno: 'descuento por aprobar', varios: 'descuentos por aprobar', href: '/admin/discount-requests', icono: <IconoPorcentaje />, permiso: 'MANAGE_CONTENT' },
+  { clave: 'verificaciones', uno: 'empresa por verificar', varios: 'empresas por verificar', href: '/admin/verifications', icono: <IconoGarantia />, permiso: 'MANAGE_USERS' },
+  { clave: 'referidos', uno: 'comisión de promotor por aprobar', varios: 'comisiones de promotores por aprobar', href: '/admin/marketing', icono: <IconoCompartir />, permiso: 'MANAGE_CONTENT' },
+  { clave: 'creadores', uno: 'solicitud de creador de cursos', varios: 'solicitudes de creadores de cursos', href: '/admin/creators', icono: <IconoClientes />, permiso: 'MANAGE_USERS' },
+  { clave: 'cursos', uno: 'curso por aprobar', varios: 'cursos por aprobar', href: '/admin/cursos', icono: <IconoServicioTecnico />, permiso: 'MANAGE_CONTENT' },
 ];
 
 export function WidgetPorAtender({ porAtender, puede }: { porAtender: DashboardData['porAtender']; puede: (permiso: string) => boolean }) {
@@ -102,7 +103,7 @@ export function WidgetPorAtender({ porAtender, puede }: { porAtender: DashboardD
   return (
     <Tarjeta id="por-atender" titulo="Por atender" detalle={total > 0 ? `${total} ${total === 1 ? 'pendiente' : 'pendientes'}` : undefined} pegado>
       {pendientes.length === 0 ? (
-        <p className="flex items-center gap-2 px-4 pb-4 text-sm text-ink-soft"><FiCheckCircle className="h-4 w-4 text-success-strong" aria-hidden="true" /> Todo al día</p>
+        <p className="flex items-center gap-2 px-4 pb-4 text-sm text-ink-soft"><IconoConfirmado className="h-4 w-4 text-success-strong" aria-hidden="true" /> Todo al día</p>
       ) : (
         <ul className="divide-y divide-line border-t border-line">
           {pendientes.map((p) => {
@@ -112,7 +113,7 @@ export function WidgetPorAtender({ porAtender, puede }: { porAtender: DashboardD
                 <Link href={p.href} className="flex min-h-12 items-center gap-3 px-4 py-2.5 text-sm text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
                   <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full [&_svg]:h-4 [&_svg]:w-4 ${p.urgente ? 'bg-warning/15 text-warning-strong' : 'bg-surface text-muted'}`} aria-hidden="true">{p.icono}</span>
                   <span className="min-w-0 flex-1 font-medium"><span className="tabular-nums">{cantidad}</span> {cantidad === 1 ? p.uno : p.varios}</span>
-                  <FiChevronRight className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                  <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
                 </Link>
               </li>
             );
@@ -229,14 +230,14 @@ export function WidgetInventario({ inventario }: { inventario: DashboardData['po
 export function WidgetTienda({ tienda }: { tienda: DashboardData['tienda'] }) {
   return (
     <Tarjeta id="tienda" titulo="Tu tienda: por completar" pegado>
-      {tienda.length === 0 ? <p className="flex items-center gap-2 px-4 pb-4 text-sm text-ink-soft"><FiCheckCircle className="h-4 w-4 text-success-strong" aria-hidden="true" /> Todo configurado</p> : (
+      {tienda.length === 0 ? <p className="flex items-center gap-2 px-4 pb-4 text-sm text-ink-soft"><IconoConfirmado className="h-4 w-4 text-success-strong" aria-hidden="true" /> Todo configurado</p> : (
         <ul className="divide-y divide-line border-t border-line">
           {tienda.map((item) => (
             <li key={item.clave}>
               <Link href={item.href} className="flex min-h-11 items-start gap-3 px-4 py-2.5 text-sm text-ink-soft hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
-                <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" aria-hidden="true" />
+                <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" aria-hidden="true" />
                 <span className="min-w-0 flex-1">{item.texto}</span>
-                <FiChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                <IconoChevronDerecha className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
               </Link>
             </li>
           ))}
@@ -382,7 +383,7 @@ export function WidgetResenas({ resenas }: { resenas: Array<{ id: string; estrel
           {resenas.map((r) => (
             <li key={r.id} className="px-4 py-2 text-sm">
               <p className="flex flex-wrap items-center gap-x-2">
-                <span className="inline-flex items-center gap-0.5 font-semibold tabular-nums text-ink"><FiStar className="h-3.5 w-3.5 text-tag" aria-hidden="true" />{r.estrellas}<span className="sr-only"> de 5</span></span>
+                <span className="inline-flex items-center gap-0.5 font-semibold tabular-nums text-ink"><IconoEstrella className="h-3.5 w-3.5 text-tag" aria-hidden="true" />{r.estrellas}<span className="sr-only"> de 5</span></span>
                 <span className="min-w-0 flex-1 truncate text-ink-soft">{r.producto}</span>
                 {r.pendiente && <span className={adminBadge('warning')}>Por moderar</span>}
               </p>
@@ -399,13 +400,13 @@ export function WidgetRespaldo({ datos }: { datos: { encendido: boolean; ultimo:
   return (
     <Tarjeta id="respaldo" titulo="Respaldo" enlace={{ href: '/admin/settings#respaldos', texto: 'Abrir' }}>
       {!datos.encendido ? (
-        <p className="flex items-start gap-2 text-sm text-warning-strong"><FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />Los respaldos automáticos están apagados.</p>
+        <p className="flex items-start gap-2 text-sm text-warning-strong"><IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />Los respaldos automáticos están apagados.</p>
       ) : !datos.ultimo ? (
         <p className="text-sm text-muted">Encendido. Todavía no corrió ninguno.</p>
       ) : (
         <>
           <p className={`flex items-center gap-2 text-sm font-semibold ${datos.ultimo.ok ? 'text-success-strong' : 'text-deal'}`}>
-            {datos.ultimo.ok ? <FiCheckCircle className="h-4 w-4" aria-hidden="true" /> : <FiAlertTriangle className="h-4 w-4" aria-hidden="true" />}
+            {datos.ultimo.ok ? <IconoConfirmado className="h-4 w-4" aria-hidden="true" /> : <IconoAdvertencia className="h-4 w-4" aria-hidden="true" />}
             {datos.ultimo.ok ? 'El último salió bien' : 'El último falló'}
           </p>
           <p className="mt-1 text-xs text-muted">{fechaCorta.format(new Date(datos.ultimo.en))}</p>

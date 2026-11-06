@@ -3,8 +3,11 @@
 import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import type { IconType } from 'react-icons';
-import { FiAlertTriangle, FiArrowLeft, FiChevronRight, FiLock, FiLogOut, FiRefreshCw, FiRepeat, FiSend, FiSlash, FiTrash2, FiUnlock, FiUserPlus, FiX } from 'react-icons/fi';
+import {
+  IconoAbrirCandado, IconoActualizar, IconoAdvertencia, IconoBloqueado, IconoCandado, IconoCerrar, IconoChevronDerecha,
+  IconoEliminar, IconoEnviar, IconoFlechaIzquierda, IconoRegistrarse, IconoRepetir, IconoSalir,
+} from '@/components/iconos';
+import type { IconType } from '@/components/iconos';
 import {
   adminBadge, adminCard, adminChoice, adminDangerButton, adminEmpty, adminError, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter,
   adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton,
@@ -35,7 +38,7 @@ type Accion = 'cambiar_rol' | 'quitar_acceso' | 'devolver_acceso' | 'reiniciar_d
 
 const ACCIONES: Record<Accion, { Icon: IconType; titulo: (m: MiembroEquipo) => string; detalle: (m: MiembroEquipo) => string; boton: string; hecho: string; peligro?: boolean; para: (m: MiembroEquipo) => boolean }> = {
   reenviar_invitacion: {
-    Icon: FiSend,
+    Icon: IconoEnviar,
     titulo: () => 'Reenviar la invitación',
     detalle: (m) => `Le llega a ${m.correo} un enlace nuevo para crear su contraseña. Sirve 24 horas y el anterior deja de servir.`,
     boton: 'Reenviar',
@@ -43,7 +46,7 @@ const ACCIONES: Record<Accion, { Icon: IconType; titulo: (m: MiembroEquipo) => s
     para: (m) => m.estado === 'invitado',
   },
   cambiar_rol: {
-    Icon: FiRepeat,
+    Icon: IconoRepetir,
     titulo: (m) => `Cambiar a ${nombreRol(otroRol(m.rol))}`,
     detalle: (m) => `${m.nombre} pasa de ${nombreRol(m.rol)} a ${nombreRol(otroRol(m.rol))}. ${ROLES.find((r) => r.rol === otroRol(m.rol))?.detalle} Si tiene una sesión abierta se cierra y vuelve a entrar con el rol nuevo.`,
     boton: 'Cambiar el rol',
@@ -51,7 +54,7 @@ const ACCIONES: Record<Accion, { Icon: IconType; titulo: (m: MiembroEquipo) => s
     para: () => true,
   },
   reiniciar_dos_pasos: {
-    Icon: FiRefreshCw,
+    Icon: IconoActualizar,
     titulo: () => 'Reiniciar sus dos pasos',
     detalle: (m) => `Para cuando ${m.nombre} pierde o cambia el teléfono. Se borran su app de códigos y sus códigos de respaldo, se cierran sus sesiones y la próxima vez que entre los configura de nuevo. Antes de hacerlo, confirma por otro medio (una llamada) que quien lo pide es esa persona.`,
     boton: 'Reiniciar',
@@ -59,7 +62,7 @@ const ACCIONES: Record<Accion, { Icon: IconType; titulo: (m: MiembroEquipo) => s
     para: (m) => m.dosPasos,
   },
   cerrar_sesiones: {
-    Icon: FiLogOut,
+    Icon: IconoSalir,
     titulo: () => 'Cerrar sus sesiones',
     detalle: (m) => `${m.nombre} sale del panel en todos sus dispositivos y tiene que volver a entrar.`,
     boton: 'Cerrar sesiones',
@@ -67,7 +70,7 @@ const ACCIONES: Record<Accion, { Icon: IconType; titulo: (m: MiembroEquipo) => s
     para: (m) => m.sesionAbierta,
   },
   devolver_acceso: {
-    Icon: FiUnlock,
+    Icon: IconoAbrirCandado,
     titulo: () => 'Devolver el acceso',
     detalle: (m) => `${m.nombre} puede volver a entrar al panel como ${nombreRol(m.rol)}, con su contraseña y sus dos pasos de antes.`,
     boton: 'Devolver el acceso',
@@ -75,7 +78,7 @@ const ACCIONES: Record<Accion, { Icon: IconType; titulo: (m: MiembroEquipo) => s
     para: (m) => m.estado === 'sin_acceso',
   },
   quitar_acceso: {
-    Icon: FiSlash,
+    Icon: IconoBloqueado,
     titulo: () => 'Quitar el acceso',
     detalle: (m) => `${m.nombre} deja de entrar al panel ahora mismo: se cierran sus sesiones y su contraseña ya no sirve. Lo que hizo queda en la bitácora. Se puede devolver después.`,
     boton: 'Quitar el acceso',
@@ -84,7 +87,7 @@ const ACCIONES: Record<Accion, { Icon: IconType; titulo: (m: MiembroEquipo) => s
     para: (m) => m.estado === 'activo',
   },
   cancelar_invitacion: {
-    Icon: FiTrash2,
+    Icon: IconoEliminar,
     titulo: () => 'Cancelar la invitación',
     detalle: (m) => `Se borra la invitación de ${m.correo} y su enlace deja de servir. Úsalo si el correo estaba mal escrito.`,
     boton: 'Cancelar la invitación',
@@ -139,7 +142,7 @@ export default function EquipoPage() {
           <p className={adminPageSubtitle}>Quién entra al panel, con qué rol y cómo protege su cuenta.</p>
         </div>
         <button type="button" onClick={() => setInvitando(true)} className={adminPrimaryButton}>
-          <FiUserPlus className="h-4 w-4" aria-hidden="true" />
+          <IconoRegistrarse className="h-4 w-4" aria-hidden="true" />
           Invitar
         </button>
       </div>
@@ -167,7 +170,7 @@ export default function EquipoPage() {
                     <span className={adminBadge(ESTADOS[m.estado].tono)}>{ESTADOS[m.estado].texto}</span>
                     {m.estado !== 'invitado' && (
                       <span className={adminBadge(m.dosPasos ? 'success' : 'warning')}>
-                        <FiLock className="h-3 w-3" aria-hidden="true" />
+                        <IconoCandado className="h-3 w-3" aria-hidden="true" />
                         {m.dosPasos ? 'Dos pasos activos' : 'Dos pasos sin configurar'}
                       </span>
                     )}
@@ -185,7 +188,7 @@ export default function EquipoPage() {
               ) : (
                 <button type="button" onClick={() => setElegido(m)} className={`${adminSecondaryButton} shrink-0`}>
                   Administrar
-                  <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+                  <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
                 </button>
               )}
             </li>
@@ -240,7 +243,7 @@ function ModalInvitar({ cerrar, alTerminar }: { cerrar: () => void; alTerminar: 
       <form id="equipo-invitar" role="dialog" aria-modal="true" aria-labelledby="titulo-invitar" onSubmit={invitar} onClick={(e) => e.stopPropagation()} noValidate className={`${adminModalPanel} sm:max-w-lg`}>
         <div className={adminModalHeader}>
           <h2 id="titulo-invitar" className={adminModalTitle}>Invitar al equipo</h2>
-          <button type="button" onClick={cerrar} aria-label="Cerrar" className={adminIconButton}><FiX className="h-5 w-5" aria-hidden="true" /></button>
+          <button type="button" onClick={cerrar} aria-label="Cerrar" className={adminIconButton}><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
         </div>
         <div className={`${adminModalBody} space-y-4`}>
           <p className="text-sm text-muted">Le llega un correo con un enlace de 24 horas para crear su contraseña. Tú nunca la conoces. Al entrar configura sus dos pasos.</p>
@@ -272,7 +275,7 @@ function ModalInvitar({ cerrar, alTerminar }: { cerrar: () => void; alTerminar: 
         <div className={adminModalFooter}>
           <button type="button" onClick={cerrar} className={adminSecondaryButton}>Cancelar</button>
           <button type="submit" disabled={ocupado} className={adminPrimaryButton}>
-            <FiSend className="h-4 w-4" aria-hidden="true" />
+            <IconoEnviar className="h-4 w-4" aria-hidden="true" />
             {ocupado ? 'Enviando…' : 'Enviar invitación'}
           </button>
         </div>
@@ -311,20 +314,20 @@ function ModalMiembro({ miembro, cerrar, alTerminar }: { miembro: MiembroEquipo;
             <h2 id="titulo-miembro" className={`${adminModalTitle} truncate`}>{actual ? actual.titulo(miembro) : miembro.nombre}</h2>
             <p className="truncate text-sm text-muted">{actual ? miembro.nombre : `${miembro.correo} · ${nombreRol(miembro.rol)}`}</p>
           </div>
-          <button type="button" onClick={cerrar} aria-label="Cerrar" className={adminIconButton}><FiX className="h-5 w-5" aria-hidden="true" /></button>
+          <button type="button" onClick={cerrar} aria-label="Cerrar" className={adminIconButton}><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
         </div>
         {actual ? (
           <>
             <div className={adminModalBody}>
               <p className={`${adminNotice(actual.peligro ? 'danger' : 'neutral')} flex items-start gap-2`}>
-                {actual.peligro && <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />}
+                {actual.peligro && <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />}
                 <span>{actual.detalle(miembro)}</span>
               </p>
               {error && <p className={`${adminError} mt-3`} role="alert">{error}</p>}
             </div>
             <div className={adminModalFooter}>
               <button type="button" onClick={() => { setAccion(null); setError(''); }} disabled={ocupado} className={adminSecondaryButton}>
-                <FiArrowLeft className="h-4 w-4" aria-hidden="true" />
+                <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" />
                 Volver
               </button>
               <button type="button" onClick={confirmar} disabled={ocupado} className={actual.peligro ? adminDangerButton : adminPrimaryButton}>
@@ -341,7 +344,7 @@ function ModalMiembro({ miembro, cerrar, alTerminar }: { miembro: MiembroEquipo;
                   <button type="button" onClick={() => setAccion(a)} className={`flex min-h-12 w-full items-center gap-3 rounded-xl border border-line px-4 py-2 text-left text-sm font-semibold transition-colors hover:bg-surface ${peligro ? 'text-deal' : 'text-ink'}`}>
                     <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span className="flex-1">{titulo(miembro)}</span>
-                    <FiChevronRight className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                    <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
                   </button>
                 </li>
               );

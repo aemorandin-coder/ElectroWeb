@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
-import { FiAlertTriangle, FiCheckCircle, FiImage } from 'react-icons/fi';
+import { IconoAdvertencia, IconoConfirmado, IconoImagen } from '@/components/iconos';
 import { adminHint, adminInput, adminLabel, adminNotice } from '@/lib/admin-ui';
 import { SPEC_ICONS } from '@/lib/studio/icons';
 import { TEMPLATES, type StudioProductSlot } from '@/lib/studio/schema';
@@ -125,15 +125,15 @@ function PhotoSlot({ label, src, optional, active, cutout, onActivate, onFile, o
             // eslint-disable-next-line @next/next/no-img-element
             <img src={src} alt="" className="h-full w-full object-contain" />
           ) : (
-            <FiImage className="h-6 w-6 text-muted" aria-hidden="true" />
+            <IconoImagen className="h-6 w-6 text-muted" aria-hidden="true" />
           )}
         </span>
         <span className="flex min-w-0 flex-col text-sm">
           <span className="flex items-center gap-1.5 font-semibold text-ink">
             {src ? (
-              <FiCheckCircle className="h-4 w-4 text-success-strong" aria-hidden="true" />
+              <IconoConfirmado className="h-4 w-4 text-success-strong" aria-hidden="true" />
             ) : missing ? (
-              <FiAlertTriangle className="h-4 w-4 text-warning-strong" aria-hidden="true" />
+              <IconoAdvertencia className="h-4 w-4 text-warning-strong" aria-hidden="true" />
             ) : null}
             {src ? 'Foto lista · cambiar' : missing ? 'Falta la foto' : 'Agregar imagen (opcional)'}
           </span>

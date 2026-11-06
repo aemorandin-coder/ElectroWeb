@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
-import { FiCheckCircle, FiCopy, FiKey, FiRefreshCw, FiShield, FiSmartphone } from 'react-icons/fi';
+import { IconoActualizar, IconoCelular, IconoClave, IconoConfirmado, IconoCopiar, IconoGarantia } from '@/components/iconos';
 import {
   adminCard, adminHint, adminIconChip, adminInput, adminLabel, adminNotice, adminPageSubtitle, adminPageTitle, adminPrimaryButton,
   adminSecondaryButton, adminSectionTitle, adminSpinner,
@@ -161,7 +161,7 @@ export default function SeguridadPage() {
       {codigos ? (
         <section className={adminCard} aria-labelledby="titulo-codigos">
           <h2 id="titulo-codigos" className={`${adminSectionTitle} mb-1 flex items-center gap-2`}>
-            <FiCheckCircle className="h-5 w-5 shrink-0 text-success-strong" aria-hidden="true" />
+            <IconoConfirmado className="h-5 w-5 shrink-0 text-success-strong" aria-hidden="true" />
             {codigos.primeros ? 'Listo. Ahora guarda tus códigos de respaldo' : 'Tus códigos de respaldo nuevos'}
           </h2>
           <p className="mb-4 text-sm text-muted">
@@ -177,7 +177,7 @@ export default function SeguridadPage() {
       ) : estado.activo ? (
         <>
           <section className={`${adminCard} flex items-start gap-4`}>
-            <span className={adminIconChip('success')}><FiShield className="h-5 w-5" aria-hidden="true" /></span>
+            <span className={adminIconChip('success')}><IconoGarantia className="h-5 w-5" aria-hidden="true" /></span>
             <div className="min-w-0">
               <h2 className={adminSectionTitle}>Verificación en dos pasos activa</h2>
               <p className="mt-1 text-sm text-muted">
@@ -194,7 +194,7 @@ export default function SeguridadPage() {
 
           <section className={`${adminCard} mt-4`} aria-labelledby="titulo-respaldo">
             <div className="flex items-start gap-4">
-              <span className={adminIconChip(estado.codigosRestantes <= 2 ? 'warning' : 'neutral')}><FiKey className="h-5 w-5" aria-hidden="true" /></span>
+              <span className={adminIconChip(estado.codigosRestantes <= 2 ? 'warning' : 'neutral')}><IconoClave className="h-5 w-5" aria-hidden="true" /></span>
               <div className="min-w-0 flex-1">
                 <h2 id="titulo-respaldo" className={adminSectionTitle}>Códigos de respaldo</h2>
                 <p className="mt-1 text-sm text-muted">
@@ -213,7 +213,7 @@ export default function SeguridadPage() {
                   </form>
                 ) : (
                   <button type="button" onClick={() => setRegenerando(true)} className={`${adminSecondaryButton} mt-4`}>
-                    <FiRefreshCw className="h-4 w-4" aria-hidden="true" />
+                    <IconoActualizar className="h-4 w-4" aria-hidden="true" />
                     Generar códigos nuevos
                   </button>
                 )}
@@ -225,7 +225,7 @@ export default function SeguridadPage() {
         <ol className="space-y-4">
           <li className={adminCard}>
             <h2 className={`${adminSectionTitle} flex items-center gap-2`}>
-              <FiSmartphone className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
+              <IconoCelular className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
               1. Instala una app de códigos en tu teléfono
             </h2>
             <p className="mt-1 text-sm text-muted">Google Authenticator o Authy. Son gratis y están en Play Store y App Store. Si ya tienes una, usa esa.</p>
@@ -249,13 +249,13 @@ export default function SeguridadPage() {
                   <div className="w-full min-w-0">
                     {/* En el mismo teléfono no se puede escanear: el enlace abre la app con los datos puestos */}
                     <a href={config.uri} className={`${adminSecondaryButton} mb-3 w-full lg:hidden`}>
-                      <FiSmartphone className="h-4 w-4" aria-hidden="true" />
+                      <IconoCelular className="h-4 w-4" aria-hidden="true" />
                       Abrir en la app de códigos
                     </a>
                     <p className="text-sm font-semibold text-ink">¿No puedes escanear? Escribe esta clave en la app</p>
                     <p className="mt-2 break-all rounded-lg border border-line bg-surface px-3 py-2 font-mono text-sm text-ink">{config.clave}</p>
                     <button type="button" onClick={copiarClave} className="mt-2 inline-flex h-10 items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700">
-                      <FiCopy className="h-4 w-4" aria-hidden="true" />
+                      <IconoCopiar className="h-4 w-4" aria-hidden="true" />
                       Copiar la clave
                     </button>
                     <p className={adminHint}>Cuenta: {correo}. Tipo: basado en tiempo.</p>

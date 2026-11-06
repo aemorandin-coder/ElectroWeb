@@ -5,7 +5,10 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
-import { FiAlertTriangle, FiArchive, FiCheck, FiClock, FiCircle, FiEye, FiEyeOff, FiLogIn, FiLogOut, FiMonitor, FiShoppingBag, FiSlash, FiSmartphone, FiTrash2, FiX, FiXCircle, FiKey } from 'react-icons/fi';
+import {
+  IconoAdvertencia, IconoArchivar, IconoBloqueado, IconoBolsa, IconoCelular, IconoCerrar, IconoCheck, IconoCirculo,
+  IconoClave, IconoEliminar, IconoEntrar, IconoMonitor, IconoOcultar, IconoRechazado, IconoReloj, IconoSalir, IconoVer,
+} from '@/components/iconos';
 import {
   adminBadge, adminDangerButton, adminError, adminInput, adminLabel, adminModalBody, adminModalFooter, adminModalHeader,
   adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPrimaryButton, adminSecondaryButton, adminIconButton,
@@ -22,12 +25,12 @@ import type { Actividad, Ajustes } from './tipos';
 
 // Seguridad (C-138): contraseña, sesiones, actividad reciente y la cuenta (desactivar o pedir que se elimine).
 
-const TEXTO_ACTIVIDAD: Record<string, { texto: string; Icono: typeof FiLogIn; tono: 'success' | 'danger' | 'warning' | 'brand' }> = {
-  AUTH_LOGIN_SUCCESS: { texto: 'Inicio de sesión', Icono: FiLogIn, tono: 'success' },
-  AUTH_LOGIN_FAILED: { texto: 'Contraseña equivocada', Icono: FiXCircle, tono: 'danger' },
-  AUTH_LOGIN_BLOCKED: { texto: 'Bloqueado por muchos intentos', Icono: FiSlash, tono: 'danger' },
-  AUTH_PASSWORD_CHANGED: { texto: 'Cambió la contraseña', Icono: FiKey, tono: 'brand' },
-  AUTH_PASSWORD_RESET: { texto: 'Recuperó la contraseña', Icono: FiKey, tono: 'warning' },
+const TEXTO_ACTIVIDAD: Record<string, { texto: string; Icono: typeof IconoEntrar; tono: 'success' | 'danger' | 'warning' | 'brand' }> = {
+  AUTH_LOGIN_SUCCESS: { texto: 'Inicio de sesión', Icono: IconoEntrar, tono: 'success' },
+  AUTH_LOGIN_FAILED: { texto: 'Contraseña equivocada', Icono: IconoRechazado, tono: 'danger' },
+  AUTH_LOGIN_BLOCKED: { texto: 'Bloqueado por muchos intentos', Icono: IconoBloqueado, tono: 'danger' },
+  AUTH_PASSWORD_CHANGED: { texto: 'Cambió la contraseña', Icono: IconoClave, tono: 'brand' },
+  AUTH_PASSWORD_RESET: { texto: 'Recuperó la contraseña', Icono: IconoClave, tono: 'warning' },
 };
 
 export default function Seguridad({ ajustes, onCambio }: { ajustes: Ajustes; onCambio: () => Promise<void> }) {
@@ -96,7 +99,7 @@ export default function Seguridad({ ajustes, onCambio }: { ajustes: Ajustes; onC
       {cuenta.estado === 'PENDING_DELETION' && (
         <div className={`${adminNotice('warning')} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`} role="status">
           <div className="flex items-start gap-2">
-            <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <p className="text-sm">
               <strong>Pediste eliminar tu cuenta</strong>
               {cuenta.eliminacionPedidaEl && <> el {new Date(cuenta.eliminacionPedidaEl).toLocaleDateString('es-VE', { day: 'numeric', month: 'long' })}</>}.
@@ -124,7 +127,7 @@ export default function Seguridad({ ajustes, onCambio }: { ajustes: Ajustes; onC
       <Seccion titulo="Dónde tienes tu sesión abierta" descripcion="Si ves un dispositivo que no reconoces, ciérralo y cambia tu contraseña.">
         <SesionesAbiertas key={versionLista} />
         <button type="button" onClick={cerrarTodas} className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-ink-soft hover:text-ink">
-          <FiLogOut className="h-4 w-4" aria-hidden="true" /> Cerrar sesión en todos, también aquí
+          <IconoSalir className="h-4 w-4" aria-hidden="true" /> Cerrar sesión en todos, también aquí
         </button>
       </Seccion>
 
@@ -158,7 +161,7 @@ export default function Seguridad({ ajustes, onCambio }: { ajustes: Ajustes; onC
               disabled={cuenta.estado === 'PENDING_DELETION'}
               className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-deal/40 bg-white px-5 text-sm font-semibold text-deal transition-colors hover:bg-deal-bg disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <FiTrash2 className="h-4 w-4" aria-hidden="true" /> {cuenta.estado === 'PENDING_DELETION' ? 'Ya lo pediste' : 'Eliminar'}
+              <IconoEliminar className="h-4 w-4" aria-hidden="true" /> {cuenta.estado === 'PENDING_DELETION' ? 'Ya lo pediste' : 'Eliminar'}
             </button>
           </div>
         </div>
@@ -170,7 +173,7 @@ export default function Seguridad({ ajustes, onCambio }: { ajustes: Ajustes; onC
 }
 
 function FilaActividad({ actividad }: { actividad: Actividad }) {
-  const meta = TEXTO_ACTIVIDAD[actividad.accion] ?? { texto: actividad.accion, Icono: FiMonitor, tono: 'brand' as const };
+  const meta = TEXTO_ACTIVIDAD[actividad.accion] ?? { texto: actividad.accion, Icono: IconoMonitor, tono: 'brand' as const };
   const { Icono } = meta;
   const color = meta.tono === 'danger' ? 'text-deal' : meta.tono === 'success' ? 'text-success-strong' : meta.tono === 'warning' ? 'text-warning-strong' : 'text-brand-600';
   return (
@@ -269,7 +272,7 @@ function SesionesAbiertas() {
       ) : (
         <ul className="divide-y divide-line">
           {sesiones.map((s) => {
-            const Icono = /^(Android|iPhone|iPad)/.test(s.dispositivo) ? FiSmartphone : FiMonitor;
+            const Icono = /^(Android|iPhone|iPad)/.test(s.dispositivo) ? IconoCelular : IconoMonitor;
             return (
               <li key={s.id} className="flex items-center gap-3 py-3">
                 <Icono className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
@@ -295,7 +298,7 @@ function SesionesAbiertas() {
       )}
       {(otras > 0 || !actualConNombre) && (
         <button type="button" onClick={cerrarOtras} disabled={ocupado !== null} className={`${adminSecondaryButton} mt-3 w-full sm:w-auto`}>
-          <FiLogOut className="h-4 w-4" aria-hidden="true" /> {ocupado === 'otras' ? 'Cerrando…' : 'Cerrar las demás sesiones'}
+          <IconoSalir className="h-4 w-4" aria-hidden="true" /> {ocupado === 'otras' ? 'Cerrando…' : 'Cerrar las demás sesiones'}
         </button>
       )}
     </div>
@@ -356,7 +359,7 @@ function CambiarContrasena({ onOtrasCerradas }: { onOtrasCerradas: () => void })
         <div className="relative">
           <input id="clave-actual" type={tipo} value={actual} onChange={(e) => setActual(e.target.value)} autoComplete="current-password" className={`${adminInput()} pr-11`} />
           <button type="button" onClick={() => setVer((v) => !v)} aria-label={ver ? 'Ocultar contraseñas' : 'Mostrar contraseñas'} aria-pressed={ver} className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted hover:text-ink">
-            {ver ? <FiEyeOff className="h-4 w-4" aria-hidden="true" /> : <FiEye className="h-4 w-4" aria-hidden="true" />}
+            {ver ? <IconoOcultar className="h-4 w-4" aria-hidden="true" /> : <IconoVer className="h-4 w-4" aria-hidden="true" />}
           </button>
         </div>
       </div>
@@ -374,7 +377,7 @@ function CambiarContrasena({ onOtrasCerradas }: { onOtrasCerradas: () => void })
       <ul id="clave-reglas" className="grid grid-cols-2 gap-x-3 gap-y-1">
         {REGLAS_CONTRASENA.map((regla) => {
           const cumple = regla.cumple(nueva);
-          const Icono = cumple ? FiCheck : FiCircle;
+          const Icono = cumple ? IconoCheck : IconoCirculo;
           return (
             <li key={regla.id} className={`flex items-center gap-1.5 text-xs font-medium ${cumple ? 'text-success-strong' : 'text-muted'}`}>
               <Icono className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {regla.texto}
@@ -450,26 +453,26 @@ function ModalEliminar({ onCerrar, onListo }: { onCerrar: () => void; onListo: (
       >
         <div className={adminModalHeader}>
           <h2 id="modal-eliminar-titulo" className={adminModalTitle}>Eliminar tu cuenta</h2>
-          <button type="button" onClick={onCerrar} aria-label="Cerrar" className={adminIconButton}><FiX className="h-5 w-5" aria-hidden="true" /></button>
+          <button type="button" onClick={onCerrar} aria-label="Cerrar" className={adminIconButton}><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
         </div>
         <div className={`${adminModalBody} space-y-3 text-sm text-ink-soft`}>
           <p>Tu pedido le llega al equipo, que te escribirá a tu correo para confirmarlo antes de cerrar la cuenta.</p>
           {tienePuntos && (
             <div className={adminNotice('warning')}>
               <p className="flex items-start gap-2">
-                <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 <span>
                   <strong>Tienes {formatPuntos(puntos ?? 0)}.</strong> No son reembolsables: si cierras tu cuenta, se pierden. Úsalos antes en productos de la tienda.
                 </span>
               </p>
               <Link href="/productos" className={`${adminSecondaryButton} mt-3 w-full sm:w-auto`}>
-                <FiShoppingBag className="h-4 w-4" aria-hidden="true" /> Ver productos
+                <IconoBolsa className="h-4 w-4" aria-hidden="true" /> Ver productos
               </Link>
             </div>
           )}
           <ul className="space-y-2">
-            <li className="flex gap-2"><FiArchive className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><span><strong className="text-ink">Se guardan tus pedidos y recibos</strong> en los registros de la tienda, como exige la ley.</span></li>
-            <li className="flex gap-2"><FiClock className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><span><strong className="text-ink">Mientras tanto</strong> puedes seguir usando tu cuenta y cancelar el pedido desde aquí.</span></li>
+            <li className="flex gap-2"><IconoArchivar className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><span><strong className="text-ink">Se guardan tus pedidos y recibos</strong> en los registros de la tienda, como exige la ley.</span></li>
+            <li className="flex gap-2"><IconoReloj className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><span><strong className="text-ink">Mientras tanto</strong> puedes seguir usando tu cuenta y cancelar el pedido desde aquí.</span></li>
           </ul>
           <p>Si solo quieres una pausa, mejor <strong>desactívala</strong>: vuelves cuando quieras.</p>
           <div>

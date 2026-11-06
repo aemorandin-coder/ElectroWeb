@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { FiAlertCircle, FiCheckCircle, FiClock, FiSend } from 'react-icons/fi';
+import { IconoConfirmado, IconoEnviar, IconoError, IconoReloj } from '@/components/iconos';
 import DocumentUpload from '@/components/customer/DocumentUpload';
 import { adminBadge, adminError, adminHint, adminInput, adminLabel, adminNotice, adminPrimaryButton, type AdminTone } from '@/lib/admin-ui';
 import { DOMICILIO_MAX, DOMICILIO_MIN, leerDomicilioFiscal } from '@/lib/facturacion';
@@ -14,11 +14,11 @@ import type { DatosPerfil } from './tipos';
 // emergente a los 2,5 s. C-147: con la empresa verificada, la factura puede ir a su nombre (se elige al pagar) y aquí
 // se guarda su domicilio fiscal.
 
-const ESTADOS: Record<string, { texto: string; tono: AdminTone; Icono: typeof FiClock }> = {
-  NONE: { texto: 'Sin verificar', tono: 'neutral', Icono: FiClock },
-  PENDING: { texto: 'En revisión', tono: 'warning', Icono: FiClock },
-  APPROVED: { texto: 'Verificada', tono: 'success', Icono: FiCheckCircle },
-  REJECTED: { texto: 'Rechazada', tono: 'danger', Icono: FiAlertCircle },
+const ESTADOS: Record<string, { texto: string; tono: AdminTone; Icono: typeof IconoReloj }> = {
+  NONE: { texto: 'Sin verificar', tono: 'neutral', Icono: IconoReloj },
+  PENDING: { texto: 'En revisión', tono: 'warning', Icono: IconoReloj },
+  APPROVED: { texto: 'Verificada', tono: 'success', Icono: IconoConfirmado },
+  REJECTED: { texto: 'Rechazada', tono: 'danger', Icono: IconoError },
 };
 
 export default function Empresa({ datos, onEnviado }: { datos: DatosPerfil; onEnviado: () => Promise<void> }) {
@@ -133,7 +133,7 @@ export default function Empresa({ datos, onEnviado }: { datos: DatosPerfil; onEn
           {error && <p className={adminError} role="alert">{error}</p>}
           {!bloqueado && (
             <button type="submit" disabled={enviando} className={`${adminPrimaryButton} w-full sm:w-auto`}>
-              <FiSend className="h-4 w-4" aria-hidden="true" /> {enviando ? 'Enviando…' : estado === 'REJECTED' ? 'Enviar de nuevo' : 'Enviar para verificar'}
+              <IconoEnviar className="h-4 w-4" aria-hidden="true" /> {enviando ? 'Enviando…' : estado === 'REJECTED' ? 'Enviar de nuevo' : 'Enviar para verificar'}
             </button>
           )}
         </form>

@@ -5,7 +5,7 @@
 // vista previa. El botón no cierra el popup por sí solo: el popup escucha los toques en sus enlaces.
 
 import Link from 'next/link';
-import { FiArrowRight } from 'react-icons/fi';
+import { IconoFlechaDerecha } from '@/components/iconos';
 import type { VarianteGorro } from '@/lib/navidad';
 import SelloNavidad from './SelloNavidad';
 
@@ -50,7 +50,7 @@ export default function TarjetaNavidad({
   const contenidoBoton = (
     <>
       {boton}
-      <FiArrowRight className="h-5 w-5 shrink-0" aria-hidden="true" />
+      <IconoFlechaDerecha className="h-5 w-5 shrink-0" aria-hidden="true" />
     </>
   );
 

@@ -8,6 +8,7 @@ import PublicHeader from '@/components/public/PublicHeader';
 import { formatUSD } from '@/lib/currency';
 import { lanzarConfeti } from '@/lib/motion/confeti';
 import { adminCard, adminPrimaryButton, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
+import { IconoChat, IconoCopiar, IconoCorreo, IconoFlechaDerecha, IconoOrdenes, IconoPaquete, IconoReloj } from '@/components/iconos';
 
 /**
  * /checkout/success — Issue #4 (Bloque 3 Audit)
@@ -131,9 +132,7 @@ function CheckoutSuccessContent() {
                             <span className="text-success-strong font-medium">¡Copiado!</span>
                           ) : (
                             <>
-                              <svg className="w-3.5 h-3.5 inline mr-0.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
+                              <IconoCopiar className="w-3.5 h-3.5 inline mr-0.5 opacity-60" />
                               Copiar
                             </>
                           )}
@@ -158,9 +157,7 @@ function CheckoutSuccessContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex items-start gap-3 p-4 bg-brand-500/5 rounded-xl border border-brand-500/15">
                   <div className="flex-shrink-0 w-9 h-9 bg-brand-500/10 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
+                    <IconoCorreo className="w-5 h-5 text-brand-600" />
                   </div>
                   <div>
                     <p className="text-sm font-bold text-ink">Email enviado</p>
@@ -169,9 +166,7 @@ function CheckoutSuccessContent() {
                 </div>
                 <div className="flex items-start gap-3 p-4 bg-success/5 rounded-xl border border-success/15">
                   <div className="flex-shrink-0 w-9 h-9 bg-success/10 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-success-strong" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <IconoReloj className="w-5 h-5 text-success-strong" />
                   </div>
                   <div>
                     <p className="text-sm font-bold text-ink">Te contactaremos</p>
@@ -183,9 +178,7 @@ function CheckoutSuccessContent() {
               {/* ── Próximos pasos ── */}
               <div className="bg-surface rounded-xl border border-line p-5">
                 <h2 className="text-sm font-bold text-ink uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
+                  <IconoFlechaDerecha className="w-4 h-4 text-brand-600" />
                   Próximos Pasos
                 </h2>
                 <ol className="space-y-3">
@@ -202,18 +195,14 @@ function CheckoutSuccessContent() {
                   href="/customer/orders"
                   className={`flex-1 ${adminPrimaryButton} py-3 text-sm font-bold justify-center`}
                 >
-                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
+                  <IconoOrdenes className="w-5 h-5 mr-1" />
                   Ver mis pedidos
                 </Link>
                 <Link
                   href="/productos"
                   className={`flex-1 ${adminSecondaryButton} py-3 text-sm font-semibold justify-center`}
                 >
-                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
+                  <IconoPaquete className="w-5 h-5 mr-1" />
                   Seguir comprando
                 </Link>
               </div>
@@ -231,9 +220,7 @@ function CheckoutSuccessContent() {
               href="/contacto"
               className={`${adminSecondaryButton} px-4 py-2 text-sm whitespace-nowrap`}
             >
-              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+              <IconoChat className="w-4 h-4 mr-1.5" />
               Contactar soporte
             </Link>
           </div>

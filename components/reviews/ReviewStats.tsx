@@ -1,7 +1,7 @@
 'use client';
 
 import StarRating from './StarRating';
-import { FaStar } from 'react-icons/fa';
+import { IconoEstrellaLlena } from '@/components/iconos';
 import { formatRating } from '@/lib/currency';
 
 interface ReviewStatsProps {
@@ -49,7 +49,7 @@ export default function ReviewStats({
                     {[5, 4, 3, 2, 1].map((star) => (
                         <div key={star} className="flex items-center gap-3">
                             <span className="text-sm font-medium text-ink w-8 inline-flex items-center gap-0.5">
-                                {star} <FaStar className="inline h-3 w-3 text-warning" aria-hidden="true" />
+                                {star} <IconoEstrellaLlena className="inline h-3 w-3 text-warning" aria-hidden="true" />
                             </span>
                             <div className="flex-1 h-2 bg-line rounded-full overflow-hidden">
                                 <div

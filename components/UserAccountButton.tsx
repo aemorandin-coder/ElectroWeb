@@ -6,7 +6,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
-import { FiLogOut, FiUser, FiPackage, FiSettings, FiCheckCircle, FiAlertCircle, FiChevronRight, FiShield } from 'react-icons/fi';
+import {
+  IconoChevronDerecha, IconoConfiguracion, IconoConfirmado, IconoCuenta, IconoError, IconoGarantia, IconoPaquete,
+  IconoSalir,
+} from '@/components/iconos';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 interface UserAccountButtonProps {
@@ -63,9 +66,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
   if (status === 'loading') {
     return (
       <button className="relative p-2 hover:bg-surface rounded-lg transition-all duration-300 group hover:scale-110">
-        <svg className="w-5 h-5 text-muted animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
+        <IconoCuenta className="w-5 h-5 text-muted animate-pulse" />
       </button>
     );
   }
@@ -77,7 +78,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
 
     return (
       <Link href="/login" id="login-btn" className={buttonClasses}>
-        <FiUser className="w-4 h-4 sm:hidden flex-shrink-0" />
+        <IconoCuenta className="w-4 h-4 sm:hidden flex-shrink-0" />
         <span className="hidden sm:inline">Iniciar Sesión</span>
       </Link>
     );
@@ -173,17 +174,17 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                 <div className="mt-2">
                   {rolEquipo ? (
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-50 rounded-lg border border-brand-200">
-                      <FiShield className="w-3 h-3 text-brand-600" />
+                      <IconoGarantia className="w-3 h-3 text-brand-600" />
                       <span className="text-brand-700 text-xs font-bold tracking-wide">{rolEquipo}</span>
                     </div>
                   ) : isVerified ? (
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-success/15 rounded-lg border border-success/30">
-                      <FiCheckCircle className="w-3 h-3 text-success" />
+                      <IconoConfirmado className="w-3 h-3 text-success" />
                       <span className="text-success-strong text-xs font-bold tracking-wide">CUENTA VERIFICADA</span>
                     </div>
                   ) : (
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-warning/15 rounded-lg border border-warning/30">
-                      <FiAlertCircle className="w-3 h-3 text-warning" />
+                      <IconoError className="w-3 h-3 text-warning" />
                       <span className="text-warning-strong text-xs font-bold tracking-wide">SIN VERIFICAR</span>
                     </div>
                   )}
@@ -202,14 +203,14 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 group-hover:bg-brand-500 group-hover:text-white transition-colors">
-                    <FiSettings className="w-4 h-4" />
+                    <IconoConfiguracion className="w-4 h-4" />
                   </div>
                   <div>
                     <span className="text-ink font-bold text-sm block">Panel de administración</span>
                     <span className="text-muted text-xs">Órdenes, productos y clientes</span>
                   </div>
                 </div>
-                <FiChevronRight className="w-4 h-4 text-subtle group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
+                <IconoChevronDerecha className="w-4 h-4 text-subtle group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
               </Link>
             )}
               <>
@@ -220,14 +221,14 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 group-hover:bg-brand-500 group-hover:text-white transition-colors">
-                      <FiUser className="w-4 h-4" />
+                      <IconoCuenta className="w-4 h-4" />
                     </div>
                     <div>
                       <span className="text-ink font-bold text-sm block">{isAdmin ? 'Mi panel de cliente' : 'Mi Panel'}</span>
                       <span className="text-muted text-xs">{isAdmin ? 'Para probar compras con esta cuenta' : 'Gestión de cuenta'}</span>
                     </div>
                   </div>
-                  <FiChevronRight className="w-4 h-4 text-subtle group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
+                  <IconoChevronDerecha className="w-4 h-4 text-subtle group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
                 </Link>
 
                 <Link
@@ -237,14 +238,14 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 group-hover:bg-brand-500 group-hover:text-white transition-colors">
-                      <FiPackage className="w-4 h-4" />
+                      <IconoPaquete className="w-4 h-4" />
                     </div>
                     <div>
                       <span className="text-ink font-bold text-sm block">Mis Pedidos</span>
                       <span className="text-muted text-xs">Historial de compras</span>
                     </div>
                   </div>
-                  <FiChevronRight className="w-4 h-4 text-subtle group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
+                  <IconoChevronDerecha className="w-4 h-4 text-subtle group-hover:text-brand-500 group-hover:translate-x-1 transition-all" />
                 </Link>
               </>
 
@@ -256,7 +257,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
               onClick={handleSignOut}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-line hover:border-deal/30 hover:bg-deal-bg rounded-xl transition-all duration-200 group shadow-sm active:scale-95"
             >
-              <FiLogOut className="w-4 h-4 text-muted group-hover:text-deal transition-colors" />
+              <IconoSalir className="w-4 h-4 text-muted group-hover:text-deal transition-colors" />
               <span className="text-ink group-hover:text-deal font-bold text-sm transition-colors">Cerrar Sesión</span>
             </button>
           </div>

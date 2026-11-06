@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { FiAlertCircle, FiCheck, FiCheckCircle, FiChevronDown, FiCopy, FiEdit2, FiLoader, FiShield, FiX } from 'react-icons/fi';
-import { HiOutlineQrcode } from 'react-icons/hi';
+import {
+  IconoCargando, IconoCerrar, IconoCheck, IconoChevronAbajo, IconoConfirmado, IconoCopiar, IconoEditar, IconoError,
+  IconoGarantia, IconoQr,
+} from '@/components/iconos';
 import toast from 'react-hot-toast';
 import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import {
@@ -111,7 +113,7 @@ function BotonCopiar({ texto, etiqueta, principal = false }: { texto: string; et
     : principal ? 'bg-brand-500 text-white hover:bg-brand-600' : 'border border-line bg-white text-ink hover:bg-surface';
   return (
     <button type="button" onClick={async () => setCopiado(await copiar(texto))} className={`${base} ${tono}`} aria-live="polite">
-      {copiado ? <FiCheck className="h-4 w-4" aria-hidden="true" /> : <FiCopy className="h-4 w-4" aria-hidden="true" />}
+      {copiado ? <IconoCheck className="h-4 w-4" aria-hidden="true" /> : <IconoCopiar className="h-4 w-4" aria-hidden="true" />}
       {copiado ? 'Copiado' : etiqueta}
     </button>
   );
@@ -239,7 +241,7 @@ export default function CheckoutPagoMovilForm({
       setOtroMonto('');
       setMostrarOtroMonto(false);
       const resultado = conciliarPagos(nuevos, montoUSD, tasa);
-      if (resultado?.estado === 'FALTA') toast(`Recibimos tu pago. Te faltan ${formatVES(-resultado.diferenciaBs)}.`, { icon: <FiAlertCircle className="h-5 w-5 text-warning-strong" aria-hidden="true" /> });
+      if (resultado?.estado === 'FALTA') toast(`Recibimos tu pago. Te faltan ${formatVES(-resultado.diferenciaBs)}.`, { icon: <IconoError className="h-5 w-5 text-warning-strong" aria-hidden="true" /> });
       else toast.success('Pago Móvil verificado');
     } catch {
       setError({ message: 'Sin conexión. Revisa tu internet e intenta de nuevo.' });
@@ -263,7 +265,7 @@ export default function CheckoutPagoMovilForm({
         <div className={`rounded-2xl border p-4 ${cubierto ? 'border-success/40 bg-success/5' : 'border-warning/40 bg-warning/10'}`} role="status">
           <div className="flex items-start gap-3">
             <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white ${cubierto ? 'bg-success-strong' : 'bg-warning-strong'}`}>
-              {cubierto ? <FiCheck className="h-5 w-5" aria-hidden="true" /> : <FiAlertCircle className="h-5 w-5" aria-hidden="true" />}
+              {cubierto ? <IconoCheck className="h-5 w-5" aria-hidden="true" /> : <IconoError className="h-5 w-5" aria-hidden="true" />}
             </span>
             <div className="min-w-0 flex-1 space-y-1">
               <p className={`font-semibold ${cubierto ? 'text-success-strong' : 'text-warning-strong'}`}>
@@ -278,7 +280,7 @@ export default function CheckoutPagoMovilForm({
               <ul className="space-y-0.5 pt-1 text-xs text-muted">
                 {pagos.map((p) => (
                   <li key={p.referencia} className="flex items-center gap-1.5">
-                    <FiCheckCircle className="h-3.5 w-3.5 shrink-0 text-success-strong" aria-hidden="true" />
+                    <IconoConfirmado className="h-3.5 w-3.5 shrink-0 text-success-strong" aria-hidden="true" />
                     Ref. {p.referencia} · {formatVES(p.pagadoBs)}
                   </li>
                 ))}
@@ -334,7 +336,7 @@ export default function CheckoutPagoMovilForm({
                   onClick={() => setVerQR(true)}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 text-sm font-semibold text-ink hover:bg-surface"
                 >
-                  <HiOutlineQrcode className="h-4 w-4" aria-hidden="true" /> Ver QR
+                  <IconoQr className="h-4 w-4" aria-hidden="true" /> Ver QR
                 </button>
               </div>
               <p className="text-xs text-muted">Transfiere el monto exacto: el banco busca tu pago por referencia y monto.</p>
@@ -376,7 +378,7 @@ export default function CheckoutPagoMovilForm({
                   className={`${inputClass} flex items-center justify-between text-left`}
                 >
                   <span className={bancoElegido ? 'text-ink' : 'text-subtle'}>{bancoElegido ? `${bancoElegido.nombre} (${bancoElegido.codigo})` : 'Elige tu banco'}</span>
-                  <FiChevronDown className={`h-4 w-4 text-muted transition-transform ${bancosAbiertos ? 'rotate-180' : ''}`} aria-hidden="true" />
+                  <IconoChevronAbajo className={`h-4 w-4 text-muted transition-transform ${bancosAbiertos ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
                 {bancosAbiertos && (
                   <div className="absolute z-[var(--z-dropdown)] mt-1 w-full overflow-hidden rounded-xl border border-line bg-white shadow-lg">
@@ -455,7 +457,7 @@ export default function CheckoutPagoMovilForm({
                     {fecha === hoyCaracas() ? ' · hoy' : ` · ${fecha}`}
                   </p>
                   <button type="button" onClick={() => setEditarPagador(true)} className="inline-flex h-11 shrink-0 items-center gap-1.5 px-2 text-sm font-semibold text-brand-600 hover:text-brand-700">
-                    <FiEdit2 className="h-4 w-4" aria-hidden="true" /> Cambiar
+                    <IconoEditar className="h-4 w-4" aria-hidden="true" /> Cambiar
                   </button>
                 </div>
               )}
@@ -500,7 +502,7 @@ export default function CheckoutPagoMovilForm({
                 disabled={!puedeVerificar}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-500 font-semibold text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {verificando ? <FiLoader className="h-5 w-5 animate-spin" aria-hidden="true" /> : <FiShield className="h-5 w-5" aria-hidden="true" />}
+                {verificando ? <IconoCargando className="h-5 w-5 animate-spin" aria-hidden="true" /> : <IconoGarantia className="h-5 w-5" aria-hidden="true" />}
                 {verificando ? 'Consultando al Banco de Venezuela…' : 'Verificar pago'}
               </button>
             </div>
@@ -514,7 +516,7 @@ export default function CheckoutPagoMovilForm({
             <div className={adminModalHeader}>
               <h3 id="pm-qr-titulo" className={adminModalTitle}>Código QR Pago Móvil</h3>
               <button type="button" onClick={() => setVerQR(false)} className="flex h-11 w-11 items-center justify-center rounded-xl text-muted hover:bg-surface hover:text-ink" aria-label="Cerrar">
-                <FiX className="h-5 w-5" aria-hidden="true" />
+                <IconoCerrar className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
             <div className={`${adminModalBody} flex flex-col items-center gap-3 text-center`}>

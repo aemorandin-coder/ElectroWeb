@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { FiMonitor, FiSmartphone } from 'react-icons/fi';
+import { IconoCelular, IconoMonitor } from '@/components/iconos';
 import { adminCardFlush, adminSpinner, adminTab } from '@/lib/admin-ui';
 
 interface Plantilla { id: string; name: string; description: string }
@@ -62,10 +62,10 @@ export default function Plantillas() {
           </p>
           <div className="flex gap-1">
             <button type="button" onClick={() => setModo('escritorio')} className={`${adminTab(modo === 'escritorio')} h-9`} aria-pressed={modo === 'escritorio'}>
-              <FiMonitor className="h-4 w-4" aria-hidden="true" /> Escritorio
+              <IconoMonitor className="h-4 w-4" aria-hidden="true" /> Escritorio
             </button>
             <button type="button" onClick={() => setModo('movil')} className={`${adminTab(modo === 'movil')} h-9`} aria-pressed={modo === 'movil'}>
-              <FiSmartphone className="h-4 w-4" aria-hidden="true" /> Móvil
+              <IconoCelular className="h-4 w-4" aria-hidden="true" /> Móvil
             </button>
           </div>
         </div>

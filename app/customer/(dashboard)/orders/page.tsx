@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { FiPackage, FiRefreshCw, FiSearch, FiShoppingBag } from 'react-icons/fi';
+import { IconoActualizar, IconoBolsa, IconoBuscar, IconoPaquete } from '@/components/iconos';
 import { formatUSD } from '@/lib/currency';
 import { useTiempoReal } from '@/lib/realtime/hooks';
 import { useMontado } from '@/lib/hooks/useMontado';
@@ -102,7 +102,7 @@ export default function OrdersPage() {
           title="Actualizar"
           className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-line bg-white text-ink-soft hover:bg-surface disabled:opacity-50"
         >
-          <FiRefreshCw className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
+          <IconoActualizar className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
         </button>
       </header>
 
@@ -110,7 +110,7 @@ export default function OrdersPage() {
         <div className="space-y-2">
           <label className="relative block">
             <span className="sr-only">Buscar por número o producto</span>
-            <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+            <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
             <input
               type="search"
               value={busqueda}
@@ -155,11 +155,11 @@ export default function OrdersPage() {
         </div>
       ) : visibles.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line-strong bg-white px-4 py-10 text-center">
-          <FiPackage className="mx-auto h-8 w-8 text-subtle" aria-hidden="true" />
+          <IconoPaquete className="mx-auto h-8 w-8 text-subtle" aria-hidden="true" />
           <p className="mt-2 text-sm font-semibold text-ink">{pedidos.length === 0 ? 'Todavía no tienes pedidos' : 'No hay pedidos con ese filtro'}</p>
           {pedidos.length === 0 ? (
             <Link href="/productos" className="mt-4 inline-flex h-11 items-center gap-2 rounded-xl bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600">
-              <FiShoppingBag className="h-4 w-4" aria-hidden="true" /> Explorar la tienda
+              <IconoBolsa className="h-4 w-4" aria-hidden="true" /> Explorar la tienda
             </Link>
           ) : (
             <button type="button" onClick={() => { setFiltro('TODOS'); setBusqueda(''); }} className="mt-3 text-sm font-semibold text-brand-600">Ver todos</button>

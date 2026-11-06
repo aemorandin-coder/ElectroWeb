@@ -1,13 +1,11 @@
 import Link from 'next/link';
-import { FaScrewdriverWrench } from 'react-icons/fa6';
-import { FiUsers } from 'react-icons/fi';
-import { PiStudentDuotone } from 'react-icons/pi';
+import { IconoClientes, IconoCursos, IconoServicioTecnico } from '@/components/iconos';
 import Container from '@/components/ui/Container';
 
 const BANNERS = [
-  { href: '/servicios', title: 'Servicio técnico', text: 'PC gaming, CCTV, redes y reparaciones con garantía.', Icon: FaScrewdriverWrench },
-  { href: '/cursos', title: 'Academia de cursos', text: 'Aprende con instructores expertos o publica tu propio curso.', Icon: PiStudentDuotone },
-  { href: '/creator', title: 'Programa de creadores', text: 'Comparte productos con tus seguidores y gana comisiones.', Icon: FiUsers },
+  { href: '/servicios', title: 'Servicio técnico', text: 'PC gaming, CCTV, redes y reparaciones con garantía.', Icon: IconoServicioTecnico },
+  { href: '/cursos', title: 'Academia de cursos', text: 'Aprende con instructores expertos o publica tu propio curso.', Icon: IconoCursos },
+  { href: '/creator', title: 'Programa de creadores', text: 'Comparte productos con tus seguidores y gana comisiones.', Icon: IconoClientes },
 ];
 
 /** "Más de ElectroShop": 3 banners compactos (reemplaza Servicios y la promo de cursos/creadores). */

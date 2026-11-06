@@ -2,7 +2,10 @@
 
 import { toast } from 'react-hot-toast';
 import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
-import { FiCheckCircle, FiCreditCard, FiPackage, FiTruck, FiGift, FiShoppingBag, FiClock, FiExternalLink, FiMapPin, FiCalendar, FiCopy, FiUser } from 'react-icons/fi';
+import {
+  IconoAbrirAparte, IconoBolsa, IconoCalendario, IconoConfirmado, IconoCopiar, IconoCuenta, IconoEntregado, IconoEnvio,
+  IconoPaquete, IconoReloj, IconoTarjeta, IconoUbicacion,
+} from '@/components/iconos';
 import { NOMBRE_EMPRESA, esRetiro, type EmpresaGuia } from '@/lib/envios/empresas';
 import { eventoEsEnOficina } from '@/lib/envios/zoom';
 import { pasosPedido } from '@/lib/order-pasos';
@@ -95,13 +98,13 @@ export default function OrderTracking({
                     }
                 `}
             >
-                {status === 'DELIVERED' && <FiGift className="w-3.5 h-3.5" />}
-                {status === 'SHIPPED' && <FiTruck className="w-3.5 h-3.5" />}
-                {status === 'READY_FOR_PICKUP' && <FiShoppingBag className="w-3.5 h-3.5" />}
-                {status === 'PAID' && <FiCreditCard className="w-3.5 h-3.5" />}
-                {status === 'PROCESSING' && <FiPackage className="w-3.5 h-3.5" />}
-                {status === 'PENDING' && <FiClock className="w-3.5 h-3.5" />}
-                {status === 'CONFIRMED' && <FiCheckCircle className="w-3.5 h-3.5" />}
+                {status === 'DELIVERED' && <IconoEntregado className="w-3.5 h-3.5" />}
+                {status === 'SHIPPED' && <IconoEnvio className="w-3.5 h-3.5" />}
+                {status === 'READY_FOR_PICKUP' && <IconoBolsa className="w-3.5 h-3.5" />}
+                {status === 'PAID' && <IconoTarjeta className="w-3.5 h-3.5" />}
+                {status === 'PROCESSING' && <IconoPaquete className="w-3.5 h-3.5" />}
+                {status === 'PENDING' && <IconoReloj className="w-3.5 h-3.5" />}
+                {status === 'CONFIRMED' && <IconoConfirmado className="w-3.5 h-3.5" />}
                 <span>
                     {status === 'DELIVERED' && '¡Entregado! Gracias por tu compra'}
                     {status === 'SHIPPED' && mensajeEnviado}
@@ -118,7 +121,7 @@ export default function OrderTracking({
             {!retiro && (courierOfficeName || shippingAddress) && status !== 'CANCELLED' && (
                 <div className="mt-3 space-y-1.5 rounded-xl border border-line bg-white p-3 text-xs">
                     <p className="flex items-start gap-1.5 text-ink">
-                        <FiMapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" />
+                        <IconoUbicacion className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" />
                         <span className="min-w-0 [overflow-wrap:anywhere]">
                             {enOficina && courierOfficeName ? (
                                 <>
@@ -130,7 +133,7 @@ export default function OrderTracking({
                     </p>
                     {recipientName && (
                         <p className="flex items-center gap-1.5 text-ink-soft">
-                            <FiUser className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" /> Recibe {recipientName}
+                            <IconoCuenta className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" /> Recibe {recipientName}
                         </p>
                     )}
                     {shippingPaidBy === 'CUSTOMER' && (
@@ -150,7 +153,7 @@ export default function OrderTracking({
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center text-brand-600">
-                                <FiTruck className="w-4 h-4" />
+                                <IconoEnvio className="w-4 h-4" />
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-ink">
@@ -170,7 +173,7 @@ export default function OrderTracking({
                                 onClick={copiarGuia}
                                 className="flex min-h-9 items-center gap-1 rounded-lg border border-line bg-white px-2 text-xs font-semibold text-ink hover:bg-surface"
                             >
-                                <FiCopy className="w-3 h-3" aria-hidden="true" />
+                                <IconoCopiar className="w-3 h-3" aria-hidden="true" />
                                 Copiar
                             </button>
                             {trackingUrl && (
@@ -180,7 +183,7 @@ export default function OrderTracking({
                                     rel="noopener noreferrer"
                                     className="flex min-h-9 items-center gap-1 px-2 bg-brand-500 text-white text-xs font-semibold rounded-lg hover:bg-brand-600 transition-colors"
                                 >
-                                    <FiExternalLink className="w-3 h-3" aria-hidden="true" />
+                                    <IconoAbrirAparte className="w-3 h-3" aria-hidden="true" />
                                     Rastrear
                                 </a>
                             )}
@@ -188,12 +191,12 @@ export default function OrderTracking({
                     </div>
                     {shippingNotes && (
                         <p className="mt-2 text-xs text-brand-700 bg-brand-50 px-2 py-1 rounded inline-flex items-center gap-1">
-                            <FiMapPin className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />{shippingNotes}
+                            <IconoUbicacion className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />{shippingNotes}
                         </p>
                     )}
                     {estimatedDelivery && status === 'SHIPPED' && (
                         <p className="mt-1.5 text-xs text-muted inline-flex items-center gap-1">
-                            <FiCalendar className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />Entrega estimada: <span className="font-semibold text-ink">{new Date(estimatedDelivery).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                            <IconoCalendario className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />Entrega estimada: <span className="font-semibold text-ink">{new Date(estimatedDelivery).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                         </p>
                     )}
                 </div>

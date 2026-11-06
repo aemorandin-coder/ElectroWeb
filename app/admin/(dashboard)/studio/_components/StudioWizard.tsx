@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiEdit3, FiX } from 'react-icons/fi';
+import { IconoCerrar, IconoEditar, IconoFlechaIzquierda } from '@/components/iconos';
 import { adminChoice, adminHint, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import { linkProduct } from '@/lib/studio/live';
@@ -106,7 +106,7 @@ export default function StudioWizard() {
   return (
     <div className="mx-auto max-w-5xl">
       <Link href="/admin/studio" className="mb-3 inline-flex h-10 items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline">
-        <FiArrowLeft className="h-4 w-4" aria-hidden="true" />
+        <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" />
         Historias
       </Link>
       <h1 className={adminPageTitle}>Nueva historia</h1>
@@ -165,7 +165,7 @@ export default function StudioWizard() {
                     </span>
                     {p && (
                       <button type="button" onClick={() => setPicks(picks.filter((_, k) => k !== i))} disabled={creating} className={smallButton} aria-label={`Quitar el producto ${i + 1}`}>
-                        <FiX className="h-4 w-4" aria-hidden="true" />
+                        <IconoCerrar className="h-4 w-4" aria-hidden="true" />
                       </button>
                     )}
                   </li>
@@ -189,7 +189,7 @@ export default function StudioWizard() {
               </button>
             ) : (
               <button type="button" onClick={() => void create(template, picks)} disabled={creating} className={adminSecondaryButton}>
-                <FiEdit3 className="h-4 w-4" aria-hidden="true" />
+                <IconoEditar className="h-4 w-4" aria-hidden="true" />
                 Escribir el producto a mano
               </button>
             )}

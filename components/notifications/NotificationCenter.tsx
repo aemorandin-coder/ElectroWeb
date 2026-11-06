@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { FiBell, FiCheck } from 'react-icons/fi';
+import { IconoCheck, IconoNotificaciones } from '@/components/iconos';
 import { useNotifications } from './NotificationProvider';
 import NotificationItem from './NotificationItem';
 
@@ -27,7 +27,7 @@ export default function NotificationCenter({ onClose }: { onClose: () => void })
         </div>
         {unreadCount > 0 && (
           <button type="button" onClick={markAllAsRead} className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-semibold text-brand-600 hover:bg-brand-50">
-            <FiCheck className="h-4 w-4" aria-hidden="true" />
+            <IconoCheck className="h-4 w-4" aria-hidden="true" />
             Marcar todas
           </button>
         )}
@@ -53,7 +53,7 @@ export default function NotificationCenter({ onClose }: { onClose: () => void })
           <p className="px-4 py-10 text-center text-sm text-muted">Cargando…</p>
         ) : visible.length === 0 ? (
           <div className="flex flex-col items-center px-4 py-10 text-center">
-            <FiBell className="h-8 w-8 text-subtle" aria-hidden="true" />
+            <IconoNotificaciones className="h-8 w-8 text-subtle" aria-hidden="true" />
             <p className="mt-2 text-sm font-semibold text-ink">{filter === 'unread' ? 'Nada sin leer' : 'Sin notificaciones'}</p>
             <p className="mt-0.5 text-sm text-muted">Aquí aparecen las novedades{isAdmin ? ' de la tienda' : ' de tus pedidos'}.</p>
           </div>

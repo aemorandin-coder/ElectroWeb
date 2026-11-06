@@ -1,8 +1,7 @@
 'use client';
 
-import type { IconType } from 'react-icons';
-import { FiCheck, FiCreditCard, FiDollarSign, FiGlobe, FiHash } from 'react-icons/fi';
-import { FaMobileScreen } from 'react-icons/fa6';
+import { IconoBillete, IconoCheck, IconoNumero, IconoPagoMovil, IconoTarjeta, IconoWeb } from '@/components/iconos';
+import type { IconType } from '@/components/iconos';
 import { SiBinance, SiPaypal, SiZelle } from 'react-icons/si';
 import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { montoBs } from '@/lib/pago-movil/monto';
@@ -52,10 +51,10 @@ export const ICONO_METODO: Record<string, IconType> = {
   CRYPTO: SiBinance,
   PAYPAL: SiPaypal,
   ZELLE: SiZelle,
-  ZINLI: FiCreditCard,
-  BANK_TRANSFER: FiHash,
-  MERCANTIL_PANAMA: FiGlobe,
-  OTHER: FiDollarSign,
+  ZINLI: IconoTarjeta,
+  BANK_TRANSFER: IconoNumero,
+  MERCANTIL_PANAMA: IconoWeb,
+  OTHER: IconoBillete,
 };
 
 /** "12,50 USDT": el mismo formato de la tienda, sin el signo de dólar. */
@@ -92,7 +91,7 @@ export function opcionesDePago(p: {
       titulo: 'Puntos ES',
       detalle: p.puntosUSD >= p.totalUSD && p.totalUSD > 0 ? `Tienes ${formatPuntos(p.puntosUSD)}: pagas con 1 clic` : `Tienes ${formatPuntos(p.puntosUSD)}`,
       etiqueta: 'Al instante',
-      Icono: FiDollarSign,
+      Icono: IconoBillete,
     },
   ];
   if (p.pagoMovilDirecto) {
@@ -101,7 +100,7 @@ export function opcionesDePago(p: {
       titulo: 'Pago Móvil',
       detalle: p.tasa > 0 ? `${formatVES(montoBs(p.totalUSD, p.tasa))} · tasa BCV ${formatVES(p.tasa).replace('Bs. ', '')}` : 'En bolívares, a la tasa BCV del día',
       etiqueta: 'Verificado por el BDV',
-      Icono: FaMobileScreen,
+      Icono: IconoPagoMovil,
     });
   }
   for (const metodo of p.metodos) {
@@ -111,7 +110,7 @@ export function opcionesDePago(p: {
       titulo: metodo.name,
       detalle: `${montoEnMoneda(metodo.type, p.totalUSD, p.tasa)} · sin recargo`,
       etiqueta: 'Lo confirma el equipo',
-      Icono: ICONO_METODO[metodo.type] ?? FiDollarSign,
+      Icono: ICONO_METODO[metodo.type] ?? IconoBillete,
       motivo: fueraDeRango(metodo, p.totalUSD) ?? undefined,
     });
   }
@@ -162,7 +161,7 @@ export default function PaymentMethodSelector({
               </span>
               {elegido && (
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white" aria-hidden="true">
-                  <FiCheck className="h-3.5 w-3.5" />
+                  <IconoCheck className="h-3.5 w-3.5" />
                 </span>
               )}
             </label>

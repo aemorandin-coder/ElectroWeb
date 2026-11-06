@@ -7,10 +7,10 @@ import PublicHeader from '@/components/public/PublicHeader';
 import PageHeader from '@/components/ui/PageHeader';
 import { getPublicSettings } from '@/lib/site-settings';
 import ServiciosPortfolio, { type Video } from '@/components/servicios/ServiciosPortfolio';
-import { FiMonitor, FiShield, FiCreditCard, FiAward, FiUsers, FiCheckCircle, FiMail, FiClock, FiVideo, FiTool } from 'react-icons/fi';
-import { PiSecurityCameraDuotone } from 'react-icons/pi';
-import { FaEthernet } from 'react-icons/fa';
-import { SiPcgamingwiki } from 'react-icons/si';
+import {
+  IconoCamaraSeguridad, IconoCheck, IconoClientes, IconoConfirmado, IconoCorreo, IconoGarantia, IconoMonitor,
+  IconoPcGaming, IconoPremio, IconoReloj, IconoRouter, IconoServicioTecnico, IconoTarjeta, IconoVideo,
+} from '@/components/iconos';
 
 export const revalidate = 0;
 
@@ -91,7 +91,7 @@ export default async function ServiciosPage() {
 
       <PageHeader
         breadcrumbs={[{ label: 'Servicios' }]}
-        icon={<FiTool />}
+        icon={<IconoServicioTecnico />}
         eyebrow="Servicios profesionales"
         title="Servicios tecnológicos"
         description="Instalación de CCTV, redes, puntos de venta y servicio técnico. Soluciones garantizadas para tu negocio."
@@ -113,7 +113,7 @@ export default async function ServiciosPage() {
           ) : (
             <div className="bg-surface rounded-xl border border-dashed border-line-strong p-6 text-center shadow-sm">
               <div className="w-10 h-10 bg-brand-50 border border-brand-200 rounded-full flex items-center justify-center text-brand-500 mx-auto mb-3">
-                <FiVideo className="w-5 h-5 opacity-80" />
+                <IconoVideo className="w-5 h-5 opacity-80" />
               </div>
               <h3 className="text-sm font-bold text-ink mb-1">Próximamente más proyectos</h3>
               <p className="text-[11px] text-muted leading-normal max-w-xs mx-auto">
@@ -132,7 +132,7 @@ export default async function ServiciosPage() {
             {/* CCTV */}
             <div className="flex items-center gap-3 p-3 bg-white rounded-xl hover:bg-surface transition-all border border-line hover:border-brand-500/30 shadow-[0_2px_8px_rgba(0,0,0,0.015)] group">
               <div className="w-9 h-9 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <PiSecurityCameraDuotone className="w-5 h-5" />
+                <IconoCamaraSeguridad className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-xs text-ink group-hover:text-brand-500 transition-colors">Sistemas CCTV</h3>
@@ -142,7 +142,7 @@ export default async function ServiciosPage() {
             {/* Redes */}
             <div className="flex items-center gap-3 p-3 bg-white rounded-xl hover:bg-surface transition-all border border-line hover:border-brand-500/30 shadow-[0_2px_8px_rgba(0,0,0,0.015)] group">
               <div className="w-9 h-9 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FaEthernet className="w-4 h-4" />
+                <IconoRouter className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-xs text-ink group-hover:text-brand-500 transition-colors">Diseño de Redes</h3>
@@ -152,7 +152,7 @@ export default async function ServiciosPage() {
             {/* POS */}
             <div className="flex items-center gap-3 p-3 bg-white rounded-xl hover:bg-surface transition-all border border-line hover:border-brand-500/30 shadow-[0_2px_8px_rgba(0,0,0,0.015)] group">
               <div className="w-9 h-9 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FiCreditCard className="w-4 h-4" />
+                <IconoTarjeta className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-xs text-ink group-hover:text-brand-500 transition-colors">Puntos de Venta POS</h3>
@@ -162,7 +162,7 @@ export default async function ServiciosPage() {
             {/* Gaming PC */}
             <div className="flex items-center gap-3 p-3 bg-white rounded-xl hover:bg-surface transition-all border border-line hover:border-brand-500/30 shadow-[0_2px_8px_rgba(0,0,0,0.015)] group">
               <div className="w-9 h-9 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <SiPcgamingwiki className="w-4 h-4" />
+                <IconoPcGaming className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-xs text-ink group-hover:text-brand-500 transition-colors">Gaming PC</h3>
@@ -172,7 +172,7 @@ export default async function ServiciosPage() {
             {/* Consolas */}
             <div className="flex items-center gap-3 p-3 bg-white rounded-xl hover:bg-surface transition-all border border-line hover:border-brand-500/30 shadow-[0_2px_8px_rgba(0,0,0,0.015)] group">
               <div className="w-9 h-9 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FiShield className="w-4 h-4" />
+                <IconoGarantia className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-xs text-ink group-hover:text-brand-500 transition-colors">Mantenimiento de Consolas</h3>
@@ -187,22 +187,22 @@ export default async function ServiciosPage() {
           <h2 className="text-sm font-bold text-center text-ink mb-4">¿Por qué confiar en nosotros?</h2>
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-3 bg-surface rounded-xl border border-line">
-              <FiAward className="w-6 h-6 text-brand-500 mx-auto mb-1.5" />
+              <IconoPremio className="w-6 h-6 text-brand-500 mx-auto mb-1.5" />
               <h3 className="font-bold text-xs text-ink mb-0.5">Experiencia</h3>
               <p className="text-[11px] text-muted">+10 años de trayectoria.</p>
             </div>
             <div className="text-center p-3 bg-surface rounded-xl border border-line">
-              <FiUsers className="w-6 h-6 text-brand-500 mx-auto mb-1.5" />
+              <IconoClientes className="w-6 h-6 text-brand-500 mx-auto mb-1.5" />
               <h3 className="font-bold text-xs text-ink mb-0.5">Equipo Pro</h3>
               <p className="text-[11px] text-muted">Técnicos certificados.</p>
             </div>
             <div className="text-center p-3 bg-surface rounded-xl border border-line">
-              <FiCheckCircle className="w-6 h-6 text-brand-500 mx-auto mb-1.5" />
+              <IconoConfirmado className="w-6 h-6 text-brand-500 mx-auto mb-1.5" />
               <h3 className="font-bold text-xs text-ink mb-0.5">Garantía</h3>
               <p className="text-[11px] text-muted">Soporte post-servicio.</p>
             </div>
             <div className="text-center p-3 bg-surface rounded-xl border border-line">
-              <FiClock className="w-6 h-6 text-brand-500 mx-auto mb-1.5" />
+              <IconoReloj className="w-6 h-6 text-brand-500 mx-auto mb-1.5" />
               <h3 className="font-bold text-xs text-ink mb-0.5">Atención Rápida</h3>
               <p className="text-[11px] text-muted">Respuesta inmediata.</p>
             </div>
@@ -213,14 +213,14 @@ export default async function ServiciosPage() {
         <div className="grid grid-cols-2 gap-3 mb-8">
           <div className="bg-brand-50 rounded-xl p-4 border border-brand-200 text-center shadow-xs">
             <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-brand-500 mx-auto mb-2 shadow-sm">
-              <FiMonitor className="w-5 h-5" />
+              <IconoMonitor className="w-5 h-5" />
             </div>
             <h3 className="text-xs font-bold text-ink mb-1">Servicios On-Site</h3>
             <p className="text-[11px] text-muted leading-tight">Instalación y soporte directamente en tu negocio o empresa.</p>
           </div>
           <div className="bg-brand-50 rounded-xl p-4 border border-brand-200 text-center shadow-xs">
             <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-brand-500 mx-auto mb-2 shadow-sm">
-              <FiShield className="w-5 h-5" />
+              <IconoGarantia className="w-5 h-5" />
             </div>
             <h3 className="text-xs font-bold text-ink mb-1">Soporte Técnico</h3>
             <p className="text-[11px] text-muted leading-tight">Asistencia remota e incidencias críticas 24/7.</p>
@@ -252,7 +252,7 @@ export default async function ServiciosPage() {
             <div className="relative bg-surface rounded-2xl border-2 border-dashed border-line p-12 text-center overflow-hidden max-w-3xl mx-auto shadow-xs">
               <div className="absolute -top-10 -left-10 w-24 h-24 bg-brand-500/5 rounded-full blur-xl pointer-events-none"></div>
               <div className="w-16 h-16 bg-brand-50 border border-brand-200 rounded-2xl flex items-center justify-center text-brand-500 mx-auto mb-4 shadow-sm">
-                <FiVideo className="w-8 h-8 opacity-80" />
+                <IconoVideo className="w-8 h-8 opacity-80" />
               </div>
               <h3 className="text-xl font-bold text-ink mb-2">Construyendo nuestro portafolio digital</h3>
               <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
@@ -275,7 +275,7 @@ export default async function ServiciosPage() {
             {/* CCTV Card */}
             <div className="bg-white rounded-2xl border border-line p-6 shadow-xs hover:border-brand-200 transition-colors flex flex-col items-center text-center group">
               <div className="w-12 h-12 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center mb-4">
-                <PiSecurityCameraDuotone className="w-6 h-6" />
+                <IconoCamaraSeguridad className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-ink text-base mb-1.5 group-hover:text-brand-500 transition-colors">Sistemas CCTV</h3>
               <p className="text-xs text-muted leading-normal">Instalación y monitoreo de cámaras de videovigilancia profesional.</p>
@@ -284,7 +284,7 @@ export default async function ServiciosPage() {
             {/* Redes Card */}
             <div className="bg-white rounded-2xl border border-line p-6 shadow-xs hover:border-brand-200 transition-colors flex flex-col items-center text-center group">
               <div className="w-12 h-12 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center mb-4">
-                <FaEthernet className="w-5 h-5" />
+                <IconoRouter className="w-5 h-5" />
               </div>
               <h3 className="font-bold text-ink text-base mb-1.5 group-hover:text-brand-500 transition-colors">Diseño de Redes</h3>
               <p className="text-xs text-muted leading-normal">Despliegue de redes estructuradas e inalámbricas corporativas.</p>
@@ -293,7 +293,7 @@ export default async function ServiciosPage() {
             {/* POS Card */}
             <div className="bg-white rounded-2xl border border-line p-6 shadow-xs hover:border-brand-200 transition-colors flex flex-col items-center text-center group">
               <div className="w-12 h-12 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center mb-4">
-                <FiCreditCard className="w-6 h-6" />
+                <IconoTarjeta className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-ink text-base mb-1.5 group-hover:text-brand-500 transition-colors">Puntos de Venta</h3>
               <p className="text-xs text-muted leading-normal">Instalación y soporte de sistemas comerciales de facturación.</p>
@@ -302,7 +302,7 @@ export default async function ServiciosPage() {
             {/* Gaming PC Card */}
             <div className="bg-white rounded-2xl border border-line p-6 shadow-xs hover:border-brand-200 transition-colors flex flex-col items-center text-center group">
               <div className="w-12 h-12 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center mb-4">
-                <SiPcgamingwiki className="w-6 h-6" />
+                <IconoPcGaming className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-ink text-base mb-1.5 group-hover:text-brand-500 transition-colors">PC Gaming</h3>
               <p className="text-xs text-muted leading-normal">Ensamblaje y personalización de computadoras de alto rendimiento.</p>
@@ -311,7 +311,7 @@ export default async function ServiciosPage() {
             {/* Consolas Card */}
             <div className="bg-white rounded-2xl border border-line p-6 shadow-xs hover:border-brand-200 transition-colors flex flex-col items-center text-center group">
               <div className="w-12 h-12 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center mb-4">
-                <FiShield className="w-6 h-6" />
+                <IconoGarantia className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-ink text-base mb-1.5 group-hover:text-brand-500 transition-colors">Mantenimiento</h3>
               <p className="text-xs text-muted leading-normal">Servicio técnico de consolas (PS5, Xbox, Switch, Steam Deck).</p>
@@ -325,28 +325,28 @@ export default async function ServiciosPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center p-4 bg-surface rounded-2xl border border-line">
               <div className="w-10 h-10 bg-brand-500/10 text-brand-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <FiAward className="w-5 h-5" />
+                <IconoPremio className="w-5 h-5" />
               </div>
               <h3 className="font-semibold text-sm mb-1 text-ink">Experiencia Comprobada</h3>
               <p className="text-muted text-[11px] leading-relaxed">Más de 10 años brindando soluciones de tecnología.</p>
             </div>
             <div className="text-center p-4 bg-surface rounded-2xl border border-line">
               <div className="w-10 h-10 bg-brand-500/10 text-brand-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <FiUsers className="w-5 h-5" />
+                <IconoClientes className="w-5 h-5" />
               </div>
               <h3 className="font-semibold text-sm mb-1 text-ink">Equipo Profesional</h3>
               <p className="text-muted text-[11px] leading-relaxed">Técnicos calificados y especializados.</p>
             </div>
             <div className="text-center p-4 bg-surface rounded-2xl border border-line">
               <div className="w-10 h-10 bg-brand-500/10 text-brand-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <FiCheckCircle className="w-5 h-5" />
+                <IconoConfirmado className="w-5 h-5" />
               </div>
               <h3 className="font-semibold text-sm mb-1 text-ink">Garantía de Calidad</h3>
               <p className="text-muted text-[11px] leading-relaxed">Soporte post-instalación incluido.</p>
             </div>
             <div className="text-center p-4 bg-surface rounded-2xl border border-line">
               <div className="w-10 h-10 bg-brand-500/10 text-brand-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <FiClock className="w-5 h-5" />
+                <IconoReloj className="w-5 h-5" />
               </div>
               <h3 className="font-semibold text-sm mb-1 text-ink">Atención Rápida</h3>
               <p className="text-muted text-[11px] leading-relaxed">Respuesta ágil a tus requerimientos.</p>
@@ -358,34 +358,26 @@ export default async function ServiciosPage() {
         <div className="grid md:grid-cols-2 gap-6 mb-16">
           <div className="bg-brand-50 rounded-2xl p-6 border border-brand-200 shadow-xs flex gap-4">
             <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-brand-500 shadow-sm flex-shrink-0 border border-brand-200">
-              <FiMonitor className="w-6 h-6" />
+              <IconoMonitor className="w-6 h-6" />
             </div>
             <div className="space-y-2">
               <h3 className="text-lg font-bold text-ink">Servicios On-Site</h3>
               <p className="text-xs text-muted leading-relaxed mb-3">Instalación y evaluación directa en tu negocio o empresa con personal especializado:</p>
               <ul className="grid grid-cols-2 gap-2 text-xs text-ink-soft font-medium">
                 <li className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <IconoCheck className="w-4 h-4 text-brand-500 flex-shrink-0" />
                   <span>Instalación directa</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <IconoCheck className="w-4 h-4 text-brand-500 flex-shrink-0" />
                   <span>Capacitación de uso</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <IconoCheck className="w-4 h-4 text-brand-500 flex-shrink-0" />
                   <span>Evaluación de espacio</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <IconoCheck className="w-4 h-4 text-brand-500 flex-shrink-0" />
                   <span>Documentación técnica</span>
                 </li>
               </ul>
@@ -394,34 +386,26 @@ export default async function ServiciosPage() {
 
           <div className="bg-brand-50 rounded-2xl p-6 border border-brand-200 shadow-xs flex gap-4">
             <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-brand-500 shadow-sm flex-shrink-0 border border-brand-200">
-              <FiShield className="w-6 h-6" />
+              <IconoGarantia className="w-6 h-6" />
             </div>
             <div className="space-y-2">
               <h3 className="text-lg font-bold text-ink">Soporte Técnico</h3>
               <p className="text-xs text-muted leading-relaxed mb-3">Asistencia técnica e incidencias para el mantenimiento de tus sistemas:</p>
               <ul className="grid grid-cols-2 gap-2 text-xs text-ink-soft font-medium">
                 <li className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <IconoCheck className="w-4 h-4 text-brand-500 flex-shrink-0" />
                   <span>Mantenimiento preventivo</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <IconoCheck className="w-4 h-4 text-brand-500 flex-shrink-0" />
                   <span>Garantía extendida</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <IconoCheck className="w-4 h-4 text-brand-500 flex-shrink-0" />
                   <span>Atención remota 24/7</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <IconoCheck className="w-4 h-4 text-brand-500 flex-shrink-0" />
                   <span>Actualizaciones de software</span>
                 </li>
               </ul>
@@ -432,12 +416,12 @@ export default async function ServiciosPage() {
         {/* CTA Final Desktop (GitHub Version) */}
         <div className="relative bg-brand-600 text-white rounded-2xl p-8 text-center overflow-hidden">
           <div className="relative">
-            <FiMail className="w-16 h-16 text-white/80 mx-auto mb-4" />
+            <IconoCorreo className="w-16 h-16 text-white/80 mx-auto mb-4" />
             <h2 className="text-3xl font-bold mb-4">¿Necesitas alguno de nuestros servicios?</h2>
             <p className="text-lg mb-6 text-white/90">Envíanos tu solicitud y recibe una cotización personalizada en menos de 24 horas</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/contacto" className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-brand-500 rounded-xl font-semibold hover:bg-surface transition-all">
-                <FiMail className="w-5 h-5" />
+                <IconoCorreo className="w-5 h-5" />
                 Enviar Solicitud
               </Link>
               <a href={`https://wa.me/${settings?.whatsapp?.replace(/\D/g, '') || '582572511282'}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-success text-white rounded-xl font-semibold hover:bg-success-strong transition-all">

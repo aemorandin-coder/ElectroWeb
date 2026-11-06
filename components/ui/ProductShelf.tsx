@@ -1,7 +1,7 @@
 'use client';
 
 import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { IconoChevronDerecha, IconoChevronIzquierda } from '@/components/iconos';
 
 const ITEM_WIDTHS = {
   // Vitrina: en móvil una tarjeta grande y se asoma buena parte de la siguiente; tres visibles desde lg.
@@ -53,7 +53,7 @@ export default function ProductShelf({ children, label, variant = 'default' }: P
   return (
     <div className="relative">
       <button type="button" onClick={() => scrollBy(-1)} disabled={!canPrev} aria-label={`Anteriores en ${label}`} className={`${arrowClass} -left-5`}>
-        <FiChevronLeft className="h-5 w-5" aria-hidden="true" />
+        <IconoChevronIzquierda className="h-5 w-5" aria-hidden="true" />
       </button>
       <ul
         ref={listRef}
@@ -66,7 +66,7 @@ export default function ProductShelf({ children, label, variant = 'default' }: P
         ))}
       </ul>
       <button type="button" onClick={() => scrollBy(1)} disabled={!canNext} aria-label={`Siguientes en ${label}`} className={`${arrowClass} -right-5`}>
-        <FiChevronRight className="h-5 w-5" aria-hidden="true" />
+        <IconoChevronDerecha className="h-5 w-5" aria-hidden="true" />
       </button>
     </div>
   );

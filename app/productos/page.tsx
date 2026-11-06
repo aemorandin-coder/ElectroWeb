@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { FiSearch, FiShoppingBag, FiX } from 'react-icons/fi';
+import { IconoBolsa, IconoBuscar, IconoCerrar } from '@/components/iconos';
 import CategoryIconRenderer from '@/components/CategoryIconRenderer';
 import CatalogFilters from '@/components/catalog/CatalogFilters';
 import CatalogPagination from '@/components/catalog/CatalogPagination';
@@ -149,7 +149,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
           ]}
           icon={
             currentCategory ? <CategoryIconRenderer iconName={currentCategory.icon || getAutoIcon(currentCategory.name)} />
-              : params.search ? <FiSearch /> : <FiShoppingBag />
+              : params.search ? <IconoBuscar /> : <IconoBolsa />
           }
           eyebrow={params.search ? 'Búsqueda' : currentCategory ? 'Categoría' : 'Catálogo'}
           title={heading}
@@ -212,7 +212,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
                     aria-label={`Quitar filtro ${chip.label}`}
                   >
                     {chip.label}
-                    <FiX className="h-3.5 w-3.5" aria-hidden="true" />
+                    <IconoCerrar className="h-3.5 w-3.5" aria-hidden="true" />
                   </Link>
                 </li>
               ))}
@@ -246,7 +246,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
               ) : (
                 <div className="rounded-xl border border-line bg-white px-6 py-12 text-center">
                   <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-                    <FiSearch className="h-6 w-6" aria-hidden="true" />
+                    <IconoBuscar className="h-6 w-6" aria-hidden="true" />
                   </span>
                   <h2 className="mt-4 text-lg font-semibold text-ink">No encontramos productos</h2>
                   <p className="mx-auto mt-1 max-w-md text-sm text-muted">

@@ -1,7 +1,6 @@
 'use client';
 
-import { FiCheckCircle, FiGift, FiPlus } from 'react-icons/fi';
-import { FaMobileScreen } from 'react-icons/fa6';
+import { IconoConfirmado, IconoGiftCard, IconoMas, IconoPagoMovil } from '@/components/iconos';
 import { formatPuntos, formatUSD } from '@/lib/currency';
 import { repartirPuntos } from '@/lib/checkout-pago';
 import { adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
@@ -53,7 +52,7 @@ export default function PagoPuntosPanel({
 
       {alcanza ? (
         <p className="flex items-start gap-2 text-sm text-ink-soft">
-          <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-success-strong" aria-hidden="true" />
+          <IconoConfirmado className="mt-0.5 h-4 w-4 shrink-0 text-success-strong" aria-hidden="true" />
           <span>
             <strong className="font-semibold text-ink">Te alcanza.</strong> Completa el pedido y listo: te quedan {formatPuntos(disponibleUSD - totalUSD)}.
           </span>
@@ -67,12 +66,12 @@ export default function PagoPuntosPanel({
           <div className="flex flex-col gap-2 sm:flex-row">
             {reparto.mixto && pagoMovilDisponible && (
               <button type="button" onClick={onPagarRestoConPagoMovil} className={`${adminPrimaryButton} h-11 justify-center`}>
-                <FaMobileScreen className="h-4 w-4" aria-hidden="true" />
+                <IconoPagoMovil className="h-4 w-4" aria-hidden="true" />
                 Pagar {formatUSD(reparto.restanteUSD)} por Pago Móvil
               </button>
             )}
             <button type="button" onClick={onRecargar} className={`${reparto.mixto && pagoMovilDisponible ? adminSecondaryButton : adminPrimaryButton} h-11 justify-center`}>
-              <FiPlus className="h-4 w-4" aria-hidden="true" />
+              <IconoMas className="h-4 w-4" aria-hidden="true" />
               Recargar Puntos ES
             </button>
           </div>
@@ -80,7 +79,7 @@ export default function PagoPuntosPanel({
       )}
 
       <button type="button" onClick={onGiftCard} className="inline-flex h-11 items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700">
-        <FiGift className="h-4 w-4" aria-hidden="true" /> ¿Tienes una gift card? Canjéala aquí
+        <IconoGiftCard className="h-4 w-4" aria-hidden="true" /> ¿Tienes una gift card? Canjéala aquí
       </button>
     </div>
   );

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
-import { FiStar, FiVideo, FiX, FiExternalLink } from 'react-icons/fi';
+import { IconoAbrirAparte, IconoCerrar, IconoEstrella, IconoPlay, IconoVideo } from '@/components/iconos';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 import { formatRating } from '@/lib/currency';
@@ -75,7 +75,7 @@ function StarDisplay({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'm
   return (
     <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((i) => (
-        <FiStar
+        <IconoEstrella
           key={i}
           className={`${s} ${
             i <= Math.round(rating) ? 'text-warning fill-warning' : 'text-line fill-line'
@@ -98,7 +98,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (n: number) 
           onMouseLeave={() => setHover(0)}
           onClick={() => onChange(i)}
         >
-          <FiStar
+          <IconoEstrella
             className={`w-6 h-6 transition-colors ${
               i <= (hover || value) ? 'text-warning fill-warning' : 'text-line'
             }`}
@@ -191,7 +191,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
       {/* Grid */}
       {filtered.length === 0 ? (
         <div className="text-center py-16">
-          <FiVideo className="w-12 h-12 text-subtle mx-auto mb-3" />
+          <IconoVideo className="w-12 h-12 text-subtle mx-auto mb-3" />
           <p className="text-muted">No hay trabajos en esta categoría todavía.</p>
         </div>
       ) : (
@@ -217,15 +217,13 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <FiVideo className="w-12 h-12 text-subtle" />
+                      <IconoVideo className="w-12 h-12 text-subtle" />
                     </div>
                   )}
                   {/* Play overlay */}
                   <div className="absolute inset-0 bg-ink/40 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                      <svg className="w-7 h-7 text-brand-500 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
+                      <IconoPlay lleno className="w-7 h-7 text-brand-500 ml-1" />
                     </div>
                   </div>
                   {/* Badges */}
@@ -315,7 +313,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                 onClick={closeModal}
                 className="p-2 hover:bg-surface rounded-xl transition-colors flex-shrink-0"
               >
-                <FiX className="w-5 h-5 text-muted" />
+                <IconoCerrar className="w-5 h-5 text-muted" />
               </button>
             </div>
 
@@ -330,14 +328,14 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                  <FiVideo className="w-12 h-12 text-white/80" />
+                  <IconoVideo className="w-12 h-12 text-white/80" />
                   <a
                     href={activeModal.videoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 bg-white text-brand-500 rounded-lg font-semibold text-sm"
                   >
-                    <FiExternalLink className="w-4 h-4" />
+                    <IconoAbrirAparte className="w-4 h-4" />
                     Ver en {platformBadge?.label || 'plataforma'}
                   </a>
                 </div>
@@ -407,7 +405,7 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
             {/* Reviews */}
             <div className="p-5">
               <h3 className="font-bold text-ink mb-4 flex items-center gap-2">
-                <FiStar className="w-4 h-4 text-warning" />
+                <IconoEstrella className="w-4 h-4 text-warning" />
                 Reseñas
                 {reviews.length > 0 && (
                   <span className="text-xs text-muted font-normal">({reviews.length})</span>

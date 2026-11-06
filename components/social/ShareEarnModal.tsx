@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { adminModalOverlay, adminModalPanel, adminModalHeader, adminLabel, adminInput } from '@/lib/admin-ui';
 import Image from 'next/image';
-import { FiX, FiCopy, FiCheck, FiGift, FiInfo, FiExternalLink } from 'react-icons/fi';
+import { IconoAbrirAparte, IconoCerrar, IconoCheck, IconoCopiar, IconoInfo, IconoRegalo } from '@/components/iconos';
 import toast from 'react-hot-toast';
 import { useDelNavegador } from '@/lib/hooks/useMontado';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -160,7 +160,7 @@ export default function ShareEarnModal() {
         <div className={adminModalHeader}>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-500">
-              <FiGift className="w-4 h-4" />
+              <IconoRegalo className="w-4 h-4" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-ink">Compartir y Ganar</h2>
@@ -175,7 +175,7 @@ export default function ShareEarnModal() {
             className="p-1 text-muted hover:text-ink hover:bg-surface rounded-lg transition-colors"
             aria-label="Cerrar modal"
           >
-            <FiX className="w-4 h-4" />
+            <IconoCerrar className="w-4 h-4" />
           </button>
         </div>
 
@@ -186,7 +186,7 @@ export default function ShareEarnModal() {
           {hasReferralCode && commissionRate > 0 && item.type === 'product' && (
             <div className="bg-success/10 border border-success/30 rounded-xl p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-success/20 flex items-center justify-center text-success-strong flex-shrink-0">
-                <FiGift className="w-5 h-5" />
+                <IconoRegalo className="w-5 h-5" />
               </div>
               <div className="flex-1">
                 <p className="text-xs font-bold text-success-strong">
@@ -202,7 +202,7 @@ export default function ShareEarnModal() {
           {/* MOCKUP VISTA PREVIA */}
           <div className="space-y-2">
             <span className="text-xs font-bold text-muted flex items-center gap-1.5">
-              <FiInfo className="w-3.5 h-3.5 text-brand-500" />
+              <IconoInfo className="w-3.5 h-3.5 text-brand-500" />
               Vista previa del enlace compartido en redes
             </span>
             
@@ -256,7 +256,7 @@ export default function ShareEarnModal() {
                     : 'bg-brand-500 text-white hover:bg-brand-600'
                 }`}
               >
-                {copied ? <FiCheck className="w-3.5 h-3.5" /> : <FiCopy className="w-3.5 h-3.5" />}
+                {copied ? <IconoCheck className="w-3.5 h-3.5" /> : <IconoCopiar className="w-3.5 h-3.5" />}
                 {copied ? 'Copiado' : 'Copiar'}
               </button>
             </div>
@@ -306,7 +306,7 @@ export default function ShareEarnModal() {
           <div className="bg-surface border border-line rounded-xl p-4 space-y-3">
             <div className="flex gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-500 flex-shrink-0 mt-0.5">
-                <FiGift className="w-4 h-4" />
+                <IconoRegalo className="w-4 h-4" />
               </div>
               <div>
                 <h4 className="text-xs font-bold text-ink">
@@ -329,7 +329,7 @@ export default function ShareEarnModal() {
                   className="px-3.5 py-1.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1"
                 >
                   Crear cuenta gratis
-                  <FiExternalLink className="w-3 h-3" />
+                  <IconoAbrirAparte className="w-3 h-3" />
                 </a>
               ) : (
                 <a
@@ -337,7 +337,7 @@ export default function ShareEarnModal() {
                   className="px-3.5 py-1.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1"
                 >
                   Quiero ser promotor
-                  <FiExternalLink className="w-3 h-3" />
+                  <IconoAbrirAparte className="w-3 h-3" />
                 </a>
               )}
             </div>

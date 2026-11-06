@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getServerSession } from 'next-auth';
-import { FiAlertTriangle, FiCheckCircle, FiDownload, FiEdit3, FiEye } from 'react-icons/fi';
+import { IconoAdvertencia, IconoConfirmado, IconoDescargar, IconoEditar, IconoVer } from '@/components/iconos';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
@@ -46,7 +46,7 @@ export default async function CotizacionPage({ params }: { params: Promise<{ tok
         <div className="flex flex-wrap gap-2">
           {/* C-182: el mismo presupuesto en PDF, para guardarlo o reenviarlo desde el teléfono */}
           <a href={`/api/cotizaciones/${token}/pdf`} className={adminSecondaryButton} data-pdf>
-            <FiDownload className="h-4 w-4" aria-hidden="true" />
+            <IconoDescargar className="h-4 w-4" aria-hidden="true" />
             Descargar PDF
           </a>
           <BotonImprimir pendiente={pendiente} />
@@ -55,13 +55,13 @@ export default async function CotizacionPage({ params }: { params: Promise<{ tok
 
       {vistaPrevia && (
         <p className={`${adminNotice('warning')} mx-auto mb-4 flex max-w-4xl items-start gap-2 print:hidden`} role="status">
-          <FiEye className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoVer className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           Vista previa del equipo: el cliente todavía no puede abrir este enlace. Se activa al enviarla desde el panel.
         </p>
       )}
       {pendiente && (
         <div className={`${adminNotice('brand')} mx-auto mb-4 flex max-w-4xl items-start gap-2 print:hidden`} data-como-aprobar>
-          <FiEdit3 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoEditar className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <p>
             <strong className="font-semibold">Este presupuesto se aprueba aquí mismo, sin imprimir ni firmar a mano.</strong>{' '}
             Revísalo y, si estás de acuerdo, <a href="#aprobar" className="font-semibold underline">escribe tu nombre y tu cédula o RIF al final de la página</a>.
@@ -71,13 +71,13 @@ export default async function CotizacionPage({ params }: { params: Promise<{ tok
       )}
       {publica.status === 'APPROVED' && (
         <p className={`${adminNotice('success')} mx-auto mb-4 flex max-w-4xl items-start gap-2 print:hidden`} role="status">
-          <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoConfirmado className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           Presupuesto aprobado. Te escribimos para coordinar el pago y la entrega. Ya puedes imprimirlo o guardarlo en PDF con la aprobación.
         </p>
       )}
       {publica.status === 'EXPIRED' && (
         <p className={`${adminNotice('danger')} mx-auto mb-4 flex max-w-4xl items-start gap-2 print:hidden`} role="status">
-          <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           Este presupuesto venció: los precios y la disponibilidad pueden haber cambiado. Escríbenos y te lo actualizamos.
         </p>
       )}

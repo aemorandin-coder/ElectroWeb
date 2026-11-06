@@ -3,7 +3,10 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
-import { FiAlertTriangle, FiDownload, FiEdit3, FiEye, FiFileText, FiPlus, FiRefreshCw, FiSearch, FiShield, FiX } from 'react-icons/fi';
+import {
+  IconoActualizar, IconoAdvertencia, IconoBuscar, IconoCerrar, IconoDescargar, IconoDocumento, IconoEditar, IconoGarantia,
+  IconoMas, IconoVer,
+} from '@/components/iconos';
 import {
   adminBadge, adminChoice, adminError, adminHint, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter,
   adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPageHeader, adminPageSubtitle,
@@ -194,10 +197,10 @@ export default function LegalPage() {
 
       <div className="flex gap-1 border-b border-line pb-2" role="tablist" aria-label="Secciones de legal">
         <button type="button" role="tab" aria-selected={tab === 'firmas'} onClick={() => setTab('firmas')} className={adminTab(tab === 'firmas')}>
-          <FiShield className="h-4 w-4" aria-hidden="true" /> Firmas
+          <IconoGarantia className="h-4 w-4" aria-hidden="true" /> Firmas
         </button>
         <button type="button" role="tab" aria-selected={tab === 'documentos'} onClick={() => setTab('documentos')} className={adminTab(tab === 'documentos')}>
-          <FiFileText className="h-4 w-4" aria-hidden="true" /> Documentos
+          <IconoDocumento className="h-4 w-4" aria-hidden="true" /> Documentos
         </button>
       </div>
 
@@ -212,7 +215,7 @@ export default function LegalPage() {
         <div className="space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <form className="relative flex-1" onSubmit={(e) => { e.preventDefault(); setCargando(true); setPagina((p) => ({ ...p, page: 1 })); setBusqueda(buscar.trim()); }}>
-              <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+              <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
               <input type="search" aria-label="Buscar firmas" value={buscar} onChange={(e) => setBuscar(e.target.value)} placeholder="Nombre, correo o cédula" className={`${adminInput()} pl-9`} />
             </form>
             <div className="flex flex-wrap gap-2">
@@ -220,9 +223,9 @@ export default function LegalPage() {
                 <button key={v} type="button" aria-pressed={estado === v} onClick={() => { setCargando(true); setEstado(v); setPagina((p) => ({ ...p, page: 1 })); }}
                   className={`${adminChoice(estado === v)} min-h-11 px-3 text-sm`}>{l}</button>
               ))}
-              <button type="button" onClick={exportarCSV} className={adminSecondaryButton}><FiDownload className="h-4 w-4" aria-hidden="true" /> CSV</button>
+              <button type="button" onClick={exportarCSV} className={adminSecondaryButton}><IconoDescargar className="h-4 w-4" aria-hidden="true" /> CSV</button>
               <button type="button" onClick={() => { setCargando(true); setRecargas((n) => n + 1); }} className={`${adminIconButton} h-11 w-11 border border-line bg-white`} aria-label="Actualizar">
-                <FiRefreshCw className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
+                <IconoActualizar className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -246,8 +249,8 @@ export default function LegalPage() {
                     <p className="truncate text-sm text-muted">{f.document.title} · v{f.document.version} · {fechaHora(f.signedAt)} · {f.userEmail}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button type="button" onClick={() => { setViendo(f); setMotivo(''); }} className={adminSecondaryButton}><FiEye className="h-4 w-4" aria-hidden="true" /> Ver</button>
-                    <a href={`/api/legal/firmas/${f.id}/pdf`} className={adminSecondaryButton} aria-label={`Descargar la constancia de ${f.userName}`}><FiDownload className="h-4 w-4" aria-hidden="true" /> PDF</a>
+                    <button type="button" onClick={() => { setViendo(f); setMotivo(''); }} className={adminSecondaryButton}><IconoVer className="h-4 w-4" aria-hidden="true" /> Ver</button>
+                    <a href={`/api/legal/firmas/${f.id}/pdf`} className={adminSecondaryButton} aria-label={`Descargar la constancia de ${f.userName}`}><IconoDescargar className="h-4 w-4" aria-hidden="true" /> PDF</a>
                   </div>
                 </li>
               ))}
@@ -271,7 +274,7 @@ export default function LegalPage() {
             <p className="text-sm text-muted">{puedePublicar ? 'Publicar una versión nueva de un documento que se firma pide la firma otra vez a todos. Las firmas anteriores se conservan. Términos y Privacidad se leen en la tienda y no se firman.' : 'Solo un super admin publica documentos o versiones nuevas.'}</p>
             {puedePublicar && (
               <button type="button" onClick={() => { setErrores({}); setVistaPrevia(false); setEditor({ slug: '', title: '', content: '', requiredFor: '' }); }} className={adminPrimaryButton}>
-                <FiPlus className="h-4 w-4" aria-hidden="true" /> Nuevo documento
+                <IconoMas className="h-4 w-4" aria-hidden="true" /> Nuevo documento
               </button>
             )}
           </div>
@@ -295,7 +298,7 @@ export default function LegalPage() {
                     </div>
                     {puedePublicar && (
                       <button type="button" onClick={() => { setErrores({}); setVistaPrevia(false); setEditor({ slug: d.slug, title: d.title, content: d.content, requiredFor: d.requiredFor ?? '' }); }} className={adminSecondaryButton}>
-                        <FiEdit3 className="h-4 w-4" aria-hidden="true" /> Nueva versión
+                        <IconoEditar className="h-4 w-4" aria-hidden="true" /> Nueva versión
                       </button>
                     )}
                   </div>
@@ -319,7 +322,7 @@ export default function LegalPage() {
           <div className={`${adminModalPanel} max-w-xl`}>
             <div className={adminModalHeader}>
               <h2 id="firma-titulo" className={adminModalTitle}>Constancia de firma</h2>
-              <button type="button" onClick={() => setViendo(null)} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+              <button type="button" onClick={() => setViendo(null)} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
             </div>
             <div className={`${adminModalBody} space-y-4`}>
               <div className="rounded-xl border border-line bg-surface p-3">
@@ -344,14 +347,14 @@ export default function LegalPage() {
                   <input id="motivo" className={adminInput()} value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={300} placeholder="Ej.: la cédula no coincide con el pago" />
                   <p className={adminHint}>El cliente recibe el aviso con este motivo. Esta firma se conserva como historial.</p>
                   <button type="button" onClick={pedirDeNuevo} disabled={pidiendo || motivo.trim().length < 5} className={adminSecondaryButton}>
-                    <FiAlertTriangle className="h-4 w-4" aria-hidden="true" /> {pidiendo ? 'Enviando…' : 'Pedir firma de nuevo'}
+                    <IconoAdvertencia className="h-4 w-4" aria-hidden="true" /> {pidiendo ? 'Enviando…' : 'Pedir firma de nuevo'}
                   </button>
                 </div>
               )}
             </div>
             <div className={adminModalFooter}>
               <button type="button" onClick={() => setViendo(null)} className={adminSecondaryButton}>Cerrar</button>
-              <a href={`/api/legal/firmas/${viendo.id}/pdf`} className={adminPrimaryButton}><FiDownload className="h-4 w-4" aria-hidden="true" /> Descargar PDF</a>
+              <a href={`/api/legal/firmas/${viendo.id}/pdf`} className={adminPrimaryButton}><IconoDescargar className="h-4 w-4" aria-hidden="true" /> Descargar PDF</a>
             </div>
           </div>
         </div>,
@@ -363,7 +366,7 @@ export default function LegalPage() {
           <div className={`${adminModalPanel} max-w-3xl`}>
             <div className={adminModalHeader}>
               <h2 id="doc-titulo" className={adminModalTitle}>{editor.slug ? 'Nueva versión' : 'Nuevo documento'}</h2>
-              <button type="button" onClick={() => setEditor(null)} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+              <button type="button" onClick={() => setEditor(null)} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
             </div>
             <div className={`${adminModalBody} space-y-4`}>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_16rem]">

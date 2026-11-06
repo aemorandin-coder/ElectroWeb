@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import {
-  FiAlertTriangle, FiCheckCircle, FiCloud, FiCopy, FiDownload, FiExternalLink, FiKey, FiLink, FiPlay, FiRefreshCw, FiShieldOff, FiXCircle,
-} from 'react-icons/fi';
+  IconoAbrirAparte, IconoActualizar, IconoAdvertencia, IconoClave, IconoConfirmado, IconoCopiar, IconoDescargar,
+  IconoEnlace, IconoNube, IconoPlay, IconoRechazado, IconoSinProteccion,
+} from '@/components/iconos';
 import {
   adminBadge, adminDangerButton, adminInput, adminModalBody, adminModalFooter, adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle,
   adminNotice, adminPrimaryButton, adminSecondaryButton, adminSpinner,
@@ -218,24 +219,24 @@ export default function BackupsSection() {
       {/* Estado de un vistazo */}
       {estado.enabled && listo && ultimoBueno && estado.alDia ? (
         <div className={`${adminNotice('success')} flex items-start gap-2`}>
-          <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoConfirmado className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span><strong>Los respaldos están al día.</strong> El último se hizo el {fechaHora(ultimoBueno.startedAt)} y pesa {formatearBytes(ultimoBueno.sizeBytes)}. Se guarda en tu Google Drive ({estado.drive.email}).</span>
         </div>
       ) : estado.enabled && listo ? (
         <div className={`${adminNotice('warning')} flex items-start gap-2`} role="alert">
-          <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span><strong>{ultimoBueno ? 'El último respaldo bueno tiene más de un día.' : 'Todavía no hay ningún respaldo hecho.'}</strong> Pulsa “Respaldar ahora” y revisa el historial: si falla, ahí dice por qué.</span>
         </div>
       ) : (
         <div className={`${adminNotice('danger')} flex items-start gap-2`} role="alert">
-          <FiShieldOff className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoSinProteccion className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span><strong>La tienda no tiene respaldos automáticos.</strong> Si el servidor se daña, se pierden las órdenes, los clientes y los Puntos ES. {estado.problema ?? 'Enciende el respaldo automático más abajo.'}</span>
         </div>
       )}
 
       {estado.drive.error && (
         <div className={`${adminNotice('danger')} flex items-start gap-2`} role="alert">
-          <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span><strong>Google rechazó el permiso:</strong> {estado.drive.error}</span>
         </div>
       )}
@@ -245,12 +246,12 @@ export default function BackupsSection() {
         title="1. Clave del respaldo"
         description="Los respaldos se guardan cifrados. Solo esta clave los abre: ni Google, ni el servidor, ni nosotros podemos leerlos sin ella."
         action={estado.clave.creada
-          ? <button type="button" onClick={() => crearClave(true)} disabled={ocupado !== null} className={adminSecondaryButton}><FiKey className="h-4 w-4" aria-hidden="true" />Cambiar la clave</button>
-          : <button type="button" onClick={() => crearClave(false)} disabled={ocupado !== null} className={adminPrimaryButton}><FiKey className="h-4 w-4" aria-hidden="true" />{ocupado === 'clave' ? 'Creando…' : 'Crear la clave'}</button>}
+          ? <button type="button" onClick={() => crearClave(true)} disabled={ocupado !== null} className={adminSecondaryButton}><IconoClave className="h-4 w-4" aria-hidden="true" />Cambiar la clave</button>
+          : <button type="button" onClick={() => crearClave(false)} disabled={ocupado !== null} className={adminPrimaryButton}><IconoClave className="h-4 w-4" aria-hidden="true" />{ocupado === 'clave' ? 'Creando…' : 'Crear la clave'}</button>}
       >
         {estado.clave.creada ? (
           <p className="flex items-start gap-2 text-sm text-ink">
-            <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-success-strong" aria-hidden="true" />
+            <IconoConfirmado className="mt-0.5 h-4 w-4 shrink-0 text-success-strong" aria-hidden="true" />
             <span>Clave creada el {estado.clave.creadaEn ? fechaHora(estado.clave.creadaEn) : '—'}. Huella: <span className="font-mono text-xs">{estado.clave.huella}</span>. La clave privada se mostró una sola vez; guárdala en tu gestor de contraseñas.</span>
           </p>
         ) : (
@@ -262,14 +263,14 @@ export default function BackupsSection() {
       <SettingsCard
         title="2. Google Drive"
         description="Dónde se guardan los respaldos. La tienda solo puede ver y borrar lo que ella misma sube a su carpeta, nada más de tu cuenta."
-        action={estado.drive.conectado ? <span className={adminBadge('success')}><FiCheckCircle className="h-3.5 w-3.5" aria-hidden="true" />Conectado</span> : <span className={adminBadge('warning')}>Sin conectar</span>}
+        action={estado.drive.conectado ? <span className={adminBadge('success')}><IconoConfirmado className="h-3.5 w-3.5" aria-hidden="true" />Conectado</span> : <span className={adminBadge('warning')}>Sin conectar</span>}
       >
         {estado.drive.conectado ? (
           <div className="space-y-3">
             <p className="text-sm text-ink">Cuenta: <strong>{estado.drive.email ?? '—'}</strong>{estado.drive.conectadoEn && <span className="text-muted"> · conectada el {fechaHora(estado.drive.conectadoEn)}</span>}. Carpeta: <strong>Respaldos ElectroShop</strong>.</p>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={probar} disabled={ocupado !== null} className={adminSecondaryButton}><FiRefreshCw className={`h-4 w-4 ${ocupado === 'probar' ? 'animate-spin' : ''}`} aria-hidden="true" />Probar conexión</button>
-              <a href="/api/admin/respaldos/drive/conectar" className={adminSecondaryButton}><FiLink className="h-4 w-4" aria-hidden="true" />Volver a conectar</a>
+              <button type="button" onClick={probar} disabled={ocupado !== null} className={adminSecondaryButton}><IconoActualizar className={`h-4 w-4 ${ocupado === 'probar' ? 'animate-spin' : ''}`} aria-hidden="true" />Probar conexión</button>
+              <a href="/api/admin/respaldos/drive/conectar" className={adminSecondaryButton}><IconoEnlace className="h-4 w-4" aria-hidden="true" />Volver a conectar</a>
               <button type="button" onClick={desconectar} disabled={ocupado !== null} className={adminDangerButton}>Desconectar</button>
             </div>
           </div>
@@ -278,7 +279,7 @@ export default function BackupsSection() {
             <details className="rounded-xl border border-line bg-surface p-4 text-sm text-ink">
               <summary className="cursor-pointer font-semibold">Cómo obtener el ID y el secreto (10 minutos, una sola vez)</summary>
               <ol className="mt-3 list-decimal space-y-2 pl-5 text-muted">
-                <li>Entra a <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold text-brand-600 hover:underline">console.cloud.google.com<FiExternalLink className="h-3 w-3" aria-hidden="true" /></a> con la cuenta de Google donde quieres guardar los respaldos y crea un proyecto nuevo (“ElectroShop Respaldos”).</li>
+                <li>Entra a <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold text-brand-600 hover:underline">console.cloud.google.com<IconoAbrirAparte className="h-3 w-3" aria-hidden="true" /></a> con la cuenta de Google donde quieres guardar los respaldos y crea un proyecto nuevo (“ElectroShop Respaldos”).</li>
                 <li>Menú → <strong>APIs y servicios</strong> → <strong>Biblioteca</strong>: busca <strong>Google Drive API</strong> y pulsa <strong>Habilitar</strong>.</li>
                 <li><strong>Pantalla de consentimiento de OAuth</strong>: tipo <strong>Externo</strong>, nombre “ElectroShop” y tu correo. En permisos (scopes) agrega <span className="font-mono text-xs">.../auth/drive.file</span>. Al final pulsa <strong>Publicar la aplicación</strong>: si se queda en “Prueba”, Google vence el permiso a los 7 días.</li>
                 <li><strong>Credenciales</strong> → Crear credenciales → <strong>ID de cliente de OAuth</strong> → tipo <strong>Aplicación web</strong>. En “URI de redireccionamiento autorizados” pega la dirección de abajo.</li>
@@ -289,7 +290,7 @@ export default function BackupsSection() {
             <Field label="Dirección de redireccionamiento (cópiala en Google)" htmlFor="respaldos-uri">
               <div className="flex gap-2">
                 <input id="respaldos-uri" readOnly value={estado.drive.urlDeRetorno} className={`${adminInput(false)} font-mono text-xs`} onFocus={(e) => e.currentTarget.select()} />
-                <button type="button" onClick={() => { void navigator.clipboard.writeText(estado.drive.urlDeRetorno).then(() => toast.success('Dirección copiada.')); }} className={adminSecondaryButton} aria-label="Copiar la dirección"><FiCopy className="h-4 w-4" aria-hidden="true" /></button>
+                <button type="button" onClick={() => { void navigator.clipboard.writeText(estado.drive.urlDeRetorno).then(() => toast.success('Dirección copiada.')); }} className={adminSecondaryButton} aria-label="Copiar la dirección"><IconoCopiar className="h-4 w-4" aria-hidden="true" /></button>
               </div>
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -303,9 +304,9 @@ export default function BackupsSection() {
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={() => guardar({ driveClientId: clientId, ...(clientSecret ? { driveClientSecret: clientSecret } : {}) }, 'Datos de Google guardados.')} disabled={ocupado !== null || !clientId || (!clientSecret && !estado.drive.tieneSecreto)} className={adminSecondaryButton}>Guardar</button>
               {clienteGuardado ? (
-                <a href="/api/admin/respaldos/drive/conectar" className={adminPrimaryButton}><FiCloud className="h-4 w-4" aria-hidden="true" />Conectar con Google</a>
+                <a href="/api/admin/respaldos/drive/conectar" className={adminPrimaryButton}><IconoNube className="h-4 w-4" aria-hidden="true" />Conectar con Google</a>
               ) : (
-                <span className={`${adminPrimaryButton} pointer-events-none opacity-50`} aria-disabled="true"><FiCloud className="h-4 w-4" aria-hidden="true" />Conectar con Google</span>
+                <span className={`${adminPrimaryButton} pointer-events-none opacity-50`} aria-disabled="true"><IconoNube className="h-4 w-4" aria-hidden="true" />Conectar con Google</span>
               )}
             </div>
           </div>
@@ -348,11 +349,11 @@ export default function BackupsSection() {
         action={
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={respaldarAhora} disabled={ocupado !== null || enCurso || !listo} className={adminPrimaryButton}>
-              {enCurso ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" /> : <FiPlay className="h-4 w-4" aria-hidden="true" />}
+              {enCurso ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" /> : <IconoPlay className="h-4 w-4" aria-hidden="true" />}
               {enCurso ? 'En marcha…' : 'Respaldar ahora'}
             </button>
             <button type="button" onClick={verificar} disabled={ocupado !== null || !estado.drive.conectado} className={adminSecondaryButton}>
-              <FiCheckCircle className="h-4 w-4" aria-hidden="true" />Verificar el último
+              <IconoConfirmado className="h-4 w-4" aria-hidden="true" />Verificar el último
             </button>
           </div>
         }
@@ -361,7 +362,7 @@ export default function BackupsSection() {
           <ul className="mb-4 space-y-2" aria-live="polite">
             {verificacion.map((v) => (
               <li key={v.tipo} className={`${adminNotice(v.ok ? 'success' : 'danger')} flex items-start gap-2`}>
-                {v.ok ? <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> : <FiXCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />}
+                {v.ok ? <IconoConfirmado className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> : <IconoRechazado className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />}
                 <span><strong>{nombreDeTipo(v.tipo)}:</strong> {v.detalle}</span>
               </li>
             ))}
@@ -429,14 +430,14 @@ function ClaveNueva({ clave, onCerrar }: { clave: { pem: string; huella: string 
         </div>
         <div className={`${adminModalBody} space-y-4`}>
           <div className={`${adminNotice('warning')} flex items-start gap-2`}>
-            <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <span><strong>Esta clave se muestra una sola vez.</strong> No queda guardada en el servidor. Sin ella, nadie puede abrir los respaldos. Guárdala ahora en tu gestor de contraseñas o descarga el archivo y ponlo en un lugar seguro, <strong>fuera del servidor</strong>.</span>
           </div>
           <textarea readOnly value={clave.pem} rows={10} onFocus={(e) => e.currentTarget.select()} className={`${adminInput(false)} h-auto resize-none py-2.5 font-mono text-xs`} aria-label="Clave privada" />
           <p className="text-xs text-muted">Huella de la clave: <span className="font-mono">{clave.huella}</span></p>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={copiar} className={adminSecondaryButton}><FiCopy className="h-4 w-4" aria-hidden="true" />Copiar</button>
-            <button type="button" onClick={descargar} className={adminSecondaryButton}><FiDownload className="h-4 w-4" aria-hidden="true" />Descargar archivo</button>
+            <button type="button" onClick={copiar} className={adminSecondaryButton}><IconoCopiar className="h-4 w-4" aria-hidden="true" />Copiar</button>
+            <button type="button" onClick={descargar} className={adminSecondaryButton}><IconoDescargar className="h-4 w-4" aria-hidden="true" />Descargar archivo</button>
           </div>
           <label className="flex cursor-pointer items-start gap-3 text-sm text-ink">
             <input type="checkbox" checked={guardada} onChange={(e) => setGuardada(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-brand-500" />

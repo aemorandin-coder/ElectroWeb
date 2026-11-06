@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
 import { createPortal } from 'react-dom';
-import { FiEdit2, FiHome, FiMapPin, FiPackage, FiPlus, FiStar, FiTrash2, FiX } from 'react-icons/fi';
+import {
+  IconoCerrar, IconoEditar, IconoEliminar, IconoEstrella, IconoInicio, IconoMas, IconoPaquete, IconoUbicacion,
+} from '@/components/iconos';
 import { toast } from 'react-hot-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -218,7 +220,7 @@ export default function AddressesPage() {
           <p className="mt-0.5 text-sm text-ink-soft">Guarda tu agencia ZOOM o MRW y el checkout la usa sola.</p>
         </div>
         <button type="button" onClick={() => abrir(null)} className={`${adminPrimaryButton} h-11 shrink-0`}>
-          <FiPlus className="h-4 w-4" aria-hidden="true" /> Agregar
+          <IconoMas className="h-4 w-4" aria-hidden="true" /> Agregar
         </button>
       </header>
 
@@ -228,11 +230,11 @@ export default function AddressesPage() {
         </div>
       ) : direcciones.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line-strong bg-white px-4 py-10 text-center">
-          <FiMapPin className="mx-auto h-8 w-8 text-subtle" aria-hidden="true" />
+          <IconoUbicacion className="mx-auto h-8 w-8 text-subtle" aria-hidden="true" />
           <p className="mt-2 text-sm font-semibold text-ink">Todavía no tienes direcciones</p>
           <p className="mt-1 text-sm text-muted">Agrega la agencia donde retiras tus pedidos.</p>
           <button type="button" onClick={() => abrir(null)} className={`${adminPrimaryButton} mt-4 h-11`}>
-            <FiPlus className="h-4 w-4" aria-hidden="true" /> Agregar dirección
+            <IconoMas className="h-4 w-4" aria-hidden="true" /> Agregar dirección
           </button>
         </div>
       ) : (
@@ -250,11 +252,11 @@ export default function AddressesPage() {
                     </span>
                   ) : (
                     <span className={adminBadge('neutral')}>
-                      <FiHome className="h-3.5 w-3.5" aria-hidden="true" />
+                      <IconoInicio className="h-3.5 w-3.5" aria-hidden="true" />
                       {ETIQUETA_TIPO[d.type] ?? 'Dirección'}
                     </span>
                   )}
-                  {d.isDefault && <span className={adminBadge('success')}><FiStar className="h-3.5 w-3.5" aria-hidden="true" />Predeterminada</span>}
+                  {d.isDefault && <span className={adminBadge('success')}><IconoEstrella className="h-3.5 w-3.5" aria-hidden="true" />Predeterminada</span>}
                 </div>
                 <p className="mt-2 text-sm font-semibold text-ink [overflow-wrap:anywhere]">
                   {agencia ? d.agencyName || 'Agencia sin elegir' : d.addressLine1}
@@ -271,14 +273,14 @@ export default function AddressesPage() {
                 <div className="mt-3 flex flex-wrap gap-2 border-t border-line pt-3">
                   {!d.isDefault && (
                     <button type="button" onClick={() => void predeterminar(d)} className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-surface">
-                      <FiStar className="h-4 w-4" aria-hidden="true" /> Predeterminada
+                      <IconoEstrella className="h-4 w-4" aria-hidden="true" /> Predeterminada
                     </button>
                   )}
                   <button type="button" onClick={() => abrir(d)} className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-surface">
-                    <FiEdit2 className="h-4 w-4" aria-hidden="true" /> Editar
+                    <IconoEditar className="h-4 w-4" aria-hidden="true" /> Editar
                   </button>
                   <button type="button" onClick={() => void borrar(d)} aria-label="Eliminar dirección" className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted hover:bg-deal-bg hover:text-deal">
-                    <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                    <IconoEliminar className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
               </li>
@@ -293,14 +295,14 @@ export default function AddressesPage() {
             <div className={adminModalHeader}>
               <h2 id="dir-titulo" className={adminModalTitle}>{editando ? 'Editar dirección' : 'Nueva dirección'}</h2>
               <button type="button" onClick={() => setAbierto(false)} aria-label="Cerrar" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink">
-                <FiX className="h-5 w-5" aria-hidden="true" />
+                <IconoCerrar className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
             <div className={`${adminModalBody} space-y-5`}>
               <fieldset>
                 <legend className={adminLabel}>¿Cómo recibes tus pedidos?</legend>
                 <div className="grid grid-cols-2 gap-2">
-                  {([['AGENCIA', 'Retiro en agencia', 'ZOOM o MRW, cobro a destino', FiPackage], ['DOMICILIO', 'A domicilio', 'Casa o trabajo', FiHome]] as const).map(([id, titulo, detalle, Icono]) => (
+                  {([['AGENCIA', 'Retiro en agencia', 'ZOOM o MRW, cobro a destino', IconoPaquete], ['DOMICILIO', 'A domicilio', 'Casa o trabajo', IconoInicio]] as const).map(([id, titulo, detalle, Icono]) => (
                     <label key={id} className={`${adminChoice(form.entrega === id)} flex cursor-pointer items-start gap-2 p-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500`}>
                       <input type="radio" name="entrega" className="sr-only" checked={form.entrega === id} onChange={() => set({ entrega: id })} />
                       <Icono className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />

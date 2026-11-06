@@ -1,9 +1,11 @@
 // Ícono y tono de cada notificación (C-73). Avisos del equipo por categoría del catálogo; las del cliente por tipo.
-import type { IconType } from 'react-icons';
 import {
-  FiAlertTriangle, FiBell, FiBookOpen, FiBox, FiBriefcase, FiCheckCircle, FiCreditCard, FiDollarSign, FiFileText, FiGift, FiHeart, FiLogIn,
-  FiMail, FiPackage, FiPercent, FiRefreshCw, FiSend, FiShield, FiShoppingBag, FiStar, FiTag, FiTool, FiTruck, FiUserPlus, FiUsers, FiXCircle,
-} from 'react-icons/fi';
+  IconoActualizar, IconoAdvertencia, IconoBillete, IconoBolsa, IconoClientes, IconoConfirmado, IconoCorreo, IconoCursos,
+  IconoDocumento, IconoEntrar, IconoEntregado, IconoEnviar, IconoEnvio, IconoEstrella, IconoFavoritos, IconoGarantia,
+  IconoGiftCard, IconoMaletin, IconoNotificaciones, IconoOferta, IconoPaquete, IconoPorcentaje, IconoRechazado,
+  IconoRegistrarse, IconoServicioTecnico, IconoTarjeta,
+} from '@/components/iconos';
+import type { IconType } from '@/components/iconos';
 import type { AdminTone } from '@/lib/admin-ui';
 import { ADMIN_EVENTS, isAdminEventType, type AdminEventCategory } from '@/lib/admin-events/catalog';
 
@@ -13,56 +15,56 @@ interface Meta {
 }
 
 const CATEGORY_META: Record<AdminEventCategory, Meta> = {
-  ventas: { Icon: FiShoppingBag, tone: 'brand' },
-  pagos: { Icon: FiCreditCard, tone: 'success' },
-  clientes: { Icon: FiUsers, tone: 'neutral' },
-  solicitudes: { Icon: FiMail, tone: 'brand' },
-  cursos: { Icon: FiBookOpen, tone: 'brand' },
-  promotores: { Icon: FiUserPlus, tone: 'success' },
-  marketing: { Icon: FiSend, tone: 'brand' },
-  giftcards: { Icon: FiGift, tone: 'brand' },
-  inventario: { Icon: FiPackage, tone: 'warning' },
-  sistema: { Icon: FiTool, tone: 'neutral' },
+  ventas: { Icon: IconoBolsa, tone: 'brand' },
+  pagos: { Icon: IconoTarjeta, tone: 'success' },
+  clientes: { Icon: IconoClientes, tone: 'neutral' },
+  solicitudes: { Icon: IconoCorreo, tone: 'brand' },
+  cursos: { Icon: IconoCursos, tone: 'brand' },
+  promotores: { Icon: IconoRegistrarse, tone: 'success' },
+  marketing: { Icon: IconoEnviar, tone: 'brand' },
+  giftcards: { Icon: IconoGiftCard, tone: 'brand' },
+  inventario: { Icon: IconoPaquete, tone: 'warning' },
+  sistema: { Icon: IconoServicioTecnico, tone: 'neutral' },
 };
 
 // Eventos que merecen su propio ícono o un tono de alerta
 const EVENT_META: Partial<Record<string, Meta>> = {
-  ORDER_CANCELLED: { Icon: FiXCircle, tone: 'danger' },
-  PAYMENT_REFERENCE_DUPLICATE: { Icon: FiAlertTriangle, tone: 'danger' },
-  GIFT_CARD_PIN_LOCKED: { Icon: FiAlertTriangle, tone: 'danger' },
-  STOCK_OUT: { Icon: FiPackage, tone: 'danger' },
-  CUSTOMER_REGISTERED: { Icon: FiUserPlus, tone: 'neutral' },
-  ACCOUNT_DELETION_REQUESTED: { Icon: FiAlertTriangle, tone: 'warning' },
-  REVIEW_SUBMITTED: { Icon: FiStar, tone: 'warning' },
-  DISCOUNT_REQUESTED: { Icon: FiPercent, tone: 'brand' },
-  EXCHANGE_RATE_UPDATED: { Icon: FiRefreshCw, tone: 'neutral' },
-  EXCHANGE_RATE_FAILED: { Icon: FiAlertTriangle, tone: 'warning' },
-  ADMIN_LOGIN: { Icon: FiLogIn, tone: 'neutral' },
-  QUOTE_REQUESTED: { Icon: FiFileText, tone: 'warning' },
-  QUOTE_APPROVED: { Icon: FiCheckCircle, tone: 'success' },
-  ADMIN_SESSION_REPORTED: { Icon: FiAlertTriangle, tone: 'danger' },
-  ADMIN_TEAM_CHANGED: { Icon: FiShield, tone: 'warning' },
+  ORDER_CANCELLED: { Icon: IconoRechazado, tone: 'danger' },
+  PAYMENT_REFERENCE_DUPLICATE: { Icon: IconoAdvertencia, tone: 'danger' },
+  GIFT_CARD_PIN_LOCKED: { Icon: IconoAdvertencia, tone: 'danger' },
+  STOCK_OUT: { Icon: IconoPaquete, tone: 'danger' },
+  CUSTOMER_REGISTERED: { Icon: IconoRegistrarse, tone: 'neutral' },
+  ACCOUNT_DELETION_REQUESTED: { Icon: IconoAdvertencia, tone: 'warning' },
+  REVIEW_SUBMITTED: { Icon: IconoEstrella, tone: 'warning' },
+  DISCOUNT_REQUESTED: { Icon: IconoPorcentaje, tone: 'brand' },
+  EXCHANGE_RATE_UPDATED: { Icon: IconoActualizar, tone: 'neutral' },
+  EXCHANGE_RATE_FAILED: { Icon: IconoAdvertencia, tone: 'warning' },
+  ADMIN_LOGIN: { Icon: IconoEntrar, tone: 'neutral' },
+  QUOTE_REQUESTED: { Icon: IconoDocumento, tone: 'warning' },
+  QUOTE_APPROVED: { Icon: IconoConfirmado, tone: 'success' },
+  ADMIN_SESSION_REPORTED: { Icon: IconoAdvertencia, tone: 'danger' },
+  ADMIN_TEAM_CHANGED: { Icon: IconoGarantia, tone: 'warning' },
   // Notificaciones del cliente
-  ORDER_CONFIRMED: { Icon: FiCheckCircle, tone: 'brand' },
-  ORDER_PAID: { Icon: FiDollarSign, tone: 'success' },
-  ORDER_SHIPPED: { Icon: FiTruck, tone: 'brand' },
-  ORDER_DELIVERED: { Icon: FiBox, tone: 'success' },
-  REVIEW_APPROVED: { Icon: FiStar, tone: 'warning' },
-  PROMOTION: { Icon: FiTag, tone: 'brand' },
-  RECHARGE_APPROVED: { Icon: FiDollarSign, tone: 'success' },
-  RECHARGE_REJECTED: { Icon: FiXCircle, tone: 'danger' },
-  BALANCE_PENDING: { Icon: FiCreditCard, tone: 'warning' },
-  DISCOUNT_REQUEST: { Icon: FiPercent, tone: 'brand' },
-  FAVORITE_PRICE_DROP: { Icon: FiTag, tone: 'brand' },
-  FAVORITE_BACK_IN_STOCK: { Icon: FiHeart, tone: 'success' },
-  BUSINESS_VERIFIED: { Icon: FiBriefcase, tone: 'brand' },
+  ORDER_CONFIRMED: { Icon: IconoConfirmado, tone: 'brand' },
+  ORDER_PAID: { Icon: IconoBillete, tone: 'success' },
+  ORDER_SHIPPED: { Icon: IconoEnvio, tone: 'brand' },
+  ORDER_DELIVERED: { Icon: IconoEntregado, tone: 'success' },
+  REVIEW_APPROVED: { Icon: IconoEstrella, tone: 'warning' },
+  PROMOTION: { Icon: IconoOferta, tone: 'brand' },
+  RECHARGE_APPROVED: { Icon: IconoBillete, tone: 'success' },
+  RECHARGE_REJECTED: { Icon: IconoRechazado, tone: 'danger' },
+  BALANCE_PENDING: { Icon: IconoTarjeta, tone: 'warning' },
+  DISCOUNT_REQUEST: { Icon: IconoPorcentaje, tone: 'brand' },
+  FAVORITE_PRICE_DROP: { Icon: IconoOferta, tone: 'brand' },
+  FAVORITE_BACK_IN_STOCK: { Icon: IconoFavoritos, tone: 'success' },
+  BUSINESS_VERIFIED: { Icon: IconoMaletin, tone: 'brand' },
 };
 
 export function notificationMeta(type: string): Meta {
   const specific = EVENT_META[type];
   if (specific) return specific;
   if (isAdminEventType(type)) return CATEGORY_META[ADMIN_EVENTS[type].category];
-  return { Icon: FiBell, tone: 'neutral' };
+  return { Icon: IconoNotificaciones, tone: 'neutral' };
 }
 
 const relative = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });

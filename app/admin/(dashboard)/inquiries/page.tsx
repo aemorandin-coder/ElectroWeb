@@ -11,7 +11,10 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { FiMessageSquare, FiPackage, FiMail, FiPhone, FiUser, FiCalendar, FiTrash2, FiCheck, FiDollarSign } from 'react-icons/fi';
+import {
+  IconoBillete, IconoCalendario, IconoCerrar, IconoChat, IconoCheck, IconoChevronIzquierda, IconoCorreo, IconoCuenta,
+  IconoEliminar, IconoPaquete, IconoTelefono,
+} from '@/components/iconos';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { toast } from 'react-hot-toast';
@@ -296,7 +299,7 @@ export default function InquiriesPage() {
                                 : 'text-muted hover:text-ink'
                             }`}
                     >
-                        <FiMessageSquare className="w-4 h-4" />
+                        <IconoChat className="w-4 h-4" />
                         Mensajes
                         {messageStats.pending > 0 && (
                             <span className="w-5 h-5 bg-brand-500 text-white text-xs rounded-full flex items-center justify-center">
@@ -311,7 +314,7 @@ export default function InquiriesPage() {
                                 : 'text-muted hover:text-ink'
                             }`}
                     >
-                        <FiPackage className="w-4 h-4" />
+                        <IconoPaquete className="w-4 h-4" />
                         Solicitudes de Productos
                         {requestStats.pending > 0 && (
                             <span className="w-5 h-5 bg-brand-500 text-white text-xs rounded-full flex items-center justify-center">
@@ -353,7 +356,7 @@ export default function InquiriesPage() {
                                     </div>
                                 ) : filteredMessages.length === 0 ? (
                                     <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted">
-                                        <FiMessageSquare className="w-12 h-12 text-subtle mb-3" />
+                                        <IconoChat className="w-12 h-12 text-subtle mb-3" />
                                         <p>No hay mensajes</p>
                                     </div>
                                 ) : (
@@ -403,23 +406,21 @@ export default function InquiriesPage() {
                                                         onClick={() => setSelectedMessage(null)}
                                                         className="md:hidden p-1 hover:bg-surface rounded-full"
                                                     >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                                        </svg>
+                                                        <IconoChevronIzquierda className="w-5 h-5" />
                                                     </button>
                                                     <h2 className="text-xl font-bold text-ink">{selectedMessage.subject}</h2>
                                                 </div>
                                                 <div className="flex items-center gap-4 text-sm text-muted">
                                                     <span className="flex items-center gap-1">
-                                                        <FiUser className="w-4 h-4" />
+                                                        <IconoCuenta className="w-4 h-4" />
                                                         {selectedMessage.name}
                                                     </span>
                                                     <span className="flex items-center gap-1">
-                                                        <FiMail className="w-4 h-4" />
+                                                        <IconoCorreo className="w-4 h-4" />
                                                         {selectedMessage.email}
                                                     </span>
                                                     <span className="flex items-center gap-1">
-                                                        <FiPhone className="w-4 h-4" />
+                                                        <IconoTelefono className="w-4 h-4" />
                                                         {selectedMessage.phone}
                                                     </span>
                                                 </div>
@@ -443,7 +444,7 @@ export default function InquiriesPage() {
                                                     className="p-2 text-deal bg-deal/10 rounded-lg transition-colors"
                                                     title="Eliminar mensaje"
                                                 >
-                                                    <FiTrash2 className="w-5 h-5" />
+                                                    <IconoEliminar className="w-5 h-5" />
                                                 </button>
                                             </div>
                                         </div>
@@ -461,7 +462,7 @@ export default function InquiriesPage() {
                                                     href={`mailto:${selectedMessage.email}?subject=Re: ${selectedMessage.subject}`}
                                                     className="flex items-center gap-2 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl transition-colors font-semibold shadow-lg shadow-brand-500/20"
                                                 >
-                                                    <FiMail className="w-5 h-5" />
+                                                    <IconoCorreo className="w-5 h-5" />
                                                     Responder por Email
                                                 </a>
                                             </div>
@@ -469,7 +470,7 @@ export default function InquiriesPage() {
                                     </div>
                                 ) : (
                                     <div className="flex-1 flex flex-col items-center justify-center text-muted p-8">
-                                        <FiMessageSquare className="w-16 h-16 text-subtle mb-4" />
+                                        <IconoChat className="w-16 h-16 text-subtle mb-4" />
                                         <p className="text-lg font-medium">Selecciona un mensaje para leer</p>
                                     </div>
                                 )}
@@ -528,7 +529,7 @@ export default function InquiriesPage() {
                                     </div>
                                 ) : requests.length === 0 ? (
                                     <div className="bg-white rounded-lg border border-line p-12 text-center">
-                                        <FiPackage className="w-16 h-16 text-subtle mx-auto mb-3" />
+                                        <IconoPaquete className="w-16 h-16 text-subtle mx-auto mb-3" />
                                         <h3 className="text-lg font-semibold text-ink mb-1">No hay solicitudes</h3>
                                         <p className="text-sm text-muted">No se encontraron solicitudes de productos</p>
                                     </div>
@@ -541,7 +542,7 @@ export default function InquiriesPage() {
                                             <div className="flex gap-4">
                                                 <div className="flex-shrink-0">
                                                     <div className="w-12 h-12 rounded-lg bg-brand-100 flex items-center justify-center">
-                                                        <FiPackage className="w-6 h-6 text-brand-600" />
+                                                        <IconoPaquete className="w-6 h-6 text-brand-600" />
                                                     </div>
                                                 </div>
 
@@ -559,28 +560,28 @@ export default function InquiriesPage() {
                                                             </p>
                                                             <div className="flex flex-wrap gap-3 text-xs text-muted">
                                                                 <span className="flex items-center gap-1">
-                                                                    <FiUser className="w-4 h-4" />
+                                                                    <IconoCuenta className="w-4 h-4" />
                                                                     {request.customerName}
                                                                 </span>
                                                                 <span className="flex items-center gap-1">
-                                                                    <FiMail className="w-4 h-4" />
+                                                                    <IconoCorreo className="w-4 h-4" />
                                                                     {request.customerEmail}
                                                                 </span>
                                                                 {request.customerPhone && (
                                                                     <span className="flex items-center gap-1">
-                                                                        <FiPhone className="w-4 h-4" />
+                                                                        <IconoTelefono className="w-4 h-4" />
                                                                         {request.customerPhone}
                                                                     </span>
                                                                 )}
                                                                 {request.estimatedBudget && (
                                                                     <span className="flex items-center gap-1">
-                                                                        <FiDollarSign className="w-4 h-4" />
+                                                                        <IconoBillete className="w-4 h-4" />
                                                                         Presupuesto: {formatUSD(request.estimatedBudget)}
                                                                     </span>
                                                                 )}
                                                             </div>
                                                             <p className="text-xs text-subtle mt-2">
-                                                                <FiCalendar className="inline w-3 h-3 mr-1" />
+                                                                <IconoCalendario className="inline w-3 h-3 mr-1" />
                                                                 {new Date(request.createdAt).toLocaleString('es-VE')}
                                                             </p>
                                                         </div>
@@ -591,14 +592,14 @@ export default function InquiriesPage() {
                                                                 className="p-2 hover:bg-surface rounded-lg transition-colors"
                                                                 title="Gestionar"
                                                             >
-                                                                <FiCheck className="w-4 h-4 text-brand-500" />
+                                                                <IconoCheck className="w-4 h-4 text-brand-500" />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteRequest(request.id)}
                                                                 className="p-2 bg-deal/10 rounded-lg transition-colors"
                                                                 title="Eliminar"
                                                             >
-                                                                <FiTrash2 className="w-4 h-4 text-deal" />
+                                                                <IconoEliminar className="w-4 h-4 text-deal" />
                                                             </button>
                                                         </div>
                                                     </div>
@@ -634,9 +635,7 @@ export default function InquiriesPage() {
                                         onClick={() => setRequestModal(false)}
                                         className="p-2 hover:bg-surface rounded-lg transition-colors"
                                     >
-                                        <svg className="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
+                                        <IconoCerrar className="w-5 h-5 text-muted" />
                                     </button>
                                 </div>
 

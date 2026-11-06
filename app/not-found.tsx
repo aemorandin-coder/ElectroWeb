@@ -1,5 +1,7 @@
 import Link from 'next/link';
-import { FiHome, FiPackage, FiSettings, FiBookOpen, FiMessageCircle, FiBox } from 'react-icons/fi';
+import {
+  IconoChat, IconoCuadricula, IconoCursos, IconoDesconectado, IconoInicio, IconoPaquete, IconoServicioTecnico,
+} from '@/components/iconos';
 import { adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 
 export default function NotFound() {
@@ -13,9 +15,7 @@ export default function NotFound() {
               404
             </span>
             <div className="w-16 h-16 bg-brand-500/10 rounded-2xl flex items-center justify-center border border-brand-500/20 shadow-sm -mt-4">
-              <svg className="w-8 h-8 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <IconoDesconectado className="w-8 h-8 text-brand-500" aria-hidden="true" />
             </div>
           </div>
 
@@ -33,14 +33,14 @@ export default function NotFound() {
             href="/"
             className={`${adminPrimaryButton} justify-center gap-2 py-3 px-6`}
           >
-            <FiHome className="w-4 h-4" />
+            <IconoInicio className="w-4 h-4" />
             Ir al inicio
           </Link>
           <Link
             href="/productos"
             className={`${adminSecondaryButton} justify-center gap-2 py-3 px-6`}
           >
-            <FiPackage className="w-4 h-4" />
+            <IconoPaquete className="w-4 h-4" />
             Ver productos
           </Link>
         </div>
@@ -53,25 +53,25 @@ export default function NotFound() {
               href="/categorias"
               className="px-3.5 py-1.5 bg-surface hover:bg-line text-ink-soft hover:text-ink rounded-full border border-line transition-colors text-xs font-semibold flex items-center gap-1.5"
             >
-              <FiBox className="w-3.5 h-3.5" /> Categorías
+              <IconoCuadricula className="w-3.5 h-3.5" /> Categorías
             </Link>
             <Link
               href="/servicios"
               className="px-3.5 py-1.5 bg-surface hover:bg-line text-ink-soft hover:text-ink rounded-full border border-line transition-colors text-xs font-semibold flex items-center gap-1.5"
             >
-              <FiSettings className="w-3.5 h-3.5" /> Servicios
+              <IconoServicioTecnico className="w-3.5 h-3.5" /> Servicios
             </Link>
             <Link
               href="/cursos"
               className="px-3.5 py-1.5 bg-surface hover:bg-line text-ink-soft hover:text-ink rounded-full border border-line transition-colors text-xs font-semibold flex items-center gap-1.5"
             >
-              <FiBookOpen className="w-3.5 h-3.5" /> Cursos
+              <IconoCursos className="w-3.5 h-3.5" /> Cursos
             </Link>
             <Link
               href="/contacto"
               className="px-3.5 py-1.5 bg-surface hover:bg-line text-ink-soft hover:text-ink rounded-full border border-line transition-colors text-xs font-semibold flex items-center gap-1.5"
             >
-              <FiMessageCircle className="w-3.5 h-3.5" /> Contacto
+              <IconoChat className="w-3.5 h-3.5" /> Contacto
             </Link>
           </div>
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FiCheck, FiMonitor, FiSearch, FiTruck } from 'react-icons/fi';
+import { IconoBuscar, IconoCheck, IconoEnvio, IconoMonitor } from '@/components/iconos';
 import SadesSearchModal from './SadesSearchModal';
 import type { WizardData } from './types';
 import { wizardChoice } from './ui';
@@ -16,14 +16,14 @@ interface Props {
 const TYPES = [
   {
     value: 'PHYSICAL' as const,
-    Icon: FiTruck,
+    Icon: IconoEnvio,
     title: 'Producto físico',
     text: 'Se envía o se retira en tienda. Pide precio, stock, peso y medidas.',
     examples: 'Periféricos, componentes, consolas',
   },
   {
     value: 'DIGITAL' as const,
-    Icon: FiMonitor,
+    Icon: IconoMonitor,
     title: 'Producto digital',
     text: 'Gift cards y recargas. Eliges los montos (en dólares, Robux…) y cómo se entrega.',
     examples: 'PlayStation, Xbox, Roblox, Steam',
@@ -73,7 +73,7 @@ export default function StepTypeSelector({ selected, onSelect, onSadesImport, is
               </span>
               {isSelected && (
                 <span className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-brand-500 text-white">
-                  <FiCheck className="h-4 w-4" aria-hidden="true" />
+                  <IconoCheck className="h-4 w-4" aria-hidden="true" />
                 </span>
               )}
             </button>
@@ -94,7 +94,7 @@ export default function StepTypeSelector({ selected, onSelect, onSadesImport, is
             className="flex w-full items-center gap-4 rounded-2xl border-2 border-dashed border-line bg-white px-5 py-4 text-left hover:border-brand-200 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500"
           >
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-ink-soft">
-              <FiSearch className="h-5 w-5" aria-hidden="true" />
+              <IconoBuscar className="h-5 w-5" aria-hidden="true" />
             </span>
             <span>
               <span className="block text-sm font-semibold text-ink">Importar desde SADES</span>

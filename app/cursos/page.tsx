@@ -9,7 +9,7 @@ import PublicHeader from '@/components/public/PublicHeader';
 import PageHeader from '@/components/ui/PageHeader';
 import Footer from '@/components/Footer';
 import ShareEarnButton from '@/components/social/ShareEarnButton';
-import { FiStar, FiBookOpen } from 'react-icons/fi';
+import { IconoCursos, IconoEstrella, IconoEstrellaLlena, IconoFlechaDerecha, IconoPlay } from '@/components/iconos';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await prisma.companySettings.findFirst({
@@ -75,9 +75,7 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <span className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((s) => (
-        <svg key={s} className={`w-3 h-3 ${s <= Math.round(rating) ? 'text-warning fill-warning' : 'text-line fill-line'}`} viewBox="0 0 20 20">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
+        <IconoEstrellaLlena key={s} className={`w-3 h-3 ${s <= Math.round(rating) ? 'text-warning' : 'text-line'}`} />
       ))}
     </span>
   );
@@ -123,16 +121,12 @@ function CourseCard({ course }: CourseCardProps) {
           <Image src={course.thumbnail} alt={course.title} width={640} height={360} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <svg className="w-12 h-12 text-brand-500/25" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
+            <IconoCursos className="w-12 h-12 text-brand-500/25" />
           </div>
         )}
         <div className="absolute inset-0 flex items-center justify-center lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-ink/20">
           <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-            <svg className="w-5 h-5 text-brand-500 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
+            <IconoPlay lleno className="w-5 h-5 text-brand-500 ml-0.5" />
           </div>
         </div>
         <div className="absolute top-2 left-2 flex gap-1">
@@ -143,7 +137,7 @@ function CourseCard({ course }: CourseCardProps) {
           )}
           {course.isFeatured && (
             <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-warning/15 text-warning-strong" aria-label="Destacado">
-              <FiStar className="h-3 w-3 fill-current" aria-hidden="true" />
+              <IconoEstrella lleno className="h-3 w-3" aria-hidden="true" />
             </span>
           )}
         </div>
@@ -221,7 +215,7 @@ export default async function CursosPage({
 
       <PageHeader
         breadcrumbs={[{ label: 'Cursos' }]}
-        icon={<FiBookOpen />}
+        icon={<IconoCursos />}
         eyebrow="Aprende con expertos"
         title="Cursos online"
         description="Aprende reparación de equipos, redes, CCTV y electrónica con cursos prácticos."
@@ -265,7 +259,7 @@ export default async function CursosPage({
             {/* Featured courses */}
             {courses.some((c) => c.isFeatured) && (
               <div className="mb-10">
-                <h2 className="text-xl font-bold text-ink mb-4 inline-flex items-center gap-1.5"><FiStar className="h-5 w-5 fill-current text-warning shrink-0" aria-hidden="true" />Cursos Destacados</h2>
+                <h2 className="text-xl font-bold text-ink mb-4 inline-flex items-center gap-1.5"><IconoEstrella lleno className="h-5 w-5 text-warning shrink-0" aria-hidden="true" />Cursos Destacados</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                   {courses.filter((c) => c.isFeatured).map((course) => (
                     <CourseCard key={course.id} course={course} />
@@ -288,9 +282,7 @@ export default async function CursosPage({
           /* Elegant empty state - no massive blue banner */
           <div className="text-center py-16 border border-dashed border-line rounded-2xl p-8 bg-surface">
             <div className="w-12 h-12 bg-brand-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
+              <IconoCursos className="w-6 h-6 text-brand-500" />
             </div>
             <h3 className="text-ink font-bold text-lg mb-1">Próximamente más cursos</h3>
             <p className="text-xs text-muted max-w-sm mx-auto">
@@ -339,9 +331,7 @@ export default async function CursosPage({
                 className="px-8 py-4 bg-white text-brand-500 hover:bg-surface font-bold rounded-2xl transition-all duration-300 inline-flex items-center gap-2"
               >
                 Comenzar a Enseñar
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
+                <IconoFlechaDerecha className="w-5 h-5" />
               </Link>
             </div>
           </div>

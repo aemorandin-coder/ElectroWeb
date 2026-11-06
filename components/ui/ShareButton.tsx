@@ -1,7 +1,7 @@
 'use client';
 
 import toast from 'react-hot-toast';
-import { FiShare2 } from 'react-icons/fi';
+import { IconoCompartir } from '@/components/iconos';
 
 interface ShareButtonProps {
   /** Ruta relativa a compartir, p. ej. /productos/laptop o /p/LAP1 */
@@ -35,7 +35,7 @@ export default function ShareButton({ path, title, className = '' }: ShareButton
       aria-label={`Compartir ${title}`}
       className={`relative z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-ink-soft hover:bg-brand-50 hover:text-brand-600 focus-visible:outline-2 focus-visible:outline-brand-500 ${className}`}
     >
-      <FiShare2 className="h-4 w-4" aria-hidden="true" />
+      <IconoCompartir className="h-4 w-4" aria-hidden="true" />
     </button>
   );
 }

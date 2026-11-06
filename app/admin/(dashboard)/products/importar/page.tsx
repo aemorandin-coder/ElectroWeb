@@ -7,8 +7,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
-  FiAlertCircle, FiAlertTriangle, FiArrowLeft, FiCheckCircle, FiDownload, FiFileText, FiImage, FiLoader, FiUpload,
-} from 'react-icons/fi';
+  IconoAdvertencia, IconoCargando, IconoConfirmado, IconoDescargar, IconoDocumento, IconoError, IconoFlechaIzquierda,
+  IconoImagen, IconoSubir,
+} from '@/components/iconos';
 import {
   adminBadge, adminCard, adminError, adminHint, adminInput, adminLabel, adminNotice, adminPageHeader, adminPageSubtitle,
   adminPageTitle, adminPrimaryButton, adminSecondaryButton,
@@ -201,7 +202,7 @@ export default function ImportarProductosPage() {
       <div className={adminPageHeader}>
         <div>
           <Link href="/admin/products" className="mb-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
-            <FiArrowLeft className="h-4 w-4" aria-hidden="true" /> Productos
+            <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Productos
           </Link>
           <h1 className={adminPageTitle}>Importar productos</h1>
           <p className={adminPageSubtitle}>Con la plantilla .json y las fotos. Todo se crea en borrador.</p>
@@ -220,7 +221,7 @@ export default function ImportarProductosPage() {
               <li>Descarga el .json que te devuelva.</li>
             </ol>
             <button type="button" onClick={async () => setError((await descargarPlantilla()) ?? '')} className={`${adminSecondaryButton} mt-4`}>
-              <FiDownload className="h-4 w-4" aria-hidden="true" /> Descargar plantilla
+              <IconoDescargar className="h-4 w-4" aria-hidden="true" /> Descargar plantilla
             </button>
           </section>
 
@@ -228,7 +229,7 @@ export default function ImportarProductosPage() {
             <h2 id="paso-2" className="text-base font-semibold text-ink">2. Elige el .json y las fotos</h2>
             <p className={adminHint}>Juntos, en una sola selección. Hasta {IMPORT_MAX_ITEMS} productos y {IMPORT_MAX_PHOTOS} fotos por producto.</p>
             <label className="mt-3 flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-line p-6 text-center hover:border-brand-500 focus-within:border-brand-500">
-              {revisando ? <FiLoader className="h-8 w-8 animate-spin text-brand-500" aria-hidden="true" /> : <FiUpload className="h-8 w-8 text-subtle" aria-hidden="true" />}
+              {revisando ? <IconoCargando className="h-8 w-8 animate-spin text-brand-500" aria-hidden="true" /> : <IconoSubir className="h-8 w-8 text-subtle" aria-hidden="true" />}
               <span className="text-sm font-semibold text-ink">{revisando ? 'Revisando…' : 'Elegir archivos'}</span>
               <span className="text-xs text-muted">Un .json y las fotos (PNG, JPG o WebP)</span>
               <input ref={inputRef} type="file" multiple accept=".json,application/json,image/png,image/jpeg,image/webp" className="sr-only" disabled={revisando}
@@ -243,7 +244,7 @@ export default function ImportarProductosPage() {
         <>
           <div className={`${adminCard} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}>
             <div className="min-w-0">
-              <p className="flex items-center gap-2 truncate text-sm font-semibold text-ink"><FiFileText className="h-4 w-4 shrink-0" aria-hidden="true" /> {archivo}</p>
+              <p className="flex items-center gap-2 truncate text-sm font-semibold text-ink"><IconoDocumento className="h-4 w-4 shrink-0" aria-hidden="true" /> {archivo}</p>
               <p className="mt-1 text-sm text-muted">
                 {terminado
                   ? `${creados} ${creados === 1 ? 'creado' : 'creados'} en borrador${pendientes ? ` · ${pendientes} sin crear` : ''}`
@@ -257,7 +258,7 @@ export default function ImportarProductosPage() {
               {pendientes > 0 && (
                 <>
                   <label className={`${adminSecondaryButton} cursor-pointer focus-within:outline-2 focus-within:outline-brand-500 ${importando ? 'pointer-events-none opacity-50' : ''}`}>
-                    <FiImage className="h-4 w-4" aria-hidden="true" /> Sumar fotos
+                    <IconoImagen className="h-4 w-4" aria-hidden="true" /> Sumar fotos
                     <input type="file" multiple accept="image/png,image/jpeg,image/webp" className="sr-only" disabled={importando}
                       onChange={(e) => { void elegirArchivos(e.target.files); e.target.value = ''; }} />
                   </label>
@@ -291,7 +292,7 @@ export default function ImportarProductosPage() {
                       {v.archivos[0] ? (
                         <Image src={v.archivos[0].url} alt="" fill sizes="80px" className="object-contain" unoptimized />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-subtle"><FiImage className="h-6 w-6" aria-hidden="true" /></div>
+                        <div className="flex h-full items-center justify-center text-subtle"><IconoImagen className="h-6 w-6" aria-hidden="true" /></div>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -324,7 +325,7 @@ export default function ImportarProductosPage() {
                     <div className="col-span-2 sm:col-span-1">
                       <p className={adminLabel}>Fotos ({v.archivos.length})</p>
                       <label className={`${adminSecondaryButton} cursor-pointer focus-within:outline-2 focus-within:outline-brand-500 ${bloqueada ? 'pointer-events-none opacity-50' : ''}`}>
-                        <FiImage className="h-4 w-4" aria-hidden="true" /> {f.fotosPropias ? 'Cambiar fotos' : 'Elegir fotos'}
+                        <IconoImagen className="h-4 w-4" aria-hidden="true" /> {f.fotosPropias ? 'Cambiar fotos' : 'Elegir fotos'}
                         <input type="file" multiple accept="image/png,image/jpeg,image/webp" className="sr-only" disabled={bloqueada}
                           onChange={(e) => {
                             const l = Array.from(e.target.files ?? []).filter(esImagen);
@@ -342,12 +343,12 @@ export default function ImportarProductosPage() {
                   {f.estado.tipo === 'fallo' && <p className={`${adminNotice('danger')} mt-3`} role="alert">{f.estado.mensaje}</p>}
                   {f.estado.tipo !== 'creado' && v.errores.length > 0 && (
                     <ul className="mt-3 space-y-1 text-sm text-deal">
-                      {v.errores.map((e) => <li key={e} className="flex gap-2"><FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{e}</li>)}
+                      {v.errores.map((e) => <li key={e} className="flex gap-2"><IconoError className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{e}</li>)}
                     </ul>
                   )}
                   {f.estado.tipo !== 'creado' && v.avisos.length > 0 && (
                     <ul className="mt-2 space-y-1 text-sm text-warning-strong">
-                      {v.avisos.map((a) => <li key={a} className="flex gap-2"><FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{a}</li>)}
+                      {v.avisos.map((a) => <li key={a} className="flex gap-2"><IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{a}</li>)}
                     </ul>
                   )}
                 </li>
@@ -362,10 +363,10 @@ export default function ImportarProductosPage() {
 
 function EstadoFila({ estado, listo }: { estado: Estado; listo: boolean }) {
   if (estado.tipo === 'creado') {
-    return <span className={adminBadge('success')}><FiCheckCircle className="h-3.5 w-3.5" aria-hidden="true" /> Creado en borrador</span>;
+    return <span className={adminBadge('success')}><IconoConfirmado className="h-3.5 w-3.5" aria-hidden="true" /> Creado en borrador</span>;
   }
   if (estado.tipo === 'subiendo') {
-    return <span className={adminBadge('brand')} role="status"><FiLoader className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> {estado.detalle}</span>;
+    return <span className={adminBadge('brand')} role="status"><IconoCargando className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> {estado.detalle}</span>;
   }
   if (estado.tipo === 'fallo') return <span className={adminBadge('danger')}>No se creó</span>;
   return listo ? <span className={adminBadge('success')}>Listo</span> : <span className={adminBadge('danger')}>Por corregir</span>;

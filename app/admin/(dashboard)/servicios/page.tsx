@@ -7,7 +7,10 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiVideo, FiToggleLeft, FiToggleRight, FiStar, FiX, FiSave, FiImage } from 'react-icons/fi';
+import {
+  IconoCerrar, IconoEditar, IconoEliminar, IconoEstrella, IconoGuardar, IconoImagen, IconoInterruptorApagado,
+  IconoInterruptorEncendido, IconoMas, IconoVideo,
+} from '@/components/iconos';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { formatRating } from '@/lib/currency';
 
@@ -194,7 +197,7 @@ export default function AdminServiciosPage() {
           onClick={openCreate}
           className="flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl font-semibold text-sm hover:bg-brand-600 transition-all shadow-md hover:shadow-lg hover:scale-105"
         >
-          <FiPlus className="w-4 h-4" />
+          <IconoMas className="w-4 h-4" />
           Agregar Trabajo
         </button>
       </div>
@@ -203,7 +206,7 @@ export default function AdminServiciosPage() {
       <div className="bg-brand-50 rounded-2xl border border-brand-200 p-5 mb-6 flex flex-col md:flex-row gap-4 items-start relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-24 h-24 bg-brand-500/5 rounded-full blur-xl pointer-events-none transition-transform duration-500 group-hover:scale-150"></div>
         <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-brand-200 flex items-center justify-center text-brand-500 flex-shrink-0">
-          <FiVideo className="w-6 h-6 animate-pulse" />
+          <IconoVideo className="w-6 h-6 animate-pulse" />
         </div>
         <div className="flex-1 space-y-2">
           <h2 className="font-bold text-ink text-base">¿Cómo funciona y para qué sirve esta sección?</h2>
@@ -270,7 +273,7 @@ export default function AdminServiciosPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 bg-surface rounded-xl border-2 border-dashed border-line">
-          <FiVideo className="w-12 h-12 text-line-strong mx-auto mb-3" />
+          <IconoVideo className="w-12 h-12 text-line-strong mx-auto mb-3" />
           <p className="text-muted font-medium">No hay trabajos en esta categoría</p>
           <button onClick={openCreate} className="mt-4 px-4 py-2 bg-brand-500 text-white rounded-lg text-sm font-semibold">
             Agregar el primero
@@ -291,7 +294,7 @@ export default function AdminServiciosPage() {
                   <img src={getThumbnailUrl(v.videoUrl, v.thumbnail)!} alt={v.title} className="w-full h-full object-cover" />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <FiVideo className="w-10 h-10 text-line-strong" />
+                    <IconoVideo className="w-10 h-10 text-line-strong" />
                   </div>
                 )}
                 {/* Badges */}
@@ -312,9 +315,9 @@ export default function AdminServiciosPage() {
                   title={v.isActive ? 'Desactivar' : 'Activar'}
                 >
                   {v.isActive ? (
-                    <FiToggleRight className="w-5 h-5 text-success" />
+                    <IconoInterruptorEncendido className="w-5 h-5 text-success" />
                   ) : (
-                    <FiToggleLeft className="w-5 h-5 text-subtle" />
+                    <IconoInterruptorApagado className="w-5 h-5 text-subtle" />
                   )}
                 </button>
                 {/* Before/After indicator */}
@@ -339,7 +342,7 @@ export default function AdminServiciosPage() {
                 <div className="flex items-center gap-2 mb-3">
                   {v.avgRating !== null ? (
                     <div className="flex items-center gap-1">
-                      <FiStar className="w-3 h-3 text-warning fill-warning" />
+                      <IconoEstrella lleno className="w-3 h-3 text-warning" />
                       <span className="text-xs font-bold text-ink">{formatRating(v.avgRating)}</span>
                       <span className="text-xs text-muted">({v.reviewCount})</span>
                     </div>
@@ -359,7 +362,7 @@ export default function AdminServiciosPage() {
                     onClick={() => openEdit(v)}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-surface hover:bg-line text-ink rounded-lg text-xs font-semibold transition-all"
                   >
-                    <FiEdit2 className="w-3.5 h-3.5" />
+                    <IconoEditar className="w-3.5 h-3.5" />
                     Editar
                   </button>
                   <button
@@ -367,7 +370,7 @@ export default function AdminServiciosPage() {
                     disabled={deletingId === v.id}
                     className="flex items-center justify-center gap-1.5 px-3 py-2 bg-deal/10 hover:bg-deal/20 text-deal rounded-lg text-xs font-semibold transition-all"
                   >
-                    <FiTrash2 className="w-3.5 h-3.5" />
+                    <IconoEliminar className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -388,7 +391,7 @@ export default function AdminServiciosPage() {
                 onClick={() => setShowModal(false)}
                 className="p-2 hover:bg-surface rounded-lg transition-colors"
               >
-                <FiX className="w-5 h-5 text-muted" />
+                <IconoCerrar className="w-5 h-5 text-muted" />
               </button>
             </div>
 
@@ -454,7 +457,7 @@ export default function AdminServiciosPage() {
                   URL del Video <span className="text-deal">*</span>
                 </label>
                 <div className="relative">
-                  <FiVideo className="absolute left-3 top-3 text-muted w-4 h-4" />
+                  <IconoVideo className="absolute left-3 top-3 text-muted w-4 h-4" />
                   <input
                     type="url"
                     value={form.videoUrl}
@@ -469,7 +472,7 @@ export default function AdminServiciosPage() {
               <div>
                 <label className="block text-sm font-semibold text-ink mb-1.5">URL de Miniatura</label>
                 <div className="relative">
-                  <FiImage className="absolute left-3 top-3 text-muted w-4 h-4" />
+                  <IconoImagen className="absolute left-3 top-3 text-muted w-4 h-4" />
                   <input
                     type="url"
                     value={form.thumbnail}
@@ -577,7 +580,7 @@ export default function AdminServiciosPage() {
                 {saving ? (
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <FiSave className="w-4 h-4" />
+                  <IconoGuardar className="w-4 h-4" />
                 )}
                 {saving ? 'Guardando...' : editingId ? 'Guardar Cambios' : 'Crear Trabajo'}
               </button>

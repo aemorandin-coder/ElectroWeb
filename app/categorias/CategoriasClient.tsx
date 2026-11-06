@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FiArrowRight, FiGrid, FiSearch } from 'react-icons/fi';
+import { IconoBuscar, IconoCuadricula, IconoFlechaDerecha } from '@/components/iconos';
 import CategoryIconRenderer from '@/components/CategoryIconRenderer';
 import { getAutoIcon } from '@/lib/category-icons';
 
@@ -26,7 +26,7 @@ export default function CategoriasClient({ categories }: { categories: Category[
       <div className="mb-6 max-w-sm">
         <label htmlFor="category-search" className="sr-only">Buscar categoría</label>
         <div className="relative">
-          <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
+          <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
           <input
             id="category-search"
             type="search"
@@ -40,7 +40,7 @@ export default function CategoriasClient({ categories }: { categories: Category[
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-white px-6 py-12 text-center">
-          <FiGrid className="mb-3 h-10 w-10 text-subtle" aria-hidden="true" />
+          <IconoCuadricula className="mb-3 h-10 w-10 text-subtle" aria-hidden="true" />
           <p className="font-semibold text-ink">No hay categorías con ese nombre</p>
         </div>
       ) : (
@@ -53,7 +53,7 @@ export default function CategoriasClient({ categories }: { categories: Category[
                   href={`/categorias/${category.slug}`}
                   className="group flex h-full flex-col gap-3 rounded-2xl border border-line bg-white p-4 hover:border-brand-200 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500 lg:p-5"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 group-hover:bg-white">
+                  <span className="iconos-marca flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-950 group-hover:bg-white">
                     <CategoryIconRenderer iconName={category.icon || getAutoIcon(category.name)} className="h-6 w-6" />
                   </span>
                   <span className="min-w-0">
@@ -62,7 +62,7 @@ export default function CategoriasClient({ categories }: { categories: Category[
                     {category.description && <span className="mt-2 hidden text-xs leading-relaxed text-ink-soft line-clamp-2 sm:block">{category.description}</span>}
                   </span>
                   <span className="mt-auto flex items-center gap-1 text-xs font-semibold text-brand-600">
-                    Ver productos <FiArrowRight className="h-3 w-3" aria-hidden="true" />
+                    Ver productos <IconoFlechaDerecha className="h-3 w-3" aria-hidden="true" />
                   </span>
                 </Link>
               </li>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { FiAlertCircle, FiArrowRight, FiCheck, FiCreditCard, FiGift, FiLock, FiSearch } from 'react-icons/fi';
+import { IconoBuscar, IconoCandado, IconoCheck, IconoError, IconoFlechaDerecha, IconoGiftCard, IconoTarjeta } from '@/components/iconos';
 import PublicHeader from '@/components/public/PublicHeader';
 import Footer from '@/components/Footer';
 import Container from '@/components/ui/Container';
@@ -129,7 +129,7 @@ export default function RedeemGiftCardPage() {
       <main>
         <PageHeader
           breadcrumbs={[{ label: 'Gift Cards', href: '/gift-cards' }, { label: 'Canjear' }]}
-          icon={<FiGift />}
+          icon={<IconoGiftCard />}
           eyebrow="Gift Cards"
           title="Canjear gift card"
           description="Escribe el código de tu tarjeta. Su valor pasa a tus Puntos ES y lo usas en cualquier compra de la tienda."
@@ -158,7 +158,7 @@ export default function RedeemGiftCardPage() {
                 <div className="flex flex-col gap-5" role="status">
                   <div className="flex items-center gap-3">
                     <span className="flex h-11 w-11 items-center justify-center rounded-full bg-success-strong/10 text-success-strong">
-                      <FiCheck className="h-6 w-6" aria-hidden="true" />
+                      <IconoCheck className="h-6 w-6" aria-hidden="true" />
                     </span>
                     <div>
                       <h2 className="text-lg font-bold text-ink">Gift card canjeada</h2>
@@ -177,10 +177,10 @@ export default function RedeemGiftCardPage() {
                   </dl>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Link href="/productos" className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">
-                      Ir a comprar <FiArrowRight className="h-4 w-4" aria-hidden="true" />
+                      Ir a comprar <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
                     </Link>
                     <Link href="/customer/balance" className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-line px-5 text-sm font-semibold text-ink hover:bg-surface">
-                      <FiCreditCard className="h-4 w-4" aria-hidden="true" /> Ver mis Puntos ES
+                      <IconoTarjeta className="h-4 w-4" aria-hidden="true" /> Ver mis Puntos ES
                     </Link>
                   </div>
                 </div>
@@ -206,7 +206,7 @@ export default function RedeemGiftCardPage() {
                           disabled={!codeComplete || isChecking}
                           className="inline-flex h-12 items-center gap-2 rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          <FiSearch className="h-4 w-4" aria-hidden="true" />
+                          <IconoBuscar className="h-4 w-4" aria-hidden="true" />
                           {isChecking ? 'Verificando…' : 'Verificar'}
                         </button>
                       )}
@@ -231,7 +231,7 @@ export default function RedeemGiftCardPage() {
                   {cardInfo?.isValid && cardInfo.requiresPin && (
                     <div>
                       <label htmlFor="gift-pin" className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-ink">
-                        <FiLock className="h-4 w-4" aria-hidden="true" /> PIN
+                        <IconoCandado className="h-4 w-4" aria-hidden="true" /> PIN
                       </label>
                       <input
                         id="gift-pin"
@@ -249,7 +249,7 @@ export default function RedeemGiftCardPage() {
 
                   {error && (
                     <p className="flex items-start gap-2 rounded-xl border border-deal/30 bg-deal-bg p-3 text-sm font-medium text-deal" role="alert">
-                      <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> {error}
+                      <IconoError className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> {error}
                     </p>
                   )}
 
@@ -260,7 +260,7 @@ export default function RedeemGiftCardPage() {
                         disabled={isRedeeming}
                         className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-success-strong px-5 text-base font-semibold text-white hover:bg-success-strong/90 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        <FiGift className="h-5 w-5" aria-hidden="true" />
+                        <IconoGiftCard className="h-5 w-5" aria-hidden="true" />
                         {isRedeeming ? 'Canjeando…' : `Canjear ${cardInfo?.balanceUSD !== undefined ? formatUSD(cardInfo.balanceUSD) : ''}`}
                       </button>
                     ) : sessionStatus !== 'loading' && (

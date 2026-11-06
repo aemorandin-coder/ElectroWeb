@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
-import { FiAlertTriangle, FiInfo, FiAlertCircle, FiX } from 'react-icons/fi';
+import { IconoAdvertencia, IconoCerrar, IconoError, IconoInfo } from '@/components/iconos';
 import {
     adminModalOverlay,
     adminModalPanel,
@@ -60,13 +60,13 @@ export default function ConfirmDialog({
     const getIcon = () => {
         switch (type) {
             case 'danger':
-                return <FiAlertCircle className="w-8 h-8" />;
+                return <IconoError className="w-8 h-8" />;
             case 'warning':
-                return <FiAlertTriangle className="w-8 h-8" />;
+                return <IconoAdvertencia className="w-8 h-8" />;
             case 'info':
-                return <FiInfo className="w-8 h-8" />;
+                return <IconoInfo className="w-8 h-8" />;
             default:
-                return <FiAlertTriangle className="w-8 h-8" />;
+                return <IconoAdvertencia className="w-8 h-8" />;
         }
     };
 
@@ -96,7 +96,7 @@ export default function ConfirmDialog({
                     className="absolute top-4 right-4 p-1.5 text-muted hover:text-ink rounded-lg transition-colors"
                     aria-label="Cerrar"
                 >
-                    <FiX className="w-5 h-5" />
+                    <IconoCerrar className="w-5 h-5" />
                 </button>
 
                 {/* Icon */}

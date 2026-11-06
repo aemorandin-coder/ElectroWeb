@@ -3,12 +3,10 @@
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
-    FiMail, FiLock, FiServer, FiCheck, FiX, FiRefreshCw,
-    FiSend, FiAlertCircle, FiCheckCircle, FiSettings,
-    FiEye, FiEyeOff, FiInfo, FiShield,
-    FiGlobe, FiCloud, FiInbox, FiMessageSquare, FiTarget,
-    FiAtSign
-} from 'react-icons/fi';
+  IconoActualizar, IconoArroba, IconoBandeja, IconoCandado, IconoCerrar, IconoChat, IconoCheck, IconoConfiguracion,
+  IconoConfirmado, IconoCorreo, IconoEnviar, IconoError, IconoGarantia, IconoInfo, IconoNube, IconoObjetivo, IconoOcultar,
+  IconoServidor, IconoVer, IconoWeb,
+} from '@/components/iconos';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface EmailSettingsData {
@@ -48,32 +46,32 @@ interface ProviderInfoType {
 const PROVIDER_INFO: Record<string, ProviderInfoType> = {
     godaddy: {
         name: 'GoDaddy',
-        icon: <FiGlobe className="w-5 h-5" />,
+        icon: <IconoWeb className="w-5 h-5" />,
         description: 'Email profesional',
     },
     gmail: {
         name: 'Gmail',
-        icon: <FiAtSign className="w-5 h-5" />,
+        icon: <IconoArroba className="w-5 h-5" />,
         description: 'Google Workspace',
     },
     outlook: {
         name: 'Outlook',
-        icon: <FiMessageSquare className="w-5 h-5" />,
+        icon: <IconoChat className="w-5 h-5" />,
         description: 'Microsoft 365',
     },
     yahoo: {
         name: 'Yahoo',
-        icon: <FiInbox className="w-5 h-5" />,
+        icon: <IconoBandeja className="w-5 h-5" />,
         description: 'Yahoo Mail',
     },
     zoho: {
         name: 'Zoho',
-        icon: <FiCloud className="w-5 h-5" />,
+        icon: <IconoNube className="w-5 h-5" />,
         description: 'Zoho Mail',
     },
     custom: {
         name: 'Personalizado',
-        icon: <FiSettings className="w-5 h-5" />,
+        icon: <IconoConfiguracion className="w-5 h-5" />,
         description: 'SMTP Custom',
     },
 };
@@ -185,7 +183,7 @@ export default function EmailSettingsPanel() {
     if (loading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <FiRefreshCw className="w-6 h-6 text-brand-500 animate-spin" />
+                <IconoActualizar className="w-6 h-6 text-brand-500 animate-spin" />
             </div>
         );
     }
@@ -200,9 +198,9 @@ export default function EmailSettingsPanel() {
                 <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                         {settings?.isConfigured ? (
-                            <FiCheckCircle className="w-5 h-5 text-white" />
+                            <IconoConfirmado className="w-5 h-5 text-white" />
                         ) : (
-                            <FiAlertCircle className="w-5 h-5 text-white" />
+                            <IconoError className="w-5 h-5 text-white" />
                         )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -232,7 +230,7 @@ export default function EmailSettingsPanel() {
             {/* Provider Selection - Compact Grid */}
             <div className="bg-white rounded-xl border border-line overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-line flex items-center gap-2">
-                    <FiServer className="w-4 h-4 text-brand-500" />
+                    <IconoServidor className="w-4 h-4 text-brand-500" />
                     <h3 className="font-bold text-sm text-ink">Proveedor de Email</h3>
                 </div>
                 <div className="p-3">
@@ -248,7 +246,7 @@ export default function EmailSettingsPanel() {
                             >
                                 {formData.provider === key && (
                                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-brand-500 rounded-full flex items-center justify-center">
-                                        <FiCheck className="w-2.5 h-2.5 text-white" />
+                                        <IconoCheck className="w-2.5 h-2.5 text-white" />
                                     </div>
                                 )}
                                 <div className={`mx-auto mb-1.5 w-8 h-8 rounded-lg flex items-center justify-center ${formData.provider === key
@@ -266,7 +264,7 @@ export default function EmailSettingsPanel() {
                     {/* Provider tip */}
                     {formData.provider === 'godaddy' && (
                         <div className="mt-3 bg-brand-50 border border-brand-200 rounded-lg p-2.5 flex items-start gap-2">
-                            <FiInfo className="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" />
+                            <IconoInfo className="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" />
                             <p className="text-xs text-brand-500">
                                 <strong>GoDaddy:</strong> Usa tu correo profesional. Puerto 465 (SSL) o 587 (TLS).
                             </p>
@@ -278,7 +276,7 @@ export default function EmailSettingsPanel() {
             {/* SMTP Configuration - Compact */}
             <div className="bg-white rounded-xl border border-line overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-line flex items-center gap-2">
-                    <FiSettings className="w-4 h-4 text-brand-500" />
+                    <IconoConfiguracion className="w-4 h-4 text-brand-500" />
                     <h3 className="font-bold text-sm text-ink">Configuración SMTP</h3>
                 </div>
                 <div className="p-3 space-y-3">
@@ -315,9 +313,9 @@ export default function EmailSettingsPanel() {
                                     : 'border-line text-muted'
                                     }`}
                             >
-                                <FiShield className="w-4 h-4" />
+                                <IconoGarantia className="w-4 h-4" />
                                 <span className="text-sm font-medium">SSL/TLS</span>
-                                {formData.smtpSecure && <FiCheck className="w-4 h-4" />}
+                                {formData.smtpSecure && <IconoCheck className="w-4 h-4" />}
                             </button>
                         </div>
                     </div>
@@ -329,7 +327,7 @@ export default function EmailSettingsPanel() {
                                 Usuario / Email
                             </label>
                             <div className="relative">
-                                <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                                <IconoCorreo className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                                 <input
                                     type="email"
                                     value={formData.smtpUser || ''}
@@ -344,7 +342,7 @@ export default function EmailSettingsPanel() {
                                 Contraseña
                             </label>
                             <div className="relative">
-                                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                                <IconoCandado className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={formData.smtpPassword || ''}
@@ -357,7 +355,7 @@ export default function EmailSettingsPanel() {
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink"
                                 >
-                                    {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                                    {showPassword ? <IconoOcultar className="w-4 h-4" /> : <IconoVer className="w-4 h-4" />}
                                 </button>
                             </div>
                         </div>
@@ -368,7 +366,7 @@ export default function EmailSettingsPanel() {
             {/* From Details - Compact */}
             <div className="bg-white rounded-xl border border-line overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-line flex items-center gap-2">
-                    <FiMail className="w-4 h-4 text-brand-500" />
+                    <IconoCorreo className="w-4 h-4 text-brand-500" />
                     <h3 className="font-bold text-sm text-ink">Remitente</h3>
                 </div>
                 <div className="p-3 grid grid-cols-3 gap-3">
@@ -414,7 +412,7 @@ export default function EmailSettingsPanel() {
             {/* Campañas (C-75). "Notificaciones" y "Transaccionales" se quitaron: el envío nunca los consultaba */}
             <div className="bg-white rounded-xl border border-line overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-line flex items-center gap-2">
-                    <FiTarget className="w-4 h-4 text-brand-500" />
+                    <IconoObjetivo className="w-4 h-4 text-brand-500" />
                     <h3 className="font-bold text-sm text-ink">Campañas de marketing</h3>
                 </div>
                 <div className="p-4 grid gap-4 sm:grid-cols-2">
@@ -465,9 +463,9 @@ export default function EmailSettingsPanel() {
                             className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                         >
                             {testing ? (
-                                <FiRefreshCw className="w-4 h-4 animate-spin" />
+                                <IconoActualizar className="w-4 h-4 animate-spin" />
                             ) : (
-                                <FiSend className="w-4 h-4" />
+                                <IconoEnviar className="w-4 h-4" />
                             )}
                             Probar
                         </button>
@@ -481,9 +479,9 @@ export default function EmailSettingsPanel() {
                         : 'bg-deal/10'
                         }`}>
                         {settings.lastTestStatus === 'success' ? (
-                            <FiCheckCircle className="w-4 h-4 text-success-strong" />
+                            <IconoConfirmado className="w-4 h-4 text-success-strong" />
                         ) : (
-                            <FiX className="w-4 h-4 text-deal" />
+                            <IconoCerrar className="w-4 h-4 text-deal" />
                         )}
                         <p className={`text-xs font-medium ${settings.lastTestStatus === 'success' ? 'text-success-strong' : 'text-deal'
                             }`}>
@@ -506,9 +504,9 @@ export default function EmailSettingsPanel() {
                     className="flex items-center gap-2 px-5 py-2.5 bg-brand-500 text-white text-sm font-bold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {saving ? (
-                        <FiRefreshCw className="w-4 h-4 animate-spin" />
+                        <IconoActualizar className="w-4 h-4 animate-spin" />
                     ) : (
-                        <FiCheck className="w-4 h-4" />
+                        <IconoCheck className="w-4 h-4" />
                     )}
                     Guardar
                 </button>

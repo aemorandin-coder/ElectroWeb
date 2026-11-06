@@ -5,11 +5,13 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
-  FiBarChart2, FiBox, FiClipboard, FiCreditCard, FiDollarSign, FiExternalLink, FiGift, FiGrid, FiLogOut,
-  FiAlertTriangle, FiBell, FiBookOpen, FiChevronDown, FiFileText, FiGitBranch, FiShoppingBag, FiFilm, FiLifeBuoy, FiLock, FiMenu, FiMessageSquare, FiPercent, FiStar, FiSettings, FiShield, FiTag, FiTool, FiTrendingUp, FiUserCheck, FiUserPlus, FiUsers, FiX,
-} from 'react-icons/fi';
+  IconoAbrirAparte, IconoAdministrador, IconoAdvertencia, IconoBillete, IconoBolsa, IconoCandado, IconoCargando,
+  IconoCerrar, IconoChat, IconoChevronAbajo, IconoClaqueta, IconoClientes, IconoConfiguracion, IconoCuadricula,
+  IconoCursos, IconoDocumento, IconoEstrella, IconoGarantia, IconoGiftCard, IconoMenu, IconoNotificaciones, IconoOrdenes,
+  IconoPaquete, IconoPorcentaje, IconoRegistrarse, IconoReportes, IconoSalir, IconoSalvavidas, IconoServicioTecnico,
+  IconoTarjeta, IconoVariantes, IconoVentas, IconoVerificado, IconoVersiones,
+} from '@/components/iconos';
 import NotificationBell from '@/components/notifications/NotificationBell';
-import { MdAdminPanelSettings } from 'react-icons/md';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
@@ -161,10 +163,7 @@ export default function AdminLayout({
       <div className="min-h-dvh bg-surface flex items-center justify-center">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-brand-500 mb-4 shadow-lg">
-            <svg className="animate-spin h-8 w-8 text-white" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+            <IconoCargando className="animate-spin h-8 w-8 text-white" />
           </div>
           <p className="text-sm text-muted font-medium">Cargando panel...</p>
         </div>
@@ -177,7 +176,7 @@ export default function AdminLayout({
   }
 
   const icono = 'h-5 w-5';
-  const dashboard: NavigationItem = { name: 'Dashboard', href: '/admin', icon: <FiGrid className={icono} aria-hidden="true" /> };
+  const dashboard: NavigationItem = { name: 'Dashboard', href: '/admin', icon: <IconoCuadricula className={icono} aria-hidden="true" /> };
 
   // C-150: el menú eran 25 ítems en una sola lista (en el teléfono había que deslizar para llegar a Configuración).
   // Ahora son secciones que se abren y se cierran. Ninguna página cambió de dirección ni de permiso.
@@ -185,76 +184,76 @@ export default function AdminLayout({
     {
       id: 'ventas',
       name: 'Ventas',
-      icon: <FiShoppingBag className={icono} aria-hidden="true" />,
+      icon: <IconoBolsa className={icono} aria-hidden="true" />,
       items: [
-        { name: 'Órdenes', href: '/admin/orders', icon: <FiClipboard className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingOrders' },
+        { name: 'Órdenes', href: '/admin/orders', icon: <IconoOrdenes className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingOrders' },
         // C-148: presupuestos para empresas e instituciones
-        { name: 'Cotizaciones', href: '/admin/cotizaciones', icon: <FiFileText className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingQuotes' },
-        { name: 'Transacciones', href: '/admin/transactions', icon: <FiDollarSign className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingTransactions' },
+        { name: 'Cotizaciones', href: '/admin/cotizaciones', icon: <IconoDocumento className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingQuotes' },
+        { name: 'Transacciones', href: '/admin/transactions', icon: <IconoBillete className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingTransactions' },
         // C-122: antes las solicitudes llegaban mezcladas en Mensajes y Solicitudes
-        { name: 'Garantías', href: '/admin/garantias', icon: <FiLifeBuoy className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingWarranty' },
-        { name: 'Gift Cards', href: '/admin/gift-cards', icon: <FiGift className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS' },
+        { name: 'Garantías', href: '/admin/garantias', icon: <IconoSalvavidas className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingWarranty' },
+        { name: 'Gift Cards', href: '/admin/gift-cards', icon: <IconoGiftCard className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS' },
       ],
     },
     {
       id: 'catalogo',
       name: 'Catálogo',
-      icon: <FiBox className={icono} aria-hidden="true" />,
+      icon: <IconoPaquete className={icono} aria-hidden="true" />,
       items: [
-        { name: 'Productos', href: '/admin/products', icon: <FiBox className={icono} aria-hidden="true" />, permission: 'MANAGE_PRODUCTS' },
-        { name: 'Categorías', href: '/admin/categories', icon: <FiTag className={icono} aria-hidden="true" />, permission: 'MANAGE_PRODUCTS' },
-        { name: 'Descuentos', href: '/admin/discount-requests', icon: <FiPercent className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingDiscounts' },
+        { name: 'Productos', href: '/admin/products', icon: <IconoPaquete className={icono} aria-hidden="true" />, permission: 'MANAGE_PRODUCTS' },
+        { name: 'Categorías', href: '/admin/categories', icon: <IconoVariantes className={icono} aria-hidden="true" />, permission: 'MANAGE_PRODUCTS' },
+        { name: 'Descuentos', href: '/admin/discount-requests', icon: <IconoPorcentaje className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingDiscounts' },
         // C-110: antes solo se llegaba desde el Dashboard
-        { name: 'Reseñas', href: '/admin/reviews', icon: <FiStar className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingReviews' },
+        { name: 'Reseñas', href: '/admin/reviews', icon: <IconoEstrella className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingReviews' },
       ],
     },
     {
       id: 'clientes',
       name: 'Clientes',
-      icon: <FiUsers className={icono} aria-hidden="true" />,
+      icon: <IconoClientes className={icono} aria-hidden="true" />,
       items: [
-        { name: 'Clientes', href: '/admin/customers', icon: <FiUsers className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS' },
-        { name: 'Mensajes y Solicitudes', href: '/admin/inquiries', icon: <FiMessageSquare className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingInquiries' },
+        { name: 'Clientes', href: '/admin/customers', icon: <IconoClientes className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS' },
+        { name: 'Mensajes y Solicitudes', href: '/admin/inquiries', icon: <IconoChat className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingInquiries' },
         // C-150: las empresas por verificar no estaban en el menú (solo se llegaba desde un aviso del Dashboard)
-        { name: 'Verificaciones', href: '/admin/verifications', icon: <FiUserCheck className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS', countKey: 'pendingVerifications' },
+        { name: 'Verificaciones', href: '/admin/verifications', icon: <IconoVerificado className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS', countKey: 'pendingVerifications' },
       ],
     },
     {
       id: 'marketing',
       name: 'Marketing',
-      icon: <FiTrendingUp className={icono} aria-hidden="true" />,
+      icon: <IconoVentas className={icono} aria-hidden="true" />,
       items: [
-        { name: 'Marketing y Contenido', href: '/admin/marketing', icon: <FiTrendingUp className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
+        { name: 'Marketing y Contenido', href: '/admin/marketing', icon: <IconoVentas className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
         // C-112: reemplaza a "Imágenes para redes" de Marketing
-        { name: 'ElectroStudio', href: '/admin/studio', icon: <FiFilm className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
-        { name: 'Trabajos Realizados', href: '/admin/servicios', icon: <FiTool className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
+        { name: 'ElectroStudio', href: '/admin/studio', icon: <IconoClaqueta className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
+        { name: 'Trabajos Realizados', href: '/admin/servicios', icon: <IconoServicioTecnico className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
       ],
     },
     {
       // C-82: no había forma de llegar a los cursos ni a los creadores desde el menú (solo desde una notificación)
       id: 'cursos',
       name: 'Cursos',
-      icon: <FiBookOpen className={icono} aria-hidden="true" />,
+      icon: <IconoCursos className={icono} aria-hidden="true" />,
       items: [
-        { name: 'Cursos', href: '/admin/cursos', icon: <FiBookOpen className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingCourses' },
-        { name: 'Creadores', href: '/admin/creators', icon: <FiUserPlus className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS', countKey: 'pendingCreators' },
+        { name: 'Cursos', href: '/admin/cursos', icon: <IconoCursos className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingCourses' },
+        { name: 'Creadores', href: '/admin/creators', icon: <IconoRegistrarse className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS', countKey: 'pendingCreators' },
       ],
     },
     {
       id: 'administracion',
       name: 'Administración',
-      icon: <FiSettings className={icono} aria-hidden="true" />,
+      icon: <IconoConfiguracion className={icono} aria-hidden="true" />,
       items: [
-        { name: 'Reportes', href: '/admin/reports', icon: <FiBarChart2 className={icono} aria-hidden="true" />, permission: 'VIEW_REPORTS' },
-        { name: 'Notificaciones', href: '/admin/notifications', icon: <FiBell className={icono} aria-hidden="true" />, countKey: 'unreadNotifications' },
-        { name: 'Documentos Legales', href: '/admin/legal', icon: <FiShield className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS' },
-        { name: 'Métodos de Pago', href: '/admin/payments', icon: <FiCreditCard className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
+        { name: 'Reportes', href: '/admin/reports', icon: <IconoReportes className={icono} aria-hidden="true" />, permission: 'VIEW_REPORTS' },
+        { name: 'Notificaciones', href: '/admin/notifications', icon: <IconoNotificaciones className={icono} aria-hidden="true" />, countKey: 'unreadNotifications' },
+        { name: 'Documentos Legales', href: '/admin/legal', icon: <IconoGarantia className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS' },
+        { name: 'Métodos de Pago', href: '/admin/payments', icon: <IconoTarjeta className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
         // C-141: invitar admins, roles, accesos y dos pasos de cada cuenta. Solo el super admin
-        { name: 'Equipo', href: '/admin/equipo', icon: <FiUsers className={icono} aria-hidden="true" />, permission: 'MANAGE_TEAM' },
-        { name: 'Configuración', href: '/admin/settings', icon: <FiSettings className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
-        { name: 'Mi seguridad', href: '/admin/seguridad', icon: <FiLock className={icono} aria-hidden="true" /> },
+        { name: 'Equipo', href: '/admin/equipo', icon: <IconoClientes className={icono} aria-hidden="true" />, permission: 'MANAGE_TEAM' },
+        { name: 'Configuración', href: '/admin/settings', icon: <IconoConfiguracion className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
+        { name: 'Mi seguridad', href: '/admin/seguridad', icon: <IconoCandado className={icono} aria-hidden="true" /> },
         // C-168: qué versión corre y qué cambió en cada módulo
-        { name: 'Versiones', href: '/admin/versiones', icon: <FiGitBranch className={icono} aria-hidden="true" /> },
+        { name: 'Versiones', href: '/admin/versiones', icon: <IconoVersiones className={icono} aria-hidden="true" /> },
       ],
     },
   ];
@@ -319,14 +318,14 @@ export default function AdminLayout({
         <ControlSesionAdmin />
         <header className="flex h-16 items-center gap-3 border-b border-line bg-white px-4 lg:px-6">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-white">
-            <MdAdminPanelSettings className="h-5 w-5" aria-hidden="true" />
+            <IconoAdministrador className="h-5 w-5" aria-hidden="true" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold text-ink">Electro Shop</span>
             <span className="block truncate text-xs text-muted">{session.user.email}</span>
           </span>
           <button type="button" onClick={handleSignOut} className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-medium text-ink-soft hover:bg-surface hover:text-ink">
-            <FiLogOut className="h-4 w-4" aria-hidden="true" />
+            <IconoSalir className="h-4 w-4" aria-hidden="true" />
             <span className="max-sm:sr-only">Cerrar sesión</span>
           </button>
         </header>
@@ -354,14 +353,14 @@ export default function AdminLayout({
       >
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-5">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500 text-white">
-            <MdAdminPanelSettings className="h-5 w-5" aria-hidden="true" />
+            <IconoAdministrador className="h-5 w-5" aria-hidden="true" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold text-ink">Electro Shop</span>
             <span className="block text-xs text-muted">Panel de administración</span>
           </span>
           <button type="button" onClick={() => setDrawerPath(null)} aria-label="Cerrar menú" className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink lg:hidden">
-            <FiX className="h-5 w-5" aria-hidden="true" />
+            <IconoCerrar className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -390,7 +389,7 @@ export default function AdminLayout({
                         <span className="sr-only"> pendientes</span>
                       </span>
                     )}
-                    <FiChevronDown className={`h-4 w-4 shrink-0 text-muted transition-transform ${abierta ? 'rotate-180' : ''}`} aria-hidden="true" />
+                    <IconoChevronAbajo className={`h-4 w-4 shrink-0 text-muted transition-transform ${abierta ? 'rotate-180' : ''}`} aria-hidden="true" />
                   </button>
                   <ul id={`menu-${grupo.id}`} hidden={!abierta} className="space-y-0.5 pb-1">
                     {grupo.items.map((item) => enlace(item, true))}
@@ -416,7 +415,7 @@ export default function AdminLayout({
             onClick={handleSignOut}
             className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-line text-sm font-medium text-ink-soft transition-colors hover:border-deal/30 hover:bg-deal-bg hover:text-deal"
           >
-            <FiLogOut className="h-4 w-4" aria-hidden="true" />
+            <IconoSalir className="h-4 w-4" aria-hidden="true" />
             Cerrar sesión
           </button>
           <Link href="/admin/versiones" className="mt-2 block rounded text-center text-xs text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-500">
@@ -435,7 +434,7 @@ export default function AdminLayout({
             aria-expanded={isDrawerOpen}
             className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-ink-soft hover:bg-surface hover:text-ink lg:hidden"
           >
-            <FiMenu className="h-5 w-5" aria-hidden="true" />
+            <IconoMenu className="h-5 w-5" aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -445,7 +444,7 @@ export default function AdminLayout({
             aria-expanded={!isCollapsed}
             className="hidden h-10 w-10 items-center justify-center rounded-lg text-ink-soft hover:bg-surface hover:text-ink lg:inline-flex"
           >
-            <FiMenu className="h-5 w-5" aria-hidden="true" />
+            <IconoMenu className="h-5 w-5" aria-hidden="true" />
           </button>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
@@ -459,7 +458,7 @@ export default function AdminLayout({
               </Link>
             )}
             <Link href="/" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-surface">
-              <FiExternalLink className="h-4 w-4" aria-hidden="true" />
+              <IconoAbrirAparte className="h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">Ver tienda</span>
             </Link>
             <NotificationBell />
@@ -479,7 +478,7 @@ export default function AdminLayout({
             <AvisosDeVersion />
             {sinSuperAdmin && (
               <div className="mb-4 flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning-strong" role="alert">
-                <FiAlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+                <IconoAdvertencia className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
                 <div className="min-w-0">
                   <p className="font-semibold">Esta tienda no tiene ningún super admin.</p>
                   <p className="mt-1">

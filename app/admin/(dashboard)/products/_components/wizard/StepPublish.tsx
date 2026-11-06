@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { FiAlertCircle, FiCheck, FiMonitor, FiTruck, FiZap } from 'react-icons/fi';
+import { IconoCheck, IconoDigital, IconoEnvio, IconoError, IconoMonitor } from '@/components/iconos';
 import { formatUSD } from '@/lib/currency';
 import { DELIVERY_MODES, getPlatform } from '@/lib/digital-catalog';
 import { leerNumero, type WizardData } from './types';
@@ -69,13 +69,13 @@ export default function StepPublish({ data, errors, isLoading, isEditing, estado
                 <Image src={mainImage} alt={data.name || 'Producto'} fill sizes="320px" className="object-contain" />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center text-muted">
-                  {isPhysical ? <FiTruck className="mb-2 h-10 w-10" aria-hidden="true" /> : <FiMonitor className="mb-2 h-10 w-10" aria-hidden="true" />}
+                  {isPhysical ? <IconoEnvio className="mb-2 h-10 w-10" aria-hidden="true" /> : <IconoMonitor className="mb-2 h-10 w-10" aria-hidden="true" />}
                   <p className="text-xs font-medium">Sin imagen</p>
                 </div>
               )}
               <div className="absolute left-2 top-2 flex flex-wrap gap-1">
                 {hasDeal && <span className="rounded bg-deal px-1.5 py-0.5 text-[11px] font-semibold text-white">-{Math.round((1 - displayPrice / comparePrice) * 100)}%</span>}
-                {!isPhysical && <span className="inline-flex items-center gap-0.5 rounded bg-brand-600 px-1.5 py-0.5 text-[11px] font-semibold text-white"><FiZap className="h-3 w-3" aria-hidden="true" />DIGITAL</span>}
+                {!isPhysical && <span className="inline-flex items-center gap-0.5 rounded bg-brand-600 px-1.5 py-0.5 text-[11px] font-semibold text-white"><IconoDigital className="h-3 w-3" aria-hidden="true" />DIGITAL</span>}
               </div>
             </div>
             <div className="space-y-2 p-3">
@@ -109,14 +109,14 @@ export default function StepPublish({ data, errors, isLoading, isEditing, estado
         <div className="space-y-4">
           <div className={`rounded-2xl border-2 p-4 ${missing === 0 ? 'border-success-strong/30 bg-success-strong/5' : 'border-warning-strong/30 bg-warning/10'}`}>
             <p className={`mb-3 flex items-center gap-2 text-sm font-bold ${missing === 0 ? 'text-success-strong' : 'text-warning-strong'}`}>
-              {missing === 0 ? <FiCheck className="h-5 w-5" aria-hidden="true" /> : <FiAlertCircle className="h-5 w-5" aria-hidden="true" />}
+              {missing === 0 ? <IconoCheck className="h-5 w-5" aria-hidden="true" /> : <IconoError className="h-5 w-5" aria-hidden="true" />}
               {missing === 0 ? 'Listo para publicar' : `Falta${missing === 1 ? '' : 'n'} ${missing} dato${missing === 1 ? '' : 's'}`}
             </p>
             <ul className="space-y-2">
               {checks.map((c) => (
                 <li key={c.label} className={`flex items-center gap-2 text-sm ${c.ok ? 'text-ink' : c.recomendado ? 'text-muted' : 'text-warning-strong'}`}>
                   <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${c.ok ? 'bg-success-strong text-white' : c.recomendado ? 'bg-line' : 'bg-warning/30'}`}>
-                    {c.ok ? <FiCheck className="h-3 w-3" aria-hidden="true" /> : <FiAlertCircle className="h-3 w-3" aria-hidden="true" />}
+                    {c.ok ? <IconoCheck className="h-3 w-3" aria-hidden="true" /> : <IconoError className="h-3 w-3" aria-hidden="true" />}
                   </span>
                   {c.label}{!c.ok && c.recomendado && ' (recomendado)'}
                 </li>
@@ -140,7 +140,7 @@ export default function StepPublish({ data, errors, isLoading, isEditing, estado
             <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" aria-label="Guardando" />
           ) : (
             <>
-              <FiCheck className="h-5 w-5" aria-hidden="true" />
+              <IconoCheck className="h-5 w-5" aria-hidden="true" />
               {isEditing && publicado ? 'Guardar cambios' : 'Publicar producto'}
             </>
           )}

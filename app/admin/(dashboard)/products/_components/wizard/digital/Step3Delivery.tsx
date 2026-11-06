@@ -1,11 +1,11 @@
 'use client';
 
-import { FiKey, FiUserCheck } from 'react-icons/fi';
+import { IconoClave, IconoVerificado } from '@/components/iconos';
 import { DELIVERY_MODES, getPlatform, type DeliveryMode } from '@/lib/digital-catalog';
 import type { StepProps } from '../types';
 import { wizardCard, wizardChoice, wizardError, wizardHint, wizardInput, wizardLabel, wizardSecondaryButton, wizardSectionHelp, wizardSectionTitle } from '../ui';
 
-const MODE_ICONS: Record<DeliveryMode, typeof FiKey> = { INSTANT: FiKey, MANUAL: FiUserCheck };
+const MODE_ICONS: Record<DeliveryMode, typeof IconoClave> = { INSTANT: IconoClave, MANUAL: IconoVerificado };
 
 /**
  * Paso 3 del producto digital (C-60): cómo se entrega.

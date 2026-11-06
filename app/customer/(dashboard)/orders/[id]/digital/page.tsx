@@ -6,12 +6,11 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-    FiCopy, FiCheck, FiArrowLeft, FiClock,
-    FiShield, FiAlertTriangle, FiChevronDown
-} from 'react-icons/fi';
+  IconoAdvertencia, IconoCheck, IconoChevronAbajo, IconoControl, IconoCopiar, IconoFlechaIzquierda, IconoGarantia,
+  IconoReloj,
+} from '@/components/iconos';
 import { BsNintendoSwitch } from 'react-icons/bs';
 import { SiSteam, SiPlaystation, SiRoblox, SiNetflix, SiSpotify, SiApple } from 'react-icons/si';
-import { FaGamepad } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import PlatformScratchCard from './_components/PlatformScratchCard';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -55,7 +54,7 @@ const platformIcons: Record<string, React.ReactNode> = {
     STEAM: <SiSteam className="w-4 h-4" />,
     PLAYSTATION: <SiPlaystation className="w-4 h-4" />,
     PSN: <SiPlaystation className="w-4 h-4" />,
-    XBOX: <FaGamepad className="w-4 h-4" />,
+    XBOX: <IconoControl className="w-4 h-4" />,
     NINTENDO: <BsNintendoSwitch className="w-4 h-4" />,
     ROBLOX: <SiRoblox className="w-4 h-4" />,
     NETFLIX: <SiNetflix className="w-4 h-4" />,
@@ -178,10 +177,10 @@ export default function DigitalCodesPage() {
         return (
             <div className="min-h-dvh bg-surface flex items-center justify-center p-4">
                 <div className="text-center">
-                    <FiAlertTriangle className="w-10 h-10 text-deal mx-auto mb-3" />
+                    <IconoAdvertencia className="w-10 h-10 text-deal mx-auto mb-3" />
                     <h1 className="text-lg font-bold text-ink mb-2">Orden no encontrada</h1>
                     <Link href="/customer/orders" className="inline-flex items-center gap-2 bg-white text-ink px-5 py-2 rounded-xl transition-all border border-line mt-2 hover:bg-surface">
-                        <FiArrowLeft /> Volver
+                        <IconoFlechaIzquierda /> Volver
                     </Link>
                 </div>
             </div>
@@ -199,7 +198,7 @@ export default function DigitalCodesPage() {
                 <div className="max-w-4xl mx-auto px-3 py-2">
                     <div className="flex items-center justify-between">
                         <Link href="/customer/orders" className="p-2 bg-surface rounded-xl text-ink hover:bg-line transition-all border border-line">
-                            <FiArrowLeft className="w-4 h-4" />
+                            <IconoFlechaIzquierda className="w-4 h-4" />
                         </Link>
 
                         <div className="flex-1 mx-3">
@@ -273,7 +272,7 @@ export default function DigitalCodesPage() {
                                             {itemRevealedCount}/{item.codes.length}
                                         </span>
                                         <div className={`w-6 h-6 rounded-full bg-surface border border-line flex items-center justify-center transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-line' : ''}`}>
-                                            <FiChevronDown className="w-3 h-3 text-muted" />
+                                            <IconoChevronAbajo className="w-3 h-3 text-muted" />
                                         </div>
                                     </div>
                                 </button>
@@ -293,7 +292,7 @@ export default function DigitalCodesPage() {
                                                         </span>
                                                         {revealedCodes[code.id] && (
                                                             <span className="text-xs text-success-strong font-bold uppercase flex items-center gap-0.5 bg-success-strong/10 border border-success-strong/20 px-1.5 py-0.5 rounded-full">
-                                                                <FiCheck className="w-2 h-2" />
+                                                                <IconoCheck className="w-2 h-2" />
                                                                 Recibido
                                                             </span>
                                                         )}
@@ -327,9 +326,9 @@ export default function DigitalCodesPage() {
                                                         >
                                                             <span className="text-sm font-semibold">{copiedCodes[code.id] ? 'Copiado' : 'Copiar código'}</span>
                                                             {copiedCodes[code.id] ? (
-                                                                <FiCheck className="w-4 h-4" />
+                                                                <IconoCheck className="w-4 h-4" />
                                                             ) : (
-                                                                <FiCopy className="w-4 h-4" />
+                                                                <IconoCopiar className="w-4 h-4" />
                                                             )}
                                                         </button>
                                                     </div>
@@ -338,7 +337,7 @@ export default function DigitalCodesPage() {
                                         ) : item.deliveryMethod === 'MANUAL' ? (
                                             <div className="p-4 rounded-xl border border-brand-200 bg-brand-50 text-center space-y-3">
                                                 <div className="w-10 h-10 bg-white border border-brand-200 rounded-full flex items-center justify-center mx-auto text-brand-600">
-                                                    <FiClock className="w-5 h-5" />
+                                                    <IconoReloj className="w-5 h-5" />
                                                 </div>
                                                 <div className="space-y-1">
                                                     <h4 className="text-xs font-bold text-brand-700 uppercase tracking-wider">Recarga Directa en Proceso</h4>
@@ -354,7 +353,7 @@ export default function DigitalCodesPage() {
                                             </div>
                                         ) : (
                                             <div className="text-center py-4 bg-surface rounded-lg border border-dashed border-line">
-                                                <FiClock className="w-6 h-6 text-muted mx-auto mb-1" />
+                                                <IconoReloj className="w-6 h-6 text-muted mx-auto mb-1" />
                                                 <p className="text-xs text-muted font-bold uppercase">Preparando...</p>
                                             </div>
                                         )}
@@ -368,11 +367,11 @@ export default function DigitalCodesPage() {
                 {/* Compact Footer Badges */}
                 <div className="mt-6 flex justify-center gap-2">
                     <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white rounded-full border border-line shadow-sm">
-                        <FiShield className="w-3 h-3 text-brand-600" />
+                        <IconoGarantia className="w-3 h-3 text-brand-600" />
                         <span className="text-xs text-ink font-bold uppercase tracking-wider">Encriptado</span>
                     </div>
                     <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white rounded-full border border-line shadow-sm">
-                        <FiCheck className="w-3 h-3 text-success-strong" />
+                        <IconoCheck className="w-3 h-3 text-success-strong" />
                         <span className="text-xs text-ink font-bold uppercase tracking-wider">Garantizado</span>
                     </div>
                 </div>
@@ -389,7 +388,7 @@ export default function DigitalCodesPage() {
 }
 
 function getPlatformIcon(platform: string | null) {
-    if (!platform) return <FaGamepad className="w-3 h-3" />;
+    if (!platform) return <IconoControl className="w-3 h-3" />;
     const p = platform.toUpperCase();
-    return platformIcons[p] || <FaGamepad className="w-3 h-3" />;
+    return platformIcons[p] || <IconoControl className="w-3 h-3" />;
 }

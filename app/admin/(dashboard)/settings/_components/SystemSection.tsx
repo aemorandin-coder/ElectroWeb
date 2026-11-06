@@ -2,7 +2,7 @@
 
 import { useId, useState } from 'react';
 import Link from 'next/link';
-import { FiAlertTriangle, FiMail, FiPlus, FiX } from 'react-icons/fi';
+import { IconoAdvertencia, IconoCerrar, IconoCorreo, IconoMas } from '@/components/iconos';
 import { adminBadge, adminInput, adminLabel, adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
 import type { SectionProps } from './settings-form';
 import { Field, SettingsCard, SwitchRow, TextAreaField } from './fields';
@@ -58,7 +58,7 @@ export default function SystemSection({ form, set, errors }: SectionProps) {
           <ul className="mb-4 flex flex-wrap gap-2">
             {form.adminAlertEmails.map((email) => (
               <li key={email} className="inline-flex max-w-full items-center gap-2 rounded-full border border-line bg-surface py-1 pl-3 pr-1 text-sm text-ink">
-                <FiMail className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                <IconoCorreo className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
                 <span className="truncate">{email}</span>
                 <button
                   type="button"
@@ -66,7 +66,7 @@ export default function SystemSection({ form, set, errors }: SectionProps) {
                   aria-label={`Quitar ${email}`}
                   className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted hover:bg-white hover:text-deal"
                 >
-                  <FiX className="h-4 w-4" aria-hidden="true" />
+                  <IconoCerrar className="h-4 w-4" aria-hidden="true" />
                 </button>
               </li>
             ))}
@@ -95,7 +95,7 @@ export default function SystemSection({ form, set, errors }: SectionProps) {
             className={adminInput(Boolean(emailError || errors.adminAlertEmails))}
           />
           <button type="button" onClick={addEmail} className={`${adminSecondaryButton} shrink-0`}>
-            <FiPlus className="h-4 w-4" aria-hidden="true" />
+            <IconoMas className="h-4 w-4" aria-hidden="true" />
             Agregar
           </button>
         </div>
@@ -128,7 +128,7 @@ export default function SystemSection({ form, set, errors }: SectionProps) {
           <SwitchRow label="Poner la tienda en mantenimiento" checked={form.maintenanceMode} onChange={(v) => set('maintenanceMode', v)} />
           {form.maintenanceMode && (
             <p className={`${adminNotice('warning')} flex items-start gap-2`}>
-              <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               Al guardar, la tienda se cierra en unos 15 segundos para todos los clientes.
             </p>
           )}
@@ -168,7 +168,7 @@ function DateTimeField({ label, value, onChange, error, hint }: { label: string;
         <input id={id} type="datetime-local" value={value} onChange={(event) => onChange(event.target.value)} aria-invalid={error ? true : undefined} className={adminInput(Boolean(error))} />
         {value && (
           <button type="button" onClick={() => onChange('')} aria-label={`Borrar ${label.toLowerCase()}`} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-line text-muted hover:bg-surface hover:text-ink">
-            <FiX className="h-4 w-4" aria-hidden="true" />
+            <IconoCerrar className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
       </div>

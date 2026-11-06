@@ -6,7 +6,10 @@ import toast from 'react-hot-toast';
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { FiCheck, FiChevronLeft, FiChevronRight, FiEdit2, FiLock, FiMaximize2, FiMinus, FiMove, FiPlus, FiRotateCcw, FiX } from 'react-icons/fi';
+import {
+  IconoAgrandar, IconoCandado, IconoCerrar, IconoCheck, IconoChevronDerecha, IconoChevronIzquierda, IconoEditar, IconoMas,
+  IconoMenos, IconoMover, IconoRestablecer,
+} from '@/components/iconos';
 import { adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { MAXIMO_ACCESOS, MAXIMO_WIDGETS, type Tamano } from '@/lib/dashboard/widgets';
@@ -76,23 +79,23 @@ function TarjetaEditable({ id, ficha, tamano, nodo, primero, ultimo, onQuitar, o
       <div className="flex items-center gap-1 px-2 py-1.5">
         {ficha.obligatorio ? (
           <span className="inline-flex h-9 items-center gap-1 rounded-full px-2 text-xs font-semibold text-brand-700" title="Siempre está: se puede mover, no quitar">
-            <FiLock className="h-3.5 w-3.5" aria-hidden="true" /> Fijo
+            <IconoCandado className="h-3.5 w-3.5" aria-hidden="true" /> Fijo
           </span>
         ) : (
           <button type="button" onClick={onQuitar} aria-label={`Quitar ${ficha.titulo}`} title="Quitar" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-deal text-white hover:bg-deal/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-deal">
-            <FiMinus className="h-4 w-4" aria-hidden="true" />
+            <IconoMenos className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-brand-700">{ficha.titulo}</span>
         {ficha.tamanos.length > 1 && (
           <button type="button" onClick={onTamano} aria-label={`Tamaño de ${ficha.titulo}: ${NOMBRE_TAMANO[tamano]}. Tocar para cambiar`} title={`Tamaño: ${NOMBRE_TAMANO[tamano]}`} className={`${boton} w-auto gap-1 px-2 text-xs font-semibold`}>
-            <FiMaximize2 className="h-3.5 w-3.5" aria-hidden="true" /> {NOMBRE_TAMANO[tamano]}
+            <IconoAgrandar className="h-3.5 w-3.5" aria-hidden="true" /> {NOMBRE_TAMANO[tamano]}
           </button>
         )}
-        <button type="button" onClick={() => onMover(-1)} disabled={primero} aria-label={`Mover ${ficha.titulo} antes`} title="Mover antes" className={boton}><FiChevronLeft className="h-4 w-4" aria-hidden="true" /></button>
-        <button type="button" onClick={() => onMover(1)} disabled={ultimo} aria-label={`Mover ${ficha.titulo} después`} title="Mover después" className={boton}><FiChevronRight className="h-4 w-4" aria-hidden="true" /></button>
+        <button type="button" onClick={() => onMover(-1)} disabled={primero} aria-label={`Mover ${ficha.titulo} antes`} title="Mover antes" className={boton}><IconoChevronIzquierda className="h-4 w-4" aria-hidden="true" /></button>
+        <button type="button" onClick={() => onMover(1)} disabled={ultimo} aria-label={`Mover ${ficha.titulo} después`} title="Mover después" className={boton}><IconoChevronDerecha className="h-4 w-4" aria-hidden="true" /></button>
         <button type="button" ref={setActivatorNodeRef} {...attributes} {...listeners} aria-label={`Arrastrar ${ficha.titulo}`} title="Arrastrar para ordenar" className={`${boton} cursor-grab touch-none active:cursor-grabbing`}>
-          <FiMove className="h-4 w-4" aria-hidden="true" />
+          <IconoMover className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
       {/* El contenido se ve, pero no se toca mientras se edita */}
@@ -186,7 +189,7 @@ export default function TableroEditable({ encabezado, items, fichas, accesos, ac
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           {encabezado}
           <button type="button" onClick={empezar} className={adminSecondaryButton}>
-            <FiEdit2 className="h-4 w-4" aria-hidden="true" /> Editar
+            <IconoEditar className="h-4 w-4" aria-hidden="true" /> Editar
           </button>
         </div>
         <ul className={`grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-4 ${refrescando ? 'opacity-90' : ''}`}>
@@ -248,7 +251,7 @@ export default function TableroEditable({ encabezado, items, fichas, accesos, ac
                   onClick={() => setBorrador((actual) => (actual ? [...actual, { id: f.id, tamano: f.porDefecto }] : actual))}
                   className="flex min-h-16 w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3 text-left hover:border-brand-500 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500 disabled:opacity-50"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success text-white" aria-hidden="true"><FiPlus className="h-4 w-4" /></span>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success text-white" aria-hidden="true"><IconoMas className="h-4 w-4" /></span>
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold text-ink">{f.titulo}</span>
                     <span className="block text-xs text-muted">{f.descripcion}</span>
@@ -274,7 +277,7 @@ export default function TableroEditable({ encabezado, items, fichas, accesos, ac
                 onClick={() => setBotones((actual) => (puesto ? actual.filter((x) => x !== a.id) : [...actual, a.id]))}
                 className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-sm font-semibold disabled:opacity-40 ${puesto ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-line bg-white text-ink-soft hover:bg-surface'}`}
               >
-                {puesto ? <FiCheck className="h-4 w-4" aria-hidden="true" /> : <FiPlus className="h-4 w-4" aria-hidden="true" />}
+                {puesto ? <IconoCheck className="h-4 w-4" aria-hidden="true" /> : <IconoMas className="h-4 w-4" aria-hidden="true" />}
                 {a.titulo}
               </button>
             );
@@ -286,16 +289,16 @@ export default function TableroEditable({ encabezado, items, fichas, accesos, ac
       <div className="sticky bottom-3 z-[var(--z-sticky)] mt-4 rounded-2xl border border-line bg-white p-3 shadow-lg">
         <div className="flex flex-wrap items-center justify-end gap-2">
           <button type="button" onClick={() => bandeja.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className={`${adminSecondaryButton} mr-auto`}>
-            <FiPlus className="h-4 w-4" aria-hidden="true" /> Agregar
+            <IconoMas className="h-4 w-4" aria-hidden="true" /> Agregar
           </button>
           <button type="button" onClick={() => void restablecer()} disabled={guardando} className={adminSecondaryButton}>
-            <FiRotateCcw className="h-4 w-4" aria-hidden="true" /> <span className="max-sm:sr-only">Restablecer</span>
+            <IconoRestablecer className="h-4 w-4" aria-hidden="true" /> <span className="max-sm:sr-only">Restablecer</span>
           </button>
           <button type="button" onClick={cancelar} disabled={guardando} className={adminSecondaryButton}>
-            <FiX className="h-4 w-4" aria-hidden="true" /> <span className="max-sm:sr-only">Cancelar</span>
+            <IconoCerrar className="h-4 w-4" aria-hidden="true" /> <span className="max-sm:sr-only">Cancelar</span>
           </button>
           <button type="button" onClick={() => void guardar({ widgets: borrador, accesos: botones })} disabled={guardando} className={adminPrimaryButton}>
-            <FiCheck className="h-4 w-4" aria-hidden="true" /> {guardando ? 'Guardando…' : 'Listo'}
+            <IconoCheck className="h-4 w-4" aria-hidden="true" /> {guardando ? 'Guardando…' : 'Listo'}
           </button>
         </div>
       </div>

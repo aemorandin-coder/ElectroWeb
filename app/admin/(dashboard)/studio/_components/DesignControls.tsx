@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { FiCheck, FiImage, FiPlus, FiX } from 'react-icons/fi';
+import { IconoCerrar, IconoCheck, IconoImagen, IconoMas } from '@/components/iconos';
 import { adminHint, adminInput, adminLabel } from '@/lib/admin-ui';
 import { bgFor, formatHeight, W } from '@/lib/studio/engine';
 import {
@@ -86,7 +86,7 @@ export function StylesBar({ studio }: { studio: Studio }) {
               className="flex h-9 w-8 items-center justify-center border-l border-line text-muted hover:bg-surface hover:text-deal"
               aria-label={`Borrar el estilo ${s.name}`}
             >
-              <FiX className="h-3.5 w-3.5" aria-hidden="true" />
+              <IconoCerrar className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </span>
         ))}
@@ -110,12 +110,12 @@ export function StylesBar({ studio }: { studio: Studio }) {
               className={`${adminInput()} h-9 w-40`}
             />
             <button type="button" onClick={save} className={smallButton} aria-label="Guardar estilo">
-              <FiCheck className="h-4 w-4" aria-hidden="true" />
+              <IconoCheck className="h-4 w-4" aria-hidden="true" />
             </button>
           </span>
         ) : (
           <button type="button" onClick={() => setNaming(true)} className={smallButton}>
-            <FiPlus className="h-4 w-4" aria-hidden="true" />
+            <IconoMas className="h-4 w-4" aria-hidden="true" />
             Guardar el actual
           </button>
         )}
@@ -196,7 +196,7 @@ export function PhotoControls({ studio }: { studio: Studio }) {
               // eslint-disable-next-line @next/next/no-img-element -- vista chica de la foto subida
               <img src={bp.url} alt="" className="h-full w-full object-cover" />
             ) : (
-              <FiImage className="h-6 w-6 text-muted" aria-hidden="true" />
+              <IconoImagen className="h-6 w-6 text-muted" aria-hidden="true" />
             )}
           </span>
           <div className="flex flex-col gap-1 text-sm">

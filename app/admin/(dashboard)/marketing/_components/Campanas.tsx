@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
-  FiArrowDown, FiArrowLeft, FiArrowUp, FiEdit3, FiImage, FiLink, FiMail, FiPause, FiPlay, FiPlus, FiSave, FiSearch, FiSend, FiTrash2, FiType, FiUpload, FiUsers, FiX,
-} from 'react-icons/fi';
+  IconoBuscar, IconoCerrar, IconoClientes, IconoCorreo, IconoEditar, IconoEliminar, IconoEnlace, IconoEnviar,
+  IconoFlechaAbajo, IconoFlechaArriba, IconoFlechaIzquierda, IconoGuardar, IconoImagen, IconoMas, IconoPausa, IconoPlay,
+  IconoSubir, IconoTexto,
+} from '@/components/iconos';
 import {
   adminBadge, adminCard, adminCardFlush, adminEmpty, adminHint, adminIconButton, adminInput, adminLabel,
   adminModalBody, adminModalFooter, adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle,
@@ -159,7 +161,7 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
       <div className="grid gap-3 sm:grid-cols-3">
         <div className={`${adminCard} flex items-center justify-between gap-3 p-4`}>
           <div className="flex items-center gap-3">
-            <FiUsers className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
+            <IconoClientes className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
             <div>
               <p className="text-xs text-muted">Aceptan promociones</p>
               <p className="text-lg font-bold text-ink">{datos.destinatarios} clientes</p>
@@ -176,7 +178,7 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
           )}
         </div>
         <div className={`${adminCard} flex items-center gap-3 p-4`}>
-          <FiMail className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
+          <IconoCorreo className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
           <div>
             <p className="text-xs text-muted">Límite por día</p>
             <p className="text-lg font-bold text-ink">{datos.limiteDiario} correos</p>
@@ -206,13 +208,13 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
         <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
           <h2 className="text-base font-semibold text-ink">Campañas</h2>
           <button type="button" onClick={alCrear} className={`${adminPrimaryButton} h-9 px-3 text-xs`}>
-            <FiPlus className="h-4 w-4" aria-hidden="true" /> Nueva campaña
+            <IconoMas className="h-4 w-4" aria-hidden="true" /> Nueva campaña
           </button>
         </div>
 
         {datos.campanas.length === 0 ? (
           <div className={`${adminEmpty} m-4`}>
-            <FiSend className="mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
+            <IconoEnviar className="mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
             <p className="font-semibold text-ink">Sin campañas</p>
             <p className="mt-1 text-sm text-muted">Redacta la primera con texto, imágenes y un botón.</p>
           </div>
@@ -240,16 +242,16 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
                   <div className="flex flex-wrap items-center gap-2">
                     {c.status === 'DRAFT' && (
                       <>
-                        <button type="button" onClick={() => alEditar(c.id)} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><FiEdit3 className="h-4 w-4" aria-hidden="true" /> Editar</button>
-                        <button type="button" onClick={() => accion(c, 'enviar')} disabled={ocupada === c.id || !datos.marketingActivo || datos.destinatarios === 0} className={`${adminSuccessButton} h-9 px-3 text-xs`}><FiSend className="h-4 w-4" aria-hidden="true" /> Enviar</button>
-                        <button type="button" onClick={() => borrar(c)} className={`${adminIconButton} hover:text-deal`} aria-label={`Borrar ${c.subject}`}><FiTrash2 className="h-4 w-4" /></button>
+                        <button type="button" onClick={() => alEditar(c.id)} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><IconoEditar className="h-4 w-4" aria-hidden="true" /> Editar</button>
+                        <button type="button" onClick={() => accion(c, 'enviar')} disabled={ocupada === c.id || !datos.marketingActivo || datos.destinatarios === 0} className={`${adminSuccessButton} h-9 px-3 text-xs`}><IconoEnviar className="h-4 w-4" aria-hidden="true" /> Enviar</button>
+                        <button type="button" onClick={() => borrar(c)} className={`${adminIconButton} hover:text-deal`} aria-label={`Borrar ${c.subject}`}><IconoEliminar className="h-4 w-4" /></button>
                       </>
                     )}
                     {c.status === 'SENDING' && (
-                      <button type="button" onClick={() => accion(c, 'pausar')} disabled={ocupada === c.id} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><FiPause className="h-4 w-4" aria-hidden="true" /> Pausar</button>
+                      <button type="button" onClick={() => accion(c, 'pausar')} disabled={ocupada === c.id} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><IconoPausa className="h-4 w-4" aria-hidden="true" /> Pausar</button>
                     )}
                     {c.status === 'PAUSED' && (
-                      <button type="button" onClick={() => accion(c, 'reanudar')} disabled={ocupada === c.id || !datos.marketingActivo} className={`${adminPrimaryButton} h-9 px-3 text-xs`}><FiPlay className="h-4 w-4" aria-hidden="true" /> Reanudar</button>
+                      <button type="button" onClick={() => accion(c, 'reanudar')} disabled={ocupada === c.id || !datos.marketingActivo} className={`${adminPrimaryButton} h-9 px-3 text-xs`}><IconoPlay className="h-4 w-4" aria-hidden="true" /> Reanudar</button>
                     )}
                   </div>
                 </li>
@@ -424,10 +426,10 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button type="button" onClick={alSalir} className={`${adminSecondaryButton} h-9 px-3 text-xs`}>
-          <FiArrowLeft className="h-4 w-4" aria-hidden="true" /> Volver a campañas
+          <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Volver a campañas
         </button>
         <button type="button" onClick={() => void guardar()} disabled={guardando} className={`${adminPrimaryButton} h-9 px-4 text-xs`}>
-          <FiSave className="h-4 w-4" aria-hidden="true" /> {guardando ? 'Guardando…' : 'Guardar borrador'}
+          <IconoGuardar className="h-4 w-4" aria-hidden="true" /> {guardando ? 'Guardando…' : 'Guardar borrador'}
         </button>
       </div>
 
@@ -455,9 +457,9 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
                   {bloque.tipo === 'titulo' ? 'Título' : bloque.tipo === 'texto' ? 'Texto' : bloque.tipo === 'imagen' ? 'Imagen' : 'Botón'}
                 </p>
                 <div className="flex items-center gap-1">
-                  <button type="button" onClick={() => mover(indice, -1)} disabled={indice === 0} className={adminIconButton} aria-label="Subir bloque"><FiArrowUp className="h-4 w-4" /></button>
-                  <button type="button" onClick={() => mover(indice, 1)} disabled={indice === campana.bloques.length - 1} className={adminIconButton} aria-label="Bajar bloque"><FiArrowDown className="h-4 w-4" /></button>
-                  <button type="button" onClick={() => quitar(indice)} className={`${adminIconButton} hover:text-deal`} aria-label="Quitar bloque"><FiTrash2 className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => mover(indice, -1)} disabled={indice === 0} className={adminIconButton} aria-label="Subir bloque"><IconoFlechaArriba className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => mover(indice, 1)} disabled={indice === campana.bloques.length - 1} className={adminIconButton} aria-label="Bajar bloque"><IconoFlechaAbajo className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => quitar(indice)} className={`${adminIconButton} hover:text-deal`} aria-label="Quitar bloque"><IconoEliminar className="h-4 w-4" /></button>
                 </div>
               </div>
 
@@ -478,7 +480,7 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={bloque.url} alt="" className="h-full w-full object-contain" />
                     ) : (
-                      <span className="text-center text-xs"><FiUpload className="mx-auto mb-1 h-5 w-5" aria-hidden="true" />Subir JPG o PNG</span>
+                      <span className="text-center text-xs"><IconoSubir className="mx-auto mb-1 h-5 w-5" aria-hidden="true" />Subir JPG o PNG</span>
                     )}
                   </button>
                   <div className="space-y-3">
@@ -512,10 +514,10 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
           <input ref={archivo} type="file" accept="image/png,image/jpeg,image/gif" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) subirImagen(f); }} />
 
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => agregar({ tipo: 'titulo', texto: '' })} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><FiType className="h-4 w-4" aria-hidden="true" /> Título</button>
-            <button type="button" onClick={() => agregar({ tipo: 'texto', texto: '' })} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><FiEdit3 className="h-4 w-4" aria-hidden="true" /> Texto</button>
-            <button type="button" onClick={() => agregar({ tipo: 'imagen', url: '', alt: '', enlace: '' })} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><FiImage className="h-4 w-4" aria-hidden="true" /> Imagen</button>
-            <button type="button" onClick={() => agregar({ tipo: 'boton', texto: 'Ver más', url: '/productos' })} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><FiLink className="h-4 w-4" aria-hidden="true" /> Botón</button>
+            <button type="button" onClick={() => agregar({ tipo: 'titulo', texto: '' })} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><IconoTexto className="h-4 w-4" aria-hidden="true" /> Título</button>
+            <button type="button" onClick={() => agregar({ tipo: 'texto', texto: '' })} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><IconoEditar className="h-4 w-4" aria-hidden="true" /> Texto</button>
+            <button type="button" onClick={() => agregar({ tipo: 'imagen', url: '', alt: '', enlace: '' })} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><IconoImagen className="h-4 w-4" aria-hidden="true" /> Imagen</button>
+            <button type="button" onClick={() => agregar({ tipo: 'boton', texto: 'Ver más', url: '/productos' })} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><IconoEnlace className="h-4 w-4" aria-hidden="true" /> Botón</button>
           </div>
         </div>
 
@@ -548,7 +550,7 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
             <div className="flex flex-col gap-2 sm:flex-row">
               <input id="campana-prueba" type="email" value={correoPrueba} onChange={(e) => setCorreoPrueba(e.target.value)} placeholder="tu@correo.com" className={adminInput()} />
               <button type="button" onClick={enviarPrueba} disabled={probando || !correoPrueba || Boolean(errorVista)} className={`${adminSecondaryButton} shrink-0`}>
-                <FiSend className="h-4 w-4" aria-hidden="true" /> {probando ? 'Enviando…' : 'Enviar prueba'}
+                <IconoEnviar className="h-4 w-4" aria-hidden="true" /> {probando ? 'Enviando…' : 'Enviar prueba'}
               </button>
             </div>
             <p className={adminHint}>Llega solo a esa dirección, marcada como prueba. Revísala en el teléfono antes de enviar la campaña.</p>
@@ -644,7 +646,7 @@ function ModalDestinatarios({ abierto, alCerrar }: { abierto: boolean; alCerrar:
         <div className={adminModalHeader}>
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-              <FiUsers className="h-5 w-5" aria-hidden="true" />
+              <IconoClientes className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
               <h2 id="modal-destinatarios-titulo" className={adminModalTitle}>Destinatarios de promociones</h2>
@@ -652,13 +654,13 @@ function ModalDestinatarios({ abierto, alCerrar }: { abierto: boolean; alCerrar:
             </div>
           </div>
           <button type="button" onClick={alCerrar} className={adminIconButton} aria-label="Cerrar modal">
-            <FiX className="h-5 w-5" />
+            <IconoCerrar className="h-5 w-5" />
           </button>
         </div>
 
         <div className="border-b border-line bg-surface/50 p-4">
           <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+            <IconoBuscar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
             <input
               type="text"
               value={busqueda}
@@ -677,7 +679,7 @@ function ModalDestinatarios({ abierto, alCerrar }: { abierto: boolean; alCerrar:
             <div className="flex justify-center py-12"><span className={adminSpinner} aria-label="Cargando destinatarios" /></div>
           ) : filtrados.length === 0 ? (
             <div className="py-12 text-center">
-              <FiMail className="mx-auto mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
+              <IconoCorreo className="mx-auto mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
               <p className="font-semibold text-ink">{consulta ? 'Sin resultados' : 'Sin destinatarios'}</p>
               <p className="mt-1 text-xs text-muted">
                 {consulta

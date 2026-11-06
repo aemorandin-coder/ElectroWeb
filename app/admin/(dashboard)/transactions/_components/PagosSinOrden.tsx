@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { FiAlertTriangle, FiArchive, FiCornerDownRight, FiLink } from 'react-icons/fi';
+import { IconoAdvertencia, IconoArchivar, IconoAsignar, IconoEnlace } from '@/components/iconos';
 import { adminError, adminHint, adminInput, adminNotice, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
@@ -119,7 +119,7 @@ export default function PagosSinOrden({ onChange }: { onChange?: () => void }) {
   return (
     <section className={adminNotice('danger')} aria-label="Pagos sin orden">
       <p className="flex items-center gap-2 font-semibold">
-        <FiAlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <IconoAdvertencia className="h-4 w-4 shrink-0" aria-hidden="true" />
         {pagos.length === 1 ? '1 Pago Móvil de compra sin orden' : `${pagos.length} Pagos Móvil de compra sin orden`}
       </p>
       <p className="mt-1 text-ink-soft">
@@ -161,7 +161,7 @@ export default function PagosSinOrden({ onChange }: { onChange?: () => void }) {
                           {o.montoCoincide && <span className="ml-1 font-semibold text-success-strong">· mismo monto</span>}
                         </span>
                         <button type="button" onClick={() => void vincular(p, o)} disabled={ocupado} className={`${adminSecondaryButton} shrink-0`}>
-                          <FiLink className="h-4 w-4" aria-hidden="true" /> Es esta orden
+                          <IconoEnlace className="h-4 w-4" aria-hidden="true" /> Es esta orden
                         </button>
                       </li>
                     ))}
@@ -181,18 +181,18 @@ export default function PagosSinOrden({ onChange }: { onChange?: () => void }) {
                   <div className="mt-2 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                     <button type="button" onClick={() => { setArchivando(null); setNota(''); setErrorNota(''); }} className={adminSecondaryButton}>Cancelar</button>
                     <button type="button" onClick={() => void archivar(p)} disabled={ocupado} className={adminPrimaryButton}>
-                      <FiArchive className="h-4 w-4" aria-hidden="true" /> {ocupado ? 'Archivando…' : 'Archivar'}
+                      <IconoArchivar className="h-4 w-4" aria-hidden="true" /> {ocupado ? 'Archivando…' : 'Archivar'}
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
                   <button type="button" onClick={() => { setArchivando(p.id); setNota(''); setErrorNota(''); }} disabled={ocupado} className={adminSecondaryButton}>
-                    <FiArchive className="h-4 w-4" aria-hidden="true" /> Ya se atendió
+                    <IconoArchivar className="h-4 w-4" aria-hidden="true" /> Ya se atendió
                   </button>
                   {p.puedeAcreditar ? (
                     <button type="button" onClick={() => void acreditar(p)} disabled={ocupado} className={viejo ? adminSecondaryButton : adminPrimaryButton}>
-                      <FiCornerDownRight className="h-4 w-4" aria-hidden="true" />
+                      <IconoAsignar className="h-4 w-4" aria-hidden="true" />
                       {ocupado ? 'Acreditando…' : 'Pasar a sus Puntos ES'}
                     </button>
                   ) : (

@@ -7,8 +7,7 @@ import { formatUSD } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState } from 'react';
-import { FiBookOpen, FiStar } from 'react-icons/fi';
-import { FaStar } from 'react-icons/fa';
+import { IconoCerrar, IconoCursos, IconoEliminar, IconoEstrella, IconoEstrellaLlena, IconoMas } from '@/components/iconos';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { formatRating } from '@/lib/currency';
@@ -295,9 +294,7 @@ export default function AdminCursosPage() {
           onClick={openCreate}
           className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white text-sm font-semibold rounded-lg hover:bg-brand-600 transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
+          <IconoMas className="w-4 h-4" />
           Nuevo Curso
         </button>
       </div>
@@ -329,7 +326,7 @@ export default function AdminCursosPage() {
         <div className="text-center py-16 text-muted">Cargando cursos...</div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <FiBookOpen className="mx-auto mb-3 h-12 w-12 text-muted" aria-hidden="true" />
+          <IconoCursos className="mx-auto mb-3 h-12 w-12 text-muted" aria-hidden="true" />
           <p className="text-muted">No hay cursos aún. ¡Crea el primero!</p>
         </div>
       ) : (
@@ -341,9 +338,7 @@ export default function AdminCursosPage() {
                   <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <svg className="w-12 h-12 text-brand-500/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
+                    <IconoCursos className="w-12 h-12 text-brand-500/30" />
                   </div>
                 )}
                 <div className="absolute top-2 left-2 flex gap-1">
@@ -353,7 +348,7 @@ export default function AdminCursosPage() {
                     </span>
                   )}
                   {course.isFeatured && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-warning/10 text-warning-strong inline-flex items-center gap-1"><FiStar className="h-3 w-3 fill-current shrink-0" aria-hidden="true" />Destacado</span>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-warning/10 text-warning-strong inline-flex items-center gap-1"><IconoEstrella lleno className="h-3 w-3 shrink-0" aria-hidden="true" />Destacado</span>
                   )}
                 </div>
                 <div className="absolute top-2 right-2">
@@ -370,7 +365,7 @@ export default function AdminCursosPage() {
                   <span>{formatUSD(Number(course.priceUSD))}</span>
                   <span>{course._count?.enrollments ?? course.enrollmentCount} inscritos</span>
                   <span>{course._count?.modules ?? 0} módulos</span>
-                  {course.rating && <span className="inline-flex items-center gap-1"><FaStar className="h-3 w-3 text-warning shrink-0" aria-hidden="true" />{formatRating(course.rating)}</span>}
+                  {course.rating && <span className="inline-flex items-center gap-1"><IconoEstrellaLlena className="h-3 w-3 text-warning shrink-0" aria-hidden="true" />{formatRating(course.rating)}</span>}
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => openEdit(course)} className="flex-1 py-1.5 text-xs font-semibold text-brand-500 border border-brand-500 rounded-lg hover:bg-brand-500 hover:text-white transition-colors">Editar</button>
@@ -381,9 +376,7 @@ export default function AdminCursosPage() {
                     {course.isActive ? 'Desactivar' : enRevision(course) ? 'Aprobar' : 'Activar'}
                   </button>
                   <button onClick={() => handleDelete(course.id)} disabled={deletingId === course.id} className="p-1.5 text-deal hover:text-deal hover:bg-deal/10 rounded-lg transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                    <IconoEliminar className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -400,9 +393,7 @@ export default function AdminCursosPage() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-line">
               <h2 className="text-lg font-bold text-ink">{editingId ? 'Editar Curso' : 'Nuevo Curso'}</h2>
               <button onClick={() => setShowModal(false)} className="text-muted hover:text-ink">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <IconoCerrar className="w-5 h-5" />
               </button>
             </div>
 
@@ -501,7 +492,7 @@ export default function AdminCursosPage() {
                         <input value={mod.title} onChange={(e) => updateModule(mIdx, 'title', e.target.value)} className="flex-1 px-2 py-1 border border-line-strong rounded text-sm focus:outline-none focus:border-brand-500 bg-white" placeholder="Nombre del módulo" />
                         <button onClick={() => addLesson(mIdx)} className="text-xs text-brand-500 font-semibold hover:underline whitespace-nowrap">+ Lección</button>
                         <button onClick={() => removeModule(mIdx)} className="text-deal hover:text-deal">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                          <IconoCerrar className="w-4 h-4" />
                         </button>
                       </div>
                       {mod.lessons.map((lesson, lIdx) => (
@@ -518,7 +509,7 @@ export default function AdminCursosPage() {
                               </label>
                             </div>
                             <button onClick={() => removeLesson(mIdx, lIdx)} className="text-deal hover:text-deal pt-1 shrink-0">
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                              <IconoCerrar className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>

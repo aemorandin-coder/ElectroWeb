@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Button } from './Button';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { IconoCerrar } from '@/components/iconos';
 
 interface ModalProps {
   isOpen: boolean;
@@ -45,9 +46,7 @@ export function Modal({
           className="fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all z-10"
           aria-label="Cerrar"
         >
-          <svg className="w-6 h-6 text-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <IconoCerrar className="w-6 h-6 text-ink" />
         </button>
 
         {/* Modal Content */}

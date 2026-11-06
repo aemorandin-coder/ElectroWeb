@@ -5,7 +5,7 @@
 
 ## 1. Servidor
 - Carpeta `/var/www/electroshopve`, proceso de PM2 `electroshop`, usuario `luami`. PM2 en **una sola instancia**: el bus de eventos del tiempo real vive en memoria. Los guiones lo buscan por nombre (desde el reinicio del 16/10 su número en `pm2 ls` es el 1, no el 0).
-- `ecosystem.config.js` está desactualizado (otro nombre y otra carpeta) y no se usa: nunca `pm2 start ecosystem.config.js`.
+- No hay `ecosystem.config.js`: el viejo tenía otro nombre y otra carpeta, y se borró en C-185 (06/11). PM2 se maneja por nombre y con `scripts/deploy.sh`; nunca `pm2 start` de un archivo.
 - **Memoria:** 7,8 GB y 4 GB de swap (28/09). El build usa unos 2,7 GB.
 - **Sistema (C-176, 16/10):** Ubuntu 24.04 y **Node 24 LTS** (repositorio de NodeSource `node_24.x`; Node 20 quedó sin soporte el 30/04/2026). PostgreSQL 16.
   - Las actualizaciones de seguridad se instalan solas (`unattended-upgrades`). El resto se instala a mano con un respaldo antes: `sudo apt-get update && sudo apt-get full-upgrade`. Si después existe `/var/run/reboot-required`, el kernel nuevo recién corre con un reinicio (`sudo reboot`, la tienda vuelve sola en unos segundos: PM2 arranca con el sistema).

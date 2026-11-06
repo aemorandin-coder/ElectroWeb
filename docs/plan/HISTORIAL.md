@@ -1,10 +1,76 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `46f8205`, versión `v1.0.0-rc.19`, el 06/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `6917382`, versión `v1.0.0-rc.20`, el 06/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 06/11 · C-186 y C-188 (de rc.19 a `v1.0.0-rc.20`)
+Subido el 06/11 por Andrés. Claude lo comprobó desde fuera:
+- los ajustes públicos dicen `gorroNavidad: "ajustado"`: Andrés ya encendió el tema;
+- la portada trae los íconos propios, con la clase `iconos-marca`.
+
+- **C-186 · Tema navideño:** el gorro de Santa en el logo, en dos versiones; la tarjeta navideña del popup; Marketing → Navidad con fechas y sin deploy. Tiene 9 columnas en `company_settings` (`estado/C-186.md`).
+- **C-188 · Los íconos propios:** 156 íconos del pack en lugar de react-icons, en la tienda y el panel. El sello "Digital" va sin el rayito (`estado/C-188.md`).
+
+Andrés decidió subir los dos juntos. C-188 no cambia la base: el SQL de abajo es solo el de C-186.
+
+Producción está en `v1.0.0-rc.19`; el bloque de rc.19 pasó a `HISTORIAL.md`. Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.20`. **Desde el deploy se ven los íconos nuevos. La Navidad, en cambio, no se ve hasta que se encienda en el panel.**
+
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.19`). Es aditivo, todo en `company_settings`:
+```sql
+ALTER TABLE "company_settings" ADD COLUMN "christmasHat" TEXT NOT NULL DEFAULT 'ajustado',
+ADD COLUMN "christmasPopup" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN "christmasPopupButton" TEXT,
+ADD COLUMN "christmasPopupLink" TEXT,
+ADD COLUMN "christmasPopupText" TEXT,
+ADD COLUMN "christmasPopupTitle" TEXT,
+ADD COLUMN "christmasTheme" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "christmasThemeFrom" DATE,
+ADD COLUMN "christmasThemeUntil" DATE;
+```
+Sin variables nuevas, sin crons y sin dependencias nuevas.
+
+**Paso a paso.** En el servidor, en `/var/www/electroshopve`:
+```bash
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.19 y sin cambios
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc20.dump
+bash scripts/deploy.sh                       # para y muestra el SQL de arriba (9 ADD COLUMN en company_settings)
+npx prisma db push && bash scripts/deploy.sh # si es solo eso
+git describe --tags                                                     # v1.0.0-rc.20
+```
+
+**Encenderlo (Admin → Marketing → Navidad):**
+1. El gorro "Ajustado al sello" ya viene elegido. "Clásico" es la otra opción.
+2. "Popup al entrar": "La tarjeta navideña" ya viene elegida. Elige "La imagen del popup" si prefieres una pieza tuya de ElectroStudio.
+3. **Para verlo hoy:** enciéndelo sin fechas y guarda. **Para dejarlo listo:** toca "Del 1 de diciembre al 6 de enero de 2027", enciende y guarda. Queda "Programado" y se prende solo el 1/12.
+
+**Pruebas** (unos 10 minutos):
+1. **Antes de encender**, en incógnito: la portada y el popup de siempre ("Ofertas de bienvenida"), sin gorros.
+2. **Encendido sin fechas**, en incógnito, en el teléfono y en la computadora:
+   - el gorro en el logo de arriba y en el del pie;
+   - a los 2 segundos y medio, la tarjeta: la pantalla del sello se enciende y el gorro cae y se mece;
+   - "Ver ideas para regalar" lleva a los productos.
+3. **Cambia al otro gorro** y guarda: la tienda cambia en la siguiente visita.
+4. En la pestaña **"Popup del home"** sale el aviso de que se muestra la tarjeta en lugar de la imagen.
+5. **Apaga y guarda:** la tienda vuelve a ser la de siempre. Después déjalo programado del 1/12 al 6/1.
+6. **Íconos, inicio en la computadora:** "Compra por categoría" va en dos tonos, "Gift Cards y Recargas" muestra una tarjeta y no la cuadrícula, y los sellos "Digital" ya no tienen el rayito.
+7. **Íconos, menú y ficha:**
+   - el menú "Categorías" del encabezado muestra cada categoría con su dibujo;
+   - en la ficha de un digital, "Recarga directa" o "Entrega digital" llevan la pantalla;
+   - el corazón de favoritos se llena al tocarlo.
+8. **Íconos, checkout:** los íconos de "Información de contacto", "Método de pago", "Notas" y "Resumen del pedido" se ven. Antes no.
+9. **Íconos, panel:**
+   - el menú de la izquierda;
+   - la estrella de destacado llena en Productos;
+   - en Categorías, el selector con los dibujos nuevos;
+   - en Transacciones, "Salida" en lugar de "Retiro".
+10. **Íconos, teléfono:** la barra inferior y el menú "Más".
+
+**Vuelta atrás:**
+- Del tema: apagarlo en el panel. Es inmediato y sin deploy.
+- Del código: `git reset --hard v1.0.0-rc.19 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas nuevas no molestan al código anterior. La base está en `~/respaldo-antes-rc20.dump`.
 
 ## 06/11 · C-187, la limpieza de C-185 y los stickers (de rc.18 a `v1.0.0-rc.19`)
 Subido el 06/11 por Andrés. Claude lo comprobó desde fuera: `/api/categories` ya cuenta solo lo publicado (Gift Cards y Recargas 6, Consolas 0, Misceláneos 1).

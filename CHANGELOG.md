@@ -11,6 +11,18 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
 ## [1.0.0-rc.21] - 2026-11-06
+### Tienda 1.4.0, Marketing 1.4.0, Carrito 1.1.0 y Configuración 1.1.3 (C-190)
+- **Ideas para regalar** (`/ideas-para-regalar`), una de las recomendaciones de Navidad que eligió Andrés:
+  - Regalos por presupuesto: hasta $20, de $20 a $50 y más de $50. Primero los destacados, después los más vendidos y los más nuevos.
+  - Las gift cards con varios montos entran en cada tramo donde tienen un monto.
+  - La página está todo el año y lleva el toque navideño con el tema encendido.
+  - Tiene su imagen para compartir y está en el sitemap y en el pie. El botón de la tarjeta navideña lleva ahí, salvo que se haya guardado otro enlace.
+- **"Para que llegue antes del 24, pide hasta el …"**, otra de las recomendaciones elegidas:
+  - Es una franja con un calendario en la ficha de los productos físicos, en el carrito y en Ideas para regalar.
+  - Las fechas de corte (ZOOM o MRW, y Guanare) se cargan en Marketing → Navidad.
+  - Solo sale con el tema activo y la fecha cargada, y se va sola después de la fecha.
+- **Dos borradores de campaña** (aguinaldo y último minuto): `scripts/campanas-navidad.ts --aplicar`. Nunca envía, ni duplica.
+- **Base:** 2 columnas nuevas (aditivo) en `company_settings`: `christmasCutoffShipping` y `christmasCutoffLocal`.
 ### Productos 1.4.0 (C-189)
 - **El selector de íconos de Categorías ofrece solo los íconos propios de Electro Shop** (aprobado por Andrés). Son 35, ordenados por tema, y ya no se importan íconos de otras librerías.
 - Las categorías que ya existen se ven igual. Lo nuevo se guarda con el nombre del pack, y un nombre desconocido muestra "Otros".

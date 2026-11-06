@@ -395,7 +395,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - Cuando vuelva SADES: una lista de SKU borrados de verdad, para que la sincronización no los recree como borrador.
 - Propuestas menores de `estado/C-187.md`: orden de la lista, lista liviana, tarjetas en el teléfono, aviso de destacado en el asistente, `categoryId` en la edición masiva y 404 real en la ficha.
 
-**De C-186 (06/11), esperan la decisión de Andrés** (`estado/C-186.md`): las 5 recomendaciones de Navidad. (1) "Ideas para regalar" por presupuesto: los productos y los rangos. (2) Gift cards de último minuto con mensaje: el plazo de los digitales, A1. (3) "Pide hasta el … para que llegue antes del 24": las fechas de corte de ZOOM y MRW. (4) Dos tandas de correos y estados con el aguinaldo y los promotores: la oferta y la comisión, A14. (5) Combos y envoltorio de regalo: los precios.
+**De C-186 (06/11):** de las 5 recomendaciones de Navidad, Andrés eligió y C-190 hizo la 1 (Ideas para regalar), la 3 (la fecha límite antes del 24) y la 4 (los borradores de campaña). Quedan sin pedir la 2 (gift card con mensaje) y la 5 (combos y envoltorio).
 - Tarea chica: `motion-safe:animate-fadeIn` no genera nada con Tailwind 4, así que el popup, `MobileNavBar` y `GuidedTour` no hacen su entrada. Hay que definir la animación en `@theme`.
 
 **De C-188 (06/11), lo decide Andrés** (`estado/C-188.md`, "Propuesto"):

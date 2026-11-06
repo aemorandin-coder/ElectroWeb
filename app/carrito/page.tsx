@@ -23,6 +23,7 @@ import IvaIncluido from '@/components/ui/IvaIncluido';
 import { getGiftCardDesign } from '@/lib/gift-card-designs';
 import { useSettings } from '@/contexts/SettingsContext';
 import CouponBox from '@/components/cart/CouponBox';
+import FechaLimiteNavidad from '@/components/navidad/FechaLimiteNavidad';
 import { parseCartItemId, toOrderItem } from '@/lib/cart-items';
 
 // Diseño de una gift card del carrito: el id es "gift-card-<diseño>-<fecha>" (app/gift-cards).
@@ -494,6 +495,9 @@ export default function CarritoPage() {
                     </ul>
                   </div>
                 )}
+
+                {/* C-190: con el tema navideño y la fecha cargada, hasta cuándo pedir para que llegue antes del 24 */}
+                {hasPhysical && <FechaLimiteNavidad />}
 
                 {/* Actions */}
                 <div className="space-y-2 pt-2">

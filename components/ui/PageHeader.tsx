@@ -21,6 +21,8 @@ interface PageHeaderProps {
   meta?: ReactNode;
   /** Botones o controles a la derecha (debajo en móvil). */
   actions?: ReactNode;
+  /** Clases de la caja de `actions` (C-190: `hidden lg:flex` para una ilustración que solo va en la computadora) */
+  actionsClassName?: string;
   className?: string;
 }
 
@@ -29,7 +31,7 @@ interface PageHeaderProps {
  * Banda azul suave de la marca, sin animaciones; el título es el único h1 de la página.
  * Una sola variante en toda la tienda (C-54): la de /gift-cards, con ícono, rótulo y descripción.
  */
-export default function PageHeader({ title, description, eyebrow, icon, breadcrumbs, meta, actions, className = '' }: PageHeaderProps) {
+export default function PageHeader({ title, description, eyebrow, icon, breadcrumbs, meta, actions, actionsClassName = 'flex', className = '' }: PageHeaderProps) {
   return (
     <header className={`border-b border-brand-100 bg-brand-50 ${className}`}>
       <Container className="py-6 lg:py-10">
@@ -70,7 +72,7 @@ export default function PageHeader({ title, description, eyebrow, icon, breadcru
               {meta && <div className="mt-3 flex flex-wrap items-center gap-2">{meta}</div>}
             </div>
           </div>
-          {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+          {actions && <div className={`${actionsClassName} shrink-0 flex-wrap items-center gap-2`}>{actions}</div>}
         </div>
       </Container>
     </header>

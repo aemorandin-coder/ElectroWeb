@@ -5,7 +5,7 @@
 
 import { z } from '@/lib/zod';
 import { MAX_EMPAQUES } from '@/lib/embalaje';
-import { GORROS } from '@/lib/navidad';
+import { corteValido, GORROS } from '@/lib/navidad';
 
 export const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 export type WeekDay = (typeof WEEK_DAYS)[number];
@@ -80,6 +80,9 @@ const optionalDay = z
     }
     return date;
   });
+
+/** C-190: el último día para pedir y que llegue antes del 24: de noviembre o de diciembre hasta el 24 (la franja lo promete) */
+const optionalCutoff = optionalDay.refine((date) => !date || corteValido(date.toISOString().slice(0, 10)), 'Elige un día de noviembre o de diciembre hasta el 24');
 
 /** C-186: enlace de un botón de la tienda: una ruta propia ("/productos") o https. Nada de javascript:, "//otro-sitio" ni "#". */
 const optionalLink = (max = 300) =>
@@ -256,6 +259,9 @@ export const settingsUpdateSchema = z.object({
   christmasPopupText: optionalText(180),
   christmasPopupButton: optionalText(30),
   christmasPopupLink: optionalLink(),
+  // C-190: las fechas de corte de la franja "Para que llegue antes del 24" (vacías: no sale)
+  christmasCutoffShipping: optionalCutoff,
+  christmasCutoffLocal: optionalCutoff,
 });
 
 export const settingsPatchSchema = settingsUpdateSchema.partial();
@@ -272,6 +278,7 @@ export const HOT_AD_FIELDS: readonly SettingsField[] = [
 export const CHRISTMAS_FIELDS: readonly SettingsField[] = [
   'christmasTheme', 'christmasThemeFrom', 'christmasThemeUntil', 'christmasHat', 'christmasPopup',
   'christmasPopupTitle', 'christmasPopupText', 'christmasPopupButton', 'christmasPopupLink',
+  'christmasCutoffShipping', 'christmasCutoffLocal',
 ];
 
 export const MARKETING_FIELDS: readonly SettingsField[] = [...HOT_AD_FIELDS, ...CHRISTMAS_FIELDS];

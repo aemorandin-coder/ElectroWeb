@@ -70,10 +70,110 @@ export interface TarjetaNavidadDatos {
   enlace: string;
 }
 
+/** La página de regalos por presupuesto (C-190, app/ideas-para-regalar) */
+export const RUTA_REGALOS = '/ideas-para-regalar';
+
 /** Textos de la tarjeta cuando el panel los deja vacíos. Sin promesas de precio, de descuento ni de plazos de entrega. */
 export const TARJETA_NAVIDAD: TarjetaNavidadDatos = {
   titulo: 'Feliz Navidad',
   mensaje: 'Gracias por confiar en Electro Shop este año. Te deseamos unas fiestas felices junto a los tuyos.',
   boton: 'Ver ideas para regalar',
-  enlace: '/productos',
+  // C-190: la página de regalos por presupuesto (antes, todo el catálogo). Un enlace guardado en el panel manda
+  enlace: RUTA_REGALOS,
 };
+
+// ---------- C-190: la fecha límite para que llegue antes del 24
+
+/** Las fechas de corte de `company_settings`: el último día para pedir, incluido */
+export interface CortesNavidad {
+  /** Por ZOOM o MRW (envío nacional) */
+  christmasCutoffShipping: Date | string | null;
+  /** Con delivery o retiro en Guanare */
+  christmasCutoffLocal: Date | string | null;
+}
+
+/** Lo que la tienda recibe: las fechas que siguen en pie ('AAAA-MM-DD'), solo con el tema activo */
+export interface EntregaNavidad {
+  envio: string | null;
+  local: string | null;
+}
+
+/**
+ * Un día de corte sirve si es de noviembre o de diciembre hasta el 24: la franja promete que llega "antes del 24".
+ * Otro día (el 26, o uno de enero) no se guarda.
+ */
+export function corteValido(dia: string): boolean {
+  const [, mes, numero] = dia.split('-').map(Number);
+  return mes === 11 || (mes === 12 && numero <= 24);
+}
+
+/**
+ * Las fechas de corte de hoy: null si el tema no se ve o si no queda ninguna en pie. Una fecha vale hasta el final de
+ * ese día en Venezuela; al día siguiente se va sola. Sin fecha no se promete nada.
+ */
+export function entregaNavidad(config: ConfigNavidad & CortesNavidad, ahora: Date = new Date()): EntregaNavidad | null {
+  if (!navidadActiva(config, ahora)) return null;
+  const hoy = diaEnCaracas(ahora);
+  const vigente = (valor: Date | string | null) => {
+    const dia = comoDia(valor);
+    return dia && dia >= hoy && corteValido(dia) ? dia : null;
+  };
+  const envio = vigente(config.christmasCutoffShipping);
+  const local = vigente(config.christmasCutoffLocal);
+  return envio || local ? { envio, local } : null;
+}
+
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+/** '2026-12-18' → { semana: 'viernes', numero: 18, mes: 'diciembre' }. Sin Intl: el servidor y el navegador dan lo mismo */
+export function partesDelDia(dia: string): { semana: string; numero: number; mes: string } {
+  const [ano, mes, numero] = dia.split('-').map(Number);
+  return { semana: DIAS[new Date(Date.UTC(ano, mes - 1, numero)).getUTCDay()], numero, mes: MESES[mes - 1] };
+}
+
+/** '2026-12-18' → 'viernes 18 de diciembre' */
+export function diaConNombre(dia: string): string {
+  const { semana, numero, mes } = partesDelDia(dia);
+  return `${semana} ${numero} de ${mes}`;
+}
+
+/** Las formas de entrega que la tienda tiene encendidas (Configuración → Envíos) */
+export interface FormasDeEntrega {
+  envio: boolean;
+  delivery: boolean;
+  retiro: boolean;
+}
+
+export interface FranjaNavidad {
+  /** El primer día que vence: va grande, en el calendario */
+  dia: string;
+  titulo: string;
+  /** Por qué medio, y el otro corte si hay dos */
+  detalle: string;
+}
+
+/**
+ * La franja "Para que llegue antes del 24, pide hasta el …" con las formas de entrega encendidas. `hoy` es el día del
+ * navegador (null en el servidor y al hidratar: el servidor ya dejó fuera las vencidas). Sin nada que decir, null.
+ */
+export function franjaNavidad(entrega: EntregaNavidad | null, formas: FormasDeEntrega, hoy: string | null): FranjaNavidad | null {
+  if (!entrega) return null;
+  const sigue = (dia: string | null) => (dia && (!hoy || dia >= hoy) ? dia : null);
+  const envio = formas.envio ? sigue(entrega.envio) : null;
+  const local = formas.delivery || formas.retiro ? sigue(entrega.local) : null;
+  if (!envio && !local) return null;
+
+  const enGuanare = formas.delivery && formas.retiro ? 'con delivery o retiro en Guanare' : formas.delivery ? 'con delivery en Guanare' : 'con retiro en la tienda';
+  const conMayuscula = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1);
+  // El que vence primero va arriba, con su medio; el otro, en el detalle con su fecha
+  const primero = envio && (!local || envio <= local) ? 'envio' : 'local';
+  const dia = (primero === 'envio' ? envio : local) as string;
+  let detalle: string;
+  if (envio && local && envio === local) detalle = `Por ZOOM o MRW, y también ${enGuanare}.`;
+  else if (primero === 'envio') detalle = `Por ZOOM o MRW.${local ? ` ${conMayuscula(enGuanare)}, hasta el ${diaConNombre(local)}.` : ''}`;
+  else detalle = `${conMayuscula(enGuanare)}.${envio ? ` Por ZOOM o MRW, hasta el ${diaConNombre(envio)}.` : ''}`;
+  // Solo con retiro, el que vence primero no "llega": se retira
+  const verbo = primero === 'local' && !formas.delivery ? 'Para retirarlo' : 'Para que llegue';
+  return { dia, titulo: `${verbo} antes del 24, pide hasta el ${diaConNombre(dia)}`, detalle };
+}

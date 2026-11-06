@@ -7,12 +7,13 @@ import { IconoCheck, IconoGuardar, IconoRestablecer } from '@/components/iconos'
 import GorroSanta from '@/components/navidad/GorroSanta';
 import SelloNavidad from '@/components/navidad/SelloNavidad';
 import TarjetaNavidad from '@/components/navidad/TarjetaNavidad';
+import { VistaFranjaNavidad } from '@/components/navidad/FechaLimiteNavidad';
 import { Field, SettingsCard, SwitchRow, TextAreaField, TextField } from '@/app/admin/(dashboard)/settings/_components/fields';
 import { adminBadge, adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton, adminSpinner, type AdminTone } from '@/lib/admin-ui';
 import { safeHotAdLink } from '@/lib/hot-ad';
 import {
-  comoDia, diaEnCaracas, estadoNavidad, GORRO_RECOMENDADO, TARJETA_NAVIDAD, temporadaSugerida, varianteGorro,
-  type EstadoNavidad, type VarianteGorro,
+  comoDia, corteValido, diaEnCaracas, estadoNavidad, franjaNavidad, GORRO_RECOMENDADO, TARJETA_NAVIDAD, temporadaSugerida, varianteGorro,
+  type EstadoNavidad, type FormasDeEntrega, type VarianteGorro,
 } from '@/lib/navidad';
 
 interface NavidadForm {
@@ -26,12 +27,18 @@ interface NavidadForm {
   christmasPopupText: string;
   christmasPopupButton: string;
   christmasPopupLink: string;
+  /** C-190: el último día para pedir y que llegue antes del 24 ('AAAA-MM-DD' o ''), por ZOOM o MRW y en Guanare */
+  christmasCutoffShipping: string;
+  christmasCutoffLocal: string;
 }
 
 const INICIAL: NavidadForm = {
   christmasTheme: false, christmasThemeFrom: '', christmasThemeUntil: '', christmasHat: GORRO_RECOMENDADO, christmasPopup: true,
   christmasPopupTitle: '', christmasPopupText: '', christmasPopupButton: '', christmasPopupLink: '',
+  christmasCutoffShipping: '', christmasCutoffLocal: '',
 };
+
+const CORTE_INVALIDO = 'Elige un día de noviembre o de diciembre hasta el 24';
 
 const texto = (valor: unknown) => (typeof valor === 'string' ? valor : '');
 
@@ -47,6 +54,8 @@ function leer(data: Record<string, unknown>): NavidadForm {
     christmasPopupText: texto(data.christmasPopupText),
     christmasPopupButton: texto(data.christmasPopupButton),
     christmasPopupLink: texto(data.christmasPopupLink),
+    christmasCutoffShipping: comoDia(texto(data.christmasCutoffShipping)) ?? '',
+    christmasCutoffLocal: comoDia(texto(data.christmasCutoffLocal)) ?? '',
   };
 }
 
@@ -114,6 +123,8 @@ export default function Navidad() {
   const [logo, setLogo] = useState<string | null>(null);
   const [nombre, setNombre] = useState('Electro Shop');
   const [fondo, setFondo] = useState({ color: '#000000', opacidad: 70 });
+  // C-190: qué formas de entrega tiene encendidas la tienda (Configuración → Envíos): la franja solo nombra esas
+  const [formas, setFormas] = useState<FormasDeEntrega>({ envio: true, delivery: false, retiro: true });
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -137,6 +148,7 @@ export default function Navidad() {
         if (texto(data.companyName)) setNombre(texto(data.companyName).split(/\s+/).slice(0, 2).join(' '));
         const opacidad = typeof data.hotAdBackdropOpacity === 'number' ? data.hotAdBackdropOpacity : 70;
         setFondo({ color: texto(data.hotAdBackdropColor) || '#000000', opacidad });
+        setFormas({ envio: data.deliveryEnabled !== false, delivery: data.localDeliveryEnabled === true, retiro: data.pickupEnabled !== false });
       })
       .catch(() => toast.error('No se pudo cargar el tema navideño'))
       .finally(() => setCargando(false));
@@ -157,12 +169,23 @@ export default function Navidad() {
       setErrores({ christmasThemeUntil: 'El último día no puede ser antes del primero' });
       return;
     }
+    const cortes = (['christmasCutoffShipping', 'christmasCutoffLocal'] as const).filter((clave) => form[clave] && !corteValido(form[clave]));
+    if (cortes.length > 0) {
+      setErrores(Object.fromEntries(cortes.map((clave) => [clave, CORTE_INVALIDO])));
+      return;
+    }
     setGuardando(true);
     try {
       const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, christmasThemeFrom: form.christmasThemeFrom || null, christmasThemeUntil: form.christmasThemeUntil || null }),
+        body: JSON.stringify({
+          ...form,
+          christmasThemeFrom: form.christmasThemeFrom || null,
+          christmasThemeUntil: form.christmasThemeUntil || null,
+          christmasCutoffShipping: form.christmasCutoffShipping || null,
+          christmasCutoffLocal: form.christmasCutoffLocal || null,
+        }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
@@ -191,6 +214,10 @@ export default function Navidad() {
   });
   const sugerida = temporadaSugerida();
   const conFechas = Boolean(form.christmasThemeFrom || form.christmasThemeUntil);
+  // C-190: la franja como la vería hoy un cliente con el tema encendido (sin las fechas vencidas ni las que no sirven)
+  const corteDe = (dia: string) => (dia && corteValido(dia) ? dia : null);
+  const franja = franjaNavidad({ envio: corteDe(form.christmasCutoffShipping), local: corteDe(form.christmasCutoffLocal) }, formas, diaEnCaracas());
+  const conCortes = Boolean(form.christmasCutoffShipping || form.christmasCutoffLocal);
 
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_24rem]">
@@ -322,6 +349,64 @@ export default function Navidad() {
             </div>
           )}
         </SettingsCard>
+
+        <SettingsCard
+          title="Para que llegue antes del 24"
+          description="La franja con el último día para pedir: en la ficha de los productos físicos, en el carrito y en Ideas para regalar, mientras el tema se ve en la tienda. Sin fecha no sale nada."
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field
+              label="Último día por ZOOM o MRW"
+              htmlFor="navidad-corte-envio"
+              error={errores.christmasCutoffShipping}
+              hint={formas.envio ? 'Envío nacional.' : 'El envío nacional está apagado en Configuración: esta fecha no sale.'}
+            >
+              <input
+                id="navidad-corte-envio"
+                type="date"
+                value={form.christmasCutoffShipping}
+                onChange={(e) => set('christmasCutoffShipping', e.target.value)}
+                aria-invalid={errores.christmasCutoffShipping ? true : undefined}
+                className={adminInput(Boolean(errores.christmasCutoffShipping))}
+              />
+            </Field>
+            <Field
+              label="Último día en Guanare"
+              htmlFor="navidad-corte-local"
+              error={errores.christmasCutoffLocal}
+              hint={
+                formas.delivery && formas.retiro ? 'Delivery o retiro en la tienda.'
+                  : formas.delivery ? 'Delivery en Guanare.'
+                    : formas.retiro ? 'Retiro en la tienda.'
+                      : 'El delivery y el retiro están apagados en Configuración: esta fecha no sale.'
+              }
+            >
+              <input
+                id="navidad-corte-local"
+                type="date"
+                value={form.christmasCutoffLocal}
+                onChange={(e) => set('christmasCutoffLocal', e.target.value)}
+                aria-invalid={errores.christmasCutoffLocal ? true : undefined}
+                className={adminInput(Boolean(errores.christmasCutoffLocal))}
+              />
+            </Field>
+          </div>
+          <p className={adminHint}>
+            El día que pongas se incluye; al siguiente, la franja se va sola. Pon solo fechas confirmadas con ZOOM, MRW y el delivery: la franja promete que llega antes del 24.
+          </p>
+          {conCortes && (
+            <button
+              type="button"
+              onClick={() => {
+                set('christmasCutoffShipping', '');
+                set('christmasCutoffLocal', '');
+              }}
+              className={`${adminSecondaryButton} mt-3 h-9 px-3 text-xs`}
+            >
+              Quitar las fechas
+            </button>
+          )}
+        </SettingsCard>
       </div>
 
       {/* Vista previa: así se ve con el tema encendido. Es solo para mirar (inert): sus enlaces no llevan a ningún lado */}
@@ -349,6 +434,14 @@ export default function Navidad() {
           ) : (
             <p className="rounded-2xl border border-dashed border-line px-4 py-3 text-sm text-muted">
               Al entrar sale la imagen de la pestaña Popup del home, como siempre. El gorro va en el logo.
+            </p>
+          )}
+          {/* C-190: la franja de la ficha y del carrito, con las formas de entrega que tiene encendidas la tienda */}
+          {franja ? (
+            <VistaFranjaNavidad franja={franja} />
+          ) : (
+            <p className="rounded-2xl border border-dashed border-line px-4 py-3 text-sm text-muted">
+              {conCortes ? 'Las fechas de entrega ya pasaron o no sirven: la franja no sale.' : 'Sin fechas de entrega, la ficha y el carrito no dicen hasta cuándo pedir.'}
             </p>
           )}
         </div>

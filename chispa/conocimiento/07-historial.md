@@ -67,6 +67,11 @@ Las fechas son de 2026. Los MP4 los tiene Andrés; aquí quedan las fuentes.
   - Gracias: el pulgar sube al lado de la cara.
   - Para esto, `chispa.js` ganó `objeto`, `espejo` y `entre` (ver `02-chispa-el-personaje.md`). Los videos de antes salen igual.
 
+## Chispa en ElectroStudio (06/11, C-193)
+- Cinco poses (saluda, señala, pulgar, celebra, explica), con y sin el gorro de Santa, en `public/images/studio/chispa/` de la web: salen de `chispa.js` con Chrome (600 × 735) y van en las historias de ElectroStudio y en el popup navideño de la tienda (C-194).
+- **Corrección de Andrés:** en "celebra" la mano izquierda era la derecha copiada ("se repite"). Ahora esa mano va con `espejo: true` (el pulgar hacia el centro) en celebra, explica y hombros. Los videos que se vuelvan a grabar salen corregidos.
+- Pidió "muchísimas mejoras a Chispa en movimiento y detalles": manos y dedos, movimiento natural, cara y expresiones (C-195 en la web).
+
 ## Ideas pendientes (Andrés no las ha pedido todavía)
 - Plantilla de historias "Domingo de web".
 - Calendario de contenido de dos semanas.

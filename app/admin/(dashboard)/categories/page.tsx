@@ -12,8 +12,7 @@ import { Button } from '@/components/ui/Button';
 import CategoryIconRenderer from '@/components/CategoryIconRenderer';
 import {
   ICON_OPTIONS, COLOR_OPTIONS,
-  getCategoryIcon, getCategoryColor, getAutoIcon,
-  parseImportStatement, loadIconDynamic,
+  getCategoryIcon, getCategoryIconOption, getCategoryColor, getAutoIcon,
 } from '@/lib/category-icons';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
@@ -62,12 +61,6 @@ export default function CategoriesPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [uploadingIcon, setUploadingIcon] = useState(false);
   const customIconRef = useRef<HTMLInputElement>(null);
-  // Custom import field
-  const [importInput, setImportInput] = useState('');
-  const [importLoading, setImportLoading] = useState(false);
-  const [importError, setImportError] = useState('');
-  const [importPreviewComponent, setImportPreviewComponent] = useState<React.ComponentType<{ className?: string }> | null>(null);
-  const [importParsedName, setImportParsedName] = useState('');
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   useBodyScrollLock(showDeleteModal);
@@ -268,42 +261,6 @@ export default function CategoriesPage() {
     }
   };
 
-  const handleImportInput = async (val: string) => {
-    setImportInput(val);
-    setImportError('');
-    setImportPreviewComponent(null);
-    setImportParsedName('');
-    if (!val.trim()) return;
-    const parsed = parseImportStatement(val.trim());
-    if (!parsed) {
-      if (val.trim().length > 3) setImportError('Formato no reconocido');
-      return;
-    }
-    setImportLoading(true);
-    try {
-      const icon = await loadIconDynamic(parsed.iconName);
-      if (icon) {
-        setImportPreviewComponent(() => icon);
-        setImportParsedName(parsed.iconName);
-      } else {
-        setImportError(`"${parsed.iconName}" no encontrado en ${parsed.library}`);
-      }
-    } catch {
-      setImportError('Error al cargar la librería');
-    } finally {
-      setImportLoading(false);
-    }
-  };
-
-  const confirmImportIcon = () => {
-    if (!importParsedName) return;
-    setFormData(prev => ({ ...prev, icon: importParsedName, image: '' }));
-    setImportInput('');
-    setImportPreviewComponent(null);
-    setImportParsedName('');
-    setImportError('');
-  };
-
   const toggleExpand = (id: string) => {
     const newExpanded = new Set(expandedNodes);
     if (newExpanded.has(id)) { newExpanded.delete(id); } else { newExpanded.add(id); }
@@ -317,6 +274,8 @@ export default function CategoriesPage() {
   // Live preview for form
   const PreviewIcon = getCategoryIcon(formData.icon || (formData.name ? getAutoIcon(formData.name) : ''));
   const previewColor = getCategoryColor(formData.color || null, 0);
+  // C-189: la opción del pack que corresponde al ícono guardado (también los nombres de antes, como "GiGameConsole")
+  const iconoElegido = getCategoryIconOption(formData.icon);
 
   return (
     <div className="-m-4 flex flex-col md:-m-6 lg:min-h-[calc(100dvh-10rem)] lg:flex-row">
@@ -470,10 +429,12 @@ export default function CategoriesPage() {
                           key={name}
                           type="button"
                           title={label}
-                          onClick={() => setFormData(prev => ({ ...prev, icon: prev.icon === name ? '' : name }))}
+                          aria-label={label}
+                          aria-pressed={iconoElegido?.name === name}
+                          onClick={() => setFormData(prev => ({ ...prev, icon: getCategoryIconOption(prev.icon)?.name === name ? '' : name }))}
                           className={[
                             'flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all',
-                            formData.icon === name
+                            iconoElegido?.name === name
                               ? 'border-brand-500 bg-brand-50 text-brand-600 shadow-sm'
                               : 'border-line hover:border-line-strong text-subtle hover:text-ink-soft',
                           ].join(' ')}
@@ -484,7 +445,7 @@ export default function CategoriesPage() {
                     </div>
                     {formData.icon && (
                       <p className="text-xs text-muted mt-1.5">
-                        Seleccionado: <span className="font-medium text-brand-600">{ICON_OPTIONS.find(o => o.name === formData.icon)?.label}</span>
+                        Seleccionado: <span className="font-medium text-brand-600">{iconoElegido?.label ?? 'uno que ya no está en la lista (se ve como "Otros")'}</span>
                         {' · '}
                         <button type="button" className="text-subtle text-deal transition-colors" onClick={() => setFormData(prev => ({ ...prev, icon: '' }))}>
                           Quitar
@@ -531,61 +492,6 @@ export default function CategoriesPage() {
                       )}
                     </div>
                     <p className="text-xs text-subtle mt-1">PNG · SVG · WebP · fondo transparente recomendado · máx. 2 MB</p>
-
-                    {/* ── Import from any react-icons library ── */}
-                    <div className="mt-4 pt-4 border-t border-line">
-                      <p className="text-xs font-medium text-muted mb-2">
-                        Importar cualquier ícono de react-icons / lucide
-                      </p>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={importInput}
-                          onChange={e => handleImportInput(e.target.value)}
-                          placeholder={`import { GiLaptop } from "react-icons/gi"`}
-                          className="flex-1 px-3 py-2 text-xs border border-line rounded-lg font-mono focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/20 bg-surface placeholder:text-subtle"
-                          spellCheck={false}
-                        />
-                        {importLoading && (
-                          <div className="flex items-center px-3">
-                            <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-                          </div>
-                        )}
-                      </div>
-
-                      {importError && (
-                        <p className="text-[11px] text-deal mt-1.5">{importError}</p>
-                      )}
-
-                      {importPreviewComponent && (() => {
-                        const ImportIcon = importPreviewComponent;
-                        return (
-                          <div className="flex items-center gap-3 mt-2 p-2.5 bg-brand-50 border border-brand-200 rounded-xl">
-                            <div
-                              className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                              style={{ background: `linear-gradient(135deg, ${previewColor.from}, ${previewColor.to})` }}
-                            >
-                              <ImportIcon className="w-5 h-5 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-mono font-semibold text-ink truncate">{importParsedName}</p>
-                              <p className="text-xs text-subtle">Ícono cargado correctamente</p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={confirmImportIcon}
-                              className="px-3 py-1.5 bg-brand-500 text-white text-xs font-semibold rounded-lg hover:bg-brand-500 transition-colors flex-shrink-0"
-                            >
-                              Usar
-                            </button>
-                          </div>
-                        );
-                      })()}
-
-                      <p className="text-xs text-subtle mt-1.5">
-                        Acepta la línea completa de import o solo el nombre: <span className="font-mono">GiLaptop</span>
-                      </p>
-                    </div>
                   </div>
 
                   {/* ── Color Palette ── */}

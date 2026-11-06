@@ -1,10 +1,5 @@
-'use client';
-
-import { createElement, useState, useEffect, type ComponentType, type SVGAttributes } from 'react';
-import { IconoCuadricula } from '@/components/iconos';
-import { getCategoryIcon, loadIconDynamic } from '@/lib/category-icons';
-
-type IconComponent = ComponentType<SVGAttributes<SVGElement> & { className?: string }>;
+import { createElement } from 'react';
+import { getCategoryIcon } from '@/lib/category-icons';
 
 interface Props {
   iconName: string | null | undefined;
@@ -12,28 +7,11 @@ interface Props {
 }
 
 /**
- * Renders any react-icons icon by name — presets render instantly,
- * custom imports (GiLaptop, FaBeer, TbDrone…) are loaded client-side
- * as a separate webpack chunk on first use.
+ * El ícono de una categoría por el nombre que guarda: del pack ("IconoConsola") o de antes ("GiGameConsole").
+ * C-189: solo íconos del pack propio, sin cargar ninguna librería. Ya no necesita el navegador: en un Server Component
+ * se dibuja en el servidor. Un nombre desconocido se ve como "Otros".
  */
 export default function CategoryIconRenderer({ iconName, className }: Props) {
-  // Los íconos del listado se resuelven al instante; los demás se cargan una vez y se guardan por nombre.
-  // C-111: antes un efecto copiaba el ícono a un estado en cada cambio (render extra y regla set-state-in-effect).
-  const preset = iconName ? getCategoryIcon(iconName) : IconoCuadricula;
-  const esPreset = !iconName || preset !== IconoCuadricula;
-  const [dinamico, setDinamico] = useState<{ name: string; Icon: IconComponent } | null>(null);
-
-  useEffect(() => {
-    if (esPreset || !iconName) return;
-    let vigente = true;
-    loadIconDynamic(iconName).then((dyn) => {
-      if (vigente && dyn) setDinamico({ name: iconName, Icon: dyn as IconComponent });
-    });
-    return () => {
-      vigente = false;
-    };
-  }, [iconName, esPreset]);
-
-  const Icon: IconComponent = esPreset ? preset : dinamico?.name === iconName ? dinamico.Icon : IconoCuadricula;
-  return createElement(Icon, { className });
+  // createElement: el ícono se elige en cada render (C-111, regla static-components)
+  return createElement(getCategoryIcon(iconName), { className });
 }

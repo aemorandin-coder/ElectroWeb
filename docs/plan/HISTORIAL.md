@@ -1,9 +1,76 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `e3479bc`, versión `v1.0.0-rc.18`, el 28/10/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `46f8205`, versión `v1.0.0-rc.19`, el 06/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 06/11 · C-187, la limpieza de C-185 y los stickers (de rc.18 a `v1.0.0-rc.19`)
+Subido el 06/11 por Andrés. Claude lo comprobó desde fuera: `/api/categories` ya cuenta solo lo publicado (Gift Cards y Recargas 6, Consolas 0, Misceláneos 1).
+- **C-187 · Productos:**
+  - Un producto con ventas que se borra para siempre queda **eliminado** (`products.eliminadoAt`), fuera de la lista, de la papelera y de la tienda, con su historia intacta.
+  - Lo archivado va en su filtro y sin estrella.
+  - Mejoras: "Por revisar", la vista que se recuerda, "Deshacer" al cambiar el estado, la estrella en la lista y el panel en el teléfono (`estado/C-187.md`).
+- **C-185:** la limpieza del repositorio. Los 40 uploads versionados se respaldaron antes del pull y se devolvieron después.
+- **Los stickers de Chispa de Luis** (`chispa/`).
+
+**Diagnóstico de producción** (`docs/plan/scripts/diagnostico-c187.sql`, corrido por Andrés el 06/11):
+- **Los 5 "Archivados" fuera de la papelera tienen órdenes**, por eso no se podían borrar:
+  - con órdenes canceladas: STEAM CARD (SALDO) `W2313131` y MINI CONSOLA NINTENDO SUP-400 `INT6154`, los dos destacados, y CABLE HDMI 3 METROS REFORZADO `INT17552800001`;
+  - con órdenes entregadas: "Producto Test" `TEST` (2) y "Test Digital" `TESTCARD` (1, con un código digital).
+- **La bitácora muestra el ciclo del error:** el 05/11 cerca de las 22:30 (hora de Venezuela) los 5 se movieron a la papelera y se borraron para siempre. Cada uno volvió como "archivado".
+- **`/api/categories` contaba de más** en Celulares y Tablets (1 contra 0), Consolas (3 contra 0), Gift Cards y Recargas (7 contra 6) y Misceláneos (2 contra 1).
+- **2 archivados seguían destacados.**
+
+El bloque de C-184 (rc.18), con el SQL, lo comprobado y su vuelta atrás, pasó a `HISTORIAL.md`. Después del deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.19`.
+
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.18`). Es aditivo:
+```sql
+ALTER TABLE "products" ADD COLUMN "eliminadoAt" TIMESTAMP(3);
+```
+Sin variables nuevas y sin crons nuevos. El cron de la papelera sigue igual; solo su registro cambia "archivados" por "conservados".
+
+**Paso a paso (como se dio).** En el servidor, en `/var/www/electroshopve`:
+```bash
+# 0. Tu cuenta: en el panel, arriba a la derecha, debe decir "Super Admin" (recuperar un eliminado es solo del dueño)
+# 1. Comprobar sin cambiar nada
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.18 y sin cambios
+crontab -l | grep papelera && tail -n 5 ~/cron-papelera.log            # "archivados" mayor que 0 = los zombis que devolvía el cron
+# 2. Respaldo de la base (hay cambio de base)
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc19.dump
+# 3. Los 40 uploads de C-185, ANTES del pull (después git ya no los lista y el pull los borraría)
+git ls-files public/uploads | tar czf ~/uploads-versionados-C185.tgz -T - && tar tzf ~/uploads-versionados-C185.tgz | wc -l   # 40
+# 4. Deploy: para y muestra el SQL de arriba. Si es solo esa línea:
+bash scripts/deploy.sh
+npx prisma db push && bash scripts/deploy.sh
+# 5. Devolver los uploads (quedan en disco, ignorados por git) y comprobar
+tar xzf ~/uploads-versionados-C185.tgz && git status --short           # vacío
+git describe --tags                                                     # v1.0.0-rc.19
+# 6. Diagnóstico de los zombis (solo lee). Pasarle a Claude el archivo
+psql "$DB" -f docs/plan/scripts/diagnostico-c187.sql > ~/diagnostico-c187.txt 2>&1
+```
+
+**Limpieza de los zombis, desde el panel y sin SQL** (después del deploy):
+1. Productos → **Archivados** → la casilla de arriba → **A la papelera**.
+2. **Papelera → Vaciar la papelera.** Lo que tiene ventas queda eliminado y oculto; lo que no, se borra.
+3. Comprobar: "Archivados" dice 0, y la papelera dice "Eliminados que se conservan por sus ventas (N)".
+4. Si quieres conservar uno archivado que estaba destacado y lo activas, vuelve destacado. Quítale la estrella en la lista.
+
+**Pruebas** (unos 10 minutos):
+1. **Teléfono:** Productos muestra enteras las pestañas Catálogo, SADES y Papelera, y "Todos" ya no trae los archivados.
+2. **Mañana, después del cron de las 9:45:** lo eliminado no volvió.
+3. **Sin sesión**, `https://electroshopve.com/api/categories`: Gift Cards y Recargas igual a sus publicados (6), Misceláneos 1 y Consolas 0.
+4. **"Por revisar":** dice "Sin marca 4" y "Sin peso o medidas 1". Ponle la marca a uno y baja. El aviso del Dashboard lleva al filtro.
+5. **La vista se recuerda:** filtra "Activos", busca algo, edita un producto y guarda: vuelves a la misma vista.
+6. **Deshacer y la estrella:** cambia el estado de un producto y toca "Deshacer". Pon la estrella de Destacado en uno y quítala.
+
+**Vuelta atrás:** `git reset --hard e3479bc && npm install && bash scripts/deploy.sh --sin-pull`.
+- La columna se queda y no molesta.
+- Lo eliminado reaparece en la papelera del código viejo (tiene `deletedAt`) y el cron viejo lo volvería a archivar. No se pierde nada.
+- Los uploads están en `~/uploads-versionados-C185.tgz` y la base en `~/respaldo-antes-rc19.dump`.
+
+**Lo decide Andrés:** `/categorias` muestra 8 de 15 categorías con "0 productos". C-187 propone esconderlas y no lo aplicó, porque es un dato visible de la tienda.
 
 
 ## 28/10 · C-184 (de rc.17 a `v1.0.0-rc.18`)

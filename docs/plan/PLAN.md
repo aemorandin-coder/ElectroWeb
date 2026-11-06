@@ -68,6 +68,7 @@ Claude lo implementa en C-10/C-11. Gemini **solo usa** estas clases y no inventa
 | `danger` | `#ef4444` | `text-danger` | Errores |
 | `info` | `#3b82f6` | | Avisos informativos |
 | `whatsapp` | `#25d366` | `bg-whatsapp` | Única excepción de marca externa |
+| `navidad` | `#e0263a` | `fill-navidad`, `text-navidad` | Solo el tema navideño (C-186): el rojo del gorro de Santa. Las ofertas siguen con `deal` y los errores con `danger` |
 
 **Reglas de color**
 - Neutros: solo `ink`, `ink-soft`, `muted`, `subtle`, `line`, `line-strong`, `surface` y la escala `gray-*`. **`slate-*` desaparece.**
@@ -394,7 +395,10 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - Cuando vuelva SADES: una lista de SKU borrados de verdad, para que la sincronización no los recree como borrador.
 - Propuestas menores de `estado/C-187.md`: orden de la lista, lista liviana, tarjetas en el teléfono, aviso de destacado en el asistente, `categoryId` en la edición masiva y 404 real en la ficha.
 
-**C-188 · Los íconos propios en la web** (pedido de Andrés el 06/11; espera a que C-186 esté integrada): pasar el pack de 132 íconos (`~/Escritorio/ElectroShop Brand/Pack de íconos/`) a componentes, reemplazar `react-icons` en la tienda y el panel (las marcas quedan con sus logos oficiales), mapear los nombres guardados en la base (categorías y notificaciones) y cerrar el selector de íconos de categorías.
+**De C-186 (06/11), esperan la decisión de Andrés** (`estado/C-186.md`): las 5 recomendaciones de Navidad. (1) "Ideas para regalar" por presupuesto: los productos y los rangos. (2) Gift cards de último minuto con mensaje: el plazo de los digitales, A1. (3) "Pide hasta el … para que llegue antes del 24": las fechas de corte de ZOOM y MRW. (4) Dos tandas de correos y estados con el aguinaldo y los promotores: la oferta y la comisión, A14. (5) Combos y envoltorio de regalo: los precios.
+- Tarea chica: `motion-safe:animate-fadeIn` no genera nada con Tailwind 4, así que el popup, `MobileNavBar` y `GuidedTour` no hacen su entrada. Hay que definir la animación en `@theme`.
+
+**C-188 · Los íconos propios en la web** (pedido de Andrés el 06/11; C-186 ya está integrada, sigue esta): pasar el pack de 132 íconos (`~/Escritorio/ElectroShop Brand/Pack de íconos/`) a componentes, reemplazar `react-icons` en la tienda y el panel (las marcas quedan con sus logos oficiales), mapear los nombres guardados en la base (categorías y notificaciones) y cerrar el selector de íconos de categorías.
 
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).

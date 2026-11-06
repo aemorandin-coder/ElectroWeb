@@ -52,6 +52,7 @@ const RC16 = { sistema: '1.0.0-rc.16' } as const;
 const RC17 = { sistema: '1.0.0-rc.17' } as const;
 const RC18 = { sistema: '1.0.0-rc.18' } as const;
 const RC19 = { sistema: '1.0.0-rc.19' } as const;
+const RC20 = { sistema: '1.0.0-rc.20' } as const;
 const primera = (resumen: string): CambioModulo => ({ ...PRIMERA, resumen, silencioso: true });
 
 export const MODULOS: ModuloPanel[] = [
@@ -124,11 +125,12 @@ export const MODULOS: ModuloPanel[] = [
     descripcion: 'Campañas por correo, plantillas y el popup promocional.',
     paginas: ['/admin/marketing'],
     archivos: [
+      'app/admin/(dashboard)/marketing/_components/Navidad.tsx', 'components/navidad/', 'lib/navidad.ts',
       'app/admin/(dashboard)/marketing/page.tsx', 'app/admin/(dashboard)/marketing/_components/Campanas.tsx',
       'app/admin/(dashboard)/marketing/_components/Plantillas.tsx', 'app/admin/(dashboard)/marketing/_components/Popup.tsx',
       'app/api/admin/campaigns/', 'app/api/admin/email/', 'lib/email-campaigns.ts', 'lib/hot-ad.ts', 'lib/email-templates/',
     ],
-    historial: [{ version: '1.2.0', ...RC9, tarea: 'C-175', resumen: 'Correos rediseñados: todos llevan el logo largo arriba, el mismo botón, los mismos títulos y cajas, y se ven igual en Gmail, Outlook y el teléfono. La vista previa de Plantillas suma el de reseña publicada.' }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Campañas de correo: el borrador ya no se pisa entre dos personas (se combinan los cambios) y se ve quién lo tiene abierto.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.3.0', ...RC20, tarea: 'C-186', resumen: 'Pestaña Navidad: el tema navideño se prende y se apaga con fechas, sin deploy. Se elige el gorro (dos versiones) y si al entrar sale la tarjeta navideña o la imagen del popup.' }, { version: '1.2.0', ...RC9, tarea: 'C-175', resumen: 'Correos rediseñados: todos llevan el logo largo arriba, el mismo botón, los mismos títulos y cajas, y se ven igual en Gmail, Outlook y el teléfono. La vista previa de Plantillas suma el de reseña publicada.' }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Campañas de correo: el borrador ya no se pisa entre dos personas (se combinan los cambios) y se ve quién lo tiene abierto.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'promotores',
@@ -211,7 +213,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/site-settings.ts', 'lib/exchange-rate.ts', 'lib/correo.ts', 'lib/email-service.ts', 'lib/smtp-seguro.ts', 'lib/maintenance.ts',
       'components/admin/EmailSettingsPanel.tsx', 'components/legal/', 'scripts/deploy.sh',
     ],
-    historial: [{ version: '1.1.0', ...RC13, tarea: 'C-178', resumen: 'Configuración → SEO: si no subes una imagen para compartir, la vista previa muestra la que arma la tienda (antes, el logo o nada).' }, { version: '1.0.2', ...RC12, tarea: 'C-177', resumen: 'Los correos salen con la versión nueva de la librería de envío, que corrige fallas de seguridad. Para quien los recibe no cambia nada.', silencioso: true }, { version: '1.0.1', ...RC9, tarea: 'C-175', resumen: 'El correo de prueba de la configuración sale con el mismo diseño que reciben los clientes: sirve para ver cómo llega el logo.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.1', ...RC20, tarea: 'C-186', resumen: 'La configuración guarda el tema navideño (Marketing puede guardarlo) y a la tienda solo le dice qué gorro se ve hoy.', silencioso: true }, { version: '1.1.0', ...RC13, tarea: 'C-178', resumen: 'Configuración → SEO: si no subes una imagen para compartir, la vista previa muestra la que arma la tienda (antes, el logo o nada).' }, { version: '1.0.2', ...RC12, tarea: 'C-177', resumen: 'Los correos salen con la versión nueva de la librería de envío, que corrige fallas de seguridad. Para quien los recibe no cambia nada.', silencioso: true }, { version: '1.0.1', ...RC9, tarea: 'C-175', resumen: 'El correo de prueba de la configuración sale con el mismo diseño que reciben los clientes: sirve para ver cómo llega el logo.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'tienda',
@@ -226,7 +228,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/queries/home.ts', 'lib/queries/catalog.ts', 'lib/queries/product.ts', 'lib/queries/navigation.ts', 'lib/queries/seo.ts',
       'lib/queries/busqueda-catalogo.ts', 'lib/queries/hot-ad.ts', 'lib/dto/', 'lib/seo.ts', 'lib/og/', 'lib/feed.ts', 'lib/llms.ts',
     ],
-    historial: [{ version: '1.2.2', ...RC16, tarea: 'C-182', resumen: 'Estilos de la hoja impresa del presupuesto (letra a 14 px y blanco y negro) en globals.css; leer las fotos subidas pasó a una pieza compartida.', silencioso: true }, { version: '1.2.1', ...RC14, tarea: 'C-178', resumen: 'La imagen de la portada al compartir dice "Todo lo encuentras con nosotros." en vez de la lista de categorías.' }, { version: '1.2.0', ...RC13, tarea: 'C-178', resumen: 'Al compartir un enlace de la tienda sale una imagen hecha para eso: el producto con su foto, el precio en dólares (tachado si hay oferta) y su condición; las categorías y las páginas, con su título y sus productos. Antes era el logo cuadrado o la foto suelta.' }, { version: '1.1.0', ...RC11, tarea: 'C-172', resumen: 'Destacados del inicio: la estrella cambia cada día y, en la computadora, rota con el siguiente de la columna (una vuelta y se detiene; con flechas y pausa).' }, { version: '1.0.1', ...RC5, tarea: 'C-174', resumen: 'Estilo de la marquesina del panel en globals.css (no se usa en la tienda).', silencioso: true }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.3.0', ...RC20, tarea: 'C-186', resumen: 'Tema navideño: con el tema encendido, el logo del encabezado y del pie lleva un gorro de Santa con el estilo de la marca, y al entrar sale la tarjeta navideña con el sello. La animación pasa una sola vez.' }, { version: '1.2.2', ...RC16, tarea: 'C-182', resumen: 'Estilos de la hoja impresa del presupuesto (letra a 14 px y blanco y negro) en globals.css; leer las fotos subidas pasó a una pieza compartida.', silencioso: true }, { version: '1.2.1', ...RC14, tarea: 'C-178', resumen: 'La imagen de la portada al compartir dice "Todo lo encuentras con nosotros." en vez de la lista de categorías.' }, { version: '1.2.0', ...RC13, tarea: 'C-178', resumen: 'Al compartir un enlace de la tienda sale una imagen hecha para eso: el producto con su foto, el precio en dólares (tachado si hay oferta) y su condición; las categorías y las páginas, con su título y sus productos. Antes era el logo cuadrado o la foto suelta.' }, { version: '1.1.0', ...RC11, tarea: 'C-172', resumen: 'Destacados del inicio: la estrella cambia cada día y, en la computadora, rota con el siguiente de la columna (una vuelta y se detiene; con flechas y pausa).' }, { version: '1.0.1', ...RC5, tarea: 'C-174', resumen: 'Estilo de la marquesina del panel en globals.css (no se usa en la tienda).', silencioso: true }, primera('Primera versión registrada.')],
   },
   {
     id: 'cuenta',

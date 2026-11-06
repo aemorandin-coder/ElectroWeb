@@ -1,17 +1,17 @@
-# Lo de ahora (actualizado 2026-11-06, C-187 · producción en 1.0.0-rc.19)
+# Lo de ahora (actualizado 2026-11-06, C-186 · producción en 1.0.0-rc.19, `main` en 1.0.0-rc.20)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.19`** (`46f8205`), subida el 06/11 por Andrés. Trae C-187 (productos zombis y 5 mejoras), la limpieza de C-185 y los stickers de Chispa. Faltan la limpieza de los zombis desde el panel y las pruebas (sección 2). **No hay código por subir.**
+- **Producción: `v1.0.0-rc.19`** (`46f8205`), subida el 06/11 por Andrés. Trae C-187 (productos zombis y 5 mejoras), la limpieza de C-185 y los stickers de Chispa. Faltan la limpieza de los zombis desde el panel y las pruebas (sección 2). **Falta subir `v1.0.0-rc.20`**: el tema navideño (C-186) y los íconos propios (C-188, en curso), juntos, como decidió Andrés. Ver la sección 2.
 - **C-187 · Admin → Productos (06/11, pedido de Andrés, en producción):** ya se pueden eliminar los zombis (`estado/C-187.md`).
   - **El motivo:** "Borrar para siempre" de un producto con ventas lo dejaba archivado y de vuelta en la lista, todavía destacado. El cron de la papelera hacía lo mismo a los 30 días.
   - **El arreglo:** ahora queda **eliminado**, fuera de la lista, de la papelera y de la tienda, sin tocar sus órdenes, garantías, reseñas, códigos ni Puntos ES. Solo el dueño lo puede recuperar, y vuelve como borrador. Lo archivado va en su propio filtro.
   - **Las 5 mejoras:** el filtro "Por revisar" (sin foto, sin marca y sin medidas); la vista que se recuerda; "Deshacer" al cambiar el estado; la estrella de destacado en la lista; y el panel bien a 360, 768 y 1024.
   - **Verificado:** 102 de 102 pruebas, humo 59 de 59, tsc, lint y build.
-- **C-186 · Tema navideño:** en curso. Andrés vio el primer diseño, genérico, y se rehace en Opus con esfuerzo máximo con el estilo del pack de íconos.
-- **C-188 · Los íconos propios en la web:** el pack está listo (132 íconos, `~/Escritorio/ElectroShop Brand/Pack de íconos/iconos-electro-shop-v1.html`, también para Luis). Se pasa a la tienda y al panel **cuando C-186 esté integrada**, para no chocar con sus archivos (pedido de Andrés: "espera que ellos terminen").
+- **C-186 · Tema navideño (06/11, hecha, falta subir):** Andrés dio el GO. Marketing → Navidad lo prende con fechas y sin deploy. Trae el gorro de Santa en el logo, en dos versiones a elegir, y la tarjeta navideña del popup, todo con el estilo del pack de íconos (`estado/C-186.md`). Después del deploy queda apagado. Las 5 recomendaciones esperan su decisión (`PLAN.md` §5.2).
+- **C-188 · Los íconos propios en la web:** sigue ahora que C-186 está integrada. El pack está listo (132 íconos, `~/Escritorio/ElectroShop Brand/Pack de íconos/iconos-electro-shop-v1.html`, también para Luis).
 - **C-185 · Limpieza (06/11, con el OK de Andrés):** la carpeta de Andrés estaba 41 commits atrás (lo de Luis del 11 al 28/10) y se puso al día. Se borraron las 178 ramas locales viejas, el stash y los worktrees de ChatGPT y de Gemini, 8 archivos sin uso y los 40 uploads de 2025 que estaban versionados. En GitHub quedan `main` y las etiquetas. Detalle en `estado/C-185.md`.
 - **Pedido del 16 y 17/10 (Luis): cotizaciones desde Numen.** Numen es la app de precios y proveedores del equipo, en un repositorio privado aparte. Las cotizaciones las arma Numen y las emite la web.
   - **C-181:** la entrada de servidor a servidor, y cuándo el cliente abre su enlace. Hecha (`estado/C-181.md`).
@@ -33,8 +33,52 @@
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
-## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.19`)
-El bloque de rc.19 (C-187, la limpieza de C-185 y los stickers), con el SQL, el diagnóstico y su vuelta atrás, pasó a `HISTORIAL.md`.
+## 2. Deploy pendiente: `v1.0.0-rc.20` (C-186 y C-188), **todavía no se sube**
+> **Andrés decidió el 06/11 subir todo junto:** el tema navideño (C-186, ya en `main`) y los íconos propios (C-188, en curso). No subir hasta que C-188 esté en `main`, con la etiqueta `v1.0.0-rc.20` puesta. Este bloque se completa con lo de C-188.
+
+Producción está en `v1.0.0-rc.19`; el bloque de rc.19 pasó a `HISTORIAL.md`. Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.20`. **La tienda se ve igual que hoy hasta que se encienda el tema en el panel.**
+
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.19`). Es aditivo, todo en `company_settings`:
+```sql
+ALTER TABLE "company_settings" ADD COLUMN "christmasHat" TEXT NOT NULL DEFAULT 'ajustado',
+ADD COLUMN "christmasPopup" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN "christmasPopupButton" TEXT,
+ADD COLUMN "christmasPopupLink" TEXT,
+ADD COLUMN "christmasPopupText" TEXT,
+ADD COLUMN "christmasPopupTitle" TEXT,
+ADD COLUMN "christmasTheme" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "christmasThemeFrom" DATE,
+ADD COLUMN "christmasThemeUntil" DATE;
+```
+Sin variables nuevas, sin crons y sin dependencias nuevas.
+
+**Paso a paso.** En el servidor, en `/var/www/electroshopve`:
+```bash
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.19 y sin cambios
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc20.dump
+bash scripts/deploy.sh                       # para y muestra el SQL de arriba (9 ADD COLUMN en company_settings)
+npx prisma db push && bash scripts/deploy.sh # si es solo eso
+git describe --tags                                                     # v1.0.0-rc.20
+```
+
+**Encenderlo (Admin → Marketing → Navidad):**
+1. El gorro "Ajustado al sello" ya viene elegido. "Clásico" es la otra opción.
+2. "Popup al entrar": "La tarjeta navideña" ya viene elegida. Elige "La imagen del popup" si prefieres una pieza tuya de ElectroStudio.
+3. **Para verlo hoy:** enciéndelo sin fechas y guarda. **Para dejarlo listo:** toca "Del 1 de diciembre al 6 de enero de 2027", enciende y guarda. Queda "Programado" y se prende solo el 1/12.
+
+**Pruebas** (unos 10 minutos):
+1. **Antes de encender**, en incógnito: la portada y el popup de siempre ("Ofertas de bienvenida"), sin gorros.
+2. **Encendido sin fechas**, en incógnito, en el teléfono y en la computadora:
+   - el gorro en el logo de arriba y en el del pie;
+   - a los 2 segundos y medio, la tarjeta: la pantalla del sello se enciende y el gorro cae y se mece;
+   - "Ver ideas para regalar" lleva a los productos.
+3. **Cambia al otro gorro** y guarda: la tienda cambia en la siguiente visita.
+4. En la pestaña **"Popup del home"** sale el aviso de que se muestra la tarjeta en lugar de la imagen.
+5. **Apaga y guarda:** la tienda vuelve a ser la de siempre. Después déjalo programado del 1/12 al 6/1.
+
+**Vuelta atrás:**
+- Del tema: apagarlo en el panel. Es inmediato y sin deploy.
+- Del código: `git reset --hard v1.0.0-rc.19 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas nuevas no molestan al código anterior. La base está en `~/respaldo-antes-rc20.dump`.
 
 ### Por confirmar de rc.19 (C-187, unos 15 minutos)
 El diagnóstico confirmó los 5 zombis: los 3 de la captura y 2 productos de prueba. Todos tienen al menos una orden (`HISTORIAL.md`, 06/11).

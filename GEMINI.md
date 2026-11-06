@@ -166,6 +166,8 @@ Aplica **solo** a clases con la forma `utilidad-[#hex]` (ej. `bg-[#2a63cd]`, `ho
 | `#3b82f6` | `info` |
 | `#0f172a` | `brand-950` |
 
+**`navidad` (#e0263a)** es solo del tema navideño (C-186, `components/navidad/`): no se usa para errores ni para ofertas.
+
 **Rojos:** para **texto, bordes y fondos de error** usa la familia `deal` (`text-deal`, `bg-deal-bg`, `border-deal/30`), como manda la tabla R3 de `PLAN_GEMINI.md`. `danger` (#ef4444) solo se queda donde ya venía en un hex: sobre blanco da 3,8:1 y no se lee. En R10 hubo que cambiar `text-danger` por `text-deal` en 6 archivos.
 
 Además: `slate-` → `gray-` (ej. `bg-slate-100` → `bg-gray-100`).

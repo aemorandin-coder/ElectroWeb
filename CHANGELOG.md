@@ -10,6 +10,23 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.20] - 2026-11-06
+### Tienda 1.3.0 (C-186)
+- **Tema navideño, con el diseño de la marca.** Con el tema encendido:
+  - el logo del encabezado y el del pie llevan un gorro de Santa con el trazo azul marino del pack de íconos;
+  - al entrar sale la tarjeta navideña, con el sello ES y su gorro, "Feliz Navidad" y el botón "Ver ideas para regalar".
+- **Dos gorros, a elegir en el panel:** "Ajustado al sello" (el aro blanco del logo se vuelve la piel del gorro) y "Clásico".
+- **La animación pasa una sola vez** (la pantalla del sello se enciende y el gorro cae y se mece hasta quedar quieto), y quien pide menos movimiento la ve quieta. Sin nieve ni animaciones en bucle.
+- **Con el tema apagado** (como queda después del deploy), la tienda es idéntica a la de antes y no carga nada del tema.
+### Marketing 1.3.0 (C-186)
+- **Pestaña Navidad:**
+  - Prende y apaga el tema con fechas en hora de Venezuela (por ejemplo del 1/12 al 6/1), sin deploy.
+  - Elige el gorro y si al entrar sale la tarjeta navideña o la imagen del popup.
+  - Edita los textos y el enlace de la tarjeta, con vista previa.
+### Configuración 1.1.1 (C-186)
+- Guarda el tema navideño. Marketing también puede guardarlo, pero nada más de la configuración. La tienda solo recibe qué gorro se ve hoy; las fechas no salen del servidor.
+- **Base:** 9 columnas nuevas (aditivo) en `company_settings`: `christmasTheme`, `christmasThemeFrom`, `christmasThemeUntil`, `christmasHat`, `christmasPopup` y los cuatro textos de la tarjeta. Sin variables ni crons.
+
 ## [1.0.0-rc.19] - 2026-11-06
 ### Productos 1.3.0 (C-187)
 - **Ya se pueden eliminar los productos zombis** (pedido de Andrés con una captura de producción).

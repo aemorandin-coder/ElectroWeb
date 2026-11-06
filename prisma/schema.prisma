@@ -1249,6 +1249,9 @@ model NotificationPreference {
   emailOrders       Boolean @default(true)
   emailReviews      Boolean @default(true)
   emailPromotions   Boolean @default(false)
+  /// C-191: cuándo el cliente dijo sí o no a las promociones (registro, Mi panel, perfil o baja). null = nunca lo decidió:
+  /// Mi panel se lo pregunta una vez. Las campañas siguen yendo solo a quien tiene emailPromotions en true.
+  emailPromotionsAt DateTime?
   inAppOrders       Boolean @default(true)
   inAppReviews      Boolean @default(true)
   inAppPromotions   Boolean @default(true)

@@ -36,7 +36,7 @@ export async function GET() {
                     emailVerified: true,
                     createdAt: true,
                     profile: { select: { lastLoginAt: true, lastLoginDevice: true, accountStatus: true, deletionRequestedAt: true } },
-                    notificationPreferences: { select: { emailPromotions: true, inAppFavoritos: true, emailFavoritos: true, emailReviews: true } },
+                    notificationPreferences: { select: { emailPromotions: true, emailPromotionsAt: true, inAppFavoritos: true, emailFavoritos: true, emailReviews: true } },
                 },
             }),
             prisma.account.count({ where: { userId, provider: 'google' } }),
@@ -133,10 +133,14 @@ export async function PATCH(request: NextRequest) {
         const body = parsed.data;
 
         if ('notificaciones' in body) {
+            // C-191: el sí o el no a las promociones queda con su fecha (Mi panel deja de preguntarlo)
+            const datos = body.notificaciones.emailPromotions === undefined
+                ? body.notificaciones
+                : { ...body.notificaciones, emailPromotionsAt: new Date() };
             await prisma.notificationPreference.upsert({
                 where: { userId },
-                create: { userId, ...body.notificaciones },
-                update: body.notificaciones,
+                create: { userId, ...datos },
+                update: datos,
             });
             return NextResponse.json({ message: 'Preferencia guardada' });
         }

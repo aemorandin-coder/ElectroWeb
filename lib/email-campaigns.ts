@@ -144,6 +144,30 @@ export async function contarDestinatarios(): Promise<number> {
   return prisma.user.count({ where: destinatariosWhere });
 }
 
+/** C-191: los clientes y por qué cada uno recibe o no las campañas. Suman `clientes`. */
+export interface AudienciaCampanas {
+  clientes: number;
+  /** Correo verificado y promociones aceptadas: los destinatarios */
+  aceptan: number;
+  /** Correo verificado y nunca lo decidieron: Mi panel se lo pregunta */
+  sinDecidir: number;
+  /** Correo verificado y dijeron que no (en Mi panel, su perfil o el enlace de baja) */
+  dijeronQueNo: number;
+  /** Sin el correo verificado: no reciben campañas aunque las acepten */
+  sinVerificar: number;
+}
+
+export async function resumenAudiencia(): Promise<AudienciaCampanas> {
+  const verificado = { role: 'USER' as const, email: { not: null }, emailVerified: { not: null } };
+  const [clientes, sinVerificar, aceptan, dijeronQueNo] = await Promise.all([
+    prisma.user.count({ where: { role: 'USER' } }),
+    prisma.user.count({ where: { role: 'USER', OR: [{ email: null }, { emailVerified: null }] } }),
+    prisma.user.count({ where: destinatariosWhere }),
+    prisma.user.count({ where: { ...verificado, notificationPreferences: { is: { emailPromotions: false, emailPromotionsAt: { not: null } } } } }),
+  ]);
+  return { clientes, aceptan, sinDecidir: Math.max(0, clientes - sinVerificar - aceptan - dijeronQueNo), dijeronQueNo, sinVerificar };
+}
+
 const PAUSA_ENTRE_CORREOS_MS = Number(process.env.CAMPAIGN_DELAY_MS ?? 1500);
 const enCurso = new Set<string>();
 const esperar = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

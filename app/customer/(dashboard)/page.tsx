@@ -9,6 +9,7 @@ import {
   IconoFlechaArriba, IconoGarantia, IconoInfo, IconoMas, IconoOferta, IconoPaquete, IconoRechazado, IconoTarjeta,
 } from '@/components/iconos';
 import CustomerOnboarding from '@/components/customer/CustomerOnboarding';
+import PreguntarPromociones from '@/components/promociones/PreguntarPromociones';
 import OrderStepper from '@/components/customer/OrderStepper';
 import { EnVivo } from '@/components/ui/EnVivo';
 import { formatUSD } from '@/lib/currency';
@@ -206,6 +207,9 @@ export default function CustomerDashboard() {
       </section>
 
       <CustomerOnboarding stats={stats} />
+
+      {/* C-191: una sola vez, a quien nunca decidió si quiere ofertas por correo */}
+      <PreguntarPromociones />
 
       {/* Pedidos en curso, con su avance */}
       <section aria-labelledby="pedidos-en-curso">

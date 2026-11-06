@@ -118,6 +118,8 @@ export const registroSchema = z.object({
   phone: telefonoSchema,
   password: contrasenaSchema,
   acceptTerms: z.literal(true, { error: 'Acepta los términos para crear tu cuenta' }),
+  // C-191: casilla sin marcar. Solo con un sí explícito el cliente entra a las campañas de correo
+  promociones: z.boolean().optional(),
 });
 
 export type CampoRegistro = keyof typeof registroSchema.shape;

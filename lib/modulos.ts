@@ -54,6 +54,7 @@ const RC18 = { sistema: '1.0.0-rc.18' } as const;
 const RC19 = { sistema: '1.0.0-rc.19' } as const;
 const RC20 = { sistema: '1.0.0-rc.20' } as const;
 const RC21 = { sistema: '1.0.0-rc.21' } as const;
+const RC22 = { sistema: '1.0.0-rc.22' } as const;
 const primera = (resumen: string): CambioModulo => ({ ...PRIMERA, resumen, silencioso: true });
 
 export const MODULOS: ModuloPanel[] = [
@@ -130,8 +131,9 @@ export const MODULOS: ModuloPanel[] = [
       'app/admin/(dashboard)/marketing/page.tsx', 'app/admin/(dashboard)/marketing/_components/Campanas.tsx',
       'app/admin/(dashboard)/marketing/_components/Plantillas.tsx', 'app/admin/(dashboard)/marketing/_components/Popup.tsx',
       'app/api/admin/campaigns/', 'app/api/admin/email/', 'lib/email-campaigns.ts', 'lib/hot-ad.ts', 'lib/email-templates/',
+      'app/api/public/email/',
     ],
-    historial: [{ version: '1.4.0', ...RC21, tarea: 'C-190', resumen: 'Navidad: las fechas de corte de ZOOM o MRW y de Guanare, con la franja en la vista previa. La tarjeta navideña lleva a Ideas para regalar.' }, { version: '1.3.1', ...RC20, tarea: 'C-188', resumen: 'Los íconos propios de Electro Shop en lugar de los de librería: el mismo trazo y la misma forma en toda la pantalla.', silencioso: true }, { version: '1.3.0', ...RC20, tarea: 'C-186', resumen: 'Pestaña Navidad: el tema navideño se prende y se apaga con fechas, sin deploy. Se elige el gorro (dos versiones) y si al entrar sale la tarjeta navideña o la imagen del popup.' }, { version: '1.2.0', ...RC9, tarea: 'C-175', resumen: 'Correos rediseñados: todos llevan el logo largo arriba, el mismo botón, los mismos títulos y cajas, y se ven igual en Gmail, Outlook y el teléfono. La vista previa de Plantillas suma el de reseña publicada.' }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Campañas de correo: el borrador ya no se pisa entre dos personas (se combinan los cambios) y se ve quién lo tiene abierto.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.5.0', ...RC22, tarea: 'C-191', resumen: 'Campañas de correo: dice cuántos de todos los clientes aceptan promociones y por qué el resto no las recibe (sin decidir, dijeron que no o sin verificar el correo).' }, { version: '1.4.0', ...RC21, tarea: 'C-190', resumen: 'Navidad: las fechas de corte de ZOOM o MRW y de Guanare, con la franja en la vista previa. La tarjeta navideña lleva a Ideas para regalar.' }, { version: '1.3.1', ...RC20, tarea: 'C-188', resumen: 'Los íconos propios de Electro Shop en lugar de los de librería: el mismo trazo y la misma forma en toda la pantalla.', silencioso: true }, { version: '1.3.0', ...RC20, tarea: 'C-186', resumen: 'Pestaña Navidad: el tema navideño se prende y se apaga con fechas, sin deploy. Se elige el gorro (dos versiones) y si al entrar sale la tarjeta navideña o la imagen del popup.' }, { version: '1.2.0', ...RC9, tarea: 'C-175', resumen: 'Correos rediseñados: todos llevan el logo largo arriba, el mismo botón, los mismos títulos y cajas, y se ven igual en Gmail, Outlook y el teléfono. La vista previa de Plantillas suma el de reseña publicada.' }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'Campañas de correo: el borrador ya no se pisa entre dos personas (se combinan los cambios) y se ve quién lo tiene abierto.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'promotores',
@@ -241,9 +243,9 @@ export const MODULOS: ModuloPanel[] = [
       'app/carrito/', 'app/checkout/', 'app/customer/', 'app/login/', 'app/registro/', 'app/sesion/', 'app/recuperar-contrasena/',
       'app/verificar-email/', 'app/api/cart/', 'app/api/customer/', 'app/api/auth/', 'app/api/sesion/',
       'components/cart/', 'components/checkout/', 'components/customer/', 'components/auth/', 'components/onboarding/',
-      'lib/checkout-pago.ts', 'lib/cart-items.ts', 'lib/saved-addresses.ts', 'contexts/',
+      'lib/checkout-pago.ts', 'lib/cart-items.ts', 'lib/saved-addresses.ts', 'contexts/', 'components/promociones/', 'lib/validations/registro.ts',
     ],
-    historial: [{ version: '1.1.0', ...RC21, tarea: 'C-190', resumen: 'El carrito dice hasta cuándo pedir para que llegue antes del 24, con el tema navideño y la fecha cargada.' }, { version: '1.0.1', ...RC20, tarea: 'C-188', resumen: 'Los íconos propios de Electro Shop en el carrito, el checkout y el panel del cliente.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.2.0', ...RC22, tarea: 'C-191', resumen: 'Al registrarse, una casilla sin marcar para recibir ofertas por correo; y Mi panel se lo pregunta una sola vez a quien nunca lo decidió.' }, { version: '1.1.0', ...RC21, tarea: 'C-190', resumen: 'El carrito dice hasta cuándo pedir para que llegue antes del 24, con el tema navideño y la fecha cargada.' }, { version: '1.0.1', ...RC20, tarea: 'C-188', resumen: 'Los íconos propios de Electro Shop en el carrito, el checkout y el panel del cliente.' }, primera('Primera versión registrada.')],
   },
 ];
 

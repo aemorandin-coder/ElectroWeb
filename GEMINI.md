@@ -473,3 +473,7 @@ Mueven datos de facturación: **no los cambies ni los "limpies".**
 - **`<img>` en lugar de `next/image`** solo en `lib/og/tarjetas.tsx`, porque Satori lo exige. No copies ese `eslint-disable` a otros archivos.
 - **Dependencias nuevas (C-177):** Next 16.3.8, sharp 0.35 y nodemailer 10. Los tipos de sharp y de nodemailer ahora se importan por nombre (`import sharp, { type OverlayOptions } from 'sharp'`, `import nodemailer, { type SMTPTransportOptions } from 'nodemailer'`). No agregues dependencias ni subas versiones en `package.json` (carril Claude).
 - **La tienda escucha solo en `127.0.0.1`** (`npm start`). Para probar en local, usa `npm run dev` como siempre.
+
+## 15. Cambios de Claude del 06/11 que te afectan (C-191)
+- **`app/customer/(dashboard)/page.tsx`:** Claude agregó `<PreguntarPromociones />` debajo de `<CustomerOnboarding />`, a pedido de Andrés. Es la pregunta de una sola vez por las ofertas por correo: no la quites ni la muevas arriba del resumen.
+- **El componente vive en `components/promociones/`** (carril Claude) y guarda con `PATCH /api/customer/settings`. Si una tarjeta tuya toca Mi perfil → Notificaciones, el interruptor de ofertas sigue mandando `notificaciones.emailPromotions`: el servidor anota la fecha de la decisión, no la mandes tú.

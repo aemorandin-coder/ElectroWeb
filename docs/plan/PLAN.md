@@ -405,6 +405,9 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - Tarea aparte: los 10 métodos de pago de la recarga de Puntos ES, una etiqueta sin % y los íconos de los flyers de ElectroStudio, redibujados con el pack.
 - Los dos tonos también en la lista de entrega de la ficha y en "Más de ElectroShop", si a Andrés le gustan en el inicio.
 
+**Pedido del 06/11 (tres correcciones, desde la cuenta de Andrés; decididas viendo la página de maquetas):**
+- **C-191** (**hecha**): Marketing decía "1 cliente" porque nada le preguntaba al cliente si quería promociones. Ahora se pregunta al registrarse y una vez en Mi panel, y el panel dice "N de M clientes" con el desglose. No se eligieron el toque después de comprar ni el correo de invitación (este lo autoriza Andrés si lo quiere).
+
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
 - Hecho en C-185 (06/11): las ramas, el stash y los worktrees viejos de la máquina de Andrés, y los 40 uploads versionados (en el servidor se respaldan antes del próximo `git pull`, `SIGUIENTE.md` §2).

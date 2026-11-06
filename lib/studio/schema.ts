@@ -13,11 +13,14 @@ export const TEMPLATES = {
   resena: { label: 'Reseña', n: 1, photo: 'optional' },
   mensaje: { label: 'Mensaje', n: 1, photo: 'optional' },
   tasa: { label: 'Tasa BCV', n: 0, photo: 'none' },
+  // C-193: los tres productos de un tramo de Ideas para regalar, y la felicitación con Chispa (sin productos)
+  regalos: { label: 'Regalos por presupuesto', n: 3, photo: 'required' },
+  felicitacion: { label: 'Felicitación', n: 0, photo: 'none' },
 } as const;
 export type TemplateId = keyof typeof TEMPLATES;
 export const TEMPLATE_IDS = Object.keys(TEMPLATES) as TemplateId[];
 /** Plantillas con productos que se escriben en el paso Contenido (el resto tiene su propio formulario) */
-export const hasProductForm = (t: TemplateId) => t === 'solo' || t === 'duo' || t === 'trio' || t === 'nuevo' || t === 'giftcard';
+export const hasProductForm = (t: TemplateId) => t === 'solo' || t === 'duo' || t === 'trio' || t === 'nuevo' || t === 'giftcard' || t === 'regalos';
 /** Cuántas fotos de producto pide la plantilla (0 si no pide ninguna obligatoria) */
 export const requiredPhotos = (t: TemplateId) => (TEMPLATES[t].photo === 'required' ? TEMPLATES[t].n : 0);
 
@@ -43,6 +46,10 @@ export const BACKGROUNDS = {
   podio: 'Podio',
   rayos: 'Rayos',
   neon: 'Neón',
+  // C-193: fondos navideños con el trazo de la marca (sin nieve que cae sin parar)
+  noche: 'Noche de Navidad',
+  guirnalda: 'Guirnalda',
+  nieve: 'Nieve',
   foto: 'Tu foto',
   fotoproducto: 'Foto del producto',
 } as const;
@@ -57,7 +64,23 @@ export const BACKGROUND_DEFAULT: Record<TemplateId, BackgroundId> = {
   resena: 'liso',
   mensaje: 'azul',
   tasa: 'circuito',
+  regalos: 'guirnalda',
+  felicitacion: 'nieve',
 };
+
+/** C-193: las poses de Chispa que salen en las historias (public/images/studio/chispa, hechas con chispa/mascota/chispa.js) */
+export const CHISPA_POSES = { saluda: 'Saluda', senala: 'Señala', pulgar: 'Pulgar arriba', celebra: 'Celebra', explica: 'Explica' } as const;
+export type ChispaPose = keyof typeof CHISPA_POSES;
+/** Plantillas con un lugar para Chispa (en las demás no cabe sin tapar el producto o el precio) */
+export const conChispa = (t: TemplateId) => t === 'mensaje' || t === 'felicitacion';
+
+/** C-193: los tramos de Ideas para regalar (lib/queries/regalos.ts, TRAMOS): el ancla y lo que dice la historia */
+export const TRAMOS_REGALO = {
+  'hasta-20': { titulo: 'Hasta $20', desde: null, hasta: 20 },
+  'de-20-a-50': { titulo: 'De $20 a $50', desde: 20, hasta: 50 },
+  'mas-de-50': { titulo: 'De más de $50', desde: 50, hasta: null },
+} as const;
+export type TramoRegalo = keyof typeof TRAMOS_REGALO;
 
 export const ANIMATIONS = { entrada: 'Entrada', zoom: 'Zoom', deslizar: 'Deslizar', destello: 'Destello', escribir: 'Escribir' } as const;
 export type AnimationId = keyof typeof ANIMATIONS;
@@ -105,6 +128,8 @@ export const productSlotSchema = z.object({
   specs: z.array(specSchema).max(4).catch([]).default([]),
   /** Montos de una gift card o recarga (de la tienda) */
   variants: z.array(variantSchema).max(8).catch([]).default([]),
+  /** C-193: código o recarga. La franja "pide hasta el … para que llegue antes del 24" sale solo con algo físico */
+  digital: z.boolean().catch(false).default(false),
 });
 export type StudioProductSlot = z.infer<typeof productSlotSchema>;
 
@@ -199,6 +224,12 @@ export const flyerSchema = z.object({
   rateDate: z.string().max(40).catch('').default(''),
   exported: exportedSchema.catch(() => exportedSchema.parse({})).default(() => exportedSchema.parse({})),
   products: z.array(productSlotSchema).max(3).catch([]).default([]),
+  /** C-193: Chispa en la historia (vacío = sin Chispa). Solo en las plantillas con su lugar (`conChispa`) */
+  chispa: z.union([z.enum(Object.keys(CHISPA_POSES) as [ChispaPose, ...ChispaPose[]]), z.literal('')]).catch('').default(''),
+  /** C-193: toque navideño: el gorro en el logo y en Chispa, y la franja de la fecha límite en los productos físicos */
+  navidad: z.boolean().catch(false).default(false),
+  /** C-193: el tramo de la plantilla Regalos por presupuesto */
+  tramo: z.enum(Object.keys(TRAMOS_REGALO) as [TramoRegalo, ...TramoRegalo[]]).catch('de-20-a-50').default('de-20-a-50'),
 });
 export type StudioFlyerData = z.infer<typeof flyerSchema>;
 /** code: el de la marca de campaña (?es=código) del enlace y el QR */
@@ -295,6 +326,8 @@ export interface StudioStoreProduct {
   conditionBadge?: string | null;
   /** Solo si hay o no: la cantidad no sale del servidor */
   inStock: boolean;
+  /** C-193: código o recarga (sin envío) */
+  digital: boolean;
 }
 
 export interface StudioCoupon {
@@ -327,6 +360,17 @@ export interface StudioStoreInfo {
   rateVES: number;
   rateUpdatedAt: string | null;
   payments: { label: string; logo: string | null }[];
+  /** C-193: el tema navideño de la tienda (Marketing → Navidad): el gorro elegido y la franja con las fechas del panel */
+  navidad: StudioNavidad;
+  /** C-193: el WhatsApp de la tienda, para el texto de la publicación */
+  whatsapp: string | null;
+}
+
+export interface StudioNavidad {
+  activo: boolean;
+  gorro: 'ajustado' | 'clasico';
+  /** "Para que llegue antes del 24, pide hasta el viernes 18 de diciembre" y su detalle; null sin fechas cargadas */
+  franja: { titulo: string; detalle: string } | null;
 }
 
 /** Resultados de una historia: visitas por su enlace o QR y compras de quienes llegaron por ella */

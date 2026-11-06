@@ -10,6 +10,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import { getPublicSettings } from '@/lib/site-settings';
 import { roundMoney } from '@/lib/pricing';
+import { diaEnCaracas, franjaNavidad } from '@/lib/navidad';
 import {
   normalizeFlyer,
   type StudioCoupon,
@@ -19,7 +20,9 @@ import {
   type StudioReview,
   type StudioStoreInfo,
   type StudioStoreProduct,
+  type TramoRegalo,
 } from './schema';
+import { enTramo } from './live';
 
 const BASE_URL = (process.env.NEXT_PUBLIC_BASE_URL || 'https://electroshopve.com').replace(/\/$/, '');
 
@@ -72,6 +75,20 @@ export async function studioStoreInfo(): Promise<StudioStoreInfo> {
     rateVES: settings.exchangeRateVES,
     rateUpdatedAt: rateRow?.lastRateUpdate?.toISOString() ?? null,
     payments: [...payments.values()],
+    whatsapp: settings.whatsapp || null,
+    // C-193: el tema de Marketing → Navidad. La franja, con la misma regla que la ficha y el carrito (C-190)
+    navidad: {
+      activo: settings.gorroNavidad !== null,
+      gorro: settings.gorroNavidad ?? 'ajustado',
+      franja: (() => {
+        const fr = franjaNavidad(
+          settings.entregaNavidad,
+          { envio: settings.deliveryEnabled, delivery: settings.localDeliveryEnabled, retiro: settings.pickupEnabled },
+          diaEnCaracas()
+        );
+        return fr ? { titulo: fr.titulo, detalle: fr.detalle } : null;
+      })(),
+    },
   };
 }
 
@@ -109,11 +126,16 @@ function toStudioProduct(p: PublicProduct, published: boolean, rateVES: number):
     published,
     inStock: p.productType === 'DIGITAL' || p.stock > 0,
     conditionBadge: p.condition?.badge ?? null,
+    digital: p.productType === 'DIGITAL',
   };
 }
 
-/** Búsqueda por nombre (publicados) o productos puntuales por id (los de un flyer, aunque ya no estén publicados). */
-export async function studioProducts({ q, ids }: { q?: string; ids?: string[] }): Promise<StudioStoreProduct[]> {
+/**
+ * Búsqueda por nombre (publicados) o productos puntuales por id (los de un flyer, aunque ya no estén publicados).
+ * C-193: con `tramo`, solo los que se pueden comprar hoy y caben en ese tramo de Ideas para regalar (una gift card, si
+ * alguno de sus montos cabe), como la página: los físicos con stock primero.
+ */
+export async function studioProducts({ q, ids, tramo }: { q?: string; ids?: string[]; tramo?: TramoRegalo }): Promise<StudioStoreProduct[]> {
   const where: Prisma.ProductWhereInput = ids?.length
     ? { id: { in: ids.slice(0, 100) } }
     : {
@@ -121,12 +143,17 @@ export async function studioProducts({ q, ids }: { q?: string; ids?: string[] })
         ...(q ? { OR: [{ name: { contains: q, mode: 'insensitive' } }, { shortCode: { equals: q.toUpperCase() } }] } : {}),
       };
   const [rows, settings] = await Promise.all([
-    prisma.product.findMany({ where, include: publicProductInclude, orderBy: { updatedAt: 'desc' }, take: ids?.length ? 100 : 12 }),
+    prisma.product.findMany({ where, include: publicProductInclude, orderBy: { updatedAt: 'desc' }, take: ids?.length || tramo ? 100 : 12 }),
     getPublicSettings(),
   ]);
   const published = new Map(rows.map((r) => [r.id, r.status === 'PUBLISHED']));
   const withOffers = await conOfertas(rows.map(toPublicProduct));
-  return withOffers.map((p) => toStudioProduct(p, published.get(p.id) ?? false, settings.exchangeRateVES));
+  const all = withOffers.map((p) => toStudioProduct(p, published.get(p.id) ?? false, settings.exchangeRateVES));
+  if (!tramo) return all;
+  return all
+    .filter((p) => p.inStock && (p.hasVariants ? p.variants.some((v) => enTramo(v.priceUSD, tramo)) : enTramo(p.priceUSD, tramo)))
+    .sort((a, b) => Number(a.digital) - Number(b.digital))
+    .slice(0, 24);
 }
 
 /** Un flyer guardado tal como lo usa el editor: lo del JSON normalizado y la fecha de guardado para detectar cambios. */

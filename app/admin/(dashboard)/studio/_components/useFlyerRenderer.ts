@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { H, StudioImages, W, createRenderer, flyerImageSources, loadStudioFonts, type ProductSrc, type StudioRenderer } from '@/lib/studio/engine';
-import type { StudioBrand, StudioFlyerData } from '@/lib/studio/schema';
+import type { StudioBrand, StudioFlyerData, StudioNavidad } from '@/lib/studio/schema';
 import { canvasBlob } from './exporters';
 
 const storeSrc: ProductSrc = (p) => p.imageUrl;
@@ -13,12 +13,14 @@ const THUMB_W = 240;
  * Dibujante aparte de la vista previa (C-116): miniaturas de la lista y descargas desde ella.
  * Un solo lienzo fuera de pantalla y una cola, para que dos dibujos no se pisen.
  */
-export function useFlyerRenderer(brand: StudioBrand) {
+export function useFlyerRenderer(brand: StudioBrand, navidad: StudioNavidad | null = null) {
   const engine = useRef<{ canvas: HTMLCanvasElement; images: StudioImages; renderer: StudioRenderer } | null>(null);
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const brandRef = useRef(brand);
+  const navidadRef = useRef(navidad);
   useEffect(() => {
     brandRef.current = brand;
+    navidadRef.current = navidad;
   });
 
   const run = useCallback(<T,>(fn: () => Promise<T>): Promise<T> => {
@@ -39,7 +41,7 @@ export function useFlyerRenderer(brand: StudioBrand) {
     const { canvas, images, renderer } = engine.current;
     await loadStudioFonts();
     await images.whenReady(flyerImageSources(f, brandRef.current, storeSrc));
-    renderer.draw(f, brandRef.current, { preview, code });
+    renderer.draw(f, brandRef.current, { preview, code, navidad: navidadRef.current });
     return { canvas, text: renderer.textIssues() };
   }, []);
 

@@ -148,8 +148,8 @@ export const MODULOS: ModuloPanel[] = [
     nombre: 'ElectroStudio',
     descripcion: 'Historias e imágenes para redes sociales.',
     paginas: ['/admin/studio'],
-    archivos: ['app/admin/(dashboard)/studio/', 'app/api/admin/studio/', 'lib/studio/', 'components/social/'],
-    historial: [{ version: '1.1.1', ...RC20, tarea: 'C-188', resumen: 'Los íconos propios de Electro Shop en lugar de los de librería: el mismo trazo y la misma forma en toda la pantalla.', silencioso: true }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'El guardado automático junta los cambios si dos personas editan la misma historia, y avisa quién más la tiene abierta.' }, primera('Primera versión registrada.')],
+    archivos: ['app/admin/(dashboard)/studio/', 'app/api/admin/studio/', 'lib/studio/', 'components/social/', 'public/images/studio/', 'scripts/studio-iconos.py'],
+    historial: [{ version: '1.2.0', ...RC22, tarea: 'C-193', resumen: 'Dos plantillas nuevas: Regalos por presupuesto (tres regalos de un tramo, con su QR a Ideas para regalar) y Felicitación con Chispa. Chispa también en los mensajes. El toque navideño: el gorro en el logo y en Chispa, la franja "pide hasta el … para que llegue antes del 24" en los productos físicos y tres fondos (Noche, Guirnalda y Nieve). Los íconos propios de Electro Shop en las historias, y el texto para publicar con el WhatsApp y de 10 a 15 hashtags.' }, { version: '1.1.1', ...RC20, tarea: 'C-188', resumen: 'Los íconos propios de Electro Shop en lugar de los de librería: el mismo trazo y la misma forma en toda la pantalla.', silencioso: true }, { version: '1.1.0', ...RC8, tarea: 'C-170', resumen: 'El guardado automático junta los cambios si dos personas editan la misma historia, y avisa quién más la tiene abierta.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'cursos',

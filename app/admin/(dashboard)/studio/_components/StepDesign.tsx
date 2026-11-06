@@ -19,6 +19,7 @@ export default function StepDesign({ studio, onAnim, drawThumb, imgTick }: { stu
   return (
     <div className="flex flex-col gap-4">
       <FormatPicker studio={studio} />
+      <NavidadToggle studio={studio} />
       <StylesBar studio={studio} />
       <BackgroundPicker studio={studio} drawThumb={drawThumb} imgTick={imgTick} />
       <PhotoControls studio={studio} />
@@ -75,6 +76,28 @@ export default function StepDesign({ studio, onAnim, drawThumb, imgTick }: { stu
       </details>
 
       <BrandSettings studio={studio} />
+    </div>
+  );
+}
+
+/**
+ * C-193: el toque navideño de la historia: el gorro de la tienda en el logo y en Chispa, y en los productos físicos la
+ * franja "pide hasta el … para que llegue antes del 24" con las fechas de Marketing → Navidad.
+ */
+function NavidadToggle({ studio }: { studio: Studio }) {
+  const { current, update, store } = studio;
+  if (!current) return null;
+  const nav = store?.navidad;
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="flex items-center gap-2 text-sm font-semibold text-ink">
+        <input type="checkbox" checked={current.navidad} onChange={(e) => update((f) => ({ ...f, navidad: e.target.checked }))} className="h-4 w-4 accent-brand-500" />
+        Toque navideño
+      </label>
+      <p className={adminHint}>
+        El gorro de la tienda en el logo y en Chispa.
+        {nav?.franja ? ` En los productos físicos: "${nav.franja.titulo}".` : ' La franja del 24 sale cuando estén las fechas en Marketing → Navidad y el tema encendido.'}
+      </p>
     </div>
   );
 }

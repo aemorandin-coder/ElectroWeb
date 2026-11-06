@@ -78,6 +78,8 @@ const STATUS_TEXT: Record<SaveStatus, string> = {
 export default function Studio({ id }: { id: string }) {
   const studio = useStudioContext();
   const { loading, flyers, current: openFlyer, currentId: openId, currentCode, brand, status, update, select, saveNow } = studio;
+  // C-193: el gorro y la franja salen del tema navideño de la tienda (Marketing → Navidad)
+  const navidad = studio.store?.navidad ?? null;
   // Solo cuenta la historia de esta dirección: mientras se abre otra, el editor no muestra la anterior
   const current = openId === id ? openFlyer : null;
   const currentId = openId === id ? openId : null;
@@ -144,9 +146,9 @@ export default function Studio({ id }: { id: string }) {
   const canShare = useDelNavegador(() => typeof navigator.share === 'function' && typeof navigator.canShare === 'function', false);
 
   // Lo último que hay que dibujar, para el bucle de animación y las cargas de imágenes
-  const scene = useRef({ current, brand, safe, code: currentCode });
+  const scene = useRef({ current, brand, safe, code: currentCode, navidad });
   useEffect(() => {
-    scene.current = { current, brand, safe, code: currentCode };
+    scene.current = { current, brand, safe, code: currentCode, navidad };
     srcRef.current = productSrc;
   });
   // Sube cada vez que llega una imagen: las miniaturas de los fondos con foto se vuelven a dibujar
@@ -157,7 +159,7 @@ export default function Studio({ id }: { id: string }) {
   const drawStatic = useCallback(() => {
     if (!renderer.current || busyRef.current) return;
     const s = scene.current;
-    renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, code: s.code });
+    renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, code: s.code, navidad: s.navidad });
     const now = renderer.current.textIssues();
     setTextIssues((prev) => (JSON.stringify(prev) === JSON.stringify(now) ? prev : now));
   }, []);
@@ -202,7 +204,7 @@ export default function Studio({ id }: { id: string }) {
       if (!busyRef.current && renderer.current) {
         const t = Math.min(DURATION, ((now - playStart.current) / 1000) % (DURATION + 0.8));
         const s = scene.current;
-        renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, t, epoch, code: s.code });
+        renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, t, epoch, code: s.code, navidad: s.navidad });
       }
       frame = requestAnimationFrame(loop);
     };
@@ -313,7 +315,7 @@ export default function Studio({ id }: { id: string }) {
     await images.current.whenReady(flyerImageSources(f, brand, src));
     const prev = srcRef.current;
     srcRef.current = src;
-    r.draw(f, brand, { preview: false, code });
+    r.draw(f, brand, { preview: false, code, navidad });
     const blob = await canvasBlob(canvas);
     srcRef.current = prev;
     return blob;
@@ -367,7 +369,7 @@ export default function Studio({ id }: { id: string }) {
       const toastId = toast.loading(`Grabando el video (${DURATION} segundos). No cambies de pestaña.`);
       const epoch = Date.now();
       const r = renderer.current;
-      const blob = await recordCanvas(canvasRef.current, type, (t) => r.draw(current, brand, { preview: false, t, epoch, code: currentCode }));
+      const blob = await recordCanvas(canvasRef.current, type, (t) => r.draw(current, brand, { preview: false, t, epoch, code: currentCode, navidad }));
       toast.dismiss(toastId);
       const ext = type.startsWith('video/mp4') ? 'mp4' : 'webm';
       downloadBlob(blob, `${fileBase(current)}.${ext}`);

@@ -56,10 +56,15 @@ const NUEVO: { subject: string; preheader: string; bloques: Bloque[] } = {
   ],
 };
 
+// C-191: por qué cada cliente recibe o no las campañas (lib/email-campaigns.ts, resumenAudiencia)
+interface Audiencia { clientes: number; aceptan: number; sinDecidir: number; dijeronQueNo: number; sinVerificar: number }
+
+const clientes = (n: number) => `${n} ${n === 1 ? 'cliente' : 'clientes'}`;
+
 const fecha = (valor: string | null) => (valor ? new Date(valor).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
 
 export default function Campanas() {
-  const [datos, setDatos] = useState<{ campanas: Resumen[]; destinatarios: number; marketingActivo: boolean; limiteDiario: number } | null>(null);
+  const [datos, setDatos] = useState<{ campanas: Resumen[]; destinatarios: number; audiencia?: Audiencia; marketingActivo: boolean; limiteDiario: number } | null>(null);
   const [editando, setEditando] = useState<{ id: string | null } | null>(null);
 
   const cargar = useCallback(async () => {
@@ -106,7 +111,7 @@ export default function Campanas() {
 /* ── Lista ──────────────────────────────────────────────────────────────── */
 
 function Lista({ datos, alCrear, alEditar, recargar }: {
-  datos: { campanas: Resumen[]; destinatarios: number; marketingActivo: boolean; limiteDiario: number } | null;
+  datos: { campanas: Resumen[]; destinatarios: number; audiencia?: Audiencia; marketingActivo: boolean; limiteDiario: number } | null;
   alCrear: () => void;
   alEditar: (id: string) => void;
   recargar: () => void;
@@ -119,7 +124,7 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
     if (tipo === 'enviar') {
       const ok = await confirm({
         title: 'Enviar campaña',
-        message: `Se enviará "${campana.subject}" a ${datos?.destinatarios ?? 0} clientes que aceptaron promociones, uno por uno. No se puede deshacer.`,
+        message: `Se enviará "${campana.subject}" a ${clientes(datos?.destinatarios ?? 0)} que ${(datos?.destinatarios ?? 0) === 1 ? 'aceptó' : 'aceptaron'} promociones, uno por uno. No se puede deshacer.`,
         confirmText: 'Enviar ahora', cancelText: 'Cancelar', type: 'warning',
       });
       if (!ok) return;
@@ -159,22 +164,33 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
   return (
     <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className={`${adminCard} flex items-center justify-between gap-3 p-4`}>
-          <div className="flex items-center gap-3">
-            <IconoClientes className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
-            <div>
-              <p className="text-xs text-muted">Aceptan promociones</p>
-              <p className="text-lg font-bold text-ink">{datos.destinatarios} clientes</p>
+        <div className={`${adminCard} flex flex-col gap-2 p-4`}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <IconoClientes className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
+              <div>
+                <p className="text-xs text-muted">Aceptan promociones</p>
+                <p className="text-lg font-bold text-ink">
+                  {datos.audiencia ? `${datos.audiencia.aceptan} de ${clientes(datos.audiencia.clientes)}` : clientes(datos.destinatarios)}
+                </p>
+              </div>
             </div>
+            {datos.destinatarios > 0 && (
+              <button
+                type="button"
+                onClick={() => setVerDestinatarios(true)}
+                className={`${adminSecondaryButton} h-8 px-2.5 text-xs`}
+              >
+                Ver correos
+              </button>
+            )}
           </div>
-          {datos.destinatarios > 0 && (
-            <button
-              type="button"
-              onClick={() => setVerDestinatarios(true)}
-              className={`${adminSecondaryButton} h-8 px-2.5 text-xs`}
-            >
-              Ver correos
-            </button>
+          {datos.audiencia && datos.audiencia.clientes > datos.audiencia.aceptan && (
+            <ul className="space-y-0.5 pl-8 text-xs text-ink-soft">
+              {datos.audiencia.sinDecidir > 0 && <li>{datos.audiencia.sinDecidir} sin decidir: Mi panel se lo pregunta</li>}
+              {datos.audiencia.dijeronQueNo > 0 && <li>{datos.audiencia.dijeronQueNo} dijeron que no</li>}
+              {datos.audiencia.sinVerificar > 0 && <li>{datos.audiencia.sinVerificar} sin verificar el correo</li>}
+            </ul>
           )}
         </div>
         <div className={`${adminCard} flex items-center gap-3 p-4`}>
@@ -200,7 +216,7 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
       )}
       {datos.destinatarios === 0 && (
         <p className={adminNotice('neutral')}>
-          Ningún cliente aceptó promociones todavía. Cada cliente lo activa en Mi panel → Configuración → Notificaciones.
+          Ningún cliente aceptó promociones todavía. Se les pregunta al registrarse y una vez en Mi panel; también lo activan en Mi perfil → Notificaciones.
         </p>
       )}
 
@@ -526,7 +542,7 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
             <div className="flex items-center justify-between border-b border-line px-4 py-3">
               <div>
                 <h3 className="text-sm font-semibold text-ink">Vista previa</h3>
-                <p className="text-xs text-muted">Así llegará a {destinatarios} clientes, con su nombre y el enlace de baja.</p>
+                <p className="text-xs text-muted">Así llegará a {clientes(destinatarios)}, con su nombre y el enlace de baja.</p>
               </div>
               {destinatarios > 0 && (
                 <button

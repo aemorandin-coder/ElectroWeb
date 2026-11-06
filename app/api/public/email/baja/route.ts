@@ -35,7 +35,8 @@ async function darDeBaja(request: NextRequest, tipo: TipoBaja): Promise<boolean>
   const usuario = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
   if (!usuario) return false;
 
-  const cambio = CAMBIO[tipo];
+  // C-191: darse de baja de las promociones también es decidir: Mi panel no se lo vuelve a preguntar
+  const cambio = tipo === 'promociones' ? { ...CAMBIO[tipo], emailPromotionsAt: new Date() } : CAMBIO[tipo];
   await prisma.notificationPreference.upsert({
     where: { userId },
     update: cambio,

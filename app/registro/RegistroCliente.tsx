@@ -31,6 +31,7 @@ type Valores = {
   telefono: string;
   password: string;
   acceptTerms: boolean;
+  promociones: boolean;
 };
 
 const INICIAL: Valores = {
@@ -40,6 +41,7 @@ const INICIAL: Valores = {
   telefono: '',
   password: '',
   acceptTerms: false,
+  promociones: false,
 };
 
 // Orden en pantalla: al enviar se enfoca el primer campo con error
@@ -52,6 +54,7 @@ function datosDe(v: Valores) {
     phone: `${v.codigoPais} ${v.telefono}`,
     password: v.password,
     acceptTerms: v.acceptTerms,
+    promociones: v.promociones,
   };
 }
 
@@ -384,6 +387,21 @@ function RegistroContenido({ google }: { google: boolean }) {
             </p>
           )}
         </div>
+
+        {/* C-191: sin marcar. Sin este sí (o el de Mi panel) el cliente no recibe campañas de correo */}
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            id="promociones"
+            type="checkbox"
+            checked={valores.promociones}
+            onChange={(e) => cambiar('promociones', e.target.checked, 'promociones')}
+            className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-line-strong accent-brand-500"
+            disabled={enviando}
+          />
+          <span className="text-sm text-ink-soft">
+            Quiero recibir ofertas y novedades por correo. Puedo darme de baja cuando quiera.
+          </span>
+        </label>
 
         <div>
           <div className="flex justify-center">

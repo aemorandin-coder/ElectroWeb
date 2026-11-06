@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, phone, password } = validationResult.data;
+    const { name, email, phone, password, promociones } = validationResult.data;
 
     // Read referral code from httpOnly cookie (set by middleware when ?ref= is present)
     const rawRef = request.cookies.get('electroshop_ref')?.value ?? '';
@@ -87,7 +87,11 @@ export async function POST(request: NextRequest) {
           create: {
             phone,
           }
-        }
+        },
+        // C-191: solo el sí queda como decisión. La casilla sin marcar no cuenta como "no": Mi panel se lo pregunta después
+        ...(promociones === true
+          ? { notificationPreferences: { create: { emailPromotions: true, emailPromotionsAt: new Date() } } }
+          : {}),
       },
       select: { id: true },
     });

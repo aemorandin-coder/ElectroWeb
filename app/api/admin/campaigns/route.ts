@@ -3,9 +3,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
-import { campanaSchema, contarDestinatarios, enviando, iniciarEnvio } from '@/lib/email-campaigns';
+import { campanaSchema, enviando, iniciarEnvio, resumenAudiencia } from '@/lib/email-campaigns';
 
-// GET — campañas y cuántos clientes aceptan promociones hoy
+// GET — campañas, cuántos clientes aceptan promociones hoy y por qué los demás no
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!isAuthorized(session, 'MANAGE_CONTENT')) {
@@ -26,14 +26,16 @@ export async function GET() {
     if (campana.status === 'SENDING' && !enviando(campana.id)) iniciarEnvio(campana.id);
   }
 
-  const [destinatarios, ajustes] = await Promise.all([
-    contarDestinatarios(),
+  const [audiencia, ajustes] = await Promise.all([
+    resumenAudiencia(),
     prisma.emailSettings.findUnique({ where: { id: 'default' }, select: { marketingEnabled: true, dailyLimit: true } }),
   ]);
 
   return NextResponse.json({
     campanas,
-    destinatarios,
+    destinatarios: audiencia.aceptan,
+    // C-191: por qué el resto no las recibe (antes solo se veía "1 clientes")
+    audiencia,
     marketingActivo: ajustes?.marketingEnabled ?? false,
     limiteDiario: ajustes?.dailyLimit ?? 500,
   });

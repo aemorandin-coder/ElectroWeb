@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'SKU no encontrado' }, { status: 404 });
         }
 
-        const cambios: { priceUSD?: string; stock?: number; status?: 'ARCHIVED' } = {};
+        const cambios: { priceUSD?: string; stock?: number; status?: 'ARCHIVED'; isFeatured?: false } = {};
         const precioNuevo = evento === 'PRICE_UPDATED' ? data.precioNuevo : evento === 'PRODUCT_UPDATED' ? data.precio : undefined;
         const stockNuevo = evento === 'STOCK_UPDATED' ? data.stockNuevo : evento === 'PRODUCT_UPDATED' ? data.stock : undefined;
         if (precioNuevo !== undefined && precioNuevo !== null) {
@@ -80,7 +80,11 @@ export async function POST(req: NextRequest) {
             if (!Number.isInteger(stock) || stock < 0 || stock > 1_000_000) return NextResponse.json({ error: 'Stock inválido' }, { status: 400 });
             cambios.stock = stock;
         }
-        if (evento === 'PRODUCT_DELETED') cambios.status = 'ARCHIVED'; // No se borra: queda archivado
+        // No se borra: queda archivado, y un archivado no se destaca (C-187)
+        if (evento === 'PRODUCT_DELETED') {
+            cambios.status = 'ARCHIVED';
+            cambios.isFeatured = false;
+        }
         if (!['STOCK_UPDATED', 'PRICE_UPDATED', 'PRODUCT_UPDATED', 'PRODUCT_DELETED'].includes(evento)) {
             console.warn(`Webhook: Evento no manejado: ${String(evento).slice(0, 40)}`);
             return NextResponse.json({ received: true, ignored: true });

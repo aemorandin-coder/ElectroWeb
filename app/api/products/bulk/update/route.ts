@@ -65,6 +65,8 @@ export async function POST(request: NextRequest) {
                     if (update.status !== undefined) {
                         if (!ESTADOS.includes(String(update.status))) return NextResponse.json({ error: `Fila ${i + 1}: estado inválido` }, { status: 400 });
                         data.status = update.status;
+                        // C-187: archivar le quita la estrella de destacado
+                        if (update.status === 'ARCHIVED') data.isFeatured = false;
                     }
                     if (Object.keys(data).length > 0) cambios.push({ id: String(update.id), data });
                 }
@@ -156,6 +158,8 @@ export async function POST(request: NextRequest) {
         } else if (field === 'status') {
             if (!['PUBLISHED', 'DRAFT', 'ARCHIVED'].includes(value)) return NextResponse.json({ error: 'Estado inválido' }, { status: 400 });
             updateData.status = value;
+            // C-187: archivar le quita la estrella de destacado
+            if (value === 'ARCHIVED') updateData.isFeatured = false;
         }
 
         // El precio fijo tampoco toca a los digitales (C-97)

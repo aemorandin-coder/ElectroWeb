@@ -78,12 +78,13 @@ export async function checkImportItems(items: unknown[]): Promise<ImportRowCheck
   const skus = reviews.map((r) => r.draft.sku).filter((s): s is string => !!s);
   const names = reviews.map((r) => r.draft.name).filter(Boolean);
   const [takenSkus, sameNames] = await Promise.all([
-    skus.length ? prisma.product.findMany({ where: { sku: { in: skus } }, select: { sku: true } }) : [],
+    skus.length ? prisma.product.findMany({ where: { sku: { in: skus } }, select: { sku: true, deletedAt: true, eliminadoAt: true } }) : [],
     names.length
       ? prisma.product.findMany({ where: { OR: names.map((n) => ({ name: { equals: n, mode: 'insensitive' as const } })) }, select: { name: true } })
       : [],
   ]);
-  const taken = new Set(takenSkus.map((p) => p.sku));
+  // C-187: dónde está el dueño del SKU (en la lista no se ve si está en la papelera o eliminado)
+  const taken = new Map(takenSkus.map((p) => [p.sku, p.eliminadoAt ? ' (un producto eliminado que se conserva por sus ventas)' : p.deletedAt ? ' (un producto en la papelera)' : '']));
   const existingNames = new Set(sameNames.map((p) => normalizeKey(p.name)));
   const skuCount = new Map<string, number>();
   const nameCount = new Map<string, number>();
@@ -103,7 +104,7 @@ export async function checkImportItems(items: unknown[]): Promise<ImportRowCheck
     }
     const brand = resolveBrand(draft.brand, ctx);
     if (brand?.isNew) warns.push(`Marca nueva "${brand.name}": se crea al importar`);
-    if (draft.sku && taken.has(draft.sku)) errs.push(`El SKU ${draft.sku} ya lo tiene otro producto`);
+    if (draft.sku && taken.has(draft.sku)) errs.push(`El SKU ${draft.sku} ya lo tiene otro producto${taken.get(draft.sku)}`);
     if (draft.sku && (skuCount.get(draft.sku) ?? 0) > 1) errs.push(`El SKU ${draft.sku} se repite en el archivo`);
     const nameKey = normalizeKey(draft.name);
     if (draft.name && existingNames.has(nameKey)) warns.push('Ya hay un producto con este nombre: ¿ya lo importaste?');

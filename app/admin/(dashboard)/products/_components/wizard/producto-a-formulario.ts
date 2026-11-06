@@ -33,6 +33,8 @@ export interface ProductoApi {
   deletedAt?: string | null;
   deletedByName?: string | null;
   statusAntesDePapelera?: EstadoProducto | null;
+  /** C-187: eliminado (tenía ventas y se conserva oculto): el editor lo trata como borrado */
+  eliminadoAt?: string | null;
   productType?: string;
   name?: Texto; sku?: Texto; description?: Texto; categoryId?: Texto;
   brand?: { name: string } | null;

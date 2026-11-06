@@ -28,6 +28,8 @@ interface Props {
   onVer: (p: ProductoLista) => void;
   onDuplicar: (p: ProductoLista) => void;
   onEstado: (p: ProductoLista) => void;
+  /** C-187: destacar o quitar de Destacados (no en los archivados) */
+  onDestacar: (p: ProductoLista) => void;
   onEliminar: (p: ProductoLista) => void;
   duplicando: string | null;
   /** C-169: id del producto → quiénes lo están editando ahora */
@@ -48,16 +50,38 @@ function Miniatura({ p, size }: { p: ProductoLista; size: number }) {
   );
 }
 
-/** "Destacado" solo si la tienda lo muestra; si está inactivo, se aclara que no se ve (antes decía "Destacado" igual) */
+/**
+ * "Destacado" solo si la tienda lo muestra; en un borrador se aclara que no se ve (antes decía "Destacado" igual).
+ * C-187: un archivado no se destaca (archivar le quita la estrella), así que ahí no se dice nada.
+ */
 function Etiquetas({ p, editando }: { p: ProductoLista; editando?: string[] }) {
   return (
     <span className="flex flex-wrap items-center gap-1">
       {editando && editando.length > 0 && <span className={adminBadge('brand')} title="Tiene este producto abierto para editarlo ahora mismo"><FiUsers className="h-3 w-3" aria-hidden="true" />{editando.join(' y ')} {editando.length === 1 ? 'lo edita' : 'lo editan'}</span>}
       {p.productType === 'DIGITAL' && <span className={adminBadge('brand')}><FiZap className="h-3 w-3" aria-hidden="true" />Digital</span>}
-      {p.isFeatured && (p.status === 'PUBLISHED'
-        ? <span className={adminBadge('warning')}><FiStar className="h-3 w-3" aria-hidden="true" />Destacado</span>
-        : <span className="text-xs text-muted" title="Está marcado como destacado, pero la tienda no lo muestra mientras esté inactivo">Destacado (no se ve: inactivo)</span>)}
+      {p.isFeatured && p.status === 'PUBLISHED' && <span className={adminBadge('warning')}><FiStar className="h-3 w-3" aria-hidden="true" />Destacado</span>}
+      {p.isFeatured && p.status === 'DRAFT' && <span className="text-xs text-muted" title="Está marcado como destacado, pero la tienda no lo muestra mientras esté en borrador">Destacado (no se ve: borrador)</span>}
     </span>
+  );
+}
+
+/** Activo, Borrador o Archivado: tocarlo activa o pasa a borrador (con "Deshacer", C-187) */
+function BotonEstado({ p, onEstado, className = '' }: { p: ProductoLista; onEstado: (p: ProductoLista) => void; className?: string }) {
+  return (
+    <button type="button" onClick={() => onEstado(p)} className={`${adminBadge(TONO_ESTADO[p.status])} min-h-8 ${className}`} title={p.status === 'PUBLISHED' ? 'Desactivar' : 'Activar'}>
+      {ETIQUETA_ESTADO[p.status]}
+    </button>
+  );
+}
+
+/** C-187: la estrella de Destacado. Un archivado no la tiene */
+function BotonDestacar({ p, onDestacar, className }: { p: ProductoLista; onDestacar: (p: ProductoLista) => void; className: string }) {
+  if (p.status === 'ARCHIVED') return null;
+  return (
+    <button type="button" onClick={() => onDestacar(p)} aria-pressed={p.isFeatured} className={className}
+      aria-label={p.isFeatured ? `Quitar ${p.name} de Destacados` : `Destacar ${p.name} en el inicio`} title={p.isFeatured ? 'Quitar de Destacados' : 'Destacar en el inicio'}>
+      <FiStar className={`h-4 w-4 ${p.isFeatured ? 'fill-current text-warning' : ''}`} aria-hidden="true" />
+    </button>
   );
 }
 
@@ -92,7 +116,7 @@ function CampoRapido({ p, campo, cambios, onCambio }: { p: ProductoLista; campo:
 }
 
 export default function ListaProductos(props: Props) {
-  const { productos, seleccion, onSeleccionar, onSeleccionarTodos, tasaVES, stockBajo, edicionRapida, cambios, onCambio, onVer, onDuplicar, onEstado, onEliminar, duplicando, editando } = props;
+  const { productos, seleccion, onSeleccionar, onSeleccionarTodos, tasaVES, stockBajo, edicionRapida, cambios, onCambio, onVer, onDuplicar, onEstado, onDestacar, onEliminar, duplicando, editando } = props;
   const [abierto, setAbierto] = useState<string | null>(null);
   const todos = productos.length > 0 && productos.every((p) => seleccion.has(p.id));
   const algunos = !todos && productos.some((p) => seleccion.has(p.id));
@@ -119,7 +143,7 @@ export default function ListaProductos(props: Props) {
                 <div className="flex flex-wrap items-end justify-between gap-2 pt-1">
                   {edicionRapida && p.productType !== 'DIGITAL' ? <CampoRapido p={p} campo="priceUSD" cambios={cambios} onCambio={onCambio} /> : <Precio p={p} tasaVES={tasaVES} />}
                   {edicionRapida && p.productType !== 'DIGITAL' ? <CampoRapido p={p} campo="stock" cambios={cambios} onCambio={onCambio} /> : <Stock p={p} stockBajo={stockBajo} />}
-                  <button type="button" onClick={() => onEstado(p)} className={`${adminBadge(TONO_ESTADO[p.status])} min-h-8`} title="Cambiar estado">{ETIQUETA_ESTADO[p.status]}</button>
+                  <BotonEstado p={p} onEstado={onEstado} />
                 </div>
               </div>
             </div>
@@ -136,10 +160,15 @@ export default function ListaProductos(props: Props) {
               </button>
             </div>
             {abierto === p.id && (
-              <div className="mt-1 grid grid-cols-3 gap-2">
+              <div className="mt-1 grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => onDuplicar(p)} disabled={duplicando === p.id} className="min-h-11 rounded-lg border border-line text-sm text-ink hover:bg-surface">{duplicando === p.id ? 'Duplicando…' : 'Duplicar'}</button>
                 <button type="button" onClick={() => onEstado(p)} className="min-h-11 rounded-lg border border-line text-sm text-ink hover:bg-surface">{p.status === 'PUBLISHED' ? 'Desactivar' : 'Activar'}</button>
-                <button type="button" onClick={() => onEliminar(p)} className="min-h-11 rounded-lg border border-deal/30 text-sm text-deal hover:bg-deal-bg">A la papelera</button>
+                {p.status !== 'ARCHIVED' && (
+                  <button type="button" onClick={() => onDestacar(p)} aria-pressed={p.isFeatured} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border border-line text-sm text-ink hover:bg-surface">
+                    <FiStar className={`h-4 w-4 ${p.isFeatured ? 'fill-current text-warning' : ''}`} aria-hidden="true" /> {p.isFeatured ? 'Quitar destacado' : 'Destacar'}
+                  </button>
+                )}
+                <button type="button" onClick={() => onEliminar(p)} className={`min-h-11 rounded-lg border border-deal/30 text-sm text-deal hover:bg-deal-bg ${p.status === 'ARCHIVED' ? 'col-span-2' : ''}`}>A la papelera</button>
               </div>
             )}
           </li>
@@ -155,10 +184,12 @@ export default function ListaProductos(props: Props) {
                 <input type="checkbox" className="h-4 w-4" checked={todos} ref={(el) => { if (el) el.indeterminate = algunos; }} onChange={onSeleccionarTodos} aria-label="Seleccionar todos los productos de la lista" />
               </th>
               <th className="px-3 py-3">Producto</th>
-              <th className="px-3 py-3">Categoría</th>
+              {/* C-187: a 1024 con el menú abierto la tabla no cabía (nombres cortados y las acciones fuera de la vista):
+                  hasta xl la categoría va bajo el SKU y el estado bajo el nombre */}
+              <th className="hidden px-3 py-3 xl:table-cell">Categoría</th>
               <th className="px-3 py-3">Precio</th>
               <th className="px-3 py-3">Stock</th>
-              <th className="px-3 py-3">Estado</th>
+              <th className="hidden px-3 py-3 xl:table-cell">Estado</th>
               <th className="px-3 py-3 text-right">Acciones</th>
             </tr>
           </thead>
@@ -170,26 +201,25 @@ export default function ListaProductos(props: Props) {
                   <div className="flex items-center gap-3">
                     <Miniatura p={p} size={44} />
                     <div className="min-w-0">
-                      <Link href={`/admin/products/${p.id}`} className="line-clamp-1 max-w-80 font-medium text-ink hover:text-brand-600" title={p.name}>{p.name}</Link>
-                      <p className="font-mono text-xs text-muted">{p.sku}</p>
+                      <Link href={`/admin/products/${p.id}`} className="line-clamp-2 max-w-80 font-medium text-ink hover:text-brand-600 xl:line-clamp-1" title={p.name}>{p.name}</Link>
+                      <p className="font-mono text-xs text-muted">{p.sku}{p.category && <span className="font-sans xl:hidden"> · {p.category.name}</span>}</p>
                       <Etiquetas p={p} editando={editando?.[p.id]} />
+                      <BotonEstado p={p} onEstado={onEstado} className="mt-1 xl:hidden" />
                     </div>
                   </div>
                 </td>
-                <td className="px-3 py-3 text-ink-soft">{p.category?.name ?? '—'}</td>
+                <td className="hidden px-3 py-3 text-ink-soft xl:table-cell">{p.category?.name ?? '—'}</td>
                 <td className="px-3 py-3">
                   {edicionRapida && p.productType !== 'DIGITAL' ? <CampoRapido p={p} campo="priceUSD" cambios={cambios} onCambio={onCambio} /> : <Precio p={p} tasaVES={tasaVES} />}
                 </td>
                 <td className="px-3 py-3">
                   {edicionRapida && p.productType !== 'DIGITAL' ? <CampoRapido p={p} campo="stock" cambios={cambios} onCambio={onCambio} /> : <Stock p={p} stockBajo={stockBajo} />}
                 </td>
-                <td className="px-3 py-3">
-                  <button type="button" onClick={() => onEstado(p)} className={`${adminBadge(TONO_ESTADO[p.status])} min-h-8`} title={p.status === 'PUBLISHED' ? 'Desactivar' : 'Activar'}>
-                    {ETIQUETA_ESTADO[p.status]}
-                  </button>
-                </td>
+                <td className="hidden px-3 py-3 xl:table-cell"><BotonEstado p={p} onEstado={onEstado} /></td>
                 <td className="px-3 py-3">
                   <div className="flex justify-end gap-1">
+                    {p.status === 'ARCHIVED' && <span className="h-11 w-11" aria-hidden="true" />}
+                    <BotonDestacar p={p} onDestacar={onDestacar} className={`${adminIconButton} h-11 w-11`} />
                     <button type="button" onClick={() => onVer(p)} className={`${adminIconButton} h-11 w-11`} aria-label={`Vista rápida de ${p.name}`} title="Vista rápida"><FiEye className="h-4 w-4" aria-hidden="true" /></button>
                     <Link href={`/admin/products/${p.id}`} className={`${adminIconButton} h-11 w-11`} aria-label={`Editar ${p.name}`} title="Editar"><FiEdit2 className="h-4 w-4" aria-hidden="true" /></Link>
                     <button type="button" onClick={() => onDuplicar(p)} disabled={duplicando === p.id} className={`${adminIconButton} h-11 w-11`} aria-label={`Duplicar ${p.name}`} title="Duplicar"><FiCopy className="h-4 w-4" aria-hidden="true" /></button>

@@ -43,6 +43,7 @@ import DigitalStep3Delivery from './wizard/digital/Step3Delivery';
 import StepSEO from './wizard/StepSEO';
 import StepPublish from './wizard/StepPublish';
 import { wizardPrimaryButton, wizardSecondaryButton } from './wizard/ui';
+import { vistaRecordada } from './lista/vista';
 
 // STEP INDEX (after type selector):
 // Physical:  0=Info, 1=Prices, 2=Specs, 3=SEO, 4=Publish
@@ -238,8 +239,11 @@ export default function ProductWizard({ productId }: Props) {
         setDatosCargados(JSON.stringify(cargado));
         setEstadoGuardado(estado);
         fijarBase({ form: cargado, version: product.updatedAt, estado });
-        // C-169: en la papelera. Se abre igual (el trabajo no se pierde) pero avisa y no deja guardar encima
-        if (product.deletedAt) {
+        // C-169: en la papelera. Se abre igual (el trabajo no se pierde) pero avisa y no deja guardar encima.
+        // C-187: si ya se eliminó (tenía ventas), es como borrado: no se restaura desde aquí
+        if (product.eliminadoAt) {
+          setBloqueo({ accion: 'eliminado', por: { id: '', nombre: 'Alguien del equipo' }, en: product.eliminadoAt });
+        } else if (product.deletedAt) {
           setBloqueo({ accion: 'papelera', por: { id: '', nombre: product.deletedByName ?? 'Alguien del equipo' }, en: product.deletedAt });
         }
 
@@ -382,7 +386,8 @@ export default function ProductWizard({ productId }: Props) {
             )}
           </span>
         ), { duration: 6000 });
-        router.push('/admin/products');
+        // C-187: vuelve a la lista como estaba (filtro, categoría y búsqueda), no a "Todos"
+        router.push(vistaRecordada());
         return;
       }
 
@@ -394,10 +399,10 @@ export default function ProductWizard({ productId }: Props) {
         await aplicarActual(cuerpo.actual, cuerpo.por?.nombre ?? 'Otra persona', datos, publishStatus, (d, e) => enviar(d, e, intento + 1));
         return;
       }
-      // Lo movieron a la papelera (410) o ya no existe (404): no se puede guardar encima, pero nada se pierde
+      // Lo movieron a la papelera (410), se eliminó (410, C-187) o ya no existe (404): no se puede guardar encima, pero nada se pierde
       if (isEditing && (res.status === 410 || cuerpo.conflicto === 'no_existe')) {
         setBloqueo({
-          accion: res.status === 410 ? 'papelera' : 'eliminado',
+          accion: res.status === 410 && cuerpo.conflicto !== 'eliminado' ? 'papelera' : 'eliminado',
           por: { id: '', nombre: cuerpo.por?.nombre ?? 'Alguien del equipo' },
           en: cuerpo.por?.en ?? new Date().toISOString(),
         });
@@ -447,7 +452,8 @@ export default function ProductWizard({ productId }: Props) {
   const restaurarYSeguir = async () => {
     setRestaurando(true);
     try {
-      const res = await fetch(`/api/products/${productId}/restaurar`, { method: 'POST' });
+      // C-187: solo desde la papelera; si mientras tanto se eliminó, el servidor lo dice y no lo recupera
+      const res = await fetch(`/api/products/${productId}/restaurar?desde=papelera`, { method: 'POST' });
       if (!res.ok) {
         toast.error((await res.json().catch(() => ({}))).error || 'No se pudo restaurar el producto');
         return;

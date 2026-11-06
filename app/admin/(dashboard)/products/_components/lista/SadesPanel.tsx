@@ -112,8 +112,9 @@ export default function SadesPanel({ onSincronizado }: { onSincronizado: () => v
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
       {/* Status Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-line p-6">
-        <div className="flex items-center justify-between">
+      {/* C-187: en el teléfono todo va en columna; antes el botón de sincronizar quedaba fuera de la pantalla, a la derecha */}
+      <div className="bg-white rounded-xl shadow-sm border border-line p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className={`p-3 rounded-full ${sadesHealth === 'ok' ? 'bg-success/10 text-success-strong' : 'bg-deal-bg text-deal'}`}>
               <FiDatabase className="w-6 h-6" />
@@ -131,8 +132,8 @@ export default function SadesPanel({ onSincronizado }: { onSincronizado: () => v
           </div>
         </div>
 
-        <div className="mt-6 pt-6 border-t border-line flex items-center justify-between">
-          <div className="flex gap-8">
+        <div className="mt-6 pt-6 border-t border-line flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="grid grid-cols-3 gap-3 sm:flex sm:gap-8">
             <div>
               <p className="text-xs text-muted uppercase tracking-wider font-semibold">Fuente de Verdad</p>
               <p className="font-medium text-ink">SADES (Remoto)</p>
@@ -151,7 +152,7 @@ export default function SadesPanel({ onSincronizado }: { onSincronizado: () => v
             variant="primary"
             onClick={handleSync}
             isLoading={isSyncing}
-            className="bg-brand-600 hover:bg-brand-700 text-white"
+            className="w-full bg-brand-600 hover:bg-brand-700 text-white sm:w-auto"
           >
             <FiRefreshCw className={`mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
             {isSyncing ? 'Sincronizando...' : 'Sincronizar Todo Ahora'}

@@ -99,7 +99,8 @@ export async function getDashboard(): Promise<DashboardData> {
     prisma.order.findMany({ where: { ...VENTA, paidAt: { gte: desdeSemana } }, select: { paidAt: true, totalUSD: true } }),
     prisma.order.aggregate({ where: VENTA, _sum: { totalUSD: true } }),
     prisma.order.count(),
-    prisma.product.count({ where: { deletedAt: null } }),
+    // C-187: lo archivado no cuenta (está retirado, como en la lista de Productos); la papelera y lo eliminado tampoco
+    prisma.product.count({ where: { deletedAt: null, status: { not: 'ARCHIVED' } } }),
     prisma.product.count({ where: { status: 'PUBLISHED' } }),
     prisma.user.count({ where: CLIENTES }),
 
@@ -157,6 +158,7 @@ export async function getDashboard(): Promise<DashboardData> {
   }
   const etiquetaDia = new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', weekday: 'short', day: 'numeric' });
 
+  // C-187: los avisos de marca, foto y medidas llevan a la lista ya filtrada ("Por revisar", con las mismas reglas)
   const tienda: DashboardData['tienda'] = [];
   // C-165: sin respaldo, un fallo del servidor puede costar las órdenes y los Puntos ES. Si la tabla aún no existe, el Dashboard no se rompe
   const [respaldoAjustes, respaldoAlDia] = await Promise.all([
@@ -171,9 +173,9 @@ export async function getDashboard(): Promise<DashboardData> {
   if (!ajustes?.taxEnabled || !(Number(ajustes.taxPercent ?? 0) > 0)) tienda.push({ clave: 'iva', texto: 'Falta el porcentaje del IVA: la tienda no dice "IVA incluido".', href: '/admin/settings', soloDueno: true });
   if (!ajustes?.rif || !ajustes.address) tienda.push({ clave: 'negocio', texto: 'Faltan el RIF o la dirección de la tienda (salen en el pie, los presupuestos y Google).', href: '/admin/settings', soloDueno: true });
   if (sinGanancia.size > 0) tienda.push({ clave: 'ganancia', texto: `${sinGanancia.size} ${sinGanancia.size === 1 ? 'producto publicado se vende' : 'productos publicados se venden'} al costo o por debajo${iva > 0 ? ', quitando el IVA' : ''}.`, href: '/admin/products', soloDueno: true });
-  if (sinMarca > 0) tienda.push({ clave: 'marca', texto: `${sinMarca} ${sinMarca === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} marca (Google y el catálogo de Meta la piden).`, href: '/admin/products', soloDueno: false });
-  if (sinFoto > 0) tienda.push({ clave: 'foto', texto: `${sinFoto} ${sinFoto === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} foto.`, href: '/admin/products', soloDueno: false });
-  if (sinMedidas > 0) tienda.push({ clave: 'medidas', texto: `${sinMedidas} ${sinMedidas === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} peso o medidas: su empaque y su envío se estiman.`, href: '/admin/products', soloDueno: false });
+  if (sinMarca > 0) tienda.push({ clave: 'marca', texto: `${sinMarca} ${sinMarca === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} marca (Google y el catálogo de Meta la piden).`, href: '/admin/products?filtro=sin-marca', soloDueno: false });
+  if (sinFoto > 0) tienda.push({ clave: 'foto', texto: `${sinFoto} ${sinFoto === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} foto.`, href: '/admin/products?filtro=sin-foto', soloDueno: false });
+  if (sinMedidas > 0) tienda.push({ clave: 'medidas', texto: `${sinMedidas} ${sinMedidas === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} peso o medidas: su empaque y su envío se estiman.`, href: '/admin/products?filtro=sin-medidas', soloDueno: false });
   if (!ajustes?.homeMetaImage) tienda.push({ clave: 'compartir', texto: 'Falta la imagen para compartir (1200 × 630): al pegar el enlace de la tienda sale el logo cuadrado.', href: '/admin/settings', soloDueno: true });
   if (!process.env.NEXT_PUBLIC_GA_ID && !process.env.NEXT_PUBLIC_FB_PIXEL_ID) tienda.push({ clave: 'medicion', texto: 'Google Analytics y el píxel de Meta no están conectados: los anuncios no pueden medir sus ventas.', href: '/admin/reports', soloDueno: true });
 

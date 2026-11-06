@@ -27,6 +27,20 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Guarda el tema navideño. Marketing también puede guardarlo, pero nada más de la configuración. La tienda solo recibe qué gorro se ve hoy; las fechas no salen del servidor.
 - **Base:** 9 columnas nuevas (aditivo) en `company_settings`: `christmasTheme`, `christmasThemeFrom`, `christmasThemeUntil`, `christmasHat`, `christmasPopup` y los cuatro textos de la tarjeta. Sin variables ni crons.
 
+### Íconos propios en toda la web (C-188)
+Tienda 1.3.1; Carrito, checkout y cuenta del cliente 1.0.1; Marco del panel 1.3.4; y un parche en Dashboard, Órdenes y pagos, Productos, Ofertas y cupones, Marketing, Promotores, ElectroStudio, Cursos, Trabajos realizados, Cotizaciones, Clientes, Reportes y seguridad y Configuración.
+- **Los íconos de librería se cambiaron por los propios de Electro Shop**, dibujados para la tienda: 156 en `components/iconos/`.
+  - Todos tienen la misma cuadrícula de 24, el mismo trazo y las puntas redondeadas.
+  - De react-icons solo quedan los logos oficiales de las marcas.
+- **El sello "Digital" ya no lleva el rayito**, sino la pantalla con el código. Los otros usos del rayito tienen su propio dibujo.
+- **Dos tonos de la marca**, azul marino y azul, en "Compra por categoría", "Compra con confianza", el menú "Categorías" y `/categorias`. En el resto van en un solo color, que toma el del texto.
+- **Arreglos de paso:**
+  - "Gift Cards y Recargas" salía con el ícono de "Otros".
+  - Cuatro títulos del checkout tenían el ícono blanco sobre celeste y no se veían.
+  - En Transacciones, el movimiento de Puntos ES que decía "Retiro" ahora dice "Salida".
+  - La portada baja mucho menos JS: de 4,9 MB a 0,9 MB sin comprimir, porque el cargador de íconos de categorías ya no arrastra familias enteras.
+- Sin cambio de base.
+
 ## [1.0.0-rc.19] - 2026-11-06
 ### Productos 1.3.0 (C-187)
 - **Ya se pueden eliminar los productos zombis** (pedido de Andrés con una captura de producción).

@@ -1,17 +1,17 @@
-# Lo de ahora (actualizado 2026-11-06, C-186 · producción en 1.0.0-rc.19, `main` en 1.0.0-rc.20)
+# Lo de ahora (actualizado 2026-11-06, C-188 · producción en 1.0.0-rc.19, `main` y la etiqueta en 1.0.0-rc.20)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.19`** (`46f8205`), subida el 06/11 por Andrés. Trae C-187 (productos zombis y 5 mejoras), la limpieza de C-185 y los stickers de Chispa. Faltan la limpieza de los zombis desde el panel y las pruebas (sección 2). **Falta subir `v1.0.0-rc.20`**: el tema navideño (C-186) y los íconos propios (C-188, en curso), juntos, como decidió Andrés. Ver la sección 2.
+- **Producción: `v1.0.0-rc.19`** (`46f8205`), subida el 06/11 por Andrés. Trae C-187 (productos zombis y 5 mejoras), la limpieza de C-185 y los stickers de Chispa. Faltan la limpieza de los zombis desde el panel y las pruebas (sección 2). **Falta subir `v1.0.0-rc.20`**: el tema navideño (C-186) y los íconos propios (C-188), juntos, como decidió Andrés. Ver la sección 2.
 - **C-187 · Admin → Productos (06/11, pedido de Andrés, en producción):** ya se pueden eliminar los zombis (`estado/C-187.md`).
   - **El motivo:** "Borrar para siempre" de un producto con ventas lo dejaba archivado y de vuelta en la lista, todavía destacado. El cron de la papelera hacía lo mismo a los 30 días.
   - **El arreglo:** ahora queda **eliminado**, fuera de la lista, de la papelera y de la tienda, sin tocar sus órdenes, garantías, reseñas, códigos ni Puntos ES. Solo el dueño lo puede recuperar, y vuelve como borrador. Lo archivado va en su propio filtro.
   - **Las 5 mejoras:** el filtro "Por revisar" (sin foto, sin marca y sin medidas); la vista que se recuerda; "Deshacer" al cambiar el estado; la estrella de destacado en la lista; y el panel bien a 360, 768 y 1024.
   - **Verificado:** 102 de 102 pruebas, humo 59 de 59, tsc, lint y build.
 - **C-186 · Tema navideño (06/11, hecha, falta subir):** Andrés dio el GO. Marketing → Navidad lo prende con fechas y sin deploy. Trae el gorro de Santa en el logo, en dos versiones a elegir, y la tarjeta navideña del popup, todo con el estilo del pack de íconos (`estado/C-186.md`). Después del deploy queda apagado. Las 5 recomendaciones esperan su decisión (`PLAN.md` §5.2).
-- **C-188 · Los íconos propios en la web:** sigue ahora que C-186 está integrada. El pack está listo (132 íconos, `~/Escritorio/ElectroShop Brand/Pack de íconos/iconos-electro-shop-v1.html`, también para Luis).
+- **C-188 · Los íconos propios en la web (06/11, hecha, falta subir):** 156 íconos del pack reemplazan a los de librería en la tienda y el panel; el sello "Digital" ya no tiene el rayito. Capturas de antes y después: `~/.cache/electroshop-capturas/C-188/comparar.png`. La página de descarga para Luis está en la v1.1, en `~/Escritorio/ElectroShop Brand/Pack de íconos/`.
 - **C-185 · Limpieza (06/11, con el OK de Andrés):** la carpeta de Andrés estaba 41 commits atrás (lo de Luis del 11 al 28/10) y se puso al día. Se borraron las 178 ramas locales viejas, el stash y los worktrees de ChatGPT y de Gemini, 8 archivos sin uso y los 40 uploads de 2025 que estaban versionados. En GitHub quedan `main` y las etiquetas. Detalle en `estado/C-185.md`.
 - **Pedido del 16 y 17/10 (Luis): cotizaciones desde Numen.** Numen es la app de precios y proveedores del equipo, en un repositorio privado aparte. Las cotizaciones las arma Numen y las emite la web.
   - **C-181:** la entrada de servidor a servidor, y cuándo el cliente abre su enlace. Hecha (`estado/C-181.md`).
@@ -33,10 +33,10 @@
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
-## 2. Deploy pendiente: `v1.0.0-rc.20` (C-186 y C-188), **todavía no se sube**
-> **Andrés decidió el 06/11 subir todo junto:** el tema navideño (C-186, ya en `main`) y los íconos propios (C-188, en curso). No subir hasta que C-188 esté en `main`, con la etiqueta `v1.0.0-rc.20` puesta. Este bloque se completa con lo de C-188.
+## 2. Deploy pendiente: `v1.0.0-rc.20` (C-186, el tema navideño, y C-188, los íconos propios)
+Andrés decidió subir los dos juntos. C-188 no cambia la base: el SQL de abajo es solo el de C-186.
 
-Producción está en `v1.0.0-rc.19`; el bloque de rc.19 pasó a `HISTORIAL.md`. Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.20`. **La tienda se ve igual que hoy hasta que se encienda el tema en el panel.**
+Producción está en `v1.0.0-rc.19`; el bloque de rc.19 pasó a `HISTORIAL.md`. Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.20`. **Desde el deploy se ven los íconos nuevos. La Navidad, en cambio, no se ve hasta que se encienda en el panel.**
 
 **SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.19`). Es aditivo, todo en `company_settings`:
 ```sql
@@ -75,6 +75,18 @@ git describe --tags                                                     # v1.0.0
 3. **Cambia al otro gorro** y guarda: la tienda cambia en la siguiente visita.
 4. En la pestaña **"Popup del home"** sale el aviso de que se muestra la tarjeta en lugar de la imagen.
 5. **Apaga y guarda:** la tienda vuelve a ser la de siempre. Después déjalo programado del 1/12 al 6/1.
+6. **Íconos, inicio en la computadora:** "Compra por categoría" va en dos tonos, "Gift Cards y Recargas" muestra una tarjeta y no la cuadrícula, y los sellos "Digital" ya no tienen el rayito.
+7. **Íconos, menú y ficha:**
+   - el menú "Categorías" del encabezado muestra cada categoría con su dibujo;
+   - en la ficha de un digital, "Recarga directa" o "Entrega digital" llevan la pantalla;
+   - el corazón de favoritos se llena al tocarlo.
+8. **Íconos, checkout:** los íconos de "Información de contacto", "Método de pago", "Notas" y "Resumen del pedido" se ven. Antes no.
+9. **Íconos, panel:**
+   - el menú de la izquierda;
+   - la estrella de destacado llena en Productos;
+   - en Categorías, el selector con los dibujos nuevos;
+   - en Transacciones, "Salida" en lugar de "Retiro".
+10. **Íconos, teléfono:** la barra inferior y el menú "Más".
 
 **Vuelta atrás:**
 - Del tema: apagarlo en el panel. Es inmediato y sin deploy.

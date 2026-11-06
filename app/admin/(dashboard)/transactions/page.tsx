@@ -114,7 +114,7 @@ const TYPE_CONFIG: Record<string, { label: string; cls: string; icon: React.Reac
     PURCHASE:   { label: 'Compra',     cls: adminBadge('brand'),   icon: <IconoPaquete         className="w-3 h-3" /> },
     REFUND:     { label: 'Reembolso',  cls: adminBadge('warning'), icon: <IconoRepetir          className="w-3 h-3" /> },
     BONUS:      { label: 'Bono',       cls: adminBadge('success'), icon: <IconoRegalo            className="w-3 h-3" /> },
-    WITHDRAWAL: { label: 'Retiro',     cls: adminBadge('neutral'), icon: <IconoSalidaPuntos className="w-3 h-3" /> },
+    WITHDRAWAL: { label: 'Salida',     cls: adminBadge('neutral'), icon: <IconoSalidaPuntos className="w-3 h-3" /> },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; cls: string }> = {

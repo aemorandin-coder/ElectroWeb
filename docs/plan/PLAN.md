@@ -398,7 +398,11 @@ Quedan para después de C-177 (`estado/C-177.md`):
 **De C-186 (06/11), esperan la decisión de Andrés** (`estado/C-186.md`): las 5 recomendaciones de Navidad. (1) "Ideas para regalar" por presupuesto: los productos y los rangos. (2) Gift cards de último minuto con mensaje: el plazo de los digitales, A1. (3) "Pide hasta el … para que llegue antes del 24": las fechas de corte de ZOOM y MRW. (4) Dos tandas de correos y estados con el aguinaldo y los promotores: la oferta y la comisión, A14. (5) Combos y envoltorio de regalo: los precios.
 - Tarea chica: `motion-safe:animate-fadeIn` no genera nada con Tailwind 4, así que el popup, `MobileNavBar` y `GuidedTour` no hacen su entrada. Hay que definir la animación en `@theme`.
 
-**C-188 · Los íconos propios en la web** (pedido de Andrés el 06/11; C-186 ya está integrada, sigue esta): pasar el pack de 132 íconos (`~/Escritorio/ElectroShop Brand/Pack de íconos/`) a componentes, reemplazar `react-icons` en la tienda y el panel (las marcas quedan con sus logos oficiales), mapear los nombres guardados en la base (categorías y notificaciones) y cerrar el selector de íconos de categorías.
+**De C-188 (06/11), lo decide Andrés** (`estado/C-188.md`, "Propuesto"):
+- Cerrar el selector de íconos de categorías a los del pack: hoy acepta cualquier librería, y el checkout todavía baja 6,3 MB de JS (4,97 MB son Simple Icons por los logos de Binance, Zelle y PayPal). Con eso se quitan `lucide-react` y las tres `@fortawesome/*`, que nadie usa.
+- "Accesorios Gaming" sigue con el control: se puede elegir el mouse del pack en Admin → Categorías.
+- Tarea aparte: los 10 métodos de pago de la recarga de Puntos ES, una etiqueta sin % y los íconos de los flyers de ElectroStudio, redibujados con el pack.
+- Los dos tonos también en la lista de entrega de la ficha y en "Más de ElectroShop", si a Andrés le gustan en el inicio.
 
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).

@@ -130,13 +130,18 @@ export interface Navegador {
   /** Escribe en un input o textarea controlado por React */
   escribir(id: string, valor: string): Promise<void>;
   sinScrollHorizontal(): Promise<boolean>;
+  /** Corre una función ("() => { … }") en cada página antes que sus scripts (C-190: fingir otro día) */
+  antesDeCargar(fn: string): Promise<void>;
   cerrar(): Promise<void>;
 }
 
 const QUIETO = `() => { const s = document.createElement('style'); s.textContent = '*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}'; document.head.appendChild(s); }`;
 
-/** Abre Firefox sin ventana. `carpeta` recibe las capturas (y un perfil temporal que se borra al cerrar). */
-export async function abrirNavegador(carpeta: string, puerto = 9333): Promise<Navegador> {
+/**
+ * Abre Firefox sin ventana. `carpeta` recibe las capturas (y un perfil temporal que se borra al cerrar).
+ * El puerto de BiDi, si no se pasa, es E2E_BIDI_PORT o 9333 (C-190: dos agentes pueden probar a la vez).
+ */
+export async function abrirNavegador(carpeta: string, puerto = Number(process.env.E2E_BIDI_PORT) || 9333): Promise<Navegador> {
   const perfil = `${carpeta}/ffprofile-bidi`;
   mkdirSync(perfil, { recursive: true });
   // Poca memoria: un solo proceso de contenido, sin caché en memoria ni restauración de sesión (la prueba corre junto al servidor)
@@ -220,6 +225,9 @@ export async function abrirNavegador(carpeta: string, puerto = 9333): Promise<Na
       await js(`() => { const el = document.getElementById(${JSON.stringify(id)}); const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, ${JSON.stringify(valor)}); el.dispatchEvent(new Event('input', { bubbles: true })); }`);
     },
     sinScrollHorizontal: () => js<boolean>(`() => document.documentElement.scrollWidth <= window.innerWidth + 1`),
+    async antesDeCargar(fn) {
+      await cmd('script.addPreloadScript', { functionDeclaration: fn, contexts: [context] });
+    },
     async cerrar() {
       await cmd('browsingContext.close', { context }).catch(() => undefined);
       conexion.close();

@@ -1,7 +1,9 @@
 // Ideas para regalar (C-190): los productos que se pueden comprar hoy, por presupuesto. Solo servidor: la página
 // (app/ideas-para-regalar) y su imagen para compartir (lib/og/datos.ts) la llaman directo.
-// El tramo sale del precio que paga el cliente (con la oferta de la tienda vigente, lib/promotions.ts) y, en los digitales
-// con varios montos, del "Desde": el mismo precio que dice la tarjeta.
+// El tramo sale del precio que paga el cliente: con la oferta de la tienda vigente (lib/promotions.ts). Un digital con
+// montos (las gift cards de PlayStation, Steam…) entra en cada tramo donde tenga alguno, y su tarjeta dice el precio de
+// esos montos: "Desde $78,00" en Más de $50. Sin eso, todas quedaban en el primer tramo por su monto más chico. En los
+// tramos de arriba van después de lo propio del tramo, para que cada uno no abra con las mismas tarjetas.
 
 import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
@@ -32,6 +34,16 @@ export const POR_TRAMO = 12;
 
 const enTramo = (precio: number, tramo: Tramo) => (tramo.desde === null || precio > tramo.desde) && (tramo.hasta === null || precio <= tramo.hasta);
 
+/** El producto como se ofrece en un tramo, o null si no cabe. A un digital con montos solo le quedan los de ese tramo */
+function enElTramo(p: PublicProduct, tramo: Tramo): PublicProduct | null {
+  if (p.productType === 'DIGITAL' && p.digitalVariants.length > 0) {
+    const montos = p.digitalVariants.filter((v) => enTramo(v.priceUSD, tramo));
+    if (montos.length === 0) return null;
+    return { ...p, priceUSD: Math.min(...montos.map((v) => v.priceUSD)), digitalVariants: montos };
+  }
+  return enTramo(p.priceUSD, tramo) ? p : null;
+}
+
 /** El catálogo con el mismo rango y solo lo disponible, para "Ver todos" */
 export function catalogoDelTramo(tramo: Tramo): string {
   const query = new URLSearchParams();
@@ -52,7 +64,7 @@ export interface TramoConProductos {
 /**
  * Los tramos con sus productos: publicados y que se pueden comprar (los físicos con stock, aunque la tienda muestre los
  * agotados). En cada tramo, los destacados primero, después los más vendidos de los últimos 90 días y después los más
- * nuevos. Los tramos vacíos no vienen.
+ * nuevos; los digitales que vienen de un tramo más barato, al final. Los tramos vacíos no vienen.
  */
 export const getIdeasParaRegalar = cache(async (): Promise<TramoConProductos[]> => {
   const filas = await prisma.product.findMany({
@@ -74,7 +86,14 @@ export const getIdeasParaRegalar = cache(async (): Promise<TramoConProductos[]> 
     Number(b.isFeatured) - Number(a.isFeatured) || (vendidos.get(b.id) ?? 0) - (vendidos.get(a.id) ?? 0) || b.createdAt.localeCompare(a.createdAt);
 
   return TRAMOS.flatMap((tramo) => {
-    const caben = productos.filter((p) => enTramo(p.priceUSD, tramo)).sort(orden);
+    const caben = productos
+      .flatMap((p) => {
+        const ofrecido = enElTramo(p, tramo);
+        // Propio: su precio de tarjeta ("Desde") es de este tramo
+        return ofrecido ? [{ producto: ofrecido, propio: enTramo(p.priceUSD, tramo) }] : [];
+      })
+      .sort((a, b) => Number(b.propio) - Number(a.propio) || orden(a.producto, b.producto))
+      .map(({ producto }) => producto);
     return caben.length > 0 ? [{ tramo, productos: caben.slice(0, POR_TRAMO), total: caben.length }] : [];
   });
 });

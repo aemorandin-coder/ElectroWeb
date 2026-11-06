@@ -86,26 +86,27 @@ const TIERS: Record<Tier, {
   border: string;
   icon: React.ReactNode;
 }> = {
+  // C-192: los niveles suben en la familia azul de la marca (antes, bronce y oro en el ámbar de los avisos)
   bronze: {
     label: 'Bronce',
-    color: 'text-warning-strong',
-    bg: 'bg-warning/10',
-    border: 'border-warning/30',
-    icon: <IconoPremio className="h-5 w-5 text-warning-strong" aria-hidden="true" />,
+    color: 'text-ink-soft',
+    bg: 'bg-surface',
+    border: 'border-line',
+    icon: <IconoPremio className="h-5 w-5 text-ink-soft" aria-hidden="true" />,
   },
   silver: {
     label: 'Plata',
-    color: 'text-muted',
-    bg: 'bg-surface',
-    border: 'border-line',
-    icon: <IconoPremio className="h-5 w-5 text-muted" aria-hidden="true" />,
+    color: 'text-brand-700',
+    bg: 'bg-brand-50',
+    border: 'border-brand-200',
+    icon: <IconoPremio className="h-5 w-5 text-brand-600" aria-hidden="true" />,
   },
   gold: {
     label: 'Oro',
-    color: 'text-warning-strong',
-    bg: 'bg-warning/15',
-    border: 'border-warning/40',
-    icon: <IconoPremio className="h-5 w-5 text-warning" aria-hidden="true" />,
+    color: 'text-brand-800',
+    bg: 'bg-brand-100',
+    border: 'border-brand-300',
+    icon: <IconoPremio className="h-5 w-5 text-brand-700" aria-hidden="true" />,
   },
 };
 
@@ -138,9 +139,10 @@ function estadoDeComision(c: Conversion): { texto: string; tono: 'success' | 'wa
   if (c.type === 'REGISTRATION') return { texto: 'Registro', tono: 'brand' };
   if (c.status === 'APPROVED') return { texto: 'Acreditada', tono: 'success' };
   if (c.status === 'REJECTED') return { texto: 'Anulada', tono: 'danger' };
-  if (c.enRevision) return { texto: 'En revisión', tono: 'warning' };
-  if (c.creditsAt) return { texto: `Se acredita el ${format(new Date(c.creditsAt), 'dd/MM', { locale: es })}`, tono: 'warning' };
-  return { texto: 'Espera la entrega', tono: 'warning' };
+  // C-192: esperar no es un aviso: el promotor no tiene que hacer nada
+  if (c.enRevision) return { texto: 'En revisión', tono: 'brand' };
+  if (c.creditsAt) return { texto: `Se acredita el ${format(new Date(c.creditsAt), 'dd/MM', { locale: es })}`, tono: 'brand' };
+  return { texto: 'Espera la entrega', tono: 'brand' };
 }
 
 function StatCard({
@@ -234,8 +236,8 @@ function NotEnrolledView({ data, onEnviada }: { data: ReferralData | null; onEnv
             Icon: IconoRegalo,
             title: 'En Puntos ES',
             desc: `Se acreditan solos ${dias} días después de que el cliente recibe su pedido. No se cambian por dinero: se usan para comprar en la tienda.`,
-            color: 'text-warning-strong',
-            bg: 'bg-warning/10',
+            color: 'text-brand-600',
+            bg: 'bg-brand-50',
           },
           {
             Icon: IconoClientes,
@@ -483,8 +485,8 @@ export default function ReferralsPage() {
           value={formatUSD(stats.pendingEarnings)}
           suffix=" Puntos ES"
           Icon={IconoReloj}
-          color="text-warning-strong"
-          bg="bg-warning/10"
+          color="text-brand-600"
+          bg="bg-brand-50"
         />
         <StatCard
           label="Acreditado"
@@ -813,16 +815,16 @@ export default function ReferralsPage() {
                   <div
                     className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                       entry.rank === 1
-                        ? 'bg-warning/15 text-warning-strong'
+                        ? 'bg-brand-950 text-white'
                         : entry.rank === 2
-                          ? 'bg-surface text-muted'
+                          ? 'bg-brand-100 text-brand-800'
                           : entry.rank === 3
-                            ? 'bg-warning/10 text-warning-strong'
+                            ? 'bg-brand-50 text-brand-700'
                             : 'bg-line text-muted'
                     }`}
                   >
                     {entry.rank <= 3
-                      ? <IconoPremio className={`h-5 w-5 ${['text-warning', 'text-muted', 'text-warning-strong'][entry.rank - 1]}`} aria-hidden="true" />
+                      ? <IconoPremio className={`h-5 w-5 ${['text-accent', 'text-brand-700', 'text-brand-600'][entry.rank - 1]}`} aria-hidden="true" />
                       : `#${entry.rank}`}
                   </div>
                   <div className="flex-1 min-w-0">

@@ -58,8 +58,8 @@ const PAYMENT_TYPE_METADATA: Record<string, { label: string; icon: React.ReactNo
     },
     BINANCE_PAY: {
         label: 'Binance Pay',
-        icon: <SiBinance className="w-5 h-5 text-warning-strong" />,
-        badgeClass: 'bg-warning/10 text-warning-strong border-warning/30',
+        icon: <SiBinance className="w-5 h-5 text-brand-600" />,
+        badgeClass: 'bg-brand-50 text-brand-700 border-brand-200',
     },
     ZELLE: {
         label: 'Zelle',
@@ -68,8 +68,8 @@ const PAYMENT_TYPE_METADATA: Record<string, { label: string; icon: React.ReactNo
     },
     ZINLI: {
         label: 'Zinli',
-        icon: <IconoTarjeta className="w-5 h-5 text-warning-strong" />,
-        badgeClass: 'bg-warning/10 text-warning-strong border-warning/30',
+        icon: <IconoTarjeta className="w-5 h-5 text-brand-600" />,
+        badgeClass: 'bg-brand-50 text-brand-700 border-brand-200',
     },
     PAYPAL: {
         label: 'PayPal',
@@ -83,8 +83,8 @@ const PAYMENT_TYPE_METADATA: Record<string, { label: string; icon: React.ReactNo
     },
     CRYPTO: {
         label: 'Criptomonedas',
-        icon: <SiBinance className="w-5 h-5 text-warning-strong" />,
-        badgeClass: 'bg-warning/10 text-warning-strong border-warning/30',
+        icon: <SiBinance className="w-5 h-5 text-brand-600" />,
+        badgeClass: 'bg-brand-50 text-brand-700 border-brand-200',
     },
     CASH: {
         label: 'Efectivo',

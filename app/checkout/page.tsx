@@ -1042,7 +1042,7 @@ export default function CheckoutPage() {
                                 type="button"
                                 onClick={handleCheckGiftCard}
                                 disabled={giftCardLoading}
-                                className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 p-2 md:px-4 md:py-2 bg-warning text-white text-sm font-bold rounded-lg hover:bg-warning-strong transition-all disabled:opacity-70 disabled:cursor-wait"
+                                className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 p-2 md:px-4 md:py-2 bg-brand-500 text-white text-sm font-bold rounded-lg hover:bg-brand-600 transition-all disabled:opacity-70 disabled:cursor-wait"
                               >
                                 {giftCardLoading ? (
                                   <span className="flex items-center gap-2">

@@ -145,7 +145,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
           <h1 className={`${adminPageTitle} break-words`}>{course.title}</h1>
           <div className="flex items-center gap-2 mt-1">
             <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-              course.isActive ? 'bg-success/15 text-success-strong' : 'bg-warning/15 text-warning-strong'
+              course.isActive ? 'bg-success/15 text-success-strong' : 'bg-brand-50 text-brand-700'
             }`}>
               {course.isActive ? 'Activo' : 'En revisión por admin'}
             </span>

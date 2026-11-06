@@ -66,9 +66,10 @@ const LEVEL_LABELS: Record<string, string> = {
 };
 
 const LEVEL_COLORS: Record<string, string> = {
-  PRINCIPIANTE: 'bg-success/15 text-success-strong',
-  INTERMEDIO: 'bg-warning/15 text-warning-strong',
-  AVANZADO: 'bg-deal-bg text-deal',
+  // C-192: el nivel no es un estado (verde, ámbar y rojo decían "bien, cuidado, error"): la misma familia azul, de menos a más
+  PRINCIPIANTE: 'bg-brand-50 text-brand-700',
+  INTERMEDIO: 'bg-brand-100 text-brand-800',
+  AVANZADO: 'bg-brand-950 text-white',
 };
 
 function StarRating({ rating }: { rating: number }) {
@@ -136,7 +137,7 @@ function CourseCard({ course }: CourseCardProps) {
             </span>
           )}
           {course.isFeatured && (
-            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-warning/15 text-warning-strong" aria-label="Destacado">
+            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-600" aria-label="Destacado">
               <IconoEstrella lleno className="h-3 w-3" aria-hidden="true" />
             </span>
           )}
@@ -259,7 +260,7 @@ export default async function CursosPage({
             {/* Featured courses */}
             {courses.some((c) => c.isFeatured) && (
               <div className="mb-10">
-                <h2 className="text-xl font-bold text-ink mb-4 inline-flex items-center gap-1.5"><IconoEstrella lleno className="h-5 w-5 text-warning shrink-0" aria-hidden="true" />Cursos Destacados</h2>
+                <h2 className="text-xl font-bold text-ink mb-4 inline-flex items-center gap-1.5"><IconoEstrella lleno className="h-5 w-5 text-brand-500 shrink-0" aria-hidden="true" />Cursos Destacados</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                   {courses.filter((c) => c.isFeatured).map((course) => (
                     <CourseCard key={course.id} course={course} />

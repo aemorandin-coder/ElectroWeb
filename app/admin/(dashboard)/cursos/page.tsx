@@ -27,13 +27,14 @@ const LEVELS = [
   { value: 'AVANZADO', label: 'Avanzado' },
 ];
 
+// C-192: la categoría no es un estado: todas con la misma etiqueta (antes verde, ámbar y rojo según el tema)
 const CATEGORY_COLORS: Record<string, string> = {
-  DESARROLLO: 'bg-brand-100 text-brand-700',
-  REDES: 'bg-success/10 text-success-strong',
-  ELECTRONICA: 'bg-warning/10 text-warning-strong',
-  GAMING: 'bg-brand-100 text-brand-700',
-  SEGURIDAD: 'bg-deal/10 text-deal',
-  NEGOCIOS: 'bg-warning/10 text-warning-strong',
+  DESARROLLO: 'bg-brand-50 text-brand-700',
+  REDES: 'bg-brand-50 text-brand-700',
+  ELECTRONICA: 'bg-brand-50 text-brand-700',
+  GAMING: 'bg-brand-50 text-brand-700',
+  SEGURIDAD: 'bg-brand-50 text-brand-700',
+  NEGOCIOS: 'bg-brand-50 text-brand-700',
 };
 
 type Lesson = {
@@ -348,7 +349,7 @@ export default function AdminCursosPage() {
                     </span>
                   )}
                   {course.isFeatured && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-warning/10 text-warning-strong inline-flex items-center gap-1"><IconoEstrella lleno className="h-3 w-3 shrink-0" aria-hidden="true" />Destacado</span>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-600 inline-flex items-center gap-1"><IconoEstrella lleno className="h-3 w-3 shrink-0" aria-hidden="true" />Destacado</span>
                   )}
                 </div>
                 <div className="absolute top-2 right-2">
@@ -371,7 +372,7 @@ export default function AdminCursosPage() {
                   <button onClick={() => openEdit(course)} className="flex-1 py-1.5 text-xs font-semibold text-brand-500 border border-brand-500 rounded-lg hover:bg-brand-500 hover:text-white transition-colors">Editar</button>
                   <button
                     onClick={() => handleToggle(course)}
-                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${course.isActive ? 'border-warning/30 text-warning-strong hover:bg-warning/10' : enRevision(course) ? 'border-success-strong bg-success-strong text-white hover:bg-success-strong/90' : 'border-success/30 text-success-strong hover:bg-success/10'}`}
+                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${course.isActive ? 'border-line text-ink-soft hover:bg-surface' : enRevision(course) ? 'border-success-strong bg-success-strong text-white hover:bg-success-strong/90' : 'border-success/30 text-success-strong hover:bg-success/10'}`}
                   >
                     {course.isActive ? 'Desactivar' : enRevision(course) ? 'Aprobar' : 'Activar'}
                   </button>

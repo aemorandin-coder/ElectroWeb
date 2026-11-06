@@ -271,7 +271,7 @@ export default function Solicitudes() {
 
                                 {/* Customer Message */}
                                 {request.customerMessage && (
-                                    <div className="mt-3 ml-13 pl-4 border-l-2 border-warning/20">
+                                    <div className="mt-3 ml-13 pl-4 border-l-2 border-line-strong">
                                         <p className="text-xs text-muted italic">&ldquo;{request.customerMessage}&rdquo;</p>
                                     </div>
                                 )}

@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { createNotification } from '@/lib/notifications';
 import { getBaseTemplate, sendEmail } from '@/lib/email-service';
-import { CORREO, botonCorreo } from '@/lib/email-templates/estilo';
+import { CORREO, botonCorreo, placaCorreo, placaInteriorCorreo } from '@/lib/email-templates/estilo';
 import { escapeHtml } from '@/lib/html';
 import { siteUrl } from '@/lib/seo';
 import { aprobarSolicitudSchema, crearPromotor, PromotorError, rechazarSolicitudSchema } from '@/lib/influencer-admin';
@@ -68,10 +68,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const contenido = `
       <h2 style="${CORREO.titulo}">Ya eres promotor</h2>
       <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(solicitud.user.name || 'promotor')}</strong>, aprobamos tu solicitud.</p>
-      <div style="${CORREO.cajaInfo}text-align:center;">
-        <p style="${CORREO.rotulo}">Tu código</p>
-        <p style="${CORREO.dato}">${escapeHtml(promotor.code)}</p>
-      </div>
+      ${placaCorreo(`
+        <p style="${CORREO.placaRotulo}">TU CÓDIGO DE PROMOTOR</p>
+        ${placaInteriorCorreo('Código', escapeHtml(promotor.code))}`)}
       <p style="${CORREO.texto}">Quien lo escriba en el carrito recibe <strong style="${CORREO.fuerte}">${promotor.customerDiscountPercent} % de descuento</strong> y tú ganas <strong style="${CORREO.fuerte}">${Number(promotor.commissionRate)} %</strong> del valor de los productos (sin IVA ni envío), en <strong style="${CORREO.fuerte}">Puntos ES</strong> para comprar en la tienda. Se acreditan ${DIAS_PARA_ACREDITAR} días después de que el cliente recibe su pedido.</p>
       ${botonCorreo(`${siteUrl()}/customer/referrals`, 'Ver mi panel de promotor')}`;
     const correo = solicitud.user.email;

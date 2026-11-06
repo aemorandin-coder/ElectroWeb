@@ -166,6 +166,8 @@ Aplica **solo** a clases con la forma `utilidad-[#hex]` (ej. `bg-[#2a63cd]`, `ho
 | `#3b82f6` | `info` |
 | `#0f172a` | `brand-950` |
 
+**Ámbar (`#f59e0b`, `#d97706`, amarillos):** pásalo a `warning` **solo si avisa que alguien tiene que hacer algo** (falta pagar, poco stock). Si destaca, celebra o clasifica (un nivel, "Destacado", "Antes", el logo de Binance), no lo conviertas: déjalo y anótalo como `PEDIDO:` para Claude (`PLAN.md` §1.1, C-192). La tabla de arriba convirtió así 60 ámbares decorativos que Claude tuvo que deshacer el 06/11.
+
 **`navidad` (#e0263a)** es solo del tema navideño (C-186, `components/navidad/`): no se usa para errores ni para ofertas.
 
 **Rojos:** para **texto, bordes y fondos de error** usa la familia `deal` (`text-deal`, `bg-deal-bg`, `border-deal/30`), como manda la tabla R3 de `PLAN_GEMINI.md`. `danger` (#ef4444) solo se queda donde ya venía en un hex: sobre blanco da 3,8:1 y no se lee. En R10 hubo que cambiar `text-danger` por `text-deal` en 6 archivos.
@@ -474,6 +476,7 @@ Mueven datos de facturación: **no los cambies ni los "limpies".**
 - **Dependencias nuevas (C-177):** Next 16.3.8, sharp 0.35 y nodemailer 10. Los tipos de sharp y de nodemailer ahora se importan por nombre (`import sharp, { type OverlayOptions } from 'sharp'`, `import nodemailer, { type SMTPTransportOptions } from 'nodemailer'`). No agregues dependencias ni subas versiones en `package.json` (carril Claude).
 - **La tienda escucha solo en `127.0.0.1`** (`npm start`). Para probar en local, usa `npm run dev` como siempre.
 
-## 15. Cambios de Claude del 06/11 que te afectan (C-191)
+## 15. Cambios de Claude del 06/11 que te afectan (C-191 y C-192)
 - **`app/customer/(dashboard)/page.tsx`:** Claude agregó `<PreguntarPromociones />` debajo de `<CustomerOnboarding />`, a pedido de Andrés. Es la pregunta de una sola vez por las ofertas por correo: no la quites ni la muevas arriba del resumen.
 - **El componente vive en `components/promociones/`** (carril Claude) y guarda con `PATCH /api/customer/settings`. Si una tarjeta tuya toca Mi perfil → Notificaciones, el interruptor de ofertas sigue mandando `notificaciones.emailPromotions`: el servidor anota la fecha de la decisión, no la mandes tú.
+- **C-192, el ámbar solo para avisos:** Claude cambió clases y tonos (sin lógica) en `app/cursos/`, `app/gift-cards/`, `app/customer/` (Promotores, Puntos ES, cotizaciones, reseñas, empresa), `components/cursos/`, `components/servicios/`, `components/modals/RechargeModalV2.tsx`, `components/contact/ContactForm.tsx` y `components/pago-movil/`. No los vuelvas a `warning`: lo que espera al equipo va en azul (`adminBadge('brand')`), los niveles y "Destacado" en la familia azul, y "Antes" en `bg-brand-950`. La regla está en §4 y en `PLAN.md` §1.1.

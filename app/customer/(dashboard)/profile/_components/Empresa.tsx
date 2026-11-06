@@ -16,7 +16,7 @@ import type { DatosPerfil } from './tipos';
 
 const ESTADOS: Record<string, { texto: string; tono: AdminTone; Icono: typeof IconoReloj }> = {
   NONE: { texto: 'Sin verificar', tono: 'neutral', Icono: IconoReloj },
-  PENDING: { texto: 'En revisión', tono: 'warning', Icono: IconoReloj },
+  PENDING: { texto: 'En revisión', tono: 'brand', Icono: IconoReloj },
   APPROVED: { texto: 'Verificada', tono: 'success', Icono: IconoConfirmado },
   REJECTED: { texto: 'Rechazada', tono: 'danger', Icono: IconoError },
 };

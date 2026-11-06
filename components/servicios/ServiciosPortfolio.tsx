@@ -243,10 +243,10 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                   {(v.beforeImage || v.afterImage) && (
                     <div className="absolute bottom-3 right-3 flex gap-1">
                       {v.beforeImage && (
-                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-warning-strong text-white">ANTES</span>
+                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-brand-950 text-white">ANTES</span>
                       )}
                       {v.afterImage && (
-                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-success-strong text-white">DESPUÉS</span>
+                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-brand-500 text-white">DESPUÉS</span>
                       )}
                     </div>
                   )}
@@ -351,8 +351,8 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                       onClick={() => setBeforeAfterView('before')}
                       className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
                         beforeAfterView === 'before'
-                          ? 'bg-warning-strong text-white'
-                          : 'bg-warning/15 text-warning-strong hover:bg-warning/25'
+                          ? 'bg-brand-950 text-white'
+                          : 'bg-surface text-ink-soft hover:bg-brand-50'
                       }`}
                     >
                       Antes
@@ -363,8 +363,8 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
                       onClick={() => setBeforeAfterView('after')}
                       className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
                         beforeAfterView === 'after'
-                          ? 'bg-success-strong text-white'
-                          : 'bg-success-strong/10 text-success-strong hover:bg-success-strong/20'
+                          ? 'bg-brand-500 text-white'
+                          : 'bg-surface text-ink-soft hover:bg-brand-50'
                       }`}
                     >
                       Después

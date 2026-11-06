@@ -267,15 +267,15 @@ export default function VerificationsPage() {
                             </div>
 
                             {selectedRequest.businessVerificationStatus === 'PENDING' && (
-                                <div className="bg-warning/10 p-4 rounded-xl border border-warning/20">
-                                    <label className="block text-sm font-medium text-warning-strong mb-2">
+                                <div className="bg-surface p-4 rounded-xl border border-line">
+                                    <label className="block text-sm font-medium text-ink mb-2">
                                         Notas de revisión (Requerido para rechazar)
                                     </label>
                                     <textarea
                                         value={actionNote}
                                         onChange={(e) => setActionNote(e.target.value)}
                                         placeholder="Escribe aquí las razones del rechazo o notas de aprobación..."
-                                        className="w-full p-3 rounded-lg border border-warning/20 focus:outline-none focus:ring-2 focus:ring-warning text-sm"
+                                        className="w-full p-3 rounded-lg border border-line bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                                         rows={3}
                                     />
                                 </div>

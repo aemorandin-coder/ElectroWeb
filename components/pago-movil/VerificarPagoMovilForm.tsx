@@ -485,11 +485,11 @@ Por favor necesito ayuda para verificar mi pago.
                 </div>
 
                 {/* Monto a verificar - Bs como protagonista */}
-                <div className="bg-warning/10 rounded-xl p-4 border border-warning/30">
+                <div className="bg-surface rounded-xl p-4 border border-line">
                     <div className="flex items-center justify-between">
                         <div>
                             <span className="text-xs font-semibold text-muted uppercase tracking-wider">Monto a pagar:</span>
-                            <p className="text-xs text-warning-strong mt-0.5">Tasa BCV oficial</p>
+                            <p className="text-xs text-muted mt-0.5">Tasa BCV oficial</p>
                         </div>
                         <div className="text-right">
                             {montoEnBs ? (
@@ -521,7 +521,7 @@ Por favor necesito ayuda para verificar mi pago.
                                 ? 'bg-success-strong'
                                 : verificationState === 'duplicate'
                                     ? 'bg-warning'
-                                    : 'bg-deal-bg0'
+                                    : 'bg-deal'
                                 }`}
                         >
                             {verificationState === 'success' ? (

@@ -1,6 +1,6 @@
 import { sendEmail, getBaseTemplate } from '@/lib/email-service';
 import { escapeHtml } from '@/lib/html';
-import { CORREO, botonCorreo, selloCorreo } from './estilo';
+import { CORREO, botonCorreo, placaCorreo, placaInteriorCorreo, selloCorreo } from './estilo';
 
 export async function sendCourseEnrollmentEmail(
   email: string,
@@ -11,11 +11,10 @@ export async function sendCourseEnrollmentEmail(
     <h2 style="${CORREO.titulo}">Inscripción confirmada</h2>
     <p style="${CORREO.subtitulo}">Ya puedes empezar a aprender</p>
     <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(data.studentName)}</strong>,</p>
-    <p style="${CORREO.texto}">Te inscribiste en el curso:</p>
-    <div style="${CORREO.cajaInfo}text-align:center;">
-      <p style="${CORREO.cajaTitulo}${CORREO.tonoInfo}font-size:18px;">${escapeHtml(data.courseTitle)}</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Instructor: ${escapeHtml(data.instructorName)}</p>
-    </div>
+    ${placaCorreo(`
+      <p style="${CORREO.placaRotulo}">TE INSCRIBISTE EN</p>
+      <p style="${CORREO.placaTitulo}">${escapeHtml(data.courseTitle)}</p>
+      <p style="${CORREO.placaTexto}">Instructor: ${escapeHtml(data.instructorName)}</p>`)}
     ${botonCorreo(`${appUrl}/cursos/${encodeURIComponent(data.courseSlug)}/aprender`, 'Comenzar ahora')}`;
 
   return sendEmail({
@@ -41,20 +40,17 @@ export async function sendCourseCertificateEmail(
 
   const content = `
     <div style="text-align:center;">
-      ${selloCorreo('exito')}
+      ${selloCorreo('info')}
       <h2 style="${CORREO.titulo}">¡Felicitaciones, ${escapeHtml(data.studentName)}!</h2>
       <p style="${CORREO.subtitulo}">Completaste el curso</p>
     </div>
 
-    <div style="${CORREO.cajaAviso}text-align:center;">
-      <p style="${CORREO.cajaTitulo}${CORREO.tonoAviso}font-size:18px;">${escapeHtml(data.courseTitle)}</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}">Instructor: ${escapeHtml(data.instructorName)} · Completado el ${dateStr}</p>
-    </div>
-
-    <div style="${CORREO.caja}text-align:center;">
-      <p style="${CORREO.rotulo}">ID de verificación</p>
-      <p style="${CORREO.dato}font-size:14px;letter-spacing:0;font-family:'Courier New',Courier,monospace;">${escapeHtml(data.certificateId)}</p>
-    </div>
+    <!-- C-192: el certificado es la pieza fuerte (placa azul noche, variante B del 06/11). Antes iba en una caja ámbar de aviso -->
+    ${placaCorreo(`
+      <p style="${CORREO.placaRotulo}">CERTIFICADO DE FINALIZACIÓN</p>
+      <p style="${CORREO.placaTitulo}">${escapeHtml(data.courseTitle)}</p>
+      <p style="${CORREO.placaTexto}">Instructor: ${escapeHtml(data.instructorName)} · ${dateStr}</p>
+      ${placaInteriorCorreo('ID de verificación', escapeHtml(data.certificateId), '', 15)}`)}
 
     <p style="${CORREO.textoMenor}text-align:center;">
       Tu certificado se puede verificar en nuestra página web: cualquier persona puede confirmar que es auténtico con el enlace de abajo.

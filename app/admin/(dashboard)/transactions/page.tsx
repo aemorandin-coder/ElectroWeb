@@ -112,7 +112,7 @@ const TYPE_CONFIG: Record<string, { label: string; cls: string; icon: React.Reac
     RECHARGE:   { label: 'Recarga',    cls: adminBadge('success'), icon: <IconoEntradaPuntos   className="w-3 h-3" /> },
     DEPOSIT:    { label: 'Abono',      cls: adminBadge('success'), icon: <IconoEntradaPuntos   className="w-3 h-3" /> },
     PURCHASE:   { label: 'Compra',     cls: adminBadge('brand'),   icon: <IconoPaquete         className="w-3 h-3" /> },
-    REFUND:     { label: 'Reembolso',  cls: adminBadge('warning'), icon: <IconoRepetir          className="w-3 h-3" /> },
+    REFUND:     { label: 'Reembolso',  cls: adminBadge('brand'),   icon: <IconoRepetir          className="w-3 h-3" /> },
     BONUS:      { label: 'Bono',       cls: adminBadge('success'), icon: <IconoRegalo            className="w-3 h-3" /> },
     WITHDRAWAL: { label: 'Salida',     cls: adminBadge('neutral'), icon: <IconoSalidaPuntos className="w-3 h-3" /> },
 };
@@ -860,7 +860,7 @@ export default function TransactionsPage() {
                                 </div>
                             )}
 
-                            <div className="mt-4 bg-warning/15 border border-warning/30 rounded-lg px-4 py-3 text-xs text-warning-strong">
+                            <div className="mt-4 bg-surface border border-line rounded-lg px-4 py-3 text-xs text-ink-soft">
                                 <strong>Nota:</strong> El cliente recibirá una notificación con el motivo del rechazo.
                             </div>
                         </div>

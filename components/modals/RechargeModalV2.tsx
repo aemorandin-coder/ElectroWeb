@@ -534,7 +534,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                                         </span>
                                                                     )}
                                                                     {method.type === 'BINANCE_PAY' && (
-                                                                        <span className="px-1.5 lg:px-2 py-0.5 text-xs font-bold bg-warning-strong/10 text-warning-strong rounded-full">
+                                                                        <span className="px-1.5 lg:px-2 py-0.5 text-xs font-bold bg-surface text-ink-soft rounded-full">
                                                                             Binance Pay
                                                                         </span>
                                                                     )}
@@ -635,14 +635,14 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
                                 {/* Bs Conversion (For Mobile Payment and Bank Transfer) */}
                                 {selectedMethod && (selectedMethod.type === 'MOBILE_PAYMENT' || selectedMethod.type === 'BANK_TRANSFER') && (
-                                    <div className="bg-warning/15 rounded-xl p-2.5 lg:p-3 border border-warning/30 shadow-sm">
+                                    <div className="bg-surface rounded-xl p-2.5 lg:p-3 border border-line">
                                         <div className="flex items-center gap-1.5 lg:gap-2 mb-1.5 lg:mb-2">
-                                            <div className="w-5 h-5 lg:w-6 lg:h-6 bg-warning-strong rounded flex items-center justify-center">
+                                            <div className="w-5 h-5 lg:w-6 lg:h-6 bg-brand-500 rounded flex items-center justify-center">
                                                 <span className="text-white font-bold text-xs">Bs</span>
                                             </div>
                                             <span className="font-bold text-xs lg:text-sm text-ink">Monto en Bolívares</span>
                                         </div>
-                                        <div className="bg-white rounded-lg p-2 lg:p-3 border border-warning/30">
+                                        <div className="bg-white rounded-lg p-2 lg:p-3 border border-line">
                                             <div className="flex items-center justify-between text-xs mb-1">
                                                 <span className="text-muted">{formatUSD(amount ? parseFloat(amount) : 0)}</span>
                                                 <span className="text-muted">x {exchangeRate > 0 ? formatVES(exchangeRate) : '...'}</span>

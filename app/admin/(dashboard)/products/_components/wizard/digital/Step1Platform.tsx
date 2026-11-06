@@ -165,7 +165,7 @@ export default function DigitalStep1Platform({ data, onChange, errors, categorie
             <span className="block text-sm font-semibold text-ink">Producto destacado</span>
             <span className="block text-xs text-muted">Aparece en “Destacados de la semana” del home</span>
           </span>
-          <IconoEstrella lleno={data.isFeatured} className={`h-5 w-5 ${data.isFeatured ? 'text-warning' : 'text-line'}`} aria-hidden="true" />
+          <IconoEstrella lleno={data.isFeatured} className={`h-5 w-5 ${data.isFeatured ? 'text-brand-500' : 'text-line'}`} aria-hidden="true" />
         </label>
       </div>
     </div>

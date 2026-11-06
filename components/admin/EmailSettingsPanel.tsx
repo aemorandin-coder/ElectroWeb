@@ -191,23 +191,24 @@ export default function EmailSettingsPanel() {
     return (
         <div className="space-y-4">
             {/* Header Status Card - Compact */}
-            <div className={`relative overflow-hidden rounded-xl p-4 ${settings?.isConfigured
-                ? 'bg-success'
-                : 'bg-warning'
+            {/* C-192: antes, texto blanco sobre verde o ámbar (no se leía) */}
+            <div className={`relative overflow-hidden rounded-xl border p-4 ${settings?.isConfigured
+                ? 'border-success-strong/20 bg-success-strong/5'
+                : 'border-warning/30 bg-warning/10'
                 }`}>
                 <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                    <div className="flex-shrink-0 w-10 h-10 bg-white rounded-lg flex items-center justify-center">
                         {settings?.isConfigured ? (
-                            <IconoConfirmado className="w-5 h-5 text-white" />
+                            <IconoConfirmado className="w-5 h-5 text-success-strong" />
                         ) : (
-                            <IconoError className="w-5 h-5 text-white" />
+                            <IconoError className="w-5 h-5 text-warning-strong" />
                         )}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h2 className="text-base font-bold text-white">
+                        <h2 className="text-base font-bold text-ink">
                             {settings?.isConfigured ? 'Email Configurado' : 'Configuración Pendiente'}
                         </h2>
-                        <p className="text-white/80 text-xs truncate">
+                        <p className="text-ink-soft text-xs truncate">
                             {settings?.isConfigured
                                 ? `${PROVIDER_INFO[settings.provider]?.name || settings.provider} • ${settings.lastTestStatus === 'success' ? 'Test OK' : 'Sin verificar'}`
                                 : 'Configura tu servidor SMTP'
@@ -215,8 +216,8 @@ export default function EmailSettingsPanel() {
                         </p>
                     </div>
                     {settings?.isConfigured && settings.lastTestAt && (
-                        <div className="text-right text-white/70 text-xs">
-                            <p className="font-medium text-white">
+                        <div className="text-right text-muted text-xs">
+                            <p className="font-medium text-ink">
                                 {new Date(settings.lastTestAt).toLocaleDateString('es-ES', {
                                     day: '2-digit',
                                     month: 'short',

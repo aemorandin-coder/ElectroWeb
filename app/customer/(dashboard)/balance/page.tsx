@@ -38,7 +38,7 @@ const FILTROS = [
 type Filtro = (typeof FILTROS)[number]['id'];
 
 const ESTADOS: Record<Exclude<EstadoMovimiento, 'COMPLETADO'>, { texto: string; clase: string }> = {
-  POR_CONFIRMAR: { texto: 'Por confirmar', clase: 'bg-warning/15 text-warning-strong' },
+  POR_CONFIRMAR: { texto: 'Por confirmar', clase: 'bg-brand-50 text-brand-700' },
   RECHAZADO: { texto: 'Rechazada', clase: 'bg-deal-bg text-deal' },
   NO_COMPLETADO: { texto: 'No completada', clase: 'bg-surface text-ink-soft' },
 };
@@ -191,7 +191,7 @@ export default function BalancePage() {
       </header>
 
       {pendientes > 0 && resumen && (
-        <p className="flex items-start gap-2 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning-strong" role="status">
+        <p className="flex items-start gap-2 rounded-2xl border border-line bg-surface p-4 text-sm text-ink-soft" role="status">
           <IconoReloj className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span>
             <strong>{pendientes === 1 ? 'Tienes 1 recarga por confirmar' : `Tienes ${pendientes} recargas por confirmar`}</strong> ({formatUSD(resumen.porConfirmar.monto)}).

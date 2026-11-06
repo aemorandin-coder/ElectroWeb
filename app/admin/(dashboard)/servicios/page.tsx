@@ -285,7 +285,7 @@ export default function AdminServiciosPage() {
             <div
               key={v.id}
               className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${
-                v.isActive ? 'border-line' : 'border-warning/30 opacity-70'
+                v.isActive ? 'border-line' : 'border-line opacity-70'
               }`}
             >
               {/* Thumbnail */}
@@ -324,10 +324,10 @@ export default function AdminServiciosPage() {
                 {(v.beforeImage || v.afterImage) && (
                   <div className="absolute bottom-2 left-2 flex gap-1">
                     {v.beforeImage && (
-                      <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-warning text-white">ANTES</span>
+                      <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-brand-950 text-white">ANTES</span>
                     )}
                     {v.afterImage && (
-                      <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-success text-white">DESPUÉS</span>
+                      <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-brand-500 text-white">DESPUÉS</span>
                     )}
                   </div>
                 )}
@@ -350,7 +350,7 @@ export default function AdminServiciosPage() {
                     <span className="text-xs text-line-strong">Sin reseñas</span>
                   )}
                   <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${
-                    v.isActive ? 'bg-success/10 text-success-strong' : 'bg-warning/10 text-warning-strong'
+                    v.isActive ? 'bg-success/10 text-success-strong' : 'bg-surface text-muted'
                   }`}>
                     {v.isActive ? 'Activo' : 'Inactivo'}
                   </span>
@@ -487,7 +487,7 @@ export default function AdminServiciosPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-ink mb-1.5">
-                    <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-warning text-white mr-1">ANTES</span>
+                    <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-brand-950 text-white mr-1">ANTES</span>
                     URL imagen
                   </label>
                   <input
@@ -500,7 +500,7 @@ export default function AdminServiciosPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-ink mb-1.5">
-                    <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-success text-white mr-1">DESPUÉS</span>
+                    <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-brand-500 text-white mr-1">DESPUÉS</span>
                     URL imagen
                   </label>
                   <input

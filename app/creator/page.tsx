@@ -102,8 +102,8 @@ export default function CreatorLandingPage() {
                 </div>
               ) : creator.status === 'PENDING' ? (
                 <div className="text-center space-y-6">
-                  <div className="w-16 h-16 bg-warning/10 border border-warning/20 rounded-2xl flex items-center justify-center mx-auto">
-                    <IconoReloj className="w-8 h-8 text-warning" />
+                  <div className="w-16 h-16 bg-brand-50 border border-brand-200 rounded-2xl flex items-center justify-center mx-auto">
+                    <IconoReloj className="w-8 h-8 text-brand-600" />
                   </div>
                   <div className="space-y-2">
                     <h2 className="text-2xl md:text-3xl font-bold text-ink">Solicitud en Revisión</h2>

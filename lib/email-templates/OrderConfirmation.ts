@@ -151,9 +151,9 @@ export async function generateOrderConfirmationEmail(data: OrderConfirmationData
     </div>
 
     ${deliveryMethod !== ETIQUETA_ENTREGA.DIGITAL ? `
-    <div style="${CORREO.cajaInfo}">
-      <p style="${CORREO.cajaTitulo}${CORREO.tonoInfo}">Tu comprobante de compra</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoInfo}">Va dentro del paquete, junto con tus productos.</p>
+    <div style="${CORREO.caja}">
+      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Tu comprobante de compra</p>
+      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Va dentro del paquete, junto con tus productos.</p>
     </div>
     ` : ''}
 

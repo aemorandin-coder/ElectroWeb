@@ -255,8 +255,8 @@ export async function POST(request: NextRequest) {
                         <h2 style="${CORREO.titulo}">La configuración funciona</h2>
                         <p style="${CORREO.texto}">Este correo salió con los datos que guardaste en el panel.</p>
                     </div>
-                    <div style="${CORREO.cajaExito}">
-                        <p style="${CORREO.cajaTexto}${CORREO.tonoExito}">
+                    <div style="${CORREO.caja}">
+                        <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">
                             Proveedor: <strong>${escapeHtml(settings.provider.toUpperCase())}</strong><br>
                             Servidor: <strong>${escapeHtml(String(settings.smtpHost))}</strong><br>
                             Puerto: <strong>${settings.smtpPort}</strong>

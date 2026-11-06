@@ -105,7 +105,7 @@ export default function CreatorCoursesPage() {
                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
                       course.isActive
                         ? 'bg-success/15 text-success-strong'
-                        : 'bg-warning/15 text-warning-strong'
+                        : 'bg-brand-50 text-brand-700'
                     }`}>
                       {course.isActive ? 'Activo' : 'En revisión'}
                     </span>

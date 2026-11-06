@@ -951,6 +951,21 @@ model CompanySettings {
   hotAdBackdropColor    String  @default("#000000")
   hotAdLink             String?
 
+  // C-186: tema navideño (Marketing → Navidad): el gorro de Santa en el sello del logo y la tarjeta navideña del popup.
+  // Apagado, la tienda queda como siempre. Las fechas son días de Venezuela, las dos incluidas; sin fechas, sigue encendido
+  // hasta que se apague
+  christmasTheme        Boolean   @default(false)
+  christmasThemeFrom    DateTime? @db.Date
+  christmasThemeUntil   DateTime? @db.Date
+  // C-186: cuál de los dos gorros (lib/navidad.ts, GORROS): 'ajustado' (se calza en el sello) o 'clasico' (encima, inclinado)
+  christmasHat          String    @default("ajustado")
+  // C-186: mientras el tema se ve, la tarjeta navideña reemplaza a la imagen del popup (textos vacíos = los de la tienda)
+  christmasPopup        Boolean   @default(true)
+  christmasPopupTitle   String?
+  christmasPopupText    String?
+  christmasPopupButton  String?
+  christmasPopupLink    String?
+
   // Admin Alert Emails — comma-separated or JSON array of emails to notify on key events
   adminAlertEmails      String?
 

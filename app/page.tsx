@@ -11,6 +11,7 @@ import MoreFromElectroShop from '@/components/home/MoreFromElectroShop';
 import ProductSection from '@/components/home/ProductSection';
 import TrustBar from '@/components/home/TrustBar';
 import VideoPlayer from '@/components/home/VideoPlayer';
+import TarjetaNavidad from '@/components/navidad/TarjetaNavidad';
 import PublicHeader from '@/components/public/PublicHeader';
 import Container from '@/components/ui/Container';
 import SectionHeader from '@/components/ui/SectionHeader';
@@ -26,6 +27,7 @@ import {
   getTopCategoriesWithProducts,
 } from '@/lib/queries/home';
 import { getHotAd } from '@/lib/queries/hot-ad';
+import { safeHotAdLink } from '@/lib/hot-ad';
 import { getPublicSettings } from '@/lib/site-settings';
 import JsonLd from '@/components/seo/JsonLd';
 import { storeJsonLd, websiteJsonLd } from '@/lib/seo';
@@ -71,6 +73,18 @@ export default async function Home() {
   );
   const rate = settings.exchangeRateVES;
   const lowStock = homeSettings.lowStockThreshold;
+
+  // C-186: la tarjeta navideña del popup se dibuja aquí, en el servidor (sin JavaScript nuevo en el navegador). Con el
+  // tema apagado no viene y el popup es el de siempre
+  const tarjetaNavidad = hotAd?.tarjeta ? (
+    <TarjetaNavidad
+      titulo={hotAd.tarjeta.titulo}
+      mensaje={hotAd.tarjeta.mensaje}
+      boton={hotAd.tarjeta.boton}
+      enlace={safeHotAdLink(hotAd.tarjeta.enlace)}
+      gorro={hotAd.tarjeta.gorro}
+    />
+  ) : undefined;
 
   return (
     <div className="min-h-dvh bg-white">
@@ -139,7 +153,7 @@ export default async function Home() {
 
       <Footer />
 
-      {hotAd && <HotAdOverlay hotAd={hotAd} />}
+      {hotAd && <HotAdOverlay hotAd={hotAd} tarjeta={tarjetaNavidad} />}
     </div>
   );
 }

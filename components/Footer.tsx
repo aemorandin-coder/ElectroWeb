@@ -2,9 +2,13 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { useSettings } from '@/contexts/SettingsContext';
 import { FiBox, FiMapPin, FiPhone, FiMessageCircle, FiMail } from 'react-icons/fi';
 import { FaInstagram, FaTiktok, FaTelegram, FaYoutube } from 'react-icons/fa6';
+
+// C-186: el gorro de Santa del logo solo se descarga con el tema navideño encendido (apagado, no se pide nada)
+const GorroSanta = dynamic(() => import('@/components/navidad/GorroSanta'));
 
 const SEED_PHONES = ['584241234567', '4241234567'];
 const isSeedPhone = (p: string | null | undefined) => {
@@ -29,7 +33,13 @@ export default function Footer() {
           {/* Brand */}
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-              {settings?.logo ? (
+              {settings?.logo && settings.gorroNavidad ? (
+                // C-186: con el tema navideño, el logo lleva el gorro (apagado, el logo de siempre, sin la caja)
+                <span className="relative h-8 w-8 shrink-0">
+                  <Image src={settings.logo} alt={settings.companyName || 'Logo'} width={32} height={32} unoptimized={!settings.logo.startsWith('/')} className="w-8 h-8 object-contain rounded-lg" />
+                  <GorroSanta variante={settings.gorroNavidad} />
+                </span>
+              ) : settings?.logo ? (
                 <Image src={settings.logo} alt={settings.companyName || 'Logo'} width={32} height={32} unoptimized={!settings.logo.startsWith('/')} className="w-8 h-8 object-contain rounded-lg" />
               ) : (
                 <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">

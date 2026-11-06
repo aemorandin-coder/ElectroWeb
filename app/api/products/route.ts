@@ -11,6 +11,7 @@ import { parseDigitalMargin, specsForUpdate } from '@/lib/product-specs';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { conditionInputSchema, pickConditionInput } from '@/lib/product-condition';
 import { precioValido } from '@/lib/pricing';
+import { ELIMINADOS, EN_PAPELERA } from '@/lib/papelera';
 
 /** specs de un producto nuevo: especificaciones del formulario y, en digitales, el margen del wizard (C-95). */
 function createSpecs(specifications: unknown, digitalMarginPercent: number | undefined): string | null {
@@ -40,16 +41,18 @@ export async function GET(request: NextRequest) {
 
     // C-169: la papelera es aparte. Por defecto no sale en el listado; `papelera=true` lista solo lo que está en ella
     // y `papelera=conteo` dice cuántos hay. Solo quien administra productos la ve.
+    // C-187: `papelera=eliminados` lista lo eliminado que se conserva por sus ventas (ya no está en la papelera)
     const papelera = searchParams.get('papelera');
     if (papelera && !canManageProducts) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
     if (papelera === 'conteo') {
-      return NextResponse.json({ conteo: await prisma.product.count({ where: { deletedAt: { not: null } } }) });
+      const [conteo, eliminados] = await Promise.all([prisma.product.count({ where: EN_PAPELERA }), prisma.product.count({ where: ELIMINADOS })]);
+      return NextResponse.json({ conteo, eliminados });
     }
 
     const where: Prisma.ProductWhereInput = {
-      deletedAt: papelera === 'true' ? { not: null } : null,
+      ...(papelera === 'true' ? EN_PAPELERA : papelera === 'eliminados' ? ELIMINADOS : { deletedAt: null }),
       OR: search ? [
         { name: { contains: search, mode: 'insensitive' } },
         { sku: { contains: search, mode: 'insensitive' } },
@@ -75,8 +78,9 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         category: true,
-        // C-51: la lista marca "desde" y no deja editar el precio de los digitales con montos
-        _count: { select: { digitalVariants: { where: { isActive: true } } } },
+        // C-51: la lista marca "desde" y no deja editar el precio de los digitales con montos.
+        // C-187: en la papelera, cuántas órdenes tiene (con ventas, "Borrar para siempre" lo conserva oculto)
+        _count: { select: { digitalVariants: { where: { isActive: true } }, ...(papelera === 'true' || papelera === 'eliminados' ? { orderItems: true } : {}) } },
       },
       orderBy: { createdAt: 'desc' },
       // Only apply pagination if not requesting all
@@ -156,8 +160,11 @@ export async function POST(request: NextRequest) {
 
     if (existingSku) {
       // C-169: un producto en la papelera sigue siendo dueño de su SKU
+      // C-187: uno eliminado también (se conserva por sus ventas): el dueño lo puede recuperar
       return NextResponse.json({
-        error: existingSku.deletedAt ? 'Ese SKU lo tiene un producto en la papelera. Restáuralo, o bórralo para siempre, desde Productos → Papelera.' : 'El SKU ya existe',
+        error: existingSku.eliminadoAt
+          ? 'Ese SKU lo tiene un producto eliminado que se conserva por sus ventas. Usa otro SKU, o recupéralo desde Productos → Papelera → Eliminados (solo el dueño).'
+          : existingSku.deletedAt ? 'Ese SKU lo tiene un producto en la papelera. Restáuralo, o bórralo para siempre, desde Productos → Papelera.' : 'El SKU ya existe',
       }, { status: 400 });
     }
 
@@ -265,7 +272,8 @@ export async function POST(request: NextRequest) {
         specs: createSpecs(body.specifications, body.productType === 'DIGITAL' ? parseDigitalMargin(body.digitalMarginPercent) : undefined),
         features: body.features ? JSON.stringify(body.features) : null,
         status: body.status || (body.isActive ? 'PUBLISHED' : 'DRAFT'),
-        isFeatured: body.isFeatured || false,
+        // C-187: un archivado no se destaca
+        isFeatured: body.isFeatured === true && body.status !== 'ARCHIVED',
         // SEO Fields
         seoTitle: body.seoTitle || null,
         seoDescription: body.seoDescription || null,

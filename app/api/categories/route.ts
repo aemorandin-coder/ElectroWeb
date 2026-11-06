@@ -8,12 +8,19 @@ import { clavesCambiadas, nombreDeSesion } from '@/lib/edicion/servidor';
 import { publicarRecursoCambiado } from '@/lib/realtime/bus';
 import { editoresDe } from '@/lib/realtime/presencia';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
+import { ELIMINADOS, EN_PAPELERA } from '@/lib/papelera';
+import type { Prisma } from '@prisma/client';
 
 const CAMPOS_CATEGORIA: Record<string, string> = { name: 'nombre', description: 'descripción', image: 'imagen', icon: 'ícono', color: 'color', parentId: 'categoría principal' };
 
+// C-187: el panel cuenta lo que tiene cada categoría (catálogo y papelera); lo eliminado, que se conserva solo por sus
+// ventas, no cuenta. La tienda (sin sesión del panel) cuenta solo lo publicado.
 const WITH_COUNT = {
-  _count: { select: { products: true } },
-} as const;
+  _count: { select: { products: { where: { eliminadoAt: null } } } },
+} satisfies Prisma.CategoryInclude;
+const CONTEO_PUBLICO = {
+  _count: { select: { products: { where: { status: 'PUBLISHED' } } } },
+} satisfies Prisma.CategoryInclude;
 
 /** ¿`candidato` es `id` o cuelga de él? Evita ciclos al elegir la categoría padre (C-110) */
 async function esDescendiente(id: string, candidato: string): Promise<boolean> {
@@ -39,10 +46,14 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
+    // C-187: esta API es pública y contaba también borradores, archivados y la papelera (en producción, "Consolas: 3"
+    // sin ninguna a la venta). Sin sesión del panel cuenta solo lo publicado, como la página de categorías.
+    const session = await getServerSession(authOptions);
+    const delPanel = isAuthorized(session, 'MANAGE_PRODUCTS') || isAuthorized(session, 'MANAGE_CONTENT');
 
     const categories = await prisma.category.findMany({
       where: slug ? { slug } : undefined,
-      include: WITH_COUNT,
+      include: delPanel ? WITH_COUNT : CONTEO_PUBLICO,
       orderBy: { name: 'asc' },
     });
 
@@ -179,15 +190,36 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Con productos o subcategorías, decirlo (antes: 500 genérico por la llave foránea)
-    const cat = await prisma.category.findUnique({ where: { id }, select: { _count: { select: { products: true, children: true } } } });
+    const cat = await prisma.category.findUnique({ where: { id }, select: { parentId: true, _count: { select: { children: true } } } });
     if (!cat) return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
-    if (cat._count.products > 0) {
-      return NextResponse.json({ error: `Tiene ${cat._count.products} producto${cat._count.products === 1 ? '' : 's'}: muévelos a otra categoría antes de eliminarla` }, { status: 409 });
+    const [enCatalogo, enPapelera, eliminados] = await Promise.all([
+      prisma.product.count({ where: { categoryId: id, deletedAt: null } }),
+      prisma.product.count({ where: { categoryId: id, ...EN_PAPELERA } }),
+      prisma.product.count({ where: { categoryId: id, ...ELIMINADOS } }),
+    ]);
+    const plural = (n: number) => `${n} producto${n === 1 ? '' : 's'}`;
+    if (enCatalogo > 0) {
+      return NextResponse.json({ error: `Tiene ${plural(enCatalogo)}: muévelos a otra categoría antes de eliminarla` }, { status: 409 });
+    }
+    // C-187: antes decía "Tiene 1 producto" y en la lista no aparecía ninguno (estaba en la papelera)
+    if (enPapelera > 0) {
+      return NextResponse.json({ error: `Tiene ${plural(enPapelera)} en la papelera: restáuralos y muévelos a otra categoría, o bórralos para siempre` }, { status: 409 });
     }
     if (cat._count.children > 0) {
       return NextResponse.json({ error: 'Tiene subcategorías: muévelas o elimínalas antes' }, { status: 409 });
     }
-    await prisma.category.delete({ where: { id } });
+    // C-187: lo eliminado (se conserva solo por sus ventas) no frena: pasa a la categoría principal o a otra. Nadie lo ve
+    // y ningún reporte agrupa por categoría; si el dueño lo recupera, vuelve como borrador y le elige la categoría.
+    if (eliminados > 0) {
+      const destino = cat.parentId ?? (await prisma.category.findFirst({ where: { id: { not: id } }, orderBy: { name: 'asc' }, select: { id: true } }))?.id;
+      if (!destino) return NextResponse.json({ error: 'Es la única categoría: crea otra antes de eliminarla' }, { status: 409 });
+      await prisma.$transaction([
+        prisma.product.updateMany({ where: { categoryId: id, ...ELIMINADOS }, data: { categoryId: destino } }),
+        prisma.category.delete({ where: { id } }),
+      ]);
+    } else {
+      await prisma.category.delete({ where: { id } });
+    }
 
     revalidateStorefront();
     publicarRecursoCambiado(`category:${id}`, 'eliminado', { id: session?.user?.id ?? '', nombre: nombreDeSesion(session) });
@@ -196,6 +228,10 @@ export async function DELETE(request: NextRequest) {
     const error = err as { code?: string; message?: string };
     if (error?.code === 'P2025') {
       return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
+    }
+    // Un producto entró a la categoría mientras tanto
+    if (error?.code === 'P2003') {
+      return NextResponse.json({ error: 'Tiene productos: muévelos a otra categoría antes de eliminarla' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Error al eliminar categoría' }, { status: 500 });
   }

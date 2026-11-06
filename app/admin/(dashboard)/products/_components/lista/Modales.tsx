@@ -36,7 +36,10 @@ export function VistaRapida({ p, tasaVES, onClose, onEstado }: { p: ProductoList
     <Modal titulo="Vista rápida" onClose={onClose} ancho="max-w-2xl" pie={
       <>
         <button type="button" onClick={() => { onEstado(p); onClose(); }} className={adminSecondaryButton}>{p.status === 'PUBLISHED' ? 'Desactivar' : 'Activar'}</button>
-        <a href={`/productos/${p.slug || p.id}`} target="_blank" rel="noopener noreferrer" className={adminSecondaryButton}><FiExternalLink className="h-4 w-4" aria-hidden="true" /> Ver en tienda</a>
+        {/* C-187: un borrador o un archivado no se ve en la tienda: el enlace llevaba a "Producto no encontrado" */}
+        {p.status === 'PUBLISHED'
+          ? <a href={`/productos/${p.slug || p.id}`} target="_blank" rel="noopener noreferrer" className={adminSecondaryButton}><FiExternalLink className="h-4 w-4" aria-hidden="true" /> Ver en tienda</a>
+          : <span className="inline-flex h-11 items-center justify-center px-2 text-sm text-muted">No se ve en la tienda</span>}
         <Link href={`/admin/products/${p.id}`} className={adminPrimaryButton}>Editar producto</Link>
       </>
     }>
@@ -53,9 +56,10 @@ export function VistaRapida({ p, tasaVES, onClose, onEstado }: { p: ProductoList
               <span className={adminBadge(p.status === 'PUBLISHED' ? 'success' : p.status === 'ARCHIVED' ? 'warning' : 'neutral')}>{ETIQUETA_ESTADO[p.status]}</span>
             </p>
             <p className="font-mono text-sm text-muted">SKU: {p.sku}</p>
-            {p.isFeatured && (
+            {/* C-187: un archivado no se destaca (archivar le quita la estrella) */}
+            {p.isFeatured && p.status !== 'ARCHIVED' && (
               <p className="mt-1 flex items-center gap-1 text-sm text-warning-strong">
-                <FiStar className="h-4 w-4" aria-hidden="true" /> Destacado{p.status !== 'PUBLISHED' && ' (no se ve mientras esté inactivo)'}
+                <FiStar className="h-4 w-4" aria-hidden="true" /> Destacado{p.status !== 'PUBLISHED' && ' (no se ve mientras esté en borrador)'}
               </p>
             )}
           </div>

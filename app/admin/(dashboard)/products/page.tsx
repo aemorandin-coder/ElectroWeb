@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { FiDatabase, FiDownload, FiEdit3, FiMoreHorizontal, FiPercent, FiPlus, FiSearch, FiTag, FiTrash2, FiUpload, FiX, FiBox } from 'react-icons/fi';
 import {
-  adminChoice, adminInput, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab,
+  adminChoice, adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab,
 } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { parseProductImages } from '@/lib/product-utils';
@@ -20,16 +20,23 @@ import ListaProductos, { type CambiosRapidos } from './_components/lista/ListaPr
 import { EdicionMasiva, VistaRapida } from './_components/lista/Modales';
 import PapeleraProductos from './_components/lista/PapeleraProductos';
 import SadesPanel from './_components/lista/SadesPanel';
-import { sinStock, type CampoMasivo, type Categoria, type EstadoProducto, type FiltroEstado, type ProductoLista } from './_components/lista/tipos';
+import {
+  enCatalogo, esFiltroRevisar, FILTROS_REVISAR, REVISAR, sinStock,
+  type CampoMasivo, type Categoria, type EstadoProducto, type FiltroEstado, type ProductoLista,
+} from './_components/lista/tipos';
+import { direccionDeVista, recordarVista, type Pestana } from './_components/lista/vista';
 
 // Productos del admin (C-51). Antes: precio "16.5 USD", "Destacado" en inactivos, acciones masivas sin casillas para
 // elegir, "Edición rápida" sin campos, botón de estado que no guardaba nada (mandaba isActive a un PATCH que no lo
 // aceptaba), "Inactivos" siempre en 0 y "Duplicar" armado en el navegador (salía sin especificaciones ni montos).
+// C-187: lo archivado va aparte (antes llenaba "Todos" de productos que no se podían eliminar), "Por revisar" con los
+// avisos del Dashboard, la vista en la dirección, "Deshacer" al cambiar el estado y la estrella de Destacado en la lista.
 
 interface ProductoApi {
   id: string; name: string; sku: string; slug: string; priceUSD: number | string; compareAtPriceUSD: number | string | null;
   stock: number; status: EstadoProducto; productType: 'PHYSICAL' | 'DIGITAL'; isFeatured: boolean; images: unknown;
   mainImage: string | null; description: string | null; category: { id: string; name: string } | null; specs: string | null;
+  brandId: string | null; weightKg: number | string | null; dimensions: string | null; barcode: string | null;
   _count?: { digitalVariants: number };
 }
 
@@ -53,26 +60,58 @@ function aLista(p: ProductoApi): ProductoLista {
     images: parseProductImages(p.images as string), mainImage: p.mainImage, description: p.description ?? '',
     category: p.category ? { id: p.category.id, name: p.category.name } : null,
     hasVariants: tieneMontos(p),
+    brandId: p.brandId ?? null,
+    weightKg: p.weightKg === null || p.weightKg === undefined ? null : Number(p.weightKg),
+    dimensions: p.dimensions || null,
+    barcode: p.barcode || null,
   };
 }
 
+// C-187: "Archivados" va al final y aparte: no cuenta en "Todos" ni en "Sin stock"
 const FILTROS: Array<{ value: FiltroEstado; label: string }> = [
   { value: 'todos', label: 'Todos' },
   { value: 'publicados', label: 'Activos' },
   { value: 'borradores', label: 'Borradores' },
-  { value: 'archivados', label: 'Archivados' },
   { value: 'sin-stock', label: 'Sin stock' },
+  { value: 'archivados', label: 'Archivados' },
 ];
+const FILTROS_VALIDOS = new Set<string>([...FILTROS.map((f) => f.value), ...FILTROS_REVISAR]);
+/** C-187: a 360 px las tres pestañas (con el número de la papelera) no cabían: un poco menos de aire en el teléfono */
+const TAB_TELEFONO = 'max-sm:gap-1.5 max-sm:px-2';
+const PESTANAS = new Set<string>(['local', 'sades', 'papelera']);
+
+function pasaFiltro(p: ProductoLista, filtro: FiltroEstado): boolean {
+  if (esFiltroRevisar(filtro)) return REVISAR[filtro].falta(p);
+  switch (filtro) {
+    case 'todos': return enCatalogo(p);
+    case 'publicados': return p.status === 'PUBLISHED';
+    case 'borradores': return p.status === 'DRAFT';
+    case 'archivados': return p.status === 'ARCHIVED';
+    case 'sin-stock': return sinStock(p);
+  }
+}
 
 const csv = (v: string | number | boolean | null | undefined) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
+// useSearchParams pide un Suspense alrededor (la página se arma estática)
 export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-12" role="status" aria-label="Cargando productos"><div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" /></div>}>
+      <Productos />
+    </Suspense>
+  );
+}
+
+function Productos() {
   const router = useRouter();
+  const params = useSearchParams();
   const { confirm } = useConfirm();
   const { data: sesion } = useSession();
   const yo = sesion?.user?.id;
-  const [tab, setTab] = useState<'local' | 'sades' | 'papelera'>('local');
+  // C-187: la vista sale de la dirección (también "Ver productos" de Categorías, que manda ?category=)
+  const [tab, setTab] = useState<Pestana>(() => (PESTANAS.has(params.get('pestana') ?? '') ? params.get('pestana') as Pestana : 'local'));
   const [enPapelera, setEnPapelera] = useState(0);
+  const [eliminados, setEliminados] = useState(0);
   // C-169: quién está editando cada producto ahora (id → nombres), por el canal en vivo
   const [editando, setEditando] = useState<Record<string, string[]>>({});
   const temporizadorRecarga = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -80,12 +119,13 @@ export default function ProductsPage() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [tasaVES, setTasaVES] = useState(0);
   const [stockBajo, setStockBajo] = useState(5);
+  const [maxDestacados, setMaxDestacados] = useState(8);
   const [cargando, setCargando] = useState(true);
   const [recargas, setRecargas] = useState(0);
 
-  const [busqueda, setBusqueda] = useState('');
-  const [categoria, setCategoria] = useState('');
-  const [filtro, setFiltro] = useState<FiltroEstado>('todos');
+  const [busqueda, setBusqueda] = useState(() => params.get('q') ?? '');
+  const [categoria, setCategoria] = useState(() => params.get('categoria') ?? params.get('category') ?? '');
+  const [filtro, setFiltro] = useState<FiltroEstado>(() => (FILTROS_VALIDOS.has(params.get('filtro') ?? '') ? params.get('filtro') as FiltroEstado : 'todos'));
   const [seleccion, setSeleccion] = useState<Set<string>>(new Set());
 
   const [edicionRapida, setEdicionRapida] = useState(false);
@@ -95,6 +135,7 @@ export default function ProductsPage() {
   const [vista, setVista] = useState<ProductoLista | null>(null);
   const [masivo, setMasivo] = useState<{ campo: CampoMasivo; valor: string } | null>(null);
   const [masAcciones, setMasAcciones] = useState(false);
+  const menuMas = useRef<HTMLDivElement>(null);
   const [duplicando, setDuplicando] = useState<string | null>(null);
 
   useEffect(() => {
@@ -107,6 +148,7 @@ export default function ProductsPage() {
     ]).then(([lista, conteoPapelera, cats, ajustes]) => {
       if (!vigente) return;
       setEnPapelera(Number(conteoPapelera?.conteo) || 0);
+      setEliminados(Number(conteoPapelera?.eliminados) || 0);
       if (!Array.isArray(lista)) {
         toast.error('No se pudieron cargar los productos');
       } else {
@@ -115,10 +157,28 @@ export default function ProductsPage() {
       setCategorias(Array.isArray(cats) ? cats.map((c: Categoria) => ({ id: c.id, name: c.name })) : []);
       setTasaVES(Number(ajustes?.exchangeRateVES) || 0);
       if (Number.isFinite(Number(ajustes?.lowStockThreshold))) setStockBajo(Number(ajustes.lowStockThreshold));
+      if (Number(ajustes?.maxFeaturedProducts) > 0) setMaxDestacados(Number(ajustes.maxFeaturedProducts));
       setCargando(false);
     });
     return () => { vigente = false; };
   }, [recargas]);
+
+  // C-187: la vista queda en la dirección (se puede compartir o recargar) y el editor vuelve a ella al guardar
+  useEffect(() => {
+    const direccion = direccionDeVista({ pestana: tab, filtro, categoria, busqueda });
+    if (direccion !== window.location.pathname + window.location.search) window.history.replaceState(null, '', direccion);
+    recordarVista(direccion);
+  }, [tab, filtro, categoria, busqueda]);
+
+  // El menú "Más" se cierra al tocar fuera o con Escape
+  useEffect(() => {
+    if (!masAcciones) return;
+    const fuera = (e: PointerEvent) => { if (!menuMas.current?.contains(e.target as Node)) setMasAcciones(false); };
+    const tecla = (e: KeyboardEvent) => { if (e.key === 'Escape') setMasAcciones(false); };
+    document.addEventListener('pointerdown', fuera);
+    document.addEventListener('keydown', tecla);
+    return () => { document.removeEventListener('pointerdown', fuera); document.removeEventListener('keydown', tecla); };
+  }, [masAcciones]);
 
   const recargar = () => setRecargas((n) => n + 1);
 
@@ -148,22 +208,19 @@ export default function ProductsPage() {
     }
   });
 
-  const conteo = useMemo(() => ({
-    todos: productos.length,
-    publicados: productos.filter((p) => p.status === 'PUBLISHED').length,
-    borradores: productos.filter((p) => p.status === 'DRAFT').length,
-    archivados: productos.filter((p) => p.status === 'ARCHIVED').length,
-    'sin-stock': productos.filter(sinStock).length,
-  }), [productos]);
+  const conteo = useMemo(() => {
+    const porFiltro = Object.fromEntries([...FILTROS.map((f) => f.value), ...FILTROS_REVISAR].map((f) => [f, productos.filter((p) => pasaFiltro(p, f)).length])) as Record<FiltroEstado, number>;
+    return { ...porFiltro, destacados: productos.filter((p) => p.isFeatured && p.status === 'PUBLISHED').length };
+  }, [productos]);
+  const porRevisar = FILTROS_REVISAR.filter((f) => conteo[f] > 0 || filtro === f);
 
   const visibles = useMemo(() => {
-    // Sin acentos ni mayúsculas (C-158): "audifonos" encuentra "Audífonos"
+    // Sin acentos ni mayúsculas (C-158): "audifonos" encuentra "Audífonos". C-187: también por código de barras
     const q = normalizar(busqueda.trim());
     return productos.filter((p) =>
-      (!q || normalizar(p.name).includes(q) || normalizar(p.sku).includes(q)) &&
+      (!q || normalizar(p.name).includes(q) || normalizar(p.sku).includes(q) || (p.barcode !== null && normalizar(p.barcode).includes(q))) &&
       (!categoria || p.category?.id === categoria) &&
-      (filtro === 'todos' || (filtro === 'publicados' && p.status === 'PUBLISHED') || (filtro === 'borradores' && p.status === 'DRAFT')
-        || (filtro === 'archivados' && p.status === 'ARCHIVED') || (filtro === 'sin-stock' && sinStock(p))));
+      pasaFiltro(p, filtro));
   }, [productos, busqueda, categoria, filtro]);
 
   const seleccionados = productos.filter((p) => seleccion.has(p.id));
@@ -176,12 +233,34 @@ export default function ProductsPage() {
     return n;
   });
 
-  const cambiarEstado = async (p: ProductoLista) => {
-    const nuevo: EstadoProducto = p.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
+  /**
+   * Activar o pasar a borrador desde la lista o la vista rápida. C-187: con "Deshacer" durante 8 segundos (en el teléfono,
+   * tocar el estado por error sacaba un producto de la tienda sin aviso).
+   */
+  const cambiarEstado = async (p: ProductoLista, destino?: EstadoProducto) => {
+    const nuevo: EstadoProducto = destino ?? (p.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED');
     const r = await fetch(`/api/products/${p.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: nuevo }) });
-    if (!r.ok) { toast.error((await r.json().catch(() => ({}))).error || 'No se pudo cambiar el estado'); return; }
-    setProductos((lista) => lista.map((x) => (x.id === p.id ? { ...x, status: nuevo } : x)));
-    toast.success(nuevo === 'PUBLISHED' ? `"${p.name}" ya se ve en la tienda` : `"${p.name}" quedó en borrador`);
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { toast.error(data.error || 'No se pudo cambiar el estado'); return; }
+    setProductos((lista) => lista.map((x) => (x.id === p.id ? { ...x, status: nuevo, isFeatured: typeof data.isFeatured === 'boolean' ? data.isFeatured : x.isFeatured } : x)));
+    if (destino) { toast.success(`"${p.name}" quedó como estaba`); return; }
+    const texto = nuevo === 'PUBLISHED' ? `"${p.name}" ya se ve en la tienda` : `"${p.name}" quedó en borrador: no se ve en la tienda`;
+    toast((t) => (
+      <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        {texto}
+        <button type="button" onClick={() => { toast.dismiss(t.id); void cambiarEstado({ ...p, status: nuevo }, p.status); }} className="font-semibold text-brand-600 underline">Deshacer</button>
+      </span>
+    ), { duration: 8_000 });
+  };
+
+  /** C-187: destacar o quitar de Destacados sin abrir el producto. Un archivado no se destaca (lo dice el servidor) */
+  const destacar = async (p: ProductoLista) => {
+    const nuevo = !p.isFeatured;
+    const r = await fetch(`/api/products/${p.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isFeatured: nuevo }) });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { toast.error(data.error || 'No se pudo cambiar'); return; }
+    setProductos((lista) => lista.map((x) => (x.id === p.id ? { ...x, isFeatured: nuevo } : x)));
+    toast.success(!nuevo ? `"${p.name}" ya no está en Destacados` : p.status === 'PUBLISHED' ? `"${p.name}" sale en Destacados del inicio` : `"${p.name}" quedó destacado: sale en el inicio cuando lo actives`);
   };
 
   /** Mueve un producto a la papelera. Si otra persona lo está editando, se pregunta antes. Devuelve true si quedó en la papelera. */
@@ -202,8 +281,9 @@ export default function ProductsPage() {
     return true;
   };
 
+  // C-187: "Deshacer" solo saca de la papelera. Si mientras tanto se borró para siempre, no lo recupera (eso es otra decisión)
   const restaurarVarios = async (ids: string[]) => {
-    const resultados = await Promise.all(ids.map((id) => fetch(`/api/products/${id}/restaurar`, { method: 'POST' }).then((r) => r.ok).catch(() => false)));
+    const resultados = await Promise.all(ids.map((id) => fetch(`/api/products/${id}/restaurar?desde=papelera`, { method: 'POST' }).then((r) => r.ok).catch(() => false)));
     const listos = resultados.filter(Boolean).length;
     toast[listos === ids.length ? 'success' : 'error'](listos === ids.length ? (ids.length === 1 ? 'Producto restaurado' : `${listos} productos restaurados`) : `Se restauraron ${listos} de ${ids.length}`);
     recargar();
@@ -301,16 +381,21 @@ export default function ProductsPage() {
   };
 
   const cambiosPendientes = Object.keys(cambios).length;
+  const limpiarFiltros = () => { setBusqueda(''); setCategoria(''); setFiltro('todos'); };
 
   return (
     <div className="min-w-0 space-y-4">
       <div className={adminPageHeader}>
         <div>
           <h1 className={adminPageTitle}>Productos</h1>
-          <p className={adminPageSubtitle}>{conteo.todos} en el catálogo · {conteo.publicados} activos</p>
+          <p className={adminPageSubtitle}>
+            {conteo.todos} en el catálogo · {conteo.publicados} activos · {conteo.destacados} {conteo.destacados === 1 ? 'destacado' : 'destacados'}
+            {conteo.destacados > maxDestacados && ` (el inicio muestra los ${maxDestacados} más nuevos)`}
+          </p>
         </div>
         {tab === 'local' && (
-          <div className="flex flex-wrap items-center gap-2">
+          // Los botones no se parten en dos filas: si falta lugar, el que se acomoda es el texto de los conteos
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
             {edicionRapida ? (
               <>
                 <button type="button" onClick={() => { setEdicionRapida(false); setCambios({}); }} className={adminSecondaryButton}>Cancelar</button>
@@ -322,7 +407,7 @@ export default function ProductsPage() {
               <>
                 <Link href="/admin/products/new" className={adminPrimaryButton}><FiPlus className="h-4 w-4" aria-hidden="true" /> Nuevo producto</Link>
                 <button type="button" onClick={() => setEdicionRapida(true)} className={adminSecondaryButton}><FiEdit3 className="h-4 w-4" aria-hidden="true" /> Edición rápida</button>
-                <div className="relative">
+                <div className="relative" ref={menuMas}>
                   <button type="button" onClick={() => setMasAcciones((v) => !v)} aria-expanded={masAcciones} className={adminSecondaryButton}>
                     <FiMoreHorizontal className="h-4 w-4" aria-hidden="true" /> Más
                   </button>
@@ -339,10 +424,13 @@ export default function ProductsPage() {
         )}
       </div>
 
+      {/* C-187: en el teléfono "SADES" a secas, para que la Papelera quepa a la vista (antes quedaba fuera, a la derecha) */}
       <div className="flex gap-1 overflow-x-auto border-b border-line pb-2" role="tablist" aria-label="Origen de los productos">
-        <button type="button" role="tab" aria-selected={tab === 'local'} onClick={() => setTab('local')} className={adminTab(tab === 'local')}><FiBox className="h-4 w-4" aria-hidden="true" /> Catálogo</button>
-        <button type="button" role="tab" aria-selected={tab === 'sades'} onClick={() => setTab('sades')} className={adminTab(tab === 'sades')}><FiDatabase className="h-4 w-4" aria-hidden="true" /> ElectroCaja / SADES</button>
-        <button type="button" role="tab" aria-selected={tab === 'papelera'} onClick={() => setTab('papelera')} className={adminTab(tab === 'papelera')}>
+        <button type="button" role="tab" aria-selected={tab === 'local'} onClick={() => setTab('local')} className={`${adminTab(tab === 'local')} ${TAB_TELEFONO}`}><FiBox className="h-4 w-4" aria-hidden="true" /> Catálogo</button>
+        <button type="button" role="tab" aria-selected={tab === 'sades'} onClick={() => setTab('sades')} className={`${adminTab(tab === 'sades')} ${TAB_TELEFONO}`}>
+          <FiDatabase className="h-4 w-4" aria-hidden="true" /> <span><span className="hidden sm:inline">ElectroCaja / </span>SADES</span>
+        </button>
+        <button type="button" role="tab" aria-selected={tab === 'papelera'} onClick={() => setTab('papelera')} className={`${adminTab(tab === 'papelera')} ${TAB_TELEFONO}`}>
           <FiTrash2 className="h-4 w-4" aria-hidden="true" /> Papelera{enPapelera > 0 && <span className="rounded-full bg-surface px-2 text-xs font-semibold tabular-nums text-muted">{enPapelera}</span>}
         </button>
       </div>
@@ -350,7 +438,7 @@ export default function ProductsPage() {
       {tab === 'sades' ? (
         <SadesPanel onSincronizado={recargar} />
       ) : tab === 'papelera' ? (
-        <PapeleraProductos puedeBorrarParaSiempre={hasPermission(sesion ?? null, 'MANAGE_SETTINGS')} recargas={recargas} onCambio={recargar} />
+        <PapeleraProductos puedeBorrarParaSiempre={hasPermission(sesion ?? null, 'MANAGE_SETTINGS')} recargas={recargas} eliminados={eliminados} onCambio={recargar} />
       ) : (
         <>
           {/* Estados como filtros rápidos: tocar "Sin stock" filtra */}
@@ -363,10 +451,30 @@ export default function ProductsPage() {
             ))}
           </div>
 
+          {/* C-187: lo mismo que avisa el Dashboard, a un toque. Solo aparece lo que tiene algo por arreglar */}
+          {!cargando && porRevisar.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Por revisar">
+              <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-muted">Por revisar</span>
+              {porRevisar.map((f) => (
+                <button key={f} type="button" aria-pressed={filtro === f} title={REVISAR[f].ayuda} onClick={() => setFiltro(filtro === f ? 'todos' : f)}
+                  className={`${adminChoice(filtro === f)} flex min-h-11 shrink-0 items-center gap-2 px-3 text-sm`}>
+                  {REVISAR[f].label}<span className="rounded-full bg-warning/15 px-2 text-xs font-semibold tabular-nums text-warning-strong">{conteo[f]}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {filtro === 'archivados' && (
+            <p className={adminNotice('neutral')}>
+              Los archivados no se ven en la tienda ni en &quot;Todos&quot;. Para quitar uno del todo, muévelo a la papelera: si tiene ventas, al borrarlo se conserva oculto para que sus órdenes sigan completas.
+            </p>
+          )}
+          {esFiltroRevisar(filtro) && <p className={adminNotice('warning')}>{REVISAR[filtro].ayuda}.</p>}
+
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="relative flex-1">
               <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
-              <input type="search" aria-label="Buscar productos" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre o SKU" className={`${adminInput()} pl-9`} />
+              <input type="search" aria-label="Buscar productos" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre, SKU o código de barras" className={`${adminInput()} pl-9`} />
             </div>
             <div className="sm:w-60">
               <label htmlFor="filtro-cat" className="sr-only">Categoría</label>
@@ -408,7 +516,7 @@ export default function ProductsPage() {
               <p className="font-semibold text-ink">{productos.length === 0 ? 'Todavía no hay productos' : 'Ningún producto con estos filtros'}</p>
               {productos.length === 0
                 ? <Link href="/admin/products/new" className={`${adminPrimaryButton} mt-4`}><FiPlus className="h-4 w-4" aria-hidden="true" /> Nuevo producto</Link>
-                : <button type="button" onClick={() => { setBusqueda(''); setCategoria(''); setFiltro('todos'); }} className={`${adminSecondaryButton} mt-4`}>Quitar filtros</button>}
+                : <button type="button" onClick={limpiarFiltros} className={`${adminSecondaryButton} mt-4`}>Quitar filtros</button>}
             </div>
           ) : (
             <>
@@ -425,7 +533,8 @@ export default function ProductsPage() {
                 onCambio={(id, campo, valor) => setCambios((c) => ({ ...c, [id]: { ...c[id], [campo]: valor } }))}
                 onVer={setVista}
                 onDuplicar={duplicar}
-                onEstado={cambiarEstado}
+                onEstado={(p) => void cambiarEstado(p)}
+                onDestacar={(p) => void destacar(p)}
                 onEliminar={eliminar}
                 duplicando={duplicando}
                 editando={editando}
@@ -435,7 +544,7 @@ export default function ProductsPage() {
         </>
       )}
 
-      {vista && <VistaRapida p={vista} tasaVES={tasaVES} onClose={() => setVista(null)} onEstado={cambiarEstado} />}
+      {vista && <VistaRapida p={vista} tasaVES={tasaVES} onClose={() => setVista(null)} onEstado={(p) => void cambiarEstado(p)} />}
       {masivo && (
         <EdicionMasiva
           cantidad={seleccion.size}

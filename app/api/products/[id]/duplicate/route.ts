@@ -10,7 +10,7 @@ import { registrarAccionAdmin } from '@/lib/audit-log';
 // Antes lo armaba la pantalla: leía `specifications` (la API devuelve `specs`) y no copiaba el tipo ni los montos,
 // así que la copia salía sin especificaciones y un digital se duplicaba como físico.
 // La copia nace en borrador, sin destacar y sin stock (el inventario es de cada producto real), con SKU,
-// slug y código corto nuevos. Los montos digitales se copian con su costo y proveedor; los códigos no.
+// slug y código corto nuevos. Los montos digitales se copian con su costo y proveedor; los códigos y el número de serie no.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   if (!isAuthorized(session, 'MANAGE_PRODUCTS')) {
@@ -19,6 +19,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
   const original = await prisma.product.findUnique({ where: { id }, include: { digitalVariants: true } });
   if (!original) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+  if (original.eliminadoAt) return NextResponse.json({ error: 'Este producto está eliminado' }, { status: 409 });
   if (original.deletedAt) return NextResponse.json({ error: 'Está en la papelera: restáuralo primero' }, { status: 409 });
 
   // SKU y slug libres: "-COPIA", "-COPIA-2", …
@@ -34,10 +35,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const slug = await libre(`${original.slug}-copia`.slice(0, 180), 'slug');
   const shortCode = await generateShortCode(prisma);
 
+  // C-187: el número de serie es de cada unidad (garantía de un usado): la copia no lo hereda
   const {
-    id: _id, sku: _sku, slug: _slug, shortCode: _short, createdAt: _c, updatedAt: _u, deletedAt: _d, deletedById: _db, statusAntesDePapelera: _sp, digitalVariants, ...resto
+    id: _id, sku: _sku, slug: _slug, shortCode: _short, createdAt: _c, updatedAt: _u, deletedAt: _d, deletedById: _db, statusAntesDePapelera: _sp,
+    eliminadoAt: _el, serialNumber: _serie, digitalVariants, ...resto
   } = original;
-  void _id; void _sku; void _slug; void _short; void _c; void _u; void _d; void _db; void _sp;
+  void _id; void _sku; void _slug; void _short; void _c; void _u; void _d; void _db; void _sp; void _el; void _serie;
 
   const copia = await prisma.$transaction(async (tx) => {
     const creado = await tx.product.create({

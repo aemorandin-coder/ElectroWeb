@@ -114,6 +114,11 @@ const CLAVES_SOLO_ESTADO = ['status', 'isActive', 'isFeatured', 'baseUpdatedAt']
 async function respuestaDeConflicto(id: string) {
   const actual = await leerProducto(id);
   if (!actual) return NextResponse.json({ error: 'Este producto ya no existe', conflicto: 'no_existe' }, { status: 404 });
+  // C-187: eliminado (tenía ventas): para el editor es como borrado, no como "en la papelera"
+  if (actual.eliminadoAt) {
+    const por = (await ultimoCambio('PRODUCT', id, ['PRODUCT_PURGED'])) ?? { nombre: 'Alguien del equipo', en: actual.eliminadoAt.toISOString() };
+    return NextResponse.json({ error: `${por.nombre} eliminó este producto`, conflicto: 'eliminado', por }, { status: 410 });
+  }
   if (actual.deletedAt) {
     const nombre = (await nombrePorId(actual.deletedById)) ?? 'Alguien del equipo';
     return NextResponse.json({
@@ -228,7 +233,18 @@ export async function PATCH(
       updateData.status = body.status;
     }
 
-    if (body.isFeatured !== undefined) updateData.isFeatured = body.isFeatured;
+    if (body.isFeatured !== undefined) {
+      if (typeof body.isFeatured !== 'boolean') return NextResponse.json({ error: 'Destacado inválido' }, { status: 400 });
+      updateData.isFeatured = body.isFeatured;
+    }
+    // C-187: un archivado no se destaca (la tienda no lo muestra y la lista decía "Destacado (no se ve: inactivo)").
+    // Pedirlo de frente es un error; al guardar el formulario entero, archivar le quita la estrella sin más.
+    if ((updateData.status ?? oldProduct.status) === 'ARCHIVED') {
+      if (body.isFeatured === true && soloEstado) {
+        return NextResponse.json({ error: 'Un producto archivado no se puede destacar: actívalo primero' }, { status: 400 });
+      }
+      updateData.isFeatured = false;
+    }
 
     // Pricing extras
     if (body.compareAtPriceUSD !== undefined) {
@@ -393,7 +409,7 @@ export async function DELETE(
     const { searchParams } = new URL(request.url);
     const quien = { id: session!.user.id, nombre: nombreDeSesion(session) };
 
-    const product = await prisma.product.findUnique({ where: { id }, select: { id: true, name: true, sku: true, status: true, priceUSD: true, deletedAt: true } });
+    const product = await prisma.product.findUnique({ where: { id }, select: { id: true, name: true, sku: true, status: true, priceUSD: true, deletedAt: true, eliminadoAt: true } });
     if (!product) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
@@ -403,21 +419,27 @@ export async function DELETE(
       if (!hasPermission(session, 'MANAGE_SETTINGS')) {
         return NextResponse.json({ error: 'Solo el dueño puede borrar para siempre' }, { status: 403 });
       }
+      // C-187: borrar dos veces no hace nada (ni otra línea en la bitácora)
+      if (product.eliminadoAt) {
+        return NextResponse.json({ message: 'Ya estaba eliminado', conservado: true, yaEstaba: true });
+      }
       if (!product.deletedAt) {
         return NextResponse.json({ error: 'Primero muévelo a la papelera' }, { status: 409 });
       }
       const resultado = await borrarParaSiempre(id);
+      if (resultado === 'no_existe') return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
       await registrarAccionAdmin(session, 'PRODUCT_PURGED', { type: 'PRODUCT', id }, { producto: product.name, sku: product.sku, resultado }, request);
       publicarRecursoCambiado(`product:${id}`, 'eliminado', quien);
       revalidateStorefront();
-      if (resultado === 'archivado') {
-        return NextResponse.json({ message: 'El producto tiene órdenes: no se puede borrar. Quedó archivado.', archived: true });
+      // C-187: antes "Quedó archivado" y el producto volvía a la lista. Ahora sale del panel y su historia sigue completa
+      if (resultado === 'conservado') {
+        return NextResponse.json({ message: 'Eliminado. Como tiene órdenes, se conserva oculto para que esas órdenes, sus garantías y sus reseñas sigan completas.', conservado: true });
       }
       return NextResponse.json({ message: 'Producto borrado para siempre' });
     }
 
     if (product.deletedAt) {
-      return NextResponse.json({ papelera: true, yaEstaba: true, id });
+      return NextResponse.json({ papelera: true, yaEstaba: true, eliminado: product.eliminadoAt !== null, id });
     }
 
     // Otra persona lo está editando ahora: se avisa antes de sacárselo (con la papelera no se pierde nada, pero se entera)

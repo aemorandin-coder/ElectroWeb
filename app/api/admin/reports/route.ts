@@ -133,7 +133,8 @@ export async function GET(request: NextRequest) {
                 prisma.order.count({ where: { createdAt: enPeriodo, status: { notIn: [...ORDEN_NO_VALIDA] } } }),
                 prisma.order.count({ where: { createdAt: enPeriodo, paymentStatus: 'PENDING', status: { notIn: [...ORDEN_NO_VALIDA] } } }),
                 prisma.order.aggregate({ _sum: { totalUSD: true }, _count: true, where: pagadasDesde(startDate) }),
-                prisma.product.count({ where: { deletedAt: null } }),
+                // C-187: como la lista de Productos: sin lo archivado, la papelera ni lo eliminado
+                prisma.product.count({ where: { deletedAt: null, status: { not: 'ARCHIVED' } } }),
                 prisma.product.count({ where: { status: 'PUBLISHED' } }),
                 prisma.productRequest.count({ where: { status: 'PENDING' } }),
                 prisma.analyticsEvent.count({ where: { eventType: 'page_view', createdAt: enPeriodo } }),

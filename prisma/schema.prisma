@@ -355,6 +355,10 @@ model Product {
   deletedAt             DateTime?
   deletedById           String?
   statusAntesDePapelera ProductStatus?
+  // C-187: "Borrar para siempre" de un producto con ventas. La fila no se puede borrar (la usan sus órdenes, garantías,
+  // reseñas y códigos entregados), así que queda eliminado: fuera del catálogo, de la lista, de la papelera y de la tienda,
+  // sin volver nunca como "Archivado". Conserva `deletedAt`. El dueño lo puede recuperar como borrador.
+  eliminadoAt           DateTime?
 
   orderItems    OrderItem[]
   reviews       Review[]

@@ -13,6 +13,7 @@ import ProductReviews from '@/components/product/ProductReviews';
 import PurchasePanel from '@/components/product/PurchasePanel';
 import CouponOffers from '@/components/product/CouponOffers';
 import ConditionDetails, { ConditionNotice } from '@/components/product/ConditionDetails';
+import FechaLimiteNavidad from '@/components/navidad/FechaLimiteNavidad';
 import OfferNote from '@/components/ui/OfferNote';
 import { cuponesParaProducto } from '@/lib/promotions';
 import WishlistButton from '@/components/product/WishlistButton';
@@ -256,16 +257,22 @@ export default async function ProductPage({ params }: PageProps) {
                     exchangeRateVES={settings.exchangeRateVES}
                     ivaIncluido={settings.taxEnabled && (!isDigital || settings.taxDigital)}
                     lowStockThreshold={homeSettings.lowStockThreshold}
-                    beforeActions={resumen.length > 0 && (
-                      <ul aria-label="Garantía y entrega" className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs font-medium text-ink-soft">
-                        {resumen.map(({ Icon, text }) => (
-                          <li key={text} className="flex items-center gap-1.5">
-                            <Icon className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden="true" />
-                            {text}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    beforeActions={
+                      <>
+                        {resumen.length > 0 && (
+                          <ul aria-label="Garantía y entrega" className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs font-medium text-ink-soft">
+                            {resumen.map(({ Icon, text }) => (
+                              <li key={text} className="flex items-center gap-1.5">
+                                <Icon className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden="true" />
+                                {text}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {/* C-190: con el tema navideño y la fecha cargada, hasta cuándo pedir para que llegue antes del 24 */}
+                        {!isDigital && product.stock > 0 && <FechaLimiteNavidad />}
+                      </>
+                    }
                     afterPrice={(product.oferta || coupons.length > 0) && (
                       // C-102: oferta de la tienda y cupones que sirven para este producto, debajo del precio
                       <div className="space-y-2">

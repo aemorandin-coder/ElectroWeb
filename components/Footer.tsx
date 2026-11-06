@@ -88,6 +88,7 @@ export default function Footer() {
               {[
                 ['Productos', '/productos'],
                 ['Gift Cards', '/gift-cards'],
+                ['Ideas para regalar', '/ideas-para-regalar'],
                 ['Categorías', '/categorias'],
                 ['Cursos', '/cursos'],
                 ['Cotizaciones para empresas', '/cotizacion'],

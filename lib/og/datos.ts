@@ -14,6 +14,7 @@ import { prisma } from '@/lib/prisma';
 import { categoryText, getCategorySummary, type CategorySummary } from '@/lib/queries/catalog';
 import { visibleProducts } from '@/lib/queries/home';
 import { getProductBySlug } from '@/lib/queries/product';
+import { fotosDeRegalos } from '@/lib/queries/regalos';
 import { absoluteUrl, plainText, siteUrl } from '@/lib/seo';
 import { getPublicSettings } from '@/lib/site-settings';
 import { leerSubida as leerFoto } from '@/lib/subidas';
@@ -29,7 +30,7 @@ const LADO_PRODUCTO = ALTO;
 export type TipoTarjeta = 'producto' | 'categoria' | 'pagina';
 
 /** Las páginas que tienen imagen propia. Solo estas: nadie puede pedir una imagen con un texto inventado */
-export const PAGINAS = ['inicio', 'productos', 'categorias', 'servicios', 'cursos', 'gift-cards', 'contacto', 'cotizacion', 'solicitar-producto', 'terminos', 'privacidad'] as const;
+export const PAGINAS = ['inicio', 'productos', 'categorias', 'servicios', 'cursos', 'gift-cards', 'ideas-para-regalar', 'contacto', 'cotizacion', 'solicitar-producto', 'terminos', 'privacidad'] as const;
 export type PaginaCompartida = (typeof PAGINAS)[number];
 export const esPagina = (valor: string): valor is PaginaCompartida => (PAGINAS as readonly string[]).includes(valor);
 
@@ -73,8 +74,9 @@ interface ContenidoPagina {
   /** Frase corta y destacada bajo el título (solo la portada) */
   lema?: string | null;
   bajada: string | null;
-  /** De dónde salen las fotos del mosaico; sin fotos, la tarjeta lleva el ícono de la marca */
-  fotos: 'destacados' | 'recientes' | null;
+  /** De dónde salen las fotos del mosaico; sin fotos, la tarjeta lleva el ícono de la marca. 'regalos': el primero de cada
+   *  tramo de Ideas para regalar (C-190), los mismos que abren la página */
+  fotos: 'destacados' | 'recientes' | 'regalos' | null;
 }
 
 const listaEs = (items: string[]) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}` : items[0] ?? '');
@@ -89,6 +91,8 @@ const categoriasPrincipales = cache(async (cuantas: number): Promise<string[]> =
 
 const FIJAS: Record<Exclude<PaginaCompartida, 'inicio' | 'productos' | 'categorias' | 'servicios' | 'cursos'>, ContenidoPagina> = {
   'gift-cards': { titulo: 'Gift Cards', bajada: 'Elige el diseño y el monto. Llega al correo de quien la recibe.', fotos: null },
+  // C-190: el mismo texto todo el año (con el tema navideño la página cambia de adorno, no de título)
+  'ideas-para-regalar': { titulo: 'Ideas para regalar', bajada: 'Regalos por presupuesto: hasta $20, de $20 a $50 y más de $50.', fotos: 'regalos' },
   contacto: { titulo: 'Contacto', bajada: 'WhatsApp, teléfono, correo, dirección y horario de la tienda.', fotos: null },
   cotizacion: { titulo: 'Cotizaciones para empresas', bajada: 'Pide un presupuesto formal para tu empresa o institución.', fotos: null },
   'solicitar-producto': { titulo: 'Solicitar un producto', bajada: '¿No encuentras lo que buscas? Cuéntanos qué necesitas.', fotos: null },
@@ -165,6 +169,10 @@ async function fotosDelMosaico(urls: string[]): Promise<string[]> {
 
 const idDeCategoria = cache(async (slug: string) => (await prisma.category.findUnique({ where: { slug }, select: { id: true } }))?.id ?? null);
 
+/** Las fotos del mosaico de una página, según lo que diga su contenido */
+const fotosDePagina = (contenido: ContenidoPagina): Promise<string[]> =>
+  contenido.fotos === 'regalos' ? fotosDeRegalos() : contenido.fotos ? fotosElegidas(null, contenido.fotos) : Promise.resolve([]);
+
 // ---------- La tarjeta pedida
 
 export interface TarjetaLista {
@@ -208,7 +216,7 @@ export async function tarjetaPara(tipo: TipoTarjeta, clave: string): Promise<Tar
 
   if (!esPagina(clave)) return null;
   const contenido = await contenidoDePagina(clave);
-  const urls = contenido.fotos ? await fotosElegidas(null, contenido.fotos) : [];
+  const urls = await fotosDePagina(contenido);
   const v = versionDePagina(clave, contenido, urls);
   return {
     version: v,
@@ -238,7 +246,7 @@ export async function imagenDePagina(pagina: PaginaCompartida, subidaAMano?: str
   const contenido = await contenidoDePagina(pagina);
   const propia = absoluteUrl(subidaAMano);
   if (propia) return { url: propia, alt: contenido.titulo };
-  const urls = contenido.fotos ? await fotosElegidas(null, contenido.fotos) : [];
+  const urls = await fotosDePagina(contenido);
   return imagenGenerada('pagina', pagina, versionDePagina(pagina, contenido, urls), contenido.titulo);
 }
 

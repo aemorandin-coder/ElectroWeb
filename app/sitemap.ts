@@ -21,6 +21,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     page('/productos', 'daily', 0.9),
     page('/categorias', 'weekly', 0.8),
     page('/gift-cards', 'weekly', 0.7),
+    // C-190: regalos por presupuesto, todo el año
+    page('/ideas-para-regalar', 'weekly', 0.7),
     page('/servicios', 'monthly', 0.6),
     page('/cotizacion', 'monthly', 0.6),
     page('/solicitar-producto', 'monthly', 0.5),

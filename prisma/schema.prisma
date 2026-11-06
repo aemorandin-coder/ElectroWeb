@@ -965,6 +965,10 @@ model CompanySettings {
   christmasPopupText    String?
   christmasPopupButton  String?
   christmasPopupLink    String?
+  // C-190: el último día para pedir y que llegue antes del 24 (incluido, en días de Venezuela): por ZOOM o MRW y con
+  // delivery o retiro en Guanare. Sin fecha no se promete nada: la franja de la ficha y del carrito no sale
+  christmasCutoffShipping DateTime? @db.Date
+  christmasCutoffLocal    DateTime? @db.Date
 
   // Admin Alert Emails — comma-separated or JSON array of emails to notify on key events
   adminAlertEmails      String?

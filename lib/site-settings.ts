@@ -5,7 +5,7 @@ import { cache } from 'react';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { reglasEmbalajeActivas, type ReglasEmbalaje } from '@/lib/embalaje';
-import { navidadActiva, varianteGorro, type VarianteGorro } from '@/lib/navidad';
+import { entregaNavidad, navidadActiva, varianteGorro, type EntregaNavidad, type VarianteGorro } from '@/lib/navidad';
 
 export interface SiteSettings {
     companyName: string;
@@ -184,6 +184,9 @@ export interface PublicSettings {
     /** C-186: el gorro de Santa del logo si el tema navideño se ve hoy (encendido y dentro de sus fechas, en hora de
      *  Venezuela); null si no. Las fechas no salen del servidor */
     gorroNavidad: VarianteGorro | null;
+    /** C-190: el último día para pedir y que llegue antes del 24 (ZOOM o MRW, y delivery o retiro en Guanare), solo con el
+     *  tema activo y las fechas que siguen en pie. null: no sale la franja */
+    entregaNavidad: EntregaNavidad | null;
     // El popup (hotAd*) no va aquí: estos settings viajan en el HTML de TODAS las páginas y la imagen
     // podía ser un base64 de cientos de KB. El home lo lee aparte con getHotAd() (C-25).
 }
@@ -208,6 +211,7 @@ const PUBLIC_SETTINGS_SELECT = {
     maintenanceMode: true, maintenanceMessage: true, maintenanceStartTime: true, maintenanceEndTime: true,
     rif: true, legalName: true,
     christmasTheme: true, christmasThemeFrom: true, christmasThemeUntil: true, christmasHat: true,
+    christmasCutoffShipping: true, christmasCutoffLocal: true,
 } satisfies Prisma.CompanySettingsSelect;
 
 type PublicSettingsRow = Prisma.CompanySettingsGetPayload<{ select: typeof PUBLIC_SETTINGS_SELECT }>;
@@ -235,6 +239,7 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     pagoMovilDirecto: false,
     rif: null, legalName: null,
     gorroNavidad: null,
+    entregaNavidad: null,
 };
 
 function parseJson<T>(value: string | null, fallback: T): T {
@@ -252,8 +257,8 @@ function toPublicSettings(row: PublicSettingsRow): PublicSettings {
     const socialMedia = parseJson<unknown>(row.socialMedia, []);
 
     // La columna se llama taxDigitalProducts; hacia afuera sale como taxDigital. Del tema navideño sale solo el gorro, y
-    // solo si se ve hoy (C-186)
-    const { taxDigitalProducts, christmasTheme, christmasThemeFrom, christmasThemeUntil, christmasHat, ...resto } = row;
+    // solo si se ve hoy (C-186), y las fechas de corte que siguen en pie (C-190: se publican en la franja de todos modos)
+    const { taxDigitalProducts, christmasTheme, christmasThemeFrom, christmasThemeUntil, christmasHat, christmasCutoffShipping, christmasCutoffLocal, ...resto } = row;
     return {
         ...resto,
         socialMedia: Array.isArray(socialMedia) ? (socialMedia as SocialMediaLink[]) : [],
@@ -277,6 +282,7 @@ function toPublicSettings(row: PublicSettingsRow): PublicSettings {
         maintenanceEndTime: row.maintenanceEndTime ? row.maintenanceEndTime.toISOString() : null,
         pagoMovilDirecto: Boolean(process.env.BDV_API_KEY && process.env.BDV_TELEFONO_COMERCIO),
         gorroNavidad: navidadActiva({ christmasTheme, christmasThemeFrom, christmasThemeUntil }) ? varianteGorro(christmasHat) : null,
+        entregaNavidad: entregaNavidad({ christmasTheme, christmasThemeFrom, christmasThemeUntil, christmasCutoffShipping, christmasCutoffLocal }),
     };
 }
 

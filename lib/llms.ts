@@ -104,6 +104,7 @@ export function buildLlmsTxt({ settings, categories, products, paymentMethods }:
 
   section('Más', [
     `- [Gift cards](${site}/gift-cards)`,
+    `- [Ideas para regalar](${site}/ideas-para-regalar): regalos por presupuesto (hasta $20, de $20 a $50 y más de $50).`,
     `- [Servicios](${site}/servicios)`,
     `- [Solicitar un producto que no está en el catálogo](${site}/solicitar-producto)`,
     `- [Términos y condiciones](${site}/terminos)`,

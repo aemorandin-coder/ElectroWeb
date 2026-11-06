@@ -389,6 +389,13 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - Entrar con Facebook o Apple: no va por ahora (24/09).
 - Búsqueda de productos en la web (C-155): un buscador con API gratuita (Brave o Google) como tercera fuente, si en producción los buscadores no le responden al servidor; buscar por código de barras desde el teléfono; proponer también la categoría y las etiquetas.
 
+**De C-187 (06/11):**
+- Decidir si `/categorias` esconde las categorías sin productos (hoy 8 de 15 dicen "0 productos"). Es un dato visible: lo decide Andrés.
+- Cuando vuelva SADES: una lista de SKU borrados de verdad, para que la sincronización no los recree como borrador.
+- Propuestas menores de `estado/C-187.md`: orden de la lista, lista liviana, tarjetas en el teléfono, aviso de destacado en el asistente, `categoryId` en la edición masiva y 404 real en la ficha.
+
+**C-188 · Los íconos propios en la web** (pedido de Andrés el 06/11; espera a que C-186 esté integrada): pasar el pack de 132 íconos (`~/Escritorio/ElectroShop Brand/Pack de íconos/`) a componentes, reemplazar `react-icons` en la tienda y el panel (las marcas quedan con sus logos oficiales), mapear los nombres guardados en la base (categorías y notificaciones) y cerrar el selector de íconos de categorías.
+
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
 - Hecho en C-185 (06/11): las ramas, el stash y los worktrees viejos de la máquina de Andrés, y los 40 uploads versionados (en el servidor se respaldan antes del próximo `git pull`, `SIGUIENTE.md` §2).

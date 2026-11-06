@@ -10,6 +10,31 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.19] - 2026-11-06
+### Productos 1.3.0 (C-187)
+- **Ya se pueden eliminar los productos zombis** (pedido de Andrés con una captura de producción).
+  - **El problema:** "Borrar para siempre" de un producto con ventas lo dejaba archivado y de vuelta en la lista, todavía destacado, y el cron de la papelera hacía lo mismo a los 30 días.
+  - **Ahora:** queda **eliminado**, fuera de la lista, de la papelera y de la tienda para siempre. No cambia nada de su historia: órdenes, garantías, reseñas, códigos y Puntos ES. Solo el dueño puede recuperarlo, y vuelve como borrador.
+  - **Papelera:** dice qué productos tienen órdenes y suma "Vaciar la papelera" (solo el dueño).
+- **Lo archivado va aparte:** tiene su propio filtro, archivar le quita la estrella de destacado, y no se puede destacar un archivado.
+- **Por revisar:** un filtro con los productos sin foto, sin marca o sin peso y medidas. Los avisos del Dashboard llevan ahí.
+- **La lista recuerda la vista** (filtro, categoría, búsqueda y pestaña) en la dirección, y al guardar un producto se vuelve a ella. "Ver productos" de Categorías filtra, y también se busca por código de barras.
+- **"Deshacer"** al cambiar el estado de un producto desde la lista o la vista rápida.
+- **La estrella de destacado en la lista.** El encabezado dice cuántos hay y avisa si pasan del máximo del inicio.
+- **Teléfono y tableta:** a 360 caben las pestañas (también la Papelera) y el botón de SADES; a 1024 la tabla cabe con sus acciones; "Más" se cierra al tocar fuera; "Ver en tienda" solo sale si el producto se ve.
+- Duplicar ya no copia el número de serie.
+- **Categorías:** la API pública cuenta solo lo publicado, y una categoría a la que solo le quedan eliminados se puede borrar.
+- **Base:** 1 columna nueva (aditivo): `products.eliminadoAt`. Sin variables ni crons nuevos.
+### Dashboard 1.1.1 (C-187)
+- Los avisos de productos sin marca, foto o medidas llevan a la lista ya filtrada. El total de productos no cuenta lo archivado.
+### Reportes y seguridad 1.1.2 (C-187)
+- El total de productos se cuenta igual que en la lista.
+### Órdenes y pagos 1.0.2 (C-187)
+- El aviso de SADES que archiva un producto le quita la estrella de destacado.
+### Sin módulo (C-185)
+- Limpieza del repositorio: se borraron archivos sin uso (la plantilla de Next, `ecosystem.config.js` y dos guiones sueltos), y 40 uploads viejos salieron de git. En el servidor se respaldan antes del `git pull` (`SIGUIENTE.md` §2).
+- Entran los stickers de WhatsApp de Chispa de Luis (`chispa/`). No cambian la tienda.
+
 ## [1.0.0-rc.18] - 2026-10-28
 ### Cotizaciones 1.4.0 (C-184)
 - **El descuento del convenio CCIET, a la vista** (Luis eligió la variante C sin la franja, viendo las maquetas con una cotización real). En las cotizaciones que arma Numen para el convenio:

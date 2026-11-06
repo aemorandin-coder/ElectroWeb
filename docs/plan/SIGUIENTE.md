@@ -1,10 +1,20 @@
-# Lo de ahora (actualizado 2026-11-06, C-185 · producción en 1.0.0-rc.18)
+# Lo de ahora (actualizado 2026-11-06, C-187 · producción en 1.0.0-rc.18, `main` en 1.0.0-rc.19)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.18`** (`e3479bc`, C-184), subida el 28/10 con Claude conectado y la aprobación de Luis. **No hay código de la tienda por subir:** después de rc.18, `main` solo suma la limpieza de C-185 y los stickers de Chispa de Luis (`chispa/`), que no cambian la tienda. **Antes del próximo `git pull` en el servidor** va el paso de los uploads (sección 2).
+- **Producción: `v1.0.0-rc.18`** (`e3479bc`, C-184), subida el 28/10 con Claude conectado y la aprobación de Luis. **Falta subir `v1.0.0-rc.19`**, un solo bloque en la sección 2:
+  - C-187: los productos zombis y las 5 mejoras de Productos. Lleva una columna nueva.
+  - La limpieza de C-185: su paso de los uploads va antes del `git pull`.
+  - Los stickers de Chispa de Luis (`chispa/`), que no cambian la tienda.
+- **C-187 · Admin → Productos (06/11, pedido de Andrés):** ya se pueden eliminar los zombis (`estado/C-187.md`).
+  - **El motivo:** "Borrar para siempre" de un producto con ventas lo dejaba archivado y de vuelta en la lista, todavía destacado. El cron de la papelera hacía lo mismo a los 30 días.
+  - **El arreglo:** ahora queda **eliminado**, fuera de la lista, de la papelera y de la tienda, sin tocar sus órdenes, garantías, reseñas, códigos ni Puntos ES. Solo el dueño lo puede recuperar, y vuelve como borrador. Lo archivado va en su propio filtro.
+  - **Las 5 mejoras:** el filtro "Por revisar" (sin foto, sin marca y sin medidas); la vista que se recuerda; "Deshacer" al cambiar el estado; la estrella de destacado en la lista; y el panel bien a 360, 768 y 1024.
+  - **Verificado:** 102 de 102 pruebas, humo 59 de 59, tsc, lint y build.
+- **C-186 · Tema navideño:** en curso. Andrés vio el primer diseño, genérico, y se rehace en Opus con esfuerzo máximo con el estilo del pack de íconos.
+- **C-188 · Los íconos propios en la web:** el pack está listo (132 íconos, `~/Escritorio/ElectroShop Brand/Pack de íconos/iconos-electro-shop-v1.html`, también para Luis). Se pasa a la tienda y al panel **cuando C-186 esté integrada**, para no chocar con sus archivos (pedido de Andrés: "espera que ellos terminen").
 - **C-185 · Limpieza (06/11, con el OK de Andrés):** la carpeta de Andrés estaba 41 commits atrás (lo de Luis del 11 al 28/10) y se puso al día. Se borraron las 178 ramas locales viejas, el stash y los worktrees de ChatGPT y de Gemini, 8 archivos sin uso y los 40 uploads de 2025 que estaban versionados. En GitHub quedan `main` y las etiquetas. Detalle en `estado/C-185.md`.
 - **Pedido del 16 y 17/10 (Luis): cotizaciones desde Numen.** Numen es la app de precios y proveedores del equipo, en un repositorio privado aparte. Las cotizaciones las arma Numen y las emite la web.
   - **C-181:** la entrada de servidor a servidor, y cuándo el cliente abre su enlace. Hecha (`estado/C-181.md`).
@@ -26,21 +36,55 @@
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
-## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.18`)
-El bloque de C-184 (rc.18), con el SQL, lo comprobado y su vuelta atrás, pasó a `HISTORIAL.md`.
+## 2. Deploy pendiente: `v1.0.0-rc.19` (C-187, la limpieza de C-185 y los stickers)
+El bloque de C-184 (rc.18), con el SQL, lo comprobado y su vuelta atrás, pasó a `HISTORIAL.md`. Después del deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.19`.
 
-### Antes del próximo `git pull` en el servidor (C-185, 1 minuto)
-C-185 sacó de git 40 archivos viejos de `public/uploads/` (logos, favicons y fotos de noviembre y diciembre de 2025). Producción no usa ninguno, pero el `git pull` los borraría del disco del servidor. Se respaldan antes y se devuelven después, ya fuera de git. No hace falta un deploy solo para esto: va con el próximo bloque.
-```bash
-cd /var/www/electroshopve
-git ls-files public/uploads | tar czf ~/uploads-versionados-C185.tgz -T -   # ANTES del pull: después ya no los lista
-tar tzf ~/uploads-versionados-C185.tgz | wc -l                              # 40
-bash scripts/deploy.sh                                                      # el deploy del próximo bloque
-tar xzf ~/uploads-versionados-C185.tgz                                      # vuelven al disco, ignorados por .gitignore
-git status --short                                                          # vacío
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.18`). Es aditivo:
+```sql
+ALTER TABLE "products" ADD COLUMN "eliminadoAt" TIMESTAMP(3);
 ```
-- **Vuelta atrás:** los 40 archivos están en `~/uploads-versionados-C185.tgz`. El código de la tienda no cambia.
-- `ecosystem.config.js` también desaparece del servidor con ese pull: no se usaba (`OPERACION.md` §1).
+Sin variables nuevas y sin crons nuevos. El cron de la papelera sigue igual; solo su registro cambia "archivados" por "conservados".
+
+**Paso a paso.** En el servidor, en `/var/www/electroshopve`:
+```bash
+# 0. Tu cuenta: en el panel, arriba a la derecha, debe decir "Super Admin" (recuperar un eliminado es solo del dueño)
+# 1. Comprobar sin cambiar nada
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.18 y sin cambios
+crontab -l | grep papelera && tail -n 5 ~/cron-papelera.log            # "archivados" mayor que 0 = los zombis que devolvía el cron
+# 2. Respaldo de la base (hay cambio de base)
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc19.dump
+# 3. Los 40 uploads de C-185, ANTES del pull (después git ya no los lista y el pull los borraría)
+git ls-files public/uploads | tar czf ~/uploads-versionados-C185.tgz -T - && tar tzf ~/uploads-versionados-C185.tgz | wc -l   # 40
+# 4. Deploy: para y muestra el SQL de arriba. Si es solo esa línea:
+bash scripts/deploy.sh
+npx prisma db push && bash scripts/deploy.sh
+# 5. Devolver los uploads (quedan en disco, ignorados por git) y comprobar
+tar xzf ~/uploads-versionados-C185.tgz && git status --short           # vacío
+git describe --tags                                                     # v1.0.0-rc.19
+# 6. Diagnóstico de los zombis (solo lee). Pasarle a Claude el archivo
+psql "$DB" -f docs/plan/scripts/diagnostico-c187.sql > ~/diagnostico-c187.txt 2>&1
+```
+
+**Limpieza de los zombis, desde el panel y sin SQL** (después del deploy):
+1. Productos → **Archivados** → la casilla de arriba → **A la papelera**.
+2. **Papelera → Vaciar la papelera.** Lo que tiene ventas queda eliminado y oculto; lo que no, se borra.
+3. Comprobar: "Archivados" dice 0, y la papelera dice "Eliminados que se conservan por sus ventas (N)".
+4. Si quieres conservar uno archivado que estaba destacado y lo activas, vuelve destacado. Quítale la estrella en la lista.
+
+**Pruebas** (unos 10 minutos):
+1. **Teléfono:** Productos muestra enteras las pestañas Catálogo, SADES y Papelera, y "Todos" ya no trae los archivados.
+2. **Mañana, después del cron de las 9:45:** lo eliminado no volvió.
+3. **Sin sesión**, `https://electroshopve.com/api/categories`: Gift Cards y Recargas igual a sus publicados (6), Misceláneos 1 y Consolas 0.
+4. **"Por revisar":** dice "Sin marca 4" y "Sin peso o medidas 1". Ponle la marca a uno y baja. El aviso del Dashboard lleva al filtro.
+5. **La vista se recuerda:** filtra "Activos", busca algo, edita un producto y guarda: vuelves a la misma vista.
+6. **Deshacer y la estrella:** cambia el estado de un producto y toca "Deshacer". Pon la estrella de Destacado en uno y quítala.
+
+**Vuelta atrás:** `git reset --hard e3479bc && npm install && bash scripts/deploy.sh --sin-pull`.
+- La columna se queda y no molesta.
+- Lo eliminado reaparece en la papelera del código viejo (tiene `deletedAt`) y el cron viejo lo volvería a archivar. No se pierde nada.
+- Los uploads están en `~/uploads-versionados-C185.tgz` y la base en `~/respaldo-antes-rc19.dump`.
+
+**Lo decide Andrés:** `/categorias` muestra 8 de 15 categorías con "0 productos". C-187 propone esconderlas y no lo aplicó, porque es un dato visible de la tienda.
 
 ### Por confirmar de rc.18 (C-184, 2 minutos)
 1. **Teléfono:** abre el enlace de la próxima cotización del convenio que mande Numen. Equipos y mano de obra van por separado, con el precio de lista tachado y el descuento en verde. "Descargar PDF" sale igual.

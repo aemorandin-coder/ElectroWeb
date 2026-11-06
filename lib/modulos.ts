@@ -51,6 +51,7 @@ const RC15 = { sistema: '1.0.0-rc.15' } as const;
 const RC16 = { sistema: '1.0.0-rc.16' } as const;
 const RC17 = { sistema: '1.0.0-rc.17' } as const;
 const RC18 = { sistema: '1.0.0-rc.18' } as const;
+const RC19 = { sistema: '1.0.0-rc.19' } as const;
 const primera = (resumen: string): CambioModulo => ({ ...PRIMERA, resumen, silencioso: true });
 
 export const MODULOS: ModuloPanel[] = [
@@ -78,7 +79,7 @@ export const MODULOS: ModuloPanel[] = [
     descripcion: 'La pantalla de trabajo: lo que espera al equipo, las ventas y los accesos rápidos.',
     paginas: [],
     archivos: ['app/admin/(dashboard)/page.tsx', 'components/admin/dashboard/', 'lib/dashboard/', 'lib/queries/dashboard.ts', 'app/api/admin/dashboard/', 'app/api/admin/live-users/'],
-    historial: [{ version: '1.1.0', ...RC7, tarea: 'C-171', resumen: 'Dashboard a tu gusto: toca Editar para quitar, agregar, ordenar y cambiar el tamaño de las tarjetas, y elegir tus accesos rápidos. Diez tarjetas nuevas (visitantes ahora, embudo de hoy, meta del mes, actividad del equipo…). Cada persona tiene el suyo.' }, { version: '1.0.2', ...RC6, tarea: 'C-173', resumen: 'Los visitantes en vivo salen de quién está conectado, no de contar eventos de 5 minutos.', silencioso: true }, { version: '1.0.1', ...RC4, tarea: 'C-169', resumen: 'El total de productos ya no cuenta los de la papelera.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.1', ...RC19, tarea: 'C-187', resumen: 'Los avisos de productos sin marca, foto o medidas llevan a la lista ya filtrada, y el total de productos no cuenta lo archivado.' }, { version: '1.1.0', ...RC7, tarea: 'C-171', resumen: 'Dashboard a tu gusto: toca Editar para quitar, agregar, ordenar y cambiar el tamaño de las tarjetas, y elegir tus accesos rápidos. Diez tarjetas nuevas (visitantes ahora, embudo de hoy, meta del mes, actividad del equipo…). Cada persona tiene el suyo.' }, { version: '1.0.2', ...RC6, tarea: 'C-173', resumen: 'Los visitantes en vivo salen de quién está conectado, no de contar eventos de 5 minutos.', silencioso: true }, { version: '1.0.1', ...RC4, tarea: 'C-169', resumen: 'El total de productos ya no cuenta los de la papelera.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'ordenes',
@@ -93,7 +94,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/order-', 'lib/pago-movil', 'lib/envios/', 'lib/embalaje.ts', 'lib/reservas.ts', 'lib/stock.ts', 'lib/warranty',
       'lib/facturacion.ts', 'lib/pricing.ts',
     ],
-    historial: [{ version: '1.0.1', ...RC9, tarea: 'C-175', resumen: 'Correos de pedido recibido, cancelado y recarga aprobada con el diseño nuevo (logo largo).', silencioso: true }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.0.2', ...RC19, tarea: 'C-187', resumen: 'El aviso de SADES que archiva un producto le quita la estrella de destacado.', silencioso: true }, { version: '1.0.1', ...RC9, tarea: 'C-175', resumen: 'Correos de pedido recibido, cancelado y recarga aprobada con el diseño nuevo (logo largo).', silencioso: true }, primera('Primera versión registrada.')],
   },
   {
     id: 'productos',
@@ -107,7 +108,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/digital-', 'lib/sades.ts', 'lib/review-status.ts', 'lib/resenas-avisos.ts', 'lib/stock-alerts.ts',
       'lib/papelera.ts', 'app/api/cron/papelera/',
     ],
-    historial: [{ version: '1.2.2', ...RC12, tarea: 'C-177', resumen: 'Las fotos de producto se arman con la versión nueva de la librería de imágenes, que corrige fallas de seguridad. Se ven igual.', silencioso: true }, { version: '1.2.1', ...RC9, tarea: 'C-175', resumen: 'Correos de reseña publicada y de pedir la reseña con el diseño nuevo (logo largo).', silencioso: true }, { version: '1.2.0', ...RC8, tarea: 'C-170', resumen: 'Categorías: si otra persona guardó antes, se combinan los cambios; se ve quién la tiene abierta y se pregunta antes de borrar una que otro edita.' }, { version: '1.1.1', ...RC5, tarea: 'C-174', resumen: 'El editor dice a los demás qué producto tiene abierto (para la marquesina del equipo).' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Eliminar manda a la papelera (30 días, con Deshacer). Si otro administrador guarda o mueve el producto mientras lo editas, se combinan los cambios, se avisa y no se pierde lo que escribiste. Se ve quién lo está editando.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.3.0', ...RC19, tarea: 'C-187', resumen: 'Ya se pueden eliminar los productos que volvían de la papelera: uno con ventas queda eliminado (fuera de la lista, de la papelera y de la tienda, con sus órdenes intactas) y solo el dueño lo recupera. Lo archivado va en su filtro y sin estrella. Nuevo: Por revisar (sin foto, marca o medidas), la vista que se recuerda, Deshacer al cambiar el estado y la estrella de destacado en la lista.' }, { version: '1.2.2', ...RC12, tarea: 'C-177', resumen: 'Las fotos de producto se arman con la versión nueva de la librería de imágenes, que corrige fallas de seguridad. Se ven igual.', silencioso: true }, { version: '1.2.1', ...RC9, tarea: 'C-175', resumen: 'Correos de reseña publicada y de pedir la reseña con el diseño nuevo (logo largo).', silencioso: true }, { version: '1.2.0', ...RC8, tarea: 'C-170', resumen: 'Categorías: si otra persona guardó antes, se combinan los cambios; se ve quién la tiene abierta y se pregunta antes de borrar una que otro edita.' }, { version: '1.1.1', ...RC5, tarea: 'C-174', resumen: 'El editor dice a los demás qué producto tiene abierto (para la marquesina del equipo).' }, { version: '1.1.0', ...RC4, tarea: 'C-169', resumen: 'Eliminar manda a la papelera (30 días, con Deshacer). Si otro administrador guarda o mueve el producto mientras lo editas, se combinan los cambios, se avisa y no se pierde lo que escribiste. Se ve quién lo está editando.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'ofertas',
@@ -195,7 +196,7 @@ export const MODULOS: ModuloPanel[] = [
       'lib/csp-', 'lib/relacion-ventas.ts', 'lib/audit-', 'components/AnalyticsTracker.tsx', 'lib/login-guard.ts', 'lib/rate-limit.ts',
       'lib/visitantes.ts', 'lib/analytics-bots.ts', 'app/api/admin/visitantes/', 'app/api/admin/hoy/',
     ],
-    historial: [{ version: '1.1.1', ...RC8, tarea: 'C-170', resumen: 'La bitácora entiende los cambios de cualquier registro del panel (quién cambió qué).', silencioso: true }, { version: '1.1.0', ...RC6, tarea: 'C-173', resumen: 'Reportes en vivo: arriba de todo, cuántas personas están conectadas a la tienda ahora (con cuenta y sin cuenta), qué miran, de dónde llegaron y quién es cada una; lo cobrado hoy se actualiza con cada orden o pago; las cifras se ponen al día solas.' }, { version: '1.0.1', ...RC4, tarea: 'C-169', resumen: 'La bitácora entiende "movido a la papelera", "restaurado" y "borrado para siempre", y el total de productos no cuenta la papelera.' }, primera('Primera versión registrada.')],
+    historial: [{ version: '1.1.2', ...RC19, tarea: 'C-187', resumen: 'El total de productos se cuenta igual que en la lista.', silencioso: true }, { version: '1.1.1', ...RC8, tarea: 'C-170', resumen: 'La bitácora entiende los cambios de cualquier registro del panel (quién cambió qué).', silencioso: true }, { version: '1.1.0', ...RC6, tarea: 'C-173', resumen: 'Reportes en vivo: arriba de todo, cuántas personas están conectadas a la tienda ahora (con cuenta y sin cuenta), qué miran, de dónde llegaron y quién es cada una; lo cobrado hoy se actualiza con cada orden o pago; las cifras se ponen al día solas.' }, { version: '1.0.1', ...RC4, tarea: 'C-169', resumen: 'La bitácora entiende "movido a la papelera", "restaurado" y "borrado para siempre", y el total de productos no cuenta la papelera.' }, primera('Primera versión registrada.')],
   },
   {
     id: 'configuracion',

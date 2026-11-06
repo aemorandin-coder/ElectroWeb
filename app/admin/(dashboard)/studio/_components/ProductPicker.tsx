@@ -5,11 +5,11 @@ import Image from 'next/image';
 import { IconoBuscar, IconoCerrar } from '@/components/iconos';
 import { adminBadge, adminInput } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
-import type { StudioStoreProduct } from '@/lib/studio/schema';
+import { TRAMOS_REGALO, type StudioStoreProduct, type TramoRegalo } from '@/lib/studio/schema';
 import { smallButton } from './ui';
 
-/** Buscar un producto publicado por nombre o código corto y elegirlo para la historia */
-export default function ProductPicker({ onPick, onCancel }: { onPick: (p: StudioStoreProduct) => void; onCancel?: () => void }) {
+/** Buscar un producto publicado por nombre o código corto y elegirlo para la historia. C-193: con `tramo`, solo los de ese tramo */
+export default function ProductPicker({ onPick, onCancel, tramo }: { onPick: (p: StudioStoreProduct) => void; onCancel?: () => void; tramo?: TramoRegalo }) {
   const [q, setQ] = useState('');
   const [results, setResults] = useState<StudioStoreProduct[]>([]);
   const [searching, setSearching] = useState(false);
@@ -22,7 +22,7 @@ export default function ProductPicker({ onPick, onCancel }: { onPick: (p: Studio
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(`/api/admin/studio/products?q=${encodeURIComponent(q.trim())}`);
+        const res = await fetch(`/api/admin/studio/products?q=${encodeURIComponent(q.trim())}${tramo ? `&tramo=${tramo}` : ''}`);
         const data = res.ok ? ((await res.json()) as { products: StudioStoreProduct[] }) : { products: [] };
         if (n === seq.current) setResults(data.products);
       } finally {
@@ -30,12 +30,12 @@ export default function ProductPicker({ onPick, onCancel }: { onPick: (p: Studio
       }
     }, 250);
     return () => clearTimeout(timer);
-  }, [q]);
+  }, [q, tramo]);
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-brand-200 bg-brand-50 p-3">
       <label htmlFor={inputId} className="text-sm font-semibold text-ink">
-        Elegir de la tienda
+        {tramo ? `Elegir de la tienda · ${TRAMOS_REGALO[tramo].titulo}` : 'Elegir de la tienda'}
       </label>
       <div className="flex gap-2">
         <div className="relative flex-1">
@@ -80,7 +80,9 @@ export default function ProductPicker({ onPick, onCancel }: { onPick: (p: Studio
             </button>
           </li>
         ))}
-        {!searching && results.length === 0 && <li className="px-1 py-2 text-sm text-muted">No hay productos publicados con ese nombre.</li>}
+        {!searching && results.length === 0 && (
+          <li className="px-1 py-2 text-sm text-muted">{tramo ? 'No hay productos de este tramo con ese nombre.' : 'No hay productos publicados con ese nombre.'}</li>
+        )}
       </ul>
     </div>
   );

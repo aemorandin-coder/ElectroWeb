@@ -1,7 +1,7 @@
 // Texto para la publicación armado con los datos del flyer (C-112). Reemplaza a la IA de la herramienta vieja,
 // que llamaba a un modelo de Gemini que ya no existe. Sin emojis (regla del proyecto).
 import { formatAmount } from '@/lib/currency';
-import { TEMPLATES, payMethods, slugify, type StudioBrand, type StudioFlyerData, type StudioProductSlot } from './schema';
+import { TEMPLATES, TRAMOS_REGALO, conChispa, payMethods, slugify, type StudioBrand, type StudioFlyerData, type StudioNavidad, type StudioProductSlot } from './schema';
 
 function priceLine(p: StudioProductSlot, brand: StudioBrand): string {
   if (!(Number(p.price) > 0)) return '';
@@ -28,10 +28,26 @@ const longDate = (iso: string) => {
   return (Number.isNaN(d.getTime()) ? new Date() : d).toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' });
 };
 
-/** link: el enlace de la historia con su marca de campaña (?es=código), para contar las visitas desde el texto */
-export function buildCaption(f: StudioFlyerData, brand: StudioBrand, link = ''): string {
+/** C-193: hashtags de relleno hasta llegar a 10 (las reglas de Chispa piden de 10 a 15, mezclando Venezuela y Guanare con el tema) */
+const TAGS_TIENDA = ['#TecnologiaVenezuela', '#Portuguesa', '#TiendaDeTecnologia', '#Tecnologia', '#ComprasOnline', '#EnviosATodaVenezuela', '#Gaming'];
+
+/** Lo que el texto toma de la tienda y no está en la marca del estudio (C-193) */
+export interface CaptionTienda {
+  /** "+58 257 251 1282" */
+  whatsapp?: string | null;
+  navidad?: StudioNavidad | null;
+}
+
+/**
+ * link: el enlace de la historia con su marca de campaña (?es=código), para contar las visitas desde el texto.
+ * C-193, con las reglas de Chispa (chispa/conocimiento/06): el gancho en la primera línea (lo que se ve sin abrir), líneas
+ * cortas, la web y el WhatsApp, y de 10 a 15 hashtags. Sin emojis.
+ */
+export function buildCaption(f: StudioFlyerData, brand: StudioBrand, link = '', tienda: CaptionTienda = {}): string {
   const lines: string[] = [];
   const tags = new Set<string>(['#ElectroShop', '#Guanare', '#Venezuela']);
+  const navidad = f.navidad;
+  if (navidad) tags.add('#Navidad').add('#RegalosDeNavidad');
 
   if (f.template === 'tasa') {
     lines.push(`Tasa oficial BCV del ${longDate(f.rateDate)}:`, `1 dólar = Bs. ${formatAmount(f.rate)}`, '');
@@ -58,6 +74,23 @@ export function buildCaption(f: StudioFlyerData, brand: StudioBrand, link = ''):
       tags.add(hashtag(p.title));
     }
     tags.add('#ClientesFelices');
+  } else if (f.template === 'felicitacion') {
+    const m = f.msg;
+    if (m.headline) lines.push(m.headline.replace(/\*/g, ''));
+    if (m.body) lines.push('', m.body);
+    lines.push('', 'De parte de todo el equipo de Electro Shop.');
+    tags.add('#FelizNavidad');
+  } else if (f.template === 'regalos') {
+    const tramo = TRAMOS_REGALO[f.tramo].titulo;
+    lines.push(`Regalos ${tramo.charAt(0).toLowerCase()}${tramo.slice(1)}: tres ideas de la tienda.`);
+    f.products.slice(0, 3).filter((p) => p.title || p.model).forEach((p) => {
+      const price = priceLine(p, brand);
+      lines.push(`- ${[p.title, p.model].filter(Boolean).join(' ')}${price ? `: ${price}` : ''}`);
+      if (p.title) tags.add(hashtag(p.title));
+    });
+    const site = (brand.website || 'electroshopve.com').replace(/^https?:\/\//, '').replace(/\/$/, '');
+    lines.push('', `Más ideas por presupuesto en ${site}/ideas-para-regalar`);
+    tags.add('#IdeasParaRegalar');
   } else if (f.template === 'mensaje') {
     const m = f.msg;
     if (m.eyebrow) lines.push(m.eyebrow.toUpperCase());
@@ -100,14 +133,27 @@ export function buildCaption(f: StudioFlyerData, brand: StudioBrand, link = ''):
     }
   }
 
+  // C-193: la fecha límite del 24, solo con algo físico en la historia y las fechas cargadas en Marketing → Navidad
+  const fisico = TEMPLATES[f.template].n > 0 && f.products.slice(0, TEMPLATES[f.template].n).some((p) => (p.title || p.model) && !p.digital);
+  if (navidad && fisico && tienda.navidad?.franja) lines.push('', `${tienda.navidad.franja.titulo}. ${tienda.navidad.franja.detalle}`);
+
   const pays = payMethods(brand);
   const store: string[] = [];
-  if (brand.shipping) store.push(`${brand.shipping.replace(/\.$/, '')}.`);
-  if (pays.length) store.push(`Paga con ${listJoin(pays)}.`);
+  if (f.template !== 'felicitacion') {
+    if (brand.shipping) store.push(`${brand.shipping.replace(/\.$/, '')}.`);
+    if (pays.length) store.push(`Paga con ${listJoin(pays)}.`);
+  }
   if (link) store.push(`Compra aquí: ${link}`);
-  else if (brand.website) store.push(`Compra en ${brand.website} o escríbenos por WhatsApp.`);
+  else if (brand.website) store.push(`Compra en ${brand.website}.`);
+  if (tienda.whatsapp) store.push(`WhatsApp: ${tienda.whatsapp}`);
+  else store.push('O escríbenos por WhatsApp.');
   if (store.length) lines.push('', ...store);
 
-  lines.push('', [...tags].filter(Boolean).slice(0, 8).join(' '));
+  if (conChispa(f.template) && f.chispa) tags.add('#Chispa');
+  for (const t of TAGS_TIENDA) {
+    if (tags.size >= 10) break;
+    tags.add(t);
+  }
+  lines.push('', [...tags].filter(Boolean).slice(0, 15).join(' '));
   return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }

@@ -3,7 +3,7 @@
 // Solo navegador (canvas, FontFace, Image).
 import qrcode from 'qrcode-generator';
 import { formatAmount } from '@/lib/currency';
-import { ICON_PATHS, payIcon } from './icons';
+import { payIcon, piezasIcono } from './icons';
 import {
   ANIMATIONS,
   BACKGROUNDS,
@@ -13,12 +13,16 @@ import {
   payKey,
   payMethods,
   requiredPhotos,
+  TEMPLATES,
+  TRAMOS_REGALO,
+  conChispa,
   type AnimationId,
   type BackgroundId,
   type FormatId,
   type StudioBrand,
   type StudioEffects,
   type StudioFlyerData,
+  type StudioNavidad,
   type StudioProductSlot,
   type StudioSpec,
   type TemplateId,
@@ -157,6 +161,8 @@ export interface DrawOptions {
   epoch?: number;
   /** Código de la historia: va en el QR (?es=código) para medir visitas y compras */
   code?: string | null;
+  /** C-193: el tema navideño de la tienda (el gorro elegido y la franja con las fechas del panel) */
+  navidad?: StudioNavidad | null;
 }
 
 export function missingImages(f: StudioFlyerData | null, productSrc: ProductSrc): string[] {
@@ -203,6 +209,19 @@ const HOT = '#E0263A'; // solo ofertas: sticker de descuento, etiqueta y contado
 const LIGHT_ON_DARK = '#9CC0FF';
 const GOLD = '#FFB400'; // estrellas de las reseñas
 const CONFETTI = ['#FFB400', '#E0263A', '#22D3EE', '#FFFFFF'];
+// C-193: el rojo del tema navideño (token `navidad`, C-186): el gorro, las luces y lo resaltado de la felicitación.
+// Es el mismo tono que HOT, pero HOT es de las ofertas: no se mezclan
+const NAVIDAD = '#E0263A';
+/** brand-900: el contorno del gorro del logo, como en la tienda (C-186) */
+const MARINO = '#0E1F44';
+/** Chispa: una imagen por pose, con y sin gorro, del mismo tamaño (600 × 735; arriba queda lugar para el gorro) */
+export const chispaSrc = (pose: string, gorro: boolean) => `/images/studio/chispa/${pose}${gorro ? '-gorro' : ''}.png`;
+/** El gorro de C-186 (components/navidad/GorroSanta.tsx), en la caja de 100 del sello del logo */
+const GORRO = {
+  ajustadoCopa: 'M82.5 28C84 4 70-17 46-21 29-23.5 12-17 1-6l7 6.5c3-2 6-3.5 9-3.5 1.5 9 1.5 21 .5 31z',
+  ajustadoPiel: 'M19.9 30.6A35.5 35.5 0 0 1 80.1 30.6',
+  clasicoCopa: 'M4.2 16.5C4.6 10.3 7.7 5.6 12.4 4.7c4.2-.8 7.6 1.5 8.3 5.8l-3.5.5c-.5 1.7-.7 3.6-.7 5.5z',
+};
 /* Los diseños están hechos en una grilla de 1080×1350 (4:5). Cada formato la acomoda en su lienzo (FORMAT_LAYOUT):
    - Historia 9:16: se estira en vertical (K) para llenar el espacio entre la barra de perfil y la de responder.
    - Post 4:5: tal cual.
@@ -213,7 +232,7 @@ const FORMAT_LAYOUT: Record<FormatId, { K: number; OY: number; S: number; TX: nu
   post45: { K: 1, OY: 0, S: 1, TX: 0 },
   post11: { K: 1, OY: 0, S: 0.8, TX: 108 },
 };
-const SPLIT: Record<TemplateId, number> = { solo: 860, duo: 650, trio: 880, nuevo: 900, giftcard: 600, cupon: 980, resena: 900, mensaje: 1000, tasa: 790 };
+const SPLIT: Record<TemplateId, number> = { solo: 860, duo: 650, trio: 880, nuevo: 900, giftcard: 600, cupon: 980, resena: 900, mensaje: 1000, tasa: 790, regalos: 1110, felicitacion: 1080 };
 /** Dónde va el podio y el centro de los rayos, según la plantilla */
 const PODIUM_X: Partial<Record<TemplateId, number>> = { solo: 760, duo: 850, nuevo: 400, giftcard: 840 };
 const RAYS_CENTER: Partial<Record<TemplateId, [number, number]>> = { solo: [310, 1010], duo: [505, 475], cupon: [540, 560], tasa: [540, 520], nuevo: [540, 620] };
@@ -225,11 +244,12 @@ const back = (t: number) => {
   return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
 };
 
-const iconPathCache = new Map<string, Path2D[]>();
-function iconPaths(name: string): Path2D[] {
+// C-193: los íconos del pack de Electro Shop, con su superficie (al 25 %) y su detalle sólido
+const iconPathCache = new Map<string, { path: Path2D; relleno?: 'sup' | 'sol'; grosor?: number }[]>();
+function iconPaths(name: string) {
   let paths = iconPathCache.get(name);
   if (!paths) {
-    paths = (ICON_PATHS[name] || ICON_PATHS.check).map((d) => new Path2D(d));
+    paths = piezasIcono(name).map((p) => ({ path: new Path2D(p.d), relleno: p.relleno, grosor: p.grosor }));
     iconPathCache.set(name, paths);
   }
   return paths;
@@ -266,7 +286,9 @@ function dims(img: Drawable): { w: number; h: number } {
 /** Enlace de la historia (QR y texto). Con código lleva la marca de campaña ?es=código, que cuenta visitas y compras. */
 export function qrUrlFor(f: StudioFlyerData, brand: StudioBrand, code?: string | null): string {
   const site = `https://${(brand.website || 'electroshopve.com').replace(/^https?:\/\//, '').replace(/\/$/, '')}`;
-  let base = (f.qrUrl || '').trim() || (f.products[0] || {}).url || site;
+  // C-193: el de Regalos por presupuesto lleva al tramo de Ideas para regalar
+  const porDefecto = f.template === 'regalos' ? `/ideas-para-regalar#${f.tramo}` : (f.products[0] || {}).url;
+  let base = (f.qrUrl || '').trim() || porDefecto || site;
   if (base.startsWith('/')) base = site + base;
   if (!code) return base;
   try {
@@ -305,6 +327,9 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   // Historia que se dibuja y su formato: fijados al empezar cada dibujo
   let FL: StudioFlyerData | null = null;
   let FX: StudioEffects = { reflejo: false, particulas: false, confeti: false };
+  // C-193: el tema navideño de la tienda; la historia lo usa si tiene el toque navideño encendido
+  let NAV: StudioNavidad | null = null;
+  const navOn = () => !!FL?.navidad;
   let CODE: string | null = null;
   let FH = H;
   let K = 1.15;
@@ -494,10 +519,20 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     ctx.translate(x, y);
     ctx.scale(s / 24, s / 24);
     ctx.strokeStyle = color;
-    ctx.lineWidth = weight;
+    ctx.fillStyle = color;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    iconPaths(name).forEach((p) => ctx.stroke(p));
+    iconPaths(name).forEach((p) => {
+      if (p.relleno) {
+        ctx.save();
+        if (p.relleno === 'sup') ctx.globalAlpha *= 0.25;
+        ctx.fill(p.path);
+        ctx.restore();
+      }
+      // El pack traza con 2; `weight` lo engrosa un poco para que se lea en la historia
+      ctx.lineWidth = weight * ((p.grosor ?? 2) / 2);
+      ctx.stroke(p.path);
+    });
     ctx.restore();
   }
   /** Ícono dentro de un recuadro de color: el tratamiento principal de los íconos en las historias */
@@ -1059,6 +1094,128 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
         for (let i = 0; i < 6; i++) ctx.fillRect(W * 0.8 - 180, split - 200 + i * 30, 360, 6 + i * 2);
         break;
       }
+      case 'noche': {
+        // C-193: azul noche con estrellas del pack, quietas, y colinas abajo
+        ctx.fillStyle = '#0A1530';
+        ctx.fillRect(0, TOP, W, BOT - TOP);
+        const glow = ctx.createRadialGradient(W * 0.8, Y(140), 20, W * 0.8, Y(140), 820);
+        glow.addColorStop(0, alpha(P, 0.5));
+        glow.addColorStop(1, alpha(P, 0));
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, TOP, W, BOT - TOP);
+        const rn = rng(2412);
+        for (let i = 0; i < 24; i++) {
+          const sx = rn() * W;
+          const sy = TOP + rn() * (split - TOP);
+          const ss = 16 + rn() * 30;
+          if (sx < 560 && sy > Y(10) && sy < Y(150)) continue; // el logo va ahí
+          ctx.save();
+          ctx.globalAlpha = 0.2 + rn() * 0.4;
+          icon('estrella', sx - ss / 2, sy - ss / 2, ss, i % 6 === 0 ? '#22D3EE' : '#FFFFFF', 1.8);
+          ctx.restore();
+        }
+        ctx.fillStyle = '#0E1F44';
+        ctx.beginPath();
+        ctx.moveTo(0, split + 30);
+        ctx.bezierCurveTo(300, split - 70, 640, split + 60, W, split - 30);
+        ctx.lineTo(W, BOT);
+        ctx.lineTo(0, BOT);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = alpha(P, 0.45);
+        ctx.beginPath();
+        ctx.moveTo(0, split + 110);
+        ctx.bezierCurveTo(380, split + 30, 720, split + 150, W, split + 70);
+        ctx.lineTo(W, BOT);
+        ctx.lineTo(0, BOT);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+      case 'guirnalda': {
+        // C-193: claro, con una guirnalda de luces arriba (encima del logo, nunca sobre él) y la ola de la marca abajo
+        const gy = Math.max(TOP + 40, -34);
+        ctx.strokeStyle = MARINO;
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        const pts: [number, number][] = [];
+        for (let i = 0; i <= 10; i++) {
+          const gx = (W / 10) * i;
+          const sag = Math.sin((i / 10) * Math.PI * 3) * 14 + 26;
+          pts.push([gx, gy + sag]);
+        }
+        ctx.beginPath();
+        ctx.moveTo(-20, gy);
+        pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.lineTo(px, py)));
+        ctx.lineTo(W + 20, gy);
+        ctx.stroke();
+        const colores = [P, '#22D3EE', NAVIDAD, '#FFFFFF', S];
+        pts.slice(0, 10).forEach(([px, py], i) => {
+          const bx2 = px + W / 20;
+          const by2 = py + 6;
+          ctx.save();
+          ctx.translate(bx2, by2);
+          ctx.rotate((i % 2 ? 1 : -1) * 0.18);
+          ctx.fillStyle = MARINO;
+          ctx.fillRect(-8, 0, 16, 12);
+          ctx.fillStyle = colores[i % colores.length];
+          ctx.strokeStyle = MARINO;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.ellipse(0, 32, 15, 21, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+        });
+        ctx.fillStyle = S;
+        circle(-80, BOT + 40, 260);
+        wave(split - 26, S);
+        wave(split, P);
+        break;
+      }
+      case 'nieve': {
+        // C-193: azul de la marca con copos quietos, dibujados con el trazo redondo, y nieve abajo
+        const gr = ctx.createLinearGradient(0, TOP, 0, BOT);
+        gr.addColorStop(0, S);
+        gr.addColorStop(1, P);
+        ctx.fillStyle = gr;
+        ctx.fillRect(0, TOP, W, BOT - TOP);
+        const rn = rng(1224);
+        ctx.strokeStyle = 'rgba(255,255,255,.5)';
+        ctx.lineCap = 'round';
+        for (let i = 0; i < 22; i++) {
+          const cx = rn() * W;
+          const cy = TOP + rn() * (split - TOP);
+          const r = 10 + rn() * 18;
+          ctx.lineWidth = 2.5 + r / 14;
+          for (let k = 0; k < 3; k++) {
+            const a = (k * Math.PI) / 3;
+            const dx = Math.cos(a) * r;
+            const dy = Math.sin(a) * r;
+            ctx.beginPath();
+            ctx.moveTo(cx - dx, cy - dy);
+            ctx.lineTo(cx + dx, cy + dy);
+            ctx.stroke();
+          }
+        }
+        ctx.fillStyle = PALE;
+        ctx.beginPath();
+        ctx.moveTo(0, split - 10);
+        ctx.bezierCurveTo(320, split - 90, 640, split + 40, W, split - 70);
+        ctx.lineTo(W, BOT);
+        ctx.lineTo(0, BOT);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.moveTo(0, split + 50);
+        ctx.bezierCurveTo(260, split - 20, 600, split + 90, W, split + 10);
+        ctx.lineTo(W, BOT);
+        ctx.lineTo(0, BOT);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
       case 'foto':
       case 'fotoproducto':
         photoBackground(style, split);
@@ -1196,12 +1353,16 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   /* ---------- logo ---------- */
   function drawLogo(x: number, y: number, maxW: number, maxH: number, alignRight = false) {
     let lg: HTMLImageElement | null = brand.logoUrl ? images.get(brand.logoUrl) : null;
+    const oficial = !lg;
     if (!lg) lg = images.get(isDark(x, y, maxW, maxH) ? OFFICIAL_LOGO.white : OFFICIAL_LOGO.color);
     if (lg) {
       const s = Math.min(maxW / lg.naturalWidth, maxH / lg.naturalHeight);
       const w = lg.naturalWidth * s;
       const h = lg.naturalHeight * s;
-      ctx.drawImage(lg, alignRight ? x + maxW - w : x, y + (maxH - h) / 2, w, h);
+      const lx = alignRight ? x + maxW - w : x;
+      ctx.drawImage(lg, lx, y + (maxH - h) / 2, w, h);
+      // C-193: con el toque navideño, el gorro de la tienda sobre el sello (solo el logo oficial: de otro no se sabe dónde va)
+      if (oficial && navOn()) gorroLogo(lx, y + (maxH - h) / 2, w);
       return;
     }
     ctx.save();
@@ -1211,6 +1372,97 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     ctx.font = F(900, 44, false);
     ctx.fillText('ElectroShop', alignRight ? x + maxW : x, y + maxH / 2);
     ctx.restore();
+  }
+
+  /** El gorro de la tienda (C-186) sobre el sello del logo: el sello ocupa 132 de los 900 px del logo, y el gorro está
+   *  dibujado sobre una caja de 100. Se usa la versión elegida en Marketing → Navidad. */
+  function gorroLogo(x0: number, y0: number, w: number) {
+    const k = (w * 132) / 900 / 100;
+    ctx.save();
+    ctx.translate(x0, y0);
+    ctx.scale(k, k);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = MARINO;
+    if ((NAV?.gorro ?? 'ajustado') === 'clasico') {
+      ctx.translate(19, 2);
+      ctx.rotate((-14 * Math.PI) / 180);
+      ctx.translate(-33, -33);
+      ctx.scale(2.75, 2.75);
+      ctx.lineWidth = 2;
+      const copa = new Path2D(GORRO.clasicoCopa);
+      ctx.fillStyle = NAVIDAD;
+      ctx.fill(copa);
+      ctx.stroke(copa);
+      ctx.fillStyle = '#FFFFFF';
+      rr(2, 16, 17, 4.5, 2.25);
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(20.2, 11.1, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      ctx.lineWidth = 5.5;
+      const copa = new Path2D(GORRO.ajustadoCopa);
+      ctx.fillStyle = NAVIDAD;
+      ctx.fill(copa);
+      ctx.stroke(copa);
+      const piel = new Path2D(GORRO.ajustadoPiel);
+      ctx.lineWidth = 21;
+      ctx.stroke(piel);
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 10;
+      ctx.stroke(piel);
+      ctx.strokeStyle = MARINO;
+      ctx.lineWidth = 5.5;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(0, -3, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /* ---------- Chispa (C-193) ---------- */
+  const recortes = new Map<string, HTMLCanvasElement>();
+  /** Chispa con el borde blanco recortado de los stickers: se lee igual sobre fondos claros y oscuros */
+  function chispaRecortada(src: string, img: HTMLImageElement): HTMLCanvasElement {
+    const hit = recortes.get(src);
+    if (hit) return hit;
+    const pad = 12;
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth + pad * 2;
+    c.height = img.naturalHeight + pad * 2;
+    const x = c.getContext('2d');
+    if (!x) return c;
+    const sil = document.createElement('canvas');
+    sil.width = img.naturalWidth;
+    sil.height = img.naturalHeight;
+    const sx = sil.getContext('2d');
+    if (sx) {
+      sx.drawImage(img, 0, 0);
+      sx.globalCompositeOperation = 'source-in';
+      sx.fillStyle = '#FFFFFF';
+      sx.fillRect(0, 0, sil.width, sil.height);
+      for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * Math.PI * 2;
+        x.drawImage(sil, pad + Math.cos(a) * pad * 0.85, pad + Math.sin(a) * pad * 0.85);
+      }
+    }
+    x.drawImage(img, pad, pad);
+    recortes.set(src, c);
+    return c;
+  }
+  /** Chispa en `box`, apoyada abajo. Con el toque navideño lleva el gorro */
+  function drawChispa(box: Box, t0: number, phase = 0) {
+    if (!FL?.chispa) return;
+    const src = chispaSrc(FL.chispa, navOn());
+    const img = images.get(src);
+    if (!img) return;
+    const c = chispaRecortada(src, img);
+    fx('up', t0, 0.7, box, () => contain(c, box[0], box[1] + bob(phase), box[2], box[3], false, 'bottom'));
   }
 
   /* ---------- ofertas, contador y QR ---------- */
@@ -1304,7 +1556,45 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   const qrOn = (f: StudioFlyerData) => !!(f.qr && qrModules(qrUrlFor(f, brand, CODE)));
 
   /* ---------- piezas compartidas ---------- */
+  /** C-193: la historia lleva algo físico (la franja de la fecha límite no es para códigos ni recargas) */
+  function conFranja(): boolean {
+    if (!FL || !navOn() || !NAV?.franja) return false;
+    if (!['solo', 'duo', 'trio', 'nuevo', 'regalos'].includes(FL.template)) return false;
+    return FL.products.slice(0, TEMPLATES[FL.template].n).some((p) => (p.title || p.model || p.price > 0) && !p.digital);
+  }
+  /** "Para que llegue antes del 24, pide hasta el viernes 18 de diciembre", con las fechas de Marketing → Navidad (C-190) */
+  function franjaNavidad(y: number) {
+    const fr = NAV?.franja;
+    if (!fr) return;
+    ctx.save();
+    const bx = 50;
+    const bw = W - 100;
+    const bh = 78;
+    const by = y - 56;
+    const dark = isDark(bx, by, bw, bh);
+    ctx.fillStyle = dark ? '#FFFFFF' : INK;
+    rr(bx, by, bw, bh, bh / 2);
+    ctx.fill();
+    const is = 44;
+    icon('calendario', bx + 26, by + (bh - is) / 2, is, NAVIDAD, 2.4);
+    ctx.fillStyle = dark ? INK : '#FFFFFF';
+    ctx.textBaseline = 'middle';
+    const tx = bx + 26 + is + 16;
+    const s = fit(fr.titulo, bx + bw - 30 - tx, 31, 800, false, 15);
+    ctx.font = F(800, s, false);
+    ctx.fillText(fr.titulo, tx, by + bh / 2 + 1);
+    ctx.globalAlpha *= 0.8;
+    ctx.font = F(600, 24, false);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = textOn(0, y + 30, W, 30);
+    ctx.fillText([brand.handle, brand.website].filter(Boolean).join('   ·   '), W / 2, y + 46);
+    ctx.restore();
+  }
   function footer(y: number) {
+    if (conFranja()) {
+      franjaNavidad(y);
+      return;
+    }
     const items: [string, string][] = [
       ['camion', brand.shipping || 'Envíos nacionales'],
       ['escudo', 'Garantía'],
@@ -1775,7 +2065,9 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     const img = productDrawable(f.products[0] || blankProduct(), 0);
     const withQr = qrOn(f);
     const yMax = Y(1285) - 90; // lejos del pie
-    const sideW = img || withQr ? 600 : maxW - 40;
+    // C-193: Chispa va en el lugar de la foto (si no hay foto ni QR): el texto se angosta igual
+    const conCh = conChispa(f.template) && !!f.chispa && !img && !withQr;
+    const sideW = img || withQr || conCh ? 600 : maxW - 40;
     ctx.font = F(500, 42, false);
     const allBody = m.body ? wrapLines(m.body, sideW) : [];
     let bodyLines = allBody.slice(0, 7);
@@ -1876,6 +2168,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     const sideTop = Math.max(y0side, yMax - 440);
     if (withQr) qrCard(f, W - 70 - 240, Math.max(y0side, yMax - 290), 240, tb + 0.4);
     else if (img) fx('up', tb, 0.7, [640, sideTop, 400, yMax - sideTop], () => contain(img, 640, sideTop + bob(), 400, yMax - sideTop, true, 'bottom'));
+    else if (conCh) drawChispa([670, sideTop - 60, 390, yMax - sideTop + 70], tb);
     else if (m.icon && m.icon !== 'ninguno')
       fx('pop', tb, 0.7, [720, yMax - 330, 320, 320], () => {
         ctx.save();
@@ -1913,7 +2206,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(s / 24, s / 24);
-    const path = iconPaths('estrella')[0];
+    const path = iconPaths('estrella')[0].path;
     ctx.fillStyle = filled ? GOLD : onDark ? 'rgba(255,255,255,.2)' : alpha(INK, 0.12);
     ctx.fill(path);
     ctx.strokeStyle = filled ? GOLD : onDark ? 'rgba(255,255,255,.4)' : alpha(INK, 0.25);
@@ -2337,6 +2630,179 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     fx('up', 2.0, 0.5, null, () => footer(Y(1285)));
   }
 
+  /* ---------- C-193: Regalos por presupuesto y Felicitación ---------- */
+  /** Una tarjeta blanca de producto: la foto, el nombre y el precio (estilo Vitrina) */
+  function tarjetaRegalo(p: StudioProductSlot, i: number, x: number, y: number, w: number, h: number, preview: boolean, t0: number) {
+    fx('up', t0, 0.55, [x, y, w, h], () => {
+      ctx.save();
+      ctx.shadowColor = 'rgba(10,27,61,.22)';
+      ctx.shadowBlur = 26;
+      ctx.shadowOffsetY = 12;
+      ctx.fillStyle = '#FFFFFF';
+      rr(x, y, w, h, 28);
+      ctx.fill();
+      ctx.restore();
+      const ph = h * 0.58;
+      const img = productDrawable(p, i);
+      if (img) contain(img, x + 16, y + 16 + bob(i * 1.3), w - 32, ph - 16, false, 'center');
+      else if (preview) placeholder(x + 16, y + 16, w - 32, ph - 16, `Foto ${i + 1}`, false);
+      ctx.save();
+      ctx.fillStyle = INK;
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = F(800, 28, false);
+      const nombre = (p.title || 'PRODUCTO').toUpperCase();
+      const lineas = wrapLines(nombre, w - 36).slice(0, 2);
+      lineas.forEach((l, k) => {
+        const ls = fit(l, w - 36, 28, 800, false, 16);
+        ctx.font = F(800, ls, false);
+        ctx.fillText(l, x + 18, y + ph + 30 + k * 32);
+      });
+      const modelo = (p.model || '').toUpperCase();
+      if (modelo) {
+        ctx.fillStyle = alpha(INK, 0.6);
+        const ms = fit(modelo, w - 36, 21, 600, false, 13);
+        ctx.font = F(600, ms, false);
+        ctx.fillText(modelo, x + 18, y + ph + 30 + lineas.length * 32);
+      }
+      const base = y + h - 30;
+      const pct = discountPct(p);
+      if (p.from || pct) {
+        ctx.font = F(700, 21, false);
+        if (pct) {
+          const ot = `ANTES ${money(Number(p.oldPrice) || 0)}`;
+          ctx.fillStyle = alpha(INK, 0.6);
+          ctx.fillText(ot, x + 18, base - 66);
+          ctx.fillStyle = HOT;
+          ctx.fillRect(x + 16, base - 73, ctx.measureText(ot).width + 4, 3);
+        } else {
+          ctx.fillStyle = alpha(INK, 0.7);
+          ctx.fillText('DESDE', x + 18, base - 66);
+        }
+      }
+      ctx.restore();
+      bigPrice(x + w / 2, base, (Number(p.price) || 0) * count(t0 + 0.15), 64, PR(), brand.pricePrefix, w - 36);
+      if (pct) sticker(x + w - 30, y + 26, 40, `-${pct}%`, t0 + 0.3);
+    });
+  }
+
+  function drawRegalos(f: StudioFlyerData, preview: boolean) {
+    const P = [0, 1, 2].map((i) => f.products[i] || blankProduct());
+    const tramo = (TRAMOS_REGALO[f.tramo]?.titulo ?? '').toUpperCase();
+    // Vitrina (elegida el 06/11 con las maquetas): el tramo arriba y tres tarjetas blancas con la foto, el nombre y el precio
+    layerBg(bgFor(f), SPLIT.regalos);
+    fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 400, 80));
+    countdown(f, W - 56, Y(30));
+    pill('Ideas para regalar', 60, Y(160), 0.3);
+    const tb = titleBox(60, Y(250), 'REGALOS', 118, 620, 'left', 0.45);
+    fx('up', 0.6, 0.5, null, () => {
+      ctx.save();
+      const ts = fit(tramo, W - 120, 112, 900);
+      ctx.font = F(900, ts);
+      ctx.fillStyle = textOn(60, Y(250) + tb.bh + 10, W - 120, ts);
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(tramo, 62, Y(250) + tb.bh + ts * 0.98);
+      ctx.restore();
+    });
+    const gap = 20;
+    const cw = (W - 100 - gap * 2) / 3;
+    P.forEach((pr, i) => tarjetaRegalo(pr, i, 50 + i * (cw + gap), Y(560), cw, Y(500), preview, 0.8 + i * 0.18));
+    const withQr = qrOn(f);
+    if (withQr) qrCard(f, 50, Y(1100), 130, 2.0, 'MÁS IDEAS');
+    fx('up', 2.0, 0.5, null, () => {
+      ctx.save();
+      const t = 'Más ideas en electroshopve.com/ideas-para-regalar';
+      const x0 = withQr ? 210 : 50;
+      const ts = fit(t, W - x0 - 50, 30, 800);
+      ctx.font = F(800, ts);
+      ctx.fillStyle = textOn(x0, Y(1150), W - x0 - 50, 40);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(t, x0, Y(1160));
+      ctx.restore();
+    });
+    fx('up', 2.1, 0.5, null, () => footer(Y(1285)));
+  }
+
+  function drawFelicitacion(f: StudioFlyerData) {
+    const m = f.msg;
+    const titular = m.headline || '¡Feliz *Navidad*!';
+    // Tarjeta (elegida el 06/11 con las maquetas; es también el popup del inicio, C-194): el saludo en una tarjeta blanca
+    // y Chispa asomado abajo a la derecha
+    layerBg(bgFor(f), SPLIT.felicitacion);
+    fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(44), 440, 84));
+    const cx = 60;
+    const cy = Y(200);
+    const cw = W - 120;
+    const chh = Y(560);
+    fx('pop', 0.35, 0.6, [cx, cy, cw, chh], () => {
+      ctx.save();
+      ctx.shadowColor = 'rgba(10,27,61,.3)';
+      ctx.shadowBlur = 30;
+      ctx.shadowOffsetY = 14;
+      ctx.fillStyle = '#FFFFFF';
+      rr(cx, cy, cw, chh, 36);
+      ctx.fill();
+      ctx.restore();
+    });
+    if (m.eyebrow) {
+      fx('up', 0.5, 0.5, null, () => {
+        ctx.save();
+        ctx.font = F(800, 30, false);
+        spacing('3px');
+        ctx.fillStyle = PR();
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(m.eyebrow.toUpperCase(), cx + 56, cy + 86);
+        ctx.restore();
+      });
+    }
+    let size = 150;
+    let lines = richLines(titular, cw - 112, size);
+    for (; size >= 60; size -= 4) {
+      lines = richLines(titular, cw - 112, size);
+      if (lines.length <= 3 && lines.length * size * 1.02 <= chh * 0.55) break;
+    }
+    lines.forEach((ln, i) => {
+      const by = cy + 120 + size * 0.86 + i * size * 1.02;
+      fx('up', 0.6 + i * 0.18, 0.55, null, () => {
+        ctx.save();
+        ctx.textBaseline = 'alphabetic';
+        ctx.font = F(900, size);
+        const sp = ctx.measureText(' ').width;
+        let x = cx + 56;
+        ln.forEach((w) => {
+          ctx.fillStyle = w.hl ? NAVIDAD : INK;
+          ctx.fillText(w.t, x, by);
+          x += ctx.measureText(w.t).width + sp;
+        });
+        ctx.restore();
+      });
+    });
+    if (m.body) {
+      const yb = cy + 120 + lines.length * size * 1.02 + 40;
+      fx('fade', 1.2, 0.6, null, () => {
+        ctx.save();
+        ctx.font = F(500, 38, false);
+        ctx.fillStyle = alpha(INK, 0.8);
+        wrapLines(m.body, cw - 112)
+          .slice(0, 3)
+          .forEach((l, i) => ctx.fillText(l, cx + 56, yb + 38 + i * 52));
+        ctx.restore();
+      });
+    }
+    drawChispa([W - 560, Y(700), 540, Y(560)], 1.0);
+    fx('up', 1.6, 0.5, null, () => {
+      ctx.save();
+      ctx.font = F(800, 34);
+      ctx.fillStyle = textOn(60, Y(1180), 480, 40);
+      ctx.textBaseline = 'alphabetic';
+      const t = 'De parte de todo el equipo';
+      ctx.fillText(t, 64, Y(1150));
+      ctx.globalAlpha *= 0.85;
+      ctx.font = F(600, 26, false);
+      ctx.fillText([brand.handle, brand.website].filter(Boolean).join('  ·  '), 64, Y(1200));
+      ctx.restore();
+    });
+  }
+
   function safeZones() {
     ctx.save();
     const top = 200;
@@ -2373,6 +2839,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     // Cambiar el alto borra el lienzo: solo cuando cambia el formato
     if (canvas.height !== FH) canvas.height = FH;
     T = opts.t ?? null;
+    NAV = opts.navidad ?? null;
     animEpoch = opts.epoch ?? Date.now();
     bgData = null;
     slideFlip = 0;
@@ -2413,6 +2880,12 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
         break;
       case 'tasa':
         drawTasa(f);
+        break;
+      case 'regalos':
+        drawRegalos(f, opts.preview);
+        break;
+      case 'felicitacion':
+        drawFelicitacion(f);
         break;
       default:
         drawSolo(f, opts.preview);
@@ -2456,5 +2929,6 @@ export function flyerImageSources(f: StudioFlyerData, brand: StudioBrand, produc
   const srcs = f.products.map((p, i) => productSrc(p, i)).filter(Boolean);
   if (f.bg === 'foto') srcs.push(f.bgPhoto.url);
   srcs.push(brand.logoUrl || '', OFFICIAL_LOGO.color, OFFICIAL_LOGO.white, ...Object.values(brand.payLogos));
+  if (f.chispa && conChispa(f.template)) srcs.push(chispaSrc(f.chispa, f.navidad));
   return srcs.filter(Boolean);
 }

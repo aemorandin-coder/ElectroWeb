@@ -3,7 +3,7 @@
 // así una historia vieja nunca sale con un precio que ya cambió.
 import { formatAmount } from '@/lib/currency';
 import { guessSpecIcon } from './icons';
-import { hasProductForm, type StudioCoupon, type StudioFlyerData, type StudioProductSlot, type StudioReview, type StudioStoreInfo, type StudioStoreProduct } from './schema';
+import { TRAMOS_REGALO, hasProductForm, type StudioCoupon, type StudioFlyerData, type StudioProductSlot, type StudioReview, type StudioStoreInfo, type StudioStoreProduct, type TramoRegalo } from './schema';
 
 /** "Teclado Gaming AOAS M-880 60% RGB" → título "Teclado Gaming", modelo "AOAS M-880 60% RGB" */
 export function splitName(name: string): { title: string; model: string } {
@@ -29,14 +29,30 @@ function toLocalInput(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-/** Lo que manda la tienda y no se escribe a mano cuando el producto está vinculado */
-function prices(slot: StudioProductSlot, p: StudioStoreProduct): StudioProductSlot {
+/** C-193: el precio cabe en el tramo de Ideas para regalar (mayor que `desde`, hasta `hasta` incluido; lib/queries/regalos.ts) */
+export function enTramo(precio: number, tramo: TramoRegalo): boolean {
+  const t = TRAMOS_REGALO[tramo];
+  return (t.desde === null || precio > t.desde) && (t.hasta === null || precio <= t.hasta);
+}
+
+/** El tramo de la historia, si es de Regalos por presupuesto */
+const tramoDe = (f: StudioFlyerData): TramoRegalo | null => (f.template === 'regalos' ? f.tramo : null);
+
+/**
+ * Lo que manda la tienda y no se escribe a mano cuando el producto está vinculado. C-193: en Regalos por presupuesto, una
+ * gift card con montos dice el menor de los que caben en el tramo ("Desde $78,00" en Más de $50), como Ideas para regalar.
+ */
+function prices(slot: StudioProductSlot, p: StudioStoreProduct, tramo: TramoRegalo | null = null): StudioProductSlot {
+  const montos = tramo && p.hasVariants ? p.variants.map((v) => v.priceUSD).filter((n) => enTramo(n, tramo)) : [];
+  const precio = montos.length ? Math.min(...montos) : p.priceUSD;
+  const ves = p.priceUSD > 0 ? Math.round(((p.priceVES * precio) / p.priceUSD) * 100) / 100 : 0;
   return {
     ...slot,
-    price: p.priceUSD,
+    price: precio,
     oldPrice: p.compareAtPriceUSD ?? 0,
-    priceBs: p.priceVES > 0 ? formatAmount(p.priceVES) : '',
+    priceBs: ves > 0 ? formatAmount(ves) : '',
     from: p.hasVariants,
+    digital: p.digital,
     url: p.url,
     imageUrl: slot.imageUrl || p.image || '',
     variants: p.variants.map((v) => ({ label: v.label, price: v.priceUSD })),
@@ -62,7 +78,7 @@ export function linkProduct(f: StudioFlyerData, index: number, p: StudioStorePro
     tag: p.conditionBadge ? p.conditionBadge.toUpperCase().slice(0, 40) : f.products[index]?.tag ?? '',
   };
   const products = [...f.products];
-  products[index] = prices(base, p);
+  products[index] = prices(base, p, tramoDe(f));
   return {
     ...f,
     products,
@@ -77,7 +93,7 @@ export function refreshLinked(f: StudioFlyerData, live: Record<string, StudioSto
   const products = f.products.map((slot) => {
     const p = slot.productId ? live[slot.productId] : undefined;
     if (!p) return slot;
-    const next = prices(slot, p);
+    const next = prices(slot, p, tramoDe(f));
     if (
       next.price !== slot.price ||
       next.oldPrice !== slot.oldPrice ||
@@ -85,6 +101,7 @@ export function refreshLinked(f: StudioFlyerData, live: Record<string, StudioSto
       next.from !== slot.from ||
       next.url !== slot.url ||
       next.imageUrl !== slot.imageUrl ||
+      next.digital !== slot.digital ||
       !sameVariants(next.variants, slot.variants)
     ) {
       changed = true;

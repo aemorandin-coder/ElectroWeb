@@ -8,9 +8,9 @@ import { IconoCerrar, IconoEditar, IconoFlechaIzquierda } from '@/components/ico
 import { adminChoice, adminHint, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import { linkProduct } from '@/lib/studio/live';
-import { TEMPLATES, blankProduct, hasProductForm, normalizeFlyer, type StudioFlyerData, type StudioStoreProduct, type TemplateId } from '@/lib/studio/schema';
+import { TEMPLATES, TRAMOS_REGALO, blankProduct, hasProductForm, normalizeFlyer, type StudioFlyerData, type StudioStoreProduct, type TemplateId, type TramoRegalo } from '@/lib/studio/schema';
 import ProductPicker from './ProductPicker';
-import { TEMPLATE_CARDS, TEMPLATE_START } from './StepContent';
+import { FELICITACION_MSG, TEMPLATE_CARDS, TEMPLATE_START } from './StepContent';
 import { useStudioContext } from './StudioContext';
 import { smallButton } from './ui';
 import { useFlyerRenderer } from './useFlyerRenderer';
@@ -26,13 +26,18 @@ const SAMPLE: Record<TemplateId, Partial<StudioFlyerData>> = {
   resena: { review: { id: '', rating: 5, comment: 'Llegó rapidísimo y bien embalado. Súper recomendados.', author: 'María', verified: true, productName: 'Audífonos' } },
   tasa: { rate: 36.5 },
   mensaje: { msg: { eyebrow: 'Horario', headline: 'Este domingo *abrimos*', body: 'De 9 a. m. a 2 p. m.', cta: '', contact: '', icon: 'reloj' } as StudioFlyerData['msg'] },
+  regalos: { tramo: 'de-20-a-50', products: [{ title: 'Audífonos', price: 25 }, { title: 'Teclado', price: 28 }, { title: 'Control', price: 45 }] as StudioFlyerData['products'] },
+  felicitacion: { chispa: 'saluda', navidad: true, msg: { eyebrow: 'Electro Shop te desea', headline: '¡Feliz *Navidad*!', body: 'Gracias por confiar en nosotros este año.', cta: '', contact: '', icon: 'ninguno' } },
 };
 
 /** Cuántos productos de la tienda pide la plantilla en el asistente (0: se completa en el editor) */
 const productsFor = (t: TemplateId) => (hasProductForm(t) ? TEMPLATES[t].n : 0);
 
-/** La historia nueva: plantilla, su fondo y efectos de arranque, y los productos elegidos vinculados a la tienda */
-function buildFlyer(template: TemplateId, picks: StudioStoreProduct[]): StudioFlyerData {
+/**
+ * La historia nueva: plantilla, su fondo y efectos de arranque, y los productos elegidos vinculados a la tienda.
+ * C-193: con el tema navideño de la tienda encendido nace con el toque navideño (el gorro y la franja del 24).
+ */
+function buildFlyer(template: TemplateId, picks: StudioStoreProduct[], opciones: { navidad: boolean; tramo: TramoRegalo | null }): StudioFlyerData {
   const start = TEMPLATE_START[template];
   let f = normalizeFlyer({ template });
   f = {
@@ -40,8 +45,11 @@ function buildFlyer(template: TemplateId, picks: StudioStoreProduct[]): StudioFl
     products: Array.from({ length: Math.max(TEMPLATES[template].n, 1) }, blankProduct),
     fx: start ? { ...f.fx, confeti: start.confeti ?? f.fx.confeti, reflejo: start.reflejo ?? f.fx.reflejo } : f.fx,
     anim: start?.anim ?? f.anim,
-    name: template === 'tasa' ? 'Tasa BCV del día' : f.name,
+    name: template === 'tasa' ? 'Tasa BCV del día' : template === 'felicitacion' ? 'Felicitación' : f.name,
+    navidad: opciones.navidad || template === 'felicitacion',
   };
+  if (template === 'felicitacion') f = { ...f, msg: FELICITACION_MSG, chispa: 'saluda' };
+  if (template === 'regalos' && opciones.tramo) f = { ...f, tramo: opciones.tramo, qr: true, name: `Regalos ${TRAMOS_REGALO[opciones.tramo].titulo.toLowerCase()}` };
   picks.forEach((p, i) => {
     f = linkProduct(f, i, p);
   });
@@ -58,8 +66,10 @@ const sampleCache = new Map<TemplateId, string>();
 export default function StudioWizard() {
   const studio = useStudioContext();
   const router = useRouter();
-  const { thumbnail } = useFlyerRenderer(studio.brand);
+  const { thumbnail } = useFlyerRenderer(studio.brand, studio.store?.navidad ?? null);
   const [template, setTemplate] = useState<TemplateId | null>(null);
+  // C-193: en Regalos por presupuesto, primero el tramo; el buscador muestra solo lo que cabe en él
+  const [tramo, setTramo] = useState<TramoRegalo | null>(null);
   const [picks, setPicks] = useState<StudioStoreProduct[]>([]);
   const [creating, setCreating] = useState(false);
   const [, setTick] = useState(0);
@@ -81,13 +91,14 @@ export default function StudioWizard() {
     if (creating) return;
     setCreating(true);
     chosen.forEach((p) => studio.rememberLive(p));
-    const flyer = await studio.create(buildFlyer(t, chosen));
+    const flyer = await studio.create(buildFlyer(t, chosen, { navidad: studio.store?.navidad.activo ?? false, tramo }));
     if (flyer) router.replace(`/admin/studio/${flyer.id}`);
     else setCreating(false);
   };
 
   const choose = (t: TemplateId) => {
     setTemplate(t);
+    setTramo(null);
     setPicks([]);
     // Sin productos de la tienda (cupón, reseña, tasa, mensaje): se crea ya y se completa en el editor
     if (productsFor(t) === 0) void create(t, []);
@@ -174,12 +185,37 @@ export default function StudioWizard() {
             </ol>
           )}
 
+          {template === 'regalos' && (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-1 text-sm font-semibold text-ink">¿Qué presupuesto?</legend>
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.keys(TRAMOS_REGALO) as TramoRegalo[]).map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => {
+                      setTramo(id);
+                      setPicks([]);
+                    }}
+                    disabled={creating}
+                    aria-pressed={tramo === id}
+                    className={`${adminChoice(tramo === id)} min-h-11 px-2 text-sm font-semibold`}
+                  >
+                    {TRAMOS_REGALO[id].titulo}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
+
           {creating ? (
             <p className="text-sm text-muted" aria-busy="true">
               Creando la historia…
             </p>
+          ) : template === 'regalos' && !tramo ? (
+            <p className={adminHint}>Elige el presupuesto: después salen solo los productos que caben en él, como en Ideas para regalar.</p>
           ) : (
-            <ProductPicker key={picks.length} onPick={pick} />
+            <ProductPicker key={`${tramo ?? ''}-${picks.length}`} onPick={pick} tramo={template === 'regalos' && tramo ? tramo : undefined} />
           )}
 
           <div className="flex flex-wrap gap-2 border-t border-line pt-3">

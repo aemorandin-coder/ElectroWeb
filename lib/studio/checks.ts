@@ -2,8 +2,8 @@
 // lista de historias y cada descarga. Lo que "impide" no deja descargar; lo que "avisa" deja seguir si se confirma.
 
 import { missingImages, type ProductSrc } from '@/lib/studio/engine';
-import { staleWarnings } from '@/lib/studio/live';
-import { TEMPLATES, type StudioCoupon, type StudioFlyerData, type StudioProductSlot, type StudioStoreInfo, type StudioStoreProduct } from '@/lib/studio/schema';
+import { enTramo, staleWarnings } from '@/lib/studio/live';
+import { TEMPLATES, TRAMOS_REGALO, type StudioCoupon, type StudioFlyerData, type StudioProductSlot, type StudioStoreInfo, type StudioStoreProduct } from '@/lib/studio/schema';
 
 export type CheckLevel = 'ok' | 'warn' | 'block';
 
@@ -45,6 +45,7 @@ const ofSlot = (f: StudioFlyerData, i: number) => (TEMPLATES[f.template].n > 1 ?
 export function contentProblems(f: StudioFlyerData): string[] {
   switch (f.template) {
     case 'mensaje':
+    case 'felicitacion':
       return f.msg.headline.trim() ? [] : ['Falta el titular'];
     case 'tasa':
       return f.rate > 0 ? [] : ['Falta la tasa del día: cárgala en Configuración → Precios y pagos'];
@@ -65,6 +66,8 @@ export function contentProblems(f: StudioFlyerData): string[] {
       f.products.slice(0, TEMPLATES[f.template].n).forEach((p, i) => {
         if (!p.title) out.push(`Falta el título ${ofSlot(f, i)}`);
         if (!(Number(p.price) > 0)) out.push(`Falta el precio ${ofSlot(f, i)}`);
+        // C-193: un regalo que no cabe en el presupuesto de la historia la contradice
+        else if (f.template === 'regalos' && !enTramo(Number(p.price), f.tramo)) out.push(`El precio ${ofSlot(f, i)} no está en ${TRAMOS_REGALO[f.tramo].titulo.toLowerCase()}`);
       });
       return out;
     }
@@ -73,6 +76,7 @@ export function contentProblems(f: StudioFlyerData): string[] {
 
 const CONTENT_OK: Partial<Record<StudioFlyerData['template'], string>> = {
   mensaje: 'Titular escrito',
+  felicitacion: 'Saludo escrito',
   tasa: 'Tasa del día cargada',
   cupon: 'Cupón elegido',
   resena: 'Reseña escrita',

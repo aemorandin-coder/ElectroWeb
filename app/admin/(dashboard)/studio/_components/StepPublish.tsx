@@ -44,7 +44,7 @@ export default function StepPublish({ studio, checks, busy, canShare, onPng, onV
       const ok = await confirm({ title: 'Escribir el texto de nuevo', message: 'Se reemplaza el texto que ya tienes.', confirmText: 'Reemplazar', cancelText: 'Cancelar' });
       if (!ok) return;
     }
-    update((f) => ({ ...f, caption: buildCaption(f, brand, link) }));
+    update((f) => ({ ...f, caption: buildCaption(f, brand, link, { whatsapp: studio.store?.whatsapp, navidad: studio.store?.navidad }) }));
   };
 
   const copyText = async (text: string, done: string) => {

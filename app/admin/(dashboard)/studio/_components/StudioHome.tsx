@@ -59,7 +59,7 @@ export default function StudioHome() {
   const router = useRouter();
   const { confirm } = useConfirm();
   const gate = useDownloadGate();
-  const { still, thumbnail } = useFlyerRenderer(brand);
+  const { still, thumbnail } = useFlyerRenderer(brand, store?.navidad ?? null);
 
   const [view, setView] = useState<View>(() => {
     try {

@@ -8,8 +8,9 @@ import { formatUSD } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { SPEC_ICONS } from '@/lib/studio/icons';
 import { slotDone } from '@/lib/studio/checks';
-import { linkProduct } from '@/lib/studio/live';
-import { TEMPLATES, hasProductForm, type StudioMessage, type StudioProductSlot, type StudioSpec, type TemplateId } from '@/lib/studio/schema';
+import { linkProduct, refreshLinked } from '@/lib/studio/live';
+import { TARJETA_NAVIDAD } from '@/lib/navidad';
+import { CHISPA_POSES, TEMPLATES, TRAMOS_REGALO, conChispa, hasProductForm, type ChispaPose, type StudioMessage, type StudioProductSlot, type StudioSpec, type TemplateId, type TramoRegalo } from '@/lib/studio/schema';
 import ProductPicker from './ProductPicker';
 import { CouponForm, HeadingField, RateInfo, ReviewForm, VariantsEditor } from './TemplateForms';
 import StudioIcon from './StudioIcon';
@@ -26,7 +27,19 @@ export const TEMPLATE_CARDS: [TemplateId, string, string, string][] = [
   ['resena', 'estrella', 'Reseña', 'Lo que dijo un cliente, con estrellas'],
   ['tasa', 'tasa', 'Tasa BCV', 'La tasa del día y equivalencias'],
   ['mensaje', 'chat', 'Mensaje', 'Aviso, horario o convocatoria'],
+  ['regalos', 'regalo', 'Regalos por presupuesto', 'Tres regalos de un tramo de precio'],
+  ['felicitacion', 'estrella', 'Felicitación', 'Un saludo con Chispa, sin precios'],
 ];
+/** C-193: la felicitación arranca con el saludo del popup navideño (lib/navidad.ts) */
+export const FELICITACION_MSG: StudioMessage = {
+  eyebrow: 'Electro Shop te desea',
+  headline: '¡Feliz *Navidad*!',
+  body: TARJETA_NAVIDAD.mensaje,
+  cta: '',
+  contact: '',
+  icon: 'ninguno',
+};
+
 /** Fondo y efectos con que arranca cada plantilla al elegirla (si la persona no eligió otros) */
 export const TEMPLATE_START: Partial<Record<TemplateId, { confeti?: boolean; reflejo?: boolean; anim?: 'escribir' }>> = {
   nuevo: { confeti: true, reflejo: true },
@@ -81,8 +94,12 @@ export default function StepContent({ studio, activeSlot, setActiveSlot }: Props
         fx: start ? { ...f.fx, confeti: start.confeti ?? f.fx.confeti, reflejo: start.reflejo ?? f.fx.reflejo } : f.fx,
         anim: start?.anim ?? f.anim,
         name: id === 'tasa' && f.name === 'Nueva historia' ? 'Tasa BCV del día' : f.name,
+        // C-193: la felicitación sin texto toma el saludo navideño y a Chispa saludando
+        ...(id === 'felicitacion' && !f.msg.headline.trim() ? { msg: FELICITACION_MSG, chispa: f.chispa || 'saluda', navidad: true } : {}),
       };
     });
+  // C-193: al cambiar de tramo, las gift cards vinculadas dicen el menor monto que cabe en el nuevo
+  const setTramo = (tramo: TramoRegalo) => update((f) => refreshLinked({ ...f, tramo }, studio.live));
 
   const setMsg = (patch: Partial<StudioMessage>) => update((f) => ({ ...f, msg: { ...f.msg, ...patch } }));
   // Como con un producto de la tienda: la historia nueva toma su nombre del titular
@@ -125,8 +142,9 @@ export default function StepContent({ studio, activeSlot, setActiveSlot }: Props
       {current.template === 'tasa' && <RateInfo studio={studio} />}
       {current.template === 'nuevo' && <HeadingField studio={studio} label="Etiqueta de arriba" placeholder="Recién llegado" />}
 
-      {!hasProductForm(current.template) && current.template !== 'mensaje' ? null : current.template === 'mensaje' ? (
+      {!hasProductForm(current.template) && current.template !== 'mensaje' && current.template !== 'felicitacion' ? null : current.template === 'mensaje' || current.template === 'felicitacion' ? (
         <>
+          {current.template === 'mensaje' && (
           <div>
             <p className={adminLabel}>Mensajes listos</p>
             <div className="flex flex-wrap gap-2">
@@ -137,6 +155,7 @@ export default function StepContent({ studio, activeSlot, setActiveSlot }: Props
               ))}
             </div>
           </div>
+          )}
           <div>
             <label htmlFor="m-headline" className={adminLabel}>
               Titular
@@ -167,6 +186,7 @@ export default function StepContent({ studio, activeSlot, setActiveSlot }: Props
                 </label>
                 <input id="m-eyebrow" type="text" value={current.msg.eyebrow} onChange={(e) => setMsg({ eyebrow: e.target.value })} placeholder="Ej: AVISO · HORARIO · NOVEDAD" className={adminInput()} />
               </div>
+              {current.template === 'mensaje' && (
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label htmlFor="m-cta" className={adminLabel}>
@@ -181,11 +201,26 @@ export default function StepContent({ studio, activeSlot, setActiveSlot }: Props
                   <input id="m-contact" type="text" value={current.msg.contact} onChange={(e) => setMsg({ contact: e.target.value })} placeholder="+58 …" className={adminInput()} />
                 </div>
               </div>
+              )}
             </div>
           </details>
+          {conChispa(current.template) && <ChispaPicker studio={studio} />}
         </>
       ) : (
         <>
+          {current.template === 'regalos' && (
+            <fieldset>
+              <legend className={adminLabel}>Presupuesto</legend>
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.keys(TRAMOS_REGALO) as TramoRegalo[]).map((id) => (
+                  <button key={id} type="button" aria-pressed={current.tramo === id} onClick={() => current.tramo !== id && setTramo(id)} className={`${adminChoice(current.tramo === id)} min-h-11 px-2 text-sm font-semibold`}>
+                    {TRAMOS_REGALO[id].titulo}
+                  </button>
+                ))}
+              </div>
+              <p className={adminHint}>Al elegir de la tienda salen solo los productos de este presupuesto, como en Ideas para regalar.</p>
+            </fieldset>
+          )}
           {current.template === 'trio' && (
             <div>
               <label htmlFor="f-heading" className={adminLabel}>
@@ -283,6 +318,7 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
       )}
       {picking && (
         <ProductPicker
+          tramo={current.template === 'regalos' ? current.tramo : undefined}
           onCancel={() => setPicking(false)}
           onPick={(prod) => {
             rememberLive(prod);
@@ -407,5 +443,35 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
       </summary>
       <div className="mt-3">{body}</div>
     </details>
+  );
+}
+
+/** C-193: Chispa en la historia (mensaje y felicitación): sin Chispa o una de sus poses. Con el toque navideño lleva el gorro */
+function ChispaPicker({ studio }: { studio: Studio }) {
+  const { current, update } = studio;
+  if (!current) return null;
+  const elegir = (pose: ChispaPose | '') => update((f) => ({ ...f, chispa: pose }));
+  return (
+    <fieldset>
+      <legend className={adminLabel}>Chispa</legend>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <button type="button" aria-pressed={!current.chispa} onClick={() => elegir('')} className={`${adminChoice(!current.chispa)} flex min-h-11 items-center justify-center p-2 text-xs font-semibold`}>
+          Sin Chispa
+        </button>
+        {(Object.keys(CHISPA_POSES) as ChispaPose[]).map((pose) => (
+          <button
+            key={pose}
+            type="button"
+            aria-pressed={current.chispa === pose}
+            onClick={() => elegir(pose)}
+            className={`${adminChoice(current.chispa === pose)} flex flex-col items-center gap-1 p-1.5 text-xs font-semibold`}
+          >
+            <Image src={`/images/studio/chispa/${pose}${current.navidad ? '-gorro' : ''}.png`} alt="" width={60} height={74} className="h-14 w-auto" />
+            {CHISPA_POSES[pose]}
+          </button>
+        ))}
+      </div>
+      {current.template === 'mensaje' && <p className={adminHint}>Va en el lugar de la foto: con una foto o el QR, Chispa no sale.</p>}
+    </fieldset>
   );
 }

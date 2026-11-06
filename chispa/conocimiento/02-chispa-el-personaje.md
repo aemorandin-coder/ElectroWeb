@@ -50,6 +50,10 @@ window.seek = t => {
 - `chispa.labios(voz)`: boca por vocal de la palabra que suena, abierta según el volumen de ese cuadro (`rms`).
 - `chispa.vida(e, t, {rms})`: parpadeo, respiración, la cabeza acompaña al habla y el pelo se queda un poco atrás.
 - Para saludar con la mano, se mueve `e.R.giro` y `e.R.muñeca` con un seno (ver la entrada).
+- **Agarrar cosas** (lo usan los stickers, `piezas/sticker.html`):
+  - `e.R.objeto = '<svg...>'`: lo que agarra la mano (una llave, una lupa). Va en coordenadas de la mano (muñeca en 0,0 y dedos hacia -y) y se dibuja debajo de los dedos, así se ve agarrado. `chispa.anguloMano(e.R)` da el ángulo de la mano, para apuntar el objeto a un punto de la cara o de un aparato.
+  - `e.L.espejo = true`: la mano al revés, con el pulgar del otro lado. Para la mano izquierda de frente (un pulgar arriba con la izquierda).
+  - `e.entre = '<svg...>'`: un aparato entre los dos brazos. Con `e.orden = 'LR'` el brazo izquierdo queda detrás del aparato y el derecho por delante; con `'RL'`, al revés.
 - Se puede ver en movimiento con `videos/chispa-demo.src.html` y el giro de frente a espalda con `videos/chispa-giro.html`.
 
 ## Chispa en Google Flow

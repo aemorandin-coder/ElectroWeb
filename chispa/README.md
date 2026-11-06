@@ -11,11 +11,11 @@ No hay videos guardados aquí (Andrés los tiene respaldados). La única excepci
 | Carpeta | Qué tiene |
 |---|---|
 | [`conocimiento/`](./conocimiento/) | El manual, en orden: [1. reglas de marca](./conocimiento/01-reglas-de-marca.md), [2. Chispa](./conocimiento/02-chispa-el-personaje.md), [3. cómo se hace un video](./conocimiento/03-como-se-hace-un-video.md), [4. voz con ElevenLabs](./conocimiento/04-voz-con-elevenlabs.md), [5. videos reales con Google Flow](./conocimiento/05-videos-reales-con-flow.md), [6. piezas y medidas](./conocimiento/06-piezas-y-medidas.md) y [7. historial](./conocimiento/07-historial.md). |
-| `mascota/` | `chispa.js` (el personaje), `hoja.html` (hoja de poses), `chispa-poses.png` y `referencias-flow/` (Chispa en PNG transparente para Google Flow). |
+| `mascota/` | `chispa.js` (el personaje), `hoja.html` (hoja de poses), `chispa-poses.png`, `chispa.ico` (ícono de la carpeta) y `referencias-flow/` (Chispa en PNG transparente para Google Flow). |
 | `videos/` | Una página por video. `*.src.html` es la fuente que se edita; `*.html` es la versión armada que se graba. |
-| `piezas/` | Banner de YouTube, miniatura de YouTube, portada de reel y portadas de historias destacadas. |
+| `piezas/` | Banner de YouTube, miniatura de YouTube, portada de reel, portadas de historias destacadas y el sticker animado de WhatsApp. |
 | `guiones/` | Los guiones con sus textos (`la-ficha.md`) y los prompts de Google Flow (`guion-andres-chispa.md`). |
-| `herramientas/` | `render.mjs` (graba), `armar.py` (arma las páginas), `captura.mjs` (fotos de piezas), `capa.mjs` (textos sobre video real), `voz.py` y `puente-voz.py` (voces), `sonido-*.py` (efectos), `quien-habla.py` (dónde habla Chispa en un clip de Flow), `montaje-andres-chispa.sh` (montaje con clips de Flow) y `cuadros.sh` (cuadros de clips). |
+| `herramientas/` | `render.mjs` (graba), `armar.py` (arma las páginas), `captura.mjs` (fotos de piezas), `sticker.mjs` (stickers animados de WhatsApp), `capa.mjs` (textos sobre video real), `voz.py` y `puente-voz.py` (voces), `sonido-*.py` (efectos), `quien-habla.py` (dónde habla Chispa en un clip de Flow), `montaje-andres-chispa.sh` (montaje con clips de Flow) y `cuadros.sh` (cuadros de clips). |
 | `assets/` | Fuentes, logos, fotos, voces de Chispa (`voz/`: mp3 + transcripciones) y `cierre.mp4`. |
 | `clips/`, `salida/` | No se suben. `clips/`: los videos reales (Flow, taller, L2) que pone Andrés. `salida/`: lo que se graba. |
 

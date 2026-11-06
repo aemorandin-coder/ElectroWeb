@@ -109,10 +109,14 @@
   };
   const ang = (e, w) => Math.atan2(w[0] - e[0], -(w[1] - e[1])) * 180 / Math.PI;
   // Brazo: hombro -> codo -> muñeca (tubo de tinta con camisa adentro) y la mano según el antebrazo.
+  // b.espejo: la misma mano al revés (el pulgar del otro lado), para la mano izquierda vista de frente.
+  // b.objeto: lo que agarra la mano (una llave, una lupa), en coordenadas de la mano y por debajo de los dedos.
   const brazo = (lado, b, id = 0) => {
-    const [hx, hy] = HOMBRO[lado], c = b.codo, m = b.muñeca, a = ang(c, m);
+    const [hx, hy] = HOMBRO[lado], c = b.codo, m = b.muñeca, r = ang(c, m) + (b.giro || 0);
     const d = `M${hx} ${hy} Q${f(c[0])} ${f(c[1])} ${f(m[0])} ${f(m[1])}`;
-    const mano = b.mano && MANOS[b.mano] ? MANOS[b.mano](m[0], m[1], a + (b.giro || 0)) : '';
+    let mano = b.mano && MANOS[b.mano] ? MANOS[b.mano](m[0], m[1], r) : '';
+    if (mano && b.espejo) mano = `<g transform="translate(${f(m[0])} ${f(m[1])}) rotate(${f(r)}) scale(-1 1) rotate(${f(-r)}) translate(${f(-m[0])} ${f(-m[1])})">${mano}</g>`;
+    if (b.objeto) mano = g(m[0], m[1], r, b.objeto) + mano;
     return `<path d="${d}" fill="none" stroke="${INK}" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="${d}" fill="none" stroke="${SHIRT}" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
             <mask id="manga${id}${lado}"><path d="${d}" fill="none" stroke="#fff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/></mask>
@@ -186,7 +190,8 @@
 
   const rig = (e) => {
     const id = ++uid;
-    const brazos = () => e.orden === 'RL' ? brazo('R', e.R, id) + brazo('L', e.L, id) : brazo('L', e.L, id) + brazo('R', e.R, id);
+    // entre: un aparato entre los dos brazos (el primero lo sostiene por detrás, el segundo trabaja por delante)
+    const brazos = () => e.orden === 'RL' ? brazo('R', e.R, id) + (e.entre || '') + brazo('L', e.L, id) : brazo('L', e.L, id) + (e.entre || '') + brazo('R', e.R, id);
     const cab = e.cabeza, sy = e.cuerpo, sx = 1 + (1 - sy) * .6;
     const cuerpo = `translate(200 420) scale(${f(sx * 1000) / 1000} ${f(sy * 1000) / 1000}) translate(-200 -420)`;
     const cabeza = `rotate(${f(cab.inc)} 200 258) translate(${f(cab.dx)} ${f(cab.dy)})`;
@@ -297,6 +302,8 @@
     return e;
   };
 
+  // ángulo de la mano (grados): para dibujar un objeto que apunte a un punto del mundo
+  chispa.anguloMano = (b) => ang(b.codo, b.muñeca) + (b.giro || 0);
   chispa.rig = rig; chispa.estado = ESTADO; chispa.linea = linea; chispa.labios = labios; chispa.vida = vida; chispa.mezcla = mezcla;
   window.chispa = chispa;
   window.CHISPA = { POSES: Object.keys(POSES).concat(Object.keys(POSES_ESPALDA)), BOCAS: Object.keys(BOCAS), OJOS: Object.keys(OJOS), CEJAS: Object.keys(CEJAS), CREAM, BLUE };

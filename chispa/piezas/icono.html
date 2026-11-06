@@ -1,0 +1,31 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Ícono de Chispa</title><style>
+/* Ícono de la carpeta (mascota/chispa.ico): la cara de Chispa saliendo de su círculo azul, con el borde blanco de los stickers.
+   Solo la cabeza, para que se reconozca hasta a 16 px. Se saca en cada tamaño con captura.mjs (ver conocimiento/06-piezas-y-medidas.md). */
+@font-face { font-family: Tektrron; src: url(../assets/Tektrron.ttf); }
+* { margin: 0; } html, body { width: 512px; height: 512px; overflow: hidden; }
+#s { display: block; width: 512px; height: 512px; }
+</style></head><body>
+<svg id="s" viewBox="52 12 296 296" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- arriba de y=175 se ve todo (el pelo sale del círculo); abajo, solo lo que cae dentro -->
+    <clipPath id="recorte"><circle cx="200" cy="178" r="113"/><rect x="0" y="-100" width="400" height="275"/></clipPath>
+    <filter id="borde" filterUnits="userSpaceOnUse" x="0" y="-40" width="400" height="400" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/>
+      <feComponentTransfer in="b" result="silueta"><feFuncA type="linear" slope="24" intercept="-0.9"/></feComponentTransfer>
+      <feFlood flood-color="#fff"/><feComposite in2="silueta" operator="in" result="blanco"/>
+      <feGaussianBlur in="silueta" stdDeviation="2.5"/><feOffset dy="3" result="so"/>
+      <feFlood flood-color="#0b1220" flood-opacity=".3"/><feComposite in2="so" operator="in" result="sombra"/>
+      <feMerge><feMergeNode in="sombra"/><feMergeNode in="blanco"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#borde)">
+    <circle cx="200" cy="178" r="116" fill="#2a63cd" stroke="#111317" stroke-width="6"/>
+    <g id="ch" clip-path="url(#recorte)"></g>
+  </g>
+</svg>
+<script src="../mascota/chispa.js"></script>
+<script>
+const e = chispa.linea([{ t: -10, pose: 'habla', ojos: 'abiertos', boca: 'feliz', cejas: 'arriba', feliz: true }])(0);
+e.fondo = false;
+document.getElementById('ch').innerHTML = chispa.rig(e).replace(/^<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+</script></body></html>

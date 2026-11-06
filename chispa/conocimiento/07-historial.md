@@ -55,6 +55,18 @@ Las fechas son de 2026. Los MP4 los tiene Andrés; aquí quedan las fuentes.
 ## Portadas de historias destacadas (11/10)
 - `piezas/destacada.html`: diez portadas con Chispa y un ícono, "sin sobrecargar" (lista en `06-piezas-y-medidas.md`).
 
+## Stickers de WhatsApp para atender clientes (12/10)
+- `piezas/sticker.html` + `herramientas/sticker.mjs`. Seis stickers animados de 512 x 512, 2,4 s en bucle a 15 fps, de 88 a 231 KB: ¡Hola!, ¡Gracias!, ¡Pago recibido!, Déjame revisar…, Nuestra dirección es: y Aún en reparación. Más el ícono de bandeja.
+- Chispa sale de su círculo azul como de una insignia, con globo de texto y borde blanco recortado.
+- Empezó con "¡Hola!" como prueba. Su primera versión pesó 1,7 MB, porque se movían la cabeza, el cuerpo y el globo. Ahora se mueve solo una zona chica (ver `06-piezas-y-medidas.md`).
+- Se pensó en poner la dirección dentro del sticker. Quedó sin ella: se manda el sticker y después la ubicación.
+- Segunda versión, por pedido: "mejorar las manos, en algunos stickers están amontonadas" y "ser más gesticular".
+  - Reparación: Chispa aprieta con una llave la tuerca de un control, detrás de un mostrador (antes: palmas juntas en el pecho).
+  - Pago recibido: detrás de una miniimpresora que saca el recibo con el cheque, y pulgar arriba (antes: dos pulgares pegados al pecho).
+  - Déjame revisar: lupa frente al ojo (antes: puño pegado al cuello).
+  - Gracias: el pulgar sube al lado de la cara.
+  - Para esto, `chispa.js` ganó `objeto`, `espejo` y `entre` (ver `02-chispa-el-personaje.md`). Los videos de antes salen igual.
+
 ## Ideas pendientes (Andrés no las ha pedido todavía)
 - Plantilla de historias "Domingo de web".
 - Calendario de contenido de dos semanas.

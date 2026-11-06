@@ -315,7 +315,7 @@ export default function Navidad() {
               <Opcion name="navidad-popup" checked={form.christmasPopup} onChange={() => set('christmasPopup', true)}>
                 <span>
                   <span className="block text-sm font-semibold text-ink">La tarjeta navideña</span>
-                  <span className="mt-0.5 block text-xs text-muted">El sello con el gorro, tu saludo y un botón.</span>
+                  <span className="mt-0.5 block text-xs text-muted">Tu saludo y un botón, con el sello y Chispa con el gorro, como la felicitación de ElectroStudio.</span>
                 </span>
               </Opcion>
               <Opcion name="navidad-popup" checked={!form.christmasPopup} onChange={() => set('christmasPopup', false)}>

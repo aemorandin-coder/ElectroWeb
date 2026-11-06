@@ -714,7 +714,7 @@ export default function GiftCardsPage() {
             {showInviteModal && (
                 <div className={adminModalOverlay}>
                     <div className={`${adminModalPanel} max-w-md w-full p-8 text-center`}>
-                        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-warning/15 text-warning-strong flex items-center justify-center">
+                        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center">
                             <IconoCorreo className="w-8 h-8" />
                         </div>
 

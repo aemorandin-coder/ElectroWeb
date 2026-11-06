@@ -75,7 +75,7 @@ export default function MyReviewsPage() {
       );
     }
     return (
-      <span className={adminBadge('warning')}>
+      <span className={adminBadge('brand')}>
         <IconoReloj className="w-3 h-3" />
         Pendiente
       </span>

@@ -250,13 +250,13 @@ export default function ContactForm() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Banner para datos precargados (desde soporte de pago móvil) */}
                     {hasPrefilledData && (
-                        <div className="p-4 bg-warning/15 border border-warning/30 rounded-xl animate-fadeIn">
+                        <div className="p-4 bg-surface border border-line rounded-xl animate-fadeIn">
                             <div className="flex items-start gap-3">
-                                <div className="w-8 h-8 bg-warning-strong rounded-full flex items-center justify-center flex-shrink-0">
+                                <div className="w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center flex-shrink-0">
                                     <IconoInfo className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <p className="text-warning-strong font-semibold text-sm">Solicitud de Soporte</p>
+                                    <p className="text-ink font-semibold text-sm">Solicitud de Soporte</p>
                                     <p className="text-ink-soft text-xs mt-1">
                                         Los datos de tu pago han sido precargados. Por favor completa tu nombre y email para que podamos ayudarte.
                                     </p>

@@ -14,7 +14,7 @@ import { cotizacionesDelCliente, type EstadoParaCliente } from '@/lib/cotizacion
 export const metadata = { title: 'Mis cotizaciones' };
 
 const ESTADOS: Record<EstadoParaCliente, { texto: string; tono: 'neutral' | 'brand' | 'success' | 'warning' | 'danger'; ayuda: string }> = {
-  PREPARING: { texto: 'En preparación', tono: 'warning', ayuda: 'El equipo la está armando. Te la enviamos a tu correo o por WhatsApp cuando esté lista.' },
+  PREPARING: { texto: 'En preparación', tono: 'brand', ayuda: 'El equipo la está armando. Te la enviamos a tu correo o por WhatsApp cuando esté lista.' },
   SENT: { texto: 'Lista para revisar', tono: 'brand', ayuda: 'Revísala y, si estás de acuerdo, apruébala con tu nombre y tu cédula o RIF.' },
   EXPIRED: { texto: 'Vencida', tono: 'danger', ayuda: 'Pasó su validez y ya no se puede aprobar. Escríbenos y la renovamos.' },
   APPROVED: { texto: 'Aprobada', tono: 'success', ayuda: 'Ya diste tu conformidad. El equipo coordina contigo el pago y la entrega.' },

@@ -76,6 +76,17 @@ Claude lo implementa en C-10/C-11. Gemini **solo usa** estas clases y no inventa
 - Prohibido `blur-[80px]` o mayor y blobs animados de fondo en la tienda: pesan demasiado en Android de gama baja.
 - Texto sobre azul: `text-white` o `text-white/80` como mínimo. Nunca `/40` ni `/60` para texto que haya que leer.
 
+**Jerarquía del color (C-192, 06/11: "el ámbar se repite en todo el proyecto y se ve genérico")**
+- **Azul de marca:** lo que se hace (botones, enlaces) y lo que la tienda destaca ("Destacado", el nivel de un curso, el monto a pagar).
+- **Azul noche (`brand-950`):** la pieza fuerte de una pantalla o de un correo, **una sola**, con texto blanco y el cian (`accent`) de acento: el certificado, la gift card, un código. Es la variante B que se eligió el 06/11 viendo las maquetas.
+- **Neutros:** la estructura: tarjetas, notas, mensajes, datos.
+- **Colores de estado, solo para estados:** verde = hecho (pagado, acreditado, en stock); **ámbar = alguien tiene que hacer algo** (falta pagar, falta verificar el correo, falta firmar, poco stock, por revisar, sin guardar); rojo = error, rechazo o descuento (`deal`).
+  - Esperar no es un aviso: "En preparación", "Se acredita el…", "En revisión" (para quien espera) van en azul.
+  - El ámbar nunca destaca, celebra ni clasifica (un nivel, una categoría, "Antes", una marca ajena como Binance).
+- **Excepciones con nombre:** las estrellas de calificación (ámbar), la etiqueta amarilla `tag` de "Oferta del día" (con texto `ink`), el rojo `navidad` del tema y el recuadro ámbar de "Lo que no incluye" de las cotizaciones (Luis, C-182).
+- **Nunca texto blanco sobre ámbar, verde o `success`:** no llega a 3:1.
+- **Un correo, un acento:** el azul del botón y, si hace falta, una placa en azul noche (`placaCorreo` de `lib/email-templates/estilo.ts`). Lo demás, neutro.
+
 ### 1.2 Tipografía
 
 | Rol | Fuente | Clase |
@@ -407,6 +418,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
 
 **Pedido del 06/11 (tres correcciones, desde la cuenta de Andrés; decididas viendo la página de maquetas):**
 - **C-191** (**hecha**): Marketing decía "1 cliente" porque nada le preguntaba al cliente si quería promociones. Ahora se pregunta al registrarse y una vez en Mi panel, y el panel dice "N de M clientes" con el desglose. No se eligieron el toque después de comprar ni el correo de invitación (este lo autoriza Andrés si lo quiere).
+- **C-192** (**hecha**): el ámbar solo para avisos, con la regla de §1.1 (variante B, placa azul noche). Queda como lo eligió Luis el recuadro de "Lo que no incluye" de las cotizaciones.
 
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).

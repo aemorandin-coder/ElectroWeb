@@ -460,8 +460,8 @@ export async function POST(req: NextRequest) {
                                     Tu recarga de <strong style="${CORREO.tonoExito}">$${montoUsd.toFixed(2)} USD</strong>
                                     se verificó sola con el Banco de Venezuela y ya está disponible en tus Puntos ES.
                                 </p>
-                                <div style="${CORREO.cajaExito}">
-                                    <p style="${CORREO.cajaTexto}${CORREO.tonoExito}">Referencia BDV: <strong>${escapeHtml(String(referencia))}</strong><br>Banco: <strong>${escapeHtml(String(bancoOrigen))}</strong></p>
+                                <div style="${CORREO.caja}">
+                                    <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Referencia BDV: <strong>${escapeHtml(String(referencia))}</strong><br>Banco: <strong>${escapeHtml(String(bancoOrigen))}</strong></p>
                                 </div>
                                 ${botonCorreo(`${tienda}/customer/balance`, 'Ver mis Puntos ES')}`,
                                 'Tu recarga fue procesada automáticamente'

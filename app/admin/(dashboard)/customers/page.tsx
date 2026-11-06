@@ -871,9 +871,9 @@ export default function CustomersPage() {
                             </div>
 
                             {selectedCustomer.profile?.businessVerificationNotes && (
-                              <div className="bg-warning/10 p-3 rounded-lg border border-warning/30">
-                                <p className="text-xs font-bold text-warning-strong mb-1">Notas de Verificación</p>
-                                <p className="text-sm text-warning-strong">{selectedCustomer.profile.businessVerificationNotes}</p>
+                              <div className="bg-surface p-3 rounded-lg border border-line">
+                                <p className="text-xs font-bold text-ink-soft mb-1">Notas de Verificación</p>
+                                <p className="text-sm text-ink">{selectedCustomer.profile.businessVerificationNotes}</p>
                               </div>
                             )}
                           </>

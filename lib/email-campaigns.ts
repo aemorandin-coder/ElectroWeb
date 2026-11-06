@@ -122,7 +122,7 @@ export async function renderCampana(
 ): Promise<string> {
   const nombre = (destinatario.nombre || '').trim().split(/\s+/)[0] || 'cliente';
   const aviso = destinatario.prueba
-    ? `<div style="${CORREO.cajaAviso}margin-top:0;"><p style="${CORREO.cajaTexto}${CORREO.tonoAviso}font-weight:600;">Correo de prueba: así lo verán los clientes.</p></div>`
+    ? `<div style="${CORREO.caja}margin-top:0;"><p style="${CORREO.cajaTexto}${CORREO.fuerte}font-weight:600;">Correo de prueba: así lo verán los clientes.</p></div>`
     : '';
   const baja = `<p style="${CORREO.nota}text-align:center;">Recibes este correo porque aceptaste recibir promociones.${
     destinatario.enlaceBaja ? ` <a href="${escaparHtml(destinatario.enlaceBaja)}" style="${CORREO.enlace}">Darme de baja</a>` : ''

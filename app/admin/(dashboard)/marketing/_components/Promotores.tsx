@@ -64,8 +64,8 @@ interface Comision {
 interface Usuario { id: string; name: string | null; email: string | null }
 
 const TIPO: Record<Comision['type'], string> = { REGISTRATION: 'Registro', PURCHASE: 'Compra', RECHARGE: 'Recarga (antes de C-75)' };
-const ESTADO: Record<Comision['status'], { label: string; tone: 'warning' | 'success' | 'danger' }> = {
-  PENDING: { label: 'Por acreditar', tone: 'warning' },
+const ESTADO: Record<Comision['status'], { label: string; tone: 'brand' | 'success' | 'danger' }> = {
+  PENDING: { label: 'Por acreditar', tone: 'brand' },
   APPROVED: { label: 'Acreditada', tone: 'success' },
   REJECTED: { label: 'Rechazada', tone: 'danger' },
 };
@@ -363,7 +363,7 @@ export default function Promotores() {
         {[
           { icono: <IconoVerificado className="h-5 w-5" />, tono: 'brand' as const, label: 'Promotores', valor: String(promotores.length) },
           { icono: <IconoVentas className="h-5 w-5" />, tono: 'neutral' as const, label: 'Conversiones', valor: String(promotores.reduce((s, p) => s + p.stats.totalConversions, 0)) },
-          { icono: <IconoBillete className="h-5 w-5" />, tono: 'warning' as const, label: 'Por acreditar', valor: formatUSD(pendienteTotal) },
+          { icono: <IconoBillete className="h-5 w-5" />, tono: 'neutral' as const, label: 'Por acreditar', valor: formatUSD(pendienteTotal) },
           { icono: <IconoBillete className="h-5 w-5" />, tono: 'success' as const, label: 'Ventas referidas', valor: formatUSD(generadoTotal) },
         ].map((stat) => (
           <div key={stat.label} className={`${adminStatCard} p-4`}>

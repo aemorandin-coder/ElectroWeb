@@ -56,10 +56,10 @@ export function Historial({ eventos, vista }: { eventos: EventoGarantia[]; vista
           ? (vista === 'cliente' ? 'Tú' : e.authorName || 'Cliente')
           : vista === 'cliente' ? 'Electro Shop' : e.authorName || 'Equipo';
         return (
-          <li key={e.id} className={`rounded-xl border p-3 ${nota ? 'border-warning/40 bg-warning/10' : deCliente ? 'border-line bg-white' : 'border-brand-200 bg-brand-50'}`}>
+          <li key={e.id} className={`rounded-xl border p-3 ${nota ? 'border-line-strong bg-surface' : deCliente ? 'border-line bg-white' : 'border-brand-200 bg-brand-50'}`}>
             <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
               <span className="font-semibold text-ink-soft">{quien}</span>
-              {nota && <span className="inline-flex items-center gap-1 font-semibold text-warning-strong"><IconoCandado className="h-3 w-3" aria-hidden="true" /> Nota interna</span>}
+              {nota && <span className="inline-flex items-center gap-1 font-semibold text-ink-soft"><IconoCandado className="h-3 w-3" aria-hidden="true" /> Nota interna</span>}
               {e.kind === 'CREATED' && <span>· abrió la solicitud</span>}
               <span>· {cuando(e.createdAt)}</span>
             </p>

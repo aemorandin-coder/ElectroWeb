@@ -32,6 +32,7 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
 - Server Components llaman a Prisma o a `lib/queries/*` directamente. **No hagas fetch a la propia API desde el servidor.**
 - Settings públicos: el servidor los lee una sola vez y los pasa a `SettingsProvider` como `initialSettings`. No agregues nuevos `fetch('/api/settings/public')`.
 - Colores y tipografía: solo los tokens de `PLAN.md` §1. Sin hex en className, sin `text-[<11px]`, sin `font-black`.
+- **El ámbar (`warning`) solo avisa que alguien tiene que hacer algo** (C-192, `PLAN.md` §1.1). Lo que se destaca va en azul; la pieza fuerte, en azul noche; notas y datos, neutros. Esperar va en azul. Nunca texto blanco sobre ámbar o verde.
 - Breakpoint móvil único: `lg`. Nada de `window.innerWidth` para decidir el layout: usa CSS.
 - Capas: variables `--z-*` de `PLAN.md` §1.3. No uses `z-[9999]`.
 - Bloqueo de scroll: usa el hook `useBodyScrollLock`; no toques `document.body.style.overflow` a mano.

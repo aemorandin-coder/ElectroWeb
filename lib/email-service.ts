@@ -8,7 +8,7 @@ import nodemailer, { type SMTPTransportOptions } from 'nodemailer';
 import { Resend } from 'resend';
 import { escapeHtml } from './html';
 import { formatUSD } from './currency';
-import { CORREO, COLOR, FUENTE, botonCorreo, selloCorreo } from './email-templates/estilo';
+import { CORREO, COLOR, FUENTE, botonCorreo, placaCorreo, placaInteriorCorreo, selloCorreo } from './email-templates/estilo';
 import { cifrarClaveSmtp, claveSmtpCifrada, leerClaveSmtp, opcionesTlsSmtp } from './smtp-seguro';
 
 // TYPES
@@ -501,8 +501,8 @@ export const sendTestEmail = async (email: string) => {
       <h2 style="${CORREO.titulo}">Correo de prueba recibido</h2>
       <p style="${CORREO.texto}">La configuración de correo está funcionando.</p>
     </div>
-    <div style="${CORREO.cajaExito}">
-      <p style="${CORREO.cajaTexto}${CORREO.tonoExito}">
+    <div style="${CORREO.caja}">
+      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">
         Proveedor: ${process.env.RESEND_API_KEY ? 'Resend API' : escapeHtml(process.env.EMAIL_PROVIDER || 'SMTP')}<br>
         Hora: ${new Date().toLocaleString('es-VE')}
       </p>
@@ -527,11 +527,11 @@ export const sendOrderPendingPaymentEmail = async (
     <p style="${CORREO.subtitulo}">Orden #${escapeHtml(orderData.orderNumber)}</p>
     <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(orderData.customerName)}</strong>,</p>
     <p style="${CORREO.texto}">Gracias por tu compra. Recibimos tu pedido y está pendiente de la confirmación del pago.</p>
-    <div style="${CORREO.cajaAviso}">
-      <p style="${CORREO.cajaTitulo}${CORREO.tonoAviso}">Estamos revisando tu pago</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}">Nuestro equipo está verificando tu transacción. Este proceso puede tomar hasta 24 horas hábiles.</p>
+    <div style="${CORREO.caja}">
+      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Estamos revisando tu pago</p>
+      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Nuestro equipo está verificando tu transacción. Puede tomar hasta 24 horas hábiles: no tienes que hacer nada más.</p>
     </div>
-    <div style="${CORREO.caja}text-align:center;">
+    <div style="text-align:center;margin:24px 0 0;">
       <p style="${CORREO.rotulo}">Total a pagar</p>
       <p style="${CORREO.dato}letter-spacing:0;">${formatUSD(orderData.total)}</p>
     </div>
@@ -565,7 +565,7 @@ export const sendOrderShippedEmail = async (
     <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(orderData.customerName)}</strong>,</p>
     <p style="${CORREO.texto}">Buenas noticias: tu pedido fue enviado y va en camino.</p>
     ${orderData.trackingNumber ? `
-    <div style="${CORREO.cajaInfo}text-align:center;">
+    <div style="${CORREO.caja}text-align:center;">
       <p style="${CORREO.rotulo}">Número de guía</p>
       <p style="${CORREO.dato}">${escapeHtml(orderData.trackingNumber)}</p>
       ${orderData.shippingCarrier ? `<p style="${CORREO.textoMenor}margin:10px 0 0;">Transportista: ${escapeHtml(orderData.shippingCarrier)}</p>` : ''}
@@ -621,9 +621,9 @@ export const sendOrderDeliveredEmail = async (
     </div>
     <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(orderData.customerName)}</strong>,</p>
     <p style="${CORREO.texto}">Tu pedido fue entregado. Esperamos que disfrutes tu compra.</p>
-    <div style="${CORREO.cajaExito}text-align:center;">
-      <p style="${CORREO.cajaTitulo}${CORREO.tonoExito}">Tu opinión es muy importante</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoExito}">¿Qué te pareció tu experiencia de compra? Déjanos tu reseña.</p>
+    <div style="${CORREO.caja}text-align:center;">
+      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Tu opinión es muy importante</p>
+      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">¿Qué te pareció tu experiencia de compra? Déjanos tu reseña.</p>
     </div>
     ${botonCorreo(`${appUrl}/customer/reviews`, 'Dejar reseña')}
     <p style="${CORREO.nota}text-align:center;">
@@ -665,11 +665,10 @@ export const sendDigitalCodeEmail = async (
     <p style="${CORREO.subtitulo}">Orden #${e.orderNumber}</p>
     <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${e.customerName}</strong>,</p>
     <p style="${CORREO.texto}">Aquí tienes tu código digital para <strong style="${CORREO.fuerte}">${e.productName}</strong>:</p>
-    <div style="${CORREO.cajaInfo}text-align:center;border-style:dashed;border-width:2px;">
-      <p style="${CORREO.rotulo}">Tu código</p>
-      <p style="${CORREO.dato}font-family:'Courier New',Courier,monospace;">${e.code}</p>
-      ${e.platform ? `<p style="${CORREO.textoMenor}margin:12px 0 0;">Plataforma: <strong style="${CORREO.fuerte}">${e.platform}</strong></p>` : ''}
-    </div>
+    ${placaCorreo(`
+      <p style="${CORREO.placaRotulo}">TU CÓDIGO DIGITAL</p>
+      ${e.platform ? `<p style="${CORREO.placaTexto}margin-top:8px;">Plataforma: <strong style="color:#ffffff;">${e.platform}</strong></p>` : ''}
+      ${placaInteriorCorreo('Código', e.code)}`)}
     ${e.redemptionInstructions ? `
     <div style="${CORREO.caja}">
       <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Instrucciones de canje</p>
@@ -721,17 +720,17 @@ export const sendGiftCardEmail = async (
     <p style="${CORREO.texto}"><strong style="${CORREO.fuerte}">${e.senderName}</strong> te envió una Gift Card de Electro Shop para que la uses en lo que más te guste.</p>
 
     ${e.personalMessage ? `
-    <div style="${CORREO.cajaAviso}text-align:center;">
-      <p style="${CORREO.rotulo}${CORREO.tonoAviso}">Mensaje personal</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}font-size:15px;font-style:italic;">"${e.personalMessage}"</p>
+    <div style="border-left:4px solid ${COLOR.marca};padding:6px 0 6px 16px;margin:20px 0;">
+      <p style="${CORREO.rotulo}margin-bottom:4px;">${e.senderName} te escribió</p>
+      <p style="margin:0;color:${COLOR.tinta};font-size:17px;line-height:1.5;font-style:italic;">"${e.personalMessage}"</p>
     </div>
     ` : ''}
 
     <!-- La tarjeta: tabla y colores planos para que se vea igual en todos los clientes de correo -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
       <tr>
-        <td bgcolor="${COLOR.marcaOscura}" style="background-color:${COLOR.marcaOscura};border-radius:16px;padding:26px 24px;text-align:center;">
-          <p style="margin:0;color:#bfdbfe;font-size:12px;line-height:1.4;letter-spacing:2px;">ELECTRO SHOP · GIFT CARD</p>
+        <td bgcolor="${COLOR.noche}" style="background-color:${COLOR.noche};border-radius:16px;padding:26px 24px;text-align:center;">
+          <p style="${CORREO.placaRotulo}">ELECTRO SHOP · GIFT CARD</p>
           <p style="margin:14px 0 0;color:#ffffff;font-size:44px;line-height:1.1;font-weight:700;">${formatUSD(giftCardData.amount)}</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;">
             <tr>
@@ -746,21 +745,17 @@ export const sendGiftCardEmail = async (
       </tr>
     </table>
 
-    <div style="${CORREO.cajaExito}">
-      <p style="${CORREO.cajaTitulo}${CORREO.tonoExito}">¿Cómo canjear tu Gift Card?</p>
-      <ol style="margin:0;padding:0 0 0 20px;font-size:14px;line-height:1.8;${CORREO.tonoExito}">
+    <p style="margin:0 0 8px;color:${COLOR.tinta};font-size:15px;line-height:1.4;font-weight:700;">Cómo canjearla</p>
+    <ol style="margin:0 0 8px;padding:0 0 0 20px;font-size:14px;line-height:1.8;${CORREO.tonoNeutro}">
         <li>Entra a Electro Shop y crea una cuenta o inicia sesión</li>
         <li>Ve a la página de <strong>Canjear Gift Card</strong></li>
         <li>Escribe el código de arriba${e.pin ? ' y el PIN' : ''}</li>
         <li>Los Puntos ES se acreditan al instante en tu cuenta</li>
       </ol>
-    </div>
 
     ${botonCorreo(redeemUrl, 'Canjear mi Gift Card')}
 
-    <div style="${CORREO.cajaAviso}">
-      <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}text-align:center;"><strong>Importante:</strong> guarda este correo. El código es único y no tiene fecha de vencimiento.</p>
-    </div>
+    <p style="${CORREO.textoMenor}text-align:center;">Guarda este correo: el código es único y no tiene fecha de vencimiento.</p>
 
     <p style="${CORREO.nota}text-align:center;">
       ¿Tienes problemas? <a href="${appUrl}/contacto" style="${CORREO.enlace}">Contáctanos</a>

@@ -62,7 +62,7 @@ function Etiquetas({ p, editando }: { p: ProductoLista; editando?: string[] }) {
     <span className="flex flex-wrap items-center gap-1">
       {editando && editando.length > 0 && <span className={adminBadge('brand')} title="Tiene este producto abierto para editarlo ahora mismo"><IconoClientes className="h-3 w-3" aria-hidden="true" />{editando.join(' y ')} {editando.length === 1 ? 'lo edita' : 'lo editan'}</span>}
       {p.productType === 'DIGITAL' && <span className={adminBadge('brand')}><IconoDigital className="h-3 w-3" aria-hidden="true" />Digital</span>}
-      {p.isFeatured && p.status === 'PUBLISHED' && <span className={adminBadge('warning')}><IconoEstrella className="h-3 w-3" aria-hidden="true" />Destacado</span>}
+      {p.isFeatured && p.status === 'PUBLISHED' && <span className={adminBadge('brand')}><IconoEstrella lleno className="h-3 w-3" aria-hidden="true" />Destacado</span>}
       {p.isFeatured && p.status === 'DRAFT' && <span className="text-xs text-muted" title="Está marcado como destacado, pero la tienda no lo muestra mientras esté en borrador">Destacado (no se ve: borrador)</span>}
     </span>
   );
@@ -83,7 +83,7 @@ function BotonDestacar({ p, onDestacar, className }: { p: ProductoLista; onDesta
   return (
     <button type="button" onClick={() => onDestacar(p)} aria-pressed={p.isFeatured} className={className}
       aria-label={p.isFeatured ? `Quitar ${p.name} de Destacados` : `Destacar ${p.name} en el inicio`} title={p.isFeatured ? 'Quitar de Destacados' : 'Destacar en el inicio'}>
-      <IconoEstrella lleno={p.isFeatured} className={`h-4 w-4 ${p.isFeatured ? 'text-warning' : ''}`} aria-hidden="true" />
+      <IconoEstrella lleno={p.isFeatured} className={`h-4 w-4 ${p.isFeatured ? 'text-brand-500' : ''}`} aria-hidden="true" />
     </button>
   );
 }
@@ -168,7 +168,7 @@ export default function ListaProductos(props: Props) {
                 <button type="button" onClick={() => onEstado(p)} className="min-h-11 rounded-lg border border-line text-sm text-ink hover:bg-surface">{p.status === 'PUBLISHED' ? 'Desactivar' : 'Activar'}</button>
                 {p.status !== 'ARCHIVED' && (
                   <button type="button" onClick={() => onDestacar(p)} aria-pressed={p.isFeatured} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border border-line text-sm text-ink hover:bg-surface">
-                    <IconoEstrella lleno={p.isFeatured} className={`h-4 w-4 ${p.isFeatured ? 'text-warning' : ''}`} aria-hidden="true" /> {p.isFeatured ? 'Quitar destacado' : 'Destacar'}
+                    <IconoEstrella lleno={p.isFeatured} className={`h-4 w-4 ${p.isFeatured ? 'text-brand-500' : ''}`} aria-hidden="true" /> {p.isFeatured ? 'Quitar destacado' : 'Destacar'}
                   </button>
                 )}
                 <button type="button" onClick={() => onEliminar(p)} className={`min-h-11 rounded-lg border border-deal/30 text-sm text-deal hover:bg-deal-bg ${p.status === 'ARCHIVED' ? 'col-span-2' : ''}`}>A la papelera</button>

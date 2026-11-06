@@ -172,7 +172,7 @@ export default function PhysicalStep1BasicInfo({ data, onChange, errors, categor
           <span className="block text-sm font-semibold text-ink">Producto destacado</span>
           <span className="block text-xs text-muted">Sale en la vitrina del inicio</span>
         </span>
-        <IconoEstrella lleno={data.isFeatured} className={`h-5 w-5 shrink-0 ${data.isFeatured ? 'text-warning' : 'text-muted'}`} aria-hidden="true" />
+        <IconoEstrella lleno={data.isFeatured} className={`h-5 w-5 shrink-0 ${data.isFeatured ? 'text-brand-500' : 'text-muted'}`} aria-hidden="true" />
       </label>
 
       <ConditionSection data={data} onChange={onChange} errors={errors} />

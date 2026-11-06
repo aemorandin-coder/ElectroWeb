@@ -180,7 +180,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
         {progress === 100 && (
           <button
             onClick={() => setShowCert(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-warning text-ink text-xs font-bold rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-500 text-white text-xs font-bold rounded-lg hover:bg-brand-600 transition-colors"
           >
             <IconoPremio className="inline h-4 w-4 shrink-0" aria-hidden="true" />Certificado
           </button>
@@ -360,7 +360,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
       {showCert && (
         <div className={adminModalOverlay}>
           <div className={`${adminModalPanel} max-w-md w-full p-8 text-center`}>
-            <IconoPremio className="mx-auto mb-4 h-16 w-16 text-warning" aria-hidden="true" />
+            <IconoPremio className="mx-auto mb-4 h-16 w-16 text-brand-500" aria-hidden="true" />
             <h2 className="text-2xl font-bold text-ink mb-2">¡Felicitaciones!</h2>
             <p className="text-muted mb-2">Completaste el curso</p>
             <p className="text-xl font-bold text-brand-500 mb-6">{course.title}</p>
@@ -387,7 +387,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                 <Link
                   href={`/certificado/${certificateId}`}
                   target="_blank"
-                  className="flex-1 py-2.5 bg-warning text-ink text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 bg-brand-500 text-white text-sm font-semibold rounded-xl hover:bg-brand-600 transition-colors text-center flex items-center justify-center gap-1.5"
                 >
                   Ver Certificado <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
                 </Link>

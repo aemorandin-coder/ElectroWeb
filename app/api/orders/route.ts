@@ -1408,9 +1408,9 @@ export async function PATCH(request: NextRequest) {
               <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escaparHtml(order.user?.name || 'Cliente')}</strong>,</p>
               <p style="${CORREO.texto}">Lamentamos informarte que tu orden fue cancelada.</p>
 
-              <div style="${CORREO.cajaAviso}">
-                <p style="${CORREO.cajaTitulo}${CORREO.tonoAviso}">Motivo de la cancelación</p>
-                <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}">${escaparHtml(motivo)}</p>
+              <div style="${CORREO.caja}">
+                <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Motivo de la cancelación</p>
+                <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">${escaparHtml(motivo)}</p>
               </div>
               ${bloqueSaldo}
               <div style="${CORREO.caja}">

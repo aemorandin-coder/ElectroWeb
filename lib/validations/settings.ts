@@ -5,6 +5,7 @@
 
 import { z } from '@/lib/zod';
 import { MAX_EMPAQUES } from '@/lib/embalaje';
+import { GORROS } from '@/lib/navidad';
 
 export const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 export type WeekDay = (typeof WEEK_DAYS)[number];
@@ -64,6 +65,31 @@ const optionalDate = z
     }
     return date;
   });
+
+/** C-186: un día del panel ('AAAA-MM-DD', de un input date) → las 00:00 UTC de ese día (columna DATE). '' o null → null */
+const optionalDay = z
+  .string()
+  .nullable()
+  .transform((value, ctx) => {
+    if (!value) return null;
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00.000Z`) : null;
+    // "2026-02-30" pasa la expresión pero no existe: Date lo corre al 2 de marzo
+    if (!date || Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+      ctx.addIssue({ code: 'custom', message: 'Fecha inválida' });
+      return z.NEVER;
+    }
+    return date;
+  });
+
+/** C-186: enlace de un botón de la tienda: una ruta propia ("/productos") o https. Nada de javascript:, "//otro-sitio" ni "#". */
+const optionalLink = (max = 300) =>
+  z
+    .string()
+    .trim()
+    .max(max, `Máximo ${max} caracteres`)
+    .refine((value) => value === '' || /^\/(?![/\\])\S*$/.test(value) || /^https:\/\/\S+$/i.test(value), 'Usa una ruta de la tienda (/productos) o un enlace https://')
+    .nullable()
+    .transform((value) => value || null);
 
 const dayHours = z.object({ open: time, close: time, enabled: z.boolean() });
 
@@ -219,6 +245,17 @@ export const settingsUpdateSchema = z.object({
   hotAdShadowOpacity: integer(0, 100),
   hotAdBackdropOpacity: integer(0, 100),
   hotAdBackdropColor: color,
+
+  // Tema navideño (C-186, lo guarda Marketing): textos vacíos = los de la tienda (lib/navidad.ts)
+  christmasTheme: z.boolean(),
+  christmasThemeFrom: optionalDay,
+  christmasThemeUntil: optionalDay,
+  christmasHat: z.enum(GORROS, { error: 'Elige uno de los dos gorros' }),
+  christmasPopup: z.boolean(),
+  christmasPopupTitle: optionalText(40),
+  christmasPopupText: optionalText(180),
+  christmasPopupButton: optionalText(30),
+  christmasPopupLink: optionalLink(),
 });
 
 export const settingsPatchSchema = settingsUpdateSchema.partial();
@@ -230,6 +267,14 @@ export const HOT_AD_FIELDS: readonly SettingsField[] = [
   'hotAdEnabled', 'hotAdImage', 'hotAdLink', 'hotAdTransparentBg', 'hotAdShadowEnabled',
   'hotAdShadowBlur', 'hotAdShadowOpacity', 'hotAdBackdropOpacity', 'hotAdBackdropColor',
 ];
+
+/** C-186: el tema navideño también es de Marketing (Marketing → Navidad). */
+export const CHRISTMAS_FIELDS: readonly SettingsField[] = [
+  'christmasTheme', 'christmasThemeFrom', 'christmasThemeUntil', 'christmasHat', 'christmasPopup',
+  'christmasPopupTitle', 'christmasPopupText', 'christmasPopupButton', 'christmasPopupLink',
+];
+
+export const MARKETING_FIELDS: readonly SettingsField[] = [...HOT_AD_FIELDS, ...CHRISTMAS_FIELDS];
 
 /** Errores de zod como { campo: mensaje } (el primero de cada campo). */
 export function fieldErrors(error: z.ZodError): Record<string, string> {
@@ -249,6 +294,8 @@ type MergedRules = {
   maxOrderAmountUSD: number | null;
   maintenanceStartTime: Date | null;
   maintenanceEndTime: Date | null;
+  christmasThemeFrom: Date | null;
+  christmasThemeUntil: Date | null;
 };
 
 /** Reglas entre campos, con los valores ya combinados (lo guardado + lo que llega). */
@@ -262,6 +309,10 @@ export function crossFieldErrors(merged: MergedRules): Record<string, string> {
   }
   if (merged.maintenanceStartTime && merged.maintenanceEndTime && merged.maintenanceEndTime <= merged.maintenanceStartTime) {
     errors.maintenanceEndTime = 'El fin debe ser después del inicio';
+  }
+  // C-186: el mismo día sirve (los dos días son incluidos)
+  if (merged.christmasThemeFrom && merged.christmasThemeUntil && merged.christmasThemeUntil < merged.christmasThemeFrom) {
+    errors.christmasThemeUntil = 'El último día no puede ser antes del primero';
   }
   return errors;
 }

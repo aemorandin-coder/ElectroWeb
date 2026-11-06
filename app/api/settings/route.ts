@@ -4,7 +4,7 @@ import type { CompanySettings } from '@prisma/client';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { hasPermission } from '@/lib/auth-helpers';
-import { crossFieldErrors, fieldErrors, HOT_AD_FIELDS, settingsPatchSchema } from '@/lib/validations/settings';
+import { crossFieldErrors, fieldErrors, MARKETING_FIELDS, settingsPatchSchema } from '@/lib/validations/settings';
 import { clearSettingsCache } from '@/lib/site-settings';
 import { leerReglasEmbalaje } from '@/lib/embalaje';
 import { refreshExchangeRate } from '@/lib/exchange-rate';
@@ -79,7 +79,7 @@ export async function GET() {
 /**
  * PUT /api/settings — guarda solo los campos que llegan (C-50b).
  * Lista blanca y validación en lib/validations/settings.ts; los campos desconocidos se ignoran.
- * El popup (hotAd*) lo puede guardar Marketing con MANAGE_CONTENT; el resto exige MANAGE_SETTINGS.
+ * El popup (hotAd*) y el tema navideño (christmas*, C-186) los puede guardar Marketing con MANAGE_CONTENT; el resto exige MANAGE_SETTINGS.
  */
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -110,7 +110,7 @@ export async function PUT(request: NextRequest) {
   if (fields.length === 0) {
     return NextResponse.json({ error: 'No hay cambios que guardar' }, { status: 400 });
   }
-  if (!canManageSettings && fields.some((field) => !HOT_AD_FIELDS.includes(field as (typeof HOT_AD_FIELDS)[number]))) {
+  if (!canManageSettings && fields.some((field) => !MARKETING_FIELDS.includes(field as (typeof MARKETING_FIELDS)[number]))) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 
@@ -128,6 +128,8 @@ export async function PUT(request: NextRequest) {
       maxOrderAmountUSD: decimal(pick('maxOrderAmountUSD', null)),
       maintenanceStartTime: (pick('maintenanceStartTime', null) as Date | null) ?? null,
       maintenanceEndTime: (pick('maintenanceEndTime', null) as Date | null) ?? null,
+      christmasThemeFrom: (pick('christmasThemeFrom', null) as Date | null) ?? null,
+      christmasThemeUntil: (pick('christmasThemeUntil', null) as Date | null) ?? null,
     });
     if (Object.keys(crossErrors).length > 0) {
       return NextResponse.json({ error: 'Revisa los campos marcados', fields: crossErrors }, { status: 400 });

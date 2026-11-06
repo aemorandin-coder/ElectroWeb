@@ -45,6 +45,10 @@
   --color-danger: #ef4444;
   --color-info: #3b82f6;
   --color-whatsapp: #25d366;
+
+  /* Tema navideño (C-186): el acento de los dibujos navideños (el gorro de Santa), el mismo rojo de las piezas de
+     ElectroStudio. El rojo de las ofertas sigue siendo `deal` */
+  --color-navidad: #e0263a;
 }
 
 /* Fuentes: next/font define --font-inter y --font-tektrron en <html> (app/layout.tsx), por eso van inline */
@@ -317,6 +321,70 @@ body {
 
 .animate-scaleIn {
   animation: scaleIn 0.2s ease-out;
+}
+
+/* Tarjeta navideña del popup (C-186, components/navidad/SelloNavidad.tsx): la pantalla del sello se enciende como un
+   televisor (una línea que se abre de lado a lado y después hacia arriba y abajo) y el gorro se acomoda en el sello: cae,
+   se pasa un poco y se balancea hasta quedar quieto (la borla, en la punta, es la que más se mece). Todo una sola vez, al
+   aparecer, y solo si el sistema no pide menos movimiento: con "reducir movimiento" estas clases no hacen nada y el sello
+   sale quieto, encendido y con el gorro puesto.
+   Son grupos de un SVG: `fill-box` hace que el origen sea el del propio dibujo (la pantalla, el gorro). */
+@media (prefers-reduced-motion: no-preference) {
+  .navidad-enciende {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: navidad-enciende 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) 0.25s both;
+  }
+
+  /* Gira desde el centro de la piel, donde se apoya en el sello */
+  .navidad-acomoda {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: navidad-acomoda 0.9s ease-in-out 0.7s both;
+  }
+}
+
+@keyframes navidad-enciende {
+  0% {
+    transform: scale(0, 0.06);
+  }
+
+  45% {
+    transform: scale(1, 0.06);
+  }
+
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+@keyframes navidad-acomoda {
+  0% {
+    opacity: 0;
+    transform: translateY(-18%) rotate(-12deg);
+  }
+
+  35% {
+    opacity: 1;
+    transform: translateY(1%) rotate(5deg);
+  }
+
+  55% {
+    transform: rotate(-3deg);
+  }
+
+  75% {
+    transform: rotate(1.5deg);
+  }
+
+  90% {
+    transform: rotate(-0.5deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Shimmer Effect */

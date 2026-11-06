@@ -21,6 +21,8 @@ import { useHideOnScroll } from './header/useHideOnScroll';
 const CategoriesMenuPanel = dynamic(() => import('./header/CategoriesMenuPanel'), {
   loading: () => <p className="p-4 text-sm text-muted">Cargando categorías…</p>,
 });
+// C-186: el gorro de Santa del logo solo se descarga con el tema navideño encendido (apagado, no se pide nada)
+const GorroSanta = dynamic(() => import('@/components/navidad/GorroSanta'));
 
 /**
  * Header de la tienda (PLAN.md §2).
@@ -55,6 +57,7 @@ function PublicHeader() {
             {settings?.logo && (
               <span className="relative h-9 w-9 shrink-0">
                 <Image src={settings.logo} alt="" fill sizes="36px" className="object-contain" priority />
+                {settings.gorroNavidad && <GorroSanta variante={settings.gorroNavidad} />}
               </span>
             )}
             <span className="font-brand min-w-0 truncate bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-base font-bold tracking-tight text-transparent sm:text-xl">

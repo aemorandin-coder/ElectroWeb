@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { FiCheck, FiImage, FiSave, FiUpload, FiX } from 'react-icons/fi';
 import {
-  adminBadge, adminCard, adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton, adminSpinner,
+  adminBadge, adminCard, adminHint, adminInput, adminLabel, adminNotice, adminPrimaryButton, adminSecondaryButton, adminSpinner,
 } from '@/lib/admin-ui';
+import { navidadActiva } from '@/lib/navidad';
 
 interface PopupState {
   hotAdEnabled: boolean;
@@ -42,6 +43,8 @@ export default function Popup() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
+  // C-186: el tema navideño se ve hoy con su tarjeta: mientras tanto, esta imagen no sale
+  const [tarjetaNavidad, setTarjetaNavidad] = useState(false);
   const archivo = useRef<HTMLInputElement>(null);
 
   const hayCambios = JSON.stringify(ad) !== JSON.stringify(guardado);
@@ -66,6 +69,8 @@ export default function Popup() {
         };
         setAd(leido);
         setGuardado(leido);
+        const temaNavidad = { christmasTheme: data.christmasTheme === true, christmasThemeFrom: data.christmasThemeFrom ?? null, christmasThemeUntil: data.christmasThemeUntil ?? null };
+        setTarjetaNavidad(data.christmasPopup === true && navidadActiva(temaNavidad));
       })
       .catch(() => toast.error('No se pudo cargar el popup'))
       .finally(() => setCargando(false));
@@ -113,6 +118,12 @@ export default function Popup() {
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="space-y-5">
+        {tarjetaNavidad && (
+          <p className={adminNotice('brand')} role="status">
+            Tema navideño encendido: al entrar sale la tarjeta navideña en lugar de esta imagen. La imagen vuelve sola cuando
+            termine el tema, o antes si eliges la imagen en la pestaña Navidad.
+          </p>
+        )}
         <section className={adminCard}>
           <div className="flex items-start justify-between gap-4">
             <div>

@@ -5,9 +5,10 @@
 import { createHash } from 'crypto';
 import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
+import { navidadActiva, TARJETA_NAVIDAD, varianteGorro, type TarjetaNavidadDatos, type VarianteGorro } from '@/lib/navidad';
 
 export interface HotAd {
-  /** URL de la imagen (archivo subido o la ruta que sirve el base64) */
+  /** URL de la imagen (archivo subido o la ruta que sirve el base64). Con la tarjeta navideña, la versión de sus textos */
   image: string;
   link: string | null;
   transparentBg: boolean;
@@ -16,6 +17,8 @@ export interface HotAd {
   shadowOpacity: number;
   backdropOpacity: number;
   backdropColor: string;
+  /** C-186: la tarjeta navideña en lugar de la imagen, mientras el tema se ve (Marketing → Navidad). Si no, no viene */
+  tarjeta?: TarjetaNavidadDatos & { gorro: VarianteGorro };
 }
 
 // Solo formatos raster: un SVG servido desde el mismo dominio podría ejecutar scripts si se abre directo
@@ -53,8 +56,34 @@ export const getHotAd = cache(async (): Promise<HotAd | null> => {
     select: {
       hotAdEnabled: true, hotAdImage: true, hotAdLink: true, hotAdTransparentBg: true, hotAdShadowEnabled: true,
       hotAdShadowBlur: true, hotAdShadowOpacity: true, hotAdBackdropOpacity: true, hotAdBackdropColor: true,
+      christmasTheme: true, christmasThemeFrom: true, christmasThemeUntil: true, christmasHat: true, christmasPopup: true,
+      christmasPopupTitle: true, christmasPopupText: true, christmasPopupButton: true, christmasPopupLink: true,
     },
   });
+
+  // C-186: mientras el tema se ve, la tarjeta navideña reemplaza a la imagen (aunque el popup de imagen esté apagado).
+  // Lleva su propia versión, hecha con sus textos: si cambian, vuelve a salir a quien ya la había visto. Con la tarjeta
+  // apagada, la imagen sale como siempre, sin adornos
+  if (row?.christmasPopup && navidadActiva(row)) {
+    const tarjeta: TarjetaNavidadDatos = {
+      titulo: row.christmasPopupTitle || TARJETA_NAVIDAD.titulo,
+      mensaje: row.christmasPopupText || TARJETA_NAVIDAD.mensaje,
+      boton: row.christmasPopupButton || TARJETA_NAVIDAD.boton,
+      enlace: row.christmasPopupLink || TARJETA_NAVIDAD.enlace,
+    };
+    return {
+      image: `navidad-${imageVersion(JSON.stringify(tarjeta))}`,
+      link: null,
+      transparentBg: false,
+      shadowEnabled: false,
+      shadowBlur: 0,
+      shadowOpacity: 0,
+      backdropOpacity: row.hotAdBackdropOpacity ?? 70,
+      backdropColor: row.hotAdBackdropColor || '#000000',
+      tarjeta: { ...tarjeta, gorro: varianteGorro(row.christmasHat) },
+    };
+  }
+
   if (!row?.hotAdEnabled || !row.hotAdImage) return null;
 
   const raw = row.hotAdImage.trim();

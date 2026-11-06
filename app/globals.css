@@ -350,6 +350,23 @@ body {
     transform-origin: 50% 100%;
     animation: navidad-acomoda 0.9s ease-in-out 0.7s both;
   }
+
+  /* C-194: Chispa sube una vez desde el borde de la tarjeta, después de que el gorro se acomoda */
+  .navidad-asoma {
+    animation: navidad-asoma 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) 1.2s both;
+  }
+}
+
+@keyframes navidad-asoma {
+  0% {
+    opacity: 0;
+    transform: translateY(30%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes navidad-enciende {

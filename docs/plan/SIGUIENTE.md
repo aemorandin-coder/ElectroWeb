@@ -47,7 +47,7 @@ El diagnóstico confirmó los 5 zombis: los 3 de la captura y 2 productos de pru
 5. **La vista se recuerda:** filtra "Activos", busca, edita un producto y guarda: vuelves a la misma vista.
 6. **Deshacer y la estrella:** cambia el estado de un producto y toca "Deshacer". Pon la estrella de Destacado en uno y quítala.
 
-**Pregunta para Andrés:** "Producto Test" (2 órdenes) y "Test Digital" (1 orden, con un código digital) tienen órdenes **entregadas** en producción. Si fueron compras de prueba, cuentan como ventas en Reportes y en la relación de ventas. ¿Fueron de prueba? Si es así, se pueden sacar de los reportes con tu OK; no se borra nada sin preguntar.
+**Decidido (06/11):** las órdenes entregadas de "Producto Test" y "Test Digital" fueron compras de prueba. Andrés dijo que se quedan como están, aunque cuenten en los reportes: no se tocan.
 
 **Lo decide Andrés:** `/categorias` muestra 8 de 15 categorías con "0 productos". C-187 propone esconderlas y no lo aplicó.
 

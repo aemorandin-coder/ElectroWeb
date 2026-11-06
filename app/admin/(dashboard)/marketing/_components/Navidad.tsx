@@ -403,7 +403,7 @@ export default function Navidad() {
               }}
               className={`${adminSecondaryButton} mt-3 h-9 px-3 text-xs`}
             >
-              Quitar las fechas
+              Quitar las fechas de entrega
             </button>
           )}
         </SettingsCard>

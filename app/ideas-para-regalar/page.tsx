@@ -30,9 +30,26 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// El lazo del regalo, con el acento de la marca (azul) o, con el tema, el rojo navideño. El trazo sigue azul marino
-const LAZO_MARCA = { '--es-acento': 'var(--color-brand-500)', '--es-acento-opacidad': 1 } as CSSProperties;
-const LAZO_NAVIDAD = { '--es-acento': 'var(--color-navidad)', '--es-acento-opacidad': 1 } as CSSProperties;
+// El acento del regalo: el azul de la marca o, con el tema, el rojo navideño. El trazo sigue azul marino
+const ACENTO_MARCA = { '--es-acento': 'var(--color-brand-500)' } as CSSProperties;
+const ACENTO_NAVIDAD = { '--es-acento': 'var(--color-navidad)' } as CSSProperties;
+const RELLENO: CSSProperties = { fill: 'var(--es-acento)' };
+
+/**
+ * El regalo de los botones de presupuesto: el de IconoRegalo (pack de íconos: trazo 2 en la cuadrícula de 24, puntas
+ * redondas, relleno plano) con la tapa también del color del acento. En el del pack solo el lazo lleva color, y en un
+ * botón ese color casi no se ve.
+ */
+function RegaloTramo({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" className={className}>
+      <rect x="3" y="8" width="18" height="4" rx="1" style={RELLENO} />
+      <path d="M12 8C10.4 4.6 6.9 4.9 7.2 6.9 7.4 8 9.4 8 12 8zM12 8c1.6-3.4 5.1-3.1 4.8-1.1C16.6 8 14.6 8 12 8z" style={RELLENO} />
+      <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7M12 8v13" />
+    </svg>
+  );
+}
+
 /** Un regalo más grande por cada tramo de TRAMOS: se entiende el presupuesto antes de leerlo */
 const TAMANO_REGALO = ['h-6 w-6', 'h-8 w-8', 'h-10 w-10'];
 /** Las columnas de los botones de presupuesto: los tramos vacíos no salen */
@@ -43,7 +60,7 @@ const ideas = (n: number) => `${n} ${n === 1 ? 'idea' : 'ideas'}`;
 export default async function IdeasParaRegalarPage() {
   const [settings, homeSettings, tramos] = await Promise.all([getPublicSettings(), getHomeSettings(), getIdeasParaRegalar()]);
   const navidad = settings.gorroNavidad;
-  const lazo = navidad ? LAZO_NAVIDAD : LAZO_MARCA;
+  const acento = navidad ? ACENTO_NAVIDAD : ACENTO_MARCA;
 
   return (
     <div className="min-h-dvh bg-surface">
@@ -73,8 +90,8 @@ export default async function IdeasParaRegalarPage() {
                         href={`#${tramo.id}`}
                         className="flex h-full flex-col rounded-xl border border-line bg-white p-3 transition-colors hover:border-brand-200 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 lg:flex-row lg:items-center lg:gap-4 lg:p-5"
                       >
-                        <span className="flex h-10 items-end text-brand-900 lg:order-2 lg:ml-auto lg:h-auto" style={lazo}>
-                          <IconoRegalo className={TAMANO_REGALO[TRAMOS.findIndex((t) => t.id === tramo.id)] ?? TAMANO_REGALO[2]} aria-hidden="true" />
+                        <span className="flex h-10 items-end text-brand-900 lg:order-2 lg:ml-auto lg:h-auto" style={acento}>
+                          <RegaloTramo className={TAMANO_REGALO[TRAMOS.findIndex((t) => t.id === tramo.id)] ?? TAMANO_REGALO[2]} />
                         </span>
                         <span className="mt-2 block min-w-0 lg:order-1 lg:mt-0">
                           <span className="block text-xs font-medium text-muted lg:text-sm">{tramo.rotulo}</span>

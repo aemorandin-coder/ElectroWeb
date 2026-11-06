@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-06, C-190 · producción en 1.0.0-rc.20, `main` y la etiqueta en 1.0.0-rc.21)
+# Lo de ahora (actualizado 2026-11-06, C-190 · producción en 1.0.0-rc.21)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.20`** (`6917382`), subida el 06/11 por Andrés, con el tema navideño encendido. **Falta subir `v1.0.0-rc.21`** (C-189 y C-190), en la sección 2. De rc.19 queda la limpieza de los zombis desde el panel.
+- **Producción: `v1.0.0-rc.21`** (`3d685db`), subida el 06/11 por Andrés. **No hay código por subir.** Faltan las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
 - **C-187 · Admin → Productos (06/11, pedido de Andrés, en producción):** ya se pueden eliminar los zombis (`estado/C-187.md`).
   - **El motivo:** "Borrar para siempre" de un producto con ventas lo dejaba archivado y de vuelta en la lista, todavía destacado. El cron de la papelera hacía lo mismo a los 30 días.
   - **El arreglo:** ahora queda **eliminado**, fuera de la lista, de la papelera y de la tienda, sin tocar sus órdenes, garantías, reseñas, códigos ni Puntos ES. Solo el dueño lo puede recuperar, y vuelve como borrador. Lo archivado va en su propio filtro.
@@ -12,8 +12,8 @@
   - **Verificado:** 102 de 102 pruebas, humo 59 de 59, tsc, lint y build.
 - **C-186 · Tema navideño (06/11, en producción, encendido):** Andrés dio el GO. Marketing → Navidad lo prende con fechas y sin deploy. Trae el gorro de Santa en el logo, en dos versiones a elegir, y la tarjeta navideña del popup, todo con el estilo del pack de íconos (`estado/C-186.md`). De las 5 recomendaciones, Andrés eligió la 1, la 3 y la 4, y las hizo C-190.
 - **C-188 · Los íconos propios en la web (06/11, en producción):** 156 íconos del pack reemplazan a los de librería en la tienda y el panel; el sello "Digital" ya no tiene el rayito. Capturas de antes y después: `~/.cache/electroshop-capturas/C-188/comparar.png`. La página de descarga para Luis está en la v1.1, en `~/Escritorio/ElectroShop Brand/Pack de íconos/`.
-- **C-189 · El selector de íconos de categorías, cerrado al pack (06/11, falta subir):** el checkout baja de 6,3 a 1,3 MB de JS (`estado/C-189.md`).
-- **C-190 · Navidad que vende (06/11, falta subir):** Ideas para regalar, la fecha límite antes del 24 y los dos borradores de campaña (`estado/C-190.md`).
+- **C-189 · El selector de íconos de categorías, cerrado al pack (06/11, en producción):** el checkout baja de 6,3 a 1,3 MB de JS (`estado/C-189.md`).
+- **C-190 · Navidad que vende (06/11, en producción):** Ideas para regalar, la fecha límite antes del 24 y los dos borradores de campaña (`estado/C-190.md`).
 - **C-185 · Limpieza (06/11, con el OK de Andrés):** la carpeta de Andrés estaba 41 commits atrás (lo de Luis del 11 al 28/10) y se puso al día. Se borraron las 178 ramas locales viejas, el stash y los worktrees de ChatGPT y de Gemini, 8 archivos sin uso y los 40 uploads de 2025 que estaban versionados. En GitHub quedan `main` y las etiquetas. Detalle en `estado/C-185.md`.
 - **Pedido del 16 y 17/10 (Luis): cotizaciones desde Numen.** Numen es la app de precios y proveedores del equipo, en un repositorio privado aparte. Las cotizaciones las arma Numen y las emite la web.
   - **C-181:** la entrada de servidor a servidor, y cuándo el cliente abre su enlace. Hecha (`estado/C-181.md`).
@@ -35,48 +35,13 @@
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
-## 2. Deploy pendiente: `v1.0.0-rc.21` (C-189 y C-190)
-Producción está en `v1.0.0-rc.20`, con el tema navideño ya encendido; ese bloque pasó a `HISTORIAL.md`. Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.21`.
-- **C-189:** el selector de íconos de categorías, cerrado al pack. El checkout baja de 6,3 a 1,3 MB de JS. Se quitan dos librerías: el `deploy.sh` reinstala las dependencias porque cambió el lockfile.
-- **C-190:** la página Ideas para regalar, la franja "pide hasta el … para que llegue antes del 24" y los dos borradores de campaña.
+## 2. Deploy pendiente: ninguno (producción en `v1.0.0-rc.21`)
+El bloque de rc.21 (C-189 y C-190) pasó a `HISTORIAL.md`.
 
-**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.20`). Es aditivo:
-```sql
-ALTER TABLE "company_settings" ADD COLUMN "christmasCutoffLocal" DATE,
-ADD COLUMN "christmasCutoffShipping" DATE;
-```
-Sin variables nuevas y sin crons.
-
-**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
-```bash
-git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.20 y sin cambios
-DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc21.dump
-bash scripts/deploy.sh                       # para y muestra el SQL de arriba (2 ADD COLUMN)
-npx prisma db push && bash scripts/deploy.sh # si es solo eso; instala las dependencias y compila
-git describe --tags                                                     # v1.0.0-rc.21
-npx tsx scripts/campanas-navidad.ts            # muestra lo que haría
-npx tsx scripts/campanas-navidad.ts --aplicar  # crea los 2 borradores (otra vez: 0). Nunca envía
-```
-
-**En el panel** (Marketing → Navidad → "Para que llegue antes del 24"): el último día para pedir por ZOOM o MRW y el de delivery en Guanare, **confirmados con ZOOM, MRW y el delivery**. Sin fechas no sale ninguna franja.
-
-**Pruebas** (unos 10 minutos; si al probar no ves un cambio, recarga la página):
-1. **Teléfono, en incógnito:** `/ideas-para-regalar` abre con los tres presupuestos y el rótulo "Navidad". "Más de $50" lleva a su sección.
-2. **Sin fechas cargadas:** la ficha de un físico y el carrito no dicen nada de "antes del 24".
-3. **Con las fechas cargadas y guardadas:** sale la franja en la ficha de un físico, en el carrito con un físico y en Ideas para regalar. Una ficha digital no la lleva.
-4. **La tarjeta navideña de la portada:** "Ver ideas para regalar" lleva a la página nueva. Si lleva a `/productos`, borra el campo "Enlace del botón" en Marketing → Navidad.
-5. **Marketing → Campañas de correo:** los dos borradores, sin enviar. Mándate una prueba de cada uno antes de enviarlos en su fecha.
-6. **Admin → Categorías → Consolas → Editar:** salen los 35 íconos del pack, dice "Seleccionado: Consolas" y ya no está el campo de importar.
-7. **Checkout en el teléfono:** abre más rápido y siguen los logos de Binance, Zelle y PayPal.
-8. **WhatsApp desde el teléfono:** comparte `https://electroshopve.com/ideas-para-regalar` y sale su imagen.
-
-**Vuelta atrás:**
-- La franja: borra las fechas o apaga el tema, sin deploy.
-- Las campañas: borra los borradores.
-- El código: `git reset --hard v1.0.0-rc.20 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas no molestan al código anterior.
-- Una categoría guardada con un ícono del pack se vería como "Otros" con el código anterior, hasta volver a elegirlo.
-
-**Decidido por Andrés (06/11, C-190):** las gift cards con varios montos salen en cada presupuesto donde tienen un monto, y la franja es solo para Navidad, sin versión de Reyes.
+### Por confirmar de rc.21 (C-189 y C-190)
+1. Si no se corrió en el deploy, crear los borradores de campaña: `npx tsx scripts/campanas-navidad.ts --aplicar`, en `/var/www/electroshopve`.
+2. Cargar las fechas de corte en Marketing → Navidad → "Para que llegue antes del 24", confirmadas con ZOOM, MRW y el delivery.
+3. Las pruebas de `HISTORIAL.md` (06/11, rc.21): Ideas para regalar, la franja, el botón de la tarjeta, los borradores, el selector de categorías y el checkout.
 
 ### Por confirmar de rc.20 (C-186 y C-188)
 Los íconos en la tienda, el panel y el teléfono; el gorro y la tarjeta navideña. Las pruebas están en `HISTORIAL.md`, 06/11.

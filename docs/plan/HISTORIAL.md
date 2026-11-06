@@ -1,10 +1,55 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `6917382`, versión `v1.0.0-rc.20`, el 06/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `3d685db`, versión `v1.0.0-rc.21`, el 06/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 06/11 · C-189 y C-190 (de rc.20 a `v1.0.0-rc.21`)
+Subido el 06/11 por Andrés. Claude comprobó desde fuera que `/ideas-para-regalar` responde 200.
+
+Producción está en `v1.0.0-rc.20`, con el tema navideño ya encendido; ese bloque pasó a `HISTORIAL.md`. Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.21`.
+- **C-189:** el selector de íconos de categorías, cerrado al pack. El checkout baja de 6,3 a 1,3 MB de JS. Se quitan dos librerías: el `deploy.sh` reinstala las dependencias porque cambió el lockfile.
+- **C-190:** la página Ideas para regalar, la franja "pide hasta el … para que llegue antes del 24" y los dos borradores de campaña.
+
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.20`). Es aditivo:
+```sql
+ALTER TABLE "company_settings" ADD COLUMN "christmasCutoffLocal" DATE,
+ADD COLUMN "christmasCutoffShipping" DATE;
+```
+Sin variables nuevas y sin crons.
+
+**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
+```bash
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.20 y sin cambios
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc21.dump
+bash scripts/deploy.sh                       # para y muestra el SQL de arriba (2 ADD COLUMN)
+npx prisma db push && bash scripts/deploy.sh # si es solo eso; instala las dependencias y compila
+git describe --tags                                                     # v1.0.0-rc.21
+npx tsx scripts/campanas-navidad.ts            # muestra lo que haría
+npx tsx scripts/campanas-navidad.ts --aplicar  # crea los 2 borradores (otra vez: 0). Nunca envía
+```
+
+**En el panel** (Marketing → Navidad → "Para que llegue antes del 24"): el último día para pedir por ZOOM o MRW y el de delivery en Guanare, **confirmados con ZOOM, MRW y el delivery**. Sin fechas no sale ninguna franja.
+
+**Pruebas** (unos 10 minutos; si al probar no ves un cambio, recarga la página):
+1. **Teléfono, en incógnito:** `/ideas-para-regalar` abre con los tres presupuestos y el rótulo "Navidad". "Más de $50" lleva a su sección.
+2. **Sin fechas cargadas:** la ficha de un físico y el carrito no dicen nada de "antes del 24".
+3. **Con las fechas cargadas y guardadas:** sale la franja en la ficha de un físico, en el carrito con un físico y en Ideas para regalar. Una ficha digital no la lleva.
+4. **La tarjeta navideña de la portada:** "Ver ideas para regalar" lleva a la página nueva. Si lleva a `/productos`, borra el campo "Enlace del botón" en Marketing → Navidad.
+5. **Marketing → Campañas de correo:** los dos borradores, sin enviar. Mándate una prueba de cada uno antes de enviarlos en su fecha.
+6. **Admin → Categorías → Consolas → Editar:** salen los 35 íconos del pack, dice "Seleccionado: Consolas" y ya no está el campo de importar.
+7. **Checkout en el teléfono:** abre más rápido y siguen los logos de Binance, Zelle y PayPal.
+8. **WhatsApp desde el teléfono:** comparte `https://electroshopve.com/ideas-para-regalar` y sale su imagen.
+
+**Vuelta atrás:**
+- La franja: borra las fechas o apaga el tema, sin deploy.
+- Las campañas: borra los borradores.
+- El código: `git reset --hard v1.0.0-rc.20 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas no molestan al código anterior.
+- Una categoría guardada con un ícono del pack se vería como "Otros" con el código anterior, hasta volver a elegirlo.
+
+**Decidido por Andrés (06/11, C-190):** las gift cards con varios montos salen en cada presupuesto donde tienen un monto, y la franja es solo para Navidad, sin versión de Reyes.
 
 ## 06/11 · C-186 y C-188 (de rc.19 a `v1.0.0-rc.20`)
 Subido el 06/11 por Andrés. Claude lo comprobó desde fuera:

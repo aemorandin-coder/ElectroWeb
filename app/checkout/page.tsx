@@ -15,7 +15,11 @@ import RechargeModal from '@/components/modals/RechargeModalV2';
 import CheckoutPagoMovilForm, { conciliarPagos, type PagoMovilVerificado } from '@/components/checkout/CheckoutPagoMovilForm';
 import { montoBs } from '@/lib/pago-movil/monto';
 import ProcessingOverlay, { CHECKOUT_STEPS } from '@/components/ProcessingOverlay';
-import { FiDollarSign, FiCheck, FiUser, FiAlertCircle, FiArrowRight, FiLock, FiPackage, FiInfo, FiCheckCircle, FiGift, FiShield, FiAlertTriangle } from 'react-icons/fi';
+import {
+  IconoAdvertencia, IconoBillete, IconoBuscar, IconoCandado, IconoCargando, IconoCarrito, IconoCerrar, IconoChat,
+  IconoCheck, IconoChevronAbajo, IconoChevronIzquierda, IconoConfirmado, IconoCorreo, IconoCuenta, IconoError,
+  IconoFlechaDerecha, IconoGarantia, IconoGiftCard, IconoInfo, IconoNumero, IconoOrdenes, IconoPaquete, IconoTarjeta,
+} from '@/components/iconos';
 import { GIFT_CARD_PIN_LENGTH } from '@/lib/gift-card-pin';
 import PaymentMethodSelector, { opcionesDePago, type MetodoCheckout, type MetodoPagoEmpresa } from '@/components/checkout/PaymentMethodSelector';
 import PagoManualPanel from '@/components/checkout/PagoManualPanel';
@@ -753,9 +757,7 @@ export default function CheckoutPage() {
         {/* Empty Cart Message */}
         <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1">
           <div className={`${adminCard} p-12 text-center max-w-xl mx-auto my-8`}>
-            <svg className="w-16 h-16 text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+            <IconoCarrito className="w-16 h-16 text-muted mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-ink mb-2">Tu carrito está vacío</h2>
             <p className="text-sm text-muted mb-6">
               Agrega productos a tu carrito para continuar con el proceso de pago.
@@ -789,7 +791,7 @@ export default function CheckoutPage() {
       <div className="min-h-dvh bg-surface flex items-center justify-center px-4">
         <div className={`${adminCard} max-w-md w-full p-8 text-center`}>
           <div className="w-16 h-16 mx-auto mb-4 bg-brand-500/10 rounded-full flex items-center justify-center border border-brand-500/20">
-            <FiUser className="w-8 h-8 text-brand-600" />
+            <IconoCuenta className="w-8 h-8 text-brand-600" />
           </div>
 
           <h2 className="text-2xl font-bold text-ink mb-2">
@@ -797,7 +799,7 @@ export default function CheckoutPage() {
           </h2>
 
           <div className="flex items-center justify-center gap-2 mb-3">
-            <FiAlertCircle className="w-4 h-4 text-brand-600" />
+            <IconoError className="w-4 h-4 text-brand-600" />
             <p className="text-sm font-semibold text-ink">
               No tienes cuenta creada
             </p>
@@ -824,7 +826,7 @@ export default function CheckoutPage() {
 
       <PageHeader
         breadcrumbs={[{ label: 'Carrito', href: '/carrito' }, { label: 'Finalizar compra' }]}
-        icon={<FiLock />}
+        icon={<IconoCandado />}
         title="Finalizar compra"
         description="Completa tus datos para procesar tu pedido."
         meta={<CheckoutSteps current={1} />}
@@ -840,9 +842,7 @@ export default function CheckoutPage() {
               {error && (
                 <div className="p-4 bg-deal-bg border border-deal/30 rounded-lg">
                   <div className="flex items-center gap-2 text-deal">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <IconoError className="w-5 h-5" />
                     <span className="text-sm font-medium">{error}</span>
                   </div>
                 </div>
@@ -885,9 +885,7 @@ export default function CheckoutPage() {
               <div id="metodo-de-pago" className="bg-white rounded-lg shadow-md border border-line p-6 relative overflow-hidden">
                 <h2 className="text-lg font-bold text-ink mb-4 flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
+                    <IconoTarjeta className="w-4 h-4" />
                   </div>
                   Método de Pago
                 </h2>
@@ -897,9 +895,7 @@ export default function CheckoutPage() {
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/95 rounded-lg overflow-auto p-4">
                     <div className="text-center w-full max-w-sm mx-auto">
                       <div className="w-12 h-12 bg-warning-strong rounded-full flex items-center justify-center mx-auto mb-3 text-white shadow-sm">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
+                        <IconoCorreo className="w-6 h-6" />
                       </div>
                       <h3 className="text-base font-bold text-ink mb-1">Verificación requerida</h3>
                       <p className="text-xs text-muted mb-3">
@@ -912,7 +908,7 @@ export default function CheckoutPage() {
                         href="/customer/profile?tab=datos"
                         className={`inline-flex items-center justify-center gap-2 ${adminPrimaryButton} px-5 py-2 text-xs font-bold`}
                       >
-                        <FiUser className="w-4 h-4" />
+                        <IconoCuenta className="w-4 h-4" />
                         Ir a Mi Cuenta
                       </Link>
                     </div>
@@ -923,7 +919,7 @@ export default function CheckoutPage() {
                 {quoteProblems.length > 0 && (
                   <div role="alert" className={`${adminNotice('warning')} mb-6`}>
                     <p className="flex items-center gap-2 font-semibold">
-                      <FiAlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <IconoAdvertencia className="h-4 w-4 shrink-0" aria-hidden="true" />
                       Todavía no puedes pagar esta compra
                     </p>
                     <ul className="mt-1 list-disc space-y-0.5 pl-6">
@@ -983,7 +979,7 @@ export default function CheckoutPage() {
                         <p className="text-xs text-muted">Transfiere a la cuenta de la tienda y confirma con la referencia</p>
                       </div>
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-success-strong/10 text-success-strong text-xs font-bold rounded-full">
-                        <FiShield className="w-3.5 h-3.5" />
+                        <IconoGarantia className="w-3.5 h-3.5" />
                         Conciliación BDV
                       </span>
                     </div>
@@ -1050,17 +1046,12 @@ export default function CheckoutPage() {
                               >
                                 {giftCardLoading ? (
                                   <span className="flex items-center gap-2">
-                                    <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
+                                    <IconoCargando className="w-5 h-5 animate-spin" />
                                     <span className="hidden md:inline">Verificando...</span>
                                   </span>
                                 ) : (
                                   <>
-                                    <svg className="w-5 h-5 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
+                                    <IconoBuscar className="w-5 h-5 md:hidden" />
                                     <span className="hidden md:inline">Verificar</span>
                                   </>
                                 )}
@@ -1073,7 +1064,7 @@ export default function CheckoutPage() {
                         {giftCardError && (
                           <div className="flex flex-col items-center justify-center gap-2 p-4 bg-deal-bg border border-deal/30 rounded-xl text-deal">
                             <div className="w-10 h-10 bg-deal text-white rounded-full flex items-center justify-center">
-                              <FiAlertCircle className="w-5 h-5" />
+                              <IconoError className="w-5 h-5" />
                             </div>
                             <span className="font-bold text-sm text-center">{giftCardError}</span>
                             <p className="text-xs text-deal/80 text-center">Verifica el código e intenta de nuevo</p>
@@ -1110,7 +1101,7 @@ export default function CheckoutPage() {
                             {giftCardInfo.status === 'ACTIVE' && giftCardInfo.balanceUSD > 0 && giftCardInfo.requiresPin && (
                               <div>
                                 <label className="block text-sm font-semibold text-ink mb-2">
-                                  <FiLock className="inline w-4 h-4 mr-1" />
+                                  <IconoCandado className="inline w-4 h-4 mr-1" />
                                   PIN de la tarjeta
                                 </label>
                                 <input
@@ -1140,7 +1131,7 @@ export default function CheckoutPage() {
                                   </>
                                 ) : (
                                   <>
-                                    <FiGift className="w-5 h-5" />
+                                    <IconoGiftCard className="w-5 h-5" />
                                     Canjear {formatUSD(giftCardInfo.balanceUSD)}
                                   </>
                                 )}
@@ -1155,7 +1146,7 @@ export default function CheckoutPage() {
                             {/* Main Content */}
                             <div className="flex flex-col md:flex-row items-center gap-6">
                               <div className="w-20 h-20 rounded-full bg-success/10 border border-success/30 flex items-center justify-center text-success-strong flex-shrink-0">
-                                <FiCheck className="w-10 h-10" />
+                                <IconoCheck className="w-10 h-10" />
                               </div>
 
                               {/* Balance Info */}
@@ -1168,7 +1159,7 @@ export default function CheckoutPage() {
                                 {/* Puntos ES suficientes badge */}
                                 {userBalance >= finalTotal && (
                                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-success/15 text-success-strong text-xs font-bold rounded-full mb-3">
-                                    <FiCheck className="w-3.5 h-3.5" />
+                                    <IconoCheck className="w-3.5 h-3.5" />
                                     Puntos ES suficientes
                                   </span>
                                 )}
@@ -1176,13 +1167,13 @@ export default function CheckoutPage() {
                                 {/* Order details */}
                                 <div className="space-y-1.5 mt-3">
                                   <div className="flex items-center justify-center md:justify-start gap-2 text-sm">
-                                    <FiPackage className="w-4 h-4 text-muted" />
+                                    <IconoPaquete className="w-4 h-4 text-muted" />
                                     <span className="text-muted">Total del pedido:</span>
                                     <span className="font-bold text-ink">{formatUSD(finalTotal)}</span>
                                   </div>
                                   {userBalance >= finalTotal && (
                                     <div className="flex items-center justify-center md:justify-start gap-2 text-sm">
-                                      <FiDollarSign className="w-4 h-4 text-success-strong" />
+                                      <IconoBillete className="w-4 h-4 text-success-strong" />
                                       <span className="text-muted">Te quedan después de la compra:</span>
                                       <span className="font-bold text-success-strong">{formatUSD(userBalance - finalTotal)}</span>
                                     </div>
@@ -1195,7 +1186,7 @@ export default function CheckoutPage() {
                             <div className="mt-6 p-4 bg-white rounded-xl border border-line text-center">
                               <div className="flex flex-col items-center justify-center gap-2">
                                 <div className="w-10 h-10 bg-success-strong rounded-full flex items-center justify-center text-white">
-                                  <FiCheck className="w-5 h-5" />
+                                  <IconoCheck className="w-5 h-5" />
                                 </div>
                                 <div>
                                   <p className="font-bold text-ink">¡Gift Card canjeada!</p>
@@ -1218,7 +1209,7 @@ export default function CheckoutPage() {
                             href="/gift-cards"
                             className={`inline-flex items-center gap-2 ${adminSecondaryButton} px-4 py-2 text-sm font-semibold`}
                           >
-                            <FiGift className="w-4 h-4" />
+                            <IconoGiftCard className="w-4 h-4" />
                             Comprar Gift Card
                           </Link>
                         </div>
@@ -1238,16 +1229,12 @@ export default function CheckoutPage() {
                 >
                   <h2 className="text-lg font-bold text-ink flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                      </svg>
+                      <IconoChat className="w-4 h-4" />
                     </div>
                     Notas Adicionales
                     <span className="text-xs text-muted font-normal">(Opcional)</span>
                   </h2>
-                  <svg className={`w-5 h-5 text-muted transition-transform duration-200 ${showNotesSection ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <IconoChevronAbajo className={`w-5 h-5 text-muted transition-transform duration-200 ${showNotesSection ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showNotesSection && (
@@ -1309,17 +1296,14 @@ export default function CheckoutPage() {
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <IconoCargando className="animate-spin h-6 w-6" />
                     <span>Procesando Pedido...</span>
                   </>
                 ) : (
                   <>
-                    <FiCheck className="w-6 h-6" />
+                    <IconoCheck className="w-6 h-6" />
                     <span>Completar Pedido</span>
-                    <FiArrowRight className="w-5 h-5" />
+                    <IconoFlechaDerecha className="w-5 h-5" />
                   </>
                 )}
               </button>
@@ -1331,19 +1315,19 @@ export default function CheckoutPage() {
               )}
               {paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified && (
                 <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
-                  <FiAlertCircle className="w-3 h-3" />
+                  <IconoError className="w-3 h-3" />
                   Debes verificar tu Pago Móvil antes de completar el pedido
                 </p>
               )}
               {paymentMode === 'MANUAL' && metodoManual && !leerReferenciaManual(referenciaManual) && (
                 <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
-                  <FiAlertCircle className="w-3 h-3" />
+                  <IconoError className="w-3 h-3" />
                   Escribe la referencia de tu pago para completar el pedido
                 </p>
               )}
               {paymentMode === 'WALLET' && userBalance < finalTotal && (
                 <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
-                  <FiAlertCircle className="w-3 h-3" />
+                  <IconoError className="w-3 h-3" />
                   No te alcanzan los Puntos ES. Recárgalos para completar el pedido.
                 </p>
               )}
@@ -1358,13 +1342,13 @@ export default function CheckoutPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-ink flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
-                      <FiUser className="w-4 h-4 text-white" />
+                      <IconoCuenta className="w-4 h-4" />
                     </div>
                     Información de Contacto
                   </h2>
                   {Boolean((session?.user as { emailVerified?: unknown } | undefined)?.emailVerified) && (
                     <div className="flex items-center gap-1.5 px-2 py-1 bg-success/15 border border-success/30 rounded-full">
-                      <FiCheckCircle className="w-3 h-3 text-success-strong" />
+                      <IconoConfirmado className="w-3 h-3 text-success-strong" />
                       <span className="text-xs font-bold text-success-strong">Verificado</span>
                     </div>
                   )}
@@ -1375,7 +1359,7 @@ export default function CheckoutPage() {
                   <div>
                     <label className="block text-xs font-semibold text-muted uppercase mb-1">Nombre</label>
                     <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-line rounded-lg">
-                      <FiLock className="w-3.5 h-3.5 text-muted" />
+                      <IconoCandado className="w-3.5 h-3.5 text-muted" />
                       <span className="text-sm text-ink font-medium truncate">{formData.customerName}</span>
                     </div>
                   </div>
@@ -1384,7 +1368,7 @@ export default function CheckoutPage() {
                   <div>
                     <label className="block text-xs font-semibold text-muted uppercase mb-1">Email</label>
                     <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-line rounded-lg">
-                      <FiLock className="w-3.5 h-3.5 text-muted" />
+                      <IconoCandado className="w-3.5 h-3.5 text-muted" />
                       <span className="text-sm text-ink font-medium truncate">{formData.customerEmail}</span>
                     </div>
                   </div>
@@ -1393,7 +1377,7 @@ export default function CheckoutPage() {
                   <div>
                     <label className="block text-xs font-semibold text-muted uppercase mb-1">Teléfono</label>
                     <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-line rounded-lg">
-                      <FiLock className="w-3.5 h-3.5 text-muted" />
+                      <IconoCandado className="w-3.5 h-3.5 text-muted" />
                       <span className="text-sm text-ink font-medium">{formData.customerPhone || 'No registrado'}</span>
                     </div>
                   </div>
@@ -1402,7 +1386,7 @@ export default function CheckoutPage() {
                   <div>
                     <label className="block text-xs font-semibold text-muted uppercase mb-1">Cédula</label>
                     <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-line rounded-lg">
-                      <FiLock className="w-3.5 h-3.5 text-muted" />
+                      <IconoCandado className="w-3.5 h-3.5 text-muted" />
                       <span className="text-sm text-ink font-medium">{formData.customerIdNumber || 'No registrado'}</span>
                     </div>
                   </div>
@@ -1414,7 +1398,7 @@ export default function CheckoutPage() {
                     href="/customer/profile"
                     className="flex items-center justify-center gap-2 text-xs text-brand-500 hover:text-brand-600 font-semibold transition-colors"
                   >
-                    <FiInfo className="w-3.5 h-3.5" />
+                    <IconoInfo className="w-3.5 h-3.5" />
                     Editar datos en mi perfil
                   </Link>
                 </div>
@@ -1438,9 +1422,7 @@ export default function CheckoutPage() {
                 <div className="px-6 py-4 border-b border-line">
                   <h2 className="text-lg font-bold text-ink flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
+                      <IconoOrdenes className="w-4 h-4" />
                     </div>
                     Resumen del Pedido
                   </h2>
@@ -1473,9 +1455,7 @@ export default function CheckoutPage() {
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <svg className="w-6 h-6 text-line" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                </svg>
+                                <IconoPaquete className="w-6 h-6 text-line" />
                               </div>
                             )}
                           </div>
@@ -1531,9 +1511,7 @@ export default function CheckoutPage() {
                     {cartDiscount > 0 && (
                       <div className="flex justify-between items-center">
                         <span className="text-success-strong flex items-center gap-1 text-sm font-medium">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                          </svg>
+                          <IconoNumero className="w-4 h-4" />
                           {couponQuote?.applied ? `Descuento (cupón ${couponQuote.code}):` : 'Descuento:'}
                         </span>
                         <div className="text-right">
@@ -1610,9 +1588,7 @@ export default function CheckoutPage() {
                     href="/productos"
                     className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-surface text-ink font-semibold rounded-xl hover:bg-line border border-line transition-all text-sm"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
+                    <IconoChevronIzquierda className="w-4 h-4" />
                     Seguir Comprando
                   </Link>
                 </div>
@@ -1645,9 +1621,7 @@ export default function CheckoutPage() {
                 className="p-1.5 text-muted hover:text-ink rounded-lg transition-colors"
                 aria-label="Cerrar modal"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <IconoCerrar className="w-5 h-5" />
               </button>
             </div>
 
@@ -1656,7 +1630,7 @@ export default function CheckoutPage() {
               {/* Critical Warning */}
               <div className="p-4 bg-warning/10 border-l-4 border-warning-strong rounded-r-xl">
                 <h3 className="font-bold text-ink mb-2 flex items-center gap-2">
-                  <FiAlertCircle className="w-5 h-5 text-warning-strong" />
+                  <IconoError className="w-5 h-5 text-warning-strong" />
                   Responsabilidad del Usuario
                 </h3>
                 <p className="text-ink-soft leading-relaxed">

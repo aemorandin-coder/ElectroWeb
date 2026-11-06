@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { FiCheck, FiCopy, FiFileText, FiUserX } from 'react-icons/fi';
+import { IconoCheck, IconoCopiar, IconoCuentaBorrada, IconoDocumento } from '@/components/iconos';
 import { adminBadge, adminHint, adminInput, adminLabel, adminSecondaryButton } from '@/lib/admin-ui';
 import { NUMERO_FACTURA, textoParaFacturar } from '@/lib/facturacion';
 import { describirPago, type PagoMovilResumen } from '@/lib/order-pago';
@@ -120,7 +120,7 @@ export default function FacturaOrden({ orden, onGuardada }: { orden: OrdenFactur
       ) : orden.guestEmail ? (
         <p className="font-semibold text-ink">Invitado</p>
       ) : (
-        <span className={adminBadge('neutral')}><FiUserX className="h-3.5 w-3.5" aria-hidden="true" /> Cliente eliminado</span>
+        <span className={adminBadge('neutral')}><IconoCuentaBorrada className="h-3.5 w-3.5" aria-hidden="true" /> Cliente eliminado</span>
       )}
 
       {(orden.user || orden.guestEmail) && (
@@ -134,7 +134,7 @@ export default function FacturaOrden({ orden, onGuardada }: { orden: OrdenFactur
       )}
 
       <button type="button" onClick={copiar} className={`${adminSecondaryButton} w-full ${copiado ? 'border-success-strong text-success-strong' : ''}`} aria-live="polite">
-        {copiado ? <FiCheck className="h-4 w-4" aria-hidden="true" /> : <FiCopy className="h-4 w-4" aria-hidden="true" />}
+        {copiado ? <IconoCheck className="h-4 w-4" aria-hidden="true" /> : <IconoCopiar className="h-4 w-4" aria-hidden="true" />}
         {copiado ? '¡Copiado!' : 'Copiar datos para facturar'}
       </button>
 
@@ -142,7 +142,7 @@ export default function FacturaOrden({ orden, onGuardada }: { orden: OrdenFactur
         <label htmlFor="orden-factura-numero" className={adminLabel}>N.º de la factura emitida</label>
         <div className="flex gap-2">
           <div className="relative min-w-0 flex-1">
-            <FiFileText className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+            <IconoDocumento className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
             <input
               id="orden-factura-numero"
               value={numero}

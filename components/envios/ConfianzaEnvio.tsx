@@ -1,4 +1,4 @@
-import { FiPackage, FiTruck } from 'react-icons/fi';
+import { IconoEnvio, IconoPaquete } from '@/components/iconos';
 import { adminCard } from '@/lib/admin-ui';
 import { LogoEmpresa } from './LogoEmpresa';
 
@@ -22,7 +22,7 @@ export function ConfianzaEnvio() {
       <ul className="space-y-3">
         <li className="flex items-start gap-3 text-xs">
           <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-500/10">
-            <FiTruck className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" />
+            <IconoEnvio className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" />
           </span>
           <span>
             <span className="block font-semibold text-ink">ZOOM y MRW con cobro a destino</span>
@@ -33,7 +33,7 @@ export function ConfianzaEnvio() {
         </li>
         <li className="flex items-start gap-3 text-xs">
           <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-success/10">
-            <FiPackage className="h-3.5 w-3.5 text-success-strong" aria-hidden="true" />
+            <IconoPaquete className="h-3.5 w-3.5 text-success-strong" aria-hidden="true" />
           </span>
           <span>
             <span className="block font-semibold text-ink">Embalaje reforzado y guía de rastreo</span>

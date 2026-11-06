@@ -2,7 +2,10 @@
 
 import { useRef, useState } from 'react';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
-import { FiCheckCircle, FiExternalLink, FiHome, FiInfo, FiMapPin, FiPackage, FiTruck, FiUser } from 'react-icons/fi';
+import {
+  IconoAbrirAparte, IconoConfirmado, IconoCuenta, IconoEnvio, IconoInfo, IconoInicio, IconoPaquete, IconoTienda,
+  IconoUbicacion,
+} from '@/components/iconos';
 import { AYUDA_DOCUMENTO, ControlDocumento, ControlTelefono } from '@/components/forms/ControlesDatos';
 import { adminCard, adminChoice, adminError, adminHint, adminInput, adminLabel, adminNotice } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
@@ -345,7 +348,7 @@ export default function EntregaEnvio({
     cambiarDestinatario({ name: cliente.nombre, docTipo: doc.tipo, docNumero: doc.numero, telCodigo: tel.codigo, telNumero: tel.numero });
   }
 
-  const metodos: Array<{ id: DeliveryMethod; titulo: string; detalle: string; Icono: typeof FiTruck }> = [
+  const metodos: Array<{ id: DeliveryMethod; titulo: string; detalle: string; Icono: typeof IconoEnvio }> = [
     ...(opciones.nacional
       ? [{
         id: 'SHIPPING' as const,
@@ -356,7 +359,7 @@ export default function EntregaEnvio({
           : envioNacional.packagingFee > 0
             ? `ZOOM o MRW · embalaje ${formatUSD(envioNacional.packagingFee)} + flete al retirar`
             : 'ZOOM o MRW · embalaje gratis + flete al retirar',
-        Icono: FiTruck,
+        Icono: IconoEnvio,
       }]
       : []),
     ...(opciones.local
@@ -364,10 +367,10 @@ export default function EntregaEnvio({
         id: 'LOCAL_DELIVERY' as const,
         titulo: 'Delivery en Guanare',
         detalle: envioNacional.isFreeShipping || !(opciones.tarifaLocal > 0) ? 'Gratis' : formatUSD(opciones.tarifaLocal),
-        Icono: FiHome,
+        Icono: IconoInicio,
       }]
       : []),
-    ...(opciones.retiro ? [{ id: 'PICKUP' as const, titulo: 'Retiro en tienda', detalle: 'Sin costo de envío', Icono: FiMapPin }] : []),
+    ...(opciones.retiro ? [{ id: 'PICKUP' as const, titulo: 'Retiro en tienda', detalle: 'Sin costo de envío', Icono: IconoTienda }] : []),
   ];
 
   const ciudadesDelEstado = zoom?.ciudades.filter((c) => c.estado === value.state) ?? [];
@@ -384,7 +387,7 @@ export default function EntregaEnvio({
     <section id="entrega" className={`${adminCard} space-y-5 p-5 sm:p-6`} aria-labelledby="entrega-titulo">
       <div>
         <h2 id="entrega-titulo" className="flex items-center gap-2 text-lg font-bold text-ink">
-          <FiTruck className="h-5 w-5 text-brand-600" aria-hidden="true" /> Entrega
+          <IconoEnvio className="h-5 w-5 text-brand-600" aria-hidden="true" /> Entrega
         </h2>
         <p className={adminHint}>Revisa bien los datos: el paquete sale a nombre de quien recibe.</p>
       </div>
@@ -411,7 +414,7 @@ export default function EntregaEnvio({
 
       {envio.isFreeShipping && value.deliveryMethod !== 'PICKUP' && (
         <p className={`${adminNotice('success')} flex items-start gap-2`}>
-          <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoConfirmado className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span>
             {envio.freeReason === 'PRODUCT'
               ? 'Tu pedido lleva un producto con envío gratis: la tienda paga el envío de todo el paquete.'
@@ -459,7 +462,7 @@ export default function EntregaEnvio({
                     onClick={() => elegirModo(modo)}
                     className={`${adminChoice(value.mode === modo)} flex items-center justify-center gap-2 px-3 py-3 text-sm font-semibold text-ink`}
                   >
-                    {modo === 'OFFICE' ? <FiPackage className="h-4 w-4" aria-hidden="true" /> : <FiHome className="h-4 w-4" aria-hidden="true" />}
+                    {modo === 'OFFICE' ? <IconoPaquete className="h-4 w-4" aria-hidden="true" /> : <IconoInicio className="h-4 w-4" aria-hidden="true" />}
                     {etiquetaModo(modo)}
                   </button>
                 ))}
@@ -525,7 +528,7 @@ export default function EntregaEnvio({
               )}
               {oficina?.direccion && (
                 <p className={`${adminHint} flex items-start gap-1`}>
-                  <FiMapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {oficina.direccion}
+                  <IconoUbicacion className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {oficina.direccion}
                 </p>
               )}
             </div>
@@ -572,7 +575,7 @@ export default function EntregaEnvio({
 
       {value.deliveryMethod === 'SHIPPING' && value.carrier && !envio.isFreeShipping && (
         <div className={`${adminNotice('brand')} space-y-1`}>
-          <p className="flex items-center gap-1.5 font-semibold"><FiInfo className="h-4 w-4" aria-hidden="true" /> Cobro a destino</p>
+          <p className="flex items-center gap-1.5 font-semibold"><IconoInfo className="h-4 w-4" aria-hidden="true" /> Cobro a destino</p>
           <p>
             El flete se lo pagas a {value.carrier} cuando {value.mode === 'OFFICE' ? 'retires en la oficina' : 'recibas el paquete'}.{' '}
             {envio.packagingFee > 0 ? 'Aquí solo pagas el embalaje.' : 'El embalaje es gratis en este pedido.'}
@@ -585,7 +588,7 @@ export default function EntregaEnvio({
           )}
           {value.carrier === 'MRW' && (
             <a href="https://mrwve.com/calcula-envio" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold underline">
-              Calcula el flete en la web de MRW <FiExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              Calcula el flete en la web de MRW <IconoAbrirAparte className="h-3.5 w-3.5" aria-hidden="true" />
             </a>
           )}
         </div>
@@ -593,7 +596,7 @@ export default function EntregaEnvio({
 
       {value.deliveryMethod !== 'PICKUP' && (
         <div className="border-t border-line pt-4">
-          <p className={`${adminLabel} flex items-center gap-1.5`}><FiUser className="h-4 w-4 text-brand-600" aria-hidden="true" /> Quién recibe</p>
+          <p className={`${adminLabel} flex items-center gap-1.5`}><IconoCuenta className="h-4 w-4 text-brand-600" aria-hidden="true" /> Quién recibe</p>
           {!otro ? (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-surface px-3 py-2.5 text-sm">
               <span className="min-w-0 text-ink-soft">

@@ -1,9 +1,11 @@
 // Modelo del formulario de Configuración (C-50b). Solo los campos que tienen efecto en la tienda;
 // la validación real está en el servidor (lib/validations/settings.ts).
 
-import type { IconType } from 'react-icons';
+import {
+  IconoBaseDeDatos, IconoBillete, IconoBolsa, IconoBuscar, IconoCorreo, IconoEnvio, IconoGarantia, IconoMaletin,
+} from '@/components/iconos';
+import type { IconType } from '@/components/iconos';
 import { leerReglasEmbalaje, type Empaque } from '@/lib/embalaje';
-import { FiBriefcase, FiDatabase, FiDollarSign, FiMail, FiSearch, FiShield, FiShoppingBag, FiTruck } from 'react-icons/fi';
 
 export const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 export type WeekDay = (typeof WEEK_DAYS)[number];
@@ -68,50 +70,50 @@ export type SectionId = 'negocio' | 'precios' | 'envios' | 'tienda' | 'seo' | 's
 
 export const SECTIONS: { id: SectionId; label: string; description: string; icon: IconType; fields: SettingsKey[] }[] = [
   {
-    id: 'negocio', label: 'Negocio', icon: FiBriefcase,
+    id: 'negocio', label: 'Negocio', icon: IconoMaletin,
     description: 'Nombre, logo, contacto, redes y horario. Se ven en el pie de página, Contacto y los correos.',
     fields: ['companyName', 'tagline', 'legalName', 'rif', 'logo', 'favicon', 'quoteStamp', 'email', 'phone', 'whatsapp', 'address', 'city', 'state',
       'instagram', 'facebook', 'twitter', 'youtube', 'telegram', 'tiktok', 'businessHours'],
   },
   {
-    id: 'precios', label: 'Precios y pagos', icon: FiDollarSign,
+    id: 'precios', label: 'Precios y pagos', icon: IconoBillete,
     description: 'Tasa BCV para los precios en bolívares, IVA y montos mínimo y máximo por compra.',
     fields: ['autoExchangeRates', 'exchangeRateVES', 'taxEnabled', 'taxPercent', 'taxDigitalProducts', 'minOrderAmountUSD', 'maxOrderAmountUSD'],
   },
   {
-    id: 'envios', label: 'Envíos y retiro', icon: FiTruck,
+    id: 'envios', label: 'Envíos y retiro', icon: IconoEnvio,
     description: 'Cómo reciben los clientes sus productos físicos y cuánto cuesta el envío.',
     fields: ['deliveryEnabled', 'packagingFeeUSD', 'freeDeliveryThresholdUSD', 'freePackagingThresholdUSD', 'packagingRules', 'localDeliveryEnabled', 'deliveryFeeUSD',
       'pickupEnabled', 'pickupAddress', 'pickupInstructions'],
   },
   {
-    id: 'tienda', label: 'Portada e inventario', icon: FiShoppingBag,
+    id: 'tienda', label: 'Portada e inventario', icon: IconoBolsa,
     description: 'Qué muestra la portada y qué pasa cuando un producto se queda sin stock.',
     fields: ['maxFeaturedProducts', 'showCategories', 'maxCategoriesDisplay', 'heroVideoEnabled', 'heroVideoUrl', 'heroVideoTitle',
       'heroVideoDescription', 'lowStockThreshold', 'autoHideOutOfStock', 'notifyLowStock', 'notifyOutOfStock'],
   },
   {
-    id: 'seo', label: 'Google y redes', icon: FiSearch,
+    id: 'seo', label: 'Google y redes', icon: IconoBuscar,
     description: 'Título, descripción e imagen con que aparecen las páginas en Google, WhatsApp y Facebook.',
     fields: ['metaTitle', 'metaDescription', 'metaKeywords', 'homeMetaImage', 'productsMetaTitle', 'productsMetaDescription',
       'productsMetaKeywords', 'productsMetaImage', 'servicesMetaTitle', 'servicesMetaDescription', 'servicesMetaKeywords',
       'servicesMetaImage', 'coursesMetaTitle', 'coursesMetaDescription', 'coursesMetaKeywords', 'coursesMetaImage'],
   },
   {
-    id: 'sistema', label: 'Avisos y mantenimiento', icon: FiShield,
+    id: 'sistema', label: 'Avisos y mantenimiento', icon: IconoGarantia,
     description: 'Correos que reciben las alertas, colores de los correos y modo mantenimiento.',
     fields: ['adminAlertEmails', 'primaryColor', 'secondaryColor', 'maintenanceMode', 'maintenanceMessage', 'maintenanceStartTime',
       'maintenanceEndTime', 'maintenanceAllowedIPs'],
   },
   // C-75: el servidor de correo estaba en Marketing. Tiene su propio guardado (no usa la barra común)
   {
-    id: 'correo', label: 'Correo', icon: FiMail,
+    id: 'correo', label: 'Correo', icon: IconoCorreo,
     description: 'Servidor con el que salen todos los correos de la tienda, remitente y campañas de marketing.',
     fields: [],
   },
   // C-165: respaldos a Google Drive. Tiene su propio guardado y sus propias acciones (no usa la barra común)
   {
-    id: 'respaldos', label: 'Respaldos', icon: FiDatabase,
+    id: 'respaldos', label: 'Respaldos', icon: IconoBaseDeDatos,
     description: 'Copia cifrada de la base de datos y de los archivos en tu Google Drive, cada día y sola.',
     fields: [],
   },

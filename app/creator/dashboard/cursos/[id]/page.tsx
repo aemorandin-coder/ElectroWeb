@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 import ImageUploadField from '@/components/ui/ImageUploadField';
-import { FiArrowLeft, FiX } from 'react-icons/fi';
+import { IconoCerrar, IconoFlechaIzquierda } from '@/components/iconos';
 
 const CATEGORIES = ['Redes', 'CCTV', 'Electrónica', 'Gaming', 'Programación', 'Hardware', 'Software', 'Otro'];
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
@@ -128,7 +128,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
       <div className="max-w-md mx-auto mt-16 text-center">
         <p className="text-muted">Curso no encontrado.</p>
         <Link href="/creator/dashboard/cursos" className="text-brand-600 text-sm hover:underline mt-3 block">
-          <FiArrowLeft className="mr-1 inline h-4 w-4" aria-hidden="true" /> Volver
+          <IconoFlechaIzquierda className="mr-1 inline h-4 w-4" aria-hidden="true" /> Volver
         </Link>
       </div>
     );
@@ -140,7 +140,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link href="/creator/dashboard/cursos" className="text-muted hover:text-ink text-sm transition-colors flex items-center gap-1 mb-2">
-            <FiArrowLeft className="h-4 w-4" aria-hidden="true" /> Mis Cursos
+            <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Mis Cursos
           </Link>
           <h1 className={`${adminPageTitle} break-words`}>{course.title}</h1>
           <div className="flex items-center gap-2 mt-1">
@@ -263,7 +263,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
                         className="text-deal hover:underline text-xs transition-colors flex-shrink-0"
                         aria-label="Quitar"
                       >
-                        <FiX className="h-4 w-4" aria-hidden="true" />
+                        <IconoCerrar className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:pl-7">

@@ -4,7 +4,7 @@ import { formatUSD } from '@/lib/currency';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FiArrowRight } from 'react-icons/fi';
+import { IconoFlechaDerecha, IconoFlechaIzquierda } from '@/components/iconos';
 import { adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import ImageUploadField from '@/components/ui/ImageUploadField';
 
@@ -59,9 +59,7 @@ export default function NuevoCursoPage() {
         href="/creator/dashboard/cursos"
         className="flex items-center gap-2 text-muted hover:text-ink text-sm transition-colors w-fit"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
+        <IconoFlechaIzquierda className="w-4 h-4" />
         Mis Cursos
       </Link>
 
@@ -166,7 +164,7 @@ export default function NuevoCursoPage() {
             disabled={saving}
             className={`${adminPrimaryButton} px-6 py-2.5 text-sm font-bold rounded-xl disabled:opacity-50`}
           >
-            {saving ? 'Creando...' : <>Crear Curso <FiArrowRight className="ml-1 inline h-4 w-4" aria-hidden="true" /></>}
+            {saving ? 'Creando...' : <>Crear Curso <IconoFlechaDerecha className="ml-1 inline h-4 w-4" aria-hidden="true" /></>}
           </button>
         </div>
       </div>

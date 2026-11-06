@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
-import { FiArrowRight, FiClipboard } from 'react-icons/fi';
+import { IconoFlechaDerecha, IconoOrdenes } from '@/components/iconos';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { adminBadge, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
@@ -35,7 +35,7 @@ export default async function MisCotizacionesPage() {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 sm:flex-row sm:items-center lg:p-6">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><FiClipboard className="h-6 w-6" aria-hidden="true" /></span>
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><IconoOrdenes className="h-6 w-6" aria-hidden="true" /></span>
           <div className="min-w-0">
             <h1 className="text-lg font-bold text-ink lg:text-2xl">Mis cotizaciones</h1>
             <p className="text-sm text-muted">Los presupuestos que pediste o que te enviamos, para revisarlos y aprobarlos.</p>
@@ -95,7 +95,7 @@ export default async function MisCotizacionesPage() {
                 {c.enlace && (
                   <Link href={c.enlace} className={`${c.estado === 'SENT' ? adminPrimaryButton : adminSecondaryButton} mt-3`}>
                     {c.estado === 'SENT' ? 'Ver y aprobar' : 'Ver el presupuesto'}
-                    <FiArrowRight className="h-4 w-4" aria-hidden="true" />
+                    <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 )}
               </li>

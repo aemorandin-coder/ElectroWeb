@@ -114,6 +114,14 @@ body:has(#mobile-bottom-nav) [data-site-footer] {
   display: none;
 }
 
+/* C-188: los íconos propios (components/iconos) a dos tonos, como en las láminas del pack: el trazo toma el color del texto
+   y las superficies y el detalle van en el azul de marca. Solo en contenedores claros con el texto en azul marino
+   (text-brand-950): las tarjetas de "Compra por categoría" y la barra de confianza. Sin la clase, van de un solo color. */
+.iconos-marca {
+  --es-acento: var(--color-brand-500);
+  --es-acento-opacidad: 1;
+}
+
 @keyframes marquee-text {
   0% {
     transform: translateX(10%);

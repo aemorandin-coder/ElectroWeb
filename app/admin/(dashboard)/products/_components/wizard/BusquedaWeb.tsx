@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState, type ReactNode } from 'react';
-import { FiAlertTriangle, FiCheck, FiGlobe, FiSearch, FiX } from 'react-icons/fi';
+import { IconoAdvertencia, IconoBuscar, IconoCerrar, IconoCheck, IconoWeb } from '@/components/iconos';
 import toast from 'react-hot-toast';
 import { adminBadge, adminNotice } from '@/lib/admin-ui';
 import { claveNombre } from '@/lib/spec-sugerencias';
@@ -139,7 +139,7 @@ export default function BusquedaWeb({ data, onChange }: Props) {
     <section aria-labelledby={`${id}-titulo`} className="rounded-xl border border-brand-100 bg-brand-50/60 p-3 sm:p-4">
       <div className="flex items-start gap-3">
         <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-brand-600">
-          <FiGlobe className="h-5 w-5" aria-hidden="true" />
+          <IconoWeb className="h-5 w-5" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
           <h3 id={`${id}-titulo`} className="text-sm font-semibold text-ink">Buscar este producto en la web</h3>
@@ -163,7 +163,7 @@ export default function BusquedaWeb({ data, onChange }: Props) {
           />
         </label>
         <button type="button" onClick={() => void buscar()} disabled={estado.tipo === 'buscando' || texto.trim().length < 3} className={`${wizardPrimaryButton} shrink-0`}>
-          <FiSearch className="h-4 w-4" aria-hidden="true" />
+          <IconoBuscar className="h-4 w-4" aria-hidden="true" />
           {estado.tipo === 'buscando' ? 'Buscando…' : 'Buscar'}
         </button>
       </div>
@@ -178,7 +178,7 @@ export default function BusquedaWeb({ data, onChange }: Props) {
         )}
         {estado.tipo === 'error' && (
           <p className={`${adminNotice('warning')} mt-3 flex items-start gap-2`} role="alert">
-            <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <span>{estado.mensaje}</span>
           </p>
         )}
@@ -188,7 +188,7 @@ export default function BusquedaWeb({ data, onChange }: Props) {
         <div className="mt-3 rounded-xl border border-line bg-white p-3 sm:p-4">
           {r.avisos.map((aviso) => (
             <p key={aviso} className={`${adminNotice('warning')} mb-3 flex items-start gap-2`}>
-              <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               <span>{aviso}</span>
             </p>
           ))}
@@ -234,10 +234,10 @@ export default function BusquedaWeb({ data, onChange }: Props) {
               </ul>
               <div className="mt-3 flex flex-col-reverse gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
                 <button type="button" onClick={() => setEstado({ tipo: 'cerrado' })} className={wizardSecondaryButton}>
-                  <FiX className="h-4 w-4" aria-hidden="true" /> No usar nada
+                  <IconoCerrar className="h-4 w-4" aria-hidden="true" /> No usar nada
                 </button>
                 <button type="button" onClick={() => usar(r)} disabled={marcados.size === 0} className={wizardPrimaryButton}>
-                  <FiCheck className="h-4 w-4" aria-hidden="true" /> Usar lo marcado ({marcados.size})
+                  <IconoCheck className="h-4 w-4" aria-hidden="true" /> Usar lo marcado ({marcados.size})
                 </button>
               </div>
             </>

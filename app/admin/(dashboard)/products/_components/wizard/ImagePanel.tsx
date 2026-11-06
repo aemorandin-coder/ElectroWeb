@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
-import { FiImage, FiPlus, FiTrash2, FiStar, FiLink, FiX } from 'react-icons/fi';
+import { IconoCerrar, IconoEliminar, IconoEnlace, IconoEstrella, IconoImagen, IconoMas } from '@/components/iconos';
 import { uploadProductPhoto } from '@/lib/product-photo-upload';
 
 const MAX_IMAGES = 8;
@@ -99,7 +99,7 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
             className="p-1.5 text-muted hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
             title="Agregar por URL"
           >
-            <FiLink className="w-4 h-4" />
+            <IconoEnlace className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -108,7 +108,7 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
             className="p-1.5 text-muted hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             title="Subir imagen"
           >
-            <FiPlus className="w-4 h-4" />
+            <IconoMas className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -132,7 +132,7 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
               OK
             </button>
             <button onClick={() => { setShowUrlInput(false); setUrlError(''); }} className="p-1.5 text-muted hover:text-ink-soft">
-              <FiX className="w-4 h-4" />
+              <IconoCerrar className="w-4 h-4" />
             </button>
           </div>
           {urlError && <p className="text-xs text-deal mt-1">{urlError}</p>}
@@ -152,7 +152,7 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
             <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
           ) : (
             <>
-              <FiImage className="w-8 h-8 text-muted mx-auto mb-2" />
+              <IconoImagen className="w-8 h-8 text-muted mx-auto mb-2" />
               <p className="text-sm font-medium text-muted">Subir imágenes</p>
               <p className="text-xs text-muted mt-1">JPG, PNG, WEBP</p>
               <p className="text-xs text-muted mt-1">
@@ -176,7 +176,7 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
                 aria-label="Quitar la foto principal"
                 title="Quitar"
               >
-                <FiTrash2 className="w-4 h-4" />
+                <IconoEliminar className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -194,7 +194,7 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
                     title="Hacer imagen principal"
                     aria-label={`Hacer principal la foto ${idx + 2}`}
                   >
-                    <FiStar className="w-3 h-3" />
+                    <IconoEstrella className="w-3 h-3" />
                   </button>
                   <button
                     type="button"
@@ -203,7 +203,7 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
                     title="Quitar"
                     aria-label={`Quitar la foto ${idx + 2}`}
                   >
-                    <FiTrash2 className="w-3 h-3" />
+                    <IconoEliminar className="w-3 h-3" />
                   </button>
                 </div>
               </div>
@@ -218,7 +218,7 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
                 {uploading ? (
                   <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <FiPlus className="w-5 h-5 text-muted" />
+                  <IconoMas className="w-5 h-5 text-muted" />
                 )}
               </div>
             )}

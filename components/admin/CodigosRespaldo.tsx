@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { FiAlertTriangle, FiCopy, FiDownload } from 'react-icons/fi';
+import { IconoAdvertencia, IconoCopiar, IconoDescargar } from '@/components/iconos';
 import { adminNotice, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 
 // C-141: los 10 códigos de respaldo de los dos pasos. El servidor los entrega una sola vez (guarda solo su huella):
@@ -42,7 +42,7 @@ export default function CodigosRespaldo({ codigos, correo, textoBoton, onListo }
   return (
     <div>
       <p className={`${adminNotice('warning')} flex items-start gap-2`}>
-        <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <span>Guárdalos ahora: no se vuelven a mostrar. Si pierdes el teléfono, uno de estos códigos te deja entrar. Cada uno sirve una sola vez.</span>
       </p>
       <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5" aria-label="Códigos de respaldo">
@@ -52,11 +52,11 @@ export default function CodigosRespaldo({ codigos, correo, textoBoton, onListo }
       </ul>
       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
         <button type="button" onClick={copiar} className={adminSecondaryButton}>
-          <FiCopy className="h-4 w-4" aria-hidden="true" />
+          <IconoCopiar className="h-4 w-4" aria-hidden="true" />
           Copiar
         </button>
         <button type="button" onClick={descargar} className={adminSecondaryButton}>
-          <FiDownload className="h-4 w-4" aria-hidden="true" />
+          <IconoDescargar className="h-4 w-4" aria-hidden="true" />
           Descargar .txt
         </button>
       </div>

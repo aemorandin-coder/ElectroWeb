@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FiHome, FiArrowLeft, FiSettings } from 'react-icons/fi';
+import { IconoConfiguracion, IconoFlechaIzquierda, IconoInicio } from '@/components/iconos';
 
 export default function AdminNotFound() {
     return (
@@ -12,7 +12,7 @@ export default function AdminNotFound() {
                     404
                 </span>
                 <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center border border-brand-200 -mt-4">
-                    <FiSettings className="w-8 h-8 text-brand-500" />
+                    <IconoConfiguracion className="w-8 h-8 text-brand-500" />
                 </div>
             </div>
 
@@ -30,14 +30,14 @@ export default function AdminNotFound() {
                     onClick={() => window.history.back()}
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-surface text-ink font-bold rounded-xl border border-line hover:bg-line transition-all "
                 >
-                    <FiArrowLeft className="w-4 h-4" />
+                    <IconoFlechaIzquierda className="w-4 h-4" />
                     Volver atrás
                 </button>
                 <Link
                     href="/admin"
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition-all"
                 >
-                    <FiHome className="w-4 h-4" />
+                    <IconoInicio className="w-4 h-4" />
                     Panel de Admin
                 </Link>
             </div>

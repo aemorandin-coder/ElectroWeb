@@ -7,7 +7,10 @@ import PublicHeader from '@/components/public/PublicHeader';
 import PageHeader from '@/components/ui/PageHeader';
 import Footer from '@/components/Footer';
 import { adminPrimaryButton } from '@/lib/admin-ui';
-import { FiAward, FiTrendingUp, FiDollarSign, FiCheckCircle, FiClock, FiAlertCircle, FiBookOpen, FiUploadCloud, FiArrowRight, FiSend, FiCheck } from 'react-icons/fi';
+import {
+  IconoBillete, IconoCheck, IconoConfirmado, IconoCursos, IconoEnviar, IconoError, IconoFlechaDerecha, IconoPremio,
+  IconoReloj, IconoSubir, IconoVentas,
+} from '@/components/iconos';
 
 type CreatorProfile = {
   id: string;
@@ -60,7 +63,7 @@ export default function CreatorLandingPage() {
 
       <PageHeader
         breadcrumbs={[{ label: 'Cursos', href: '/cursos' }, { label: 'Enseña aquí' }]}
-        icon={<FiTrendingUp />}
+        icon={<IconoVentas />}
         eyebrow="Programa de creadores de cursos"
         title="Monetiza tu experiencia y quédate con el 90%"
         description="Crea cursos de reparación, redes, CCTV, gaming o electrónica. Nosotros nos encargamos del cobro y el marketing; tú te llevas la mayor parte."
@@ -81,7 +84,7 @@ export default function CreatorLandingPage() {
               {creator.status === 'APPROVED' ? (
                 <div className="text-center space-y-6">
                   <div className="w-16 h-16 bg-success/10 border border-success/20 rounded-2xl flex items-center justify-center mx-auto">
-                    <FiCheckCircle className="w-8 h-8 text-success" />
+                    <IconoConfirmado className="w-8 h-8 text-success" />
                   </div>
                   <div className="space-y-2">
                     <h2 className="text-2xl md:text-3xl font-bold text-ink">¡Eres Creador Oficial!</h2>
@@ -94,13 +97,13 @@ export default function CreatorLandingPage() {
                     className={`${adminPrimaryButton} h-12 px-8`}
                   >
                     Ir a mi Panel de Creador
-                    <FiArrowRight className="w-5 h-5" />
+                    <IconoFlechaDerecha className="w-5 h-5" />
                   </Link>
                 </div>
               ) : creator.status === 'PENDING' ? (
                 <div className="text-center space-y-6">
                   <div className="w-16 h-16 bg-warning/10 border border-warning/20 rounded-2xl flex items-center justify-center mx-auto">
-                    <FiClock className="w-8 h-8 text-warning" />
+                    <IconoReloj className="w-8 h-8 text-warning" />
                   </div>
                   <div className="space-y-2">
                     <h2 className="text-2xl md:text-3xl font-bold text-ink">Solicitud en Revisión</h2>
@@ -112,7 +115,7 @@ export default function CreatorLandingPage() {
               ) : (
                 <div className="text-center space-y-6">
                   <div className="w-16 h-16 bg-deal-bg border border-deal/30 rounded-2xl flex items-center justify-center mx-auto">
-                    <FiAlertCircle className="w-8 h-8 text-deal" />
+                    <IconoError className="w-8 h-8 text-deal" />
                   </div>
                   <div className="space-y-2">
                     <h2 className="text-2xl md:text-3xl font-bold text-ink">Solicitud No Aprobada</h2>
@@ -134,7 +137,7 @@ export default function CreatorLandingPage() {
               {submitted ? (
                 <div className="text-center py-12 space-y-4">
                   <div className="w-12 h-12 bg-success/10 border border-success/20 rounded-full flex items-center justify-center mx-auto">
-                    <FiCheck className="w-6 h-6 text-success" />
+                    <IconoCheck className="w-6 h-6 text-success" />
                   </div>
                   <h3 className="text-lg font-bold text-ink">¡Solicitud Enviada con Éxito!</h3>
                   <p className="text-muted text-sm max-w-xs mx-auto">
@@ -145,7 +148,7 @@ export default function CreatorLandingPage() {
                 <div className="space-y-5">
                   {error && (
                     <div className="p-4 bg-deal-bg border border-deal/30 text-deal rounded-xl text-xs flex items-center gap-2">
-                      <FiAlertCircle className="w-4 h-4 shrink-0" />
+                      <IconoError className="w-4 h-4 shrink-0" />
                       <span>{error}</span>
                     </div>
                   )}
@@ -202,7 +205,7 @@ export default function CreatorLandingPage() {
                       </>
                     ) : (
                       <>
-                        <FiSend className="w-4 h-4" />
+                        <IconoEnviar className="w-4 h-4" />
                         <span>Enviar Solicitud de Creador</span>
                       </>
                     )}
@@ -214,7 +217,7 @@ export default function CreatorLandingPage() {
             /* Not logged in state */
             <div className="space-y-6 rounded-3xl border border-line bg-white p-5 text-center sm:p-8 md:p-10">
               <div className="w-16 h-16 bg-brand-500/10 border border-brand-500/20 rounded-2xl flex items-center justify-center mx-auto">
-                <FiBookOpen className="w-8 h-8 text-brand-500" />
+                <IconoCursos className="w-8 h-8 text-brand-500" />
               </div>
               <div className="space-y-2">
                 <h2 className="text-2xl font-bold text-ink">Únete como Creador</h2>
@@ -242,9 +245,9 @@ export default function CreatorLandingPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6">
           {[
-            { value: '90%', label: 'Comisión Directa', desc: 'El porcentaje más alto para ti por cada estudiante.', icon: FiDollarSign },
-            { value: '10%', label: 'Fee de la Plataforma', desc: 'Cubre procesamiento, hosting y soporte.', icon: FiTrendingUp },
-            { value: 'Ilimitados', label: 'Cursos & Lecciones', desc: 'Sube todo el contenido técnico que desees.', icon: FiBookOpen },
+            { value: '90%', label: 'Comisión Directa', desc: 'El porcentaje más alto para ti por cada estudiante.', icon: IconoBillete },
+            { value: '10%', label: 'Fee de la Plataforma', desc: 'Cubre procesamiento, hosting y soporte.', icon: IconoVentas },
+            { value: 'Ilimitados', label: 'Cursos & Lecciones', desc: 'Sube todo el contenido técnico que desees.', icon: IconoCursos },
           ].map((stat, idx) => {
             const Icon = stat.icon;
             return (
@@ -268,9 +271,9 @@ export default function CreatorLandingPage() {
             <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-[1px] bg-line z-0" />
 
             {[
-              { step: '01', title: 'Postúlate en Minutos', desc: 'Llena el formulario abajo con tu perfil y experiencia. Nuestro equipo te revisará en 24/48 horas.', icon: FiSend },
-              { step: '02', title: 'Crea tu Curso Técnico', desc: 'Usa nuestro panel intuitivo para subir lecciones, estructurar módulos y conectar tus videos sin esfuerzo.', icon: FiUploadCloud },
-              { step: '03', title: 'Recibe tus Ganancias', desc: 'Retira tus ingresos de forma simple. Recibe notificaciones instantáneas de cada nueva inscripción.', icon: FiAward },
+              { step: '01', title: 'Postúlate en Minutos', desc: 'Llena el formulario abajo con tu perfil y experiencia. Nuestro equipo te revisará en 24/48 horas.', icon: IconoEnviar },
+              { step: '02', title: 'Crea tu Curso Técnico', desc: 'Usa nuestro panel intuitivo para subir lecciones, estructurar módulos y conectar tus videos sin esfuerzo.', icon: IconoSubir },
+              { step: '03', title: 'Recibe tus Ganancias', desc: 'Retira tus ingresos de forma simple. Recibe notificaciones instantáneas de cada nueva inscripción.', icon: IconoPremio },
             ].map((item, idx) => {
               const Icon = item.icon;
               return (

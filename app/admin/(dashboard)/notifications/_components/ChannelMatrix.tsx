@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { FiRotateCcw, FiSave } from 'react-icons/fi';
+import { IconoGuardar, IconoRestablecer } from '@/components/iconos';
 import { adminCardFlush, adminNotice, adminPrimaryButton, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
 import {
   ADMIN_EVENTS, ADMIN_EVENT_TYPES, CATEGORY_LABELS,
@@ -161,11 +161,11 @@ export default function ChannelMatrix({ onGoToTelegram }: { onGoToTelegram: () =
             <p className="text-sm font-semibold text-ink">Cambios sin guardar</p>
             <div className="grid grid-cols-2 gap-2 sm:flex">
               <button type="button" onClick={() => setMatrix(initial)} disabled={saving} className={`${adminSecondaryButton} whitespace-nowrap px-3 sm:px-5`}>
-                <FiRotateCcw className="hidden h-4 w-4 sm:block" aria-hidden="true" />
+                <IconoRestablecer className="hidden h-4 w-4 sm:block" aria-hidden="true" />
                 Descartar
               </button>
               <button type="button" onClick={save} disabled={saving} className={`${adminPrimaryButton} whitespace-nowrap px-3 sm:px-5`}>
-                <FiSave className="hidden h-4 w-4 sm:block" aria-hidden="true" />
+                <IconoGuardar className="hidden h-4 w-4 sm:block" aria-hidden="true" />
                 {saving ? 'Guardando…' : 'Guardar'}
               </button>
             </div>

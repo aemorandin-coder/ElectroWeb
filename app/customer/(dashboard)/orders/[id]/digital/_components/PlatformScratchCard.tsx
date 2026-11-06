@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent } from 'react';
 import Image from 'next/image';
-import { FiCheck, FiCopy, FiRotateCw, FiUnlock } from 'react-icons/fi';
+import { IconoAbrirCandado, IconoCheck, IconoControl, IconoCopiar, IconoGirar } from '@/components/iconos';
 import { BsNintendoSwitch } from 'react-icons/bs';
 import { SiSteam, SiPlaystation, SiRoblox, SiNetflix, SiSpotify, SiApple } from 'react-icons/si';
-import { FaGamepad, FaXbox } from 'react-icons/fa';
+import { FaXbox } from 'react-icons/fa';
 import { createCardEngine, type GiftCardFace } from '@/components/gift-card/cardEngine';
 import { adminSecondaryButton } from '@/lib/admin-ui';
 import styles from './PlatformScratchCard.module.css';
@@ -43,7 +43,7 @@ export default function PlatformScratchCard({ code, platform, productName, image
   isAlreadyRevealed: boolean;
   onCopy: () => void;
 }) {
-  const brand = PLATFORMS[platform?.toUpperCase() as keyof typeof PLATFORMS] ?? { name: platform || 'Digital', icon: FaGamepad };
+  const brand = PLATFORMS[platform?.toUpperCase() as keyof typeof PLATFORMS] ?? { name: platform || 'Digital', icon: IconoControl };
   const Icon = brand.icon;
   const platformStyle = Object.hasOwn(PLATFORMS, platform?.toUpperCase() ?? '') ? platform?.toUpperCase() : 'DIGITAL';
   const reduced = useSyncExternalStore(subscribeReduced, readReduced, serverReduced);
@@ -222,11 +222,11 @@ export default function PlatformScratchCard({ code, platform, productName, image
             <div className={styles.glare} aria-hidden="true" />
           </div>
           <div className={`${styles.face} ${styles.back}`} aria-hidden={face !== 'back'} inert={face !== 'back'}>
-            <div className={styles.backBrand}><Icon aria-hidden="true" /><span>{brand.name}</span><FiUnlock aria-hidden="true" /></div>
+            <div className={styles.backBrand}><Icon aria-hidden="true" /><span>{brand.name}</span><IconoAbrirCandado aria-hidden="true" /></div>
             <p className={styles.backTitle}>{revealed ? 'Tu código está listo' : 'Tu próximo juego empieza aquí'}</p>
             <div className={styles.scratchZone}>
               <button type="button" onClick={() => revealed && onCopy()} disabled={!revealed} tabIndex={revealed && face === 'back' ? 0 : -1} className={styles.code} aria-label={revealed ? 'Copiar código revelado' : 'Código cubierto'}>
-                <span aria-hidden={!revealed}>{code}</span>{revealed && <FiCopy className="h-4 w-4 shrink-0" aria-hidden="true" />}
+                <span aria-hidden={!revealed}>{code}</span>{revealed && <IconoCopiar className="h-4 w-4 shrink-0" aria-hidden="true" />}
               </button>
               {!revealed && <canvas ref={coverRef} className={styles.cover} aria-label="Raspa con el dedo o el mouse para revelar el código" onPointerDown={(event) => scratch(event, true)} onPointerMove={(event) => scratch(event)} onPointerUp={finishScratch} onPointerCancel={finishScratch} />}
               <canvas ref={dustRef} className={styles.dust} aria-hidden="true" />
@@ -236,10 +236,10 @@ export default function PlatformScratchCard({ code, platform, productName, image
         </div>
       </div>
       <div className="mt-6 flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => { engine.pointerLeave({ clientX: 0, clientY: 0, pointerType: 'mouse' }); engine.flip(); }} className={`${adminSecondaryButton} flex-1 px-3`}><FiRotateCw className="h-4 w-4" aria-hidden="true" />{face === 'front' ? 'Voltear tarjeta' : 'Ver portada'}</button>
-        {face === 'back' && !revealed && <button type="button" onClick={reveal} className={`${adminSecondaryButton} flex-1 px-3`}><FiUnlock className="h-4 w-4" aria-hidden="true" />Revelar sin raspar</button>}
+        <button type="button" onClick={() => { engine.pointerLeave({ clientX: 0, clientY: 0, pointerType: 'mouse' }); engine.flip(); }} className={`${adminSecondaryButton} flex-1 px-3`}><IconoGirar className="h-4 w-4" aria-hidden="true" />{face === 'front' ? 'Voltear tarjeta' : 'Ver portada'}</button>
+        {face === 'back' && !revealed && <button type="button" onClick={reveal} className={`${adminSecondaryButton} flex-1 px-3`}><IconoAbrirCandado className="h-4 w-4" aria-hidden="true" />Revelar sin raspar</button>}
       </div>
-      <p role="status" className="mt-2 flex items-center gap-1.5 text-xs text-muted">{revealed ? <><FiCheck className="h-4 w-4 text-success-strong" aria-hidden="true" />Código revelado</> : face === 'front' ? 'Toca o arrastra la tarjeta para voltearla.' : `Lámina raspada: ${progress}%`}</p>
+      <p role="status" className="mt-2 flex items-center gap-1.5 text-xs text-muted">{revealed ? <><IconoCheck className="h-4 w-4 text-success-strong" aria-hidden="true" />Código revelado</> : face === 'front' ? 'Toca o arrastra la tarjeta para voltearla.' : `Lámina raspada: ${progress}%`}</p>
     </div>
   );
 }

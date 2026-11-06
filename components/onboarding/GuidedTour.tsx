@@ -3,8 +3,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
-import type { IconType } from 'react-icons';
-import { FiArrowLeft, FiArrowRight, FiCheck, FiGrid, FiSearch, FiShoppingCart, FiUser, FiX, FiZap } from 'react-icons/fi';
+import {
+  IconoBuscar, IconoCarrito, IconoCerrar, IconoCheck, IconoCuadricula, IconoCuenta, IconoFlechaDerecha,
+  IconoFlechaIzquierda, IconoNovedad,
+} from '@/components/iconos';
+import type { IconType } from '@/components/iconos';
 import { adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { lanzarConfeti } from '@/lib/motion/confeti';
@@ -31,22 +34,22 @@ import {
 type Paso = { id: string; objetivo: string | null; titulo: string; texto: string; Icono: IconType };
 
 const PASOS: Paso[] = [
-  { id: 'bienvenida', objetivo: null, titulo: 'Hola', texto: 'Te mostramos la tienda en 4 pasos. Toma menos de un minuto.', Icono: FiZap },
+  { id: 'bienvenida', objetivo: null, titulo: 'Hola', texto: 'Te mostramos la tienda en 4 pasos. Toma menos de un minuto.', Icono: IconoNovedad },
   {
     id: 'buscar',
     objetivo: '[data-tour="buscar"]',
     titulo: 'Busca lo que necesitas',
     texto: 'Escribe una marca, un juego o un producto y te mostramos el precio en dólares y en bolívares.',
-    Icono: FiSearch,
+    Icono: IconoBuscar,
   },
-  { id: 'catalogo', objetivo: '[data-tour="catalogo"]', titulo: 'Explora el catálogo', texto: 'Laptops, consolas, gift cards y más, ordenados por categoría.', Icono: FiGrid },
-  { id: 'carrito', objetivo: '[data-tour="carrito"]', titulo: 'Tu carrito', texto: 'Lo que agregues queda aquí hasta que pagues, también si cierras la página.', Icono: FiShoppingCart },
+  { id: 'catalogo', objetivo: '[data-tour="catalogo"]', titulo: 'Explora el catálogo', texto: 'Laptops, consolas, gift cards y más, ordenados por categoría.', Icono: IconoCuadricula },
+  { id: 'carrito', objetivo: '[data-tour="carrito"]', titulo: 'Tu carrito', texto: 'Lo que agregues queda aquí hasta que pagues, también si cierras la página.', Icono: IconoCarrito },
   {
     id: 'cuenta',
     objetivo: '[data-tour="cuenta"]',
     titulo: 'Tu cuenta',
     texto: 'Tus pedidos, tus Puntos ES y tus datos. Recarga Puntos ES con Pago Móvil y paga al instante.',
-    Icono: FiUser,
+    Icono: IconoCuenta,
   },
 ];
 
@@ -376,7 +379,7 @@ export function GuidedTour() {
                   aria-label="Cerrar el recorrido"
                   className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink"
                 >
-                  <FiX className="h-5 w-5" aria-hidden="true" />
+                  <IconoCerrar className="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -418,12 +421,12 @@ export function GuidedTour() {
                     // Sin la receta: su px-5 le dejaba 4 px al ícono dentro de un botón de 44 px
                     className="flex h-11 w-11 items-center justify-center rounded-lg border border-line bg-white text-ink transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                   >
-                    <FiArrowLeft className="h-4 w-4" aria-hidden="true" />
+                    <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" />
                   </button>
                 )}
                 <button ref={principalRef} type="button" onClick={siguiente} disabled={saliendo} className={`${adminPrimaryButton} h-11`}>
                   {esBienvenida ? 'Empezar' : ultimo ? 'Listo' : 'Siguiente'}
-                  {ultimo ? <FiCheck className="h-4 w-4" aria-hidden="true" /> : <FiArrowRight className="h-4 w-4" aria-hidden="true" />}
+                  {ultimo ? <IconoCheck className="h-4 w-4" aria-hidden="true" /> : <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />}
                 </button>
               </div>
             </div>

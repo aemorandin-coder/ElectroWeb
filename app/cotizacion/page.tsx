@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { compartirPagina } from '@/lib/og/datos';
-import { FiFileText } from 'react-icons/fi';
+import { IconoDocumento } from '@/components/iconos';
 import PublicHeader from '@/components/public/PublicHeader';
 import Footer from '@/components/Footer';
 import Container from '@/components/ui/Container';
@@ -24,7 +24,7 @@ export default function PedirCotizacionPage() {
       <main className="min-h-dvh bg-surface">
         <PageHeader
           breadcrumbs={[{ label: 'Cotizaciones' }]}
-          icon={<FiFileText />}
+          icon={<IconoDocumento />}
           eyebrow="Empresas e instituciones"
           title="Pide una cotización"
           description="Cuéntanos qué necesitas y te enviamos un presupuesto formal, a nombre de tu empresa, para verlo, imprimirlo y aprobarlo."

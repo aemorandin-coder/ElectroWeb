@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { FiAlertTriangle, FiRefreshCw, FiHome } from 'react-icons/fi';
+import { IconoActualizar, IconoAdvertencia, IconoInicio } from '@/components/iconos';
 import { adminCard, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 
 export default function Error({
@@ -20,7 +20,7 @@ export default function Error({
     <div className="min-h-dvh bg-surface flex items-center justify-center p-4" role="main">
       <div className={`${adminCard} max-w-md w-full text-center p-8`}>
         <div className="w-14 h-14 mx-auto mb-5 rounded-2xl bg-deal-bg text-deal flex items-center justify-center border border-deal/30" aria-hidden="true">
-          <FiAlertTriangle className="w-7 h-7" />
+          <IconoAdvertencia className="w-7 h-7" />
         </div>
         <h1 className="text-xl sm:text-2xl font-bold text-ink mb-2">
           Algo salió mal
@@ -41,7 +41,7 @@ export default function Error({
             className={`${adminPrimaryButton} flex-1 justify-center gap-2 py-2.5`}
             aria-label="Intentar cargar la página de nuevo"
           >
-            <FiRefreshCw className="w-4 h-4" />
+            <IconoActualizar className="w-4 h-4" />
             Intentar de nuevo
           </button>
           <Link
@@ -49,7 +49,7 @@ export default function Error({
             className={`${adminSecondaryButton} flex-1 justify-center gap-2 py-2.5`}
             aria-label="Volver a la página de inicio"
           >
-            <FiHome className="w-4 h-4" />
+            <IconoInicio className="w-4 h-4" />
             Inicio
           </Link>
         </div>

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { FiChevronRight } from 'react-icons/fi';
+import { IconoChevronDerecha } from '@/components/iconos';
 import Container from './Container';
 
 export interface PageHeaderCrumb {
@@ -41,7 +41,7 @@ export default function PageHeader({ title, description, eyebrow, icon, breadcru
                 const isLast = index === breadcrumbs.length - 1;
                 return (
                   <li key={`${crumb.label}-${index}`} className="flex items-center gap-1">
-                    <FiChevronRight className="h-3 w-3" aria-hidden="true" />
+                    <IconoChevronDerecha className="h-3 w-3" aria-hidden="true" />
                     {crumb.href && !isLast ? (
                       <Link href={crumb.href} className="hover:text-brand-600 hover:underline">{crumb.label}</Link>
                     ) : (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FiDatabase, FiRefreshCw } from 'react-icons/fi';
+import { IconoActualizar, IconoBaseDeDatos } from '@/components/iconos';
 import { Button } from '@/components/ui/Button';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
@@ -117,7 +117,7 @@ export default function SadesPanel({ onSincronizado }: { onSincronizado: () => v
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className={`p-3 rounded-full ${sadesHealth === 'ok' ? 'bg-success/10 text-success-strong' : 'bg-deal-bg text-deal'}`}>
-              <FiDatabase className="w-6 h-6" />
+              <IconoBaseDeDatos className="w-6 h-6" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-ink">Conexión ElectroCaja / Sades</h2>
@@ -154,7 +154,7 @@ export default function SadesPanel({ onSincronizado }: { onSincronizado: () => v
             isLoading={isSyncing}
             className="w-full bg-brand-600 hover:bg-brand-700 text-white sm:w-auto"
           >
-            <FiRefreshCw className={`mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+            <IconoActualizar className={`mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
             {isSyncing ? 'Sincronizando...' : 'Sincronizar Todo Ahora'}
           </Button>
         </div>

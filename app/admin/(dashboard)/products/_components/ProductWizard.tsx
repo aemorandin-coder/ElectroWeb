@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { FiAlertTriangle, FiArrowLeft, FiArrowRight, FiSave } from 'react-icons/fi';
+import { IconoAdvertencia, IconoFlechaDerecha, IconoFlechaIzquierda, IconoGuardar } from '@/components/iconos';
 import toast from 'react-hot-toast';
 
 import {
@@ -591,7 +591,7 @@ export default function ProductWizard({ productId }: Props) {
                 aria-label="Volver"
                 className="rounded-lg p-2 text-muted hover:bg-surface hover:text-ink"
               >
-                <FiArrowLeft className="w-5 h-5" />
+                <IconoFlechaIzquierda className="w-5 h-5" />
               </button>
               <div className="min-w-0">
                 <h1 className="truncate text-base font-bold leading-tight text-ink">
@@ -617,7 +617,7 @@ export default function ProductWizard({ productId }: Props) {
               </button>
               {isEditing && (
                 <button type="button" onClick={guardarCambios} disabled={isLoading || sinCambios || bloqueado} className={`${wizardPrimaryButton} disabled:opacity-50`}>
-                  <FiSave className="h-4 w-4" aria-hidden="true" />
+                  <IconoGuardar className="h-4 w-4" aria-hidden="true" />
                   <span className="hidden sm:inline">{isLoading ? 'Guardando…' : 'Guardar cambios'}</span>
                   <span className="sm:hidden">{isLoading ? '…' : 'Guardar'}</span>
                 </button>
@@ -660,7 +660,7 @@ export default function ProductWizard({ productId }: Props) {
 
         {errors.general && (
           <div className="mb-6 flex items-center gap-3 rounded-xl border border-deal/30 bg-deal-bg p-4 text-sm font-semibold text-deal" role="alert">
-            <FiAlertTriangle className="h-5 w-5 shrink-0" aria-hidden="true" />
+            <IconoAdvertencia className="h-5 w-5 shrink-0" aria-hidden="true" />
             {errors.general}
           </div>
         )}
@@ -681,7 +681,7 @@ export default function ProductWizard({ productId }: Props) {
                     onClick={handleBack}
                     className={wizardSecondaryButton}
                   >
-                    <FiArrowLeft className="w-4 h-4" />
+                    <IconoFlechaIzquierda className="w-4 h-4" />
                     {step === 0 ? 'Cambiar tipo' : 'Anterior'}
                   </button>
                 )}
@@ -690,7 +690,7 @@ export default function ProductWizard({ productId }: Props) {
                 {isEditing ? (
                   <button type="button" onClick={handleNext} className={wizardSecondaryButton}>
                     Siguiente
-                    <FiArrowRight className="w-4 h-4" />
+                    <IconoFlechaDerecha className="w-4 h-4" />
                   </button>
                 ) : (
                   <button
@@ -699,7 +699,7 @@ export default function ProductWizard({ productId }: Props) {
                     className={wizardPrimaryButton}
                   >
                     {step === steps.length - 2 ? 'Revisar y publicar' : 'Continuar'}
-                    <FiArrowRight className="w-4 h-4" />
+                    <IconoFlechaDerecha className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -713,7 +713,7 @@ export default function ProductWizard({ productId }: Props) {
                   onClick={handleBack}
                   className="flex items-center gap-2 text-sm font-medium text-muted hover:text-ink"
                 >
-                  <FiArrowLeft className="w-4 h-4" />
+                  <IconoFlechaIzquierda className="w-4 h-4" />
                   Volver a SEO
                 </button>
               </div>

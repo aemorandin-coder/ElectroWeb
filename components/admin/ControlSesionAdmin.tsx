@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { signOut } from 'next-auth/react';
-import { FiClock } from 'react-icons/fi';
+import { IconoReloj } from '@/components/iconos';
 import { adminPrimaryButton } from '@/lib/admin-ui';
 
 // C-140: la sesión del panel se cierra tras 1 hora sin uso (regla de Andrés del 30/09).
@@ -94,7 +94,7 @@ export default function ControlSesionAdmin() {
   return (
     <div role="alertdialog" aria-live="assertive" aria-labelledby="sesion-aviso-titulo" className="fixed inset-x-3 bottom-4 z-[var(--z-toast)] mx-auto max-w-md rounded-2xl border border-line bg-white p-4 shadow-lg">
       <div className="flex items-start gap-3">
-        <FiClock className="mt-0.5 h-5 w-5 shrink-0 text-warning-strong" aria-hidden="true" />
+        <IconoReloj className="mt-0.5 h-5 w-5 shrink-0 text-warning-strong" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p id="sesion-aviso-titulo" className="text-sm font-semibold text-ink">Tu sesión se cierra en {minutos} {minutos === 1 ? 'minuto' : 'minutos'}</p>
           <p className="mt-0.5 text-sm text-muted">Por seguridad, el panel se cierra tras 1 hora sin uso.</p>

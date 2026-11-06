@@ -20,6 +20,7 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
 import { enviarConVersion } from '@/lib/edicion/guardado';
 import { useConflictoDeFormulario } from '@/lib/edicion/useConflictoDeFormulario';
+import { IconoBuscar, IconoCerrar, IconoChevronDerecha, IconoMas, IconoReportes, IconoSubir } from '@/components/iconos';
 
 interface Category {
   id: string;
@@ -329,9 +330,7 @@ export default function CategoriesPage() {
               className="p-1.5 bg-brand-50 text-brand-600 rounded-md hover:bg-brand-100 transition-colors"
               title="Nueva Categoría Raíz"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
+              <IconoMas className="w-5 h-5" />
             </button>
           </div>
           <div className="relative">
@@ -342,9 +341,7 @@ export default function CategoriesPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-2 bg-white border border-line rounded-lg text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
             />
-            <svg className="w-4 h-4 text-subtle absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <IconoBuscar className="w-4 h-4 text-subtle absolute left-3 top-2.5" />
           </div>
         </div>
 
@@ -421,9 +418,7 @@ export default function CategoriesPage() {
                     onClick={() => { setIsCreating(false); setIsEditing(false); }}
                     className="p-2 text-subtle hover:text-muted hover:bg-surface rounded-full transition-all"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <IconoCerrar className="w-6 h-6" />
                   </button>
                 </div>
 
@@ -518,9 +513,7 @@ export default function CategoriesPage() {
                         {uploadingIcon ? (
                           <div className="w-3.5 h-3.5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                          </svg>
+                          <IconoSubir className="w-3.5 h-3.5" />
                         )}
                         Subir icono personalizado
                       </button>
@@ -776,9 +769,7 @@ export default function CategoriesPage() {
                         className="w-full flex items-center gap-4 p-4 bg-white border border-line rounded-2xl hover:border-brand-500 hover:shadow-md transition-all group text-left"
                       >
                         <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600 group-hover:bg-brand-500 group-hover:text-white transition-colors">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
+                          <IconoMas className="w-5 h-5" />
                         </div>
                         <div>
                           <div className="font-semibold text-ink text-sm group-hover:text-brand-600 transition-colors">Crear Subcategoría</div>
@@ -791,9 +782,7 @@ export default function CategoriesPage() {
                         className="w-full flex items-center gap-4 p-4 bg-white border border-line rounded-2xl hover:border-brand-500 transition-all group text-left"
                       >
                         <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600 group-bg-brand-600 group-hover:text-white transition-colors">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                          </svg>
+                          <IconoReportes className="w-5 h-5" />
                         </div>
                         <div>
                           <div className="font-semibold text-ink text-sm group-text-brand-600 transition-colors">Ver Productos</div>
@@ -885,9 +874,7 @@ function CategoryTree({
                   onClick={(e) => { e.stopPropagation(); onToggle(node.id); }}
                   className={`p-1 rounded hover:bg-ink/10 ${selectedId === node.id ? 'text-white' : 'text-muted'}`}
                 >
-                  <svg className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <IconoChevronDerecha className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                 </button>
               ) : (
                 <div className="w-5" />

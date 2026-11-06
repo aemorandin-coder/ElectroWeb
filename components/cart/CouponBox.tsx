@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
-import { FiCheck, FiScissors, FiX } from 'react-icons/fi';
+import { IconoCerrar, IconoCheck, IconoCupon } from '@/components/iconos';
 
 export interface CouponStatus {
   applied: boolean;
@@ -32,7 +32,7 @@ export default function CouponBox({ code, onApply, onRemove, status, pendingText
     return (
       <div className={`rounded-lg border px-3 py-2 ${tone}`}>
         <div className="flex items-center gap-2">
-          {status?.applied ? <FiCheck className="h-4 w-4 shrink-0 text-success-strong" aria-hidden="true" /> : <FiScissors className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />}
+          {status?.applied ? <IconoCheck className="h-4 w-4 shrink-0 text-success-strong" aria-hidden="true" /> : <IconoCupon className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />}
           <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">Cupón {code}</span>
           <button
             type="button"
@@ -40,7 +40,7 @@ export default function CouponBox({ code, onApply, onRemove, status, pendingText
             className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-medium text-muted hover:text-deal focus-visible:outline-2 focus-visible:outline-brand-500"
             aria-label={`Quitar el cupón ${code}`}
           >
-            <FiX className="h-4 w-4" aria-hidden="true" /> Quitar
+            <IconoCerrar className="h-4 w-4" aria-hidden="true" /> Quitar
           </button>
         </div>
         <p className={`text-xs ${status?.applied ? 'text-success-strong' : status ? 'text-warning-strong' : 'text-muted'}`} role="status">
@@ -57,7 +57,7 @@ export default function CouponBox({ code, onApply, onRemove, status, pendingText
         onClick={() => setOpen(true)}
         className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-brand-500"
       >
-        <FiScissors className="h-4 w-4" aria-hidden="true" /> ¿Tienes un cupón?
+        <IconoCupon className="h-4 w-4" aria-hidden="true" /> ¿Tienes un cupón?
       </button>
     );
   }

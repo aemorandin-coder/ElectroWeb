@@ -7,7 +7,7 @@ import { formatUSD } from '@/lib/currency';
 
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FiPercent, FiCheck, FiX, FiClock, FiUser, FiPackage, FiSearch } from 'react-icons/fi';
+import { IconoBuscar, IconoCerrar, IconoCheck, IconoCuenta, IconoPaquete, IconoPorcentaje, IconoReloj } from '@/components/iconos';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -173,7 +173,7 @@ export default function Solicitudes() {
                 <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between">
                     {/* Search */}
                     <div className="relative flex-1 w-full md:max-w-md">
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                        <IconoBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                         <input
                             type="text"
                             placeholder="Buscar por producto o cliente..."
@@ -216,7 +216,7 @@ export default function Solicitudes() {
                                             {request.user.image ? (
                                                 <Image src={request.user.image} alt="" width={40} height={40} className="rounded-full" />
                                             ) : (
-                                                <FiUser className="w-5 h-5 text-muted" />
+                                                <IconoCuenta className="w-5 h-5 text-muted" />
                                             )}
                                         </div>
                                         <div className="min-w-0">
@@ -228,7 +228,7 @@ export default function Solicitudes() {
                                     {/* Product Info */}
                                     <div className="flex-1 flex items-center gap-3">
                                         <div className="w-12 h-12 bg-surface rounded-lg flex items-center justify-center">
-                                            <FiPackage className="w-6 h-6 text-muted" />
+                                            <IconoPaquete className="w-6 h-6 text-muted" />
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <p className="font-semibold text-ink text-sm truncate">{request.productName}</p>
@@ -251,14 +251,14 @@ export default function Solicitudes() {
                                                     className="p-2 bg-success/10 text-success-strong rounded-lg hover:bg-success/20 transition-all"
                                                     title="Aprobar"
                                                 >
-                                                    <FiCheck className="w-4 h-4" />
+                                                    <IconoCheck className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => openActionModal(request, 'reject')}
                                                     className="p-2 bg-deal/10 text-deal rounded-lg hover:bg-deal/20 transition-all"
                                                     title="Rechazar"
                                                 >
-                                                    <FiX className="w-4 h-4" />
+                                                    <IconoCerrar className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         )}
@@ -279,7 +279,7 @@ export default function Solicitudes() {
                                 {/* Approved Info */}
                                 {request.status === 'APPROVED' && request.expiresAt && (
                                     <div className="mt-3 flex items-center gap-2 text-xs">
-                                        <FiClock className="w-3.5 h-3.5 text-success-strong" />
+                                        <IconoReloj className="w-3.5 h-3.5 text-success-strong" />
                                         <span className="text-success-strong font-semibold">
                                             Descuento de {request.approvedDiscount}% aprobado -
                                             Expira: {new Date(request.expiresAt).toLocaleString('es-VE')}
@@ -292,7 +292,7 @@ export default function Solicitudes() {
                 </div>
             ) : (
                 <div className="bg-white rounded-xl border border-line p-12 text-center">
-                    <FiPercent className="w-16 h-16 text-subtle mx-auto mb-4" />
+                    <IconoPorcentaje className="w-16 h-16 text-subtle mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-ink mb-2">No hay solicitudes</h3>
                     <p className="text-muted">
                         {filter === 'PENDING' ? 'No hay solicitudes pendientes de revisar' : 'No se encontraron solicitudes'}
@@ -315,7 +315,7 @@ export default function Solicitudes() {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                                        {actionType === 'approve' ? <FiCheck className="w-6 h-6" /> : <FiX className="w-6 h-6" />}
+                                        {actionType === 'approve' ? <IconoCheck className="w-6 h-6" /> : <IconoCerrar className="w-6 h-6" />}
                                     </div>
                                     <div>
                                         <h2 className="text-lg font-bold">{actionType === 'approve' ? 'Aprobar Descuento' : 'Rechazar Solicitud'}</h2>
@@ -323,7 +323,7 @@ export default function Solicitudes() {
                                     </div>
                                 </div>
                                 <button onClick={() => setShowActionModal(false)} className="p-2 hover:bg-white/20 rounded-lg">
-                                    <FiX className="w-5 h-5" />
+                                    <IconoCerrar className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
@@ -425,12 +425,12 @@ export default function Solicitudes() {
                                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                 ) : actionType === 'approve' ? (
                                     <>
-                                        <FiCheck className="w-5 h-5" />
+                                        <IconoCheck className="w-5 h-5" />
                                         Aprobar Descuento
                                     </>
                                 ) : (
                                     <>
-                                        <FiX className="w-5 h-5" />
+                                        <IconoCerrar className="w-5 h-5" />
                                         Rechazar Solicitud
                                     </>
                                 )}

@@ -4,8 +4,11 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import {
+  IconoAbrirAparte, IconoAdvertencia, IconoConfirmado, IconoCopiar, IconoCorreo, IconoEliminar, IconoEnviar,
+  IconoFlechaIzquierda, IconoMas, IconoPaquete, IconoVer,
+} from '@/components/iconos';
 import { FaWhatsapp } from 'react-icons/fa6';
-import { FiAlertTriangle, FiArrowLeft, FiBox, FiCheckCircle, FiCopy, FiExternalLink, FiEye, FiMail, FiPlus, FiSend, FiTrash2 } from 'react-icons/fi';
 import {
   adminBadge, adminCard, adminDangerButton, adminError, adminHint, adminIconButton, adminInput, adminLabel, adminNotice, adminPageSubtitle, adminPageTitle,
   adminPrimaryButton, adminSecondaryButton, adminSectionTitle, adminSpinner,
@@ -413,7 +416,7 @@ export default function EditorCotizacion() {
   return (
     <div className="mx-auto max-w-4xl pb-10">
       <Link href="/admin/cotizaciones" className="mb-3 inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-ink">
-        <FiArrowLeft className="h-4 w-4" aria-hidden="true" />
+        <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" />
         Cotizaciones
       </Link>
       <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -433,7 +436,7 @@ export default function EditorCotizacion() {
 
       {cotizacion?.estadoGuardado === 'APPROVED' && (
         <p className={`${adminNotice('success')} mb-4 flex items-start gap-2`} role="status">
-          <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoConfirmado className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span>
             Aprobada por <strong>{cotizacion.approvedName}</strong>{cotizacion.approvedDoc ? ` (${cotizacion.approvedDoc})` : ''}
             {cotizacion.approvedAt ? ` el ${new Date(cotizacion.approvedAt).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })}` : ''}.
@@ -458,7 +461,7 @@ export default function EditorCotizacion() {
           <p className={adminPageSubtitle}>Con este enlace la ve, la imprime o la guarda en PDF y la aprueba. No necesita cuenta.</p>
           {/* C-181: si el cliente ya la abrió (la vista previa de WhatsApp y el equipo no cuentan) */}
           <p className="mt-2 flex items-start gap-2 text-sm text-ink-soft" data-vista>
-            <FiEye className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <IconoVer className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <span>
               {cotizacion.viewedAt
                 ? `El cliente la abrió el ${new Date(cotizacion.viewedAt).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })}${cotizacion.viewCount > 1 && cotizacion.lastViewedAt ? ` (${cotizacion.viewCount} veces; la última, el ${new Date(cotizacion.lastViewedAt).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })})` : ''}.`
@@ -468,13 +471,13 @@ export default function EditorCotizacion() {
           </p>
           <p className="mt-3 break-all rounded-lg border border-line bg-surface px-3 py-2 font-mono text-xs text-ink" data-enlace>{enlace}</p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            <button type="button" onClick={copiar} className={adminSecondaryButton}><FiCopy className="h-4 w-4" aria-hidden="true" />Copiar enlace</button>
+            <button type="button" onClick={copiar} className={adminSecondaryButton}><IconoCopiar className="h-4 w-4" aria-hidden="true" />Copiar enlace</button>
             {telefono.length >= 10 && (
               <a href={`https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className={adminSecondaryButton}>
                 <FaWhatsapp className="h-4 w-4" aria-hidden="true" />Enviar por WhatsApp
               </a>
             )}
-            <a href={enlace} target="_blank" rel="noopener noreferrer" className={adminSecondaryButton}><FiExternalLink className="h-4 w-4" aria-hidden="true" />Abrir</a>
+            <a href={enlace} target="_blank" rel="noopener noreferrer" className={adminSecondaryButton}><IconoAbrirAparte className="h-4 w-4" aria-hidden="true" />Abrir</a>
           </div>
 
           <div className="mt-4 border-t border-line pt-4" data-correo>
@@ -494,7 +497,7 @@ export default function EditorCotizacion() {
               {cotizacion.emailedAt && ` Último envío: a ${cotizacion.emailedTo} (${new Date(cotizacion.emailedAt).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })}).`}
             </p>
             <button type="button" onClick={enviarPorCorreo} disabled={correoOcupado || !destinoCorreo.trim()} className={`${adminSecondaryButton} mt-3`}>
-              <FiMail className="h-4 w-4" aria-hidden="true" />{correoOcupado ? 'Enviando…' : 'Enviar por correo'}
+              <IconoCorreo className="h-4 w-4" aria-hidden="true" />{correoOcupado ? 'Enviando…' : 'Enviar por correo'}
             </button>
           </div>
         </section>
@@ -546,7 +549,7 @@ export default function EditorCotizacion() {
               <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-ink-soft">¿Un servicio o algo que no está en el catálogo?</p>
                 <button type="button" onClick={() => setLineas((ls) => [...ls, { clave: clave(), productId: null, title: '', description: '', quantity: '1', unitPriceUSD: '', listPriceUSD: null, kind: null }])} className={`${adminSecondaryButton} shrink-0`} data-linea-libre>
-                  <FiPlus className="h-4 w-4" aria-hidden="true" />
+                  <IconoMas className="h-4 w-4" aria-hidden="true" />
                   Agregar una línea libre
                 </button>
               </div>
@@ -566,7 +569,7 @@ export default function EditorCotizacion() {
                   <li key={l.clave} className="rounded-xl border border-line p-3" data-linea>
                     {l.productId && (
                       <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-soft" data-del-catalogo>
-                        <span className={adminBadge('brand')}><FiBox className="h-3 w-3" aria-hidden="true" />Del catálogo</span>
+                        <span className={adminBadge('brand')}><IconoPaquete className="h-3 w-3" aria-hidden="true" />Del catálogo</span>
                         {producto && <span className="[overflow-wrap:anywhere]">{producto.sku}</span>}
                         {producto && !soloLectura && (producto.disponible === null
                           ? <span>Digital: no lleva inventario</span>
@@ -579,7 +582,7 @@ export default function EditorCotizacion() {
                         <input id={`${l.clave}-title`} value={l.title} onChange={(e) => cambiarLinea(l.clave, 'title', e.target.value)} maxLength={160} className={adminInput()} placeholder="Equipo o servicio" />
                       </div>
                       <button type="button" onClick={() => setLineas((ls) => ls.filter((x) => x.clave !== l.clave))} aria-label={`Quitar la línea ${i + 1}`} className={`${adminIconButton} h-11 w-11 shrink-0 hover:text-deal`}>
-                        <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                        <IconoEliminar className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
                     <label htmlFor={`${l.clave}-desc`} className="sr-only">Línea {i + 1}: descripción</label>
@@ -603,7 +606,7 @@ export default function EditorCotizacion() {
                     )}
                     {faltan > 0 && !soloLectura && (
                       <p className="mt-2 flex items-start gap-1.5 text-xs font-semibold text-warning-strong" data-falta-inventario>
-                        <FiAlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        <IconoAdvertencia className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                         <span>{producto?.disponible === 0 ? 'No hay existencias' : `Solo hay ${producto?.disponible}`}: si se aprueba así, {faltan === 1 ? 'falta 1 unidad' : `faltan ${faltan} unidades`} por conseguir.</span>
                       </p>
                     )}
@@ -691,15 +694,15 @@ export default function EditorCotizacion() {
       {!soloLectura && (
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <button type="button" onClick={enviar} disabled={ocupado} className={adminPrimaryButton}>
-            <FiSend className="h-4 w-4" aria-hidden="true" />
+            <IconoEnviar className="h-4 w-4" aria-hidden="true" />
             {cotizacion?.estadoGuardado === 'SENT' ? 'Guardar y reenviar' : 'Guardar y enviar al cliente'}
           </button>
           <button type="button" onClick={guardarBorrador} disabled={ocupado} className={adminSecondaryButton}>Guardar{cotizacion?.estadoGuardado === 'SENT' ? '' : ' borrador'}</button>
           {cotizacion && !visibleParaCliente && (
-            <a href={enlace} target="_blank" rel="noopener noreferrer" className={adminSecondaryButton}><FiExternalLink className="h-4 w-4" aria-hidden="true" />Vista previa</a>
+            <a href={enlace} target="_blank" rel="noopener noreferrer" className={adminSecondaryButton}><IconoAbrirAparte className="h-4 w-4" aria-hidden="true" />Vista previa</a>
           )}
           {cotizacion && cotizacion.estadoGuardado !== 'REJECTED' && (
-            <button type="button" onClick={aprobar} disabled={ocupado} className={adminSecondaryButton}><FiCheckCircle className="h-4 w-4" aria-hidden="true" />Marcar como aprobada</button>
+            <button type="button" onClick={aprobar} disabled={ocupado} className={adminSecondaryButton}><IconoConfirmado className="h-4 w-4" aria-hidden="true" />Marcar como aprobada</button>
           )}
           {cotizacion?.estadoGuardado === 'SENT' && (
             <>
@@ -711,7 +714,7 @@ export default function EditorCotizacion() {
             <button type="button" onClick={() => void cerrar('reabrir')} disabled={ocupado} className={adminSecondaryButton}>Volver a borrador</button>
           )}
           {cotizacion && !cotizacion.sentAt && (cotizacion.estadoGuardado === 'DRAFT' || cotizacion.estadoGuardado === 'REQUESTED') && (
-            <button type="button" onClick={borrar} disabled={ocupado} className={`${adminDangerButton} sm:ml-auto`}><FiTrash2 className="h-4 w-4" aria-hidden="true" />Borrar</button>
+            <button type="button" onClick={borrar} disabled={ocupado} className={`${adminDangerButton} sm:ml-auto`}><IconoEliminar className="h-4 w-4" aria-hidden="true" />Borrar</button>
           )}
         </div>
       )}

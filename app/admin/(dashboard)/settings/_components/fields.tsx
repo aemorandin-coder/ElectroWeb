@@ -3,7 +3,7 @@
 import { useId, useRef, useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import { FiImage, FiTrash2, FiUpload } from 'react-icons/fi';
+import { IconoEliminar, IconoImagen, IconoSubir } from '@/components/iconos';
 import { adminCard, adminError, adminHint, adminInput, adminLabel, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
 
 /** Tarjeta de un grupo de ajustes, con título y para qué sirve. */
@@ -219,7 +219,7 @@ export function ImageField({ label, hint, value, onChange, uploadType, aspect = 
           ) : value ? (
             <Image src={value} alt="" fill sizes={aspect === 'wide' ? '160px' : '80px'} className={aspect === 'wide' ? 'object-cover' : 'object-contain p-2'} unoptimized={!value.startsWith('/')} />
           ) : (
-            <FiImage className="h-7 w-7 text-subtle" aria-hidden="true" />
+            <IconoImagen className="h-7 w-7 text-subtle" aria-hidden="true" />
           )}
         </div>
         <div className="flex min-w-0 flex-col gap-2">
@@ -236,12 +236,12 @@ export function ImageField({ label, hint, value, onChange, uploadType, aspect = 
             }}
           />
           <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className={`${adminSecondaryButton} h-9 whitespace-nowrap px-3`}>
-            <FiUpload className="h-4 w-4" aria-hidden="true" />
+            <IconoSubir className="h-4 w-4" aria-hidden="true" />
             {value ? 'Cambiar' : 'Subir imagen'}
           </button>
           {value && (
             <button type="button" onClick={() => onChange('')} className="inline-flex items-center gap-1.5 self-start text-sm font-semibold text-deal hover:underline">
-              <FiTrash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              <IconoEliminar className="h-3.5 w-3.5" aria-hidden="true" />
               Quitar
             </button>
           )}

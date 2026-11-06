@@ -7,6 +7,7 @@ import { useCartSafe } from '@/contexts/CartContext';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { formatUSD } from '@/lib/currency';
 import { getGiftCardDesign } from '@/lib/gift-card-designs';
+import { IconoCarrito, IconoEliminar, IconoMas, IconoMenos, IconoPaquete } from '@/components/iconos';
 
 export default function CartIcon() {
   const { items, totalItems, getTotalPrice, removeItem, updateQuantity, clearCart } = useCartSafe();
@@ -55,18 +56,7 @@ export default function CartIcon() {
         className="relative p-2 hover:bg-brand-50 rounded-lg transition-all duration-300"
         style={{ overflow: 'visible' }}
       >
-        <svg
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          style={{
-            width: '20px',
-            height: '20px',
-            transition: 'transform 0.3s'
-          }}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
+        <IconoCarrito style={{ width: '20px', height: '20px', transition: 'transform 0.3s' }} />
 
         {/* Contador igual al de la barra inferior y la campana (revisión R12: tenía estilos en línea con hex y letra de 9 px, y cortaba en "9+") */}
         {totalItems > 0 && (
@@ -106,9 +96,7 @@ export default function CartIcon() {
           >
             {items.length === 0 ? (
               <div className="p-8 text-center flex flex-col items-center justify-center">
-                <svg className="w-16 h-16 text-line mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+                <IconoCarrito className="w-16 h-16 text-line mx-auto mb-4" />
                 <p className="text-muted text-sm mb-4">Tu carrito está vacío</p>
                 <Link
                   href="/productos"
@@ -130,9 +118,7 @@ export default function CartIcon() {
                   className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-deal hover:text-deal/80 hover:bg-deal-bg rounded transition-colors"
                   title="Limpiar carrito"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  <IconoEliminar className="w-3.5 h-3.5" />
                   <span>Limpiar</span>
                 </button>
               </div>
@@ -235,9 +221,7 @@ export default function CartIcon() {
                             />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <svg className="w-8 h-8 text-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                              </svg>
+                              <IconoPaquete className="w-8 h-8 text-subtle" />
                             </div>
                           );
                         })()}
@@ -258,9 +242,7 @@ export default function CartIcon() {
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             className="w-6 h-6 flex items-center justify-center border border-line rounded hover:bg-white transition-colors"
                           >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                            </svg>
+                            <IconoMenos className="w-3 h-3" />
                           </button>
                           <span className="text-xs font-medium text-ink w-8 text-center">
                             {item.quantity}
@@ -270,17 +252,13 @@ export default function CartIcon() {
                             disabled={item.quantity >= item.stock}
                             className="w-6 h-6 flex items-center justify-center border border-line rounded hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
+                            <IconoMas className="w-3 h-3" />
                           </button>
                           <button
                             onClick={() => removeItem(item.id)}
                             className="ml-auto text-deal hover:text-deal/80 transition-colors"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                            <IconoEliminar className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
@@ -300,9 +278,7 @@ export default function CartIcon() {
                   onClick={() => setIsOpen(false)}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-500 text-white text-sm font-semibold rounded-lg hover:bg-brand-600 transition-all shadow-md mb-2"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
+                  <IconoCarrito className="w-4 h-4" />
                   Ver Carrito Completo
                 </Link>
                 <Link

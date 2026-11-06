@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { FiAlertTriangle, FiBox, FiCheck, FiCopy, FiExternalLink, FiMapPin, FiRefreshCw, FiTruck, FiUser } from 'react-icons/fi';
+import {
+  IconoAbrirAparte, IconoActualizar, IconoAdvertencia, IconoCheck, IconoCopiar, IconoCuenta, IconoEnvio, IconoPaquete,
+  IconoUbicacion,
+} from '@/components/iconos';
 import { adminBadge, adminSecondaryButton } from '@/lib/admin-ui';
 import { leerEmbalajeGuardado, renglonesEmbalaje } from '@/lib/embalaje';
 import { ETIQUETA_ENTREGA, NOMBRE_EMPRESA, etiquetaModo, type EmpresaGuia } from '@/lib/envios/empresas';
@@ -121,7 +124,7 @@ export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrden
     <div className="space-y-3 rounded-xl border border-line p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 className="flex items-center gap-2 text-sm font-semibold text-ink">
-          <FiTruck className="h-4 w-4 text-brand-600" aria-hidden="true" />
+          <IconoEnvio className="h-4 w-4 text-brand-600" aria-hidden="true" />
           {ETIQUETA_ENTREGA[orden.deliveryMethod ?? ''] ?? 'Entrega'}
           {empresa && esEnvio ? ` · ${empresa}` : ''}
           {orden.shippingMode && esEnvio ? ` · ${etiquetaModo(orden.shippingMode)}` : ''}
@@ -136,7 +139,7 @@ export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrden
       {orden.shippingMode === 'OFFICE' && orden.courierOfficeName ? (
         <div className="text-sm">
           <p className="flex items-start gap-1.5 font-medium text-ink">
-            <FiMapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+            <IconoUbicacion className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
             {orden.shippingCarrier === 'MRW' ? 'Agencia' : 'Oficina'} {orden.courierOfficeName}
             <span className="font-normal text-muted">(código {orden.courierOfficeCode})</span>
           </p>
@@ -145,13 +148,13 @@ export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrden
         </div>
       ) : orden.shippingAddress ? (
         <p className="flex items-start gap-1.5 text-sm text-ink [overflow-wrap:anywhere]">
-          <FiMapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /> {orden.shippingAddress}
+          <IconoUbicacion className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /> {orden.shippingAddress}
         </p>
       ) : null}
 
       {orden.recipientName && (
         <p className="flex items-start gap-1.5 text-sm text-ink">
-          <FiUser className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+          <IconoCuenta className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
           <span>
             {orden.recipientName}
             <span className="text-muted"> · {orden.recipientIdNumber} · {orden.recipientPhone}</span>
@@ -163,7 +166,7 @@ export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrden
       {plan && (
         <div className="rounded-lg bg-surface p-3 text-sm">
           <p className="flex items-center gap-1.5 font-semibold text-ink">
-            <FiBox className="h-4 w-4 text-brand-600" aria-hidden="true" />
+            <IconoPaquete className="h-4 w-4 text-brand-600" aria-hidden="true" />
             Cómo empacar: {plan.piezas} {plan.piezas === 1 ? 'pieza' : 'piezas'} · {String(plan.pesoKg).replace('.', ',')} kg aprox.
           </p>
           {plan.bultos.length > 0 && (
@@ -173,7 +176,7 @@ export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrden
           )}
           {plan.estimados.length > 0 && (
             <p className="mt-1.5 flex items-start gap-1.5 text-xs text-warning-strong">
-              <FiAlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <IconoAdvertencia className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               Sin medidas en la ficha (tamaño estimado por el peso): {plan.estimados.join(', ')}. Revisa que quepa antes de cerrar el paquete.
             </p>
           )}
@@ -182,7 +185,7 @@ export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrden
 
       {esEnvio && conDatosNuevos && (
         <button type="button" onClick={() => copiar('datos')} className={`${adminSecondaryButton} w-full sm:w-auto ${copiado === 'datos' ? 'border-success-strong text-success-strong' : ''}`} aria-live="polite">
-          {copiado === 'datos' ? <FiCheck className="h-4 w-4" aria-hidden="true" /> : <FiCopy className="h-4 w-4" aria-hidden="true" />}
+          {copiado === 'datos' ? <IconoCheck className="h-4 w-4" aria-hidden="true" /> : <IconoCopiar className="h-4 w-4" aria-hidden="true" />}
           {copiado === 'datos' ? '¡Copiado!' : 'Copiar datos para la guía'}
         </button>
       )}
@@ -192,17 +195,17 @@ export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrden
           <span className="text-muted">Guía:</span>
           <span className="font-mono font-semibold text-ink">{orden.trackingNumber}</span>
           <button type="button" onClick={() => copiar('guia')} className="inline-flex h-9 items-center gap-1 rounded-lg px-2 font-medium text-brand-600 hover:bg-brand-50" aria-live="polite">
-            {copiado === 'guia' ? <FiCheck className="h-4 w-4" aria-hidden="true" /> : <FiCopy className="h-4 w-4" aria-hidden="true" />}
+            {copiado === 'guia' ? <IconoCheck className="h-4 w-4" aria-hidden="true" /> : <IconoCopiar className="h-4 w-4" aria-hidden="true" />}
             {copiado === 'guia' ? '¡Copiada!' : 'Copiar guía'}
           </button>
           {orden.trackingUrl && (
             <a href={orden.trackingUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-brand-600 hover:text-brand-700">
-              <FiExternalLink className="h-4 w-4" aria-hidden="true" /> Abrir {empresa || 'la empresa'}
+              <IconoAbrirAparte className="h-4 w-4" aria-hidden="true" /> Abrir {empresa || 'la empresa'}
             </a>
           )}
           {puedeConsultar && (
             <button type="button" onClick={consultarZoom} disabled={consultando} className="inline-flex h-9 items-center gap-1 rounded-lg px-2 font-medium text-brand-600 hover:bg-brand-50 disabled:opacity-60">
-              <FiRefreshCw className={`h-4 w-4 ${consultando ? 'animate-spin' : ''}`} aria-hidden="true" />
+              <IconoActualizar className={`h-4 w-4 ${consultando ? 'animate-spin' : ''}`} aria-hidden="true" />
               {consultando ? 'Consultando…' : 'Consultar ZOOM ahora'}
             </button>
           )}

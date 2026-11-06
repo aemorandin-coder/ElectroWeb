@@ -1,4 +1,4 @@
-import { FiCheck } from 'react-icons/fi';
+import { IconoCheck } from '@/components/iconos';
 import type { PasoPedido } from '@/lib/order-pasos';
 
 // Stepper horizontal de un pedido (C-128): Confirmado → En preparación → Despachado a ZOOM → Listo para retiro.
@@ -23,7 +23,7 @@ export default function OrderStepper({ pasos }: { pasos: PasoPedido[] }) {
                 hecho ? 'bg-brand-500 text-white' : actual ? 'bg-white text-brand-600 ring-2 ring-brand-500' : 'bg-white text-muted ring-1 ring-line-strong'
               }`}
             >
-              {hecho ? <FiCheck className="h-3.5 w-3.5" aria-hidden="true" /> : i + 1}
+              {hecho ? <IconoCheck className="h-3.5 w-3.5" aria-hidden="true" /> : i + 1}
             </span>
             <span className={`mt-1.5 px-0.5 text-xs leading-tight ${actual ? 'font-semibold text-ink' : hecho ? 'text-ink-soft' : 'text-muted'}`}>
               {paso.label}

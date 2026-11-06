@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { FiAlertTriangle, FiInfo, FiTruck } from 'react-icons/fi';
+import { IconoAdvertencia, IconoEnvio, IconoInfo } from '@/components/iconos';
 import { useSettings } from '@/contexts/SettingsContext';
 import { formatUSD } from '@/lib/currency';
 import { desglosePrecio, formatMargen, MARGEN_SUGERIDO, precioSugerido } from '@/lib/precio-sugerido';
@@ -104,13 +104,13 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
         </div>
         {ganancia !== null && ganancia <= 0 && (
           <p className="flex items-start gap-2 text-sm font-medium text-deal" role="alert">
-            <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             {iva > 0 ? 'Quitando el IVA, lo' : 'Lo'} vendes {ganancia === 0 ? 'al costo' : 'por debajo del costo'}. Revisa el precio.
           </p>
         )}
         {pasaDelTope && (
           <p className="flex items-start gap-2 text-sm text-warning-strong">
-            <FiAlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <span>
               El margen pasa del {MARGEN_SUGERIDO} % sobre el costo que escribiste. El tope de la Ley de Precios Justos se mide sobre todos tus costos (flete, gastos de la tienda): confírmalo con tu contador. Este aviso solo lo ves tú.
             </span>
@@ -136,7 +136,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
         titulo="Envío"
         ayuda={(
           <span className="inline-flex items-start gap-1.5">
-            <FiInfo className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+            <IconoInfo className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
             ZOOM o MRW con cobro a destino: con el peso y las medidas la tienda elige el empaque, cobra su embalaje y muestra la tarifa de referencia.
           </span>
         )}
@@ -184,7 +184,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
         {/* C-155: un estimado de la búsqueda en la web se recuerda hasta que alguien toque el peso o las medidas */}
         {data.medidasEstimadas && (
           <p className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning-strong">
-            <FiInfo className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <IconoInfo className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <span>El peso o las medidas son un estimado de la búsqueda en la web. Compruébalos con la caja real: de aquí salen el embalaje y el flete.</span>
           </p>
         )}
@@ -217,7 +217,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
         <div className="flex items-start justify-between gap-4 rounded-xl border border-line p-3">
           <label htmlFor="free-shipping" className="min-w-0 cursor-pointer">
             <span className="flex items-center gap-1.5 text-sm font-semibold text-ink">
-              <FiTruck className="h-4 w-4 text-success-strong" aria-hidden="true" /> Envío gratis
+              <IconoEnvio className="h-4 w-4 text-success-strong" aria-hidden="true" /> Envío gratis
             </span>
             <span className="mt-0.5 block text-xs text-muted">
               La tienda paga el envío de todo el pedido que lo lleve. Para productos de alto precio.

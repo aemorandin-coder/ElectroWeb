@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { compartirPagina } from '@/lib/og/datos';
 import Link from 'next/link';
-import { FiFileText } from 'react-icons/fi';
+import { IconoDocumento } from '@/components/iconos';
 import PublicHeader from '@/components/public/PublicHeader';
 import Footer from '@/components/Footer';
 import Container from '@/components/ui/Container';
@@ -33,7 +33,7 @@ export default async function TermsPage() {
       <main className="min-h-dvh bg-surface">
         <PageHeader
           breadcrumbs={[{ label: 'Términos y condiciones' }]}
-          icon={<FiFileText />}
+          icon={<IconoDocumento />}
           eyebrow="Legal"
           title="Términos y condiciones"
           description={pagina ? `Última actualización: ${actualizado} · Versión ${pagina.version}` : undefined}

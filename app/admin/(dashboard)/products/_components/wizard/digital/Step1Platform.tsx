@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
+import { IconoCerrar, IconoCheck, IconoClave, IconoControl, IconoEstrella, IconoGiftCard, IconoPaquete } from '@/components/iconos';
 import { BsNintendoSwitch } from 'react-icons/bs';
 import { FaAmazon, FaXbox } from 'react-icons/fa6';
-import { FiCheck, FiGift, FiKey, FiPackage, FiStar, FiX } from 'react-icons/fi';
-import { MdSportsEsports } from 'react-icons/md';
 import { SiApple, SiGoogleplay, SiNetflix, SiPlaystation, SiRoblox, SiSpotify, SiSteam } from 'react-icons/si';
 import { DIGITAL_PLATFORMS, DIGITAL_REGIONS, DIGITAL_UNITS, getPlatform } from '@/lib/digital-catalog';
 import { rowsFromPlatform, type StepProps } from '../types';
@@ -13,9 +12,9 @@ import { wizardCard, wizardChoice, wizardError, wizardHint, wizardInput, wizardL
 const PLATFORM_ICONS: Record<string, ReactNode> = {
   PLAYSTATION: <SiPlaystation />, XBOX: <FaXbox />, ROBLOX: <SiRoblox />, STEAM: <SiSteam />, NINTENDO: <BsNintendoSwitch />,
   NETFLIX: <SiNetflix />, SPOTIFY: <SiSpotify />, APPLE: <SiApple />, GOOGLE_PLAY: <SiGoogleplay />, AMAZON: <FaAmazon />,
-  GIFT_CARD: <FiGift />, SOFTWARE: <FiKey />, OTHER: <FiPackage />,
+  GIFT_CARD: <IconoGiftCard />, SOFTWARE: <IconoClave />, OTHER: <IconoPaquete />,
 };
-const iconFor = (value: string) => PLATFORM_ICONS[value] ?? <MdSportsEsports />;
+const iconFor = (value: string) => PLATFORM_ICONS[value] ?? <IconoControl />;
 
 /**
  * Paso 1 del producto digital (C-60): plataforma, región y datos básicos.
@@ -74,7 +73,7 @@ export default function DigitalStep1Platform({ data, onChange, errors, categorie
                   <span className="block text-sm font-bold text-ink">{p.label}</span>
                   <span className="block text-xs text-muted">{DIGITAL_UNITS[p.unit].name}</span>
                 </span>
-                {isSelected && <FiCheck className="absolute right-3 top-3 h-5 w-5 text-brand-600" aria-hidden="true" />}
+                {isSelected && <IconoCheck className="absolute right-3 top-3 h-5 w-5 text-brand-600" aria-hidden="true" />}
               </button>
             );
           })}
@@ -154,7 +153,7 @@ export default function DigitalStep1Platform({ data, onChange, errors, categorie
               {data.tags.map((tag) => (
                 <li key={tag} className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
                   {tag}
-                  <button type="button" onClick={() => onChange({ tags: data.tags.filter((t) => t !== tag) })} aria-label={`Quitar etiqueta ${tag}`} className="text-brand-700 hover:text-ink"><FiX className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => onChange({ tags: data.tags.filter((t) => t !== tag) })} aria-label={`Quitar etiqueta ${tag}`} className="text-brand-700 hover:text-ink"><IconoCerrar className="h-3.5 w-3.5" /></button>
                 </li>
               ))}
             </ul>
@@ -166,7 +165,7 @@ export default function DigitalStep1Platform({ data, onChange, errors, categorie
             <span className="block text-sm font-semibold text-ink">Producto destacado</span>
             <span className="block text-xs text-muted">Aparece en “Destacados de la semana” del home</span>
           </span>
-          <FiStar className={`h-5 w-5 ${data.isFeatured ? 'fill-current text-warning' : 'text-line'}`} aria-hidden="true" />
+          <IconoEstrella lleno={data.isFeatured} className={`h-5 w-5 ${data.isFeatured ? 'text-warning' : 'text-line'}`} aria-hidden="true" />
         </label>
       </div>
     </div>

@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import {
+  IconoAbrirAparte, IconoClientes, IconoCopiar, IconoCuenta, IconoEliminar, IconoEnviar, IconoMas, IconoPausa, IconoPlay,
+} from '@/components/iconos';
 import { FaTelegram } from 'react-icons/fa6';
-import { FiCopy, FiExternalLink, FiPause, FiPlay, FiPlus, FiSend, FiTrash2, FiUsers, FiUser } from 'react-icons/fi';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import {
   adminBadge, adminCard, adminDangerButton, adminHint, adminIconButton, adminInput, adminLabel, adminNotice,
@@ -278,7 +280,7 @@ export default function TelegramPanel() {
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => sendTest()} disabled={busy === 'test' || status.chats.every((chat) => !chat.isActive)} className={adminSecondaryButton}>
-            <FiSend className="h-4 w-4" aria-hidden="true" />
+            <IconoEnviar className="h-4 w-4" aria-hidden="true" />
             {busy === 'test' ? 'Enviando…' : 'Probar en todos'}
           </button>
           <button type="button" onClick={disconnect} disabled={busy === 'disconnect'} className={adminDangerButton}>Desconectar</button>
@@ -293,7 +295,7 @@ export default function TelegramPanel() {
           </div>
           {!link && (
             <button type="button" onClick={createLink} disabled={busy === 'link'} className={adminPrimaryButton}>
-              <FiPlus className="h-4 w-4" aria-hidden="true" />
+              <IconoMas className="h-4 w-4" aria-hidden="true" />
               Conectar un chat
             </button>
           )}
@@ -304,11 +306,11 @@ export default function TelegramPanel() {
             <p className="text-sm font-semibold text-ink">Abre uno de estos enlaces en el teléfono o computadora donde tengas Telegram:</p>
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               <a href={link.privateUrl} target="_blank" rel="noopener noreferrer" className={`${adminPrimaryButton} w-full`}>
-                <FiUser className="h-4 w-4" aria-hidden="true" />
+                <IconoCuenta className="h-4 w-4" aria-hidden="true" />
                 Mi chat personal
               </a>
               <a href={link.groupUrl} target="_blank" rel="noopener noreferrer" className={`${adminSecondaryButton} w-full`}>
-                <FiUsers className="h-4 w-4" aria-hidden="true" />
+                <IconoClientes className="h-4 w-4" aria-hidden="true" />
                 Agregar a un grupo
               </a>
             </div>
@@ -321,7 +323,7 @@ export default function TelegramPanel() {
                 aria-label="Copiar comando"
                 className={`${adminIconButton} ml-1 h-7 w-7 align-middle`}
               >
-                <FiCopy className="h-3.5 w-3.5" aria-hidden="true" />
+                <IconoCopiar className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
             </p>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
@@ -342,7 +344,7 @@ export default function TelegramPanel() {
               <li key={chat.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
                   <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-ink-soft">
-                    {chat.type === 'private' ? <FiUser className="h-4 w-4" aria-hidden="true" /> : <FiUsers className="h-4 w-4" aria-hidden="true" />}
+                    {chat.type === 'private' ? <IconoCuenta className="h-4 w-4" aria-hidden="true" /> : <IconoClientes className="h-4 w-4" aria-hidden="true" />}
                   </span>
                   <div className="min-w-0">
                     <p className="flex flex-wrap items-center gap-2">
@@ -357,13 +359,13 @@ export default function TelegramPanel() {
                 </div>
                 <div className="flex shrink-0 gap-1 self-end sm:self-center">
                   <button type="button" onClick={() => sendTest(chat)} disabled={busy === `test-${chat.id}` || !chat.isActive} aria-label={`Enviar prueba a ${chat.title}`} className={adminIconButton}>
-                    <FiSend className="h-4 w-4" aria-hidden="true" />
+                    <IconoEnviar className="h-4 w-4" aria-hidden="true" />
                   </button>
                   <button type="button" onClick={() => updateChat(chat, { isActive: !chat.isActive })} disabled={busy === chat.id} aria-label={chat.isActive ? `Pausar ${chat.title}` : `Reanudar ${chat.title}`} className={adminIconButton}>
-                    {chat.isActive ? <FiPause className="h-4 w-4" aria-hidden="true" /> : <FiPlay className="h-4 w-4" aria-hidden="true" />}
+                    {chat.isActive ? <IconoPausa className="h-4 w-4" aria-hidden="true" /> : <IconoPlay className="h-4 w-4" aria-hidden="true" />}
                   </button>
                   <button type="button" onClick={() => removeChat(chat)} disabled={busy === chat.id} aria-label={`Quitar ${chat.title}`} className={`${adminIconButton} hover:text-deal`}>
-                    <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                    <IconoEliminar className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
               </li>
@@ -386,7 +388,7 @@ export default function TelegramPanel() {
           ))}
         </dl>
         <a href={`https://t.me/${status.bot?.username}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline">
-          Abrir el bot <FiExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+          Abrir el bot <IconoAbrirAparte className="h-3.5 w-3.5" aria-hidden="true" />
         </a>
       </section>
     </div>

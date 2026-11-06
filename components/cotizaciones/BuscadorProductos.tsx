@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { FiCheck, FiPackage, FiPlus, FiSearch, FiX } from 'react-icons/fi';
+import { IconoBuscar, IconoCerrar, IconoCheck, IconoMas, IconoPaquete } from '@/components/iconos';
 import { adminBadge, adminHint, adminInput, adminLabel } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import type { ProductoParaCotizar } from '@/lib/cotizaciones/productos';
@@ -96,7 +96,7 @@ export function BuscadorProductos({ enCotizacion, onAgregar, bloqueado = false }
     <div data-buscador>
       <label htmlFor="buscar-producto" className={adminLabel}>Agregar del catálogo</label>
       <div className="relative">
-        <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+        <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
         <input
           ref={campo}
           id="buscar-producto"
@@ -121,7 +121,7 @@ export function BuscadorProductos({ enCotizacion, onAgregar, bloqueado = false }
         />
         {texto && (
           <button type="button" onClick={limpiar} aria-label="Borrar la búsqueda" className="absolute right-0 top-0 flex h-full w-11 items-center justify-center text-muted hover:text-ink">
-            <FiX className="h-4 w-4" aria-hidden="true" />
+            <IconoCerrar className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
       </div>
@@ -156,7 +156,7 @@ export function BuscadorProductos({ enCotizacion, onAgregar, bloqueado = false }
               const agotado = p.disponible !== null && p.disponible <= yaVan;
               const accion = (
                 <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-brand-600">
-                  <FiPlus className="h-3.5 w-3.5" aria-hidden="true" />
+                  <IconoMas className="h-3.5 w-3.5" aria-hidden="true" />
                   {yaVan > 0 ? 'Uno más' : 'Agregar'}
                 </span>
               );
@@ -173,7 +173,7 @@ export function BuscadorProductos({ enCotizacion, onAgregar, bloqueado = false }
                   data-resultado
                 >
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-line bg-white text-muted">
-                    {p.imagen ? <Image src={p.imagen} alt="" width={44} height={44} className="h-full w-full object-contain" /> : <FiPackage className="h-5 w-5" aria-hidden="true" />}
+                    {p.imagen ? <Image src={p.imagen} alt="" width={44} height={44} className="h-full w-full object-contain" /> : <IconoPaquete className="h-5 w-5" aria-hidden="true" />}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-semibold text-ink [overflow-wrap:anywhere]">{p.name}</span>
@@ -186,7 +186,7 @@ export function BuscadorProductos({ enCotizacion, onAgregar, bloqueado = false }
                           : <span className={`${adminBadge(agotado ? 'warning' : 'success')} whitespace-nowrap`}>{p.disponible} {p.disponible === 1 ? 'disponible' : 'disponibles'}</span>}
                       {yaVan > 0 && (
                         <span className={`${adminBadge('brand')} whitespace-nowrap`} data-ya-van>
-                          <FiCheck className="h-3 w-3" aria-hidden="true" />
+                          <IconoCheck className="h-3 w-3" aria-hidden="true" />
                           {yaVan} en la cotización
                         </span>
                       )}

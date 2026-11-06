@@ -10,11 +10,10 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import CheckoutSteps from '@/components/ui/CheckoutSteps';
 import PageHeader from '@/components/ui/PageHeader';
-import { FiAlertTriangle, FiMinus, FiPlus, FiShoppingCart, FiTruck } from 'react-icons/fi';
+import { IconoAdvertencia, IconoCarrito, IconoEliminar, IconoEnvio, IconoMas, IconoMenos } from '@/components/iconos';
 import { ConfianzaEnvio } from '@/components/envios/ConfianzaEnvio';
 import Footer from '@/components/Footer';
 import { toast } from 'react-hot-toast';
-import { HiTrash } from 'react-icons/hi';
 import { adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { calculateOrder, ivaIncluido, orderAmountProblems, toPricingSettings, type ShippingBreakdown } from '@/lib/pricing';
@@ -172,7 +171,7 @@ export default function CarritoPage() {
 
       <PageHeader
         breadcrumbs={[{ label: 'Carrito' }]}
-        icon={<FiShoppingCart />}
+        icon={<IconoCarrito />}
         title="Tu carrito"
         description={items.length === 0 ? 'Todavía no agregaste productos.' : `${items.length} ${items.length === 1 ? 'producto listo' : 'productos listos'} para pagar.`}
         meta={items.length > 0 ? <CheckoutSteps current={0} /> : undefined}
@@ -184,7 +183,7 @@ export default function CarritoPage() {
           /* Empty Cart State */
           <div className={`${adminCard} text-center py-16 px-6 max-w-xl mx-auto my-8`}>
             <div className="w-20 h-20 mx-auto mb-6 bg-surface rounded-full flex items-center justify-center border border-line">
-              <FiShoppingCart className="w-10 h-10 text-muted" />
+              <IconoCarrito className="w-10 h-10 text-muted" />
             </div>
             <h2 className="text-2xl font-bold text-ink mb-2">
               Tu carrito está vacío
@@ -207,7 +206,7 @@ export default function CarritoPage() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-ink flex items-center gap-2">
                   <span className="w-8 h-8 bg-brand-500/10 rounded-lg flex items-center justify-center">
-                    <FiShoppingCart className="w-4 h-4 text-brand-600" />
+                    <IconoCarrito className="w-4 h-4 text-brand-600" />
                   </span>
                   Productos ({items.length})
                 </h2>
@@ -215,7 +214,7 @@ export default function CarritoPage() {
                   onClick={handleClearCart}
                   className="flex items-center gap-2 px-3 py-1.5 text-deal hover:bg-deal-bg rounded-xl transition-colors font-medium text-sm"
                 >
-                  <HiTrash className="w-4 h-4" />
+                  <IconoEliminar className="w-4 h-4" />
                   <span className={isClearing ? 'animate-pulse' : ''}>Vaciar</span>
                 </button>
               </div>
@@ -283,7 +282,7 @@ export default function CarritoPage() {
                           />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <FiShoppingCart className="w-8 h-8 text-subtle" />
+                            <IconoCarrito className="w-8 h-8 text-subtle" />
                           </div>
                         );
                       })()}
@@ -301,7 +300,7 @@ export default function CarritoPage() {
                         )}
                         {item.freeShipping && item.productType !== 'DIGITAL' && (
                           <p className="mb-2 inline-flex items-center gap-1 text-xs font-semibold text-success-strong">
-                            <FiTruck className="h-3.5 w-3.5" aria-hidden="true" /> Envío gratis: todo tu pedido viaja sin costo
+                            <IconoEnvio className="h-3.5 w-3.5" aria-hidden="true" /> Envío gratis: todo tu pedido viaja sin costo
                           </p>
                         )}
                         {item.digitalUsername && (
@@ -356,7 +355,7 @@ export default function CarritoPage() {
                                   className="w-10 h-10 flex items-center justify-center bg-surface border border-line rounded-lg text-ink hover:bg-line transition-colors"
                                   aria-label="Disminuir cantidad"
                                 >
-                                  <FiMinus className="w-4 h-4" aria-hidden="true" />
+                                  <IconoMenos className="w-4 h-4" aria-hidden="true" />
                                 </button>
                                 <span className="w-8 text-center text-sm font-bold text-ink">
                                   {item.quantity}
@@ -368,7 +367,7 @@ export default function CarritoPage() {
                                   className="w-10 h-10 flex items-center justify-center bg-surface border border-line rounded-lg text-ink hover:bg-line transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                   aria-label="Aumentar cantidad"
                                 >
-                                  <FiPlus className="w-4 h-4" aria-hidden="true" />
+                                  <IconoMas className="w-4 h-4" aria-hidden="true" />
                                 </button>
                                 {item.quantity >= item.stock && (
                                   <span className="text-xs text-warning-strong font-medium">Máx</span>
@@ -397,7 +396,7 @@ export default function CarritoPage() {
                             title="Eliminar producto"
                             aria-label="Eliminar producto"
                           >
-                            <HiTrash className="w-5 h-5" />
+                            <IconoEliminar className="w-5 h-5" />
                           </button>
                         </div>
                       </div>
@@ -411,7 +410,7 @@ export default function CarritoPage() {
             <div className="space-y-6">
               <div className={`${adminCard} space-y-6`}>
                 <h2 className="text-lg font-bold text-ink flex items-center gap-2">
-                  <FiShoppingCart className="w-5 h-5 text-brand-600" />
+                  <IconoCarrito className="w-5 h-5 text-brand-600" />
                   Resumen del pedido
                 </h2>
 
@@ -485,7 +484,7 @@ export default function CarritoPage() {
                 {cartProblems.length > 0 && (
                   <div role="status" className={adminNotice('warning')}>
                     <p className="flex items-center gap-2 font-semibold">
-                      <FiAlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <IconoAdvertencia className="h-4 w-4 shrink-0" aria-hidden="true" />
                       Todavía no puedes pagar esta compra
                     </p>
                     <ul className="mt-1 list-disc space-y-0.5 pl-6">

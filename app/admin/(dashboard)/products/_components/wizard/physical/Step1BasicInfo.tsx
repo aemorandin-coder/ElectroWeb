@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FiPlus, FiStar, FiX } from 'react-icons/fi';
+import { IconoCerrar, IconoEstrella, IconoMas } from '@/components/iconos';
 import { wizardInput, wizardSectionTitle, wizardSectionHelp } from '../ui';
 import { StepProps } from '../types';
 import { Campo, controlDe } from '../Campo';
@@ -139,7 +139,7 @@ export default function PhysicalStep1BasicInfo({ data, onChange, errors, categor
             aria-label="Agregar etiqueta"
             className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-line text-brand-600 hover:bg-brand-50 disabled:opacity-40"
           >
-            <FiPlus className="h-4 w-4" aria-hidden="true" />
+            <IconoMas className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
         {data.tags.length > 0 && (
@@ -153,7 +153,7 @@ export default function PhysicalStep1BasicInfo({ data, onChange, errors, categor
                   aria-label={`Quitar la etiqueta ${tag}`}
                   className="inline-flex h-6 w-6 items-center justify-center rounded-full text-muted hover:bg-line hover:text-ink"
                 >
-                  <FiX className="h-3.5 w-3.5" aria-hidden="true" />
+                  <IconoCerrar className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
               </li>
             ))}
@@ -172,7 +172,7 @@ export default function PhysicalStep1BasicInfo({ data, onChange, errors, categor
           <span className="block text-sm font-semibold text-ink">Producto destacado</span>
           <span className="block text-xs text-muted">Sale en la vitrina del inicio</span>
         </span>
-        <FiStar className={`h-5 w-5 shrink-0 ${data.isFeatured ? 'fill-current text-warning' : 'text-muted'}`} aria-hidden="true" />
+        <IconoEstrella lleno={data.isFeatured} className={`h-5 w-5 shrink-0 ${data.isFeatured ? 'text-warning' : 'text-muted'}`} aria-hidden="true" />
       </label>
 
       <ConditionSection data={data} onChange={onChange} errors={errors} />

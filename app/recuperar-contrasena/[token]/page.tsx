@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { FiAlertCircle, FiCheck, FiCheckCircle, FiCircle, FiEye, FiEyeOff } from 'react-icons/fi';
+import { IconoCheck, IconoCirculo, IconoConfirmado, IconoError, IconoOcultar, IconoVer } from '@/components/iconos';
 import AuthShell from '@/components/auth/AuthShell';
 import { adminError, adminInput, adminLabel, adminPrimaryButton } from '@/lib/admin-ui';
 import { contrasenaSchema, REGLAS_CONTRASENA } from '@/lib/validations/registro';
@@ -68,7 +68,7 @@ export default function ResetPasswordPage() {
     <AuthShell volver={{ href: destino, texto: 'Volver al Login' }}>
       {success ? (
         <div className="text-center">
-          <FiCheckCircle className="mx-auto h-12 w-12 text-success-strong" aria-hidden="true" />
+          <IconoConfirmado className="mx-auto h-12 w-12 text-success-strong" aria-hidden="true" />
           <h1 className="mt-4 text-2xl font-bold text-ink">{invitacion ? 'Contraseña creada' : 'Contraseña restablecida'}</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted">
             {invitacion
@@ -79,7 +79,7 @@ export default function ResetPasswordPage() {
         </div>
       ) : expired ? (
         <div className="text-center">
-          <FiAlertCircle className="mx-auto h-12 w-12 text-deal" aria-hidden="true" />
+          <IconoError className="mx-auto h-12 w-12 text-deal" aria-hidden="true" />
           <h1 className="mt-4 text-2xl font-bold text-ink">{invitacion ? 'Invitación vencida o ya usada' : 'Enlace vencido o inválido'}</h1>
           {invitacion ? (
             <p className="mt-2 text-sm leading-relaxed text-muted">Las invitaciones sirven 24 horas y una sola vez. Pide a quien te invitó que te la reenvíe desde Equipo.</p>
@@ -105,13 +105,13 @@ export default function ResetPasswordPage() {
                 <button type="button" onClick={() => setShowPassword((value) => !value)}
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} aria-pressed={showPassword}
                   className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted hover:text-ink">
-                  {showPassword ? <FiEyeOff className="h-5 w-5" aria-hidden="true" /> : <FiEye className="h-5 w-5" aria-hidden="true" />}
+                  {showPassword ? <IconoOcultar className="h-5 w-5" aria-hidden="true" /> : <IconoVer className="h-5 w-5" aria-hidden="true" />}
                 </button>
               </div>
               <ul id="password-rules" className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
                 {REGLAS_CONTRASENA.map((rule) => {
                   const met = rule.cumple(password);
-                  const Icon = met ? FiCheck : password ? FiAlertCircle : FiCircle;
+                  const Icon = met ? IconoCheck : password ? IconoError : IconoCirculo;
                   return <li key={rule.id} className={`flex items-center gap-1.5 text-xs font-medium ${met ? 'text-success-strong' : password ? 'text-deal' : 'text-muted'}`}>
                     <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{rule.texto}
                     <span className="sr-only">{met ? ': listo' : ': falta'}</span>
@@ -130,7 +130,7 @@ export default function ResetPasswordPage() {
                 <button type="button" onClick={() => setShowConfirmPassword((value) => !value)}
                   aria-label={showConfirmPassword ? 'Ocultar confirmación' : 'Mostrar confirmación'} aria-pressed={showConfirmPassword}
                   className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted hover:text-ink">
-                  {showConfirmPassword ? <FiEyeOff className="h-5 w-5" aria-hidden="true" /> : <FiEye className="h-5 w-5" aria-hidden="true" />}
+                  {showConfirmPassword ? <IconoOcultar className="h-5 w-5" aria-hidden="true" /> : <IconoVer className="h-5 w-5" aria-hidden="true" />}
                 </button>
               </div>
               <p id="confirm-error" className={`${adminError} min-h-4`} role={error?.field === 'confirmPassword' ? 'alert' : undefined}>{error?.field === 'confirmPassword' ? error.message : ''}</p>

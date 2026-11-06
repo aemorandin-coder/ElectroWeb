@@ -1,37 +1,47 @@
 import {
-  FiMonitor, FiCpu, FiHardDrive, FiSmartphone, FiHeadphones,
-  FiWifi, FiCamera, FiPrinter, FiBattery, FiSliders,
-  FiMic, FiVolume2, FiPackage, FiShield, FiWatch,
-  FiServer, FiSettings, FiGrid,
-} from 'react-icons/fi';
-import { MdGamepad, MdSportsEsports } from 'react-icons/md';
+  IconoAudifonos, IconoBateria, IconoCableUsb, IconoCamaraFotos, IconoCamaraSeguridad, IconoCelularTableta, IconoChip,
+  IconoCircuito, IconoConfiguracion, IconoConsola, IconoControl, IconoCuadricula, IconoDiscoDuro, IconoGarantia,
+  IconoGiftCard, IconoImpresora, IconoLaptop, IconoMicrofono, IconoMonitor, IconoMouse, IconoPaquete, IconoParlante,
+  IconoPcEscritorio, IconoRelojInteligente, IconoRouter, IconoServidor, IconoSoftware, IconoVideojuegos,
+} from '@/components/iconos';
 import type { ComponentType, SVGAttributes } from 'react';
 
 type IconComponent = ComponentType<SVGAttributes<SVGElement> & { className?: string }>;
 
 // ─── Preset icon list ───────────────────────────────────────────────────────
-
+// C-188: las opciones fijas se dibujan con los íconos propios de Electro Shop. La categoría sigue guardando el mismo
+// nombre (el de react-icons, "FiMonitor"), así que la base no cambia. Con el significado de categoría: FiSmartphone es
+// "Celulares y tablets" y FiGift es "Gift cards". Las ocho últimas son los nombres que ya usan categorías de producción
+// (antes no eran opciones y la tienda los bajaba de react-icons al abrir la página; FiGift salía como "Otros").
 export const ICON_OPTIONS: { name: string; label: string; Icon: IconComponent }[] = [
-  { name: 'FiMonitor',       label: 'PC / Monitor',   Icon: FiMonitor },
-  { name: 'FiSmartphone',    label: 'Smartphones',    Icon: FiSmartphone },
-  { name: 'FiCpu',           label: 'Componentes',    Icon: FiCpu },
-  { name: 'FiHardDrive',     label: 'Almacenamiento', Icon: FiHardDrive },
-  { name: 'FiHeadphones',    label: 'Audio',          Icon: FiHeadphones },
-  { name: 'FiWifi',          label: 'Redes',          Icon: FiWifi },
-  { name: 'FiCamera',        label: 'Fotografía',     Icon: FiCamera },
-  { name: 'FiPrinter',       label: 'Impresoras',     Icon: FiPrinter },
-  { name: 'FiBattery',       label: 'Energía',        Icon: FiBattery },
-  { name: 'FiSliders',       label: 'Accesorios',     Icon: FiSliders },
-  { name: 'FiMic',           label: 'Micrófonos',     Icon: FiMic },
-  { name: 'FiVolume2',       label: 'Parlantes',      Icon: FiVolume2 },
-  { name: 'FiPackage',       label: 'General',        Icon: FiPackage },
-  { name: 'FiShield',        label: 'Seguridad',      Icon: FiShield },
-  { name: 'FiWatch',         label: 'Wearables',      Icon: FiWatch },
-  { name: 'FiServer',        label: 'Servidores',     Icon: FiServer },
-  { name: 'FiSettings',      label: 'Herramientas',   Icon: FiSettings },
-  { name: 'FiGrid',          label: 'Otros',          Icon: FiGrid },
-  { name: 'MdGamepad',       label: 'Gaming',         Icon: MdGamepad },
-  { name: 'MdSportsEsports', label: 'Esports',        Icon: MdSportsEsports },
+  { name: 'FiMonitor',       label: 'PC / Monitor',   Icon: IconoMonitor },
+  { name: 'FiSmartphone',    label: 'Smartphones',    Icon: IconoCelularTableta },
+  { name: 'FiCpu',           label: 'Componentes',    Icon: IconoChip },
+  { name: 'FiHardDrive',     label: 'Almacenamiento', Icon: IconoDiscoDuro },
+  { name: 'FiHeadphones',    label: 'Audio',          Icon: IconoAudifonos },
+  { name: 'FiWifi',          label: 'Redes',          Icon: IconoRouter },
+  { name: 'FiCamera',        label: 'Fotografía',     Icon: IconoCamaraFotos },
+  { name: 'FiPrinter',       label: 'Impresoras',     Icon: IconoImpresora },
+  { name: 'FiBattery',       label: 'Energía',        Icon: IconoBateria },
+  { name: 'FiSliders',       label: 'Accesorios',     Icon: IconoMouse },
+  { name: 'FiMic',           label: 'Micrófonos',     Icon: IconoMicrofono },
+  { name: 'FiVolume2',       label: 'Parlantes',      Icon: IconoParlante },
+  { name: 'FiPackage',       label: 'General',        Icon: IconoPaquete },
+  { name: 'FiShield',        label: 'Seguridad',      Icon: IconoGarantia },
+  { name: 'FiWatch',         label: 'Wearables',      Icon: IconoRelojInteligente },
+  { name: 'FiServer',        label: 'Servidores',     Icon: IconoServidor },
+  { name: 'FiSettings',      label: 'Herramientas',   Icon: IconoConfiguracion },
+  { name: 'FiGrid',          label: 'Otros',          Icon: IconoCuadricula },
+  { name: 'MdGamepad',       label: 'Gaming',         Icon: IconoVideojuegos },
+  { name: 'MdSportsEsports', label: 'Esports',        Icon: IconoControl },
+  { name: 'FiGift',          label: 'Gift cards',     Icon: IconoGiftCard },
+  { name: 'GiGameConsole',   label: 'Consolas',       Icon: IconoConsola },
+  { name: 'FaLaptop',        label: 'Laptops',        Icon: IconoLaptop },
+  { name: 'BsPcDisplay',     label: 'PC de escritorio', Icon: IconoPcEscritorio },
+  { name: 'TbDeviceCctv',    label: 'CCTV',           Icon: IconoCamaraSeguridad },
+  { name: 'FaMicrochip',     label: 'Electrónica',    Icon: IconoCircuito },
+  { name: 'BsPlugin',        label: 'Adaptadores',    Icon: IconoCableUsb },
+  { name: 'IoLogoWindows',   label: 'Software',       Icon: IconoSoftware },
 ];
 
 // Synchronous lookup map for preset icons
@@ -39,9 +49,9 @@ const ICON_MAP: Record<string, IconComponent> = Object.fromEntries(
   ICON_OPTIONS.map(o => [o.name, o.Icon])
 );
 
-/** Synchronous lookup — returns FiGrid if not found in presets. */
+/** Synchronous lookup — devuelve la cuadrícula ("Otros") si el nombre no es una opción fija. */
 export function getCategoryIcon(name: string | null | undefined): IconComponent {
-  return (name && ICON_MAP[name]) ? ICON_MAP[name] : FiGrid;
+  return (name && ICON_MAP[name]) ? ICON_MAP[name] : IconoCuadricula;
 }
 
 export function getAutoIcon(categoryName: string): string {
@@ -107,12 +117,14 @@ export async function loadIconDynamic(iconName: string): Promise<IconComponent |
   if (!lib) return null;
 
   try {
-    // Static import() paths so webpack can create per-library code-split chunks
+    // Static import() paths so webpack can create per-library code-split chunks.
+    // Ojo (C-188): una familia que se importa aquí entera no se puede recortar en ningún otro lado: si un componente usa un
+    // logo de esa familia, la página baja la familia completa. Por eso ya no está 'fa6' (ningún nombre llegaba: "Fa" es
+    // 'fa') y los logos de marca de la tienda (FaWhatsapp en el pie y en el botón flotante) vienen de 'react-icons/fa6'.
     let mod: Record<string, unknown>;
     switch (lib) {
       case 'gi':  mod = await import('react-icons/gi');  break;
       case 'fa':  mod = await import('react-icons/fa');  break;
-      case 'fa6': mod = await import('react-icons/fa6'); break;
       case 'bs':  mod = await import('react-icons/bs');  break;
       case 'hi':  mod = await import('react-icons/hi');  break;
       case 'io5': mod = await import('react-icons/io5'); break;

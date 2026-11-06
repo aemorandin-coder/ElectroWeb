@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import { FiArrowDown, FiFilter, FiGift, FiGrid, FiList, FiPackage, FiSearch, FiShoppingCart, FiTag, FiTrash2 } from 'react-icons/fi';
-import { PiHeartBreakBold, PiSparkle } from 'react-icons/pi';
+import {
+  IconoBuscar, IconoCarrito, IconoCuadricula, IconoDesconectado, IconoEliminar, IconoFiltro, IconoFlechaAbajo, IconoLista,
+  IconoNovedad, IconoOferta, IconoPaquete, IconoRegalo,
+} from '@/components/iconos';
 import { useCart } from '@/contexts/CartContext';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -141,13 +143,13 @@ export default function WishlistPage() {
                 <OfferNote oferta={p.oferta} />
                 {pct > 0 && (
                     <p className="flex items-center gap-1 text-xs font-semibold text-success-strong">
-                        <FiArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
+                        <IconoFlechaAbajo className="h-3.5 w-3.5" aria-hidden="true" />
                         Bajó {pct}% desde que lo guardaste
                     </p>
                 )}
                 {aprobado && (
                     <p className="flex items-center gap-1 text-xs font-semibold text-success-strong">
-                        <FiGift className="h-3.5 w-3.5" aria-hidden="true" />
+                        <IconoRegalo className="h-3.5 w-3.5" aria-hidden="true" />
                         Tienes {aprobado.approvedDiscount || aprobado.requestedDiscount}% aprobado al pagar
                     </p>
                 )}
@@ -160,14 +162,14 @@ export default function WishlistPage() {
         if (needsProductPage(p)) {
             return (
                 <Link href={`/productos/${p.slug}`} className={`${adminPrimaryButton} ${compact ? 'h-11 px-3' : 'h-10 w-full gap-1 whitespace-nowrap px-2 text-xs sm:text-sm'}`}>
-                    <FiShoppingCart className="h-4 w-4 shrink-0" aria-hidden="true" /> {compact ? <span className="sr-only">Elegir monto</span> : 'Elegir monto'}
+                    <IconoCarrito className="h-4 w-4 shrink-0" aria-hidden="true" /> {compact ? <span className="sr-only">Elegir monto</span> : 'Elegir monto'}
                 </Link>
             );
         }
         return (
             <button type="button" onClick={() => void moverAlCarrito(p)} disabled={agotado || removingId === p.id} className={`${adminPrimaryButton} ${compact ? 'h-11 px-3' : 'h-10 w-full gap-1 whitespace-nowrap px-2 text-xs sm:text-sm'}`}
                 aria-label={compact ? `Mover ${p.name} al carrito` : undefined}>
-                <FiShoppingCart className="h-4 w-4 shrink-0" aria-hidden="true" /> {!compact && (agotado ? 'Agotado' : <><span className="sm:hidden">Al carrito</span><span className="hidden sm:inline">Mover al carrito</span></>)}
+                <IconoCarrito className="h-4 w-4 shrink-0" aria-hidden="true" /> {!compact && (agotado ? 'Agotado' : <><span className="sm:hidden">Al carrito</span><span className="hidden sm:inline">Mover al carrito</span></>)}
             </button>
         );
     };
@@ -190,7 +192,7 @@ export default function WishlistPage() {
                     {favoritos.length > 0 && <span>· {disponibles.length} disponibles por {formatUSD(totalValue)}</span>}
                     {enOferta > 0 && (
                         <span className="inline-flex items-center gap-1 font-semibold text-deal">
-                            · <FiTag className="h-3.5 w-3.5" aria-hidden="true" />{enOferta} con precio rebajado
+                            · <IconoOferta className="h-3.5 w-3.5" aria-hidden="true" />{enOferta} con precio rebajado
                         </span>
                     )}
                 </p>
@@ -199,13 +201,13 @@ export default function WishlistPage() {
             {favoritos.length > 0 && (
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <div className="relative flex-1">
-                        <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+                        <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
                         <input type="search" aria-label="Buscar en favoritos" placeholder="Buscar en tu lista…" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                             className="h-11 w-full rounded-lg border border-line bg-white pl-9 pr-3 text-sm text-ink focus-visible:outline-2 focus-visible:outline-brand-500" />
                     </div>
                     <div className="flex items-center gap-2">
                         <label className="relative flex items-center">
-                            <FiFilter className="pointer-events-none absolute left-3 h-4 w-4 text-muted" aria-hidden="true" />
+                            <IconoFiltro className="pointer-events-none absolute left-3 h-4 w-4 text-muted" aria-hidden="true" />
                             <span className="sr-only">Ordenar</span>
                             <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)}
                                 className="h-11 rounded-lg border border-line bg-white pl-9 pr-3 text-sm text-ink">
@@ -219,11 +221,11 @@ export default function WishlistPage() {
                         <div className="flex overflow-hidden rounded-lg border border-line" role="group" aria-label="Vista">
                             <button type="button" onClick={() => setViewMode('grid')} aria-pressed={viewMode === 'grid'} aria-label="Vista cuadrícula"
                                 className={`flex h-11 w-11 items-center justify-center ${viewMode === 'grid' ? 'bg-brand-500 text-white' : 'bg-white text-muted'}`}>
-                                <FiGrid className="h-4 w-4" aria-hidden="true" />
+                                <IconoCuadricula className="h-4 w-4" aria-hidden="true" />
                             </button>
                             <button type="button" onClick={() => setViewMode('list')} aria-pressed={viewMode === 'list'} aria-label="Vista lista"
                                 className={`flex h-11 w-11 items-center justify-center ${viewMode === 'list' ? 'bg-brand-500 text-white' : 'bg-white text-muted'}`}>
-                                <FiList className="h-4 w-4" aria-hidden="true" />
+                                <IconoLista className="h-4 w-4" aria-hidden="true" />
                             </button>
                         </div>
                     </div>
@@ -240,7 +242,7 @@ export default function WishlistPage() {
                                 <li key={p.id} className={`flex flex-col overflow-hidden rounded-xl border border-line bg-white ${removingId === p.id ? 'opacity-50' : ''}`}>
                                     <div className="relative aspect-square bg-white">
                                         {src ? <Image src={src} alt={p.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-contain" /> : (
-                                            <div className="flex h-full items-center justify-center text-subtle"><FiPackage className="h-10 w-10" aria-hidden="true" /></div>
+                                            <div className="flex h-full items-center justify-center text-subtle"><IconoPaquete className="h-10 w-10" aria-hidden="true" /></div>
                                         )}
                                         {p.compareAtPriceUSD && p.compareAtPriceUSD > p.priceUSD && (
                                             <span className="absolute left-2 top-2 rounded bg-deal px-1.5 py-0.5 text-[11px] font-semibold text-white">
@@ -250,7 +252,7 @@ export default function WishlistPage() {
                                         {agotado && <span className="absolute inset-x-2 bottom-2 rounded bg-ink/80 px-2 py-1 text-center text-xs font-semibold text-white">Agotado</span>}
                                         <button type="button" onClick={() => removeFromWishlist(p.id)} disabled={removingId === p.id} aria-label={`Quitar ${p.name} de favoritos`}
                                             className="absolute right-1 top-1 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-muted shadow-sm hover:text-deal">
-                                            <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                                            <IconoEliminar className="h-4 w-4" aria-hidden="true" />
                                         </button>
                                     </div>
                                     <div className="flex flex-1 flex-col gap-1.5 p-2.5">
@@ -280,7 +282,7 @@ export default function WishlistPage() {
                                 <li key={p.id} className={`flex items-center gap-3 rounded-2xl border border-line bg-white p-3 ${removingId === p.id ? 'opacity-50' : ''}`}>
                                     <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-white">
                                         {src ? <Image src={src} alt={p.name} fill sizes="80px" className="object-contain" /> : (
-                                            <div className="flex h-full items-center justify-center text-subtle"><FiPackage className="h-6 w-6" aria-hidden="true" /></div>
+                                            <div className="flex h-full items-center justify-center text-subtle"><IconoPaquete className="h-6 w-6" aria-hidden="true" /></div>
                                         )}
                                     </div>
                                     <div className="min-w-0 flex-1 space-y-1">
@@ -297,7 +299,7 @@ export default function WishlistPage() {
                                         <Accion p={p} compact />
                                         <button type="button" onClick={() => removeFromWishlist(p.id)} disabled={removingId === p.id} aria-label={`Quitar ${p.name} de favoritos`}
                                             className="flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-deal">
-                                            <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                                            <IconoEliminar className="h-4 w-4" aria-hidden="true" />
                                         </button>
                                     </div>
                                 </li>
@@ -307,17 +309,17 @@ export default function WishlistPage() {
                 )
             ) : searchTerm ? (
                 <div className={`${adminCard} py-10 text-center`}>
-                    <FiSearch className="mx-auto mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
+                    <IconoBuscar className="mx-auto mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
                     <p className="font-semibold text-ink">Sin resultados para &ldquo;{searchTerm}&rdquo;</p>
                     <button type="button" onClick={() => setSearchTerm('')} className="mt-2 min-h-11 text-sm font-semibold text-brand-600">Limpiar búsqueda</button>
                 </div>
             ) : (
                 <div className={`${adminCard} py-12 text-center`}>
-                    <PiHeartBreakBold className="mx-auto mb-3 h-10 w-10 text-subtle" aria-hidden="true" />
+                    <IconoDesconectado className="mx-auto mb-3 h-10 w-10 text-subtle" aria-hidden="true" />
                     <p className="font-semibold text-ink">Tu lista de favoritos está vacía</p>
                     <p className="mt-1 text-sm text-muted">Guarda productos y te mostramos aquí cuando entren en oferta o bajen de precio.</p>
                     <Link href="/productos?oferta=1" className={`${adminPrimaryButton} mt-4`}>
-                        <PiSparkle className="h-4 w-4" aria-hidden="true" /> Ver ofertas de hoy
+                        <IconoNovedad className="h-4 w-4" aria-hidden="true" /> Ver ofertas de hoy
                     </Link>
                 </div>
             )}

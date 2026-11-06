@@ -4,7 +4,9 @@ import { useState, useEffect, Suspense, useRef } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { FiAlertCircle, FiArrowLeft, FiEye, FiEyeOff, FiShield } from 'react-icons/fi';
+import {
+  IconoArroba, IconoCandado, IconoCargando, IconoError, IconoFlechaIzquierda, IconoGarantia, IconoOcultar, IconoVer,
+} from '@/components/iconos';
 import AuthShell from '@/components/auth/AuthShell';
 import BotonGoogle from '@/components/auth/BotonGoogle';
 import HCaptchaWrapper, { type HCaptchaRefMethods } from '@/components/HCaptchaWrapper';
@@ -302,10 +304,7 @@ function LoginPageContent({ google }: { google: boolean }) {
       <div className="min-h-dvh bg-surface flex items-center justify-center">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-line mb-4 shadow-sm">
-            <svg className="animate-spin h-8 w-8 text-brand-600" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+            <IconoCargando className="animate-spin h-8 w-8 text-brand-600" />
           </div>
           <p className="text-muted text-sm font-medium">Verificando sesión...</p>
         </div>
@@ -370,7 +369,7 @@ function LoginPageContent({ google }: { google: boolean }) {
             <p className={adminHint}>{email}</p>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
               <button type="button" onClick={() => { setPideCodigo(false); setCodigo(''); setConRespaldo(false); setError(''); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-ink">
-                <FiArrowLeft className="h-4 w-4" aria-hidden="true" />
+                <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" />
                 Volver
               </button>
               <button type="button" onClick={() => { setConRespaldo((v) => !v); setCodigo(''); setError(''); }} className="text-sm font-medium text-brand-600 hover:text-brand-700">
@@ -386,9 +385,7 @@ function LoginPageContent({ google }: { google: boolean }) {
             Correo
           </label>
           <div className="form-field group">
-            <svg className="field-icon text-muted group-focus-within:text-brand-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-            </svg>
+            <IconoArroba className="field-icon text-muted group-focus-within:text-brand-600 transition-colors duration-200" aria-hidden="true" />
             <input
               id="email"
               type="email"
@@ -423,9 +420,7 @@ function LoginPageContent({ google }: { google: boolean }) {
             </Link>
           </div>
           <div className="form-field group">
-            <svg className="field-icon text-muted group-focus-within:text-brand-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+            <IconoCandado className="field-icon text-muted group-focus-within:text-brand-600 transition-colors duration-200" aria-hidden="true" />
             <input
               id="password"
               type={showPassword ? 'text' : 'password'}
@@ -445,7 +440,7 @@ function LoginPageContent({ google }: { google: boolean }) {
               aria-pressed={showPassword}
               className="field-icon-right text-muted hover:text-ink transition-colors duration-200"
             >
-              {showPassword ? <FiEyeOff className="h-5 w-5" aria-hidden="true" /> : <FiEye className="h-5 w-5" aria-hidden="true" />}
+              {showPassword ? <IconoOcultar className="h-5 w-5" aria-hidden="true" /> : <IconoVer className="h-5 w-5" aria-hidden="true" />}
             </button>
           </div>
           {touchedFields.password && validationErrors.password && (
@@ -457,7 +452,7 @@ function LoginPageContent({ google }: { google: boolean }) {
         {requiresCaptcha && (
           <div>
             <p className="mb-2 flex items-center gap-2 text-sm font-medium text-warning-strong">
-              <FiShield className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <IconoGarantia className="h-4 w-4 shrink-0" aria-hidden="true" />
               Verificación de seguridad
             </p>
             <div className="flex justify-center">
@@ -475,7 +470,7 @@ function LoginPageContent({ google }: { google: boolean }) {
         {/* Error Message */}
         {error && (
           <div role="alert" className={`${adminNotice('danger')} flex items-start gap-2`}>
-            <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <IconoError className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <p>{error}</p>
           </div>
         )}

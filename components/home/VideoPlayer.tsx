@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { IconoPlay } from '@/components/iconos';
 
 interface VideoPlayerProps {
   videoId?: string;
@@ -44,9 +45,7 @@ export default function VideoPlayer({ videoId, videoUrl }: VideoPlayerProps) {
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center transition-all duration-500 group-hover:bg-black/25 z-10">
         <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-[0_0_30px_rgba(220,38,38,0.6)] mb-3">
-          <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7z" />
-          </svg>
+          <IconoPlay lleno className="w-8 h-8 text-white ml-1" />
         </div>
         <span className="text-white font-bold tracking-wide drop-shadow-md">Haz clic para reproducir</span>
       </div>

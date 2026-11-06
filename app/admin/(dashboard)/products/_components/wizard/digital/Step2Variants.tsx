@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FiAlertTriangle, FiArrowDown, FiArrowUp, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { IconoAdvertencia, IconoEliminar, IconoFlechaAbajo, IconoFlechaArriba, IconoMas } from '@/components/iconos';
 import { useSettings } from '@/contexts/SettingsContext';
 import { formatUSD } from '@/lib/currency';
 import { formatMargen } from '@/lib/precio-sugerido';
@@ -120,14 +120,14 @@ export default function DigitalStep2Variants({ data, onChange, errors }: StepPro
                   </label>
                   {margin !== null && (
                     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${belowCost ? 'bg-deal-bg text-deal' : 'bg-success-strong/10 text-success-strong'}`}>
-                      {belowCost && <FiAlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />}
+                      {belowCost && <IconoAdvertencia className="h-3.5 w-3.5" aria-hidden="true" />}
                       Margen {formatMargen(margin)}
                     </span>
                   )}
                   <div className="flex items-center">
-                    <button type="button" onClick={() => move(index, -1)} disabled={index === 0} aria-label={`Subir ${row.label || 'monto'}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink disabled:opacity-30"><FiArrowUp className="h-4 w-4" /></button>
-                    <button type="button" onClick={() => move(index, 1)} disabled={index === rows.length - 1} aria-label={`Bajar ${row.label || 'monto'}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink disabled:opacity-30"><FiArrowDown className="h-4 w-4" /></button>
-                    <button type="button" onClick={() => setRows(rows.filter((r) => r.key !== row.key))} aria-label={`Quitar ${row.label || 'monto'}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-deal-bg hover:text-deal"><FiTrash2 className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => move(index, -1)} disabled={index === 0} aria-label={`Subir ${row.label || 'monto'}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink disabled:opacity-30"><IconoFlechaArriba className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => move(index, 1)} disabled={index === rows.length - 1} aria-label={`Bajar ${row.label || 'monto'}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink disabled:opacity-30"><IconoFlechaAbajo className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => setRows(rows.filter((r) => r.key !== row.key))} aria-label={`Quitar ${row.label || 'monto'}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-deal-bg hover:text-deal"><IconoEliminar className="h-4 w-4" /></button>
                   </div>
                 </div>
 
@@ -170,7 +170,7 @@ export default function DigitalStep2Variants({ data, onChange, errors }: StepPro
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button type="button" onClick={() => setRows([...rows, newVariantRow(defaultUnit)])} className={wizardSecondaryButton}>
-          <FiPlus className="h-4 w-4" aria-hidden="true" /> Agregar monto
+          <IconoMas className="h-4 w-4" aria-hidden="true" /> Agregar monto
         </button>
         {errors.digitalVariants && <p className={wizardError} role="alert">{errors.digitalVariants}</p>}
       </div>

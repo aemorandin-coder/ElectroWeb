@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { FiAlertTriangle, FiArchive, FiCheckCircle, FiChevronLeft, FiChevronRight, FiCopy, FiDownload, FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
+import {
+  IconoAdvertencia, IconoArchivar, IconoChevronDerecha, IconoChevronIzquierda, IconoConfirmado, IconoCopiar,
+  IconoDescargar, IconoEditar, IconoEliminar, IconoMas,
+} from '@/components/iconos';
 import { adminBadge, adminEmpty, adminHint, adminIconButton, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminTab } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { downloadIssues, flyerChecks, flyerStatus, type CheckKind, type FlyerCheck, type TextIssues } from '@/lib/studio/checks';
@@ -183,7 +186,7 @@ export default function StudioHome() {
       </div>
       {/* C-116, fase 2: el asistente guarda la historia recién cuando se eligió qué publicar */}
       <Link href="/admin/studio/nueva" className={`${adminPrimaryButton} shrink-0 self-start whitespace-nowrap sm:self-auto`}>
-        <FiPlus className="h-4 w-4" aria-hidden="true" />
+        <IconoMas className="h-4 w-4" aria-hidden="true" />
         Nueva historia
       </Link>
     </div>
@@ -228,24 +231,24 @@ export default function StudioHome() {
             {date && ` · ${date}`}
           </p>
           <span className={`${adminBadge(status.tone)} max-w-full self-start`} title={all.join(' · ') || undefined}>
-            {status.tone === 'success' ? <FiCheckCircle className="h-3 w-3 shrink-0" aria-hidden="true" /> : <FiAlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />}
+            {status.tone === 'success' ? <IconoConfirmado className="h-3 w-3 shrink-0" aria-hidden="true" /> : <IconoAdvertencia className="h-3 w-3 shrink-0" aria-hidden="true" />}
             <span className="truncate">{status.text}</span>
             {status.more > 0 && <span className="shrink-0">+{status.more}</span>}
           </span>
         </div>
         <div className="relative col-span-2 flex flex-wrap gap-1.5 sm:col-span-1 sm:col-start-2 sm:self-end">
           <Link href={editHref(f.id)} className={`${smallButton} h-11 sm:h-9`}>
-            <FiEdit2 className="h-4 w-4" aria-hidden="true" />
+            <IconoEditar className="h-4 w-4" aria-hidden="true" />
             Editar
           </Link>
           <button type="button" onClick={() => void download(f)} disabled={busy} className={`${adminIconButton} h-11 w-11 sm:h-9 sm:w-9`} aria-label={`Descargar ${name}`} title="Descargar imagen">
-            <FiDownload className="h-4 w-4" aria-hidden="true" />
+            <IconoDescargar className="h-4 w-4" aria-hidden="true" />
           </button>
           <button type="button" onClick={() => void studio.duplicate(f.id, { open: false })} className={`${adminIconButton} h-11 w-11 sm:h-9 sm:w-9`} aria-label={`Duplicar ${name}`} title="Duplicar">
-            <FiCopy className="h-4 w-4" aria-hidden="true" />
+            <IconoCopiar className="h-4 w-4" aria-hidden="true" />
           </button>
           <button type="button" onClick={() => void askRemove(f)} className={`${adminIconButton} h-11 w-11 text-deal hover:bg-deal-bg sm:h-9 sm:w-9`} aria-label={`Eliminar ${name}`} title="Eliminar">
-            <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+            <IconoEliminar className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </li>
@@ -294,7 +297,7 @@ export default function StudioHome() {
                     attention === a.kind ? 'border-warning-strong bg-warning/15 text-warning-strong' : 'border-warning/40 bg-white text-warning-strong hover:bg-warning/10'
                   }`}
                 >
-                  <FiAlertTriangle className="h-4 w-4" aria-hidden="true" />
+                  <IconoAdvertencia className="h-4 w-4" aria-hidden="true" />
                   {a.count === 1 ? a.one : `${a.count} ${a.many}`}
                 </button>
               ))}
@@ -328,13 +331,13 @@ export default function StudioHome() {
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-2">
                 <button type="button" onClick={() => setWeekOffset((w) => w - 1)} className={adminIconButton} aria-label="Semana anterior">
-                  <FiChevronLeft className="h-5 w-5" aria-hidden="true" />
+                  <IconoChevronIzquierda className="h-5 w-5" aria-hidden="true" />
                 </button>
                 <span className="text-sm font-semibold text-ink">
                   {days[0].toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })} – {days[6].toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })}
                 </span>
                 <button type="button" onClick={() => setWeekOffset((w) => w + 1)} className={adminIconButton} aria-label="Semana siguiente">
-                  <FiChevronRight className="h-5 w-5" aria-hidden="true" />
+                  <IconoChevronDerecha className="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
               {days.map((d) => {
@@ -350,7 +353,7 @@ export default function StudioHome() {
               <div className="flex flex-wrap items-center gap-3">
                 {inWeek.length > 0 && (
                   <button type="button" disabled={busy} onClick={() => void downloadZip(inWeek, `semana-${ymd(days[0])}`)} className={smallButton}>
-                    <FiArchive className="h-4 w-4" aria-hidden="true" />
+                    <IconoArchivar className="h-4 w-4" aria-hidden="true" />
                     Descargar la semana (ZIP)
                   </button>
                 )}
@@ -371,7 +374,7 @@ export default function StudioHome() {
                   ))}
                   {batch && (
                     <button type="button" disabled={busy} onClick={() => void downloadZip(flyers.filter((f) => f.batch === batch), batch)} className={`${smallButton} shrink-0 whitespace-nowrap`}>
-                      <FiArchive className="h-4 w-4" aria-hidden="true" />
+                      <IconoArchivar className="h-4 w-4" aria-hidden="true" />
                       Descargar el lote (ZIP)
                     </button>
                   )}

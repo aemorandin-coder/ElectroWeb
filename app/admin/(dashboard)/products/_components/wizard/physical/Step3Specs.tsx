@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { IconoEliminar, IconoMas } from '@/components/iconos';
 import { StepProps } from '../types';
 import { wizardInput, wizardError, wizardSectionTitle, wizardSectionHelp } from '../ui';
 import { claveNombre, combinarSugerencias, type SugerenciasSpecs } from '@/lib/spec-sugerencias';
@@ -79,7 +79,7 @@ export default function PhysicalStep3Specs({ data, onChange, errors, categories 
                 aria-label={`Quitar ${k}`}
                 className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-deal-bg hover:text-deal"
               >
-                <FiTrash2 className="h-4 w-4" aria-hidden="true" />
+                <IconoEliminar className="h-4 w-4" aria-hidden="true" />
               </button>
             </li>
           ))}
@@ -124,7 +124,7 @@ export default function PhysicalStep3Specs({ data, onChange, errors, categories 
             disabled={!key.trim() || !value.trim()}
             className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <FiPlus className="h-4 w-4" aria-hidden="true" /> Agregar
+            <IconoMas className="h-4 w-4" aria-hidden="true" /> Agregar
           </button>
         </div>
         {valoresSugeridos.length > 0 && (

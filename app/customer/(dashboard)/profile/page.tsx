@@ -4,8 +4,8 @@ import { useCallback, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
-import { FiBell, FiBriefcase, FiCamera, FiLock, FiUser } from 'react-icons/fi';
-import type { IconType } from 'react-icons';
+import { IconoCamaraFotos, IconoCandado, IconoCuenta, IconoMaletin, IconoNotificaciones } from '@/components/iconos';
+import type { IconType } from '@/components/iconos';
 import { adminNotice, adminSecondaryButton, adminTab } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -22,10 +22,10 @@ import type { Ajustes, DatosPerfil } from './_components/tipos';
 type Pestana = 'datos' | 'seguridad' | 'notificaciones' | 'empresa';
 
 const PESTANAS: { id: Pestana; texto: string; Icono: IconType }[] = [
-  { id: 'datos', texto: 'Datos personales', Icono: FiUser },
-  { id: 'seguridad', texto: 'Seguridad', Icono: FiLock },
-  { id: 'notificaciones', texto: 'Notificaciones', Icono: FiBell },
-  { id: 'empresa', texto: 'Empresa', Icono: FiBriefcase },
+  { id: 'datos', texto: 'Datos personales', Icono: IconoCuenta },
+  { id: 'seguridad', texto: 'Seguridad', Icono: IconoCandado },
+  { id: 'notificaciones', texto: 'Notificaciones', Icono: IconoNotificaciones },
+  { id: 'empresa', texto: 'Empresa', Icono: IconoMaletin },
 ];
 
 const esPestana = (valor: string | null): valor is Pestana => PESTANAS.some((p) => p.id === valor);
@@ -141,7 +141,7 @@ export default function ProfilePage() {
             title="Cambiar foto"
             className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-60"
           >
-            <FiCamera className="h-4 w-4" aria-hidden="true" />
+            <IconoCamaraFotos className="h-4 w-4" aria-hidden="true" />
           </button>
           <input ref={archivo} type="file" accept="image/png,image/jpeg,image/webp" onChange={cambiarFoto} className="hidden" />
         </div>

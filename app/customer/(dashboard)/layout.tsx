@@ -7,39 +7,26 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  FiHome,
-  FiShoppingBag,
-  FiMapPin,
-  FiUser,
-  FiLogOut,
-  FiMenu,
-  FiX,
-  FiShield,
-  FiGift,
-  FiBook,
-  FiExternalLink,
-  FiFileText,
-  FiClipboard,
-} from 'react-icons/fi';
-import { FaMoneyCheckAlt } from 'react-icons/fa';
-import { PiListHeartBold } from 'react-icons/pi';
+  IconoAbrirAparte, IconoBolsa, IconoCerrar, IconoCuenta, IconoCursos, IconoDocumento, IconoFavoritos, IconoGarantia,
+  IconoInicio, IconoMenu, IconoOrdenes, IconoPuntosEs, IconoRegalo, IconoSalir, IconoUbicacion,
+} from '@/components/iconos';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import CustomerMobileNavBar from '@/components/customer/CustomerMobileNavBar';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 
 const MENU = [
-  { href: '/customer', icon: FiHome, label: 'Inicio' },
-  { href: '/customer/balance', icon: FaMoneyCheckAlt, label: 'Puntos ES' },
-  { href: '/customer/orders', icon: FiShoppingBag, label: 'Mis Pedidos' },
-  { href: '/customer/cotizaciones', icon: FiClipboard, label: 'Mis cotizaciones' },
-  { href: '/customer/wishlist', icon: PiListHeartBold, label: 'Favoritos' },
-  { href: '/customer/addresses', icon: FiMapPin, label: 'Direcciones' },
-  { href: '/customer/warranty', icon: FiShield, label: 'Garantía' },
-  { href: '/customer/documentos', icon: FiFileText, label: 'Mis documentos' },
-  { href: '/customer/mis-cursos', icon: FiBook, label: 'Mis Cursos' },
-  { href: '/customer/referrals', icon: FiGift, label: 'Promotores' },
-  { href: '/customer/profile', icon: FiUser, label: 'Mi perfil' },
+  { href: '/customer', icon: IconoInicio, label: 'Inicio' },
+  { href: '/customer/balance', icon: IconoPuntosEs, label: 'Puntos ES' },
+  { href: '/customer/orders', icon: IconoBolsa, label: 'Mis Pedidos' },
+  { href: '/customer/cotizaciones', icon: IconoOrdenes, label: 'Mis cotizaciones' },
+  { href: '/customer/wishlist', icon: IconoFavoritos, label: 'Favoritos' },
+  { href: '/customer/addresses', icon: IconoUbicacion, label: 'Direcciones' },
+  { href: '/customer/warranty', icon: IconoGarantia, label: 'Garantía' },
+  { href: '/customer/documentos', icon: IconoDocumento, label: 'Mis documentos' },
+  { href: '/customer/mis-cursos', icon: IconoCursos, label: 'Mis Cursos' },
+  { href: '/customer/referrals', icon: IconoRegalo, label: 'Promotores' },
+  { href: '/customer/profile', icon: IconoCuenta, label: 'Mi perfil' },
 ];
 
 export default function CustomerDashboardLayout({
@@ -152,7 +139,7 @@ export default function CustomerDashboardLayout({
                 <Image src={companySettings.logo} alt={companySettings.companyName || 'Electro Shop'} fill sizes="36px" className="object-contain p-1" />
               </span>
             ) : (
-              <FiUser className="h-5 w-5" aria-hidden="true" />
+              <IconoCuenta className="h-5 w-5" aria-hidden="true" />
             )}
           </span>
           <span className="min-w-0 flex-1">
@@ -165,7 +152,7 @@ export default function CustomerDashboardLayout({
             aria-label="Cerrar menú"
             className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink lg:hidden"
           >
-            <FiX className="h-5 w-5" aria-hidden="true" />
+            <IconoCerrar className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -205,7 +192,7 @@ export default function CustomerDashboardLayout({
             onClick={handleSignOut}
             className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-line text-sm font-medium text-ink-soft transition-colors hover:border-deal/30 hover:bg-deal-bg hover:text-deal"
           >
-            <FiLogOut className="h-4 w-4" aria-hidden="true" />
+            <IconoSalir className="h-4 w-4" aria-hidden="true" />
             Cerrar sesión
           </button>
         </div>
@@ -221,7 +208,7 @@ export default function CustomerDashboardLayout({
             aria-expanded={isDrawerOpen}
             className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-ink-soft hover:bg-surface hover:text-ink lg:hidden"
           >
-            <FiMenu className="h-5 w-5" aria-hidden="true" />
+            <IconoMenu className="h-5 w-5" aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -231,14 +218,14 @@ export default function CustomerDashboardLayout({
             aria-expanded={!isCollapsed}
             className="hidden h-10 w-10 items-center justify-center rounded-lg text-ink-soft hover:bg-surface hover:text-ink lg:inline-flex"
           >
-            <FiMenu className="h-5 w-5" aria-hidden="true" />
+            <IconoMenu className="h-5 w-5" aria-hidden="true" />
           </button>
 
           <span className="truncate text-sm font-bold text-ink lg:hidden">Mi panel</span>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <Link href="/" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-surface">
-              <FiExternalLink className="h-4 w-4" aria-hidden="true" />
+              <IconoAbrirAparte className="h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">Ir a la tienda</span>
             </Link>
             <NotificationBell />

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
-import { FiArchive, FiBox, FiChevronDown, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
+import { IconoArchivar, IconoChevronAbajo, IconoEliminar, IconoPaquete, IconoRestablecer } from '@/components/iconos';
 import { adminDangerButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { parseProductImages } from '@/lib/product-utils';
@@ -31,7 +31,7 @@ function Miniatura({ p }: { p: ProductoPapelera }) {
   const src = p.mainImage || parseProductImages(p.images)[0];
   return (
     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-line bg-white">
-      {src ? <Image src={src} alt="" fill sizes="56px" className="object-contain p-1" unoptimized={!src.startsWith('/')} /> : <div className="flex h-full items-center justify-center text-subtle"><FiBox className="h-5 w-5" aria-hidden="true" /></div>}
+      {src ? <Image src={src} alt="" fill sizes="56px" className="object-contain p-1" unoptimized={!src.startsWith('/')} /> : <div className="flex h-full items-center justify-center text-subtle"><IconoPaquete className="h-5 w-5" aria-hidden="true" /></div>}
     </div>
   );
 }
@@ -177,7 +177,7 @@ export default function PapeleraProductos({ puedeBorrarParaSiempre, recargas, el
     <div className="space-y-3">
       {productos.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line px-6 py-12 text-center">
-          <FiTrash2 className="mx-auto mb-2 h-6 w-6 text-subtle" aria-hidden="true" />
+          <IconoEliminar className="mx-auto mb-2 h-6 w-6 text-subtle" aria-hidden="true" />
           <p className="font-semibold text-ink">La papelera está vacía</p>
           <p className="mt-1 text-sm text-muted">Lo que muevas aquí se puede restaurar durante {DIAS} días.</p>
         </div>
@@ -190,7 +190,7 @@ export default function PapeleraProductos({ puedeBorrarParaSiempre, recargas, el
             </p>
             {puedeBorrarParaSiempre && productos.length > 1 && (
               <button type="button" onClick={() => void vaciar()} disabled={vaciando || ocupado !== null} className={`${adminDangerButton} shrink-0`}>
-                <FiTrash2 className="h-4 w-4" aria-hidden="true" /> {vaciando ? 'Vaciando…' : 'Vaciar la papelera'}
+                <IconoEliminar className="h-4 w-4" aria-hidden="true" /> {vaciando ? 'Vaciando…' : 'Vaciar la papelera'}
               </button>
             )}
           </div>
@@ -212,11 +212,11 @@ export default function PapeleraProductos({ puedeBorrarParaSiempre, recargas, el
                   </div>
                   <div className="flex gap-2">
                     <button type="button" onClick={() => void restaurar(p)} disabled={ocupado === p.id || vaciando} className={adminSecondaryButton}>
-                      <FiRotateCcw className="h-4 w-4" aria-hidden="true" /> Restaurar
+                      <IconoRestablecer className="h-4 w-4" aria-hidden="true" /> Restaurar
                     </button>
                     {puedeBorrarParaSiempre && (
                       <button type="button" onClick={() => void borrarParaSiempre(p)} disabled={ocupado === p.id || vaciando} className={adminDangerButton}>
-                        <FiTrash2 className="h-4 w-4" aria-hidden="true" /> Borrar para siempre
+                        <IconoEliminar className="h-4 w-4" aria-hidden="true" /> Borrar para siempre
                       </button>
                     )}
                   </div>
@@ -232,9 +232,9 @@ export default function PapeleraProductos({ puedeBorrarParaSiempre, recargas, el
         <section className="rounded-2xl border border-line bg-white">
           <button type="button" onClick={() => setVerEliminados((v) => !v)} aria-expanded={verEliminados} aria-controls="productos-eliminados"
             className="flex min-h-12 w-full items-center gap-2 px-4 text-left text-sm font-semibold text-ink">
-            <FiArchive className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+            <IconoArchivar className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
             <span className="min-w-0 flex-1">Eliminados que se conservan por sus ventas ({eliminados})</span>
-            <FiChevronDown className={`h-4 w-4 shrink-0 text-muted transition-transform ${verEliminados ? 'rotate-180' : ''}`} aria-hidden="true" />
+            <IconoChevronAbajo className={`h-4 w-4 shrink-0 text-muted transition-transform ${verEliminados ? 'rotate-180' : ''}`} aria-hidden="true" />
           </button>
           {verEliminados && (
             <div id="productos-eliminados" className="space-y-2 border-t border-line p-3">
@@ -253,7 +253,7 @@ export default function PapeleraProductos({ puedeBorrarParaSiempre, recargas, el
                       </div>
                       {puedeBorrarParaSiempre && (
                         <button type="button" onClick={() => void restaurar(p)} disabled={ocupado === p.id} className={adminSecondaryButton}>
-                          <FiRotateCcw className="h-4 w-4" aria-hidden="true" /> Recuperar como borrador
+                          <IconoRestablecer className="h-4 w-4" aria-hidden="true" /> Recuperar como borrador
                         </button>
                       )}
                     </li>

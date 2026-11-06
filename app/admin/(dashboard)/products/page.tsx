@@ -5,7 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { FiDatabase, FiDownload, FiEdit3, FiMoreHorizontal, FiPercent, FiPlus, FiSearch, FiTag, FiTrash2, FiUpload, FiX, FiBox } from 'react-icons/fi';
+import {
+  IconoBaseDeDatos, IconoBuscar, IconoCerrar, IconoDescargar, IconoEditar, IconoEliminar, IconoMas, IconoMasOpciones,
+  IconoPaquete, IconoPorcentaje, IconoSubir, IconoVariantes,
+} from '@/components/iconos';
 import {
   adminChoice, adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab,
 } from '@/lib/admin-ui';
@@ -405,16 +408,16 @@ function Productos() {
               </>
             ) : (
               <>
-                <Link href="/admin/products/new" className={adminPrimaryButton}><FiPlus className="h-4 w-4" aria-hidden="true" /> Nuevo producto</Link>
-                <button type="button" onClick={() => setEdicionRapida(true)} className={adminSecondaryButton}><FiEdit3 className="h-4 w-4" aria-hidden="true" /> Edición rápida</button>
+                <Link href="/admin/products/new" className={adminPrimaryButton}><IconoMas className="h-4 w-4" aria-hidden="true" /> Nuevo producto</Link>
+                <button type="button" onClick={() => setEdicionRapida(true)} className={adminSecondaryButton}><IconoEditar className="h-4 w-4" aria-hidden="true" /> Edición rápida</button>
                 <div className="relative" ref={menuMas}>
                   <button type="button" onClick={() => setMasAcciones((v) => !v)} aria-expanded={masAcciones} className={adminSecondaryButton}>
-                    <FiMoreHorizontal className="h-4 w-4" aria-hidden="true" /> Más
+                    <IconoMasOpciones className="h-4 w-4" aria-hidden="true" /> Más
                   </button>
                   {masAcciones && (
                     <div className="absolute right-0 z-[var(--z-dropdown)] mt-1 w-52 rounded-xl border border-line bg-white p-1 shadow-lg" role="menu">
-                      <Link href="/admin/products/importar" role="menuitem" onClick={() => setMasAcciones(false)} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-ink hover:bg-surface"><FiUpload className="h-4 w-4" aria-hidden="true" /> Importar (.json)</Link>
-                      <button type="button" role="menuitem" onClick={() => { setMasAcciones(false); exportar(); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-ink hover:bg-surface"><FiDownload className="h-4 w-4" aria-hidden="true" /> Exportar CSV</button>
+                      <Link href="/admin/products/importar" role="menuitem" onClick={() => setMasAcciones(false)} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-ink hover:bg-surface"><IconoSubir className="h-4 w-4" aria-hidden="true" /> Importar (.json)</Link>
+                      <button type="button" role="menuitem" onClick={() => { setMasAcciones(false); exportar(); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-ink hover:bg-surface"><IconoDescargar className="h-4 w-4" aria-hidden="true" /> Exportar CSV</button>
                     </div>
                   )}
                 </div>
@@ -426,12 +429,12 @@ function Productos() {
 
       {/* C-187: en el teléfono "SADES" a secas, para que la Papelera quepa a la vista (antes quedaba fuera, a la derecha) */}
       <div className="flex gap-1 overflow-x-auto border-b border-line pb-2" role="tablist" aria-label="Origen de los productos">
-        <button type="button" role="tab" aria-selected={tab === 'local'} onClick={() => setTab('local')} className={`${adminTab(tab === 'local')} ${TAB_TELEFONO}`}><FiBox className="h-4 w-4" aria-hidden="true" /> Catálogo</button>
+        <button type="button" role="tab" aria-selected={tab === 'local'} onClick={() => setTab('local')} className={`${adminTab(tab === 'local')} ${TAB_TELEFONO}`}><IconoPaquete className="h-4 w-4" aria-hidden="true" /> Catálogo</button>
         <button type="button" role="tab" aria-selected={tab === 'sades'} onClick={() => setTab('sades')} className={`${adminTab(tab === 'sades')} ${TAB_TELEFONO}`}>
-          <FiDatabase className="h-4 w-4" aria-hidden="true" /> <span><span className="hidden sm:inline">ElectroCaja / </span>SADES</span>
+          <IconoBaseDeDatos className="h-4 w-4" aria-hidden="true" /> <span><span className="hidden sm:inline">ElectroCaja / </span>SADES</span>
         </button>
         <button type="button" role="tab" aria-selected={tab === 'papelera'} onClick={() => setTab('papelera')} className={`${adminTab(tab === 'papelera')} ${TAB_TELEFONO}`}>
-          <FiTrash2 className="h-4 w-4" aria-hidden="true" /> Papelera{enPapelera > 0 && <span className="rounded-full bg-surface px-2 text-xs font-semibold tabular-nums text-muted">{enPapelera}</span>}
+          <IconoEliminar className="h-4 w-4" aria-hidden="true" /> Papelera{enPapelera > 0 && <span className="rounded-full bg-surface px-2 text-xs font-semibold tabular-nums text-muted">{enPapelera}</span>}
         </button>
       </div>
 
@@ -473,7 +476,7 @@ function Productos() {
 
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="relative flex-1">
-              <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+              <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
               <input type="search" aria-label="Buscar productos" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre, SKU o código de barras" className={`${adminInput()} pl-9`} />
             </div>
             <div className="sm:w-60">
@@ -495,16 +498,16 @@ function Productos() {
             <div className="sticky top-2 z-[var(--z-sticky)] space-y-1 rounded-2xl bg-brand-600 p-2 text-white shadow-lg sm:flex sm:items-center sm:gap-2 sm:space-y-0">
               <div className="flex items-center justify-between gap-2 sm:contents">
                 <span className="px-2 text-sm font-semibold">{seleccion.size} seleccionado{seleccion.size === 1 ? '' : 's'}</span>
-                <button type="button" onClick={() => setSeleccion(new Set())} className="inline-flex min-h-11 items-center gap-1 px-2 text-sm text-white/80 hover:text-white sm:order-last sm:ml-auto"><FiX className="h-4 w-4" aria-hidden="true" /> Quitar selección</button>
+                <button type="button" onClick={() => setSeleccion(new Set())} className="inline-flex min-h-11 items-center gap-1 px-2 text-sm text-white/80 hover:text-white sm:order-last sm:ml-auto"><IconoCerrar className="h-4 w-4" aria-hidden="true" /> Quitar selección</button>
               </div>
               {/* En el teléfono las acciones se deslizan en una fila (antes ocupaban media pantalla) */}
               <div className="-mx-2 flex gap-2 overflow-x-auto px-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
                 <button type="button" onClick={() => aplicarMasivo('status', 'PUBLISHED')} className="min-h-11 shrink-0 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15">Activar</button>
                 <button type="button" onClick={() => aplicarMasivo('status', 'DRAFT')} className="min-h-11 shrink-0 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15">Desactivar</button>
-                <button type="button" onClick={() => setMasivo({ campo: 'pricePercent', valor: '' })} className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15"><FiPercent className="h-4 w-4" aria-hidden="true" /> Precio</button>
-                <button type="button" onClick={() => setMasivo({ campo: 'category', valor: '' })} className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15"><FiTag className="h-4 w-4" aria-hidden="true" /> Categoría</button>
+                <button type="button" onClick={() => setMasivo({ campo: 'pricePercent', valor: '' })} className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15"><IconoPorcentaje className="h-4 w-4" aria-hidden="true" /> Precio</button>
+                <button type="button" onClick={() => setMasivo({ campo: 'category', valor: '' })} className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15"><IconoVariantes className="h-4 w-4" aria-hidden="true" /> Categoría</button>
                 <button type="button" onClick={() => setMasivo({ campo: 'stock', valor: '' })} className="min-h-11 shrink-0 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15">Más cambios</button>
-                <button type="button" onClick={eliminarSeleccion} className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15"><FiTrash2 className="h-4 w-4" aria-hidden="true" /> A la papelera</button>
+                <button type="button" onClick={eliminarSeleccion} className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-white/30 px-3 text-sm hover:bg-white/15"><IconoEliminar className="h-4 w-4" aria-hidden="true" /> A la papelera</button>
               </div>
             </div>
           )}
@@ -515,7 +518,7 @@ function Productos() {
             <div className="rounded-2xl border border-dashed border-line px-6 py-12 text-center">
               <p className="font-semibold text-ink">{productos.length === 0 ? 'Todavía no hay productos' : 'Ningún producto con estos filtros'}</p>
               {productos.length === 0
-                ? <Link href="/admin/products/new" className={`${adminPrimaryButton} mt-4`}><FiPlus className="h-4 w-4" aria-hidden="true" /> Nuevo producto</Link>
+                ? <Link href="/admin/products/new" className={`${adminPrimaryButton} mt-4`}><IconoMas className="h-4 w-4" aria-hidden="true" /> Nuevo producto</Link>
                 : <button type="button" onClick={limpiarFiltros} className={`${adminSecondaryButton} mt-4`}>Quitar filtros</button>}
             </div>
           ) : (

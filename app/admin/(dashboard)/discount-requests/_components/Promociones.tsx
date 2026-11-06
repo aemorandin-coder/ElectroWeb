@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
-import { FiCopy, FiEdit2, FiPause, FiPlay, FiPlus, FiScissors, FiSearch, FiTag, FiTrash2, FiX } from 'react-icons/fi';
+import {
+  IconoBuscar, IconoCerrar, IconoCopiar, IconoCupon, IconoEditar, IconoEliminar, IconoMas, IconoOferta, IconoPausa,
+  IconoPlay,
+} from '@/components/iconos';
 import {
     adminBadge, adminCard, adminChoice, adminError, adminHint, adminInput, adminLabel, adminModalBody, adminModalFooter,
     adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPrimaryButton,
@@ -330,10 +333,10 @@ export default function Promociones() {
 
             <div className="flex flex-wrap items-center gap-2">
                 <button type="button" onClick={() => abrir('AUTOMATIC')} className={adminPrimaryButton}>
-                    <FiTag className="h-4 w-4" aria-hidden="true" /> Nueva oferta
+                    <IconoOferta className="h-4 w-4" aria-hidden="true" /> Nueva oferta
                 </button>
                 <button type="button" onClick={() => abrir('COUPON')} className={adminSecondaryButton}>
-                    <FiScissors className="h-4 w-4" aria-hidden="true" /> Nuevo cupón
+                    <IconoCupon className="h-4 w-4" aria-hidden="true" /> Nuevo cupón
                 </button>
                 <div className="ml-auto flex gap-1" role="group" aria-label="Filtrar">
                     {FILTROS.map((f) => (
@@ -373,7 +376,7 @@ export default function Promociones() {
                                     <span className="rounded-lg border border-dashed border-line bg-surface px-2 py-1 font-mono font-semibold text-ink">{p.code}</span>
                                     <button type="button" className={`${adminIconButton} h-11 w-11`} aria-label={`Copiar el código ${p.code}`}
                                         onClick={() => { navigator.clipboard?.writeText(p.code ?? '').then(() => toast.success('Código copiado'), () => toast.error('No se pudo copiar')); }}>
-                                        <FiCopy className="h-4 w-4" aria-hidden="true" />
+                                        <IconoCopiar className="h-4 w-4" aria-hidden="true" />
                                     </button>
                                     <span className="text-xs text-muted">{p.isPublic ? 'Visible en la ficha del producto' : 'Solo con el código'}</span>
                                 </div>
@@ -385,13 +388,13 @@ export default function Promociones() {
                                 <div><dt className="text-muted">Ahorro dado</dt><dd className="tabular-nums text-ink">{formatUSD(p.savedUSD)}</dd></div>
                             </dl>
                             <div className="flex flex-wrap gap-2 border-t border-line pt-3">
-                                <button type="button" onClick={() => abrir(p.kind, p)} className={adminSecondaryButton}><FiEdit2 className="h-4 w-4" aria-hidden="true" /> Editar</button>
+                                <button type="button" onClick={() => abrir(p.kind, p)} className={adminSecondaryButton}><IconoEditar className="h-4 w-4" aria-hidden="true" /> Editar</button>
                                 {p.status !== 'VENCIDA' && (
                                     <button type="button" onClick={() => pausar(p)} className={adminSecondaryButton}>
-                                        {p.isActive ? <><FiPause className="h-4 w-4" aria-hidden="true" /> Pausar</> : <><FiPlay className="h-4 w-4" aria-hidden="true" /> Reanudar</>}
+                                        {p.isActive ? <><IconoPausa className="h-4 w-4" aria-hidden="true" /> Pausar</> : <><IconoPlay className="h-4 w-4" aria-hidden="true" /> Reanudar</>}
                                     </button>
                                 )}
-                                <button type="button" onClick={() => eliminar(p)} className={`${adminSecondaryButton} text-deal`}><FiTrash2 className="h-4 w-4" aria-hidden="true" /> Eliminar</button>
+                                <button type="button" onClick={() => eliminar(p)} className={`${adminSecondaryButton} text-deal`}><IconoEliminar className="h-4 w-4" aria-hidden="true" /> Eliminar</button>
                             </div>
                         </li>
                     ))}
@@ -405,7 +408,7 @@ export default function Promociones() {
                             <h2 id="promo-titulo" className={adminModalTitle}>
                                 {editando ? (form.kind === 'COUPON' ? 'Editar cupón' : 'Editar oferta') : form.kind === 'COUPON' ? 'Nuevo cupón' : 'Nueva oferta'}
                             </h2>
-                            <button type="button" onClick={cerrar} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+                            <button type="button" onClick={cerrar} className={`${adminIconButton} h-11 w-11`} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
                         </div>
                         <div className={`${adminModalBody} space-y-5`}>
                             {editando && <PresenciaEnEditor recurso={`promotion:${editando.id}`} etiqueta={editando.name} nombreRecurso={editando.kind === 'COUPON' ? 'cupón' : 'oferta'} femenino={editando.kind !== 'COUPON'} />}
@@ -493,7 +496,7 @@ export default function Promociones() {
                                 {form.scope === 'PRODUCT' && (
                                     <div className="mt-3 space-y-2">
                                         <div className="relative">
-                                            <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+                                            <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
                                             <input aria-label="Buscar productos" className={`${adminInput()} pl-9`} value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre o SKU" />
                                         </div>
                                         {busqueda.trim().length >= 2 && resultados.length > 0 && (
@@ -517,7 +520,7 @@ export default function Promociones() {
                                                         <span className="max-w-48 truncate">{p.name}</span>
                                                         <button type="button" onClick={() => set('products', form.products.filter((x) => x.id !== p.id))}
                                                             className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-line" aria-label={`Quitar ${p.name}`}>
-                                                            <FiX className="h-4 w-4" aria-hidden="true" />
+                                                            <IconoCerrar className="h-4 w-4" aria-hidden="true" />
                                                         </button>
                                                     </li>
                                                 ))}
@@ -566,7 +569,7 @@ export default function Promociones() {
                         <div className={adminModalFooter}>
                             <button type="button" onClick={cerrar} className={adminSecondaryButton} disabled={guardando}>Cancelar</button>
                             <button type="button" onClick={() => void guardar()} className={adminPrimaryButton} disabled={guardando}>
-                                <FiPlus className="h-4 w-4" aria-hidden="true" />{guardando ? 'Guardando…' : editando ? 'Guardar cambios' : form.kind === 'COUPON' ? 'Crear cupón' : 'Crear oferta'}
+                                <IconoMas className="h-4 w-4" aria-hidden="true" />{guardando ? 'Guardando…' : editando ? 'Guardar cambios' : form.kind === 'COUPON' ? 'Crear cupón' : 'Crear oferta'}
                             </button>
                         </div>
                     </div>

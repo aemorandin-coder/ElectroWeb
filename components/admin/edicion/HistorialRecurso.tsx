@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { FiClock } from 'react-icons/fi';
+import { IconoReloj } from '@/components/iconos';
 import { listaEnTexto } from '@/lib/edicion/producto';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
@@ -37,7 +37,7 @@ export default function HistorialRecurso({ recurso, recargar }: { recurso: strin
   return (
     <details className="mt-4 rounded-2xl border border-line bg-white p-4 text-sm">
       <summary className="flex cursor-pointer flex-wrap items-center gap-x-2 font-semibold text-ink">
-        <FiClock className="h-4 w-4 text-muted" aria-hidden="true" />
+        <IconoReloj className="h-4 w-4 text-muted" aria-hidden="true" />
         Historial
         <span className="font-normal text-muted">· último cambio: {ultima.quien}, {haceCuanto(ultima.en)}</span>
       </summary>

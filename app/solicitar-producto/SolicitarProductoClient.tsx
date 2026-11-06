@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import type { HCaptchaRefMethods } from '@/components/HCaptchaWrapper';
-import { FiUser, FiMail, FiPhone, FiPackage, FiDollarSign, FiClock, FiCheck, FiShield, FiTruck, FiSearch } from 'react-icons/fi';
-import { IoMdPricetags } from 'react-icons/io';
+import {
+  IconoBillete, IconoBuscar, IconoCargando, IconoCheck, IconoCorreo, IconoCuenta, IconoEnvio, IconoError, IconoGarantia,
+  IconoPaquete, IconoPedirProducto, IconoReloj, IconoTelefono,
+} from '@/components/iconos';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import { adminPrimaryButton } from '@/lib/admin-ui';
 import PageHeader, { PageHeaderChip } from '@/components/ui/PageHeader';
@@ -230,15 +232,15 @@ export default function SolicitarProductoClient() {
     <>
       <PageHeader
         breadcrumbs={[{ label: 'Productos', href: '/productos' }, { label: 'Solicitar producto' }]}
-        icon={<FiSearch />}
+        icon={<IconoBuscar />}
         eyebrow="Servicio personalizado"
         title="Solicitar producto"
         description="¿No encuentras lo que buscas? Cuéntanos qué necesitas y te lo conseguimos al mejor precio."
         meta={
           <>
-            <PageHeaderChip><FiShield className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" /> 100% seguro</PageHeaderChip>
-            <PageHeaderChip><FiTruck className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" /> Envío nacional</PageHeaderChip>
-            <PageHeaderChip><IoMdPricetags className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" /> Mejores precios</PageHeaderChip>
+            <PageHeaderChip><IconoGarantia className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" /> 100% seguro</PageHeaderChip>
+            <PageHeaderChip><IconoEnvio className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" /> Envío nacional</PageHeaderChip>
+            <PageHeaderChip><IconoPedirProducto className="h-3.5 w-3.5 text-brand-600" aria-hidden="true" /> Mejores precios</PageHeaderChip>
           </>
         }
       />
@@ -250,7 +252,7 @@ export default function SolicitarProductoClient() {
           <div className="rounded-2xl border border-line bg-white shadow-sm p-8 text-center relative overflow-hidden">
             <div className="relative">
               <div className="w-16 h-16 bg-success-strong/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-success-strong">
-                <FiCheck className="w-8 h-8 text-success-strong" />
+                <IconoCheck className="w-8 h-8 text-success-strong" />
               </div>
               <h2 className="text-2xl font-bold text-ink mb-3">¡Solicitud Enviada!</h2>
               <p className="text-muted text-base mb-3 max-w-md mx-auto">
@@ -292,7 +294,7 @@ export default function SolicitarProductoClient() {
                 {error && (
                   <div className="mb-6 p-3 bg-deal-bg border border-deal/30 rounded-xl animate-shake">
                     <div className="flex items-center gap-2 text-deal">
-                      <FiAlertCircle className="w-4 h-4" />
+                      <IconoError className="w-4 h-4" />
                       <span className="text-xs font-semibold">{error}</span>
                     </div>
                   </div>
@@ -331,7 +333,7 @@ export default function SolicitarProductoClient() {
                     <div className="space-y-1">
                       <div className="relative group">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors">
-                          <FiUser className="w-3 h-3" />
+                          <IconoCuenta className="w-3 h-3" />
                         </div>
                         <input
                           ref={nameInputRef}
@@ -353,7 +355,7 @@ export default function SolicitarProductoClient() {
                     <div className="space-y-1">
                       <div className="relative group">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors">
-                          <FiMail className="w-3 h-3" />
+                          <IconoCorreo className="w-3 h-3" />
                         </div>
                         <input
                           type="email"
@@ -376,7 +378,7 @@ export default function SolicitarProductoClient() {
                   <div className="space-y-1">
                     <div className="relative group">
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors">
-                        <FiPhone className="w-3 h-3" />
+                        <IconoTelefono className="w-3 h-3" />
                       </div>
                       <input
                         type="tel"
@@ -409,7 +411,7 @@ export default function SolicitarProductoClient() {
                     <div className="space-y-1">
                       <div className="relative group">
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors">
-                          <FiPackage className="w-4 h-4" />
+                          <IconoPaquete className="w-4 h-4" />
                         </div>
                         <input
                           type="text"
@@ -469,7 +471,7 @@ export default function SolicitarProductoClient() {
                     <div className="space-y-1">
                       <div className="relative group">
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors">
-                          <FiDollarSign className="w-4 h-4" />
+                          <IconoBillete className="w-4 h-4" />
                         </div>
                         <input
                           type="text"
@@ -486,7 +488,7 @@ export default function SolicitarProductoClient() {
                     <div className="space-y-1">
                       <div className="relative group">
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors">
-                          <FiClock className="w-4 h-4" />
+                          <IconoReloj className="w-4 h-4" />
                         </div>
                         <select
                           id="urgency"
@@ -523,10 +525,7 @@ export default function SolicitarProductoClient() {
                   >
                     {loading ? (
                       <>
-                        <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
+                        <IconoCargando className="animate-spin w-4 h-4 text-white" />
                         <span>Enviando...</span>
                       </>
                     ) : (
@@ -540,10 +539,10 @@ export default function SolicitarProductoClient() {
             {/* Steps Info - Horizontal on Desktop when compact */}
             <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { step: '1', title: 'Solicitas', icon: FiPackage },
-                { step: '2', title: 'Buscamos', icon: FiPackage },
-                { step: '3', title: 'Cotizamos', icon: FiPackage },
-                { step: '4', title: 'Recibes', icon: FiTruck },
+                { step: '1', title: 'Solicitas', icon: IconoPaquete },
+                { step: '2', title: 'Buscamos', icon: IconoPaquete },
+                { step: '3', title: 'Cotizamos', icon: IconoPaquete },
+                { step: '4', title: 'Recibes', icon: IconoEnvio },
               ].map((item) => (
                 <div key={item.step} className="bg-white p-4 rounded-2xl border border-line shadow-xs flex flex-col items-center text-center">
                   <div className="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mb-2">
@@ -557,25 +556,5 @@ export default function SolicitarProductoClient() {
         )}
       </main>
     </>
-  );
-}
-function FiAlertCircle(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="12" />
-      <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
   );
 }

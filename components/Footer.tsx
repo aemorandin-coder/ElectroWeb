@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useSettings } from '@/contexts/SettingsContext';
-import { FiBox, FiMapPin, FiPhone, FiMessageCircle, FiMail } from 'react-icons/fi';
+import { IconoChat, IconoCorreo, IconoPaquete, IconoTelefono, IconoUbicacion } from '@/components/iconos';
 import { FaInstagram, FaTiktok, FaTelegram, FaYoutube } from 'react-icons/fa6';
 
 // C-186: el gorro de Santa del logo solo se descarga con el tema navideño encendido (apagado, no se pide nada)
@@ -43,7 +43,7 @@ export default function Footer() {
                 <Image src={settings.logo} alt={settings.companyName || 'Logo'} width={32} height={32} unoptimized={!settings.logo.startsWith('/')} className="w-8 h-8 object-contain rounded-lg" />
               ) : (
                 <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">
-                  <FiBox className="w-5 h-5 text-white" />
+                  <IconoPaquete className="w-5 h-5 text-white" />
                 </div>
               )}
               <h3 className="font-brand text-base font-bold">
@@ -123,14 +123,14 @@ export default function Footer() {
             <ul className="space-y-2 text-xs text-subtle">
               {settings?.address && (
                 <li className="flex justify-center md:justify-start items-center gap-2">
-                  <FiMapPin className="w-4 h-4 flex-shrink-0" /> {settings.address}
+                  <IconoUbicacion className="w-4 h-4 flex-shrink-0" /> {settings.address}
                 </li>
               )}
               {settings?.phone && !isSeedPhone(settings.phone) && (
                 <li>
                   <a href={`tel:${settings.phone}`}
                     className="hover:text-brand-500 flex justify-center md:justify-start items-center gap-2">
-                    <FiPhone className="w-4 h-4 flex-shrink-0" /> {settings.phone}
+                    <IconoTelefono className="w-4 h-4 flex-shrink-0" /> {settings.phone}
                   </a>
                 </li>
               )}
@@ -139,7 +139,7 @@ export default function Footer() {
                   {/* FIX #3: número sanitizado con .replace(/\D/g,'') */}
                   <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer"
                     className="hover:text-brand-500 flex justify-center md:justify-start items-center gap-2">
-                    <FiMessageCircle className="w-4 h-4 flex-shrink-0" /> WhatsApp
+                    <IconoChat className="w-4 h-4 flex-shrink-0" /> WhatsApp
                   </a>
                 </li>
               )}
@@ -147,7 +147,7 @@ export default function Footer() {
                 <li>
                   <a href={`mailto:${settings.email}`}
                     className="hover:text-brand-500 flex justify-center md:justify-start items-center gap-2">
-                    <FiMail className="w-4 h-4 flex-shrink-0" /> {settings.email}
+                    <IconoCorreo className="w-4 h-4 flex-shrink-0" /> {settings.email}
                   </a>
                 </li>
               )}

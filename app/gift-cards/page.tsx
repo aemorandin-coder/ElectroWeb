@@ -17,8 +17,11 @@ import Footer from '@/components/Footer';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { adminModalOverlay, adminModalPanel, adminNotice } from '@/lib/admin-ui';
 
-import { FiGift, FiCheck, FiAlertCircle, FiMail, FiArrowRight, FiClock, FiPlusCircle, FiLogIn, FiCreditCard, FiLock, FiCalendar, FiEye, FiUser, FiStar } from 'react-icons/fi';
-import { AiOutlineDeliveredProcedure } from 'react-icons/ai';
+import {
+  IconoCalendario, IconoCandado, IconoCheck, IconoChevronAbajo, IconoCorreo, IconoCuenta, IconoEntrar, IconoEntregado,
+  IconoError, IconoEstrella, IconoFlechaDerecha, IconoGiftCard, IconoInfo, IconoRecargarPuntos, IconoRegalo, IconoReloj,
+  IconoTarjeta, IconoVer,
+} from '@/components/iconos';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 // Predefined amounts
@@ -270,7 +273,7 @@ export default function GiftCardsPage() {
 
             <PageHeader
                 breadcrumbs={[{ label: 'Gift Cards' }]}
-                icon={<FiGift />}
+                icon={<IconoGiftCard />}
                 eyebrow="Gift Cards"
                 title="Regala tecnología"
                 description="Elige el diseño y el monto. La tarjeta llega al correo de quien la recibe y la canjea como Puntos ES en la tienda."
@@ -339,7 +342,7 @@ export default function GiftCardsPage() {
                                     <div key={amount} className="relative">
                                         {amount === 50 && (
                                             <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-brand-500 text-white text-xs font-bold rounded-full z-20 whitespace-nowrap inline-flex items-center gap-1">
-                                                <FiStar className="h-3 w-3 fill-current shrink-0" aria-hidden="true" />Popular
+                                                <IconoEstrella lleno className="h-3 w-3 shrink-0" aria-hidden="true" />Popular
                                             </span>
                                         )}
                                         <button
@@ -398,9 +401,7 @@ export default function GiftCardsPage() {
                                     />
                                     {/* Tooltip icon */}
                                     <div className="absolute right-2 top-1/2 -translate-y-1/2 cursor-help">
-                                        <svg className="w-4 h-4 text-muted hover:text-brand-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
+                                        <IconoInfo className="w-4 h-4 text-muted hover:text-brand-500 transition-colors" />
                                         {/* Tooltip popup */}
                                         <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-ink text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[var(--z-dropdown)] shadow-lg">
                                             <div className="font-semibold mb-1">Monto personalizado</div>
@@ -437,7 +438,7 @@ export default function GiftCardsPage() {
                                         : 'bg-surface text-ink-soft hover:bg-line/50 border border-line'
                                         }`}
                                 >
-                                    <FiGift className="w-3.5 h-3.5" />
+                                    <IconoRegalo className="w-3.5 h-3.5" />
                                     Es un regalo
                                 </button>
 
@@ -451,7 +452,7 @@ export default function GiftCardsPage() {
                                             : 'bg-surface text-ink-soft hover:bg-line/50 border border-line'
                                             }`}
                                     >
-                                        <FiUser className="w-3.5 h-3.5" />
+                                        <IconoCuenta className="w-3.5 h-3.5" />
                                         Para mí mismo
                                     </button>
                                 )}
@@ -473,12 +474,12 @@ export default function GiftCardsPage() {
                                     />
                                     {isForMyself && (
                                         <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                            <FiUser className="w-3 h-3 text-brand-500" />
+                                            <IconoCuenta className="w-3 h-3 text-brand-500" />
                                         </div>
                                     )}
                                     {errors.name && (
                                         <div className="absolute -bottom-4 left-0 text-xs text-deal flex items-center gap-1">
-                                            <FiAlertCircle className="w-2.5 h-2.5" />
+                                            <IconoError className="w-2.5 h-2.5" />
                                             {errors.name}
                                         </div>
                                     )}
@@ -501,14 +502,14 @@ export default function GiftCardsPage() {
                                             }`}
                                     />
                                     <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                        {isForMyself && <FiLock className="w-3 h-3 text-brand-500" />}
+                                        {isForMyself && <IconoCandado className="w-3 h-3 text-brand-500" />}
                                         {!isForMyself && isCheckingEmail && <span className="text-muted text-xs">...</span>}
-                                        {!isForMyself && !isCheckingEmail && recipientExists === true && <FiCheck className="w-3.5 h-3.5 text-success" />}
-                                        {!isForMyself && !isCheckingEmail && recipientExists === false && <FiAlertCircle className="w-3.5 h-3.5 text-warning" />}
+                                        {!isForMyself && !isCheckingEmail && recipientExists === true && <IconoCheck className="w-3.5 h-3.5 text-success" />}
+                                        {!isForMyself && !isCheckingEmail && recipientExists === false && <IconoError className="w-3.5 h-3.5 text-warning" />}
                                     </div>
                                     {errors.email && (
                                         <div className="absolute -bottom-4 left-0 text-xs text-deal flex items-center gap-1">
-                                            <FiAlertCircle className="w-2.5 h-2.5" />
+                                            <IconoError className="w-2.5 h-2.5" />
                                             {errors.email}
                                         </div>
                                     )}
@@ -516,7 +517,7 @@ export default function GiftCardsPage() {
                             </div>
                             {isForMyself && (
                                 <p className="text-xs text-brand-500 mt-1.5 flex items-center gap-1">
-                                    <FiLock className="w-2.5 h-2.5" />
+                                    <IconoCandado className="w-2.5 h-2.5" />
                                     Se usarán tus datos de cuenta automáticamente
                                 </p>
                             )}
@@ -554,17 +555,10 @@ export default function GiftCardsPage() {
                                     className="w-full px-3 py-2 bg-surface flex items-center justify-between hover:bg-line/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-2">
-                                        <FiCalendar className="w-3.5 h-3.5 text-brand-600" />
+                                        <IconoCalendario className="w-3.5 h-3.5 text-brand-600" />
                                         <span className="text-xs font-medium text-ink">Programar envío (opcional)</span>
                                     </div>
-                                    <svg
-                                        className={`w-3.5 h-3.5 text-muted transition-transform duration-300 ${showScheduledSection ? 'rotate-180' : ''}`}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    <IconoChevronAbajo className={`w-3.5 h-3.5 text-muted transition-transform duration-300 ${showScheduledSection ? 'rotate-180' : ''}`} />
                                 </button>
 
                                 <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showScheduledSection ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -591,7 +585,7 @@ export default function GiftCardsPage() {
                                 onClick={() => setShowEmailPreview(true)}
                                 className="w-full mb-4 py-2 rounded-lg border border-brand-200 text-brand-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-brand-50 transition-colors"
                             >
-                                <FiEye className="w-4 h-4" />
+                                <IconoVer className="w-4 h-4" />
                                 Ver cómo lucirá el email
                             </button>
                         )}
@@ -619,7 +613,7 @@ export default function GiftCardsPage() {
 
                         {/* Security Badge */}
                         <div className="flex items-center justify-center gap-2 text-xs text-muted mb-3">
-                            <FiLock className="w-3 h-3" />
+                            <IconoCandado className="w-3 h-3" />
                             <span>Pago 100% seguro — Entrega garantizada</span>
                         </div>
 
@@ -641,11 +635,11 @@ export default function GiftCardsPage() {
                                 }`}
                         >
                             {!session ? (
-                                <><FiLogIn className="w-4 h-4" /> Inicia sesión para comprar</>
+                                <><IconoEntrar className="w-4 h-4" /> Inicia sesión para comprar</>
                             ) : isLoading ? 'Procesando' : !saldoCargado ? 'Cargando tus Puntos ES' : canPayWithBalance ? (
-                                <><FiCreditCard className="w-4 h-4" /> Pagar con Puntos ES</>
+                                <><IconoTarjeta className="w-4 h-4" /> Pagar con Puntos ES</>
                             ) : (
-                                <><FiPlusCircle className="w-4 h-4" /> Recargar Puntos ES</>
+                                <><IconoRecargarPuntos className="w-4 h-4" /> Recargar Puntos ES</>
                             )}
                         </button>
                     </div>
@@ -659,22 +653,22 @@ export default function GiftCardsPage() {
                     <div className="grid md:grid-cols-4 gap-4">
                         {[
                             {
-                                icon: <AiOutlineDeliveredProcedure className="w-5 h-5" />,
+                                icon: <IconoEntregado className="w-5 h-5" />,
                                 title: 'Entrega Instantánea',
                                 description: 'Código por email inmediatamente.',
                             },
                             {
-                                icon: <FiClock className="w-5 h-5" />,
+                                icon: <IconoReloj className="w-5 h-5" />,
                                 title: 'Sin Expiración',
                                 description: 'Úsalas cuando quieras.',
                             },
                             {
-                                icon: <FiGift className="w-5 h-5" />,
+                                icon: <IconoRegalo className="w-5 h-5" />,
                                 title: 'Personalizable',
                                 description: 'Añade un mensaje personal.',
                             },
                             {
-                                icon: <FiLock className="w-5 h-5" />,
+                                icon: <IconoCandado className="w-5 h-5" />,
                                 title: '100% Seguro',
                                 description: 'Transacciones protegidas y garantizadas.',
                             },
@@ -705,9 +699,9 @@ export default function GiftCardsPage() {
                             href="/canjear-gift-card"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand-500 text-sm font-bold rounded-xl hover:bg-surface transition-colors whitespace-nowrap"
                         >
-                            <FiGift className="w-4 h-4" />
+                            <IconoGiftCard className="w-4 h-4" />
                             Canjear Gift Card
-                            <FiArrowRight className="w-4 h-4" />
+                            <IconoFlechaDerecha className="w-4 h-4" />
                         </Link>
                     </div>
                 </div>
@@ -721,7 +715,7 @@ export default function GiftCardsPage() {
                 <div className={adminModalOverlay}>
                     <div className={`${adminModalPanel} max-w-md w-full p-8 text-center`}>
                         <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-warning/15 text-warning-strong flex items-center justify-center">
-                            <FiMail className="w-8 h-8" />
+                            <IconoCorreo className="w-8 h-8" />
                         </div>
 
                         <h3 className="text-2xl font-bold text-ink mb-3">Usuario no registrado</h3>
@@ -738,7 +732,7 @@ export default function GiftCardsPage() {
                                 disabled={isSendingInvite}
                                 className="w-full py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
                             >
-                                {isSendingInvite ? 'Enviando...' : <><FiMail /> Sí, enviar invitación</>}
+                                {isSendingInvite ? 'Enviando...' : <><IconoCorreo /> Sí, enviar invitación</>}
                             </button>
 
                             <button
@@ -764,7 +758,7 @@ export default function GiftCardsPage() {
                         <div className="bg-brand-600 px-6 py-4 text-white">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                                    <FiGift className="w-5 h-5" />
+                                    <IconoRegalo className="w-5 h-5" />
                                 </div>
                                 <div>
                                     <p className="font-bold">¡Tienes un regalo de Electro Shop!</p>

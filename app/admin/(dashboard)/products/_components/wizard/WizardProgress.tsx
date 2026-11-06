@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { FiCheck } from 'react-icons/fi';
+import { IconoCheck } from '@/components/iconos';
 
 interface Props {
   steps: string[];
@@ -50,7 +50,7 @@ export default function WizardProgress({ steps, current, onStepClick, freeNaviga
                   done ? 'bg-success-strong text-white' : active ? 'bg-brand-500 text-white ring-4 ring-brand-100' : 'bg-line text-ink-soft',
                 ].join(' ')}
               >
-                {done ? <FiCheck className="h-3 w-3" aria-hidden="true" /> : i + 1}
+                {done ? <IconoCheck className="h-3 w-3" aria-hidden="true" /> : i + 1}
               </span>
               {/* En el teléfono, el nombre del paso en el que estás (antes solo números) */}
               <span className={active ? 'block' : 'hidden sm:block'}>{label}</span>

@@ -3,7 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { HCaptchaRefMethods } from '@/components/HCaptchaWrapper';
-import { FiSend } from 'react-icons/fi';
+import {
+  IconoArroba, IconoCargando, IconoChat, IconoCheck, IconoChevronAbajo, IconoCuenta, IconoEnviar, IconoError, IconoInfo,
+  IconoTelefono,
+} from '@/components/iconos';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
 import { adminPrimaryButton, adminLabel } from '@/lib/admin-ui';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -217,9 +220,7 @@ export default function ContactForm() {
             <div className="rounded-2xl border border-line bg-white shadow-sm p-10 text-center relative overflow-hidden">
                 <div className="relative">
                     <div className="w-20 h-20 bg-success-strong/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <svg className="w-10 h-10 text-success-strong" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
+                        <IconoCheck className="w-10 h-10 text-success-strong" />
                     </div>
                     <h3 className="text-2xl font-bold text-ink mb-2">¡Mensaje Enviado!</h3>
                     <p className="text-muted mb-8 text-base">
@@ -252,9 +253,7 @@ export default function ContactForm() {
                         <div className="p-4 bg-warning/15 border border-warning/30 rounded-xl animate-fadeIn">
                             <div className="flex items-start gap-3">
                                 <div className="w-8 h-8 bg-warning-strong rounded-full flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                    <IconoInfo className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
                                     <p className="text-warning-strong font-semibold text-sm">Solicitud de Soporte</p>
@@ -268,9 +267,7 @@ export default function ContactForm() {
                     {error && (
                         <div className="p-4 bg-deal-bg border border-deal/30 rounded-xl animate-shake">
                             <div className="flex items-center gap-2 text-deal">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                                <IconoError className="w-5 h-5" />
                                 <span className="text-sm font-semibold">{error}</span>
                             </div>
                         </div>
@@ -283,9 +280,7 @@ export default function ContactForm() {
                         </label>
                         <div className="relative group">
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
-                                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
+                                <IconoCuenta className="w-4 h-4 md:w-5 md:h-5" />
                             </div>
                             <input
                                 ref={nameInputRef}
@@ -316,9 +311,7 @@ export default function ContactForm() {
                             </label>
                             <div className="relative group">
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
-                                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                                    </svg>
+                                    <IconoArroba className="w-4 h-4 md:w-5 md:h-5" />
                                 </div>
                                 <input
                                     type="email"
@@ -346,9 +339,7 @@ export default function ContactForm() {
                             </label>
                             <div className="relative group">
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
-                                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                    </svg>
+                                    <IconoTelefono className="w-4 h-4 md:w-5 md:h-5" />
                                 </div>
                                 <input
                                     type="tel"
@@ -404,9 +395,7 @@ export default function ContactForm() {
                             </select>
                             {/* Dropdown arrow */}
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
-                                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
+                                <IconoChevronAbajo className="w-4 h-4 md:w-5 md:h-5" />
                             </div>
                         </div>
                         {touchedFields.subject && validationErrors.subject && (
@@ -421,9 +410,7 @@ export default function ContactForm() {
                         </label>
                         <div className="relative group">
                             <div className="absolute left-3 top-3 text-muted group-focus-within:text-brand-600 transition-colors duration-200">
-                                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                                </svg>
+                                <IconoChat className="w-4 h-4 md:w-5 md:h-5" />
                             </div>
                             <textarea
                                 id="message"
@@ -465,15 +452,12 @@ export default function ContactForm() {
                     >
                         {loading ? (
                             <>
-                                <svg className="animate-spin w-5 h-5 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                </svg>
+                                <IconoCargando className="animate-spin w-5 h-5 text-white" />
                                 <span>Enviando mensaje...</span>
                             </>
                         ) : (
                             <>
-                                <FiSend className="w-4 h-4" aria-hidden="true" />
+                                <IconoEnviar className="w-4 h-4" aria-hidden="true" />
                                 <span>Enviar Mensaje</span>
                             </>
                         )}

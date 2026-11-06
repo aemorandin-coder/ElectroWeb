@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { IconoChevronDerecha, IconoChevronIzquierda } from '@/components/iconos';
 import { catalogHref, type CatalogParams } from '@/lib/queries/catalog';
 
 interface CatalogPaginationProps {
@@ -24,7 +24,7 @@ export default function CatalogPagination({ params, page, totalPages }: CatalogP
     <nav aria-label="Páginas de resultados" className="mt-8 flex flex-wrap items-center justify-center gap-1.5">
       {page > 1 ? (
         <Link href={catalogHref(params, { page: page - 1 })} rel="prev" className={`${base} border border-line bg-white text-ink hover:bg-surface`}>
-          <FiChevronLeft className="h-4 w-4" aria-hidden="true" />
+          <IconoChevronIzquierda className="h-4 w-4" aria-hidden="true" />
           <span className="sr-only sm:not-sr-only sm:ml-1">Anterior</span>
         </Link>
       ) : null}
@@ -46,7 +46,7 @@ export default function CatalogPagination({ params, page, totalPages }: CatalogP
       {page < totalPages ? (
         <Link href={catalogHref(params, { page: page + 1 })} rel="next" className={`${base} border border-line bg-white text-ink hover:bg-surface`}>
           <span className="sr-only sm:not-sr-only sm:mr-1">Siguiente</span>
-          <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+          <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
         </Link>
       ) : null}
     </nav>

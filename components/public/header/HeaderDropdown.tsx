@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { FiChevronDown } from 'react-icons/fi';
+import { IconoChevronAbajo } from '@/components/iconos';
 
 interface HeaderDropdownProps {
   label: ReactNode;
@@ -50,7 +50,7 @@ export default function HeaderDropdown({ label, children, panelClassName = '' }:
         className={`flex h-10 items-center gap-1.5 rounded-md px-3 text-sm font-semibold text-white hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white ${open ? 'bg-brand-700' : ''}`}
       >
         {label}
-        <FiChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+        <IconoChevronAbajo className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
       {open && (
         <div

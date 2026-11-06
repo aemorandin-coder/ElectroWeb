@@ -4,8 +4,9 @@ import { formatUSD, formatVES } from '@/lib/currency';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import {
-    FiX, FiDollarSign, FiCheck, FiShield, FiArrowLeft, FiAlertTriangle, FiCheckCircle
-} from 'react-icons/fi';
+  IconoAdvertencia, IconoBillete, IconoCargando, IconoCerrar, IconoCheck, IconoConfirmado, IconoFlechaIzquierda,
+  IconoGarantia,
+} from '@/components/iconos';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'react-hot-toast';
@@ -359,7 +360,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
         if (data.autoApproved) {
             toast.success('Tu recarga se verificó y se aprobó sola. Tus Puntos ES ya están disponibles.', {
                 duration: 5000,
-                icon: <FiCheckCircle className="h-5 w-5 text-success-strong" />
+                icon: <IconoConfirmado className="h-5 w-5 text-success-strong" />
             });
         } else {
             toast.success('Pago verificado. Tu recarga sera procesada en breve.');
@@ -390,7 +391,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                 style={{ zIndex: 'var(--z-modal)' }}
                 aria-label="Cerrar"
             >
-                <FiX className="w-6 h-6 text-ink" />
+                <IconoCerrar className="w-6 h-6 text-ink" />
             </button>
 
             {/* Modal */}
@@ -404,14 +405,14 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     onClick={() => setStep('SELECT_METHOD')}
                                     className="p-1.5 lg:p-2 hover:bg-white/10 rounded-lg transition-colors"
                                 >
-                                    <FiArrowLeft className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
+                                    <IconoFlechaIzquierda className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                                 </button>
                             )}
                             <div className="w-9 h-9 lg:w-12 lg:h-12 bg-white/20 rounded-lg lg:rounded-xl flex items-center justify-center">
                                 {step === 'VERIFY_PAYMENT' ? (
-                                    <FiShield className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                                    <IconoGarantia className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
                                 ) : (
-                                    <FiDollarSign className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                                    <IconoBillete className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
                                 )}
                             </div>
                             <div>
@@ -426,7 +427,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                             </div>
                         </div>
                         <button onClick={onClose} className="p-2 sm:hidden hover:bg-white/20 rounded-lg transition-all">
-                            <FiX className="w-6 h-6 text-white" />
+                            <IconoCerrar className="w-6 h-6 text-white" />
                         </button>
                     </div>
 
@@ -470,7 +471,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                 {/* Selection indicator */}
                                                 {amount === quickAmount.toString() && (
                                                     <div className="absolute top-0.5 right-0.5 lg:top-1 lg:right-1 w-3 h-3 lg:w-4 lg:h-4 bg-white rounded-full flex items-center justify-center shadow-sm">
-                                                        <FiCheck className="w-2 h-2 lg:w-3 lg:h-3 text-brand-600" />
+                                                        <IconoCheck className="w-2 h-2 lg:w-3 lg:h-3 text-brand-600" />
                                                     </div>
                                                 )}
                                             </button>
@@ -480,7 +481,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     {/* Custom Amount Input */}
                                     <div className="relative">
                                         <div className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 text-muted">
-                                            <FiDollarSign className="w-4 h-4 lg:w-5 lg:h-5" />
+                                            <IconoBillete className="w-4 h-4 lg:w-5 lg:h-5" />
                                         </div>
                                         <input
                                             type="number"
@@ -528,7 +529,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                                     <h3 className="font-bold text-ink text-sm lg:text-base">{method.name}</h3>
                                                                     {method.type === 'MOBILE_PAYMENT' && (
                                                                         <span className="px-1.5 lg:px-2 py-0.5 text-xs font-bold bg-success-strong/10 text-success-strong rounded-full flex items-center gap-0.5">
-                                                                            <FiShield className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
+                                                                            <IconoGarantia className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
                                                                             <span className="hidden sm:inline">Verificación</span> Auto
                                                                         </span>
                                                                     )}
@@ -544,7 +545,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                                                     )}
                                                                     {isSelected && (
                                                                         <div className="w-4 h-4 lg:w-5 lg:h-5 bg-brand-500 rounded-full flex items-center justify-center ml-auto">
-                                                                            <FiCheck className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-white" />
+                                                                            <IconoCheck className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-white" />
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -625,7 +626,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     ) : (
                                         <div className="text-center py-3 lg:py-4 text-muted">
                                             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-line rounded-full flex items-center justify-center mx-auto mb-2">
-                                                <FiDollarSign className="w-4 h-4 lg:w-5 lg:h-5 text-muted" />
+                                                <IconoBillete className="w-4 h-4 lg:w-5 lg:h-5 text-muted" />
                                             </div>
                                             <p className="text-xs">Selecciona un método de pago</p>
                                         </div>
@@ -655,7 +656,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                         </div>
                                         {amount && parseFloat(amount) > 0 && (
                                             <p className="text-xs text-warning-strong mt-1 lg:mt-1.5 flex items-center gap-1">
-                                                <FiAlertTriangle className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
+                                                <IconoAdvertencia className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
                                                 Transfiere este monto exacto
                                             </p>
                                         )}
@@ -687,7 +688,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     <div className="bg-success-strong/10 rounded-xl p-3 lg:p-4 border border-success-strong/20">
                                         <div className="flex items-start gap-2 lg:gap-3">
                                             <div className="w-6 h-6 lg:w-8 lg:h-8 bg-success-strong rounded-full flex items-center justify-center flex-shrink-0 text-white">
-                                                <FiShield className="w-3 h-3 lg:w-4 lg:h-4" />
+                                                <IconoGarantia className="w-3 h-3 lg:w-4 lg:h-4" />
                                             </div>
                                             <div>
                                                 <h4 className="font-bold text-xs lg:text-sm text-success-strong">Verificación Automática</h4>
@@ -737,15 +738,12 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     >
                                         {processing ? (
                                             <>
-                                                <svg className="animate-spin w-4 h-4 lg:w-5 lg:h-5" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                                </svg>
+                                                <IconoCargando className="animate-spin w-4 h-4 lg:w-5 lg:h-5" />
                                                 <span className="hidden sm:inline">Procesando...</span>
                                             </>
                                         ) : (
                                             <>
-                                                <FiShield className="w-4 h-4 lg:w-5 lg:h-5" />
+                                                <IconoGarantia className="w-4 h-4 lg:w-5 lg:h-5" />
                                                 <span className="hidden sm:inline">Continuar y</span> Verificar Pago
                                             </>
                                         )}
@@ -759,15 +757,12 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     >
                                         {processing ? (
                                             <>
-                                                <svg className="animate-spin w-4 h-4 lg:w-5 lg:h-5" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                                </svg>
+                                                <IconoCargando className="animate-spin w-4 h-4 lg:w-5 lg:h-5" />
                                                 <span className="hidden sm:inline">Procesando...</span>
                                             </>
                                         ) : (
                                             <>
-                                                <FiCheck className="w-4 h-4 lg:w-5 lg:h-5" />
+                                                <IconoCheck className="w-4 h-4 lg:w-5 lg:h-5" />
                                                 Confirmar Recarga
                                             </>
                                         )}

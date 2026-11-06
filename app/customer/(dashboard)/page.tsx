@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 import {
-  FiActivity, FiArrowDown, FiArrowUp, FiChevronRight, FiCreditCard, FiHeart, FiInfo, FiLogIn, FiPackage, FiPlus,
-  FiShield, FiTag, FiTruck, FiUser, FiXCircle,
-} from 'react-icons/fi';
+  IconoChevronDerecha, IconoCuenta, IconoEnVivo, IconoEntrar, IconoEnvio, IconoFavoritos, IconoFlechaAbajo,
+  IconoFlechaArriba, IconoGarantia, IconoInfo, IconoMas, IconoOferta, IconoPaquete, IconoRechazado, IconoTarjeta,
+} from '@/components/iconos';
 import CustomerOnboarding from '@/components/customer/CustomerOnboarding';
 import OrderStepper from '@/components/customer/OrderStepper';
 import { EnVivo } from '@/components/ui/EnVivo';
@@ -87,7 +87,7 @@ function tonoEstado(status: string): AdminTone {
 function Movimiento({ actividad }: { actividad: RecentActivity }) {
   const entra = actividad.type === 'RECHARGE' || actividad.type === 'DEPOSIT' || actividad.type === 'REFUND';
   const sale = actividad.type === 'PURCHASE';
-  const Icono = actividad.type === 'LOGIN' ? FiLogIn : actividad.type === 'ORDER' ? FiPackage : actividad.type === 'ACCOUNT' ? FiUser : entra ? FiArrowUp : sale ? FiArrowDown : FiActivity;
+  const Icono = actividad.type === 'LOGIN' ? IconoEntrar : actividad.type === 'ORDER' ? IconoPaquete : actividad.type === 'ACCOUNT' ? IconoCuenta : entra ? IconoFlechaArriba : sale ? IconoFlechaAbajo : IconoEnVivo;
   return (
     <li className="flex items-center gap-3 py-2.5">
       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${entra ? 'bg-success-strong/10 text-success-strong' : sale ? 'bg-deal-bg text-deal' : 'bg-brand-50 text-brand-600'}`}>
@@ -167,12 +167,12 @@ export default function CustomerDashboard() {
       <section aria-label="Resumen de tu cuenta" className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <div className="col-span-2 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 p-5 text-white lg:col-span-1">
           <p className="flex items-center gap-2 text-sm text-white/80">
-            <FiCreditCard className="h-4 w-4" aria-hidden="true" /> Tus Puntos ES
+            <IconoTarjeta className="h-4 w-4" aria-hidden="true" /> Tus Puntos ES
           </p>
           <p className="mt-1 text-3xl font-bold tabular-nums">{formatUSD(stats?.balance ?? 0)} <span className="text-base font-semibold opacity-80">Puntos ES</span></p>
           <div className="mt-4 flex gap-2">
             <Link href="/customer/balance?recargar=1" className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-brand-700 hover:bg-brand-50">
-              <FiPlus className="h-4 w-4" aria-hidden="true" /> Recargar
+              <IconoMas className="h-4 w-4" aria-hidden="true" /> Recargar
             </Link>
             <Link href="/customer/balance" className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-white/40 px-4 text-sm font-semibold text-white hover:bg-white/10">
               Movimientos
@@ -182,25 +182,25 @@ export default function CustomerDashboard() {
 
         <Link href="/customer/orders" className="group rounded-2xl border border-line bg-white p-4 transition-colors hover:border-brand-200 lg:p-5">
           <p className="flex items-center gap-2 text-sm text-muted">
-            <FiTruck className="h-4 w-4 text-brand-600" aria-hidden="true" /> Compras activas
+            <IconoEnvio className="h-4 w-4 text-brand-600" aria-hidden="true" /> Compras activas
           </p>
           <p className="mt-1 text-2xl font-bold tabular-nums text-ink lg:text-3xl">{stats?.activeCount ?? 0}</p>
           <p className="mt-2 flex items-center justify-between gap-1 text-xs text-ink-soft lg:text-sm">
             {stats?.pending ? `${stats.pending} con el pago por validar` : 'En preparación o en camino'}
-            <FiChevronRight className="h-4 w-4 shrink-0 text-muted group-hover:text-brand-600" aria-hidden="true" />
+            <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted group-hover:text-brand-600" aria-hidden="true" />
           </p>
         </Link>
 
         <Link href="/customer/warranty" className="group rounded-2xl border border-line bg-white p-4 transition-colors hover:border-brand-200 lg:p-5">
           <p className="flex items-center gap-2 text-sm text-muted">
-            <FiShield className="h-4 w-4 text-brand-600" aria-hidden="true" /> Garantías vigentes
+            <IconoGarantia className="h-4 w-4 text-brand-600" aria-hidden="true" /> Garantías vigentes
           </p>
           <p className="mt-1 text-2xl font-bold tabular-nums text-ink lg:text-3xl">{garantias.active}</p>
           <p className="mt-2 flex items-center justify-between gap-1 text-xs text-ink-soft lg:text-sm">
             {garantias.openClaims > 0
               ? `${garantias.openClaims} ${garantias.openClaims === 1 ? 'solicitud' : 'solicitudes'} en revisión`
               : garantias.nextExpiry ? `La primera vence el ${fechaCorta.format(new Date(garantias.nextExpiry))}` : 'Productos cubiertos por la tienda'}
-            <FiChevronRight className="h-4 w-4 shrink-0 text-muted group-hover:text-brand-600" aria-hidden="true" />
+            <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted group-hover:text-brand-600" aria-hidden="true" />
           </p>
         </Link>
       </section>
@@ -212,7 +212,7 @@ export default function CustomerDashboard() {
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 id="pedidos-en-curso" className="text-lg font-semibold text-ink lg:text-xl">Pedidos en curso</h2>
           <Link href="/customer/orders" className="inline-flex h-11 items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
-            Ver todos <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+            Ver todos <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
         {activos.length > 0 ? (
@@ -236,7 +236,7 @@ export default function CustomerDashboard() {
                     </div>
                     {nota && (
                       <p className="mt-4 flex items-start gap-2 rounded-xl bg-surface px-3 py-2 text-sm text-ink-soft">
-                        <FiInfo className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+                        <IconoInfo className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
                         <span>
                           {nota}
                           {orden.trackingNumber && orden.status === 'SHIPPED' ? ` · Guía ${orden.trackingNumber}` : ''}
@@ -257,11 +257,11 @@ export default function CustomerDashboard() {
           </ul>
         ) : (
           <div className="flex flex-col items-center rounded-2xl border border-dashed border-line-strong bg-white px-6 py-10 text-center">
-            <FiPackage className="h-8 w-8 text-subtle" aria-hidden="true" />
+            <IconoPaquete className="h-8 w-8 text-subtle" aria-hidden="true" />
             <p className="mt-3 font-semibold text-ink">No tienes pedidos en camino</p>
             <p className="mt-1 text-sm text-muted">Cuando compres, aquí verás cada paso hasta que lo recibas.</p>
             <Link href="/productos" className={`${adminPrimaryButton} mt-4`}>
-              <FiTag className="h-4 w-4" aria-hidden="true" /> Ver ofertas de hoy
+              <IconoOferta className="h-4 w-4" aria-hidden="true" /> Ver ofertas de hoy
             </Link>
           </div>
         )}
@@ -283,7 +283,7 @@ export default function CustomerDashboard() {
                       <span className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-semibold text-ink">#{order.orderNumber}</span>
                         <span className={adminBadge(tonoEstado(order.status))}>
-                          {order.status === 'CANCELLED' && <FiXCircle className="h-3 w-3" aria-hidden="true" />}
+                          {order.status === 'CANCELLED' && <IconoRechazado className="h-3 w-3" aria-hidden="true" />}
                           {ETIQUETA_ESTADO[order.status as keyof typeof ETIQUETA_ESTADO] ?? order.status}
                         </span>
                       </span>
@@ -301,7 +301,7 @@ export default function CustomerDashboard() {
           )}
           {(stats?.wishlist ?? 0) > 0 && (
             <Link href="/customer/wishlist" className="mt-2 flex min-h-11 items-center gap-2 border-t border-line pt-3 text-sm font-medium text-brand-600 hover:text-brand-700">
-              <FiHeart className="h-4 w-4" aria-hidden="true" /> {stats?.wishlist} en tu lista de deseos
+              <IconoFavoritos className="h-4 w-4" aria-hidden="true" /> {stats?.wishlist} en tu lista de deseos
             </Link>
           )}
         </section>

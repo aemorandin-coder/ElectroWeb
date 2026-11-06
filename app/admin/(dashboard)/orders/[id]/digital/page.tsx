@@ -6,12 +6,10 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-    FiArrowLeft, FiSend, FiCheck, FiPackage, FiClock,
-    FiAlertCircle, FiMonitor
-} from 'react-icons/fi';
+  IconoCheck, IconoControl, IconoEnviar, IconoError, IconoFlechaIzquierda, IconoMonitor, IconoPaquete, IconoReloj,
+} from '@/components/iconos';
 import { BsNintendoSwitch } from 'react-icons/bs';
 import { SiSteam, SiPlaystation, SiRoblox } from 'react-icons/si';
-import { FaGamepad } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import {
     adminSecondaryButton,
@@ -89,7 +87,7 @@ const platformIcons: Record<string, React.ReactNode> = {
     STEAM: <SiSteam className="w-5 h-5" />,
     PLAYSTATION: <SiPlaystation className="w-5 h-5" />,
     PSN: <SiPlaystation className="w-5 h-5" />,
-    XBOX: <FaGamepad className="w-5 h-5" />,
+    XBOX: <IconoControl className="w-5 h-5" />,
     NINTENDO: <BsNintendoSwitch className="w-5 h-5" />,
     ROBLOX: <SiRoblox className="w-5 h-5" />,
 };
@@ -202,8 +200,8 @@ export default function AdminDigitalCodesPage() {
         setNewCodes(prev => ({ ...prev, [orderItemId]: { ...(prev[orderItemId] ?? FORM_VACIO), [campo]: valor } }));
 
     const getPlatformIcon = (platform: string | null) => {
-        if (!platform) return <FaGamepad className="w-5 h-5" />;
-        return platformIcons[platform.toUpperCase()] || <FaGamepad className="w-5 h-5" />;
+        if (!platform) return <IconoControl className="w-5 h-5" />;
+        return platformIcons[platform.toUpperCase()] || <IconoControl className="w-5 h-5" />;
     };
 
     if (loading) {
@@ -220,7 +218,7 @@ export default function AdminDigitalCodesPage() {
     if (!data) {
         return (
             <div className="text-center py-12">
-                <FiAlertCircle className="w-16 h-16 text-deal mx-auto mb-4" />
+                <IconoError className="w-16 h-16 text-deal mx-auto mb-4" />
                 <h1 className="text-xl font-bold text-ink mb-2">Orden no encontrada</h1>
                 <Link href="/admin/orders" className="text-brand-600 hover:underline">
                     Volver a órdenes
@@ -241,14 +239,14 @@ export default function AdminDigitalCodesPage() {
                     href="/admin/orders"
                     className={`${adminSecondaryButton} mb-4`}
                 >
-                    <FiArrowLeft /> Volver a órdenes
+                    <IconoFlechaIzquierda /> Volver a órdenes
                 </Link>
 
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <div className="flex items-center gap-3">
                             <div className={`${adminIconChip('brand')} hidden sm:flex`}>
-                                <FiMonitor className="w-6 h-6 text-brand-600" />
+                                <IconoMonitor className="w-6 h-6 text-brand-600" />
                             </div>
                             <div>
                                 <h1 className={adminPageTitle}>
@@ -261,7 +259,7 @@ export default function AdminDigitalCodesPage() {
 
                     <div className="flex items-center gap-2">
                         <span className={adminBadge(isPaid ? 'success' : 'warning')}>
-                            {isPaid ? <><FiCheck className="inline h-4 w-4 shrink-0 mr-1" aria-hidden="true" />Pagado</> : <><FiClock className="inline h-4 w-4 shrink-0 mr-1" aria-hidden="true" />Pendiente de pago</>}
+                            {isPaid ? <><IconoCheck className="inline h-4 w-4 shrink-0 mr-1" aria-hidden="true" />Pagado</> : <><IconoReloj className="inline h-4 w-4 shrink-0 mr-1" aria-hidden="true" />Pendiente de pago</>}
                         </span>
                     </div>
                 </div>
@@ -270,7 +268,7 @@ export default function AdminDigitalCodesPage() {
             {/* Warning if not paid */}
             {!isPaid && (
                 <div className={`mb-6 flex items-start gap-3 ${adminNotice('warning')}`}>
-                    <FiAlertCircle className="w-5 h-5 text-warning-strong flex-shrink-0 mt-0.5" />
+                    <IconoError className="w-5 h-5 text-warning-strong flex-shrink-0 mt-0.5" />
                     <div>
                         <p className="font-medium text-warning-strong">Orden no pagada</p>
                         <p className="text-sm text-warning-strong">
@@ -284,7 +282,7 @@ export default function AdminDigitalCodesPage() {
             <div className="mb-5 flex gap-3 overflow-x-auto pb-1">
                 <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
                     <span className={`${adminIconChip('brand')} hidden sm:flex`}>
-                        <FiPackage className="w-5 h-5" />
+                        <IconoPaquete className="w-5 h-5" />
                     </span>
                     <div>
                         <p className={adminStatValue}>{data.digitalItems.length}</p>
@@ -293,7 +291,7 @@ export default function AdminDigitalCodesPage() {
                 </div>
                 <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
                     <span className={`${adminIconChip('warning')} hidden sm:flex`}>
-                        <FiClock className="w-5 h-5" />
+                        <IconoReloj className="w-5 h-5" />
                     </span>
                     <div>
                         <p className={adminStatValue}>{pendingItems.length}</p>
@@ -302,7 +300,7 @@ export default function AdminDigitalCodesPage() {
                 </div>
                 <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
                     <span className={`${adminIconChip('success')} hidden sm:flex`}>
-                        <FiCheck className="w-5 h-5" />
+                        <IconoCheck className="w-5 h-5" />
                     </span>
                     <div>
                         <p className={adminStatValue}>{completedItems.length}</p>
@@ -315,7 +313,7 @@ export default function AdminDigitalCodesPage() {
             {pendingItems.length > 0 && (
                 <div className="mb-8">
                     <h2 className={`${adminSectionTitle} mb-4 flex items-center gap-2`}>
-                        <FiClock className="text-warning-strong" />
+                        <IconoReloj className="text-warning-strong" />
                         Pendientes de Envío ({pendingItems.length})
                     </h2>
 
@@ -450,7 +448,7 @@ export default function AdminDigitalCodesPage() {
                                                 </>
                                             ) : (
                                                 <>
-                                                    <FiSend className="w-4 h-4" />
+                                                    <IconoEnviar className="w-4 h-4" />
                                                     Enviar Código al Cliente
                                                 </>
                                             )}
@@ -467,7 +465,7 @@ export default function AdminDigitalCodesPage() {
             {completedItems.length > 0 && (
                 <div>
                     <h2 className={`${adminSectionTitle} mb-4 flex items-center gap-2`}>
-                        <FiCheck className="text-success-strong" />
+                        <IconoCheck className="text-success-strong" />
                         Códigos Entregados ({completedItems.length})
                     </h2>
 
@@ -499,7 +497,7 @@ export default function AdminDigitalCodesPage() {
                                             {compraProveedor(item) && <p className="text-xs text-muted">{compraProveedor(item)}</p>}
                                         </div>
                                         <div className={adminBadge('success')}>
-                                            <FiCheck className="inline h-4 w-4 shrink-0" aria-hidden="true" />Entregado
+                                            <IconoCheck className="inline h-4 w-4 shrink-0" aria-hidden="true" />Entregado
                                         </div>
                                     </div>
                                 </div>
@@ -532,7 +530,7 @@ export default function AdminDigitalCodesPage() {
             {/* All delivered message */}
             {data.isDelivered && (
                 <div className={`mt-8 p-6 text-center ${adminNotice('success')}`}>
-                    <FiCheck className="w-12 h-12 text-success-strong mx-auto mb-3" />
+                    <IconoCheck className="w-12 h-12 text-success-strong mx-auto mb-3" />
                     <h3 className="text-lg font-bold text-success-strong mb-1">
                         Todos los códigos entregados
                     </h3>

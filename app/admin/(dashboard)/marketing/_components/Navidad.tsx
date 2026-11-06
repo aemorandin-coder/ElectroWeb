@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
-import { FiCheck, FiRotateCcw, FiSave } from 'react-icons/fi';
+import { IconoCheck, IconoGuardar, IconoRestablecer } from '@/components/iconos';
 import GorroSanta from '@/components/navidad/GorroSanta';
 import SelloNavidad from '@/components/navidad/SelloNavidad';
 import TarjetaNavidad from '@/components/navidad/TarjetaNavidad';
@@ -354,11 +354,11 @@ export default function Navidad() {
         </div>
         {form.christmasPopup && (
           <button type="button" onClick={() => setVuelta((n) => n + 1)} className={`${adminSecondaryButton} mt-3 h-9 w-full px-3 text-xs motion-reduce:hidden`}>
-            <FiRotateCcw className="h-4 w-4" aria-hidden="true" /> Ver otra vez cómo se enciende
+            <IconoRestablecer className="h-4 w-4" aria-hidden="true" /> Ver otra vez cómo se enciende
           </button>
         )}
         <button type="button" onClick={guardar} disabled={guardando || !hayCambios} className={`${adminPrimaryButton} mt-4 w-full`}>
-          {guardando ? 'Guardando…' : hayCambios ? <><FiSave className="h-4 w-4" aria-hidden="true" /> Guardar</> : <><FiCheck className="h-4 w-4" aria-hidden="true" /> Sin cambios</>}
+          {guardando ? 'Guardando…' : hayCambios ? <><IconoGuardar className="h-4 w-4" aria-hidden="true" /> Guardar</> : <><IconoCheck className="h-4 w-4" aria-hidden="true" /> Sin cambios</>}
         </button>
       </aside>
     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { createElement, useState, useEffect, type ComponentType, type SVGAttributes } from 'react';
-import { FiGrid } from 'react-icons/fi';
+import { IconoCuadricula } from '@/components/iconos';
 import { getCategoryIcon, loadIconDynamic } from '@/lib/category-icons';
 
 type IconComponent = ComponentType<SVGAttributes<SVGElement> & { className?: string }>;
@@ -19,8 +19,8 @@ interface Props {
 export default function CategoryIconRenderer({ iconName, className }: Props) {
   // Los íconos del listado se resuelven al instante; los demás se cargan una vez y se guardan por nombre.
   // C-111: antes un efecto copiaba el ícono a un estado en cada cambio (render extra y regla set-state-in-effect).
-  const preset = iconName ? getCategoryIcon(iconName) : FiGrid;
-  const esPreset = !iconName || preset !== FiGrid;
+  const preset = iconName ? getCategoryIcon(iconName) : IconoCuadricula;
+  const esPreset = !iconName || preset !== IconoCuadricula;
   const [dinamico, setDinamico] = useState<{ name: string; Icon: IconComponent } | null>(null);
 
   useEffect(() => {
@@ -34,6 +34,6 @@ export default function CategoryIconRenderer({ iconName, className }: Props) {
     };
   }, [iconName, esPreset]);
 
-  const Icon: IconComponent = esPreset ? preset : dinamico?.name === iconName ? dinamico.Icon : FiGrid;
+  const Icon: IconComponent = esPreset ? preset : dinamico?.name === iconName ? dinamico.Icon : IconoCuadricula;
   return createElement(Icon, { className });
 }

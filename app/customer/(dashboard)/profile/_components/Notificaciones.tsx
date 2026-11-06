@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { FiBell, FiCheckCircle } from 'react-icons/fi';
+import { IconoConfirmado, IconoNotificaciones } from '@/components/iconos';
 import { Interruptor, Seccion } from './comun';
 import type { Ajustes } from './tipos';
 
@@ -43,11 +43,11 @@ export default function Notificaciones({ inicial }: { inicial: Ajustes['notifica
       <Seccion titulo="Tus pedidos y tus Puntos ES" descripcion="Estos avisos siempre te llegan en la tienda porque los necesitas para comprar. Los de tus pedidos y garantías, también por correo.">
         <ul className="grid gap-2 text-sm text-ink-soft sm:grid-cols-2">
           {['Confirmación y pago de cada pedido', 'Envío, guía y entrega', 'Recargas y movimientos de Puntos ES', 'Respuestas de garantía'].map((t) => (
-            <li key={t} className="flex items-center gap-2"><FiCheckCircle className="h-4 w-4 shrink-0 text-success-strong" aria-hidden="true" /> {t}</li>
+            <li key={t} className="flex items-center gap-2"><IconoConfirmado className="h-4 w-4 shrink-0 text-success-strong" aria-hidden="true" /> {t}</li>
           ))}
         </ul>
         <Link href="/customer/notifications" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:underline">
-          <FiBell className="h-4 w-4" aria-hidden="true" /> Ver mis notificaciones
+          <IconoNotificaciones className="h-4 w-4" aria-hidden="true" /> Ver mis notificaciones
         </Link>
       </Seccion>
 

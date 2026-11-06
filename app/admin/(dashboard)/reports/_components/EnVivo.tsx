@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FiActivity, FiMonitor, FiShoppingCart, FiSmartphone, FiTablet, FiUser, FiUsers } from 'react-icons/fi';
+import { IconoCarrito, IconoCelular, IconoClientes, IconoCuenta, IconoEnVivo, IconoMonitor, IconoTableta } from '@/components/iconos';
 import { adminBadge } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -24,7 +24,7 @@ interface Hoy {
 type Filtro = 'todos' | 'cliente' | 'visitante';
 
 const REFRESCO_MS = 5_000;
-const ICONO_DISPOSITIVO = { desktop: FiMonitor, mobile: FiSmartphone, tablet: FiTablet } as const;
+const ICONO_DISPOSITIVO = { desktop: IconoMonitor, mobile: IconoCelular, tablet: IconoTableta } as const;
 const NOMBRE_DISPOSITIVO = { desktop: 'Computadora', mobile: 'Teléfono', tablet: 'Tableta' } as const;
 const hora = new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', hour: 'numeric', minute: '2-digit', second: '2-digit' });
 
@@ -35,7 +35,7 @@ function hace(segundos: number): string {
   return `${Math.floor(minutos / 60)} h ${minutos % 60} min`;
 }
 
-function Cifra({ titulo, valor, detalle, icono: Icono }: { titulo: string; valor: number | string; detalle?: string; icono: typeof FiUsers }) {
+function Cifra({ titulo, valor, detalle, icono: Icono }: { titulo: string; valor: number | string; detalle?: string; icono: typeof IconoClientes }) {
   return (
     <div className="rounded-xl border border-line bg-surface p-3">
       <p className="flex items-center gap-1.5 text-xs text-muted"><Icono className="h-3.5 w-3.5" aria-hidden="true" />{titulo}</p>
@@ -122,10 +122,10 @@ export default function EnVivo() {
 
       <div className="space-y-4 p-4">
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-          <Cifra titulo="Conectados ahora" valor={datos ? total : '…'} detalle="en la tienda" icono={FiActivity} />
-          <Cifra titulo="Con cuenta" valor={datos ? datos.conCuenta : '…'} detalle="clientes que iniciaron sesión" icono={FiUser} />
-          <Cifra titulo="Sin cuenta" valor={datos ? datos.sinCuenta : '…'} detalle="visitantes" icono={FiUsers} />
-          <Cifra titulo="Con productos en el carrito" valor={datos ? datos.conCarrito : '…'} detalle="listos para comprar" icono={FiShoppingCart} />
+          <Cifra titulo="Conectados ahora" valor={datos ? total : '…'} detalle="en la tienda" icono={IconoEnVivo} />
+          <Cifra titulo="Con cuenta" valor={datos ? datos.conCuenta : '…'} detalle="clientes que iniciaron sesión" icono={IconoCuenta} />
+          <Cifra titulo="Sin cuenta" valor={datos ? datos.sinCuenta : '…'} detalle="visitantes" icono={IconoClientes} />
+          <Cifra titulo="Con productos en el carrito" valor={datos ? datos.conCarrito : '…'} detalle="listos para comprar" icono={IconoCarrito} />
         </div>
 
         {total > 0 && (
@@ -192,13 +192,13 @@ export default function EnVivo() {
                 return (
                   <li key={`${p.tipo}-${p.etiqueta}-${i}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm animate-fadeIn">
                     <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${p.tipo === 'cliente' ? 'bg-brand-500 text-white' : 'bg-surface text-muted'}`} aria-hidden="true">
-                      {p.tipo === 'cliente' ? p.etiqueta[0]?.toUpperCase() : <FiUser className="h-4 w-4" />}
+                      {p.tipo === 'cliente' ? p.etiqueta[0]?.toUpperCase() : <IconoCuenta className="h-4 w-4" />}
                     </span>
                     <span className="min-w-0 flex-1 basis-40">
                       <span className="flex flex-wrap items-center gap-1.5">
                         <span className="font-semibold text-ink">{p.etiqueta}</span>
                         <span className={adminBadge(p.tipo === 'cliente' ? 'brand' : 'neutral')}>{p.tipo === 'cliente' ? 'Con cuenta' : 'Sin cuenta'}</span>
-                        {p.carrito > 0 && <span className={adminBadge('success')}><FiShoppingCart className="h-3 w-3" aria-hidden="true" />{p.carrito} en el carrito</span>}
+                        {p.carrito > 0 && <span className={adminBadge('success')}><IconoCarrito className="h-3 w-3" aria-hidden="true" />{p.carrito} en el carrito</span>}
                       </span>
                       <span className="block truncate text-xs text-muted">{p.pagina}</span>
                     </span>

@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import {
-    FiPlus, FiEdit2, FiTrash2, FiCreditCard, FiCheck, FiX,
-    FiArrowUp, FiArrowDown, FiDollarSign, FiShield, FiUpload,
-    FiInfo, FiSmartphone, FiGlobe
-} from 'react-icons/fi';
+  IconoBillete, IconoCerrar, IconoCheck, IconoEditar, IconoEliminar, IconoFlechaAbajo, IconoFlechaArriba, IconoGarantia,
+  IconoInfo, IconoMas, IconoPagoMovil, IconoSubir, IconoTarjeta, IconoWeb,
+} from '@/components/iconos';
 import { SiBinance, SiZelle, SiPaypal } from 'react-icons/si';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { toast } from 'react-hot-toast';
@@ -49,12 +48,12 @@ export interface AdminPaymentMethod {
 const PAYMENT_TYPE_METADATA: Record<string, { label: string; icon: React.ReactNode; badgeClass: string }> = {
     MOBILE_PAYMENT: {
         label: 'Pago Móvil',
-        icon: <FiSmartphone className="w-5 h-5 text-brand-600" />,
+        icon: <IconoPagoMovil className="w-5 h-5 text-brand-600" />,
         badgeClass: 'bg-brand-50 text-brand-700 border-brand-200',
     },
     BANK_TRANSFER: {
         label: 'Transferencia',
-        icon: <FiCreditCard className="w-5 h-5 text-brand-600" />,
+        icon: <IconoTarjeta className="w-5 h-5 text-brand-600" />,
         badgeClass: 'bg-brand-50 text-brand-700 border-brand-200',
     },
     BINANCE_PAY: {
@@ -69,7 +68,7 @@ const PAYMENT_TYPE_METADATA: Record<string, { label: string; icon: React.ReactNo
     },
     ZINLI: {
         label: 'Zinli',
-        icon: <FiCreditCard className="w-5 h-5 text-warning-strong" />,
+        icon: <IconoTarjeta className="w-5 h-5 text-warning-strong" />,
         badgeClass: 'bg-warning/10 text-warning-strong border-warning/30',
     },
     PAYPAL: {
@@ -79,7 +78,7 @@ const PAYMENT_TYPE_METADATA: Record<string, { label: string; icon: React.ReactNo
     },
     MERCANTIL_PANAMA: {
         label: 'Mercantil Panamá',
-        icon: <FiGlobe className="w-5 h-5 text-brand-700" />,
+        icon: <IconoWeb className="w-5 h-5 text-brand-700" />,
         badgeClass: 'bg-brand-50 text-brand-800 border-brand-200',
     },
     CRYPTO: {
@@ -89,12 +88,12 @@ const PAYMENT_TYPE_METADATA: Record<string, { label: string; icon: React.ReactNo
     },
     CASH: {
         label: 'Efectivo',
-        icon: <FiDollarSign className="w-5 h-5 text-success-strong" />,
+        icon: <IconoBillete className="w-5 h-5 text-success-strong" />,
         badgeClass: 'bg-success/10 text-success-strong border-success/30',
     },
     OTHER: {
         label: 'Otro',
-        icon: <FiCreditCard className="w-5 h-5 text-muted" />,
+        icon: <IconoTarjeta className="w-5 h-5 text-muted" />,
         badgeClass: 'bg-surface text-ink border-line',
     },
 };
@@ -169,7 +168,7 @@ export default function PaymentsPage() {
                 toast.success(`${data.count} plantillas creadas e inactivas: completa tus datos y actívalas`);
                 fetchMethods();
             } else if (data.count > 0) {
-                toast('Ya existen métodos de pago configurados', { icon: <FiInfo className="h-5 w-5 text-brand-600" /> });
+                toast('Ya existen métodos de pago configurados', { icon: <IconoInfo className="h-5 w-5 text-brand-600" /> });
             } else {
                 toast.error(data.error || 'Error al crear métodos');
             }
@@ -374,7 +373,7 @@ export default function PaymentsPage() {
                         onClick={() => handleOpenModal()}
                         className={`inline-flex items-center gap-2 ${adminPrimaryButton}`}
                     >
-                        <FiPlus className="w-4 h-4" />
+                        <IconoMas className="w-4 h-4" />
                         Nuevo método
                     </button>
                 }
@@ -384,7 +383,7 @@ export default function PaymentsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className={`${adminCard} p-4 flex items-center gap-3`}>
                     <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shrink-0">
-                        <FiCreditCard className="w-5 h-5" />
+                        <IconoTarjeta className="w-5 h-5" />
                     </div>
                     <div>
                         <p className="text-xs text-muted font-medium uppercase tracking-wider">Total Métodos</p>
@@ -394,7 +393,7 @@ export default function PaymentsPage() {
 
                 <div className={`${adminCard} p-4 flex items-center gap-3`}>
                     <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center text-success-strong shrink-0">
-                        <FiCheck className="w-5 h-5" />
+                        <IconoCheck className="w-5 h-5" />
                     </div>
                     <div>
                         <p className="text-xs text-muted font-medium uppercase tracking-wider">Activos</p>
@@ -404,7 +403,7 @@ export default function PaymentsPage() {
 
                 <div className={`${adminCard} p-4 flex items-center gap-3`}>
                     <div className="w-10 h-10 rounded-xl bg-surface border border-line flex items-center justify-center text-muted shrink-0">
-                        <FiX className="w-5 h-5" />
+                        <IconoCerrar className="w-5 h-5" />
                     </div>
                     <div>
                         <p className="text-xs text-muted font-medium uppercase tracking-wider">Inactivos</p>
@@ -422,7 +421,7 @@ export default function PaymentsPage() {
             ) : methods.length === 0 ? (
                 <div className={`${adminCard} p-12 text-center max-w-lg mx-auto`}>
                     <div className="w-14 h-14 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mx-auto mb-4">
-                        <FiCreditCard className="w-7 h-7" />
+                        <IconoTarjeta className="w-7 h-7" />
                     </div>
                     <h3 className="text-lg font-bold text-ink mb-1">Sin métodos de pago</h3>
                     <p className="text-sm text-muted mb-6">
@@ -434,7 +433,7 @@ export default function PaymentsPage() {
                             onClick={seedInitialMethods}
                             className={`inline-flex items-center gap-2 ${adminSecondaryButton}`}
                         >
-                            <FiPlus className="w-4 h-4" />
+                            <IconoMas className="w-4 h-4" />
                             Cargar predefinidos
                         </button>
                         <button
@@ -442,7 +441,7 @@ export default function PaymentsPage() {
                             onClick={() => handleOpenModal()}
                             className={`inline-flex items-center gap-2 ${adminPrimaryButton}`}
                         >
-                            <FiPlus className="w-4 h-4" />
+                            <IconoMas className="w-4 h-4" />
                             Crear método
                         </button>
                     </div>
@@ -593,7 +592,7 @@ export default function PaymentsPage() {
                                             className="p-1.5 rounded hover:bg-surface text-muted disabled:opacity-30 disabled:hover:bg-transparent"
                                             title="Mover arriba"
                                         >
-                                            <FiArrowUp className="w-4 h-4" />
+                                            <IconoFlechaArriba className="w-4 h-4" />
                                         </button>
                                         <button
                                             type="button"
@@ -602,7 +601,7 @@ export default function PaymentsPage() {
                                             className="p-1.5 rounded hover:bg-surface text-muted disabled:opacity-30 disabled:hover:bg-transparent"
                                             title="Mover abajo"
                                         >
-                                            <FiArrowDown className="w-4 h-4" />
+                                            <IconoFlechaAbajo className="w-4 h-4" />
                                         </button>
                                     </div>
 
@@ -613,7 +612,7 @@ export default function PaymentsPage() {
                                             className={`p-1.5 text-xs font-semibold rounded-lg ${adminSecondaryButton}`}
                                             title="Editar método"
                                         >
-                                            <FiEdit2 className="w-3.5 h-3.5" />
+                                            <IconoEditar className="w-3.5 h-3.5" />
                                             <span>Editar</span>
                                         </button>
                                         <button
@@ -622,7 +621,7 @@ export default function PaymentsPage() {
                                             className="p-2 text-deal hover:bg-deal-bg rounded-lg transition-colors"
                                             title="Eliminar método"
                                         >
-                                            <FiTrash2 className="w-4 h-4" />
+                                            <IconoEliminar className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>
@@ -651,7 +650,7 @@ export default function PaymentsPage() {
                                 onClick={handleCloseModal}
                                 className="p-1.5 rounded-lg text-muted hover:text-ink hover:bg-surface"
                             >
-                                <FiX className="w-5 h-5" />
+                                <IconoCerrar className="w-5 h-5" />
                             </button>
                         </div>
 
@@ -1132,7 +1131,7 @@ export default function PaymentsPage() {
                                                     disabled={uploadingLogo}
                                                     className={`inline-flex items-center gap-2 ${adminSecondaryButton}`}
                                                 >
-                                                    <FiUpload className="w-4 h-4" />
+                                                    <IconoSubir className="w-4 h-4" />
                                                     {uploadingLogo ? 'Subiendo...' : 'Subir logo'}
                                                 </button>
                                             )}
@@ -1175,7 +1174,7 @@ export default function PaymentsPage() {
                                                     disabled={uploadingQR}
                                                     className={`inline-flex items-center gap-2 ${adminSecondaryButton}`}
                                                 >
-                                                    <FiUpload className="w-4 h-4" />
+                                                    <IconoSubir className="w-4 h-4" />
                                                     {uploadingQR ? 'Subiendo...' : 'Subir código QR'}
                                                 </button>
                                             )}
@@ -1208,7 +1207,7 @@ export default function PaymentsPage() {
                                 <div className="lg:col-span-5 space-y-3">
                                     <div className="sticky top-0">
                                         <div className="flex items-center gap-1.5 mb-2 text-xs font-bold uppercase tracking-wider text-muted">
-                                            <FiShield className="w-3.5 h-3.5 text-brand-600" />
+                                            <IconoGarantia className="w-3.5 h-3.5 text-brand-600" />
                                             <span>Así lo ve el cliente</span>
                                         </div>
 
@@ -1221,9 +1220,9 @@ export default function PaymentsPage() {
                                                     ) : formData.type === 'ZELLE' ? (
                                                         <SiZelle className="w-5 h-5 text-white" />
                                                     ) : formData.type === 'MOBILE_PAYMENT' ? (
-                                                        <FiSmartphone className="w-5 h-5 text-white" />
+                                                        <IconoPagoMovil className="w-5 h-5 text-white" />
                                                     ) : (
-                                                        <FiCreditCard className="w-5 h-5 text-white" />
+                                                        <IconoTarjeta className="w-5 h-5 text-white" />
                                                     )}
                                                 </div>
                                                 <div className="min-w-0">
@@ -1347,7 +1346,7 @@ export default function PaymentsPage() {
                                         </>
                                     ) : (
                                         <>
-                                            <FiCheck className="w-4 h-4" />
+                                            <IconoCheck className="w-4 h-4" />
                                             <span>{editingMethod ? 'Guardar Cambios' : 'Crear Método'}</span>
                                         </>
                                     )}

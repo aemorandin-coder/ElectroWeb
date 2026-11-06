@@ -3,6 +3,10 @@
 import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import {
+    IconoCarrito, IconoCerrar, IconoCheck, IconoConfirmado, IconoEntrar, IconoEnviar, IconoEnvio, IconoGiftCard, IconoPaquete,
+    IconoTarjeta, type IconType,
+} from '@/components/iconos';
 
 // Step configuration interface
 export interface ProcessingStep {
@@ -23,32 +27,16 @@ interface ProcessingOverlayProps {
     logoUrl?: string | null; // Optional company logo URL
 }
 
-// Icon components for better organization
-const Icons = {
-    payment: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-    ),
-    gift: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-    ),
-    email: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-    ),
-    rocket: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-    ),
-    cart: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-    ),
-    package: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-    ),
-    check: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    ),
-    truck: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
-    ),
+// Ícono de cada paso (C-188: los del pack propio; "Redirigiendo" era un rayo)
+const Icons: Record<ProcessingStep['icon'], IconType> = {
+    payment: IconoTarjeta,
+    gift: IconoGiftCard,
+    email: IconoEnviar,
+    rocket: IconoEntrar,
+    cart: IconoCarrito,
+    package: IconoPaquete,
+    check: IconoConfirmado,
+    truck: IconoEnvio,
 };
 
 export default function ProcessingOverlay({
@@ -89,9 +77,7 @@ export default function ProcessingOverlay({
                 {error ? (
                     <div className="text-center">
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-deal-bg flex items-center justify-center text-deal">
-                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <IconoCerrar className="w-8 h-8" />
                         </div>
                         <h2 id="processing-title" className="text-xl font-bold text-ink mb-2">
                             Ocurrió un error
@@ -125,6 +111,7 @@ export default function ProcessingOverlay({
                                 const stepNumber = index + 1;
                                 const isActive = currentStep === stepNumber - 1;
                                 const isCompleted = currentStep >= stepNumber;
+                                const IconoPaso = Icons[step.icon];
 
                                 return (
                                     <div
@@ -150,9 +137,7 @@ export default function ProcessingOverlay({
                                             {isActive && !isCompleted ? (
                                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                             ) : (
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    {Icons[step.icon]}
-                                                </svg>
+                                                <IconoPaso className="w-4 h-4" />
                                             )}
                                         </div>
 
@@ -184,19 +169,7 @@ export default function ProcessingOverlay({
 
                                         {/* Checkmark */}
                                         {isCompleted && (
-                                            <svg
-                                                className="w-4 h-4 text-success-strong flex-shrink-0"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M5 13l4 4L19 7"
-                                                />
-                                            </svg>
+                                            <IconoCheck className="w-4 h-4 text-success-strong flex-shrink-0" />
                                         )}
                                     </div>
                                 );

@@ -4,7 +4,10 @@ import { useState, useCallback } from 'react';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 import Link from 'next/link';
-import { FiEye, FiAward, FiArrowRight } from 'react-icons/fi';
+import {
+  IconoCargando, IconoCheck, IconoChevronDerecha, IconoChevronIzquierda, IconoCursos, IconoFlechaDerecha,
+  IconoFlechaIzquierda, IconoMenu, IconoPlay, IconoPremio, IconoVer,
+} from '@/components/iconos';
 
 type Lesson = {
   id: string;
@@ -140,7 +143,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
       {/* Creator preview banner */}
       {isCreatorPreview && (
         <div className="shrink-0 bg-warning/20 border-b border-warning/30 px-4 py-2 flex items-center justify-center gap-2">
-          <span className="text-warning text-xs font-bold inline-flex items-center gap-1.5"><FiEye className="h-4 w-4 shrink-0" aria-hidden="true" />Vista previa de creador — el progreso no se guarda</span>
+          <span className="text-warning text-xs font-bold inline-flex items-center gap-1.5"><IconoVer className="h-4 w-4 shrink-0" aria-hidden="true" />Vista previa de creador — el progreso no se guarda</span>
         </div>
       )}
 
@@ -151,15 +154,11 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
           className="text-white/80 hover:text-white transition-colors"
           title="Toggle sidebar"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+          <IconoMenu className="w-5 h-5" />
         </button>
 
         <Link href={`/cursos/${course.slug}`} className="text-white/80 hover:text-white transition-colors">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
+          <IconoFlechaIzquierda className="w-5 h-5" />
         </Link>
 
         <div className="flex-1 min-w-0">
@@ -183,7 +182,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
             onClick={() => setShowCert(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-warning text-ink text-xs font-bold rounded-lg hover:opacity-90 transition-opacity"
           >
-            <FiAward className="inline h-4 w-4 shrink-0" aria-hidden="true" />Certificado
+            <IconoPremio className="inline h-4 w-4 shrink-0" aria-hidden="true" />Certificado
           </button>
         )}
       </header>
@@ -207,12 +206,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                 className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/5 transition-colors"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <svg
-                    className={`w-3.5 h-3.5 text-white/80 shrink-0 transition-transform ${openModules.has(mod.id) ? 'rotate-90' : ''}`}
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <IconoChevronDerecha className={`w-3.5 h-3.5 text-white/80 shrink-0 transition-transform ${openModules.has(mod.id) ? 'rotate-90' : ''}`} />
                   <span className="text-white/80 text-xs font-semibold truncate">{mod.title}</span>
                 </div>
                 <span className="text-white/80 text-xs shrink-0 ml-2">
@@ -234,9 +228,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                         {/* Completion circle */}
                         <div className={`mt-0.5 w-4 h-4 rounded-full border shrink-0 flex items-center justify-center transition-colors ${done ? 'bg-success border-success' : 'border-white/30'}`}>
                           {done && (
-                            <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
+                            <IconoCheck className="w-2.5 h-2.5 text-white" />
                           )}
                         </div>
 
@@ -278,18 +270,13 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center text-white/80 gap-4 p-8 text-center">
-                  <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <IconoPlay className="w-16 h-16" />
                   <p className="text-sm">Video no disponible para esta lección</p>
                 </div>
               )
             ) : (
               <div className="flex flex-col items-center justify-center text-white/20 gap-3">
-                <svg className="w-20 h-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
+                <IconoCursos className="w-20 h-20" />
                 <p>Selecciona una lección para comenzar</p>
               </div>
             )}
@@ -314,9 +301,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                     disabled={isFirst}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white/80 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
+                    <IconoChevronIzquierda className="w-4 h-4" />
                     Anterior
                   </button>
 
@@ -330,15 +315,10 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                       }`}
                     >
                       {saving ? (
-                        <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
+                        <IconoCargando className="w-3.5 h-3.5 animate-spin" />
                       ) : isCompleted ? (
                         <>
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                          </svg>
+                          <IconoCheck className="w-3.5 h-3.5" />
                           Completada
                         </>
                       ) : (
@@ -356,9 +336,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white/80 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     Siguiente
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <IconoChevronDerecha className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -382,15 +360,13 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
       {showCert && (
         <div className={adminModalOverlay}>
           <div className={`${adminModalPanel} max-w-md w-full p-8 text-center`}>
-            <FiAward className="mx-auto mb-4 h-16 w-16 text-warning" aria-hidden="true" />
+            <IconoPremio className="mx-auto mb-4 h-16 w-16 text-warning" aria-hidden="true" />
             <h2 className="text-2xl font-bold text-ink mb-2">¡Felicitaciones!</h2>
             <p className="text-muted mb-2">Completaste el curso</p>
             <p className="text-xl font-bold text-brand-500 mb-6">{course.title}</p>
             <div className="border-2 border-dashed border-brand-500/30 rounded-xl p-5 mb-5 bg-surface">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <svg className="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z" />
-                </svg>
+                <IconoPremio className="w-5 h-5 text-brand-500" />
                 <span className="text-sm font-bold text-brand-500">Certificado de Finalización</span>
               </div>
               <p className="text-xs text-muted mb-3">ElectroShop certifica que completaste este curso satisfactoriamente.</p>
@@ -413,7 +389,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
                   target="_blank"
                   className="flex-1 py-2.5 bg-warning text-ink text-sm font-semibold rounded-xl hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-1.5"
                 >
-                  Ver Certificado <FiArrowRight className="h-4 w-4" aria-hidden="true" />
+                  Ver Certificado <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
                 </Link>
               )}
               <Link

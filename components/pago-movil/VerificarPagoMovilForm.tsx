@@ -3,7 +3,10 @@ import { formatUSD, formatVES } from '@/lib/currency';
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiPhone, FiHash, FiCalendar, FiCheck, FiAlertCircle, FiLoader, FiChevronDown, FiMessageCircle, FiUser } from 'react-icons/fi';
+import {
+  IconoCalendario, IconoCargando, IconoChat, IconoCheck, IconoChevronAbajo, IconoCuenta, IconoError, IconoNumero,
+  IconoTelefono,
+} from '@/components/iconos';
 import {
     BANCOS_VENEZUELA,
     mascaraTelefonoVE,
@@ -276,21 +279,21 @@ Por favor necesito ayuda para verificar mi pago.
             case 'verifying':
                 return (
                     <>
-                        <FiLoader className="w-5 h-5 animate-spin" />
+                        <IconoCargando className="w-5 h-5 animate-spin" />
                         <span>Validando con Banco de Venezuela...</span>
                     </>
                 );
             case 'success':
                 return (
                     <>
-                        <FiCheck className="w-5 h-5" />
+                        <IconoCheck className="w-5 h-5" />
                         <span>¡Verificación Exitosa!</span>
                     </>
                 );
             default:
                 return (
                     <>
-                        <FiCheck className="w-5 h-5" />
+                        <IconoCheck className="w-5 h-5" />
                         <span>Verificar pago y acreditar Puntos ES</span>
                     </>
                 );
@@ -307,7 +310,7 @@ Por favor necesito ayuda para verificar mi pago.
                         Fecha del Pago <span className="text-deal">*</span>
                     </label>
                     <div className="form-field">
-                        <FiCalendar className="field-icon text-muted" />
+                        <IconoCalendario className="field-icon text-muted" />
                         <input
                             type="date"
                             name="fechaPago"
@@ -322,7 +325,7 @@ Por favor necesito ayuda para verificar mi pago.
                     </div>
                     {fieldErrors.fechaPago && (
                         <p className="text-deal text-xs mt-1 flex items-center gap-1">
-                            <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.fechaPago}
+                            <IconoError className="w-3 h-3 flex-shrink-0" />{fieldErrors.fechaPago}
                         </p>
                     )}
                 </div>
@@ -333,7 +336,7 @@ Por favor necesito ayuda para verificar mi pago.
                         Nº de Referencia <span className="text-deal">*</span>
                     </label>
                     <div className="form-field">
-                        <FiHash className="field-icon text-muted" />
+                        <IconoNumero className="field-icon text-muted" />
                         <input
                             type="text"
                             name="referencia"
@@ -350,7 +353,7 @@ Por favor necesito ayuda para verificar mi pago.
                     </div>
                     {fieldErrors.referencia ? (
                         <p className="text-deal text-xs mt-1 flex items-center gap-1">
-                            <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.referencia}
+                            <IconoError className="w-3 h-3 flex-shrink-0" />{fieldErrors.referencia}
                         </p>
                     ) : (
                         <p className="text-xs text-muted mt-1">4 a 8 dígitos numéricos</p>
@@ -366,7 +369,7 @@ Por favor necesito ayuda para verificar mi pago.
                         Cédula del Titular <span className="text-deal">*</span>
                     </label>
                     <div className="form-field">
-                        <FiUser className="field-icon text-muted" />
+                        <IconoCuenta className="field-icon text-muted" />
                         <input
                             type="text"
                             name="cedulaPagador"
@@ -383,7 +386,7 @@ Por favor necesito ayuda para verificar mi pago.
                     </div>
                     {fieldErrors.cedulaPagador ? (
                         <p className="text-deal text-xs mt-1 flex items-center gap-1">
-                            <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.cedulaPagador}
+                            <IconoError className="w-3 h-3 flex-shrink-0" />{fieldErrors.cedulaPagador}
                         </p>
                     ) : (
                         <p className="text-xs text-muted mt-1">Ej: V12345678 o E12345678</p>
@@ -396,7 +399,7 @@ Por favor necesito ayuda para verificar mi pago.
                         Teléfono del Pago <span className="text-deal">*</span>
                     </label>
                     <div className="form-field">
-                        <FiPhone className="field-icon text-muted" />
+                        <IconoTelefono className="field-icon text-muted" />
                         <input
                             type="tel"
                             name="telefonoPagador"
@@ -413,7 +416,7 @@ Por favor necesito ayuda para verificar mi pago.
                     </div>
                     {fieldErrors.telefonoPagador ? (
                         <p className="text-deal text-xs mt-1 flex items-center gap-1">
-                            <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.telefonoPagador}
+                            <IconoError className="w-3 h-3 flex-shrink-0" />{fieldErrors.telefonoPagador}
                         </p>
                     ) : (
                         <p className="text-xs text-muted mt-1">Teléfono desde donde pagaste</p>
@@ -427,7 +430,7 @@ Por favor necesito ayuda para verificar mi pago.
                     </label>
                     {fieldErrors.bancoOrigen && (
                         <p className="text-deal text-xs mb-1 flex items-center gap-1">
-                            <FiAlertCircle className="w-3 h-3 flex-shrink-0" />{fieldErrors.bancoOrigen}
+                            <IconoError className="w-3 h-3 flex-shrink-0" />{fieldErrors.bancoOrigen}
                         </p>
                     )}
                     <button
@@ -439,7 +442,7 @@ Por favor necesito ayuda para verificar mi pago.
                         <span className={bancoSeleccionado ? 'text-ink' : 'text-muted'}>
                             {bancoSeleccionado ? bancoSeleccionado.nombreCorto : 'Seleccionar banco...'}
                         </span>
-                        <FiChevronDown className={`w-4 h-4 text-muted transition-transform ${showBankDropdown ? 'rotate-180' : ''}`} />
+                        <IconoChevronAbajo className={`w-4 h-4 text-muted transition-transform ${showBankDropdown ? 'rotate-180' : ''}`} />
                     </button>
 
                     {/* Dropdown de bancos */}
@@ -522,9 +525,9 @@ Por favor necesito ayuda para verificar mi pago.
                                 }`}
                         >
                             {verificationState === 'success' ? (
-                                <FiCheck className="w-3.5 h-3.5 text-white" />
+                                <IconoCheck className="w-3.5 h-3.5 text-white" />
                             ) : (
-                                <FiAlertCircle className="w-3.5 h-3.5 text-white" />
+                                <IconoError className="w-3.5 h-3.5 text-white" />
                             )}
                         </div>
                         <span
@@ -562,7 +565,7 @@ Por favor necesito ayuda para verificar mi pago.
                                 : 'bg-deal-bg text-deal hover:bg-deal/20'
                                 }`}
                         >
-                            <FiMessageCircle className="w-3.5 h-3.5" />
+                            <IconoChat className="w-3.5 h-3.5" />
                             Contactar Soporte
                         </button>
                     )}

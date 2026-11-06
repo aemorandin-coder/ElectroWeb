@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FiAlertCircle, FiCheckCircle, FiLoader } from 'react-icons/fi';
+import { IconoCargando, IconoConfirmado, IconoError } from '@/components/iconos';
 import toast from 'react-hot-toast';
 import AuthShell from '@/components/auth/AuthShell';
 import { adminError, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
@@ -71,14 +71,14 @@ export default function VerifyEmailPage() {
       <div className="text-center">
         {status === 'loading' && (
           <>
-            <FiLoader className="mx-auto h-12 w-12 animate-spin text-brand-600" aria-hidden="true" />
+            <IconoCargando className="mx-auto h-12 w-12 animate-spin text-brand-600" aria-hidden="true" />
             <h1 className="mt-4 text-2xl font-bold text-ink">Verificando tu correo</h1>
             <p className="mt-2 text-sm text-muted">Espera un momento mientras confirmamos el enlace.</p>
           </>
         )}
         {status === 'success' && (
           <>
-            <FiCheckCircle className="mx-auto h-12 w-12 text-success-strong" aria-hidden="true" />
+            <IconoConfirmado className="mx-auto h-12 w-12 text-success-strong" aria-hidden="true" />
             <h1 className="mt-4 text-2xl font-bold text-ink">Correo verificado</h1>
             <p className="mt-2 text-sm leading-relaxed text-muted">{message}</p>
             <p className="mt-2 text-xs text-muted">Te llevaremos al inicio de sesión en unos segundos.</p>
@@ -87,7 +87,7 @@ export default function VerifyEmailPage() {
         )}
         {status === 'error' && (
           <>
-            <FiAlertCircle className="mx-auto h-12 w-12 text-deal" aria-hidden="true" />
+            <IconoError className="mx-auto h-12 w-12 text-deal" aria-hidden="true" />
             <h1 className="mt-4 text-2xl font-bold text-ink">No pudimos verificar el correo</h1>
             <p className="mt-2 text-sm leading-relaxed text-muted">{message}</p>
             <div className="mt-6 space-y-3">

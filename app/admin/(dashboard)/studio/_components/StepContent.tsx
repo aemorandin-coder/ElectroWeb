@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { FiAlertTriangle, FiCheckCircle, FiExternalLink, FiLink, FiRefreshCw, FiSearch } from 'react-icons/fi';
+import { IconoAbrirAparte, IconoActualizar, IconoAdvertencia, IconoBuscar, IconoConfirmado, IconoEnlace } from '@/components/iconos';
 import { adminBadge, adminChoice, adminHint, adminInput, adminLabel, adminNotice } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
@@ -238,7 +238,7 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
             </span>
             <div className="min-w-0 flex-1 text-sm">
               <p className="flex items-center gap-1.5 font-semibold text-ink">
-                <FiLink className="h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />
+                <IconoEnlace className="h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />
                 <span className="truncate">{linked?.name ?? 'Producto de la tienda'}</span>
               </p>
               <p className="text-muted">
@@ -252,7 +252,7 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
           </div>
           {linked && !linked.published && (
             <p className={`${adminNotice('warning')} flex items-center gap-2 p-2`}>
-              <FiAlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <IconoAdvertencia className="h-4 w-4 shrink-0" aria-hidden="true" />
               Este producto ya no está publicado en la tienda.
             </p>
           )}
@@ -260,12 +260,12 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
           <div className="flex flex-wrap gap-2">
             {p.url && (
               <a href={p.url} target="_blank" rel="noopener noreferrer" className={smallButton}>
-                <FiExternalLink className="h-4 w-4" aria-hidden="true" />
+                <IconoAbrirAparte className="h-4 w-4" aria-hidden="true" />
                 Ver en la tienda
               </a>
             )}
             <button type="button" onClick={() => setPicking(true)} className={smallButton}>
-              <FiRefreshCw className="h-4 w-4" aria-hidden="true" />
+              <IconoActualizar className="h-4 w-4" aria-hidden="true" />
               Cambiar producto
             </button>
             <button type="button" onClick={() => setSlot({ productId: null })} className={smallButton}>
@@ -276,7 +276,7 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
       ) : (
         !picking && (
           <button type="button" onClick={() => setPicking(true)} className={`${smallButton} self-start`}>
-            <FiSearch className="h-4 w-4" aria-hidden="true" />
+            <IconoBuscar className="h-4 w-4" aria-hidden="true" />
             Elegir de la tienda
           </button>
         )
@@ -403,7 +403,7 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
           Producto {index + 1}
           {p.title && ` · ${p.title}`}
         </span>
-        {slotDone(p) && <FiCheckCircle className="h-4 w-4 shrink-0 text-success-strong" aria-label="Completo" />}
+        {slotDone(p) && <IconoConfirmado className="h-4 w-4 shrink-0 text-success-strong" aria-label="Completo" />}
       </summary>
       <div className="mt-3">{body}</div>
     </details>

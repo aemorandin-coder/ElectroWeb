@@ -2,7 +2,10 @@
 
 import { useCallback, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { FiAlertTriangle, FiCheck, FiCopy, FiDollarSign, FiEye, FiGift, FiHash, FiPlus, FiPrinter, FiRefreshCw, FiSearch, FiShoppingBag, FiX } from 'react-icons/fi';
+import {
+  IconoActualizar, IconoAdvertencia, IconoBillete, IconoBolsa, IconoBuscar, IconoCerrar, IconoCheck, IconoCopiar,
+  IconoGiftCard, IconoImpresora, IconoMas, IconoNumero, IconoVer,
+} from '@/components/iconos';
 import GiftCard3D from '@/components/gift-card/GiftCard3D';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { formatUSD } from '@/lib/currency';
@@ -271,24 +274,24 @@ export default function GiftCardsAdminPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => void fetchGiftCards()} className={`${adminIconButton} h-11 w-11`} aria-label="Actualizar lista" title="Actualizar lista">
-            <FiRefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+            <IconoActualizar className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
           <button type="button" onClick={() => openSell()} className={adminSecondaryButton}>
-            <FiShoppingBag className="h-4 w-4" aria-hidden="true" /> Vender en caja
+            <IconoBolsa className="h-4 w-4" aria-hidden="true" /> Vender en caja
           </button>
           <button type="button" onClick={() => setShowCreate(true)} className={`${adminPrimaryButton} order-first`}>
-            <FiPlus className="h-4 w-4" aria-hidden="true" /> Generar impresas
+            <IconoMas className="h-4 w-4" aria-hidden="true" /> Generar impresas
           </button>
         </div>
       </div>
 
       <div className="mb-4 flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-5">
         {[
-          { label: 'Total', value: String(stats.total), icon: FiHash, tone: 'neutral' as AdminTone },
-          { label: 'Por activar', value: String(stats.toActivate), icon: FiAlertTriangle, tone: 'warning' as AdminTone },
-          { label: 'Activas', value: String(stats.active), icon: FiCheck, tone: 'success' as AdminTone },
-          { label: 'Valor sin canjear', value: formatUSD(stats.activeBalance), icon: FiDollarSign, tone: 'brand' as AdminTone },
-          { label: 'Canjeado', value: formatUSD(stats.redeemed), icon: FiGift, tone: 'brand' as AdminTone },
+          { label: 'Total', value: String(stats.total), icon: IconoNumero, tone: 'neutral' as AdminTone },
+          { label: 'Por activar', value: String(stats.toActivate), icon: IconoAdvertencia, tone: 'warning' as AdminTone },
+          { label: 'Activas', value: String(stats.active), icon: IconoCheck, tone: 'success' as AdminTone },
+          { label: 'Valor sin canjear', value: formatUSD(stats.activeBalance), icon: IconoBillete, tone: 'brand' as AdminTone },
+          { label: 'Canjeado', value: formatUSD(stats.redeemed), icon: IconoGiftCard, tone: 'brand' as AdminTone },
         ].map(({ label, value, icon: Icon, tone }) => (
           <div key={label} className={`${adminStatCard} min-w-max shrink-0 p-3`}>
             <span className={`${adminIconChip(tone)} hidden`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
@@ -302,7 +305,7 @@ export default function GiftCardsAdminPage() {
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
-          <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
+          <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
           <label htmlFor="gc-search" className="sr-only">Buscar gift cards</label>
           <input id="gc-search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Código, correo o nombre" className={`${adminInput()} pl-9`} />
         </div>
@@ -317,7 +320,7 @@ export default function GiftCardsAdminPage() {
         <div className="flex justify-center py-16"><span className={adminSpinner} aria-label="Cargando" /></div>
       ) : filtered.length === 0 ? (
         <div className={adminEmpty}>
-          <FiGift className="mb-3 h-10 w-10 text-subtle" aria-hidden="true" />
+          <IconoGiftCard className="mb-3 h-10 w-10 text-subtle" aria-hidden="true" />
           <p className="font-semibold text-ink">No hay gift cards con ese filtro</p>
           <p className={adminHint}>Genera tarjetas impresas o espera las compras de la tienda.</p>
         </div>
@@ -341,7 +344,7 @@ export default function GiftCardsAdminPage() {
                   </dl>
                   {card.recipientEmail && <div className="mb-3 text-sm [overflow-wrap:anywhere]"><p className="font-medium text-ink">{card.recipientName}</p><p className="text-muted">{card.recipientEmail}</p></div>}
                   <div className="flex flex-wrap gap-2">
-                    <button type="button" onClick={() => void copyCode(card.code)} className={`${adminSecondaryButton} relative px-3`}><FiCopy className="h-4 w-4" aria-hidden="true" /> Copiar código</button>
+                    <button type="button" onClick={() => void copyCode(card.code)} className={`${adminSecondaryButton} relative px-3`}><IconoCopiar className="h-4 w-4" aria-hidden="true" /> Copiar código</button>
                     {card.status === 'INACTIVE' && <button type="button" onClick={() => openSell(card.code)} className={`${adminSuccessButton} relative px-3`}>Activar</button>}
                   </div>
                 </article>
@@ -371,7 +374,7 @@ export default function GiftCardsAdminPage() {
                       <div className="flex items-center gap-1">
                         <code className="rounded bg-surface px-2 py-1 font-mono text-xs">****{card.codeLast4 || card.code.slice(-4)}</code>
                         <button type="button" onClick={() => void copyCode(card.code)} className={`${adminIconButton} h-11 w-11`} aria-label="Copiar código completo">
-                          <FiCopy className="h-3.5 w-3.5" aria-hidden="true" />
+                          <IconoCopiar className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
                       </div>
                     </td>
@@ -391,7 +394,7 @@ export default function GiftCardsAdminPage() {
                           <button type="button" onClick={() => openSell(card.code)} className={`${adminSuccessButton} h-11 px-3 text-sm`}>Activar</button>
                         )}
                         <button type="button" onClick={() => setDetails(card)} className={adminIconButton} aria-label={`Ver tarjeta terminada en ${card.codeLast4 || card.code.slice(-4)}`}>
-                          <FiEye className="h-4 w-4" aria-hidden="true" />
+                          <IconoVer className="h-4 w-4" aria-hidden="true" />
                         </button>
                       </div>
                     </td>
@@ -410,7 +413,7 @@ export default function GiftCardsAdminPage() {
           <div className={`${adminModalPanel} sm:max-w-md`}>
             <div className={adminModalHeader}>
               <h2 id="create-title" className={adminModalTitle}>Generar tarjetas impresas</h2>
-              <button type="button" onClick={() => setShowCreate(false)} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+              <button type="button" onClick={() => setShowCreate(false)} className={adminIconButton} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
             </div>
             <div className={`${adminModalBody} flex flex-col gap-4`}>
               <div>
@@ -452,7 +455,7 @@ export default function GiftCardsAdminPage() {
           <div className={`${adminModalPanel} sm:max-w-2xl`}>
             <div className={adminModalHeader}>
               <h2 id="batch-title" className={adminModalTitle}>Lote listo para imprimir</h2>
-              <button type="button" onClick={closeBatch} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+              <button type="button" onClick={closeBatch} className={adminIconButton} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
             </div>
             <div className={`${adminModalBody} flex flex-col gap-4`}>
               <div className={adminNotice('danger')}>
@@ -479,7 +482,7 @@ export default function GiftCardsAdminPage() {
             <div className={adminModalFooter}>
               <button type="button" onClick={closeBatch} className={adminSecondaryButton}>Cerrar</button>
               <button type="button" onClick={() => { if (printBatch(batch)) setBatchPrinted(true); }} className={adminPrimaryButton}>
-                <FiPrinter className="h-4 w-4" aria-hidden="true" /> Imprimir hoja
+                <IconoImpresora className="h-4 w-4" aria-hidden="true" /> Imprimir hoja
               </button>
             </div>
           </div>
@@ -492,7 +495,7 @@ export default function GiftCardsAdminPage() {
           <form className={`${adminModalPanel} sm:max-w-md`} onSubmit={(e) => { e.preventDefault(); void handleSell(); }}>
             <div className={adminModalHeader}>
               <h2 id="sell-title" className={adminModalTitle}>Vender en caja</h2>
-              <button type="button" onClick={() => setShowSell(false)} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+              <button type="button" onClick={() => setShowSell(false)} className={adminIconButton} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
             </div>
             <div className={`${adminModalBody} flex flex-col gap-4`}>
               <p className="text-sm text-ink-soft">Cobra la tarjeta al cliente y actívala aquí. Hasta entonces no se puede canjear.</p>
@@ -517,7 +520,7 @@ export default function GiftCardsAdminPage() {
             <div className={adminModalFooter}>
               <button type="button" onClick={() => setShowSell(false)} className={adminSecondaryButton}>Cancelar</button>
               <button type="submit" disabled={selling || sellForm.code.length < 19} className={adminSuccessButton}>
-                <FiCheck className="h-4 w-4" aria-hidden="true" /> {selling ? 'Activando…' : 'Cobrado: activar'}
+                <IconoCheck className="h-4 w-4" aria-hidden="true" /> {selling ? 'Activando…' : 'Cobrado: activar'}
               </button>
             </div>
           </form>
@@ -530,7 +533,7 @@ export default function GiftCardsAdminPage() {
           <div className={`${adminModalPanel} sm:max-w-lg`}>
             <div className={adminModalHeader}>
               <h2 id="details-title" className={adminModalTitle}>Tarjeta ****{details.codeLast4 || details.code.slice(-4)}</h2>
-              <button type="button" onClick={() => setDetails(null)} className={adminIconButton} aria-label="Cerrar"><FiX className="h-5 w-5" aria-hidden="true" /></button>
+              <button type="button" onClick={() => setDetails(null)} className={adminIconButton} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
             </div>
             <div className={`${adminModalBody} flex flex-col gap-4`}>
               <GiftCard3D
@@ -552,7 +555,7 @@ export default function GiftCardsAdminPage() {
               {isPrinted(details) && <p className={adminHint}>El PIN no se puede volver a ver: solo aparece en la hoja del lote.</p>}
             </div>
             <div className={adminModalFooter}>
-              <button type="button" onClick={() => void copyCode(details.code)} className={adminSecondaryButton}><FiCopy className="h-4 w-4" aria-hidden="true" /> Copiar código</button>
+              <button type="button" onClick={() => void copyCode(details.code)} className={adminSecondaryButton}><IconoCopiar className="h-4 w-4" aria-hidden="true" /> Copiar código</button>
               {details.status === 'INACTIVE' && <button type="button" onClick={() => openSell(details.code)} className={adminSuccessButton}>Vender en caja</button>}
             </div>
           </div>

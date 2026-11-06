@@ -4,7 +4,10 @@ import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { FiArrowDownLeft, FiArrowUpRight, FiChevronRight, FiClock, FiDollarSign, FiInfo, FiPlus, FiRefreshCw, FiShoppingBag, FiSlash, FiXCircle } from 'react-icons/fi';
+import {
+  IconoActualizar, IconoBillete, IconoBloqueado, IconoBolsa, IconoChevronDerecha, IconoFlechaAbajoIzquierda,
+  IconoFlechaArribaDerecha, IconoInfo, IconoMas, IconoRechazado, IconoReloj,
+} from '@/components/iconos';
 import RechargeModal from '@/components/modals/RechargeModalV2';
 import { formatUSD } from '@/lib/currency';
 import { useTiempoReal } from '@/lib/realtime/hooks';
@@ -44,7 +47,7 @@ const fecha = (iso: string) => new Date(iso).toLocaleString('es-VE', { timeZone:
 
 function Movimiento({ m }: { m: MovimientoDTO }) {
   const hecho = m.estado === 'COMPLETADO';
-  const Icono = m.estado === 'POR_CONFIRMAR' ? FiClock : m.estado === 'RECHAZADO' ? FiXCircle : m.estado === 'NO_COMPLETADO' ? FiSlash : m.entra ? FiArrowDownLeft : FiArrowUpRight;
+  const Icono = m.estado === 'POR_CONFIRMAR' ? IconoReloj : m.estado === 'RECHAZADO' ? IconoRechazado : m.estado === 'NO_COMPLETADO' ? IconoBloqueado : m.entra ? IconoFlechaAbajoIzquierda : IconoFlechaArribaDerecha;
   const color = !hecho ? 'bg-surface text-muted' : m.entra ? 'bg-success-strong/10 text-success-strong' : 'bg-brand-50 text-brand-600';
   return (
     <li className="flex gap-3 px-4 py-3">
@@ -75,7 +78,7 @@ function Movimiento({ m }: { m: MovimientoDTO }) {
         {m.pedido && (
           <Link href={`/customer/orders?orden=${m.pedido.id}`} className="mt-1.5 inline-flex min-h-8 items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700">
             Ver el pedido {m.pedido.numero}
-            <FiChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            <IconoChevronDerecha className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         )}
       </div>
@@ -160,7 +163,7 @@ export default function BalancePage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="flex items-center gap-2 text-sm font-semibold text-white/80">
-              <FiDollarSign className="h-4 w-4" aria-hidden="true" />
+              <IconoBillete className="h-4 w-4" aria-hidden="true" />
               Puntos ES disponibles
             </h1>
             {resumen ? (
@@ -176,11 +179,11 @@ export default function BalancePage() {
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Link href="/productos" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/40 px-5 text-sm font-semibold text-white hover:bg-white/10">
-              <FiShoppingBag className="h-4 w-4" aria-hidden="true" />
+              <IconoBolsa className="h-4 w-4" aria-hidden="true" />
               Ir a la tienda
             </Link>
             <button type="button" onClick={() => setRecargar(true)} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-brand-700 hover:bg-surface">
-              <FiPlus className="h-4 w-4" aria-hidden="true" />
+              <IconoMas className="h-4 w-4" aria-hidden="true" />
               Recargar Puntos ES
             </button>
           </div>
@@ -189,7 +192,7 @@ export default function BalancePage() {
 
       {pendientes > 0 && resumen && (
         <p className="flex items-start gap-2 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning-strong" role="status">
-          <FiClock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <IconoReloj className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span>
             <strong>{pendientes === 1 ? 'Tienes 1 recarga por confirmar' : `Tienes ${pendientes} recargas por confirmar`}</strong> ({formatUSD(resumen.porConfirmar.monto)}).
             {' '}Todavía no están en tus Puntos ES: la tienda confirma el pago y te avisa.
@@ -208,7 +211,7 @@ export default function BalancePage() {
             title="Actualizar"
             className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-line bg-white text-ink-soft hover:bg-surface disabled:opacity-50"
           >
-            <FiRefreshCw className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
+            <IconoActualizar className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
         </div>
         <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1">
@@ -242,13 +245,13 @@ export default function BalancePage() {
           </div>
         ) : movimientos.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-10 text-center">
-            <FiDollarSign className="mx-auto h-10 w-10 text-subtle" aria-hidden="true" />
+            <IconoBillete className="mx-auto h-10 w-10 text-subtle" aria-hidden="true" />
             <p className="mt-3 text-sm font-semibold text-ink">{actual.vacio}</p>
             {filtro === '' && (
               <>
                 <p className="mt-1 text-sm text-muted">Recarga Puntos ES y paga tus compras sin esperar la confirmación de cada pago.</p>
                 <button type="button" onClick={() => setRecargar(true)} className="mt-4 inline-flex h-11 items-center gap-2 rounded-xl bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">
-                  <FiPlus className="h-4 w-4" aria-hidden="true" />
+                  <IconoMas className="h-4 w-4" aria-hidden="true" />
                   Recargar Puntos ES
                 </button>
               </>
@@ -272,7 +275,7 @@ export default function BalancePage() {
 
       <section className="rounded-2xl border border-line bg-white p-4 lg:p-5" aria-labelledby="titulo-como">
         <h2 id="titulo-como" className="flex items-center gap-2 text-base font-bold text-ink">
-          <FiInfo className="h-4 w-4 text-brand-600" aria-hidden="true" />
+          <IconoInfo className="h-4 w-4 text-brand-600" aria-hidden="true" />
           Cómo funcionan los Puntos ES
         </h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-ink-soft">
@@ -284,7 +287,7 @@ export default function BalancePage() {
         </ul>
         <Link href="/customer/documentos" className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
           Términos y condiciones de los Puntos ES
-          <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+          <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
         </Link>
       </section>
 

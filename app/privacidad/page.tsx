@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { compartirPagina } from '@/lib/og/datos';
 import Link from 'next/link';
-import { FiShield } from 'react-icons/fi';
+import { IconoGarantia } from '@/components/iconos';
 import PublicHeader from '@/components/public/PublicHeader';
 import Footer from '@/components/Footer';
 import Container from '@/components/ui/Container';
@@ -33,7 +33,7 @@ export default async function PrivacyPage() {
       <main className="min-h-dvh bg-surface">
         <PageHeader
           breadcrumbs={[{ label: 'Política de privacidad' }]}
-          icon={<FiShield />}
+          icon={<IconoGarantia />}
           eyebrow="Legal"
           title="Política de privacidad"
           description={pagina ? `Última actualización: ${actualizado} · Versión ${pagina.version}` : undefined}

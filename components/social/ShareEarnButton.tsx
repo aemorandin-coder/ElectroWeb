@@ -1,6 +1,6 @@
 'use client';
 
-import { FiShare2 } from 'react-icons/fi';
+import { IconoCompartir } from '@/components/iconos';
 
 interface ShareEarnButtonProps {
   url: string;
@@ -47,7 +47,7 @@ export default function ShareEarnButton({
       title="Compartir y Ganar"
       aria-label="Compartir y Ganar"
     >
-      <FiShare2 className="w-4 h-4" />
+      <IconoCompartir className="w-4 h-4" />
     </button>
   );
 }

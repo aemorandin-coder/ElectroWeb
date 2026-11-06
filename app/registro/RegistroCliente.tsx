@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { FiAlertCircle, FiCheck, FiCheckCircle, FiCircle, FiEye, FiEyeOff, FiX } from 'react-icons/fi';
+import { IconoCerrar, IconoCheck, IconoCirculo, IconoConfirmado, IconoError, IconoOcultar, IconoVer } from '@/components/iconos';
 import AuthShell from '@/components/auth/AuthShell';
 import BotonGoogle from '@/components/auth/BotonGoogle';
 import { ControlTelefono } from '@/components/forms/ControlesDatos';
@@ -200,7 +200,7 @@ function RegistroContenido({ google }: { google: boolean }) {
     return (
       <AuthShell volver={{ href: '/', texto: 'Volver a la tienda' }}>
         <div className="text-center">
-          <FiCheckCircle className="mx-auto h-12 w-12 text-success-strong" aria-hidden="true" />
+          <IconoConfirmado className="mx-auto h-12 w-12 text-success-strong" aria-hidden="true" />
           <h1 className="mt-3 text-2xl font-bold text-ink">Tu cuenta está lista</h1>
           <p className="mt-2 text-sm text-muted">
             Entra con <span className="font-semibold text-ink">{valores.email.trim().toLowerCase()}</span> y la contraseña que acabas de crear.
@@ -332,13 +332,13 @@ function RegistroContenido({ google }: { google: boolean }) {
               aria-pressed={verContrasena}
               className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted transition-colors hover:text-ink"
             >
-              {verContrasena ? <FiEyeOff className="h-5 w-5" aria-hidden="true" /> : <FiEye className="h-5 w-5" aria-hidden="true" />}
+              {verContrasena ? <IconoOcultar className="h-5 w-5" aria-hidden="true" /> : <IconoVer className="h-5 w-5" aria-hidden="true" />}
             </button>
           </div>
           <ul id="password-reglas" className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
             {REGLAS_CONTRASENA.map((regla) => {
               const cumple = regla.cumple(valores.password);
-              const Icono = cumple ? FiCheck : passwordTocada ? FiX : FiCircle;
+              const Icono = cumple ? IconoCheck : passwordTocada ? IconoCerrar : IconoCirculo;
               const tono = cumple ? 'text-success-strong' : passwordTocada ? 'text-deal' : 'text-muted';
               return (
                 <li key={regla.id} className={`flex items-center gap-1.5 text-xs font-medium ${tono}`}>
@@ -406,7 +406,7 @@ function RegistroContenido({ google }: { google: boolean }) {
 
         {errorGeneral && (
           <div role="alert" className={`${adminNotice('danger')} flex items-start gap-2`}>
-            <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <IconoError className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <p>{errorGeneral}</p>
           </div>
         )}

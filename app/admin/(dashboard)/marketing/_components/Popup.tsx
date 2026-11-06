@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { FiCheck, FiImage, FiSave, FiUpload, FiX } from 'react-icons/fi';
+import { IconoCerrar, IconoCheck, IconoGuardar, IconoImagen, IconoSubir } from '@/components/iconos';
 import {
   adminBadge, adminCard, adminHint, adminInput, adminLabel, adminNotice, adminPrimaryButton, adminSecondaryButton, adminSpinner,
 } from '@/lib/admin-ui';
@@ -150,14 +150,14 @@ export default function Popup() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={ad.hotAdImage} alt="Imagen del popup" className="h-full w-full object-contain p-1" />
                 ) : (
-                  <span className="text-center text-xs"><FiUpload className="mx-auto mb-1 h-5 w-5" aria-hidden="true" />Subir imagen</span>
+                  <span className="text-center text-xs"><IconoSubir className="mx-auto mb-1 h-5 w-5" aria-hidden="true" />Subir imagen</span>
                 )}
               </button>
               <input ref={archivo} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) subir(f); }} />
               <div className="mt-2 flex gap-2">
                 <button type="button" onClick={() => archivo.current?.click()} className={`${adminSecondaryButton} h-9 flex-1 px-2 text-xs`}>{ad.hotAdImage ? 'Cambiar' : 'Elegir'}</button>
                 {ad.hotAdImage && (
-                  <button type="button" onClick={() => set('hotAdImage', null)} className={`${adminSecondaryButton} h-9 px-2 text-xs`} aria-label="Quitar imagen"><FiX className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => set('hotAdImage', null)} className={`${adminSecondaryButton} h-9 px-2 text-xs`} aria-label="Quitar imagen"><IconoCerrar className="h-4 w-4" /></button>
                 )}
               </div>
               <p className={adminHint}>PNG, JPG o WEBP · máx. 5 MB</p>
@@ -188,7 +188,7 @@ export default function Popup() {
         </section>
 
         <section className={adminCard}>
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-ink"><FiImage className="h-4 w-4 text-muted" aria-hidden="true" /> Ajustes visuales</h3>
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-ink"><IconoImagen className="h-4 w-4 text-muted" aria-hidden="true" /> Ajustes visuales</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {ad.hotAdShadowEnabled && (
               <>
@@ -235,7 +235,7 @@ export default function Popup() {
           )}
         </div>
         <button type="button" onClick={guardar} disabled={guardando || !hayCambios} className={`${adminPrimaryButton} mt-4 w-full`}>
-          {guardando ? 'Guardando…' : hayCambios ? <><FiSave className="h-4 w-4" aria-hidden="true" /> Guardar popup</> : <><FiCheck className="h-4 w-4" aria-hidden="true" /> Sin cambios</>}
+          {guardando ? 'Guardando…' : hayCambios ? <><IconoGuardar className="h-4 w-4" aria-hidden="true" /> Guardar popup</> : <><IconoCheck className="h-4 w-4" aria-hidden="true" /> Sin cambios</>}
         </button>
       </aside>
     </div>

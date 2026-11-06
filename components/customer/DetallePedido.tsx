@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { FiPackage, FiPrinter, FiX } from 'react-icons/fi';
+import { IconoCerrar, IconoImpresora, IconoPaquete } from '@/components/iconos';
 import OrderTracking from '@/components/orders/OrderTracking';
 import { formatUSD, formatVES } from '@/lib/currency';
 import IvaIncluido from '@/components/ui/IvaIncluido';
@@ -105,7 +105,7 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
           <div className="flex shrink-0 items-center gap-2">
             <span className={adminBadge(estado.tono)}>{estado.label}</span>
             <button type="button" onClick={onCerrar} aria-label="Cerrar" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink">
-              <FiX className="h-5 w-5" aria-hidden="true" />
+              <IconoCerrar className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </header>
@@ -155,7 +155,7 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
                 return (
                   <li key={item.id} className="flex items-center gap-3 p-2.5">
                     <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-line bg-white print:hidden">
-                      {foto ? <Image src={foto} alt="" fill sizes="48px" className="object-contain" /> : <span className="flex h-full items-center justify-center text-subtle"><FiPackage className="h-5 w-5" aria-hidden="true" /></span>}
+                      {foto ? <Image src={foto} alt="" fill sizes="48px" className="object-contain" /> : <span className="flex h-full items-center justify-center text-subtle"><IconoPaquete className="h-5 w-5" aria-hidden="true" /></span>}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-medium text-ink [overflow-wrap:anywhere]">{item.productName}</span>
@@ -225,7 +225,7 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
 
         <footer className="flex gap-2 border-t border-line bg-surface p-3 print:hidden">
           <button type="button" onClick={() => window.print()} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-line bg-white text-sm font-semibold text-ink hover:bg-surface">
-            <FiPrinter className="h-4 w-4" aria-hidden="true" /> Imprimir recibo
+            <IconoImpresora className="h-4 w-4" aria-hidden="true" /> Imprimir recibo
           </button>
           <button type="button" onClick={onCerrar} className="inline-flex h-11 flex-1 items-center justify-center rounded-xl bg-brand-500 text-sm font-semibold text-white hover:bg-brand-600">
             Cerrar

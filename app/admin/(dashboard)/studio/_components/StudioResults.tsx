@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FiBarChart2 } from 'react-icons/fi';
+import { IconoReportes } from '@/components/iconos';
 import { adminEmpty, adminHint } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -40,7 +40,7 @@ export default function StudioResults({ onSelect }: { onSelect: (id: string) => 
         </p>
       ) : data.results.length === 0 ? (
         <div className={adminEmpty}>
-          <FiBarChart2 className="h-6 w-6 text-muted" aria-hidden="true" />
+          <IconoReportes className="h-6 w-6 text-muted" aria-hidden="true" />
           <p className="mt-2 text-sm font-semibold text-ink">Aún no hay visitas desde las historias</p>
           <p className="mt-1 text-sm text-muted">Se cuentan cuando alguien entra por el QR o el enlace de una historia (el que lleva ?es=).</p>
         </div>

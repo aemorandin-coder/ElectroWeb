@@ -5,10 +5,10 @@ import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
-    FiBarChart2, FiShoppingCart, FiUsers, FiMousePointer, FiShield, FiTrendingUp, FiPackage, FiAlertTriangle,
-    FiEye, FiMonitor, FiSmartphone, FiTablet, FiGlobe, FiClock, FiRefreshCw, FiActivity, FiList,
-    FiGift, FiDollarSign, FiCheckCircle, FiAward, FiDownload, FiLock,
-} from 'react-icons/fi';
+  IconoActualizar, IconoAdvertencia, IconoBillete, IconoCandado, IconoCarrito, IconoCelular, IconoClientes,
+  IconoConfirmado, IconoDescargar, IconoEnVivo, IconoGarantia, IconoLista, IconoMonitor, IconoPaquete, IconoPremio,
+  IconoPuntero, IconoRegalo, IconoReloj, IconoReportes, IconoTableta, IconoVentas, IconoVer, IconoWeb,
+} from '@/components/iconos';
 import {
     ResponsiveContainer, AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
     Legend, PieChart, Pie, Cell,
@@ -81,11 +81,11 @@ const PERIODOS = [
     { value: '1y', label: '1 año' },
 ];
 const TABS: Array<{ id: Tab; label: string; icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }> }> = [
-    { id: 'overview', label: 'Resumen', icon: FiBarChart2 },
-    { id: 'products', label: 'Productos', icon: FiPackage },
-    { id: 'interactions', label: 'Interacciones', icon: FiMousePointer },
-    { id: 'security', label: 'Seguridad', icon: FiShield },
-    { id: 'referrals', label: 'Referidos', icon: FiGift },
+    { id: 'overview', label: 'Resumen', icon: IconoReportes },
+    { id: 'products', label: 'Productos', icon: IconoPaquete },
+    { id: 'interactions', label: 'Interacciones', icon: IconoPuntero },
+    { id: 'security', label: 'Seguridad', icon: IconoGarantia },
+    { id: 'referrals', label: 'Referidos', icon: IconoRegalo },
 ];
 const FILTROS_BITACORA = [
     { value: '', label: 'Todo' },
@@ -108,9 +108,9 @@ const ESTADO_CONVERSION: Record<string, { label: string; color: string; tone: Ad
     REJECTED: { label: 'Rechazadas', color: 'var(--color-danger)', tone: 'danger' },
 };
 const DISPOSITIVO: Record<string, { label: string; icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }> }> = {
-    desktop: { label: 'Computadora', icon: FiMonitor },
-    mobile: { label: 'Teléfono', icon: FiSmartphone },
-    tablet: { label: 'Tableta', icon: FiTablet },
+    desktop: { label: 'Computadora', icon: IconoMonitor },
+    mobile: { label: 'Teléfono', icon: IconoCelular },
+    tablet: { label: 'Tableta', icon: IconoTableta },
 };
 const EVENTO: Record<string, string> = {
     page_view: 'Vistas de página', click: 'Clics', form_submit: 'Formularios enviados',
@@ -317,11 +317,11 @@ export default function ReportsPage() {
                     </div>
                     <button type="button" onClick={() => setRecargas((n) => n + 1)} className={`${adminIconButton} h-11 w-11 border border-line bg-white`}
                         aria-label="Actualizar reporte" title="Actualizar reporte">
-                        <FiRefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                        <IconoActualizar className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
                     </button>
                     {actualizado && <span className="text-xs text-muted">Actualizado a las {format(actualizado, 'h:mm:ss a', { locale: es })}</span>}
                     <button type="button" onClick={exportToCSV} className={adminSecondaryButton}>
-                        <FiDownload className="h-4 w-4" aria-hidden="true" /> Exportar CSV
+                        <IconoDescargar className="h-4 w-4" aria-hidden="true" /> Exportar CSV
                     </button>
                 </div>
             </div>
@@ -335,22 +335,22 @@ export default function ReportsPage() {
                     {activeTab === 'overview' && overview && (
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                                <Stat wide label="Ingresos cobrados" icon={FiTrendingUp} value={formatUSD(overview.revenue.total)}
+                                <Stat wide label="Ingresos cobrados" icon={IconoVentas} value={formatUSD(overview.revenue.total)}
                                     detail={overview.orders.paid > 0 ? `${overview.orders.paid} pagos · ticket promedio ${formatUSD(overview.revenue.averageTicket)}` : 'Sin pagos confirmados'}
                                     source="Órdenes con el pago confirmado en el período. No cuenta las canceladas ni las que esperan pago." />
-                                <Stat label="Pedidos" icon={FiShoppingCart} value={overview.orders.created}
+                                <Stat label="Pedidos" icon={IconoCarrito} value={overview.orders.created}
                                     detail={`${overview.orders.pendingPayment} esperan pago`}
                                     source="Órdenes creadas en el período, sin las canceladas." />
-                                <Stat label="Clientes" icon={FiUsers} value={overview.users.total}
+                                <Stat label="Clientes" icon={IconoClientes} value={overview.users.total}
                                     detail={`+${overview.users.new} nuevos en el período`}
                                     source="Cuentas de clientes (sin el equipo). Nuevos: registrados en el período." />
-                                <Stat wide label="Productos" icon={FiPackage} value={overview.products.total}
+                                <Stat wide label="Productos" icon={IconoPaquete} value={overview.products.total}
                                     detail={`${overview.products.published} publicados · ${overview.productRequests.pending} solicitudes pendientes`}
                                     source="Todo el catálogo, en cualquier estado. Solicitudes: pedidos de productos que aún no se atienden." />
                             </div>
 
                             {mounted && overview.dailyData.length > 0 && (
-                                <Panel title="Tendencias del período" icon={FiTrendingUp} source="Por día, en hora de Venezuela.">
+                                <Panel title="Tendencias del período" icon={IconoVentas} source="Por día, en hora de Venezuela.">
                                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                         <div className="space-y-2">
                                             <p className="text-xs font-semibold text-muted">Ingresos cobrados (USD), por día del pago</p>
@@ -394,12 +394,12 @@ export default function ReportsPage() {
                             )}
 
                             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                                <Panel title="Interacciones" icon={FiMousePointer} source="Visitas a la tienda (no el panel), sin buscadores ni bots.">
+                                <Panel title="Interacciones" icon={IconoPuntero} source="Visitas a la tienda (no el panel), sin buscadores ni bots.">
                                     <div className="grid grid-cols-3 gap-3 text-center">
                                         {[
-                                            { label: 'Visitantes', value: overview.interactions.visitors, icon: FiUsers },
-                                            { label: 'Vistas', value: overview.interactions.pageViews, icon: FiEye },
-                                            { label: 'Clics', value: overview.interactions.clicks, icon: FiMousePointer },
+                                            { label: 'Visitantes', value: overview.interactions.visitors, icon: IconoClientes },
+                                            { label: 'Vistas', value: overview.interactions.pageViews, icon: IconoVer },
+                                            { label: 'Clics', value: overview.interactions.clicks, icon: IconoPuntero },
                                         ].map(({ label, value, icon: Icon }) => (
                                             <div key={label}>
                                                 <Icon className="mx-auto mb-1 h-5 w-5 text-brand-500" aria-hidden="true" />
@@ -409,20 +409,20 @@ export default function ReportsPage() {
                                         ))}
                                     </div>
                                 </Panel>
-                                <Panel title="Seguridad" icon={FiShield} source="Bitácora del servidor: inicios de sesión, aprobaciones y cambios de precio.">
+                                <Panel title="Seguridad" icon={IconoGarantia} source="Bitácora del servidor: inicios de sesión, aprobaciones y cambios de precio.">
                                     <div className="grid grid-cols-3 gap-3 text-center">
                                         <div>
-                                            <FiList className="mx-auto mb-1 h-5 w-5 text-brand-500" aria-hidden="true" />
+                                            <IconoLista className="mx-auto mb-1 h-5 w-5 text-brand-500" aria-hidden="true" />
                                             <p className="text-xl font-bold tabular-nums text-ink">{overview.security.events}</p>
                                             <p className="text-xs text-muted">Registros</p>
                                         </div>
                                         <div>
-                                            <FiLock className="mx-auto mb-1 h-5 w-5 text-warning-strong" aria-hidden="true" />
+                                            <IconoCandado className="mx-auto mb-1 h-5 w-5 text-warning-strong" aria-hidden="true" />
                                             <p className="text-xl font-bold tabular-nums text-ink">{overview.security.failedLogins}</p>
                                             <p className="text-xs text-muted">Accesos fallidos</p>
                                         </div>
                                         <div>
-                                            <FiAlertTriangle className={`mx-auto mb-1 h-5 w-5 ${overview.security.critical > 0 ? 'text-deal' : 'text-success-strong'}`} aria-hidden="true" />
+                                            <IconoAdvertencia className={`mx-auto mb-1 h-5 w-5 ${overview.security.critical > 0 ? 'text-deal' : 'text-success-strong'}`} aria-hidden="true" />
                                             <p className="text-xl font-bold tabular-nums text-ink">{overview.security.critical}</p>
                                             <p className="text-xs text-muted">Críticas</p>
                                         </div>
@@ -434,7 +434,7 @@ export default function ReportsPage() {
 
                     {activeTab === 'products' && products && (
                         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                            <Panel title="Más vendidos" icon={FiTrendingUp} source="Unidades de órdenes con el pago confirmado en el período.">
+                            <Panel title="Más vendidos" icon={IconoVentas} source="Unidades de órdenes con el pago confirmado en el período.">
                                 {mounted && products.topSelling.length > 0 ? (
                                     <>
                                         <div className="h-52 w-full sm:h-64">
@@ -466,7 +466,7 @@ export default function ReportsPage() {
                                     </>
                                 ) : <Vacio>Sin ventas pagadas en el período</Vacio>}
                             </Panel>
-                            <Panel title="Solicitudes de productos" icon={FiPackage} source="Productos que pidieron los clientes, desde siempre, por estado.">
+                            <Panel title="Solicitudes de productos" icon={IconoPaquete} source="Productos que pidieron los clientes, desde siempre, por estado.">
                                 {mounted && products.requests.length > 0 ? (
                                     <Dona data={products.requests.map((r) => ({
                                         name: ESTADO_SOLICITUD[r.status]?.label ?? r.status,
@@ -480,20 +480,20 @@ export default function ReportsPage() {
 
                     {activeTab === 'interactions' && interactions && (
                         interactions.byType.length === 0 ? (
-                            <Panel title="Interacciones" icon={FiMousePointer}>
+                            <Panel title="Interacciones" icon={IconoPuntero}>
                                 <Vacio>No hay visitas registradas en el período. Se cuentan las visitas a la tienda, sin el panel ni los bots.</Vacio>
                             </Panel>
                         ) : (
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                                    <Stat label="Visitantes" icon={FiUsers} value={interactions.visitors} source="Navegadores distintos (una sesión por pestaña abierta)." />
+                                    <Stat label="Visitantes" icon={IconoClientes} value={interactions.visitors} source="Navegadores distintos (una sesión por pestaña abierta)." />
                                     {interactions.byType.slice(0, 3).map((e) => (
-                                        <Stat key={e.eventType} label={EVENTO[e.eventType] ?? e.eventType.replace(/_/g, ' ')} icon={e.eventType === 'click' ? FiMousePointer : e.eventType === 'page_view' ? FiEye : FiList}
+                                        <Stat key={e.eventType} label={EVENTO[e.eventType] ?? e.eventType.replace(/_/g, ' ')} icon={e.eventType === 'click' ? IconoPuntero : e.eventType === 'page_view' ? IconoVer : IconoLista}
                                             value={e.count} source={e.eventType === 'page_view' ? 'Cada página que se abre.' : e.eventType === 'click' ? 'Un clic por botón, enlace o producto.' : 'Registrado por la tienda.'} />
                                     ))}
                                 </div>
                                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                                    <Panel title="Actividad por día" icon={FiActivity} source="Todos los eventos, por día en hora de Venezuela.">
+                                    <Panel title="Actividad por día" icon={IconoEnVivo} source="Todos los eventos, por día en hora de Venezuela.">
                                         {mounted && (
                                             <div className="h-52 w-full sm:h-64">
                                                 <ResponsiveContainer width="100%" height="100%">
@@ -514,7 +514,7 @@ export default function ReportsPage() {
                                             </div>
                                         )}
                                     </Panel>
-                                    <Panel title="Dispositivos" icon={FiMonitor} source="Visitantes por tipo de equipo (cada visitante cuenta una vez).">
+                                    <Panel title="Dispositivos" icon={IconoMonitor} source="Visitantes por tipo de equipo (cada visitante cuenta una vez).">
                                         {mounted && interactions.byDevice.length > 0 ? (
                                             <Dona data={interactions.byDevice.map((d, i) => ({
                                                 name: DISPOSITIVO[d.deviceType]?.label ?? 'Otro',
@@ -524,7 +524,7 @@ export default function ReportsPage() {
                                         ) : <Vacio>Sin datos de dispositivos</Vacio>}
                                     </Panel>
                                 </div>
-                                <Panel title="Páginas más visitadas" icon={FiGlobe} source="Vistas de página en el período.">
+                                <Panel title="Páginas más visitadas" icon={IconoWeb} source="Vistas de página en el período.">
                                     {interactions.topPages.length > 0 ? (
                                         <ol className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
                                             {interactions.topPages.map((page, index) => (
@@ -547,7 +547,7 @@ export default function ReportsPage() {
                         <div className="space-y-4">
                             {criticas > 0 && (
                                 <div className="flex items-start gap-3 rounded-xl border border-deal/30 bg-deal/5 p-4">
-                                    <FiAlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-deal" aria-hidden="true" />
+                                    <IconoAdvertencia className="mt-0.5 h-5 w-5 shrink-0 text-deal" aria-hidden="true" />
                                     <div>
                                         <p className="text-sm font-semibold text-deal">{criticas} {criticas === 1 ? 'evento crítico' : 'eventos críticos'} en el período</p>
                                         <p className="text-sm text-ink-soft">
@@ -572,7 +572,7 @@ export default function ReportsPage() {
                             </p>
 
                             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                                <Panel title="Eventos por tipo" icon={FiList} source="Todo lo que registró el servidor en el período.">
+                                <Panel title="Eventos por tipo" icon={IconoLista} source="Todo lo que registró el servidor en el período.">
                                     {security.byAction.length > 0 ? (
                                         <ul className="grid grid-cols-2 gap-2">
                                             {security.byAction.map((a) => (
@@ -584,7 +584,7 @@ export default function ReportsPage() {
                                         </ul>
                                     ) : <Vacio>Sin eventos en el período</Vacio>}
                                 </Panel>
-                                <Panel title="IPs sospechosas" icon={FiShield}
+                                <Panel title="IPs sospechosas" icon={IconoGarantia}
                                     source="Direcciones con más alertas: contraseñas incorrectas, bloqueos y accesos denegados. Muchas cuentas desde una IP es un ataque, no un olvido.">
                                     {security.suspiciousIPs.length > 0 ? (
                                         <ul className="space-y-2">
@@ -605,7 +605,7 @@ export default function ReportsPage() {
                                 </Panel>
                             </div>
 
-                            <Panel title="Bitácora" icon={FiClock} source="Los 100 registros más recientes del filtro elegido, en hora de Venezuela.">
+                            <Panel title="Bitácora" icon={IconoReloj} source="Los 100 registros más recientes del filtro elegido, en hora de Venezuela.">
                                 <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Filtrar la bitácora">
                                     {FILTROS_BITACORA.map((f) => (
                                         <button key={f.value} type="button" aria-pressed={grupo === f.value} onClick={() => setGrupo(f.value)}
@@ -640,18 +640,18 @@ export default function ReportsPage() {
                     {activeTab === 'referrals' && referrals && (
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                                <Stat wide label="Promotores" icon={FiUsers} value={referrals.totalInfluencers} source="Todos los promotores registrados." />
-                                <Stat label="Activos" icon={FiCheckCircle} value={referrals.activeInfluencers} source="Pueden generar comisiones." />
-                                <Stat label="Pausados" icon={FiActivity} value={referrals.pausedInfluencers} source="No generan comisiones nuevas." />
+                                <Stat wide label="Promotores" icon={IconoClientes} value={referrals.totalInfluencers} source="Todos los promotores registrados." />
+                                <Stat label="Activos" icon={IconoConfirmado} value={referrals.activeInfluencers} source="Pueden generar comisiones." />
+                                <Stat label="Pausados" icon={IconoEnVivo} value={referrals.pausedInfluencers} source="No generan comisiones nuevas." />
                             </div>
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <Stat label="Ventas por referidos" icon={FiShoppingCart} value={formatUSD(referrals.approvedRevenue.gross)}
+                                <Stat label="Ventas por referidos" icon={IconoCarrito} value={formatUSD(referrals.approvedRevenue.gross)}
                                     source="Monto de las compras con comisión aprobada en el período." />
-                                <Stat label="Comisiones aprobadas" icon={FiDollarSign} value={formatUSD(referrals.approvedRevenue.commission)}
+                                <Stat label="Comisiones aprobadas" icon={IconoBillete} value={formatUSD(referrals.approvedRevenue.commission)}
                                     source="Comisiones acreditadas como Puntos ES en el período." />
                             </div>
                             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                                <Panel title="Comisiones por promotor (USD)" icon={FiAward} source="Comisiones aprobadas, desde siempre.">
+                                <Panel title="Comisiones por promotor (USD)" icon={IconoPremio} source="Comisiones aprobadas, desde siempre.">
                                     {mounted && referrals.topInfluencers.length > 0 ? (
                                         <div className="h-52 w-full sm:h-64">
                                             <ResponsiveContainer width="100%" height="100%">
@@ -667,7 +667,7 @@ export default function ReportsPage() {
                                         </div>
                                     ) : <Vacio>Sin comisiones aprobadas</Vacio>}
                                 </Panel>
-                                <Panel title="Conversiones por estado" icon={FiList} source="Compras atribuidas a un promotor en el período.">
+                                <Panel title="Conversiones por estado" icon={IconoLista} source="Compras atribuidas a un promotor en el período.">
                                     {referrals.conversionsByStatus.length > 0 ? (
                                         <>
                                             {mounted && (
@@ -692,7 +692,7 @@ export default function ReportsPage() {
                                     ) : <Vacio>Sin conversiones en el período</Vacio>}
                                 </Panel>
                             </div>
-                            <Panel title="Mejores promotores" icon={FiAward} source="Por comisión aprobada acumulada.">
+                            <Panel title="Mejores promotores" icon={IconoPremio} source="Por comisión aprobada acumulada.">
                                 {referrals.topInfluencers.length === 0 ? <Vacio>Sin conversiones aprobadas aún</Vacio> : (
                                     <ol className="space-y-2">
                                         {referrals.topInfluencers.map((inf, idx) => (

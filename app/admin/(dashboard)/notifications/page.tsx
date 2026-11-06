@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { IconoAjustes, IconoBandeja } from '@/components/iconos';
 import { FaTelegram } from 'react-icons/fa6';
-import { FiInbox, FiSliders } from 'react-icons/fi';
 import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab } from '@/lib/admin-ui';
 import { hasPermission } from '@/lib/auth-helpers';
 import Inbox from './_components/Inbox';
@@ -15,9 +15,9 @@ import TelegramPanel from './_components/TelegramPanel';
 
 type TabId = 'bandeja' | 'avisos' | 'telegram';
 
-const TABS: { id: TabId; label: string; Icon: typeof FiInbox }[] = [
-  { id: 'bandeja', label: 'Bandeja', Icon: FiInbox },
-  { id: 'avisos', label: 'Qué avisar', Icon: FiSliders },
+const TABS: { id: TabId; label: string; Icon: typeof IconoBandeja }[] = [
+  { id: 'bandeja', label: 'Bandeja', Icon: IconoBandeja },
+  { id: 'avisos', label: 'Qué avisar', Icon: IconoAjustes },
   { id: 'telegram', label: 'Telegram', Icon: FaTelegram },
 ];
 

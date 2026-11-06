@@ -3,7 +3,10 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiBox, FiCopy, FiEdit2, FiEye, FiMoreHorizontal, FiStar, FiTrash2, FiUsers, FiZap } from 'react-icons/fi';
+import {
+  IconoClientes, IconoCopiar, IconoDigital, IconoEditar, IconoEliminar, IconoEstrella, IconoMasOpciones, IconoPaquete,
+  IconoVer,
+} from '@/components/iconos';
 import { adminBadge, adminIconButton, type AdminTone } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { ETIQUETA_ESTADO, type EstadoProducto, type ProductoLista } from './tipos';
@@ -44,7 +47,7 @@ function Miniatura({ p, size }: { p: ProductoLista; size: number }) {
       {src && !fallo ? (
         <Image src={src} alt="" fill sizes={`${size}px`} className="object-contain p-1" onError={() => setFallo(true)} unoptimized={!src.startsWith('/')} />
       ) : (
-        <div className="flex h-full items-center justify-center text-subtle"><FiBox className="h-5 w-5" aria-hidden="true" /></div>
+        <div className="flex h-full items-center justify-center text-subtle"><IconoPaquete className="h-5 w-5" aria-hidden="true" /></div>
       )}
     </div>
   );
@@ -57,9 +60,9 @@ function Miniatura({ p, size }: { p: ProductoLista; size: number }) {
 function Etiquetas({ p, editando }: { p: ProductoLista; editando?: string[] }) {
   return (
     <span className="flex flex-wrap items-center gap-1">
-      {editando && editando.length > 0 && <span className={adminBadge('brand')} title="Tiene este producto abierto para editarlo ahora mismo"><FiUsers className="h-3 w-3" aria-hidden="true" />{editando.join(' y ')} {editando.length === 1 ? 'lo edita' : 'lo editan'}</span>}
-      {p.productType === 'DIGITAL' && <span className={adminBadge('brand')}><FiZap className="h-3 w-3" aria-hidden="true" />Digital</span>}
-      {p.isFeatured && p.status === 'PUBLISHED' && <span className={adminBadge('warning')}><FiStar className="h-3 w-3" aria-hidden="true" />Destacado</span>}
+      {editando && editando.length > 0 && <span className={adminBadge('brand')} title="Tiene este producto abierto para editarlo ahora mismo"><IconoClientes className="h-3 w-3" aria-hidden="true" />{editando.join(' y ')} {editando.length === 1 ? 'lo edita' : 'lo editan'}</span>}
+      {p.productType === 'DIGITAL' && <span className={adminBadge('brand')}><IconoDigital className="h-3 w-3" aria-hidden="true" />Digital</span>}
+      {p.isFeatured && p.status === 'PUBLISHED' && <span className={adminBadge('warning')}><IconoEstrella className="h-3 w-3" aria-hidden="true" />Destacado</span>}
       {p.isFeatured && p.status === 'DRAFT' && <span className="text-xs text-muted" title="Está marcado como destacado, pero la tienda no lo muestra mientras esté en borrador">Destacado (no se ve: borrador)</span>}
     </span>
   );
@@ -80,7 +83,7 @@ function BotonDestacar({ p, onDestacar, className }: { p: ProductoLista; onDesta
   return (
     <button type="button" onClick={() => onDestacar(p)} aria-pressed={p.isFeatured} className={className}
       aria-label={p.isFeatured ? `Quitar ${p.name} de Destacados` : `Destacar ${p.name} en el inicio`} title={p.isFeatured ? 'Quitar de Destacados' : 'Destacar en el inicio'}>
-      <FiStar className={`h-4 w-4 ${p.isFeatured ? 'fill-current text-warning' : ''}`} aria-hidden="true" />
+      <IconoEstrella lleno={p.isFeatured} className={`h-4 w-4 ${p.isFeatured ? 'text-warning' : ''}`} aria-hidden="true" />
     </button>
   );
 }
@@ -149,14 +152,14 @@ export default function ListaProductos(props: Props) {
             </div>
             <div className="mt-3 flex gap-2 border-t border-line pt-2">
               <Link href={`/admin/products/${p.id}`} className="inline-flex min-h-11 flex-1 items-center justify-center gap-1 rounded-lg text-sm font-semibold text-brand-600 hover:bg-brand-50">
-                <FiEdit2 className="h-4 w-4" aria-hidden="true" /> Editar
+                <IconoEditar className="h-4 w-4" aria-hidden="true" /> Editar
               </Link>
               <button type="button" onClick={() => onVer(p)} className="inline-flex min-h-11 flex-1 items-center justify-center gap-1 rounded-lg text-sm font-semibold text-ink-soft hover:bg-surface">
-                <FiEye className="h-4 w-4" aria-hidden="true" /> Ver
+                <IconoVer className="h-4 w-4" aria-hidden="true" /> Ver
               </button>
               <button type="button" onClick={() => setAbierto(abierto === p.id ? null : p.id)} aria-expanded={abierto === p.id}
                 className="inline-flex min-h-11 flex-1 items-center justify-center gap-1 rounded-lg text-sm font-semibold text-ink-soft hover:bg-surface">
-                <FiMoreHorizontal className="h-4 w-4" aria-hidden="true" /> Más
+                <IconoMasOpciones className="h-4 w-4" aria-hidden="true" /> Más
               </button>
             </div>
             {abierto === p.id && (
@@ -165,7 +168,7 @@ export default function ListaProductos(props: Props) {
                 <button type="button" onClick={() => onEstado(p)} className="min-h-11 rounded-lg border border-line text-sm text-ink hover:bg-surface">{p.status === 'PUBLISHED' ? 'Desactivar' : 'Activar'}</button>
                 {p.status !== 'ARCHIVED' && (
                   <button type="button" onClick={() => onDestacar(p)} aria-pressed={p.isFeatured} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border border-line text-sm text-ink hover:bg-surface">
-                    <FiStar className={`h-4 w-4 ${p.isFeatured ? 'fill-current text-warning' : ''}`} aria-hidden="true" /> {p.isFeatured ? 'Quitar destacado' : 'Destacar'}
+                    <IconoEstrella lleno={p.isFeatured} className={`h-4 w-4 ${p.isFeatured ? 'text-warning' : ''}`} aria-hidden="true" /> {p.isFeatured ? 'Quitar destacado' : 'Destacar'}
                   </button>
                 )}
                 <button type="button" onClick={() => onEliminar(p)} className={`min-h-11 rounded-lg border border-deal/30 text-sm text-deal hover:bg-deal-bg ${p.status === 'ARCHIVED' ? 'col-span-2' : ''}`}>A la papelera</button>
@@ -220,10 +223,10 @@ export default function ListaProductos(props: Props) {
                   <div className="flex justify-end gap-1">
                     {p.status === 'ARCHIVED' && <span className="h-11 w-11" aria-hidden="true" />}
                     <BotonDestacar p={p} onDestacar={onDestacar} className={`${adminIconButton} h-11 w-11`} />
-                    <button type="button" onClick={() => onVer(p)} className={`${adminIconButton} h-11 w-11`} aria-label={`Vista rápida de ${p.name}`} title="Vista rápida"><FiEye className="h-4 w-4" aria-hidden="true" /></button>
-                    <Link href={`/admin/products/${p.id}`} className={`${adminIconButton} h-11 w-11`} aria-label={`Editar ${p.name}`} title="Editar"><FiEdit2 className="h-4 w-4" aria-hidden="true" /></Link>
-                    <button type="button" onClick={() => onDuplicar(p)} disabled={duplicando === p.id} className={`${adminIconButton} h-11 w-11`} aria-label={`Duplicar ${p.name}`} title="Duplicar"><FiCopy className="h-4 w-4" aria-hidden="true" /></button>
-                    <button type="button" onClick={() => onEliminar(p)} className={`${adminIconButton} h-11 w-11 hover:text-deal`} aria-label={`Mover ${p.name} a la papelera`} title="Mover a la papelera"><FiTrash2 className="h-4 w-4" aria-hidden="true" /></button>
+                    <button type="button" onClick={() => onVer(p)} className={`${adminIconButton} h-11 w-11`} aria-label={`Vista rápida de ${p.name}`} title="Vista rápida"><IconoVer className="h-4 w-4" aria-hidden="true" /></button>
+                    <Link href={`/admin/products/${p.id}`} className={`${adminIconButton} h-11 w-11`} aria-label={`Editar ${p.name}`} title="Editar"><IconoEditar className="h-4 w-4" aria-hidden="true" /></Link>
+                    <button type="button" onClick={() => onDuplicar(p)} disabled={duplicando === p.id} className={`${adminIconButton} h-11 w-11`} aria-label={`Duplicar ${p.name}`} title="Duplicar"><IconoCopiar className="h-4 w-4" aria-hidden="true" /></button>
+                    <button type="button" onClick={() => onEliminar(p)} className={`${adminIconButton} h-11 w-11 hover:text-deal`} aria-label={`Mover ${p.name} a la papelera`} title="Mover a la papelera"><IconoEliminar className="h-4 w-4" aria-hidden="true" /></button>
                   </div>
                 </td>
               </tr>

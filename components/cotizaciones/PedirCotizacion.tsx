@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { FiCheckCircle, FiSend } from 'react-icons/fi';
+import { IconoConfirmado, IconoEnviar } from '@/components/iconos';
 import HCaptchaWrapper, { type HCaptchaRefMethods } from '@/components/HCaptchaWrapper';
 import { useCart } from '@/contexts/CartContext';
 import { formatUSD } from '@/lib/currency';
@@ -73,7 +73,7 @@ export default function PedirCotizacion() {
   if (numero) {
     return (
       <div className={`${adminCard} text-center`} role="status">
-        <FiCheckCircle className="mx-auto h-12 w-12 text-success-strong" aria-hidden="true" />
+        <IconoConfirmado className="mx-auto h-12 w-12 text-success-strong" aria-hidden="true" />
         <h2 className="mt-3 text-xl font-bold text-ink">Recibimos tu solicitud</h2>
         <p className="mt-1 text-sm text-ink-soft">Número <strong className="font-mono text-ink">{numero}</strong>. Armamos tu presupuesto y te lo enviamos por WhatsApp o por correo, con un enlace para verlo, imprimirlo y aprobarlo.</p>
         <Link href="/productos" className={`${adminSecondaryButton} mt-5`}>Seguir viendo productos</Link>
@@ -158,7 +158,7 @@ export default function PedirCotizacion() {
       {error && <p className={error.campo ? adminError : adminNotice('danger')} role="alert">{error.texto}</p>}
 
       <button type="submit" disabled={enviando} className={`${adminPrimaryButton} w-full sm:w-auto`}>
-        <FiSend className="h-4 w-4" aria-hidden="true" />
+        <IconoEnviar className="h-4 w-4" aria-hidden="true" />
         {enviando ? 'Enviando…' : 'Pedir cotización'}
       </button>
     </form>

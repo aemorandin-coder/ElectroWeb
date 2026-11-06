@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FiUpload, FiFile, FiX, FiAlertCircle } from 'react-icons/fi';
+import { IconoArchivo, IconoCerrar, IconoError, IconoSubir } from '@/components/iconos';
 import Image from 'next/image';
 
 interface DocumentUploadProps {
@@ -87,7 +87,7 @@ export default function DocumentUpload({
             }`}
           >
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
-              <FiUpload className={`w-8 h-8 mb-2 ${disabled ? 'text-subtle' : 'text-brand-500'}`} />
+              <IconoSubir className={`w-8 h-8 mb-2 ${disabled ? 'text-subtle' : 'text-brand-500'}`} />
               <p className={`text-sm ${disabled ? 'text-subtle' : 'text-muted'}`}>
                 {/* C-138: decía "o arrastra aquí", pero soltar un archivo no hace nada */}
                 <span className="font-semibold text-ink">Toca para elegir el archivo</span>
@@ -111,7 +111,7 @@ export default function DocumentUpload({
                 />
               ) : (
                 <div className="w-16 h-16 bg-deal-bg rounded-lg flex items-center justify-center">
-                  <FiFile className="w-8 h-8 text-deal" />
+                  <IconoArchivo className="w-8 h-8 text-deal" />
                 </div>
               )}
               <div>
@@ -130,7 +130,7 @@ export default function DocumentUpload({
                 className="p-2 text-deal hover:bg-deal-bg rounded-lg transition-colors"
                 aria-label="Eliminar documento"
               >
-                <FiX className="w-5 h-5" />
+                <IconoCerrar className="w-5 h-5" />
               </button>
             )}
           </div>
@@ -141,7 +141,7 @@ export default function DocumentUpload({
               rel="noopener noreferrer"
               className="mt-2 text-xs text-brand-500 hover:underline flex items-center gap-1"
             >
-              <FiFile className="w-3 h-3" />
+              <IconoArchivo className="w-3 h-3" />
               Ver documento actual
             </a>
           )}
@@ -150,7 +150,7 @@ export default function DocumentUpload({
 
       {error && (
         <div className="flex items-center gap-2 text-xs text-deal bg-deal-bg p-2.5 rounded-lg border border-deal/20">
-          <FiAlertCircle className="w-4 h-4 flex-shrink-0" />
+          <IconoError className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
       )}

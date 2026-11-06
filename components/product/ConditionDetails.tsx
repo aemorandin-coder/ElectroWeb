@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FiInfo, FiShield } from 'react-icons/fi';
+import { IconoGarantia, IconoInfo } from '@/components/iconos';
 import type { PublicCondition } from '@/lib/dto/product';
 
 const plural = (n: number, one: string, many: string) => `${n.toLocaleString('es-VE')} ${n === 1 ? one : many}`;
@@ -16,7 +16,7 @@ export function ConditionNotice({ condition }: { condition: PublicCondition }) {
         {condition.gradeDefinition && <span className="text-ink-soft">{condition.gradeDefinition}</span>}
       </p>
       <p className="mt-2 flex items-center gap-1.5 text-ink-soft">
-        <FiShield className="h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+        <IconoGarantia className="h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
         Garantía de la tienda: {plural(condition.warrantyDays, 'día', 'días')}.{' '}
         <a href="#estado" className="font-semibold text-brand-700 hover:underline">
           Ver el estado del equipo
@@ -55,7 +55,7 @@ export default function ConditionDetails({ condition }: { condition: PublicCondi
         ))}
       </dl>
       <p className="mt-3 flex gap-2 rounded-xl bg-surface p-3 text-xs text-ink-soft">
-        <FiInfo className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <IconoInfo className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <span>
           La garantía la da la tienda: cubre fallas de funcionamiento, no el desgaste descrito aquí ni daños posteriores a la entrega. No hay devoluciones por
           cambio de opinión. Detalles en los{' '}

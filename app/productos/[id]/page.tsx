@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import {
+  IconoChevronDerecha, IconoDigital, IconoEnvio, IconoEstrella, IconoGarantia, IconoPaquete, IconoTarjeta, IconoTienda,
+  IconoUbicacion,
+} from '@/components/iconos';
 import { FaWhatsapp } from 'react-icons/fa6';
-import { FiBox, FiChevronRight, FiCreditCard, FiMapPin, FiShield, FiStar, FiTruck, FiZap } from 'react-icons/fi';
 import Footer from '@/components/Footer';
 import { PAYMENT_LABELS } from '@/components/home/TrustBar';
 import ProductGallery from '@/components/product/ProductGallery';
@@ -126,45 +129,45 @@ export default async function ProductPage({ params }: PageProps) {
     envio?.missingFreeShippingUSD != null && settings.freeDeliveryThresholdUSD ? `Envío gratis en compras desde ${formatUSD(settings.freeDeliveryThresholdUSD)}.` : '',
   ].filter(Boolean).join(' ');
 
-  const delivery: Array<{ Icon: typeof FiTruck; title: string; text: string; link?: { href: string; label: string } }> = [
+  const delivery: Array<{ Icon: typeof IconoEnvio; title: string; text: string; link?: { href: string; label: string } }> = [
     ...(isDigital
-      ? [{ Icon: FiZap, title: deliveryMode.store, text: deliveryMode.storeHelp }]
+      ? [{ Icon: IconoDigital, title: deliveryMode.store, text: deliveryMode.storeHelp }]
       : settings.deliveryEnabled
         ? [envioGratis
-          ? { Icon: FiTruck, title: 'Envío gratis a toda Venezuela', text: 'Por ZOOM o MRW: el envío lo paga la tienda' }
-          : { Icon: FiTruck, title: 'Envíos a toda Venezuela', text: textoEnvio }]
+          ? { Icon: IconoEnvio, title: 'Envío gratis a toda Venezuela', text: 'Por ZOOM o MRW: el envío lo paga la tienda' }
+          : { Icon: IconoEnvio, title: 'Envíos a toda Venezuela', text: textoEnvio }]
         : []),
     ...(!isDigital && settings.localDeliveryEnabled
       ? [{
-        Icon: FiMapPin,
+        Icon: IconoUbicacion,
         title: 'Delivery en Guanare',
         text: envioGratis || !(settings.deliveryFeeUSD > 0) ? 'Gratis' : `${formatUSD(settings.deliveryFeeUSD)} por pedido`,
       }]
       : []),
-    ...(!isDigital && settings.pickupEnabled ? [{ Icon: FiMapPin, title: 'Retiro en tienda', text: settings.pickupAddress || 'Coordina el retiro al comprar' }] : []),
+    ...(!isDigital && settings.pickupEnabled ? [{ Icon: IconoTienda, title: 'Retiro en tienda', text: settings.pickupAddress || 'Coordina el retiro al comprar' }] : []),
     // C-154: la garantía con sus días también en los productos nuevos, y qué hace la tienda si procede (términos, 6.3)
     product.warrantyDays
       ? {
-        Icon: FiShield,
+        Icon: IconoGarantia,
         title: `Garantía de la tienda: ${product.warrantyDays} días`,
         text: `${product.condition ? '' : 'Producto 100% original. '}Por fallas de funcionamiento: se repara; si no se puede, se cambia por uno igual o equivalente; y si tampoco, se devuelve lo pagado por el producto en Puntos ES.`,
         link: { href: '/terminos#garantia', label: 'Ver condiciones' },
       }
-      : { Icon: FiShield, title: 'Producto 100% original', text: 'Con respaldo de la tienda' },
+      : { Icon: IconoGarantia, title: 'Producto 100% original', text: 'Con respaldo de la tienda' },
     ...(paymentKinds.length > 0
-      ? [{ Icon: FiCreditCard, title: 'Formas de pago', text: paymentKinds.map((kind) => PAYMENT_LABELS[kind].label).join(' · ') }]
+      ? [{ Icon: IconoTarjeta, title: 'Formas de pago', text: paymentKinds.map((kind) => PAYMENT_LABELS[kind].label).join(' · ') }]
       : []),
   ];
 
   // C-154: lo esencial en una línea, justo encima del botón de compra (el detalle queda debajo)
-  const resumen: Array<{ Icon: typeof FiTruck; text: string }> = isDigital
-    ? [{ Icon: FiZap, text: deliveryMode.store }]
+  const resumen: Array<{ Icon: typeof IconoEnvio; text: string }> = isDigital
+    ? [{ Icon: IconoDigital, text: deliveryMode.store }]
     : [
-      ...(product.warrantyDays ? [{ Icon: FiShield, text: `Garantía ${product.warrantyDays} días` }] : []),
+      ...(product.warrantyDays ? [{ Icon: IconoGarantia, text: `Garantía ${product.warrantyDays} días` }] : []),
       ...(settings.deliveryEnabled
-        ? [{ Icon: FiTruck, text: envioGratis ? 'Envío gratis' : 'Envío nacional' }]
-        : settings.pickupEnabled ? [{ Icon: FiMapPin, text: 'Retiro en tienda' }] : []),
-      ...(settings.deliveryEnabled && embalaje > 0 ? [{ Icon: FiBox, text: `Embalaje ${formatUSD(embalaje)}` }] : []),
+        ? [{ Icon: IconoEnvio, text: envioGratis ? 'Envío gratis' : 'Envío nacional' }]
+        : settings.pickupEnabled ? [{ Icon: IconoTienda, text: 'Retiro en tienda' }] : []),
+      ...(settings.deliveryEnabled && embalaje > 0 ? [{ Icon: IconoPaquete, text: `Embalaje ${formatUSD(embalaje)}` }] : []),
     ];
 
   return (
@@ -186,11 +189,11 @@ export default async function ProductPage({ params }: PageProps) {
           <nav aria-label="Ruta de navegación" className="mb-2 lg:mb-3">
             <ol className="flex min-w-0 items-center gap-1 text-xs text-muted">
               <li className="shrink-0"><Link href="/" className="hover:text-brand-600 hover:underline">Inicio</Link></li>
-              <li aria-hidden="true" className="shrink-0"><FiChevronRight className="h-3 w-3" /></li>
+              <li aria-hidden="true" className="shrink-0"><IconoChevronDerecha className="h-3 w-3" /></li>
               <li className="shrink-0"><Link href="/productos" className="hover:text-brand-600 hover:underline">Productos</Link></li>
-              <li aria-hidden="true" className="shrink-0"><FiChevronRight className="h-3 w-3" /></li>
+              <li aria-hidden="true" className="shrink-0"><IconoChevronDerecha className="h-3 w-3" /></li>
               <li className="shrink-0"><Link href={`/categorias/${product.category.slug}`} className="hover:text-brand-600 hover:underline">{product.category.name}</Link></li>
-              <li aria-hidden="true" className="hidden shrink-0 sm:block"><FiChevronRight className="h-3 w-3" /></li>
+              <li aria-hidden="true" className="hidden shrink-0 sm:block"><IconoChevronDerecha className="h-3 w-3" /></li>
               <li className="hidden min-w-0 sm:block"><span aria-current="page" className="block truncate text-ink-soft">{product.name}</span></li>
             </ol>
           </nav>
@@ -226,7 +229,7 @@ export default async function ProductPage({ params }: PageProps) {
                 <a href="#resenas" className="mt-2 inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-brand-700">
                   <span className="flex text-warning" aria-hidden="true">
                     {[1, 2, 3, 4, 5].map((n) => (
-                      <FiStar key={n} className={`h-4 w-4 ${n <= Math.round(summary.average) ? 'fill-current' : 'text-line'}`} />
+                      <IconoEstrella key={n} lleno={n <= Math.round(summary.average)} className={`h-4 w-4 ${n <= Math.round(summary.average) ? '' : 'text-line'}`} />
                     ))}
                   </span>
                   {summary.count > 0 ? (

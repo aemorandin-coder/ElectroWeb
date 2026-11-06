@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { FiX } from 'react-icons/fi';
+import { IconoCerrar } from '@/components/iconos';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { safeHotAdLink, shouldShowHotAd, type HotAdRecord } from '@/lib/hot-ad';
 import type { HotAd } from '@/lib/queries/hot-ad';
@@ -164,7 +164,7 @@ export default function HotAdOverlay({ hotAd, tarjeta }: { hotAd: HotAd; tarjeta
       aria-label="Cerrar promoción"
       className={`absolute -right-2 -top-2 lg:-right-4 lg:-top-4 ${tarjeta ? 'z-10 ' : ''}flex h-11 w-11 lg:h-10 lg:w-10 items-center justify-center rounded-full bg-white text-ink shadow-lg hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer transition active:scale-95`}
     >
-      <FiX className="h-6 w-6 lg:h-5 lg:w-5" aria-hidden="true" />
+      <IconoCerrar className="h-6 w-6 lg:h-5 lg:w-5" aria-hidden="true" />
     </button>
   );
 

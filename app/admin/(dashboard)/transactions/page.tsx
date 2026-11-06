@@ -6,12 +6,10 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import {
-    FiDownload, FiCheck, FiX, FiFilter, FiRefreshCw,
-    FiAlertCircle, FiSearch, FiDollarSign, FiClock,
-    FiCheckCircle, FiTrendingUp, FiSmartphone,
-    FiCreditCard, FiGlobe, FiArrowUpCircle, FiArrowDownCircle,
-    FiRepeat, FiGift, FiPackage,
-} from 'react-icons/fi';
+  IconoActualizar, IconoBillete, IconoBuscar, IconoCerrar, IconoCheck, IconoConfirmado, IconoDescargar,
+  IconoEntradaPuntos, IconoError, IconoFiltro, IconoPagoMovil, IconoPaquete, IconoRegalo, IconoReloj, IconoRepetir,
+  IconoSalidaPuntos, IconoTarjeta, IconoVentas, IconoWeb,
+} from '@/components/iconos';
 import { SiBinance } from 'react-icons/si';
 import { formatPaymentMethod, isCreditTransaction } from '@/lib/format-helpers';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -52,17 +50,17 @@ import { EnVivo } from '@/components/ui/EnVivo';
 
 function PaymentIcon({ method, className = 'w-3.5 h-3.5' }: { method: string | null | undefined; className?: string }) {
     switch (method) {
-        case 'MOBILE_PAYMENT':   return <FiSmartphone className={className} />;
-        case 'BANK_TRANSFER':    return <FiDollarSign className={className} />;
-        case 'ZELLE':            return <FiGlobe className={className} />;
-        case 'ZINLI':            return <FiGlobe className={className} />;
-        case 'PAYPAL':           return <FiGlobe className={className} />;
+        case 'MOBILE_PAYMENT':   return <IconoPagoMovil className={className} />;
+        case 'BANK_TRANSFER':    return <IconoBillete className={className} />;
+        case 'ZELLE':            return <IconoWeb className={className} />;
+        case 'ZINLI':            return <IconoWeb className={className} />;
+        case 'PAYPAL':           return <IconoWeb className={className} />;
         case 'CRYPTO':           return <SiBinance className={className} />;
-        case 'CASH':             return <FiDollarSign className={className} />;
-        case 'CREDIT_CARD':      return <FiCreditCard className={className} />;
-        case 'BALANCE':          return <FiArrowUpCircle className={className} />;
-        case 'MERCANTIL_PANAMA': return <FiGlobe className={className} />;
-        default:                 return <FiDollarSign className={className} />;
+        case 'CASH':             return <IconoBillete className={className} />;
+        case 'CREDIT_CARD':      return <IconoTarjeta className={className} />;
+        case 'BALANCE':          return <IconoEntradaPuntos className={className} />;
+        case 'MERCANTIL_PANAMA': return <IconoWeb className={className} />;
+        default:                 return <IconoBillete className={className} />;
     }
 }
 
@@ -111,12 +109,12 @@ const REJECTION_REASONS = [
 // ─── Design tokens ───────────────────────────────────────────────────────────
 
 const TYPE_CONFIG: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
-    RECHARGE:   { label: 'Recarga',    cls: adminBadge('success'), icon: <FiArrowUpCircle   className="w-3 h-3" /> },
-    DEPOSIT:    { label: 'Abono',      cls: adminBadge('success'), icon: <FiArrowUpCircle   className="w-3 h-3" /> },
-    PURCHASE:   { label: 'Compra',     cls: adminBadge('brand'),   icon: <FiPackage         className="w-3 h-3" /> },
-    REFUND:     { label: 'Reembolso',  cls: adminBadge('warning'), icon: <FiRepeat          className="w-3 h-3" /> },
-    BONUS:      { label: 'Bono',       cls: adminBadge('success'), icon: <FiGift            className="w-3 h-3" /> },
-    WITHDRAWAL: { label: 'Retiro',     cls: adminBadge('neutral'), icon: <FiArrowDownCircle className="w-3 h-3" /> },
+    RECHARGE:   { label: 'Recarga',    cls: adminBadge('success'), icon: <IconoEntradaPuntos   className="w-3 h-3" /> },
+    DEPOSIT:    { label: 'Abono',      cls: adminBadge('success'), icon: <IconoEntradaPuntos   className="w-3 h-3" /> },
+    PURCHASE:   { label: 'Compra',     cls: adminBadge('brand'),   icon: <IconoPaquete         className="w-3 h-3" /> },
+    REFUND:     { label: 'Reembolso',  cls: adminBadge('warning'), icon: <IconoRepetir          className="w-3 h-3" /> },
+    BONUS:      { label: 'Bono',       cls: adminBadge('success'), icon: <IconoRegalo            className="w-3 h-3" /> },
+    WITHDRAWAL: { label: 'Retiro',     cls: adminBadge('neutral'), icon: <IconoSalidaPuntos className="w-3 h-3" /> },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; cls: string }> = {
@@ -340,14 +338,14 @@ export default function TransactionsPage() {
                         aria-label="Actualizar transacciones"
                         title="Actualizar"
                     >
-                        <FiRefreshCw className={`w-4 h-4 text-muted ${loading ? 'animate-spin' : ''}`} />
+                        <IconoActualizar className={`w-4 h-4 text-muted ${loading ? 'animate-spin' : ''}`} />
                     </button>
                     <button
                         onClick={exportToCSV}
                         disabled={displayed.length === 0}
                         className={adminSecondaryButton}
                     >
-                        <FiDownload className="w-3.5 h-3.5" />
+                        <IconoDescargar className="w-3.5 h-3.5" />
                         Exportar CSV
                     </button>
                 </div>
@@ -367,7 +365,7 @@ export default function TransactionsPage() {
             <div className="flex flex-wrap gap-2 items-center">
                 {/* Search */}
                 <div className="relative flex-1 min-w-[200px]">
-                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle" />
+                    <IconoBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle" />
                     <input
                         type="text"
                         aria-label="Buscar por nombre, correo o referencia"
@@ -378,14 +376,14 @@ export default function TransactionsPage() {
                     />
                     {searchQuery && (
                         <button onClick={() => setSearchQuery('')} aria-label="Limpiar búsqueda" title="Limpiar búsqueda" className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted">
-                            <FiX className="w-4 h-4" />
+                            <IconoCerrar className="w-4 h-4" />
                         </button>
                     )}
                 </div>
 
                 {/* Type */}
                 <div className="relative">
-                    <FiFilter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle pointer-events-none" />
+                    <IconoFiltro className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle pointer-events-none" />
                     <select
                         aria-label="Tipo de transacción"
                         value={filterType}
@@ -425,7 +423,7 @@ export default function TransactionsPage() {
             {stats && (
                 <div className="order-3 flex gap-3 overflow-x-auto pb-1 lg:order-none xl:grid xl:grid-cols-4">
                     <StatCard
-                        icon={<FiClock className="w-5 h-5" />}
+                        icon={<IconoReloj className="w-5 h-5" />}
                         label="Pendientes"
                         value={stats.pendingCount}
                         sub={<span className={stats.pendingCount > 0 ? 'text-warning-strong font-semibold' : 'text-muted'}>
@@ -434,19 +432,19 @@ export default function TransactionsPage() {
                         accent={stats.pendingCount > 0}
                     />
                     <StatCard
-                        icon={<FiCheckCircle className="w-5 h-5 text-success-strong" />}
+                        icon={<IconoConfirmado className="w-5 h-5 text-success-strong" />}
                         label="Aprobadas hoy"
                         value={stats.completedTodayCount}
                         sub={<span className="text-success-strong font-semibold">+{fmtAmount(stats.completedTodayAmount)}</span>}
                     />
                     <StatCard
-                        icon={<FiTrendingUp className="w-5 h-5 text-brand-500" />}
+                        icon={<IconoVentas className="w-5 h-5 text-brand-500" />}
                         label="Esta semana"
                         value={stats.weekCount}
                         sub={<span className="text-brand-500 font-semibold">{fmtAmount(stats.weekAmount)}</span>}
                     />
                     <StatCard
-                        icon={<FiX className="w-5 h-5 text-deal" />}
+                        icon={<IconoCerrar className="w-5 h-5 text-deal" />}
                         label="Rechazadas hoy"
                         value={stats.cancelledTodayCount}
                         sub={<span className="text-muted">En el día</span>}
@@ -466,7 +464,7 @@ export default function TransactionsPage() {
                 ) : displayed.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-muted gap-3 py-16">
                         <div className="w-14 h-14 rounded-2xl bg-surface border border-line flex items-center justify-center">
-                            <FiDollarSign className="w-6 h-6 text-line-strong" />
+                            <IconoBillete className="w-6 h-6 text-line-strong" />
                         </div>
                         <p className="text-sm font-medium">
                             {searchQuery ? 'Sin resultados para la búsqueda' : 'No hay transacciones'}
@@ -544,7 +542,7 @@ export default function TransactionsPage() {
 
                                         {t.status === 'CANCELLED' && t.rejectionReason && (
                                             <div className="flex items-start gap-1.5 text-xs text-deal mb-3">
-                                                <FiAlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                                                <IconoError className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                                                 <span>{t.rejectionReason}</span>
                                             </div>
                                         )}
@@ -556,7 +554,7 @@ export default function TransactionsPage() {
                                                     disabled={processingId === t.id}
                                                     className={`${adminSuccessButton} flex-1 px-3`}
                                                 >
-                                                    {processingId === t.id ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiCheck className="w-3.5 h-3.5" />}
+                                                    {processingId === t.id ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <IconoCheck className="w-3.5 h-3.5" />}
                                                     Aprobar
                                                 </button>
                                                 <button
@@ -564,7 +562,7 @@ export default function TransactionsPage() {
                                                     disabled={processingId === t.id}
                                                     className={`${adminSecondaryButton} flex-1 px-3 text-deal`}
                                                 >
-                                                    <FiX className="w-3.5 h-3.5" />
+                                                    <IconoCerrar className="w-3.5 h-3.5" />
                                                     Rechazar
                                                 </button>
                                             </div>
@@ -659,7 +657,7 @@ export default function TransactionsPage() {
                                                     </span>
                                                     {t.status === 'CANCELLED' && t.rejectionReason && (
                                                         <p className="text-xs text-deal flex items-center gap-1 mt-1">
-                                                            <FiAlertCircle className="w-3 h-3 flex-shrink-0" />
+                                                            <IconoError className="w-3 h-3 flex-shrink-0" />
                                                             <span className="truncate max-w-[120px]">{t.rejectionReason}</span>
                                                         </p>
                                                     )}
@@ -680,7 +678,7 @@ export default function TransactionsPage() {
                                                     {t.status === 'PENDING' && t.type === 'RECHARGE' ? (
                                                         anim ? (
                                                             <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${anim === 'approve' ? 'bg-success-strong/15 text-success-strong' : 'bg-deal-bg text-deal'}`}>
-                                                                {anim === 'approve' ? <><FiCheck className="w-3.5 h-3.5" /> Aprobada</> : <><FiX className="w-3.5 h-3.5" /> Rechazada</>}
+                                                                {anim === 'approve' ? <><IconoCheck className="w-3.5 h-3.5" /> Aprobada</> : <><IconoCerrar className="w-3.5 h-3.5" /> Rechazada</>}
                                                             </span>
                                                         ) : (
                                                             <div className="flex justify-end gap-1.5">
@@ -693,7 +691,7 @@ export default function TransactionsPage() {
                                                                 >
                                                                     {processingId === t.id
                                                                         ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                                        : <FiCheck className="w-4 h-4" />}
+                                                                        : <IconoCheck className="w-4 h-4" />}
                                                                 </button>
                                                                 <button
                                                                     onClick={() => openRejectModal(t)}
@@ -702,7 +700,7 @@ export default function TransactionsPage() {
                                                                     aria-label="Rechazar recarga"
                                                                     title="Rechazar recarga"
                                                                 >
-                                                                    <FiX className="w-4 h-4" />
+                                                                    <IconoCerrar className="w-4 h-4" />
                                                                 </button>
                                                             </div>
                                                         )
@@ -728,7 +726,7 @@ export default function TransactionsPage() {
                         <div className={adminModalHeader}>
                             <div className="flex items-center gap-3">
                                 <div className="w-9 h-9 rounded-lg bg-success-strong/15 flex items-center justify-center">
-                                    <FiCheck className="w-5 h-5 text-success-strong" />
+                                    <IconoCheck className="w-5 h-5 text-success-strong" />
                                 </div>
                                 <div>
                                     <h2 className={adminModalTitle}>Confirmar Aprobación</h2>
@@ -792,7 +790,7 @@ export default function TransactionsPage() {
                             >
                                 {processingId === approvingTransaction.id
                                     ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    : <FiCheck className="w-4 h-4" />}
+                                    : <IconoCheck className="w-4 h-4" />}
                                 Aprobar Recarga
                             </button>
                         </div>
@@ -809,7 +807,7 @@ export default function TransactionsPage() {
                         <div className={adminModalHeader}>
                             <div className="flex items-center gap-3">
                                 <div className="w-9 h-9 rounded-lg bg-deal-bg flex items-center justify-center">
-                                    <FiX className="w-5 h-5 text-deal" />
+                                    <IconoCerrar className="w-5 h-5 text-deal" />
                                 </div>
                                 <div>
                                     <h2 className={adminModalTitle}>Rechazar Transacción</h2>
@@ -881,7 +879,7 @@ export default function TransactionsPage() {
                             >
                                 {processingId === rejectingTransaction.id
                                     ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    : <FiX className="w-4 h-4" />}
+                                    : <IconoCerrar className="w-4 h-4" />}
                                 Confirmar Rechazo
                             </button>
                         </div>

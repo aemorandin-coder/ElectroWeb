@@ -4,8 +4,7 @@ import Image from 'next/image';
 import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { FiChevronRight, FiExternalLink, FiPackage } from 'react-icons/fi';
-import { BsCardList } from 'react-icons/bs';
+import { IconoAbrirAparte, IconoChevronDerecha, IconoDigital, IconoPaquete } from '@/components/iconos';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { adminBadge } from '@/lib/admin-ui';
 import { estadoParaCliente, pasosPedido } from '@/lib/order-pasos';
@@ -71,7 +70,7 @@ export default function PedidoCard({ pedido, onDetalle }: { pedido: PedidoClient
                 {foto ? (
                   <Image src={foto} alt={item.productName} fill sizes="48px" className="object-contain" />
                 ) : (
-                  <span className="flex h-full items-center justify-center text-subtle"><FiPackage className="h-5 w-5" aria-hidden="true" /></span>
+                  <span className="flex h-full items-center justify-center text-subtle"><IconoPaquete className="h-5 w-5" aria-hidden="true" /></span>
                 )}
                 {item.quantity > 1 && (
                   <span className="absolute bottom-0 right-0 rounded-tl-md bg-ink/80 px-1 text-[11px] font-semibold text-white">×{item.quantity}</span>
@@ -109,7 +108,7 @@ export default function PedidoCard({ pedido, onDetalle }: { pedido: PedidoClient
               // Fondo blanco: el logo azul de ZOOM no se ve sobre el azul de la tienda
               className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-brand-200 bg-white px-3 text-sm font-semibold text-ink hover:bg-brand-50"
             >
-              <FiExternalLink className="h-4 w-4 text-brand-600" aria-hidden="true" /> Rastrear en{' '}
+              <IconoAbrirAparte className="h-4 w-4 text-brand-600" aria-hidden="true" /> Rastrear en{' '}
               {pedido.shippingCarrier === 'ZOOM' || pedido.shippingCarrier === 'MRW'
                 ? <LogoEmpresa empresa={pedido.shippingCarrier} className="h-4" />
                 : empresa}
@@ -122,7 +121,7 @@ export default function PedidoCard({ pedido, onDetalle }: { pedido: PedidoClient
         )}
         {conCodigos && (
           <Link href={`/customer/orders/${pedido.id}/digital`} className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-brand-500 px-3 text-sm font-semibold text-white hover:bg-brand-600">
-            <BsCardList className="h-4 w-4" aria-hidden="true" /> Ver mis códigos
+            <IconoDigital className="h-4 w-4" aria-hidden="true" /> Ver mis códigos
           </Link>
         )}
         <button
@@ -130,7 +129,7 @@ export default function PedidoCard({ pedido, onDetalle }: { pedido: PedidoClient
           onClick={onDetalle}
           className="ml-auto inline-flex h-10 items-center gap-1 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-surface"
         >
-          Detalle y recibo <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+          Detalle y recibo <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     </article>

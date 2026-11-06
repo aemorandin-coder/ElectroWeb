@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { compartirPagina } from '@/lib/og/datos';
 import Link from 'next/link';
-import { FiGrid } from 'react-icons/fi';
+import { IconoCuadricula } from '@/components/iconos';
 import Footer from '@/components/Footer';
 import PublicHeader from '@/components/public/PublicHeader';
 import Container from '@/components/ui/Container';
@@ -42,7 +42,7 @@ export default async function CategoriasPage() {
       <main>
         <PageHeader
           breadcrumbs={[{ label: 'Categorías' }]}
-          icon={<FiGrid />}
+          icon={<IconoCuadricula />}
           eyebrow="Catálogo"
           title="Categorías"
           description="Elige una categoría para ver sus productos con filtros, precios y disponibilidad."

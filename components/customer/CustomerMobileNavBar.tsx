@@ -8,15 +8,15 @@
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { IconType } from 'react-icons';
-import { FiCreditCard, FiHeart, FiHome, FiMenu, FiPackage } from 'react-icons/fi';
+import { IconoFavoritos, IconoInicio, IconoMenu, IconoPaquete, IconoTarjeta } from '@/components/iconos';
+import type { IconType } from '@/components/iconos';
 import { useMontado } from '@/lib/hooks/useMontado';
 
 const ITEMS: Array<{ href: string; label: string; Icono: IconType }> = [
-  { href: '/customer', label: 'Inicio', Icono: FiHome },
-  { href: '/customer/orders', label: 'Pedidos', Icono: FiPackage },
-  { href: '/customer/balance', label: 'Puntos ES', Icono: FiCreditCard },
-  { href: '/customer/wishlist', label: 'Favoritos', Icono: FiHeart },
+  { href: '/customer', label: 'Inicio', Icono: IconoInicio },
+  { href: '/customer/orders', label: 'Pedidos', Icono: IconoPaquete },
+  { href: '/customer/balance', label: 'Puntos ES', Icono: IconoTarjeta },
+  { href: '/customer/wishlist', label: 'Favoritos', Icono: IconoFavoritos },
 ];
 
 const base = 'flex h-14 flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-xl text-xs font-semibold transition-colors';
@@ -58,7 +58,7 @@ export default function CustomerMobileNavBar() {
             aria-controls="customer-sidebar"
             className={`${base} w-full text-ink-soft active:bg-surface`}
           >
-            <FiMenu className="h-5 w-5" aria-hidden="true" />
+            <IconoMenu className="h-5 w-5" aria-hidden="true" />
             Más
           </button>
         </li>

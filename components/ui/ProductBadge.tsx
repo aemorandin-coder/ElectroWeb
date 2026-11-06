@@ -1,4 +1,4 @@
-import { FiTruck, FiZap } from 'react-icons/fi';
+import { IconoDigital, IconoEnvio } from '@/components/iconos';
 
 export type ProductBadgeVariant = 'deal' | 'new' | 'digital' | 'soldout' | 'tag' | 'freeShipping' | 'used';
 
@@ -23,8 +23,8 @@ interface ProductBadgeProps {
 export default function ProductBadge({ variant, children }: ProductBadgeProps) {
   return (
     <span className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-semibold tracking-wide ${VARIANT_CLASSES[variant]}`}>
-      {variant === 'digital' && <FiZap className="h-3 w-3" aria-hidden="true" />}
-      {variant === 'freeShipping' && <FiTruck className="h-3 w-3" aria-hidden="true" />}
+      {variant === 'digital' && <IconoDigital className="h-3 w-3" aria-hidden="true" />}
+      {variant === 'freeShipping' && <IconoEnvio className="h-3 w-3" aria-hidden="true" />}
       {children}
     </span>
   );

@@ -5,7 +5,7 @@ import { useStockEnVivo } from '@/lib/realtime/hooks';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
-import { FiMinus, FiPlus, FiShoppingCart } from 'react-icons/fi';
+import { IconoCarrito, IconoMas, IconoMenos } from '@/components/iconos';
 import Price from '@/components/ui/Price';
 import { getStockLabel } from '@/components/ui/productCardData';
 import { useCart } from '@/contexts/CartContext';
@@ -228,11 +228,11 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
             <div className="flex items-stretch gap-3">
               <div className="flex shrink-0 items-center overflow-hidden rounded-lg border border-line bg-white" role="group" aria-label="Cantidad">
                 <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} disabled={quantity <= 1} aria-label="Quitar una unidad" className={stepperButton}>
-                  <FiMinus className="h-4 w-4" aria-hidden="true" />
+                  <IconoMenos className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <span className="w-9 text-center text-sm font-semibold text-ink" aria-live="polite">{quantity}</span>
                 <button type="button" onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))} disabled={quantity >= maxQuantity} aria-label="Agregar una unidad" className={stepperButton}>
-                  <FiPlus className="h-4 w-4" aria-hidden="true" />
+                  <IconoMas className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
               <button
@@ -241,7 +241,7 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
                 aria-label="Agregar al carrito"
                 className="inline-flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
               >
-                <FiShoppingCart className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <IconoCarrito className="h-4 w-4 shrink-0" aria-hidden="true" />
                 {/* Junto al selector de cantidad, a 360px el texto largo partía en dos líneas */}
                 <span className="sm:hidden">Agregar</span>
                 <span className="hidden sm:inline">Agregar al carrito</span>
@@ -279,7 +279,7 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
               onClick={addToCart}
               className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
             >
-              <FiShoppingCart className="h-4 w-4" aria-hidden="true" />
+              <IconoCarrito className="h-4 w-4" aria-hidden="true" />
               Agregar
             </button>
           </div>

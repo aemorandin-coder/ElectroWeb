@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { FiBell } from 'react-icons/fi';
+import { IconoNotificaciones } from '@/components/iconos';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useNotifications } from './NotificationProvider';
 import NotificationCenter from './NotificationCenter';
@@ -54,7 +54,7 @@ export default function NotificationBell() {
         aria-haspopup="dialog"
         className={`relative inline-flex h-10 w-10 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-surface hover:text-ink ${open ? 'bg-surface text-ink' : ''}`}
       >
-        <FiBell className="h-5 w-5" aria-hidden="true" />
+        <IconoNotificaciones className="h-5 w-5" aria-hidden="true" />
         {unreadCount > 0 && (
           <span className="absolute right-1 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-deal px-1 text-[11px] font-bold leading-none text-white" aria-hidden="true">
             {unreadCount > 99 ? '99+' : unreadCount}

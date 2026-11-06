@@ -399,8 +399,9 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - Tarea chica: `motion-safe:animate-fadeIn` no genera nada con Tailwind 4, así que el popup, `MobileNavBar` y `GuidedTour` no hacen su entrada. Hay que definir la animación en `@theme`.
 
 **De C-188 (06/11), lo decide Andrés** (`estado/C-188.md`, "Propuesto"):
-- Cerrar el selector de íconos de categorías a los del pack: hoy acepta cualquier librería, y el checkout todavía baja 6,3 MB de JS (4,97 MB son Simple Icons por los logos de Binance, Zelle y PayPal). Con eso se quitan `lucide-react` y las tres `@fortawesome/*`, que nadie usa.
-- "Accesorios Gaming" sigue con el control: se puede elegir el mouse del pack en Admin → Categorías.
+- Hecho en C-189 (06/11): el selector de categorías ofrece solo los íconos del pack, y se quitaron `lucide-react` y `@fortawesome`.
+- "Accesorios Gaming": Andrés elige el ícono él mismo en Admin → Categorías (06/11).
+- Dependencias (de `npm audit`, 06/11): pasar a Next 16.4.x en cuanto tenga dos semanas publicada, como dice la regla de dependencias; `zod` se arregla con `npm audit fix` sin cambio de versión mayor. Es una tarea corta aparte.
 - Tarea aparte: los 10 métodos de pago de la recarga de Puntos ES, una etiqueta sin % y los íconos de los flyers de ElectroStudio, redibujados con el pack.
 - Los dos tonos también en la lista de entrega de la ficha y en "Más de ElectroShop", si a Andrés le gustan en el inicio.
 

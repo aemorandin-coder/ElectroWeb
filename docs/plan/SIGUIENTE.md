@@ -34,6 +34,8 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente: `v1.0.0-rc.20` (C-186, el tema navideño, y C-188, los íconos propios)
+> **En preparación, `v1.0.0-rc.21`:** suma C-189 (el selector de íconos de categorías cerrado al pack; el checkout baja de 6,3 a 1,3 MB de JS) y C-190 (Ideas para regalar, la fecha límite antes del 24 y los borradores de campaña, en curso). Si Andrés prefiere un solo deploy, este bloque se reemplaza por el de rc.21 cuando C-190 esté en `main`.
+
 Andrés decidió subir los dos juntos. C-188 no cambia la base: el SQL de abajo es solo el de C-186.
 
 Producción está en `v1.0.0-rc.19`; el bloque de rc.19 pasó a `HISTORIAL.md`. Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.20`. **Desde el deploy se ven los íconos nuevos. La Navidad, en cambio, no se ve hasta que se encienda en el panel.**

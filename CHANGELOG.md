@@ -10,6 +10,17 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.21] - 2026-11-06
+### Productos 1.4.0 (C-189)
+- **El selector de íconos de Categorías ofrece solo los íconos propios de Electro Shop** (aprobado por Andrés). Son 35, ordenados por tema, y ya no se importan íconos de otras librerías.
+- Las categorías que ya existen se ven igual. Lo nuevo se guarda con el nombre del pack, y un nombre desconocido muestra "Otros".
+- **Mucho menos JavaScript:**
+  - el checkout pasa de 6,3 MB a 1,3 MB sin comprimir (de 2,3 MB a 370 KB transferidos);
+  - los códigos digitales del cliente pasan de 9,8 MB a 2 MB;
+  - el sitio completo pasa de 36 MB a 4,7 MB.
+- Fuera las dependencias que nadie usaba: `lucide-react` y las de `@fortawesome`.
+- Sin cambio de base.
+
 ## [1.0.0-rc.20] - 2026-11-06
 ### Tienda 1.3.0 (C-186)
 - **Tema navideño, con el diseño de la marca.** Con el tema encendido:

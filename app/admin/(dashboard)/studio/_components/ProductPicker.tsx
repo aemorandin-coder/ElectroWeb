@@ -8,8 +8,21 @@ import { formatUSD } from '@/lib/currency';
 import { TRAMOS_REGALO, type StudioStoreProduct, type TramoRegalo } from '@/lib/studio/schema';
 import { smallButton } from './ui';
 
-/** Buscar un producto publicado por nombre o código corto y elegirlo para la historia. C-193: con `tramo`, solo los de ese tramo */
-export default function ProductPicker({ onPick, onCancel, tramo }: { onPick: (p: StudioStoreProduct) => void; onCancel?: () => void; tramo?: TramoRegalo }) {
+/**
+ * Buscar un producto publicado por nombre o código corto y elegirlo para la historia. C-193: con `tramo`, solo los de ese
+ * tramo; `excluir`, los que ya están en la historia (no se elige dos veces el mismo)
+ */
+export default function ProductPicker({
+  onPick,
+  onCancel,
+  tramo,
+  excluir = [],
+}: {
+  onPick: (p: StudioStoreProduct) => void;
+  onCancel?: () => void;
+  tramo?: TramoRegalo;
+  excluir?: string[];
+}) {
   const [q, setQ] = useState('');
   const [results, setResults] = useState<StudioStoreProduct[]>([]);
   const [searching, setSearching] = useState(false);
@@ -57,7 +70,7 @@ export default function ProductPicker({ onPick, onCancel, tramo }: { onPick: (p:
         )}
       </div>
       <ul className="flex max-h-72 flex-col gap-1 overflow-y-auto" aria-live="polite" aria-busy={searching}>
-        {results.map((p) => (
+        {results.filter((p) => !excluir.includes(p.id)).map((p) => (
           <li key={p.id}>
             <button
               type="button"

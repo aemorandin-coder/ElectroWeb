@@ -215,7 +215,7 @@ export default function StudioWizard() {
           ) : template === 'regalos' && !tramo ? (
             <p className={adminHint}>Elige el presupuesto: después salen solo los productos que caben en él, como en Ideas para regalar.</p>
           ) : (
-            <ProductPicker key={`${tramo ?? ''}-${picks.length}`} onPick={pick} tramo={template === 'regalos' && tramo ? tramo : undefined} />
+            <ProductPicker key={`${tramo ?? ''}-${picks.length}`} onPick={pick} tramo={template === 'regalos' && tramo ? tramo : undefined} excluir={picks.map((p) => p.id)} />
           )}
 
           <div className="flex flex-wrap gap-2 border-t border-line pt-3">

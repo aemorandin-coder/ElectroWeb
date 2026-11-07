@@ -33,14 +33,26 @@
   const nariz = `<path d="M196 196 C192 206 194 212 204 212" fill="none" ${s4}/>`;
   const rubor = (o) => `<ellipse cx="156" cy="214" rx="13" ry="6.5" fill="#f4a493" opacity="${f(o)}"/><ellipse cx="244" cy="214" rx="13" ry="6.5" fill="#f4a493" opacity="${f(o)}"/>`;
 
-  // Ojos: abre (0 cerrado .. 1 normal .. 1.15 sorpresa), mirada (mx, my en -1..1), forma: normal | feliz | guino
+  // Ojos: abre (0 cerrado .. 1 normal .. 1.15 sorpresa), mirada (mx, my en -1..1), forma: normal | feliz | guino | sonrie | entrecerrado.
+  // C-195: "sonrie" (abiertos, con el párpado de abajo empujado por la mejilla) y "entrecerrado" (el de arriba bajo: pícaro, pensando)
   const ojo = (cx, cy, abre, mx, my, forma) => {
     if (forma === 'feliz') return `<path d="M${cx - 12} ${cy + 4} C${cx - 6} ${cy - 7} ${cx + 6} ${cy - 7} ${cx + 12} ${cy + 4}" fill="none" ${S}/>`;
     if (abre < .22) return `<path d="M${cx - 12} ${cy + 2} Q${cx} ${cy + 7} ${cx + 12} ${cy + 2}" fill="none" ${S}/>`;
     const x = cx + mx * 3.5, y = cy + my * 2.5, ry = 15 * abre, rx = 11 + (abre > 1 ? (abre - 1) * 6 : 0);
     const k = Math.min(1, abre);
-    return `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" fill="${INK}"/>
+    const abierto = `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" fill="${INK}"/>
       <circle cx="${f(x + 4)}" cy="${f(y - 6 * k)}" r="${f(4.2 * k)}" fill="#fff"/><circle cx="${f(x - 3.5)}" cy="${f(y + 5 * k)}" r="${f(1.8 * k)}" fill="#fff" opacity=".85"/>`;
+    if (forma === 'sonrie') {
+      const yb = cy + ry * .36;
+      return `${abierto}<path d="M${f(cx - rx - 6)} ${f(yb)} Q${cx} ${f(cy - ry * .12)} ${f(cx + rx + 6)} ${f(yb)} L${f(cx + rx + 6)} ${f(cy + ry + 8)} L${f(cx - rx - 6)} ${f(cy + ry + 8)} Z" fill="${SKIN}"/>
+        <path d="M${f(cx - rx - 2)} ${f(yb + 1)} Q${cx} ${f(cy - ry * .1)} ${f(cx + rx + 2)} ${f(yb + 1)}" fill="none" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/>`;
+    }
+    if (forma === 'entrecerrado') {
+      const yt = cy - ry * .18;
+      return `${abierto}<path d="M${f(cx - rx - 6)} ${f(cy - ry - 8)} L${f(cx + rx + 6)} ${f(cy - ry - 8)} L${f(cx + rx + 6)} ${f(yt)} Q${cx} ${f(yt + 3)} ${f(cx - rx - 6)} ${f(yt)} Z" fill="${SKIN}"/>
+        <path d="M${f(cx - rx - 2)} ${f(yt + 1)} Q${cx} ${f(yt + 4)} ${f(cx + rx + 2)} ${f(yt + 1)}" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>`;
+    }
+    return abierto;
   };
   const ojos = (o) => `${ojo(166, 176, o.abre, o.mx, o.my, o.forma === 'guino' ? 'normal' : o.forma)}${ojo(234, 176, o.abre, o.mx, o.my, o.forma === 'guino' ? 'feliz' : o.forma)}`;
 
@@ -49,17 +61,19 @@
     const up = pts.map((p, i) => `${f(p[0])} ${f(p[1] - gr[i])}`), dn = pts.map((p, i) => `${f(p[0])} ${f(p[1] + gr[i] * .7)}`);
     return `<path d="M${up[0]} C${up[1]} ${up[2]} ${up[3]} L${dn[3]} C${dn[2]} ${dn[1]} ${dn[0]} Z" fill="${INK}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>`;
   };
+  // C-195: triste (las puntas de adentro arriba y las de afuera abajo): apenado, "ups"
   const cejas = (c) => {
-    const a = c.alto * 8, dL = c.duda * 2, dR = -c.duda * 7, e = c.enojo * 6;
-    return ceja([[150, 150 - a + dL], [158, 144 - a + dL], [172, 144 - a + dL], [180, 148 - a + dL + e]], [2.2, 3.6, 4.6, 5]) +
-           ceja([[220, 148 - a + dR + e], [228, 144 - a + dR], [242, 144 - a + dR], [250, 150 - a + dR]], [5, 4.6, 3.6, 2.2]);
+    const a = c.alto * 8, dL = c.duda * 2, dR = -c.duda * 7, e = c.enojo * 6, tr = (c.triste || 0) * 7;
+    return ceja([[150, 150 - a + dL + tr * .45], [158, 144 - a + dL], [172, 144 - a + dL - tr * .55], [180, 148 - a + dL + e - tr]], [2.2, 3.6, 4.6, 5]) +
+           ceja([[220, 148 - a + dR + e - tr], [228, 144 - a + dR - tr * .55], [242, 144 - a + dR], [250, 150 - a + dR + tr * .45]], [5, 4.6, 3.6, 2.2]);
   };
 
-  // Boca: abre 0..1, ancho 0..1, sonrisa -1..1, dientes
+  // Boca: abre 0..1, ancho 0..1, sonrisa -1..1, dientes. C-195: lado -1..1 sube una comisura (la sonrisa de lado)
   const boca = (b, id) => {
-    const cx = 201, cy = 231, w = 13 + 13 * b.ancho, sub = b.sonrisa * 6, h = 24 * b.abre;
-    if (h < 2.5) return `<path d="M${f(cx - w)} ${f(cy - sub)} Q${cx} ${f(cy + 4 + sub * 1.6)} ${f(cx + w)} ${f(cy - sub)}" fill="none" ${S}/>`;
-    const d = `M${f(cx - w)} ${f(cy - sub)} Q${cx} ${f(cy - 3 + sub * .6)} ${f(cx + w)} ${f(cy - sub)} Q${f(cx + w * .9)} ${f(cy + h * .9)} ${cx} ${f(cy + h + sub)} Q${f(cx - w * .9)} ${f(cy + h * .9)} ${f(cx - w)} ${f(cy - sub)} Z`;
+    const cx = 201, cy = 231, w = 13 + 13 * b.ancho, sub = b.sonrisa * 6, h = 24 * b.abre, la = (b.lado || 0) * 5.5;
+    const yl = cy - sub + la, yr = cy - sub - la;
+    if (h < 2.5) return `<path d="M${f(cx - w)} ${f(yl)} Q${cx} ${f(cy + 4 + sub * 1.6)} ${f(cx + w)} ${f(yr)}" fill="none" ${S}/>`;
+    const d = `M${f(cx - w)} ${f(yl)} Q${cx} ${f(cy - 3 + sub * .6)} ${f(cx + w)} ${f(yr)} Q${f(cx + w * .9)} ${f(cy + h * .9)} ${cx} ${f(cy + h + sub)} Q${f(cx - w * .9)} ${f(cy + h * .9)} ${f(cx - w)} ${f(yl)} Z`;
     const lengua = h > 9 ? `<ellipse cx="${cx}" cy="${f(cy + h + sub - 3)}" rx="${f(w * .6)}" ry="${f(h * .32)}" fill="#e86a5c"/>` : '';
     const dientes = b.dientes && h > 6 ? `<rect x="${f(cx - w)}" y="${f(cy - 8)}" width="${f(w * 2)}" height="${f(8 + Math.min(6, h * .25))}" fill="#fff"/>` : '';
     return `<clipPath id="boca${id}"><path d="${d}"/></clipPath><path d="${d}" fill="${INK}"/><g clip-path="url(#boca${id})">${lengua}${dientes}</g><path d="${d}" fill="none" ${s4}/>`;
@@ -84,25 +98,69 @@
       <text x="19" y="20" text-anchor="middle" font-family="Tektrron, Poppins" font-size="14" font-weight="700" fill="${BLUE}">ES</text></g>`;
 
   // ---------- Manos (coordenadas locales: muñeca en 0,0 y los dedos hacia -y) ----------
-  const dedo = (x1, y1, x2, y2) => `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="${INK}" stroke-width="25" stroke-linecap="round"/><path d="M${x1} ${y1} L${x2} ${y2}" stroke="${SKIN}" stroke-width="14" stroke-linecap="round"/>`;
+  // C-195 (pedido de Andrés el 06/11, "muchísimas mejoras a Chispa"): los dedos se afinan hacia la punta y llevan su pliegue,
+  // el puño tiene nudillos y el pulgar su uña. dedo(x1, y1, x2, y2, grosor, { pliegue, una }): de la base a la punta; el
+  // borde no se cierra en la base, así un dedo dibujado encima del puño sale de él sin una raya.
+  const dedo = (x1, y1, x2, y2, g = 1, { pliegue = true, una = false } = {}) => {
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+    const wb = 9.6 * g, wt = 8 * g, p = (x, y) => `${f(x)} ${f(y)}`;
+    const borde = `M${p(x1 + nx * wb, y1 + ny * wb)} L${p(x2 + nx * wt, y2 + ny * wt)} A${f(wt)} ${f(wt)} 0 0 0 ${p(x2 - nx * wt, y2 - ny * wt)} L${p(x1 - nx * wb, y1 - ny * wb)}`;
+    const cx = x1 + ux * L * .5, cy = y1 + uy * L * .5, w = (wb + wt) / 2 * .62;
+    const pl = pliegue && L > 22 ? `<path d="M${p(cx + nx * w, cy + ny * w)} L${p(cx - nx * w, cy - ny * w)}" stroke="${INK}" stroke-width="2.4" stroke-linecap="round" opacity=".28"/>` : '';
+    // la uña: un brillo claro adentro de la punta, sin contorno (con contorno parecía un aro)
+    const ux2 = x2 - ux * wt * .7, uy2 = y2 - uy * wt * .7;
+    const un = una ? `<ellipse cx="${f(ux2)}" cy="${f(uy2)}" rx="${f(wt * .5)}" ry="${f(wt * .64)}" transform="rotate(${f(Math.atan2(uy, ux) * 180 / Math.PI + 90)} ${f(ux2)} ${f(uy2)})" fill="#fff" opacity=".85"/>` : '';
+    return `<path d="${borde} Z" fill="${SKIN}"/><path d="${borde}" fill="none" stroke="${INK}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>${pl}${un}`;
+  };
+  // La línea de la palma de siempre, suave (dos líneas parecían una cicatriz)
+  const lineasPalma = `<path d="M-9 -2 C-3 3 5 3 10 -2" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round" opacity=".45"/>`;
   const PALMA = 'M-25 -10 C-27 -26 -14 -30 0 -30 C14 -30 27 -26 25 -10 L23 10 C19 24 -19 24 -23 10 Z';
   const PUÑO = 'M-24 -16 C-24 -26 24 -26 24 -16 L24 10 C24 22 -24 22 -24 10 Z';
+  // El puño de frente con los cuatro nudillos arriba
+  const PUÑO_NUDILLOS = 'M-24 -14 C-25 -22 -16 -25 -12 -20 C-9 -27 -1 -27 0 -21 C2 -27 10 -27 12 -21 C15 -26 25 -23 24 -14 L24 10 C24 22 -24 22 -24 10 Z';
+  // El puño del pulgar arriba, de costado: los dedos doblados hacen olas en el borde derecho
+  const PUÑO_PULGAR = 'M-26 -16 C-26 -28 14 -29 20 -24 C28 -22 29 -14 25 -11 C30 -9 30 0 25 2 C30 4 30 12 24 14 C27 18 24 25 16 25 L-14 25 C-24 25 -26 20 -26 14 Z';
   const g = (x, y, r, cuerpo) => `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(r)})">${cuerpo}</g>`;
   const MANOS = {
-    palma: (x, y, r) => g(x, y, r, `${dedo(-15, -24, -21, -52)}${dedo(-5, -27, -6, -60)}${dedo(6, -27, 8, -60)}${dedo(16, -22, 22, -50)}${dedo(-20, -4, -38, -20)}
-      <path d="${PALMA}" fill="${SKIN}" ${S}/><path d="M-9 -2 C-3 3 5 3 10 -2" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round" opacity=".45"/>`),
-    indice: (x, y, r) => g(x, y, r, `${dedo(2, -20, 2, -70)}<path d="${PUÑO}" fill="${SKIN}" ${S}/>
-      <path d="M-14 -6 L12 -6 M-14 5 L12 5" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>${dedo(-21, 0, -32, -15)}`),
-    pulgar: (x, y, r) => g(x, y, r, `${dedo(-12, -18, -14, -62)}<path d="M-26 -18 C-26 -28 26 -28 26 -18 L26 14 C26 26 -26 26 -26 14 Z" fill="${SKIN}" ${S}/>
-      <path d="M-8 -7 L22 -7 M-8 4 L22 4 M-8 15 L22 15" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>`),
-    puño: (x, y, r) => g(x, y, r, `<path d="${PUÑO}" fill="${SKIN}" ${S}/><path d="M-12 -7 L12 -7 M-12 4 L12 4" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
-      <path d="M-20 8 C-14 2 2 2 10 6 C14 8 12 14 6 14 L-14 14 C-20 14 -22 11 -20 8 Z" fill="${SKIN}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`),
+    palma: (x, y, r) => g(x, y, r, `${dedo(-15, -24, -20, -54)}${dedo(-5, -27, -6, -61)}${dedo(6, -27, 8, -58)}${dedo(16, -22, 22, -47, .88)}${dedo(-20, -4, -38, -20, 1.08, { pliegue: false })}
+      <path d="${PALMA}" fill="${SKIN}" ${S}/>${lineasPalma}`),
+    // Los dedos juntos (presentar algo, "aquí está")
+    palmaJunta: (x, y, r) => g(x, y, r, `${dedo(16, -22, 18, -50, .88)}${dedo(6, -26, 7, -58)}${dedo(-4, -27, -4, -61)}${dedo(-13, -24, -15, -55)}${dedo(-20, -4, -36, -18, 1.08, { pliegue: false })}
+      <path d="${PALMA}" fill="${SKIN}" ${S}/>${lineasPalma}`),
+    indice: (x, y, r) => g(x, y, r, `${dedo(2, -20, 2, -70)}<path d="${PUÑO_NUDILLOS}" fill="${SKIN}" ${S}/>
+      <path d="M-14 -6 L12 -6 M-14 5 L12 5" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>${dedo(-21, 0, -32, -15, 1.05, { pliegue: false, una: true })}`),
+    pulgar: (x, y, r) => g(x, y, r, `${dedo(-12, -18, -14, -62, 1.1, { una: true })}<path d="${PUÑO_PULGAR}" fill="${SKIN}" ${S}/>
+      <path d="M-7 -11 L24 -11 M-7 2 L25 2 M-5 14 L23 14" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M-19 -15 C-15 -10 -9 -10 -6 -16" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" opacity=".35"/>`),
+    puño: (x, y, r) => g(x, y, r, `<path d="${PUÑO_NUDILLOS}" fill="${SKIN}" ${S}/><path d="M-12 -7 L12 -7 M-12 4 L12 4" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M-20 8 C-14 2 2 2 10 6 C14 8 12 14 6 14 L-14 14 C-20 14 -22 11 -20 8 Z" fill="${SKIN}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <ellipse cx="7" cy="9" rx="3.4" ry="2.6" fill="#fff" opacity=".7" stroke="${INK}" stroke-width="1.5" stroke-opacity=".5"/>`),
+    // OK: el índice se curva hacia abajo hasta tocar la punta del pulgar y dejan un hueco; los otros tres dedos, arriba
+    ok: (x, y, r) => g(x, y, r, `${dedo(-1, -27, 1, -64)}${dedo(9, -26, 14, -59)}${dedo(17, -21, 25, -47, .88)}
+      <path d="${PALMA}" fill="${SKIN}" ${S}/>${lineasPalma}
+      <path d="M-11 -24 C-12 -48 -40 -50 -39 -28" fill="none" stroke="${INK}" stroke-width="24.5" stroke-linecap="round"/>
+      <path d="M-11 -24 C-12 -48 -40 -50 -39 -28" fill="none" stroke="${SKIN}" stroke-width="13.5" stroke-linecap="round"/>
+      ${dedo(-21, -4, -36, -23, 1.08, { pliegue: false, una: true })}`),
+    // V: el índice y el medio abiertos; el anular y el meñique doblados, y el pulgar encima de ellos
+    v: (x, y, r) => g(x, y, r, `${dedo(-9, -26, -21, -61)}${dedo(3, -27, 12, -62)}
+      <path d="${PALMA}" fill="${SKIN}" ${S}/>${lineasPalma}
+      <path d="M4 -27 C4 -36 13 -36 14 -28 M14 -27 C15 -34 23 -33 23 -25" fill="${SKIN}" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/>
+      ${dedo(-23, -4, 4, -18, 1, { pliegue: false, una: true })}`),
+    // Sosteniendo el teléfono con la pantalla hacia quien mira: la tienda abierta en la pantalla
+    telefono: (x, y, r) => g(x, y, r, `<path d="${PALMA}" transform="translate(0 6)" fill="${SKIN}" ${S}/>
+      <rect x="-25" y="-92" width="50" height="88" rx="10" fill="#1b2433" stroke="${INK}" stroke-width="5"/>
+      <rect x="-19" y="-84" width="38" height="70" rx="5" fill="${BLUE}"/>
+      <rect x="-14" y="-79" width="28" height="7" rx="2.5" fill="#fff" opacity=".95"/>
+      <rect x="-14" y="-67" width="12.5" height="16" rx="2.5" fill="#fff" opacity=".85"/><rect x="1.5" y="-67" width="12.5" height="16" rx="2.5" fill="#fff" opacity=".85"/>
+      <rect x="-14" y="-46" width="28" height="6" rx="3" fill="${CREAM}"/>
+      <rect x="-14" y="-35" width="18" height="5" rx="2.5" fill="#fff" opacity=".6"/>
+      ${dedo(30, -66, 18, -64, .82, { pliegue: false })}${dedo(31, -50, 18, -48, .86, { pliegue: false })}${dedo(30, -34, 18, -32, .84, { pliegue: false })}
+      ${dedo(-28, -6, -24, -44, 1.08, { pliegue: false, una: true })}`),
     // vistas por detrás: dorso del puño con nudillos; índice arriba con la uña
     puñoAtras: (x, y, r) => g(x, y, r, `<path d="${PUÑO}" fill="${SKIN}" ${S}/>
       <path d="M-20 -14 C-20 -21 -12 -21 -11 -14 M-10 -14 C-10 -22 -1 -22 0 -14 M1 -14 C1 -22 10 -22 11 -14 M12 -14 C12 -21 20 -21 20 -14" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
       <path d="M-14 2 L-12 12 M0 2 L0 13 M14 2 L12 12" stroke="${INK}" stroke-width="2.5" stroke-linecap="round" opacity=".45"/>`),
-    indiceAtras: (x, y, r) => g(x, y, r, `${dedo(-12, -14, -12, -64)}
-      <path d="M-18 -68 C-18 -76 -6 -76 -6 -68 L-6 -60 C-9 -57 -15 -57 -18 -60 Z" fill="#fff" stroke="${INK}" stroke-width="2.5"/>
+    indiceAtras: (x, y, r) => g(x, y, r, `${dedo(-12, -14, -12, -64, 1, { una: true })}
       <path d="${PUÑO}" fill="${SKIN}" ${S}/>
       <path d="M-4 -14 C-4 -21 4 -21 5 -14 M6 -14 C6 -21 14 -21 15 -14 M16 -14 C16 -20 22 -20 22 -14" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
       <path d="M-14 2 L-12 12 M0 2 L0 13 M14 2 L12 12" stroke="${INK}" stroke-width="2.5" stroke-linecap="round" opacity=".45"/>`),
@@ -161,8 +219,13 @@
     saluda: { L: REPOSO_L, R: { codo: [334, 318], muñeca: [330, 232], mano: 'palma', giro: 8 } },
     celebra: { L: { codo: [94, 392], muñeca: [102, 318], mano: 'pulgar', giro: 0, espejo: true }, R: { codo: [306, 392], muñeca: [298, 318], mano: 'pulgar', giro: 0 } },
     piensa: { L: REPOSO_L, R: { codo: [306, 392], muñeca: [212, 288], mano: 'puño', giro: 44 } },
+    // C-195: manos nuevas en poses nuevas
+    ok: { L: REPOSO_L, R: { codo: [306, 390], muñeca: [292, 312], mano: 'ok', giro: -6 } },
+    victoria: { L: REPOSO_L, R: { codo: [332, 324], muñeca: [326, 240], mano: 'v', giro: 6 } },
+    telefono: { L: REPOSO_L, R: { codo: [302, 398], muñeca: [258, 344], mano: 'telefono', giro: 36 } },
+    presenta: { L: REPOSO_L, R: { codo: [326, 370], muñeca: [352, 322], mano: 'palmaJunta', giro: 4 } },
   };
-  const INC_POSE = { señala: 3, pulgar: 2, brazos: -2, hombros: -5, saluda: 4, piensa: -7, celebra: 0, explica: 0 };
+  const INC_POSE = { señala: 3, pulgar: 2, brazos: -2, hombros: -5, saluda: 4, piensa: -7, celebra: 0, explica: 0, ok: 2, victoria: 4, telefono: -4, presenta: 5 };
   const R_ATRAS = { codo: [284, 370], muñeca: [288, 446], mano: 'indiceAtras', giro: 0 }, L_ATRAS = { codo: [116, 370], muñeca: [112, 446], mano: 'puñoAtras', giro: 0 };
   const POSES_ESPALDA = {
     espalda: { L: L_ATRAS, R: R_ATRAS },
@@ -174,20 +237,44 @@
   // ---------- Estado completo ----------
   const ESTADO = () => ({
     vista: 'frente', pose: 'habla', L: REPOSO_L, R: REPOSO_R, orden: 'LR',
-    cabeza: { inc: 0, dx: 0, dy: 0 }, pelo: 0, cuerpo: 1,
+    cabeza: { inc: 0, dx: 0, dy: 0 }, pelo: 0, cuerpo: 1, cuerpoInc: 0,
     ojos: { abre: 1, mx: 0, my: 0, forma: 'normal' },
-    cejas: { alto: 0, duda: 0, enojo: 0 },
-    boca: { abre: 0, ancho: .5, sonrisa: .5, dientes: false },
+    cejas: { alto: 0, duda: 0, enojo: 0, triste: 0 },
+    boca: { abre: 0, ancho: .5, sonrisa: .5, dientes: false, lado: 0 },
     rubor: .5, fondo: true,
   });
-  const CEJAS = { normal: { alto: 0, duda: 0, enojo: 0 }, arriba: { alto: 1, duda: 0, enojo: 0 }, duda: { alto: .2, duda: 1, enojo: 0 }, enojo: { alto: -.3, duda: 0, enojo: 1 } };
-  const OJOS = { abiertos: { abre: 1, forma: 'normal' }, cerrados: { abre: 0, forma: 'normal' }, sorpresa: { abre: 1.15, forma: 'normal' }, guino: { abre: 1, forma: 'guino' }, feliz: { abre: 1, forma: 'feliz' } };
-  const BOCAS = {
-    sonrisa: { abre: 0, ancho: .5, sonrisa: .6, dientes: false }, seria: { abre: 0, ancho: .45, sonrisa: 0, dientes: false },
-    a: { abre: .85, ancho: .55, sonrisa: .2, dientes: true }, e: { abre: .45, ancho: .85, sonrisa: .3, dientes: true },
-    i: { abre: .28, ancho: .95, sonrisa: .5, dientes: true }, o: { abre: .72, ancho: .08, sonrisa: 0, dientes: false },
-    u: { abre: .42, ancho: .12, sonrisa: 0, dientes: false }, feliz: { abre: .55, ancho: .8, sonrisa: 1, dientes: true },
+  const CEJAS = {
+    normal: { alto: 0, duda: 0, enojo: 0, triste: 0 }, arriba: { alto: 1, duda: 0, enojo: 0, triste: 0 }, duda: { alto: .2, duda: 1, enojo: 0, triste: 0 },
+    enojo: { alto: -.3, duda: 0, enojo: 1, triste: 0 }, triste: { alto: .1, duda: 0, enojo: 0, triste: 1 },
   };
+  const OJOS = {
+    abiertos: { abre: 1, forma: 'normal' }, cerrados: { abre: 0, forma: 'normal' }, sorpresa: { abre: 1.15, forma: 'normal' }, guino: { abre: 1, forma: 'guino' },
+    feliz: { abre: 1, forma: 'feliz' }, sonrie: { abre: 1, forma: 'sonrie' }, entrecerrados: { abre: .95, forma: 'entrecerrado' },
+  };
+  const BOCAS = {
+    sonrisa: { abre: 0, ancho: .5, sonrisa: .6, dientes: false, lado: 0 }, seria: { abre: 0, ancho: .45, sonrisa: 0, dientes: false, lado: 0 },
+    a: { abre: .85, ancho: .55, sonrisa: .2, dientes: true, lado: 0 }, e: { abre: .45, ancho: .85, sonrisa: .3, dientes: true, lado: 0 },
+    i: { abre: .28, ancho: .95, sonrisa: .5, dientes: true, lado: 0 }, o: { abre: .72, ancho: .08, sonrisa: 0, dientes: false, lado: 0 },
+    u: { abre: .42, ancho: .12, sonrisa: 0, dientes: false, lado: 0 }, feliz: { abre: .55, ancho: .8, sonrisa: 1, dientes: true, lado: 0 },
+    // C-195
+    risa: { abre: .95, ancho: .9, sonrisa: 1, dientes: true, lado: 0 }, sorpresa: { abre: .9, ancho: .16, sonrisa: -.1, dientes: false, lado: 0 },
+    triste: { abre: 0, ancho: .42, sonrisa: -.75, dientes: false, lado: 0 }, ups: { abre: .32, ancho: .9, sonrisa: -.35, dientes: true, lado: 0 },
+    picara: { abre: 0, ancho: .55, sonrisa: .45, dientes: false, lado: .9 }, duda: { abre: 0, ancho: .4, sonrisa: .05, dientes: false, lado: -.8 },
+  };
+  // C-195: expresiones listas (ojos, cejas, boca, mirada y rubor juntos), para chispa({ expresion }) y las claves de linea()
+  const EXPRESIONES = {
+    alegre: { ojos: 'sonrie', cejas: 'normal', boca: 'feliz', rubor: .7 },
+    risa: { ojos: 'feliz', cejas: 'arriba', boca: 'risa', rubor: .85 },
+    sorpresa: { ojos: 'sorpresa', cejas: 'arriba', boca: 'sorpresa', rubor: .4 },
+    pensativo: { ojos: 'abiertos', cejas: 'duda', boca: 'duda', mirar: [.7, -.9], rubor: .35 },
+    picaro: { ojos: 'guino', cejas: 'duda', boca: 'picara', rubor: .6 },
+    apenado: { ojos: 'abiertos', cejas: 'triste', boca: 'ups', mirar: [-.4, .5], rubor: .85 },
+    orgulloso: { ojos: 'entrecerrados', cejas: 'normal', boca: 'picara', rubor: .55 },
+    triste: { ojos: 'abiertos', cejas: 'triste', boca: 'triste', mirar: [0, .7], rubor: .3 },
+  };
+  // C-195: miradas con intención, por nombre (linea acepta mirar: 'telefono' además de [mx, my])
+  const MIRADAS = { camara: [0, 0], derecha: [1, 0], izquierda: [-1, 0], arriba: [.3, -1], abajo: [0, 1], telefono: [.6, .8], producto: [.9, .2] };
+  const miradaDe = (v) => (typeof v === 'string' ? MIRADAS[v] || [0, 0] : v);
   const brazosDe = (vista, pose) => (vista === 'espalda' ? POSES_ESPALDA[pose] || POSES_ESPALDA.espalda : POSES[pose] || POSES.habla);
 
   const rig = (e) => {
@@ -195,7 +282,7 @@
     // entre: un aparato entre los dos brazos (el primero lo sostiene por detrás, el segundo trabaja por delante)
     const brazos = () => e.orden === 'RL' ? brazo('R', e.R, id) + (e.entre || '') + brazo('L', e.L, id) : brazo('L', e.L, id) + (e.entre || '') + brazo('R', e.R, id);
     const cab = e.cabeza, sy = e.cuerpo, sx = 1 + (1 - sy) * .6;
-    const cuerpo = `translate(200 420) scale(${f(sx * 1000) / 1000} ${f(sy * 1000) / 1000}) translate(-200 -420)`;
+    const cuerpo = `translate(200 420) rotate(${f(e.cuerpoInc || 0)}) scale(${f(sx * 1000) / 1000} ${f(sy * 1000) / 1000}) translate(-200 -420)`;
     const cabeza = `rotate(${f(cab.inc)} 200 258) translate(${f(cab.dx)} ${f(cab.dy)})`;
     let dentro;
     if (e.vista === 'espalda') {
@@ -217,8 +304,13 @@
   };
 
   // API de siempre: chispa({ pose, boca, ojos, cejas, fondo }); 'espalda-libre' usa window.CHISPA_L / CHISPA_R
-  const chispa = ({ pose = 'habla', boca = 'sonrisa', ojos = 'abiertos', cejas = 'normal', fondo = true } = {}) => {
+  const chispa = ({ pose = 'habla', boca, ojos, cejas, fondo = true, expresion } = {}) => {
+    // C-195: una expresión pone ojos, cejas, boca, mirada y rubor; lo que se pase aparte manda
+    const ex = EXPRESIONES[expresion] || {};
+    boca = boca ?? ex.boca ?? 'sonrisa'; ojos = ojos ?? ex.ojos ?? 'abiertos'; cejas = cejas ?? ex.cejas ?? 'normal';
     const e = ESTADO(), espalda = pose.startsWith('espalda');
+    if (ex.mirar) [e.ojos.mx, e.ojos.my] = ex.mirar;
+    if (ex.rubor !== undefined) e.rubor = ex.rubor;
     e.vista = espalda ? 'espalda' : 'frente'; e.fondo = fondo;
     let b = brazosDe(e.vista, pose);
     if (pose === 'espalda-libre') {
@@ -241,10 +333,28 @@
   const backOut = (x, s = 1.5) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2);
   const easeInOut = (x) => x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
   const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+  // C-195: movimiento natural (pedido de Andrés el 06/11). Un gesto dura un poco más (0,42 s) y tiene tres tiempos:
+  // un impulso corto hacia atrás (anticipación), el viaje y un rebote al llegar.
+  const DUR_GESTO = .42;
+  const anticipa = (x) => (x < .16 ? -.06 * Math.sin((Math.PI * x) / .16) : backOut((x - .16) / .84, 1.4));
+  // La mano viaja en curva, abombada hacia afuera del cuerpo, no en línea recta
+  const curva = (a, b, x) => {
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+    if (L < 4) return [0, 0];
+    let nx = -dy / L, ny = dx / L;
+    if (nx * ((a[0] + b[0]) / 2 - 200) + ny * ((a[1] + b[1]) / 2 - 330) < 0) { nx = -nx; ny = -ny; }
+    const s = Math.sin(Math.PI * clamp(x)) * Math.min(L * .2, 26);
+    return [nx * s, ny * s];
+  };
 
-  // linea(claves): claves = [{ t, pose?, vista?, ojos?, cejas?, boca?, mirar?:[mx,my], inc?, feliz? }]. Cada campo pasa suave de su valor anterior al nuevo.
+  // linea(claves): claves = [{ t, pose?, vista?, ojos?, cejas?, boca?, mirar?:[mx,my]|'telefono', inc?, feliz?, expresion?, rubor? }].
+  // Cada campo pasa suave de su valor anterior al nuevo. C-195: `expresion` pone ojos, cejas, boca, mirada y rubor (lo que
+  // la clave diga aparte manda), y la mirada se puede pedir por nombre (MIRADAS).
   const linea = (claves) => {
-    const ks = [...claves].sort((a, b) => a.t - b.t);
+    const ks = [...claves].map((k) => {
+      const ex = EXPRESIONES[k.expresion];
+      return ex ? { ojos: ex.ojos, cejas: ex.cejas, boca: ex.boca, ...(ex.mirar ? { mirar: ex.mirar } : {}), ...(ex.rubor !== undefined ? { rubor: ex.rubor } : {}), ...k } : k;
+    }).sort((a, b) => a.t - b.t);
     const valor = (campo, def, t) => {
       let prev = def, cur = def, tc = -1e9;
       for (const k of ks) { if (k.t > t) break; if (campo in k) { prev = cur; cur = k[campo]; tc = k.t; } }
@@ -255,15 +365,32 @@
       const v = valor('vista', 'frente', t); e.vista = v.cur;
       const p = valor('pose', 'habla', t);
       // si cambió la vista, la pose nueva arranca sin transición desde la anterior (el giro la tapa)
-      const bA = brazosDe(e.vista, p.prev), bB = brazosDe(e.vista, p.cur), k = backOut(clamp(p.x / .32));
-      const mano = (a, b) => ({ ...mezcla(a, b, k), mano: k < .35 ? (a.mano || b.mano) : (b.mano || a.mano) });
+      // C-195: anticipación y rebote, la mano en curva, y la muñeca gira un instante después que el brazo
+      const bA = brazosDe(e.vista, p.prev), bB = brazosDe(e.vista, p.cur), x = clamp(p.x / DUR_GESTO), k = anticipa(x), kg = anticipa(clamp((p.x - .06) / DUR_GESTO));
+      const mano = (a, b) => {
+        const m = mezcla(a, b, k);
+        m.giro = lerp(a.giro || 0, b.giro || 0, kg);
+        const cm = curva(a.muñeca, b.muñeca, x), cc = curva(a.codo, b.codo, x);
+        m.muñeca = [m.muñeca[0] + cm[0], m.muñeca[1] + cm[1]];
+        m.codo = [m.codo[0] + cc[0] * .5, m.codo[1] + cc[1] * .5];
+        const llega = k >= .35;
+        m.mano = llega ? (b.mano || a.mano) : (a.mano || b.mano);
+        m.espejo = llega ? b.espejo : a.espejo;
+        return m;
+      };
       e.L = mano(bA.L, bB.L); e.R = mano(bA.R, bB.R); e.orden = (k < .5 ? bA.orden : bB.orden) || 'LR';
+      // el cuerpo y la cabeza acompañan el gesto: se inclinan un poco hacia donde va la mano, y la cabeza baja en el impulso
+      const haciaX = (bB.R.muñeca[0] - bA.R.muñeca[0]) + (bB.L.muñeca[0] - bA.L.muñeca[0]);
+      e.cuerpoInc = Math.sin(Math.PI * x) * clamp(haciaX / 140, -1, 1) * 1.6;
       const o = valor('ojos', 'abiertos', t), oj = mezcla(OJOS[o.prev] || OJOS.abiertos, OJOS[o.cur] || OJOS.abiertos, easeInOut(clamp(o.x / .12)));
       Object.assign(e.ojos, oj);
       const c = valor('cejas', 'normal', t); Object.assign(e.cejas, mezcla(CEJAS[c.prev] || CEJAS.normal, CEJAS[c.cur] || CEJAS.normal, backOut(clamp(c.x / .25), 1.2)));
-      const m = valor('mirar', [0, 0], t), mm = mezcla(m.prev, m.cur, easeInOut(clamp(m.x / .18))); e.ojos.mx = mm[0]; e.ojos.my = mm[1];
+      const m = valor('mirar', [0, 0], t), mm = mezcla(miradaDe(m.prev), miradaDe(m.cur), easeInOut(clamp(m.x / .18))); e.ojos.mx = mm[0]; e.ojos.my = mm[1];
       const i = valor('inc', 0, t); e.cabeza.inc = mezcla(i.prev, i.cur, easeInOut(clamp(i.x / .4))) + mezcla(INC_POSE[p.prev] || 0, INC_POSE[p.cur] || 0, easeInOut(clamp(p.x / .45)));
+      e.cabeza.inc += Math.sin(Math.PI * x) * clamp(haciaX / 140, -1, 1) * 2.4;
+      if (x < .16) e.cabeza.dy += Math.sin((Math.PI * x) / .16) * 1.6;
       const fz = valor('feliz', false, t); e.boca.sonrisa = mezcla(fz.prev ? 1 : .5, fz.cur ? 1 : .5, clamp(fz.x / .2)); e.rubor = .45 + (fz.cur ? .25 : 0);
+      const ru = valor('rubor', null, t); if (ru.cur !== null) e.rubor = mezcla(ru.prev ?? .45, ru.cur, easeInOut(clamp(ru.x / .3)));
       const bo = valor('boca', 'sonrisa', t); Object.assign(e.boca, mezcla(BOCAS[bo.prev] || BOCAS.sonrisa, BOCAS[bo.cur] || BOCAS.sonrisa, easeInOut(clamp(bo.x / .1))));
       e.cambioPose = p.x;
       return e;
@@ -291,8 +418,11 @@
     const T = 3.3, n = Math.floor(t / T), off = ((n * 7919) % 13) / 13 * 1.2, x = t - n * T - off;
     return x >= 0 && x < .16 ? 1 - Math.sin(x / .16 * Math.PI) : 1;
   };
+  const PARPADEAN = ['normal', 'sonrie', 'entrecerrado'];
   const vida = (e, t, { rms = null } = {}) => {
-    if (e.ojos.forma === 'normal' && e.ojos.abre > .5) e.ojos.abre *= parpadeo(t);
+    if (PARPADEAN.includes(e.ojos.forma) && e.ojos.abre > .5) e.ojos.abre *= parpadeo(t);
+    // C-195: parpadea al cambiar de gesto, como una persona
+    if (PARPADEAN.includes(e.ojos.forma) && e.cambioPose !== undefined && e.cambioPose > .03 && e.cambioPose < .15) e.ojos.abre *= 1 - Math.sin(((e.cambioPose - .03) / .12) * Math.PI) * .92;
     e.cuerpo = 1 + Math.sin(t * 2.1) * .006;
     const habla = rms ? clamp((rms + 40) / 22) : 0;
     e.cabeza.inc += Math.sin(t * 1.3) * 1.2 + Math.sin(t * 7.1) * habla * 1.6;
@@ -308,5 +438,5 @@
   chispa.anguloMano = (b) => ang(b.codo, b.muñeca) + (b.giro || 0);
   chispa.rig = rig; chispa.estado = ESTADO; chispa.linea = linea; chispa.labios = labios; chispa.vida = vida; chispa.mezcla = mezcla;
   window.chispa = chispa;
-  window.CHISPA = { POSES: Object.keys(POSES).concat(Object.keys(POSES_ESPALDA)), BOCAS: Object.keys(BOCAS), OJOS: Object.keys(OJOS), CEJAS: Object.keys(CEJAS), CREAM, BLUE };
+  window.CHISPA = { POSES: Object.keys(POSES).concat(Object.keys(POSES_ESPALDA)), BOCAS: Object.keys(BOCAS), OJOS: Object.keys(OJOS), CEJAS: Object.keys(CEJAS), EXPRESIONES: Object.keys(EXPRESIONES), MIRADAS: Object.keys(MIRADAS), MANOS: Object.keys(MANOS), CREAM, BLUE };
 })();

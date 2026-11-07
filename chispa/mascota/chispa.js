@@ -98,72 +98,124 @@
       <text x="19" y="20" text-anchor="middle" font-family="Tektrron, Poppins" font-size="14" font-weight="700" fill="${BLUE}">ES</text></g>`;
 
   // ---------- Manos (coordenadas locales: muñeca en 0,0 y los dedos hacia -y) ----------
-  // C-195 (pedido de Andrés el 06/11, "muchísimas mejoras a Chispa"): los dedos se afinan hacia la punta y llevan su pliegue,
-  // el puño tiene nudillos y el pulgar su uña. dedo(x1, y1, x2, y2, grosor, { pliegue, una }): de la base a la punta; el
-  // borde no se cierra en la base, así un dedo dibujado encima del puño sale de él sin una raya.
-  const dedo = (x1, y1, x2, y2, g = 1, { pliegue = true, una = false } = {}) => {
-    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
-    const wb = 9.6 * g, wt = 8 * g, p = (x, y) => `${f(x)} ${f(y)}`;
-    const borde = `M${p(x1 + nx * wb, y1 + ny * wb)} L${p(x2 + nx * wt, y2 + ny * wt)} A${f(wt)} ${f(wt)} 0 0 0 ${p(x2 - nx * wt, y2 - ny * wt)} L${p(x1 - nx * wb, y1 - ny * wb)}`;
-    const cx = x1 + ux * L * .5, cy = y1 + uy * L * .5, w = (wb + wt) / 2 * .62;
-    const pl = pliegue && L > 22 ? `<path d="M${p(cx + nx * w, cy + ny * w)} L${p(cx - nx * w, cy - ny * w)}" stroke="${INK}" stroke-width="2.4" stroke-linecap="round" opacity=".28"/>` : '';
-    // la uña: un brillo claro adentro de la punta, sin contorno (con contorno parecía un aro)
-    const ux2 = x2 - ux * wt * .7, uy2 = y2 - uy * wt * .7;
-    const un = una ? `<ellipse cx="${f(ux2)}" cy="${f(uy2)}" rx="${f(wt * .5)}" ry="${f(wt * .64)}" transform="rotate(${f(Math.atan2(uy, ux) * 180 / Math.PI + 90)} ${f(ux2)} ${f(uy2)})" fill="#fff" opacity=".85"/>` : '';
-    return `<path d="${borde} Z" fill="${SKIN}"/><path d="${borde}" fill="none" stroke="${INK}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>${pl}${un}`;
+  // C-195 (Andrés, 06/11: "revisa bien las manos", "los pulgares son muy largos y se perciben como índice"). Cada mano es una
+  // SILUETA: la palma y los dedos se dibujan juntos con un solo contorno de tinta alrededor (primero todo en tinta y más grueso,
+  // después todo en piel encima), así no quedan cortes ni manchas donde un dedo se junta con la palma. Adentro van las rayas
+  // que separan los dedos y los pliegues. Un pulgar que cruza por delante también es parte de la silueta, y encima se le dibuja
+  // su borde abierto en la base: se ve delante de los dedos y se funde con la palma. Los pulgares son cortos y gruesos.
+  const CONTORNO = 12;
+  const p2 = (x, y) => `${f(x)} ${f(y)}`;
+  // Una pieza alargada: q = [x1, y1, x2, y2, radio en la base, radio en la punta], redonda en las dos puntas
+  const capsula = ([x1, y1, x2, y2, rb, rt]) => {
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+    return `M${p2(x1 + nx * rb, y1 + ny * rb)} L${p2(x2 + nx * rt, y2 + ny * rt)} A${f(rt)} ${f(rt)} 0 0 0 ${p2(x2 - nx * rt, y2 - ny * rt)} L${p2(x1 - nx * rb, y1 - ny * rb)} A${f(rb)} ${f(rb)} 0 0 0 ${p2(x1 + nx * rb, y1 + ny * rb)} Z`;
   };
-  // La línea de la palma de siempre, suave (dos líneas parecían una cicatriz)
-  const lineasPalma = `<path d="M-9 -2 C-3 3 5 3 10 -2" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round" opacity=".45"/>`;
+  const elipse = (cx, cy, rx, ry) => `M${p2(cx - rx, cy)} A${f(rx)} ${f(ry)} 0 1 0 ${p2(cx + rx, cy)} A${f(rx)} ${f(ry)} 0 1 0 ${p2(cx - rx, cy)} Z`;
+  const silueta = (...piezas) =>
+    piezas.map((d) => `<path d="${d}" fill="${INK}" stroke="${INK}" stroke-width="${CONTORNO}" stroke-linejoin="round"/>`).join('') +
+    piezas.map((d) => `<path d="${d}" fill="${SKIN}"/>`).join('');
+  const trazo = (d, w = 3.5, o = 1) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"${o < 1 ? ` opacity="${o}"` : ''}/>`;
+  const en = (q, t) => [q[0] + (q[2] - q[0]) * t, q[1] + (q[3] - q[1]) * t, q[4] + (q[5] - q[4]) * t];
+  // La raya entre dos dedos vecinos: baja desde donde se tocan (o desde las puntas, si van juntos) hacia la palma
+  const entre = (a, b, largo = 8) => {
+    let t = 1;
+    for (; t > 0; t -= .02) { const A = en(a, t), B = en(b, t); if (Math.hypot(A[0] - B[0], A[1] - B[1]) <= A[2] + B[2]) break; }
+    if (t <= 0) return '';
+    const A = en(a, t), B = en(b, t), A0 = en(a, 0), B0 = en(b, 0), c = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2];
+    const dx = (A0[0] + B0[0]) / 2 - c[0], dy = (A0[1] + B0[1]) / 2 - c[1], k = Math.min(1, largo / (Math.hypot(dx, dy) || 1));
+    return trazo(`M${p2(c[0], c[1])} L${p2(c[0] + dx * k, c[1] + dy * k)}`, 3.2);
+  };
+  // El borde de una pieza que va por delante de la palma: rodea la punta y se abre antes de la base. El lado de arriba (el que
+  // la separa de los dedos) llega más cerca de la base que el de abajo, que se funde con la palma.
+  const borde = (q, arriba = .3, abajo = .55, w = 4.5) => {
+    const [x1, y1, x2, y2, , rt] = q, dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1;
+    let nx = -dy / L, ny = dx / L, d1 = abajo, d2 = arriba;
+    if (ny < 0) { d1 = arriba; d2 = abajo; }
+    const [ax, ay, ra] = en(q, d1), [bx, by, rb] = en(q, d2), RA = ra + w / 2, RB = rb + w / 2, RT = rt + w / 2;
+    return trazo(`M${p2(ax + nx * RA, ay + ny * RA)} L${p2(x2 + nx * RT, y2 + ny * RT)} A${f(RT)} ${f(RT)} 0 0 0 ${p2(x2 - nx * RT, y2 - ny * RT)} L${p2(bx - nx * RB, by - ny * RB)}`, w);
+  };
+  // La uña del pulgar: un brillo claro adentro de la punta, sin contorno
+  const uña = (q) => {
+    const [x1, y1, x2, y2, , rt] = q, dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, cx = x2 - dx / L * rt * .55, cy = y2 - dy / L * rt * .55;
+    return `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(rt * .55)}" ry="${f(rt * .7)}" transform="rotate(${f(Math.atan2(dy, dx) * 180 / Math.PI + 90)} ${f(cx)} ${f(cy)})" fill="#fff" opacity=".8"/>`;
+  };
+  // Un pulgar por delante: su piel otra vez (tapa las rayas de los dedos que quedan atrás), su borde y la uña
+  const pulgarDelante = (q, arriba = .3, abajo = .55) => `<path d="${capsula(q)}" fill="${SKIN}"/>` + borde(q, arriba, abajo) + uña(q);
+  // Medidas: los dedos con 7,4 de radio en la base y 6,2 en la punta; el meñique, más fino; el pulgar, 9,5 y 8,2: más grueso
+  // y bastante más corto que el índice.
+  const DEDO = [7.4, 6.2], MEÑIQUE = [6.6, 5.6], PULGAR = [9.5, 8.2];
   const PALMA = 'M-25 -10 C-27 -26 -14 -30 0 -30 C14 -30 27 -26 25 -10 L23 10 C19 24 -19 24 -23 10 Z';
-  const PUÑO = 'M-24 -16 C-24 -26 24 -26 24 -16 L24 10 C24 22 -24 22 -24 10 Z';
-  // El puño de frente con los cuatro nudillos arriba
+  // La línea de la palma rodea la base del pulgar (la curva de antes, al medio, parecía una sonrisa)
+  const lineaPalma = trazo('M-16 -14 C-8 -8 -6 3 -8 13', 2.8, .35);
+  // El puño de frente con los cuatro nudillos arriba (también se ve así por detrás)
   const PUÑO_NUDILLOS = 'M-24 -14 C-25 -22 -16 -25 -12 -20 C-9 -27 -1 -27 0 -21 C2 -27 10 -27 12 -21 C15 -26 25 -23 24 -14 L24 10 C24 22 -24 22 -24 10 Z';
   // El puño del pulgar arriba, de costado: los dedos doblados hacen olas en el borde derecho
   const PUÑO_PULGAR = 'M-26 -16 C-26 -28 14 -29 20 -24 C28 -22 29 -14 25 -11 C30 -9 30 0 25 2 C30 4 30 12 24 14 C27 18 24 25 16 25 L-14 25 C-24 25 -26 20 -26 14 Z';
+  // El mismo puño con el índice arriba: quedan tres dedos doblados (tres olas)
+  const PUÑO_INDICE = 'M-26 -14 C-26 -25 10 -26 18 -21 C27 -19 28 -8 24 -5 C29 -2 29 8 24 10 C28 13 27 25 16 25 L-14 25 C-24 25 -26 20 -26 14 Z';
   const g = (x, y, r, cuerpo) => `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(r)})">${cuerpo}</g>`;
+  // Una mano abierta con la palma hacia quien mira: los cuatro dedos y el pulgar en una silueta
+  const abierta = (dedos, pulgar, juntos = false) =>
+    silueta(PALMA, ...dedos.map(capsula), capsula(pulgar)) + dedos.slice(1).map((q, i) => entre(dedos[i], q, juntos ? 99 : 8)).join('') + lineaPalma;
+  const dedos = (...qs) => qs.map(([x1, y1, x2, y2, m = DEDO]) => [x1, y1, x2, y2, ...m]);
+  const pulgar = (x1, y1, x2, y2) => [x1, y1, x2, y2, ...PULGAR];
   const MANOS = {
-    palma: (x, y, r) => g(x, y, r, `${dedo(-15, -24, -20, -54)}${dedo(-5, -27, -6, -61)}${dedo(6, -27, 8, -58)}${dedo(16, -22, 22, -47, .88)}${dedo(-20, -4, -38, -20, 1.08, { pliegue: false })}
-      <path d="${PALMA}" fill="${SKIN}" ${S}/>${lineasPalma}`),
+    palma: (x, y, r) => g(x, y, r, abierta(dedos([-13, -22, -25, -53], [-3, -25, -6, -62], [6, -24, 7, -58], [15, -18, 26, -44, MEÑIQUE]), pulgar(-17, -2, -33, -16))),
     // Los dedos juntos (presentar algo, "aquí está")
-    palmaJunta: (x, y, r) => g(x, y, r, `${dedo(16, -22, 18, -50, .88)}${dedo(6, -26, 7, -58)}${dedo(-4, -27, -4, -61)}${dedo(-13, -24, -15, -55)}${dedo(-20, -4, -36, -18, 1.08, { pliegue: false })}
-      <path d="${PALMA}" fill="${SKIN}" ${S}/>${lineasPalma}`),
-    indice: (x, y, r) => g(x, y, r, `${dedo(2, -20, 2, -70)}<path d="${PUÑO_NUDILLOS}" fill="${SKIN}" ${S}/>
-      <path d="M-14 -6 L12 -6 M-14 5 L12 5" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>${dedo(-21, 0, -32, -15, 1.05, { pliegue: false, una: true })}`),
-    pulgar: (x, y, r) => g(x, y, r, `${dedo(-12, -18, -14, -62, 1.1, { una: true })}<path d="${PUÑO_PULGAR}" fill="${SKIN}" ${S}/>
-      <path d="M-7 -11 L24 -11 M-7 2 L25 2 M-5 14 L23 14" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
-      <path d="M-19 -15 C-15 -10 -9 -10 -6 -16" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" opacity=".35"/>`),
-    puño: (x, y, r) => g(x, y, r, `<path d="${PUÑO_NUDILLOS}" fill="${SKIN}" ${S}/><path d="M-12 -7 L12 -7 M-12 4 L12 4" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
-      <path d="M-20 8 C-14 2 2 2 10 6 C14 8 12 14 6 14 L-14 14 C-20 14 -22 11 -20 8 Z" fill="${SKIN}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
-      <ellipse cx="7" cy="9" rx="3.4" ry="2.6" fill="#fff" opacity=".7" stroke="${INK}" stroke-width="1.5" stroke-opacity=".5"/>`),
-    // OK: el índice se curva hacia abajo hasta tocar la punta del pulgar y dejan un hueco; los otros tres dedos, arriba
-    ok: (x, y, r) => g(x, y, r, `${dedo(-1, -27, 1, -64)}${dedo(9, -26, 14, -59)}${dedo(17, -21, 25, -47, .88)}
-      <path d="${PALMA}" fill="${SKIN}" ${S}/>${lineasPalma}
-      <path d="M-11 -24 C-12 -48 -40 -50 -39 -28" fill="none" stroke="${INK}" stroke-width="24.5" stroke-linecap="round"/>
-      <path d="M-11 -24 C-12 -48 -40 -50 -39 -28" fill="none" stroke="${SKIN}" stroke-width="13.5" stroke-linecap="round"/>
-      ${dedo(-21, -4, -36, -23, 1.08, { pliegue: false, una: true })}`),
-    // V: el índice y el medio abiertos; el anular y el meñique doblados, y el pulgar encima de ellos
-    v: (x, y, r) => g(x, y, r, `${dedo(-9, -26, -21, -61)}${dedo(3, -27, 12, -62)}
-      <path d="${PALMA}" fill="${SKIN}" ${S}/>${lineasPalma}
-      <path d="M4 -27 C4 -36 13 -36 14 -28 M14 -27 C15 -34 23 -33 23 -25" fill="${SKIN}" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/>
-      ${dedo(-23, -4, 4, -18, 1, { pliegue: false, una: true })}`),
-    // Sosteniendo el teléfono con la pantalla hacia quien mira: la tienda abierta en la pantalla
-    telefono: (x, y, r) => g(x, y, r, `<path d="${PALMA}" transform="translate(0 6)" fill="${SKIN}" ${S}/>
-      <rect x="-25" y="-92" width="50" height="88" rx="10" fill="#1b2433" stroke="${INK}" stroke-width="5"/>
-      <rect x="-19" y="-84" width="38" height="70" rx="5" fill="${BLUE}"/>
-      <rect x="-14" y="-79" width="28" height="7" rx="2.5" fill="#fff" opacity=".95"/>
-      <rect x="-14" y="-67" width="12.5" height="16" rx="2.5" fill="#fff" opacity=".85"/><rect x="1.5" y="-67" width="12.5" height="16" rx="2.5" fill="#fff" opacity=".85"/>
-      <rect x="-14" y="-46" width="28" height="6" rx="3" fill="${CREAM}"/>
-      <rect x="-14" y="-35" width="18" height="5" rx="2.5" fill="#fff" opacity=".6"/>
-      ${dedo(30, -66, 18, -64, .82, { pliegue: false })}${dedo(31, -50, 18, -48, .86, { pliegue: false })}${dedo(30, -34, 18, -32, .84, { pliegue: false })}
-      ${dedo(-28, -6, -24, -44, 1.08, { pliegue: false, una: true })}`),
-    // vistas por detrás: dorso del puño con nudillos; índice arriba con la uña
-    puñoAtras: (x, y, r) => g(x, y, r, `<path d="${PUÑO}" fill="${SKIN}" ${S}/>
-      <path d="M-20 -14 C-20 -21 -12 -21 -11 -14 M-10 -14 C-10 -22 -1 -22 0 -14 M1 -14 C1 -22 10 -22 11 -14 M12 -14 C12 -21 20 -21 20 -14" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
-      <path d="M-14 2 L-12 12 M0 2 L0 13 M14 2 L12 12" stroke="${INK}" stroke-width="2.5" stroke-linecap="round" opacity=".45"/>`),
-    indiceAtras: (x, y, r) => g(x, y, r, `${dedo(-12, -14, -12, -64, 1, { una: true })}
-      <path d="${PUÑO}" fill="${SKIN}" ${S}/>
-      <path d="M-4 -14 C-4 -21 4 -21 5 -14 M6 -14 C6 -21 14 -21 15 -14 M16 -14 C16 -20 22 -20 22 -14" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>
-      <path d="M-14 2 L-12 12 M0 2 L0 13 M14 2 L12 12" stroke="${INK}" stroke-width="2.5" stroke-linecap="round" opacity=".45"/>`),
+    palmaJunta: (x, y, r) => g(x, y, r, abierta(dedos([-11, -22, -13, -55], [-3, -24, -3, -60], [6, -24, 7, -57], [15, -18, 21, -46, MEÑIQUE]), pulgar(-17, -2, -31, -15), true)),
+    // Señalar: el índice arriba, los otros tres dedos doblados y el pulgar cruzado por delante
+    indice: (x, y, r) => {
+      const ind = dedos([-13, -18, -12, -68])[0], pul = pulgar(-20, -2, 4, -4);
+      return g(x, y, r, silueta(PUÑO_INDICE, capsula(ind), capsula(pul)) + trazo('M-4 -5 L24 -5 M-4 10 L24 10') + pulgarDelante(pul));
+    },
+    // Pulgar arriba: corto y grueso, saliendo del puño (antes medía lo que un índice)
+    pulgar: (x, y, r) => {
+      const pul = pulgar(-13, -20, -14, -37), punta = [-14, -37, -18, -50, 9.2, 9.4];
+      return g(x, y, r, silueta(PUÑO_PULGAR, capsula(pul), capsula(punta)) + uña(punta) + trazo('M-6 -11 L24 -11 M-6 2 L25 2 M-4 14 L23 14') + trazo('M-25 -20 C-19 -15 -11 -15 -5 -20', 2.6, .35));
+    },
+    // El puño de costado: los cuatro dedos doblados y el pulgar doblado arriba, por delante del índice
+    puño: (x, y, r) => {
+      const pul = pulgar(-19, -16, 4, -17);
+      return g(x, y, r, silueta(PUÑO_PULGAR, capsula(pul)) + trazo('M-6 -11 L24 -11 M-6 2 L25 2 M-4 14 L23 14') + pulgarDelante(pul));
+    },
+    // OK: el índice y el pulgar hacen un aro chico, pegado a la palma (una sola silueta), y los otros tres dedos se abren
+    // arriba. El hueco se recorta con una máscara: se ve el fondo aunque quede cerca de la palma. La raya es donde se tocan
+    // las puntas, y la uña dice que la mitad de abajo es el pulgar. (Andrés, 06/11: "el círculo debe ser más pequeño".)
+    // id: el de la Chispa que se dibuja (cada máscara necesita el suyo; con uno fijo, una Chispa le pisaba la mano a otra)
+    ok: (x, y, r, id = ++uid) => {
+      const ds = dedos([4, -25, 7, -61], [12, -24, 18, -55], [18, -17, 27, -43, MEÑIQUE]), [cx, cy, hx, hy] = [-20, -42, 5.6, 4.8];
+      return g(x, y, r, `<mask id="chispaOk${id}" maskUnits="userSpaceOnUse" x="-90" y="-130" width="180" height="200"><rect x="-90" y="-130" width="180" height="200" fill="#fff"/><ellipse cx="${cx}" cy="${cy}" rx="${hx}" ry="${hy}" fill="#000"/></mask>` +
+        `<g mask="url(#chispaOk${id})">` + silueta(PALMA, ...ds.map(capsula), elipse(cx, cy, 16.5, 15.5)) + entre(ds[0], ds[1]) + entre(ds[1], ds[2]) +
+        trazo('M-3.6 -50 L-3.4 -31', 3.2) + `<ellipse cx="${cx}" cy="${cy}" rx="${hx + 1.7}" ry="${hy + 1.7}" fill="none" stroke="${INK}" stroke-width="3.4"/>` +
+        trazo('M-36.5 -37 L-27 -40', 3.2) + `<ellipse cx="-29.5" cy="-33.5" rx="2.6" ry="3.6" transform="rotate(-62 -29.5 -33.5)" fill="#fff" opacity=".8"/></g>`);
+    },
+    // V: el índice y el medio abiertos; el anular y el meñique doblados por delante, y el pulgar encima de ellos
+    v: (x, y, r) => {
+      const ds = dedos([-8, -24, -20, -60], [3, -25, 13, -61]), dob = [[12, -26, 12, -16, 6.6, 6.2], [19, -21, 19, -12, 6, 5.6]], pul = pulgar(-15, 4, 9, -9);
+      return g(x, y, r, silueta(PALMA, ...ds.map(capsula), ...dob.map(capsula), capsula(pul)) + trazo('M5.8 -31 L6.5 -20 M15.6 -26 L15.6 -18', 3.2) + pulgarDelante(pul));
+    },
+    // El teléfono con la pantalla hacia quien mira: los dedos asoman por detrás a la derecha; la palma lo sostiene abajo,
+    // por delante, con el pulgar corto subiendo por el borde izquierdo
+    telefono: (x, y, r) => {
+      const atras = dedos([8, -68, 30, -69], [8, -51, 32, -51], [8, -34, 29, -34, MEÑIQUE]), pul = pulgar(-15, -8, -21, -32);
+      return g(x, y, r, silueta(...atras.map(capsula)) +
+        `<rect x="-25" y="-92" width="50" height="88" rx="10" fill="#1b2433" stroke="${INK}" stroke-width="6"/>
+        <rect x="-19" y="-84" width="38" height="70" rx="5" fill="${BLUE}"/>
+        <rect x="-14" y="-79" width="28" height="7" rx="2.5" fill="#fff" opacity=".95"/>
+        <rect x="-14" y="-67" width="12.5" height="16" rx="2.5" fill="#fff" opacity=".85"/><rect x="1.5" y="-67" width="12.5" height="16" rx="2.5" fill="#fff" opacity=".85"/>
+        <rect x="-14" y="-46" width="28" height="6" rx="3" fill="${CREAM}"/>
+        <rect x="-14" y="-35" width="18" height="5" rx="2.5" fill="#fff" opacity=".6"/>` +
+        silueta('M-24 -8 C-24 -16 -12 -18 0 -18 C12 -18 24 -16 24 -8 L22 12 C18 24 -18 24 -22 12 Z', capsula(pul)) + uña(pul));
+    },
+    // Por detrás: el dorso del puño con los nudillos; el índice arriba con la uña
+    puñoAtras: (x, y, r) => g(x, y, r, silueta(PUÑO_NUDILLOS) + trazo('M-12 -19 L-12 -12 M0 -20 L0 -13 M12 -20 L12 -13', 3.2) +
+      trazo('M-14 0 L-12 12 M0 0 L0 13 M14 0 L12 12', 2.5, .4)),
+    indiceAtras: (x, y, r) => {
+      const ind = dedos([-17, -18, -16, -66])[0];
+      return g(x, y, r, silueta(PUÑO_NUDILLOS, capsula(ind)) +
+        `<path d="M-21 -66 C-21 -73 -11 -73 -11 -66 L-11 -59 C-13 -56 -19 -56 -21 -59 Z" fill="#fff" stroke="${INK}" stroke-width="2.5"/>` +
+        trazo('M-9.6 -25 L-9.6 -16 M0 -21 L0 -13 M12 -21 L12 -13', 3.2) + trazo('M-14 0 L-12 12 M0 0 L0 13 M14 0 L12 12', 2.5, .4));
+    },
   };
   const ang = (e, w) => Math.atan2(w[0] - e[0], -(w[1] - e[1])) * 180 / Math.PI;
   // Brazo: hombro -> codo -> muñeca (tubo de tinta con camisa adentro) y la mano según el antebrazo.
@@ -172,7 +224,7 @@
   const brazo = (lado, b, id = 0) => {
     const [hx, hy] = HOMBRO[lado], c = b.codo, m = b.muñeca, r = ang(c, m) + (b.giro || 0);
     const d = `M${hx} ${hy} Q${f(c[0])} ${f(c[1])} ${f(m[0])} ${f(m[1])}`;
-    let mano = b.mano && MANOS[b.mano] ? MANOS[b.mano](m[0], m[1], r) : '';
+    let mano = b.mano && MANOS[b.mano] ? MANOS[b.mano](m[0], m[1], r, `${id}${lado}`) : '';
     if (mano && b.espejo) mano = `<g transform="translate(${f(m[0])} ${f(m[1])}) rotate(${f(r)}) scale(-1 1) rotate(${f(-r)}) translate(${f(-m[0])} ${f(-m[1])})">${mano}</g>`;
     if (b.objeto) mano = g(m[0], m[1], r, b.objeto) + mano;
     return `<path d="${d}" fill="none" stroke="${INK}" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
@@ -220,7 +272,8 @@
     celebra: { L: { codo: [94, 392], muñeca: [102, 318], mano: 'pulgar', giro: 0, espejo: true }, R: { codo: [306, 392], muñeca: [298, 318], mano: 'pulgar', giro: 0 } },
     piensa: { L: REPOSO_L, R: { codo: [306, 392], muñeca: [212, 288], mano: 'puño', giro: 44 } },
     // C-195: manos nuevas en poses nuevas
-    ok: { L: REPOSO_L, R: { codo: [306, 390], muñeca: [292, 312], mano: 'ok', giro: -6 } },
+    // El OK junto a la cara, con el aro sobre el fondo azul (sobre la camisa oscura el hueco no se leía)
+    ok: { L: REPOSO_L, R: { codo: [318, 380], muñeca: [318, 292], mano: 'ok', giro: -14 } },
     victoria: { L: REPOSO_L, R: { codo: [332, 324], muñeca: [326, 240], mano: 'v', giro: 6 } },
     telefono: { L: REPOSO_L, R: { codo: [302, 398], muñeca: [258, 344], mano: 'telefono', giro: 36 } },
     presenta: { L: REPOSO_L, R: { codo: [326, 370], muñeca: [352, 322], mano: 'palmaJunta', giro: 4 } },
@@ -436,6 +489,8 @@
 
   // ángulo de la mano (grados): para dibujar un objeto que apunte a un punto del mundo
   chispa.anguloMano = (b) => ang(b.codo, b.muñeca) + (b.giro || 0);
+  // C-195: una mano sola (para revisarla de cerca o usarla en una pieza): <g> en (x, y), girada r grados
+  chispa.mano = (nombre, x = 0, y = 0, r = 0) => (MANOS[nombre] ? MANOS[nombre](x, y, r) : '');
   chispa.rig = rig; chispa.estado = ESTADO; chispa.linea = linea; chispa.labios = labios; chispa.vida = vida; chispa.mezcla = mezcla;
   window.chispa = chispa;
   window.CHISPA = { POSES: Object.keys(POSES).concat(Object.keys(POSES_ESPALDA)), BOCAS: Object.keys(BOCAS), OJOS: Object.keys(OJOS), CEJAS: Object.keys(CEJAS), EXPRESIONES: Object.keys(EXPRESIONES), MIRADAS: Object.keys(MIRADAS), MANOS: Object.keys(MANOS), CREAM, BLUE };

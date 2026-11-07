@@ -10,6 +10,39 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.22] - 2026-11-06
+### Marketing 1.5.0 y Carrito, checkout y cuenta del cliente 1.2.0 (C-191)
+- **Por qué Marketing decía "1 cliente":** las campañas van solo a quien aceptó promociones (regla de Andrés del 16/09), pero nada se lo preguntaba al cliente: el interruptor estaba solo en Mi perfil → Notificaciones.
+- **Ahora se pregunta:**
+  - al registrarse, con una casilla sin marcar;
+  - y una vez en Mi panel ("¿Te avisamos de las ofertas?", con "Sí, por correo" y "No, gracias"), a quien nunca decidió.
+- **Marketing → Campañas de correo** dice "N de M clientes" (todos los de Clientes) y por qué el resto no las recibe: sin decidir, dijeron que no o sin verificar el correo. "1 cliente" en singular.
+- **Base:** 1 columna nueva (aditivo): `notification_preferences.emailPromotionsAt`, la fecha del sí o del no.
+### Marketing 1.6.0 y 11 módulos más (C-192)
+- **El ámbar, solo para avisos que piden hacer algo.** La regla está en `PLAN.md` §1.1, elegida con maquetas reales:
+  - el azul de la marca para lo que se destaca;
+  - una sola pieza fuerte en azul noche;
+  - neutros para notas y datos.
+- **Correos con un solo acento:** el certificado, la inscripción, la gift card, el código digital y el código de promotor van en una placa azul noche. El pago en revisión, la guía, la cancelación y los datos de las pruebas, en gris.
+- **Tienda y panel:** los niveles y las categorías de cursos, "Destacado", "Antes" y "Después" de Servicios, Promotores, los métodos de pago, los reembolsos y las notas internas dejan el ámbar.
+- **Contraste:** sin texto blanco sobre ámbar o verde.
+- **Un arreglo de paso:** el círculo del error de Pago Móvil vuelve a tener color.
+### ElectroStudio 1.2.0 (C-193)
+- **Dos plantillas nuevas:**
+  - Regalos por presupuesto: tres regalos de un tramo de Ideas para regalar, con el QR a ese tramo y el buscador limitado al tramo.
+  - Felicitación con Chispa.
+- **Chispa en las historias:** cinco poses, con el borde de sticker, en los mensajes y en la felicitación.
+- **Toque navideño:**
+  - el gorro de la tienda en el logo y en Chispa;
+  - la franja "pide hasta el … para que llegue antes del 24" en los productos físicos, con las fechas de Marketing → Navidad;
+  - tres fondos: Noche, Guirnalda y Nieve.
+- **Los íconos propios de Electro Shop** en las historias y en el editor.
+- **El texto para publicar** lleva el WhatsApp y de 10 a 15 hashtags.
+### Marketing 1.7.0 y Tienda 1.5.0 (C-194)
+- **El popup navideño del inicio**, con el diseño de la felicitación que eligió Andrés: el saludo en una tarjeta blanca, el botón "Ver ideas para regalar" y Chispa saludando con el gorro.
+### Chispa (fuera de la web)
+- En "celebra", "explica" y "hombros", la mano izquierda era la derecha copiada. Ahora va en espejo (`chispa/mascota/chispa.js`).
+
 ## [1.0.0-rc.21] - 2026-11-06
 ### Tienda 1.4.0, Marketing 1.4.0, Carrito 1.1.0 y Configuración 1.1.3 (C-190)
 - **Ideas para regalar** (`/ideas-para-regalar`), una de las recomendaciones de Navidad que eligió Andrés:

@@ -10,6 +10,25 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.23] - 2026-11-07
+### ElectroStudio 1.2.1 y Marketing 1.7.1 (C-195)
+- **Chispa 3.0 en las historias, en el editor y en el popup navideño:**
+  - pulgares cortos y gruesos, que ya no parecen un índice;
+  - cada mano con un solo contorno, sin cortes en las uniones;
+  - la mano de señalar con el pulgar cruzado.
+- **Las imágenes van en otra carpeta,** `/images/studio/chispa-3/`, con la dirección en `lib/studio/chispa.ts`. El optimizador de imágenes guarda 30 días y no se puede vaciar: con la misma dirección se habrían seguido viendo las manos viejas.
+### Chispa (fuera de la web)
+- **Las manos:**
+  - una silueta por mano;
+  - el puño de costado;
+  - el OK con un aro chico junto a la cara;
+  - manos nuevas: OK, V, teléfono y dedos juntos;
+  - `chispa.mano()` para ver una sola.
+- **Movimiento:** impulso, curva y rebote, la muñeca con retraso y parpadeo al cambiar de gesto.
+- **Cara:** ocho expresiones y miradas por nombre.
+- **Poses nuevas:** `ok`, `victoria`, `telefono` y `presenta`.
+- Las reglas para dibujar las manos, en `chispa/conocimiento/02-chispa-el-personaje.md`.
+
 ## [1.0.0-rc.22] - 2026-11-06
 ### Marketing 1.5.0 y Carrito, checkout y cuenta del cliente 1.2.0 (C-191)
 - **Por qué Marketing decía "1 cliente":** las campañas van solo a quien aceptó promociones (regla de Andrés del 16/09), pero nada se lo preguntaba al cliente: el interruptor estaba solo en Mi perfil → Notificaciones.

@@ -72,6 +72,26 @@ Las fechas son de 2026. Los MP4 los tiene Andrés; aquí quedan las fuentes.
 - **Corrección de Andrés:** en "celebra" la mano izquierda era la derecha copiada ("se repite"). Ahora esa mano va con `espejo: true` (el pulgar hacia el centro) en celebra, explica y hombros. Los videos que se vuelvan a grabar salen corregidos.
 - Pidió "muchísimas mejoras a Chispa en movimiento y detalles": manos y dedos, movimiento natural, cara y expresiones (C-195 en la web).
 
+## Chispa 3.0 (06/11, C-195)
+- Andrés eligió manos y dedos, movimiento natural, y cara y expresiones. El giro de tres cuartos quedó para después.
+- **Movimiento:**
+  - un impulso antes de cada gesto;
+  - la mano en curva, con rebote al llegar;
+  - la muñeca con retraso;
+  - el cuerpo y la cabeza acompañan, y parpadea al cambiar de gesto.
+- **Cara:** ocho expresiones y miradas por nombre.
+- **Poses nuevas:** `ok`, `victoria`, `telefono` y `presenta`.
+- **Las manos se corrigieron tres veces el mismo día:**
+  1. "Revisa bien las manos": un corte donde el pulgar se junta con la palma (teléfono) y una mancha en la unión del OK. Ahora cada mano es una sola silueta.
+  2. "Los pulgares son muy largos y se perciben como índice": ahora son cortos y gruesos, con la uña.
+  3. "El círculo debe ser más pequeño, dale más enfoque": el aro del OK es chico y va junto a la cara, sobre el fondo azul.
+- **Pidió buscar una skill para diseñar manos "como los productores de juegos".** No hay ninguna que enseñe a dibujarlas. Las reglas de la animación y la prueba de silueta quedaron en `02-chispa-el-personaje.md`, «Las manos».
+- **En la web:**
+  - las imágenes de ElectroStudio y del popup salieron de nuevo, en `public/images/studio/chispa-3/`;
+  - la dirección está en `lib/studio/chispa.ts`;
+  - un dibujo nuevo va en otra carpeta, porque el optimizador de imágenes de la tienda guarda 30 días y no se puede vaciar.
+- Los stickers y los reels ya grabados no cambian: toman las manos nuevas cuando se vuelven a grabar. Los seis stickers se probaron con la versión nueva y la lupa y la llave siguen agarradas.
+
 ## Ideas pendientes (Andrés no las ha pedido todavía)
 - Plantilla de historias "Domingo de web".
 - Calendario de contenido de dos semanas.

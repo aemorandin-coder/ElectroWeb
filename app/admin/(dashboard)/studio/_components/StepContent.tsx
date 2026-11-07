@@ -10,6 +10,7 @@ import { SPEC_ICONS } from '@/lib/studio/icons';
 import { slotDone } from '@/lib/studio/checks';
 import { linkProduct, refreshLinked } from '@/lib/studio/live';
 import { TARJETA_NAVIDAD } from '@/lib/navidad';
+import { chispaSrc } from '@/lib/studio/chispa';
 import { CHISPA_POSES, TEMPLATES, TRAMOS_REGALO, conChispa, hasProductForm, type ChispaPose, type StudioMessage, type StudioProductSlot, type StudioSpec, type TemplateId, type TramoRegalo } from '@/lib/studio/schema';
 import ProductPicker from './ProductPicker';
 import { CouponForm, HeadingField, RateInfo, ReviewForm, VariantsEditor } from './TemplateForms';
@@ -466,7 +467,7 @@ function ChispaPicker({ studio }: { studio: Studio }) {
             onClick={() => elegir(pose)}
             className={`${adminChoice(current.chispa === pose)} flex flex-col items-center gap-1 p-1.5 text-xs font-semibold`}
           >
-            <Image src={`/images/studio/chispa/${pose}${current.navidad ? '-gorro' : ''}.png`} alt="" width={60} height={74} className="h-14 w-auto" />
+            <Image src={chispaSrc(pose, current.navidad)} alt="" width={60} height={74} className="h-14 w-auto" />
             {CHISPA_POSES[pose]}
           </button>
         ))}

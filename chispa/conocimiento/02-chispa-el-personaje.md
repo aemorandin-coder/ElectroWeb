@@ -2,7 +2,7 @@
 
 Chispa es la mascota de Electro Shop: un muchacho en dibujo 2D de tinta, con colores planos y el pelo negro en puntas. Tiene piel crema, ojos grandes negros con brillo y cachetes rosados. Lleva camisa azul marino con cuello en V azul y una placa blanca con "ES" en letras azules. Va siempre de la cintura para arriba, delante de un círculo azul de marca.
 
-Todo está en `mascota/chispa.js` (versión 2.0, del 10/10): un SVG armado como muñeco articulado. La hoja de poses está en `mascota/hoja.html` (foto: `mascota/chispa-poses.png`).
+Todo está en `mascota/chispa.js` (versión 3.0, del 06/11, C-195): un SVG armado como muñeco articulado. La hoja de poses está en `mascota/hoja.html` (foto: `mascota/chispa-poses.png`).
 
 ## Lo que Andrés corrigió (no repetir)
 - **Sin franja azul en la muñeca.** "Rompe las manos". Las manos salen directo de la manga.

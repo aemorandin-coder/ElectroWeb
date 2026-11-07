@@ -1,10 +1,55 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `3d685db`, versión `v1.0.0-rc.21`, el 06/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `b586a4e`, versión `v1.0.0-rc.22`, el 06/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 06/11 · C-191 a C-194 (de rc.21 a `v1.0.0-rc.22`)
+Subido el 06/11 por Andrés: los archivos nuevos tienen en el servidor la fecha de las 20:05, hora de Venezuela. Claude lo comprobó el 07/11, pidiendo las páginas como un visitante:
+- `/registro` tiene la casilla "Quiero recibir ofertas y novedades por correo" (C-191).
+- El inicio trae el popup navideño nuevo: "Electro Shop te desea", "De parte de todo el equipo" y Chispa con el gorro (C-194).
+- `/servicios` tiene "Antes" y "Después" (C-192). `/ideas-para-regalar` responde 200.
+- Las 10 imágenes de Chispa de ElectroStudio son las del repositorio (C-193).
+
+Lo que necesita una cuenta (el panel, Mi panel y que se aplicó la columna nueva) quedó en `SIGUIENTE.md`, "Por confirmar de rc.22".
+
+Producción está en `v1.0.0-rc.21`. Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.22`.
+- **C-191:** el permiso para las promociones (registro y Mi panel) y el desglose en Marketing.
+- **C-192:** el ámbar solo para avisos, con la placa azul noche en los correos.
+- **C-193:** ElectroStudio con Chispa, el toque navideño, los íconos del pack, el texto nuevo y las plantillas Regalos y Felicitación.
+- **C-194:** el popup navideño con la felicitación.
+
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.21`). Es aditivo:
+```sql
+ALTER TABLE "notification_preferences" ADD COLUMN "emailPromotionsAt" TIMESTAMP(3);
+```
+Sin variables nuevas y sin crons.
+
+**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
+```bash
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.21 y sin cambios
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc22.dump
+bash scripts/deploy.sh                       # para y muestra el SQL de arriba (1 ADD COLUMN)
+npx prisma db push && bash scripts/deploy.sh # si es solo eso; compila
+git describe --tags                                                     # v1.0.0-rc.22
+```
+
+**Pruebas** (unos 15 minutos; si al probar no ves un cambio, recarga la página):
+1. **Marketing → Campañas de correo:** dice "N de M clientes" (todos los clientes) y debajo cuántos no han decidido, cuántos dijeron que no y cuántos no verificaron el correo.
+2. **Teléfono, en incógnito, `/registro`:** debajo de los términos, la casilla de las ofertas, sin marcar.
+3. **Con una cuenta de cliente que nunca decidió:** Mi panel muestra "¿Te avisamos de las ofertas?". "Sí, por correo" la quita y en Marketing sube "aceptan".
+4. **Marketing → Correos de la tienda:** "Certificado de curso", "Gift card" y "Código digital" llevan la placa azul noche; "Pago en revisión" ya no tiene la caja ámbar.
+5. **Productos:** "Destacado" en azul. **Teléfono, `/servicios`:** "Antes" y "Después" se leen.
+6. **ElectroStudio → Nueva historia → Regalos por presupuesto:** elige "De $20 a $50": salen solo productos de ese tramo. Con tres, la historia muestra las tarjetas y el QR.
+7. **Nueva historia → Felicitación:** "¡Feliz Navidad!" con Chispa saludando con el gorro. En Diseño, el "Toque navideño" pone el gorro en el logo; en una historia de un producto físico, con las fechas cargadas, sale la franja del 24.
+8. **Publicar → Escribir el texto:** trae el WhatsApp y unos 10 hashtags.
+9. **Teléfono, en incógnito, con el tema navideño encendido:** al entrar sale el popup nuevo con Chispa. "Ver ideas para regalar" lleva a la página de regalos.
+
+**Vuelta atrás:**
+- El código: `git reset --hard v1.0.0-rc.21 && npm install && bash scripts/deploy.sh --sin-pull`. La columna no molesta al código anterior.
+- Las historias de Regalos o Felicitación que se hayan creado se abrirían como "1 producto" con el código anterior: conviene borrarlas antes.
 
 ## 06/11 · C-189 y C-190 (de rc.20 a `v1.0.0-rc.21`)
 Subido el 06/11 por Andrés. Claude comprobó desde fuera que `/ideas-para-regalar` responde 200.

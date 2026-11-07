@@ -4,6 +4,7 @@
 import qrcode from 'qrcode-generator';
 import { formatAmount } from '@/lib/currency';
 import { payIcon, piezasIcono } from './icons';
+import { chispaSrc } from './chispa';
 import {
   ANIMATIONS,
   BACKGROUNDS,
@@ -214,8 +215,6 @@ const CONFETTI = ['#FFB400', '#E0263A', '#22D3EE', '#FFFFFF'];
 const NAVIDAD = '#E0263A';
 /** brand-900: el contorno del gorro del logo, como en la tienda (C-186) */
 const MARINO = '#0E1F44';
-/** Chispa: una imagen por pose, con y sin gorro, del mismo tamaño (600 × 735; arriba queda lugar para el gorro) */
-export const chispaSrc = (pose: string, gorro: boolean) => `/images/studio/chispa/${pose}${gorro ? '-gorro' : ''}.png`;
 /** El gorro de C-186 (components/navidad/GorroSanta.tsx), en la caja de 100 del sello del logo */
 const GORRO = {
   ajustadoCopa: 'M82.5 28C84 4 70-17 46-21 29-23.5 12-17 1-6l7 6.5c3-2 6-3.5 9-3.5 1.5 9 1.5 21 .5 31z',

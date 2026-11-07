@@ -10,6 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { IconoFlechaDerecha } from '@/components/iconos';
 import type { VarianteGorro } from '@/lib/navidad';
+import { chispaSrc } from '@/lib/studio/chispa';
 import SelloNavidad from './SelloNavidad';
 
 interface TarjetaNavidadProps {
@@ -109,7 +110,7 @@ export default function TarjetaNavidad({
         </svg>
         <p className="absolute bottom-4 left-5 max-w-[48%] text-sm font-bold italic leading-snug text-brand-950">De parte de todo el equipo</p>
         <Image
-          src="/images/studio/chispa/saluda-gorro.png"
+          src={chispaSrc('saluda', true)}
           alt=""
           width={600}
           height={735}

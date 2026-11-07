@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-06, C-191 a C-194 · producción en 1.0.0-rc.21, `main` y la etiqueta en 1.0.0-rc.22)
+# Lo de ahora (actualizado 2026-11-07, C-195 · producción en 1.0.0-rc.22, `main` y la etiqueta en 1.0.0-rc.23)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.21`**, subida el 06/11 por Andrés (el panel muestra `3b340d8`, un commit de documentos después de la etiqueta). **Falta subir `v1.0.0-rc.22`** (C-191 a C-194), en la sección 2. Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
+- **Producción: `v1.0.0-rc.22`** (C-191 a C-194), subida el 06/11 por Andrés. Claude lo comprobó desde fuera el 07/11; lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.22". **Falta subir `v1.0.0-rc.23`** (C-195), en la sección 2. Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
 - **Pedido del 06/11 (tres correcciones, desde la cuenta de Andrés), decidido con una página de maquetas:**
   - **C-191 · Marketing decía "1 cliente":** las campañas van solo a quien aceptó promociones, y nada se lo preguntaba. Ahora se pregunta al registrarse y una vez en Mi panel, y el panel dice "N de M clientes" con el desglose (`estado/C-191.md`).
   - **C-192 · El ámbar, solo para avisos:** la regla de `PLAN.md` §1.1 (variante B, placa azul noche) en los correos, la tienda y el panel (`estado/C-192.md`).
@@ -14,7 +14,9 @@
     - Los íconos del pack y el texto para publicar con las reglas de Chispa.
     - Dos plantillas: Regalos por presupuesto (Vitrina) y Felicitación (Tarjeta). Detalle en `estado/C-193.md`.
   - **C-194 · El popup navideño del inicio** con el diseño de la felicitación ("este me encanta para que sea el popup del inicio") (`estado/C-194.md`).
-  - **C-195 · Chispa con más movimiento y detalle** (pedida): manos y dedos, movimiento natural, cara y expresiones. Ya se corrigió la mano copiada de "celebra", "explica" y "hombros".
+  - **C-195 · Chispa 3.0** (aprobada el 06/11, en rc.23): manos y dedos, movimiento natural, cara y expresiones (`estado/C-195.md`).
+    - Las manos se corrigieron tres veces: cortes en las uniones, pulgares que parecían índice y el aro del OK grande.
+    - Se buscó una skill para dibujar manos y no hay: las reglas quedaron en `chispa/conocimiento/02`.
 - **C-187 · Admin → Productos (06/11, pedido de Andrés, en producción):** ya se pueden eliminar los zombis (`estado/C-187.md`).
   - **El motivo:** "Borrar para siempre" de un producto con ventas lo dejaba archivado y de vuelta en la lista, todavía destacado. El cron de la papelera hacía lo mismo a los 30 días.
   - **El arreglo:** ahora queda **eliminado**, fuera de la lista, de la papelera y de la tienda, sin tocar sus órdenes, garantías, reseñas, códigos ni Puntos ES. Solo el dueño lo puede recuperar, y vuelve como borrador. Lo archivado va en su propio filtro.
@@ -45,29 +47,36 @@
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
-## 2. Deploy pendiente: `v1.0.0-rc.22` (C-191 a C-194)
-Producción está en `v1.0.0-rc.21`. Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.22`.
-- **C-191:** el permiso para las promociones (registro y Mi panel) y el desglose en Marketing.
-- **C-192:** el ámbar solo para avisos, con la placa azul noche en los correos.
-- **C-193:** ElectroStudio con Chispa, el toque navideño, los íconos del pack, el texto nuevo y las plantillas Regalos y Felicitación.
-- **C-194:** el popup navideño con la felicitación.
+## 2. Deploy pendiente: `v1.0.0-rc.23` (C-195)
+Producción está en `v1.0.0-rc.22`. Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.23`.
+- **C-195:** Chispa 3.0. En la web cambian sus 10 imágenes de ElectroStudio, que también usa el popup navideño: pulgares cortos, una silueta por mano y la mano de señalar nueva.
+- Las imágenes cambian de carpeta, a `/images/studio/chispa-3/`, porque la tienda guarda 30 días las imágenes optimizadas y con la misma dirección se seguirían viendo las viejas.
 
-**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.21`). Es aditivo:
-```sql
-ALTER TABLE "notification_preferences" ADD COLUMN "emailPromotionsAt" TIMESTAMP(3);
-```
-Sin variables nuevas y sin crons.
+**Sin SQL, sin variables nuevas y sin crons.** No cambian las dependencias.
 
 **Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
 ```bash
-git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.21 y sin cambios
-DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc22.dump
-bash scripts/deploy.sh                       # para y muestra el SQL de arriba (1 ADD COLUMN)
-npx prisma db push && bash scripts/deploy.sh # si es solo eso; compila
-git describe --tags                                                     # v1.0.0-rc.22
+git describe --tags --abbrev=0 && git status -sb    # v1.0.0-rc.22 y sin cambios
+bash scripts/deploy.sh                                # sin SQL: compila y reinicia
+# (si se detiene y muestra el ADD COLUMN de "emailPromotionsAt", faltó en rc.22: npx prisma db push && bash scripts/deploy.sh)
+git describe --tags                                   # v1.0.0-rc.23
 ```
 
-**Pruebas** (unos 15 minutos; si al probar no ves un cambio, recarga la página):
+**Pruebas** (unos 5 minutos):
+1. **Teléfono, en incógnito, con el tema navideño encendido:** el popup muestra a Chispa saludando con la mano nueva: los dedos abiertos y el pulgar corto.
+2. **ElectroStudio → Nueva historia → Felicitación → Contenido:** en el selector de Chispa, "Pulgar arriba" tiene el pulgar corto y grueso, y "Señala", el pulgar cruzado. La historia muestra la misma pose.
+3. **Una historia vieja con Chispa** se abre y lo muestra con las manos nuevas.
+
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.22 && bash scripts/deploy.sh --sin-pull`. Vuelven la carpeta y las imágenes de antes. Sin cambio de base.
+
+### Por confirmar de rc.22 (C-191 a C-194, unos 15 minutos)
+Subida el 06/11 por Andrés. Claude comprobó el 07/11, como un visitante:
+- la casilla de las ofertas en `/registro`;
+- el popup navideño nuevo, con Chispa;
+- "Antes" y "Después" en `/servicios`;
+- `/ideas-para-regalar`.
+
+Falta lo que necesita una cuenta (detalle en `HISTORIAL.md`, 06/11). La prueba 3 confirma también que se aplicó la columna nueva de la base.
 1. **Marketing → Campañas de correo:** dice "N de M clientes" (todos los clientes) y debajo cuántos no han decidido, cuántos dijeron que no y cuántos no verificaron el correo.
 2. **Teléfono, en incógnito, `/registro`:** debajo de los términos, la casilla de las ofertas, sin marcar.
 3. **Con una cuenta de cliente que nunca decidió:** Mi panel muestra "¿Te avisamos de las ofertas?". "Sí, por correo" la quita y en Marketing sube "aceptan".
@@ -77,10 +86,6 @@ git describe --tags                                                     # v1.0.0
 7. **Nueva historia → Felicitación:** "¡Feliz Navidad!" con Chispa saludando con el gorro. En Diseño, el "Toque navideño" pone el gorro en el logo; en una historia de un producto físico, con las fechas cargadas, sale la franja del 24.
 8. **Publicar → Escribir el texto:** trae el WhatsApp y unos 10 hashtags.
 9. **Teléfono, en incógnito, con el tema navideño encendido:** al entrar sale el popup nuevo con Chispa. "Ver ideas para regalar" lleva a la página de regalos.
-
-**Vuelta atrás:**
-- El código: `git reset --hard v1.0.0-rc.21 && npm install && bash scripts/deploy.sh --sin-pull`. La columna no molesta al código anterior.
-- Las historias de Regalos o Felicitación que se hayan creado se abrirían como "1 producto" con el código anterior: conviene borrarlas antes.
 
 ### Por confirmar de rc.21 (C-189 y C-190)
 1. Si no se corrió en el deploy, crear los borradores de campaña: `npx tsx scripts/campanas-navidad.ts --aplicar`, en `/var/www/electroshopve`.
@@ -213,6 +218,7 @@ En el orden en que más destraban:
 
 **En producción**
 1. **Las pruebas de la sección 2:**
+   - rc.23 y rc.22: Chispa en el popup y en ElectroStudio; Marketing, Mi panel, los correos y las plantillas nuevas.
    - rc.17: la hoja impresa con las condiciones y las formas de pago a lo ancho.
    - rc.16: el anexo en el panel, la hoja en blanco y negro y el PDF en el teléfono.
    - rc.15: la vista del cliente en el panel.

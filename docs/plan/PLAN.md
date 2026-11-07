@@ -421,7 +421,9 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-192** (**hecha**): el ámbar solo para avisos, con la regla de §1.1 (variante B, placa azul noche). Queda como lo eligió Luis el recuadro de "Lo que no incluye" de las cotizaciones.
 - **C-193** (**hecha**): ElectroStudio con Chispa, el toque navideño, los íconos del pack, el texto con las reglas de Chispa y dos plantillas (Regalos por presupuesto y Felicitación). Sin elegir, por si se quieren: "Arma la semana" con el calendario de Navidad y las plantillas "Fecha límite y gift card", "Antes y después" y "¿Cuál prefieres?".
 - **C-194** (**hecha**): el popup navideño del inicio con el diseño de la felicitación (Andrés lo pidió al ver la maqueta).
-- **C-195** (pedida el 06/11): Chispa con más movimiento y detalle en `chispa/mascota/chispa.js`: manos y dedos, movimiento natural, cara y expresiones. El giro de tres cuartos, después.
+- **C-195** (**hecha**, rc.23): Chispa 3.0 en `chispa/mascota/chispa.js`: manos y dedos (pulgares cortos, una silueta por mano, el OK chico), movimiento natural, cara y expresiones. Las imágenes de ElectroStudio y del popup salen de nuevo, en `chispa-3/`.
+  - Queda para después, como dijo Andrés: el giro de tres cuartos de Chispa.
+  - Sin pedir: volver a grabar los stickers y los reels para que tomen las manos nuevas (salen solos con `herramientas/sticker.mjs` y los `videos/*.src.html`).
 
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).

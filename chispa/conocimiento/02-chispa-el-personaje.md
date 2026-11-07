@@ -2,7 +2,7 @@
 
 Chispa es la mascota de Electro Shop: un muchacho en dibujo 2D de tinta, con colores planos y el pelo negro en puntas. Tiene piel crema, ojos grandes negros con brillo y cachetes rosados. Lleva camisa azul marino con cuello en V azul y una placa blanca con "ES" en letras azules. Va siempre de la cintura para arriba, delante de un círculo azul de marca.
 
-Todo está en `mascota/chispa.js` (versión 2.0, del 10/10): un SVG armado como muñeco articulado. La hoja de poses está en `mascota/hoja.html` (foto: `mascota/chispa-poses.png`).
+Todo está en `mascota/chispa.js` (versión 3.0, del 06/11, C-195): un SVG armado como muñeco articulado. La hoja de poses está en `mascota/hoja.html` (foto: `mascota/chispa-poses.png`).
 
 ## Lo que Andrés corrigió (no repetir)
 - **Sin franja azul en la muñeca.** "Rompe las manos". Las manos salen directo de la manga.
@@ -13,17 +13,48 @@ Todo está en `mascota/chispa.js` (versión 2.0, del 10/10): un SVG armado como 
 - **Las manos se agarran del borde** cuando se asoma (no flotan).
 - **De espalda, la mano es un puño visto por detrás** (nudillos) o el índice con la uña. Nunca una palma de frente vista de espalda.
 - Se mantiene el estilo: tinta gruesa, colores planos, nada de 3D, nada de degradados en el personaje.
+- **La mano izquierda no es la derecha copiada** (06/11, en «celebra»). Con las dos manos a la vista, la izquierda va en espejo (`espejo: true`), con el pulgar hacia el centro.
+- **Los pulgares son cortos y gruesos** (06/11: «los pulgares son muy largos y se perciben como índice»).
+- **Sin cortes donde un dedo se junta con la palma** (06/11: «revisa bien las manos»). Cada mano es una sola silueta (abajo).
+- **El aro del OK, chico y con el hueco sobre el fondo** (06/11: «el círculo debe ser más pequeño, dale más enfoque»). Sobre la camisa oscura el hueco no se leía.
+
+## Las manos: cómo se dibujan (C-195)
+No hay una skill que enseñe a dibujar manos (se buscó el 06/11). Estas reglas salen de cómo las trabajan la animación y los juegos: Preston Blair (la mano como un mitón primero), Proko (palma en bloque, dedos como cilindros, base triangular del pulgar), Streamline (empezar por la mano abierta y el puño, y que se lean en chico) y la prueba de silueta de los estudios. Más lo que corrigió Andrés.
+1. **Una mano, una silueta.** La palma, los dedos y el pulgar se dibujan juntos con un solo contorno: primero todo en tinta con un trazo de 12 por fuera, después todo en piel encima (`silueta()`). Así no quedan cortes ni manchas en las uniones.
+   - Un pulgar que cruza por delante de los dedos doblados también entra en la silueta. Encima va su borde, abierto en la base para que se funda con la palma (`pulgarDelante()`): el lado de arriba llega más cerca de la base que el de abajo.
+2. **Primero la silueta.** Cada gesto se tiene que entender en negro sólido y a 32 px. Si no se entiende, se cambia la forma; no se agregan líneas. El pulgar arriba tiene que verse distinto del índice, y el hueco del OK tiene que verse.
+3. **El pulgar.**
+   - Es corto y grueso: 9,5 de radio en la base contra 7,4 del índice, y bastante más corto.
+   - Sale bajo, de la mitad de la palma hacia la muñeca, nunca de la fila de los nudillos. Su punta llega a la base del índice.
+   - Lleva la uña (un brillo claro, sin contorno) solo cuando se le ve la punta.
+   - El pulgar arriba se echa un poco hacia atrás y termina más grueso que el tronco.
+4. **Los dedos no van parejos.**
+   - El medio es el más largo; el índice y el anular, parecidos; el meñique, el más corto y más fino. Las puntas hacen un arco.
+   - Uno se separa del grupo: en la mano abierta, el índice y el meñique; en la de dedos juntos, el meñique.
+   - Nada de dedos paralelos e igual de separados, ni de dos manos iguales.
+5. **Pocas líneas adentro:** las rayas que separan los dedos (`entre()`) y la línea que rodea la base del pulgar.
+   - Los pliegues de los dedos se quitaron: se veían como una línea punteada.
+   - La línea de la palma al medio parecía una sonrisa.
+6. **Grosores.** El contorno, 6. Las líneas de adentro, de 3,2 a 4,5. El borde del hueco del OK, 3,4.
+7. **Lo que se ve a través** (el hueco del OK) se recorta con una máscara, con un id propio por cada Chispa (`chispaOk${id}`); con un id fijo, una Chispa le pisaba la mano a otra. No se pinta con un color de fondo inventado.
+8. **Se revisa así antes de mostrarla:**
+   - cada mano sola y grande (`chispa.mano('ok')`);
+   - la misma mano en negro, a 64 y a 32 px;
+   - en las poses, a tamaño real y de cerca.
 
 ## Cómo se usa
 ```js
 // en la página: <script src="../mascota/chispa.js"></script>
 el.innerHTML = chispa({ pose: 'saluda', boca: 'sonrisa', ojos: 'feliz', cejas: 'normal', fondo: false });
 ```
-- **Poses (de frente):** `habla`, `señala` (índice arriba a su izquierda), `explica` (dos palmas abiertas), `pulgar`, `brazos` (cruzados), `hombros` ("¿y entonces?"), `saluda`, `celebra` (dos pulgares al pecho) y `piensa` (puño bajo la barbilla).
+- **Poses (de frente):** `habla`, `señala` (índice arriba a su izquierda), `explica` (dos palmas abiertas), `pulgar`, `brazos` (cruzados), `hombros` ("¿y entonces?"), `saluda`, `celebra` (dos pulgares al pecho), `piensa` (puño bajo la barbilla), `ok` (junto a la cara), `victoria` (la V), `telefono` (muestra el teléfono con la tienda) y `presenta` (la mano abierta hacia un lado, para presentar algo).
 - **Poses de espalda:** `espalda`, `espalda-señala`, `espalda-señala-alto`, `espalda-dos` y `espalda-libre` (brazos a mano con `window.CHISPA_L` y `window.CHISPA_R`).
-- **Ojos:** `abiertos`, `cerrados`, `sorpresa`, `guino`, `feliz`.
-- **Cejas:** `normal`, `arriba`, `duda`, `enojo`.
-- **Bocas:** `sonrisa`, `seria` y las vocales `a`, `e`, `i`, `o`, `u`.
+- **Ojos:** `abiertos`, `cerrados`, `sorpresa`, `guino`, `feliz`, `sonrie`, `entrecerrados`.
+- **Cejas:** `normal`, `arriba`, `duda`, `enojo`, `triste`.
+- **Bocas:** `sonrisa`, `seria`, las vocales `a`, `e`, `i`, `o`, `u`, y `feliz`, `risa`, `sorpresa`, `triste`, `ups`, `picara`, `duda`.
+- **Expresiones** (ponen ojos, cejas, boca, mirada y rubor juntos; lo que se pase aparte manda): `alegre`, `risa`, `sorpresa`, `pensativo`, `picaro`, `apenado`, `orgulloso`, `triste`. Ejemplo: `chispa({ pose: 'telefono', expresion: 'alegre' })`.
+- **Miradas por nombre** (en `chispa.linea`, `mirar: 'telefono'`): `camara`, `derecha`, `izquierda`, `arriba`, `abajo`, `telefono`, `producto`.
+- **Una mano sola:** `chispa.mano('pulgar', x, y, giro)` da el SVG de la mano, para revisarla de cerca o usarla en una pieza.
 - Cada pose inclina un poco la cabeza (`INC_POSE`) para que no se vea rígido.
 
 ## Animarlo (lo que usan los videos)

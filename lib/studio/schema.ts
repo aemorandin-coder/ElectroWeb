@@ -68,7 +68,7 @@ export const BACKGROUND_DEFAULT: Record<TemplateId, BackgroundId> = {
   felicitacion: 'nieve',
 };
 
-/** C-193: las poses de Chispa que salen en las historias (public/images/studio/chispa, hechas con chispa/mascota/chispa.js) */
+/** C-193: las poses de Chispa que salen en las historias (las imágenes y su carpeta, en lib/studio/chispa.ts) */
 export const CHISPA_POSES = { saluda: 'Saluda', senala: 'Señala', pulgar: 'Pulgar arriba', celebra: 'Celebra', explica: 'Explica' } as const;
 export type ChispaPose = keyof typeof CHISPA_POSES;
 /** Plantillas con un lugar para Chispa (en las demás no cabe sin tapar el producto o el precio) */

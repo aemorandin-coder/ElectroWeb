@@ -11,7 +11,7 @@ import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { ELIMINADOS, EN_PAPELERA } from '@/lib/papelera';
 import type { Prisma } from '@prisma/client';
 
-const CAMPOS_CATEGORIA: Record<string, string> = { name: 'nombre', description: 'descripción', image: 'imagen', icon: 'ícono', color: 'color', parentId: 'categoría principal' };
+const CAMPOS_CATEGORIA: Record<string, string> = { name: 'nombre', description: 'descripción', image: 'imagen', icon: 'ícono', color: 'color', parentId: 'categoría principal', isDepartment: 'departamento aparte' };
 
 // C-187: el panel cuenta lo que tiene cada categoría (catálogo y papelera); lo eliminado, que se conserva solo por sus
 // ventas, no cuenta. La tienda (sin sesión del panel) cuenta solo lo publicado.
@@ -86,6 +86,8 @@ export async function POST(request: NextRequest) {
         icon: icon || null,
         color: color || null,
         parentId: parentId || null,
+        // C-200: solo una categoría principal puede ser un departamento aparte (Ferretería)
+        isDepartment: body.isDepartment === true && !parentId,
       },
       include: WITH_COUNT,
     });
@@ -140,6 +142,10 @@ export async function PATCH(request: NextRequest) {
     if (icon !== undefined)        updateData.icon = icon || null;
     if (color !== undefined)       updateData.color = color || null;
     if (parentId !== undefined)    updateData.parentId = parentId || null;
+    // C-200: departamento aparte, solo en una categoría principal (con categoría padre deja de serlo)
+    if (body.isDepartment !== undefined) updateData.isDepartment = body.isDepartment === true;
+    const padreFinal = parentId !== undefined ? parentId || null : antes.parentId;
+    if (padreFinal) updateData.isDepartment = false;
 
     const category = await prisma.$transaction(async (tx) => {
       const tomada = await tx.category.updateMany({ where: { id, updatedAt: v.base }, data: { updatedAt: new Date() } });

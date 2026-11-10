@@ -7,11 +7,16 @@ import {
   IconoCarrito, IconoCerrar, IconoCorreo, IconoCuadricula, IconoCursos, IconoGiftCard, IconoInicio, IconoMasOpciones,
   IconoOferta, IconoPaquete, IconoServicioTecnico, IconoVariantes,
 } from '@/components/iconos';
+import dynamic from 'next/dynamic';
 import { useCart } from '@/contexts/CartContext';
+import { useNavDepartamentos } from '@/contexts/CatalogNavContext';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { esRutaDeAcceso } from '@/lib/rutas';
 
 type IconType = ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
+
+// C-200: el ícono de un departamento aparte se carga aparte (el de cada categoría sale de una lista de 35)
+const IconoDeCategoria = dynamic(() => import('@/components/CategoryIconRenderer'));
 
 const MAIN_ITEMS: Array<{ href: string; label: string; Icon: IconType }> = [
   { href: '/', label: 'Inicio', Icon: IconoInicio },
@@ -38,6 +43,12 @@ const DRAWER_ITEMS: Array<{ href: string; label: string; Icon: IconType }> = [
 export default function MobileNavBar() {
   const { totalItems } = useCart();
   const pathname = usePathname();
+  // C-200: los departamentos aparte (Ferretería) van primero en "Más"
+  const departamentos = useNavDepartamentos();
+  const drawerItems = [
+    ...departamentos.map((d) => ({ href: `/categorias/${d.slug}`, label: d.name, icono: <IconoDeCategoria iconName={d.icon} className="h-5 w-5 shrink-0" /> })),
+    ...DRAWER_ITEMS.map(({ href, label, Icon }) => ({ href, label, icono: <Icon className="h-5 w-5 shrink-0" aria-hidden /> })),
+  ];
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -133,9 +144,10 @@ export default function MobileNavBar() {
               </button>
             </div>
             <ul className="grid grid-cols-2 gap-3">
-              {DRAWER_ITEMS.map(({ href, label, Icon }, index) => {
+              {drawerItems.map(({ href, label, icono }, index) => {
                 const active = isActive(href);
-                const wide = index === DRAWER_ITEMS.length - 1;
+                // El último va a lo ancho si quedó solo en su fila
+                const wide = index === drawerItems.length - 1 && drawerItems.length % 2 === 1;
                 return (
                   <li key={href} className={wide ? 'col-span-2' : undefined}>
                     <Link
@@ -146,7 +158,7 @@ export default function MobileNavBar() {
                         active ? 'bg-brand-500 text-white' : 'bg-white/10 text-white hover:bg-white/15'
                       }`}
                     >
-                      <Icon className="h-5 w-5 shrink-0" aria-hidden />
+                      {icono}
                       {label}
                     </Link>
                   </li>

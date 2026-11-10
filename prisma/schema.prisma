@@ -601,6 +601,9 @@ model Category {
   parentId    String?
   parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryHierarchy")
+  /// C-200: un departamento aparte (Ferretería). Sus productos y los de sus subcategorías no se mezclan con el inicio
+  /// de tecnología: tienen su vitrina, su acceso en la franja y su página, con su descripción como aviso arriba.
+  isDepartment Boolean  @default(false)
   products    Product[]
 
   createdAt   DateTime  @default(now())

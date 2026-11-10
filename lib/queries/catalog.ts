@@ -121,7 +121,8 @@ function filterConditions(params: CatalogParams, { withCategory, ofertas, busque
   const conditions: Prisma.ProductWhereInput[] = [];
   // La búsqueda (C-158) ya se resolvió sin acentos ni mayúsculas: aquí solo se pide esos productos
   if (busqueda) conditions.push({ id: { in: busqueda } });
-  if (withCategory && params.category) conditions.push({ category: { slug: params.category } });
+  // C-200: una categoría madre (el departamento Ferretería) trae también lo de sus subcategorías
+  if (withCategory && params.category) conditions.push({ category: { OR: [{ slug: params.category }, { parent: { slug: params.category } }] } });
   if (params.min !== null) conditions.push({ priceUSD: { gte: params.min } });
   if (params.max !== null) conditions.push({ priceUSD: { lte: params.max } });
   if (params.offers) conditions.push(ofertas);
@@ -153,6 +154,18 @@ export interface CatalogCategoryFacet {
 export interface CatalogCurrentCategory extends CatalogCategoryFacet {
   icon: string | null;
   description: string | null;
+  /**
+   * C-200: el departamento aparte al que pertenece (ella misma, si es el departamento), con sus subcategorías para los
+   * chips de arriba y su aviso del envío. null si no es de un departamento.
+   */
+  departamento: {
+    name: string;
+    slug: string;
+    description: string | null;
+    hijos: Array<{ id: string; name: string; slug: string; icon: string | null; count: number }>;
+  } | null;
+  /** C-200: la categoría madre, para la miga de pan ("Productos › Ferretería › Pinturas") */
+  parent: { name: string; slug: string } | null;
 }
 
 export interface CatalogResult {
@@ -231,7 +244,14 @@ export async function getCatalog(params: CatalogParams): Promise<CatalogResult> 
       where: { id: { in: counts.map((c) => c.categoryId) } },
       select: { id: true, name: true, slug: true },
     }),
-    params.category ? prisma.category.findUnique({ where: { slug: params.category }, select: { id: true, name: true, slug: true, icon: true, description: true } }) : null,
+    params.category ? prisma.category.findUnique({
+      where: { slug: params.category },
+      select: {
+        id: true, name: true, slug: true, icon: true, description: true, isDepartment: true,
+        children: { select: { id: true, name: true, slug: true, icon: true } },
+        parent: { select: { name: true, slug: true, description: true, isDepartment: true, children: { select: { id: true, name: true, slug: true, icon: true } } } },
+      },
+    }) : null,
   ]);
 
   // Con orden en memoria, la base devuelve la página sin orden: se acomoda como dijo `idsEnOrden`
@@ -251,8 +271,34 @@ export async function getCatalog(params: CatalogParams): Promise<CatalogResult> 
     page,
     totalPages,
     categories,
-    currentCategory: selected ? { ...selected, count: countById.get(selected.id) ?? 0 } : null,
+    currentCategory: selected ? categoriaElegida(selected, countById) : null,
     aproximado: coincidencias?.aproximado ?? false,
+  };
+}
+
+type CategoriaDeLaBase = {
+  id: string; name: string; slug: string; icon: string | null; description: string | null; isDepartment: boolean;
+  children: Array<{ id: string; name: string; slug: string; icon: string | null }>;
+  parent: { name: string; slug: string; description: string | null; isDepartment: boolean; children: Array<{ id: string; name: string; slug: string; icon: string | null }> } | null;
+};
+
+/** C-200: la categoría elegida, con el conteo de ella y sus subcategorías y, si es de un departamento aparte, sus chips */
+function categoriaElegida(c: CategoriaDeLaBase, countById: Map<string, number>): CatalogCurrentCategory {
+  const contar = (id: string) => countById.get(id) ?? 0;
+  const conConteo = (hijos: CategoriaDeLaBase['children']) => hijos
+    .map((h) => ({ ...h, count: contar(h.id) }))
+    .filter((h) => h.count > 0)
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'es'));
+  const departamento = c.isDepartment
+    ? { name: c.name, slug: c.slug, description: c.description, hijos: conConteo(c.children) }
+    : c.parent?.isDepartment
+      ? { name: c.parent.name, slug: c.parent.slug, description: c.parent.description, hijos: conConteo(c.parent.children) }
+      : null;
+  return {
+    id: c.id, name: c.name, slug: c.slug, icon: c.icon, description: c.description,
+    count: contar(c.id) + c.children.reduce((suma, h) => suma + contar(h.id), 0),
+    departamento,
+    parent: c.parent ? { name: c.parent.name, slug: c.parent.slug } : null,
   };
 }
 
@@ -270,11 +316,12 @@ export interface CategorySummary {
  * `cache()`: generateMetadata y la página comparten la consulta.
  */
 export const getCategorySummary = cache(async (slug: string): Promise<CategorySummary | null> => {
-  const category = await prisma.category.findUnique({ where: { slug }, select: { id: true, name: true, slug: true, description: true } });
+  const category = await prisma.category.findUnique({ where: { slug }, select: { id: true, name: true, slug: true, description: true, children: { select: { id: true } } } });
   if (!category) return null;
   const byBrand = await prisma.product.groupBy({
     by: ['brandId'],
-    where: await visibleProducts({ categoryId: category.id, brandId: { not: null } }),
+    // C-200: con las de sus subcategorías (el departamento Ferretería no tiene productos propios)
+    where: await visibleProducts({ categoryId: { in: [category.id, ...category.children.map((c) => c.id)] }, brandId: { not: null } }),
     _count: { brandId: true },
     orderBy: { _count: { brandId: 'desc' } },
     take: 4,

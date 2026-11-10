@@ -463,7 +463,15 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-202** (**hecha**, rc.27): los nombres de producto bien escritos (la regla de §7.2), la columna "Nombre en la tienda" en la Lista del proveedor, el aviso del asistente, y renombrar ya no rompe el enlace (la dirección vieja responde 308). `estado/C-202.md`. Quedan:
   - **Los 14 productos publicados:** la propuesta está en `estado/C-202.md` y espera el OK de Andrés. Se renombran después de subir rc.27.
   - **Los de la ferretería:** las 28 preguntas y los modelos a confirmar van a la ferretería. Con el modelo exacto, el nombre se completa con el del fabricante.
-- **En curso, en paralelo (una copia de Claude):** las maquetas de C-200 (la franja, la vitrina del inicio y la página del departamento) y las de "Para ti" en Mi panel, para que Andrés elija antes de programar.
+- **C-200** (**hecha**, rc.28): el departamento Ferretería, con las maquetas que eligió Andrés. `estado/C-200.md`. Quedan:
+  - La línea "Sale desde La Victoria" en cada tarjeta va con C-199, que guarda la ciudad de despacho del proveedor.
+  - Antes de crear los productos de la ferretería, correr en producción `scripts/ferreteria-departamento.ts --aplicar`, que crea las categorías.
+- **Pack de íconos v1.2** (10/11, en C-200): los 10 de ferretería, redibujados de la tanda que generó Andrés. La página para Luis está en `ElectroShop Brand/Pack de íconos/iconos-electro-shop-v1.2.html`.
+- **"Para ti" en Mi panel** (Andrés eligió la V1 el 10/11): cuatro tarjetas por motivo, después de "Pedidos en curso" (volvió a haber, bajó de precio, va con lo que compraste, lo viste hace poco). Maqueta privada "Para ti en Mi panel". Lo que pide para funcionar está en su página: el precio y la existencia del favorito al marcarlo, una regla de complementos por categoría y los vistos en el navegador del cliente.
+- **Plan "Electro Shop lo tiene todo" con ElectroStudio** (10/11): documento privado, más sus maquetas de flyers.
+  - Cuatro plantillas nuevas, cada una con su animación de 7 s: Lo tiene todo, Departamento, Arma tu proyecto y ¿Sabías que también…?
+  - Calendario del 11/11 al 31/12, con el lanzamiento de Ferretería tentativo la semana del 23/11.
+  - Las plantillas esperan que Andrés elija sus maquetas.
 
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
@@ -599,6 +607,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - Un departamento Ferretería, y el inicio sigue siendo de tecnología (C-200).
   - Las fotos, del fabricante.
   - Las variantes, como familias de productos (C-198).
+- **El departamento Ferretería (Andrés, 10/11, C-200):** enlace en la franja al lado de Ofertas (en el teléfono, primer chip del inicio y entrada en "Más"); su vitrina, un estante con sus categorías después de "Recién llegados"; su página, el catálogo de siempre con el aviso del envío y sus categorías arriba.
 - **Nombres de producto (Andrés, 10/11, C-202):** escritos normal, como una oración, en toda la tienda. Siglas, unidades y marcas como se escriben ("120 V", "LED", "Daewoo"). Primero lo que es, después lo que lo distingue, la marca y el modelo; el color o la talla al final. Nada inventado: lo que no se entiende se le pregunta al proveedor.
   - La ficha, en una sola tarjeta (C-197).
 - **Taller:** espera a SADES (30/09).

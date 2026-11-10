@@ -10,6 +10,21 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.28] - 2026-11-10
+### Tienda 1.7.0 (C-200)
+- **El departamento Ferretería.** Sus productos no se mezclan con el inicio, que sigue siendo de tecnología. Tiene:
+  - **Acceso:** en la franja, al lado de Ofertas; en el teléfono, el primer chip del inicio y la primera entrada de "Más".
+  - **Su vitrina en el inicio,** después de "Recién llegados": el aviso del envío, sus categorías y sus productos.
+  - **Su página:** el catálogo de siempre, con el aviso del envío y sus 9 categorías arriba. Cada subcategoría lleva la miga "Productos › Ferretería › …".
+  - "Categorías" lo muestra en su propio grupo, y `/categorias`, el sitemap y `llms.txt` suman lo de sus categorías.
+  - **No se ve hasta que tenga productos publicados.**
+### Productos 1.8.0 y Carrito, checkout y cuenta del cliente 1.2.3 (C-200)
+- **Categorías:**
+  - la casilla "Departamento aparte";
+  - en el selector, los 10 íconos nuevos de ferretería (pack v1.2: rodillo, taladro, enchufe, pala con brote, grifo, llave, bombillo, llave inglesa con destornillador, careta y caja de herramientas).
+- **Guion:** `scripts/ferreteria-departamento.ts` crea el departamento y sus 9 categorías.
+- **Base:** 1 columna nueva (aditivo): `categories.isDepartment`.
+
 ## [1.0.0-rc.27] - 2026-11-10
 ### Productos 1.7.0 (C-202)
 - **Los nombres bien escritos.**

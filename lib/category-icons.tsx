@@ -4,6 +4,8 @@ import {
   IconoDiscoDuro, IconoGarantia, IconoGiftCard, IconoImpresora, IconoLaptop, IconoMicrofono, IconoMonitor, IconoMouse,
   IconoPaquete, IconoParlante, IconoPcEscritorio, IconoPcGaming, IconoRegalo, IconoRelojInteligente, IconoRouter,
   IconoServicioTecnico, IconoServidor, IconoSoftware, IconoTableta, IconoVideojuegos,
+  IconoAgua, IconoBombillo, IconoEnchufe, IconoFerreteria, IconoHerramientas, IconoJardin, IconoLlave, IconoPintura,
+  IconoSoldadura, IconoTaladro,
   type IconType,
 } from '@/components/iconos';
 
@@ -54,6 +56,17 @@ export const ICON_OPTIONS: CategoryIconOption[] = [
   { name: 'IconoRouter',           label: 'Redes',                   Icon: IconoRouter },
   { name: 'IconoCamaraSeguridad',  label: 'CCTV y seguridad',        Icon: IconoCamaraSeguridad },
   { name: 'IconoGarantia',         label: 'Protección',              Icon: IconoGarantia },
+  // Ferretería (pack v1.2, C-200)
+  { name: 'IconoFerreteria',       label: 'Ferretería',              Icon: IconoFerreteria },
+  { name: 'IconoTaladro',          label: 'Herramientas eléctricas', Icon: IconoTaladro },
+  { name: 'IconoHerramientas',     label: 'Herramientas manuales',   Icon: IconoHerramientas },
+  { name: 'IconoPintura',          label: 'Pinturas',                Icon: IconoPintura },
+  { name: 'IconoEnchufe',          label: 'Electricidad',            Icon: IconoEnchufe },
+  { name: 'IconoBombillo',         label: 'Iluminación',             Icon: IconoBombillo },
+  { name: 'IconoAgua',             label: 'Bombas y agua',           Icon: IconoAgua },
+  { name: 'IconoJardin',           label: 'Jardín y agro',           Icon: IconoJardin },
+  { name: 'IconoLlave',            label: 'Cerrajería',              Icon: IconoLlave },
+  { name: 'IconoSoldadura',        label: 'Soldadura',               Icon: IconoSoldadura },
   // General
   { name: 'IconoServicioTecnico',  label: 'Servicio técnico',        Icon: IconoServicioTecnico },
   { name: 'IconoConfiguracion',    label: 'Herramientas',            Icon: IconoConfiguracion },

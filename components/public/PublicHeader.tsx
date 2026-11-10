@@ -10,7 +10,7 @@ import CartIcon from '@/components/CartIcon';
 import UserAccountButton from '@/components/UserAccountButton';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import Container from '@/components/ui/Container';
-import { useNavCategories } from '@/contexts/CatalogNavContext';
+import { useNavCategories, useNavDepartamentos } from '@/contexts/CatalogNavContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { formatVES } from '@/lib/currency';
 import HeaderDropdown from './header/HeaderDropdown';
@@ -21,6 +21,8 @@ import { useHideOnScroll } from './header/useHideOnScroll';
 const CategoriesMenuPanel = dynamic(() => import('./header/CategoriesMenuPanel'), {
   loading: () => <p className="p-4 text-sm text-muted">Cargando categorías…</p>,
 });
+// C-200: el ícono de un departamento aparte se carga aparte (el de cada categoría sale de una lista de 35)
+const IconoDeCategoria = dynamic(() => import('@/components/CategoryIconRenderer'));
 // C-186: el gorro de Santa del logo solo se descarga con el tema navideño encendido (apagado, no se pide nada)
 const GorroSanta = dynamic(() => import('@/components/navidad/GorroSanta'));
 
@@ -34,6 +36,7 @@ const GorroSanta = dynamic(() => import('@/components/navidad/GorroSanta'));
 function PublicHeader() {
   const { settings } = useSettings();
   const categories = useNavCategories();
+  const departamentos = useNavDepartamentos();
   const pathname = usePathname();
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const hideMobileSearch = useHideOnScroll(mobileSearchRef);
@@ -103,7 +106,7 @@ function PublicHeader() {
             label={<><IconoMenu className="h-4 w-4" aria-hidden="true" /> Categorías</>}
             panelClassName="w-[min(56rem,calc(100vw-4rem))]"
           >
-            {(close) => <CategoriesMenuPanel categories={categories} onNavigate={close} />}
+            {(close) => <CategoriesMenuPanel categories={categories} departamentos={departamentos} onNavigate={close} />}
           </HeaderDropdown>
 
           {/* id="nav-productos": objetivo del tour guiado */}
@@ -114,6 +117,12 @@ function PublicHeader() {
           <Link href="/productos?oferta=1" className={navLinkClass('/ofertas')}>
             <IconoOferta className="mr-1 h-4 w-4" aria-hidden="true" /> Ofertas
           </Link>
+          {/* C-200: cada departamento aparte (Ferretería), al lado de Ofertas. Sin productos publicados no sale */}
+          {departamentos.map((d) => (
+            <Link key={d.id} href={`/categorias/${d.slug}`} className={navLinkClass(`/categorias/${d.slug}`)} aria-current={isActive(`/categorias/${d.slug}`) ? 'page' : undefined}>
+              <IconoDeCategoria iconName={d.icon} className="mr-1 h-4 w-4" /> {d.name}
+            </Link>
+          ))}
           <Link href="/gift-cards" className={navLinkClass('/gift-cards')} aria-current={isActive('/gift-cards') ? 'page' : undefined}>
             Gift Cards
           </Link>

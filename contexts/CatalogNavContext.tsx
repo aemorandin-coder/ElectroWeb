@@ -12,13 +12,28 @@ export interface NavCategory {
   productCount: number;
 }
 
-const CatalogNavContext = createContext<NavCategory[]>([]);
-
-export function CatalogNavProvider({ categories, children }: { categories: NavCategory[]; children: ReactNode }) {
-  return <CatalogNavContext.Provider value={categories}>{children}</CatalogNavContext.Provider>;
+/** C-200: un departamento aparte (Ferretería) con sus subcategorías */
+export interface NavDepartamento extends NavCategory {
+  hijos: NavCategory[];
 }
 
-/** Categorías con productos, de mayor a menor cantidad. Vacío si no hay provider. */
+const CatalogNavContext = createContext<NavCategory[]>([]);
+const DepartamentosContext = createContext<NavDepartamento[]>([]);
+
+export function CatalogNavProvider({ categories, departamentos = [], children }: { categories: NavCategory[]; departamentos?: NavDepartamento[]; children: ReactNode }) {
+  return (
+    <CatalogNavContext.Provider value={categories}>
+      <DepartamentosContext.Provider value={departamentos}>{children}</DepartamentosContext.Provider>
+    </CatalogNavContext.Provider>
+  );
+}
+
+/** Categorías con productos, de mayor a menor cantidad (sin las de los departamentos aparte). Vacío si no hay provider. */
 export function useNavCategories(): NavCategory[] {
   return useContext(CatalogNavContext);
+}
+
+/** C-200: los departamentos aparte con productos (la franja y "Más" los muestran). Vacío si no hay ninguno. */
+export function useNavDepartamentos(): NavDepartamento[] {
+  return useContext(DepartamentosContext);
 }

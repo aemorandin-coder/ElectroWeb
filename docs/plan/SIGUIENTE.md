@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-10, C-202 · producción en 1.0.0-rc.25; `main` y la etiqueta en 1.0.0-rc.27)
+# Lo de ahora (actualizado 2026-11-10, C-200 · producción en 1.0.0-rc.25; `main` y la etiqueta en 1.0.0-rc.28)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.25`** (C-196, C-196b y C-197), subida el 10/11 por Andrés y comprobada desde fuera: la ficha nueva y la base aplicada. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.25". **Por subir: `v1.0.0-rc.27`** (C-201 y C-202, con rc.26 adentro; dos columnas nuevas; sección 2). Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
+- **Producción: `v1.0.0-rc.25`** (C-196, C-196b y C-197), subida el 10/11 por Andrés y comprobada desde fuera: la ficha nueva y la base aplicada. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.25". **Por subir: `v1.0.0-rc.28`** (C-201, C-202 y C-200, con rc.26 y rc.27 adentro; tres columnas nuevas y un guion; sección 2). Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
 - **Pedido del 10/11 (Andrés): vender de todo, con la ferretería aliada.** Las maquetas y el plan están en una página privada de Andrés (el enlace, en el chat de esa sesión). Los productos de la ferretería están en La Victoria (Aragua) y se venden solo con envío.
   - **C-196 · Admin → Productos para miles de productos (hecha, en rc.24):** la lista por páginas (de 4.626 KB a 29 KB con 3.100 productos), el proveedor y el costo en cada producto, y Productos → Más → Lista del proveedor: su Excel en lote y las fotos por código (`estado/C-196.md`).
   - **C-196b (hecha, en rc.25):** la casilla "Su lista trae el IVA incluido". Su "Precio Máximo" trae el IVA y es lo que la tienda le paga: costo sin el IVA, y la bomba de $54,90 queda en $71,37 y no en $82,78.
@@ -32,6 +32,16 @@
     - El asistente avisa si un nombre está en mayúsculas.
     - **Cambiar el nombre ya no rompe el enlace:** la dirección vieja lleva a la nueva (`estado/C-202.md`).
     - **Los 14 nombres nuevos de los productos publicados** están en `estado/C-202.md` y esperan el OK de Andrés. **No renombrar nada publicado antes de subir rc.27.**
+- **C-200 · El departamento Ferretería (10/11, en `main`, rc.28; Andrés eligió las maquetas recomendadas):**
+  - Acceso en la franja al lado de Ofertas, y en el teléfono primer chip y entrada en "Más".
+  - Su vitrina después de "Recién llegados" y su página con el aviso del envío y sus 9 categorías.
+  - El resto del inicio sigue siendo de tecnología.
+  - No se ve hasta que tenga productos publicados (`estado/C-200.md`).
+  - Íconos nuevos: los 10 que generó Andrés, en el pack v1.2. La página para Luis: `ElectroShop Brand/Pack de íconos/iconos-electro-shop-v1.2.html`.
+- **Maquetas y planes del 10/11 (páginas privadas de Andrés):**
+  - "Para ti en Mi panel": eligió la V1, tarjetas por motivo.
+  - "Electro Shop lo tiene todo: plan con ElectroStudio", con su calendario hasta el 31/12.
+  - "Flyers: lo tiene todo": cuatro plantillas con su animación, que esperan que las elija.
 - **Las fotos del fabricante de los 80 (10/11):** en `Fotos del fabricante`, fuera del repositorio, ordenadas en tres carpetas.
   - "1 - Para subir": 32 códigos.
   - "2 - Por confirmar con la ferreteria": 13 códigos.
@@ -81,50 +91,50 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Por subir: `v1.0.0-rc.27` (C-201 y C-202, con rc.26 adentro; unos 15 minutos)
+### Por subir: `v1.0.0-rc.28` (C-201, C-202 y C-200, con rc.26 y rc.27 adentro; unos 20 minutos)
 Producción está en `v1.0.0-rc.25`, subida el 10/11 y comprobada desde fuera; su bloque está en `HISTORIAL.md`.
 - **C-201 (rc.26):** el inicio de Mi panel sin errores y más claro.
-- **C-202 (rc.27):**
-  - los nombres de producto escritos normal: la columna "Nombre en la tienda" en la Lista del proveedor y el aviso del asistente;
-  - cambiar un nombre ya no rompe el enlace.
+- **C-202 (rc.27):** los nombres de producto escritos normal (la columna "Nombre en la tienda" y el aviso del asistente), y cambiar un nombre ya no rompe el enlace.
+- **C-200 (rc.28):** el departamento Ferretería, que no se ve hasta que tenga productos publicados, y el pack de íconos v1.2.
 
-**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.25`). Es aditivo: dos columnas nuevas.
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.25`). Es aditivo: tres columnas nuevas.
 ```sql
 ALTER TABLE "products" ADD COLUMN "previousSlugs" TEXT[] DEFAULT ARRAY[]::TEXT[], ADD COLUMN "supplierName" TEXT;
+ALTER TABLE "categories" ADD COLUMN "isDepartment" BOOLEAN NOT NULL DEFAULT false;
 ```
-Sin variables nuevas, sin crons y sin dependencias nuevas.
+Sin variables nuevas, sin crons y sin dependencias nuevas. Un guion para después: `scripts/ferreteria-departamento.ts`.
 
 **Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
 ```bash
 git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.25 y sin cambios
-DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc27.dump
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc28.dump
 bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
-npx prisma db push && bash scripts/deploy.sh # aplica las dos columnas y compila
-git describe --tags --abbrev=0                                          # v1.0.0-rc.27
+npx prisma db push && bash scripts/deploy.sh # aplica las tres columnas y compila
+git describe --tags --abbrev=0                                          # v1.0.0-rc.28
+npx tsx scripts/ferreteria-departamento.ts            # muestra lo que haría: Ferretería y sus 9 categorías
+npx tsx scripts/ferreteria-departamento.ts --aplicar  # las crea
 ```
-`prisma db push` no debería preguntar nada: las dos columnas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
+- `prisma db push` no debería preguntar nada, porque las tres columnas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
+- El guion no cambia nada de lo que ve el cliente: el departamento aparece cuando tenga productos publicados, y eso espera a C-199.
 
-**Pruebas** (unos 15 minutos; si no ves un cambio, recarga):
+**Pruebas** (unos 20 minutos; si no ves un cambio, recarga):
 1. **Mi panel (C-201), en el teléfono, con una cuenta de cliente que tenga alguna compra:**
-   - Nada se sale de la pantalla y no hay scroll de lado.
-   - La lista se llama "Actividad reciente". Los movimientos dicen "Puntos ES devueltos" o "Compra de la orden…", nunca "Saldo".
-   - No sale "En vivo".
-   - Si a la cuenta le falta algo, sale una tarjeta corta, "Te falta un paso".
-   - El menú dice "Mis pedidos" (con minúscula). "Mis cotizaciones" y "Mis cursos" salen solo si la cuenta tiene alguno.
-   - En Garantía se ven enteras las tres pestañas.
+   - Nada se sale de la pantalla.
+   - Dice "Actividad reciente" y nunca "Saldo".
+   - No sale "En vivo", y en Garantía se ven enteras las tres pestañas.
 2. **Lista del proveedor (C-202):**
-   - Productos → Más → Lista del proveedor. Elige el proveedor y sube el archivo de los 60 junto con su listado de existencia.
-   - En "Nuevos", la columna se llama "Nombre en la tienda". La bomba R023127 dice "Bomba periférica 1/2 HP 120 V Daewoo" y debajo "Su lista: BOMBA PERIF 1/2 HP 120V DAEWOO".
-   - "Nombres para revisar" muestra solo las filas con algo en ámbar.
-   - No hace falta crear nada para probarlo.
-3. **El aviso del asistente (C-202):** edita el teclado AOAS (sin guardar). Debajo del nombre sale "Está en mayúsculas" con el nombre propuesto. "Usar este nombre" lo pone en el campo. Sal con "Volver", sin guardar.
-4. **Cambiar un nombre (C-202), cuando apruebes los 14 de `estado/C-202.md`:**
-   - Renombra uno en el panel y guarda.
-   - En una ventana de incógnito, abre su dirección vieja (por ejemplo `https://electroshopve.com/productos/fuente-poder-hp-pce011-250-watts`): lleva sola a la nueva.
+   - Sube el archivo de los 60 con su listado de existencia.
+   - En "Nuevos", la columna se llama "Nombre en la tienda", y "Nombres para revisar" filtra lo que va en ámbar. No hace falta crear nada.
+3. **El aviso del asistente (C-202):** edita el teclado AOAS sin guardar. Sale "Está en mayúsculas" con el nombre propuesto.
+4. **Categorías (C-200):**
+   - Están Ferretería y sus 9 categorías, con los íconos nuevos.
+   - Ferretería tiene marcada "Departamento aparte".
+   - En la tienda no cambió nada: ni la franja ni el inicio la muestran, porque todavía no tiene productos publicados.
+5. **Cambiar un nombre (C-202), cuando apruebes los 14 de `estado/C-202.md`:** renombra uno y abre su dirección vieja en una ventana de incógnito. Lleva sola a la nueva.
 
 **Vuelta atrás:**
 - `git reset --hard v1.0.0-rc.25 && npm install && bash scripts/deploy.sh --sin-pull`.
-- Las dos columnas nuevas no molestan al código anterior: no se quitan.
+- Las tres columnas y las categorías del guion no molestan al código anterior.
 - Si ya se renombró algún producto, sus direcciones viejas vuelven a dar "no encontrado" hasta subir de nuevo.
 
 ### Por confirmar de rc.25 (C-196, C-196b y C-197)
@@ -354,7 +364,16 @@ En el orden en que más destraban:
 - los nombres corregidos del archivo de los 60;
 - las fotos del fabricante, ordenadas.
 
-**En curso:** las maquetas de C-200 y de "Para ti" (una copia de Claude en paralelo, para que Andrés elija) y el mensaje con las preguntas para la ferretería (el agente de fotos).
+También del 10/11:
+- C-200, el departamento Ferretería (rc.28);
+- el pack de íconos v1.2;
+- las maquetas que eligió Andrés ("Para ti" en la V1);
+- el plan de ElectroStudio con sus maquetas de flyers;
+- el mensaje para la ferretería, con 48 preguntas.
+
+**Sigue:**
+- C-199 en sesión nueva: el envío desde La Victoria, con la línea "Sale desde La Victoria" en las tarjetas.
+- Después: "Para ti" (V1), las plantillas de ElectroStudio que elija Andrés y C-198.
 
 **Lo del 10/11, en este orden** (todo decidido, `PLAN.md` §7.2):
 1. **C-199 · El envío desde La Victoria (la próxima sesión arranca por aquí).** El plan completo, con las reglas de dinero que decidió Andrés, está en `PLAN.md` §5.2:

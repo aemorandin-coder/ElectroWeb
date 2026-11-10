@@ -30,10 +30,20 @@ export default async function CategoriasPage() {
       description: true,
       icon: true,
       _count: { select: { products: { where: { status: 'PUBLISHED' } } } },
+      // C-200: una categoría madre (el departamento Ferretería) muestra también lo de sus subcategorías
+      children: { select: { _count: { select: { products: { where: { status: 'PUBLISHED' } } } } } },
+      parent: { select: { isDepartment: true } },
     },
   });
 
   const totalProducts = categories.reduce((sum, c) => sum + c._count.products, 0);
+  // C-200: las categorías de un departamento aparte no van sueltas: están en la página del departamento
+  const conSubcategorias = categories
+    .filter((c) => !c.parent?.isDepartment)
+    .map(({ children, parent, ...c }) => {
+      void parent;
+      return { ...c, _count: { products: c._count.products + children.reduce((suma, h) => suma + h._count.products, 0) } };
+    });
 
   return (
     <div className="min-h-dvh bg-surface">
@@ -55,7 +65,7 @@ export default async function CategoriasPage() {
         />
 
         <Container className="py-6 lg:py-10">
-          <CategoriasClient categories={categories} />
+          <CategoriasClient categories={conSubcategorias} />
 
           <section aria-labelledby="solicitar-title" className="mt-10 flex flex-col items-start justify-between gap-4 rounded-2xl bg-gradient-to-r from-brand-700 via-brand-600 to-brand-500 p-5 text-white sm:flex-row sm:items-center lg:p-6">
             <div>

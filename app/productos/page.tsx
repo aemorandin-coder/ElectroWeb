@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { IconoBolsa, IconoBuscar, IconoCerrar } from '@/components/iconos';
+import { IconoBolsa, IconoBuscar, IconoCerrar, IconoEnvio } from '@/components/iconos';
 import CategoryIconRenderer from '@/components/CategoryIconRenderer';
 import CatalogFilters from '@/components/catalog/CatalogFilters';
 import CatalogPagination from '@/components/catalog/CatalogPagination';
@@ -124,6 +124,9 @@ export default async function ProductosPage({ searchParams }: PageProps) {
   const sortOptions = (params.search ? [SORT_RELEVANCIA, ...SORT_OPTIONS] : SORT_OPTIONS).map((option) => ({ ...option, href: catalogHref(current, { sort: option.value }) }));
   const rangeStart = total === 0 ? 0 : (page - 1) * CATALOG_PAGE_SIZE + 1;
   const rangeEnd = Math.min(page * CATALOG_PAGE_SIZE, total);
+  // C-200: en el departamento Ferretería o en una de sus categorías, los chips de arriba son sus subcategorías
+  const departamento = currentCategory?.departamento ?? null;
+  const chipClass = (activo: boolean) => `inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 text-sm font-medium ${activo ? 'border-brand-500 bg-brand-500 text-white' : 'border-line bg-white text-ink-soft hover:border-brand-200'}`;
 
   return (
     <div className="min-h-dvh bg-surface">
@@ -134,6 +137,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
             data={breadcrumbJsonLd([
               { name: 'Inicio', path: '/' },
               { name: 'Productos', path: '/productos' },
+              ...(currentCategory?.parent ? [{ name: currentCategory.parent.name, path: `/categorias/${currentCategory.parent.slug}` }] : []),
               ...(currentCategory ? [{ name: currentCategory.name, path: `/categorias/${currentCategory.slug}` }] : []),
             ])}
           />
@@ -145,6 +149,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
         <PageHeader
           breadcrumbs={[
             { label: 'Productos', href: currentCategory || params.search ? '/productos' : undefined },
+            ...(currentCategory?.parent ? [{ label: currentCategory.parent.name, href: `/categorias/${currentCategory.parent.slug}` }] : []),
             ...(currentCategory ? [{ label: currentCategory.name }] : []),
           ]}
           icon={
@@ -177,7 +182,33 @@ export default async function ProductosPage({ searchParams }: PageProps) {
             </FiltersDrawer>
             <SortSelect id="sort-mobile" value={params.sort} options={sortOptions} />
           </div>
-          {categories.length > 1 && (
+          {departamento && (
+            <div className="mt-3 lg:mb-5 lg:mt-0">
+              {/* En una de sus categorías, el aviso del departamento (en el departamento ya es el texto de arriba) */}
+              {departamento.description && currentCategory?.slug !== departamento.slug && (
+                <p className="mb-2 flex items-start gap-1.5 text-sm text-ink-soft">
+                  <IconoEnvio className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+                  {departamento.description}
+                </p>
+              )}
+              <ul className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0" aria-label={`Categorías de ${departamento.name}`}>
+                <li className="shrink-0">
+                  <Link href={catalogHref(current, { category: departamento.slug })} aria-current={currentCategory?.slug === departamento.slug ? 'true' : undefined} className={chipClass(currentCategory?.slug === departamento.slug)}>
+                    Todas
+                  </Link>
+                </li>
+                {departamento.hijos.map((hijo) => (
+                  <li key={hijo.id} className="shrink-0">
+                    <Link href={catalogHref(current, { category: hijo.slug })} aria-current={currentCategory?.slug === hijo.slug ? 'true' : undefined} className={chipClass(currentCategory?.slug === hijo.slug)}>
+                      <CategoryIconRenderer iconName={hijo.icon} className="h-4 w-4" />
+                      {hijo.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {categories.length > 1 && !departamento && (
             <ul className="scrollbar-hide -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:hidden" aria-label="Categorías">
               <li className="shrink-0">
                 <Link

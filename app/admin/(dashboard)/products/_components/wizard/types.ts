@@ -98,6 +98,9 @@ export interface WizardData {
   priceUSD: string;
   compareAtPriceUSD: string;
   costPerItem: string;
+  /** C-196: a quién se le compra y con qué código (solo lo ve el equipo) */
+  supplierId: string;
+  supplierSku: string;
   stock: string;
   barcode: string;
   weightKg: string;
@@ -157,6 +160,8 @@ export const DEFAULT_WIZARD_DATA: WizardData = {
   priceUSD: '',
   compareAtPriceUSD: '',
   costPerItem: '',
+  supplierId: '',
+  supplierSku: '',
   stock: '0',
   barcode: '',
   weightKg: '',
@@ -226,6 +231,7 @@ export function validatePhysicalStep2(data: WizardData): Record<string, string> 
     else if (precio > 0 && antes <= precio) e.compareAtPriceUSD = 'Tiene que ser mayor que el precio de venta';
   }
   if (data.costPerItem.trim() && !(leerNumero(data.costPerItem) >= 0)) e.costPerItem = 'Escribe un costo válido o déjalo vacío';
+  if (data.supplierSku.trim().length > 64) e.supplierSku = 'Hasta 64 caracteres';
   const stock = leerNumero(data.stock);
   if (!Number.isInteger(stock) || stock > 1_000_000) e.stock = 'Un número entero, 0 si no hay';
   const peso = leerNumero(data.weightKg);

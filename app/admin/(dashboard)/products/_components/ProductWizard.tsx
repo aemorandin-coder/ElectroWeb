@@ -95,6 +95,9 @@ function construirPayload(data: WizardData, publishStatus: EstadoProducto): Reco
     payload.priceUSD = leerNumero(data.priceUSD);
     payload.compareAtPriceUSD = data.compareAtPriceUSD.trim() ? leerNumero(data.compareAtPriceUSD) : null;
     payload.costPerItem = data.costPerItem.trim() ? leerNumero(data.costPerItem) : null;
+    // C-196: sin proveedor, el servidor borra también el código
+    payload.supplierId = data.supplierId || null;
+    payload.supplierSku = data.supplierId ? data.supplierSku.trim() || null : null;
     payload.stock = leerNumero(data.stock);
     payload.weightKg = data.weightKg.trim() ? leerNumero(data.weightKg) : 0;
     payload.isConsolidable = data.isConsolidable;

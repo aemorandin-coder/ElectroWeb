@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { hasPermission, isAuthorized } from '@/lib/auth-helpers';
 import { digitalVariantsInputSchema, minActivePrice, syncDigitalVariants, type DigitalVariantInput } from '@/lib/digital-variants';
 import { parseDigitalMargin, specsForUpdate } from '@/lib/product-specs';
+import { leerProveedorDeProducto } from '@/lib/proveedores/servidor';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { publicarRecursoCambiado, publicarStock } from '@/lib/realtime/bus';
 import { editoresDe } from '@/lib/realtime/presencia';
@@ -22,7 +23,7 @@ function formatVariants(variants: { faceValue: unknown; costUSD: unknown; priceU
   return variants.map((v) => ({ ...v, faceValue: Number(v.faceValue), costUSD: Number(v.costUSD), priceUSD: Number(v.priceUSD) }));
 }
 
-const incluirParaAdmin = { category: true, brand: { select: { name: true } }, digitalVariants: adminVariantsInclude } as const;
+const incluirParaAdmin = { category: true, brand: { select: { name: true } }, supplier: { select: { id: true, name: true } }, digitalVariants: adminVariantsInclude } as const;
 
 // Decimal → número para que viaje por JSON
 const safeNumber = (val: unknown): number | null => {
@@ -253,6 +254,12 @@ export async function PATCH(
       updateData.compareAtPriceUSD = antes;
     }
     if (body.costPerItem !== undefined) updateData.costPerItem = body.costPerItem ? parseFloat(body.costPerItem) : null;
+    // C-196: el proveedor y su código en el proveedor (único por proveedor)
+    if (body.supplierId !== undefined || body.supplierSku !== undefined) {
+      const proveedor = await leerProveedorDeProducto(body, id);
+      if ('error' in proveedor) return NextResponse.json({ error: proveedor.error }, { status: 400 });
+      Object.assign(updateData, proveedor);
+    }
 
     // Inventory extras
     if (body.barcode !== undefined) updateData.barcode = body.barcode || null;

@@ -1,10 +1,14 @@
-# Lo de ahora (actualizado 2026-11-07, C-195 · producción en 1.0.0-rc.22, `main` y la etiqueta en 1.0.0-rc.23)
+# Lo de ahora (actualizado 2026-11-10, C-196 · producción en 1.0.0-rc.23, `main` y la etiqueta en 1.0.0-rc.24)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.22`** (C-191 a C-194), subida el 06/11 por Andrés. Claude lo comprobó desde fuera el 07/11; lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.22". **Falta subir `v1.0.0-rc.23`** (C-195), en la sección 2. Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
+- **Producción: `v1.0.0-rc.23`** (C-195). Claude lo comprobó desde fuera el 10/11: las imágenes nuevas de Chispa responden. **Falta subir `v1.0.0-rc.24`** (C-196), en la sección 2, con una tabla nueva. Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
+- **Pedido del 10/11 (Andrés): vender de todo, con la ferretería aliada.** Las maquetas y el plan están en una página privada de Andrés (el enlace, en el chat de esa sesión). Los productos de la ferretería están en La Victoria (Aragua) y se venden solo con envío.
+  - **C-196 · Admin → Productos para miles de productos (hecha, en rc.24):** la lista por páginas (de 4.626 KB a 29 KB con 3.100 productos), el proveedor y el costo en cada producto, y Productos → Más → Lista del proveedor: su Excel en lote y las fotos por código (`estado/C-196.md`).
+  - **Esperan una decisión del chat:** C-197 (la ficha sin huecos: tres maquetas), C-198 (variantes de color y talla como familias de productos) y C-199 (el envío desde La Victoria: el flete estimado en la ficha, solo envío y el carrito en dos paquetes). Detalle en `PLAN.md` §5.2 y §7.1 (A15 a A17).
+  - **El flete real desde La Victoria** (ZOOM, consultado el 10/11): 5 kg, unos $22 a Caracas; 20 kg, unos $61; el mínimo ronda los $6,40. Lo barato (bombillos, pintura, machetes) solo se vende como complemento en la misma caja.
 - **Pedido del 06/11 (tres correcciones, desde la cuenta de Andrés), decidido con una página de maquetas:**
   - **C-191 · Marketing decía "1 cliente":** las campañas van solo a quien aceptó promociones, y nada se lo preguntaba. Ahora se pregunta al registrarse y una vez en Mi panel, y el panel dice "N de M clientes" con el desglose (`estado/C-191.md`).
   - **C-192 · El ámbar, solo para avisos:** la regla de `PLAN.md` §1.1 (variante B, placa azul noche) en los correos, la tienda y el panel (`estado/C-192.md`).
@@ -47,27 +51,50 @@
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
-## 2. Deploy pendiente: `v1.0.0-rc.23` (C-195)
-Producción está en `v1.0.0-rc.22`. Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.23`.
-- **C-195:** Chispa 3.0. En la web cambian sus 10 imágenes de ElectroStudio, que también usa el popup navideño: pulgares cortos, una silueta por mano y la mano de señalar nueva.
-- Las imágenes cambian de carpeta, a `/images/studio/chispa-3/`, porque la tienda guarda 30 días las imágenes optimizadas y con la misma dirección se seguirían viendo las viejas.
+## 2. Deploy pendiente: `v1.0.0-rc.24` (C-196)
+Producción está en `v1.0.0-rc.23` (comprobada desde fuera el 10/11). Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.24`.
+- **C-196:** Admin → Productos para miles de productos: la lista por páginas, el proveedor y el costo en cada producto, y Productos → Más → Lista del proveedor (su Excel en lote y las fotos por código).
 
-**Sin SQL, sin variables nuevas y sin crons.** No cambian las dependencias.
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.23`). Es aditivo: una tabla, tres columnas, cinco índices y una clave:
+```sql
+ALTER TABLE "products" ADD COLUMN "supplierId" TEXT, ADD COLUMN "supplierSku" TEXT, ADD COLUMN "supplierSyncedAt" TIMESTAMP(3);
+CREATE TABLE "suppliers" ("id" TEXT NOT NULL, "name" TEXT NOT NULL, "discountPercent" DECIMAL(65,30) NOT NULL DEFAULT 0, "notes" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "suppliers_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "suppliers_name_key" ON "suppliers"("name");
+CREATE INDEX "products_status_idx" ON "products"("status");
+CREATE INDEX "products_categoryId_idx" ON "products"("categoryId");
+CREATE INDEX "products_createdAt_idx" ON "products"("createdAt");
+CREATE UNIQUE INDEX "products_supplierId_supplierSku_key" ON "products"("supplierId", "supplierSku");
+ALTER TABLE "products" ADD CONSTRAINT "products_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "suppliers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+```
+Sin variables nuevas, sin crons y sin dependencias nuevas.
 
 **Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
 ```bash
-git describe --tags --abbrev=0 && git status -sb    # v1.0.0-rc.22 y sin cambios
-bash scripts/deploy.sh                                # sin SQL: compila y reinicia
-# (si se detiene y muestra el ADD COLUMN de "emailPromotionsAt", faltó en rc.22: npx prisma db push && bash scripts/deploy.sh)
-git describe --tags                                   # v1.0.0-rc.23
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.23 y sin cambios
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc24.dump
+bash scripts/deploy.sh                       # para y muestra el SQL de arriba
+npx prisma db push && bash scripts/deploy.sh # aplica y compila (ver la nota de abajo)
+git describe --tags                                                     # v1.0.0-rc.24
 ```
+**Nota sobre `prisma db push`:** va a avisar "There might be data loss" por el índice único de `supplierId` y `supplierSku`, y a preguntar si sigue. **No se pierde nada:** las dos columnas son nuevas y están vacías (probado el 10/11 en una copia con productos: quedan intactos). Si el aviso es solo ese, responde `y`. Si en vez de preguntar dice "Use the --accept-data-loss flag", corre `npx prisma db push --accept-data-loss && bash scripts/deploy.sh`. Si el aviso nombra otra cosa (un DROP o un cambio de tipo), para y avísale a Claude.
 
-**Pruebas** (unos 5 minutos):
+**Pruebas** (unos 15 minutos; si al probar no ves un cambio, recarga la página):
+1. **Productos:** arriba dice "N en el catálogo · N activos · N destacados" y abajo "Mostrando 1 a N de N". Los filtros (Todos, Activos, Borradores, Sin stock, Archivados y Por revisar) tienen sus números.
+2. **El buscador:** escribe `teclado aoas` (en otro orden y en minúsculas) y aparece el teclado. Ordena por "Precio: menor a mayor".
+3. **Un proveedor:** edita un producto físico → paso **Precios** → "Proveedor" → **+ Agregar proveedor…**, escribe el nombre de la ferretería, **Agregar**, pon su código en "Código en el proveedor" y guarda. En la lista, el producto dice el proveedor y el código bajo el SKU, y la columna Costo trae el margen. El filtro "Todos los proveedores" lo encuentra.
+4. **Productos → Más → Lista del proveedor:** elige el proveedor, sube su listado de existencia y su lista de precios (los dos `.xls`). Debe decir cuántos hay en su lista y cuántos con existencia. **No crees nada todavía** si no se decidió el costo (`PLAN.md` §7.1, A15): solo mira la vista previa.
+5. **Teléfono:** Productos se ve en tarjetas, sin scroll de lado, y abajo están las páginas.
+6. **Exportar:** Más → Exportar todo (CSV) abre en Excel con los acentos bien y las columnas de costo y proveedor.
+
+**Vuelta atrás:**
+- El código: `git reset --hard v1.0.0-rc.23 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas no molestan al código anterior: se quedan.
+- Si hace falta la base de antes (no debería): `~/respaldo-antes-rc24.dump`, con el guion de `OPERACION.md`.
+
+### Por confirmar de rc.23 (C-195, unos 5 minutos)
+Subida entre el 07 y el 10/11. Claude la comprobó desde fuera el 10/11. El bloque está en `HISTORIAL.md`.
 1. **Teléfono, en incógnito, con el tema navideño encendido:** el popup muestra a Chispa saludando con la mano nueva: los dedos abiertos y el pulgar corto.
 2. **ElectroStudio → Nueva historia → Felicitación → Contenido:** en el selector de Chispa, "Pulgar arriba" tiene el pulgar corto y grueso, y "Señala", el pulgar cruzado. La historia muestra la misma pose.
 3. **Una historia vieja con Chispa** se abre y lo muestra con las manos nuevas.
-
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.22 && bash scripts/deploy.sh --sin-pull`. Vuelven la carpeta y las imágenes de antes. Sin cambio de base.
 
 ### Por confirmar de rc.22 (C-191 a C-194, unos 15 minutos)
 Subida el 06/11 por Andrés. Claude comprobó el 07/11, como un visitante:
@@ -216,8 +243,15 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
 ## 3. Tareas del equipo (Andrés y Luis, sin código)
 En el orden en que más destraban:
 
+**La ferretería aliada (pedido del 10/11)**
+0. **Decidir en el chat** (o con Claude en la próxima sesión): qué es el "Precio Máximo" de su lista (A15), el departamento Ferretería (A16), el envío desde La Victoria (A17), la ficha (C-197) y las variantes (C-198).
+0b. **Después del deploy de rc.24:** Productos → Más → Lista del proveedor → crear el proveedor con el nombre de la ferretería → subir el archivo de los 60 (está en la carpeta de proveedores, fuera del repositorio) junto con su listado de existencia → marcar los nuevos → crear en borrador. Antes, crear las categorías del archivo en Admin → Categorías (o elegir una para todos).
+0c. **Las fotos de los 60:** en la ferretería, con el teléfono, 3 por producto, con el fondo quitado y cada foto con el nombre del código (`R023127.jpg`, `R023127-2.jpg`). Se suben todas en Lista del proveedor → "Fotos por código".
+0d. **Preguntar a ZOOM y MRW** si llevan pintura con solvente (esmaltes y fondos): son inflamables.
+
 **En producción**
 1. **Las pruebas de la sección 2:**
+   - rc.24: la lista por páginas, el proveedor y la Lista del proveedor.
    - rc.23 y rc.22: Chispa en el popup y en ElectroStudio; Marketing, Mi panel, los correos y las plantillas nuevas.
    - rc.17: la hoja impresa con las condiciones y las formas de pago a lo ancho.
    - rc.16: el anexo en el panel, la hoja en blanco y negro y el PDF en el teléfono.
@@ -261,6 +295,7 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
+**Lo del 10/11:** C-197 (la ficha), C-198 (variantes) y C-199 (el envío desde La Victoria) esperan las decisiones del chat. Con la decisión de la ficha, C-197 es corta; C-199 toca el checkout y lleva su prueba del caso normal y del manipulado.
 La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedido del 16/10 está hecho** (C-176, C-177 y C-178). **Cotizaciones desde Numen:** C-181 hecha y en producción (rc.15). Sigue **C-182**: el documento y el PDF con el estilo del presupuesto. Luis eligió la maqueta A (la fiel), con la opción de imprimir en blanco y negro. **Sigue C-180** (fotos del feed para el catálogo de WhatsApp) cuando llegue la captura de Commerce Manager (§3, 1b). Quedan de ahí: SSH solo con llave (tus llaves, §3), Prisma 7, Next 16.4 y el aviso de npm 12 (`PLAN.md` §5.2). Lo que espera un dato tuyo:
 - Esperan datos: C-154b (plazo de los digitales: ya se sabe que son unas 2 horas, falta el horario), C-107 (seguro), C-92 (clientes) y C-153b (decidir si los "frágiles" llevan más relleno).
 - **Decisiones abiertas de promotores** (`PLAN.md` §7.1, A13 y A14): si los digitales pagan comisión, los % por defecto y los términos del programa para el abogado.

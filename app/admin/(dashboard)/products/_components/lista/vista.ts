@@ -7,12 +7,18 @@ const CLAVE = 'admin:productos:vista';
 const BASE = '/admin/products';
 
 /** La dirección de la lista con esta vista (sin parámetros cuando es la de siempre) */
-export function direccionDeVista(v: { pestana: Pestana; filtro: string; categoria: string; busqueda: string }): string {
+export function direccionDeVista(v: {
+  pestana: Pestana; filtro: string; categoria: string; busqueda: string; proveedor?: string; orden?: string; pagina?: number;
+}): string {
   const params = new URLSearchParams();
   if (v.pestana !== 'local') params.set('pestana', v.pestana);
   if (v.filtro !== 'todos') params.set('filtro', v.filtro);
   if (v.categoria) params.set('categoria', v.categoria);
   if (v.busqueda.trim()) params.set('q', v.busqueda.trim());
+  // C-196: también el proveedor, el orden y la página (al guardar un producto se vuelve a la misma página)
+  if (v.proveedor) params.set('proveedor', v.proveedor);
+  if (v.orden && v.orden !== 'recientes') params.set('orden', v.orden);
+  if (v.pagina && v.pagina > 1) params.set('pagina', String(v.pagina));
   const qs = params.toString();
   return qs ? `${BASE}?${qs}` : BASE;
 }

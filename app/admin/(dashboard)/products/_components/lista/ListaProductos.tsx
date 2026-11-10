@@ -9,6 +9,7 @@ import {
 } from '@/components/iconos';
 import { adminBadge, adminIconButton, type AdminTone } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
+import { desglosePrecio, formatMargen } from '@/lib/precio-sugerido';
 import { ETIQUETA_ESTADO, type EstadoProducto, type ProductoLista } from './tipos';
 
 const TONO_ESTADO: Record<EstadoProducto, AdminTone> = { PUBLISHED: 'success', DRAFT: 'neutral', ARCHIVED: 'warning' };
@@ -24,6 +25,10 @@ interface Props {
   onSeleccionar: (id: string) => void;
   onSeleccionarTodos: () => void;
   tasaVES: number;
+  /** C-196: para el margen (el precio lleva el IVA dentro) */
+  ivaPercent: number;
+  /** C-196: costo, margen y proveedor solo para quien administra productos */
+  verCosto: boolean;
   stockBajo: number;
   edicionRapida: boolean;
   cambios: Record<string, CambiosRapidos>;
@@ -98,6 +103,29 @@ function Precio({ p, tasaVES }: { p: ProductoLista; tasaVES: number }) {
   );
 }
 
+/** C-196: el costo y el margen real (sobre el costo y sin el IVA, como en el asistente). En rojo si se vende sin ganancia */
+function Costo({ p, ivaPercent }: { p: ProductoLista; ivaPercent: number }) {
+  if (p.costPerItem === null || !(p.costPerItem > 0)) return <span className="text-xs text-muted">{p.productType === 'DIGITAL' ? '—' : 'Sin costo'}</span>;
+  const margen = p.hasVariants ? null : desglosePrecio(p.priceUSD, p.costPerItem, ivaPercent)?.margenPercent ?? null;
+  return (
+    <span className="block whitespace-nowrap">
+      <span className="tabular-nums text-ink">{formatUSD(p.costPerItem)}</span>
+      {margen !== null && <span className={`block text-xs tabular-nums ${margen <= 0 ? 'font-semibold text-deal' : 'text-muted'}`}>Margen {formatMargen(margen)}</span>}
+    </span>
+  );
+}
+
+/** C-196: de quién es y con qué código lo conoce él */
+function Proveedor({ p }: { p: ProductoLista }) {
+  if (!p.supplier) return null;
+  return (
+    // Se parte en dos líneas si hace falta: sin partirse, a 1024 con el menú abierto empujaba las acciones fuera de la tabla
+    <p className="break-words text-xs text-muted" title={p.supplierSyncedAt ? `Su lista lo actualizó el ${new Date(p.supplierSyncedAt).toLocaleDateString('es-VE')}` : undefined}>
+      {p.supplier.name}{p.supplierSku && <span className="font-mono"> · {p.supplierSku}</span>}
+    </p>
+  );
+}
+
 function Stock({ p, stockBajo }: { p: ProductoLista; stockBajo: number }) {
   if (p.productType === 'DIGITAL') return <span className="text-sm text-muted">Digital</span>;
   const tono = p.stock <= 0 ? 'text-deal font-semibold' : p.stock <= stockBajo ? 'text-warning-strong font-semibold' : 'text-ink';
@@ -119,7 +147,7 @@ function CampoRapido({ p, campo, cambios, onCambio }: { p: ProductoLista; campo:
 }
 
 export default function ListaProductos(props: Props) {
-  const { productos, seleccion, onSeleccionar, onSeleccionarTodos, tasaVES, stockBajo, edicionRapida, cambios, onCambio, onVer, onDuplicar, onEstado, onDestacar, onEliminar, duplicando, editando } = props;
+  const { productos, seleccion, onSeleccionar, onSeleccionarTodos, tasaVES, ivaPercent, verCosto, stockBajo, edicionRapida, cambios, onCambio, onVer, onDuplicar, onEstado, onDestacar, onEliminar, duplicando, editando } = props;
   const [abierto, setAbierto] = useState<string | null>(null);
   const todos = productos.length > 0 && productos.every((p) => seleccion.has(p.id));
   const algunos = !todos && productos.some((p) => seleccion.has(p.id));
@@ -142,12 +170,14 @@ export default function ListaProductos(props: Props) {
               <div className="min-w-0 flex-1 space-y-1">
                 <Link href={`/admin/products/${p.id}`} className="line-clamp-2 text-sm font-semibold text-ink hover:text-brand-600">{p.name}</Link>
                 <p className="truncate font-mono text-xs text-muted">{p.sku}{p.category ? ` · ${p.category.name}` : ''}</p>
+                <Proveedor p={p} />
                 <Etiquetas p={p} editando={editando?.[p.id]} />
                 <div className="flex flex-wrap items-end justify-between gap-2 pt-1">
                   {edicionRapida && p.productType !== 'DIGITAL' ? <CampoRapido p={p} campo="priceUSD" cambios={cambios} onCambio={onCambio} /> : <Precio p={p} tasaVES={tasaVES} />}
                   {edicionRapida && p.productType !== 'DIGITAL' ? <CampoRapido p={p} campo="stock" cambios={cambios} onCambio={onCambio} /> : <Stock p={p} stockBajo={stockBajo} />}
                   <BotonEstado p={p} onEstado={onEstado} />
                 </div>
+                {verCosto && p.productType !== 'DIGITAL' && <div className="text-xs text-muted">Costo: <Costo p={p} ivaPercent={ivaPercent} /></div>}
               </div>
             </div>
             <div className="mt-3 flex gap-2 border-t border-line pt-2">
@@ -191,6 +221,8 @@ export default function ListaProductos(props: Props) {
                   hasta xl la categoría va bajo el SKU y el estado bajo el nombre */}
               <th className="hidden px-3 py-3 xl:table-cell">Categoría</th>
               <th className="px-3 py-3">Precio</th>
+              {/* C-196: hasta xl el costo va bajo el precio (a 1024 con el menú abierto no cabía otra columna) */}
+              {verCosto && <th className="hidden px-3 py-3 xl:table-cell">Costo</th>}
               <th className="px-3 py-3">Stock</th>
               <th className="hidden px-3 py-3 xl:table-cell">Estado</th>
               <th className="px-3 py-3 text-right">Acciones</th>
@@ -206,6 +238,7 @@ export default function ListaProductos(props: Props) {
                     <div className="min-w-0">
                       <Link href={`/admin/products/${p.id}`} className="line-clamp-2 max-w-80 font-medium text-ink hover:text-brand-600 xl:line-clamp-1" title={p.name}>{p.name}</Link>
                       <p className="font-mono text-xs text-muted">{p.sku}{p.category && <span className="font-sans xl:hidden"> · {p.category.name}</span>}</p>
+                      <Proveedor p={p} />
                       <Etiquetas p={p} editando={editando?.[p.id]} />
                       <BotonEstado p={p} onEstado={onEstado} className="mt-1 xl:hidden" />
                     </div>
@@ -214,7 +247,9 @@ export default function ListaProductos(props: Props) {
                 <td className="hidden px-3 py-3 text-ink-soft xl:table-cell">{p.category?.name ?? '—'}</td>
                 <td className="px-3 py-3">
                   {edicionRapida && p.productType !== 'DIGITAL' ? <CampoRapido p={p} campo="priceUSD" cambios={cambios} onCambio={onCambio} /> : <Precio p={p} tasaVES={tasaVES} />}
+                  {verCosto && p.productType !== 'DIGITAL' && <span className="mt-1 block text-xs text-muted xl:hidden">Costo <Costo p={p} ivaPercent={ivaPercent} /></span>}
                 </td>
+                {verCosto && <td className="hidden px-3 py-3 xl:table-cell"><Costo p={p} ivaPercent={ivaPercent} /></td>}
                 <td className="px-3 py-3">
                   {edicionRapida && p.productType !== 'DIGITAL' ? <CampoRapido p={p} campo="stock" cambios={cambios} onCambio={onCambio} /> : <Stock p={p} stockBajo={stockBajo} />}
                 </td>

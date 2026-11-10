@@ -13,8 +13,6 @@ import {
   adminChoice, adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab,
 } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
-import { parseProductImages } from '@/lib/product-utils';
-import { normalizar } from '@/lib/cotizaciones/busqueda';
 import { hasPermission } from '@/lib/auth-helpers';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import type { PersonaEnLinea } from '@/lib/realtime/eventos';
@@ -24,8 +22,8 @@ import { EdicionMasiva, VistaRapida } from './_components/lista/Modales';
 import PapeleraProductos from './_components/lista/PapeleraProductos';
 import SadesPanel from './_components/lista/SadesPanel';
 import {
-  enCatalogo, esFiltroRevisar, FILTROS_REVISAR, REVISAR, sinStock,
-  type CampoMasivo, type Categoria, type EstadoProducto, type FiltroEstado, type ProductoLista,
+  esFiltroRevisar, FILTROS_REVISAR, ORDENES, REVISAR,
+  type CampoMasivo, type Categoria, type EstadoProducto, type FiltroEstado, type OrdenLista, type ProductoLista,
 } from './_components/lista/tipos';
 import { direccionDeVista, recordarVista, type Pestana } from './_components/lista/vista';
 
@@ -34,41 +32,22 @@ import { direccionDeVista, recordarVista, type Pestana } from './_components/lis
 // aceptaba), "Inactivos" siempre en 0 y "Duplicar" armado en el navegador (salía sin especificaciones ni montos).
 // C-187: lo archivado va aparte (antes llenaba "Todos" de productos que no se podían eliminar), "Por revisar" con los
 // avisos del Dashboard, la vista en la dirección, "Deshacer" al cambiar el estado y la estrella de Destacado en la lista.
+// C-196: por páginas. Antes pedía todos los productos con su descripción y filtraba aquí: con 3.000 eran varios megas
+// y la página se trababa al escribir. Ahora la búsqueda, los filtros, los números y el orden los resuelve el servidor
+// (GET /api/admin/products/lista) y llegan 50 filas livianas. Suma el proveedor, el costo y el margen, el orden, y
+// "Seleccionar los N que coinciden" para las acciones en lote de varias páginas.
 
-interface ProductoApi {
-  id: string; name: string; sku: string; slug: string; priceUSD: number | string; compareAtPriceUSD: number | string | null;
-  stock: number; status: EstadoProducto; productType: 'PHYSICAL' | 'DIGITAL'; isFeatured: boolean; images: unknown;
-  mainImage: string | null; description: string | null; category: { id: string; name: string } | null; specs: string | null;
-  brandId: string | null; weightKg: number | string | null; dimensions: string | null; barcode: string | null;
-  _count?: { digitalVariants: number };
+interface Pagina {
+  productos: ProductoLista[];
+  total: number;
+  pagina: number;
+  paginas: number;
+  porPagina: number;
+  conteos: Record<FiltroEstado, number>;
+  resumen: { catalogo: number; activos: number; destacados: number };
 }
 
-/** Digital con montos: los de la tabla (C-60) o, en productos viejos, los de specs.digitalPricing */
-function tieneMontos(p: ProductoApi): boolean {
-  if (p.productType !== 'DIGITAL') return false;
-  if ((p._count?.digitalVariants ?? 0) > 0) return true;
-  try {
-    const specs = p.specs ? JSON.parse(p.specs) : null;
-    return Array.isArray(specs?.digitalPricing) && specs.digitalPricing.length > 0;
-  } catch {
-    return false;
-  }
-}
-
-function aLista(p: ProductoApi): ProductoLista {
-  return {
-    id: p.id, name: p.name, sku: p.sku, slug: p.slug, priceUSD: Number(p.priceUSD),
-    compareAtPriceUSD: p.compareAtPriceUSD === null ? null : Number(p.compareAtPriceUSD),
-    stock: p.stock, status: p.status, productType: p.productType, isFeatured: p.isFeatured,
-    images: parseProductImages(p.images as string), mainImage: p.mainImage, description: p.description ?? '',
-    category: p.category ? { id: p.category.id, name: p.category.name } : null,
-    hasVariants: tieneMontos(p),
-    brandId: p.brandId ?? null,
-    weightKg: p.weightKg === null || p.weightKg === undefined ? null : Number(p.weightKg),
-    dimensions: p.dimensions || null,
-    barcode: p.barcode || null,
-  };
-}
+interface Proveedor { id: string; name: string; productos: number }
 
 // C-187: "Archivados" va al final y aparte: no cuenta en "Todos" ni en "Sin stock"
 const FILTROS: Array<{ value: FiltroEstado; label: string }> = [
@@ -79,22 +58,47 @@ const FILTROS: Array<{ value: FiltroEstado; label: string }> = [
   { value: 'archivados', label: 'Archivados' },
 ];
 const FILTROS_VALIDOS = new Set<string>([...FILTROS.map((f) => f.value), ...FILTROS_REVISAR]);
+const ORDENES_VALIDOS = new Set<string>(ORDENES.map((o) => o.value));
 /** C-187: a 360 px las tres pestañas (con el número de la papelera) no cabían: un poco menos de aire en el teléfono */
 const TAB_TELEFONO = 'max-sm:gap-1.5 max-sm:px-2';
 const PESTANAS = new Set<string>(['local', 'sades', 'papelera']);
+const ESPERA_BUSQUEDA_MS = 300;
+const miles = (n: number) => n.toLocaleString('es-VE');
 
-function pasaFiltro(p: ProductoLista, filtro: FiltroEstado): boolean {
-  if (esFiltroRevisar(filtro)) return REVISAR[filtro].falta(p);
-  switch (filtro) {
-    case 'todos': return enCatalogo(p);
-    case 'publicados': return p.status === 'PUBLISHED';
-    case 'borradores': return p.status === 'DRAFT';
-    case 'archivados': return p.status === 'ARCHIVED';
-    case 'sin-stock': return sinStock(p);
-  }
+/** La dirección de la API con la vista: la misma para la página, los ids de "todos los que coinciden" y el CSV */
+function consultaDeVista(v: { q: string; filtro: FiltroEstado; categoria: string; proveedor: string; orden: OrdenLista }): URLSearchParams {
+  const p = new URLSearchParams();
+  if (v.q.trim()) p.set('q', v.q.trim());
+  if (v.filtro !== 'todos') p.set('filtro', v.filtro);
+  if (v.categoria) p.set('categoria', v.categoria);
+  if (v.proveedor) p.set('proveedor', v.proveedor);
+  if (v.orden !== 'recientes') p.set('orden', v.orden);
+  return p;
 }
 
-const csv = (v: string | number | boolean | null | undefined) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+/** Las páginas a la vista: la primera, la última y dos alrededor de la actual */
+function numerosDePagina(actual: number, total: number): Array<number | '…'> {
+  const set = new Set([1, total, actual - 1, actual, actual + 1].filter((n) => n >= 1 && n <= total));
+  const orden = [...set].sort((a, b) => a - b);
+  const out: Array<number | '…'> = [];
+  orden.forEach((n, i) => { if (i > 0 && n - orden[i - 1] > 1) out.push('…'); out.push(n); });
+  return out;
+}
+
+function Paginador({ pagina, paginas, onIr }: { pagina: number; paginas: number; onIr: (n: number) => void }) {
+  if (paginas <= 1) return null;
+  const boton = 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border px-3 text-sm font-semibold tabular-nums';
+  return (
+    <nav aria-label="Páginas de productos" className="flex flex-wrap items-center justify-center gap-1.5">
+      <button type="button" onClick={() => onIr(pagina - 1)} disabled={pagina <= 1} className={`${boton} border-line bg-white text-ink hover:bg-surface disabled:opacity-40`}>Anterior</button>
+      {numerosDePagina(pagina, paginas).map((n, i) => n === '…'
+        ? <span key={`s${i}`} className="px-1 text-muted" aria-hidden="true">…</span>
+        : <button key={n} type="button" onClick={() => onIr(n)} aria-current={n === pagina ? 'page' : undefined}
+          className={`${boton} ${n === pagina ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-line bg-white text-ink hover:bg-surface'}`}>{n}</button>)}
+      <button type="button" onClick={() => onIr(pagina + 1)} disabled={pagina >= paginas} className={`${boton} border-line bg-white text-ink hover:bg-surface disabled:opacity-40`}>Siguiente</button>
+    </nav>
+  );
+}
 
 // useSearchParams pide un Suspense alrededor (la página se arma estática)
 export default function ProductsPage() {
@@ -111,6 +115,8 @@ function Productos() {
   const { confirm } = useConfirm();
   const { data: sesion } = useSession();
   const yo = sesion?.user?.id;
+  // El costo y el proveedor son de quien administra productos; Marketing ve la lista sin ellos (lo corta también la API)
+  const verCosto = hasPermission(sesion ?? null, 'MANAGE_PRODUCTS');
   // C-187: la vista sale de la dirección (también "Ver productos" de Categorías, que manda ?category=)
   const [tab, setTab] = useState<Pestana>(() => (PESTANAS.has(params.get('pestana') ?? '') ? params.get('pestana') as Pestana : 'local'));
   const [enPapelera, setEnPapelera] = useState(0);
@@ -118,18 +124,30 @@ function Productos() {
   // C-169: quién está editando cada producto ahora (id → nombres), por el canal en vivo
   const [editando, setEditando] = useState<Record<string, string[]>>({});
   const temporizadorRecarga = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [productos, setProductos] = useState<ProductoLista[]>([]);
+  const [datos, setDatos] = useState<Pagina | null>(null);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [tasaVES, setTasaVES] = useState(0);
+  const [ivaPercent, setIvaPercent] = useState(0);
   const [stockBajo, setStockBajo] = useState(5);
   const [maxDestacados, setMaxDestacados] = useState(8);
-  const [cargando, setCargando] = useState(true);
   const [recargas, setRecargas] = useState(0);
+  // La vista que se terminó de cargar: mientras no sea la pedida, la lista dice "Actualizando…"
+  const [claveCargada, setClaveCargada] = useState('');
 
   const [busqueda, setBusqueda] = useState(() => params.get('q') ?? '');
+  const [q, setQ] = useState(() => params.get('q') ?? '');
   const [categoria, setCategoria] = useState(() => params.get('categoria') ?? params.get('category') ?? '');
+  const [proveedor, setProveedor] = useState(() => params.get('proveedor') ?? '');
   const [filtro, setFiltro] = useState<FiltroEstado>(() => (FILTROS_VALIDOS.has(params.get('filtro') ?? '') ? params.get('filtro') as FiltroEstado : 'todos'));
+  const [orden, setOrden] = useState<OrdenLista>(() => (ORDENES_VALIDOS.has(params.get('orden') ?? '') ? params.get('orden') as OrdenLista : 'recientes'));
+  const [pagina, setPagina] = useState(() => Math.max(1, Number.parseInt(params.get('pagina') ?? '1', 10) || 1));
+
   const [seleccion, setSeleccion] = useState<Set<string>>(new Set());
+  // Lo que se sabe de cada seleccionado (nombre y tipo) aunque ya no esté en la página a la vista
+  const [conocidos, setConocidos] = useState<Map<string, ProductoLista>>(new Map());
+  const [digitalesTodos, setDigitalesTodos] = useState<Set<string>>(new Set());
+  const [seleccionandoTodos, setSeleccionandoTodos] = useState(false);
 
   const [edicionRapida, setEdicionRapida] = useState(false);
   const [cambios, setCambios] = useState<Record<string, CambiosRapidos>>({});
@@ -141,37 +159,76 @@ function Productos() {
   const menuMas = useRef<HTMLDivElement>(null);
   const [duplicando, setDuplicando] = useState<string | null>(null);
 
+  const productos = useMemo(() => datos?.productos ?? [], [datos]);
+  const cargando = datos === null;
+  const consulta = useMemo(() => consultaDeVista({ q, filtro, categoria, proveedor, orden }), [q, filtro, categoria, proveedor, orden]);
+  const clavePedida = `${consulta}|${pagina}|${recargas}`;
+  const actualizando = tab === 'local' && clavePedida !== claveCargada;
+
+  // Escribir en el buscador no pide nada hasta que se deja de teclear
+  useEffect(() => {
+    if (busqueda === q) return;
+    const t = setTimeout(() => { setQ(busqueda); setPagina(1); }, ESPERA_BUSQUEDA_MS);
+    return () => clearTimeout(t);
+  }, [busqueda, q]);
+
+  // Lo que no cambia con la vista: categorías, proveedores, ajustes
   useEffect(() => {
     let vigente = true;
     Promise.all([
-      fetch('/api/products?all=true').then((r) => (r.ok ? r.json() : null)),
-      fetch('/api/products?papelera=conteo').then((r) => (r.ok ? r.json() : null)).catch(() => null),
-      fetch('/api/categories').then((r) => (r.ok ? r.json() : [])),
+      fetch('/api/categories').then((r) => (r.ok ? r.json() : [])).catch(() => []),
       fetch('/api/settings').then((r) => (r.ok ? r.json() : null)).catch(() => null),
-    ]).then(([lista, conteoPapelera, cats, ajustes]) => {
+      verCosto ? fetch('/api/admin/proveedores').then((r) => (r.ok ? r.json() : null)).catch(() => null) : Promise.resolve(null),
+    ]).then(([cats, ajustes, provs]) => {
       if (!vigente) return;
-      setEnPapelera(Number(conteoPapelera?.conteo) || 0);
-      setEliminados(Number(conteoPapelera?.eliminados) || 0);
-      if (!Array.isArray(lista)) {
-        toast.error('No se pudieron cargar los productos');
-      } else {
-        setProductos((lista as ProductoApi[]).map(aLista));
-      }
       setCategorias(Array.isArray(cats) ? cats.map((c: Categoria) => ({ id: c.id, name: c.name })) : []);
+      setProveedores(Array.isArray(provs?.proveedores) ? provs.proveedores : []);
       setTasaVES(Number(ajustes?.exchangeRateVES) || 0);
+      setIvaPercent(ajustes?.taxEnabled ? Number(ajustes.taxPercent) || 0 : 0);
       if (Number.isFinite(Number(ajustes?.lowStockThreshold))) setStockBajo(Number(ajustes.lowStockThreshold));
       if (Number(ajustes?.maxFeaturedProducts) > 0) setMaxDestacados(Number(ajustes.maxFeaturedProducts));
-      setCargando(false);
+    });
+    return () => { vigente = false; };
+  }, [verCosto]);
+
+  // La página a la vista. Un pedido viejo que llega tarde no pisa al nuevo
+  useEffect(() => {
+    if (tab !== 'local') return;
+    const control = new AbortController();
+    const clave = `${consulta}|${pagina}|${recargas}`;
+    const p = new URLSearchParams(consulta);
+    if (pagina > 1) p.set('pagina', String(pagina));
+    fetch(`/api/admin/products/lista?${p}`, { signal: control.signal })
+      .then(async (r) => {
+        const d = await r.json().catch(() => null);
+        if (!r.ok || !d) { toast.error(d?.error || 'No se pudieron cargar los productos'); return; }
+        const nueva = d as Pagina;
+        setConocidos((previo) => { const m = new Map(previo); nueva.productos.forEach((x) => m.set(x.id, x)); return m; });
+        setDatos(nueva);
+        // Si la página pedida ya no existe (se borraron productos), el servidor manda la última
+        if (nueva.pagina !== pagina) setPagina(nueva.pagina);
+      })
+      .catch((e) => { if (e?.name !== 'AbortError') toast.error('No se pudieron cargar los productos'); })
+      .finally(() => { if (!control.signal.aborted) setClaveCargada(clave); });
+    return () => control.abort();
+  }, [consulta, pagina, recargas, tab]);
+
+  useEffect(() => {
+    let vigente = true;
+    fetch('/api/products?papelera=conteo').then((r) => (r.ok ? r.json() : null)).catch(() => null).then((c) => {
+      if (!vigente) return;
+      setEnPapelera(Number(c?.conteo) || 0);
+      setEliminados(Number(c?.eliminados) || 0);
     });
     return () => { vigente = false; };
   }, [recargas]);
 
   // C-187: la vista queda en la dirección (se puede compartir o recargar) y el editor vuelve a ella al guardar
   useEffect(() => {
-    const direccion = direccionDeVista({ pestana: tab, filtro, categoria, busqueda });
+    const direccion = direccionDeVista({ pestana: tab, filtro, categoria, busqueda: q, proveedor, orden, pagina });
     if (direccion !== window.location.pathname + window.location.search) window.history.replaceState(null, '', direccion);
     recordarVista(direccion);
-  }, [tab, filtro, categoria, busqueda]);
+  }, [tab, filtro, categoria, q, proveedor, orden, pagina]);
 
   // El menú "Más" se cierra al tocar fuera o con Escape
   useEffect(() => {
@@ -184,13 +241,15 @@ function Productos() {
   }, [masAcciones]);
 
   const recargar = () => setRecargas((n) => n + 1);
+  /** Cambiar la vista vuelve a la primera página */
+  const cambiarVista = (cambio: () => void) => { cambio(); setPagina(1); };
 
   // C-169: quién está editando qué, y avisos de lo que otros mueven o restauran. Cada cambio ajeno vuelve a pedir la lista.
   useCargarAlMontar(async () => {
     const r = await fetch('/api/admin/presencia?tipo=product').catch(() => null);
     if (!r?.ok) return;
-    const datos = (await r.json().catch(() => null)) as { presentes?: Record<string, PersonaEnLinea[]> } | null;
-    setEditando(Object.fromEntries(Object.entries(datos?.presentes ?? {}).map(([recurso, personas]) => [recurso.slice('product:'.length), personas.map((x) => x.nombre)])));
+    const datosPresencia = (await r.json().catch(() => null)) as { presentes?: Record<string, PersonaEnLinea[]> } | null;
+    setEditando(Object.fromEntries(Object.entries(datosPresencia?.presentes ?? {}).map(([recurso, personas]) => [recurso.slice('product:'.length), personas.map((x) => x.nombre)])));
   });
   useTiempoReal((evento) => {
     if (evento.tipo === 'admin:presencia' && evento.recurso.startsWith('product:')) {
@@ -211,30 +270,36 @@ function Productos() {
     }
   });
 
-  const conteo = useMemo(() => {
-    const porFiltro = Object.fromEntries([...FILTROS.map((f) => f.value), ...FILTROS_REVISAR].map((f) => [f, productos.filter((p) => pasaFiltro(p, f)).length])) as Record<FiltroEstado, number>;
-    return { ...porFiltro, destacados: productos.filter((p) => p.isFeatured && p.status === 'PUBLISHED').length };
-  }, [productos]);
-  const porRevisar = FILTROS_REVISAR.filter((f) => conteo[f] > 0 || filtro === f);
-
-  const visibles = useMemo(() => {
-    // Sin acentos ni mayúsculas (C-158): "audifonos" encuentra "Audífonos". C-187: también por código de barras
-    const q = normalizar(busqueda.trim());
-    return productos.filter((p) =>
-      (!q || normalizar(p.name).includes(q) || normalizar(p.sku).includes(q) || (p.barcode !== null && normalizar(p.barcode).includes(q))) &&
-      (!categoria || p.category?.id === categoria) &&
-      pasaFiltro(p, filtro));
-  }, [productos, busqueda, categoria, filtro]);
-
-  const seleccionados = productos.filter((p) => seleccion.has(p.id));
+  const conteo = datos?.conteos ?? null;
+  const porRevisar = FILTROS_REVISAR.filter((f) => (conteo?.[f] ?? 0) > 0 || filtro === f);
 
   const seleccionar = (id: string) => setSeleccion((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const seleccionarTodos = () => setSeleccion((s) => {
-    const todos = visibles.every((p) => s.has(p.id));
+    const todos = productos.every((p) => s.has(p.id));
     const n = new Set(s);
-    visibles.forEach((p) => (todos ? n.delete(p.id) : n.add(p.id)));
+    productos.forEach((p) => (todos ? n.delete(p.id) : n.add(p.id)));
     return n;
   });
+  const quitarSeleccion = () => { setSeleccion(new Set()); setDigitalesTodos(new Set()); };
+
+  /** C-196: todos los que coinciden con la vista, aunque estén en otras páginas */
+  const seleccionarLosQueCoinciden = async () => {
+    setSeleccionandoTodos(true);
+    try {
+      const r = await fetch(`/api/admin/products/lista?${consulta}&soloIds=1`);
+      const d = await r.json().catch(() => null);
+      if (!r.ok || !Array.isArray(d?.ids)) { toast.error(d?.error || 'No se pudo seleccionar'); return; }
+      setSeleccion(new Set(d.ids as string[]));
+      setDigitalesTodos(new Set(d.digitales as string[]));
+      if (d.recortado) toast(`Se seleccionaron los primeros ${miles(d.ids.length)}: acota la búsqueda para el resto`);
+    } finally {
+      setSeleccionandoTodos(false);
+    }
+  };
+
+  const digitalesSeleccionados = [...seleccion].filter((id) => digitalesTodos.has(id) || conocidos.get(id)?.productType === 'DIGITAL').length;
+  const paginaEntera = productos.length > 0 && productos.every((p) => seleccion.has(p.id));
+  const ofrecerTodos = paginaEntera && datos !== null && datos.total > seleccion.size;
 
   /**
    * Activar o pasar a borrador desde la lista o la vista rápida. C-187: con "Deshacer" durante 8 segundos (en el teléfono,
@@ -245,7 +310,8 @@ function Productos() {
     const r = await fetch(`/api/products/${p.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: nuevo }) });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) { toast.error(data.error || 'No se pudo cambiar el estado'); return; }
-    setProductos((lista) => lista.map((x) => (x.id === p.id ? { ...x, status: nuevo, isFeatured: typeof data.isFeatured === 'boolean' ? data.isFeatured : x.isFeatured } : x)));
+    // Los números de los filtros cambian: se pide la página otra vez
+    recargar();
     if (destino) { toast.success(`"${p.name}" quedó como estaba`); return; }
     const texto = nuevo === 'PUBLISHED' ? `"${p.name}" ya se ve en la tienda` : `"${p.name}" quedó en borrador: no se ve en la tienda`;
     toast((t) => (
@@ -262,12 +328,13 @@ function Productos() {
     const r = await fetch(`/api/products/${p.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isFeatured: nuevo }) });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) { toast.error(data.error || 'No se pudo cambiar'); return; }
-    setProductos((lista) => lista.map((x) => (x.id === p.id ? { ...x, isFeatured: nuevo } : x)));
+    setDatos((d) => (d ? { ...d, productos: d.productos.map((x) => (x.id === p.id ? { ...x, isFeatured: nuevo } : x)) } : d));
+    recargar();
     toast.success(!nuevo ? `"${p.name}" ya no está en Destacados` : p.status === 'PUBLISHED' ? `"${p.name}" sale en Destacados del inicio` : `"${p.name}" quedó destacado: sale en el inicio cuando lo actives`);
   };
 
   /** Mueve un producto a la papelera. Si otra persona lo está editando, se pregunta antes. Devuelve true si quedó en la papelera. */
-  const moverAPapelera = async (p: ProductoLista): Promise<boolean> => {
+  const moverAPapelera = async (p: Pick<ProductoLista, 'id' | 'name'>): Promise<boolean> => {
     let r = await fetch(`/api/products/${p.id}`, { method: 'DELETE' });
     let data = await r.json().catch(() => ({}));
     if (r.status === 409 && data.conflicto === 'en_edicion') {
@@ -312,14 +379,17 @@ function Productos() {
   };
 
   const eliminarSeleccion = async () => {
-    const ok = await confirm({ title: `Mover ${seleccionados.length} productos a la papelera`, message: 'Dejan de verse en la tienda y se pueden restaurar durante 30 días.', confirmText: 'Mover a la papelera', cancelText: 'Cancelar', type: 'danger' });
+    const ok = await confirm({ title: `Mover ${miles(seleccion.size)} productos a la papelera`, message: 'Dejan de verse en la tienda y se pueden restaurar durante 30 días.', confirmText: 'Mover a la papelera', cancelText: 'Cancelar', type: 'danger' });
     if (!ok) return;
     const movidos: string[] = [];
-    for (const p of seleccionados) {
-      if (await moverAPapelera(p)) movidos.push(p.id);
+    const avance = seleccion.size > 20 ? toast.loading(`Moviendo 0 de ${miles(seleccion.size)}…`) : null;
+    for (const id of seleccion) {
+      if (await moverAPapelera({ id, name: conocidos.get(id)?.name ?? 'Este producto' })) movidos.push(id);
+      if (avance) toast.loading(`Moviendo ${miles(movidos.length)} de ${miles(seleccion.size)}…`, { id: avance });
     }
-    if (movidos.length > 0) avisarConDeshacer(movidos, movidos.length === 1 ? '1 producto está en la papelera' : `${movidos.length} productos están en la papelera`);
-    setSeleccion(new Set());
+    if (avance) toast.dismiss(avance);
+    if (movidos.length > 0) avisarConDeshacer(movidos, movidos.length === 1 ? '1 producto está en la papelera' : `${miles(movidos.length)} productos están en la papelera`);
+    quitarSeleccion();
     recargar();
   };
 
@@ -329,7 +399,7 @@ function Productos() {
     const data = await r.json().catch(() => ({}));
     if (!r.ok) { toast.error(data.error || 'No se pudo aplicar'); return false; }
     toast.success(data.message || 'Listo');
-    setSeleccion(new Set());
+    quitarSeleccion();
     recargar();
     return true;
   };
@@ -369,22 +439,12 @@ function Productos() {
     }
   };
 
-  const exportar = () => {
-    // Con comillas escapadas y BOM (antes una descripción con " rompía el archivo y Excel mostraba mal los acentos)
-    const filas = [
-      ['nombre', 'sku', 'descripcion', 'categoria', 'tipo', 'precioUSD', 'stock', 'estado', 'destacado'].join(','),
-      ...productos.map((p) => [p.name, p.sku, p.description, p.category?.name, p.productType === 'DIGITAL' ? 'digital' : 'fisico', p.priceUSD.toFixed(2), p.stock, p.status, p.isFeatured ? 'si' : 'no'].map(csv).join(',')),
-    ];
-    const url = URL.createObjectURL(new Blob(['﻿' + filas.join('\n')], { type: 'text/csv;charset=utf-8;' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `productos_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   const cambiosPendientes = Object.keys(cambios).length;
-  const limpiarFiltros = () => { setBusqueda(''); setCategoria(''); setFiltro('todos'); };
+  const hayFiltros = Boolean(q.trim() || categoria || proveedor || filtro !== 'todos');
+  const limpiarFiltros = () => cambiarVista(() => { setBusqueda(''); setQ(''); setCategoria(''); setProveedor(''); setFiltro('todos'); });
+  const desde = datos && datos.total > 0 ? (datos.pagina - 1) * datos.porPagina + 1 : 0;
+  const hasta = datos ? Math.min(datos.total, datos.pagina * datos.porPagina) : 0;
+  const irAPagina = (n: number) => { setPagina(n); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   return (
     <div className="min-w-0 space-y-4">
@@ -392,8 +452,10 @@ function Productos() {
         <div>
           <h1 className={adminPageTitle}>Productos</h1>
           <p className={adminPageSubtitle}>
-            {conteo.todos} en el catálogo · {conteo.publicados} activos · {conteo.destacados} {conteo.destacados === 1 ? 'destacado' : 'destacados'}
-            {conteo.destacados > maxDestacados && ` (el inicio muestra los ${maxDestacados} más nuevos)`}
+            {datos ? <>
+              {miles(datos.resumen.catalogo)} en el catálogo · {miles(datos.resumen.activos)} activos · {datos.resumen.destacados} {datos.resumen.destacados === 1 ? 'destacado' : 'destacados'}
+              {datos.resumen.destacados > maxDestacados && ` (el inicio muestra los ${maxDestacados} más nuevos)`}
+            </> : 'Cargando…'}
           </p>
         </div>
         {tab === 'local' && (
@@ -415,9 +477,15 @@ function Productos() {
                     <IconoMasOpciones className="h-4 w-4" aria-hidden="true" /> Más
                   </button>
                   {masAcciones && (
-                    <div className="absolute right-0 z-[var(--z-dropdown)] mt-1 w-52 rounded-xl border border-line bg-white p-1 shadow-lg" role="menu">
+                    <div className="absolute right-0 z-[var(--z-dropdown)] mt-1 w-64 rounded-xl border border-line bg-white p-1 shadow-lg" role="menu">
+                      {verCosto && (
+                        <Link href="/admin/products/proveedor" role="menuitem" onClick={() => setMasAcciones(false)} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-ink hover:bg-surface"><IconoBaseDeDatos className="h-4 w-4" aria-hidden="true" /> Lista del proveedor (Excel)</Link>
+                      )}
                       <Link href="/admin/products/importar" role="menuitem" onClick={() => setMasAcciones(false)} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-ink hover:bg-surface"><IconoSubir className="h-4 w-4" aria-hidden="true" /> Importar (.json)</Link>
-                      <button type="button" role="menuitem" onClick={() => { setMasAcciones(false); exportar(); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-ink hover:bg-surface"><IconoDescargar className="h-4 w-4" aria-hidden="true" /> Exportar CSV</button>
+                      {/* C-196: la vista a la vista (con sus filtros), armada en el servidor */}
+                      <a href={`/api/admin/products/lista?${consulta}&formato=csv`} role="menuitem" onClick={() => setMasAcciones(false)} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-ink hover:bg-surface">
+                        <IconoDescargar className="h-4 w-4" aria-hidden="true" /> {hayFiltros ? 'Exportar esta vista (CSV)' : 'Exportar todo (CSV)'}
+                      </a>
                     </div>
                   )}
                 </div>
@@ -444,24 +512,24 @@ function Productos() {
         <PapeleraProductos puedeBorrarParaSiempre={hasPermission(sesion ?? null, 'MANAGE_SETTINGS')} recargas={recargas} eliminados={eliminados} onCambio={recargar} />
       ) : (
         <>
-          {/* Estados como filtros rápidos: tocar "Sin stock" filtra */}
+          {/* Estados como filtros rápidos: tocar "Sin stock" filtra. Los números respetan la búsqueda, la categoría y el proveedor */}
           <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filtrar por estado">
             {FILTROS.map((f) => (
-              <button key={f.value} type="button" aria-pressed={filtro === f.value} onClick={() => setFiltro(f.value)}
+              <button key={f.value} type="button" aria-pressed={filtro === f.value} onClick={() => cambiarVista(() => setFiltro(f.value))}
                 className={`${adminChoice(filtro === f.value)} flex min-h-11 shrink-0 items-center gap-2 px-3 text-sm`}>
-                {f.label}<span className={`rounded-full px-2 text-xs font-semibold tabular-nums ${f.value === 'sin-stock' && conteo['sin-stock'] > 0 ? 'bg-deal-bg text-deal' : 'bg-surface text-muted'}`}>{cargando ? '…' : conteo[f.value]}</span>
+                {f.label}<span className={`rounded-full px-2 text-xs font-semibold tabular-nums ${f.value === 'sin-stock' && (conteo?.['sin-stock'] ?? 0) > 0 ? 'bg-deal-bg text-deal' : 'bg-surface text-muted'}`}>{conteo ? miles(conteo[f.value]) : '…'}</span>
               </button>
             ))}
           </div>
 
           {/* C-187: lo mismo que avisa el Dashboard, a un toque. Solo aparece lo que tiene algo por arreglar */}
-          {!cargando && porRevisar.length > 0 && (
+          {conteo && porRevisar.length > 0 && (
             <div className="flex items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Por revisar">
               <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-muted">Por revisar</span>
               {porRevisar.map((f) => (
-                <button key={f} type="button" aria-pressed={filtro === f} title={REVISAR[f].ayuda} onClick={() => setFiltro(filtro === f ? 'todos' : f)}
+                <button key={f} type="button" aria-pressed={filtro === f} title={REVISAR[f].ayuda} onClick={() => cambiarVista(() => setFiltro(filtro === f ? 'todos' : f))}
                   className={`${adminChoice(filtro === f)} flex min-h-11 shrink-0 items-center gap-2 px-3 text-sm`}>
-                  {REVISAR[f].label}<span className="rounded-full bg-warning/15 px-2 text-xs font-semibold tabular-nums text-warning-strong">{conteo[f]}</span>
+                  {REVISAR[f].label}<span className="rounded-full bg-warning/15 px-2 text-xs font-semibold tabular-nums text-warning-strong">{miles(conteo[f])}</span>
                 </button>
               ))}
             </div>
@@ -474,31 +542,47 @@ function Productos() {
           )}
           {esFiltroRevisar(filtro) && <p className={adminNotice('warning')}>{REVISAR[filtro].ayuda}.</p>}
 
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <div className="relative flex-1">
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_13rem_13rem_13rem]">
+            <div className="relative sm:col-span-2 xl:col-span-1">
               <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
-              <input type="search" aria-label="Buscar productos" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre, SKU o código de barras" className={`${adminInput()} pl-9`} />
+              <input type="search" aria-label="Buscar productos" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre, SKU, marca o código" className={`${adminInput()} pl-9`} />
             </div>
-            <div className="sm:w-60">
+            <div>
               <label htmlFor="filtro-cat" className="sr-only">Categoría</label>
-              <select id="filtro-cat" className={adminInput()} value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+              <select id="filtro-cat" className={adminInput()} value={categoria} onChange={(e) => cambiarVista(() => setCategoria(e.target.value))}>
                 <option value="">Todas las categorías</option>
                 {categorias.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            {verCosto && (
+              <div>
+                <label htmlFor="filtro-prov" className="sr-only">Proveedor</label>
+                <select id="filtro-prov" className={adminInput()} value={proveedor} onChange={(e) => cambiarVista(() => setProveedor(e.target.value))}>
+                  <option value="">Todos los proveedores</option>
+                  {proveedores.map((p) => <option key={p.id} value={p.id}>{p.name} ({miles(p.productos)})</option>)}
+                  <option value="ninguno">Sin proveedor</option>
+                </select>
+              </div>
+            )}
+            <div className={verCosto ? '' : 'xl:col-span-2'}>
+              <label htmlFor="orden" className="sr-only">Orden</label>
+              <select id="orden" className={adminInput()} value={orden} onChange={(e) => cambiarVista(() => setOrden(e.target.value as OrdenLista))}>
+                {ORDENES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
           </div>
 
           {edicionRapida && (
             <p className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-700">
-              Edición rápida: cambia precio y stock en la lista y toca Guardar. Los digitales con montos se editan en su producto.
+              Edición rápida: cambia precio y stock en esta página y toca Guardar. Los digitales con montos se editan en su producto.
             </p>
           )}
 
           {seleccion.size > 0 && (
             <div className="sticky top-2 z-[var(--z-sticky)] space-y-1 rounded-2xl bg-brand-600 p-2 text-white shadow-lg sm:flex sm:items-center sm:gap-2 sm:space-y-0">
               <div className="flex items-center justify-between gap-2 sm:contents">
-                <span className="px-2 text-sm font-semibold">{seleccion.size} seleccionado{seleccion.size === 1 ? '' : 's'}</span>
-                <button type="button" onClick={() => setSeleccion(new Set())} className="inline-flex min-h-11 items-center gap-1 px-2 text-sm text-white/80 hover:text-white sm:order-last sm:ml-auto"><IconoCerrar className="h-4 w-4" aria-hidden="true" /> Quitar selección</button>
+                <span className="px-2 text-sm font-semibold">{miles(seleccion.size)} seleccionado{seleccion.size === 1 ? '' : 's'}</span>
+                <button type="button" onClick={quitarSeleccion} className="inline-flex min-h-11 items-center gap-1 px-2 text-sm text-white/80 hover:text-white sm:order-last sm:ml-auto"><IconoCerrar className="h-4 w-4" aria-hidden="true" /> Quitar selección</button>
               </div>
               {/* En el teléfono las acciones se deslizan en una fila (antes ocupaban media pantalla) */}
               <div className="-mx-2 flex gap-2 overflow-x-auto px-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
@@ -514,34 +598,49 @@ function Productos() {
 
           {cargando ? (
             <div className="flex justify-center py-12" role="status" aria-label="Cargando productos"><div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" /></div>
-          ) : visibles.length === 0 ? (
+          ) : productos.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-line px-6 py-12 text-center">
-              <p className="font-semibold text-ink">{productos.length === 0 ? 'Todavía no hay productos' : 'Ningún producto con estos filtros'}</p>
-              {productos.length === 0
+              <p className="font-semibold text-ink">{!hayFiltros && datos.resumen.catalogo === 0 ? 'Todavía no hay productos' : 'Ningún producto con estos filtros'}</p>
+              {!hayFiltros && datos.resumen.catalogo === 0
                 ? <Link href="/admin/products/new" className={`${adminPrimaryButton} mt-4`}><IconoMas className="h-4 w-4" aria-hidden="true" /> Nuevo producto</Link>
                 : <button type="button" onClick={limpiarFiltros} className={`${adminSecondaryButton} mt-4`}>Quitar filtros</button>}
             </div>
           ) : (
             <>
-              <p className="text-sm text-muted">Mostrando {visibles.length}{visibles.length !== productos.length ? ` de ${productos.length}` : ''}</p>
-              <ListaProductos
-                productos={visibles}
-                seleccion={seleccion}
-                onSeleccionar={seleccionar}
-                onSeleccionarTodos={seleccionarTodos}
-                tasaVES={tasaVES}
-                stockBajo={stockBajo}
-                edicionRapida={edicionRapida}
-                cambios={cambios}
-                onCambio={(id, campo, valor) => setCambios((c) => ({ ...c, [id]: { ...c[id], [campo]: valor } }))}
-                onVer={setVista}
-                onDuplicar={duplicar}
-                onEstado={(p) => void cambiarEstado(p)}
-                onDestacar={(p) => void destacar(p)}
-                onEliminar={eliminar}
-                duplicando={duplicando}
-                editando={editando}
-              />
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm text-muted" aria-live="polite">
+                  {datos.total <= datos.porPagina ? `Mostrando ${miles(datos.total)}` : `Mostrando ${miles(desde)} a ${miles(hasta)} de ${miles(datos.total)}`}
+                  {actualizando && <span className="ml-2 text-brand-600">Actualizando…</span>}
+                </p>
+                {ofrecerTodos && (
+                  <button type="button" onClick={() => void seleccionarLosQueCoinciden()} disabled={seleccionandoTodos} className="min-h-11 text-sm font-semibold text-brand-600 underline disabled:opacity-60">
+                    {seleccionandoTodos ? 'Seleccionando…' : `Seleccionar los ${miles(datos.total)} que coinciden`}
+                  </button>
+                )}
+              </div>
+              <div className={actualizando ? 'opacity-70 transition-opacity' : ''}>
+                <ListaProductos
+                  productos={productos}
+                  seleccion={seleccion}
+                  onSeleccionar={seleccionar}
+                  onSeleccionarTodos={seleccionarTodos}
+                  tasaVES={tasaVES}
+                  ivaPercent={ivaPercent}
+                  verCosto={verCosto}
+                  stockBajo={stockBajo}
+                  edicionRapida={edicionRapida}
+                  cambios={cambios}
+                  onCambio={(id, campo, valor) => setCambios((c) => ({ ...c, [id]: { ...c[id], [campo]: valor } }))}
+                  onVer={setVista}
+                  onDuplicar={duplicar}
+                  onEstado={(p) => void cambiarEstado(p)}
+                  onDestacar={(p) => void destacar(p)}
+                  onEliminar={eliminar}
+                  duplicando={duplicando}
+                  editando={editando}
+                />
+              </div>
+              <Paginador pagina={datos.pagina} paginas={datos.paginas} onIr={irAPagina} />
             </>
           )}
         </>
@@ -551,7 +650,7 @@ function Productos() {
       {masivo && (
         <EdicionMasiva
           cantidad={seleccion.size}
-          digitales={seleccionados.filter((p) => p.productType === 'DIGITAL').length}
+          digitales={digitalesSeleccionados}
           campoInicial={masivo.campo}
           valorInicial={masivo.valor}
           categorias={categorias}

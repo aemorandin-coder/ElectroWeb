@@ -1,10 +1,23 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `b586a4e`, versión `v1.0.0-rc.22`, el 06/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `4682e7c`, versión `v1.0.0-rc.23`, comprobada el 10/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## Entre el 07 y el 10/11 · C-195 (de rc.22 a `v1.0.0-rc.23`)
+Subido después del 07/11 (no quedó anotado quién ni cuándo). Claude lo comprobó el 10/11 desde fuera: `/images/studio/chispa-3/senala.png`, que solo existe desde rc.23, responde 200.
+- **C-195:** Chispa 3.0. Cambian sus 10 imágenes de ElectroStudio, que también usa el popup navideño: pulgares cortos, una silueta por mano y la mano de señalar nueva. Las imágenes van en otra carpeta, `/images/studio/chispa-3/`, porque la tienda guarda 30 días las imágenes optimizadas.
+
+Sin SQL, sin variables nuevas y sin crons. El paso a paso fue `bash scripts/deploy.sh` y `git describe --tags` → `v1.0.0-rc.23`.
+
+**Pruebas** (unos 5 minutos; siguen por confirmar en `SIGUIENTE.md`):
+1. **Teléfono, en incógnito, con el tema navideño encendido:** el popup muestra a Chispa saludando con la mano nueva: los dedos abiertos y el pulgar corto.
+2. **ElectroStudio → Nueva historia → Felicitación → Contenido:** en el selector de Chispa, "Pulgar arriba" tiene el pulgar corto y grueso, y "Señala", el pulgar cruzado. La historia muestra la misma pose.
+3. **Una historia vieja con Chispa** se abre y lo muestra con las manos nuevas.
+
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.22 && bash scripts/deploy.sh --sin-pull`. Vuelven la carpeta y las imágenes de antes. Sin cambio de base.
 
 ## 06/11 · C-191 a C-194 (de rc.21 a `v1.0.0-rc.22`)
 Subido el 06/11 por Andrés: los archivos nuevos tienen en el servidor la fecha de las 20:05, hora de Venezuela. Claude lo comprobó el 07/11, pidiendo las páginas como un visitante:

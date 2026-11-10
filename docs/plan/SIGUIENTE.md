@@ -254,7 +254,9 @@ En el orden en que más destraban:
 
 **La ferretería aliada (pedido del 10/11)**
 0. **Después del deploy de rc.25 y de C-199 y C-200:** Productos → Más → Lista del proveedor → crear el proveedor con el nombre de la ferretería → marcar "Su lista trae el IVA incluido" (sin descuento) → subir el archivo de los 60 (está en la carpeta de proveedores, fuera del repositorio) junto con su listado de existencia → marcar los nuevos → crear en borrador. Las categorías del archivo se crean dentro del departamento Ferretería (C-200).
-0b. **Las fotos de los 60 (decidido: del fabricante):** Claude las busca en los sitios oficiales de cada marca y las deja nombradas por código; se suben todas en Lista del proveedor → "Fotos por código".
+0b. **Las fotos de los 60 (decidido: del fabricante):** hace falta el **modelo exacto** de cada uno. Su lista dice "DESMALEZADORA 52CC DAEWOO", y Daewoo tiene al menos cuatro de 52 cc distintas: con la foto de otro modelo se mostraría algo que el cliente no recibe.
+   - Pedirle a la ferretería el modelo de cada uno, o una foto de la etiqueta de cada caja. El archivo de los 60 trae la columna "Modelo exacto" para llenarla.
+   - Con eso, Claude busca las fotos oficiales y las deja nombradas por código. Se suben todas en Lista del proveedor → "Fotos por código".
 0c. **Preguntar a ZOOM y MRW** si llevan pintura con solvente (esmaltes y fondos): son inflamables.
 
 **En producción**

@@ -480,3 +480,18 @@ Mueven datos de facturación: **no los cambies ni los "limpies".**
 - **`app/customer/(dashboard)/page.tsx`:** Claude agregó `<PreguntarPromociones />` debajo de `<CustomerOnboarding />`, a pedido de Andrés. Es la pregunta de una sola vez por las ofertas por correo: no la quites ni la muevas arriba del resumen.
 - **El componente vive en `components/promociones/`** (carril Claude) y guarda con `PATCH /api/customer/settings`. Si una tarjeta tuya toca Mi perfil → Notificaciones, el interruptor de ofertas sigue mandando `notificaciones.emailPromotions`: el servidor anota la fecha de la decisión, no la mandes tú.
 - **C-192, el ámbar solo para avisos:** Claude cambió clases y tonos (sin lógica) en `app/cursos/`, `app/gift-cards/`, `app/customer/` (Promotores, Puntos ES, cotizaciones, reseñas, empresa), `components/cursos/`, `components/servicios/`, `components/modals/RechargeModalV2.tsx`, `components/contact/ContactForm.tsx` y `components/pago-movil/`. No los vuelvas a `warning`: lo que espera al equipo va en azul (`adminBadge('brand')`), los niveles y "Destacado" en la familia azul, y "Antes" en `bg-brand-950`. La regla está en §4 y en `PLAN.md` §1.1.
+
+## 16. Cambios de Claude del 10/11 que te afectan (C-201)
+Andrés pidió pulir Mi panel, así que Claude entró a tu carril (`estado/C-201.md`):
+- **`app/customer/(dashboard)/page.tsx`:**
+  - Ya no tiene `<EnVivo />`.
+  - "Movimientos" pasó a llamarse "Actividad reciente".
+  - Esa sección y "Últimos pedidos" llevan `min-w-0` para no salirse en el teléfono: no se lo quites.
+- **`components/customer/CustomerOnboarding.tsx`:** para quien ya compró, una tarjeta corta con solo las misiones que faltan.
+- **`app/customer/(dashboard)/layout.tsx`:**
+  - "Mis pedidos" y "Mis cursos", con minúscula.
+  - "Mis cotizaciones" y "Mis cursos" llevan `soloSi`: salen solo a quien tiene alguno. Los números vienen de `GET /api/user/profile` (`menu`).
+  - Si agregas una entrada al menú, escríbela igual.
+- **Títulos:** "Mis cursos" y "Mis reseñas".
+- **Garantía:** en el teléfono, las pestañas van sin ícono y la de "Mis solicitudes" dice "Solicitudes".
+- **Los textos de los movimientos** salen de `descripcionLimpia` (`lib/dto/movimiento.ts`, carril Claude). No muestres el `description` de la base sin pasarlo por ahí.

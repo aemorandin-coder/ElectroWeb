@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { contarCotizacionesDelCliente } from '@/lib/cotizaciones/cliente';
 import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { leerDocumento, leerTelefono, nombreSchema } from '@/lib/validations/registro';
@@ -105,6 +106,11 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
+    // C-201: el menú del panel muestra "Mis cotizaciones" y "Mis cursos" solo a quien tiene alguna
+    const [cotizaciones, cursos] = await Promise.all([
+      contarCotizacionesDelCliente(user.id, user.email, Boolean(user.emailVerified)),
+      prisma.courseEnrollment.count({ where: { userId: user.id } }),
+    ]);
 
     return NextResponse.json({
       user: {
@@ -117,6 +123,7 @@ export async function GET() {
       },
       profile: user.profile,
       resumen: { pedidosPagados: pagados._count, totalComprado: Number(pagados._sum.totalUSD ?? 0) },
+      menu: { cotizaciones, cursos },
     });
   } catch (error) {
     console.error('Error fetching profile:', error);

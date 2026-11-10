@@ -320,18 +320,19 @@ export default function WarrantyPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 border-b border-line" role="tablist" aria-label="Garantía">
-        <button type="button" role="tab" aria-selected={selectedTab === 'info'} onClick={() => setSelectedTab('info')} className={adminTab(selectedTab === 'info')}>
-          <span className="inline-flex items-center gap-1.5"><IconoAyuda className="w-3.5 h-3.5" aria-hidden="true" />Info</span>
+      {/* C-201: a 360 px "Nueva" quedaba cortada: en el teléfono, sin íconos, con menos aire y "Solicitudes" */}
+      <div className="flex gap-2 overflow-x-auto pb-1 border-b border-line max-sm:gap-1" role="tablist" aria-label="Garantía">
+        <button type="button" role="tab" aria-selected={selectedTab === 'info'} onClick={() => setSelectedTab('info')} className={`${adminTab(selectedTab === 'info')} max-sm:px-2.5`}>
+          <span className="inline-flex items-center gap-1.5"><IconoAyuda className="w-3.5 h-3.5 max-sm:hidden" aria-hidden="true" />Info</span>
         </button>
-        <button type="button" role="tab" aria-selected={selectedTab === 'requests'} onClick={() => { setSelectedTab('requests'); setAbierta(null); }} className={adminTab(selectedTab === 'requests')}>
+        <button type="button" role="tab" aria-selected={selectedTab === 'requests'} onClick={() => { setSelectedTab('requests'); setAbierta(null); }} className={`${adminTab(selectedTab === 'requests')} max-sm:px-2.5`}>
           <span className="inline-flex items-center gap-1.5">
-            <IconoDocumento className="w-3.5 h-3.5" aria-hidden="true" />Mis Solicitudes
+            <IconoDocumento className="w-3.5 h-3.5 max-sm:hidden" aria-hidden="true" /><span className="sm:hidden">Solicitudes</span><span className="max-sm:hidden">Mis solicitudes</span>
             {claims.some((c) => c.status === 'WAITING_CUSTOMER') && <span className="h-2 w-2 rounded-full bg-deal" aria-label="Hay una solicitud esperando tu respuesta" />}
           </span>
         </button>
-        <button type="button" role="tab" aria-selected={selectedTab === 'new'} onClick={() => setSelectedTab('new')} className={adminTab(selectedTab === 'new')}>
-          <span className="inline-flex items-center gap-1.5"><IconoActualizar className="w-3.5 h-3.5" aria-hidden="true" />Nueva</span>
+        <button type="button" role="tab" aria-selected={selectedTab === 'new'} onClick={() => setSelectedTab('new')} className={`${adminTab(selectedTab === 'new')} max-sm:px-2.5`}>
+          <span className="inline-flex items-center gap-1.5"><IconoActualizar className="w-3.5 h-3.5 max-sm:hidden" aria-hidden="true" />Nueva</span>
         </button>
       </div>
 
@@ -362,7 +363,7 @@ export default function WarrantyPage() {
               <div className="w-9 h-9 bg-surface text-ink-soft rounded-lg flex items-center justify-center mb-2">
                 <IconoPaquete className="w-4 h-4" aria-hidden="true" />
               </div>
-              <h3 className="font-bold text-ink text-sm mb-0.5">Soporte Técnico</h3>
+              <h3 className="font-bold text-ink text-sm mb-0.5">Soporte técnico</h3>
               <p className="text-xs text-muted">
                 Asistencia especializada para configuración y problemas técnicos.
               </p>
@@ -584,7 +585,7 @@ export default function WarrantyPage() {
                 <SelectorFotos fotos={fotosNuevas} onChange={setFotosNuevas} />
                 <div className="bg-surface border border-line p-3 rounded-xl">
                   <p className="text-xs text-muted">
-                    <strong className="text-ink">Nota:</strong> Te respondemos en 1 a 2 días hábiles, aquí en &quot;Mis Solicitudes&quot; y por correo.
+                    <strong className="text-ink">Nota:</strong> Te respondemos en 1 a 2 días hábiles, aquí en &quot;Mis solicitudes&quot; y por correo.
                   </p>
                 </div>
                 <div className="pt-2">

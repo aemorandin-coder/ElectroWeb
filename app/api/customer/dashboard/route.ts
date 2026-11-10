@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { descripcionLimpia } from '@/lib/dto/movimiento';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -203,7 +204,8 @@ export async function GET() {
                 id: tx.id,
                 type: tx.type,
                 amount: Number(tx.amount),
-                description: tx.description,
+                // C-201: la misma limpieza que la página de Puntos ES: los movimientos de antes de C-131 decían "saldo"
+                description: descripcionLimpia(tx),
                 createdAt: tx.createdAt,
                 status: tx.status,
             });

@@ -85,7 +85,7 @@ export default function MyReviewsPage() {
   return (
     <div className="space-y-4 lg:space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl lg:text-2xl font-bold text-ink">Mis Reseñas</h1>
+        <h1 className="text-xl lg:text-2xl font-bold text-ink">Mis reseñas</h1>
       </div>
 
       {/* Filters */}

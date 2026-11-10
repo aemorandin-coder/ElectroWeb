@@ -24,7 +24,7 @@ import {
 } from '@/lib/proveedores/lista';
 import { uploadProductPhoto } from '@/lib/product-photo-upload';
 
-interface Proveedor { id: string; name: string; discountPercent: number; productos: number }
+interface Proveedor { id: string; name: string; discountPercent: number; pricesIncludeTax: boolean; productos: number }
 interface EnTienda { id: string; name: string; sku: string; status: string; stock: number; priceUSD: number; costo: number | null; enPapelera: boolean; fotos: number }
 interface Archivo { nombre: string; filas: Celda[][]; encabezados: string[]; columnas: Columnas }
 type Vista = 'nuevos-con-existencia' | 'nuevos' | 'en-tienda' | 'todos';
@@ -59,6 +59,8 @@ export default function ListaDelProveedorPage() {
   const [iva, setIva] = useState(0);
 
   const [descuento, setDescuento] = useState('0');
+  // C-196b: su lista trae el IVA: el costo es su precio sin el IVA
+  const [ivaIncluido, setIvaIncluido] = useState(false);
   const [margen, setMargen] = useState('30');
   const [reserva, setReserva] = useState('1');
   const [categoriaDefecto, setCategoriaDefecto] = useState('');
@@ -100,7 +102,7 @@ export default function ListaDelProveedorPage() {
   const elegirProveedor = (id: string, lista = proveedores) => {
     setProveedorId(id);
     const p = lista?.find((x) => x.id === id);
-    if (p) setDescuento(String(p.discountPercent).replace('.', ','));
+    if (p) { setDescuento(String(p.discountPercent).replace('.', ',')); setIvaIncluido(p.pricesIncludeTax); }
     setSeleccion(new Set()); setCreados([]); setErrores([]);
   };
 
@@ -221,7 +223,9 @@ export default function ListaDelProveedorPage() {
     }
   };
 
-  const opciones = () => ({ descuento: pctDescuento, margen: pctMargen, reserva: unidadesReserva });
+  const opciones = () => ({ descuento: pctDescuento, margen: pctMargen, reserva: unidadesReserva, ivaIncluido });
+  /** El IVA que se le quita al precio de su lista para el costo (el mismo cálculo del servidor) */
+  const ivaLista = ivaIncluido ? (iva > 0 ? iva : 16) : 0;
 
   const crear = async () => {
     if (!proveedorId || nuevosSeleccionados.length === 0 || !opcionesValidas) return;
@@ -316,6 +320,11 @@ export default function ListaDelProveedorPage() {
             <label htmlFor="desc" className={adminLabel}>Descuento sobre su lista (%)</label>
             <input id="desc" inputMode="decimal" value={descuento} onChange={(e) => setDescuento(e.target.value.replace(/[^\d.,]/g, ''))} className={adminInput(!(pctDescuento >= 0 && pctDescuento <= 90))} />
             <p className={adminHint}>Costo = su precio menos este %. Con 0, su precio es tu costo. Se recuerda para la próxima.</p>
+            <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-2 text-sm text-ink">
+              <input type="checkbox" className="h-4 w-4" checked={ivaIncluido} onChange={(e) => setIvaIncluido(e.target.checked)} />
+              Su lista trae el IVA incluido
+            </label>
+            {ivaIncluido && <p className={adminHint}>El costo es su precio sin el IVA ({String(iva > 0 ? iva : 16).replace('.', ',')}{'\u00a0'}%): el IVA que le pagas no es costo, y la tienda lo vuelve a sumar al precio de venta.</p>}
           </div>
           <div>
             <label htmlFor="marg" className={adminLabel}>Margen sobre el costo (%)</label>
@@ -481,7 +490,7 @@ export default function ListaDelProveedorPage() {
               <tbody>
                 {enPagina.map((f) => {
                   const actual = revision?.[f.codigo];
-                  const costo = costoDesdeLista(f.precioLista, pctDescuento);
+                  const costo = costoDesdeLista(f.precioLista, pctDescuento, ivaLista);
                   const sugerido = costo !== null && pctMargen >= 0 ? precioSugerido(costo, iva, pctMargen) : null;
                   const pub = existenciaPublicable(f.existencia, unidadesReserva);
                   return (

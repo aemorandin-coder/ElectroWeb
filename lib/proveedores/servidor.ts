@@ -99,6 +99,8 @@ export interface OpcionesLista {
   margen: number;
   reserva: number;
   ivaPercent: number;
+  /** C-196b: su lista ya trae el IVA (se le quita para el costo) */
+  ivaIncluido: boolean;
 }
 
 export function leerOpciones(body: Record<string, unknown>, ivaPercent: number): OpcionesLista | { error: string } {
@@ -108,7 +110,13 @@ export function leerOpciones(body: Record<string, unknown>, ivaPercent: number):
   if (descuento === null) return { error: `El descuento va de 0 a ${DESCUENTO_MAX} %` };
   if (margen === null) return { error: `El margen va de 0 a ${MARGEN_MAX} %` };
   if (reserva === null) return { error: `La reserva va de 0 a ${RESERVA_MAX} unidades` };
-  return { descuento, margen, reserva, ivaPercent };
+  if (body.ivaIncluido !== undefined && typeof body.ivaIncluido !== 'boolean') return { error: 'IVA incluido: sí o no' };
+  return { descuento, margen, reserva, ivaPercent, ivaIncluido: body.ivaIncluido === true };
+}
+
+/** El IVA que trae la lista del proveedor, para quitarlo del costo: el de la tienda o, si está apagado, el general (16 %) */
+export function ivaDeLaLista(opciones: OpcionesLista): number {
+  return opciones.ivaIncluido ? (opciones.ivaPercent > 0 ? opciones.ivaPercent : 16) : 0;
 }
 
 function slugDe(nombre: string): string {
@@ -150,7 +158,7 @@ export async function crearDesdeLista(
   for (const f of filas) {
     if (existentes.has(f.codigo)) { resultado.errores.push({ codigo: f.codigo, error: 'Ya está en la tienda' }); continue; }
     if (!f.nombre) { resultado.errores.push({ codigo: f.codigo, error: 'Sin nombre' }); continue; }
-    const costo = costoDesdeLista(f.precioLista, opciones.descuento);
+    const costo = costoDesdeLista(f.precioLista, opciones.descuento, ivaDeLaLista(opciones));
     const precio = costo === null ? null : precioSugerido(costo, opciones.ivaPercent, opciones.margen);
     if (costo === null || precio === null) { resultado.errores.push({ codigo: f.codigo, error: 'Sin precio en la lista' }); continue; }
     const categoryId = (f.categoria ? porNombre.get(normalizar(f.categoria)) : undefined) ?? categoriaPorDefecto;
@@ -214,7 +222,7 @@ export async function actualizarDesdeLista(
     const p = porCodigo.get(f.codigo);
     if (!p) { r.noEstan++; continue; }
     const data: Prisma.ProductUpdateInput = {};
-    const costo = costoDesdeLista(f.precioLista, opciones.descuento);
+    const costo = costoDesdeLista(f.precioLista, opciones.descuento, ivaDeLaLista(opciones));
     if (que.costo && costo !== null && (p.costPerItem === null || Number(p.costPerItem) !== costo)) data.costPerItem = montoDecimal(costo);
     const stock = existenciaPublicable(f.existencia, opciones.reserva);
     if (que.existencia && stock !== null && stock !== p.stock) data.stock = stock;

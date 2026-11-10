@@ -610,6 +610,9 @@ model Supplier {
   name            String    @unique
   /// Descuento que da sobre los precios de su lista, en % (0 = su lista es tu costo). Lo recuerda la carga en lote.
   discountPercent Decimal   @default(0)
+  /// C-196b: los precios de su lista ya traen el IVA (la ferretería aliada, 10/11): el costo es su precio ÷ (1 + IVA), porque el IVA
+  /// que se le paga no es costo. La carga en lote lo recuerda como el descuento.
+  pricesIncludeTax Boolean  @default(false)
   notes           String?
   products        Product[]
 

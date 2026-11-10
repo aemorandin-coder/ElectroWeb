@@ -23,7 +23,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
   if (!isAuthorized(session, 'MANAGE_PRODUCTS')) return NextResponse.json({ error: 'No autorizado' }, { status: session ? 403 : 401 });
   const { id } = await params;
-  const proveedor = await prisma.supplier.findUnique({ where: { id }, select: { id: true, name: true, discountPercent: true } });
+  const proveedor = await prisma.supplier.findUnique({ where: { id }, select: { id: true, name: true, discountPercent: true, pricesIncludeTax: true } });
   if (!proveedor) return NextResponse.json({ error: 'Proveedor no encontrado' }, { status: 404 });
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return NextResponse.json({ error: 'Pedido inválido' }, { status: 400 });
@@ -52,9 +52,9 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     const settings = await getPublicSettings();
     const opciones = leerOpciones(body, settings.taxEnabled ? settings.taxPercent : 0);
     if ('error' in opciones) return NextResponse.json({ error: opciones.error }, { status: 400 });
-    // El descuento del acuerdo se recuerda para la próxima lista
-    if (opciones.descuento !== Number(proveedor.discountPercent)) {
-      await prisma.supplier.update({ where: { id: proveedor.id }, data: { discountPercent: opciones.descuento } });
+    // El descuento del acuerdo y si su lista trae el IVA se recuerdan para la próxima lista
+    if (opciones.descuento !== Number(proveedor.discountPercent) || opciones.ivaIncluido !== proveedor.pricesIncludeTax) {
+      await prisma.supplier.update({ where: { id: proveedor.id }, data: { discountPercent: opciones.descuento, pricesIncludeTax: opciones.ivaIncluido } });
     }
 
     if (body.accion === 'crear') {
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
       if (r.creados.length > 0) {
         await registrarAccionAdmin(session, 'PRODUCT_CREATED', { type: 'PRODUCT', id: r.creados.length === 1 ? r.creados[0].id : undefined }, {
           origen: 'Lista del proveedor', proveedor: proveedor.name, productos: r.creados.length, codigos: r.creados.slice(0, 30).map((c) => c.codigo),
-          descuento: opciones.descuento, margen: opciones.margen, reserva: opciones.reserva,
+          descuento: opciones.descuento, ivaIncluido: opciones.ivaIncluido, margen: opciones.margen, reserva: opciones.reserva,
         }, request);
       }
       return NextResponse.json(r);
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
       if (r.actualizados > 0) {
         await registrarAccionAdmin(session, 'PRODUCT_STOCK_CHANGED', { type: 'PRODUCT' }, {
           origen: 'Lista del proveedor', proveedor: proveedor.name, productos: r.actualizados, costo: que.costo, existencia: que.existencia, precio: que.precio,
-          descuento: opciones.descuento, reserva: opciones.reserva,
+          descuento: opciones.descuento, ivaIncluido: opciones.ivaIncluido, reserva: opciones.reserva,
         }, request);
       }
       if (r.precios.length > 0) {

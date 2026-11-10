@@ -7,6 +7,7 @@ import { StepProps } from '../types';
 import { Campo, controlDe } from '../Campo';
 import ConditionSection from './ConditionSection';
 import BusquedaWeb from '../BusquedaWeb';
+import AvisoNombre from '../AvisoNombre';
 
 // C-134: una columna en el teléfono, errores debajo de cada campo y etiquetas que se agregan también con un botón
 // (en el teclado del teléfono "Enter" no siempre agrega).
@@ -47,6 +48,7 @@ export default function PhysicalStep1BasicInfo({ data, onChange, errors, categor
           placeholder="Ej: Laptop ASUS VivoBook 15 i5-12ª Gen"
           className={wizardInput(Boolean(errors.name))}
         />
+        <AvisoNombre nombre={data.name} marcas={marcas} onUsar={(name) => onChange({ name })} />
       </Campo>
 
       <BusquedaWeb data={data} onChange={onChange} />

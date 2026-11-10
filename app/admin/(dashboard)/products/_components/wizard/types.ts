@@ -101,6 +101,8 @@ export interface WizardData {
   /** C-196: a quién se le compra y con qué código (solo lo ve el equipo) */
   supplierId: string;
   supplierSku: string;
+  /** C-202: cómo lo llama su lista (solo se muestra; lo guarda la Lista del proveedor) */
+  supplierName: string;
   stock: string;
   barcode: string;
   weightKg: string;
@@ -162,6 +164,7 @@ export const DEFAULT_WIZARD_DATA: WizardData = {
   costPerItem: '',
   supplierId: '',
   supplierSku: '',
+  supplierName: '',
   stock: '0',
   barcode: '',
   weightKg: '',

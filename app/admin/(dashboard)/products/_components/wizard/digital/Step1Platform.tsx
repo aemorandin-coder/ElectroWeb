@@ -8,6 +8,7 @@ import { SiApple, SiGoogleplay, SiNetflix, SiPlaystation, SiRoblox, SiSpotify, S
 import { DIGITAL_PLATFORMS, DIGITAL_REGIONS, DIGITAL_UNITS, getPlatform } from '@/lib/digital-catalog';
 import { rowsFromPlatform, type StepProps } from '../types';
 import { wizardCard, wizardChoice, wizardError, wizardHint, wizardInput, wizardLabel, wizardSectionHelp, wizardSectionTitle } from '../ui';
+import AvisoNombre from '../AvisoNombre';
 
 const PLATFORM_ICONS: Record<string, ReactNode> = {
   PLAYSTATION: <SiPlaystation />, XBOX: <FaXbox />, ROBLOX: <SiRoblox />, STEAM: <SiSteam />, NINTENDO: <BsNintendoSwitch />,
@@ -118,6 +119,7 @@ export default function DigitalStep1Platform({ data, onChange, errors, categorie
             className={wizardInput(Boolean(errors.name))}
           />
           {errors.name && <p className={wizardError}>{errors.name}</p>}
+          <AvisoNombre nombre={data.name} onUsar={(name) => onChange({ name })} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>

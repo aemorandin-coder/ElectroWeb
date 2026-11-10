@@ -42,7 +42,7 @@ export interface ProductoApi {
   isFeatured?: boolean | null;
   seoTitle?: Texto; seoDescription?: Texto;
   priceUSD?: Numero; compareAtPriceUSD?: Numero; costPerItem?: Numero; stock?: Numero; barcode?: Texto;
-  supplierId?: Texto; supplierSku?: Texto;
+  supplierId?: Texto; supplierSku?: Texto; supplierName?: Texto;
   weightKg?: Numero; isConsolidable?: boolean | null; shippingCost?: Numero; freeShipping?: boolean | null;
   condition?: Condition | null; conditionGrade?: Grade | null; packaging?: Packaging | null;
   includedItems?: Texto; missingItems?: Texto; usageHours?: Numero; batteryHealth?: Numero;
@@ -128,6 +128,7 @@ export function productoAFormulario(product: ProductoApi): WizardData {
     costPerItem: texto(product.costPerItem),
     supplierId: product.supplierId || '',
     supplierSku: product.supplierSku || '',
+    supplierName: product.supplierName || '',
     stock: texto(product.stock) || '0',
     barcode: product.barcode || '',
     weightKg: texto(product.weightKg),

@@ -279,6 +279,9 @@ model Product {
   name        String
   sku         String   @unique
   slug        String   @unique
+  /// C-202: las direcciones que tuvo antes de cambiarle el nombre. La ficha las manda a la de ahora (308), para que
+  /// no se rompan los enlaces de Google ni los que ya se compartieron.
+  previousSlugs String[] @default([])
   shortCode   String?  @unique
   description String
   priceUSD    Decimal
@@ -321,6 +324,8 @@ model Product {
   supplierSku      String?
   /// C-196: la última vez que la lista del proveedor le cambió el costo o la existencia
   supplierSyncedAt DateTime?
+  /// C-202: su nombre en la lista del proveedor, tal cual viene (el de la tienda se escribe aparte)
+  supplierName     String?
 
   // Inventory extras
   barcode  String?

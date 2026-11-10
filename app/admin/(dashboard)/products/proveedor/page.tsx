@@ -4,12 +4,15 @@
 // existencia) y se elige qué hacer: crear en borrador lo nuevo, con costo, precio sugerido y existencia, y actualizar el
 // costo y la existencia de lo que ya está. El archivo se lee aquí (lib/proveedores/hoja.ts) y el servidor calcula y
 // guarda (POST /api/admin/proveedores/[id]/lista). Las fotos llamadas con el código se suben aparte, cuando estén.
+// C-202: cada fila nueva trae su "Nombre en la tienda", propuesto con la regla de la tienda (lib/nombres/producto.ts) y
+// editable antes de crear. Lo dudoso (un nombre cortado, una abreviatura que no se entiende) se marca para revisar.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import {
-  IconoAdvertencia, IconoBuscar, IconoCargando, IconoConfirmado, IconoFlechaIzquierda, IconoImagen, IconoSubir,
+  IconoAdvertencia, IconoBuscar, IconoCargando, IconoConfirmado, IconoDeshacer, IconoFlechaIzquierda, IconoImagen, IconoInfo,
+  IconoSubir,
 } from '@/components/iconos';
 import {
   adminCard, adminChoice, adminHint, adminInput, adminLabel, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle,
@@ -23,11 +26,12 @@ import {
   leerFilas, unirListas, type CampoLista, type Columnas, type FilaProveedor,
 } from '@/lib/proveedores/lista';
 import { uploadProductPhoto } from '@/lib/product-photo-upload';
+import { proponedorDeNombres, type PropuestaNombre } from '@/lib/nombres/producto';
 
 interface Proveedor { id: string; name: string; discountPercent: number; pricesIncludeTax: boolean; productos: number }
 interface EnTienda { id: string; name: string; sku: string; status: string; stock: number; priceUSD: number; costo: number | null; enPapelera: boolean; fotos: number }
 interface Archivo { nombre: string; filas: Celda[][]; encabezados: string[]; columnas: Columnas }
-type Vista = 'nuevos-con-existencia' | 'nuevos' | 'en-tienda' | 'todos';
+type Vista = 'nuevos-con-existencia' | 'nuevos' | 'revisar' | 'en-tienda' | 'todos';
 
 const CAMPOS: CampoLista[] = ['codigo', 'nombre', 'precio', 'existencia', 'departamento', 'unidad', 'categoria', 'marca', 'peso', 'largo', 'ancho', 'alto'];
 const POR_PAGINA = 100;
@@ -43,9 +47,9 @@ async function post<T>(proveedorId: string, cuerpo: Record<string, unknown>): Pr
   return d as T;
 }
 
-/** Lo que viaja de cada fila: el servidor recalcula todo */
-const filaParaEnviar = (f: FilaProveedor) => ({
-  codigo: f.codigo, nombre: f.nombre, precioLista: f.precioLista, existencia: f.existencia,
+/** Lo que viaja de cada fila: el servidor recalcula todo. El nombre es el de la tienda; el de su lista va aparte (C-202) */
+const filaParaEnviar = (f: FilaProveedor, nombreTienda?: string) => ({
+  codigo: f.codigo, nombre: nombreTienda ?? f.nombre, nombreProveedor: f.nombre, precioLista: f.precioLista, existencia: f.existencia,
   categoria: f.categoria, marca: f.marca, pesoKg: f.pesoKg, medidas: f.medidas,
 });
 
@@ -81,6 +85,9 @@ export default function ListaDelProveedorPage() {
   const [creados, setCreados] = useState<Array<{ codigo: string; id: string; sku: string }>>([]);
   const [errores, setErrores] = useState<Array<{ codigo: string; error: string }>>([]);
   const [actualizarQue, setActualizarQue] = useState({ costo: true, existencia: true, precio: false });
+  // C-202: las marcas de la tienda (para escribirlas igual) y los nombres que el equipo corrigió, por código
+  const [marcasTienda, setMarcasTienda] = useState<string[]>([]);
+  const [nombres, setNombres] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let vigente = true;
@@ -88,12 +95,14 @@ export default function ListaDelProveedorPage() {
       fetch('/api/admin/proveedores').then(async (r) => (r.ok ? r.json() : r.status === 403 || r.status === 401 ? 'sin-permiso' : null)).catch(() => null),
       fetch('/api/categories').then((r) => (r.ok ? r.json() : [])).catch(() => []),
       fetch('/api/settings').then((r) => (r.ok ? r.json() : null)).catch(() => null),
-    ]).then(([provs, cats, ajustes]) => {
+      fetch('/api/admin/products/marcas').then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    ]).then(([provs, cats, ajustes, marcas]) => {
       if (!vigente) return;
       if (provs === 'sin-permiso') { setSinPermiso(true); return; }
       setProveedores(Array.isArray(provs?.proveedores) ? provs.proveedores : []);
       setCategorias(Array.isArray(cats) ? cats.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })) : []);
       setIva(ajustes?.taxEnabled ? Number(ajustes.taxPercent) || 0 : 0);
+      if (Array.isArray(marcas?.marcas)) setMarcasTienda(marcas.marcas.filter((m: unknown): m is string => typeof m === 'string'));
     });
     return () => { vigente = false; };
   }, []);
@@ -120,6 +129,20 @@ export default function ListaDelProveedorPage() {
   const revisando = Boolean(proveedorId && filas.length > 0 && revisado?.para !== claveRevision);
   const traeExistencia = archivos.some((a) => a.columnas.existencia !== undefined);
   const departamentos = useMemo(() => [...new Set(filas.map((f) => f.departamento).filter((d): d is string => Boolean(d)))].sort((a, b) => a.localeCompare(b, 'es')), [filas]);
+  // C-202: el nombre que propone la tienda para cada fila, con lo que hay que revisar
+  const propuestas = useMemo(() => {
+    const proponer = proponedorDeNombres(marcasTienda);
+    return new Map<string, PropuestaNombre>(filas.map((f) => [f.codigo, proponer(f.nombre)]));
+  }, [filas, marcasTienda]);
+  const paraRevisar = useCallback(
+    (codigo: string) => (propuestas.get(codigo)?.avisos.some((a) => a.tipo === 'cortado' || a.tipo === 'revisar') ?? false) && nombres[codigo] === undefined,
+    [propuestas, nombres],
+  );
+  /** El nombre con que se crea: el que escribió el equipo o, si no tocó nada, el propuesto */
+  const nombreTienda = useCallback(
+    (f: FilaProveedor) => nombres[f.codigo]?.trim() || propuestas.get(f.codigo)?.nombre || f.nombre,
+    [propuestas, nombres],
+  );
 
   // Qué códigos ya están en la tienda (de este proveedor), por partes
   useEffect(() => {
@@ -150,11 +173,12 @@ export default function ListaDelProveedorPage() {
       const enTienda = Boolean(revision?.[f.codigo]);
       if (vista === 'nuevos-con-existencia' && (enTienda || !((f.existencia ?? 0) > 0) || !((f.precioLista ?? 0) > 0))) return false;
       if (vista === 'nuevos' && enTienda) return false;
+      if (vista === 'revisar' && (enTienda || !paraRevisar(f.codigo))) return false;
       if (vista === 'en-tienda' && !enTienda) return false;
       if (dpto && f.departamento !== dpto) return false;
-      return !q || f.codigo.toLowerCase().includes(q) || f.nombre.toLowerCase().includes(q);
+      return !q || f.codigo.toLowerCase().includes(q) || f.nombre.toLowerCase().includes(q) || nombreTienda(f).toLowerCase().includes(q);
     });
-  }, [filas, revision, vista, dpto, busqueda]);
+  }, [filas, revision, vista, dpto, busqueda, paraRevisar, nombreTienda]);
   const paginas = Math.max(1, Math.ceil(visibles.length / POR_PAGINA));
   const enPagina = visibles.slice((Math.min(pagina, paginas) - 1) * POR_PAGINA, Math.min(pagina, paginas) * POR_PAGINA);
   const nuevosSeleccionados = filas.filter((f) => seleccion.has(f.codigo) && !revision?.[f.codigo]);
@@ -164,7 +188,8 @@ export default function ListaDelProveedorPage() {
     conExistencia: filas.filter((f) => (f.existencia ?? 0) > 0).length,
     nuevos: filas.filter((f) => !revision?.[f.codigo]).length,
     enTienda: filas.filter((f) => revision?.[f.codigo]).length,
-  }), [filas, revision]);
+    revisar: filas.filter((f) => !revision?.[f.codigo] && paraRevisar(f.codigo)).length,
+  }), [filas, revision, paraRevisar]);
 
   const cambiarVista = (f: () => void) => { f(); setPagina(1); };
 
@@ -235,7 +260,7 @@ export default function ListaDelProveedorPage() {
     const hechos: typeof creados = [], fallos: typeof errores = [];
     try {
       for (const parte of partir(nuevosSeleccionados, LOTE_CREAR)) {
-        const d = await post<{ creados: typeof creados; errores: typeof errores }>(proveedorId, { accion: 'crear', filas: parte.map(filaParaEnviar), categoryId: categoriaDefecto || null, ...opciones() });
+        const d = await post<{ creados: typeof creados; errores: typeof errores }>(proveedorId, { accion: 'crear', filas: parte.map((f) => filaParaEnviar(f, nombreTienda(f))), categoryId: categoriaDefecto || null, ...opciones() });
         hechos.push(...d.creados); fallos.push(...d.errores);
         setTrabajando(`Creando ${miles(hechos.length + fallos.length)} de ${miles(nuevosSeleccionados.length)}…`);
       }
@@ -258,7 +283,7 @@ export default function ListaDelProveedorPage() {
     let actualizados = 0, sinCambios = 0, precios = 0;
     try {
       for (const parte of partir(enTiendaTodos, LOTE_ACTUALIZAR)) {
-        const d = await post<{ actualizados: number; sinCambios: number; precios: number }>(proveedorId, { accion: 'actualizar', filas: parte.map(filaParaEnviar), ...actualizarQue, ...opciones() });
+        const d = await post<{ actualizados: number; sinCambios: number; precios: number }>(proveedorId, { accion: 'actualizar', filas: parte.map((f) => filaParaEnviar(f)), ...actualizarQue, ...opciones() });
         actualizados += d.actualizados; sinCambios += d.sinCambios; precios += d.precios;
       }
       toast.success(`${miles(actualizados)} ${actualizados === 1 ? 'producto actualizado' : 'productos actualizados'}${precios > 0 ? `, ${miles(precios)} con precio nuevo` : ''}. ${miles(sinCambios)} sin cambios.`, { duration: 8000 });
@@ -443,7 +468,7 @@ export default function ListaDelProveedorPage() {
 
           {/* Filtros de la vista previa */}
           <div className="flex flex-wrap gap-2" role="group" aria-label="Qué filas ver">
-            {([['nuevos-con-existencia', 'Nuevos con existencia'], ['nuevos', 'Nuevos'], ['en-tienda', 'Ya en la tienda'], ['todos', 'Todos']] as const).map(([v, t]) => (
+            {([['nuevos-con-existencia', 'Nuevos con existencia'], ['nuevos', 'Nuevos'], ['revisar', `Nombres para revisar (${miles(conteo.revisar)})`], ['en-tienda', 'Ya en la tienda'], ['todos', 'Todos']] as const).map(([v, t]) => (
               <button key={v} type="button" aria-pressed={vista === v} onClick={() => cambiarVista(() => setVista(v))} className={`${adminChoice(vista === v)} min-h-11 px-3 text-sm`}>{t}</button>
             ))}
           </div>
@@ -479,7 +504,7 @@ export default function ListaDelProveedorPage() {
                 <tr className="bg-surface text-left text-xs font-semibold uppercase tracking-wide text-muted">
                   <th className="w-10 px-3 py-2"><span className="sr-only">Marcar</span></th>
                   <th className="px-3 py-2">Código</th>
-                  <th className="px-3 py-2">En su lista</th>
+                  <th className="px-3 py-2">Nombre en la tienda</th>
                   <th className="px-3 py-2 text-right">Existencia</th>
                   <th className="px-3 py-2 text-right">Precio de lista</th>
                   <th className="px-3 py-2 text-right">Costo</th>
@@ -500,7 +525,19 @@ export default function ListaDelProveedorPage() {
                           onChange={() => setSeleccion((s) => { const n = new Set(s); if (n.has(f.codigo)) n.delete(f.codigo); else n.add(f.codigo); return n; })} />}
                       </td>
                       <td className="px-3 py-2 font-mono text-xs text-ink-soft">{f.codigo}</td>
-                      <td className="px-3 py-2"><span className="block text-ink">{f.nombre || <span className="text-muted">Sin nombre</span>}</span>{f.departamento && <span className="text-xs text-muted">{f.departamento}</span>}</td>
+                      <td className="min-w-[18rem] px-3 py-2 align-top">
+                        <NombreEnTienda
+                          fila={f}
+                          enTienda={actual?.name ?? null}
+                          propuesta={propuestas.get(f.codigo) ?? null}
+                          valor={nombres[f.codigo]}
+                          onCambiar={(v) => setNombres((n) => {
+                            const copia = { ...n };
+                            if (v === undefined) delete copia[f.codigo]; else copia[f.codigo] = v;
+                            return copia;
+                          })}
+                        />
+                      </td>
                       <td className="px-3 py-2 text-right tabular-nums">{f.existencia === null ? '—' : miles(f.existencia)}</td>
                       <td className="px-3 py-2 text-right tabular-nums">{f.precioLista === null ? '—' : formatUSD(f.precioLista)}</td>
                       <td className="px-3 py-2 text-right tabular-nums">{costo === null ? '—' : formatUSD(costo)}</td>
@@ -534,6 +571,60 @@ export default function ListaDelProveedorPage() {
 
       <FotosPorCodigo proveedorId={proveedorId} />
     </div>
+  );
+}
+
+/**
+ * C-202: el nombre de una fila. Si es nueva, el campo con el nombre propuesto (se puede corregir) y, debajo, cómo viene
+ * en su lista y lo que hay que mirar: en ámbar lo que alguien tiene que revisar (cortado, sin entender), en gris lo que
+ * la tienda completó sola. Si ya está en la tienda, su nombre de la tienda.
+ */
+function NombreEnTienda({ fila, enTienda, propuesta, valor, onCambiar }: {
+  fila: FilaProveedor;
+  enTienda: string | null;
+  propuesta: PropuestaNombre | null;
+  valor: string | undefined;
+  onCambiar: (v: string | undefined) => void;
+}) {
+  if (enTienda !== null) {
+    return (
+      <>
+        <span className="block text-ink">{enTienda}</span>
+        <span className="block text-xs text-muted">Su lista: {fila.nombre || 'sin nombre'}</span>
+      </>
+    );
+  }
+  const propuesto = propuesta?.nombre || fila.nombre;
+  const editado = valor !== undefined && valor !== propuesto;
+  const avisos = editado ? [] : propuesta?.avisos ?? [];
+  return (
+    <>
+      <div className="flex items-center gap-1">
+        <input
+          type="text"
+          aria-label={`Nombre en la tienda de ${fila.codigo}`}
+          value={valor ?? propuesto}
+          maxLength={150}
+          onChange={(e) => onCambiar(e.target.value)}
+          className={`${adminInput()} h-9 text-sm`}
+        />
+        {editado && (
+          <button type="button" onClick={() => onCambiar(undefined)} title="Volver al nombre propuesto" aria-label={`Volver al nombre propuesto de ${fila.codigo}`} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink">
+            <IconoDeshacer className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+      <span className="mt-1 block text-xs text-muted">Su lista: {fila.nombre || 'sin nombre'}{fila.departamento ? ` · ${fila.departamento}` : ''}</span>
+      {avisos.map((a) => {
+        const revisar = a.tipo === 'cortado' || a.tipo === 'revisar';
+        const Icono = revisar ? IconoAdvertencia : IconoInfo;
+        return (
+          <span key={a.texto} className={`mt-0.5 flex items-start gap-1 text-xs ${revisar ? 'text-warning-strong' : 'text-muted'}`}>
+            <Icono className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />{a.texto}
+          </span>
+        );
+      })}
+    </>
   );
 }
 

@@ -58,7 +58,10 @@ export async function productosPorCodigo(supplierId: string, codigos: string[]):
 /** Lo que llega de la pantalla para crear o actualizar, revisado aquí: la pantalla no decide nada */
 export interface FilaEntrada {
   codigo: string;
+  /** El nombre para la tienda (C-202: la pantalla lo propone y el equipo lo corrige) */
   nombre: string;
+  /** C-202: su nombre en la lista, tal cual (se guarda aparte para pedirle el producto) */
+  nombreProveedor: string | null;
   precioLista: number | null;
   existencia: number | null;
   categoria: string | null;
@@ -83,6 +86,7 @@ export function leerFilasEntrada(valor: unknown, maximo: number): { filas: FilaE
     filas.push({
       codigo,
       nombre: typeof f.nombre === 'string' ? limpiarNombre(f.nombre).slice(0, NOMBRE_MAX) : '',
+      nombreProveedor: typeof f.nombreProveedor === 'string' && f.nombreProveedor.trim() ? limpiarNombre(f.nombreProveedor).slice(0, NOMBRE_MAX) : null,
       precioLista: numeroONull(f.precioLista, 0, 1_000_000),
       existencia: numeroONull(f.existencia, 0, 1_000_000),
       categoria: typeof f.categoria === 'string' && f.categoria.trim() ? f.categoria.trim().slice(0, 80) : null,
@@ -126,7 +130,9 @@ function slugDe(nombre: string): string {
 async function libre(campo: 'sku' | 'slug', base: string): Promise<string> {
   for (let n = 1; n <= 30; n++) {
     const candidato = n === 1 ? base : `${base}-${n}`;
-    const existe = await prisma.product.findFirst({ where: { [campo]: candidato }, select: { id: true } });
+    // C-202: la dirección que otro producto tuvo antes tampoco (esa redirige a él)
+    const where: Prisma.ProductWhereInput = campo === 'slug' ? { OR: [{ slug: candidato }, { previousSlugs: { has: candidato } }] } : { sku: candidato };
+    const existe = await prisma.product.findFirst({ where, select: { id: true } });
     if (!existe) return candidato;
   }
   return `${base}-${Date.now().toString(36)}`;
@@ -177,7 +183,7 @@ export async function crearDesdeLista(
           categoryId, brandId,
           weightKg: f.pesoKg ?? 0,
           dimensions: f.medidas ? JSON.stringify({ length: f.medidas[0], width: f.medidas[1], height: f.medidas[2] }) : null,
-          supplierId: proveedor.id, supplierSku: f.codigo, supplierSyncedAt: ahora,
+          supplierId: proveedor.id, supplierSku: f.codigo, supplierSyncedAt: ahora, supplierName: f.nombreProveedor,
         };
         return tx.product.create({ data, select: { id: true, sku: true } });
       });
@@ -213,11 +219,13 @@ export async function actualizarDesdeLista(
   const r: ResultadoActualizar = { actualizados: 0, sinCambios: 0, noEstan: 0, precios: [], tocaTienda: false };
   const productos = await prisma.product.findMany({
     where: { supplierId: proveedorId, supplierSku: { in: filas.map((f) => f.codigo) }, deletedAt: null, productType: 'PHYSICAL' },
-    select: { id: true, name: true, status: true, stock: true, priceUSD: true, costPerItem: true, supplierSku: true },
+    select: { id: true, name: true, status: true, stock: true, priceUSD: true, costPerItem: true, supplierSku: true, supplierName: true },
   });
   const porCodigo = new Map(productos.map((p) => [p.supplierSku as string, p]));
   const ahora = new Date();
   const cambios: Array<{ id: string; data: Prisma.ProductUpdateInput }> = [];
+  // C-202: su nombre en la lista se guarda al día sin contar como cambio (no es algo que la tienda muestre)
+  const soloNombre: Array<{ id: string; supplierName: string }> = [];
   for (const f of filas) {
     const p = porCodigo.get(f.codigo);
     if (!p) { r.noEstan++; continue; }
@@ -233,12 +241,20 @@ export async function actualizarDesdeLista(
         r.precios.push({ id: p.id, producto: p.name, antes: Number(p.priceUSD), despues: precio });
       }
     }
-    if (Object.keys(data).length === 0) { r.sinCambios++; continue; }
+    const nombreLista = f.nombreProveedor ?? f.nombre;
+    const nombreNuevo = nombreLista && nombreLista !== p.supplierName ? nombreLista : null;
+    if (Object.keys(data).length === 0) {
+      r.sinCambios++;
+      if (nombreNuevo) soloNombre.push({ id: p.id, supplierName: nombreNuevo });
+      continue;
+    }
+    if (nombreNuevo) data.supplierName = nombreNuevo;
     data.supplierSyncedAt = ahora;
     if (p.status === 'PUBLISHED' && (data.stock !== undefined || data.priceUSD !== undefined)) r.tocaTienda = true;
     cambios.push({ id: p.id, data });
   }
   if (cambios.length > 0) await prisma.$transaction(cambios.map(({ id, data }) => prisma.product.update({ where: { id }, data })));
+  if (soloNombre.length > 0) await prisma.$transaction(soloNombre.map(({ id, supplierName }) => prisma.product.update({ where: { id }, data: { supplierName } })));
   r.actualizados = cambios.length;
   return r;
 }

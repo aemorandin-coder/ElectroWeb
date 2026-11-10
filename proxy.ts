@@ -4,6 +4,7 @@ import { getMaintenanceState, getRequestIP, isMaintenanceExemptPath, maintenance
 import { scheduleExchangeRateRefresh } from '@/lib/exchange-rate';
 import { isFlyerCode, STUDIO_COOKIE, STUDIO_COOKIE_DAYS } from '@/lib/studio/code';
 import { PAGINAS_SOLO_DUENO } from '@/lib/auth-helpers';
+import { direccionActual } from '@/lib/direcciones-anteriores';
 
 const REF_COOKIE = 'electroshop_ref';
 const REF_TTL_DAYS = 30;
@@ -64,6 +65,20 @@ export default withAuth(
     // ── REDIRECTS ────────────────────────────────────────────────────
     if (pathname === '/admin/login') {
       return NextResponse.redirect(new URL('/login?redirect=admin', req.url));
+    }
+
+    // Direcciones anteriores de productos (C-202): al cambiarle el nombre, el producto cambia de dirección. La vieja
+    // responde 308 a la nueva, con lo que traía después del "?" (?ref=, ?es=). La base se lee como mucho una vez por minuto.
+    const enFicha = pathname.match(/^\/productos\/([^/]+)\/?$/);
+    if (enFicha) {
+      let slug = enFicha[1];
+      try { slug = decodeURIComponent(slug); } catch { /* mal escrita: la ficha responde que no existe */ }
+      const actual = await direccionActual(slug);
+      if (actual) {
+        const destino = new URL(`/productos/${encodeURIComponent(actual)}`, req.url);
+        destino.search = req.nextUrl.search;
+        return NextResponse.redirect(destino, 308);
+      }
     }
 
     // ── ADMIN PROTECTION ─────────────────────────────────────────────

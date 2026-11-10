@@ -57,7 +57,7 @@ export default function MisCursosPage() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-ink">Mis Cursos</h1>
+        <h1 className="text-2xl font-bold text-ink">Mis cursos</h1>
         <p className="text-sm text-muted mt-1">
           {enrollments.length} curso(s) inscrito(s)
         </p>

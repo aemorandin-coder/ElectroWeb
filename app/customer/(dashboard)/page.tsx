@@ -11,7 +11,6 @@ import {
 import CustomerOnboarding from '@/components/customer/CustomerOnboarding';
 import PreguntarPromociones from '@/components/promociones/PreguntarPromociones';
 import OrderStepper from '@/components/customer/OrderStepper';
-import { EnVivo } from '@/components/ui/EnVivo';
 import { formatUSD } from '@/lib/currency';
 import { adminBadge, adminPrimaryButton, type AdminTone } from '@/lib/admin-ui';
 import { ETIQUETA_ESTADO } from '@/lib/order-admin';
@@ -132,8 +131,8 @@ export default function CustomerDashboard() {
     void fetchDashboardData();
   }, []);
 
-  // C-127: el avance de los pedidos y el saldo se actualizan solos
-  const enVivo = useTiempoReal((evento) => {
+  // C-127: el avance de los pedidos y los Puntos ES se actualizan solos
+  useTiempoReal((evento) => {
     if (evento.tipo === 'order:status_updated' || evento.tipo === 'payment:verified') void fetchDashboardData();
   }, { onReconectar: () => void fetchDashboardData(), respaldoMs: 120_000 });
 
@@ -161,7 +160,7 @@ export default function CustomerDashboard() {
           <p className="text-sm text-muted">{greeting},</p>
           <h1 className="text-2xl font-bold text-ink lg:text-3xl">{nombre}</h1>
         </div>
-        <EnVivo estado={enVivo} />
+        {/* C-201: sin "En vivo": no le decía nada al cliente. La pantalla se sigue actualizando sola (y, sin conexión, consulta de a ratos) */}
       </header>
 
       {/* Resumen: saldo, compras activas y garantías */}
@@ -272,8 +271,9 @@ export default function CustomerDashboard() {
       </section>
 
       {/* Historial */}
+      {/* C-201: min-w-0 en las dos: sin él, a 360 px medían 570 (el texto largo ensanchaba la columna) y se salían */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <section aria-labelledby="ultimos-pedidos" className="rounded-2xl border border-line bg-white p-4 lg:p-5">
+        <section aria-labelledby="ultimos-pedidos" className="min-w-0 rounded-2xl border border-line bg-white p-4 lg:p-5">
           <div className="mb-1 flex items-center justify-between">
             <h2 id="ultimos-pedidos" className="font-semibold text-ink">Últimos pedidos</h2>
             <span className="text-xs text-muted">{stats?.orders ?? 0} en total</span>
@@ -310,8 +310,9 @@ export default function CustomerDashboard() {
           )}
         </section>
 
-        <section aria-labelledby="movimientos" className="rounded-2xl border border-line bg-white p-4 lg:p-5">
-          <h2 id="movimientos" className="mb-1 font-semibold text-ink">Movimientos</h2>
+        {/* C-201: mezcla Puntos ES con inicios de sesión y pedidos: es la actividad de la cuenta, no solo dinero */}
+        <section aria-labelledby="movimientos" className="min-w-0 rounded-2xl border border-line bg-white p-4 lg:p-5">
+          <h2 id="movimientos" className="mb-1 font-semibold text-ink">Actividad reciente</h2>
           {stats?.recentActivity?.length ? (
             <ul className="divide-y divide-line">
               {stats.recentActivity.slice(0, 4).map((actividad) => <Movimiento key={actividad.id} actividad={actividad} />)}

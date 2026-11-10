@@ -57,7 +57,7 @@ export function numeroDeOrden(tx: Pick<Transaction, 'reference' | 'description' 
  * La descripción guardada, en limpio: los movimientos de antes de C-131 dicen "saldo" o "billetera" (se llaman
  * Puntos ES), el canje de gift card lleva una clave interna al final y el ajuste manual nombra al "admin".
  */
-function descripcionLimpia(tx: Pick<Transaction, 'type' | 'description'>): string {
+export function descripcionLimpia(tx: Pick<Transaction, 'type' | 'description'>): string {
   const base = (tx.description ?? '').trim();
   if (!base) return isCreditTransaction(tx.type) ? 'Puntos ES acreditados' : 'Compra con Puntos ES';
   return base
@@ -65,6 +65,9 @@ function descripcionLimpia(tx: Pick<Transaction, 'type' | 'description'>): strin
     .replace(/^Ajuste manual por admin:\s*(Sin razón especificada)?/i, (_, sinRazon) => (sinRazon ? 'Ajuste de la tienda' : 'Ajuste de la tienda: '))
     .replace(/\b(del|al|tu|su)\s+(saldo|billetera|monedero|wallet)\b/gi, (_, prep: string) => `${PLURAL[prep.toLowerCase()]} Puntos ES`)
     .replace(/\b(saldo|billetera|monedero|wallet)\b/gi, 'Puntos ES')
+    // C-201: "Puntos ES" es plural ("Saldo devuelto" decía "Puntos ES devuelto") y "Compra Orden #" de antes
+    .replace(/\bPuntos ES (devuelto|acreditado|recargado|reintegrado|agregado|añadido|abonado|descontado|usado|insuficiente)\b/g, 'Puntos ES $1s')
+    .replace(/^Compra Orden\b/, 'Compra de la orden')
     .trim();
 }
 

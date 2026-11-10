@@ -18,13 +18,14 @@ import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 const MENU = [
   { href: '/customer', icon: IconoInicio, label: 'Inicio' },
   { href: '/customer/balance', icon: IconoPuntosEs, label: 'Puntos ES' },
-  { href: '/customer/orders', icon: IconoBolsa, label: 'Mis Pedidos' },
-  { href: '/customer/cotizaciones', icon: IconoOrdenes, label: 'Mis cotizaciones' },
+  { href: '/customer/orders', icon: IconoBolsa, label: 'Mis pedidos' },
+  // C-201: "Mis cotizaciones" y "Mis cursos" solo para quien tiene alguna (o si está en esa página)
+  { href: '/customer/cotizaciones', icon: IconoOrdenes, label: 'Mis cotizaciones', soloSi: 'cotizaciones' as const },
   { href: '/customer/wishlist', icon: IconoFavoritos, label: 'Favoritos' },
   { href: '/customer/addresses', icon: IconoUbicacion, label: 'Direcciones' },
   { href: '/customer/warranty', icon: IconoGarantia, label: 'Garantía' },
   { href: '/customer/documentos', icon: IconoDocumento, label: 'Mis documentos' },
-  { href: '/customer/mis-cursos', icon: IconoCursos, label: 'Mis Cursos' },
+  { href: '/customer/mis-cursos', icon: IconoCursos, label: 'Mis cursos', soloSi: 'cursos' as const },
   { href: '/customer/referrals', icon: IconoRegalo, label: 'Promotores' },
   { href: '/customer/profile', icon: IconoCuenta, label: 'Mi perfil' },
 ];
@@ -39,6 +40,7 @@ export default function CustomerDashboardLayout({
   const pathname = usePathname();
   const { settings: companySettings } = useSettings();
   const [userImage, setUserImage] = useState<string | null>(null);
+  const [usa, setUsa] = useState<{ cotizaciones: number; cursos: number } | null>(null);
 
   // Escritorio: menú fijo que se puede ocultar. Móvil: cajón cerrado que se cierra al navegar
   // (se guarda la ruta en la que se abrió, así no hace falta un efecto para cerrarlo). Igual que el admin (C-52).
@@ -72,6 +74,7 @@ export default function CustomerDashboardLayout({
         // La foto que sube el cliente queda en user.image; profile.avatar es de cuentas viejas (C-80: antes leía profile.image, que no existe)
         const imagen = data?.user?.image || data?.profile?.avatar;
         if (!cancelado && imagen) setUserImage(imagen);
+        if (!cancelado && data?.menu) setUsa({ cotizaciones: Number(data.menu.cotizaciones) || 0, cursos: Number(data.menu.cursos) || 0 });
       })
       .catch(() => { /* la foto es opcional */ });
     return () => { cancelado = true; };
@@ -160,6 +163,7 @@ export default function CustomerDashboardLayout({
           <ul className="space-y-0.5">
             {MENU.map((item) => {
               const isActive = pathname === item.href || (item.href !== '/customer' && pathname.startsWith(item.href));
+              if ('soloSi' in item && item.soloSi && !isActive && !(usa && usa[item.soloSi] > 0)) return null;
               return (
                 <li key={item.href}>
                   <Link

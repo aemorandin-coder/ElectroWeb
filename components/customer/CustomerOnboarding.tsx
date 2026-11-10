@@ -144,6 +144,34 @@ export default function CustomerOnboarding({ stats }: { stats: Stats }) {
   if (!cargado) {
     return <div className="mb-3 h-44 animate-pulse rounded-2xl bg-line" aria-hidden="true" />;
   }
+  // C-201 (pedido de Andrés): quien ya compró no necesita el recorrido para "dejar la cuenta lista": solo lo que le falta,
+  // en una tarjeta corta y sin el anillo. Quien todavía no compró sigue viendo las misiones completas.
+  const pendientes = misiones.filter((m) => !m.hecha);
+  if ((stats?.orders ?? 0) > 0 && pendientes.length > 0) {
+    return (
+      <section aria-labelledby="misiones-titulo" className={`${adminCard} mb-3 p-3 lg:p-4`}>
+        <h2 id="misiones-titulo" className="px-1 text-sm font-semibold text-ink">
+          {pendientes.length === 1 ? 'Te falta un paso' : `Te faltan ${pendientes.length} pasos`}
+        </h2>
+        <ul className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {pendientes.map((m) => (
+            <li key={m.id}>
+              <Link href={m.href} className="group flex min-h-12 items-center gap-3 rounded-xl border border-line bg-surface p-2.5 hover:border-brand-500/40 hover:bg-white">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-brand-600 ring-1 ring-line">
+                  <m.Icono className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-ink">{m.titulo}</span>
+                  <span className="block truncate text-xs text-muted">{m.texto}</span>
+                </span>
+                <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="misiones-titulo" className={`${adminCard} mb-3 p-4 lg:p-5`}>

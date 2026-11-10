@@ -36,16 +36,26 @@ export function estadoParaCliente(status: string, sentAt: Date | null, validityD
   return 'PREPARING';
 }
 
+/** Las cotizaciones de un cliente: las que pidió con su cuenta y, con el correo verificado, las enviadas a su correo */
+function whereDelCliente(userId: string, correo: string | null, correoVerificado: boolean) {
+  return {
+    OR: [
+      { userId },
+      ...(correo && correoVerificado
+        ? [{ contactEmail: { equals: correo, mode: 'insensitive' as const }, status: { in: ['SENT', 'APPROVED'] } }]
+        : []),
+    ],
+  };
+}
+
+/** C-201: cuántas tiene (el menú del panel muestra "Mis cotizaciones" solo a quien tiene alguna) */
+export function contarCotizacionesDelCliente(userId: string, correo: string | null, correoVerificado: boolean): Promise<number> {
+  return prisma.quote.count({ where: whereDelCliente(userId, correo, correoVerificado) });
+}
+
 export async function cotizacionesDelCliente(userId: string, correo: string | null, correoVerificado: boolean): Promise<CotizacionDelCliente[]> {
   const filas = await prisma.quote.findMany({
-    where: {
-      OR: [
-        { userId },
-        ...(correo && correoVerificado
-          ? [{ contactEmail: { equals: correo, mode: 'insensitive' as const }, status: { in: ['SENT', 'APPROVED'] } }]
-          : []),
-      ],
-    },
+    where: whereDelCliente(userId, correo, correoVerificado),
     orderBy: { createdAt: 'desc' },
     take: MAXIMO,
     include: { items: { select: { quantity: true, unitPriceUSD: true } } },

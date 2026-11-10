@@ -10,6 +10,21 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.26] - 2026-11-10
+### Carrito, checkout y cuenta del cliente 1.2.2 (C-201)
+- **Mi panel ya no se sale de la pantalla en el teléfono:** "Últimos pedidos" y "Movimientos" medían 570 px en un teléfono de 360.
+- **Los movimientos viejos ya no dicen "Saldo devuelto":** el inicio los limpia como la página de Puntos ES ("Puntos ES devueltos", "Compra de la orden").
+- **El inicio, más claro:**
+  - Sin "En vivo".
+  - "Actividad reciente" en vez de "Movimientos".
+  - Para quien ya compró, las misiones van en una tarjeta corta con solo lo que falta.
+- **El menú:** "Mis pedidos" y "Mis cursos", con las mayúsculas parejas. "Mis cotizaciones" y "Mis cursos" salen solo a quien tiene alguno.
+- **Garantía:** las tres pestañas entran en el teléfono.
+### Tienda 1.6.1, Clientes 1.0.5 y Cotizaciones 1.4.2 (C-201, internos)
+- El texto limpio de los movimientos, para el inicio de Mi panel (`descripcionLimpia`).
+- El perfil dice cuántas cotizaciones y cursos tiene el cliente, para su menú.
+- La regla de dueño de las cotizaciones, en una sola función.
+
 ## [1.0.0-rc.25] - 2026-11-10
 ### Tienda 1.6.0 (C-197)
 - **La ficha del producto sin huecos:** la descripción y las especificaciones van en una sola tarjeta. La Descripción ya no se estira hasta la altura de las especificaciones.

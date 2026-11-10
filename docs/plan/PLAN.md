@@ -452,8 +452,18 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - El checkout a 360 y 1440.
     - La prueba de humo.
 - **C-200 · El departamento Ferretería** (decidido el 10/11): una categoría madre "Ferretería" con las suyas adentro; el inicio sigue siendo de tecnología, con una sola vitrina de ferretería y un acceso en la franja. Hoy la tienda no usa las subcategorías (`parentId` existe pero nada lo lee). Va antes de publicar los productos de la ferretería.
-- **La carga de los 60 productos de la ferretería:** el archivo (80 códigos, con categoría, marca, peso y medidas estimados) está en la carpeta de proveedores de Andrés, fuera del repositorio. Se sube con Productos → Más → Lista del proveedor, con "Su lista trae el IVA incluido" marcada y sin descuento, junto con su listado de existencia. **Fotos (decidido el 10/11): solo las del fabricante**, buscadas en los sitios oficiales de cada marca y nombradas por código para "Fotos por código". **Esperan el modelo exacto de cada producto:** su lista no lo trae, y la búsqueda del 10/11 encontró al menos cuatro desmalezadoras Daewoo de 52 cc distintas. El archivo de los 60 trae la columna para llenarlo. Falta confirmar con ZOOM y MRW si llevan pintura con solvente.
+- **La carga de los 60 productos de la ferretería:** el archivo (80 códigos, con categoría, marca, peso y medidas estimados) está en la carpeta de proveedores de Andrés, fuera del repositorio. Se sube con Productos → Más → Lista del proveedor, con "Su lista trae el IVA incluido" marcada y sin descuento, junto con su listado de existencia. **Fotos (decidido el 10/11): solo las del fabricante**, buscadas en los sitios oficiales de cada marca y nombradas por código para "Fotos por código". **Esperan el modelo exacto de cada producto:** su lista no lo trae, y la búsqueda del 10/11 encontró al menos cuatro desmalezadoras Daewoo de 52 cc distintas. El archivo de los 60 trae la columna para llenarlo. Falta confirmar con ZOOM y MRW si llevan pintura con solvente. **Los 80 nombres se corrigieron el 10/11:** llevan todo lo de su lista y nada más (antes faltaban modelos y había tres datos cambiados), y la columna "Revisar antes de publicar" trae 22 preguntas para la ferretería.
 - **De paso (C-196):** la búsqueda de la tienda (`buscarEnCatalogo`) lee todos los productos publicados para comparar en memoria. Con unos miles anda bien; si lo publicado pasa de 10.000, llevarla a la base como la del panel.
+
+**Pedido del 10/11 (Andrés), mientras se espera lo de la ferretería:**
+- **C-201** (**hecha**, rc.26): el inicio de Mi panel sin errores y más claro. `estado/C-201.md`. Quedan:
+  - En el teléfono, el botón de WhatsApp tapa el final de las tarjetas del panel.
+  - "1 a 2 días hábiles" en Garantía, a confirmar con los términos (A3).
+  - "Para ti" en el inicio del panel: maquetas con datos de producción para que Andrés elija.
+- **Cambiar el nombre de un producto cambia su dirección** (encontrado el 10/11).
+  - `PUT /api/products/[id]` arma la dirección con el nombre nuevo cuando no le llega `slug`, y el asistente no lo manda.
+  - El enlace viejo da 404, en Google y en lo que ya se compartió. Los de `/p/<código>` siguen andando.
+  - Arreglarlo antes de renombrar productos publicados: que la dirección no cambie al renombrar, o guardar las anteriores y redirigir.
 
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).

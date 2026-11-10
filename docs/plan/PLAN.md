@@ -427,16 +427,18 @@ Quedan para después de C-177 (`estado/C-177.md`):
 
 **Pedido del 10/11 (Andrés): vender de todo, con la ferretería aliada.** Se mostró en una página de maquetas con datos de producción; las decisiones se preguntaron en el chat. Los productos de la ferretería están en La Victoria (Aragua) y se venden solo con envío.
 - **C-196** (**hecha**, rc.24): Admin → Productos para miles de productos. La lista por páginas, el proveedor y el costo en cada producto, y la lista del proveedor en lote (Excel, fotos por código). `estado/C-196.md`.
-- **C-197 · La ficha sin huecos:** la Descripción se estira hasta la altura de las Especificaciones. Tres maquetas: una sola ficha (recomendada), dos columnas ajustadas y pestañas. En las tres, los nombres en mayúsculas se escriben normal y "No especificado" no se muestra. Espera que Andrés elija.
-- **C-198 · Variantes de color, talla y versión:** propuesta de familias de productos. Cada variante es un producto (su código, existencia, precio, fotos y enlace); la familia los une para el selector de la ficha y una sola tarjeta en el catálogo ("Elegir color"). El carrito, las órdenes y la existencia no cambian. Espera la aprobación.
+- **C-196b** (**hecha**, rc.25): la casilla "Su lista trae el IVA incluido" en la carga en lote (el costo queda sin el IVA). `estado/C-196b.md`.
+- **C-197** (**hecha**, rc.25): la ficha en una sola tarjeta (la maqueta A que eligió Andrés). `estado/C-197.md`.
+- **C-198 · Variantes de color, talla y versión** (aprobada el 10/11, la propuesta recomendada; después de C-199 y C-200): familias de productos. Cada variante es un producto (su código, existencia, precio, fotos y enlace); la familia los une para el selector de la ficha y una sola tarjeta en el catálogo ("Elegir color"). El carrito, las órdenes y la existencia no cambian. El panel agrupa con "Agrupar como variantes" desde la lista.
 - **C-199 · El envío desde el proveedor:**
   - El origen del envío por proveedor: La Victoria es la ciudad 244 de ZOOM; hoy todo se calcula desde Guanare (43).
   - Solo envío: sin retiro ni delivery en Guanare para sus productos.
   - El flete estimado en la ficha.
   - El carrito mixto en dos paquetes, con dos fletes.
   - Tarifas reales de ZOOM desde La Victoria, consultadas el 10/11: 5 kg, unos $22 a Caracas; 20 kg, unos $61. El mínimo ronda los $6,40. Lo barato solo se vende como complemento.
-  - Espera las decisiones del chat (`PLAN.md` §7.1, A17).
-- **La carga de los 60 productos de la ferretería:** el archivo (80 códigos, con categoría, marca, peso y medidas estimados) está en la carpeta de proveedores de Andrés, fuera del repositorio. Se sube con Productos → Más → Lista del proveedor junto con su listado de existencia. Faltan las fotos y confirmar con ZOOM y MRW si llevan pintura con solvente.
+  - **Decidido el 10/11:** dos paquetes (la opción recomendada). Es la siguiente tarea: toca el checkout y el dinero, con su prueba del caso normal y del manipulado.
+- **C-200 · El departamento Ferretería** (decidido el 10/11): una categoría madre "Ferretería" con las suyas adentro; el inicio sigue siendo de tecnología, con una sola vitrina de ferretería y un acceso en la franja. Hoy la tienda no usa las subcategorías (`parentId` existe pero nada lo lee). Va antes de publicar los productos de la ferretería.
+- **La carga de los 60 productos de la ferretería:** el archivo (80 códigos, con categoría, marca, peso y medidas estimados) está en la carpeta de proveedores de Andrés, fuera del repositorio. Se sube con Productos → Más → Lista del proveedor, con "Su lista trae el IVA incluido" marcada y sin descuento, junto con su listado de existencia. **Fotos (decidido el 10/11): solo las del fabricante**, buscadas en los sitios oficiales de cada marca y nombradas por código para "Fotos por código". Falta confirmar con ZOOM y MRW si llevan pintura con solvente.
 - **De paso (C-196):** la búsqueda de la tienda (`buscarEnCatalogo`) lee todos los productos publicados para comparar en memoria. Con unos miles anda bien; si lo publicado pasa de 10.000, llevarla a la base como la del panel.
 
 **Limpieza (sin urgencia):**
@@ -499,9 +501,6 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 | A12 | En las tarjetas chicas, ¿la etiqueta de un usado dice solo la condición ("CAJA ABIERTA") y el grado se lee en la ficha? | Hoy "CAJA ABIERTA · EXCELENTE" ocupa dos líneas y tapa parte de la foto (`estado/C-162.md`). |
 | A13 | Promotores: ¿los productos digitales (códigos y recargas) pagan comisión? Hoy sí, pero no se acredita sola si supera la ganancia de la venta | `estado/C-167.md`. Opciones: no pagar en digitales, un % menor, o dejarlo. |
 | A14 | Promotores: % por defecto de la comisión y del descuento del código (quedó 5 % y 5 %), y los términos del programa para el abogado | `estado/C-167.md`. |
-| A15 | La ferretería aliada: ¿el "Precio Máximo" de su lista es el costo de la tienda, su precio al público con un descuento para la tienda, o una comisión? | El costo y el precio de sus productos (C-196 ya pide el descuento del acuerdo). |
-| A16 | ¿Un departamento Ferretería (categoría madre con las suyas) y el inicio sigue siendo de tecnología? Hoy el inicio y la franja muestran las categorías con más productos | Que cientos de productos de ferretería no cambien la cara de la tienda. |
-| A17 | Los productos de la ferretería salen de La Victoria y solo con envío: ¿flete estimado en la ficha y carrito mixto en dos paquetes? | C-199. |
 | A11 | ¿La cinta ES también en los productos que no son nuevos (al menos en "Caja abierta")? | Hoy llevan su etiqueta de condición y no la cinta (decisión del 28/09). Andrés la echó de menos el 01/10 (`estado/C-161.md`). |
 
 ### 7.2 Tomadas (no volver a preguntar)
@@ -569,5 +568,12 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - El precio publicado ya lleva el IVA y se dice cuánto es. El precio sugerido es costo + 30 % + IVA.
   - Los productos digitales no llevan IVA (interruptor en Configuración, apagado).
 - **ElectroStudio:** historias en la base, dos pantallas (inicio y editor), trabajo por fases. El plan semanal automático quedó fuera (28/09).
+- **La ferretería aliada (10/11, Andrés, en el chat):**
+  - Su lista trabaja a BCV, igual que la tienda, y su "Precio Máximo" trae el IVA y es lo que la tienda le paga, sin descuento. El costo es su precio sin el IVA (C-196b).
+  - Sus productos se venden solo con envío desde La Victoria (Aragua), en dos paquetes si el carrito mezcla (C-199).
+  - Un departamento Ferretería, y el inicio sigue siendo de tecnología (C-200).
+  - Las fotos, del fabricante.
+  - Las variantes, como familias de productos (C-198).
+  - La ficha, en una sola tarjeta (C-197).
 - **Taller:** espera a SADES (30/09).
 - **Credenciales del historial (C-40):** revisado el 26/09, no había nada que cambiar. Si algún día se configura el webhook de SADES, usar un secreto nuevo.

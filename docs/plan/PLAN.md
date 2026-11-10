@@ -430,13 +430,27 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-196b** (**hecha**, rc.25): la casilla "Su lista trae el IVA incluido" en la carga en lote (el costo queda sin el IVA). `estado/C-196b.md`.
 - **C-197** (**hecha**, rc.25): la ficha en una sola tarjeta (la maqueta A que eligió Andrés). `estado/C-197.md`.
 - **C-198 · Variantes de color, talla y versión** (aprobada el 10/11, la propuesta recomendada; después de C-199 y C-200): familias de productos. Cada variante es un producto (su código, existencia, precio, fotos y enlace); la familia los une para el selector de la ficha y una sola tarjeta en el catálogo ("Elegir color"). El carrito, las órdenes y la existencia no cambian. El panel agrupa con "Agrupar como variantes" desde la lista.
-- **C-199 · El envío desde el proveedor:**
-  - El origen del envío por proveedor: La Victoria es la ciudad 244 de ZOOM; hoy todo se calcula desde Guanare (43).
-  - Solo envío: sin retiro ni delivery en Guanare para sus productos.
-  - El flete estimado en la ficha.
-  - El carrito mixto en dos paquetes, con dos fletes.
-  - Tarifas reales de ZOOM desde La Victoria, consultadas el 10/11: 5 kg, unos $22 a Caracas; 20 kg, unos $61. El mínimo ronda los $6,40. Lo barato solo se vende como complemento.
-  - **Decidido el 10/11:** dos paquetes (la opción recomendada). Es la siguiente tarea: toca el checkout y el dinero, con su prueba del caso normal y del manipulado.
+- **C-199 · El envío desde el proveedor** (decidido el 10/11; **la próxima sesión arranca por aquí**). Hoy la tienda calcula todo como si saliera de Guanare (ZOOM 43) y ofrece retiro y delivery en Guanare para todo. La ferretería despacha y envía sus pedidos desde La Victoria (ZOOM 244).
+  - **El proveedor:** "Despacha él mismo desde [ciudad de ZOOM]", con la lista de ciudades de `ciudadesZoom()`. Sus productos son solo envío.
+  - **La ficha:**
+    - "Se envía desde La Victoria, Aragua", con el flete de referencia desde su ciudad al centro y al más lejos. `tarifaZoom` hoy fija `ciudad_remitente` a Guanare: recibe el origen. La tarifa se guarda en memoria.
+    - Sin "Retiro en tienda" ni "Delivery en Guanare".
+  - **El checkout:**
+    - Si el carrito lleva algo del proveedor, solo ZOOM o MRW. El servidor rechaza retiro y delivery (caso manipulado).
+    - Un carrito mixto dice "Tu pedido llega en 2 paquetes", con el flete de referencia de cada uno y su origen.
+  - **El dinero** (`calculateOrder` en `lib/pricing.ts`, una sola fuente para el servidor y el checkout):
+    - **El embalaje se cobra en cada paquete** (Andrés, 10/11: "igual para los dos"). Con empaques configurados (C-153), cada paquete arma el suyo, y el embalaje gratis desde un monto vale igual para los dos.
+    - **El envío gratis** (por producto o por monto) **vale solo para el paquete de Guanare.** El de la ferretería va siempre con cobro a destino: lo paga el cliente al retirar (Andrés, 10/11).
+  - **La orden** guarda sus paquetes: el origen, los productos y la guía de cada uno. Hoy hay un solo `trackingNumber`.
+    - **Panel:** cada paquete con su "Copiar datos para la guía" y su número de guía. En el de la ferretería, el aviso para pasarle el pedido.
+    - **Cliente:** las dos guías con su rastreo; el cron de seguimiento mira las dos.
+    - **Correos:** "llega en 2 paquetes".
+  - **Base (aditiva):** la ciudad de despacho en `suppliers` y los paquetes de la orden (una tabla `order_packages` o un JSON en `orders`; elegir al empezar).
+  - **Pruebas:**
+    - Casos normales: solo de Guanare, solo de la ferretería y mixto, cada uno con y sin embalaje gratis y envío gratis.
+    - Casos manipulados: retiro y delivery con un producto de la ferretería, y el embalaje y el total que manda el navegador.
+    - El checkout a 360 y 1440.
+    - La prueba de humo.
 - **C-200 · El departamento Ferretería** (decidido el 10/11): una categoría madre "Ferretería" con las suyas adentro; el inicio sigue siendo de tecnología, con una sola vitrina de ferretería y un acceso en la franja. Hoy la tienda no usa las subcategorías (`parentId` existe pero nada lo lee). Va antes de publicar los productos de la ferretería.
 - **La carga de los 60 productos de la ferretería:** el archivo (80 códigos, con categoría, marca, peso y medidas estimados) está en la carpeta de proveedores de Andrés, fuera del repositorio. Se sube con Productos → Más → Lista del proveedor, con "Su lista trae el IVA incluido" marcada y sin descuento, junto con su listado de existencia. **Fotos (decidido el 10/11): solo las del fabricante**, buscadas en los sitios oficiales de cada marca y nombradas por código para "Fotos por código". **Esperan el modelo exacto de cada producto:** su lista no lo trae, y la búsqueda del 10/11 encontró al menos cuatro desmalezadoras Daewoo de 52 cc distintas. El archivo de los 60 trae la columna para llenarlo. Falta confirmar con ZOOM y MRW si llevan pintura con solvente.
 - **De paso (C-196):** la búsqueda de la tienda (`buscarEnCatalogo`) lee todos los productos publicados para comparar en memoria. Con unos miles anda bien; si lo publicado pasa de 10.000, llevarla a la base como la del panel.
@@ -571,6 +585,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 - **La ferretería aliada (10/11, Andrés, en el chat):**
   - Su lista trabaja a BCV, igual que la tienda, y su "Precio Máximo" trae el IVA y es lo que la tienda le paga, sin descuento. El costo es su precio sin el IVA (C-196b).
   - Sus productos se venden solo con envío desde La Victoria (Aragua), en dos paquetes si el carrito mezcla (C-199). **La ferretería despacha y envía** los pedidos de la web (acordado con ella el 10/11).
+  - **El embalaje se cobra igual en los dos paquetes;** el envío gratis vale solo para el de Guanare: el de la ferretería siempre con cobro a destino (C-199).
   - Un departamento Ferretería, y el inicio sigue siendo de tecnología (C-200).
   - Las fotos, del fabricante.
   - Las variantes, como familias de productos (C-198).

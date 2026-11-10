@@ -279,10 +279,9 @@ En el orden en que más destraban:
 
 ## 4. Fila de Claude
 **Lo del 10/11, en este orden** (todo decidido, `PLAN.md` §7.2):
-1. **C-199 · El envío desde La Victoria:**
-   - el origen por proveedor (ZOOM 244), sin retiro ni delivery en Guanare para esos productos;
-   - el flete estimado en la ficha;
-   - el carrito mixto en dos paquetes, con dos fletes.
+1. **C-199 · El envío desde La Victoria (la próxima sesión arranca por aquí).** El plan completo, con las reglas de dinero que decidió Andrés, está en `PLAN.md` §5.2:
+   - el embalaje se cobra en los dos paquetes;
+   - el envío gratis vale solo para el de Guanare.
    Toca el checkout: lleva su prueba del caso normal y del manipulado.
 2. **C-200 · El departamento Ferretería:** la categoría madre y el inicio que sigue siendo de tecnología.
 3. **Las fotos del fabricante de los 60**, nombradas por código (fuera del repositorio).
@@ -304,4 +303,4 @@ La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedid
 >    - Si hay alguno de los datos de la sección 3 (también las llaves de SSH de Andrés).
 >    - Producción se comprueba con `git describe --tags` por SSH (`OPERACION.md` §3).
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
-> 4. Sigue con la fila (sección 4). Al terminar cada tarea: estado HECHO, su fila en `PLAN_CLAUDE.md`, `PLAN.md` §5 y `SIGUIENTE.md` al día (un solo bloque de deploy con el SQL total y las pruebas), merge y push.
+> 4. Sigue con la fila (sección 4): **C-199**, con el plan de `PLAN.md` §5.2. Al terminar cada tarea: estado HECHO, su fila en `PLAN_CLAUDE.md`, `PLAN.md` §5 y `SIGUIENTE.md` al día (un solo bloque de deploy con el SQL total y las pruebas), merge y push.

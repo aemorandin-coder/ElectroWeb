@@ -1,9 +1,70 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `94bc53d`, versión `v1.0.0-rc.25`, el 10/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.28`, el 10/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 10/11 (noche) · C-201, C-202 y C-200 (de rc.25 a `v1.0.0-rc.28`, con rc.26 y rc.27 adentro)
+Subido el 10/11 por Andrés, con `scripts/ferreteria-departamento.ts --aplicar`. Claude lo comprobó el mismo día desde fuera, como un visitante:
+- `/`, `/productos`, `/categorias`, `/llms.txt`, `/sitemap.xml`, `/feed/productos.xml` y `/api/products/public` responden 200.
+- **C-200:**
+  - `/categorias/ferreteria` tiene el aviso del envío y los chips de sus categorías.
+  - `/categorias/pinturas` existe, con la miga hacia Ferretería y el aviso.
+  - `/categorias` muestra Ferretería sin sus 9 categorías sueltas.
+  - El inicio todavía no muestra la vitrina ni el acceso, porque no hay productos publicados: así tiene que ser.
+- **C-202:**
+  - Las direcciones viejas de los productos renombrados responden 308 a la nueva: `fuente-poder-hp-pce011-250-watts` y `nintendo-eshop-card-saldo`.
+  - El producto renombrado comparte con su nombre nuevo en `og:title`, y su imagen (200, JPEG) se ve también por la dirección vieja.
+- Lo que necesita una cuenta quedó en `SIGUIENTE.md`, "Por confirmar de rc.28".
+- **Los 14 nombres:** Andrés los cambió con el botón "Usar este nombre", y 10 quedaron con los nombres propios en minúscula o en inglés (lista en `SIGUIENTE.md`).
+
+### El bloque que se subió: `v1.0.0-rc.28` (C-201, C-202 y C-200, con rc.26 y rc.27 adentro; unos 20 minutos)
+Producción está en `v1.0.0-rc.25`, subida el 10/11 y comprobada desde fuera; su bloque está en `HISTORIAL.md`.
+- **C-201 (rc.26):** el inicio de Mi panel sin errores y más claro.
+- **C-202 (rc.27):** los nombres de producto escritos normal (la columna "Nombre en la tienda" y el aviso del asistente), y cambiar un nombre ya no rompe el enlace.
+- **C-200 (rc.28):** el departamento Ferretería, que no se ve hasta que tenga productos publicados, y el pack de íconos v1.2.
+
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.25`). Es aditivo: tres columnas nuevas.
+```sql
+ALTER TABLE "products" ADD COLUMN "previousSlugs" TEXT[] DEFAULT ARRAY[]::TEXT[], ADD COLUMN "supplierName" TEXT;
+ALTER TABLE "categories" ADD COLUMN "isDepartment" BOOLEAN NOT NULL DEFAULT false;
+```
+Sin variables nuevas, sin crons y sin dependencias nuevas. Un guion para después: `scripts/ferreteria-departamento.ts`.
+
+**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
+```bash
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.25 y sin cambios
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc28.dump
+bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
+npx prisma db push && bash scripts/deploy.sh # aplica las tres columnas y compila
+git describe --tags --abbrev=0                                          # v1.0.0-rc.28
+npx tsx scripts/ferreteria-departamento.ts            # muestra lo que haría: Ferretería y sus 9 categorías
+npx tsx scripts/ferreteria-departamento.ts --aplicar  # las crea
+```
+- `prisma db push` no debería preguntar nada, porque las tres columnas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
+- El guion no cambia nada de lo que ve el cliente: el departamento aparece cuando tenga productos publicados, y eso espera a C-199.
+
+**Pruebas** (unos 20 minutos; si no ves un cambio, recarga):
+1. **Mi panel (C-201), en el teléfono, con una cuenta de cliente que tenga alguna compra:**
+   - Nada se sale de la pantalla.
+   - Dice "Actividad reciente" y nunca "Saldo".
+   - No sale "En vivo", y en Garantía se ven enteras las tres pestañas.
+2. **Lista del proveedor (C-202):**
+   - Sube el archivo de los 60 con su listado de existencia.
+   - En "Nuevos", la columna se llama "Nombre en la tienda", y "Nombres para revisar" filtra lo que va en ámbar. No hace falta crear nada.
+3. **El aviso del asistente (C-202):** edita el teclado AOAS sin guardar. Sale "Está en mayúsculas" con el nombre propuesto.
+4. **Categorías (C-200):**
+   - Están Ferretería y sus 9 categorías, con los íconos nuevos.
+   - Ferretería tiene marcada "Departamento aparte".
+   - En la tienda no cambió nada: ni la franja ni el inicio la muestran, porque todavía no tiene productos publicados.
+5. **Cambiar un nombre (C-202), cuando apruebes los 14 de `estado/C-202.md`:** renombra uno y abre su dirección vieja en una ventana de incógnito. Lleva sola a la nueva.
+
+**Vuelta atrás:**
+- `git reset --hard v1.0.0-rc.25 && npm install && bash scripts/deploy.sh --sin-pull`.
+- Las tres columnas y las categorías del guion no molestan al código anterior.
+- Si ya se renombró algún producto, sus direcciones viejas vuelven a dar "no encontrado" hasta subir de nuevo.
 
 
 ## 10/11 · C-196, C-196b y C-197 (de rc.23 a `v1.0.0-rc.25`, con rc.24 adentro)

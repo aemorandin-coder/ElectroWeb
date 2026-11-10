@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-10, C-200 · producción en 1.0.0-rc.25; `main` y la etiqueta en 1.0.0-rc.28)
+# Lo de ahora (actualizado 2026-11-10 · producción, `main` y la etiqueta en 1.0.0-rc.28)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.25`** (C-196, C-196b y C-197), subida el 10/11 por Andrés y comprobada desde fuera: la ficha nueva y la base aplicada. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.25". **Por subir: `v1.0.0-rc.28`** (C-201, C-202 y C-200, con rc.26 y rc.27 adentro; tres columnas nuevas y un guion; sección 2). Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
+- **Producción: `v1.0.0-rc.25`** (C-196, C-196b y C-197), subida el 10/11 por Andrés y comprobada desde fuera: la ficha nueva y la base aplicada. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.25". **Desde el 10/11 en la noche, producción está en `v1.0.0-rc.28`** (C-201, C-202 y C-200). La subió Andrés, con el guion de Ferretería, y Claude la comprobó desde fuera. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.28". Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
 - **Pedido del 10/11 (Andrés): vender de todo, con la ferretería aliada.** Las maquetas y el plan están en una página privada de Andrés (el enlace, en el chat de esa sesión). Los productos de la ferretería están en La Victoria (Aragua) y se venden solo con envío.
   - **C-196 · Admin → Productos para miles de productos (hecha, en rc.24):** la lista por páginas (de 4.626 KB a 29 KB con 3.100 productos), el proveedor y el costo en cada producto, y Productos → Más → Lista del proveedor: su Excel en lote y las fotos por código (`estado/C-196.md`).
   - **C-196b (hecha, en rc.25):** la casilla "Su lista trae el IVA incluido". Su "Precio Máximo" trae el IVA y es lo que la tienda le paga: costo sin el IVA, y la bomba de $54,90 queda en $71,37 y no en $82,78.
@@ -98,51 +98,21 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Por subir: `v1.0.0-rc.28` (C-201, C-202 y C-200, con rc.26 y rc.27 adentro; unos 20 minutos)
-Producción está en `v1.0.0-rc.25`, subida el 10/11 y comprobada desde fuera; su bloque está en `HISTORIAL.md`.
-- **C-201 (rc.26):** el inicio de Mi panel sin errores y más claro.
-- **C-202 (rc.27):** los nombres de producto escritos normal (la columna "Nombre en la tienda" y el aviso del asistente), y cambiar un nombre ya no rompe el enlace.
-- **C-200 (rc.28):** el departamento Ferretería, que no se ve hasta que tenga productos publicados, y el pack de íconos v1.2.
+**Nada por subir:** producción está en `v1.0.0-rc.28` (C-201, C-202 y C-200), subida el 10/11 por Andrés, con el guion de Ferretería aplicado. Claude la comprobó desde fuera. El bloque, con su SQL y su vuelta atrás, está en `HISTORIAL.md`.
 
-**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.25`). Es aditivo: tres columnas nuevas.
-```sql
-ALTER TABLE "products" ADD COLUMN "previousSlugs" TEXT[] DEFAULT ARRAY[]::TEXT[], ADD COLUMN "supplierName" TEXT;
-ALTER TABLE "categories" ADD COLUMN "isDepartment" BOOLEAN NOT NULL DEFAULT false;
-```
-Sin variables nuevas, sin crons y sin dependencias nuevas. Un guion para después: `scripts/ferreteria-departamento.ts`.
-
-**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
-```bash
-git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.25 y sin cambios
-DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc28.dump
-bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
-npx prisma db push && bash scripts/deploy.sh # aplica las tres columnas y compila
-git describe --tags --abbrev=0                                          # v1.0.0-rc.28
-npx tsx scripts/ferreteria-departamento.ts            # muestra lo que haría: Ferretería y sus 9 categorías
-npx tsx scripts/ferreteria-departamento.ts --aplicar  # las crea
-```
-- `prisma db push` no debería preguntar nada, porque las tres columnas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
-- El guion no cambia nada de lo que ve el cliente: el departamento aparece cuando tenga productos publicados, y eso espera a C-199.
-
-**Pruebas** (unos 20 minutos; si no ves un cambio, recarga):
+### Por confirmar de rc.28 (necesita una cuenta, unos 15 minutos)
 1. **Mi panel (C-201), en el teléfono, con una cuenta de cliente que tenga alguna compra:**
-   - Nada se sale de la pantalla.
-   - Dice "Actividad reciente" y nunca "Saldo".
-   - No sale "En vivo", y en Garantía se ven enteras las tres pestañas.
-2. **Lista del proveedor (C-202):**
-   - Sube el archivo de los 60 con su listado de existencia.
-   - En "Nuevos", la columna se llama "Nombre en la tienda", y "Nombres para revisar" filtra lo que va en ámbar. No hace falta crear nada.
-3. **El aviso del asistente (C-202):** edita el teclado AOAS sin guardar. Sale "Está en mayúsculas" con el nombre propuesto.
-4. **Categorías (C-200):**
-   - Están Ferretería y sus 9 categorías, con los íconos nuevos.
-   - Ferretería tiene marcada "Departamento aparte".
-   - En la tienda no cambió nada: ni la franja ni el inicio la muestran, porque todavía no tiene productos publicados.
-5. **Cambiar un nombre (C-202), cuando apruebes los 14 de `estado/C-202.md`:** renombra uno y abre su dirección vieja en una ventana de incógnito. Lleva sola a la nueva.
-
-**Vuelta atrás:**
-- `git reset --hard v1.0.0-rc.25 && npm install && bash scripts/deploy.sh --sin-pull`.
-- Las tres columnas y las categorías del guion no molestan al código anterior.
-- Si ya se renombró algún producto, sus direcciones viejas vuelven a dar "no encontrado" hasta subir de nuevo.
+   - nada se sale de la pantalla;
+   - dice "Actividad reciente" y nunca "Saldo";
+   - no sale "En vivo";
+   - en Garantía se ven enteras las tres pestañas.
+2. **Lista del proveedor (C-202):** sube el archivo de los 60 con su existencia. Sale la columna "Nombre en la tienda", y "Nombres para revisar" filtra lo que va en ámbar.
+3. **Categorías (C-200):** Ferretería tiene marcada "Departamento aparte" y adentro sus 9 categorías, con los íconos nuevos.
+4. **Los 14 nombres (C-202):** ya se cambiaron, pero 10 quedaron con nombres propios en minúscula o en inglés.
+   - Los juegos: "Assassins creed mirage…", "Grand theft auto v…", "Sonic frontier…".
+   - Las tarjetas: "Steam card", "Xbox live points", "PlayStation fondos".
+   - Los nombres correctos están en `estado/C-202.md`.
+   - El botón "Usar este nombre" no conoce títulos ni marcas de juegos: hay que escribirlos a mano.
 
 ### Por confirmar de rc.25 (C-196, C-196b y C-197)
 1. **Productos:** arriba dice "N en el catálogo · N activos · N destacados" y abajo "Mostrando 1 a N de N". Los filtros (Todos, Activos, Borradores, Sin stock, Archivados y Por revisar) tienen sus números.

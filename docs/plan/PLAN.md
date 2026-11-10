@@ -606,6 +606,10 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - **El embalaje se cobra igual en los dos paquetes;** el envío gratis vale solo para el de Guanare: el de la ferretería siempre con cobro a destino (C-199).
   - Un departamento Ferretería, y el inicio sigue siendo de tecnología (C-200).
   - Las fotos, del fabricante.
+    - **Ampliado el 10/11:** lo decidió el dueño de la cuenta en otra sesión de Claude, la de las fotos, que lo avisó por mensaje.
+    - Sin foto oficial, se usa una foto real del mismo producto, de un distribuidor o una tienda venezolana. Solo si coinciden la marca y el modelo y no tiene marca de agua.
+    - Lo que no tiene marca ni modelo queda en borrador.
+    - En las pinturas, solo la lata: el color lo resuelve el selector de colores de C-198.
   - Las variantes, como familias de productos (C-198).
 - **El departamento Ferretería (Andrés, 10/11, C-200):** enlace en la franja al lado de Ofertas (en el teléfono, primer chip del inicio y entrada en "Más"); su vitrina, un estante con sus categorías después de "Recién llegados"; su página, el catálogo de siempre con el aviso del envío y sus categorías arriba.
 - **Nombres de producto (Andrés, 10/11, C-202):** escritos normal, como una oración, en toda la tienda. Siglas, unidades y marcas como se escriben ("120 V", "LED", "Daewoo"). Primero lo que es, después lo que lo distingue, la marca y el modelo; el color o la talla al final. Nada inventado: lo que no se entiende se le pregunta al proveedor.

@@ -495,3 +495,7 @@ Andrés pidió pulir Mi panel, así que Claude entró a tu carril (`estado/C-201
 - **Títulos:** "Mis cursos" y "Mis reseñas".
 - **Garantía:** en el teléfono, las pestañas van sin ícono y la de "Mis solicitudes" dice "Solicitudes".
 - **Los textos de los movimientos** salen de `descripcionLimpia` (`lib/dto/movimiento.ts`, carril Claude). No muestres el `description` de la base sin pasarlo por ahí.
+
+## 17. Cambios de Claude del 10/11 que te afectan (C-200)
+- **El pack de íconos va en la v1.2:** 166 íconos, con 10 nuevos de ferretería (IconoFerreteria, IconoPintura, IconoTaladro, IconoEnchufe, IconoJardin, IconoAgua, IconoLlave, IconoBombillo, IconoHerramientas e IconoSoldadura). Úsalos donde corresponda. No dibujes otros ni traigas de librerías.
+- **Departamentos aparte:** la ferretería es un departamento (`categories.isDepartment`), con su acceso en la franja y en "Más" (`useNavDepartamentos` de `contexts/CatalogNavContext.tsx`). Si una tarjeta tuya toca menús o listas de categorías, no mezcles sus categorías con las de tecnología.

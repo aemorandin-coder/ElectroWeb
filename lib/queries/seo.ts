@@ -45,16 +45,27 @@ export interface CategoryWithCount {
 export async function getCategoriesWithProducts(): Promise<CategoryWithCount[]> {
   const counts = await prisma.product.groupBy({ by: ['categoryId'], where: await visibleProducts(), _count: { categoryId: true }, _max: { updatedAt: true } });
   if (counts.length === 0) return [];
+  const ids = counts.map((c) => c.categoryId);
+  // C-200: también las categorías madre (el departamento Ferretería), que no tienen productos propios
   const rows = await prisma.category.findMany({
-    where: { id: { in: counts.map((c) => c.categoryId) } },
-    select: { id: true, name: true, slug: true, updatedAt: true },
+    where: { OR: [{ id: { in: ids } }, { children: { some: { id: { in: ids } } } }] },
+    select: { id: true, name: true, slug: true, updatedAt: true, parentId: true },
   });
-  const byId = new Map(counts.map((c) => [c.categoryId, c]));
+  // Cada una cuenta lo suyo y lo de sus subcategorías
+  const suma = new Map<string, { count: number; ultimo: Date | null }>();
+  for (const c of counts) {
+    const madre = rows.find((r) => r.id === c.categoryId)?.parentId ?? null;
+    for (const destino of madre ? [c.categoryId, madre] : [c.categoryId]) {
+      const s = suma.get(destino) ?? { count: 0, ultimo: null };
+      const ultimo = c._max.updatedAt;
+      suma.set(destino, { count: s.count + c._count.categoryId, ultimo: ultimo && (!s.ultimo || ultimo > s.ultimo) ? ultimo : s.ultimo });
+    }
+  }
   return rows
     .map((row) => {
-      const stats = byId.get(row.id);
-      const lastProduct = stats?._max.updatedAt ?? row.updatedAt;
-      return { name: row.name, slug: row.slug, count: stats?._count.categoryId ?? 0, updatedAt: lastProduct > row.updatedAt ? lastProduct : row.updatedAt };
+      const stats = suma.get(row.id);
+      const lastProduct = stats?.ultimo ?? row.updatedAt;
+      return { name: row.name, slug: row.slug, count: stats?.count ?? 0, updatedAt: lastProduct > row.updatedAt ? lastProduct : row.updatedAt };
     })
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'es'));
 }

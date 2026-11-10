@@ -10,6 +10,7 @@ import { estrellaDelDia } from '@/lib/destacados';
 import MoreFromElectroShop from '@/components/home/MoreFromElectroShop';
 import ProductSection from '@/components/home/ProductSection';
 import TrustBar from '@/components/home/TrustBar';
+import VitrinaDepartamento from '@/components/home/VitrinaDepartamento';
 import VideoPlayer from '@/components/home/VideoPlayer';
 import TarjetaNavidad from '@/components/navidad/TarjetaNavidad';
 import PublicHeader from '@/components/public/PublicHeader';
@@ -23,8 +24,10 @@ import {
   getDeals,
   getFeatured,
   getHomeSettings,
+  getDepartamentos,
   getNewArrivals,
   getTopCategoriesWithProducts,
+  getVitrinaDepartamento,
 } from '@/lib/queries/home';
 import { getHotAd } from '@/lib/queries/hot-ad';
 import { safeHotAdLink } from '@/lib/hot-ad';
@@ -64,6 +67,9 @@ export default async function Home() {
     getHotAd(),
   ]);
   const railCategories = homeSettings.showCategories ? await getCategoriesRail(homeSettings.maxCategoriesDisplay) : [];
+  // C-200: el inicio es de tecnología; cada departamento aparte (Ferretería) tiene una sola vitrina, después de "Recién llegados"
+  const departamentos = await getDepartamentos();
+  const vitrinas = await Promise.all(departamentos.map(async (departamento) => ({ departamento, products: await getVitrinaDepartamento(departamento.id, 12) })));
 
   // Si hay pocos destacados, la vitrina se completa con ofertas y recién llegados:
   // el primer pantallazo siempre muestra productos.
@@ -122,6 +128,10 @@ export default async function Home() {
 
         <ProductSection id="recien-llegados" title="Recién llegados" href="/productos" products={newArrivals} exchangeRateVES={rate} lowStockThreshold={lowStock} tone="surface" />
 
+        {vitrinas.map(({ departamento, products }) => (
+          <VitrinaDepartamento key={departamento.id} departamento={departamento} products={products} exchangeRateVES={rate} lowStockThreshold={lowStock} />
+        ))}
+
         {topCategories.map(({ category, products }, index) => (
           <ProductSection
             key={category.id}
@@ -131,7 +141,7 @@ export default async function Home() {
             products={products}
             exchangeRateVES={rate}
             lowStockThreshold={lowStock}
-            tone={index % 2 === 0 ? 'white' : 'surface'}
+            tone={(index + (vitrinas.length % 2)) % 2 === 0 ? 'white' : 'surface'}
           />
         ))}
 

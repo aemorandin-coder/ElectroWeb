@@ -1,6 +1,6 @@
-// GENERADO: no editar a mano. Íconos propios de Electro Shop, pack v1.1 (156 íconos, C-188).
+// GENERADO: no editar a mano. Íconos propios de Electro Shop, pack v1.2 (166 íconos, C-188).
 // Fuente: ~/.cache/electroshop-iconos/pack.py (los dibujos en la cuadrícula de 24, trazo de 2) y la entrega para Luis,
-// "ElectroShop Brand/Pack de íconos/iconos-electro-shop-v1.1.html" (sus dibujos también van en el JSON DATOS).
+// "ElectroShop Brand/Pack de íconos/iconos-electro-shop-v1.2.html" (sus dibujos también van en el JSON DATOS).
 // Para cambiar o agregar un ícono: editar pack.py y correr `python3 -I ~/.cache/electroshop-iconos/componentes.py <raíz del repo>`.
 // La base (medida, título, aria-hidden, `lleno` y los colores del acento) está a mano en ./base.tsx.
 // Devuelven ReactNode, como el IconType de react-icons: así una lista puede mezclar estos íconos con logos de marca.
@@ -297,6 +297,56 @@ export function IconoCelular(props: IconoProps): ReactNode {
 /** Tableta. Grupo: Categorías. */
 export function IconoTableta(props: IconoProps): ReactNode {
   return <Icono {...props}><rect x="4" y="2.5" width="16" height="19" rx="2.5" style={SUP} /><path d="M10.5 18.5h3" /></Icono>;
+}
+
+/** Ferretería. Grupo: Ferretería. */
+export function IconoFerreteria(props: IconoProps): ReactNode {
+  return <Icono {...props}><rect x="3" y="8" width="18" height="12.5" rx="2" /><path d="M3 12.5h7.5M13.5 12.5H21" /><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8" /><rect x="10.5" y="10.5" width="3" height="4.5" rx="1" style={SUP} /></Icono>;
+}
+
+/** Pinturas. Grupo: Ferretería. */
+export function IconoPintura(props: IconoProps): ReactNode {
+  return <Icono {...props}><rect x="3" y="3" width="14" height="5" rx="1.5" style={SUP} /><path d="M17 5.5h1.5A1.5 1.5 0 0 1 20 7v2.1a1.5 1.5 0 0 1-1.1 1.45l-6.3 1.8a1.5 1.5 0 0 0-1.1 1.45V15" /><rect x="10" y="15" width="3" height="6.5" rx="1.5" /></Icono>;
+}
+
+/** Herramientas eléctricas. Grupo: Ferretería. */
+export function IconoTaladro(props: IconoProps): ReactNode {
+  return <Icono {...props}><path d="M2.5 8.5H5" /><rect x="5" y="6.5" width="3" height="4" rx="1" /><path d="M8 5.5l2-1h8a2.5 2.5 0 0 1 2.5 2.5v2.5a2.5 2.5 0 0 1-2.5 2.5h-8l-2-1z" /><path d="M12.5 12l1 6M18 12l-1 6" /><rect x="11.5" y="18" width="7.5" height="3.5" rx="1" style={SUP} /></Icono>;
+}
+
+/** Electricidad. Grupo: Ferretería. */
+export function IconoEnchufe(props: IconoProps): ReactNode {
+  return <Icono {...props}><rect x="3" y="3" width="18" height="18" rx="3.5" /><circle cx="12" cy="12" r="6" /><path d="M10 9.4v2.4M14 9.4v2.4" /><circle cx="12" cy="14.7" r="1.3" stroke="none" style={SOL} /></Icono>;
+}
+
+/** Jardín y agro. Grupo: Ferretería. */
+export function IconoJardin(props: IconoProps): ReactNode {
+  return <Icono {...props}><path d="M5.5 2.5h3M7 2.5v10" /><path d="M4.5 12.5h5V17l-2.5 3.5L4.5 17z" /><path d="M16.5 21.5v-6.5" /><path d="M16.5 15c0-2.2-1.6-3.8-3.8-3.8 0 2.2 1.6 3.8 3.8 3.8zM16.5 15c0-2.5 1.8-4.3 4.3-4.3 0 2.5-1.8 4.3-4.3 4.3z" style={SUP} /><path d="M13 21.5h7" /></Icono>;
+}
+
+/** Bombas y agua. Grupo: Ferretería. */
+export function IconoAgua(props: IconoProps): ReactNode {
+  return <Icono {...props}><path d="M3 6.5v7.5" /><path d="M3 8.5h9a4 4 0 0 1 4 4V15h-3v-2a1 1 0 0 0-1-1H3" /><path d="M8 8.5V5.5M5.5 5h5" /><path d="M14.5 17.3c-.9 1.1-1.4 1.9-1.4 2.6a1.4 1.4 0 0 0 2.8 0c0-.7-.5-1.5-1.4-2.6z" strokeWidth="1" style={SOL_LIN} /></Icono>;
+}
+
+/** Cerrajería. Grupo: Ferretería. */
+export function IconoLlave(props: IconoProps): ReactNode {
+  return <Icono {...props}><circle cx="15.5" cy="8.5" r="5" /><circle cx="16.6" cy="7.4" r="1.4" stroke="none" style={SOL} /><path d="M11.9 12.1L3.5 20.5" /><path d="M6 18l2 2M8.5 15.5l1.6 1.6" /></Icono>;
+}
+
+/** Iluminación. Grupo: Ferretería. */
+export function IconoBombillo(props: IconoProps): ReactNode {
+  return <Icono {...props}><path d="M9 17v-1.3c0-1-.5-1.8-1.3-2.6A6.5 6.5 0 1 1 16.3 13.1c-.8.8-1.3 1.6-1.3 2.6V17z" /><path d="M9.5 19.5h5M10.5 22h3" /><path d="M10.2 14.4v-2.6l.95-1 .85 1 .85-1 .95 1v2.6" strokeWidth="1.6" style={LIN} /></Icono>;
+}
+
+/** Herramientas manuales. Grupo: Ferretería. */
+export function IconoHerramientas(props: IconoProps): ReactNode {
+  return <Icono {...props}><path d="M6.21 3.45A3.4 3.4 0 1 1 3.45 6.21L5.01 7.77L7.77 5.01z" /><path d="M9.20 9.20L19.5 19.5" /><path d="M11.6 12.1L19 4.7M18 3.7l2 2" /><path d="M12.8 13.4l-6.4 6.4a1.8 1.8 0 0 1-2.55-2.55l6.4-6.4z" style={SUP} /></Icono>;
+}
+
+/** Soldadura. Grupo: Ferretería. */
+export function IconoSoldadura(props: IconoProps): ReactNode {
+  return <Icono {...props}><path d="M6 4.6C7.8 3.6 9.8 3 12 3s4.2.6 6 1.6V15a6 6 0 0 1-12 0z" /><path d="M3.5 9.5v3M20.5 9.5v3" /><rect x="8" y="7" width="8" height="4.5" rx="1" style={SUP} /></Icono>;
 }
 
 /** Servicio técnico. Grupo: Servicios y cursos. */

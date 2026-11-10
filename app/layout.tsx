@@ -9,7 +9,7 @@ import AnalyticsTracker from "@/components/AnalyticsTracker";
 import MobileNavBar from "@/components/public/MobileNavBar";
 import { GuidedTourWrapper } from "@/components/onboarding/GuidedTourWrapper";
 import { getPublicSettings, getSiteSettings } from "@/lib/site-settings";
-import { getNavCategories } from "@/lib/queries/navigation";
+import { getNavCategories, getNavDepartamentos } from "@/lib/queries/navigation";
 import { imagenDePagina } from "@/lib/og/datos";
 import { absoluteUrl, siteUrl } from "@/lib/seo";
 
@@ -117,12 +117,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [publicSettings, navCategories] = await Promise.all([getPublicSettings(), getNavCategories()]);
+  const [publicSettings, navCategories, navDepartamentos] = await Promise.all([getPublicSettings(), getNavCategories(), getNavDepartamentos()]);
 
   return (
     <html lang="es" data-scroll-behavior="smooth" className={`${inter.variable} ${tektrron.variable}`} suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
-        <Providers initialSettings={publicSettings} navCategories={navCategories}>
+        <Providers initialSettings={publicSettings} navCategories={navCategories} navDepartamentos={navDepartamentos}>
           <NotificationProvider>
             <div className="page-transition-wrapper">
               {children}

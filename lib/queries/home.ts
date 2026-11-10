@@ -51,11 +51,91 @@ export async function visibleProducts(extra?: Prisma.ProductWhereInput): Promise
   return { AND: conditions };
 }
 
+export interface HomeCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
+  color: string | null;
+  image: string | null;
+  productCount: number;
+  /** C-200: es un departamento aparte (Ferretería): los chips del inicio lo muestran con su ícono */
+  esDepartamento?: boolean;
+}
+
+/** C-200: un departamento aparte (Ferretería), con sus subcategorías. */
+export interface Departamento extends HomeCategory {
+  /** Lo que escribió el equipo en Categorías: va como aviso arriba de su vitrina y de su página */
+  description: string | null;
+  /** Sus subcategorías con productos visibles, de más a menos */
+  hijos: HomeCategory[];
+  /** Su id y los de todas sus subcategorías (para filtrar sus productos) */
+  ids: string[];
+}
+
+/**
+ * C-200: los departamentos aparte (categorías marcadas `isDepartment`), con cuántos productos visibles tienen entre
+ * ellos y sus subcategorías. Uno sin productos visibles no sale: ni en la franja ni en el inicio.
+ */
+export const getDepartamentos = cache(async (): Promise<Departamento[]> => {
+  const filas = await prisma.category.findMany({
+    where: { isDepartment: true },
+    select: {
+      id: true, name: true, slug: true, icon: true, color: true, image: true, description: true,
+      children: { select: { id: true, name: true, slug: true, icon: true, color: true, image: true } },
+    },
+    orderBy: { name: 'asc' },
+  });
+  if (filas.length === 0) return [];
+  const todos = filas.flatMap((d) => [d.id, ...d.children.map((c) => c.id)]);
+  const cuentas = await prisma.product.groupBy({
+    by: ['categoryId'],
+    where: await visibleProducts({ categoryId: { in: todos } }),
+    _count: { categoryId: true },
+  });
+  const cuenta = new Map(cuentas.map((c) => [c.categoryId, c._count.categoryId]));
+  return filas
+    .map(({ children, ...d }) => {
+      const hijos = children
+        .map((c) => ({ ...c, productCount: cuenta.get(c.id) ?? 0 }))
+        .filter((c) => c.productCount > 0)
+        .sort((a, b) => b.productCount - a.productCount || a.name.localeCompare(b.name, 'es'));
+      const productCount = (cuenta.get(d.id) ?? 0) + hijos.reduce((suma, h) => suma + h.productCount, 0);
+      return { ...d, productCount, hijos, ids: [d.id, ...children.map((c) => c.id)] };
+    })
+    .filter((d) => d.productCount > 0);
+});
+
+/**
+ * Lo visible del inicio de tecnología: lo publicado, fuera de los departamentos aparte (C-200). Sin esto, los productos
+ * de la ferretería llenarían "Recién llegados" el día que se publiquen y sus categorías pasarían a ser los estantes.
+ */
+async function visiblesDelInicio(extra?: Prisma.ProductWhereInput): Promise<Prisma.ProductWhereInput> {
+  const fuera = (await getDepartamentos()).flatMap((d) => d.ids);
+  const condiciones: Prisma.ProductWhereInput[] = [];
+  if (extra) condiciones.push(extra);
+  if (fuera.length > 0) condiciones.push({ categoryId: { notIn: fuera } });
+  return visibleProducts(condiciones.length === 0 ? undefined : condiciones.length === 1 ? condiciones[0] : { AND: condiciones });
+}
+
+/** C-200: la vitrina de un departamento en el inicio: destacados primero, después lo más nuevo. */
+export const getVitrinaDepartamento = cache(async (departamentoId: string, max = 12): Promise<PublicProduct[]> => {
+  const departamento = (await getDepartamentos()).find((d) => d.id === departamentoId);
+  if (!departamento) return [];
+  const rows = await prisma.product.findMany({
+    where: await visibleProducts({ categoryId: { in: departamento.ids } }),
+    include: publicProductInclude,
+    orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
+    take: clampLimit(max),
+  });
+  return conOfertas(rows.map(toPublicProduct));
+});
+
 /** Destacados (isFeatured). Sin `max`, usa maxFeaturedProducts del admin. */
 export const getFeatured = cache(async (max?: number): Promise<PublicProduct[]> => {
   const limit = clampLimit(max ?? (await getHomeSettings()).maxFeaturedProducts);
   const rows = await prisma.product.findMany({
-    where: await visibleProducts({ isFeatured: true }),
+    where: await visiblesDelInicio({ isFeatured: true }),
     include: publicProductInclude,
     orderBy: { createdAt: 'desc' },
     take: limit,
@@ -66,7 +146,7 @@ export const getFeatured = cache(async (max?: number): Promise<PublicProduct[]> 
 /** Ofertas: precio anterior mayor al precio o una oferta de la tienda vigente (C-102), ordenadas por % de ahorro. */
 export const getDeals = cache(async (max = 12): Promise<PublicProduct[]> => {
   const rows = await prisma.product.findMany({
-    where: await visibleProducts(await filtroEnOferta()),
+    where: await visiblesDelInicio(await filtroEnOferta()),
     include: publicProductInclude,
     orderBy: { updatedAt: 'desc' },
     take: 200,
@@ -95,7 +175,7 @@ export const getBestSellers = cache(async (days = 90, max = 12): Promise<PublicP
   if (sales.length === 0) return [];
 
   const rows = await prisma.product.findMany({
-    where: await visibleProducts({ id: { in: sales.map((s) => s.productId) } }),
+    where: await visiblesDelInicio({ id: { in: sales.map((s) => s.productId) } }),
     include: publicProductInclude,
   });
   const byId = new Map(rows.map((row) => [row.id, row]));
@@ -110,7 +190,7 @@ export const getBestSellers = cache(async (days = 90, max = 12): Promise<PublicP
 /** Recién llegados. */
 export const getNewArrivals = cache(async (max = 12): Promise<PublicProduct[]> => {
   const rows = await prisma.product.findMany({
-    where: await visibleProducts(),
+    where: await visiblesDelInicio(),
     include: publicProductInclude,
     orderBy: { createdAt: 'desc' },
     take: clampLimit(max),
@@ -118,21 +198,11 @@ export const getNewArrivals = cache(async (max = 12): Promise<PublicProduct[]> =
   return conOfertas(rows.map(toPublicProduct));
 });
 
-export interface HomeCategory {
-  id: string;
-  name: string;
-  slug: string;
-  icon: string | null;
-  color: string | null;
-  image: string | null;
-  productCount: number;
-}
-
-/** Categorías ordenadas por cantidad de productos visibles (solo las que tienen alguno). */
+/** Categorías ordenadas por cantidad de productos visibles (solo las que tienen alguno), fuera de los departamentos aparte. */
 async function categoriesByProductCount(max: number): Promise<HomeCategory[]> {
   const counts = await prisma.product.groupBy({
     by: ['categoryId'],
-    where: await visibleProducts(),
+    where: await visiblesDelInicio(),
     _count: { categoryId: true },
     orderBy: { _count: { categoryId: 'desc' } },
     take: clampLimit(max),
@@ -151,10 +221,18 @@ async function categoriesByProductCount(max: number): Promise<HomeCategory[]> {
   });
 }
 
-/** Rail de categorías con íconos (el home decide si mostrarlo con showCategories). */
+/**
+ * Rail de categorías con íconos (el home decide si mostrarlo con showCategories). C-200: cada departamento aparte entra
+ * primero como una sola entrada, con todos sus productos ("Ferretería" y no sus 9 categorías).
+ */
 export const getCategoriesRail = cache(async (max?: number): Promise<HomeCategory[]> => {
-  return categoriesByProductCount(max ?? (await getHomeSettings()).maxCategoriesDisplay);
+  const limite = max ?? (await getHomeSettings()).maxCategoriesDisplay;
+  const departamentos = (await getDepartamentos()).map(({ id, name, slug, icon, color, image, productCount }) => ({ id, name, slug, icon, color, image, productCount, esDepartamento: true }));
+  return [...departamentos, ...(await categoriesByProductCount(limite))].slice(0, clampLimit(limite));
 });
+
+/** C-200: las categorías que no son de un departamento aparte (la franja las muestra aparte de los departamentos). */
+export const getCategoriasSueltas = cache(async (max: number): Promise<HomeCategory[]> => categoriesByProductCount(max));
 
 /** Las `n` categorías con más productos, cada una con sus productos (destacados primero). */
 export const getTopCategoriesWithProducts = cache(

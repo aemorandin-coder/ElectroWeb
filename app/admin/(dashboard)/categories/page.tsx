@@ -29,6 +29,8 @@ interface Category {
   icon?: string | null;
   color?: string | null;
   parentId?: string | null;
+  /** C-200: departamento aparte (Ferretería) */
+  isDepartment?: boolean;
   /** C-170: la versión con que se abre el editor */
   updatedAt?: string;
   _count?: { products: number };
@@ -50,12 +52,13 @@ export default function CategoriesPage() {
     parentId: '' as string | null,
     icon: '',
     color: '',
+    isDepartment: false,
   });
   // C-170: lo que había al abrir el editor, para combinar si otra persona guardó antes
   const [formBase, setFormBase] = useState<typeof formData | null>(null);
   const { confirm } = useConfirm();
   const { resolver: resolverConflicto, dialogo: dialogoConflicto } = useConflictoDeFormulario({
-    name: 'Nombre', description: 'Descripción', image: 'Imagen', parentId: 'Categoría principal', icon: 'Ícono', color: 'Color',
+    name: 'Nombre', description: 'Descripción', image: 'Imagen', parentId: 'Categoría principal', icon: 'Ícono', color: 'Color', isDepartment: 'Departamento aparte',
   });
   const [saveLoading, setSaveLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -110,7 +113,7 @@ export default function CategoriesPage() {
 
   const handleCreate = (parentId: string | null = null) => {
     setSelectedCategory(null);
-    setFormData({ name: '', description: '', image: '', parentId, icon: '', color: '' });
+    setFormData({ name: '', description: '', image: '', parentId, icon: '', color: '', isDepartment: false });
     setIsCreating(true);
     setIsEditing(false);
   };
@@ -123,6 +126,7 @@ export default function CategoriesPage() {
       parentId: category.parentId || null,
       icon: category.icon || '',
       color: category.color || '',
+      isDepartment: Boolean(category.isDepartment),
     };
     setSelectedCategory(category);
     setFormData(formulario);
@@ -137,6 +141,8 @@ export default function CategoriesPage() {
     parentId: formulario.parentId || null,
     icon: formulario.icon || null,
     color: formulario.color || null,
+    // C-200: solo una categoría principal puede ser un departamento aparte
+    isDepartment: !formulario.parentId && formulario.isDepartment,
   });
 
   /** Edición con la versión con que se abrió (C-170): si otra persona guardó antes, se combina lo de cada una y solo se pregunta por lo que las dos tocaron */
@@ -155,7 +161,7 @@ export default function CategoriesPage() {
       }
       if (r.conflicto?.tipo === 'cambiado') {
         const actual = r.conflicto.actual as Category;
-        const suyo = { name: actual.name, description: actual.description || '', image: actual.image || '', parentId: actual.parentId || null, icon: actual.icon || '', color: actual.color || '' };
+        const suyo = { name: actual.name, description: actual.description || '', image: actual.image || '', parentId: actual.parentId || null, icon: actual.icon || '', color: actual.color || '', isDepartment: Boolean(actual.isDepartment) };
         resolverConflicto({
           base: formBase ?? suyo, mio: formulario, suyo, quien: r.conflicto.por?.nombre ?? 'Otra persona',
           continuar: (final) => { setFormData(final); setFormBase(suyo); return guardarEdicion(final, actual.updatedAt); },
@@ -565,6 +571,20 @@ export default function CategoriesPage() {
                         ))}
                     </select>
                     <p className="text-xs text-muted mt-1">Si seleccionas una categoría padre, esta será una subcategoría.</p>
+                    {/* C-200: el departamento aparte (Ferretería) */}
+                    <label className={`mt-3 flex items-start gap-2 text-sm ${formData.parentId ? 'text-muted' : 'text-ink-soft'}`}>
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 h-4 w-4 shrink-0"
+                        checked={!formData.parentId && formData.isDepartment}
+                        disabled={Boolean(formData.parentId)}
+                        onChange={(e) => setFormData(prev => ({ ...prev, isDepartment: e.target.checked }))}
+                      />
+                      <span>
+                        <span className="font-medium text-ink">Departamento aparte</span>, como Ferretería. Sus productos y los de sus subcategorías no se mezclan con el inicio de tecnología: tienen su vitrina, su acceso en la franja y su página, con la descripción como aviso arriba.
+                        {formData.parentId && ' Solo para una categoría raíz.'}
+                      </span>
+                    </label>
                   </div>
 
                   {/* ── Description ── */}

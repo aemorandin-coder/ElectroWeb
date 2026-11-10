@@ -82,8 +82,9 @@ git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-
 DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc25.dump
 bash scripts/deploy.sh                       # para y muestra el SQL de arriba
 npx prisma db push && bash scripts/deploy.sh # aplica y compila (ver la nota de abajo)
-git describe --tags                                                     # v1.0.0-rc.25
+git describe --tags --abbrev=0                                          # v1.0.0-rc.25
 ```
+(`git describe --tags` sin `--abbrev=0` dice `v1.0.0-rc.25-2-g…`: son los dos commits de documentación que van después de la etiqueta. Es normal.)
 **Nota sobre `prisma db push`:** va a avisar "There might be data loss" por el índice único de `supplierId` y `supplierSku`, y a preguntar si sigue. **No se pierde nada:** las dos columnas son nuevas y están vacías (probado el 10/11 en una copia con productos: quedan intactos). Si el aviso es solo ese, responde `y`. Si en vez de preguntar dice "Use the --accept-data-loss flag", corre `npx prisma db push --accept-data-loss && bash scripts/deploy.sh`. Si el aviso nombra otra cosa (un DROP o un cambio de tipo), para y avísale a Claude.
 
 **Pruebas** (unos 15 minutos; si al probar no ves un cambio, recarga la página):

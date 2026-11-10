@@ -31,7 +31,8 @@ import { getPublicSettings } from '@/lib/site-settings';
 import { formatUSD } from '@/lib/currency';
 import { calculateOrder, toPricingSettings } from '@/lib/pricing';
 import { resumenEmbalaje } from '@/lib/embalaje';
-import { INTERNAL_SPEC_KEYS } from '@/lib/product-specs';
+import { INTERNAL_SPEC_KEYS, especificacionesParaMostrar } from '@/lib/product-specs';
+import { normalizar } from '@/lib/cotizaciones/busqueda';
 import JsonLd from '@/components/seo/JsonLd';
 import { imagenGenerada, versionDeProducto } from '@/lib/og/datos';
 import { absoluteUrl, breadcrumbJsonLd, plainText, productJsonLd } from '@/lib/seo';
@@ -97,9 +98,17 @@ export default async function ProductPage({ params }: PageProps) {
 
   const isDigital = product.productType === 'DIGITAL';
   const images = [...new Set([product.mainImage, ...product.images].filter((src): src is string => Boolean(src)))];
-  const specs = Object.entries(product.specs ?? {}).filter(
-    ([key, value]) => !HIDDEN_SPEC_KEYS.has(key) && value !== null && value !== '' && typeof value !== 'object'
-  );
+  // C-197: sin "No especificado" y con los nombres en mayúsculas escritos normal (TAMAÑO → Tamaño, TIPO DE LED → Tipo de LED)
+  const specs = especificacionesParaMostrar(product.specs, HIDDEN_SPEC_KEYS);
+  // C-197: cuatro datos de un vistazo al lado de la descripción (los físicos; los digitales ya los tienen arriba)
+  const modelo = specs.find(([key]) => normalizar(key) === 'modelo')?.[1];
+  const vistazo: Array<[string, string]> = isDigital ? [] : [
+    ...(product.brand ? [['Marca', product.brand.name] as [string, string]] : []),
+    ...(modelo ? [['Modelo', modelo] as [string, string]] : []),
+    ...(product.warrantyDays ? [['Garantía', `${product.warrantyDays} días`] as [string, string]] : []),
+    ['Condición', product.condition?.label ?? 'Nuevo'],
+  ];
+  const conVistazo = vistazo.length >= 2;
   // Las instrucciones son una columna del producto (C-60; antes se leían de specs y nunca aparecían)
   const instructions = product.redemptionInstructions?.trim() ?? '';
   const deliveryMode = DELIVERY_MODES[product.deliveryMethod === 'MANUAL' ? 'MANUAL' : 'INSTANT'];
@@ -313,41 +322,61 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-6 lg:mt-10 lg:grid-cols-12 lg:gap-10">
+          {/* C-197 (opción A, elegida por Andrés el 10/11): descripción y especificaciones en una sola tarjeta. Antes iban en dos
+              columnas de la misma fila y la Descripción se estiraba hasta la altura de las Especificaciones: quedaba el hueco */}
+          <div className="mt-8 space-y-6 lg:mt-10 lg:space-y-10">
             {product.condition && <ConditionDetails condition={product.condition} />}
-            <section aria-labelledby="descripcion-title" className={`rounded-2xl border border-line bg-white p-4 lg:p-6 ${specs.length > 0 ? 'lg:col-span-7' : 'lg:col-span-12'}`}>
-              <h2 id="descripcion-title" className="text-lg font-bold text-ink lg:text-xl">Descripción</h2>
-              {product.description ? (
-                <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink-soft">{product.description}</p>
-              ) : (
-                <p className="mt-3 text-sm text-muted">Pronto agregaremos la descripción de este producto.</p>
-              )}
-              {product.features.length > 0 && (
-                <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-ink-soft">
-                  {product.features.map((feature) => <li key={feature}>{feature}</li>)}
-                </ul>
-              )}
-              {instructions && (
-                <div className="mt-6 rounded-xl bg-surface p-4">
-                  <h3 className="text-sm font-semibold text-ink">¿Cómo se canjea?</h3>
-                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-soft">{instructions}</p>
-                </div>
-              )}
-            </section>
-
-            {specs.length > 0 && (
-              <section aria-labelledby="specs-title" className="rounded-2xl border border-line bg-white p-4 lg:col-span-5 lg:p-6">
-                <h2 id="specs-title" className="text-lg font-bold text-ink lg:text-xl">Especificaciones</h2>
-                <dl className="mt-3 divide-y divide-line">
-                  {specs.map(([key, value]) => (
-                    <div key={key} className="grid grid-cols-2 gap-3 py-2.5 text-sm">
-                      <dt className="text-muted">{key}</dt>
-                      <dd className="font-medium text-ink">{String(value)}</dd>
+            <div className="rounded-2xl border border-line bg-white p-4 lg:p-8">
+              <div className={conVistazo ? 'grid gap-6 lg:grid-cols-12 lg:gap-10' : ''}>
+                <section aria-labelledby="descripcion-title" className={conVistazo ? 'lg:col-span-8' : ''}>
+                  <h2 id="descripcion-title" className="text-lg font-bold text-ink lg:text-xl">Descripción</h2>
+                  {product.description ? (
+                    <p className="mt-3 max-w-[68ch] whitespace-pre-line text-[15px] leading-relaxed text-ink-soft">{product.description}</p>
+                  ) : (
+                    <p className="mt-3 text-sm text-muted">Pronto agregaremos la descripción de este producto.</p>
+                  )}
+                  {product.features.length > 0 && (
+                    <ul className="mt-4 max-w-[68ch] list-disc space-y-1 pl-5 text-sm text-ink-soft">
+                      {product.features.map((feature) => <li key={feature}>{feature}</li>)}
+                    </ul>
+                  )}
+                  {instructions && (
+                    <div className="mt-6 max-w-[68ch] rounded-xl bg-surface p-4">
+                      <h3 className="text-sm font-semibold text-ink">¿Cómo se canjea?</h3>
+                      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-soft">{instructions}</p>
                     </div>
-                  ))}
-                </dl>
-              </section>
-            )}
+                  )}
+                </section>
+                {conVistazo && (
+                  <dl aria-label="De un vistazo" className="grid grid-cols-2 gap-3 self-start lg:col-span-4">
+                    {vistazo.map(([label, value]) => (
+                      <div key={label} className="min-w-0 rounded-xl bg-surface px-4 py-3">
+                        <dt className="text-xs font-medium text-muted">{label}</dt>
+                        <dd className="mt-0.5 break-words text-base font-semibold text-ink">{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </div>
+
+              {specs.length > 0 && (
+                <section aria-labelledby="specs-title" className="mt-6 border-t border-line pt-6 lg:mt-8 lg:pt-8">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h2 id="specs-title" className="text-lg font-bold text-ink lg:text-xl">Especificaciones</h2>
+                    <span className="text-xs text-muted">{specs.length} {specs.length === 1 ? 'dato' : 'datos'}</span>
+                  </div>
+                  {/* En dos columnas desde lg: 12 datos ocupan 6 filas, y la tarjeta mide lo que trae el producto */}
+                  <dl className="mt-2 lg:columns-2 lg:gap-x-12">
+                    {specs.map(([key, value]) => (
+                      <div key={key} className="grid break-inside-avoid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-3 border-b border-line py-2.5 text-sm">
+                        <dt className="text-muted">{key}</dt>
+                        <dd className="break-words font-medium text-ink">{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
+              )}
+            </div>
           </div>
 
           <section id="resenas" aria-labelledby="resenas-title" className="mt-8 scroll-mt-28 lg:mt-10">

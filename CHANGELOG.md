@@ -10,6 +10,16 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.25] - 2026-11-10
+### Tienda 1.6.0 (C-197)
+- **La ficha del producto sin huecos:** la descripción y las especificaciones van en una sola tarjeta. La Descripción ya no se estira hasta la altura de las especificaciones.
+  - Al lado de la descripción, cuatro datos de un vistazo: marca, modelo, garantía y condición.
+  - Las especificaciones van en dos columnas desde la computadora.
+- **Las especificaciones se leen mejor:** los nombres en mayúsculas se escriben normal ("TIPO DE LED" pasa a "Tipo de LED") y lo que decía "No especificado" no sale. Lo guardado no cambia.
+### Productos 1.6.0 (C-196b)
+- **Lista del proveedor:** la casilla "Su lista trae el IVA incluido". El costo queda sin el IVA que se le paga, y la tienda lo vuelve a sumar al precio de venta: con $54,90, costo $47,33 y precio $71,37. Se recuerda por proveedor.
+- **Base:** 1 columna nueva (aditivo): `suppliers.pricesIncludeTax`.
+
 ## [1.0.0-rc.24] - 2026-11-10
 ### Productos 1.5.0 y Marco del panel 1.3.6 (C-196)
 - **La lista va por páginas de 50.** Antes pedía todos los productos con su descripción: 4.626 KB con 3.100 productos; ahora una página pesa 29 KB.

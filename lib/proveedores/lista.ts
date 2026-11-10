@@ -198,11 +198,16 @@ export function unirListas(...listas: FilaProveedor[][]): FilaProveedor[] {
 
 const centavos = (n: number) => Math.round(n * 100) / 100;
 
-/** Lo que cuesta: el precio de su lista menos el descuento que da el proveedor */
-export function costoDesdeLista(precioLista: number | null, descuentoPercent: number): number | null {
+/**
+ * Lo que cuesta: el precio de su lista menos el descuento que da el proveedor. C-196b: si su lista trae el IVA
+ * (`ivaIncluidoPercent` > 0), se le quita, porque el IVA que se le paga no es costo: la tienda lo vuelve a sumar al
+ * precio de venta. Con la lista de $54,90 con IVA del 16 %, el costo es $47,33.
+ */
+export function costoDesdeLista(precioLista: number | null, descuentoPercent: number, ivaIncluidoPercent = 0): number | null {
   if (precioLista === null || !(precioLista > 0)) return null;
   const d = Math.min(Math.max(descuentoPercent, 0), DESCUENTO_MAX);
-  return centavos(precioLista * (1 - d / 100));
+  const iva = ivaIncluidoPercent > 0 ? ivaIncluidoPercent : 0;
+  return centavos((precioLista * (1 - d / 100)) / (1 + iva / 100));
 }
 
 /**

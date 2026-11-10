@@ -17,7 +17,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
   const actual = await prisma.supplier.findUnique({ where: { id } });
   if (!actual) return NextResponse.json({ error: 'Proveedor no encontrado' }, { status: 404 });
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const data: { name?: string; discountPercent?: number; notes?: string | null } = {};
+  const data: { name?: string; discountPercent?: number; pricesIncludeTax?: boolean; notes?: string | null } = {};
   if (body?.name !== undefined) {
     const name = leerNombreProveedor(body.name);
     if (!name) return NextResponse.json({ error: 'El nombre del proveedor lleva de 2 a 80 caracteres' }, { status: 400 });
@@ -30,13 +30,17 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
     if (d === null) return NextResponse.json({ error: `El descuento va de 0 a ${DESCUENTO_MAX} %` }, { status: 400 });
     data.discountPercent = d;
   }
+  if (body?.pricesIncludeTax !== undefined) {
+    if (typeof body.pricesIncludeTax !== 'boolean') return NextResponse.json({ error: 'IVA incluido: sí o no' }, { status: 400 });
+    data.pricesIncludeTax = body.pricesIncludeTax;
+  }
   if (body?.notes !== undefined) data.notes = typeof body.notes === 'string' ? body.notes.trim().slice(0, 500) || null : null;
   const guardado = await prisma.supplier.update({ where: { id }, data });
   await registrarAccionAdmin(session, 'PANEL_RECORD_UPDATED', { type: 'SUPPLIER', id }, {
     accion: 'Proveedor cambiado', proveedor: guardado.name,
     ...(data.discountPercent !== undefined && data.discountPercent !== Number(actual.discountPercent) ? { descuento: { antes: Number(actual.discountPercent), despues: data.discountPercent } } : {}),
   }, request);
-  return NextResponse.json({ id: guardado.id, name: guardado.name, discountPercent: Number(guardado.discountPercent), notes: guardado.notes });
+  return NextResponse.json({ id: guardado.id, name: guardado.name, discountPercent: Number(guardado.discountPercent), pricesIncludeTax: guardado.pricesIncludeTax, notes: guardado.notes });
 }
 
 // Se borra solo si no tiene productos (ni en la papelera): el costo y el código de cada producto dependen de él

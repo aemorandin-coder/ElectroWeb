@@ -8,6 +8,7 @@ import { desglosePrecio, formatMargen, MARGEN_SUGERIDO, precioSugerido } from '@
 import { StepProps, leerNumero } from '../types';
 import { wizardChoice, wizardInput, wizardSectionTitle, wizardSectionHelp } from '../ui';
 import { Campo, Seccion, controlDe } from '../Campo';
+import ProveedorCampos from './ProveedorCampos';
 
 // C-134: secciones sin tarjeta dentro de la tarjeta, una columna en el teléfono, los números con coma o punto
 // ("49,90") y el tipo de envío como radio (antes era un <div> con clic: no se elegía con el teclado).
@@ -56,6 +57,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
 
       <Seccion id="sec-precios" titulo="Precio">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <ProveedorCampos data={data} onChange={onChange} errors={errors} />
           <Campo id="p-costo" label="Costo" error={errors.costPerItem} hint="Lo que te cuesta puesto en la tienda. Solo lo ve el equipo">
             <Monto id="p-costo" value={data.costPerItem} onChange={(v) => onChange({ costPerItem: v })} error={errors.costPerItem} hint="hint" />
           </Campo>

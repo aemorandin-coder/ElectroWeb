@@ -16,6 +16,8 @@ export const ETIQUETA_CAMPO_FORMULARIO: Record<string, string> = {
   priceUSD: 'Precio',
   compareAtPriceUSD: 'Precio anterior (tachado)',
   costPerItem: 'Costo',
+  supplierId: 'Proveedor',
+  supplierSku: 'Código en el proveedor',
   stock: 'Stock',
   barcode: 'Código de barras',
   weightKg: 'Peso',
@@ -52,7 +54,7 @@ export const ETIQUETA_CAMPO_FORMULARIO: Record<string, string> = {
 const ETIQUETA_COLUMNA: Record<string, string> = {
   name: 'nombre', description: 'descripción', priceUSD: 'precio', stock: 'stock', sku: 'SKU', categoryId: 'categoría',
   images: 'fotos', mainImage: 'fotos', specs: 'especificaciones', status: 'estado', isFeatured: 'destacado',
-  compareAtPriceUSD: 'precio anterior', costPerItem: 'costo', barcode: 'código de barras', tags: 'etiquetas',
+  compareAtPriceUSD: 'precio anterior', costPerItem: 'costo', supplierId: 'proveedor', supplierSku: 'código del proveedor', supplierSyncedAt: 'lista del proveedor', barcode: 'código de barras', tags: 'etiquetas',
   seoTitle: 'datos para buscadores', seoDescription: 'datos para buscadores', seoImage: 'datos para buscadores',
   slug: 'dirección de la página', brandId: 'marca', productType: 'tipo', digitalPlatform: 'datos digitales',
   digitalRegion: 'datos digitales', deliveryMethod: 'datos digitales', redemptionInstructions: 'datos digitales',

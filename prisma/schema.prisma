@@ -314,6 +314,14 @@ model Product {
   compareAtPriceUSD Decimal? // Strike-through price to show a discount
   costPerItem       Decimal? // Internal cost (not shown to customers)
 
+  /// C-196: de qué proveedor viene y con qué código lo conoce él. Con el código, su lista actualiza el costo y la
+  /// existencia de este producto. Solo lo ve el equipo: no está en lib/dto/product.ts.
+  supplierId       String?
+  supplier         Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  supplierSku      String?
+  /// C-196: la última vez que la lista del proveedor le cambió el costo o la existencia
+  supplierSyncedAt DateTime?
+
   // Inventory extras
   barcode  String?
   tags     String?  // JSON array of tag strings
@@ -368,6 +376,12 @@ model Product {
   digitalVariants DigitalVariant[]
 
   @@index([deletedAt])
+  // C-196: la lista del panel por páginas (estado, categoría, lo más nuevo) con miles de productos
+  @@index([status])
+  @@index([categoryId])
+  @@index([createdAt])
+  // C-196: un código del proveedor es un solo producto (sin proveedor o sin código no cuenta: NULL no choca)
+  @@unique([supplierId, supplierSku])
   @@map("products")
 }
 
@@ -588,6 +602,21 @@ model Category {
   updatedAt   DateTime  @updatedAt
 
   @@map("categories")
+}
+
+/// C-196: a quién se le compra (la ferretería aliada, un mayorista). Solo para el equipo: nunca sale a la tienda.
+model Supplier {
+  id              String    @id @default(cuid())
+  name            String    @unique
+  /// Descuento que da sobre los precios de su lista, en % (0 = su lista es tu costo). Lo recuerda la carga en lote.
+  discountPercent Decimal   @default(0)
+  notes           String?
+  products        Product[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("suppliers")
 }
 
 model Brand {

@@ -10,6 +10,22 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.24] - 2026-11-10
+### Productos 1.5.0 y Marco del panel 1.3.6 (C-196)
+- **La lista va por páginas de 50.** Antes pedía todos los productos con su descripción: 4.626 KB con 3.100 productos; ahora una página pesa 29 KB.
+  - Busca por palabras en cualquier orden, sin acentos: "taladro daewoo" encuentra "TALADRO IMPACT 1050W DAEWOO". También por marca y por código del proveedor.
+  - Ordena por lo más nuevo, lo cambiado hace poco, el nombre, el precio o lo que menos existencia tiene.
+  - "Seleccionar los N que coinciden" sirve para las acciones en lote de varias páginas.
+  - El CSV exporta la vista, con la marca, el costo y el proveedor.
+- **Proveedor y costo en cada producto:** en el paso de precios del asistente ("Agregar proveedor" ahí mismo) y en la lista, con el costo, el margen y el filtro por proveedor. Nada de esto sale a la tienda.
+- **Productos → Más → Lista del proveedor:**
+  - Se sube su Excel (`.xls`, `.xlsx` o `.csv`; los de precios y de existencia juntos se unen por el código).
+  - Crea en borrador lo que se marque, con costo, precio sugerido y existencia con reserva.
+  - Actualiza el costo y la existencia de lo que ya está, y deja en 0 lo que se agotó allá.
+  - Sube las fotos llamadas con el código (`R023127.jpg`, `R023127-2.jpg`).
+- **Base:** la tabla `suppliers`, 3 columnas en `products` (`supplierId`, `supplierSku`, `supplierSyncedAt`) y 4 índices. Aditivo.
+- El cuadro de "dos personas cambiaron lo mismo" nombra el proveedor y su código.
+
 ## [1.0.0-rc.23] - 2026-11-07
 ### ElectroStudio 1.2.1 y Marketing 1.7.1 (C-195)
 - **Chispa 3.0 en las historias, en el editor y en el popup navideño:**

@@ -12,6 +12,7 @@ import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { conditionInputSchema, pickConditionInput } from '@/lib/product-condition';
 import { precioValido } from '@/lib/pricing';
 import { ELIMINADOS, EN_PAPELERA } from '@/lib/papelera';
+import { leerProveedorDeProducto } from '@/lib/proveedores/servidor';
 
 /** specs de un producto nuevo: especificaciones del formulario y, en digitales, el margen del wizard (C-95). */
 function createSpecs(specifications: unknown, digitalMarginPercent: number | undefined): string | null {
@@ -249,6 +250,10 @@ export async function POST(request: NextRequest) {
     if ('error' in marca) return NextResponse.json({ error: marca.error }, { status: 400 });
     const brandId = body.brandName !== undefined ? null : body.brandId || null;
 
+    // C-196: el proveedor y su código en el proveedor (opcionales; los digitales no los llevan)
+    const proveedor: Awaited<ReturnType<typeof leerProveedorDeProducto>> = body.productType === 'DIGITAL' ? {} : await leerProveedorDeProducto(body, null);
+    if ('error' in proveedor) return NextResponse.json({ error: proveedor.error }, { status: 400 });
+
     const product = await prisma.$transaction(async (tx) => {
       const marcaId = marca.nombre ? await resolverMarca(tx, marca.nombre) : brandId;
       const created = await tx.product.create({
@@ -261,6 +266,8 @@ export async function POST(request: NextRequest) {
         priceUSD,
         compareAtPriceUSD: tachado,
         costPerItem: body.costPerItem ? parseFloat(body.costPerItem) : null,
+        supplierId: proveedor.supplierId ?? null,
+        supplierSku: proveedor.supplierSku ?? null,
         stock,
         minStock: parseInt(body.minStock) || 0,
         barcode: body.barcode || null,

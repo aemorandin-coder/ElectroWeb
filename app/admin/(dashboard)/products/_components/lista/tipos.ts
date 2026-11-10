@@ -24,6 +24,12 @@ export interface ProductoLista {
   weightKg: number | null;
   dimensions: string | null;
   barcode: string | null;
+  /** C-196: costo, proveedor y su código. null para quien no administra productos (Marketing) */
+  costPerItem: number | null;
+  supplier: { id: string; name: string } | null;
+  supplierSku: string | null;
+  /** Cuándo la lista del proveedor le cambió el costo o la existencia (ISO) */
+  supplierSyncedAt: string | null;
 }
 
 export interface Categoria {
@@ -37,38 +43,31 @@ export type FiltroRevisar = 'sin-foto' | 'sin-marca' | 'sin-medidas';
 
 export type CampoMasivo = 'status' | 'pricePercent' | 'price' | 'stock' | 'category';
 
+/** C-196: el orden de la lista (lo resuelve el servidor, lib/admin/productos-lista.ts) */
+export type OrdenLista = 'recientes' | 'nombre' | 'precio-asc' | 'precio-desc' | 'stock' | 'actualizados';
+export const ORDENES: Array<{ value: OrdenLista; label: string }> = [
+  { value: 'recientes', label: 'Más nuevos primero' },
+  { value: 'actualizados', label: 'Cambiados hace poco' },
+  { value: 'nombre', label: 'Nombre (A a Z)' },
+  { value: 'precio-asc', label: 'Precio: menor a mayor' },
+  { value: 'precio-desc', label: 'Precio: mayor a menor' },
+  { value: 'stock', label: 'Menos existencia primero' },
+];
+
 export const ETIQUETA_ESTADO: Record<EstadoProducto, string> = {
   PUBLISHED: 'Activo',
   DRAFT: 'Borrador',
   ARCHIVED: 'Archivado',
 };
 
-/** C-187: lo archivado queda fuera de "Todos" y de "Sin stock": tiene su propio filtro */
-export function enCatalogo(p: Pick<ProductoLista, 'status'>): boolean {
-  return p.status !== 'ARCHIVED';
-}
-
-export function sinStock(p: Pick<ProductoLista, 'productType' | 'stock' | 'status'>): boolean {
-  return enCatalogo(p) && p.productType !== 'DIGITAL' && p.stock <= 0;
-}
-
-/** C-187: las mismas reglas que los avisos del Dashboard (lib/queries/dashboard.ts), para que los números coincidan */
-export const REVISAR: Record<FiltroRevisar, { label: string; ayuda: string; falta: (p: ProductoLista) => boolean }> = {
-  'sin-foto': {
-    label: 'Sin foto',
-    ayuda: 'Publicados sin ninguna foto',
-    falta: (p) => p.status === 'PUBLISHED' && !p.mainImage && p.images.length === 0,
-  },
-  'sin-marca': {
-    label: 'Sin marca',
-    ayuda: 'Físicos publicados sin marca: Google y el catálogo de Meta la piden',
-    falta: (p) => p.status === 'PUBLISHED' && p.productType === 'PHYSICAL' && !p.brandId,
-  },
-  'sin-medidas': {
-    label: 'Sin peso o medidas',
-    ayuda: 'Físicos publicados sin peso o sin medidas: el empaque y el envío se estiman',
-    falta: (p) => p.status === 'PUBLISHED' && p.productType === 'PHYSICAL' && (p.weightKg === null || p.weightKg <= 0 || !p.dimensions),
-  },
+/**
+ * C-187: lo que avisa el Dashboard, a un toque. C-196: las reglas las aplica el servidor (WHERE_FILTRO de
+ * lib/admin/productos-lista.ts, las mismas del Dashboard); aquí quedan el nombre y la ayuda de cada filtro.
+ */
+export const REVISAR: Record<FiltroRevisar, { label: string; ayuda: string }> = {
+  'sin-foto': { label: 'Sin foto', ayuda: 'Publicados sin ninguna foto' },
+  'sin-marca': { label: 'Sin marca', ayuda: 'Físicos publicados sin marca: Google y el catálogo de Meta la piden' },
+  'sin-medidas': { label: 'Sin peso o medidas', ayuda: 'Físicos publicados sin peso o sin medidas: el empaque y el envío se estiman' },
 };
 
 export const FILTROS_REVISAR = Object.keys(REVISAR) as FiltroRevisar[];

@@ -36,11 +36,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const shortCode = await generateShortCode(prisma);
 
   // C-187: el número de serie es de cada unidad (garantía de un usado): la copia no lo hereda
+  // C-196: el código del proveedor es de un solo producto (único por proveedor): la copia queda con el proveedor y sin código
   const {
     id: _id, sku: _sku, slug: _slug, shortCode: _short, createdAt: _c, updatedAt: _u, deletedAt: _d, deletedById: _db, statusAntesDePapelera: _sp,
-    eliminadoAt: _el, serialNumber: _serie, digitalVariants, ...resto
+    eliminadoAt: _el, serialNumber: _serie, supplierSku: _codProv, supplierSyncedAt: _sync, digitalVariants, ...resto
   } = original;
-  void _id; void _sku; void _slug; void _short; void _c; void _u; void _d; void _db; void _sp; void _el; void _serie;
+  void _id; void _sku; void _slug; void _short; void _c; void _u; void _d; void _db; void _sp; void _el; void _serie; void _codProv; void _sync;
 
   const copia = await prisma.$transaction(async (tx) => {
     const creado = await tx.product.create({

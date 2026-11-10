@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-10, C-197 · producción en 1.0.0-rc.23, `main` y la etiqueta en 1.0.0-rc.25)
+# Lo de ahora (actualizado 2026-11-10, C-197 · producción, `main` y la etiqueta en 1.0.0-rc.25)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **Producción: `v1.0.0-rc.23`** (C-195). Claude lo comprobó desde fuera el 10/11: las imágenes nuevas de Chispa responden. **Falta subir `v1.0.0-rc.25`** (C-196, C-196b y C-197, con rc.24 adentro), en la sección 2, con una tabla nueva. Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
+- **Producción: `v1.0.0-rc.25`** (C-196, C-196b y C-197), subida el 10/11 por Andrés y comprobada desde fuera: la ficha nueva y la base aplicada. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.25". **Nada por subir.** Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
 - **Pedido del 10/11 (Andrés): vender de todo, con la ferretería aliada.** Las maquetas y el plan están en una página privada de Andrés (el enlace, en el chat de esa sesión). Los productos de la ferretería están en La Victoria (Aragua) y se venden solo con envío.
   - **C-196 · Admin → Productos para miles de productos (hecha, en rc.24):** la lista por páginas (de 4.626 KB a 29 KB con 3.100 productos), el proveedor y el costo en cada producto, y Productos → Más → Lista del proveedor: su Excel en lote y las fotos por código (`estado/C-196.md`).
   - **C-196b (hecha, en rc.25):** la casilla "Su lista trae el IVA incluido". Su "Precio Máximo" trae el IVA y es lo que la tienda le paga: costo sin el IVA, y la bomba de $54,90 queda en $71,37 y no en $82,78.
@@ -57,48 +57,19 @@
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
-## 2. Deploy pendiente: `v1.0.0-rc.25` (C-196, C-196b y C-197)
-Producción está en `v1.0.0-rc.23` (comprobada desde fuera el 10/11). rc.24 no se subió: va adentro. Después de este deploy, `git describe --tags` en el servidor dice `v1.0.0-rc.25`.
-- **C-196:** Admin → Productos para miles de productos: la lista por páginas, el proveedor y el costo en cada producto, y Productos → Más → Lista del proveedor (su Excel en lote y las fotos por código).
-- **C-196b:** en la Lista del proveedor, la casilla "Su lista trae el IVA incluido".
-- **C-197:** la ficha del producto en una sola tarjeta, sin el hueco de la Descripción.
+## 2. Deploy pendiente
+**Nada por subir:** producción está en `v1.0.0-rc.25`, igual que `main` (subida el 10/11 y comprobada desde fuera; el bloque, con su SQL y su vuelta atrás, está en `HISTORIAL.md`).
 
-**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.23`). Es aditivo: una tabla, tres columnas, cinco índices y una clave:
-```sql
-ALTER TABLE "products" ADD COLUMN "supplierId" TEXT, ADD COLUMN "supplierSku" TEXT, ADD COLUMN "supplierSyncedAt" TIMESTAMP(3);
-CREATE TABLE "suppliers" ("id" TEXT NOT NULL, "name" TEXT NOT NULL, "discountPercent" DECIMAL(65,30) NOT NULL DEFAULT 0, "pricesIncludeTax" BOOLEAN NOT NULL DEFAULT false, "notes" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "suppliers_pkey" PRIMARY KEY ("id"));
-CREATE UNIQUE INDEX "suppliers_name_key" ON "suppliers"("name");
-CREATE INDEX "products_status_idx" ON "products"("status");
-CREATE INDEX "products_categoryId_idx" ON "products"("categoryId");
-CREATE INDEX "products_createdAt_idx" ON "products"("createdAt");
-CREATE UNIQUE INDEX "products_supplierId_supplierSku_key" ON "products"("supplierId", "supplierSku");
-ALTER TABLE "products" ADD CONSTRAINT "products_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "suppliers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-```
-Sin variables nuevas, sin crons y sin dependencias nuevas.
-
-**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
-```bash
-git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.23 y sin cambios
-DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc25.dump
-bash scripts/deploy.sh                       # para y muestra el SQL de arriba
-npx prisma db push && bash scripts/deploy.sh # aplica y compila (ver la nota de abajo)
-git describe --tags --abbrev=0                                          # v1.0.0-rc.25
-```
-(`git describe --tags` sin `--abbrev=0` dice `v1.0.0-rc.25-2-g…`: son los dos commits de documentación que van después de la etiqueta. Es normal.)
-**Nota sobre `prisma db push`:** va a avisar "There might be data loss" por el índice único de `supplierId` y `supplierSku`, y a preguntar si sigue. **No se pierde nada:** las dos columnas son nuevas y están vacías (probado el 10/11 en una copia con productos: quedan intactos). Si el aviso es solo ese, responde `y`. Si en vez de preguntar dice "Use the --accept-data-loss flag", corre `npx prisma db push --accept-data-loss && bash scripts/deploy.sh`. Si el aviso nombra otra cosa (un DROP o un cambio de tipo), para y avísale a Claude.
-
-**Pruebas** (unos 15 minutos; si al probar no ves un cambio, recarga la página):
+### Por confirmar de rc.25 (C-196, C-196b y C-197)
 1. **Productos:** arriba dice "N en el catálogo · N activos · N destacados" y abajo "Mostrando 1 a N de N". Los filtros (Todos, Activos, Borradores, Sin stock, Archivados y Por revisar) tienen sus números.
 2. **El buscador:** escribe `teclado aoas` (en otro orden y en minúsculas) y aparece el teclado. Ordena por "Precio: menor a mayor".
 3. **Un proveedor:** edita un producto físico → paso **Precios** → "Proveedor" → **+ Agregar proveedor…**, escribe el nombre de la ferretería, **Agregar**, pon su código en "Código en el proveedor" y guarda. En la lista, el producto dice el proveedor y el código bajo el SKU, y la columna Costo trae el margen. El filtro "Todos los proveedores" lo encuentra.
 4. **Productos → Más → Lista del proveedor:** elige el proveedor (el de la ferretería), marca **"Su lista trae el IVA incluido"**, deja el descuento en 0 y sube su listado de existencia y su lista de precios (los dos `.xls`). Dice cuántos hay en su lista y cuántos con existencia, y en la vista previa la bomba Daewoo de 1/2 HP (R023127) dice costo $47,33 y precio sugerido $71,37. **No crees nada todavía:** primero C-199 y C-200 (sección 4).
-7. **La ficha, en la computadora y en el teléfono:** abre el teclado AOAS. La descripción y las especificaciones van en una sola tarjeta, sin hueco; al lado de la descripción, Aoas, M-880, 30 días y Nuevo; las especificaciones en dos columnas, con "Tamaño" y "Tipo de LED" (no en mayúsculas) y sin "Switches: No especificado". En el teléfono, todo en una columna.
-5. **Teléfono:** Productos se ve en tarjetas, sin scroll de lado, y abajo están las páginas.
-6. **Exportar:** Más → Exportar todo (CSV) abre en Excel con los acentos bien y las columnas de costo y proveedor.
+5. **La ficha, en la computadora y en el teléfono:** abre el teclado AOAS. La descripción y las especificaciones van en una sola tarjeta, sin hueco; al lado de la descripción, Aoas, M-880, 30 días y Nuevo; las especificaciones en dos columnas, con "Tamaño" y "Tipo de LED" (no en mayúsculas) y sin "Switches: No especificado". En el teléfono, todo en una columna.
+6. **Teléfono:** Productos se ve en tarjetas, sin scroll de lado, y abajo están las páginas.
+7. **Exportar:** Más → Exportar todo (CSV) abre en Excel con los acentos bien y las columnas de costo y proveedor.
 
-**Vuelta atrás:**
-- El código: `git reset --hard v1.0.0-rc.23 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas no molestan al código anterior: se quedan.
-- Si hace falta la base de antes (no debería): `~/respaldo-antes-rc25.dump`, con el guion de `OPERACION.md`.
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.23 && npm install && bash scripts/deploy.sh --sin-pull` (detalle en `HISTORIAL.md`, 10/11).
 
 ### Por confirmar de rc.23 (C-195, unos 5 minutos)
 Subida entre el 07 y el 10/11. Claude la comprobó desde fuera el 10/11. El bloque está en `HISTORIAL.md`.
@@ -254,7 +225,8 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
 En el orden en que más destraban:
 
 **La ferretería aliada (pedido del 10/11)**
-0. **Después del deploy de rc.25 y de C-199 y C-200:** Productos → Más → Lista del proveedor → crear el proveedor con el nombre de la ferretería → marcar "Su lista trae el IVA incluido" (sin descuento) → subir el archivo de los 60 (está en la carpeta de proveedores, fuera del repositorio) junto con su listado de existencia → marcar los nuevos → crear en borrador. Las categorías del archivo se crean dentro del departamento Ferretería (C-200).
+0. **Despacho (acordado el 10/11):** la ferretería despacha y envía los pedidos de la web.
+0a. **Después de C-199 y C-200:** Productos → Más → Lista del proveedor → crear el proveedor con el nombre de la ferretería → marcar "Su lista trae el IVA incluido" (sin descuento) → subir el archivo de los 60 (está en la carpeta de proveedores, fuera del repositorio) junto con su listado de existencia → marcar los nuevos → crear en borrador. Las categorías del archivo se crean dentro del departamento Ferretería (C-200).
 0b. **Las fotos de los 60 (decidido: del fabricante):** hace falta el **modelo exacto** de cada uno. Su lista dice "DESMALEZADORA 52CC DAEWOO", y Daewoo tiene al menos cuatro de 52 cc distintas: con la foto de otro modelo se mostraría algo que el cliente no recibe.
    - Pedirle a la ferretería el modelo de cada uno, o una foto de la etiqueta de cada caja. El archivo de los 60 trae la columna "Modelo exacto" para llenarla.
    - Con eso, Claude busca las fotos oficiales y las deja nombradas por código. Se suben todas en Lista del proveedor → "Fotos por código".

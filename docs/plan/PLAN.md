@@ -570,7 +570,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 - **ElectroStudio:** historias en la base, dos pantallas (inicio y editor), trabajo por fases. El plan semanal automático quedó fuera (28/09).
 - **La ferretería aliada (10/11, Andrés, en el chat):**
   - Su lista trabaja a BCV, igual que la tienda, y su "Precio Máximo" trae el IVA y es lo que la tienda le paga, sin descuento. El costo es su precio sin el IVA (C-196b).
-  - Sus productos se venden solo con envío desde La Victoria (Aragua), en dos paquetes si el carrito mezcla (C-199).
+  - Sus productos se venden solo con envío desde La Victoria (Aragua), en dos paquetes si el carrito mezcla (C-199). **La ferretería despacha y envía** los pedidos de la web (acordado con ella el 10/11).
   - Un departamento Ferretería, y el inicio sigue siendo de tecnología (C-200).
   - Las fotos, del fabricante.
   - Las variantes, como familias de productos (C-198).

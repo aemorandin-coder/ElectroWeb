@@ -1,10 +1,60 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `4682e7c`, versión `v1.0.0-rc.23`, comprobada el 10/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: `94bc53d`, versión `v1.0.0-rc.25`, el 10/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 10/11 · C-196, C-196b y C-197 (de rc.23 a `v1.0.0-rc.25`, con rc.24 adentro)
+Subido el 10/11 por Andrés. Claude lo comprobó el mismo día desde fuera, como un visitante:
+- La ficha del teclado AOAS tiene la tarjeta nueva: "De un vistazo", "Tipo de LED" (no en mayúsculas), las especificaciones en dos columnas y sin "No especificado" en pantalla (C-197).
+- **La base nueva está aplicada:** la ficha lee todas las columnas del producto (`findFirst` con `include`), y sin `supplierId`, `supplierSku` y `supplierSyncedAt` daría error. Responde 200.
+- `/`, `/productos` y `/api/products/public` responden 200; la API pública no dice proveedor ni costo; `/admin/products/proveedor` pide sesión (307).
+
+Lo que necesita una cuenta (el panel y la Lista del proveedor) quedó en `SIGUIENTE.md`, "Por confirmar de rc.25".
+
+Producción estaba en `v1.0.0-rc.23`; rc.24 fue adentro. Después de este deploy, `git describe --tags --abbrev=0` en el servidor dice `v1.0.0-rc.25`.
+- **C-196:** Admin → Productos para miles de productos: la lista por páginas, el proveedor y el costo en cada producto, y Productos → Más → Lista del proveedor (su Excel en lote y las fotos por código).
+- **C-196b:** en la Lista del proveedor, la casilla "Su lista trae el IVA incluido".
+- **C-197:** la ficha del producto en una sola tarjeta, sin el hueco de la Descripción.
+
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.23`). Es aditivo: una tabla, tres columnas, cinco índices y una clave:
+```sql
+ALTER TABLE "products" ADD COLUMN "supplierId" TEXT, ADD COLUMN "supplierSku" TEXT, ADD COLUMN "supplierSyncedAt" TIMESTAMP(3);
+CREATE TABLE "suppliers" ("id" TEXT NOT NULL, "name" TEXT NOT NULL, "discountPercent" DECIMAL(65,30) NOT NULL DEFAULT 0, "pricesIncludeTax" BOOLEAN NOT NULL DEFAULT false, "notes" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "suppliers_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "suppliers_name_key" ON "suppliers"("name");
+CREATE INDEX "products_status_idx" ON "products"("status");
+CREATE INDEX "products_categoryId_idx" ON "products"("categoryId");
+CREATE INDEX "products_createdAt_idx" ON "products"("createdAt");
+CREATE UNIQUE INDEX "products_supplierId_supplierSku_key" ON "products"("supplierId", "supplierSku");
+ALTER TABLE "products" ADD CONSTRAINT "products_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "suppliers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+```
+Sin variables nuevas, sin crons y sin dependencias nuevas.
+
+**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
+```bash
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.23 y sin cambios
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc25.dump
+bash scripts/deploy.sh                       # para y muestra el SQL de arriba
+npx prisma db push && bash scripts/deploy.sh # aplica y compila (ver la nota de abajo)
+git describe --tags --abbrev=0                                          # v1.0.0-rc.25
+```
+(`git describe --tags` sin `--abbrev=0` dice `v1.0.0-rc.25-2-g…`: son los dos commits de documentación que van después de la etiqueta. Es normal.)
+**Nota sobre `prisma db push`:** va a avisar "There might be data loss" por el índice único de `supplierId` y `supplierSku`, y a preguntar si sigue. **No se pierde nada:** las dos columnas son nuevas y están vacías (probado el 10/11 en una copia con productos: quedan intactos). Si el aviso es solo ese, responde `y`. Si en vez de preguntar dice "Use the --accept-data-loss flag", corre `npx prisma db push --accept-data-loss && bash scripts/deploy.sh`. Si el aviso nombra otra cosa (un DROP o un cambio de tipo), para y avísale a Claude.
+
+**Pruebas** (unos 15 minutos; si al probar no ves un cambio, recarga la página):
+1. **Productos:** arriba dice "N en el catálogo · N activos · N destacados" y abajo "Mostrando 1 a N de N". Los filtros (Todos, Activos, Borradores, Sin stock, Archivados y Por revisar) tienen sus números.
+2. **El buscador:** escribe `teclado aoas` (en otro orden y en minúsculas) y aparece el teclado. Ordena por "Precio: menor a mayor".
+3. **Un proveedor:** edita un producto físico → paso **Precios** → "Proveedor" → **+ Agregar proveedor…**, escribe el nombre de la ferretería, **Agregar**, pon su código en "Código en el proveedor" y guarda. En la lista, el producto dice el proveedor y el código bajo el SKU, y la columna Costo trae el margen. El filtro "Todos los proveedores" lo encuentra.
+4. **Productos → Más → Lista del proveedor:** elige el proveedor (el de la ferretería), marca **"Su lista trae el IVA incluido"**, deja el descuento en 0 y sube su listado de existencia y su lista de precios (los dos `.xls`). Dice cuántos hay en su lista y cuántos con existencia, y en la vista previa la bomba Daewoo de 1/2 HP (R023127) dice costo $47,33 y precio sugerido $71,37. **No crees nada todavía:** primero C-199 y C-200 (sección 4).
+5. **La ficha, en la computadora y en el teléfono:** abre el teclado AOAS. La descripción y las especificaciones van en una sola tarjeta, sin hueco; al lado de la descripción, Aoas, M-880, 30 días y Nuevo; las especificaciones en dos columnas, con "Tamaño" y "Tipo de LED" (no en mayúsculas) y sin "Switches: No especificado". En el teléfono, todo en una columna.
+6. **Teléfono:** Productos se ve en tarjetas, sin scroll de lado, y abajo están las páginas.
+7. **Exportar:** Más → Exportar todo (CSV) abre en Excel con los acentos bien y las columnas de costo y proveedor.
+
+**Vuelta atrás:**
+- El código: `git reset --hard v1.0.0-rc.23 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas no molestan al código anterior: se quedan.
+- Si hace falta la base de antes (no debería): `~/respaldo-antes-rc25.dump`, con el guion de `OPERACION.md`.
 
 ## Entre el 07 y el 10/11 · C-195 (de rc.22 a `v1.0.0-rc.23`)
 Subido después del 07/11 (no quedó anotado quién ni cuándo). Claude lo comprobó el 10/11 desde fuera: `/images/studio/chispa-3/senala.png`, que solo existe desde rc.23, responde 200.

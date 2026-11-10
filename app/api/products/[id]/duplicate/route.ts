@@ -39,9 +39,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // C-196: el código del proveedor es de un solo producto (único por proveedor): la copia queda con el proveedor y sin código
   const {
     id: _id, sku: _sku, slug: _slug, shortCode: _short, createdAt: _c, updatedAt: _u, deletedAt: _d, deletedById: _db, statusAntesDePapelera: _sp,
-    eliminadoAt: _el, serialNumber: _serie, supplierSku: _codProv, supplierSyncedAt: _sync, digitalVariants, ...resto
+    eliminadoAt: _el, serialNumber: _serie, supplierSku: _codProv, supplierSyncedAt: _sync, previousSlugs: _antes, supplierName: _nomProv,
+    digitalVariants, ...resto
   } = original;
   void _id; void _sku; void _slug; void _short; void _c; void _u; void _d; void _db; void _sp; void _el; void _serie; void _codProv; void _sync;
+  // C-202: las direcciones anteriores son del original (redirigen a él) y su nombre en la lista va con el código
+  void _antes; void _nomProv;
 
   const copia = await prisma.$transaction(async (tx) => {
     const creado = await tx.product.create({

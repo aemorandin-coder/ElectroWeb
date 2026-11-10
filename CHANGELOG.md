@@ -10,6 +10,17 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.27] - 2026-11-10
+### Productos 1.7.0 (C-202)
+- **Los nombres bien escritos.**
+  - En la Lista del proveedor, cada producto nuevo trae su "Nombre en la tienda": escrito normal, con las abreviaturas de su lista completadas ("BOMBA PERIF 1/2 HP 120V DAEWOO" pasa a "Bomba periférica 1/2 HP 120 V Daewoo"). Se corrige antes de crear.
+  - Debajo de cada nombre va cómo viene en su lista y lo que hay que mirar: cortado (su sistema corta en 30 letras) o algo que no se entendió. "Nombres para revisar" muestra solo esas filas.
+  - Su nombre original queda guardado aparte, para pedirle el producto.
+- **En el asistente:** si el nombre está en mayúsculas o trae abreviaturas, un aviso muestra el nombre propuesto, con "Usar este nombre".
+### Tienda 1.6.2 y Marco del panel 1.3.7 (C-202)
+- **Cambiarle el nombre a un producto ya no rompe su enlace:** la dirección anterior responde con un 308 a la nueva. Antes daba "no encontrado" en Google y en lo que ya se había compartido.
+- **Base:** 2 columnas nuevas (aditivo): `products.previousSlugs` y `products.supplierName`.
+
 ## [1.0.0-rc.26] - 2026-11-10
 ### Carrito, checkout y cuenta del cliente 1.2.2 (C-201)
 - **Mi panel ya no se sale de la pantalla en el teléfono:** "Últimos pedidos" y "Movimientos" medían 570 px en un teléfono de 360.

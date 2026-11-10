@@ -94,7 +94,12 @@ export default function ProveedorCampos({ data, onChange, errors }: {
           </select>
         )}
       </Campo>
-      <Campo id="p-codigo-proveedor" label="Código en el proveedor" error={errors.supplierSku} hint="Con este código su lista actualiza el costo y la existencia">
+      <Campo
+        id="p-codigo-proveedor"
+        label="Código en el proveedor"
+        error={errors.supplierSku}
+        hint={<>Con este código su lista actualiza el costo y la existencia.{data.supplierName && <> En su lista: <span className="font-mono">{data.supplierName}</span></>}</>}
+      >
         <input
           {...controlDe('p-codigo-proveedor', errors.supplierSku, 'hint')}
           value={data.supplierSku}

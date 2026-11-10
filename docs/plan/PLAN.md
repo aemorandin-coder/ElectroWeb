@@ -460,10 +460,10 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - En el teléfono, el botón de WhatsApp tapa el final de las tarjetas del panel.
   - "1 a 2 días hábiles" en Garantía, a confirmar con los términos (A3).
   - "Para ti" en el inicio del panel: maquetas con datos de producción para que Andrés elija.
-- **Cambiar el nombre de un producto cambia su dirección** (encontrado el 10/11).
-  - `PUT /api/products/[id]` arma la dirección con el nombre nuevo cuando no le llega `slug`, y el asistente no lo manda.
-  - El enlace viejo da 404, en Google y en lo que ya se compartió. Los de `/p/<código>` siguen andando.
-  - Arreglarlo antes de renombrar productos publicados: que la dirección no cambie al renombrar, o guardar las anteriores y redirigir.
+- **C-202** (**hecha**, rc.27): los nombres de producto bien escritos (la regla de §7.2), la columna "Nombre en la tienda" en la Lista del proveedor, el aviso del asistente, y renombrar ya no rompe el enlace (la dirección vieja responde 308). `estado/C-202.md`. Quedan:
+  - **Los 14 productos publicados:** la propuesta está en `estado/C-202.md` y espera el OK de Andrés. Se renombran después de subir rc.27.
+  - **Los de la ferretería:** las 28 preguntas y los modelos a confirmar van a la ferretería. Con el modelo exacto, el nombre se completa con el del fabricante.
+- **En curso, en paralelo (una copia de Claude):** las maquetas de C-200 (la franja, la vitrina del inicio y la página del departamento) y las de "Para ti" en Mi panel, para que Andrés elija antes de programar.
 
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
@@ -599,6 +599,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - Un departamento Ferretería, y el inicio sigue siendo de tecnología (C-200).
   - Las fotos, del fabricante.
   - Las variantes, como familias de productos (C-198).
+- **Nombres de producto (Andrés, 10/11, C-202):** escritos normal, como una oración, en toda la tienda. Siglas, unidades y marcas como se escriben ("120 V", "LED", "Daewoo"). Primero lo que es, después lo que lo distingue, la marca y el modelo; el color o la talla al final. Nada inventado: lo que no se entiende se le pregunta al proveedor.
   - La ficha, en una sola tarjeta (C-197).
 - **Taller:** espera a SADES (30/09).
 - **Credenciales del historial (C-40):** revisado el 26/09, no había nada que cambiar. Si algún día se configura el webhook de SADES, usar un secreto nuevo.

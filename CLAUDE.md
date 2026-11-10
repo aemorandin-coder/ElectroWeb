@@ -39,6 +39,7 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
 - Nada que solo funcione con hover. Nada de `<button>` dentro de `<Link>` (usa *stretched link*).
 - Precios con `lib/currency.ts` (`formatUSD`, `formatVES`).
 - Sin `<style jsx>`, `console.log` ni `any` nuevos. Sin animaciones infinitas en la tienda.
+- **Nombres de producto escritos normal** (C-202, `PLAN.md` §7.2): como una oración, con siglas, unidades y marcas como se escriben. Para proponerlos está `lib/nombres/producto.ts`. Cambiar un nombre cambia la dirección: la anterior queda en `previousSlugs` y redirige; no la dejes sin guardar.
 - **"Puntos ES", nunca "saldo" ni "billetera"** (ley venezolana; regla de Andrés del 2026-09-30). El saldo del cliente se llama **Puntos ES** (Puntos ElectroShop) en todo texto visible: tienda, panel, correos, toasts y admin. Tampoco "wallet" ni "monedero", ni decir que se retira o se transfiere. Si un pedido usa esas palabras, se traduce a "Puntos ES". El código interno (`WALLET`, `userBalance`, `/customer/balance`) no se renombra.
 - **Sin emojis** en la web ni en el código (textos, toasts, badges, comentarios): usa íconos. Regla vieja del proyecto que Andrés reafirmó el 2026-09-14.
 - **Íconos: los propios de Electro Shop**, de `@/components/iconos` (`IconoCarrito`, `IconoCheck`…; C-188, pedido de Andrés). Reciben lo mismo que los de react-icons (`className`, `size`, `title`, `aria-*`) y van de un color (`currentColor`). De `react-icons` solo quedan los logos de marca (WhatsApp, Steam, PlayStation…).

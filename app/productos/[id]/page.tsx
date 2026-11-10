@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import {
   IconoChevronDerecha, IconoDigital, IconoEnvio, IconoEstrella, IconoGarantia, IconoPaquete, IconoTarjeta, IconoTienda,
   IconoUbicacion,
@@ -84,6 +84,10 @@ export default async function ProductPage({ params }: PageProps) {
   const { id } = await params;
   const product = await getProductBySlug(id);
   if (!product) notFound();
+  // C-202: llegó por una dirección anterior en el minuto en que proxy.ts todavía no la conoce: a la de ahora
+  let pedido = id;
+  try { pedido = decodeURIComponent(id); } catch { /* mal escrita: se compara tal cual */ }
+  if (pedido !== product.slug && pedido !== product.id) permanentRedirect(`/productos/${product.slug}`);
 
   const [settings, homeSettings, summary, reviews, related, paymentKinds, coupons] = await Promise.all([
     getPublicSettings(),

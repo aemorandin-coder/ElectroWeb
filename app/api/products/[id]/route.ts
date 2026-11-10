@@ -259,6 +259,9 @@ export async function PATCH(
       const proveedor = await leerProveedorDeProducto(body, id);
       if ('error' in proveedor) return NextResponse.json({ error: proveedor.error }, { status: 400 });
       Object.assign(updateData, proveedor);
+      // C-202: su nombre en la lista es el del código de antes: se borra si cambian el proveedor o el código
+      if ((proveedor.supplierId !== undefined && proveedor.supplierId !== oldProduct.supplierId)
+        || (proveedor.supplierSku !== undefined && proveedor.supplierSku !== oldProduct.supplierSku)) updateData.supplierName = null;
     }
 
     // Inventory extras
@@ -271,17 +274,25 @@ export async function PATCH(
     if (body.seoImage !== undefined) updateData.seoImage = body.seoImage || null;
 
     // Slug update (generate from name if name changed, or use provided)
-    if (body.slug !== undefined) {
-      updateData.slug = body.slug;
-    } else if (body.name !== undefined && body.name !== oldProduct.name) {
+    let slugNuevo: string | null = null;
+    if (typeof body.slug === 'string' && body.slug.trim()) {
+      slugNuevo = body.slug.trim();
+    } else if (typeof body.name === 'string' && body.name !== oldProduct.name) {
       const newSlug = body.name
         .toLowerCase()
         .normalize('NFD')
         .replace(/[̀-ͯ]/g, '')
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-      const existing = await prisma.product.findFirst({ where: { slug: newSlug, NOT: { id } } });
-      updateData.slug = existing ? `${newSlug}-${Math.random().toString(36).substring(2, 7)}` : newSlug;
+        .replace(/(^-|-$)/g, '') || 'producto';
+      // C-202: tampoco la que otro producto tuvo antes (esa redirige a él)
+      const existing = await prisma.product.findFirst({ where: { OR: [{ slug: newSlug }, { previousSlugs: { has: newSlug } }], NOT: { id } } });
+      slugNuevo = existing ? `${newSlug}-${Math.random().toString(36).substring(2, 7)}` : newSlug;
+    }
+    // C-202: la dirección de antes queda guardada y la ficha la manda a la nueva. Antes cambiar el nombre (por ejemplo,
+    // de mayúsculas a normal) dejaba en 404 el enlace de Google y los que ya se habían compartido.
+    if (slugNuevo !== null && slugNuevo !== oldProduct.slug) {
+      updateData.slug = slugNuevo;
+      updateData.previousSlugs = [...new Set([oldProduct.slug, ...oldProduct.previousSlugs])].filter((s) => s && s !== slugNuevo).slice(0, 20);
     }
 
     // Fields that might not exist in current schema or need specific handling

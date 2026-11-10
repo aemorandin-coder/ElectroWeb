@@ -7,12 +7,22 @@ import { publicProductInclude, toPublicProduct, type PublicProduct } from '@/lib
 import { visibleProducts } from '@/lib/queries/home';
 import { conOfertas } from '@/lib/promotions';
 
-/** Producto publicado por slug (o id, para enlaces viejos). null si no existe o no está publicado. */
+/**
+ * Producto publicado por slug (o id, para enlaces viejos). null si no existe o no está publicado.
+ * C-202: también por una dirección que tuvo antes de cambiarle el nombre (proxy.ts ya la redirige; esto cubre el minuto
+ * en que su lista todavía no se renovó, y la imagen para compartir de los enlaces viejos). La de ahora gana siempre.
+ */
 export const getProductBySlug = cache(async (slugOrId: string): Promise<PublicProduct | null> => {
-  const value = decodeURIComponent(slugOrId).slice(0, 200);
+  let value = slugOrId;
+  try { value = decodeURIComponent(slugOrId); } catch { /* mal escrita: se busca tal cual */ }
+  value = value.slice(0, 200);
   const row = await prisma.product.findFirst({
     where: { status: 'PUBLISHED', OR: [{ slug: value }, { id: value }] },
     include: publicProductInclude,
+  }) ?? await prisma.product.findFirst({
+    where: { status: 'PUBLISHED', previousSlugs: { has: value } },
+    include: publicProductInclude,
+    orderBy: { updatedAt: 'desc' },
   });
   return row ? (await conOfertas([toPublicProduct(row)]))[0] : null;
 });

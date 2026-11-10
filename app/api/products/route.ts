@@ -170,9 +170,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slug already exists and append random string if so
+    // C-202: también la que otro producto tuvo antes de cambiarle el nombre (esa dirección redirige a él)
     let finalSlug = slug;
-    const existingSlug = await prisma.product.findUnique({
-      where: { slug: finalSlug },
+    const existingSlug = await prisma.product.findFirst({
+      where: { OR: [{ slug: finalSlug }, { previousSlugs: { has: finalSlug } }] },
+      select: { id: true },
     });
 
     if (existingSlug) {

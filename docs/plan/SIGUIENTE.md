@@ -42,12 +42,23 @@
   - "Para ti en Mi panel": eligió la V1, tarjetas por motivo.
   - "Electro Shop lo tiene todo: plan con ElectroStudio", con su calendario hasta el 31/12.
   - "Flyers: lo tiene todo": cuatro plantillas con su animación, que esperan que las elija.
-- **Las fotos del fabricante de los 80 (10/11):** en `Fotos del fabricante`, fuera del repositorio, ordenadas en tres carpetas.
-  - "1 - Para subir": 32 códigos.
-  - "2 - Por confirmar con la ferreteria": 13 códigos.
-  - "3 - No usar (otro producto)": 4 códigos, por ejemplo la foto de un esmeril de 750 W para uno de 850 W.
-  - 31 no tienen foto oficial.
-  - Las hojas de contactos y `fuentes.csv` dicen de dónde salió cada una.
+- **Las fotos del fabricante de los 80 (10/11):** en `Fotos del fabricante`, fuera del repositorio. Las termina otra sesión de Claude, con el dueño de la cuenta, que avisó lo decidido:
+  - **Los 13 "por confirmar" pasan a "para subir", con su modelo:**
+    - R023127 DAQB60, R023128 DAQB90 y R023129 DAEPC-11A.
+    - EX10020 MEM-050LT, recortada a la de 50 L.
+    - HE00051 ELRH202201, sin batería ni cargador.
+    - HE00038 DASP500A, HE00044 EPLS0321 y R009031 45086.
+    - E000004 FW120M y R023141 DAAC24DN.
+    - R016037, el bombillo LED de emergencia de 30 W, y R016097, el reflector de marco negro.
+    - EX10080 DBC520.
+    - E000005, la misma FW120M sin electrodos.
+  - **De "no usar" se usa la foto y se corrige el nombre:**
+    - HE00040 es de 750 W.
+    - HE00062, de 89 piezas.
+    - R016087, de sobreponer.
+    - EX10081 (la motosierra de 20") queda sin foto oficial.
+  - **Para los que no tienen foto oficial,** la regla nueva de `PLAN.md` §7.2: una foto real del mismo producto, de un distribuidor o una tienda venezolana, con la misma marca y el mismo modelo, y sin marca de agua.
+  - **Esa sesión pone al día** el archivo de los 60 ("Modelo exacto" y los nombres) y deja en las preguntas para la ferretería solo las que siguen abiertas.
 - **Pedido del 06/11 (tres correcciones, desde la cuenta de Andrés), decidido con una página de maquetas:**
   - **C-191 · Marketing decía "1 cliente":** las campañas van solo a quien aceptó promociones, y nada se lo preguntaba. Ahora se pregunta al registrarse y una vez en Mi panel, y el panel dice "N de M clientes" con el desglose (`estado/C-191.md`).
   - **C-192 · El ámbar, solo para avisos:** la regla de `PLAN.md` §1.1 (variante B, placa azul noche) en los correos, la tienda y el panel (`estado/C-192.md`).
@@ -307,7 +318,7 @@ En el orden en que más destraban:
    - **Usa el archivo corregido el 10/11:** los nombres llevan todo lo de su lista (sección 1).
    - Antes de publicar, resuelve con la ferretería las 28 preguntas de la columna "Revisar antes de publicar" y los modelos de la columna "Modelo que encontramos (confirmar)". El mensaje para mandarle está en `Preguntas para la ferreteria.txt`, en la misma carpeta.
    - Al subirlo, revisa la columna "Nombre en la tienda" (C-202) antes de crear: lo que sale en ámbar hay que mirarlo.
-0b. **Las fotos de los 60 (decidido: del fabricante):** hace falta el **modelo exacto** de cada uno. Su lista dice "DESMALEZADORA 52CC DAEWOO", y Daewoo tiene al menos cuatro de 52 cc distintas: con la foto de otro modelo se mostraría algo que el cliente no recibe.
+0b. **Las fotos de los 60 (del fabricante; sin oficial, una real del mismo modelo: `PLAN.md` §7.2). La mayoría de los modelos ya está confirmada (sección 1).** Para los que faltan, sigue haciendo falta el **modelo exacto**. Su lista dice "DESMALEZADORA 52CC DAEWOO", y Daewoo tiene al menos cuatro de 52 cc distintas: con la foto de otro modelo se mostraría algo que el cliente no recibe.
    - Pedirle a la ferretería el modelo de cada uno, o una foto de la etiqueta de cada caja. El archivo de los 60 trae la columna "Modelo exacto" para llenarla.
    - Con eso, Claude busca las fotos oficiales y las deja nombradas por código. Se suben todas en Lista del proveedor → "Fotos por código".
 0c. **Preguntar a ZOOM y MRW** si llevan pintura con solvente (esmaltes y fondos): son inflamables.

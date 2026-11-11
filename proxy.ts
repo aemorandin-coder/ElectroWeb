@@ -5,12 +5,31 @@ import { scheduleExchangeRateRefresh } from '@/lib/exchange-rate';
 import { isFlyerCode, STUDIO_COOKIE, STUDIO_COOKIE_DAYS } from '@/lib/studio/code';
 import { PAGINAS_SOLO_DUENO } from '@/lib/auth-helpers';
 import { direccionActual } from '@/lib/direcciones-anteriores';
+import { CABECERA_VERSION, VERSION_PESTANA } from '@/lib/version-build';
 
 const REF_COOKIE = 'electroshop_ref';
 const REF_TTL_DAYS = 30;
 
 export default withAuth(
   async function proxy(req) {
+    // ── PESTAÑAS DE OTRA VERSIÓN (C-203) ─────────────────────────────
+    // Una pestaña abierta antes de un deploy tiene el código de la versión anterior. Si al navegar recibe el contenido de
+    // la nueva, Next carga los archivos nuevos encima de los viejos y la página se rompe (el 11/11, Categorías del panel:
+    // "getCategoryIconOption is not a function"). Cada pedido del router trae la versión de la pestaña (x-es-version,
+    // lib/version-build.ts). Si no es esta, la respuesta va vacía: el prefetch se descarta y la navegación se vuelve una
+    // carga completa de la página, ya con la versión nueva.
+    // Una pestaña de antes de C-203 no manda la cabecera: su pedido se reconoce por ser un fetch del mismo sitio a una
+    // página (la tienda solo hace fetch a /api, y al abrir una página el navegador manda "Sec-Fetch-Dest: document").
+    // Next le quita a proxy.ts la cabecera "rsc" de sus pedidos: por eso no se usa. En desarrollo no se filtra.
+    if (process.env.NODE_ENV === 'production' && !req.nextUrl.pathname.startsWith('/api/')) {
+      const versionPestana = req.headers.get(CABECERA_VERSION);
+      const delRouter = versionPestana !== null
+        || (req.headers.get('sec-fetch-dest') === 'empty' && req.headers.get('sec-fetch-site') === 'same-origin');
+      if (delRouter && versionPestana !== VERSION_PESTANA) {
+        return new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+      }
+    }
+
     const token = req.nextauth.token;
     const { pathname } = req.nextUrl;
     const isAdminRoute = pathname.startsWith('/admin');

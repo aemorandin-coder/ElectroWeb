@@ -12,6 +12,7 @@ import { getPublicSettings, getSiteSettings } from "@/lib/site-settings";
 import { getNavCategories, getNavDepartamentos } from "@/lib/queries/navigation";
 import { imagenDePagina } from "@/lib/og/datos";
 import { absoluteUrl, siteUrl } from "@/lib/seo";
+import { GUION_VERSION_PESTANA } from "@/lib/version-build";
 
 // Los settings públicos se leen aquí para todo el sitio: cada ruta se regenera como mucho
 // cada 60 s para que la tasa BCV no quede congelada en las páginas estáticas.
@@ -121,6 +122,11 @@ export default async function RootLayout({
 
   return (
     <html lang="es" data-scroll-behavior="smooth" className={`${inter.variable} ${tektrron.variable}`} suppressHydrationWarning>
+      <head>
+        {/* C-203: la versión de esta pestaña en cada pedido del router. Una pestaña abierta antes de un deploy se recarga
+            entera al navegar (proxy.ts), en vez de mezclar el código de las dos versiones */}
+        <script dangerouslySetInnerHTML={{ __html: GUION_VERSION_PESTANA }} />
+      </head>
       <body className="antialiased" suppressHydrationWarning>
         <Providers initialSettings={publicSettings} navCategories={navCategories} navDepartamentos={navDepartamentos}>
           <NotificationProvider>

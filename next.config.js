@@ -79,6 +79,9 @@ const nextConfig = {
         protocol: 'https',
         hostname: '*.googleusercontent.com',
       },
+      // Miniaturas de los videos de /servicios (C-203: respondían 400, "url" parameter is not allowed, y salían rotas)
+      { protocol: 'https', hostname: 'img.youtube.com' },
+      { protocol: 'https', hostname: 'i.ytimg.com' },
     ],
   },
   async redirects() {

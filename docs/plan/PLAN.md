@@ -473,6 +473,11 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - Calendario del 11/11 al 31/12, con el lanzamiento de Ferretería tentativo la semana del 23/11.
   - Las plantillas esperan que Andrés elija sus maquetas.
 
+**Pedido del 11/11 (dos errores de la consola, desde la cuenta de Andrés):**
+- **C-203** (**hecha**, rc.29): una pestaña abierta antes de un deploy se recarga entera al navegar, en vez de mezclar las dos versiones (el `TypeError` de Categorías del panel y los 404 de `/categorias`); el deploy sigue sirviendo 7 días los archivos de las versiones anteriores. De paso, las miniaturas de YouTube de `/servicios`. `estado/C-203.md`. Queda:
+  - Comprobar en producción, después del deploy, que un pedido del router sin versión responde 204 (`SIGUIENTE.md`).
+  - Si se actualiza Next: la prueba de humo comprueba que navegar por dentro no recarga la página. Si falla, el guion de `lib/version-build.ts` ya no llega a los pedidos del router.
+
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
 - Hecho en C-185 (06/11): las ramas, el stash y los worktrees viejos de la máquina de Andrés, y los 40 uploads versionados (en el servidor se respaldan antes del próximo `git pull`, `SIGUIENTE.md` §2).

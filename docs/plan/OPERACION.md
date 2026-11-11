@@ -39,6 +39,8 @@ git pull --ff-only          # primero: el guion que corre no se actualiza a sí 
 bash scripts/deploy.sh
 ```
 - Compila en `.next-a` o `.next-b` (la que no se sirve) y solo entonces reinicia. La tienda no se cae durante el build.
+- **Sigue sirviendo 7 días los archivos del navegador de las versiones anteriores** (C-203): los copia a la carpeta nueva antes de reiniciar (paso 4, "Archivos de versiones anteriores que se siguen sirviendo: N"). Una pestaña abierta antes del deploy los pide hasta que navega. Cada build anota los suyos en `static-propios.txt`.
+- **Una pestaña de otra versión se recarga entera al navegar** (C-203): cada pedido del router manda la versión de la pestaña (`x-es-version`, `lib/version-build.ts`) y `proxy.ts` le responde 204 vacío si no es la del servidor. No se configura nada. Comprobar: `curl -s -o /dev/null -w '%{http_code}\n' -H 'sec-fetch-dest: empty' -H 'sec-fetch-site: same-origin' https://electroshopve.com/categorias` responde `204` (una pestaña sin versión), y sin esas cabeceras, `200`.
 - **Si el build falla o la tienda no responde con la versión nueva, sigue la anterior.**
 - **Si el deploy cambia la base, el guion para y muestra el SQL.**
   - Solo se sigue si son `ADD COLUMN`, `CREATE TABLE`, `CREATE INDEX` o `CREATE TYPE` y coinciden con el bloque de `SIGUIENTE.md`.

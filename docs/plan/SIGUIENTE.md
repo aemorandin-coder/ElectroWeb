@@ -1,9 +1,10 @@
-# Lo de ahora (actualizado 2026-11-10 · producción, `main` y la etiqueta en 1.0.0-rc.28)
+# Lo de ahora (actualizado 2026-11-11 · producción en 1.0.0-rc.28; `main` y la etiqueta en 1.0.0-rc.29)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-203 · Las pestañas abiertas durante un deploy (11/11, en `main`, rc.29, por subir):** los dos errores de la consola del 11/11 (404 en `/categorias` y `getCategoryIconOption is not a function` en Categorías del panel) eran de una pestaña abierta desde antes del 06/11. Producción estaba bien. Ahora una pestaña de otra versión se recarga entera al navegar, en vez de mezclar las dos, y el deploy sigue sirviendo 7 días los archivos de las versiones anteriores. Sin bajar nada de nuevo después de cada deploy. De paso, las miniaturas de YouTube de `/servicios` (`estado/C-203.md`).
 - **Producción: `v1.0.0-rc.25`** (C-196, C-196b y C-197), subida el 10/11 por Andrés y comprobada desde fuera: la ficha nueva y la base aplicada. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.25". **Desde el 10/11 en la noche, producción está en `v1.0.0-rc.28`** (C-201, C-202 y C-200). La subió Andrés, con el guion de Ferretería, y Claude la comprobó desde fuera. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.28". Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
 - **Pedido del 10/11 (Andrés): vender de todo, con la ferretería aliada.** Las maquetas y el plan están en una página privada de Andrés (el enlace, en el chat de esa sesión). Los productos de la ferretería están en La Victoria (Aragua) y se venden solo con envío.
   - **C-196 · Admin → Productos para miles de productos (hecha, en rc.24):** la lista por páginas (de 4.626 KB a 29 KB con 3.100 productos), el proveedor y el costo en cada producto, y Productos → Más → Lista del proveedor: su Excel en lote y las fotos por código (`estado/C-196.md`).
@@ -98,7 +99,33 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-**Nada por subir:** producción está en `v1.0.0-rc.28` (C-201, C-202 y C-200), subida el 10/11 por Andrés, con el guion de Ferretería aplicado. Claude la comprobó desde fuera. El bloque, con su SQL y su vuelta atrás, está en `HISTORIAL.md`.
+### El bloque: `v1.0.0-rc.29` (C-203; unos 10 minutos)
+Producción está en `v1.0.0-rc.28` (C-201, C-202 y C-200), subida el 10/11 por Andrés y comprobada desde fuera. Su bloque está en `HISTORIAL.md`.
+- **C-203 (rc.29):**
+  - una pestaña abierta antes de un deploy se recarga entera al navegar, en vez de mezclar las dos versiones;
+  - el deploy sigue sirviendo 7 días los archivos del navegador de las versiones anteriores;
+  - las miniaturas de los videos de `/servicios` se ven.
+
+**Sin SQL**, sin variables nuevas y sin crons. `package-lock.json` cambió solo en el número de versión: el guion corre `npm install` y no instala nada nuevo.
+
+**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
+```bash
+git describe --tags --abbrev=0 && git status -sb   # v1.0.0-rc.28 y sin cambios
+git pull --ff-only                                 # primero: este deploy cambia deploy.sh, y el que corre no se actualiza solo
+bash scripts/deploy.sh                             # en el paso 4 dice "Archivos de versiones anteriores que se siguen sirviendo: N"
+git describe --tags --abbrev=0                     # v1.0.0-rc.29
+curl -s -o /dev/null -w '%{http_code}\n' -H 'sec-fetch-dest: empty' -H 'sec-fetch-site: same-origin' http://127.0.0.1:3000/categorias   # 204
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/categorias                                                                # 200
+```
+- El primer `curl` hace de una pestaña de antes del deploy, sin versión: responde `204`, vacío. El segundo es abrir la página: `200`.
+- Si el primero responde `200`, el filtro no está activo: no sigas con las pruebas y pásale la salida a Claude.
+
+**Pruebas** (unos 5 minutos, en la computadora; la consola se abre con F12 → Consola):
+1. **Una pestaña vieja:** antes del deploy, deja abiertas `/categorias` y el panel de Categorías. Después del deploy, sin recargar, haz clic en un enlace en cada una. La página se carga entera (se ve el parpadeo) y la consola no muestra errores rojos.
+2. **Navegar normal:** en una pestaña nueva, recorre la tienda (Productos, una ficha, el carrito) y el panel. Las páginas cambian sin recargarse enteras, como siempre.
+3. **Servicios:** `/servicios` muestra las miniaturas de los videos.
+
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.28 && npm install && bash scripts/deploy.sh --sin-pull`. Sin cambio de base.
 
 ### Por confirmar de rc.28 (necesita una cuenta, unos 15 minutos)
 1. **Mi panel (C-201), en el teléfono, con una cuenta de cliente que tenga alguna compra:**

@@ -96,6 +96,10 @@ correr(async () => {
     t('C-150 la compra de hoy está en el Dashboard', await nav.js(`() => document.querySelector('[aria-labelledby=w-ordenes]').innerText.includes('Clienta Bloque')`));
     t('C-150 menú: Dashboard y seis secciones', await nav.js(`() => document.querySelectorAll('#admin-sidebar nav button[aria-expanded]').length === 6 && document.querySelector('#admin-sidebar nav a').innerText.trim() === 'Dashboard'`));
     await nav.foto('bloque-dashboard-1440');
+    // C-203: con la versión al día, navegar por dentro no recarga la página. Si falla, la cabecera x-es-version no llega a
+    // proxy.ts (lib/version-build.ts) y cada clic recarga todo: pasaría si Next cambia cómo pide las páginas
+    await nav.js(`() => { window.__mismoDocumento = true; window.next.router.push('/admin/orders'); }`);
+    t('C-203 navegar por dentro no recarga la página', await nav.hasta(`() => location.pathname === '/admin/orders' && Boolean(document.querySelector('main h1'))`) && await nav.js(`() => window.__mismoDocumento === true`));
 
     await nav.ir('/admin/orders');
     const abierto = await nav.hasta(`() => { if (document.getElementById('orden-factura-numero')) return true; const fila = [...document.querySelectorAll('tr, li, article, div')].filter(x => x.innerText && x.innerText.includes('${fisica!.orderNumber}') && x.querySelector('[aria-label="Ver detalles"]')).pop(); const b = fila && fila.querySelector('[aria-label="Ver detalles"]'); if (b) b.click(); return false; }`);

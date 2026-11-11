@@ -10,6 +10,14 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.29] - 2026-11-11
+### Tienda 1.7.1, Marco del panel 1.3.8 y Configuración 1.1.5 (C-203)
+- **Una pestaña abierta antes de un deploy ya no se rompe.** Al navegar mezclaba el código viejo con el nuevo ("getCategoryIconOption is not a function" en Categorías del panel, el 11/11) y pedía archivos que ya no existían (404 y "MIME type 'text/plain'" en la consola). Ahora:
+  - cada pedido del router dice de qué versión es la pestaña; si no es la del servidor, `proxy.ts` responde vacío y la página se carga entera, ya con la versión nueva;
+  - el deploy sigue sirviendo 7 días los archivos del navegador de las versiones anteriores.
+- Después de un deploy no se baja nada de nuevo: el JS y las fotos se siguen guardando en el navegador como antes.
+- **De paso:** las miniaturas de los videos de `/servicios` se ven (respondían 400).
+
 ## [1.0.0-rc.28] - 2026-11-10
 ### Tienda 1.7.0 (C-200)
 - **El departamento Ferretería.** Sus productos no se mezclan con el inicio, que sigue siendo de tecnología. Tiene:

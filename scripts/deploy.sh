@@ -9,8 +9,9 @@
 #   1. git pull (solo avance rápido).
 #   2. Si la base no coincide con prisma/schema.prisma, PARA: el cambio de base se revisa y se aplica a mano.
 #   3. Compila en la carpeta que NO se está sirviendo (.next-a o .next-b). La tienda sigue respondiendo.
-#   4. Reinicia PM2 apuntando a la carpeta nueva y espera a que responda.
-#   5. Si no responde, vuelve a la carpeta anterior. Si responde, borra la anterior.
+#   4. Copia a la carpeta nueva los archivos del navegador de las versiones de los últimos 7 días (C-203).
+#   5. Reinicia PM2 apuntando a la carpeta nueva y espera a que responda.
+#   6. Si no responde, vuelve a la carpeta anterior. Si responde, borra la anterior.
 #
 # Antes el build borraba .next con la tienda corriendo y PM2 la reiniciaba sin parar
 # ("Could not find a production build", 55.910 veces hasta el 26/09/2026).
@@ -34,6 +35,33 @@ carpeta_pm2() {
 responde() {
   # C-177: la tienda escucha solo en 127.0.0.1 (package.json, "start"); "localhost" también resuelve a ::1
   [ "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PUERTO/")" = "200" ]
+}
+
+# C-203: una pestaña abierta antes del deploy sigue pidiendo los archivos de su versión (al abrir un menú, el buscador)
+# hasta que navega y se recarga entera (proxy.ts). Sin ellos falla: "404" y "MIME type ('text/plain')" en la consola.
+# Por eso la carpeta nueva sirve también los de las versiones retiradas en los últimos 7 días (next start lee static/
+# al arrancar). Cada build anota los suyos en static-propios.txt: al copiarlos, los de la versión que se retira ahora
+# llevan la fecha de hoy y los que ella traía de antes conservan la suya. Así los 7 días cuentan desde que cada versión
+# dejó de servirse. Los nombres salen del contenido: un archivo del build nuevo nunca se pisa con uno viejo.
+conservar_anteriores() {
+  local anterior=$1 nueva=$2 propios=$2/static-propios.txt f
+  (cd "$nueva/static" && find . -type f) > "$propios"
+  if [ -d "$anterior/static" ]; then
+    (cd "$anterior/static" && find . -type f) | while IFS= read -r f; do
+      [ -e "$nueva/static/$f" ] && continue
+      mkdir -p "$(dirname "$nueva/static/$f")"
+      if [ ! -f "$anterior/static-propios.txt" ] || grep -qxF "$f" "$anterior/static-propios.txt"; then
+        cp "$anterior/static/$f" "$nueva/static/$f"
+      else
+        cp -p "$anterior/static/$f" "$nueva/static/$f"
+      fi
+    done
+  fi
+  # Los de versiones retiradas hace más de 7 días (10.080 minutos). Los del build nuevo nunca: están en static-propios.txt
+  (cd "$nueva/static" && find . -type f -mmin +10080) | while IFS= read -r f; do
+    grep -qxF "$f" "$propios" || rm -f "$nueva/static/$f"
+  done
+  echo "Archivos de versiones anteriores que se siguen sirviendo: $(( $(cd "$nueva/static" && find . -type f | wc -l) - $(wc -l < "$propios") ))"
 }
 
 main() {
@@ -96,7 +124,10 @@ main() {
     exit 1
   fi
 
-  echo "--- 4. Cambio a $NUEVA"
+  echo "--- 4. Archivos de las versiones anteriores"
+  conservar_anteriores "$ACTUAL" "$NUEVA" || echo "Aviso: no se copiaron todos. Solo afecta a pestañas abiertas antes del deploy."
+
+  echo "--- 5. Cambio a $NUEVA"
   NEXT_DIST_DIR="$NUEVA" pm2 restart "$APP" --update-env
   if [ "$(carpeta_pm2)" != "$NUEVA" ]; then
     echo "PM2 no tomó NEXT_DIST_DIR=$NUEVA. No borro nada: revisa 'pm2 env 0'."

@@ -1,9 +1,44 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.28`, el 10/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.29`, comprobada el 12/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 11-12/11 · C-203 (de rc.28 a `v1.0.0-rc.29`)
+Lo subió el equipo entre el 11 y el 12/11 (no quedó anotado quién). Claude lo comprobó el 12/11 desde fuera, como un visitante:
+- **El filtro de las pestañas viejas está activo.** Un pedido del router sin versión a `/categorias` (`Sec-Fetch-Dest: empty` y `Sec-Fetch-Site: same-origin`) responde `204`, y la página normal, `200`.
+- **La miniatura de un video de `/servicios`,** por el optimizador de imágenes, responde `200` (`image/jpeg`). Antes daba 400.
+- **La prueba con una pestaña abierta durante el deploy** pasó al bloque de rc.30 (`SIGUIENTE.md`), porque se hace en el próximo deploy.
+
+### El bloque que se subió: `v1.0.0-rc.29` (C-203; unos 10 minutos)
+Producción está en `v1.0.0-rc.28` (C-201, C-202 y C-200), subida el 10/11 por Andrés y comprobada desde fuera. Su bloque está en `HISTORIAL.md`.
+- **C-203 (rc.29):**
+  - una pestaña abierta antes de un deploy se recarga entera al navegar, en vez de mezclar las dos versiones;
+  - el deploy sigue sirviendo 7 días los archivos del navegador de las versiones anteriores;
+  - las miniaturas de los videos de `/servicios` se ven.
+
+**Sin SQL**, sin variables nuevas y sin crons. `package-lock.json` cambió solo en el número de versión: el guion corre `npm install` y no instala nada nuevo.
+
+**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
+```bash
+git describe --tags --abbrev=0 && git status -sb   # v1.0.0-rc.28 y sin cambios
+git pull --ff-only                                 # primero: este deploy cambia deploy.sh, y el que corre no se actualiza solo
+bash scripts/deploy.sh                             # en el paso 4 dice "Archivos de versiones anteriores que se siguen sirviendo: N"
+git describe --tags --abbrev=0                     # v1.0.0-rc.29
+curl -s -o /dev/null -w '%{http_code}\n' -H 'sec-fetch-dest: empty' -H 'sec-fetch-site: same-origin' http://127.0.0.1:3000/categorias   # 204
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/categorias                                                                # 200
+```
+- El primer `curl` hace de una pestaña de antes del deploy, sin versión: responde `204`, vacío. El segundo es abrir la página: `200`.
+- Si el primero responde `200`, el filtro no está activo: no sigas con las pruebas y pásale la salida a Claude.
+
+**Pruebas** (unos 5 minutos, en la computadora; la consola se abre con F12 → Consola):
+1. **Una pestaña vieja:** antes del deploy, deja abiertas `/categorias` y el panel de Categorías. Después del deploy, sin recargar, haz clic en un enlace en cada una. La página se carga entera (se ve el parpadeo) y la consola no muestra errores rojos.
+2. **Navegar normal:** en una pestaña nueva, recorre la tienda (Productos, una ficha, el carrito) y el panel. Las páginas cambian sin recargarse enteras, como siempre.
+3. **Servicios:** `/servicios` muestra las miniaturas de los videos.
+
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.28 && npm install && bash scripts/deploy.sh --sin-pull`. Sin cambio de base.
 
 
 ## 10/11 (noche) · C-201, C-202 y C-200 (de rc.25 a `v1.0.0-rc.28`, con rc.26 y rc.27 adentro)

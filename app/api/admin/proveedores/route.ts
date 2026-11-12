@@ -15,10 +15,10 @@ export async function GET() {
   if (!isAuthorized(session, 'MANAGE_PRODUCTS')) return NextResponse.json({ error: 'No autorizado' }, { status: session ? 403 : 401 });
   const proveedores = await prisma.supplier.findMany({
     orderBy: { name: 'asc' },
-    select: { id: true, name: true, discountPercent: true, pricesIncludeTax: true, notes: true, _count: { select: { products: { where: { deletedAt: null } } } } },
+    select: { id: true, name: true, discountPercent: true, pricesIncludeTax: true, noShipTerms: true, notes: true, _count: { select: { products: { where: { deletedAt: null } } } } },
   });
   return NextResponse.json({
-    proveedores: proveedores.map((p) => ({ id: p.id, name: p.name, discountPercent: Number(p.discountPercent), pricesIncludeTax: p.pricesIncludeTax, notes: p.notes, productos: p._count.products })),
+    proveedores: proveedores.map((p) => ({ id: p.id, name: p.name, discountPercent: Number(p.discountPercent), pricesIncludeTax: p.pricesIncludeTax, noShipTerms: p.noShipTerms, notes: p.notes, productos: p._count.products })),
   });
 }
 
@@ -35,5 +35,5 @@ export async function POST(request: NextRequest) {
   if (repetido) return NextResponse.json({ error: 'Ya hay un proveedor con ese nombre' }, { status: 409 });
   const creado = await prisma.supplier.create({ data: { name, discountPercent: descuento, pricesIncludeTax: body?.pricesIncludeTax === true, notes: notas } });
   await registrarAccionAdmin(session, 'PANEL_RECORD_UPDATED', { type: 'SUPPLIER', id: creado.id }, { accion: 'Proveedor nuevo', proveedor: name }, request);
-  return NextResponse.json({ id: creado.id, name: creado.name, discountPercent: Number(creado.discountPercent), pricesIncludeTax: creado.pricesIncludeTax, notes: creado.notes, productos: 0 }, { status: 201 });
+  return NextResponse.json({ id: creado.id, name: creado.name, discountPercent: Number(creado.discountPercent), pricesIncludeTax: creado.pricesIncludeTax, noShipTerms: creado.noShipTerms, notes: creado.notes, productos: 0 }, { status: 201 });
 }

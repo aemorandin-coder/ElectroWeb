@@ -1,11 +1,35 @@
-# Lo de ahora (actualizado 2026-11-11 · producción en 1.0.0-rc.28; `main` y la etiqueta en 1.0.0-rc.29)
+# Lo de ahora (actualizado 2026-11-12 · producción en 1.0.0-rc.29; `main` y la etiqueta en 1.0.0-rc.30)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-203 · Las pestañas abiertas durante un deploy (11/11, en `main`, rc.29, por subir):** los dos errores de la consola del 11/11 (404 en `/categorias` y `getCategoryIconOption is not a function` en Categorías del panel) eran de una pestaña abierta desde antes del 06/11. Producción estaba bien. Ahora una pestaña de otra versión se recarga entera al navegar, en vez de mezclar las dos, y el deploy sigue sirviendo 7 días los archivos de las versiones anteriores. Sin bajar nada de nuevo después de cada deploy. De paso, las miniaturas de YouTube de `/servicios` (`estado/C-203.md`).
-- **Producción: `v1.0.0-rc.25`** (C-196, C-196b y C-197), subida el 10/11 por Andrés y comprobada desde fuera: la ficha nueva y la base aplicada. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.25". **Desde el 10/11 en la noche, producción está en `v1.0.0-rc.28`** (C-201, C-202 y C-200). La subió Andrés, con el guion de Ferretería, y Claude la comprobó desde fuera. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.28". Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
+- **C-204 · La carga masiva, completa (12/11, en `main`, rc.30, por subir):** Andrés pidió cinco preguntas antes de tocar código y eligió lo recomendado en las cinco (`PLAN.md` §7.2). En Productos → Más → Lista del proveedor (`estado/C-204.md`):
+  - el Excel y las fotos van juntos: se sueltan encima o se elige la carpeta, y cada producto se crea con las suyas;
+  - lo que ZOOM y MRW no llevan (pinturas, solventes, aerosoles, pegas con solvente, gas) se marca y no se crea;
+  - "Sugeridos" pone primero lo afín a la tienda que aguanta solo su envío;
+  - la columna "Modelo" entra a la ficha;
+  - **el paso 5:** dice qué le falta a cada borrador, los completa con la web (la IA propone, el equipo revisa) y publica los listos.
+- **La ferretería respondió las preguntas (12/11, el .docx de Andrés):**
+  - **Confirmados:** DAQB60, DAQB90, DAEPC-11A, DAJS710, la careta 45086, la desmalezadora DBC520, el bombillo de emergencia y el reflector de Run, y el atornillador de 12 V, que viene suelto y con batería y cargador.
+  - **Distintos de lo que se eligió el 10/11 por las fotos** (manda lo que dijo la ferretería):
+    - el esmeril HE00040 es de 850 W (ULAG15854);
+    - el panel R016087 es de empotrar;
+    - la pistola HE00038 es la DAPG500HM;
+    - la soldadora E000004 es la FW131M;
+    - HE00051, el rotomartillo, es "ELRH21228";
+    - HE00044, el kit de alicates, es "EMP50603";
+    - HE00028, la lijadora, es la "DAPAS230G";
+    - EX10081, la motosierra, es la "DACS5820".
+  - **Marcas nuevas:** los protectores son Protektor; el flotante, Aquafina; el tablero, Brickell; las griferías, BG. Además, el cable es Protonic de 100 m.
+  - **Siguen sin respuesta:** el presostato, el juego de 166 piezas, la pinza MT87, la membrana de 50 L y las fotos de las cerraduras Brufer.
+- **Las pinturas, fuera por ahora (Andrés, 12/11):** ZOOM y MRW no las llevan. Los 60 pasan a **los 70**:
+  - salen los 15 códigos de pinturas;
+  - entran 14 productos con la regla de "Sugeridos" (`PLAN.md` §5.2).
+  - El archivo nuevo es `Electro Shop - los 70 para cargar.xlsx`, en la carpeta de proveedores de Andrés.
+- **Las fotos que faltan:** un agente aparte (Sonnet, pedido de Andrés) rehace las de los modelos corregidos y busca las de los nuevos, con las reglas del 10/11. Trabaja en `Fotos del fabricante`; las pinturas pasan a "4 - Pinturas (por ahora no se venden)".
+- **C-203 · Las pestañas abiertas durante un deploy (11/11, rc.29, en producción; Claude lo comprobó desde fuera el 12/11):** los dos errores de la consola del 11/11 (404 en `/categorias` y `getCategoryIconOption is not a function` en Categorías del panel) eran de una pestaña abierta desde antes del 06/11. Producción estaba bien. Ahora una pestaña de otra versión se recarga entera al navegar, en vez de mezclar las dos, y el deploy sigue sirviendo 7 días los archivos de las versiones anteriores. Sin bajar nada de nuevo después de cada deploy. De paso, las miniaturas de YouTube de `/servicios` (`estado/C-203.md`).
+- **Producción: `v1.0.0-rc.29`** (C-203), comprobada por Claude desde fuera el 12/11. El bloque pasó a `HISTORIAL.md`. Antes: **`v1.0.0-rc.25`** (C-196, C-196b y C-197), subida el 10/11 por Andrés y comprobada desde fuera: la ficha nueva y la base aplicada. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.25". **Desde el 10/11 en la noche, producción está en `v1.0.0-rc.28`** (C-201, C-202 y C-200). La subió Andrés, con el guion de Ferretería, y Claude la comprobó desde fuera. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.28". Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
 - **Pedido del 10/11 (Andrés): vender de todo, con la ferretería aliada.** Las maquetas y el plan están en una página privada de Andrés (el enlace, en el chat de esa sesión). Los productos de la ferretería están en La Victoria (Aragua) y se venden solo con envío.
   - **C-196 · Admin → Productos para miles de productos (hecha, en rc.24):** la lista por páginas (de 4.626 KB a 29 KB con 3.100 productos), el proveedor y el costo en cada producto, y Productos → Más → Lista del proveedor: su Excel en lote y las fotos por código (`estado/C-196.md`).
   - **C-196b (hecha, en rc.25):** la casilla "Su lista trae el IVA incluido". Su "Precio Máximo" trae el IVA y es lo que la tienda le paga: costo sin el IVA, y la bomba de $54,90 queda en $71,37 y no en $82,78.
@@ -99,33 +123,48 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque: `v1.0.0-rc.29` (C-203; unos 10 minutos)
-Producción está en `v1.0.0-rc.28` (C-201, C-202 y C-200), subida el 10/11 por Andrés y comprobada desde fuera. Su bloque está en `HISTORIAL.md`.
-- **C-203 (rc.29):**
-  - una pestaña abierta antes de un deploy se recarga entera al navegar, en vez de mezclar las dos versiones;
-  - el deploy sigue sirviendo 7 días los archivos del navegador de las versiones anteriores;
-  - las miniaturas de los videos de `/servicios` se ven.
+### El bloque: `v1.0.0-rc.30` (C-204; unos 15 minutos)
+Producción está en `v1.0.0-rc.29` (C-203), comprobada desde fuera el 12/11; su bloque está en `HISTORIAL.md`.
+- **C-204 (rc.30):** la carga masiva completa, en Productos → Más → Lista del proveedor:
+  - el Excel y las fotos juntos;
+  - lo que no se envía, marcado y sin crear;
+  - "Sugeridos" y la columna "Modelo";
+  - el paso 5, con la lista de control, "Completar con la web" y "Publicar los listos".
 
-**Sin SQL**, sin variables nuevas y sin crons. `package-lock.json` cambió solo en el número de versión: el guion corre `npm install` y no instala nada nuevo.
+**SQL** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.29`). Es aditivo: una columna nueva.
+```sql
+ALTER TABLE "suppliers" ADD COLUMN "noShipTerms" TEXT[] DEFAULT ARRAY[]::TEXT[];
+```
+Sin variables nuevas, sin crons y sin dependencias nuevas.
 
 **Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
 ```bash
-git describe --tags --abbrev=0 && git status -sb   # v1.0.0-rc.28 y sin cambios
-git pull --ff-only                                 # primero: este deploy cambia deploy.sh, y el que corre no se actualiza solo
-bash scripts/deploy.sh                             # en el paso 4 dice "Archivos de versiones anteriores que se siguen sirviendo: N"
-git describe --tags --abbrev=0                     # v1.0.0-rc.29
-curl -s -o /dev/null -w '%{http_code}\n' -H 'sec-fetch-dest: empty' -H 'sec-fetch-site: same-origin' http://127.0.0.1:3000/categorias   # 204
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/categorias                                                                # 200
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.29 y sin cambios
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc30.dump
+bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
+npx prisma db push && bash scripts/deploy.sh # aplica la columna y compila
+git describe --tags --abbrev=0                                          # v1.0.0-rc.30
 ```
-- El primer `curl` hace de una pestaña de antes del deploy, sin versión: responde `204`, vacío. El segundo es abrir la página: `200`.
-- Si el primero responde `200`, el filtro no está activo: no sigas con las pruebas y pásale la salida a Claude.
+- `prisma db push` no debería preguntar nada: la columna es nueva. Si avisa de perder datos, no sigas y pásale el texto a Claude.
 
-**Pruebas** (unos 5 minutos, en la computadora; la consola se abre con F12 → Consola):
-1. **Una pestaña vieja:** antes del deploy, deja abiertas `/categorias` y el panel de Categorías. Después del deploy, sin recargar, haz clic en un enlace en cada una. La página se carga entera (se ve el parpadeo) y la consola no muestra errores rojos.
-2. **Navegar normal:** en una pestaña nueva, recorre la tienda (Productos, una ficha, el carrito) y el panel. Las páginas cambian sin recargarse enteras, como siempre.
-3. **Servicios:** `/servicios` muestra las miniaturas de los videos.
+**Pruebas** (unos 15 minutos, en la computadora; la consola se abre con F12 → Consola):
+1. **Una pestaña de antes del deploy (C-203):**
+   - Antes de correr el guion, deja abierta la Lista del proveedor del panel.
+   - Después, sin recargar, toca "Productos" arriba a la izquierda.
+   - La página se carga entera (se ve el parpadeo) y la consola no muestra errores rojos.
+2. **La Lista del proveedor (C-204), sin crear nada:**
+   - Elige el proveedor de la ferretería.
+   - Suelta encima el archivo de los 70, su listado de existencia y la carpeta "1 - Para subir" de las fotos.
+   - Cada fila con foto muestra su miniatura en "Foto".
+   - En el paso 1 está "Lo que no se envía por ZOOM ni MRW (la lista de siempre)".
+   - "Sugeridos" pone primero lo de $25 o más.
+   - Abajo está el paso 5, "Terminar los borradores y publicar".
+3. **La carpeta entera:** quita las fotos y suelta "Fotos del fabricante" completa. Dice de qué carpetas vienen; deja marcada solo "1 - Para subir".
+4. **Navegar normal:** en una pestaña nueva, recorre la tienda y el panel. Las páginas cambian sin recargarse enteras, como siempre.
 
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.28 && npm install && bash scripts/deploy.sh --sin-pull`. Sin cambio de base.
+**Vuelta atrás:**
+- `git reset --hard v1.0.0-rc.29 && npm install && bash scripts/deploy.sh --sin-pull`.
+- La columna nueva no molesta al código anterior, y lo creado con la carga nueva son borradores normales.
 
 ### Por confirmar de rc.28 (necesita una cuenta, unos 15 minutos)
 1. **Mi panel (C-201), en el teléfono, con una cuenta de cliente que tenga alguna compra:**
@@ -307,14 +346,14 @@ En el orden en que más destraban:
 
 **La ferretería aliada (pedido del 10/11)**
 0. **Despacho (acordado el 10/11):** la ferretería despacha y envía los pedidos de la web.
-0a. **Después de C-199 y C-200:** Productos → Más → Lista del proveedor → crear el proveedor con el nombre de la ferretería → marcar "Su lista trae el IVA incluido" (sin descuento) → subir el archivo de los 60 (está en la carpeta de proveedores, fuera del repositorio) junto con su listado de existencia → marcar los nuevos → crear en borrador. Las categorías del archivo se crean dentro del departamento Ferretería (C-200).
-   - **Usa el archivo corregido el 10/11:** los nombres llevan todo lo de su lista (sección 1).
-   - Antes de publicar, resuelve con la ferretería las 28 preguntas de la columna "Revisar antes de publicar" y los modelos de la columna "Modelo que encontramos (confirmar)". El mensaje para mandarle está en `Preguntas para la ferreteria.txt`, en la misma carpeta.
-   - Al subirlo, revisa la columna "Nombre en la tienda" (C-202) antes de crear: lo que sale en ámbar hay que mirarlo.
-0b. **Las fotos de los 60: hay 51 listas (sección 1).**
-   - Después de crear los productos en borrador: Productos → Más → Lista del proveedor → "Fotos por código", con los 63 archivos de "1 - Para subir". Acepta WebP y entiende "-2" y "-3".
-   - Para los 29 sin foto, las 31 preguntas que quedan para la ferretería. Lo que no tenga marca ni modelo se queda en borrador.
-0c. **Preguntar a ZOOM y MRW** si llevan pintura con solvente (esmaltes y fondos): son inflamables.
+0a. **Los 70 en borrador, después de subir rc.30** (no se ven en la tienda: se publican después de C-199):
+   1. En el panel: Productos → Más → Lista del proveedor. Elige el proveedor de la ferretería, marca "Su lista trae el IVA incluido" y deja el descuento en 0.
+   2. En la misma pantalla, suelta juntos `Electro Shop - los 70 para cargar.xlsx`, su listado de existencia más nuevo y la carpeta "1 - Para subir" de `Fotos del fabricante`.
+   3. Revisa la columna "Nombre en la tienda": lo que sale en ámbar se mira antes de crear.
+   4. En "Nuevos con existencia", marca los 85 códigos y toca "Crear en borrador" con "Con sus fotos" marcado. Tarda unos minutos por las fotos.
+   5. En el paso 5, toca "Completar con la web": tarda unos 15 minutos y se puede detener. Después, en "Por revisar", abre cada uno, corrige la descripción si hace falta y toca "Está bien".
+   6. **No toques "Publicar los listos" hasta que esté C-199** (el envío desde La Victoria).
+0b. **A la ferretería, cuando se pueda:** fotos de la caja o la etiqueta de lo que sigue sin respuesta (sección 1), y confirmar los modelos que llegaron con un posible error de tipeo ("ELRH21228", "EMP50603", "DAPAS230G", "DACS5820", "PARTE-200V"). El agente de fotos dirá cuáles son.
 
 **En producción**
 1. **Las pruebas de la sección 2:**
@@ -362,6 +401,12 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
+**Hecho el 12/11:**
+- C-204 (la carga masiva completa, rc.30);
+- los 70 de la ferretería sin pinturas, con lo que respondió la ferretería;
+- las fotos que faltan, con un agente aparte;
+- rc.29 comprobada en producción, y su bloque en `HISTORIAL.md`.
+
 **Hecho el 10/11, mientras se espera:**
 - C-201 (Mi panel, rc.26);
 - C-202 (los nombres y las direcciones, rc.27);

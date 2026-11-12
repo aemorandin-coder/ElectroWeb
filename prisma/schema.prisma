@@ -621,6 +621,9 @@ model Supplier {
   /// C-196b: los precios de su lista ya traen el IVA (la ferretería aliada, 10/11): el costo es su precio ÷ (1 + IVA), porque el IVA
   /// que se le paga no es costo. La carga en lote lo recuerda como el descuento.
   pricesIncludeTax Boolean  @default(false)
+  /// C-204: las palabras de lo que ZOOM y MRW no transportan (pinturas, solventes, aerosoles…), sin acentos y en
+  /// minúsculas. Lo que las trae no se crea desde su lista. Vacía = la lista de siempre (lib/proveedores/no-se-envia.ts).
+  noShipTerms     String[]  @default([])
   notes           String?
   products        Product[]
 

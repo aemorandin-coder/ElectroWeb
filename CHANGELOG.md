@@ -10,6 +10,19 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.30] - 2026-11-12
+### Productos 1.9.0 (C-204)
+- **La carga masiva, completa** (Productos → Más → Lista del proveedor), con lo que eligió Andrés en las cinco preguntas:
+  - **El Excel y las fotos juntos.** Se sueltan encima de la pantalla o se elige la carpeta. La vista previa muestra la foto de cada fila y cada producto se crea con las suyas, con el fondo blanco y la cinta. Si vienen de varias carpetas, se puede dejar fuera una, y una foto repetida en dos carpetas no se sube.
+  - **Lo que ZOOM y MRW no llevan** (pinturas, solventes, aerosoles, pegas con solvente y gas) se marca y no se crea. La lista de palabras se edita y se guarda con el proveedor; el servidor la respeta aunque la pantalla mande otra cosa.
+  - **"Sugeridos":** primero lo afín a la tienda (electricidad, iluminación, protectores de voltaje, herramientas eléctricas, bombas y cerrajería), con existencia y que aguanta solo su envío.
+  - **La columna "Modelo"** entra como la especificación del mismo nombre ("De un vistazo" en la ficha).
+  - **El paso 5, "Terminar los borradores y publicar":**
+    - cada borrador dice qué le falta: foto, descripción, peso y medidas, el nombre escrito normal, marca o modelo;
+    - "Completar con la web" los busca uno por uno y llena solo lo vacío; lo que trajo queda por revisar;
+    - "Publicar los listos" publica solo los completos.
+- **Base:** 1 columna nueva (aditivo): `suppliers.noShipTerms`.
+
 ## [1.0.0-rc.29] - 2026-11-11
 ### Tienda 1.7.1, Marco del panel 1.3.8 y Configuración 1.1.5 (C-203)
 - **Una pestaña abierta antes de un deploy ya no se rompe.** Al navegar mezclaba el código viejo con el nuevo ("getCategoryIconOption is not a function" en Categorías del panel, el 11/11) y pedía archivos que ya no existían (404 y "MIME type 'text/plain'" en la consola). Ahora:

@@ -452,7 +452,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - El checkout a 360 y 1440.
     - La prueba de humo.
 - **C-200 · El departamento Ferretería** (decidido el 10/11): una categoría madre "Ferretería" con las suyas adentro; el inicio sigue siendo de tecnología, con una sola vitrina de ferretería y un acceso en la franja. Hoy la tienda no usa las subcategorías (`parentId` existe pero nada lo lee). Va antes de publicar los productos de la ferretería.
-- **La carga de los 60 productos de la ferretería:** el archivo (80 códigos, con categoría, marca, peso y medidas estimados) está en la carpeta de proveedores de Andrés, fuera del repositorio. Se sube con Productos → Más → Lista del proveedor, con "Su lista trae el IVA incluido" marcada y sin descuento, junto con su listado de existencia. **Fotos (decidido el 10/11): solo las del fabricante**, buscadas en los sitios oficiales de cada marca y nombradas por código para "Fotos por código". **Esperan el modelo exacto de cada producto:** su lista no lo trae, y la búsqueda del 10/11 encontró al menos cuatro desmalezadoras Daewoo de 52 cc distintas. El archivo de los 60 trae la columna para llenarlo. Falta confirmar con ZOOM y MRW si llevan pintura con solvente. **Los 80 nombres se corrigieron el 10/11:** llevan todo lo de su lista y nada más (antes faltaban modelos y había tres datos cambiados), y la columna "Revisar antes de publicar" trae 22 preguntas para la ferretería.
+- **La carga de los 60 productos de la ferretería** (12/11: pasó a los 70, sin pinturas; ver el pedido del 12/11): el archivo (80 códigos, con categoría, marca, peso y medidas estimados) está en la carpeta de proveedores de Andrés, fuera del repositorio. Se sube con Productos → Más → Lista del proveedor, con "Su lista trae el IVA incluido" marcada y sin descuento, junto con su listado de existencia. **Fotos (decidido el 10/11): solo las del fabricante**, buscadas en los sitios oficiales de cada marca y nombradas por código para "Fotos por código". **Esperan el modelo exacto de cada producto:** su lista no lo trae, y la búsqueda del 10/11 encontró al menos cuatro desmalezadoras Daewoo de 52 cc distintas. El archivo de los 60 trae la columna para llenarlo. Falta confirmar con ZOOM y MRW si llevan pintura con solvente. **Los 80 nombres se corrigieron el 10/11:** llevan todo lo de su lista y nada más (antes faltaban modelos y había tres datos cambiados), y la columna "Revisar antes de publicar" trae 22 preguntas para la ferretería.
 - **De paso (C-196):** la búsqueda de la tienda (`buscarEnCatalogo`) lee todos los productos publicados para comparar en memoria. Con unos miles anda bien; si lo publicado pasa de 10.000, llevarla a la base como la del panel.
 
 **Pedido del 10/11 (Andrés), mientras se espera lo de la ferretería:**
@@ -474,9 +474,25 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - Las plantillas esperan que Andrés elija sus maquetas.
 
 **Pedido del 11/11 (dos errores de la consola, desde la cuenta de Andrés):**
-- **C-203** (**hecha**, rc.29): una pestaña abierta antes de un deploy se recarga entera al navegar, en vez de mezclar las dos versiones (el `TypeError` de Categorías del panel y los 404 de `/categorias`); el deploy sigue sirviendo 7 días los archivos de las versiones anteriores. De paso, las miniaturas de YouTube de `/servicios`. `estado/C-203.md`. Queda:
-  - Comprobar en producción, después del deploy, que un pedido del router sin versión responde 204 (`SIGUIENTE.md`).
+- **C-203** (**hecha y en producción**, rc.29): una pestaña abierta antes de un deploy se recarga entera al navegar, en vez de mezclar las dos versiones (el `TypeError` de Categorías del panel y los 404 de `/categorias`); el deploy sigue sirviendo 7 días los archivos de las versiones anteriores. De paso, las miniaturas de YouTube de `/servicios`. `estado/C-203.md`. Queda:
+  - ~~Comprobar en producción que un pedido del router sin versión responde 204~~: comprobado el 12/11 (`HISTORIAL.md`). La prueba con una pestaña abierta durante un deploy va en el bloque de rc.30.
   - Si se actualiza Next: la prueba de humo comprueba que navegar por dentro no recarga la página. Si falla, el guion de `lib/version-build.ts` ya no llega a los pedidos del router.
+
+**Pedido del 12/11 (Andrés): la carga masiva, completa, y los 70 de la ferretería sin pinturas.** La ferretería respondió las preguntas de los modelos (el .docx de Andrés, fuera del repositorio). Las pinturas quedan fuera porque ZOOM y MRW no las llevan (§7.2).
+- **C-204** (**hecha**, rc.30): la carga masiva con las cinco respuestas de Andrés. `estado/C-204.md`.
+  - El Excel y las fotos juntos.
+  - Lo que no se envía, marcado y sin crear.
+  - "Sugeridos".
+  - La columna "Modelo".
+  - El paso 5: la lista de control, "Completar con la web" en lote y "Publicar los listos".
+  - Quedan:
+    - **Publicar los de la ferretería espera C-199.** El aviso al publicar lo recuerda, pero no lo impide.
+    - Probar a mano la primera vez elegir o soltar la carpeta "Fotos del fabricante": Firefox no deja hacerlo desde una prueba.
+- **Los 70 de la ferretería** (archivo fuera del repositorio, en la carpeta de proveedores de Andrés):
+  - Salen los 15 códigos de pinturas.
+  - Entran 14 productos (20 códigos) con la regla de "Sugeridos": hidrolavadoras, bomba centrífuga, aspiradoras, herramientas Emtop con su batería y su cargador, esmeril de 2350 W, press control, breakers, cable #14 y disco para desmalezadora.
+  - Los modelos que confirmó la ferretería mandan sobre los que se habían elegido el 10/11 por las fotos: el esmeril de 850 W, el panel de empotrar, la pistola DAPG500HM, la soldadora FW131M, el rotomartillo, el kit de alicates, la lijadora y la motosierra.
+  - Las fotos de esos y de los nuevos las rehace un agente aparte, con las mismas reglas del 10/11.
 
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
@@ -617,6 +633,13 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
     - En las pinturas, solo la lata: el color lo resuelve el selector de colores de C-198.
   - Las variantes, como familias de productos (C-198).
 - **El departamento Ferretería (Andrés, 10/11, C-200):** enlace en la franja al lado de Ofertas (en el teléfono, primer chip del inicio y entrada en "Más"); su vitrina, un estante con sus categorías después de "Recién llegados"; su página, el catálogo de siempre con el aviso del envío y sus categorías arriba.
+- **Las pinturas, fuera por ahora (Andrés, 12/11):** ZOOM y MRW no las transportan. Lo mismo vale para los solventes, los aerosoles, las pegas con solvente y el gas: la carga no los crea (C-204).
+- **La carga masiva (Andrés, 12/11, C-204):**
+  - el Excel y las fotos van juntos;
+  - el modelo entra con el Excel, y la descripción la propone la web con IA, **pero el equipo la revisa antes de publicar**;
+  - lo que no se envía no se crea;
+  - "Publicar los listos" publica solo los completos;
+  - "Sugeridos" es lo afín a la tienda (electricidad, iluminación, protectores de voltaje, herramientas eléctricas, bombas y cerrajería), con existencia y que aguanta solo su envío (de unos $25 o más). Lo más barato va como complemento.
 - **Nombres de producto (Andrés, 10/11, C-202):** escritos normal, como una oración, en toda la tienda. Siglas, unidades y marcas como se escriben ("120 V", "LED", "Daewoo"). Primero lo que es, después lo que lo distingue, la marca y el modelo; el color o la talla al final. Nada inventado: lo que no se entiende se le pregunta al proveedor.
   - La ficha, en una sola tarjeta (C-197).
 - **Taller:** espera a SADES (30/09).

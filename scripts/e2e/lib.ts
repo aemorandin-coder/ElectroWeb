@@ -132,6 +132,8 @@ export interface Navegador {
   sinScrollHorizontal(): Promise<boolean>;
   /** Corre una función ("() => { … }") en cada página antes que sus scripts (C-190: fingir otro día) */
   antesDeCargar(fn: string): Promise<void>;
+  /** C-204: elige archivos de este equipo en un <input type="file"> (rutas absolutas) */
+  archivos(selector: string, rutas: string[]): Promise<void>;
   cerrar(): Promise<void>;
 }
 
@@ -227,6 +229,12 @@ export async function abrirNavegador(carpeta: string, puerto = Number(process.en
     sinScrollHorizontal: () => js<boolean>(`() => document.documentElement.scrollWidth <= window.innerWidth + 1`),
     async antesDeCargar(fn) {
       await cmd('script.addPreloadScript', { functionDeclaration: fn, contexts: [context] });
+    },
+    async archivos(selector, rutas) {
+      const r = await cmd('script.evaluate', { expression: `document.querySelector(${JSON.stringify(selector)})`, target: { context }, awaitPromise: false, resultOwnership: 'root' });
+      const sharedId = (r.result as { sharedId?: string } | undefined)?.sharedId;
+      if (!sharedId) throw new Error(`No está ${selector}`);
+      await cmd('input.setFiles', { context, element: { sharedId }, files: rutas });
     },
     async cerrar() {
       await cmd('browsingContext.close', { context }).catch(() => undefined);

@@ -1,11 +1,16 @@
 // Product.specs (JSON en texto) mezcla las especificaciones que ve el cliente con datos internos del panel.
 
+/** C-204: lo que dejó la búsqueda en la web de la carga masiva en un borrador (lib/proveedores/lista-de-control.ts) */
+export const FICHA_WEB_KEY = '__fichaWeb';
+
 /**
  * Claves internas de specs. Nunca salen en el DTO público y el formulario no las edita como especificación:
  * - digitalPricing: montos de productos digitales anteriores a C-60 (respaldo de lib/order-quote.ts).
  * - __adminPricing: el último margen usado en el wizard digital (C-95).
+ * - __fichaWeb (C-204): qué trajo la web y si alguien ya lo revisó. Guardar el producto desde el asistente cuenta como
+ *   revisado: specsForUpdate no la conserva.
  */
-export const INTERNAL_SPEC_KEYS = ['digitalPricing', '__adminPricing'] as const;
+export const INTERNAL_SPEC_KEYS = ['digitalPricing', '__adminPricing', FICHA_WEB_KEY] as const;
 
 /** specs en texto u objeto → objeto plano nuevo ({} si no es válido). */
 export function parseSpecsObject(raw: unknown): Record<string, unknown> {

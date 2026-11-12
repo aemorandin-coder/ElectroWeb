@@ -14,12 +14,14 @@ export interface FilaProveedor {
   /** Opcionales, para dejar el producto listo para el envío y el catálogo (los trae el archivo de los 60, no el del proveedor) */
   categoria: string | null;
   marca: string | null;
+  /** C-204: el modelo del fabricante (la ficha lo muestra en "De un vistazo" y la búsqueda en la web lo usa) */
+  modelo: string | null;
   pesoKg: number | null;
   /** Largo, ancho y alto de la caja en cm */
   medidas: [number, number, number] | null;
 }
 
-export type CampoLista = 'codigo' | 'nombre' | 'precio' | 'existencia' | 'departamento' | 'unidad' | 'categoria' | 'marca' | 'peso' | 'largo' | 'ancho' | 'alto';
+export type CampoLista = 'codigo' | 'nombre' | 'precio' | 'existencia' | 'departamento' | 'unidad' | 'categoria' | 'marca' | 'modelo' | 'peso' | 'largo' | 'ancho' | 'alto';
 /** Columna de cada campo en el archivo (índice desde 0); undefined = el archivo no lo trae */
 export type Columnas = Partial<Record<CampoLista, number>>;
 
@@ -32,6 +34,7 @@ export const ETIQUETA_CAMPO: Record<CampoLista, string> = {
   unidad: 'Unidad',
   categoria: 'Categoría en la tienda',
   marca: 'Marca',
+  modelo: 'Modelo',
   peso: 'Peso (kg)',
   largo: 'Largo (cm)',
   ancho: 'Ancho (cm)',
@@ -45,6 +48,7 @@ export const LOTE_CREAR = 100;
 export const LOTE_ACTUALIZAR = 500;
 export const CODIGO_MAX = 64;
 export const NOMBRE_MAX = 200;
+export const MODELO_MAX = 60;
 export const DESCUENTO_MAX = 90;
 export const MARGEN_MAX = 300;
 export const RESERVA_MAX = 20;
@@ -75,6 +79,8 @@ export function detectarColumnas(encabezados: string[]): Columnas {
   col.unidad = primero((x) => /^(und|unidad|u m|um)( |$)/.test(x), usadas());
   col.categoria = primero((x) => /^categoria/.test(x), usadas());
   col.marca = primero((x) => /^marca( |$)/.test(x), usadas());
+  // C-204: "Modelo" o "Modelo exacto (…)"; la primera columna que empiece así (el archivo de los 60 trae dos)
+  col.modelo = primero((x) => /^(modelo|model)( |$)/.test(x), usadas());
   col.peso = primero((x) => /^peso/.test(x), usadas());
   col.largo = primero((x) => /^largo/.test(x), usadas());
   col.ancho = primero((x) => /^ancho/.test(x), usadas());
@@ -164,6 +170,7 @@ export function leerFilas(hoja: unknown[][], columnas: Columnas): FilaProveedor[
       unidad: typeof und === 'string' && und.trim() ? und.trim().slice(0, 20) : null,
       categoria: texto('categoria', 80),
       marca: texto('marca', 60),
+      modelo: texto('modelo', MODELO_MAX),
       pesoKg: peso !== null && peso > 0 && peso <= PESO_MAX ? peso : null,
       medidas: lados.every((x): x is number => x !== null && x > 0 && x <= MEDIDA_MAX) ? [lados[0], lados[1], lados[2]] as [number, number, number] : null,
     });
@@ -189,6 +196,7 @@ export function unirListas(...listas: FilaProveedor[][]): FilaProveedor[] {
       previa.unidad ??= f.unidad;
       previa.categoria ??= f.categoria;
       previa.marca ??= f.marca;
+      previa.modelo ??= f.modelo;
       previa.pesoKg ??= f.pesoKg;
       previa.medidas ??= f.medidas;
     }

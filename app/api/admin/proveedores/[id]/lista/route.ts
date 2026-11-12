@@ -10,12 +10,14 @@ import { LISTA_MAX_FILAS, LOTE_ACTUALIZAR, LOTE_CREAR, LOTE_REVISAR, limpiarCodi
 import {
   actualizarDesdeLista, agotadosFueraDeLista, crearDesdeLista, leerFilasEntrada, leerOpciones, productosPorCodigo,
 } from '@/lib/proveedores/servidor';
+import { esLaDeSiempre, leerTerminos, terminosEfectivos } from '@/lib/proveedores/no-se-envia';
 
 type Ctx = { params: Promise<{ id: string }> };
 
 // C-196: la lista del proveedor (su Excel), leída en el navegador y aplicada aquí por partes:
 // - revisar: qué códigos ya están en la tienda.
-// - crear: los nuevos, en borrador, con costo, precio sugerido y existencia.
+// - crear: los nuevos, en borrador, con costo, precio sugerido y existencia. C-204: menos lo que no se envía (la lista
+//   que manda la pantalla, `noSeEnvia`, se guarda con el proveedor como el descuento).
 // - actualizar: costo, existencia y (si se pide) precio de los que ya están.
 // - agotados: los suyos que ya no salen en su lista; con `aplicar`, quedan en 0.
 // El costo, el precio y la existencia se calculan aquí con lo que diga la base; la pantalla solo manda la lista.
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
   if (!isAuthorized(session, 'MANAGE_PRODUCTS')) return NextResponse.json({ error: 'No autorizado' }, { status: session ? 403 : 401 });
   const { id } = await params;
-  const proveedor = await prisma.supplier.findUnique({ where: { id }, select: { id: true, name: true, discountPercent: true, pricesIncludeTax: true } });
+  const proveedor = await prisma.supplier.findUnique({ where: { id }, select: { id: true, name: true, discountPercent: true, pricesIncludeTax: true, noShipTerms: true } });
   if (!proveedor) return NextResponse.json({ error: 'Proveedor no encontrado' }, { status: 404 });
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return NextResponse.json({ error: 'Pedido inválido' }, { status: 400 });
@@ -64,7 +66,15 @@ export async function POST(request: NextRequest, { params }: Ctx) {
       if (categoria && !(await prisma.category.findUnique({ where: { id: categoria }, select: { id: true } }))) {
         return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 400 });
       }
-      const r = await crearDesdeLista(proveedor, leidas.filas, opciones, categoria);
+      let terminos = proveedor.noShipTerms;
+      if (body.noSeEnvia !== undefined) {
+        const leidos = leerTerminos(body.noSeEnvia);
+        if (leidos === null) return NextResponse.json({ error: 'La lista de lo que no se envía: hasta 120 palabras o frases' }, { status: 400 });
+        const guardar = esLaDeSiempre(leidos) ? [] : leidos;
+        if (guardar.join('\n') !== proveedor.noShipTerms.join('\n')) await prisma.supplier.update({ where: { id: proveedor.id }, data: { noShipTerms: guardar } });
+        terminos = guardar;
+      }
+      const r = await crearDesdeLista(proveedor, leidas.filas, opciones, categoria, terminosEfectivos(terminos));
       if (r.creados.length > 0) {
         await registrarAccionAdmin(session, 'PRODUCT_CREATED', { type: 'PRODUCT', id: r.creados.length === 1 ? r.creados[0].id : undefined }, {
           origen: 'Lista del proveedor', proveedor: proveedor.name, productos: r.creados.length, codigos: r.creados.slice(0, 30).map((c) => c.codigo),

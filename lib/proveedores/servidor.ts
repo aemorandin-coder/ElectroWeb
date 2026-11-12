@@ -10,9 +10,10 @@ import { montoDecimal } from '@/lib/pricing';
 import { precioSugerido } from '@/lib/precio-sugerido';
 import { parseProductImages } from '@/lib/product-utils';
 import {
-  CODIGO_MAX, DESCUENTO_MAX, MARGEN_MAX, MEDIDA_MAX, NOMBRE_MAX, PESO_MAX, RESERVA_MAX,
+  CODIGO_MAX, DESCUENTO_MAX, MARGEN_MAX, MEDIDA_MAX, MODELO_MAX, NOMBRE_MAX, PESO_MAX, RESERVA_MAX,
   costoDesdeLista, existenciaPublicable, limpiarCodigo, limpiarNombre, prefijoSku, skuDesdeCodigo,
 } from './lista';
+import { terminoQueNoSeEnvia } from './no-se-envia';
 
 export const NOMBRE_PROVEEDOR_MAX = 80;
 
@@ -66,6 +67,8 @@ export interface FilaEntrada {
   existencia: number | null;
   categoria: string | null;
   marca: string | null;
+  /** C-204: el modelo del fabricante; se guarda como la especificación "Modelo" */
+  modelo: string | null;
   pesoKg: number | null;
   medidas: [number, number, number] | null;
 }
@@ -91,6 +94,7 @@ export function leerFilasEntrada(valor: unknown, maximo: number): { filas: FilaE
       existencia: numeroONull(f.existencia, 0, 1_000_000),
       categoria: typeof f.categoria === 'string' && f.categoria.trim() ? f.categoria.trim().slice(0, 80) : null,
       marca: typeof f.marca === 'string' && f.marca.trim() ? f.marca.trim().slice(0, 60) : null,
+      modelo: typeof f.modelo === 'string' && f.modelo.trim() ? limpiarNombre(f.modelo).slice(0, MODELO_MAX) : null,
       pesoKg: numeroONull(f.pesoKg, 0.001, PESO_MAX),
       medidas,
     });
@@ -146,13 +150,15 @@ export interface ResultadoCrear {
 /**
  * Crea en borrador los códigos que todavía no están: costo = lista − descuento; precio = costo + margen + IVA (la regla de
  * Andrés, lib/precio-sugerido.ts); existencia = la suya menos la reserva. Sin foto, descripción, peso y medidas el
- * asistente no deja publicarlos: quedan para completarlos uno por uno.
+ * asistente no deja publicarlos: quedan para la lista de control (C-204).
+ * C-204: lo que ZOOM y MRW no llevan (`noSeEnvia`, lib/proveedores/no-se-envia.ts) no se crea, aunque la pantalla lo mande.
  */
 export async function crearDesdeLista(
   proveedor: { id: string; name: string },
   filas: FilaEntrada[],
   opciones: OpcionesLista,
   categoriaPorDefecto: string | null,
+  noSeEnvia: readonly string[],
 ): Promise<ResultadoCrear> {
   const resultado: ResultadoCrear = { creados: [], errores: [] };
   const categorias = await prisma.category.findMany({ select: { id: true, name: true } });
@@ -164,6 +170,8 @@ export async function crearDesdeLista(
   for (const f of filas) {
     if (existentes.has(f.codigo)) { resultado.errores.push({ codigo: f.codigo, error: 'Ya está en la tienda' }); continue; }
     if (!f.nombre) { resultado.errores.push({ codigo: f.codigo, error: 'Sin nombre' }); continue; }
+    const termino = terminoQueNoSeEnvia([f.nombre, f.nombreProveedor], noSeEnvia);
+    if (termino) { resultado.errores.push({ codigo: f.codigo, error: `No se envía por ZOOM ni MRW ("${termino}")` }); continue; }
     const costo = costoDesdeLista(f.precioLista, opciones.descuento, ivaDeLaLista(opciones));
     const precio = costo === null ? null : precioSugerido(costo, opciones.ivaPercent, opciones.margen);
     if (costo === null || precio === null) { resultado.errores.push({ codigo: f.codigo, error: 'Sin precio en la lista' }); continue; }
@@ -183,6 +191,7 @@ export async function crearDesdeLista(
           categoryId, brandId,
           weightKg: f.pesoKg ?? 0,
           dimensions: f.medidas ? JSON.stringify({ length: f.medidas[0], width: f.medidas[1], height: f.medidas[2] }) : null,
+          specs: f.modelo ? JSON.stringify({ Modelo: f.modelo }) : null,
           supplierId: proveedor.id, supplierSku: f.codigo, supplierSyncedAt: ahora, supplierName: f.nombreProveedor,
         };
         return tx.product.create({ data, select: { id: true, sku: true } });

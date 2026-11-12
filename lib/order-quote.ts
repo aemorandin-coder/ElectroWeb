@@ -93,6 +93,11 @@ export function orderBlockers(calculation: OrderCalculation, settings: CompanySe
     settings?.maxOrderAmountUSD ? Number(settings.maxOrderAmountUSD) : null
   );
   if (calculation.physical) {
+    // C-199: lo que despacha un proveedor desde otra ciudad (la ferretería, desde La Victoria) solo viaja por ZOOM o MRW
+    const deFuera = calculation.paquetes.find(p => p.origen !== null);
+    if (deFuera && (deliveryMethod === 'PICKUP' || deliveryMethod === 'LOCAL_DELIVERY')) {
+      out.push(`Lo que sale desde ${deFuera.origenNombre} solo se envía por ZOOM o MRW: elige envío nacional.`);
+    }
     if (deliveryMethod === 'PICKUP' && !settings?.pickupEnabled) out.push('El retiro en tienda no está disponible: elige otra forma de entrega.');
     if (deliveryMethod === 'SHIPPING' && settings?.deliveryEnabled === false) out.push('Por ahora no hacemos envíos nacionales: elige otra forma de entrega.');
     if (deliveryMethod === 'LOCAL_DELIVERY' && !settings?.localDeliveryEnabled) out.push('El delivery en Guanare no está disponible: elige otra forma de entrega.');
@@ -191,6 +196,8 @@ export async function quoteOrder(
         condition: true,
         conditionGrade: true,
         warrantyDays: true,
+        // C-199: de dónde sale (solo la ciudad: el proveedor no viaja a ninguna pantalla del cliente)
+        supplier: { select: { dispatchCityCode: true, dispatchCityName: true } },
       },
     }),
     prisma.discountRequest.findMany({
@@ -305,6 +312,9 @@ export async function quoteOrder(
       // Se fija abajo con el mayor descuento (oferta, cupón o solicitud aprobada)
       discountPercent: 0,
       discountUSD: 0,
+      // C-199: lo de un proveedor que despacha él mismo va en su propio paquete
+      origen: !isDigital ? product.supplier?.dispatchCityCode ?? null : null,
+      origenNombre: !isDigital ? product.supplier?.dispatchCityName ?? null : null,
     };
 
     pricingLines.push(pricingLine);

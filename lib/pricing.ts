@@ -43,7 +43,13 @@ export interface PricingLine {
   discountPercent: number; // 0 si no hay descuento aprobado
   /** C-102: descuento de la línea en USD (oferta o cupón), ya elegido por el servidor. Gana el mayor con discountPercent. */
   discountUSD?: number;
+  /** C-199: la ciudad de ZOOM desde donde la despacha su proveedor (null = sale de la tienda, Guanare) y su nombre */
+  origen?: string | null;
+  origenNombre?: string | null;
 }
+
+/** C-199: de dónde salen los paquetes de la tienda */
+export const ORIGEN_TIENDA_NOMBRE = 'Guanare';
 
 /** Descuento de una línea: el mayor entre el porcentaje aprobado y el monto de oferta o cupón, sin pasar del total. */
 export function lineDiscountUSD(line: Pick<PricingLine, 'unitPriceUSD' | 'quantity' | 'discountPercent' | 'discountUSD'>): number {
@@ -115,16 +121,33 @@ export interface OrderGroupTotals {
   totalUSD: number;
 }
 
+/**
+ * C-199: un paquete de la compra. Lo de la tienda sale de Guanare; lo de un proveedor que despacha él mismo (la
+ * ferretería, desde La Victoria) va en su propio paquete, con su embalaje, y siempre con cobro a destino.
+ */
+export interface PaqueteEnvio {
+  /** Ciudad de ZOOM desde donde sale; null = la tienda */
+  origen: string | null;
+  origenNombre: string;
+  lines: PricingLine[];
+  shipping: ShippingBreakdown;
+  totals: OrderGroupTotals;
+}
+
 export interface OrderCalculation {
   subtotalUSD: number;
   discountUSD: number;
   shippingUSD: number;
   taxUSD: number;
   totalUSD: number;
+  /** El envío de toda la compra (con varios paquetes, la suma; `packaging` queda en cada paquete) */
   shipping: ShippingBreakdown;
   // La compra se divide en una orden de productos físicos (con envío) y otra de digitales.
+  // C-199: con varios paquetes, `physical` es la suma de los paquetes (cada uno es su propia orden).
   physical: OrderGroupTotals | null;
   digital: OrderGroupTotals | null;
+  /** C-199: los paquetes de lo físico, el de la tienda primero. Vacío si no hay físicos */
+  paquetes: PaqueteEnvio[];
 }
 
 type NumberLike = number | string | { toString(): string } | null | undefined;
@@ -244,10 +267,16 @@ function emptyBreakdown(): ShippingBreakdown {
   };
 }
 
+/**
+ * El envío de un paquete. C-199: el envío gratis (por producto o por monto, con lo de ese paquete) vale solo para el de
+ * la tienda; el de un proveedor va siempre con cobro a destino. El embalaje gratis desde un monto cuenta toda la compra
+ * física y vale igual para los dos (Andrés, 10/11).
+ */
 function calculateShipping(
   lines: PricingLine[],
   settings: PricingSettings,
-  deliveryMethod: DeliveryMethod
+  deliveryMethod: DeliveryMethod,
+  opciones: { esDeLaTienda: boolean; subtotalFisicoCompra: number | null } = { esDeLaTienda: true, subtotalFisicoCompra: null }
 ): ShippingBreakdown {
   const breakdown = emptyBreakdown();
   const physical = lines.filter(line => line.productType !== 'DIGITAL');
@@ -272,13 +301,15 @@ function calculateShipping(
   // El umbral cuenta solo lo físico: antes una gift card de $50 le daba envío gratis a un cable de $5 (E1)
   const physicalSubtotal = physical.reduce((sum, line) => sum + line.unitPriceUSD * line.quantity - lineDiscountUSD(line), 0);
   const threshold = settings.freeDeliveryThresholdUSD;
-  if (physical.some(line => line.freeShipping)) breakdown.freeReason = 'PRODUCT';
+  if (!opciones.esDeLaTienda) breakdown.freeReason = null;
+  else if (physical.some(line => line.freeShipping)) breakdown.freeReason = 'PRODUCT';
   else if (threshold && roundMoney(physicalSubtotal) >= threshold) breakdown.freeReason = 'THRESHOLD';
   breakdown.isFreeShipping = breakdown.freeReason !== null;
   // C-153: cuánto falta para cada umbral, para avisarlo en el carrito y en el pago
   const falta = (umbral: number | null) =>
     umbral && umbral > 0 && roundMoney(physicalSubtotal) < umbral ? roundMoney(umbral - physicalSubtotal) : null;
-  if (!breakdown.isFreeShipping) breakdown.missingFreeShippingUSD = falta(threshold);
+  if (!breakdown.isFreeShipping && opciones.esDeLaTienda) breakdown.missingFreeShippingUSD = falta(threshold);
+  const subtotalEmbalaje = opciones.subtotalFisicoCompra ?? physicalSubtotal;
 
   if (deliveryMethod === 'LOCAL_DELIVERY') {
     breakdown.localDeliveryFee = breakdown.isFreeShipping ? 0 : roundMoney(settings.localDeliveryFeeUSD);
@@ -302,9 +333,11 @@ function calculateShipping(
   }
   const fee = roundMoney(plan ? plan.totalUSD : settings.packagingFeeUSD);
   const packagingThreshold = settings.freePackagingThresholdUSD;
-  breakdown.packagingFreeByThreshold = !breakdown.isFreeShipping && fee > 0 && Boolean(packagingThreshold) && roundMoney(physicalSubtotal) >= (packagingThreshold ?? 0);
+  breakdown.packagingFreeByThreshold = !breakdown.isFreeShipping && fee > 0 && Boolean(packagingThreshold) && roundMoney(subtotalEmbalaje) >= (packagingThreshold ?? 0);
   breakdown.packagingFee = breakdown.isFreeShipping || breakdown.packagingFreeByThreshold ? 0 : fee;
-  if (breakdown.packagingFee > 0) breakdown.missingFreePackagingUSD = falta(packagingThreshold);
+  if (breakdown.packagingFee > 0 && packagingThreshold && packagingThreshold > 0 && roundMoney(subtotalEmbalaje) < packagingThreshold) {
+    breakdown.missingFreePackagingUSD = roundMoney(packagingThreshold - subtotalEmbalaje);
+  }
   breakdown.total = breakdown.packagingFee;
   return breakdown;
 }
@@ -336,18 +369,67 @@ function calculateGroup(lines: PricingLine[], shippingUSD: number, settings: Pri
   };
 }
 
+/** C-199: los totales de varios paquetes, sumados tal cual (cada uno ya redondeado): lo cobrado cuadra con las órdenes */
+function sumarGrupos(grupos: OrderGroupTotals[], lines: PricingLine[]): OrderGroupTotals {
+  const suma = (campo: 'subtotalUSD' | 'discountUSD' | 'shippingUSD' | 'taxUSD' | 'totalUSD') => roundMoney(grupos.reduce((s, g) => s + g[campo], 0));
+  return { lines, subtotalUSD: suma('subtotalUSD'), discountUSD: suma('discountUSD'), shippingUSD: suma('shippingUSD'), taxUSD: suma('taxUSD'), totalUSD: suma('totalUSD') };
+}
+
+/** C-199: el envío de toda la compra a partir de sus paquetes. Con uno solo, es el suyo (como antes) */
+function juntarEnvios(paquetes: PaqueteEnvio[], digitalLines: PricingLine[]): ShippingBreakdown {
+  const digitalItems = digitalLines.map(line => ({ name: line.name, quantity: line.quantity }));
+  if (paquetes.length === 0) return { ...emptyBreakdown(), digitalItems };
+  if (paquetes.length === 1) return { ...paquetes[0].shipping, digitalItems };
+  const envios = paquetes.map(p => p.shipping);
+  const suma = (f: (e: ShippingBreakdown) => number) => roundMoney(envios.reduce((s, e) => s + f(e), 0));
+  const tienda = paquetes.find(p => p.origen === null)?.shipping ?? null;
+  const todosGratis = envios.every(e => e.isFreeShipping);
+  return {
+    total: suma(e => e.total),
+    packagingFee: suma(e => e.packagingFee),
+    localDeliveryFee: suma(e => e.localDeliveryFee),
+    isFreeShipping: todosGratis,
+    freeReason: todosGratis ? tienda?.freeReason ?? null : null,
+    packagingFreeByThreshold: envios.some(e => e.packagingFreeByThreshold),
+    packaging: null,
+    missingFreePackagingUSD: envios.find(e => e.missingFreePackagingUSD !== null)?.missingFreePackagingUSD ?? null,
+    missingFreeShippingUSD: tienda?.missingFreeShippingUSD ?? null,
+    paidBy: envios.some(e => e.paidBy === 'CUSTOMER') ? 'CUSTOMER' : envios.some(e => e.paidBy === 'STORE') ? 'STORE' : null,
+    totalWeight: suma(e => e.totalWeight),
+    pieces: envios.reduce((n, e) => n + e.pieces, 0),
+    digitalItems,
+  };
+}
+
 export function calculateOrder(
   lines: PricingLine[],
   settings: PricingSettings,
   deliveryMethod: DeliveryMethod
 ): OrderCalculation {
-  const shipping = calculateShipping(lines, settings, deliveryMethod);
-
   const physicalLines = lines.filter(line => line.productType !== 'DIGITAL');
   const digitalLines = lines.filter(line => line.productType === 'DIGITAL');
 
-  // El envío se carga completo a la orden física; la digital nunca paga envío.
-  const physical = calculateGroup(physicalLines, physicalLines.length > 0 ? shipping.total : 0, settings, 'PHYSICAL');
+  // C-199: un paquete por origen (el de la tienda primero), cada uno con su embalaje y su envío
+  const porOrigen = new Map<string, PricingLine[]>();
+  for (const line of physicalLines) porOrigen.set(line.origen ?? '', [...(porOrigen.get(line.origen ?? '') ?? []), line]);
+  const subtotalFisicoCompra = physicalLines.reduce((sum, line) => sum + line.unitPriceUSD * line.quantity - lineDiscountUSD(line), 0);
+  const paquetes: PaqueteEnvio[] = [...porOrigen.keys()]
+    .sort((a, b) => (a === '' ? -1 : b === '' ? 1 : a.localeCompare(b)))
+    .map((origen) => {
+      const delPaquete = porOrigen.get(origen) as PricingLine[];
+      const shipping = calculateShipping(delPaquete, settings, deliveryMethod, { esDeLaTienda: origen === '', subtotalFisicoCompra });
+      return {
+        origen: origen || null,
+        origenNombre: origen ? delPaquete[0].origenNombre || 'otra ciudad' : ORIGEN_TIENDA_NOMBRE,
+        lines: delPaquete,
+        shipping,
+        totals: calculateGroup(delPaquete, shipping.total, settings, 'PHYSICAL') as OrderGroupTotals,
+      };
+    });
+  const shipping = juntarEnvios(paquetes, digitalLines);
+
+  // El envío se carga a la orden física (o a cada paquete); la digital nunca paga envío.
+  const physical = paquetes.length === 0 ? null : paquetes.length === 1 ? paquetes[0].totals : sumarGrupos(paquetes.map(p => p.totals), physicalLines);
   const digital = calculateGroup(digitalLines, 0, settings, 'DIGITAL');
   const groups = [physical, digital].filter((g): g is OrderGroupTotals => g !== null);
 
@@ -360,5 +442,6 @@ export function calculateOrder(
     shipping,
     physical,
     digital,
+    paquetes,
   };
 }

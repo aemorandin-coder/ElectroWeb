@@ -194,6 +194,7 @@ export default function EntregaEnvio({
   items,
   direcciones,
   error,
+  paquetes = [],
 }: {
   value: EnvioForm;
   onChange: (next: EnvioForm) => void;
@@ -214,13 +215,19 @@ export default function EntregaEnvio({
   items: unknown[];
   direcciones: Array<{ address: string; city?: string; state?: string }>;
   error?: string;
+  /** C-199: los paquetes de la compra, si llega en más de uno (la tienda sale de Guanare; la ferretería, de La Victoria) */
+  paquetes?: Array<{ origen: string | null; origenNombre: string; gratis: boolean }>;
 }) {
   const [zoom, setZoom] = useState<DestinosZoom | null>(null);
   const [mrw, setMrw] = useState<DestinosMrw | null>(null);
   const [oficinasZoom, setOficinasZoom] = useState<Record<string, Oficina[]>>({});
   const [cargando, setCargando] = useState<string | null>(null);
   const [errorCarga, setErrorCarga] = useState('');
-  const [tarifa, setTarifa] = useState<{ clave: string; totalBs: number; totalUSD: number | null } | null>(null);
+  const [tarifa, setTarifa] = useState<{
+    clave: string; totalBs: number; totalUSD: number | null;
+    /** C-199: la de cada paquete, si llega en varios */
+    paquetes: Array<{ origenNombre: string; gratis: boolean; totalBs: number; totalUSD: number | null }>;
+  } | null>(null);
   const ultimaTarifa = useRef('');
 
   const set = (cambios: Partial<EnvioForm>) => onChange({ ...value, ...cambios });
@@ -258,7 +265,7 @@ export default function EntregaEnvio({
       });
       const data = await res.json().catch(() => null);
       if (ultimaTarifa.current !== clave) return;
-      setTarifa(res.ok && data?.totalBs ? { clave, totalBs: data.totalBs, totalUSD: data.totalUSD ?? null } : null);
+      setTarifa(res.ok && data?.totalBs ? { clave, totalBs: data.totalBs, totalUSD: data.totalUSD ?? null, paquetes: Array.isArray(data.paquetes) ? data.paquetes : [] } : null);
     } catch {
       if (ultimaTarifa.current === clave) setTarifa(null);
     }
@@ -580,7 +587,19 @@ export default function EntregaEnvio({
             El flete se lo pagas a {value.carrier} cuando {value.mode === 'OFFICE' ? 'retires en la oficina' : 'recibas el paquete'}.{' '}
             {envio.packagingFee > 0 ? 'Aquí solo pagas el embalaje.' : 'El embalaje es gratis en este pedido.'}
           </p>
-          {value.carrier === 'ZOOM' && tarifaVigente && (
+          {paquetes.length > 1 && (
+            <p>Tu pedido llega en {paquetes.length} paquetes, cada uno con su guía: {paquetes.map((p) => `uno sale desde ${p.origenNombre}`).join(' y ')}.</p>
+          )}
+          {value.carrier === 'ZOOM' && tarifaVigente && tarifaVigente.paquetes.length > 1 ? (
+            <ul className="tabular-nums">
+              {tarifaVigente.paquetes.map((p) => (
+                <li key={p.origenNombre}>
+                  Desde {p.origenNombre}: {p.gratis ? <strong>envío gratis</strong> : <>ZOOM te cobrará aprox. <strong>{formatVES(p.totalBs)}</strong>{p.totalUSD ? ` (≈ ${formatUSD(p.totalUSD)})` : ''}</>}
+                </li>
+              ))}
+              <li className="text-xs">Es una referencia: la tarifa final la da ZOOM.</li>
+            </ul>
+          ) : value.carrier === 'ZOOM' && tarifaVigente && (
             <p className="tabular-nums">
               ZOOM te cobrará aprox. <strong>{formatVES(tarifaVigente.totalBs)}</strong>
               {tarifaVigente.totalUSD ? ` (≈ ${formatUSD(tarifaVigente.totalUSD)})` : ''}. Es una referencia: la tarifa final la da ZOOM.

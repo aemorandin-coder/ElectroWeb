@@ -57,6 +57,9 @@ interface CartItem {
   shippingCost?: number;
   freeShipping?: boolean; // C-100: el paquete que lo lleve va con envío gratis
   dimensions?: string; // JSON string: {length, width, height} in cm
+  // C-199: sale de otra ciudad (su paquete aparte, solo envío): el código de ZOOM y la ciudad
+  origen?: string;
+  origenNombre?: string;
   digitalUsername?: string;
   // C-60: variante digital elegida (el precio lo vuelve a calcular el servidor)
   digitalVariantId?: string;

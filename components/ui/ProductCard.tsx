@@ -67,6 +67,8 @@ export default function ProductCard({ product, exchangeRateVES, lowStockThreshol
         <Price priceUSD={product.priceUSD} compareAtPriceUSD={product.compareAtPriceUSD} exchangeRateVES={exchangeRateVES} from={hasPriceRange(product)} />
         <OfferNote oferta={product.oferta} />
         {stockLabel && <p className={`text-xs font-medium ${stockLabel.className}`}>{stockLabel.text}</p>}
+        {/* C-199: lo que despacha un proveedor desde otra ciudad (la ferretería, desde La Victoria) */}
+        {product.despacho && <p className="text-xs text-muted">Sale desde {product.despacho.ciudad}</p>}
         <div className="mt-auto pt-1">
           <AddToCartButton product={product} />
         </div>

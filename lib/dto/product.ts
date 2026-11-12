@@ -25,6 +25,8 @@ import {
 export type ProductWithPublicRelations = Product & {
   category: Pick<Category, 'id' | 'name' | 'slug'>;
   brand?: Pick<Brand, 'name' | 'slug'> | null;
+  /** C-199: solo la ciudad desde donde despacha (el proveedor y su costo no salen del servidor) */
+  supplier?: { dispatchCityCode: string | null; dispatchCityName: string | null } | null;
   digitalVariants?: Pick<DigitalVariant, 'id' | 'label' | 'faceValue' | 'unit' | 'priceUSD'>[];
 };
 
@@ -76,6 +78,11 @@ export interface PublicProduct {
   shippingCost: number | null;
   /** C-100: la tienda paga el envío (badge "Envío gratis") */
   freeShipping: boolean;
+  /**
+   * C-199: sale de otra ciudad, solo con envío (la ferretería, desde La Victoria): el código de ZOOM y la ciudad.
+   * null = sale de la tienda. Nunca el proveedor.
+   */
+  despacho: { codigo: string; ciudad: string } | null;
   category: { id: string; name: string; slug: string };
   brand: { name: string; slug: string } | null;
   isFeatured: boolean;
@@ -229,6 +236,9 @@ export function toPublicProduct(product: ProductWithPublicRelations): PublicProd
     isConsolidable: product.isConsolidable,
     shippingCost: toNumberOrNull(product.shippingCost),
     freeShipping: product.productType !== 'DIGITAL' && product.freeShipping,
+    despacho: product.productType !== 'DIGITAL' && product.supplier?.dispatchCityCode
+      ? { codigo: product.supplier.dispatchCityCode, ciudad: product.supplier.dispatchCityName || 'otra ciudad' }
+      : null,
     category: { id: product.category.id, name: product.category.name, slug: product.category.slug },
     brand: product.brand ? { name: product.brand.name, slug: product.brand.slug } : null,
     isFeatured: product.isFeatured,
@@ -248,6 +258,8 @@ export function toPublicProduct(product: ProductWithPublicRelations): PublicProd
 export const publicProductInclude = {
   category: { select: { id: true, name: true, slug: true } },
   brand: { select: { name: true, slug: true } },
+  // C-199: del proveedor, solo la ciudad desde donde despacha (su nombre y sus costos no se consultan)
+  supplier: { select: { dispatchCityCode: true, dispatchCityName: true } },
   // Solo activas y solo campos públicos: el costo y el proveedor no se consultan
   digitalVariants: {
     where: { isActive: true },

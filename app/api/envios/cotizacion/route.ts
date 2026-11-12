@@ -6,7 +6,8 @@ import { OrderInputError, parseOrderItems, quoteOrder } from '@/lib/order-quote'
 import { roundMoney } from '@/lib/pricing';
 import { tarifaZoom } from '@/lib/envios/zoom';
 
-// POST { items, cityCode, officeCode?, mode } → lo que ZOOM le cobrará al cliente al recibir (C-100).
+// POST { items, cityCode, officeCode?, mode } → lo que ZOOM le cobrará al cliente al recibir (C-100). C-199: con el de
+// cada paquete (`paquetes`), si la compra llega en dos.
 // Es una referencia para el checkout: la tienda no la cobra (cobro a destino). Peso y valor salen del servidor.
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -34,20 +35,33 @@ export async function POST(request: NextRequest) {
     if (!calculation.physical) return NextResponse.json({ error: 'No hay productos físicos' }, { status: 400 });
 
     const tasa = Number(settings?.exchangeRateVES ?? 0);
-    const tarifa = await tarifaZoom({
+    // C-199: cada paquete desde su origen (la tienda, Guanare; la ferretería, La Victoria), con su peso y su valor
+    const tarifas = await Promise.all(calculation.paquetes.map((paquete) => tarifaZoom({
       ciudad: cityCode,
       oficina: mode === 'OFFICE' ? officeCode : null,
       modo: mode,
-      pesoKg: calculation.shipping.totalWeight,
-      piezas: calculation.shipping.pieces,
-      valorDeclaradoBs: tasa > 0 ? calculation.physical.subtotalUSD * tasa : 0,
-    });
-    if (!tarifa) return NextResponse.json({ error: 'ZOOM no pudo calcular la tarifa ahora' }, { status: 503 });
+      pesoKg: paquete.shipping.totalWeight,
+      piezas: paquete.shipping.pieces,
+      valorDeclaradoBs: tasa > 0 ? paquete.totals.subtotalUSD * tasa : 0,
+      origen: paquete.origen,
+    })));
+    if (tarifas.some((t) => !t)) return NextResponse.json({ error: 'ZOOM no pudo calcular la tarifa ahora' }, { status: 503 });
 
+    const paquetes = calculation.paquetes.map((paquete, i) => {
+      const totalBs = roundMoney(tarifas[i]!.totalBs);
+      return {
+        origen: paquete.origen, origenNombre: paquete.origenNombre, pesoKg: paquete.shipping.totalWeight,
+        // El paquete con envío gratis lo paga la tienda: la referencia es para el que paga el cliente
+        gratis: paquete.shipping.isFreeShipping,
+        totalBs, totalUSD: tasa > 0 ? roundMoney(totalBs / tasa) : null,
+      };
+    });
+    const totalBs = roundMoney(paquetes.reduce((s, p) => s + p.totalBs, 0));
     return NextResponse.json({
-      totalBs: roundMoney(tarifa.totalBs),
-      totalUSD: tasa > 0 ? roundMoney(tarifa.totalBs / tasa) : null,
+      totalBs,
+      totalUSD: tasa > 0 ? roundMoney(totalBs / tasa) : null,
       pesoKg: calculation.shipping.totalWeight,
+      paquetes,
     });
   } catch (error) {
     if (error instanceof OrderInputError) return NextResponse.json({ error: error.message }, { status: error.status });

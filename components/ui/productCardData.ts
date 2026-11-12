@@ -26,6 +26,8 @@ export interface ProductCardData {
   shippingCost?: number | null;
   /** C-100: la tienda paga el envío */
   freeShipping?: boolean;
+  /** C-199: sale de otra ciudad, solo con envío ("Sale desde La Victoria") */
+  despacho?: { codigo: string; ciudad: string } | null;
   /** C-102: oferta de la tienda vigente (priceUSD ya viene rebajado) */
   oferta?: PublicOffer | null;
   /** C-119: usado, reacondicionado o caja abierta (null si es nuevo) */

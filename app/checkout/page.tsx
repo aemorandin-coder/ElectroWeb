@@ -273,6 +273,8 @@ export default function CheckoutPage() {
       shippingCostUSD: item.shippingCost || 0,
       freeShipping: item.productType !== 'DIGITAL' && item.freeShipping === true,
       discountPercent: activeDiscount ? (activeDiscount.approvedDiscount || activeDiscount.requestedDiscount) : 0,
+      origen: item.productType !== 'DIGITAL' ? item.origen ?? null : null,
+      origenNombre: item.productType !== 'DIGITAL' ? item.origenNombre ?? null : null,
     };
   }), [items, activeDiscounts]);
 
@@ -280,6 +282,17 @@ export default function CheckoutPage() {
     () => calculateOrder(pricingLines, toPricingSettings(companySettings), envio.deliveryMethod),
     [pricingLines, companySettings, envio.deliveryMethod]
   );
+  // C-199: los paquetes (la tienda sale de Guanare; la ferretería, de La Victoria). Lo de otra ciudad es solo envío
+  const paquetesEnvio = useMemo(
+    () => localCalculation.paquetes.map((p) => ({ origen: p.origen, origenNombre: p.origenNombre, gratis: p.shipping.isFreeShipping })),
+    [localCalculation]
+  );
+  const hayDeOtraCiudad = paquetesEnvio.some((p) => p.origen !== null);
+  useCargarAlMontar(() => {
+    if (hayDeOtraCiudad && envio.deliveryMethod !== 'SHIPPING' && companySettings?.deliveryEnabled !== false) {
+      setEnvio((prev) => ({ ...prev, deliveryMethod: 'SHIPPING' }));
+    }
+  }, [hayDeOtraCiudad, envio.deliveryMethod]);
   // C-153: lo que costaría el envío por ZOOM o MRW aunque haya otra entrega elegida (el embalaje sale del paquete)
   const envioNacionalLocal = useMemo(
     () => calculateOrder(pricingLines, toPricingSettings(companySettings), 'SHIPPING').shipping,
@@ -866,8 +879,9 @@ export default function CheckoutPage() {
                   onChange={setEnvio}
                   opciones={{
                     nacional: companySettings?.deliveryEnabled !== false,
-                    local: companySettings?.localDeliveryEnabled === true,
-                    retiro: companySettings?.pickupEnabled === true,
+                    // C-199: lo que sale de otra ciudad (la ferretería) solo viaja por ZOOM o MRW
+                    local: companySettings?.localDeliveryEnabled === true && !hayDeOtraCiudad,
+                    retiro: companySettings?.pickupEnabled === true && !hayDeOtraCiudad,
                     tarifaLocal: Number(companySettings?.deliveryFeeUSD) || 0,
                     retiroDireccion: companySettings?.pickupAddress,
                     retiroInstrucciones: companySettings?.pickupInstructions,
@@ -878,6 +892,7 @@ export default function CheckoutPage() {
                   envioNacional={envioNacional}
                   items={orderItemsBody}
                   direcciones={savedAddresses}
+                  paquetes={paquetesEnvio}
                 />
               )}
 

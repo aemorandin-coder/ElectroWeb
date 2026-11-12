@@ -99,6 +99,8 @@ export default function WishlistPage() {
             isConsolidable: p.isConsolidable !== false,
             shippingCost: p.shippingCost ?? undefined,
             freeShipping: !isDigital && p.freeShipping === true,
+            origen: p.despacho?.codigo,
+            origenNombre: p.despacho?.ciudad,
         }, 1);
     };
 

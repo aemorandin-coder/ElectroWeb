@@ -1,9 +1,18 @@
-# Lo de ahora (actualizado 2026-11-12 · producción en 1.0.0-rc.29 o rc.30; `main` y la etiqueta en 1.0.0-rc.31)
+# Lo de ahora (actualizado 2026-11-12 · producción en 1.0.0-rc.29; `main` y la etiqueta en 1.0.0-rc.32)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-199 · El envío desde el proveedor y "Calcula tu envío" (12/11, en `main`, rc.32, por subir):** Andrés pidió un cálculo del envío "tipo con la API de Zoom" y eligió lo recomendado en las cinco preguntas, junto con C-199 (`estado/C-199.md`).
+  - **"Calcula tu envío" en la ficha y en el carrito:** estado y ciudad de ZOOM, recordados; lo que cobra ZOOM retirando en su oficina, en $ y Bs; un estimado propio si ZOOM no responde.
+  - **La ferretería despacha desde La Victoria:**
+    - "Sale desde La Victoria" en la ficha y la tarjeta;
+    - solo envío;
+    - si el carrito mezcla, dos paquetes, cada uno con su embalaje, su guía y su orden.
+  - **El envío gratis vale solo para el paquete de Guanare.**
+  - **Queda abierta A15** (`PLAN.md` §7.1): si el monto del envío gratis cuenta solo lo de Guanare (así quedó) o toda la compra.
+- **Andrés no subió nada todavía (12/11):** las capturas de la Lista del proveedor eran de una copia local. El bloque de la sección 2 sube rc.30, rc.31 y rc.32 juntas.
 - **C-204b (12/11, en `main`, rc.31, por subir):** Andrés mandó una captura: la "Motobomba a gasolina" salía como "No se envía". Arreglado (`estado/C-204b.md`):
   - después de "a", "para" o "P/", la palabra de la lista no cuenta;
   - el botón "Sí se envía" deja pasar lo que la regla marque mal;
@@ -135,38 +144,47 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque: `v1.0.0-rc.31` (C-204b, y C-204 si todavía no se subió; unos 10 minutos)
-- **C-204b (rc.31):** lo que no se envía sin falsos positivos ("Motobomba a gasolina" se crea), el botón "Sí se envía", y de una carpeta solo se toman las fotos.
-- **C-204 (rc.30), si el servidor todavía dice rc.29:** la carga masiva completa (el Excel y las fotos juntos, lo que no se envía, "Sugeridos", la columna "Modelo" y el paso 5).
+### El bloque: `v1.0.0-rc.32` (C-204, C-204b y C-199, con rc.30 y rc.31 adentro; unos 25 minutos)
+Producción está en `v1.0.0-rc.29` (C-203), comprobada desde fuera el 12/11; su bloque está en `HISTORIAL.md`.
+- **C-204 (rc.30):** la carga masiva completa: el Excel y las fotos juntos, lo que no se envía, "Sugeridos", la columna "Modelo" y el paso 5 (la lista de control, "Completar con la web" y "Publicar los listos").
+- **C-204b (rc.31):** lo que no se envía, sin falsos positivos ("Motobomba a gasolina" se crea), el botón "Sí se envía", y de una carpeta solo se toman las fotos.
+- **C-199 (rc.32):** el envío desde el proveedor (dos paquetes y dos órdenes, solo envío) y "Calcula tu envío" en la ficha y el carrito.
 
-**SQL:** con rc.30 ya subida, ninguno. Si el servidor dice rc.29, la columna de rc.30 (aditiva):
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.29`). Es aditivo: cinco columnas nuevas.
 ```sql
-ALTER TABLE "suppliers" ADD COLUMN "noShipTerms" TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "suppliers" ADD COLUMN "dispatchCityCode" TEXT, ADD COLUMN "dispatchCityName" TEXT, ADD COLUMN "noShipTerms" TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "orders" ADD COLUMN "dispatchCityCode" TEXT, ADD COLUMN "dispatchCityName" TEXT;
 ```
 Sin variables nuevas, sin crons y sin dependencias nuevas.
 
 **Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
 ```bash
-git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.30 (o rc.29) y sin cambios
-DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc31.dump
-bash scripts/deploy.sh                       # con rc.30 compila de una; con rc.29 se detiene y muestra el SQL de arriba
-git describe --tags --abbrev=0               # v1.0.0-rc.31
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.29 y sin cambios
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc32.dump
+bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
+npx prisma db push && bash scripts/deploy.sh # aplica las cinco columnas y compila
+git describe --tags --abbrev=0               # v1.0.0-rc.32
 ```
-- **Solo si el guion se detuvo por el SQL** (venías de rc.29): `npx prisma db push && bash scripts/deploy.sh`. No debería preguntar nada: la columna es nueva. Si avisa de perder datos, no sigas y pásale el texto a Claude.
+- `prisma db push` no debería preguntar nada: las columnas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
 
-**Pruebas** (unos 10 minutos, en la computadora):
-1. **Lista del proveedor:**
-   - Elige el proveedor de la ferretería, marca "Su lista trae el IVA incluido" y suelta el archivo de los 70 con la carpeta "Fotos del fabricante" entera.
-   - Sale un aviso de que las hojas que venían dentro de la carpeta no se leyeron.
-   - La "Motobomba a gasolina" (R023137) dice "Nuevo", no "No se envía", y debajo del nombre no aparece un modelo largo.
-2. **"Sí se envía":** si alguna fila dice "No se envía" y sí se envía, toca el botón. La fila se puede marcar, y el paso 1 dice "1 excepción".
-3. **Si venías de rc.29:**
-   - antes del guion, deja abierta una pestaña del panel; después, sin recargar, toca "Productos": se carga entera y sin errores rojos (F12);
-   - el paso 5, "Terminar los borradores y publicar", está abajo.
+**Después del deploy, en el panel:** Productos → Más → Lista del proveedor. Elige el proveedor de la ferretería y, en "Quién despacha sus pedidos", "Él mismo, desde La Victoria" (está en el grupo Aragua).
+
+**Pruebas** (unos 15 minutos, en la computadora; la consola se abre con F12):
+1. **Una pestaña de antes del deploy (C-203):** antes de correr el guion, deja abierta la Lista del proveedor. Después, sin recargar, toca "Productos": se carga entera y sin errores rojos.
+2. **"Calcula tu envío":** en la ficha de cualquier producto físico publicado, elige tu estado y tu ciudad. Sale lo que cobra ZOOM, en $ y Bs. En otra ficha, recuerda la ciudad.
+3. **La Lista del proveedor (C-204):** marca "Su lista trae el IVA incluido" y suelta el archivo de los 70 con la carpeta "Fotos del fabricante" entera.
+   - Sale el aviso de las hojas que no se leyeron.
+   - La "Motobomba a gasolina" dice "Nuevo".
+   - Cada fila con foto muestra su miniatura.
+4. **Lo de la ferretería** (cuando publiques el primero):
+   - su ficha dice "Sale desde La Victoria", sin delivery ni retiro en Guanare;
+   - en el carrito, con algo de la tienda, "Tu pedido llega en 2 paquetes";
+   - el checkout no ofrece retiro ni delivery.
 
 **Vuelta atrás:**
-- `git reset --hard v1.0.0-rc.30 && npm install && bash scripts/deploy.sh --sin-pull` (o `v1.0.0-rc.29` si venías de ahí).
-- La columna no molesta al código anterior.
+- `git reset --hard v1.0.0-rc.29 && npm install && bash scripts/deploy.sh --sin-pull`.
+- Las columnas no molestan al código anterior.
+- Una compra hecha en dos paquetes queda como dos órdenes normales.
 
 ### Por confirmar de rc.28 (necesita una cuenta, unos 15 minutos)
 1. **Mi panel (C-201), en el teléfono, con una cuenta de cliente que tenga alguna compra:**
@@ -354,7 +372,7 @@ En el orden en que más destraban:
    3. Revisa la columna "Nombre en la tienda": lo que sale en ámbar se mira antes de crear.
    4. En "Nuevos con existencia", marca los 85 códigos y toca "Crear en borrador" con "Con sus fotos" marcado. Tarda unos minutos por las fotos.
    5. En el paso 5, toca "Completar con la web": tarda unos 15 minutos y se puede detener. Después, en "Por revisar", abre cada uno, corrige la descripción si hace falta y toca "Está bien".
-   6. **No toques "Publicar los listos" hasta que esté C-199** (el envío desde La Victoria).
+   6. **"Publicar los listos" ya se puede** después de subir rc.32 y elegir "Él mismo, desde La Victoria" (arriba). Revisa antes que cada uno tenga foto y descripción.
 0c. **Las fotos que faltan, desde MercadoLibre:** abre `Fotos que faltan - MercadoLibre.html` (en la carpeta de proveedores). Trae la búsqueda de cada uno de los 35 productos sin foto. Guarda la foto principal de una publicación con la marca y el modelo, sin marca de agua ni logo de la tienda, con el nombre del código (`HE00014.jpg`), en `Fotos del fabricante/2 - De MercadoLibre`. Después, avísale a Claude: las revisa, les quita el fondo y las pasa a "1 - Para subir".
 0b. **Mandarle a la ferretería `Preguntas para la ferreteria 12-11.txt`** (2 mensajes, en la carpeta de proveedores): fotos de la caja de 35 códigos, los Protektor y 15 modelos para confirmar con un sí. Con sus respuestas, Claude completa los nombres, los modelos y las fotos.
 
@@ -406,6 +424,7 @@ En el orden en que más destraban:
 ## 4. Fila de Claude
 **Hecho el 12/11:**
 - C-204 (la carga masiva completa, rc.30) y C-204b (sin falsos positivos y las hojas de una carpeta, rc.31);
+- C-199 (el envío desde el proveedor y "Calcula tu envío", rc.32);
 - los 70 de la ferretería sin pinturas, con lo que respondió la ferretería;
 - las fotos que faltan, con un agente aparte;
 - rc.29 comprobada en producción, y su bloque en `HISTORIAL.md`.
@@ -424,16 +443,15 @@ También del 10/11:
 - el mensaje para la ferretería, con 48 preguntas.
 
 **Sigue:**
-- C-199 en sesión nueva: el envío desde La Victoria, con la línea "Sale desde La Victoria" en las tarjetas.
+- Las fotos que baje el equipo de MercadoLibre (Antigravity, con el prompt de `Prompt para Antigravity - fotos de MercadoLibre.txt`): revisarlas, limpiarlas y pasarlas a "1 - Para subir".
+- Lo que responda la ferretería (`Preguntas para la ferreteria 12-11.txt`): los nombres, los modelos y las fotos del archivo de los 70.
+- `lib/nombres/marcas.ts`: Belt-G (su lista dice "BG"), Protektor y V-Teg.
 - Después: "Para ti" (V1), las plantillas de ElectroStudio que elija Andrés y C-198.
 
-**Lo del 10/11, en este orden** (todo decidido, `PLAN.md` §7.2):
-1. **C-199 · El envío desde La Victoria (la próxima sesión arranca por aquí).** El plan completo, con las reglas de dinero que decidió Andrés, está en `PLAN.md` §5.2:
-   - el embalaje se cobra en los dos paquetes;
-   - el envío gratis vale solo para el de Guanare.
-   Toca el checkout: lleva su prueba del caso normal y del manipulado.
-2. **C-200 · El departamento Ferretería:** la categoría madre y el inicio que sigue siendo de tecnología.
-3. **Las fotos del fabricante de los 60**, nombradas por código (fuera del repositorio).
+**Lo del 10/11** (todo decidido, `PLAN.md` §7.2):
+1. ~~C-199 · El envío desde La Victoria~~: hecha el 12/11 (rc.32), con "Calcula tu envío".
+2. ~~C-200 · El departamento Ferretería~~: hecha (rc.28).
+3. ~~Las fotos del fabricante~~: 50 de los 85 códigos de los 70; lo demás, con MercadoLibre y la ferretería.
 4. **C-198 · Las variantes como familias.**
 La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedido del 16/10 está hecho** (C-176, C-177 y C-178). **Cotizaciones desde Numen:** C-181 hecha y en producción (rc.15). Sigue **C-182**: el documento y el PDF con el estilo del presupuesto. Luis eligió la maqueta A (la fiel), con la opción de imprimir en blanco y negro. **Sigue C-180** (fotos del feed para el catálogo de WhatsApp) cuando llegue la captura de Commerce Manager (§3, 1b). Quedan de ahí: SSH solo con llave (tus llaves, §3), Prisma 7, Next 16.4 y el aviso de npm 12 (`PLAN.md` §5.2). Lo que espera un dato tuyo:
 - Esperan datos: C-154b (plazo de los digitales: ya se sabe que son unas 2 horas, falta el horario), C-107 (seguro), C-92 (clientes) y C-153b (decidir si los "frágiles" llevan más relleno).
@@ -452,4 +470,4 @@ La lista completa, con lo que espera datos, está en `PLAN.md` §5.2. **El pedid
 >    - Si hay alguno de los datos de la sección 3 (también las llaves de SSH de Andrés).
 >    - Producción se comprueba con `git describe --tags` por SSH (`OPERACION.md` §3).
 > 3. Si Gemini entregó algo nuevo, revísalo según `CLAUDE.md` antes de mergear.
-> 4. Sigue con la fila (sección 4): **C-199**, con el plan de `PLAN.md` §5.2. Al terminar cada tarea: estado HECHO, su fila en `PLAN_CLAUDE.md`, `PLAN.md` §5 y `SIGUIENTE.md` al día (un solo bloque de deploy con el SQL total y las pruebas), merge y push.
+> 4. Sigue con la fila (sección 4): primero las fotos de MercadoLibre y las respuestas de la ferretería, si llegaron; después "Para ti" (V1), ElectroStudio o C-198, lo que elija Andrés. Al terminar cada tarea: estado HECHO, su fila en `PLAN_CLAUDE.md`, `PLAN.md` §5 y `SIGUIENTE.md` al día (un solo bloque de deploy con el SQL total y las pruebas), merge y push.

@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import PublicHeader from '@/components/public/PublicHeader';
+import CalculaTuEnvio from '@/components/envios/CalculaTuEnvio';
 import CheckoutSteps from '@/components/ui/CheckoutSteps';
 import PageHeader from '@/components/ui/PageHeader';
 import { IconoAdvertencia, IconoCarrito, IconoEliminar, IconoEnvio, IconoMas, IconoMenos } from '@/components/iconos';
@@ -136,7 +137,7 @@ export default function CarritoPage() {
   const hasPhysical = items.some(item => item.productType !== 'DIGITAL');
   // C-153: el embalaje de este paquete, antes de llegar al pago. Con sesión es el del servidor; sin sesión, el mismo
   // cálculo con los datos del carrito. Sale de las medidas de los productos y de los empaques de la tienda.
-  const envioLocal = useMemo(
+  const calculoLocal = useMemo(
     () => calculateOrder(
       items.filter((item) => !item.id.startsWith('gift-card-')).map((item) => ({
         productId: parseCartItemId(item).productId,
@@ -150,13 +151,27 @@ export default function CarritoPage() {
         shippingCostUSD: 0,
         freeShipping: item.productType !== 'DIGITAL' && item.freeShipping === true,
         discountPercent: 0,
+        origen: item.origen ?? null,
+        origenNombre: item.origenNombre ?? null,
       })),
       toPricingSettings(settings),
       'SHIPPING'
-    ).shipping,
+    ),
     [items, settings]
   );
-  const envio = server?.envio ?? envioLocal;
+  const envio = server?.envio ?? calculoLocal.shipping;
+  // C-199: los paquetes de la compra (la tienda sale de Guanare; la ferretería, de La Victoria) y lo físico para
+  // "Calcula tu envío" (el servidor saca el peso y el valor de la base)
+  const paquetes = calculoLocal.paquetes.map((p) => ({ origen: p.origen, origenNombre: p.origenNombre, gratis: p.shipping.isFreeShipping }));
+  const itemsEnvio = useMemo(() => {
+    const porProducto = new Map<string, number>();
+    for (const item of items) {
+      if (item.id.startsWith('gift-card-') || item.productType === 'DIGITAL') continue;
+      const id = parseCartItemId(item).productId;
+      porProducto.set(id, (porProducto.get(id) ?? 0) + item.quantity);
+    }
+    return [...porProducto.entries()].map(([productId, quantity]) => ({ productId, quantity }));
+  }, [items]);
   const empaque = envio.packaging ? resumenEmbalaje(envio.packaging) : null;
   // C-115: lo que impide pagar se avisa aquí, no recién en el checkout: productos que el servidor rechaza y
   // mínimo o máximo de compra. Sin sesión se compara con el total local; con sesión, con el del servidor.
@@ -478,6 +493,14 @@ export default function CarritoPage() {
                         umbralEnvio={settings?.freeDeliveryThresholdUSD ?? null}
                         className="mt-3"
                       />
+                    )}
+                    {hasPhysical && enviosNacionales && paquetes.length > 1 && (
+                      <p className="mt-3 text-xs text-ink-soft">
+                        Tu pedido llega en {paquetes.length} paquetes: {paquetes.map((p) => `uno sale desde ${p.origenNombre}`).join(' y ')}. Cada uno con su embalaje y su guía{paquetes.some((p) => p.origen === null) ? `; el envío gratis de la tienda vale solo para el de ${paquetes.find((p) => p.origen === null)?.origenNombre}` : ''}.
+                      </p>
+                    )}
+                    {hasPhysical && enviosNacionales && itemsEnvio.length > 0 && (
+                      <CalculaTuEnvio className="mt-3" items={itemsEnvio} paquetes={paquetes} />
                     )}
                   </div>
                 </div>

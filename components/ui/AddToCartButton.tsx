@@ -51,6 +51,8 @@ export default function AddToCartButton({ product, className = '' }: AddToCartBu
       isConsolidable: product.isConsolidable !== false,
       shippingCost: product.shippingCost ?? undefined,
       freeShipping: !isDigital && product.freeShipping === true,
+      origen: product.despacho?.codigo,
+      origenNombre: product.despacho?.ciudad,
       conditionBadge: product.condition?.badge,
     });
     toast.success('Agregado al carrito');

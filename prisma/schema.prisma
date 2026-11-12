@@ -624,6 +624,10 @@ model Supplier {
   /// C-204: las palabras de lo que ZOOM y MRW no transportan (pinturas, solventes, aerosoles…), sin acentos y en
   /// minúsculas. Lo que las trae no se crea desde su lista. Vacía = la lista de siempre (lib/proveedores/no-se-envia.ts).
   noShipTerms     String[]  @default([])
+  /// C-199: despacha él mismo, desde esta ciudad de ZOOM (código y nombre), y sus productos son solo envío. Null = salen
+  /// de la tienda (Guanare). La ferretería aliada: La Victoria (244).
+  dispatchCityCode String?
+  dispatchCityName String?
   notes           String?
   products        Product[]
 
@@ -695,6 +699,10 @@ model Order {
   shippingPaidBy       String?  // CUSTOMER (cobro a destino) o STORE (envío gratis)
   // C-153: cómo se despacha (JSON: piezas, peso y qué va en cada empaque). Copia del momento de la compra
   packagingPlan        String?
+  /// C-199: de dónde sale este paquete, si no es de la tienda (la ferretería despacha desde La Victoria, 244). Una compra
+  /// con productos de los dos lados se divide en una orden por paquete, cada una con su guía.
+  dispatchCityCode     String?
+  dispatchCityName     String?
   shippingState        String?
   shippingCity         String?
   courierCityCode      String?  // Código de ciudad de ZOOM

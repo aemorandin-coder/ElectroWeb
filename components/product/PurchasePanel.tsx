@@ -127,6 +127,8 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
         isConsolidable: product.isConsolidable !== false,
         shippingCost: product.shippingCost ?? undefined,
         freeShipping: !isDigital && product.freeShipping === true,
+        origen: product.despacho?.codigo,
+        origenNombre: product.despacho?.ciudad,
         digitalUsername: isManual ? cleanUser : undefined,
         digitalVariantId: selected?.id,
         conditionBadge: product.condition?.badge,

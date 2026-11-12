@@ -107,9 +107,15 @@ export async function oficinasZoom(codigoCiudad: string): Promise<OficinaEnvio[]
   });
 }
 
+// C-199: la ficha y el carrito piden la misma tarifa muchas veces: se guarda 6 horas por consulta exacta
+const TARIFAS_TTL_MS = 6 * 60 * 60 * 1000;
+const TARIFAS_MAX = 2000;
+const tarifas = new Map<string, { expira: number; valor: TarifaZoom }>();
+
 /**
  * Lo que ZOOM le cobrará al cliente al recibir (cobro a destino), en bolívares. Es una referencia:
- * la tarifa final la calcula ZOOM al crear la guía.
+ * la tarifa final la calcula ZOOM al crear la guía. C-199: `origen` es la ciudad desde donde sale el paquete (la
+ * ferretería despacha desde La Victoria); sin él, Guanare.
  */
 export async function tarifaZoom(params: {
   ciudad: string;
@@ -118,11 +124,24 @@ export async function tarifaZoom(params: {
   pesoKg: number;
   piezas: number;
   valorDeclaradoBs: number;
+  origen?: string | null;
 }): Promise<TarifaZoom | null> {
+  const clave = JSON.stringify([params.origen ?? '', params.ciudad, params.oficina ?? '', params.modo, Math.round(params.pesoKg * 100), Math.round(params.piezas), Math.round(params.valorDeclaradoBs)]);
+  const guardada = tarifas.get(clave);
+  if (guardada && guardada.expira > Date.now()) return guardada.valor;
+  const tarifa = await tarifaZoomSinCache(params);
+  if (tarifa) {
+    if (tarifas.size >= TARIFAS_MAX) tarifas.delete(tarifas.keys().next().value as string);
+    tarifas.set(clave, { expira: Date.now() + TARIFAS_TTL_MS, valor: tarifa });
+  }
+  return tarifa;
+}
+
+async function tarifaZoomSinCache(params: Parameters<typeof tarifaZoom>[0]): Promise<TarifaZoom | null> {
   const base: Record<string, string> = {
     tipo_tarifa: '1',
     modalidad_tarifa: params.modo === 'DOOR' ? '2' : '1',
-    ciudad_remitente: ZOOM_CIUDAD_ORIGEN,
+    ciudad_remitente: params.origen && /^\d{1,6}$/.test(params.origen) ? params.origen : ZOOM_CIUDAD_ORIGEN,
     ciudad_destinatario: params.ciudad,
     cantidad_piezas: String(Math.max(1, Math.round(params.piezas))),
     peso: String(Math.max(0.1, Math.round(params.pesoKg * 100) / 100)),

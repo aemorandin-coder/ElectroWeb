@@ -10,6 +10,26 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.32] - 2026-11-12
+### Tienda 1.8.0 y Carrito, checkout y cuenta del cliente 1.3.0 (C-199)
+- **"Calcula tu envío"** en la ficha y en el carrito:
+  - el cliente elige su estado y su ciudad;
+  - ve lo que le cobrará ZOOM al retirar en su oficina, en dólares y bolívares;
+  - se recuerda para la próxima y sale de "Mis direcciones" si inició sesión;
+  - si ZOOM no responde, un estimado propio marcado como aproximado.
+- **Lo de la ferretería sale desde La Victoria,** solo con envío:
+  - la ficha y la tarjeta dicen "Sale desde La Victoria";
+  - no ofrece retiro ni delivery en Guanare;
+  - si el carrito mezcla, llega en dos paquetes, cada uno con su embalaje y su guía, y el carrito y el checkout dan el flete de cada uno.
+### Órdenes y pagos 1.1.0 (C-199)
+- **Una orden por paquete:** la compra con productos de la tienda y de la ferretería se divide en dos órdenes, que se pagan juntas, cada una con su guía y su correo.
+- **El envío gratis vale solo para el paquete de Guanare.** El de la ferretería va siempre con cobro a destino.
+- **En el panel,** la orden del proveedor avisa que hay que pasarle el pedido.
+- El servidor rechaza el retiro y el delivery con algo de la ferretería.
+### Productos 1.10.0 (C-199)
+- **Lista del proveedor, "Quién despacha sus pedidos":** la tienda, o él mismo desde su ciudad de ZOOM. La ferretería despacha desde La Victoria.
+- **Base:** 4 columnas nuevas (aditivo): `suppliers.dispatchCityCode`, `suppliers.dispatchCityName`, `orders.dispatchCityCode` y `orders.dispatchCityName`.
+
 ## [1.0.0-rc.31] - 2026-11-12
 ### Productos 1.9.1 (C-204b)
 - **Lo que no se envía, sin falsos positivos:** después de "a", "para" o "P/" la palabra dice con qué funciona o para qué sirve, y no cuenta. "Motobomba a gasolina" y "Pistola para pintura" se crean; "Gasolina blanca" y "Pintura de aceite" no. Sale "satinado" de la lista (también es un acabado de cerradura).

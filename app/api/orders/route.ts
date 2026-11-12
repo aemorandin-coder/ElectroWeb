@@ -230,6 +230,8 @@ interface OrderGroup {
   /** C-153: cómo se despacha (JSON), para el panel */
   packagingPlan: string | null;
   tag: string;
+  /** C-199: el paquete sale de otra ciudad (lo despacha su proveedor); null = de la tienda */
+  despacho: { codigo: string; nombre: string } | null;
 }
 
 // ORD-{año}-{secuencia}. Se llama dentro de la transacción. El advisory lock serializa la creación
@@ -275,7 +277,8 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
     fields: [
       ['Total', `${formatUSD(Number(order.totalUSD))} (${formatVES(Number(order.totalVES))})`],
       ['Pago', `${formatOrderPaymentMethod(order)} · ${order.paymentStatus === 'PAID' ? 'confirmado' : 'por verificar'}${order.paymentReference ? ` · ref. ${order.paymentReference}` : ''}`],
-      ['Entrega', DELIVERY_LABELS[order.deliveryMethod || ''] || order.deliveryMethod],
+      // C-199: el paquete de un proveedor que despacha él mismo hay que pasárselo
+      ['Entrega', `${DELIVERY_LABELS[order.deliveryMethod || ''] || order.deliveryMethod}${order.dispatchCityName ? ` · sale desde ${order.dispatchCityName}: pásale el pedido al proveedor` : ''}`],
       ['Productos', products],
       ['Cliente', order.user?.email],
     ],
@@ -315,7 +318,8 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
       currency: 'USD',
       paymentMethod: formatOrderPaymentMethod(order),
       paid: order.paymentStatus === 'PAID',
-      deliveryMethod: DELIVERY_LABELS[order.deliveryMethod || ''] || 'Entrega',
+      // C-199: si la compra llega en varios paquetes, cada correo dice de dónde sale el suyo
+      deliveryMethod: `${DELIVERY_LABELS[order.deliveryMethod || ''] || 'Entrega'}${order.dispatchCityName ? ` · este paquete sale desde ${order.dispatchCityName}, con su propia guía` : ''}`,
       deliveryAddress: order.shippingAddress || undefined,
     });
 
@@ -644,29 +648,31 @@ export async function POST(request: NextRequest) {
       quote.lines.map(line => line.discountRequestId).filter((id): id is string => id !== null)
     )];
 
-    // La compra se divide en una orden física (con envío) y una digital, como hasta ahora
+    // La compra se divide en una orden física (con envío) y una digital, como hasta ahora. C-199: una orden física por
+    // paquete (la tienda, y cada proveedor que despacha él mismo desde su ciudad), cada una con su embalaje y su guía.
     const groups: OrderGroup[] = [];
-    if (calculation.physical) {
-      const fisicas = quote.lines.filter(line => line.productType !== 'DIGITAL');
+    for (const paquete of calculation.paquetes) {
+      const fisicas = quote.lines.filter(line => line.productType !== 'DIGITAL' && (line.origen ?? null) === paquete.origen);
       // C-153: el plan de despacho queda en la orden: piezas y peso para la guía y, con empaques configurados,
       // qué empaque usar y qué va dentro. Es la copia del momento de la compra (las medidas pueden cambiar después).
-      const plan = calculation.shipping.packaging;
+      const plan = paquete.shipping.packaging;
       const embalaje: EmbalajeGuardado | null = deliveryMethod === 'SHIPPING'
         ? {
-          piezas: Math.max(calculation.shipping.pieces, 1),
+          piezas: Math.max(paquete.shipping.pieces, 1),
           pesoKg: plan ? plan.pesoKg : roundMoney(fisicas.reduce((kg, line) => kg + (line.weightKg || 0.1) * line.quantity, 0)),
           bultos: plan?.bultos ?? [],
           estimados: plan?.estimados ?? [],
         }
         : null;
       groups.push({
-        totals: calculation.physical,
+        totals: paquete.totals,
         lines: fisicas,
         deliveryMethod,
         destino,
-        shippingPaidBy: calculation.shipping.paidBy,
+        shippingPaidBy: paquete.shipping.paidBy,
         packagingPlan: embalaje ? JSON.stringify(embalaje) : null,
-        tag: '[Productos Físicos]',
+        tag: paquete.origen ? `[Desde ${paquete.origenNombre}]` : '[Productos Físicos]',
+        despacho: paquete.origen ? { codigo: paquete.origen, nombre: paquete.origenNombre } : null,
       });
     }
     if (calculation.digital) {
@@ -678,6 +684,7 @@ export async function POST(request: NextRequest) {
         shippingPaidBy: null,
         packagingPlan: null,
         tag: '[Productos Digitales]',
+        despacho: null,
       });
     }
 
@@ -765,6 +772,8 @@ export async function POST(request: NextRequest) {
             ...(group.destino ?? { shippingAddress: '' }),
             shippingPaidBy: group.shippingPaidBy,
             packagingPlan: group.packagingPlan,
+            dispatchCityCode: group.despacho?.codigo ?? null,
+            dispatchCityName: group.despacho?.nombre ?? null,
             subtotalUSD: montoDecimal(totals.subtotalUSD),
             taxUSD: montoDecimal(totals.taxUSD),
             shippingUSD: montoDecimal(totals.shippingUSD),

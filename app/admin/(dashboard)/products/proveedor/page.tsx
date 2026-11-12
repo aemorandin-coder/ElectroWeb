@@ -37,11 +37,17 @@ import { compararSugeridos, sugerencia, type Sugerencia } from '@/lib/proveedore
 import Borradores from './_componentes/Borradores';
 import Miniatura from './_componentes/Miniatura';
 import NoSeEnvia from './_componentes/NoSeEnvia';
+import DespachaDesde from './_componentes/DespachaDesde';
 import {
   agruparFotos, archivosDeLaCaida, archivosDelInput, FOTOS_MAX, subirFotosAProducto, type ArchivosLlegados, type FotoSuelta,
 } from './_componentes/fotos';
 
-interface Proveedor { id: string; name: string; discountPercent: number; pricesIncludeTax: boolean; noShipTerms: string[]; productos: number }
+interface Proveedor {
+  id: string; name: string; discountPercent: number; pricesIncludeTax: boolean; noShipTerms: string[];
+  /** C-199: despacha él mismo desde esta ciudad de ZOOM (null = la tienda) */
+  dispatchCityCode: string | null; dispatchCityName: string | null;
+  productos: number;
+}
 interface EnTienda { id: string; name: string; sku: string; status: string; stock: number; priceUSD: number; costo: number | null; enPapelera: boolean; fotos: number }
 interface Archivo { nombre: string; filas: Celda[][]; encabezados: string[]; columnas: Columnas }
 type Vista = 'nuevos-con-existencia' | 'sugeridos' | 'nuevos' | 'revisar' | 'en-tienda' | 'todos';
@@ -489,6 +495,15 @@ export default function ListaDelProveedorPage() {
             guardando={guardandoLista}
             onCambiar={setNoSeEnvia}
             onGuardar={() => void guardarLista()}
+          />
+        )}
+        {proveedor && (
+          <DespachaDesde
+            key={proveedor.id}
+            proveedorId={proveedor.id}
+            codigo={proveedor.dispatchCityCode}
+            nombre={proveedor.dispatchCityName}
+            onGuardado={(codigo, nombre) => setProveedores((l) => l?.map((p) => (p.id === proveedor.id ? { ...p, dispatchCityCode: codigo, dispatchCityName: nombre } : p)) ?? l)}
           />
         )}
       </section>

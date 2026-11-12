@@ -430,7 +430,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-196b** (**hecha**, rc.25): la casilla "Su lista trae el IVA incluido" en la carga en lote (el costo queda sin el IVA). `estado/C-196b.md`.
 - **C-197** (**hecha**, rc.25): la ficha en una sola tarjeta (la maqueta A que eligió Andrés). `estado/C-197.md`.
 - **C-198 · Variantes de color, talla y versión** (aprobada el 10/11, la propuesta recomendada; después de C-199 y C-200): familias de productos. Cada variante es un producto (su código, existencia, precio, fotos y enlace); la familia los une para el selector de la ficha y una sola tarjeta en el catálogo ("Elegir color"). El carrito, las órdenes y la existencia no cambian. El panel agrupa con "Agrupar como variantes" desde la lista.
-- **C-199 · El envío desde el proveedor** (decidido el 10/11; **la próxima sesión arranca por aquí**). Hoy la tienda calcula todo como si saliera de Guanare (ZOOM 43) y ofrece retiro y delivery en Guanare para todo. La ferretería despacha y envía sus pedidos desde La Victoria (ZOOM 244).
+- **C-199 · El envío desde el proveedor** (**hecha**, rc.32, 12/11, junto con "Calcula tu envío" en la ficha y el carrito; `estado/C-199.md`). Decidida el 10/11; el plan de abajo es el que se siguió. Antes, la tienda calculaba todo como si saliera de Guanare (ZOOM 43) y ofrecía retiro y delivery en Guanare para todo. La ferretería despacha y envía sus pedidos desde La Victoria (ZOOM 244).
   - **El proveedor:** "Despacha él mismo desde [ciudad de ZOOM]", con la lista de ciudades de `ciudadesZoom()`. Sus productos son solo envío.
   - **La ficha:**
     - "Se envía desde La Victoria, Aragua", con el flete de referencia desde su ciudad al centro y al más lejos. `tarifaZoom` hoy fija `ciudad_remitente` a Guanare: recibe el origen. La tarifa se guarda en memoria.
@@ -464,7 +464,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **Los 14 productos publicados:** la propuesta está en `estado/C-202.md` y espera el OK de Andrés. Se renombran después de subir rc.27.
   - **Los de la ferretería:** las 28 preguntas y los modelos a confirmar van a la ferretería. Con el modelo exacto, el nombre se completa con el del fabricante.
 - **C-200** (**hecha**, rc.28): el departamento Ferretería, con las maquetas que eligió Andrés. `estado/C-200.md`. Quedan:
-  - La línea "Sale desde La Victoria" en cada tarjeta va con C-199, que guarda la ciudad de despacho del proveedor.
+  - ~~La línea "Sale desde La Victoria" en cada tarjeta~~: hecha en C-199.
   - Antes de crear los productos de la ferretería, correr en producción `scripts/ferreteria-departamento.ts --aplicar`, que crea las categorías.
 - **Pack de íconos v1.2** (10/11, en C-200): los 10 de ferretería, redibujados de la tanda que generó Andrés. La página para Luis está en `ElectroShop Brand/Pack de íconos/iconos-electro-shop-v1.2.html`.
 - **"Para ti" en Mi panel** (Andrés eligió la V1 el 10/11): cuatro tarjetas por motivo, después de "Pedidos en curso" (volvió a haber, bajó de precio, va con lo que compraste, lo viste hace poco). Maqueta privada "Para ti en Mi panel". Lo que pide para funcionar está en su página: el precio y la existencia del favorito al marcarlo, una regla de complementos por categoría y los vistos en el navegador del cliente.
@@ -487,7 +487,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - El paso 5: la lista de control, "Completar con la web" en lote y "Publicar los listos".
   - **C-204b** (**hecha**, rc.31, 12/11): "Motobomba a gasolina" se marcaba como gasolina. Después de "a", "para" o "P/" la palabra no cuenta, y "Sí se envía" deja pasar un producto. De una carpeta solo se toman las fotos (los `.csv` de trabajo se leían como su lista). `estado/C-204b.md`.
   - Quedan:
-    - **Publicar los de la ferretería espera C-199.** El aviso al publicar lo recuerda, pero no lo impide.
+    - **Publicar los de la ferretería:** ya se puede con C-199 (rc.32), después de elegir en la Lista del proveedor "Él mismo, desde La Victoria".
     - Probar a mano la primera vez elegir o soltar la carpeta "Fotos del fabricante": Firefox no deja hacerlo desde una prueba.
 - **Los 70 de la ferretería** (archivo fuera del repositorio, en la carpeta de proveedores de Andrés):
   - Salen los 15 códigos de pinturas.
@@ -556,6 +556,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 | A12 | En las tarjetas chicas, ¿la etiqueta de un usado dice solo la condición ("CAJA ABIERTA") y el grado se lee en la ficha? | Hoy "CAJA ABIERTA · EXCELENTE" ocupa dos líneas y tapa parte de la foto (`estado/C-162.md`). |
 | A13 | Promotores: ¿los productos digitales (códigos y recargas) pagan comisión? Hoy sí, pero no se acredita sola si supera la ganancia de la venta | `estado/C-167.md`. Opciones: no pagar en digitales, un % menor, o dejarlo. |
 | A14 | Promotores: % por defecto de la comisión y del descuento del código (quedó 5 % y 5 %), y los términos del programa para el abogado | `estado/C-167.md`. |
+| A15 | El envío gratis por monto, con una compra que llega en dos paquetes: ¿cuenta solo lo del paquete de Guanare o toda la compra? | Así quedó en C-199: solo lo del paquete de Guanare, la lectura de "vale solo para el paquete de Guanare" (10/11). Cambiarlo es una línea (`estado/C-199.md`). |
 | A11 | ¿La cinta ES también en los productos que no son nuevos (al menos en "Caja abierta")? | Hoy llevan su etiqueta de condición y no la cinta (decisión del 28/09). Andrés la echó de menos el 01/10 (`estado/C-161.md`). |
 
 ### 7.2 Tomadas (no volver a preguntar)
@@ -635,6 +636,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
     - En las pinturas, solo la lata: el color lo resuelve el selector de colores de C-198.
   - Las variantes, como familias de productos (C-198).
 - **El departamento Ferretería (Andrés, 10/11, C-200):** enlace en la franja al lado de Ofertas (en el teléfono, primer chip del inicio y entrada en "Más"); su vitrina, un estante con sus categorías después de "Recién llegados"; su página, el catálogo de siempre con el aviso del envío y sus categorías arriba.
+- **"Calcula tu envío" (Andrés, 12/11, C-199):** en la ficha y en el carrito; el cliente elige estado y ciudad de ZOOM (se recuerda, y sale de "Mis direcciones" si inició sesión); ve lo que le cobra ZOOM retirando en su oficina, en $ y Bs, "lo pagas al retirar" y "MRW cobra parecido"; si ZOOM no responde, un estimado propio marcado como aproximado. Se hizo junto con C-199: cada paquete desde su origen.
 - **Las pinturas, fuera por ahora (Andrés, 12/11):** ZOOM y MRW no las transportan. Lo mismo vale para los solventes, los aerosoles, las pegas con solvente y el gas: la carga no los crea (C-204).
 - **La carga masiva (Andrés, 12/11, C-204):**
   - el Excel y las fotos van juntos;

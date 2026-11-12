@@ -6,7 +6,7 @@ import {
   IconoAbrirAparte, IconoActualizar, IconoAdvertencia, IconoCheck, IconoCopiar, IconoCuenta, IconoEnvio, IconoPaquete,
   IconoUbicacion,
 } from '@/components/iconos';
-import { adminBadge, adminSecondaryButton } from '@/lib/admin-ui';
+import { adminBadge, adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
 import { leerEmbalajeGuardado, renglonesEmbalaje } from '@/lib/embalaje';
 import { ETIQUETA_ENTREGA, NOMBRE_EMPRESA, etiquetaModo, type EmpresaGuia } from '@/lib/envios/empresas';
 
@@ -24,6 +24,9 @@ export interface EntregaOrdenDatos {
   shippingPaidBy?: string | null;
   /** C-153: plan de despacho que guardó la orden (JSON) */
   packagingPlan?: string | null;
+  /** C-199: el paquete sale de otra ciudad: lo despacha su proveedor (la ferretería, desde La Victoria) */
+  dispatchCityCode?: string | null;
+  dispatchCityName?: string | null;
   shippingState?: string | null;
   shippingCity?: string | null;
   courierOfficeCode?: string | null;
@@ -135,6 +138,12 @@ export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrden
           </span>
         )}
       </div>
+
+      {orden.dispatchCityName && (
+        <p className={adminNotice('warning')}>
+          Este paquete sale desde {orden.dispatchCityName}: lo despacha el proveedor. Pásale el pedido con &quot;Copiar datos para la guía&quot; y anota aquí su número de guía cuando te lo dé.
+        </p>
+      )}
 
       {orden.shippingMode === 'OFFICE' && orden.courierOfficeName ? (
         <div className="text-sm">

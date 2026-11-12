@@ -11,6 +11,7 @@ import { PAYMENT_LABELS } from '@/components/home/TrustBar';
 import ProductGallery from '@/components/product/ProductGallery';
 import ProductReviews from '@/components/product/ProductReviews';
 import PurchasePanel from '@/components/product/PurchasePanel';
+import CalculaTuEnvio from '@/components/envios/CalculaTuEnvio';
 import CouponOffers from '@/components/product/CouponOffers';
 import ConditionDetails, { ConditionNotice } from '@/components/product/ConditionDetails';
 import FechaLimiteNavidad from '@/components/navidad/FechaLimiteNavidad';
@@ -29,7 +30,7 @@ import { getActivePaymentMethodKinds, getHomeSettings } from '@/lib/queries/home
 import { getProductBySlug, getPublicReviews, getRelatedProducts, getReviewSummary } from '@/lib/queries/product';
 import { getPublicSettings } from '@/lib/site-settings';
 import { formatUSD } from '@/lib/currency';
-import { calculateOrder, toPricingSettings } from '@/lib/pricing';
+import { ORIGEN_TIENDA_NOMBRE, calculateOrder, toPricingSettings } from '@/lib/pricing';
 import { resumenEmbalaje } from '@/lib/embalaje';
 import { INTERNAL_SPEC_KEYS, especificacionesParaMostrar } from '@/lib/product-specs';
 import { normalizar } from '@/lib/cotizaciones/busqueda';
@@ -127,6 +128,7 @@ export default async function ProductPage({ params }: PageProps) {
         productId: product.id, name: product.name, productType: 'PHYSICAL', unitPriceUSD: product.priceUSD, quantity: 1,
         weightKg: product.weightKg, dimensions: product.dimensions, isConsolidable: product.isConsolidable,
         shippingCostUSD: 0, freeShipping: product.freeShipping, discountPercent: 0,
+        origen: product.despacho?.codigo ?? null, origenNombre: product.despacho?.ciudad ?? null,
       }],
       toPricingSettings(settings),
       'SHIPPING'
@@ -134,8 +136,10 @@ export default async function ProductPage({ params }: PageProps) {
   const envioGratis = envio?.isFreeShipping ?? false;
   const embalaje = envio && !envioGratis && envio.packagingFee > 0 ? envio.packagingFee : 0;
   const empaque = envio?.packaging ? resumenEmbalaje(envio.packaging).toLowerCase() : null;
+  // C-199: lo que despacha un proveedor desde otra ciudad (la ferretería, desde La Victoria) es solo con envío
+  const despacho = isDigital ? null : product.despacho;
   const textoEnvio = [
-    'Por ZOOM o MRW con cobro a destino: el flete lo pagas al retirar.',
+    despacho ? `Sale desde ${despacho.ciudad}, por ZOOM o MRW con cobro a destino: el flete lo pagas al retirar.` : 'Por ZOOM o MRW con cobro a destino: el flete lo pagas al retirar.',
     embalaje > 0
       ? empaque ? `Embalaje de este producto: ${formatUSD(embalaje)} (${empaque}).` : `Embalaje: ${formatUSD(embalaje)} por pedido.`
       : envio?.packagingFreeByThreshold ? 'El embalaje es gratis con este producto.' : '',
@@ -151,14 +155,14 @@ export default async function ProductPage({ params }: PageProps) {
           ? { Icon: IconoEnvio, title: 'Envío gratis a toda Venezuela', text: 'Por ZOOM o MRW: el envío lo paga la tienda' }
           : { Icon: IconoEnvio, title: 'Envíos a toda Venezuela', text: textoEnvio }]
         : []),
-    ...(!isDigital && settings.localDeliveryEnabled
+    ...(!isDigital && !despacho && settings.localDeliveryEnabled
       ? [{
         Icon: IconoUbicacion,
         title: 'Delivery en Guanare',
         text: envioGratis || !(settings.deliveryFeeUSD > 0) ? 'Gratis' : `${formatUSD(settings.deliveryFeeUSD)} por pedido`,
       }]
       : []),
-    ...(!isDigital && settings.pickupEnabled ? [{ Icon: IconoTienda, title: 'Retiro en tienda', text: settings.pickupAddress || 'Coordina el retiro al comprar' }] : []),
+    ...(!isDigital && !despacho && settings.pickupEnabled ? [{ Icon: IconoTienda, title: 'Retiro en tienda', text: settings.pickupAddress || 'Coordina el retiro al comprar' }] : []),
     // C-154: la garantía con sus días también en los productos nuevos, y qué hace la tienda si procede (términos, 6.3)
     product.warrantyDays
       ? {
@@ -180,7 +184,7 @@ export default async function ProductPage({ params }: PageProps) {
       ...(product.warrantyDays ? [{ Icon: IconoGarantia, text: `Garantía ${product.warrantyDays} días` }] : []),
       ...(settings.deliveryEnabled
         ? [{ Icon: IconoEnvio, text: envioGratis ? 'Envío gratis' : 'Envío nacional' }]
-        : settings.pickupEnabled ? [{ Icon: IconoTienda, text: 'Retiro en tienda' }] : []),
+        : settings.pickupEnabled && !despacho ? [{ Icon: IconoTienda, text: 'Retiro en tienda' }] : []),
       ...(settings.deliveryEnabled && embalaje > 0 ? [{ Icon: IconoPaquete, text: `Embalaje ${formatUSD(embalaje)}` }] : []),
     ];
 
@@ -310,6 +314,14 @@ export default async function ProductPage({ params }: PageProps) {
                     </li>
                   ))}
                 </ul>
+                {/* C-199: lo que le cobrará ZOOM hasta su ciudad (si la tienda no paga el envío) */}
+                {!isDigital && settings.deliveryEnabled && !envioGratis && (
+                  <CalculaTuEnvio
+                    className="mt-4"
+                    items={[{ productId: product.id, quantity: 1 }]}
+                    paquetes={[{ origen: despacho?.codigo ?? null, origenNombre: despacho?.ciudad ?? ORIGEN_TIENDA_NOMBRE, gratis: false }]}
+                  />
+                )}
 
                 {waNumber && (
                   <a

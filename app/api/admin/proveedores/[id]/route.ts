@@ -4,13 +4,16 @@ import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { registrarAccionAdmin } from '@/lib/audit-log';
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { DESCUENTO_MAX } from '@/lib/proveedores/lista';
 import { leerNombreProveedor, leerPorcentaje } from '@/lib/proveedores/servidor';
 import { esLaDeSiempre, leerTerminos } from '@/lib/proveedores/no-se-envia';
+import { ciudadesZoom } from '@/lib/envios/zoom';
 
 type Ctx = { params: Promise<{ id: string }> };
 
-// C-196: cambiar el nombre, el descuento o las notas de un proveedor. C-204: y la lista de lo que no se envía
+// C-196: cambiar el nombre, el descuento o las notas de un proveedor. C-204: y la lista de lo que no se envía.
+// C-199: y desde qué ciudad de ZOOM despacha él mismo (null = sus productos salen de la tienda)
 export async function PATCH(request: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
   if (!isAuthorized(session, 'MANAGE_PRODUCTS')) return NextResponse.json({ error: 'No autorizado' }, { status: session ? 403 : 401 });
@@ -18,7 +21,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
   const actual = await prisma.supplier.findUnique({ where: { id } });
   if (!actual) return NextResponse.json({ error: 'Proveedor no encontrado' }, { status: 404 });
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const data: { name?: string; discountPercent?: number; pricesIncludeTax?: boolean; notes?: string | null; noShipTerms?: string[] } = {};
+  const data: { name?: string; discountPercent?: number; pricesIncludeTax?: boolean; notes?: string | null; noShipTerms?: string[]; dispatchCityCode?: string | null; dispatchCityName?: string | null } = {};
   if (body?.name !== undefined) {
     const name = leerNombreProveedor(body.name);
     if (!name) return NextResponse.json({ error: 'El nombre del proveedor lleva de 2 a 80 caracteres' }, { status: 400 });
@@ -42,13 +45,30 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
     // La de siempre se guarda vacía: si la lista de siempre mejora, la toma sola
     data.noShipTerms = esLaDeSiempre(terminos) ? [] : terminos;
   }
+  if (body?.dispatchCityCode !== undefined) {
+    if (body.dispatchCityCode === null || body.dispatchCityCode === '') {
+      data.dispatchCityCode = null;
+      data.dispatchCityName = null;
+    } else {
+      // La ciudad tiene que estar en la lista de ZOOM (con cobro a destino): el nombre sale de ahí, no del navegador
+      const ciudad = typeof body.dispatchCityCode === 'string' && /^\d{1,6}$/.test(body.dispatchCityCode)
+        ? (await ciudadesZoom())?.find((c) => c.codigo === body.dispatchCityCode) ?? null
+        : null;
+      if (!ciudad) return NextResponse.json({ error: 'Esa ciudad no está en la lista de ZOOM' }, { status: 400 });
+      data.dispatchCityCode = ciudad.codigo;
+      data.dispatchCityName = ciudad.nombre;
+    }
+  }
   const guardado = await prisma.supplier.update({ where: { id }, data });
   await registrarAccionAdmin(session, 'PANEL_RECORD_UPDATED', { type: 'SUPPLIER', id }, {
     accion: 'Proveedor cambiado', proveedor: guardado.name,
     ...(data.discountPercent !== undefined && data.discountPercent !== Number(actual.discountPercent) ? { descuento: { antes: Number(actual.discountPercent), despues: data.discountPercent } } : {}),
     ...(data.noShipTerms !== undefined ? { noSeEnvia: data.noShipTerms.length === 0 ? 'la lista de siempre' : data.noShipTerms } : {}),
+    ...(data.dispatchCityCode !== undefined ? { despachaDesde: { antes: actual.dispatchCityName ?? 'la tienda', despues: data.dispatchCityName ?? 'la tienda' } } : {}),
   }, request);
-  return NextResponse.json({ id: guardado.id, name: guardado.name, discountPercent: Number(guardado.discountPercent), pricesIncludeTax: guardado.pricesIncludeTax, notes: guardado.notes, noShipTerms: guardado.noShipTerms });
+  // C-199: cambia de dónde salen sus productos publicados (la ficha, la tarjeta y el envío)
+  if (data.dispatchCityCode !== undefined && data.dispatchCityCode !== actual.dispatchCityCode) revalidateStorefront();
+  return NextResponse.json({ id: guardado.id, name: guardado.name, discountPercent: Number(guardado.discountPercent), pricesIncludeTax: guardado.pricesIncludeTax, notes: guardado.notes, noShipTerms: guardado.noShipTerms, dispatchCityCode: guardado.dispatchCityCode, dispatchCityName: guardado.dispatchCityName });
 }
 
 // Se borra solo si no tiene productos (ni en la papelera): el costo y el código de cada producto dependen de él

@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { IconoCerrar, IconoImpresora, IconoPaquete } from '@/components/iconos';
+import { IconoCerrar, IconoEnvio, IconoImpresora, IconoPaquete } from '@/components/iconos';
 import OrderTracking from '@/components/orders/OrderTracking';
 import { formatUSD, formatVES } from '@/lib/currency';
 import IvaIncluido from '@/components/ui/IvaIncluido';
@@ -54,6 +54,8 @@ export interface PedidoCliente {
   shippingAddress?: string | null;
   shippingMode?: string | null;
   shippingPaidBy?: string | null;
+  /** C-199: el paquete sale de otra ciudad (la compra llega en varios paquetes, cada uno con su guía) */
+  dispatchCityName?: string | null;
   courierOfficeName?: string | null;
   courierOfficeAddress?: string | null;
   recipientName?: string | null;
@@ -112,6 +114,12 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
 
         <div className="flex-1 space-y-4 overflow-y-auto p-4 print:overflow-visible">
           <section className="print:hidden" aria-label="Seguimiento">
+            {pedido.dispatchCityName && (
+              <p className="mb-3 flex items-start gap-2 rounded-lg bg-surface p-3 text-sm text-ink-soft">
+                <IconoEnvio className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+                Este paquete sale desde {pedido.dispatchCityName}, con su propia guía.
+              </p>
+            )}
             <OrderTracking
               status={pedido.status}
               paymentStatus={pedido.paymentStatus}

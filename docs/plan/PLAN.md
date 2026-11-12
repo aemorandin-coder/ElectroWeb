@@ -492,7 +492,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - Salen los 15 códigos de pinturas.
   - Entran 14 productos (20 códigos) con la regla de "Sugeridos": hidrolavadoras, bomba centrífuga, aspiradoras, herramientas Emtop con su batería y su cargador, esmeril de 2350 W, press control, breakers, cable #14 y disco para desmalezadora.
   - Los modelos que confirmó la ferretería mandan sobre los que se habían elegido el 10/11 por las fotos: el esmeril de 850 W, el panel de empotrar, la pistola DAPG500HM, la soldadora FW131M, el rotomartillo, el kit de alicates, la lijadora y la motosierra.
-  - Las fotos de esos y de los nuevos las rehace un agente aparte, con las mismas reglas del 10/11.
+  - **Las fotos (12/11):** las rehizo un agente aparte, con las mismas reglas del 10/11. 50 de los 85 códigos tienen foto; lo que falta se le pidió a la ferretería (`SIGUIENTE.md`).
+  - **El proponedor de nombres** (`lib/nombres/marcas.ts`) tiene que conocer Belt-G (su lista dice "BG"), Protektor y V-Teg para la próxima lista.
 
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).

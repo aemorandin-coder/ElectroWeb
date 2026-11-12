@@ -27,7 +27,14 @@
   - salen los 15 códigos de pinturas;
   - entran 14 productos con la regla de "Sugeridos" (`PLAN.md` §5.2).
   - El archivo nuevo es `Electro Shop - los 70 para cargar.xlsx`, en la carpeta de proveedores de Andrés.
-- **Las fotos que faltan:** un agente aparte (Sonnet, pedido de Andrés) rehace las de los modelos corregidos y busca las de los nuevos, con las reglas del 10/11. Trabaja en `Fotos del fabricante`; las pinturas pasan a "4 - Pinturas (por ahora no se venden)".
+- **Las fotos de los 70 (12/11, un agente aparte en Sonnet, pedido de Andrés; con las reglas del 10/11):**
+  - **50 de los 85 códigos tienen foto:** 73 archivos en "1 - Para subir", y todos pasan por la preparación de la tienda.
+  - **8 fotos que eran de otro modelo pasaron a "3 - No usar",** con el motivo en el nombre. Las pinturas pasaron a "4 - Pinturas (por ahora no se venden)".
+  - **Cinco modelos que dijo la ferretería no existen en la web de la marca:** ULAG15854, ELRH21228, EMP50603, DAPAS230G y DACS5820. De los Protektor, la marca publica PARTEP y PARP.
+  - **"BG" es Belt-G** (las griferías son la GRI-0764 y la GRI-0763), y "Pico" no es una marca: son los picos de voltaje.
+  - **15 fotos son de un modelo que dedujo el agente** (los nuevos de Daewoo, Emtop, Ingco y Bellota, entre otros). Se confirman con la ferretería.
+  - **El mensaje con lo que falta:** `Preguntas para la ferreteria 12-11.txt`, en la carpeta de proveedores. Pide fotos de la caja de 35 códigos, aclara los Protektor y confirma 15 modelos con un sí.
+  - El archivo de los 70 trae la columna "Fotos listas".
 - **C-203 · Las pestañas abiertas durante un deploy (11/11, rc.29, en producción; Claude lo comprobó desde fuera el 12/11):** los dos errores de la consola del 11/11 (404 en `/categorias` y `getCategoryIconOption is not a function` en Categorías del panel) eran de una pestaña abierta desde antes del 06/11. Producción estaba bien. Ahora una pestaña de otra versión se recarga entera al navegar, en vez de mezclar las dos, y el deploy sigue sirviendo 7 días los archivos de las versiones anteriores. Sin bajar nada de nuevo después de cada deploy. De paso, las miniaturas de YouTube de `/servicios` (`estado/C-203.md`).
 - **Producción: `v1.0.0-rc.29`** (C-203), comprobada por Claude desde fuera el 12/11. El bloque pasó a `HISTORIAL.md`. Antes: **`v1.0.0-rc.25`** (C-196, C-196b y C-197), subida el 10/11 por Andrés y comprobada desde fuera: la ficha nueva y la base aplicada. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.25". **Desde el 10/11 en la noche, producción está en `v1.0.0-rc.28`** (C-201, C-202 y C-200). La subió Andrés, con el guion de Ferretería, y Claude la comprobó desde fuera. Lo que necesita una cuenta está en la sección 2, "Por confirmar de rc.28". Siguen pendientes las fechas de corte en el panel, los borradores de campaña (si no se corrió el guion) y, de rc.19, la limpieza de los zombis desde el panel.
 - **Pedido del 10/11 (Andrés): vender de todo, con la ferretería aliada.** Las maquetas y el plan están en una página privada de Andrés (el enlace, en el chat de esa sesión). Los productos de la ferretería están en La Victoria (Aragua) y se venden solo con envío.
@@ -353,7 +360,7 @@ En el orden en que más destraban:
    4. En "Nuevos con existencia", marca los 85 códigos y toca "Crear en borrador" con "Con sus fotos" marcado. Tarda unos minutos por las fotos.
    5. En el paso 5, toca "Completar con la web": tarda unos 15 minutos y se puede detener. Después, en "Por revisar", abre cada uno, corrige la descripción si hace falta y toca "Está bien".
    6. **No toques "Publicar los listos" hasta que esté C-199** (el envío desde La Victoria).
-0b. **A la ferretería, cuando se pueda:** fotos de la caja o la etiqueta de lo que sigue sin respuesta (sección 1), y confirmar los modelos que llegaron con un posible error de tipeo ("ELRH21228", "EMP50603", "DAPAS230G", "DACS5820", "PARTE-200V"). El agente de fotos dirá cuáles son.
+0b. **Mandarle a la ferretería `Preguntas para la ferreteria 12-11.txt`** (2 mensajes, en la carpeta de proveedores): fotos de la caja de 35 códigos, los Protektor y 15 modelos para confirmar con un sí. Con sus respuestas, Claude completa los nombres, los modelos y las fotos.
 
 **En producción**
 1. **Las pruebas de la sección 2:**

@@ -1,9 +1,14 @@
-# Lo de ahora (actualizado 2026-11-12 · producción en 1.0.0-rc.29; `main` y la etiqueta en 1.0.0-rc.30)
+# Lo de ahora (actualizado 2026-11-12 · producción en 1.0.0-rc.29 o rc.30; `main` y la etiqueta en 1.0.0-rc.31)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-204b (12/11, en `main`, rc.31, por subir):** Andrés mandó una captura: la "Motobomba a gasolina" salía como "No se envía". Arreglado (`estado/C-204b.md`):
+  - después de "a", "para" o "P/", la palabra de la lista no cuenta;
+  - el botón "Sí se envía" deja pasar lo que la regla marque mal;
+  - de una carpeta solo se toman las fotos. Los `.csv` de trabajo de "Fotos del fabricante" se leían como su lista, y de ahí salía el "modelo" largo de la captura.
+- **Las fotos de MercadoLibre (12/11):** Andrés vio que allí están casi todas las que faltan. El agente no puede navegar MercadoLibre: el permiso de la sesión lo bloqueó, y Claude no usa la cuenta de nadie. Quedó una página con la búsqueda de cada producto para bajarlas a mano (sección 3, 0c).
 - **C-204 · La carga masiva, completa (12/11, en `main`, rc.30, por subir):** Andrés pidió cinco preguntas antes de tocar código y eligió lo recomendado en las cinco (`PLAN.md` §7.2). En Productos → Más → Lista del proveedor (`estado/C-204.md`):
   - el Excel y las fotos van juntos: se sueltan encima o se elige la carpeta, y cada producto se crea con las suyas;
   - lo que ZOOM y MRW no llevan (pinturas, solventes, aerosoles, pegas con solvente, gas) se marca y no se crea;
@@ -130,15 +135,11 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque: `v1.0.0-rc.30` (C-204; unos 15 minutos)
-Producción está en `v1.0.0-rc.29` (C-203), comprobada desde fuera el 12/11; su bloque está en `HISTORIAL.md`.
-- **C-204 (rc.30):** la carga masiva completa, en Productos → Más → Lista del proveedor:
-  - el Excel y las fotos juntos;
-  - lo que no se envía, marcado y sin crear;
-  - "Sugeridos" y la columna "Modelo";
-  - el paso 5, con la lista de control, "Completar con la web" y "Publicar los listos".
+### El bloque: `v1.0.0-rc.31` (C-204b, y C-204 si todavía no se subió; unos 10 minutos)
+- **C-204b (rc.31):** lo que no se envía sin falsos positivos ("Motobomba a gasolina" se crea), el botón "Sí se envía", y de una carpeta solo se toman las fotos.
+- **C-204 (rc.30), si el servidor todavía dice rc.29:** la carga masiva completa (el Excel y las fotos juntos, lo que no se envía, "Sugeridos", la columna "Modelo" y el paso 5).
 
-**SQL** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.29`). Es aditivo: una columna nueva.
+**SQL:** con rc.30 ya subida, ninguno. Si el servidor dice rc.29, la columna de rc.30 (aditiva):
 ```sql
 ALTER TABLE "suppliers" ADD COLUMN "noShipTerms" TEXT[] DEFAULT ARRAY[]::TEXT[];
 ```
@@ -146,32 +147,26 @@ Sin variables nuevas, sin crons y sin dependencias nuevas.
 
 **Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
 ```bash
-git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.29 y sin cambios
-DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc30.dump
-bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
-npx prisma db push && bash scripts/deploy.sh # aplica la columna y compila
-git describe --tags --abbrev=0                                          # v1.0.0-rc.30
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.30 (o rc.29) y sin cambios
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc31.dump
+bash scripts/deploy.sh                       # con rc.30 compila de una; con rc.29 se detiene y muestra el SQL de arriba
+git describe --tags --abbrev=0               # v1.0.0-rc.31
 ```
-- `prisma db push` no debería preguntar nada: la columna es nueva. Si avisa de perder datos, no sigas y pásale el texto a Claude.
+- **Solo si el guion se detuvo por el SQL** (venías de rc.29): `npx prisma db push && bash scripts/deploy.sh`. No debería preguntar nada: la columna es nueva. Si avisa de perder datos, no sigas y pásale el texto a Claude.
 
-**Pruebas** (unos 15 minutos, en la computadora; la consola se abre con F12 → Consola):
-1. **Una pestaña de antes del deploy (C-203):**
-   - Antes de correr el guion, deja abierta la Lista del proveedor del panel.
-   - Después, sin recargar, toca "Productos" arriba a la izquierda.
-   - La página se carga entera (se ve el parpadeo) y la consola no muestra errores rojos.
-2. **La Lista del proveedor (C-204), sin crear nada:**
-   - Elige el proveedor de la ferretería.
-   - Suelta encima el archivo de los 70, su listado de existencia y la carpeta "1 - Para subir" de las fotos.
-   - Cada fila con foto muestra su miniatura en "Foto".
-   - En el paso 1 está "Lo que no se envía por ZOOM ni MRW (la lista de siempre)".
-   - "Sugeridos" pone primero lo de $25 o más.
-   - Abajo está el paso 5, "Terminar los borradores y publicar".
-3. **La carpeta entera:** quita las fotos y suelta "Fotos del fabricante" completa. Dice de qué carpetas vienen; deja marcada solo "1 - Para subir".
-4. **Navegar normal:** en una pestaña nueva, recorre la tienda y el panel. Las páginas cambian sin recargarse enteras, como siempre.
+**Pruebas** (unos 10 minutos, en la computadora):
+1. **Lista del proveedor:**
+   - Elige el proveedor de la ferretería, marca "Su lista trae el IVA incluido" y suelta el archivo de los 70 con la carpeta "Fotos del fabricante" entera.
+   - Sale un aviso de que las hojas que venían dentro de la carpeta no se leyeron.
+   - La "Motobomba a gasolina" (R023137) dice "Nuevo", no "No se envía", y debajo del nombre no aparece un modelo largo.
+2. **"Sí se envía":** si alguna fila dice "No se envía" y sí se envía, toca el botón. La fila se puede marcar, y el paso 1 dice "1 excepción".
+3. **Si venías de rc.29:**
+   - antes del guion, deja abierta una pestaña del panel; después, sin recargar, toca "Productos": se carga entera y sin errores rojos (F12);
+   - el paso 5, "Terminar los borradores y publicar", está abajo.
 
 **Vuelta atrás:**
-- `git reset --hard v1.0.0-rc.29 && npm install && bash scripts/deploy.sh --sin-pull`.
-- La columna nueva no molesta al código anterior, y lo creado con la carga nueva son borradores normales.
+- `git reset --hard v1.0.0-rc.30 && npm install && bash scripts/deploy.sh --sin-pull` (o `v1.0.0-rc.29` si venías de ahí).
+- La columna no molesta al código anterior.
 
 ### Por confirmar de rc.28 (necesita una cuenta, unos 15 minutos)
 1. **Mi panel (C-201), en el teléfono, con una cuenta de cliente que tenga alguna compra:**
@@ -354,12 +349,13 @@ En el orden en que más destraban:
 **La ferretería aliada (pedido del 10/11)**
 0. **Despacho (acordado el 10/11):** la ferretería despacha y envía los pedidos de la web.
 0a. **Los 70 en borrador, después de subir rc.30** (no se ven en la tienda: se publican después de C-199):
-   1. En el panel: Productos → Más → Lista del proveedor. Elige el proveedor de la ferretería, marca "Su lista trae el IVA incluido" y deja el descuento en 0.
+   1. En el panel: Productos → Más → Lista del proveedor. Elige el proveedor de la ferretería, marca "Su lista trae el IVA incluido" y deja el descuento en 0. En la captura del 12/11 el costo era igual al precio de lista: la casilla estaba sin marcar, y así el precio sale un 16 % más alto (la motobomba, $370,21 en vez de $319,15).
    2. En la misma pantalla, suelta juntos `Electro Shop - los 70 para cargar.xlsx`, su listado de existencia más nuevo y la carpeta "1 - Para subir" de `Fotos del fabricante`.
    3. Revisa la columna "Nombre en la tienda": lo que sale en ámbar se mira antes de crear.
    4. En "Nuevos con existencia", marca los 85 códigos y toca "Crear en borrador" con "Con sus fotos" marcado. Tarda unos minutos por las fotos.
    5. En el paso 5, toca "Completar con la web": tarda unos 15 minutos y se puede detener. Después, en "Por revisar", abre cada uno, corrige la descripción si hace falta y toca "Está bien".
    6. **No toques "Publicar los listos" hasta que esté C-199** (el envío desde La Victoria).
+0c. **Las fotos que faltan, desde MercadoLibre:** abre `Fotos que faltan - MercadoLibre.html` (en la carpeta de proveedores). Trae la búsqueda de cada uno de los 35 productos sin foto. Guarda la foto principal de una publicación con la marca y el modelo, sin marca de agua ni logo de la tienda, con el nombre del código (`HE00014.jpg`), en `Fotos del fabricante/2 - De MercadoLibre`. Después, avísale a Claude: las revisa, les quita el fondo y las pasa a "1 - Para subir".
 0b. **Mandarle a la ferretería `Preguntas para la ferreteria 12-11.txt`** (2 mensajes, en la carpeta de proveedores): fotos de la caja de 35 códigos, los Protektor y 15 modelos para confirmar con un sí. Con sus respuestas, Claude completa los nombres, los modelos y las fotos.
 
 **En producción**
@@ -409,7 +405,7 @@ En el orden en que más destraban:
 
 ## 4. Fila de Claude
 **Hecho el 12/11:**
-- C-204 (la carga masiva completa, rc.30);
+- C-204 (la carga masiva completa, rc.30) y C-204b (sin falsos positivos y las hojas de una carpeta, rc.31);
 - los 70 de la ferretería sin pinturas, con lo que respondió la ferretería;
 - las fotos que faltan, con un agente aparte;
 - rc.29 comprobada en producción, y su bloque en `HISTORIAL.md`.

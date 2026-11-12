@@ -32,12 +32,14 @@ import {
   leerFilas, unirListas, type CampoLista, type Columnas, type FilaProveedor,
 } from '@/lib/proveedores/lista';
 import { proponedorDeNombres, type PropuestaNombre } from '@/lib/nombres/producto';
-import { esLaDeSiempre, terminoQueNoSeEnvia, terminosEfectivos } from '@/lib/proveedores/no-se-envia';
+import { esLaDeSiempre, palabrasDe, terminoQueNoSeEnvia, terminosEfectivos } from '@/lib/proveedores/no-se-envia';
 import { compararSugeridos, sugerencia, type Sugerencia } from '@/lib/proveedores/sugeridos';
 import Borradores from './_componentes/Borradores';
 import Miniatura from './_componentes/Miniatura';
 import NoSeEnvia from './_componentes/NoSeEnvia';
-import { agruparFotos, archivosDeLaCaida, archivosDelInput, FOTOS_MAX, subirFotosAProducto, type FotoSuelta } from './_componentes/fotos';
+import {
+  agruparFotos, archivosDeLaCaida, archivosDelInput, FOTOS_MAX, subirFotosAProducto, type ArchivosLlegados, type FotoSuelta,
+} from './_componentes/fotos';
 
 interface Proveedor { id: string; name: string; discountPercent: number; pricesIncludeTax: boolean; noShipTerms: string[]; productos: number }
 interface EnTienda { id: string; name: string; sku: string; status: string; stock: number; priceUSD: number; costo: number | null; enPapelera: boolean; fotos: number }
@@ -102,6 +104,8 @@ export default function ListaDelProveedorPage() {
   // carpetas que se dejan fuera
   const [noSeEnvia, setNoSeEnvia] = useState<string[]>(() => [...terminosEfectivos(null)]);
   const [guardandoLista, setGuardandoLista] = useState(false);
+  // C-204b: cambia cuando "Sí se envía" agrega una excepción, para que el editor de la lista la muestre
+  const [versionLista, setVersionLista] = useState(0);
   const [fotos, setFotos] = useState<FotoSuelta[]>([]);
   const [carpetasFuera, setCarpetasFuera] = useState<Set<string>>(new Set());
   const [conFotos, setConFotos] = useState(true);
@@ -195,7 +199,7 @@ export default function ListaDelProveedorPage() {
   const listaGuardada = useMemo(() => [...terminosEfectivos(proveedor?.noShipTerms)], [proveedor]);
   // C-204: por qué palabra no se envía cada fila (con su nombre de la lista o el de la tienda); null = se envía
   const noSeEnviaPor = useMemo(
-    () => new Map(filas.map((f) => [f.codigo, terminoQueNoSeEnvia([f.nombre, nombreTienda(f)], noSeEnvia)])),
+    () => new Map(filas.map((f) => [f.codigo, terminoQueNoSeEnvia([f.nombre, nombreTienda(f)], noSeEnvia, f.codigo)])),
     [filas, nombreTienda, noSeEnvia],
   );
   // C-204: si es afín a la tienda y si aguanta solo su envío (con el precio de venta que tendría)
@@ -252,8 +256,18 @@ export default function ListaDelProveedorPage() {
   const cambiarVista = (f: () => void) => { f(); setPagina(1); };
 
   /** C-204: las hojas se leen; las fotos se juntan para la vista previa y para subirlas al crear */
-  const agregarArchivos = async ({ hojas, fotos: nuevasFotos }: { hojas: File[]; fotos: FotoSuelta[] }) => {
-    if (hojas.length === 0 && nuevasFotos.length === 0) { toast.error('Ahí no hay hojas (.xls, .xlsx o .csv) ni fotos (.jpg, .png o .webp)'); return; }
+  const agregarArchivos = async ({ hojas, fotos: nuevasFotos, hojasEnCarpeta }: ArchivosLlegados) => {
+    // C-204b: una hoja que venía dentro de una carpeta no es su lista (los .csv de trabajo de las fotos, por ejemplo)
+    if (hojasEnCarpeta.length > 0) {
+      const n = hojasEnCarpeta.length;
+      toast(`${n === 1 ? 'Una hoja que venía' : `${miles(n)} hojas que venían`} dentro de la carpeta no se ${n === 1 ? 'leyó' : 'leyeron'} (${hojasEnCarpeta.slice(0, 3).join(', ')}${n > 3 ? '…' : ''}): de una carpeta solo se toman las fotos. Su lista se elige o se suelta aparte.`, {
+        icon: <IconoInfo className="h-5 w-5 text-ink-soft" aria-hidden="true" />, duration: 10000,
+      });
+    }
+    if (hojas.length === 0 && nuevasFotos.length === 0) {
+      if (hojasEnCarpeta.length === 0) toast.error('Ahí no hay hojas (.xls, .xlsx o .csv) ni fotos (.jpg, .png o .webp)');
+      return;
+    }
     setLeyendo(true);
     try {
       const nuevos: Archivo[] = [];
@@ -289,6 +303,13 @@ export default function ListaDelProveedorPage() {
       if (inputArchivos.current) inputArchivos.current.value = '';
       if (inputCarpeta.current) inputCarpeta.current.value = '';
     }
+  };
+
+  /** C-204b: "Sí se envía" en una fila que la regla marcó mal: una excepción con su código en la lista del proveedor */
+  const permitir = (codigo: string) => {
+    const excepcion = `+${palabrasDe(codigo)}`;
+    setNoSeEnvia((l) => (l.includes(excepcion) ? l : [...l, excepcion]));
+    setVersionLista((v) => v + 1);
   };
 
   const guardarLista = async () => {
@@ -461,7 +482,7 @@ export default function ListaDelProveedorPage() {
         </div>
         {proveedorId && (
           <NoSeEnvia
-            key={proveedorId}
+            key={`${proveedorId}-${versionLista}`}
             terminos={noSeEnvia}
             guardada={listaGuardada}
             marcados={filas.length > 0 ? conteo.noSeEnvian : null}
@@ -724,7 +745,10 @@ export default function ListaDelProveedorPage() {
                       <td className="px-3 py-2 text-xs">
                         {estadoDe(f) === 'nuevo'
                           ? noSe
-                            ? <span className="flex items-start gap-1 text-ink-soft"><IconoBloqueado className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> No se envía por ZOOM ni MRW (&quot;{noSe}&quot;): no se crea</span>
+                            ? <>
+                              <span className="flex items-start gap-1 text-ink-soft"><IconoBloqueado className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> No se envía por ZOOM ni MRW (&quot;{noSe}&quot;): no se crea</span>
+                              <button type="button" onClick={() => permitir(f.codigo)} className="min-h-11 text-xs font-semibold text-brand-600 hover:underline">Sí se envía</button>
+                            </>
                             : <>
                               <span className="font-semibold text-brand-700">Nuevo{pub !== null ? ` · publica ${pub}` : ''}</span>
                               {sug?.familia && <span className={`block ${sug.seVendeSolo ? 'text-brand-700' : 'text-muted'}`}>{sug.seVendeSolo ? 'Sugerido: aguanta solo su envío' : 'Complemento: mejor acompañado'}</span>}

@@ -1,6 +1,8 @@
 // C-204: las fotos van con el Excel (decisión de Andrés del 12/11). Se sueltan juntos (o se elige la carpeta), la vista
 // previa muestra la foto de cada fila y, al crear, cada producto ya queda con las suyas. Las fotos se llaman con el
 // código del proveedor: "R023127.jpg", "R023127-2.jpg" (lib/proveedores/lista.ts, codigoDeFoto).
+// C-204b: de una carpeta solo se toman las fotos. Las hojas que vienen adentro (los .csv de trabajo de "Fotos del
+// fabricante", el 12/11) se mezclaban con su lista como si fueran del proveedor. Una hoja se elige o se suelta suelta.
 
 import { codigoDeFoto } from '@/lib/proveedores/lista';
 import { uploadProductPhoto } from '@/lib/product-photo-upload';
@@ -28,34 +30,40 @@ function carpetaDe(ruta: string): string {
   return partes.length >= 2 ? partes[partes.length - 2] : '';
 }
 
-/** De un <input type="file"> (con carpeta o sin ella): las hojas y las fotos, cada una con su carpeta */
-export function archivosDelInput(lista: FileList | null): { hojas: File[]; fotos: FotoSuelta[] } {
-  const hojas: File[] = [], fotos: FotoSuelta[] = [];
+/** Lo que llega: las hojas (su lista), las fotos con su carpeta y las hojas que venían dentro de una carpeta (no se leen) */
+export interface ArchivosLlegados { hojas: File[]; fotos: FotoSuelta[]; hojasEnCarpeta: string[] }
+
+/** De un <input type="file"> (con carpeta o sin ella): las hojas sueltas y las fotos, cada una con su carpeta */
+export function archivosDelInput(lista: FileList | null): ArchivosLlegados {
+  const hojas: File[] = [], fotos: FotoSuelta[] = [], hojasEnCarpeta: string[] = [];
   for (const file of Array.from(lista ?? [])) {
     const ruta = (file as File & { webkitRelativePath?: string }).webkitRelativePath || '';
     if (OCULTO.test(ruta)) continue;
-    if (esHoja(file)) hojas.push(file);
-    else if (esFoto(file) && fotos.length < FOTOS_CARPETA_MAX) fotos.push({ file, carpeta: carpetaDe(ruta) });
+    if (esHoja(file)) {
+      if (ruta.includes('/')) hojasEnCarpeta.push(file.name); else hojas.push(file);
+    } else if (esFoto(file) && fotos.length < FOTOS_CARPETA_MAX) fotos.push({ file, carpeta: carpetaDe(ruta) });
   }
-  return { hojas, fotos };
+  return { hojas, fotos, hojasEnCarpeta };
 }
 
 /**
  * Lo que se suelta en la pantalla, con las carpetas adentro (recorridas). Las entradas se piden de una vez, dentro del
  * evento: el navegador las invalida apenas termina.
  */
-export async function archivosDeLaCaida(dt: DataTransfer): Promise<{ hojas: File[]; fotos: FotoSuelta[] }> {
+export async function archivosDeLaCaida(dt: DataTransfer): Promise<ArchivosLlegados> {
   const entradas = Array.from(dt.items ?? [])
     .map((i) => (typeof i.webkitGetAsEntry === 'function' ? i.webkitGetAsEntry() : null))
     .filter((e): e is FileSystemEntry => e !== null);
   if (entradas.length === 0) return archivosDelInput(dt.files);
-  const hojas: File[] = [], fotos: FotoSuelta[] = [];
-  const leer = async (e: FileSystemEntry): Promise<void> => {
+  const hojas: File[] = [], fotos: FotoSuelta[] = [], hojasEnCarpeta: string[] = [];
+  // `suelta`: el archivo se soltó tal cual, no vino dentro de una carpeta
+  const leer = async (e: FileSystemEntry, suelta: boolean): Promise<void> => {
     if (OCULTO.test(e.fullPath) || fotos.length >= FOTOS_CARPETA_MAX) return;
     if (e.isFile) {
       const file = await new Promise<File>((ok, mal) => (e as FileSystemFileEntry).file(ok, mal));
-      if (esHoja(file)) hojas.push(file);
-      else if (esFoto(file)) fotos.push({ file, carpeta: carpetaDe(e.fullPath) });
+      if (esHoja(file)) {
+        if (suelta) hojas.push(file); else hojasEnCarpeta.push(file.name);
+      } else if (esFoto(file)) fotos.push({ file, carpeta: carpetaDe(e.fullPath) });
       return;
     }
     if (e.isDirectory) {
@@ -64,12 +72,12 @@ export async function archivosDeLaCaida(dt: DataTransfer): Promise<{ hojas: File
       for (;;) {
         const lote = await new Promise<FileSystemEntry[]>((ok, mal) => lector.readEntries(ok, mal));
         if (lote.length === 0) break;
-        for (const x of lote) await leer(x);
+        for (const x of lote) await leer(x, false);
       }
     }
   };
-  for (const e of entradas) await leer(e);
-  return { hojas, fotos };
+  for (const e of entradas) await leer(e, true);
+  return { hojas, fotos, hojasEnCarpeta };
 }
 
 export interface FotosAgrupadas {

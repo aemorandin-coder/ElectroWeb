@@ -485,6 +485,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - "Sugeridos".
   - La columna "Modelo".
   - El paso 5: la lista de control, "Completar con la web" en lote y "Publicar los listos".
+  - **C-204b** (**hecha**, rc.31, 12/11): "Motobomba a gasolina" se marcaba como gasolina. Después de "a", "para" o "P/" la palabra no cuenta, y "Sí se envía" deja pasar un producto. De una carpeta solo se toman las fotos (los `.csv` de trabajo se leían como su lista). `estado/C-204b.md`.
   - Quedan:
     - **Publicar los de la ferretería espera C-199.** El aviso al publicar lo recuerda, pero no lo impide.
     - Probar a mano la primera vez elegir o soltar la carpeta "Fotos del fabricante": Firefox no deja hacerlo desde una prueba.

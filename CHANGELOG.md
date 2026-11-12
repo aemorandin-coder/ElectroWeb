@@ -10,6 +10,12 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.31] - 2026-11-12
+### Productos 1.9.1 (C-204b)
+- **Lo que no se envía, sin falsos positivos:** después de "a", "para" o "P/" la palabra dice con qué funciona o para qué sirve, y no cuenta. "Motobomba a gasolina" y "Pistola para pintura" se crean; "Gasolina blanca" y "Pintura de aceite" no. Sale "satinado" de la lista (también es un acabado de cerradura).
+- **"Sí se envía":** el botón de cada fila marcada deja pasar ese producto (una excepción con su código, que se guarda con el proveedor).
+- **De una carpeta solo se toman las fotos.** Las hojas que vienen adentro (como los `.csv` de trabajo de las fotos) ya no se mezclan con su lista: un aviso dice cuáles no se leyeron.
+
 ## [1.0.0-rc.30] - 2026-11-12
 ### Productos 1.9.0 (C-204)
 - **La carga masiva, completa** (Productos → Más → Lista del proveedor), con lo que eligió Andrés en las cinco preguntas:

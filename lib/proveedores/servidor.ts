@@ -170,7 +170,7 @@ export async function crearDesdeLista(
   for (const f of filas) {
     if (existentes.has(f.codigo)) { resultado.errores.push({ codigo: f.codigo, error: 'Ya está en la tienda' }); continue; }
     if (!f.nombre) { resultado.errores.push({ codigo: f.codigo, error: 'Sin nombre' }); continue; }
-    const termino = terminoQueNoSeEnvia([f.nombre, f.nombreProveedor], noSeEnvia);
+    const termino = terminoQueNoSeEnvia([f.nombre, f.nombreProveedor], noSeEnvia, f.codigo);
     if (termino) { resultado.errores.push({ codigo: f.codigo, error: `No se envía por ZOOM ni MRW ("${termino}")` }); continue; }
     const costo = costoDesdeLista(f.precioLista, opciones.descuento, ivaDeLaLista(opciones));
     const precio = costo === null ? null : precioSugerido(costo, opciones.ivaPercent, opciones.margen);

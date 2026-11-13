@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {
-  IconoActualizar, IconoDocumento, IconoGarantia, IconoNovedad, IconoOrdenes, IconoPedirProducto, IconoPorcentaje,
+  IconoActualizar, IconoDocumento, IconoGarantia, IconoNovedad, IconoOrdenes, IconoPedirProducto, IconoPorcentaje, IconoReloj,
 } from '@/components/iconos';
 import { formatUSD } from '@/lib/currency';
 import { adminBadge, adminDato, adminNotice, adminPrimaryButton, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
@@ -74,7 +74,7 @@ export default function ResumenCliente({ clienteId }: { clienteId: string }) {
                   {/* En el teléfono, la píldora va debajo: el texto usa todo el ancho */}
                   <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <Link href={p.enlace} className="min-w-0 text-ink hover:text-brand-600 hover:underline">{p.texto}</Link>
-                    {p.lesToca ? <span className={adminBadge('warning')}>Te toca</span> : <span className={adminBadge('brand')}>Espera al cliente</span>}
+                    {p.lesToca ? <span className={adminBadge('warning')}><IconoReloj className="h-3.5 w-3.5" aria-hidden="true" />Te toca</span> : <span className={adminBadge('brand')}>Espera al cliente</span>}
                   </div>
                 </li>
               );

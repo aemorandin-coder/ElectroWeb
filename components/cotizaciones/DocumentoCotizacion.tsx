@@ -157,7 +157,8 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
   ) : c.status === 'EXPIRED' ? (
     <p className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-deal/40 bg-deal-bg px-2.5 py-0.5 text-xs font-bold text-deal" data-bn="sello">Vencido</p>
   ) : c.status === 'SENT' ? (
-    <p className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-warning/45 bg-warning/10 px-2.5 py-0.5 text-xs font-bold text-warning-strong" data-bn="sello">
+    // C-216: lo que se espera va en azul (PLAN §1.1), con el estilo suave de los demás sellos del documento
+    <p className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-brand-500/40 bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-700" data-bn="sello">
       <IconoReloj className="h-3.5 w-3.5" aria-hidden="true" /> Pendiente de aprobación
     </p>
   ) : null;

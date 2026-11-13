@@ -1,6 +1,6 @@
 'use client';
 
-import { adminTab, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminBadge, adminTab, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 
@@ -126,7 +126,7 @@ export default function Solicitudes() {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'PENDING':
-                return <span className="px-2.5 py-1 bg-warning/10 text-warning-strong text-xs font-bold rounded-full">Pendiente</span>;
+                return <span className={adminBadge('warning')}>Pendiente</span>;
             case 'APPROVED':
                 return <span className="px-2.5 py-1 bg-success/10 text-success-strong text-xs font-bold rounded-full">Aprobado</span>;
             case 'REJECTED':

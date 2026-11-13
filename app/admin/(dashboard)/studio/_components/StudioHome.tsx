@@ -294,7 +294,8 @@ export default function StudioHome() {
                     changeView('lista');
                   }}
                   className={`inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-sm font-semibold transition-colors ${
-                    attention === a.kind ? 'border-warning-strong bg-warning/15 text-warning-strong' : 'border-warning/40 bg-white text-warning-strong hover:bg-warning/10'
+                    // C-216: lo que hay que hacer, sin ámbar: elegido, el sello azul noche con el ícono en cian; si no, su contorno
+                    attention === a.kind ? 'border-brand-950 bg-brand-950 text-white [&_svg]:text-accent' : 'border-brand-950/40 bg-white text-brand-950 hover:bg-brand-50'
                   }`}
                 >
                   <IconoAdvertencia className="h-4 w-4" aria-hidden="true" />

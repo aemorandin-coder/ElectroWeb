@@ -1,6 +1,6 @@
 'use client';
 
-import { adminTableWrap, adminTable, adminRowHover, adminModalOverlay } from '@/lib/admin-ui';
+import { adminBadge, adminTableWrap, adminTable, adminRowHover, adminModalOverlay } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 
@@ -97,7 +97,7 @@ export default function VerificationsPage() {
             case 'REJECTED':
                 return <span className="px-2 py-1 bg-deal/10 text-deal rounded-full text-xs font-bold flex items-center gap-1"><IconoRechazado /> Rechazado</span>;
             default:
-                return <span className="px-2 py-1 bg-warning/10 text-warning-strong rounded-full text-xs font-bold flex items-center gap-1"><IconoReloj /> Pendiente</span>;
+                return <span className={adminBadge('warning')}><IconoReloj className="h-3.5 w-3.5" aria-hidden="true" /> Pendiente</span>;
         }
     };
 

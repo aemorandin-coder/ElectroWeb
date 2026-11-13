@@ -8,6 +8,7 @@ import {
   IconoServidor, IconoVer, IconoWeb,
 } from '@/components/iconos';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { adminBadge } from '@/lib/admin-ui';
 
 interface EmailSettingsData {
     provider: string;
@@ -495,7 +496,7 @@ export default function EmailSettingsPanel() {
             {/* Save Button - Compact */}
             <div className="flex items-center justify-end gap-3">
                 {hasChanges && (
-                    <span className="text-xs text-warning-strong bg-warning/10 px-2 py-1 rounded-full">
+                    <span className={adminBadge('warning')}>
                         Sin guardar
                     </span>
                 )}

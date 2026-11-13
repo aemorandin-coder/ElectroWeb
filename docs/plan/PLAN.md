@@ -80,7 +80,8 @@ Claude lo implementa en C-10/C-11. Gemini **solo usa** estas clases y no inventa
 - **Azul de marca:** lo que se hace (botones, enlaces) y lo que la tienda destaca ("Destacado", el nivel de un curso, el monto a pagar).
 - **Azul noche (`brand-950`):** la pieza fuerte de una pantalla o de un correo, **una sola**, con texto blanco y el cian (`accent`) de acento: el certificado, la gift card, un código. Es la variante B que se eligió el 06/11 viendo las maquetas.
 - **Neutros:** la estructura: tarjetas, notas, mensajes, datos.
-- **Colores de estado, solo para estados:** verde = hecho (pagado, acreditado, en stock); **ámbar = alguien tiene que hacer algo** (falta pagar, falta verificar el correo, falta firmar, poco stock, por revisar, sin guardar); rojo = error, rechazo o descuento (`deal`).
+- **Colores de estado, solo para estados:** verde = hecho (pagado, acreditado, en stock); **ámbar = alguien tiene que hacer algo** (falta pagar, falta verificar el correo, falta firmar, poco stock, por revisar, sin guardar), **solo en avisos de bloque y textos, nunca en una píldora**; rojo = error, rechazo o descuento (`deal`).
+  - **En una píldora, lo que alguien tiene que hacer va en un sello azul noche** (`brand-950`) con texto blanco y el ícono en cian (`accent`): es el tono `warning` de `adminBadge` desde C-216. Andrés, 13/11: "esas píldoras ámbar, las detesto, se ven demasiado genéricas"; eligió la A viendo las tres opciones. El azul noche de la regla siguiente ("una sola pieza fuerte") se refiere a bloques, no a estos sellos.
   - Esperar no es un aviso: "En preparación", "Se acredita el…", "En revisión" (para quien espera) van en azul.
   - El ámbar nunca destaca, celebra ni clasifica (un nivel, una categoría, "Antes", una marca ajena como Binance).
 - **Excepciones con nombre:** las estrellas de calificación (ámbar), la etiqueta amarilla `tag` de "Oferta del día" (con texto `ink`), el rojo `navidad` del tema y el recuadro ámbar de "Lo que no incluye" de las cotizaciones (Luis, C-182).
@@ -174,7 +175,8 @@ Andrés eligió la versión A ("como la tienda") el 13/11, para todo el panel.
   - verde fuerte (`success-strong`) para lo hecho;
   - rojo (`deal`) para lo cancelado o rechazado.
   - Es `adminBadge`. El estado de una orden lleva además su ícono (`components/admin/PildoraEstadoOrden`).
-- **Lo que alguien tiene que hacer sigue en ámbar claro con texto oscuro:** nunca texto blanco sobre ámbar (§1.1).
+- **Lo que alguien tiene que hacer va en un sello azul noche, con texto blanco y el ícono en cian** (C-216, Andrés, 13/11: nada de píldoras ámbar). Es `adminBadge('warning')`: el nombre del tono quedó, el color cambió.
+- **Un nivel o una clasificación** (Urgente, el nivel de un curso) va en azul de marca, nunca en ámbar ni en azul noche (§1.1).
 - **Un dato en píldora** (una guía, un código) va en gris con su ícono (`adminDato`): informa sin competir con el estado.
 - **Los botones** (`adminPrimaryButton`, `adminSecondaryButton`, `adminIconButton`…) se levantan un poco al pasar el ratón y se hunden al tocarlos. Con "reducir movimiento" solo cambian de color, y apagados no se mueven.
 
@@ -487,6 +489,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-212 · El sorteo de la PlayStation 4** (**hecha**, rc.37, pedido de Andrés del 13/11; los números en §7.2): `/sorteo`, la tarjeta en Mi panel y Marketing → Sorteo. Boletos por compra de USD 10 o más y por invitar a 2 amigos; el sorteo, una sola vez, después del cierre. Dos tablas nuevas. `estado/C-212.md`.
   - **Después del deploy:** armarlo en el panel con la foto de la consola y encenderlo; el 20/12, "Sortear ahora".
   - **Sin pedir:** un correo automático al ganador, una franja del sorteo en el inicio y su flyer en ElectroStudio.
+- **C-216 · Sin píldoras ámbar** (**hecha**, rc.41, Andrés, 13/11: "las detesto, se ven demasiado genéricas"; eligió la A): lo que alguien tiene que hacer va en un sello azul noche con el ícono en cian, en todo el panel y en Mi panel (§1.1 y §1.8). `estado/C-216.md`.
+  - **Sin pedir:** los avisos en bloque y los textos en ámbar siguen (la regla los permite); si también molestan, se pasan con la misma idea.
 - **Haiku en el panel** (Andrés eligió 5 de las 7 ideas el 13/11). Esfuerzo alto para lo que se espera en pantalla; el máximo, solo para trabajos de fondo. La base común está en `lib/ia/claude.ts` y las reglas del texto en `lib/ia/texto.ts` (C-213).
   - **A · El resumen del cliente en su ficha** (**hecha**, C-213, rc.38): la pestaña Resumen con lo que hay que atender y cómo compra, y a pedido el resumen de Claude con qué ofrecerle. De paso, "Total gastado" ya no suma lo pendiente ni lo cancelado. `estado/C-213.md`.
     - **Probada con un Claude simulado:** la clave del 13/11 da 401. Falta una clave nueva (en el servidor y aquí) y probarla con el modelo de verdad.
@@ -726,6 +730,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - **Destacados y "Recién llegados" (Andrés, 13/11, C-210; cambia lo de C-200 y C-207):**
     - "Destacados de la semana" muestra solo lo que tiene la estrella, de toda la tienda (la ferretería también) y sin relleno: "los he desactivado todos y siguen apareciendo los mismos". Sin ninguno, la sección no sale.
     - "Recién llegados" ordena por la fecha en que cada producto se publicó por primera vez, no por la de creación (la carga del proveedor crea en borrador). El mismo día, los destacados primero, y como mucho 4 de cada departamento o categoría.
+- **Sin píldoras ámbar (Andrés, 13/11, C-216):** "Esas píldoras ámbar, las detesto, se ven demasiado genéricas; por ahí tenemos una regla clara para no usarlas". Viendo las tres opciones, eligió la A: lo que alguien tiene que hacer va en un sello azul noche con texto blanco y el ícono en cian, en todo el panel y en Mi panel. Un nivel (Urgente) va en azul de marca. Los avisos en bloque siguen en ámbar.
 - **El sorteo de la PlayStation 4 (Andrés, 13/11, C-212):** que la empresa no pierda.
   - **Boletos:** 1 por cada compra pagada de USD 10 o más; sin comprar, el enlace propio y 2 amigos que se registran y verifican el correo (1 boleto por cada 2, hasta 3). Las capturas del estado de WhatsApp no cuentan: no se pueden comprobar.
   - **El resultado, el 20/12,** para que el premio llegue a otro estado antes de Navidad. **El premio cuesta de USD 150 a 250.**

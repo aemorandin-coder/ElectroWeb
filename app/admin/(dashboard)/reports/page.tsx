@@ -702,7 +702,7 @@ export default function ReportsPage() {
                                                     <p className="flex flex-wrap items-center gap-2">
                                                         <span className="truncate text-sm font-medium text-ink">{inf.name}</span>
                                                         <span className="font-mono text-xs text-muted">{inf.code}</span>
-                                                        {inf.status === 'PAUSED' && <span className={adminBadge('warning')}>Pausado</span>}
+                                                        {inf.status === 'PAUSED' && <span className={adminBadge('neutral')}>Pausado</span>}
                                                     </p>
                                                     <p className="text-xs text-muted">{inf.conversionsCount} conversiones · {formatUSD(inf.totalGross)} en ventas</p>
                                                 </div>

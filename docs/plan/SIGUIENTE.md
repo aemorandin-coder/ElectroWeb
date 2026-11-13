@@ -1,20 +1,20 @@
-# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.29; `main` y la etiqueta en 1.0.0-rc.33)
+# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.33, igual que `main`)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-205 · La Lista del proveedor por pasos (13/11, en `main`, rc.33, por subir):** Andrés miró la carga masiva y marcó tres cosas: contenedores anchísimos para una palabra, que no se sabía qué hacer ni adónde ir, y píldoras sin ícono ni explicación (`estado/C-205.md`).
+- **C-205 · La Lista del proveedor por pasos (13/11, rc.33, en producción):** Andrés miró la carga masiva y marcó tres cosas: contenedores anchísimos para una palabra, que no se sabía qué hacer ni adónde ir, y píldoras sin ícono ni explicación (`estado/C-205.md`).
   - Eligió la maqueta A: un paso a la vez, con los pasos arriba y "Atrás / Siguiente: …" abajo.
   - Los campos, del tamaño de su dato. Los filtros, con ícono, cuenta y subtítulo.
   - Las reglas para todo el panel y la web quedaron en `PLAN.md` §1.5 a §1.7. Pasar las demás pantallas a la regla es C-206.
-- **La carpeta de la ferretería, reordenada (13/11, fuera del repositorio):** `LEEME.txt` explica cada cosa.
-  - Lo que se carga está arriba: el archivo de los 70 y la carpeta "Fotos para subir".
-  - Lo de trabajo está en "Trabajo de fotos (no se sube)" y lo viejo, en "Anteriores".
+- **La carpeta de la ferretería, numerada en el orden en que se usa (13/11, fuera del repositorio):** `LEEME.txt` explica cada cosa.
+  - "1 - Cargar en la tienda": el archivo de los 70, la existencia y "Fotos para subir"; en el paso 2 se selecciona todo y se suelta.
+  - "2 - Para la ferreteria", "3 - Sus listas originales", "4 - Trabajo de fotos (no se sube)" y "5 - Anteriores".
   - **74 de los 85 códigos tienen foto (105 archivos):** 24 productos con lo que bajó Hydrogen de MercadoLibre y 5 de otras tiendas, revisados uno por uno.
   - **Se apartaron:** los protectores PARTEP (la ferretería vende el PARTE), una foto reconstruida con IA y dos membranas juntas.
   - Las preguntas para la ferretería, más cortas: `Preguntas para la ferreteria 13-11.txt`.
-- **C-199 · El envío desde el proveedor y "Calcula tu envío" (12/11, en `main`, rc.32, por subir):** Andrés pidió un cálculo del envío "tipo con la API de Zoom" y eligió lo recomendado en las cinco preguntas, junto con C-199 (`estado/C-199.md`).
+- **C-199 · El envío desde el proveedor y "Calcula tu envío" (12/11, rc.32, en producción):** Andrés pidió un cálculo del envío "tipo con la API de Zoom" y eligió lo recomendado en las cinco preguntas, junto con C-199 (`estado/C-199.md`).
   - **"Calcula tu envío" en la ficha y en el carrito:** estado y ciudad de ZOOM, recordados; lo que cobra ZOOM retirando en su oficina, en $ y Bs; un estimado propio si ZOOM no responde.
   - **La ferretería despacha desde La Victoria:**
     - "Sale desde La Victoria" en la ficha y la tarjeta;
@@ -22,13 +22,13 @@
     - si el carrito mezcla, dos paquetes, cada uno con su embalaje, su guía y su orden.
   - **El envío gratis vale solo para el paquete de Guanare.**
   - **Queda abierta A15** (`PLAN.md` §7.1): si el monto del envío gratis cuenta solo lo de Guanare (así quedó) o toda la compra.
-- **Andrés no subió nada todavía (12/11):** las capturas de la Lista del proveedor eran de una copia local. El bloque de la sección 2 sube rc.30, rc.31 y rc.32 juntas.
-- **C-204b (12/11, en `main`, rc.31, por subir):** Andrés mandó una captura: la "Motobomba a gasolina" salía como "No se envía". Arreglado (`estado/C-204b.md`):
+- **En producción desde el 13/11 (rc.33):** rc.30 la subió el equipo sin anotarlo (usuario `luami`), y el 13/11 subió de rc.30 a rc.33. El bloque y lo comprobado están en `HISTORIAL.md`.
+- **C-204b (12/11, rc.31, en producción):** Andrés mandó una captura: la "Motobomba a gasolina" salía como "No se envía". Arreglado (`estado/C-204b.md`):
   - después de "a", "para" o "P/", la palabra de la lista no cuenta;
   - el botón "Sí se envía" deja pasar lo que la regla marque mal;
   - de una carpeta solo se toman las fotos. Los `.csv` de trabajo de "Fotos del fabricante" se leían como su lista, y de ahí salía el "modelo" largo de la captura.
 - **Las fotos de MercadoLibre (12/11):** Andrés vio que allí están casi todas las que faltan. El agente no puede navegar MercadoLibre: el permiso de la sesión lo bloqueó, y Claude no usa la cuenta de nadie. Quedó una página con la búsqueda de cada producto para bajarlas a mano (sección 3, 0c).
-- **C-204 · La carga masiva, completa (12/11, en `main`, rc.30, por subir):** Andrés pidió cinco preguntas antes de tocar código y eligió lo recomendado en las cinco (`PLAN.md` §7.2). En Productos → Más → Lista del proveedor (`estado/C-204.md`):
+- **C-204 · La carga masiva, completa (12/11, rc.30, en producción):** Andrés pidió cinco preguntas antes de tocar código y eligió lo recomendado en las cinco (`PLAN.md` §7.2). En Productos → Más → Lista del proveedor (`estado/C-204.md`):
   - el Excel y las fotos van juntos: se sueltan encima o se elige la carpeta, y cada producto se crea con las suyas;
   - lo que ZOOM y MRW no llevan (pinturas, solventes, aerosoles, pegas con solvente, gas) se marca y no se crea;
   - "Sugeridos" pone primero lo afín a la tienda que aguanta solo su envío;
@@ -154,48 +154,12 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque: `v1.0.0-rc.33` (C-204, C-204b, C-199 y C-205, con rc.30 a rc.32 adentro; unos 25 minutos)
-Producción está en `v1.0.0-rc.29` (C-203), comprobada desde fuera el 12/11; su bloque está en `HISTORIAL.md`.
-- **C-204 (rc.30):** la carga masiva completa: el Excel y las fotos juntos, lo que no se envía, "Sugeridos", la columna "Modelo" y el paso 5 (la lista de control, "Completar con la web" y "Publicar los listos").
-- **C-204b (rc.31):** lo que no se envía, sin falsos positivos ("Motobomba a gasolina" se crea), el botón "Sí se envía", y de una carpeta solo se toman las fotos.
-- **C-199 (rc.32):** el envío desde el proveedor (dos paquetes y dos órdenes, solo envío) y "Calcula tu envío" en la ficha y el carrito.
-- **C-205 (rc.33):** la Lista del proveedor por pasos, los campos del tamaño de su dato y los filtros con ícono y subtítulo. Sin cambio de base.
+### Nada por subir
+Producción está en `v1.0.0-rc.33` (C-205), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
 
-**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.29`). Es aditivo: cinco columnas nuevas.
-```sql
-ALTER TABLE "suppliers" ADD COLUMN "dispatchCityCode" TEXT, ADD COLUMN "dispatchCityName" TEXT, ADD COLUMN "noShipTerms" TEXT[] DEFAULT ARRAY[]::TEXT[];
-ALTER TABLE "orders" ADD COLUMN "dispatchCityCode" TEXT, ADD COLUMN "dispatchCityName" TEXT;
-```
-Sin variables nuevas, sin crons y sin dependencias nuevas.
-
-**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
-```bash
-git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.29 y sin cambios
-DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc33.dump
-bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
-npx prisma db push && bash scripts/deploy.sh # aplica las cinco columnas y compila
-git describe --tags --abbrev=0               # v1.0.0-rc.33
-```
-- `prisma db push` no debería preguntar nada: las columnas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
-
-**Después del deploy, en el panel:** Productos → Más → Lista del proveedor. Elige el proveedor de la ferretería y, en "Quién despacha sus pedidos", "Él mismo, desde La Victoria" (está en el grupo Aragua).
-
-**Pruebas** (unos 15 minutos, en la computadora; la consola se abre con F12):
-1. **Una pestaña de antes del deploy (C-203):** antes de correr el guion, deja abierta la Lista del proveedor. Después, sin recargar, toca "Productos": se carga entera y sin errores rojos.
-2. **"Calcula tu envío":** en la ficha de cualquier producto físico publicado, elige tu estado y tu ciudad. Sale lo que cobra ZOOM, en $ y Bs. En otra ficha, recuerda la ciudad.
-3. **La Lista del proveedor (C-204 y C-205):** arriba se ven los 5 pasos.
-   - En el paso 1, elige el proveedor y marca "Su lista trae el IVA incluido": el descuento y el margen son campos chicos, y "Así queda" muestra la cuenta.
-   - En el paso 2, suelta juntos el archivo de los 70, su listado de existencia y la carpeta "Fotos para subir": dice "105 fotos · 74 códigos de su lista con foto".
-   - En el paso 3, las píldoras llevan ícono y subtítulo, la "Motobomba a gasolina" dice "Nuevo" y cada fila con foto muestra su miniatura.
-4. **Lo de la ferretería** (cuando publiques el primero):
-   - su ficha dice "Sale desde La Victoria", sin delivery ni retiro en Guanare;
-   - en el carrito, con algo de la tienda, "Tu pedido llega en 2 paquetes";
-   - el checkout no ofrece retiro ni delivery.
-
-**Vuelta atrás:**
-- `git reset --hard v1.0.0-rc.29 && npm install && bash scripts/deploy.sh --sin-pull`.
-- Las columnas no molestan al código anterior.
-- Una compra hecha en dos paquetes queda como dos órdenes normales.
+**Por confirmar de rc.33 (con una cuenta, unos 15 minutos):**
+1. **La Lista del proveedor por pasos:** arriba se ven los 5 pasos. En el paso 2, abre "1 - Cargar en la tienda" de la carpeta de la ferretería, selecciona todo (Ctrl + A) y suéltalo: dice "105 fotos · 74 códigos de su lista con foto".
+2. **Una compra que mezcla la tienda y la ferretería:** el carrito dice "Tu pedido llega en 2 paquetes"; el checkout no ofrece retiro ni delivery; quedan dos órdenes, y la de La Victoria avisa en el panel "pásale el pedido".
 
 ### Por confirmar de rc.28 (necesita una cuenta, unos 15 minutos)
 1. **Mi panel (C-201), en el teléfono, con una cuenta de cliente que tenga alguna compra:**
@@ -379,12 +343,12 @@ En el orden en que más destraban:
 0. **Despacho (acordado el 10/11):** la ferretería despacha y envía los pedidos de la web.
 0a. **Los 70 en borrador, después de subir rc.30** (no se ven en la tienda: se publican después de C-199):
    1. En el panel: Productos → Más → Lista del proveedor. Elige el proveedor de la ferretería, marca "Su lista trae el IVA incluido" y deja el descuento en 0. En la captura del 12/11 el costo era igual al precio de lista: la casilla estaba sin marcar, y así el precio sale un 16 % más alto (la motobomba, $370,21 en vez de $319,15).
-   2. En el paso 2 de la misma pantalla, suelta juntos `Electro Shop - los 70 para cargar.xlsx`, su listado de existencia más nuevo (en "Listas de la ferreteria") y la carpeta "Fotos para subir". Así lo explica `LEEME.txt`.
+   2. En el paso 2 de la misma pantalla, abre "1 - Cargar en la tienda" de la carpeta de la ferretería, selecciona todo (Ctrl + A) y suéltalo: van juntos el archivo de los 70, su existencia y "Fotos para subir". Así lo explica `LEEME.txt`.
    3. Revisa la columna "Nombre en la tienda": lo que sale en ámbar se mira antes de crear.
    4. En "Nuevos con existencia", marca los 85 códigos y toca "Crear en borrador" con "Con sus fotos" marcado. Tarda unos minutos por las fotos.
    5. En el paso 5, toca "Completar con la web": tarda unos 15 minutos y se puede detener. Después, en "Por revisar", abre cada uno, corrige la descripción si hace falta y toca "Está bien".
    6. **"Publicar los listos" ya se puede** después de subir rc.32 y elegir "Él mismo, desde La Victoria" (arriba). Revisa antes que cada uno tenga foto y descripción.
-0c. ~~**Las fotos que faltan, desde MercadoLibre:**~~ **Hecho el 13/11** (Hydrogen y otras tiendas; Claude las revisó y quedan 11 sin foto). Si quieres, una segunda vuelta con Antigravity para 3 (los protectores PARTE-110 y PARTE-220 y el taladro Zasc): `Trabajo de fotos (no se sube)/Prompt para Antigravity - segunda vuelta.txt`. Antes decía: abre `Fotos que faltan - MercadoLibre.html` (en la carpeta de proveedores). Trae la búsqueda de cada uno de los 35 productos sin foto. Guarda la foto principal de una publicación con la marca y el modelo, sin marca de agua ni logo de la tienda, con el nombre del código (`HE00014.jpg`), en `Fotos del fabricante/2 - De MercadoLibre`. Después, avísale a Claude: las revisa, les quita el fondo y las pasa a "1 - Para subir".
+0c. ~~**Las fotos que faltan, desde MercadoLibre:**~~ **Hecho el 13/11** (Hydrogen y otras tiendas; Claude las revisó y quedan 11 sin foto). Si quieres, una segunda vuelta con Antigravity para 3 (los protectores PARTE-110 y PARTE-220 y el taladro Zasc): `4 - Trabajo de fotos (no se sube)/Prompt para Antigravity - segunda vuelta.txt`. Antes decía: abre `Fotos que faltan - MercadoLibre.html` (en la carpeta de proveedores). Trae la búsqueda de cada uno de los 35 productos sin foto. Guarda la foto principal de una publicación con la marca y el modelo, sin marca de agua ni logo de la tienda, con el nombre del código (`HE00014.jpg`), en `Fotos del fabricante/2 - De MercadoLibre`. Después, avísale a Claude: las revisa, les quita el fondo y las pasa a "1 - Para subir".
 0b. **Mandarle a la ferretería `Preguntas para la ferreteria 13-11.txt`** (2 mensajes, en la carpeta de proveedores; si ya mandaste la del 12/11, no hace falta otra): fotos de la caja de 13 códigos y 24 modelos para confirmar con un sí. Con sus respuestas, Claude completa los nombres, los modelos y las fotos.
 
 **En producción**
@@ -460,8 +424,8 @@ También del 10/11:
 
 **Sigue:**
 - **C-206:** la regla de anchos en las demás pantallas del panel y en la web (`PLAN.md` §1.5).
-- Lo que responda la ferretería (`Preguntas para la ferreteria 13-11.txt`): los nombres, los modelos y las fotos del archivo de los 70. Para el HE00017, el R016087 y el R010077 ya hay foto si confirman el modelo (`Sin foto todavia.csv`).
-- Si el equipo hace la segunda vuelta de MercadoLibre: revisar lo que deje en "Trabajo de fotos (no se sube)/De MercadoLibre".
+- Lo que responda la ferretería (`Preguntas para la ferreteria 13-11.txt`): los nombres, los modelos y las fotos del archivo de los 70. Para el HE00017, el R016087 y el R010077 ya hay foto si confirman el modelo (`4 - Trabajo de fotos/Registro/Sin foto todavia.csv`).
+- Si el equipo hace la segunda vuelta de MercadoLibre: revisar lo que deje en "4 - Trabajo de fotos (no se sube)/Para revisar".
 - `lib/nombres/marcas.ts`: Belt-G (su lista dice "BG"), Protektor y V-Teg.
 - Después: "Para ti" (V1), las plantillas de ElectroStudio que elija Andrés y C-198.
 

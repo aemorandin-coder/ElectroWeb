@@ -1,10 +1,64 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.29`, comprobada el 12/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.33`, comprobada el 13/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 12-13/11 · C-204, C-204b, C-199 y C-205 (de rc.29 a `v1.0.0-rc.33`, con rc.30 a rc.32 adentro)
+**rc.30 (C-204)** la subió el equipo entre el 12 y el 13/11, sin anotarlo (usuario `luami`). El 13/11 el servidor decía `v1.0.0-rc.30` y la portada, `1.0.0-rc.30`. **rc.33** la subió el equipo el 13/11 desde rc.30, con los pasos de abajo. Por eso el SQL fue de 4 columnas: `suppliers.noShipTerms` ya estaba desde rc.30.
+
+Claude lo comprobó el 13/11 desde fuera, como un visitante:
+- **La portada dice `1.0.0-rc.33`.**
+- **Los 12 productos publicados de la ferretería** traen `despacho` = La Victoria (ZOOM 244) en la API pública: en el panel ya se eligió "Él mismo, desde La Victoria".
+- **"Calcula tu envío":**
+  - `/api/public/envio/destinos` responde `200`;
+  - el estimado de un cable de la ferretería a Caracas da un paquete desde La Victoria: ZOOM real, Bs 6.923,77 ($7,59), no aproximado.
+- **Falta probar con una cuenta:** la Lista del proveedor por pasos (C-205) y una compra mixta en dos paquetes.
+
+### El bloque que se subió: `v1.0.0-rc.33` (C-204, C-204b, C-199 y C-205, con rc.30 a rc.32 adentro; unos 25 minutos)
+Producción está en `v1.0.0-rc.29` (C-203), comprobada desde fuera el 12/11; su bloque está en `HISTORIAL.md`.
+- **C-204 (rc.30):** la carga masiva completa: el Excel y las fotos juntos, lo que no se envía, "Sugeridos", la columna "Modelo" y el paso 5 (la lista de control, "Completar con la web" y "Publicar los listos").
+- **C-204b (rc.31):** lo que no se envía, sin falsos positivos ("Motobomba a gasolina" se crea), el botón "Sí se envía", y de una carpeta solo se toman las fotos.
+- **C-199 (rc.32):** el envío desde el proveedor (dos paquetes y dos órdenes, solo envío) y "Calcula tu envío" en la ficha y el carrito.
+- **C-205 (rc.33):** la Lista del proveedor por pasos, los campos del tamaño de su dato y los filtros con ícono y subtítulo. Sin cambio de base.
+
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.29`). Es aditivo: cinco columnas nuevas.
+```sql
+ALTER TABLE "suppliers" ADD COLUMN "dispatchCityCode" TEXT, ADD COLUMN "dispatchCityName" TEXT, ADD COLUMN "noShipTerms" TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "orders" ADD COLUMN "dispatchCityCode" TEXT, ADD COLUMN "dispatchCityName" TEXT;
+```
+Sin variables nuevas, sin crons y sin dependencias nuevas.
+
+**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
+```bash
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.29 y sin cambios
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc33.dump
+bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
+npx prisma db push && bash scripts/deploy.sh # aplica las cinco columnas y compila
+git describe --tags --abbrev=0               # v1.0.0-rc.33
+```
+- `prisma db push` no debería preguntar nada: las columnas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
+
+**Después del deploy, en el panel:** Productos → Más → Lista del proveedor. Elige el proveedor de la ferretería y, en "Quién despacha sus pedidos", "Él mismo, desde La Victoria" (está en el grupo Aragua).
+
+**Pruebas** (unos 15 minutos, en la computadora; la consola se abre con F12):
+1. **Una pestaña de antes del deploy (C-203):** antes de correr el guion, deja abierta la Lista del proveedor. Después, sin recargar, toca "Productos": se carga entera y sin errores rojos.
+2. **"Calcula tu envío":** en la ficha de cualquier producto físico publicado, elige tu estado y tu ciudad. Sale lo que cobra ZOOM, en $ y Bs. En otra ficha, recuerda la ciudad.
+3. **La Lista del proveedor (C-204 y C-205):** arriba se ven los 5 pasos.
+   - En el paso 1, elige el proveedor y marca "Su lista trae el IVA incluido": el descuento y el margen son campos chicos, y "Así queda" muestra la cuenta.
+   - En el paso 2, suelta juntos el archivo de los 70, su listado de existencia y la carpeta "Fotos para subir": dice "105 fotos · 74 códigos de su lista con foto".
+   - En el paso 3, las píldoras llevan ícono y subtítulo, la "Motobomba a gasolina" dice "Nuevo" y cada fila con foto muestra su miniatura.
+4. **Lo de la ferretería** (cuando publiques el primero):
+   - su ficha dice "Sale desde La Victoria", sin delivery ni retiro en Guanare;
+   - en el carrito, con algo de la tienda, "Tu pedido llega en 2 paquetes";
+   - el checkout no ofrece retiro ni delivery.
+
+**Vuelta atrás:**
+- `git reset --hard v1.0.0-rc.29 && npm install && bash scripts/deploy.sh --sin-pull`.
+- Las columnas no molestan al código anterior.
+- Una compra hecha en dos paquetes queda como dos órdenes normales.
 
 ## 11-12/11 · C-203 (de rc.28 a `v1.0.0-rc.29`)
 Lo subió el equipo entre el 11 y el 12/11 (no quedó anotado quién). Claude lo comprobó el 12/11 desde fuera, como un visitante:

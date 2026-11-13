@@ -10,6 +10,16 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.39] - 2026-11-13
+### Clientes 1.2.0 (C-214)
+- **"Redactar con Claude" en cada mensaje de contacto:** la respuesta lleva lo real de la tienda:
+  - el estado de su orden, con la guía y el rastreo;
+  - los productos que nombra, con su precio, si hay y el enlace;
+  - lo que cobra ZOOM a su ciudad.
+  - Lo que no está en los datos va a "Antes de enviar, confirma". Se edita y se manda por correo o por WhatsApp, o se copia.
+- **Una orden de otra persona no se usa,** aunque el mensaje la nombre. Si el teléfono del mensaje no es el de su cuenta, solo se ofrece responder por correo.
+- **En el teléfono, el detalle del mensaje cabe en la pantalla.**
+
 ## [1.0.0-rc.38] - 2026-11-13
 Claude en el panel, la primera de las ideas que eligió Andrés.
 ### Clientes 1.1.0 (C-213)

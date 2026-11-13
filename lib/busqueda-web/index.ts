@@ -5,6 +5,7 @@ import { descargar } from './descarga';
 import { especificacionesDe, type EspecificacionHallada } from './especificaciones';
 import { cajaDesdeProducto, estimarPorTipo } from './estimar';
 import { extraerDatos, type DatosPagina } from './extraer';
+import { buscarConClaude, leerConClaude } from './claude';
 import { buscarConGroq, leerConGroq } from './groq';
 import { redactarDescripcion } from './redactar';
 import { clave, palabras, textoPlano } from './texto';
@@ -110,6 +111,7 @@ export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda): Promise<Res
     especificaciones: [],
     descripcion: '',
     redaccion: 'reglas',
+    modeloIA: '',
     avisos: [],
   };
   const sugeridos = [...new Set([...nombresBase(categoria).filter((n) => !/garant|marca/i.test(n)), 'Conexión', 'Capacidad', 'Color', 'Material', 'Compatibilidad', 'Incluye', 'Peso', 'Dimensiones'])];
@@ -149,12 +151,14 @@ export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda): Promise<Res
   resultado.fuentes = paginas.map((p) => p.fuente).slice(0, 5);
   const estimadoTipo = estimarPorTipo(nombre, categoria);
 
-  // Sin ninguna página leída (los buscadores no le responden al servidor, o no hay resultados): Groq busca por su
-  // cuenta. No hay con qué contrastar lo que traiga, así que todo queda como sin confirmar
+  // Sin ninguna página leída (los buscadores no le responden al servidor, o no hay resultados): la IA busca por su
+  // cuenta, Claude primero y Groq si falla (C-211). No hay con qué contrastar lo que traiga: todo queda sin confirmar
   if (!resultado.encontrado) {
-    const ia = await buscarConGroq({ nombre: buscado, categoria }, sugeridos);
+    const conClaude = await buscarConClaude({ nombre: buscado, categoria }, sugeridos);
+    const ia = conClaude?.busqueda ?? (await buscarConGroq({ nombre: buscado, categoria }, sugeridos));
     const util = ia && (ia.especificaciones.length >= 2 || ia.medidas || ia.pesoKg);
     if (ia && util) {
+      resultado.modeloIA = conClaude?.firma ?? 'Groq';
       const sinConfirmar = 'Lo trajo la búsqueda con IA, sin una página para contrastarlo';
       resultado.encontrado = true;
       resultado.redaccion = 'ia';
@@ -175,8 +179,12 @@ export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda): Promise<Res
     return resultado;
   }
 
-  // Groq ordena lo leído (groq.ts). Si no hay clave o falla, sigue la lectura propia
-  const ia = await leerConGroq({ nombre: buscado, categoria }, paginas.map((p) => ({ dominio: p.fuente.dominio, titulo: p.fuente.titulo, pares: p.datos.pares })), sugeridos);
+  // La IA ordena lo leído: Claude (claude.ts, C-211) y, si no hay clave o falla, Groq (groq.ts). Sin ninguna, sigue la
+  // lectura propia
+  const paraLeer = paginas.map((p) => ({ dominio: p.fuente.dominio, titulo: p.fuente.titulo, pares: p.datos.pares }));
+  const conClaude = await leerConClaude({ nombre: buscado, categoria }, paraLeer, sugeridos);
+  const ia = conClaude?.lectura ?? (await leerConGroq({ nombre: buscado, categoria }, paraLeer, sugeridos));
+  const firmaIA = conClaude?.firma ?? 'Groq';
 
   // Marca: la que más páginas repiten
   const marcas = paginas.filter((p) => p.datos.marca && p.datos.marca.length <= 40).map((p) => ({ marca: p.datos.marca, fuente: p.fuente.dominio }));
@@ -277,10 +285,14 @@ export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda): Promise<Res
   if (ia && ia.especificaciones.length >= 3) {
     resultado.especificaciones = ia.especificaciones;
     resultado.redaccion = 'ia';
+    resultado.modeloIA = firmaIA;
   }
 
   resultado.descripcion = ia?.descripcion || redactarDescripcion({ nombre, marca: resultado.marca?.valor ?? '', especificaciones: resultado.especificaciones });
-  if (ia?.descripcion) resultado.redaccion = 'ia';
+  if (ia?.descripcion) {
+    resultado.redaccion = 'ia';
+    resultado.modeloIA = firmaIA;
+  }
   return resultado;
 }
 

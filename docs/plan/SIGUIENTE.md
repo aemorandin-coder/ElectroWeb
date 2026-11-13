@@ -1,9 +1,14 @@
-# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.35, por subir)
+# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.36, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-211 · Claude Haiku 5.5 en "Buscar en la web" (rc.36, por subir):** Andrés pidió cambiar Groq por Claude y dio su clave (`estado/C-211.md`).
+  - Claude lee las páginas, redacta la ficha y busca por su cuenta. Groq queda de respaldo.
+  - La ficha dice qué IA la redactó.
+  - **Va en esfuerzo alto y no máximo:** el máximo tardó 98 y 158 s y nginx corta a los 60 s; el alto, 17 y 13 s, con casi la misma ficha. Se cambia en el `.env`.
+  - **La clave va en el `.env` del servidor** (paso 1 del bloque).
 - **C-210 · Correcciones del 13/11 (rc.35, por subir):** Andrés miró producción con rc.34 y pidió tres cosas. Eligió lo recomendado en las cuatro preguntas (`estado/C-210.md`).
   - **"Destacados" muestra solo lo que tiene estrella,** de toda la tienda. Antes se completaba con relleno y por eso no se iban los que desactivaba.
   - **"Recién llegados" va por la fecha de publicación** (columna nueva `products.publishedAt`, con su relleno), con hasta 4 por departamento.
@@ -164,18 +169,24 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.35` (C-210; unos 15 minutos)
+### El bloque por subir: `v1.0.0-rc.36` (C-210 y C-211, con rc.35 adentro; unos 20 minutos)
 Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
 - **C-210 (rc.35):**
   - "Destacados" muestra solo lo que tiene estrella, de toda la tienda;
   - "Recién llegados" va por la fecha de publicación, con hasta 4 por departamento;
   - las píldoras del panel van llenas, como las de la tienda, y los botones se animan.
+- **C-211 (rc.36):** "Buscar en la web" con Claude Haiku 5.5 en esfuerzo alto, con Groq de respaldo. Una dependencia nueva (`@anthropic-ai/sdk`, la instala `deploy.sh`) y **una variable nueva en el `.env`**.
 
 **SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.34`). Es aditivo: una columna nueva, sin índices.
 ```sql
 ALTER TABLE "products" ADD COLUMN "publishedAt" TIMESTAMP(3);
 ```
-Después, una sola vez, el relleno de lo ya publicado: `docs/plan/scripts/c210-fecha-de-publicacion.sql`. Sin variables nuevas, sin crons y sin dependencias nuevas.
+Después, una sola vez, el relleno de lo ya publicado: `docs/plan/scripts/c210-fecha-de-publicacion.sql`. Sin crons.
+
+**Antes del deploy, la clave de Claude** (la que creaste en platform.claude.com). En la terminal del servidor, en `/var/www/electroshopve`:
+1. `nano .env` y, al final, una línea nueva: `ANTHROPIC_API_KEY="tu clave"`. Guarda con Ctrl + O, Enter, y sal con Ctrl + X.
+2. Comprueba que quedó una sola: `grep -c '^ANTHROPIC_API_KEY' .env` debe decir `1`.
+3. **Opcional:** `ANTHROPIC_EFFORT="high"` es el esfuerzo por defecto. `"max"` tarda más de lo que nginx espera: no lo pongas sin hablar con Claude.
 
 **Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
 ```bash
@@ -184,7 +195,7 @@ DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg
 bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
 npx prisma db push && bash scripts/deploy.sh # agrega la columna y compila
 DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/c210-fecha-de-publicacion.sql
-git describe --tags --abbrev=0               # v1.0.0-rc.35
+git describe --tags --abbrev=0               # v1.0.0-rc.36
 ```
 - `prisma db push` no debería preguntar nada: la columna es nueva. Si avisa de perder datos, no sigas y pásale el texto a Claude.
 - **El relleno termina con `publicados_sin_fecha`, que debe decir 0.** Si dice otro número, pásale la salida a Claude.
@@ -195,12 +206,13 @@ git describe --tags --abbrev=0               # v1.0.0-rc.35
    - "Recién llegados" abre con la lijadora, el esmeril y la aspiradora.
 2. **En el panel, Productos:** quítale la estrella a uno y recarga el inicio: ya no sale en Destacados. Vuelve a ponérsela.
 3. **Publica un borrador** (uno de la ferretería, en Productos → Borradores): recarga el inicio y sale primero en "Recién llegados".
-4. **En el panel, Órdenes:**
+4. **En el panel, Productos → Nuevo producto → Producto físico:** escribe "Taladro de impacto 1/2 650 W Emtop" y toca "Buscar". En unos 20 segundos, la descripción dice "Redactada por Claude Haiku 5.5 (esfuerzo alto)…". Si dice Groq, la clave no quedó bien en el `.env`.
+5. **En el panel, Órdenes:**
    - las píldoras van llenas: "Entregada" en verde con su ícono y "Digital" en azul, como en la tienda;
    - la guía de ZOOM va en gris con el camión;
    - al pasar el ratón por "Códigos" o por el ojo, el botón se levanta.
 
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.34 && npm install && bash scripts/deploy.sh --sin-pull`. La columna nueva no molesta al código anterior y se puede quedar.
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.34 && npm install && bash scripts/deploy.sh --sin-pull`. La columna nueva y la clave del `.env` no molestan al código anterior y se pueden quedar.
 
 **Por confirmar de rc.33 (con una cuenta, unos 15 minutos):**
 1. **La Lista del proveedor por pasos:** arriba se ven los 5 pasos. En el paso 2, abre "1 - Cargar en la tienda" de la carpeta de la ferretería, selecciona todo (Ctrl + A) y suéltalo: dice "105 fotos · 74 códigos de su lista con foto".

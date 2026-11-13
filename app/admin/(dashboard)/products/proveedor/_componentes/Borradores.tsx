@@ -268,7 +268,7 @@ export default function Borradores({ proveedorId, version, enPaso = false }: { p
                 {f.ficha && !f.ficha.revisada && abiertos.has(f.id) && (
                   <div className="mt-3 space-y-3 rounded-xl bg-surface p-3">
                     <div>
-                      <label htmlFor={`desc-${f.id}`} className="mb-1 block text-xs font-semibold text-ink-soft">Descripción {f.ficha.redaccion === 'ia' ? '(la redactó la IA con lo que encontró)' : '(armada con lo que encontró)'}</label>
+                      <label htmlFor={`desc-${f.id}`} className="mb-1 block text-xs font-semibold text-ink-soft">Descripción {f.ficha.redaccion === 'ia' ? `(la redactó ${f.ficha.modeloIA || 'la IA'} con lo que encontró)` : '(armada con lo que encontró)'}</label>
                       <textarea id={`desc-${f.id}`} rows={6} value={textos[f.id] ?? f.descripcion} onChange={(e) => setTextos((t) => ({ ...t, [f.id]: e.target.value }))} className={`${adminInput()} min-h-32 text-sm`} />
                     </div>
                     {f.especificaciones.length > 0 && (

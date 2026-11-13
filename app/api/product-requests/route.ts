@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -6,6 +6,7 @@ import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { createNotification } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { revisarAlLlegar } from '@/lib/ia/urgencia';
 import { formatUSD } from '@/lib/currency';
 import { verifyCaptcha } from '@/lib/captcha';
 import { checkRateLimit, getClientIP, getRateLimitHeaders } from '@/lib/rate-limit';
@@ -54,7 +55,14 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(requests);
+    // C-215: el producto de la tienda que Claude dijo que es lo pedido o se le parece (si sigue publicado)
+    const ids = [...new Set(requests.map((r) => r.iaProductoId).filter((x): x is string => Boolean(x)))];
+    const productos = ids.length
+      ? await prisma.product.findMany({ where: { id: { in: ids }, status: 'PUBLISHED', deletedAt: null }, select: { id: true, name: true, slug: true, priceUSD: true } })
+      : [];
+    const porId = new Map(productos.map((p) => [p.id, { nombre: p.name, slug: p.slug, precioUSD: Number(p.priceUSD) }]));
+
+    return NextResponse.json(requests.map((r) => ({ ...r, iaProducto: r.iaProductoId ? porId.get(r.iaProductoId) ?? null : null })));
   } catch (error) {
     console.error('Error fetching product requests:', error);
     return NextResponse.json({ error: 'Error al obtener solicitudes' }, { status: 500 });
@@ -112,6 +120,9 @@ export async function POST(request: NextRequest) {
         status: 'PENDING',
       },
     });
+
+    // C-215: Claude le pone la urgencia y busca si ya está en la tienda, después de responder
+    after(() => revisarAlLlegar({ solicitud: productRequest.id }));
 
     await createNotification({
       userId,

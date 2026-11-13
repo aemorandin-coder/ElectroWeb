@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -6,6 +6,7 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { verifyCaptcha } from '@/lib/captcha';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { revisarAlLlegar } from '@/lib/ia/urgencia';
 
 // POST /api/contact - Submit contact form
 export async function POST(request: NextRequest) {
@@ -58,6 +59,9 @@ export async function POST(request: NextRequest) {
         status: 'PENDING', // PENDING, READ, RESPONDED
       },
     });
+
+    // C-215: Claude le pone la urgencia después de responder (no hace esperar a quien escribe)
+    after(() => revisarAlLlegar({ mensaje: contact.id }));
 
     emitAdminEvent({
       type: 'CONTACT_MESSAGE',

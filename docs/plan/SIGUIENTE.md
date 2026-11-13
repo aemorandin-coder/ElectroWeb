@@ -1,14 +1,15 @@
-# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.39, por subir)
+# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.40, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-215 · Mensajes y solicitudes por urgencia (rc.40, por subir):** la idea B, la parte de la tienda. Claude marca la urgencia, de qué trata y por qué, y en las solicitudes si ya está en la tienda; lo nuevo se revisa solo al llegar (`estado/C-215.md`). La lista de la ferretería entra con F.
 - **C-214 · Respuestas a clientes con Claude (rc.39, por subir):** la idea D. En cada mensaje de contacto, "Redactar con Claude" escribe la respuesta con su orden, los productos que nombra y lo que cobra ZOOM a su ciudad; se revisa y se manda por correo o WhatsApp (`estado/C-214.md`).
 - **C-213 · El resumen del cliente en su ficha (rc.38, por subir):** la primera de las ideas de Haiku que eligió Andrés (A). La pestaña Resumen dice lo que hay que atender y cómo compra, y a pedido Claude escribe quién es como cliente y qué ofrecerle (`estado/C-213.md`).
   - **De paso:** "Total gastado" ya no suma lo pendiente ni lo cancelado, y las órdenes de la ficha tienen su monto.
   - **La clave de Claude del 13/11 ya no sirve** (Anthropic da 401): hace falta una nueva para el paso 1 del bloque. Se probó con un Claude simulado.
-  - **Siguen** B (Mensajes y solicitudes por urgencia), C (Campañas de correo) y F (el catálogo de la ferretería).
+  - **Siguen** C (Campañas de correo) y F (el catálogo de la ferretería, que completa B).
 - **C-212 · El sorteo de la PlayStation 4 (rc.37, por subir):** Andrés lo pidió el 13/11 y eligió los números para que la empresa no pierda (`estado/C-212.md`).
   - **Cómo se participa:** 1 boleto por cada compra pagada de USD 10 o más, o invitando a 2 amigos con su enlace, sin comprar (1 boleto por cada 2, hasta 3). El resultado, el 20/12.
   - **Dónde:** la página `/sorteo`, Mi panel y Marketing → Sorteo (lo que dejó, quiénes participan y "Sortear ahora").
@@ -179,7 +180,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.39` (C-210 a C-214, con rc.35 a rc.38 adentro; unos 30 minutos)
+### El bloque por subir: `v1.0.0-rc.40` (C-210 a C-215, con rc.35 a rc.39 adentro; unos 30 minutos)
 Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
 - **C-210 (rc.35):**
   - "Destacados" muestra solo lo que tiene estrella, de toda la tienda;
@@ -189,10 +190,22 @@ Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su
 - **C-212 (rc.37):** el sorteo de la PlayStation 4: `/sorteo`, la tarjeta en Mi panel y Marketing → Sorteo. Dos tablas nuevas.
 - **C-213 (rc.38):** la pestaña Resumen de la ficha del cliente, con Claude, y "Total gastado" sin lo pendiente ni lo cancelado. Sin cambio de base.
 - **C-214 (rc.39):** "Redactar con Claude" en los mensajes de contacto. Sin cambio de base.
+- **C-215 (rc.40):** los mensajes y las solicitudes por urgencia, con Claude. 9 columnas nuevas.
 
-**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.34`). Es aditivo: una columna nueva y dos tablas nuevas; no toca ningún dato.
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.34`). Es aditivo: 10 columnas nuevas y dos tablas nuevas; no toca ningún dato.
 ```sql
 ALTER TABLE "products" ADD COLUMN "publishedAt" TIMESTAMP(3);
+
+ALTER TABLE "contact_messages" ADD COLUMN "iaMotivo" TEXT,
+ADD COLUMN "iaRevisadoAt" TIMESTAMP(3),
+ADD COLUMN "iaTipo" TEXT,
+ADD COLUMN "iaUrgencia" TEXT;
+
+ALTER TABLE "product_requests" ADD COLUMN "iaCoincide" TEXT,
+ADD COLUMN "iaMotivo" TEXT,
+ADD COLUMN "iaProductoId" TEXT,
+ADD COLUMN "iaRevisadoAt" TIMESTAMP(3),
+ADD COLUMN "iaUrgencia" TEXT;
 
 CREATE TABLE "sorteos" (
     "id" TEXT NOT NULL,
@@ -245,11 +258,11 @@ Después, una sola vez, el relleno de lo ya publicado: `docs/plan/scripts/c210-f
 git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.34 y sin cambios
 DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc35.dump
 bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
-npx prisma db push && bash scripts/deploy.sh # agrega la columna y las dos tablas, y compila
+npx prisma db push && bash scripts/deploy.sh # agrega las columnas y las dos tablas, y compila
 DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/c210-fecha-de-publicacion.sql
-git describe --tags --abbrev=0               # v1.0.0-rc.39
+git describe --tags --abbrev=0               # v1.0.0-rc.40
 ```
-- `prisma db push` no debería preguntar nada: la columna y las tablas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
+- `prisma db push` no debería preguntar nada: las columnas y las tablas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
 - **El relleno termina con `publicados_sin_fecha`, que debe decir 0.** Si dice otro número, pásale la salida a Claude.
 
 **Pruebas** (unos 10 minutos):
@@ -269,7 +282,10 @@ git describe --tags --abbrev=0               # v1.0.0-rc.39
 7. **La respuesta a un mensaje:** en el panel, Clientes → Mensajes y solicitudes → abre un mensaje → **"Redactar con Claude"**.
    - Arriba salen los datos que usó (su orden, un producto, la ciudad y el flete de ZOOM), y el texto se puede editar.
    - "Responder por correo" abre tu correo con el asunto y el texto. Si el mensaje es de alguien con cuenta y otro teléfono, no sale "Enviar por WhatsApp", a propósito.
-8. **El sorteo: armarlo y encenderlo** (en la computadora, con tu cuenta).
+8. **Los mensajes por urgencia:** en Mensajes y solicitudes, toca **"Ordenar por urgencia"** una vez (lo que llegó antes del deploy no está revisado).
+   - En unos segundos, la lista queda con "Urgente", "Puede esperar" y de qué trata cada uno, y "Más urgentes primero" los ordena.
+   - En **Solicitudes de productos**, si alguien pidió algo que ya vendes, sale "Ya está en la tienda" con el enlace.
+9. **El sorteo: armarlo y encenderlo** (en la computadora, con tu cuenta).
    1. **La foto de la consola:** súbela como foto de un producto (o en Configuración), ábrela y copia su dirección, la que empieza con `/api/uploads/`.
    2. **En el panel, Marketing → Sorteo:** revisa lo propuesto (premio, del día de hoy al 18/12, resultado el 20/12, USD 10 y 3 por invitar) y pon lo que te costó la consola.
    3. Pega la dirección de la foto, marca "En la tienda" y guarda.
@@ -277,7 +293,7 @@ git describe --tags --abbrev=0               # v1.0.0-rc.39
    5. **Con una cuenta de cliente,** en el teléfono: "Tus boletos" y "Compartir por WhatsApp". En Mi panel sale la tarjeta "Tienes N boletos".
    6. **El 20/12,** en Marketing → Sorteo, "Sortear ahora". Solo se puede después del cierre y una sola vez. Escríbele al ganador al correo que sale ahí.
 
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.34 && npm install && bash scripts/deploy.sh --sin-pull`. La columna y las dos tablas nuevas, y la clave del `.env`, no molestan al código anterior y se pueden quedar.
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.34 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas y las dos tablas nuevas, y la clave del `.env`, no molestan al código anterior y se pueden quedar.
 
 **Por confirmar de rc.33 (con una cuenta, unos 15 minutos):**
 1. **La Lista del proveedor por pasos:** arriba se ven los 5 pasos. En el paso 2, abre "1 - Cargar en la tienda" de la carpeta de la ferretería, selecciona todo (Ctrl + A) y suéltalo: dice "105 fotos · 74 códigos de su lista con foto".

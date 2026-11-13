@@ -490,7 +490,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **Haiku en el panel** (Andrés eligió 5 de las 7 ideas el 13/11). Esfuerzo alto para lo que se espera en pantalla; el máximo, solo para trabajos de fondo. La base común está en `lib/ia/claude.ts` y las reglas del texto en `lib/ia/texto.ts` (C-213).
   - **A · El resumen del cliente en su ficha** (**hecha**, C-213, rc.38): la pestaña Resumen con lo que hay que atender y cómo compra, y a pedido el resumen de Claude con qué ofrecerle. De paso, "Total gastado" ya no suma lo pendiente ni lo cancelado. `estado/C-213.md`.
     - **Probada con un Claude simulado:** la clave del 13/11 da 401. Falta una clave nueva (en el servidor y aquí) y probarla con el modelo de verdad.
-  - **B · Las consultas y los "Solicitar producto":** ordenados por urgencia, buscando si ya está en la tienda o en la lista de la ferretería.
+  - **B · Las consultas y los "Solicitar producto"** (**hecha** la parte de la tienda, C-215, rc.40): Claude pone la urgencia, de qué trata y por qué, y en las solicitudes si ya está en la tienda. Se guarda en la base y lo nuevo se revisa solo al llegar. `estado/C-215.md`.
+    - **Falta la lista de la ferretería:** entra cuando F la guarde en la base.
   - **C · Campañas de correo:** del objetivo ("gift cards para Navidad") al asunto y el texto, con los productos reales.
   - **D · Respuestas a clientes** (**hecha**, C-214, rc.39): "Redactar con Claude" en cada mensaje, con su orden, los productos que nombra y el flete de ZOOM a su ciudad. Una orden ajena no se usa, y sin el teléfono de su cuenta no se ofrece WhatsApp. `estado/C-214.md`.
   - **F · El catálogo de la ferretería:** la categoría y el nombre de la tienda para los 3.114 códigos de su lista.

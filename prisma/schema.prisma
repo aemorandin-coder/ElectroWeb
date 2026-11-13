@@ -1096,6 +1096,13 @@ model ContactMessage {
   message String
   status  String @default("PENDING")
 
+  /// C-215: la urgencia según Claude (alta, media o baja), de qué trata (orden, garantía, compra…) y por qué, en una
+  /// línea. Null = todavía sin revisar.
+  iaUrgencia   String?
+  iaTipo       String?
+  iaMotivo     String?
+  iaRevisadoAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1610,6 +1617,13 @@ model ProductRequest {
   estimatedBudget  Decimal?
   status           String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, REJECTED
   adminNotes       String?
+  /// C-215: la urgencia según Claude y por qué, y el producto de la tienda que es lo pedido (iaCoincide "igual") o se le
+  /// parece ("parecido"). Null = todavía sin revisar.
+  iaUrgencia       String?
+  iaMotivo         String?
+  iaProductoId     String?
+  iaCoincide       String?
+  iaRevisadoAt     DateTime?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

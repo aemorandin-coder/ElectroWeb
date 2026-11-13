@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/Badge';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import BorradorRespuesta from '@/components/admin/consultas/BorradorRespuesta';
+import { BotonUrgencia, EnLaTienda, PildoraUrgencia, porUrgencia } from '@/components/admin/consultas/Urgencia';
 
 // ============== TYPES ==============
 
@@ -32,6 +33,10 @@ interface ContactMessage {
     message: string;
     status: 'PENDING' | 'READ' | 'RESPONDED';
     createdAt: string;
+    // C-215: lo que dijo Claude (null = sin revisar)
+    iaUrgencia?: string | null;
+    iaTipo?: string | null;
+    iaMotivo?: string | null;
 }
 
 interface ProductRequest {
@@ -46,6 +51,11 @@ interface ProductRequest {
     status: string;
     adminNotes?: string;
     createdAt: string;
+    // C-215: lo que dijo Claude, y el producto de la tienda que es lo pedido o se le parece
+    iaUrgencia?: string | null;
+    iaMotivo?: string | null;
+    iaCoincide?: string | null;
+    iaProducto?: { nombre: string; slug: string; precioUSD: number } | null;
 }
 
 type Tab = 'messages' | 'requests';
@@ -69,6 +79,12 @@ export default function InquiriesPage() {
     const [messagesLoading, setMessagesLoading] = useState(true);
     const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
     const [messageFilterStatus, setMessageFilterStatus] = useState<'ALL' | 'PENDING' | 'READ' | 'RESPONDED'>('ALL');
+    // C-215: más recientes (como antes) o más urgentes primero, en las dos pestañas
+    const [ordenUrgencia, setOrdenUrgencia] = useState(false);
+    const despuesDeOrdenar = async () => {
+        await Promise.all([fetchMessages(), fetchRequests()]);
+        setOrdenUrgencia(true);
+    };
 
     // Requests State
     const [requests, setRequests] = useState<ProductRequest[]>([]);
@@ -150,8 +166,20 @@ export default function InquiriesPage() {
         }
     };
 
-    const filteredMessages = messages.filter(msg =>
+    const mensajesDelFiltro = messages.filter(msg =>
         messageFilterStatus === 'ALL' ? true : msg.status === messageFilterStatus
+    );
+    const filteredMessages = ordenUrgencia ? porUrgencia(mensajesDelFiltro) : mensajesDelFiltro;
+    const selectorOrden = (
+        <select
+            value={ordenUrgencia ? 'urgencia' : 'recientes'}
+            onChange={(e) => setOrdenUrgencia(e.target.value === 'urgencia')}
+            aria-label="Orden"
+            className="px-4 py-2 border border-line rounded-lg focus:outline-none focus:border-brand-500 text-sm bg-white"
+        >
+            <option value="recientes">Más recientes</option>
+            <option value="urgencia">Más urgentes primero</option>
+        </select>
     );
 
     const getMessageStatusColor = (status: string) => {
@@ -333,7 +361,7 @@ export default function InquiriesPage() {
                     <div className="h-full flex flex-col">
                         {/* Filter */}
                         <div className="flex-shrink-0 mb-4">
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
                                 <select
                                     value={messageFilterStatus}
                                     onChange={(e) => setMessageFilterStatus(e.target.value as 'ALL' | 'PENDING' | 'READ' | 'RESPONDED')}
@@ -344,6 +372,8 @@ export default function InquiriesPage() {
                                     <option value="READ">Leídos</option>
                                     <option value="RESPONDED">Respondidos</option>
                                 </select>
+                                {selectorOrden}
+                                <BotonUrgencia alTerminar={despuesDeOrdenar} />
                             </div>
                         </div>
 
@@ -384,10 +414,11 @@ export default function InquiriesPage() {
                                                 </div>
                                                 <p className="text-sm text-ink font-medium truncate mb-1">{msg.subject}</p>
                                                 <p className="text-xs text-muted truncate">{msg.message}</p>
-                                                <div className="mt-2">
+                                                <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getMessageStatusColor(msg.status)}`}>
                                                         {getMessageStatusLabel(msg.status)}
                                                     </span>
+                                                    <PildoraUrgencia urgencia={msg.iaUrgencia} tipo={msg.iaTipo} />
                                                 </div>
                                             </div>
                                         ))}
@@ -428,6 +459,12 @@ export default function InquiriesPage() {
                                                 <div className="mt-2 text-xs text-muted">
                                                     {format(new Date(selectedMessage.createdAt), "d 'de' MMMM, yyyy 'a las' HH:mm", { locale: es })}
                                                 </div>
+                                                {selectedMessage.iaMotivo && (
+                                                    <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm text-ink-soft">
+                                                        <PildoraUrgencia urgencia={selectedMessage.iaUrgencia} tipo={selectedMessage.iaTipo} />
+                                                        <span>{selectedMessage.iaMotivo}</span>
+                                                    </p>
+                                                )}
                                             </div>
 
                                             <div className="flex gap-2">
@@ -480,7 +517,7 @@ export default function InquiriesPage() {
                     <div className="h-full flex flex-col">
                         {/* Stats and Filter */}
                         <div className="flex-shrink-0 space-y-4 mb-4">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                                 <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
                                     <p className="text-xs text-muted font-medium mb-1">Total</p>
                                     <p className="text-2xl font-semibold text-ink">{requestStats.total}</p>
@@ -513,6 +550,10 @@ export default function InquiriesPage() {
                                     <option value="FULFILLED">Cumplidas</option>
                                     <option value="REJECTED">Rechazadas</option>
                                 </select>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {selectorOrden}
+                                    <BotonUrgencia alTerminar={despuesDeOrdenar} />
+                                </div>
                             </div>
                         </div>
 
@@ -531,13 +572,14 @@ export default function InquiriesPage() {
                                         <p className="text-sm text-muted">No se encontraron solicitudes de productos</p>
                                     </div>
                                 ) : (
-                                    requests.map((request) => (
+                                    (ordenUrgencia ? porUrgencia(requests) : requests).map((request) => (
                                         <div
                                             key={request.id}
                                             className="bg-white rounded-lg border border-line p-4 shadow-sm hover:shadow-md transition-all"
                                         >
                                             <div className="flex gap-4">
-                                                <div className="flex-shrink-0">
+                                                {/* C-215: en el teléfono, el ícono deja el ancho al nombre de lo pedido */}
+                                                <div className="hidden flex-shrink-0 sm:block">
                                                     <div className="w-12 h-12 rounded-lg bg-brand-100 flex items-center justify-center">
                                                         <IconoPaquete className="w-6 h-6 text-brand-600" />
                                                     </div>
@@ -555,6 +597,13 @@ export default function InquiriesPage() {
                                                             <p className="text-sm text-muted mb-2">
                                                                 {request.description}
                                                             </p>
+                                                            {(request.iaUrgencia || request.iaProducto) && (
+                                                                <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                                                                    <PildoraUrgencia urgencia={request.iaUrgencia} />
+                                                                    <EnLaTienda coincide={request.iaCoincide} producto={request.iaProducto} />
+                                                                    {request.iaMotivo && <span className="text-xs text-ink-soft">{request.iaMotivo}</span>}
+                                                                </div>
+                                                            )}
                                                             <div className="flex flex-wrap gap-3 text-xs text-muted">
                                                                 <span className="flex items-center gap-1">
                                                                     <IconoCuenta className="w-4 h-4" />

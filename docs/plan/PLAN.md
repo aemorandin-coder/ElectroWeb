@@ -611,7 +611,6 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 | A12 | En las tarjetas chicas, ¿la etiqueta de un usado dice solo la condición ("CAJA ABIERTA") y el grado se lee en la ficha? | Hoy "CAJA ABIERTA · EXCELENTE" ocupa dos líneas y tapa parte de la foto (`estado/C-162.md`). |
 | A13 | Promotores: ¿los productos digitales (códigos y recargas) pagan comisión? Hoy sí, pero no se acredita sola si supera la ganancia de la venta | `estado/C-167.md`. Opciones: no pagar en digitales, un % menor, o dejarlo. |
 | A14 | Promotores: % por defecto de la comisión y del descuento del código (quedó 5 % y 5 %), y los términos del programa para el abogado | `estado/C-167.md`. |
-| A15 | El envío gratis por monto, con una compra que llega en dos paquetes: ¿cuenta solo lo del paquete de Guanare o toda la compra? | Así quedó en C-199: solo lo del paquete de Guanare, la lectura de "vale solo para el paquete de Guanare" (10/11). Cambiarlo es una línea (`estado/C-199.md`). |
 | A11 | ¿La cinta ES también en los productos que no son nuevos (al menos en "Caja abierta")? | Hoy llevan su etiqueta de condición y no la cinta (decisión del 28/09). Andrés la echó de menos el 01/10 (`estado/C-161.md`). |
 
 ### 7.2 Tomadas (no volver a preguntar)
@@ -692,6 +691,10 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - Las variantes, como familias de productos (C-198).
 - **El departamento Ferretería (Andrés, 10/11, C-200):** enlace en la franja al lado de Ofertas (en el teléfono, primer chip del inicio y entrada en "Más"); su vitrina, un estante con sus categorías después de "Recién llegados"; su página, el catálogo de siempre con el aviso del envío y sus categorías arriba.
 - **"Calcula tu envío" (Andrés, 12/11, C-199):** en la ficha y en el carrito; el cliente elige estado y ciudad de ZOOM (se recuerda, y sale de "Mis direcciones" si inició sesión); ve lo que le cobra ZOOM retirando en su oficina, en $ y Bs, "lo pagas al retirar" y "MRW cobra parecido"; si ZOOM no responde, un estimado propio marcado como aproximado. Se hizo junto con C-199: cada paquete desde su origen.
+- **El envío gratis cuando la compra llega en dos paquetes (Andrés, 13/11; cerró A15):** cada paquete calcula lo suyo.
+  - **El de Guanare** es gratis si lo que sale de Guanare llega al monto de Configuración ($600 al 13/11). Lo de la ferretería no suma para ese monto.
+  - **El de La Victoria** va siempre con cobro a destino.
+  - **El embalaje gratis desde un monto** sigue contando toda la compra física, igual para los dos (10/11).
 - **Las pinturas, fuera por ahora (Andrés, 12/11):** ZOOM y MRW no las transportan. Lo mismo vale para los solventes, los aerosoles, las pegas con solvente y el gas: la carga no los crea (C-204).
 - **La carga masiva (Andrés, 12/11, C-204):**
   - el Excel y las fotos van juntos;

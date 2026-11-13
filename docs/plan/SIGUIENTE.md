@@ -31,7 +31,7 @@
     - solo envío;
     - si el carrito mezcla, dos paquetes, cada uno con su embalaje, su guía y su orden.
   - **El envío gratis vale solo para el paquete de Guanare.**
-  - **Queda abierta A15** (`PLAN.md` §7.1): si el monto del envío gratis cuenta solo lo de Guanare (así quedó) o toda la compra.
+  - **A15, decidida por Andrés el 13/11:** cada paquete calcula lo suyo. El monto del envío gratis cuenta solo lo que sale de Guanare, como ya funcionaba (`PLAN.md` §7.2).
 - **En producción desde el 13/11 (rc.33):** rc.30 la subió el equipo sin anotarlo (usuario `luami`), y el 13/11 subió de rc.30 a rc.33. El bloque y lo comprobado están en `HISTORIAL.md`.
 - **C-204b (12/11, rc.31, en producción):** Andrés mandó una captura: la "Motobomba a gasolina" salía como "No se envía". Arreglado (`estado/C-204b.md`):
   - después de "a", "para" o "P/", la palabra de la lista no cuenta;

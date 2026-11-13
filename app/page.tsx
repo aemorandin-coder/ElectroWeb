@@ -12,24 +12,28 @@ import ProductSection from '@/components/home/ProductSection';
 import TrustBar from '@/components/home/TrustBar';
 import VitrinaDepartamento from '@/components/home/VitrinaDepartamento';
 import VideoPlayer from '@/components/home/VideoPlayer';
-import TarjetaNavidad from '@/components/navidad/TarjetaNavidad';
+import SaludoNavidad from '@/components/navidad/SaludoNavidad';
 import PublicHeader from '@/components/public/PublicHeader';
 import Container from '@/components/ui/Container';
 import SectionHeader from '@/components/ui/SectionHeader';
-import type { PublicProduct } from '@/lib/dto/product';
+import { crearReparto, porDiaYDestacado, variados } from '@/lib/inicio/reparto';
+import { diaEnCaracas } from '@/lib/navidad';
 import {
   getActivePaymentMethodKinds,
   getBestSellers,
   getCategoriesRail,
+  getCodigosDigitales,
+  getCompraPorCategoria,
   getDeals,
   getFeatured,
   getHomeSettings,
   getDepartamentos,
   getNewArrivals,
+  getRecienLlegados,
   getTopCategoriesWithProducts,
   getVitrinaDepartamento,
 } from '@/lib/queries/home';
-import { getHotAd } from '@/lib/queries/hot-ad';
+import { getHotAd, getSaludoNavidad } from '@/lib/queries/hot-ad';
 import { safeHotAdLink } from '@/lib/hot-ad';
 import { getPublicSettings } from '@/lib/site-settings';
 import JsonLd from '@/components/seo/JsonLd';
@@ -44,53 +48,69 @@ export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 // La vitrina necesita 1 producto estrella + 4 en desktop
 const SHOWCASE_MIN = 5;
-
-function uniqueById(products: PublicProduct[]): PublicProduct[] {
-  const seen = new Set<string>();
-  return products.filter((product) => (seen.has(product.id) ? false : (seen.add(product.id), true)));
-}
+// C-207: lo que muestra cada estante del inicio, y cuántos de un mismo departamento o categoría van en "Recién llegados"
+const POR_ESTANTE = 12;
+const NUEVOS_POR_GRUPO = 3;
+const ESTANTES_DE_CATEGORIA = 3;
 
 /**
  * Home "vitrina" (PLAN.md §3): lo primero son productos con precio y botón, no un mensaje.
  * Todo se renderiza en el servidor; solo carrito, compartir y buscador son cliente.
  */
 export default async function Home() {
-  const [settings, homeSettings, featured, deals, bestSellers, newArrivals, topCategories, paymentMethods, hotAd] = await Promise.all([
+  const [settings, homeSettings, featured, deals, bestSellers, newArrivals, recientes, codigos, topCategories, paymentMethods, hotAd, saludo] = await Promise.all([
     getPublicSettings(),
     getHomeSettings(),
     getFeatured(),
-    getDeals(12),
-    getBestSellers(90, 12),
+    getDeals(24),
+    getBestSellers(90, 24),
     getNewArrivals(12),
-    getTopCategoriesWithProducts(3, 10),
+    getRecienLlegados(48),
+    getCodigosDigitales(POR_ESTANTE),
+    getTopCategoriesWithProducts(6, 16),
     getActivePaymentMethodKinds(),
     getHotAd(),
+    getSaludoNavidad(),
   ]);
-  const railCategories = homeSettings.showCategories ? await getCategoriesRail(homeSettings.maxCategoriesDisplay) : [];
-  // C-200: el inicio es de tecnología; cada departamento aparte (Ferretería) tiene una sola vitrina, después de "Recién llegados"
-  const departamentos = await getDepartamentos();
-  const vitrinas = await Promise.all(departamentos.map(async (departamento) => ({ departamento, products: await getVitrinaDepartamento(departamento.id, 12) })));
+  // C-200: cada departamento aparte (Ferretería) tiene una sola vitrina, después de "Recién llegados"
+  const [railCategories, compraPorCategoria, departamentos] = await Promise.all([
+    homeSettings.showCategories ? getCategoriesRail(homeSettings.maxCategoriesDisplay) : [],
+    homeSettings.showCategories ? getCompraPorCategoria(homeSettings.maxCategoriesDisplay) : { casillas: [], mas: null },
+    getDepartamentos(),
+  ]);
+  const vitrinas = await Promise.all(departamentos.map(async (departamento) => ({ departamento, products: await getVitrinaDepartamento(departamento.id, 24) })));
 
-  // Si hay pocos destacados, la vitrina se completa con ofertas y recién llegados:
-  // el primer pantallazo siempre muestra productos.
+  // C-207: cada producto sale una sola vez, en la primera sección que le toca, en el orden de la página; una sección con
+  // menos de 4 no sale y lo suyo queda para las de abajo (lib/inicio/reparto.ts)
+  const reparto = crearReparto();
+
+  // La vitrina: los destacados. Si son pocos, se completa con ofertas y lo nuevo de tecnología solo hasta lo que necesita
+  // para verse (antes, hasta 8): lo demás nuevo va a "Recién llegados". El primer pantallazo siempre muestra productos.
   // C-172: la estrella cambia cada día siguiendo el orden de los destacados (la página se regenera cada minuto)
-  const showcase = estrellaDelDia(
-    uniqueById([...featured, ...deals, ...newArrivals]).slice(0, Math.max(SHOWCASE_MIN, homeSettings.maxFeaturedProducts))
-  );
+  const showcase = estrellaDelDia(reparto.tomar([...featured, ...deals, ...newArrivals], Math.max(featured.length, SHOWCASE_MIN), 1));
+  const ofertas = reparto.tomar(deals, POR_ESTANTE);
+  const masVendidos = reparto.tomar(bestSellers, POR_ESTANTE);
+  // Las gift cards y recargas, en su sección y en ninguna otra
+  const codigosDigitales = reparto.tomar(codigos, POR_ESTANTE);
+  const categoriasDigitales = [...new Set(codigosDigitales.map((product) => product.category.slug))];
+  const hrefDigitales = categoriasDigitales.length === 1 ? `/categorias/${categoriasDigitales[0]}` : '/productos?tipo=digital';
+  // "Recién llegados": lo último de toda la tienda (Andrés, 13/11), por día y con los destacados del día primero, y pocos de
+  // cada departamento o categoría: una carga de 70 productos de un proveedor no llena la sección
+  const departamentoDe = new Map(departamentos.flatMap((departamento) => departamento.ids.map((id) => [id, departamento.id] as const)));
+  const nuevos = porDiaYDestacado(recientes.filter((product) => !reparto.mostrado(product.id)), (product) => diaEnCaracas(new Date(product.createdAt)));
+  const recienLlegados = reparto.tomar(variados(nuevos, (product) => departamentoDe.get(product.category.id) ?? product.category.id, NUEVOS_POR_GRUPO), POR_ESTANTE);
+  const vitrinasConProductos = vitrinas
+    .map(({ departamento, products }) => ({ departamento, products: reparto.tomar(products, POR_ESTANTE) }))
+    .filter(({ products }) => products.length > 0);
+  // Los estantes de categoría, con lo que no salió arriba: los primeros tres que tengan con qué
+  const estantes: typeof topCategories = [];
+  for (const { category, products } of topCategories) {
+    if (estantes.length === ESTANTES_DE_CATEGORIA) break;
+    const elegidos = reparto.tomar(products, POR_ESTANTE);
+    if (elegidos.length > 0) estantes.push({ category, products: elegidos });
+  }
   const rate = settings.exchangeRateVES;
   const lowStock = homeSettings.lowStockThreshold;
-
-  // C-186: la tarjeta navideña del popup se dibuja aquí, en el servidor (sin JavaScript nuevo en el navegador). Con el
-  // tema apagado no viene y el popup es el de siempre
-  const tarjetaNavidad = hotAd?.tarjeta ? (
-    <TarjetaNavidad
-      titulo={hotAd.tarjeta.titulo}
-      mensaje={hotAd.tarjeta.mensaje}
-      boton={hotAd.tarjeta.boton}
-      enlace={safeHotAdLink(hotAd.tarjeta.enlace)}
-      gorro={hotAd.tarjeta.gorro}
-    />
-  ) : undefined;
 
   return (
     <div className="min-h-dvh bg-white">
@@ -118,21 +138,30 @@ export default async function Home() {
           </section>
         )}
 
-        <CategoryRail categories={railCategories} />
+        {/* C-207: el saludo navideño, en una franja dentro de la página y después de los destacados: ya no tapa la tienda */}
+        {saludo && (
+          <section aria-label={saludo.titulo} className="bg-white pt-6 lg:pt-8">
+            <Container>
+              <SaludoNavidad titulo={saludo.titulo} mensaje={saludo.mensaje} boton={saludo.boton} enlace={safeHotAdLink(saludo.enlace)} gorro={saludo.gorro} />
+            </Container>
+          </section>
+        )}
 
-        <ProductSection id="ofertas" title="Ofertas" subtitle="Precios rebajados por tiempo limitado" href="/productos?oferta=1" products={deals} exchangeRateVES={rate} lowStockThreshold={lowStock} tone="surface" />
+        <CategoryRail casillas={compraPorCategoria.casillas} mas={compraPorCategoria.mas} />
 
-        <ProductSection id="mas-vendidos" title="Lo más vendido" subtitle="Lo que más compran nuestros clientes" products={bestSellers} exchangeRateVES={rate} lowStockThreshold={lowStock} />
+        <ProductSection id="ofertas" title="Ofertas" subtitle="Precios rebajados por tiempo limitado" href="/productos?oferta=1" products={ofertas} exchangeRateVES={rate} lowStockThreshold={lowStock} tone="surface" />
 
-        <DigitalStrip />
+        <ProductSection id="mas-vendidos" title="Lo más vendido" subtitle="Lo que más compran nuestros clientes" products={masVendidos} exchangeRateVES={rate} lowStockThreshold={lowStock} />
 
-        <ProductSection id="recien-llegados" title="Recién llegados" href="/productos" products={newArrivals} exchangeRateVES={rate} lowStockThreshold={lowStock} tone="surface" />
+        <DigitalStrip products={codigosDigitales} href={hrefDigitales} exchangeRateVES={rate} lowStockThreshold={lowStock} />
 
-        {vitrinas.map(({ departamento, products }) => (
+        <ProductSection id="recien-llegados" title="Recién llegados" subtitle="Lo último que llegó a la tienda" href="/productos" products={recienLlegados} exchangeRateVES={rate} lowStockThreshold={lowStock} tone="surface" />
+
+        {vitrinasConProductos.map(({ departamento, products }) => (
           <VitrinaDepartamento key={departamento.id} departamento={departamento} products={products} exchangeRateVES={rate} lowStockThreshold={lowStock} />
         ))}
 
-        {topCategories.map(({ category, products }, index) => (
+        {estantes.map(({ category, products }, index) => (
           <ProductSection
             key={category.id}
             id={`categoria-${category.slug}`}
@@ -141,7 +170,7 @@ export default async function Home() {
             products={products}
             exchangeRateVES={rate}
             lowStockThreshold={lowStock}
-            tone={(index + (vitrinas.length % 2)) % 2 === 0 ? 'white' : 'surface'}
+            tone={(index + (vitrinasConProductos.length % 2)) % 2 === 0 ? 'white' : 'surface'}
           />
         ))}
 
@@ -163,7 +192,7 @@ export default async function Home() {
 
       <Footer />
 
-      {hotAd && <HotAdOverlay hotAd={hotAd} tarjeta={tarjetaNavidad} />}
+      {hotAd && <HotAdOverlay hotAd={hotAd} />}
     </div>
   );
 }

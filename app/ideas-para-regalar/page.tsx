@@ -19,7 +19,7 @@ import { getPublicSettings } from '@/lib/site-settings';
 
 // C-190: la página de regalos por presupuesto. Existe todo el año; con el tema navideño (Marketing → Navidad) lleva el
 // adorno de la temporada: el sello con el gorro, los lazos en rojo y la fecha límite para que llegue antes del 24.
-// El botón "Ver ideas para regalar" de la tarjeta navideña lleva aquí.
+// El botón "Ver ideas para regalar" de la franja navideña del inicio lleva aquí.
 
 export async function generateMetadata(): Promise<Metadata> {
   return {

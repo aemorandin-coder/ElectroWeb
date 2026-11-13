@@ -331,7 +331,7 @@ body {
   animation: scaleIn 0.2s ease-out;
 }
 
-/* Tarjeta navideña del popup (C-186, components/navidad/SelloNavidad.tsx): la pantalla del sello se enciende como un
+/* El sello navideño (C-186, components/navidad/SelloNavidad.tsx; desde C-207, en la franja del inicio): la pantalla se enciende como un
    televisor (una línea que se abre de lado a lado y después hacia arriba y abajo) y el gorro se acomoda en el sello: cae,
    se pasa un poco y se balancea hasta quedar quieto (la borla, en la punta, es la que más se mece). Todo una sola vez, al
    aparecer, y solo si el sistema no pide menos movimiento: con "reducir movimiento" estas clases no hacen nada y el sello
@@ -349,23 +349,6 @@ body {
     transform-box: fill-box;
     transform-origin: 50% 100%;
     animation: navidad-acomoda 0.9s ease-in-out 0.7s both;
-  }
-
-  /* C-194: Chispa sube una vez desde el borde de la tarjeta, después de que el gorro se acomoda */
-  .navidad-asoma {
-    animation: navidad-asoma 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) 1.2s both;
-  }
-}
-
-@keyframes navidad-asoma {
-  0% {
-    opacity: 0;
-    transform: translateY(30%);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 

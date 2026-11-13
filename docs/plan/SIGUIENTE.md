@@ -1,9 +1,14 @@
-# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.33, igual que `main`)
+# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.33; `main` en 1.0.0-rc.34, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-207 · El inicio que vende (13/11, rc.34, por subir):** Andrés vio el plan de los 5 cambios del inicio y eligió. Se hicieron el 1, el 3 y el 4 (`estado/C-207.md`).
+  - **El saludo navideño ya no tapa la tienda:** es una franja dentro del inicio, después de los destacados. Andrés va a mejorar su diseño. Los textos siguen en Marketing → Navidad.
+  - **Cada producto sale una sola vez.** "Recién llegados" trae lo último de toda la tienda, ferretería incluida, con pocos de cada rincón, y las gift cards van en una sola sección, con cada plataforma y su monto.
+  - **"Compra por categoría"** lleva la foto de un producto real y la cuenta solo desde 10. Las categorías chicas van juntas en "Más categorías".
+  - **Sigue C-209:** la portada (2) y las pruebas de confianza (5), con maquetas antes. Los videos de creadores son C-208, con su plan maestro aparte.
 - **C-205 · La Lista del proveedor por pasos (13/11, rc.33, en producción):** Andrés miró la carga masiva y marcó tres cosas: contenedores anchísimos para una palabra, que no se sabía qué hacer ni adónde ir, y píldoras sin ícono ni explicación (`estado/C-205.md`).
   - Eligió la maqueta A: un paso a la vez, con los pasos arriba y "Atrás / Siguiente: …" abajo.
   - Los campos, del tamaño de su dato. Los filtros, con ícono, cuenta y subtítulo.
@@ -154,8 +159,40 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Nada por subir
+### El bloque por subir: `v1.0.0-rc.34` (C-207; unos 10 minutos)
 Producción está en `v1.0.0-rc.33` (C-205), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
+- **C-207 (rc.34):** el saludo navideño en una franja (ya no tapa la tienda), cada producto una sola vez en el inicio, "Recién llegados" de toda la tienda, las gift cards en una sola sección y "Compra por categoría" con fotos.
+
+Sin cambio de base, sin variables nuevas, sin crons y sin dependencias nuevas.
+
+**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
+```bash
+git describe --tags --abbrev=0 && git status -sb   # v1.0.0-rc.33 y sin cambios
+bash scripts/deploy.sh                             # no hay SQL: compila y reinicia
+git describe --tags --abbrev=0                     # v1.0.0-rc.34
+```
+
+**Pruebas** (unos 10 minutos):
+1. **En la computadora, en una ventana de incógnito,** abre el inicio y espera unos segundos.
+   - Nada tapa la tienda.
+   - Debajo de los destacados está la franja "Feliz Navidad", con "Ver ideas para regalar", que lleva a la página de regalos.
+2. **Ningún producto se repite.** De arriba abajo:
+   - "Destacados de la semana";
+   - "Gift cards y recargas digitales", con las 6 tarjetas, su "Desde $…" y "Elegir monto";
+   - "Recién llegados": la hidrolavadora, el taladro, el panel LED, Sonic, GTA V y el teclado;
+   - "Ferretería", con lo demás de la ferretería.
+3. **En la computadora, "Compra por categoría":**
+   - Ferretería, con "12 productos";
+   - Gift Cards y Recargas, y Videojuegos, cada una con la foto de un producto;
+   - "Más categorías", con cuatro fotos redondas.
+   - Ninguna dice "1 producto".
+4. **En el teléfono,** la franja lleva el saludo y "Ver ideas para regalar →", y se toca en cualquier parte.
+5. **En el panel, Marketing → Navidad:**
+   - "El saludo en el inicio" tiene marcada "La franja navideña", con "Recomendada";
+   - la vista previa muestra la franja;
+   - en "Popup del home", el aviso dice que el inicio lleva la franja navideña.
+
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.33 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de la base que deshacer.
 
 **Por confirmar de rc.33 (con una cuenta, unos 15 minutos):**
 1. **La Lista del proveedor por pasos:** arriba se ven los 5 pasos. En el paso 2, abre "1 - Cargar en la tienda" de la carpeta de la ferretería, selecciona todo (Ctrl + A) y suéltalo: dice "105 fotos · 74 códigos de su lista con foto".

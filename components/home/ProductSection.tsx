@@ -3,9 +3,10 @@ import ProductCard from '@/components/ui/ProductCard';
 import ProductShelf from '@/components/ui/ProductShelf';
 import SectionHeader from '@/components/ui/SectionHeader';
 import type { ProductCardData } from '@/components/ui/productCardData';
+import { MIN_SECCION } from '@/lib/inicio/reparto';
 
-// Una sección con menos productos que esto no se muestra (PLAN.md §3)
-export const MIN_SECTION_PRODUCTS = 4;
+// Una sección con menos productos que esto no se muestra (PLAN.md §3). C-207: el mismo mínimo con el que el inicio reparte
+export const MIN_SECTION_PRODUCTS = MIN_SECCION;
 
 interface ProductSectionProps {
   id: string;

@@ -8,6 +8,7 @@ import type { PaymentMethodType, Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { publicProductInclude, toPublicProduct, type PublicProduct } from '@/lib/dto/product';
 import { conOfertas, filtroEnOferta } from '@/lib/promotions';
+import { repartirCategorias } from '@/lib/inicio/reparto';
 
 const MAX_LIMIT = 50;
 const clampLimit = (value: number) => Math.min(MAX_LIMIT, Math.max(1, Math.floor(value) || 1));
@@ -187,12 +188,42 @@ export const getBestSellers = cache(async (days = 90, max = 12): Promise<PublicP
     .map(toPublicProduct));
 });
 
-/** Recién llegados. */
+/** Lo más nuevo de tecnología (sin los departamentos aparte): completa la vitrina de destacados cuando hay pocos. */
 export const getNewArrivals = cache(async (max = 12): Promise<PublicProduct[]> => {
   const rows = await prisma.product.findMany({
     where: await visiblesDelInicio(),
     include: publicProductInclude,
     orderBy: { createdAt: 'desc' },
+    take: clampLimit(max),
+  });
+  return conOfertas(rows.map(toPublicProduct));
+});
+
+/**
+ * C-207: "Recién llegados" es lo último de toda la tienda, ferretería incluida (Andrés, 13/11: "se tiene que ver de
+ * todo"). Trae más de los que se muestran: el inicio quita lo que ya salió arriba y deja pocos de cada departamento o
+ * categoría (lib/inicio/reparto.ts).
+ */
+export const getRecienLlegados = cache(async (max = 48): Promise<PublicProduct[]> => {
+  const rows = await prisma.product.findMany({
+    where: await visibleProducts(),
+    include: publicProductInclude,
+    orderBy: { createdAt: 'desc' },
+    take: clampLimit(max),
+  });
+  return conOfertas(rows.map(toPublicProduct));
+});
+
+/**
+ * C-207: las gift cards y recargas de las plataformas (los productos digitales), para su única sección del inicio: cada
+ * plataforma con su monto. Antes salían en su franja (como enlaces a búsquedas, algunas sin nada), en "Recién llegados"
+ * y en su estante.
+ */
+export const getCodigosDigitales = cache(async (max = 12): Promise<PublicProduct[]> => {
+  const rows = await prisma.product.findMany({
+    where: await visibleProducts({ productType: 'DIGITAL' }),
+    include: publicProductInclude,
+    orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
     take: clampLimit(max),
   });
   return conOfertas(rows.map(toPublicProduct));
@@ -233,6 +264,51 @@ export const getCategoriesRail = cache(async (max?: number): Promise<HomeCategor
 
 /** C-200: las categorías que no son de un departamento aparte (la franja las muestra aparte de los departamentos). */
 export const getCategoriasSueltas = cache(async (max: number): Promise<HomeCategory[]> => categoriesByProductCount(max));
+
+/** C-207: una casilla de "Compra por categoría", con la foto de uno de sus productos (destacado o, si no, el más nuevo). */
+export interface CasillaCategoria extends HomeCategory {
+  foto: string | null;
+}
+
+/** C-207: la casilla "Más categorías": las que tienen pocos productos y las que no caben, con la foto de hasta 4 de ellas. */
+export interface MasCategorias {
+  nombres: string[];
+  fotos: string[];
+}
+
+/** La foto de una categoría (o de un departamento con sus subcategorías): la de un producto suyo visible */
+async function fotoDeCategoria(ids: string[]): Promise<string | null> {
+  const fila = await prisma.product.findFirst({
+    where: await visibleProducts({ categoryId: { in: ids }, mainImage: { not: null } }),
+    orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
+    select: { mainImage: true },
+  });
+  return fila?.mainImage ?? null;
+}
+
+/**
+ * C-207: "Compra por categoría" (computadora). Cada casilla lleva la foto de un producto real y no un ícono suelto; las
+ * categorías con pocos productos van juntas en "Más categorías", para que ninguna diga "1 producto" (lib/inicio/reparto.ts).
+ * Los departamentos aparte (Ferretería) van primero, como en la franja (C-200).
+ */
+export const getCompraPorCategoria = cache(async (max?: number): Promise<{ casillas: CasillaCategoria[]; mas: MasCategorias | null }> => {
+  const limite = clampLimit(max ?? (await getHomeSettings()).maxCategoriesDisplay);
+  const departamentos = await getDepartamentos();
+  const lista: HomeCategory[] = [
+    ...departamentos.map(({ id, name, slug, icon, color, image, productCount }) => ({ id, name, slug, icon, color, image, productCount, esDepartamento: true })),
+    ...(await categoriesByProductCount(MAX_LIMIT)),
+  ];
+  const { solas, resto } = repartirCategorias(lista, limite);
+  const idsDe = (categoria: HomeCategory) => departamentos.find((d) => d.id === categoria.id)?.ids ?? [categoria.id];
+  const [fotos, fotosResto] = await Promise.all([
+    Promise.all(solas.map((categoria) => fotoDeCategoria(idsDe(categoria)))),
+    Promise.all(resto.slice(0, 4).map((categoria) => fotoDeCategoria(idsDe(categoria)))),
+  ]);
+  return {
+    casillas: solas.map((categoria, i) => ({ ...categoria, foto: fotos[i] })),
+    mas: resto.length > 0 ? { nombres: resto.map((categoria) => categoria.name), fotos: fotosResto.filter((foto): foto is string => Boolean(foto)) } : null,
+  };
+});
 
 /** Las `n` categorías con más productos, cada una con sus productos (destacados primero). */
 export const getTopCategoriesWithProducts = cache(

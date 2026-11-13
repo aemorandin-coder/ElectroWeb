@@ -10,6 +10,26 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.37] - 2026-11-13
+El sorteo de la PlayStation 4 (pedido de Andrés del 13/11; eligió los números para que la empresa no pierda).
+### Marketing 1.9.0 (C-212)
+- **Marketing → Sorteo:**
+  - **Cómo es:** el premio, su foto, las fechas, la compra mínima (USD 10), el tope por invitar (3) y lo que cuesta el premio, que solo se ve en el panel.
+  - **Lo que dejó el sorteo:** boletos, participantes, ventas con boleto y cuánto del premio ya pagó el margen.
+  - **Quiénes participan,** con un aviso cuando un invitado no cuenta.
+  - **"Sortear ahora":** solo cuando cerró y una sola vez, al azar entre todos los boletos. Queda en la bitácora con la huella de la lista.
+### Carrito, checkout y cuenta del cliente 1.4.0 (C-212)
+- **La página `/sorteo`:**
+  - el premio y cuántos días faltan;
+  - cómo participar: 1 boleto por cada compra pagada de USD 10 o más, o invitando a 2 amigos sin comprar (1 boleto por cada 2, hasta 3);
+  - con sesión, los boletos y el enlace para compartir por WhatsApp;
+  - las bases;
+  - después del sorteo, quién ganó, con el correo tapado.
+- **Mi panel muestra el sorteo con los boletos del cliente.** Quien se registra con el enlace de un participante queda como su invitado.
+- **Dos tablas nuevas** (`sorteos` y `sorteo_participantes`). No se borra ni se cambia nada de lo que hay.
+### Tienda 1.10.1 y Marco del panel 1.5.1 (C-212)
+- La imagen para compartir de `/sorteo` y el enlace `?invita=`, que se guarda 30 días para el registro.
+
 ## [1.0.0-rc.36] - 2026-11-13
 ### Productos 1.13.0 (C-211)
 - **"Buscar en la web" y "Completar con la web" usan Claude Haiku 5.5 en esfuerzo alto** (pedido de Andrés): lee las páginas del fabricante y redacta la ficha, y busca por su cuenta cuando no encuentra páginas. Lo que devuelve pasa por las mismas comprobaciones de la tienda que antes.

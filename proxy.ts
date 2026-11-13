@@ -67,6 +67,14 @@ export default withAuth(
       }
     }
 
+    // ── SORTEO (C-212) ──────────────────────────────────────────────
+    // ?invita=<código>: el enlace de un participante. Primer toque, como el de los promotores: quien se registre con
+    // esta cookie queda como su invitado (app/api/auth/register)
+    const invitaParam = req.nextUrl.searchParams.get('invita');
+    if (invitaParam && /^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{8}$/.test(invitaParam) && !req.cookies.get('electroshop_sorteo')) {
+      response.cookies.set('electroshop_sorteo', invitaParam, { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60, path: '/' });
+    }
+
     // ── ELECTROSTUDIO (C-113) ───────────────────────────────────────
     // ?es=<código>: llegó por una historia de Instagram. Último toque: la historia más reciente se queda con la compra
     const esParam = req.nextUrl.searchParams.get('es');

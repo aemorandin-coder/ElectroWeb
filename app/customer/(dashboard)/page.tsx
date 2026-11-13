@@ -10,6 +10,7 @@ import {
 } from '@/components/iconos';
 import CustomerOnboarding from '@/components/customer/CustomerOnboarding';
 import PreguntarPromociones from '@/components/promociones/PreguntarPromociones';
+import TarjetaSorteo from '@/components/sorteo/TarjetaSorteo';
 import OrderStepper from '@/components/customer/OrderStepper';
 import { formatUSD } from '@/lib/currency';
 import { adminBadge, adminPrimaryButton, type AdminTone } from '@/lib/admin-ui';
@@ -162,6 +163,9 @@ export default function CustomerDashboard() {
         </div>
         {/* C-201: sin "En vivo": no le decía nada al cliente. La pantalla se sigue actualizando sola (y, sin conexión, consulta de a ratos) */}
       </header>
+
+      {/* C-212: el sorteo vigente, con sus boletos (sin sorteo activo no sale) */}
+      <TarjetaSorteo />
 
       {/* Resumen: saldo, compras activas y garantías */}
       <section aria-label="Resumen de tu cuenta" className="grid grid-cols-2 gap-3 lg:grid-cols-3">

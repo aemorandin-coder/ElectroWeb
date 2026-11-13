@@ -19,6 +19,7 @@ import { useSession } from 'next-auth/react';
 import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
 import { enviarConVersion } from '@/lib/edicion/guardado';
 import { useConflictoDeFormulario } from '@/lib/edicion/useConflictoDeFormulario';
+import ArmarConClaude from '@/components/admin/campanas/ArmarConClaude';
 
 type Bloque =
   | { tipo: 'titulo'; texto: string }
@@ -454,6 +455,12 @@ function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatari
       {dialogoConflicto}
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-4">
+          {/* C-217: el borrador desde un objetivo, con productos reales; llena el editor y se guarda como siempre */}
+          <ArmarConClaude
+            // Hay algo que perder si tiene asunto, un texto escrito o una imagen (el título y el botón de una campaña nueva no cuentan)
+            hayContenido={Boolean(campana.subject.trim()) || campana.bloques.some((b) => (b.tipo === 'texto' ? b.texto.trim() !== '' : b.tipo === 'imagen' && b.url.trim() !== ''))}
+            alArmar={(c) => setCampana(c)}
+          />
           <section className={`${adminCard} space-y-4`}>
             <div>
               <label htmlFor="campana-asunto" className={adminLabel}>Asunto *</label>

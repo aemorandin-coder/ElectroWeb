@@ -10,6 +10,14 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.42] - 2026-11-13
+### Marketing 1.10.0 (C-217)
+- **"Armar con Claude" en las campañas de correo:** se escribe el objetivo ("gift cards para Navidad") y Claude arma el asunto, la vista previa y el texto con hasta 4 productos de la tienda.
+  - La foto, el precio y el enlace de cada producto los pone la tienda, no la IA.
+  - Usa lo que se sabe de la tienda: el envío gratis, las fechas de Navidad y el sorteo.
+  - Llena el editor para revisarlo y guardarlo como siempre.
+- **Las campañas aceptan las fotos de los productos** (antes, solo las imágenes subidas sueltas).
+
 ## [1.0.0-rc.41] - 2026-11-13
 Sin píldoras ámbar (Andrés, 13/11; eligió la opción A viendo las tres).
 ### Marco del panel 1.6.1 y todos los módulos con píldoras (C-216)

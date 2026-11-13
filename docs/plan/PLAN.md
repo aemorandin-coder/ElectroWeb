@@ -492,7 +492,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - **Probada con un Claude simulado:** la clave del 13/11 da 401. Falta una clave nueva (en el servidor y aquí) y probarla con el modelo de verdad.
   - **B · Las consultas y los "Solicitar producto":** ordenados por urgencia, buscando si ya está en la tienda o en la lista de la ferretería.
   - **C · Campañas de correo:** del objetivo ("gift cards para Navidad") al asunto y el texto, con los productos reales.
-  - **D · Respuestas a clientes:** un borrador para cada consulta, con el estado real de su orden y lo que cobra ZOOM a su ciudad.
+  - **D · Respuestas a clientes** (**hecha**, C-214, rc.39): "Redactar con Claude" en cada mensaje, con su orden, los productos que nombra y el flete de ZOOM a su ciudad. Una orden ajena no se usa, y sin el teléfono de su cuenta no se ofrece WhatsApp. `estado/C-214.md`.
   - **F · El catálogo de la ferretería:** la categoría y el nombre de la tienda para los 3.114 códigos de su lista.
     - Necesita guardar antes la lista del proveedor en la base: hoy se lee del Excel en el navegador cada vez. La parte de B que busca en la ferretería depende de eso.
 - **C-208 · Videos de creadores, fase 1** (pendiente; plan maestro de Andrés del 13/11): el equipo carga videos de TikTok y YouTube (Instagram como enlace) y salen en la ficha y en el inicio, con el código del promotor. Una tabla nueva (aditiva), una pantalla en Marketing y la revisión semanal de los enlaces. Las fases 2 y 3 esperan sus decisiones.

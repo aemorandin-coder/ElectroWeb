@@ -10,6 +10,15 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.40] - 2026-11-13
+### Clientes 1.3.0 (C-215)
+- **Mensajes y solicitudes por urgencia:**
+  - Claude marca cada uno como urgente o que puede esperar, dice de qué trata (su pedido, garantía, quiere comprar…) y por qué;
+  - en las solicitudes, dice si lo pedido ya está en la tienda, con el enlace.
+  - Lo nuevo se revisa solo al llegar, y "Ordenar por urgencia" revisa lo que falte. "Más urgentes primero" ordena las dos pestañas.
+- **Queda guardado** (9 columnas nuevas en mensajes y solicitudes, aditivas): abrir la pantalla no vuelve a gastar.
+- En el teléfono, las cifras de las solicitudes van de a dos.
+
 ## [1.0.0-rc.39] - 2026-11-13
 ### Clientes 1.2.0 (C-214)
 - **"Redactar con Claude" en cada mensaje de contacto:** la respuesta lleva lo real de la tienda:

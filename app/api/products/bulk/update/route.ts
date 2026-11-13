@@ -6,6 +6,7 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { montoDecimal, precioValido } from '@/lib/pricing';
 import { registrarAccionAdmin } from '@/lib/audit-log';
+import { marcarPublicados } from '@/lib/productos/publicacion';
 
 // C-169: los productos en la papelera no se tocan (un "Activar" los sacaría de ahí sin restaurarlos).
 // C-97: valores de la edición rápida y de los masivos. Antes "abc" daba 500 y se aceptaban negativos.
@@ -171,6 +172,8 @@ export async function POST(request: NextRequest) {
             where: { id: { in: productIds }, deletedAt: null, ...(soloFisicos ? { productType: 'PHYSICAL' as const } : {}) },
             data: updateData,
         });
+        // C-210: los que salen a la tienda por primera vez llevan su fecha ("Recién llegados")
+        if (updateData.status === 'PUBLISHED') await marcarPublicados(productIds);
         const digitales = soloFisicos ? await prisma.product.count({ where: { id: { in: productIds }, productType: 'DIGITAL' } }) : 0;
 
         if (result.count > 0) revalidateStorefront();

@@ -7,6 +7,7 @@ import { registrarAccionAdmin } from '@/lib/audit-log';
 import { nombreDeSesion } from '@/lib/edicion/servidor';
 import { publicarRecursoCambiado } from '@/lib/realtime/bus';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
+import { fechaDePublicacion } from '@/lib/productos/publicacion';
 
 // POST /api/products/[id]/restaurar (C-169): saca un producto de la papelera y lo deja como estaba (publicado, borrador o archivado).
 // Su SKU y su dirección siguen siendo suyos mientras estuvo en la papelera: no hay choque al volver.
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'No autorizado' }, { status: session ? 403 : 401 });
   }
   const { id } = await params;
-  const producto = await prisma.product.findUnique({ where: { id }, select: { id: true, name: true, sku: true, deletedAt: true, eliminadoAt: true, statusAntesDePapelera: true } });
+  const producto = await prisma.product.findUnique({ where: { id }, select: { id: true, name: true, sku: true, deletedAt: true, eliminadoAt: true, statusAntesDePapelera: true, publishedAt: true } });
   if (!producto) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
   if (!producto.deletedAt) return NextResponse.json({ error: 'El producto no está en la papelera' }, { status: 409 });
 
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const estado = eliminado ? 'DRAFT' : producto.statusAntesDePapelera ?? 'DRAFT';
   const restaurado = await prisma.product.updateMany({
     where: { id, deletedAt: { not: null }, eliminadoAt: eliminado ? { not: null } : null },
-    data: { status: estado, deletedAt: null, deletedById: null, statusAntesDePapelera: null, eliminadoAt: null },
+    data: { status: estado, deletedAt: null, deletedById: null, statusAntesDePapelera: null, eliminadoAt: null, ...fechaDePublicacion(estado, producto.publishedAt) },
   });
   if (restaurado.count > 0) {
     revalidateStorefront();

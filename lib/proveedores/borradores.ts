@@ -12,6 +12,7 @@ import { buscarProductoEnLaWeb } from '@/lib/busqueda-web';
 import { leerNombreMarca, resolverMarca } from '@/lib/marcas';
 import { FICHA_WEB_KEY, INTERNAL_SPEC_KEYS, parseSpecsObject } from '@/lib/product-specs';
 import { parseProductImages } from '@/lib/product-utils';
+import { marcarPublicados } from '@/lib/productos/publicacion';
 import {
   DESCRIPCION_MIN, leerFichaWeb, medidasCompletas, modeloDe, revisarBorrador, type FichaWeb, type RevisionBorrador,
 } from './lista-de-control';
@@ -194,5 +195,7 @@ export async function publicarListos(supplierId: string, ids: string[]) {
   const hecho = listos.length > 0
     ? await prisma.product.updateMany({ where: { id: { in: listos.map((p) => p.id) }, status: 'DRAFT' }, data: { status: 'PUBLISHED' } })
     : { count: 0 };
+  // C-210: su fecha de publicación, para que suban en "Recién llegados"
+  await marcarPublicados(listos.map((p) => p.id));
   return { publicados: hecho.count, nombres: listos.slice(0, 30).map((p) => p.name), noListos, noEstan: ids.length - productos.length };
 }

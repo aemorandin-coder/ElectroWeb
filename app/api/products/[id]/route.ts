@@ -14,6 +14,7 @@ import { nombresDeColumnas } from '@/lib/edicion/producto';
 import { borrarParaSiempre } from '@/lib/papelera';
 import { precioValido } from '@/lib/pricing';
 import { registrarAccionAdmin } from '@/lib/audit-log';
+import { fechaDePublicacion } from '@/lib/productos/publicacion';
 import { conditionInputSchema, pickConditionInput } from '@/lib/product-condition';
 import { leerNombreMarca, resolverMarca } from '@/lib/marcas';
 
@@ -233,6 +234,8 @@ export async function PATCH(
       }
       updateData.status = body.status;
     }
+    // C-210: la primera vez que sale a la tienda, en esta misma escritura ("Recién llegados" ordena por esto)
+    Object.assign(updateData, fechaDePublicacion(updateData.status, oldProduct.publishedAt));
 
     if (body.isFeatured !== undefined) {
       if (typeof body.isFeatured !== 'boolean') return NextResponse.json({ error: 'Destacado inválido' }, { status: 400 });

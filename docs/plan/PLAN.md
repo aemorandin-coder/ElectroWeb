@@ -84,7 +84,7 @@ Claude lo implementa en C-10/C-11. Gemini **solo usa** estas clases y no inventa
   - Esperar no es un aviso: "En preparación", "Se acredita el…", "En revisión" (para quien espera) van en azul.
   - El ámbar nunca destaca, celebra ni clasifica (un nivel, una categoría, "Antes", una marca ajena como Binance).
 - **Excepciones con nombre:** las estrellas de calificación (ámbar), la etiqueta amarilla `tag` de "Oferta del día" (con texto `ink`), el rojo `navidad` del tema y el recuadro ámbar de "Lo que no incluye" de las cotizaciones (Luis, C-182).
-- **Nunca texto blanco sobre ámbar, verde o `success`:** no llega a 3:1.
+- **Nunca texto blanco sobre ámbar ni sobre el verde claro (`success`):** no llega a 3:1. Sobre el verde fuerte (`success-strong`) sí: 5,5:1, como "Envío gratis" en la tienda y las píldoras de lo hecho en el panel (§1.8).
 - **Un correo, un acento:** el azul del botón y, si hace falta, una placa en azul noche (`placaCorreo` de `lib/email-templates/estilo.ts`). Lo demás, neutro.
 
 ### 1.2 Tipografía
@@ -166,6 +166,17 @@ Los filtros de una lista van con `components/admin/Filtros`:
 - **Una con cuenta 0** se apaga, pero se puede tocar.
 - **En el teléfono** se deslizan de lado.
 - Son botones con `aria-pressed`, no pestañas.
+
+### 1.8 Píldoras de estado y botones del panel (C-210)
+Andrés eligió la versión A ("como la tienda") el 13/11, para todo el panel.
+- **El estado va lleno y con texto blanco,** como los sellos de la tienda ("DIGITAL", "Envío gratis"):
+  - azul (`brand-600`) para lo que avanza;
+  - verde fuerte (`success-strong`) para lo hecho;
+  - rojo (`deal`) para lo cancelado o rechazado.
+  - Es `adminBadge`. El estado de una orden lleva además su ícono (`components/admin/PildoraEstadoOrden`).
+- **Lo que alguien tiene que hacer sigue en ámbar claro con texto oscuro:** nunca texto blanco sobre ámbar (§1.1).
+- **Un dato en píldora** (una guía, un código) va en gris con su ícono (`adminDato`): informa sin competir con el estado.
+- **Los botones** (`adminPrimaryButton`, `adminSecondaryButton`, `adminIconButton`…) se levantan un poco al pasar el ratón y se hunden al tocarlos. Con "reducir movimiento" solo cambian de color, y apagados no se mueven.
 
 ---
 
@@ -470,6 +481,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-205 · La Lista del proveedor por pasos y las reglas de ancho** (**hecha**, rc.33, 13/11; pedido de Andrés mirando la pantalla, la maqueta A): un paso a la vez con los pasos arriba, campos del ancho de su dato y filtros con ícono y subtítulo. Las reglas quedaron en §1.5 a §1.7. `estado/C-205.md`.
 - **C-207 · El inicio que vende** (**hecha**, rc.34, 13/11; Andrés eligió después de ver el plan de los 5 cambios, §7.2): el saludo navideño en una franja dentro del inicio (ya no tapa la tienda), cada producto una sola vez, "Recién llegados" de toda la tienda y variado, las gift cards en una sola sección y "Compra por categoría" con fotos, sin "1 producto" y con las chicas juntas. `estado/C-207.md`.
 - **C-209 · La portada y las pruebas de confianza** (pendiente, 2 y 5 del plan del inicio): primero maquetas con datos reales. La frase de arriba y los cuatro accesos los decide Andrés; las pruebas de confianza van con los videos de creadores (C-208).
+- **C-210 · Correcciones del 13/11** (**hecha**, rc.35, pedido de Andrés mirando producción; eligió lo recomendado en las cuatro preguntas): las píldoras del panel llenas como las de la tienda y los botones animados (§1.8); "Destacados" solo con lo que tiene estrella, de toda la tienda; "Recién llegados" por la fecha de publicación (columna `products.publishedAt`, nueva), con hasta 4 por departamento. `estado/C-210.md`.
 - **C-208 · Videos de creadores, fase 1** (pendiente; plan maestro de Andrés del 13/11): el equipo carga videos de TikTok y YouTube (Instagram como enlace) y salen en la ficha y en el inicio, con el código del promotor. Una tabla nueva (aditiva), una pantalla en Marketing y la revisión semanal de los enlaces. Las fases 2 y 3 esperan sus decisiones.
 - **C-206 · La regla de anchos en todo el panel y en la web** (pendiente, sigue a C-205): las páginas que se centran angostas dentro del marco y dejan un hueco junto al menú (Configuración, Equipo, Seguridad, Notificaciones, Cotizaciones y Marketing), los campos cortos estirados y las píldoras de filtro sin ícono. Una por una, con capturas a 360, 768, 1024 y 1440 px. El asistente de productos puede pasar a `Pasos`.
 - **C-198 · Variantes de color, talla y versión** (aprobada el 10/11, la propuesta recomendada; después de C-199 y C-200): familias de productos. Cada variante es un producto (su código, existencia, precio, fotos y enlace); la familia los une para el selector de la ficha y una sola tarjeta en el catálogo ("Elegir color"). El carrito, las órdenes y la existencia no cambian. El panel agrupa con "Agrupar como variantes" desde la lista.
@@ -693,7 +705,10 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - La tarjeta navideña ya no sale en pantalla completa: va como franja dentro del inicio. Andrés va a mejorar su diseño.
   - "Recién llegados" muestra todo lo nuevo de la tienda, la ferretería incluida: "capaz mañana venda teléfonos o productos afines; se tiene que ver de todo". El resto del inicio sigue como decidió C-200.
   - Las pruebas de confianza van, con los videos de creadores (C-208).
-  - **Cómo quedó (C-207):** un producto sale una sola vez, en la primera sección que le toca; "Destacados" se completa solo hasta 5; "Recién llegados" ordena por día (el mismo día, los destacados primero) y lleva como mucho 3 de cada departamento o categoría; las gift cards van solo en su sección. En "Compra por categoría", la cuenta sale desde 10 y las categorías con menos de 3 van juntas en "Más categorías".
+  - **Cómo quedó (C-207):** un producto sale una sola vez, en la primera sección que le toca; las gift cards van solo en su sección. En "Compra por categoría", la cuenta sale desde 10 y las categorías con menos de 3 van juntas en "Más categorías".
+  - **Destacados y "Recién llegados" (Andrés, 13/11, C-210; cambia lo de C-200 y C-207):**
+    - "Destacados de la semana" muestra solo lo que tiene la estrella, de toda la tienda (la ferretería también) y sin relleno: "los he desactivado todos y siguen apareciendo los mismos". Sin ninguno, la sección no sale.
+    - "Recién llegados" ordena por la fecha en que cada producto se publicó por primera vez, no por la de creación (la carga del proveedor crea en borrador). El mismo día, los destacados primero, y como mucho 4 de cada departamento o categoría.
 - **Videos de creadores (Andrés, 13/11):** videos de quienes compraron el producto (TikTok, Instagram o YouTube), en la ficha y en el inicio, enganchados con el programa de promotores. El plan maestro está en un documento de Claude Docs de Andrés ("Plan maestro de videos de creadores"). Faltan sus decisiones de la fase 2: el premio, quién manda videos, Instagram, los en vivo y el abogado.
 - **Taller:** espera a SADES (30/09).
 - **Credenciales del historial (C-40):** revisado el 26/09, no había nada que cambiar. Si algún día se configura el webhook de SADES, usar un secreto nuevo.

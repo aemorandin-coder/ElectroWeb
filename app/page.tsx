@@ -28,7 +28,6 @@ import {
   getFeatured,
   getHomeSettings,
   getDepartamentos,
-  getNewArrivals,
   getRecienLlegados,
   getTopCategoriesWithProducts,
   getVitrinaDepartamento,
@@ -46,11 +45,10 @@ export const revalidate = 60;
 // Los enlaces de promotores (?ref=) y de las historias (?es=) son la misma portada
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 
-// La vitrina necesita 1 producto estrella + 4 en desktop
-const SHOWCASE_MIN = 5;
 // C-207: lo que muestra cada estante del inicio, y cuántos de un mismo departamento o categoría van en "Recién llegados"
+// (C-210: 4, lo que eligió Andrés el 13/11)
 const POR_ESTANTE = 12;
-const NUEVOS_POR_GRUPO = 3;
+const NUEVOS_POR_GRUPO = 4;
 const ESTANTES_DE_CATEGORIA = 3;
 
 /**
@@ -58,13 +56,12 @@ const ESTANTES_DE_CATEGORIA = 3;
  * Todo se renderiza en el servidor; solo carrito, compartir y buscador son cliente.
  */
 export default async function Home() {
-  const [settings, homeSettings, featured, deals, bestSellers, newArrivals, recientes, codigos, topCategories, paymentMethods, hotAd, saludo] = await Promise.all([
+  const [settings, homeSettings, featured, deals, bestSellers, recientes, codigos, topCategories, paymentMethods, hotAd, saludo] = await Promise.all([
     getPublicSettings(),
     getHomeSettings(),
     getFeatured(),
     getDeals(24),
     getBestSellers(90, 24),
-    getNewArrivals(12),
     getRecienLlegados(48),
     getCodigosDigitales(POR_ESTANTE),
     getTopCategoriesWithProducts(6, 16),
@@ -84,10 +81,10 @@ export default async function Home() {
   // menos de 4 no sale y lo suyo queda para las de abajo (lib/inicio/reparto.ts)
   const reparto = crearReparto();
 
-  // La vitrina: los destacados. Si son pocos, se completa con ofertas y lo nuevo de tecnología solo hasta lo que necesita
-  // para verse (antes, hasta 8): lo demás nuevo va a "Recién llegados". El primer pantallazo siempre muestra productos.
+  // La vitrina: solo lo que tiene la estrella, de toda la tienda (C-210, Andrés 13/11: "los he desactivado todos y siguen
+  // apareciendo los mismos": antes se completaba con ofertas y lo nuevo). Sin ninguno, la sección no sale.
   // C-172: la estrella cambia cada día siguiendo el orden de los destacados (la página se regenera cada minuto)
-  const showcase = estrellaDelDia(reparto.tomar([...featured, ...deals, ...newArrivals], Math.max(featured.length, SHOWCASE_MIN), 1));
+  const showcase = estrellaDelDia(reparto.tomar(featured, featured.length, 1));
   const ofertas = reparto.tomar(deals, POR_ESTANTE);
   const masVendidos = reparto.tomar(bestSellers, POR_ESTANTE);
   // Las gift cards y recargas, en su sección y en ninguna otra
@@ -97,7 +94,11 @@ export default async function Home() {
   // "Recién llegados": lo último de toda la tienda (Andrés, 13/11), por día y con los destacados del día primero, y pocos de
   // cada departamento o categoría: una carga de 70 productos de un proveedor no llena la sección
   const departamentoDe = new Map(departamentos.flatMap((departamento) => departamento.ids.map((id) => [id, departamento.id] as const)));
-  const nuevos = porDiaYDestacado(recientes.filter((product) => !reparto.mostrado(product.id)), (product) => diaEnCaracas(new Date(product.createdAt)));
+  const nuevos = porDiaYDestacado(
+    recientes.filter((product) => !reparto.mostrado(product.id)),
+    (product) => product.publishedAt ?? product.createdAt,
+    (momento) => diaEnCaracas(new Date(momento))
+  );
   const recienLlegados = reparto.tomar(variados(nuevos, (product) => departamentoDe.get(product.category.id) ?? product.category.id, NUEVOS_POR_GRUPO), POR_ESTANTE);
   const vitrinasConProductos = vitrinas
     .map(({ departamento, products }) => ({ departamento, products: reparto.tomar(products, POR_ESTANTE) }))
@@ -126,7 +127,7 @@ export default async function Home() {
 
         {showcase.length > 0 ? (
           <FeaturedShowcase products={showcase} exchangeRateVES={rate} lowStockThreshold={lowStock} />
-        ) : (
+        ) : recientes.length > 0 ? null : (
           <section className="bg-surface py-12">
             <Container className="text-center">
               <p className="text-lg font-semibold text-ink">Estamos preparando el catálogo</p>

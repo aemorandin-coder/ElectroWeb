@@ -1,10 +1,15 @@
-# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.33; `main` en 1.0.0-rc.34, por subir)
+# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.35, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-207 · El inicio que vende (13/11, rc.34, por subir):** Andrés vio el plan de los 5 cambios del inicio y eligió. Se hicieron el 1, el 3 y el 4 (`estado/C-207.md`).
+- **C-210 · Correcciones del 13/11 (rc.35, por subir):** Andrés miró producción con rc.34 y pidió tres cosas. Eligió lo recomendado en las cuatro preguntas (`estado/C-210.md`).
+  - **"Destacados" muestra solo lo que tiene estrella,** de toda la tienda. Antes se completaba con relleno y por eso no se iban los que desactivaba.
+  - **"Recién llegados" va por la fecha de publicación** (columna nueva `products.publishedAt`, con su relleno), con hasta 4 por departamento.
+  - **Las píldoras del panel van llenas,** como los sellos de la tienda, y los botones se animan al pasar y al tocar (`PLAN.md` §1.8).
+  - **Andrés no trabaja con Gemini por ahora:** no se dejan planes para él.
+- **C-207 · El inicio que vende (13/11, rc.34, en producción):** Andrés vio el plan de los 5 cambios del inicio y eligió. Se hicieron el 1, el 3 y el 4 (`estado/C-207.md`).
   - **El saludo navideño ya no tapa la tienda:** es una franja dentro del inicio, después de los destacados. Andrés va a mejorar su diseño. Los textos siguen en Marketing → Navidad.
   - **Cada producto sale una sola vez.** "Recién llegados" trae lo último de toda la tienda, ferretería incluida, con pocos de cada rincón, y las gift cards van en una sola sección, con cada plataforma y su monto.
   - **"Compra por categoría"** lleva la foto de un producto real y la cuenta solo desde 10. Las categorías chicas van juntas en "Más categorías".
@@ -159,40 +164,43 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.34` (C-207; unos 10 minutos)
-Producción está en `v1.0.0-rc.33` (C-205), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
-- **C-207 (rc.34):** el saludo navideño en una franja (ya no tapa la tienda), cada producto una sola vez en el inicio, "Recién llegados" de toda la tienda, las gift cards en una sola sección y "Compra por categoría" con fotos.
+### El bloque por subir: `v1.0.0-rc.35` (C-210; unos 15 minutos)
+Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
+- **C-210 (rc.35):**
+  - "Destacados" muestra solo lo que tiene estrella, de toda la tienda;
+  - "Recién llegados" va por la fecha de publicación, con hasta 4 por departamento;
+  - las píldoras del panel van llenas, como las de la tienda, y los botones se animan.
 
-Sin cambio de base, sin variables nuevas, sin crons y sin dependencias nuevas.
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.34`). Es aditivo: una columna nueva, sin índices.
+```sql
+ALTER TABLE "products" ADD COLUMN "publishedAt" TIMESTAMP(3);
+```
+Después, una sola vez, el relleno de lo ya publicado: `docs/plan/scripts/c210-fecha-de-publicacion.sql`. Sin variables nuevas, sin crons y sin dependencias nuevas.
 
 **Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
 ```bash
-git describe --tags --abbrev=0 && git status -sb   # v1.0.0-rc.33 y sin cambios
-bash scripts/deploy.sh                             # no hay SQL: compila y reinicia
-git describe --tags --abbrev=0                     # v1.0.0-rc.34
+git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.34 y sin cambios
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc35.dump
+bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
+npx prisma db push && bash scripts/deploy.sh # agrega la columna y compila
+DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/c210-fecha-de-publicacion.sql
+git describe --tags --abbrev=0               # v1.0.0-rc.35
 ```
+- `prisma db push` no debería preguntar nada: la columna es nueva. Si avisa de perder datos, no sigas y pásale el texto a Claude.
+- **El relleno termina con `publicados_sin_fecha`, que debe decir 0.** Si dice otro número, pásale la salida a Claude.
 
 **Pruebas** (unos 10 minutos):
-1. **En la computadora, en una ventana de incógnito,** abre el inicio y espera unos segundos.
-   - Nada tapa la tienda.
-   - Debajo de los destacados está la franja "Feliz Navidad", con "Ver ideas para regalar", que lleva a la página de regalos.
-2. **Ningún producto se repite.** De arriba abajo:
-   - "Destacados de la semana";
-   - "Gift cards y recargas digitales", con las 6 tarjetas, su "Desde $…" y "Elegir monto";
-   - "Recién llegados": la hidrolavadora, el taladro, el panel LED, Sonic, GTA V y el teclado;
-   - "Ferretería", con lo demás de la ferretería.
-3. **En la computadora, "Compra por categoría":**
-   - Ferretería, con "12 productos";
-   - Gift Cards y Recargas, y Videojuegos, cada una con la foto de un producto;
-   - "Más categorías", con cuatro fotos redondas.
-   - Ninguna dice "1 producto".
-4. **En el teléfono,** la franja lleva el saludo y "Ver ideas para regalar →", y se toca en cualquier parte.
-5. **En el panel, Marketing → Navidad:**
-   - "El saludo en el inicio" tiene marcada "La franja navideña", con "Recomendada";
-   - la vista previa muestra la franja;
-   - en "Popup del home", el aviso dice que el inicio lleva la franja navideña.
+1. **En la computadora, en una ventana de incógnito,** abre el inicio.
+   - "Destacados de la semana" muestra los que tienen la estrella: hoy, la hidrolavadora, el taladro, los audífonos y el SSD.
+   - "Recién llegados" abre con la lijadora, el esmeril y la aspiradora.
+2. **En el panel, Productos:** quítale la estrella a uno y recarga el inicio: ya no sale en Destacados. Vuelve a ponérsela.
+3. **Publica un borrador** (uno de la ferretería, en Productos → Borradores): recarga el inicio y sale primero en "Recién llegados".
+4. **En el panel, Órdenes:**
+   - las píldoras van llenas: "Entregada" en verde con su ícono y "Digital" en azul, como en la tienda;
+   - la guía de ZOOM va en gris con el camión;
+   - al pasar el ratón por "Códigos" o por el ojo, el botón se levanta.
 
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.33 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de la base que deshacer.
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.34 && npm install && bash scripts/deploy.sh --sin-pull`. La columna nueva no molesta al código anterior y se puede quedar.
 
 **Por confirmar de rc.33 (con una cuenta, unos 15 minutos):**
 1. **La Lista del proveedor por pasos:** arriba se ven los 5 pasos. En el paso 2, abre "1 - Cargar en la tienda" de la carpeta de la ferretería, selecciona todo (Ctrl + A) y suéltalo: dice "105 fotos · 74 códigos de su lista con foto".

@@ -1,9 +1,54 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.33`, comprobada el 13/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.34`, comprobada el 13/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 13/11 · C-207 (de rc.33 a `v1.0.0-rc.34`)
+La subió Andrés el 13/11 con los pasos de abajo. Claude lo comprobó el mismo día desde fuera, como un visitante:
+- **La portada dice `1.0.0-rc.34`.** Trae la franja "Feliz Navidad" (sin popup), "Lo último que llegó a la tienda", "Más categorías" y la sección de gift cards.
+- **Ningún producto se repite:** Destacados 5, gift cards 6, Recién llegados 6 y Ferretería 12.
+- **Lo que Andrés vio mal ese mismo día lo arregló C-210** (rc.35):
+  - Destacados se completaba con relleno;
+  - "Recién llegados" ordenaba por la fecha de creación, y la lijadora, el esmeril y la aspiradora (publicados el 13/11) no subían;
+  - las píldoras del panel, al revés de las de la tienda.
+
+### El bloque que se subió: `v1.0.0-rc.34` (C-207; unos 10 minutos)
+Producción está en `v1.0.0-rc.33` (C-205), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
+- **C-207 (rc.34):** el saludo navideño en una franja (ya no tapa la tienda), cada producto una sola vez en el inicio, "Recién llegados" de toda la tienda, las gift cards en una sola sección y "Compra por categoría" con fotos.
+
+Sin cambio de base, sin variables nuevas, sin crons y sin dependencias nuevas.
+
+**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
+```bash
+git describe --tags --abbrev=0 && git status -sb   # v1.0.0-rc.33 y sin cambios
+bash scripts/deploy.sh                             # no hay SQL: compila y reinicia
+git describe --tags --abbrev=0                     # v1.0.0-rc.34
+```
+
+**Pruebas** (unos 10 minutos):
+1. **En la computadora, en una ventana de incógnito,** abre el inicio y espera unos segundos.
+   - Nada tapa la tienda.
+   - Debajo de los destacados está la franja "Feliz Navidad", con "Ver ideas para regalar", que lleva a la página de regalos.
+2. **Ningún producto se repite.** De arriba abajo:
+   - "Destacados de la semana";
+   - "Gift cards y recargas digitales", con las 6 tarjetas, su "Desde $…" y "Elegir monto";
+   - "Recién llegados": la hidrolavadora, el taladro, el panel LED, Sonic, GTA V y el teclado;
+   - "Ferretería", con lo demás de la ferretería.
+3. **En la computadora, "Compra por categoría":**
+   - Ferretería, con "12 productos";
+   - Gift Cards y Recargas, y Videojuegos, cada una con la foto de un producto;
+   - "Más categorías", con cuatro fotos redondas.
+   - Ninguna dice "1 producto".
+4. **En el teléfono,** la franja lleva el saludo y "Ver ideas para regalar →", y se toca en cualquier parte.
+5. **En el panel, Marketing → Navidad:**
+   - "El saludo en el inicio" tiene marcada "La franja navideña", con "Recomendada";
+   - la vista previa muestra la franja;
+   - en "Popup del home", el aviso dice que el inicio lleva la franja navideña.
+
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.33 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de la base que deshacer.
 
 
 ## 12-13/11 · C-204, C-204b, C-199 y C-205 (de rc.29 a `v1.0.0-rc.33`, con rc.30 a rc.32 adentro)

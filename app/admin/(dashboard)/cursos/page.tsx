@@ -1,6 +1,6 @@
 'use client';
 
-import { adminModalOverlay } from '@/lib/admin-ui';
+import { adminBadge, adminModalOverlay } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 
@@ -349,7 +349,7 @@ export default function AdminCursosPage() {
                     </span>
                   )}
                   {course.isFeatured && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-600 inline-flex items-center gap-1"><IconoEstrella lleno className="h-3 w-3 shrink-0" aria-hidden="true" />Destacado</span>
+                    <span className={adminBadge('brand')}><IconoEstrella lleno className="h-3 w-3 shrink-0" aria-hidden="true" />Destacado</span>
                   )}
                 </div>
                 <div className="absolute top-2 right-2">

@@ -343,6 +343,9 @@ model Product {
   brand       Brand?   @relation(fields: [brandId], references: [id])
 
   status      ProductStatus @default(DRAFT)
+  /// C-210: cuándo salió a la tienda por primera vez (al publicarlo). "Recién llegados" ordena por esto: la carga del
+  /// proveedor crea en borrador y se publica días después. Se llena una sola vez; despublicar y volver a publicar no lo cambia.
+  publishedAt DateTime?
   isFeatured  Boolean       @default(false)
 
   // C-119: usados y reacondicionados. Nuevo por defecto; lo demás solo cuando no es nuevo

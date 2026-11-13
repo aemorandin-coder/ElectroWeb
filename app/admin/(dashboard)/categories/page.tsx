@@ -1,6 +1,6 @@
 'use client';
 
-import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminBadge, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 import { toast } from 'react-hot-toast';
@@ -640,7 +640,7 @@ export default function CategoriesPage() {
                           ID: {selectedCategory.id.substring(0, 8)}
                         </span>
                         {selectedCategory.parentId && (
-                          <span className="bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full text-xs font-medium border border-brand-200">
+                          <span className={adminBadge('brand')}>
                             Subcategoría
                           </span>
                         )}

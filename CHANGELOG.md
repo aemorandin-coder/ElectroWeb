@@ -10,6 +10,21 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.35] - 2026-11-13
+Correcciones que pidió Andrés mirando producción. Eligió lo recomendado en las cuatro preguntas.
+### Tienda 1.10.0 (C-210)
+- **"Destacados de la semana" muestra solo lo que tiene la estrella,** de toda la tienda (la ferretería también). Antes se completaba con ofertas y lo nuevo, y por eso, aunque se quitaran las estrellas, seguían saliendo los mismos. Sin ninguna estrella, la sección no sale.
+- **"Recién llegados" ordena por la fecha en que se publicó cada producto,** no por la de creación: lo que se publica hoy sale primero, aunque se haya creado antes en borrador con la Lista del proveedor. Lleva hasta 4 de cada departamento o categoría.
+### Productos 1.12.0 (C-210)
+- **Cada producto guarda cuándo se publicó por primera vez:** al publicarlo uno por uno, en lote, con "Publicar los listos" o al crearlo ya publicado. Volver a publicarlo no le cambia la fecha.
+### Marco del panel 1.5.0, Órdenes y pagos 1.2.0 y Cursos 1.0.5 (C-210)
+- **Las píldoras de estado, como los sellos de la tienda:**
+  - llenas y con texto blanco (azul, verde fuerte o rojo); lo que falta hacer, en ámbar claro;
+  - en Órdenes, con su ícono;
+  - "Digital", en azul como en la tienda;
+  - la guía de ZOOM, en gris con el camión.
+- **Los botones se levantan un poco al pasar el ratón y se hunden al tocarlos.**
+
 ## [1.0.0-rc.34] - 2026-11-13
 ### Tienda 1.9.0 (C-207)
 - **El inicio que vende** (Andrés eligió el 13/11, después de ver el plan de los 5 cambios):

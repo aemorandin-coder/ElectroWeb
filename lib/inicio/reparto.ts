@@ -4,8 +4,8 @@
 // - Una sección con menos del mínimo no se muestra, y lo que no alcanzó a salir queda libre para las de abajo.
 // - "Recién llegados" trae lo último de toda la tienda, ferretería incluida, pero variado: una carga de 70 productos de un
 //   proveedor no llena la sección.
-// - La vitrina de "Destacados" se completa solo hasta lo que necesita para verse: lo nuevo que no es destacado va a
-//   "Recién llegados", que es su lugar.
+// - C-210: "Destacados" muestra solo lo que tiene la estrella, de toda la tienda; sin ninguna, no sale. "Recién llegados"
+//   ordena por la fecha en que cada producto salió a la tienda, con hasta 4 de cada departamento o categoría.
 
 /** Lo mínimo para que una sección del inicio se muestre (PLAN.md §3) */
 export const MIN_SECCION = 4;
@@ -67,15 +67,18 @@ export function repartirCategorias<T extends { productCount: number; esDepartame
 /**
  * Lo más nuevo primero, por día: lo que llegó el mismo día va con los destacados adelante. Así, de una carga de un
  * proveedor (todo el mismo día), "Recién llegados" muestra lo que el equipo marcó como destacado y no las primeras filas
- * de su Excel. `dia` da el día de cada producto ('AAAA-MM-DD').
+ * de su Excel. `momento` dice cuándo llegó cada uno (ISO; C-210: cuándo se publicó) y `dia`, el día de ese momento
+ * ('AAAA-MM-DD', en Venezuela).
  */
-export function porDiaYDestacado<T extends { createdAt: string; isFeatured: boolean }>(productos: readonly T[], dia: (p: T) => string): T[] {
+export function porDiaYDestacado<T extends { isFeatured: boolean }>(productos: readonly T[], momento: (p: T) => string, dia: (iso: string) => string): T[] {
   return [...productos].sort((a, b) => {
-    const da = dia(a);
-    const db = dia(b);
+    const ma = momento(a);
+    const mb = momento(b);
+    const da = dia(ma);
+    const db = dia(mb);
     if (da !== db) return da < db ? 1 : -1;
     if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
-    return a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0;
+    return ma < mb ? 1 : ma > mb ? -1 : 0;
   });
 }
 

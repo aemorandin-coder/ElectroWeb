@@ -4,14 +4,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import Filtros from '@/components/admin/Filtros';
 import {
-  IconoAbrirAparte, IconoActualizar, IconoAdvertencia, IconoCargando, IconoConfirmado, IconoEditar, IconoImagen, IconoInfo,
-  IconoWeb,
+  IconoAbrirAparte, IconoActualizar, IconoAdvertencia, IconoCargando, IconoConfirmado, IconoCuadricula, IconoEditar, IconoImagen,
+  IconoInfo, IconoWeb,
 } from '@/components/iconos';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { formatUSD } from '@/lib/currency';
 import {
-  adminBadge, adminCard, adminChoice, adminHint, adminInput, adminNotice, adminPrimaryButton, adminSecondaryButton,
+  adminBadge, adminCard, adminHint, adminInput, adminNotice, adminPrimaryButton, adminSecondaryButton,
 } from '@/lib/admin-ui';
 import { ETIQUETA_FALTA, type Falta } from '@/lib/proveedores/lista-de-control';
 import type { FilaBorrador } from '@/lib/proveedores/borradores';
@@ -45,7 +46,8 @@ async function post<T>(proveedorId: string, cuerpo: Record<string, unknown>): Pr
  * qué le falta; "Completar con la web" llena lo vacío con la búsqueda de C-155 (la IA propone, el equipo revisa) y
  * "Publicar los listos" publica solo los completos. El servidor revisa cada uno otra vez.
  */
-export default function Borradores({ proveedorId, version }: { proveedorId: string; version: number }) {
+/** C-205: con `enPaso`, va dentro del paso 5 de la Lista del proveedor, que pone el título (sin tarjeta dentro de otra) */
+export default function Borradores({ proveedorId, version, enPaso = false }: { proveedorId: string; version: number; enPaso?: boolean }) {
   const { confirm } = useConfirm();
   const [datos, setDatos] = useState<{ para: string; filas: FilaBorrador[]; total: number } | null>(null);
   const [cargando, setCargando] = useState(false);
@@ -175,30 +177,39 @@ export default function Borradores({ proveedorId, version }: { proveedorId: stri
   if (!proveedorId) return null;
 
   return (
-    <section className={`${adminCard} space-y-4`} aria-labelledby="t-borr">
+    <section className={enPaso ? 'space-y-4' : `${adminCard} space-y-4`} aria-labelledby={enPaso ? undefined : 't-borr'} aria-label={enPaso ? 'Borradores' : undefined}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="t-borr" className="text-base font-bold text-ink">5. Terminar los borradores y publicar</h2>
+        {enPaso
+          ? <p className="text-sm text-ink-soft">Foto, descripción, peso y medidas, marca o modelo, y el nombre escrito normal.</p>
+          : <h2 id="t-borr" className="text-base font-bold text-ink">Terminar los borradores y publicar</h2>}
         <button type="button" onClick={() => void cargar(proveedorId)} disabled={cargando || Boolean(trabajando)} className={adminSecondaryButton}>
           <IconoActualizar className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" /> Actualizar
         </button>
       </div>
-      <p className={adminHint}>
-        Los borradores de este proveedor y lo que le falta a cada uno: foto, descripción, peso y medidas, marca o modelo, y el nombre escrito normal. &quot;Completar con la web&quot; llena lo vacío (lo redacta la IA con lo que encuentra: revísalo antes de publicar). &quot;Publicar los listos&quot; publica solo los completos.
-      </p>
+      {!enPaso && (
+        <p className={adminHint}>
+          Los borradores de este proveedor y lo que le falta a cada uno: foto, descripción, peso y medidas, marca o modelo, y el nombre escrito normal. &quot;Completar con la web&quot; llena lo vacío (lo redacta la IA con lo que encuentra: revísalo antes de publicar). &quot;Publicar los listos&quot; publica solo los completos.
+        </p>
+      )}
 
       {datos?.para !== proveedorId ? (
         <p className="flex items-center gap-2 text-sm text-muted"><IconoCargando className="h-4 w-4 animate-spin" aria-hidden="true" /> Cargando los borradores…</p>
       ) : filas.length === 0 ? (
-        <p className={adminNotice('neutral')}>Este proveedor no tiene borradores. Los que crees arriba aparecen aquí.</p>
+        <p className={adminNotice('neutral')}>Este proveedor no tiene borradores. Los que crees en el paso anterior aparecen aquí.</p>
       ) : (
         <>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Qué borradores ver">
-            {([['todos', 'Todos'], ['listos', 'Listos'], ['faltan', 'Les falta algo'], ['revisar', 'Por revisar']] as const).map(([v, t]) => (
-              <button key={v} type="button" aria-pressed={filtro === v} onClick={() => { setFiltro(v); setCuantos(POR_VISTA); }} className={`${adminChoice(filtro === v)} min-h-11 px-3 text-sm`}>
-                {t} ({miles(conteo[v])})
-              </button>
-            ))}
-          </div>
+          {/* C-205: los filtros con ícono y subtítulo (PLAN.md §1.7) */}
+          <Filtros<Filtro>
+            etiqueta="Qué borradores ver"
+            valor={filtro}
+            onCambiar={(v) => { setFiltro(v); setCuantos(POR_VISTA); }}
+            filtros={[
+              { valor: 'todos', etiqueta: 'Todos', ayuda: 'Los de este proveedor', Icono: IconoCuadricula, cuenta: conteo.todos },
+              { valor: 'listos', etiqueta: 'Listos', ayuda: 'Se pueden publicar', Icono: IconoConfirmado, cuenta: conteo.listos },
+              { valor: 'faltan', etiqueta: 'Les falta algo', ayuda: 'Foto, descripción, peso…', Icono: IconoAdvertencia, cuenta: conteo.faltan, tono: 'aviso' },
+              { valor: 'revisar', etiqueta: 'Por revisar', ayuda: 'Lo completó la web', Icono: IconoEditar, cuenta: conteo.revisar, tono: 'aviso' },
+            ]}
+          />
           {datos.total > filas.length && <p className={adminHint}>Se muestran los {miles(filas.length)} más nuevos de {miles(datos.total)}.</p>}
 
           <div className="flex flex-wrap items-center gap-2">

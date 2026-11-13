@@ -12,17 +12,24 @@
 // - "Sugeridos" ordena lo que conviene subir: afín a la tienda, con existencia y que aguante el envío;
 // - la columna "Modelo" entra como la especificación del mismo nombre;
 // - el paso 5 termina los borradores (lista de control, búsqueda en la web en lote) y publica los listos.
+// C-205 (Andrés, 13/11: "¿qué hago?, ¿a dónde voy?", y los campos de una palabra a 380 px): un paso a la vez, con los
+// pasos arriba (la maqueta A que eligió), cada campo del ancho de su dato y los filtros con ícono y subtítulo
+// (PLAN.md §1.5 a §1.7). Ninguna acción se quitó: solo cambiaron de lugar.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import CampoUnidad from '@/components/admin/CampoUnidad';
+import Filtros, { type Filtro } from '@/components/admin/Filtros';
+import Pasos, { type Paso } from '@/components/admin/Pasos';
 import {
-  IconoAdvertencia, IconoBloqueado, IconoBuscar, IconoCargando, IconoConfirmado, IconoDeshacer, IconoFlechaIzquierda, IconoImagen,
-  IconoInfo, IconoSubir,
+  IconoAdvertencia, IconoArchivo, IconoBloqueado, IconoBuscar, IconoCargando, IconoChevronDerecha, IconoConfirmado, IconoCuadricula,
+  IconoDeshacer, IconoEditar, IconoEstrella, IconoFlechaDerecha, IconoFlechaIzquierda, IconoImagen, IconoInfo, IconoMas, IconoNovedad,
+  IconoPaquete, IconoSubir, IconoTienda,
 } from '@/components/iconos';
 import {
-  adminCard, adminChoice, adminHint, adminInput, adminLabel, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle,
-  adminPrimaryButton, adminSecondaryButton,
+  adminChoice, adminHint, adminInput, adminLabel, adminNotice, adminPageSubtitle, adminPageTitle, adminPrimaryButton,
+  adminSecondaryButton,
 } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import { precioSugerido } from '@/lib/precio-sugerido';
@@ -76,6 +83,9 @@ export default function ListaDelProveedorPage() {
   const [sinPermiso, setSinPermiso] = useState(false);
   const [proveedorId, setProveedorId] = useState('');
   const [nuevoNombre, setNuevoNombre] = useState('');
+  const [nuevoAbierto, setNuevoAbierto] = useState(false);
+  // C-205: el paso en que está (0 a 4)
+  const [paso, setPaso] = useState(0);
   const [creandoProveedor, setCreandoProveedor] = useState(false);
   const [categorias, setCategorias] = useState<Array<{ id: string; name: string }>>([]);
   const [iva, setIva] = useState(0);
@@ -253,6 +263,7 @@ export default function ListaDelProveedorPage() {
     total: filas.length,
     conExistencia: filas.filter((f) => (f.existencia ?? 0) > 0).length,
     nuevos: filas.filter((f) => !revision?.[f.codigo]).length,
+    nuevosConExistencia: filas.filter((f) => !revision?.[f.codigo] && (f.existencia ?? 0) > 0 && (f.precioLista ?? 0) > 0).length,
     enTienda: filas.filter((f) => revision?.[f.codigo]).length,
     revisar: filas.filter((f) => !revision?.[f.codigo] && paraRevisar(f.codigo)).length,
     noSeEnvian: filas.filter((f) => !revision?.[f.codigo] && noSeEnviaPor.get(f.codigo)).length,
@@ -440,250 +451,289 @@ export default function ListaDelProveedorPage() {
     return <p className={adminNotice('warning')}>La lista del proveedor es para quien administra productos: lleva costos.</p>;
   }
 
+  // C-205: el ejemplo del precio, con la primera fila que traiga precio (o $100), para ver la cuenta sin hacerla
+  const precioEjemplo = filas.find((f) => (f.precioLista ?? 0) > 0)?.precioLista ?? 100;
+  const costoEjemplo = costoDesdeLista(precioEjemplo, pctDescuento, ivaLista);
+  const ventaEjemplo = costoEjemplo !== null && pctMargen >= 0 ? precioSugerido(costoEjemplo, iva, pctMargen) : null;
+  const pctTexto = (n: number) => `${String(n).replace('.', ',')} %`;
+
+  const pasos: Paso[] = [
+    {
+      titulo: 'Proveedor y precio',
+      resumen: proveedor ? `${proveedor.name}${ivaIncluido ? ' · IVA incluido' : ''} · margen ${pctTexto(pctMargen)}` : 'Elige el proveedor',
+      hecho: Boolean(proveedorId) && opcionesValidas,
+      disponible: true,
+    },
+    {
+      titulo: 'Lista y fotos',
+      resumen: archivos.length > 0 ? `${miles(conteo.total)} filas · ${miles(fotos.length)} fotos` : 'Su Excel y las fotos',
+      hecho: archivos.length > 0,
+      disponible: Boolean(proveedorId),
+    },
+    {
+      titulo: 'Revisar',
+      resumen: archivos.length === 0 ? 'Lo que llegó' : revisando ? 'Revisando…' : seleccion.size === 0 && creados.length > 0 ? `${miles(creados.length)} creados de ${miles(conteo.total)}` : `${miles(seleccion.size)} marcados de ${miles(conteo.total)}`,
+      hecho: creados.length > 0,
+      disponible: Boolean(proveedorId) && archivos.length > 0,
+    },
+    {
+      titulo: 'Crear y actualizar',
+      resumen: creados.length > 0 ? `${miles(creados.length)} creados en borrador` : revision ? `${miles(nuevosSeleccionados.length)} por crear · ${miles(enTiendaTodos.length)} ya están` : 'Lo nuevo y lo que ya está',
+      hecho: creados.length > 0,
+      disponible: Boolean(proveedorId) && revision !== null,
+    },
+    {
+      titulo: 'Terminar y publicar',
+      resumen: 'Los borradores de este proveedor',
+      hecho: false,
+      disponible: Boolean(proveedorId),
+    },
+  ];
+  const irA = (i: number) => { setPaso(i); window.scrollTo({ top: 0, behavior: 'instant' }); };
+
+  const filtrosVista: Array<Filtro<Vista>> = [
+    { valor: 'nuevos-con-existencia', etiqueta: 'Nuevos con existencia', ayuda: 'Hay en su depósito', Icono: IconoPaquete, cuenta: revision ? conteo.nuevosConExistencia : null },
+    { valor: 'sugeridos', etiqueta: 'Sugeridos', ayuda: 'Afines y aguantan el envío', Icono: IconoEstrella, cuenta: revision ? conteo.sugeridos : null },
+    { valor: 'nuevos', etiqueta: 'Nuevos', ayuda: 'Todavía no están en la tienda', Icono: IconoNovedad, cuenta: revision ? conteo.nuevos : null },
+    { valor: 'revisar', etiqueta: 'Nombres para revisar', ayuda: 'Su sistema los cortó o abrevió', Icono: IconoEditar, cuenta: revision ? conteo.revisar : null, tono: 'aviso' },
+    { valor: 'en-tienda', etiqueta: 'Ya en la tienda', ayuda: 'Se actualizan costo y existencia', Icono: IconoTienda, cuenta: revision ? conteo.enTienda : null },
+    { valor: 'todos', etiqueta: 'Todos', ayuda: 'Toda su lista', Icono: IconoCuadricula, cuenta: conteo.total },
+  ];
+
+  const botonesArchivos = (
+    <div className="flex flex-wrap gap-2">
+      <label className={`${archivos.length > 0 ? adminSecondaryButton : adminPrimaryButton} cursor-pointer`}>
+        {leyendo ? <IconoCargando className="h-4 w-4 animate-spin" aria-hidden="true" /> : <IconoSubir className="h-4 w-4" aria-hidden="true" />}
+        {archivos.length > 0 ? 'Agregar otro archivo' : 'Elegir su Excel'}
+        <input ref={inputArchivos} type="file" accept=".xls,.xlsx,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={(e) => void agregarArchivos(archivosDelInput(e.target.files))} />
+      </label>
+      <label className={`${adminSecondaryButton} cursor-pointer`}>
+        <IconoImagen className="h-4 w-4" aria-hidden="true" /> Elegir la carpeta de fotos
+        <input ref={inputCarpeta} type="file" multiple className="sr-only" onChange={(e) => void agregarArchivos(archivosDelInput(e.target.files))} />
+      </label>
+    </div>
+  );
+
   return (
-    <div className="min-w-0 space-y-5">
-      <div className={adminPageHeader}>
-        <div>
-          <Link href="/admin/products" className="mb-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand-600 hover:underline"><IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Productos</Link>
-          <h1 className={adminPageTitle}>Lista del proveedor</h1>
-          <p className={adminPageSubtitle}>Sube su Excel y las fotos: crea en borrador lo nuevo, con sus fotos, y actualiza el costo y la existencia de lo que ya está, por su código. Después, termina los borradores y publica los listos.</p>
-        </div>
+    <div
+      className="w-full min-w-0 space-y-4"
+      onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setArrastrando(true); } }}
+      onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setArrastrando(false); }}
+      onDrop={(e) => { e.preventDefault(); setArrastrando(false); void archivosDeLaCaida(e.dataTransfer).then(agregarArchivos).then(() => { if (proveedorId && paso < 1) irA(1); }); }}
+    >
+      <div>
+        <Link href="/admin/products" className="mb-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand-600 hover:underline"><IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Productos</Link>
+        <h1 className={adminPageTitle}>Lista del proveedor</h1>
+        <p className={`${adminPageSubtitle} max-w-prose`}>Su Excel y sus fotos, por su código: lo nuevo queda en borrador con sus fotos y lo que ya está se actualiza. Después terminas los borradores y publicas los listos.</p>
       </div>
 
-      {/* 1. Proveedor y cuentas */}
-      <section className={`${adminCard} space-y-4`} aria-labelledby="t-prov">
-        <h2 id="t-prov" className="text-base font-bold text-ink">1. El proveedor y el precio</h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div>
-            <label htmlFor="prov" className={adminLabel}>Proveedor</label>
-            <select id="prov" className={adminInput()} value={proveedorId} onChange={(e) => elegirProveedor(e.target.value)} disabled={proveedores === null}>
-              <option value="">{proveedores === null ? 'Cargando…' : 'Elige el proveedor'}</option>
-              {(proveedores ?? []).map((p) => <option key={p.id} value={p.id}>{p.name} ({miles(p.productos)})</option>)}
-            </select>
-            <div className="mt-2 flex gap-2">
-              <input aria-label="Nombre del proveedor nuevo" value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} placeholder="Proveedor nuevo" maxLength={80} className={`${adminInput()} min-w-0 flex-1`} />
-              <button type="button" onClick={() => void agregarProveedor()} disabled={creandoProveedor || nuevoNombre.trim().length < 2} className={adminSecondaryButton}>Agregar</button>
-            </div>
-          </div>
-          <div>
-            <label htmlFor="desc" className={adminLabel}>Descuento sobre su lista (%)</label>
-            <input id="desc" inputMode="decimal" value={descuento} onChange={(e) => setDescuento(e.target.value.replace(/[^\d.,]/g, ''))} className={adminInput(!(pctDescuento >= 0 && pctDescuento <= 90))} />
-            <p className={adminHint}>Costo = su precio menos este %. Con 0, su precio es tu costo. Se recuerda para la próxima.</p>
-            <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-2 text-sm text-ink">
-              <input type="checkbox" className="h-4 w-4" checked={ivaIncluido} onChange={(e) => setIvaIncluido(e.target.checked)} />
-              Su lista trae el IVA incluido
-            </label>
-            {ivaIncluido && <p className={adminHint}>El costo es su precio sin el IVA ({String(iva > 0 ? iva : 16).replace('.', ',')}{'\u00a0'}%): el IVA que le pagas no es costo, y la tienda lo vuelve a sumar al precio de venta.</p>}
-          </div>
-          <div>
-            <label htmlFor="marg" className={adminLabel}>Margen sobre el costo (%)</label>
-            <input id="marg" inputMode="decimal" value={margen} onChange={(e) => setMargen(e.target.value.replace(/[^\d.,]/g, ''))} className={adminInput(!(pctMargen >= 0 && pctMargen <= 300))} />
-            <p className={adminHint}>Precio de venta = costo + margen{iva > 0 ? ` + IVA ${String(iva).replace('.', ',')}\u00a0%` : ''}, como en el asistente.</p>
-          </div>
-          <div>
-            <label htmlFor="res" className={adminLabel}>Unidades de reserva</label>
-            <input id="res" inputMode="numeric" value={reserva} onChange={(e) => setReserva(e.target.value.replace(/\D/g, ''))} className={adminInput(!(unidadesReserva >= 0 && unidadesReserva <= 20))} />
-            <p className={adminHint}>Su existencia es compartida con su mostrador: se publica la suya menos estas.</p>
-          </div>
-        </div>
-        {proveedorId && (
-          <NoSeEnvia
-            key={`${proveedorId}-${versionLista}`}
-            terminos={noSeEnvia}
-            guardada={listaGuardada}
-            marcados={filas.length > 0 ? conteo.noSeEnvian : null}
-            guardando={guardandoLista}
-            onCambiar={setNoSeEnvia}
-            onGuardar={() => void guardarLista()}
-          />
-        )}
-        {proveedor && (
-          <DespachaDesde
-            key={proveedor.id}
-            proveedorId={proveedor.id}
-            codigo={proveedor.dispatchCityCode}
-            nombre={proveedor.dispatchCityName}
-            onGuardado={(codigo, nombre) => setProveedores((l) => l?.map((p) => (p.id === proveedor.id ? { ...p, dispatchCityCode: codigo, dispatchCityName: nombre } : p)) ?? l)}
-          />
-        )}
-      </section>
+      <Pasos pasos={pasos} actual={paso} onIr={irA} etiqueta="Pasos de la lista del proveedor" />
 
-      {/* 2. Archivos: su Excel y las fotos (C-204), elegidos o soltados juntos */}
-      <section
-        className={`${adminCard} space-y-4 ${arrastrando ? 'outline-2 outline-offset-2 outline-dashed outline-brand-500' : ''}`}
-        aria-labelledby="t-arch"
-        onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setArrastrando(true); } }}
-        onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setArrastrando(false); }}
-        onDrop={(e) => { e.preventDefault(); setArrastrando(false); void archivosDeLaCaida(e.dataTransfer).then(agregarArchivos); }}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id="t-arch" className="text-base font-bold text-ink">2. Su lista y las fotos</h2>
-          <div className="flex flex-wrap gap-2">
-            <label className={`${adminPrimaryButton} cursor-pointer`}>
-              {leyendo ? <IconoCargando className="h-4 w-4 animate-spin" aria-hidden="true" /> : <IconoSubir className="h-4 w-4" aria-hidden="true" />}
-              {archivos.length > 0 ? 'Agregar otro archivo' : 'Elegir archivos'}
-              <input ref={inputArchivos} type="file" accept=".xls,.xlsx,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={(e) => void agregarArchivos(archivosDelInput(e.target.files))} />
-            </label>
-            <label className={`${adminSecondaryButton} cursor-pointer`}>
-              <IconoImagen className="h-4 w-4" aria-hidden="true" /> Elegir la carpeta de fotos
-              <input ref={inputCarpeta} type="file" multiple className="sr-only" onChange={(e) => void agregarArchivos(archivosDelInput(e.target.files))} />
-            </label>
-          </div>
-        </div>
-        {archivos.length === 0 && fotos.length === 0 ? (
-          <p className={adminHint}>Suelta aquí su Excel (.xls, .xlsx o .csv, como sale de su sistema) y la carpeta con las fotos llamadas por su código: R023127.jpg, R023127-2.jpg. Si manda los precios y la existencia en archivos separados, súbelos juntos: se unen por el código.</p>
-        ) : (
-          <div className="space-y-3">
-            {archivos.map((a, i) => (
-              <div key={`${a.nombre}-${i}`} className="rounded-xl border border-line p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="min-w-0 truncate text-sm font-semibold text-ink">{a.nombre} <span className="font-normal text-muted">· {miles(Math.max(0, a.filas.length - 1))} filas</span></p>
-                  <button type="button" onClick={() => setArchivos((l) => l.filter((_, k) => k !== i))} className="min-h-11 text-sm font-semibold text-deal hover:underline">Quitar</button>
-                </div>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                  {CAMPOS.filter((c) => a.columnas[c] !== undefined || ['codigo', 'nombre', 'precio', 'existencia'].includes(c)).map((campo) => (
-                    <label key={campo} className="text-xs font-semibold text-ink-soft">
-                      {ETIQUETA_CAMPO[campo]}
-                      <select value={a.columnas[campo] ?? ''} onChange={(e) => cambiarColumna(i, campo, e.target.value)} className={`${adminInput(campo === 'codigo' && a.columnas.codigo === undefined)} mt-1`}>
-                        <option value="">No viene</option>
-                        {a.encabezados.map((h, k) => <option key={k} value={k}>{h || `Columna ${k + 1}`}</option>)}
-                      </select>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        {fotos.length > 0 && (
-          <div className="space-y-2 rounded-xl border border-line p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="flex min-w-0 items-center gap-2 text-sm font-semibold text-ink">
-                <IconoImagen className="h-4 w-4 shrink-0 text-ink-soft" aria-hidden="true" />
-                <span>{miles(fotos.length)} {fotos.length === 1 ? 'foto' : 'fotos'}{filas.length > 0 && <span className="font-normal text-muted"> · {miles(fotosAgrupadas.porCodigo.size)} {fotosAgrupadas.porCodigo.size === 1 ? 'código' : 'códigos'} de su lista con foto</span>}</span>
-              </p>
-              <button type="button" onClick={() => { setFotos([]); setCarpetasFuera(new Set()); }} className="min-h-11 text-sm font-semibold text-deal hover:underline">Quitar las fotos</button>
-            </div>
-            {carpetas.length > 1 && (
-              <div>
-                <p className={adminHint}>Vienen de {carpetas.length} carpetas: deja marcada solo la de las fotos listas para subir.</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {carpetas.map(([c, n]) => (
-                    <label key={c || '-'} className={`${adminChoice(!carpetasFuera.has(c))} flex min-h-11 cursor-pointer items-center gap-2 px-3 text-sm`}>
-                      <input type="checkbox" className="h-4 w-4" checked={!carpetasFuera.has(c)} onChange={() => setCarpetasFuera((x) => { const k = new Set(x); if (k.has(c)) k.delete(c); else k.add(c); return k; })} />
-                      {c || 'Sueltas'} ({miles(n)})
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-            {fotosAgrupadas.repetidas.length > 0 && (
-              <p className="flex items-start gap-1 text-xs text-warning-strong">
-                <IconoAdvertencia className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                {miles(fotosAgrupadas.repetidas.length)} {fotosAgrupadas.repetidas.length === 1 ? 'foto repetida no se sube' : 'fotos repetidas no se suben'} ({fotosAgrupadas.repetidas.slice(0, 4).join(', ')}{fotosAgrupadas.repetidas.length > 4 ? '…' : ''}): el mismo nombre llegó dos veces, de dos carpetas. Quita la que sobra.
-              </p>
-            )}
-            {filas.length > 0 && fotosAgrupadas.sueltas.length > 0 && (
-              <p className="text-xs text-muted">{miles(fotosAgrupadas.sueltas.length)} no son de ningún código de su lista: {fotosAgrupadas.sueltas.slice(0, 5).join(', ')}{fotosAgrupadas.sueltas.length > 5 ? '…' : ''}</p>
-            )}
-          </div>
-        )}
-      </section>
-
-      {/* 3. Vista previa y acciones */}
-      {archivos.length > 0 && (
-        <section className={`${adminCard} space-y-4`} aria-labelledby="t-prev">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 id="t-prev" className="text-base font-bold text-ink">3. Qué hacer</h2>
-            <p className="text-sm text-muted" aria-live="polite">
-              {miles(conteo.total)} en su lista · {miles(conteo.conExistencia)} con existencia
-              {revision && <> · {miles(conteo.nuevos)} nuevos · {miles(conteo.enTienda)} ya en la tienda</>}
-              {revision && conteo.noSeEnvian > 0 && <> · {miles(conteo.noSeEnvian)} {conteo.noSeEnvian === 1 ? 'no se envía' : 'no se envían'}</>}
-              {revisando && <span className="ml-2 text-brand-600">Revisando…</span>}
-            </p>
-          </div>
-          {!proveedorId && <p className={adminNotice('warning')}>Elige el proveedor arriba: con él se sabe qué códigos ya están en la tienda.</p>}
-
-          {proveedorId && revision && (
-            <div className="grid gap-3 lg:grid-cols-2">
-              <div className="space-y-2 rounded-xl border border-line p-3">
-                <p className="text-sm font-semibold text-ink">Crear en borrador los nuevos que marques</p>
-                <label htmlFor="cat-def" className={adminLabel}>Categoría {filas.some((f) => f.categoria) ? '(para los que no la traen en el archivo)' : ''}</label>
-                <select id="cat-def" className={adminInput()} value={categoriaDefecto} onChange={(e) => setCategoriaDefecto(e.target.value)}>
-                  <option value="">Elige la categoría</option>
-                  {categorias.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+      {/* 1. El proveedor y el precio */}
+      {paso === 0 && (
+        <Marco
+          id="t-prov"
+          titulo="Proveedor y precio"
+          descripcion="De quién es la lista y cómo se calcula el precio. El descuento y el IVA se recuerdan para la próxima."
+          arrastrando={arrastrando}
+          pie={<Pie siguiente={{ texto: 'Siguiente: su lista y las fotos', onClick: () => irA(1), deshabilitado: !proveedorId || !opcionesValidas, porque: !proveedorId ? 'Primero elige el proveedor' : 'Revisa el descuento, el margen o la reserva' }} />}
+        >
+          <div className="max-w-3xl space-y-6">
+            <div>
+              <label htmlFor="prov" className={adminLabel}>Proveedor</label>
+              <div className="flex flex-wrap items-center gap-2">
+                <select id="prov" className={`${adminInput()} sm:max-w-sm`} value={proveedorId} onChange={(e) => elegirProveedor(e.target.value)} disabled={proveedores === null}>
+                  <option value="">{proveedores === null ? 'Cargando…' : 'Elige el proveedor'}</option>
+                  {(proveedores ?? []).map((p) => <option key={p.id} value={p.id}>{p.name} ({miles(p.productos)})</option>)}
                 </select>
-                {fotosAgrupadas.porCodigo.size > 0 && (
-                  <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-ink">
-                    <input type="checkbox" className="h-4 w-4" checked={conFotos} onChange={(e) => setConFotos(e.target.checked)} />
-                    Con sus fotos ({miles(nuevosSeleccionados.filter((f) => fotosAgrupadas.porCodigo.has(f.codigo)).length)} de los marcados tienen)
-                  </label>
+                {!nuevoAbierto && (
+                  <button type="button" onClick={() => setNuevoAbierto(true)} className={adminSecondaryButton}><IconoMas className="h-4 w-4" aria-hidden="true" /> Proveedor nuevo</button>
                 )}
-                <p className={adminHint}>Quedan en borrador. En el paso 5 se completan con la web y se publican los que estén listos.</p>
-                <button type="button" onClick={() => void crear()} disabled={Boolean(trabajando) || nuevosSeleccionados.length === 0 || !opcionesValidas} className={adminPrimaryButton}>
-                  Crear {miles(nuevosSeleccionados.length)} en borrador
-                </button>
               </div>
-              <div className="space-y-2 rounded-xl border border-line p-3">
-                <p className="text-sm font-semibold text-ink">Actualizar los {miles(enTiendaTodos.length)} que ya están</p>
-                <div className="flex flex-wrap gap-2">
-                  {([['costo', 'Costo'], ['existencia', 'Existencia'], ['precio', 'Precio de venta con el margen']] as const).map(([k, t]) => (
-                    <label key={k} className={`${adminChoice(actualizarQue[k])} flex min-h-11 cursor-pointer items-center gap-2 px-3 text-sm`}>
-                      <input type="checkbox" checked={actualizarQue[k]} onChange={(e) => setActualizarQue((q) => ({ ...q, [k]: e.target.checked }))} className="h-4 w-4" /> {t}
-                    </label>
-                  ))}
+              {nuevoAbierto && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <input aria-label="Nombre del proveedor nuevo" autoFocus value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void agregarProveedor(); }} placeholder="Nombre del proveedor" maxLength={80} className={`${adminInput()} sm:max-w-sm`} />
+                  <button type="button" onClick={() => void agregarProveedor()} disabled={creandoProveedor || nuevoNombre.trim().length < 2} className={adminPrimaryButton}>Agregar</button>
+                  <button type="button" onClick={() => { setNuevoAbierto(false); setNuevoNombre(''); }} className="min-h-11 px-2 text-sm font-semibold text-brand-600 hover:underline">Cancelar</button>
                 </div>
-                {actualizarQue.precio && <p className={adminNotice('warning')}>Cambia el precio de lo publicado: la tienda lo muestra al instante.</p>}
-                <button type="button" onClick={() => void actualizar()} disabled={Boolean(trabajando) || enTiendaTodos.length === 0 || !opcionesValidas || !(actualizarQue.costo || actualizarQue.existencia || actualizarQue.precio)} className={adminSecondaryButton}>
-                  Actualizar {miles(enTiendaTodos.length)}
-                </button>
-                {agotados && agotados.cantidad > 0 && (
-                  <div className={adminNotice('warning')}>
-                    <p>{miles(agotados.cantidad)} {agotados.cantidad === 1 ? 'producto suyo ya no sale' : 'productos suyos ya no salen'} en esta lista de existencia y todavía {agotados.cantidad === 1 ? 'tiene' : 'tienen'} existencia en la tienda: {agotados.nombres.slice(0, 5).join(', ')}{agotados.cantidad > 5 ? '…' : ''}.</p>
-                    <button type="button" onClick={() => void ponerAgotadosEnCero()} disabled={Boolean(trabajando)} className={`${adminSecondaryButton} mt-2`}>Dejarlos sin existencia</button>
+              )}
+            </div>
+
+            <fieldset>
+              <legend className={adminLabel}>Precio</legend>
+              <div className="flex flex-wrap gap-x-5 gap-y-3">
+                <div>
+                  <label htmlFor="desc" className="mb-1 block text-xs font-semibold text-ink-soft">Descuento sobre su lista</label>
+                  <CampoUnidad id="desc" unidad="%" inputMode="decimal" value={descuento} onChange={(e) => setDescuento(e.target.value.replace(/[^\d.,]/g, ''))} invalido={!(pctDescuento >= 0 && pctDescuento <= 90)} />
+                </div>
+                <div>
+                  <label htmlFor="marg" className="mb-1 block text-xs font-semibold text-ink-soft">Margen sobre el costo</label>
+                  <CampoUnidad id="marg" unidad="%" inputMode="decimal" value={margen} onChange={(e) => setMargen(e.target.value.replace(/[^\d.,]/g, ''))} invalido={!(pctMargen >= 0 && pctMargen <= 300)} />
+                </div>
+                <div>
+                  <label htmlFor="res" className="mb-1 block text-xs font-semibold text-ink-soft">Unidades de reserva</label>
+                  <CampoUnidad id="res" unidad="und." inputMode="numeric" value={reserva} onChange={(e) => setReserva(e.target.value.replace(/\D/g, ''))} invalido={!(unidadesReserva >= 0 && unidadesReserva <= 20)} />
+                </div>
+              </div>
+              <label className="mt-3 flex min-h-11 cursor-pointer items-center gap-2 text-sm text-ink">
+                <input type="checkbox" className="h-4 w-4" checked={ivaIncluido} onChange={(e) => setIvaIncluido(e.target.checked)} />
+                Su lista trae el IVA incluido
+              </label>
+              <p className={adminHint}>
+                El costo es su precio menos el descuento{ivaIncluido ? ` y sin el IVA (${pctTexto(iva > 0 ? iva : 16)}): el IVA que le pagas no es costo, y la tienda lo vuelve a sumar al precio de venta` : ''}. El precio de venta es el costo más el margen{iva > 0 ? ` más el IVA (${pctTexto(iva)})` : ''}, como en el asistente. Su existencia es compartida con su mostrador: se publica la suya menos la reserva.
+              </p>
+              {opcionesValidas && costoEjemplo !== null && ventaEjemplo !== null && (
+                <p className="mt-2 text-sm text-ink-soft">
+                  Así queda: <span className="tabular-nums">{formatUSD(precioEjemplo)}</span> en su lista → costo <span className="tabular-nums">{formatUSD(costoEjemplo)}</span> → venta <strong className="tabular-nums text-ink">{formatUSD(ventaEjemplo)}</strong>
+                </p>
+              )}
+            </fieldset>
+
+            {proveedor && (
+              <DespachaDesde
+                key={proveedor.id}
+                proveedorId={proveedor.id}
+                codigo={proveedor.dispatchCityCode}
+                nombre={proveedor.dispatchCityName}
+                onGuardado={(codigo, nombre) => setProveedores((l) => l?.map((p) => (p.id === proveedor.id ? { ...p, dispatchCityCode: codigo, dispatchCityName: nombre } : p)) ?? l)}
+              />
+            )}
+            {proveedorId && (
+              <NoSeEnvia
+                key={`${proveedorId}-${versionLista}`}
+                terminos={noSeEnvia}
+                guardada={listaGuardada}
+                marcados={filas.length > 0 ? conteo.noSeEnvian : null}
+                guardando={guardandoLista}
+                onCambiar={setNoSeEnvia}
+                onGuardar={() => void guardarLista()}
+              />
+            )}
+          </div>
+        </Marco>
+      )}
+
+      {/* 2. Su lista y las fotos (C-204): elegidos o soltados juntos, en cualquier paso */}
+      {paso === 1 && (
+        <Marco
+          id="t-arch"
+          titulo="Su lista y las fotos"
+          descripcion="Su Excel como sale de su sistema y la carpeta con las fotos llamadas por su código. Se pueden soltar juntos."
+          accion={archivos.length > 0 || fotos.length > 0 ? botonesArchivos : undefined}
+          arrastrando={arrastrando}
+          pie={<Pie onAtras={() => irA(0)} siguiente={{ texto: archivos.length > 0 ? `Siguiente: revisar ${miles(conteo.total)} filas` : 'Siguiente: revisar', onClick: () => irA(2), deshabilitado: archivos.length === 0, porque: 'Primero su Excel' }} />}
+        >
+          <div className="max-w-3xl space-y-4">
+            {archivos.length === 0 && fotos.length === 0 ? (
+              <div className={`flex flex-col items-start gap-3 rounded-2xl border-2 border-dashed p-6 ${arrastrando ? 'border-brand-500 bg-brand-50' : 'border-line-strong'}`}>
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><IconoSubir className="h-5 w-5" aria-hidden="true" /></span>
+                <div>
+                  <p className="text-sm font-semibold text-ink">Suelta aquí su Excel y la carpeta de las fotos</p>
+                  <p className={adminHint}>Su Excel en .xls, .xlsx o .csv. Las fotos, con el código como nombre: R023127.jpg, R023127-2.jpg. Si manda los precios y la existencia en archivos separados, súbelos juntos: se unen por el código.</p>
+                </div>
+                {botonesArchivos}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {archivos.map((a, i) => {
+                  const reconocidas = CAMPOS.filter((c) => a.columnas[c] !== undefined).length;
+                  return (
+                    <div key={`${a.nombre}-${i}`} className="rounded-xl border border-line">
+                      <div className="flex flex-wrap items-center justify-between gap-2 px-3 pt-2">
+                        <p className="flex min-w-0 items-center gap-2 text-sm font-semibold text-ink">
+                          <IconoArchivo className="h-4 w-4 shrink-0 text-ink-soft" aria-hidden="true" />
+                          <span className="min-w-0 truncate">{a.nombre}</span>
+                          <span className="shrink-0 font-normal text-muted">· {miles(Math.max(0, a.filas.length - 1))} filas</span>
+                        </p>
+                        <button type="button" onClick={() => setArchivos((l) => l.filter((_, k) => k !== i))} className="min-h-11 text-sm font-semibold text-deal hover:underline">Quitar</button>
+                      </div>
+                      <details className="group px-3 pb-3" open={a.columnas.codigo === undefined}>
+                        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 text-sm text-ink-soft">
+                          <IconoChevronDerecha className="h-4 w-4 shrink-0 transition-transform duration-150 group-open:rotate-90" aria-hidden="true" />
+                          Columnas: {reconocidas} reconocidas{a.columnas.codigo === undefined && <span className="font-semibold text-warning-strong"> · falta el código</span>}
+                        </summary>
+                        <div className="mt-1 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                          {CAMPOS.filter((c) => a.columnas[c] !== undefined || ['codigo', 'nombre', 'precio', 'existencia'].includes(c)).map((campo) => (
+                            <label key={campo} className="text-xs font-semibold text-ink-soft">
+                              {ETIQUETA_CAMPO[campo]}
+                              <select value={a.columnas[campo] ?? ''} onChange={(e) => cambiarColumna(i, campo, e.target.value)} className={`${adminInput(campo === 'codigo' && a.columnas.codigo === undefined)} mt-1`}>
+                                <option value="">No viene</option>
+                                {a.encabezados.map((h, k) => <option key={k} value={k}>{h || `Columna ${k + 1}`}</option>)}
+                              </select>
+                            </label>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  );
+                })}
+                {archivos.length === 0 && <p className={adminNotice('warning')}>Falta su Excel. Si solo son fotos para productos que ya están en la tienda, súbelas abajo, en &quot;Fotos para lo que ya está en la tienda&quot;.</p>}
+              </div>
+            )}
+            {fotos.length > 0 && (
+              <div className="space-y-2 rounded-xl border border-line p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="flex min-w-0 items-center gap-2 text-sm font-semibold text-ink">
+                    <IconoImagen className="h-4 w-4 shrink-0 text-ink-soft" aria-hidden="true" />
+                    <span>{miles(fotos.length)} {fotos.length === 1 ? 'foto' : 'fotos'}{filas.length > 0 && <span className="font-normal text-muted"> · {miles(fotosAgrupadas.porCodigo.size)} {fotosAgrupadas.porCodigo.size === 1 ? 'código' : 'códigos'} de su lista con foto</span>}</span>
+                  </p>
+                  <button type="button" onClick={() => { setFotos([]); setCarpetasFuera(new Set()); }} className="min-h-11 text-sm font-semibold text-deal hover:underline">Quitar las fotos</button>
+                </div>
+                {carpetas.length > 1 && (
+                  <div>
+                    <p className={adminHint}>Vienen de {carpetas.length} carpetas: deja marcada solo la de las fotos listas para subir.</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {carpetas.map(([c, n]) => (
+                        <label key={c || '-'} className={`${adminChoice(!carpetasFuera.has(c))} flex min-h-11 cursor-pointer items-center gap-2 px-3 text-sm`}>
+                          <input type="checkbox" className="h-4 w-4" checked={!carpetasFuera.has(c)} onChange={() => setCarpetasFuera((x) => { const k = new Set(x); if (k.has(c)) k.delete(c); else k.add(c); return k; })} />
+                          {c || 'Sueltas'} ({miles(n)})
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 )}
+                {fotosAgrupadas.repetidas.length > 0 && (
+                  <p className="flex items-start gap-1 text-xs text-warning-strong">
+                    <IconoAdvertencia className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    {miles(fotosAgrupadas.repetidas.length)} {fotosAgrupadas.repetidas.length === 1 ? 'foto repetida no se sube' : 'fotos repetidas no se suben'} ({fotosAgrupadas.repetidas.slice(0, 4).join(', ')}{fotosAgrupadas.repetidas.length > 4 ? '…' : ''}): el mismo nombre llegó dos veces, de dos carpetas. Quita la que sobra.
+                  </p>
+                )}
+                {filas.length > 0 && fotosAgrupadas.sueltas.length > 0 && (
+                  <p className="text-xs text-muted">{miles(fotosAgrupadas.sueltas.length)} no son de ningún código de su lista: {fotosAgrupadas.sueltas.slice(0, 5).join(', ')}{fotosAgrupadas.sueltas.length > 5 ? '…' : ''}</p>
+                )}
               </div>
-            </div>
-          )}
-
-          {trabajando && <p className="flex items-center gap-2 text-sm font-semibold text-brand-700" role="status"><IconoCargando className="h-4 w-4 animate-spin" aria-hidden="true" /> {trabajando}</p>}
-
-          {creados.length > 0 && (
-            <div className={adminNotice('success')}>
-              <p className="flex items-center gap-2 font-semibold"><IconoConfirmado className="h-4 w-4" aria-hidden="true" /> {miles(creados.length)} creados en borrador.</p>
-              <Link href={`/admin/products?proveedor=${proveedorId}&filtro=borradores`} className="mt-1 inline-flex min-h-11 items-center font-semibold underline">Verlos en Productos</Link>
-            </div>
-          )}
-          {errores.length > 0 && (
-            <div className={adminNotice('danger')}>
-              <p className="font-semibold">{miles(errores.length)} no se crearon:</p>
-              <ul className="mt-1 list-disc pl-5 text-sm">{errores.slice(0, 10).map((e) => <li key={e.codigo}><span className="font-mono">{e.codigo}</span>: {e.error}</li>)}</ul>
-            </div>
-          )}
-          {fallosFotos.length > 0 && (
-            <div className={adminNotice('warning')}>
-              <p className="font-semibold">{miles(fallosFotos.length)} {fallosFotos.length === 1 ? 'producto quedó' : 'productos quedaron'} sin sus fotos: súbelas en el paso 4.</p>
-              <ul className="mt-1 list-disc pl-5 text-sm">{fallosFotos.slice(0, 10).map((f) => <li key={f}>{f}</li>)}</ul>
-            </div>
-          )}
-
-          {/* Filtros de la vista previa */}
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Qué filas ver">
-            {([['nuevos-con-existencia', 'Nuevos con existencia'], ['sugeridos', `Sugeridos (${miles(conteo.sugeridos)})`], ['nuevos', 'Nuevos'], ['revisar', `Nombres para revisar (${miles(conteo.revisar)})`], ['en-tienda', 'Ya en la tienda'], ['todos', 'Todos']] as const).map(([v, t]) => (
-              <button key={v} type="button" aria-pressed={vista === v} onClick={() => cambiarVista(() => setVista(v))} className={`${adminChoice(vista === v)} min-h-11 px-3 text-sm`}>{t}</button>
-            ))}
+            )}
+            <FotosPorCodigo proveedorId={proveedorId} />
           </div>
+        </Marco>
+      )}
+
+      {/* 3. Revisar lo que llegó: los filtros, la búsqueda y la tabla */}
+      {paso === 2 && (
+        <Marco
+          id="t-prev"
+          titulo="Revisa lo que llegó"
+          descripcion="Marca lo nuevo que quieres crear y corrige el nombre si hace falta. Lo que ya está en la tienda se actualiza en el paso siguiente."
+          accion={
+            <p className="text-sm text-muted" aria-live="polite">
+              {revisando
+                ? <span className="inline-flex items-center gap-1.5 text-brand-700"><IconoCargando className="h-4 w-4 animate-spin" aria-hidden="true" /> Revisando qué ya está en la tienda…</span>
+                : <>{miles(conteo.total)} en su lista · {miles(conteo.conExistencia)} con existencia{conteo.noSeEnvian > 0 && <> · {miles(conteo.noSeEnvian)} no se {conteo.noSeEnvian === 1 ? 'envía' : 'envían'}</>}</>}
+            </p>
+          }
+          pie={<Pie onAtras={() => irA(1)} estado={seleccion.size > 0 ? `${miles(nuevosSeleccionados.length)} marcados${conFotos && fotosAgrupadas.porCodigo.size > 0 ? `, ${miles(nuevosSeleccionados.filter((f) => fotosAgrupadas.porCodigo.has(f.codigo)).length)} con foto` : ''}` : 'Marca lo que quieres crear'} siguiente={{ texto: nuevosSeleccionados.length > 0 ? `Siguiente: crear ${miles(nuevosSeleccionados.length)} en borrador` : 'Siguiente: crear y actualizar', onClick: () => irA(3), deshabilitado: revision === null, porque: 'Esperando la revisión' }} />}
+        >
+          <Filtros filtros={filtrosVista} valor={vista} onCambiar={(v) => cambiarVista(() => setVista(v))} etiqueta="Qué filas ver" />
           {vista === 'sugeridos' && (
             <p className={adminHint}>Afines a la tienda (electricidad, iluminación, protectores de voltaje, herramientas eléctricas, bombas y cerrajería), con existencia y que se pueden enviar. Primero los de $25 o más, que aguantan solos su envío; después, los complementos.</p>
           )}
-          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_16rem]">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative w-full sm:max-w-sm">
               <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
               <input type="search" aria-label="Buscar en la lista" value={busqueda} onChange={(e) => cambiarVista(() => setBusqueda(e.target.value))} placeholder="Buscar por código o nombre" className={`${adminInput()} pl-9`} />
             </div>
             {departamentos.length > 0 && (
-              <select aria-label="Departamento" className={adminInput()} value={dpto} onChange={(e) => cambiarVista(() => setDpto(e.target.value))}>
+              <select aria-label="Departamento" className={`${adminInput()} sm:max-w-xs`} value={dpto} onChange={(e) => cambiarVista(() => setDpto(e.target.value))}>
                 <option value="">Todos los departamentos</option>
                 {departamentos.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
@@ -789,11 +839,144 @@ export default function ListaDelProveedorPage() {
               <button type="button" className={adminSecondaryButton} disabled={pagina >= paginas} onClick={() => setPagina((p) => p + 1)}>Siguiente</button>
             </div>
           )}
-        </section>
+        </Marco>
       )}
 
-      <FotosPorCodigo proveedorId={proveedorId} />
-      <Borradores proveedorId={proveedorId} version={versionBorradores} />
+      {/* 4. Crear lo nuevo y actualizar lo que ya está */}
+      {paso === 3 && (
+        <Marco
+          id="t-hacer"
+          titulo="Crea y actualiza"
+          descripcion="Lo nuevo queda en borrador, con sus fotos; lo que ya está en la tienda se actualiza con su lista."
+          pie={<Pie onAtras={() => irA(2)} siguiente={{ texto: 'Siguiente: terminar y publicar', onClick: () => irA(4), deshabilitado: Boolean(trabajando), porque: 'Espera a que termine' }} />}
+        >
+          <div className="grid gap-6 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-line">
+            <div className="space-y-3 lg:pr-6">
+              <h3 className="text-sm font-semibold text-ink">Crear en borrador los {miles(nuevosSeleccionados.length)} que marcaste</h3>
+              <div>
+                <label htmlFor="cat-def" className={adminLabel}>Categoría {filas.some((f) => f.categoria) ? '(para los que no la traen en el archivo)' : ''}</label>
+                <select id="cat-def" className={`${adminInput()} sm:max-w-sm`} value={categoriaDefecto} onChange={(e) => setCategoriaDefecto(e.target.value)}>
+                  <option value="">Elige la categoría</option>
+                  {categorias.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              {fotosAgrupadas.porCodigo.size > 0 && (
+                <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-ink">
+                  <input type="checkbox" className="h-4 w-4" checked={conFotos} onChange={(e) => setConFotos(e.target.checked)} />
+                  Con sus fotos ({miles(nuevosSeleccionados.filter((f) => fotosAgrupadas.porCodigo.has(f.codigo)).length)} de los marcados tienen)
+                </label>
+              )}
+              <p className={adminHint}>Quedan en borrador. En el paso siguiente se completan con la web y se publican los que estén listos.</p>
+              {nuevosSeleccionados.length === 0 && <p className="text-sm text-muted">No marcaste ninguno: vuelve a <button type="button" onClick={() => irA(2)} className="font-semibold text-brand-600 underline">Revisar</button>.</p>}
+              <button type="button" onClick={() => void crear()} disabled={Boolean(trabajando) || nuevosSeleccionados.length === 0 || !opcionesValidas} className={adminPrimaryButton}>
+                Crear {miles(nuevosSeleccionados.length)} en borrador
+              </button>
+            </div>
+            <div className="space-y-3 lg:pl-6">
+              <h3 className="text-sm font-semibold text-ink">Actualizar los {miles(enTiendaTodos.length)} que ya están</h3>
+              <div className="flex flex-wrap gap-2">
+                {([['costo', 'Costo'], ['existencia', 'Existencia'], ['precio', 'Precio de venta con el margen']] as const).map(([k, t]) => (
+                  <label key={k} className={`${adminChoice(actualizarQue[k])} flex min-h-11 cursor-pointer items-center gap-2 px-3 text-sm`}>
+                    <input type="checkbox" checked={actualizarQue[k]} onChange={(e) => setActualizarQue((q) => ({ ...q, [k]: e.target.checked }))} className="h-4 w-4" /> {t}
+                  </label>
+                ))}
+              </div>
+              {actualizarQue.precio && <p className={adminNotice('warning')}>Cambia el precio de lo publicado: la tienda lo muestra al instante.</p>}
+              <button type="button" onClick={() => void actualizar()} disabled={Boolean(trabajando) || enTiendaTodos.length === 0 || !opcionesValidas || !(actualizarQue.costo || actualizarQue.existencia || actualizarQue.precio)} className={adminSecondaryButton}>
+                Actualizar {miles(enTiendaTodos.length)}
+              </button>
+              {agotados && agotados.cantidad > 0 && (
+                <div className={adminNotice('warning')}>
+                  <p>{miles(agotados.cantidad)} {agotados.cantidad === 1 ? 'producto suyo ya no sale' : 'productos suyos ya no salen'} en esta lista de existencia y todavía {agotados.cantidad === 1 ? 'tiene' : 'tienen'} existencia en la tienda: {agotados.nombres.slice(0, 5).join(', ')}{agotados.cantidad > 5 ? '…' : ''}.</p>
+                  <button type="button" onClick={() => void ponerAgotadosEnCero()} disabled={Boolean(trabajando)} className={`${adminSecondaryButton} mt-2`}>Dejarlos sin existencia</button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {trabajando && <p className="flex items-center gap-2 text-sm font-semibold text-brand-700" role="status"><IconoCargando className="h-4 w-4 animate-spin" aria-hidden="true" /> {trabajando}</p>}
+          {creados.length > 0 && (
+            <div className={adminNotice('success')}>
+              <p className="flex items-center gap-2 font-semibold"><IconoConfirmado className="h-4 w-4" aria-hidden="true" /> {miles(creados.length)} creados en borrador.</p>
+              <button type="button" onClick={() => irA(4)} className="mt-1 inline-flex min-h-11 items-center font-semibold underline">Terminarlos y publicarlos</button>
+            </div>
+          )}
+          {errores.length > 0 && (
+            <div className={adminNotice('danger')}>
+              <p className="font-semibold">{miles(errores.length)} no se crearon:</p>
+              <ul className="mt-1 list-disc pl-5 text-sm">{errores.slice(0, 10).map((e) => <li key={e.codigo}><span className="font-mono">{e.codigo}</span>: {e.error}</li>)}</ul>
+            </div>
+          )}
+          {fallosFotos.length > 0 && (
+            <div className={adminNotice('warning')}>
+              <p className="font-semibold">{miles(fallosFotos.length)} {fallosFotos.length === 1 ? 'producto quedó' : 'productos quedaron'} sin sus fotos: súbelas en el paso 2, en &quot;Fotos para lo que ya está en la tienda&quot;.</p>
+              <ul className="mt-1 list-disc pl-5 text-sm">{fallosFotos.slice(0, 10).map((f) => <li key={f}>{f}</li>)}</ul>
+            </div>
+          )}
+        </Marco>
+      )}
+
+      {/* 5. Terminar los borradores y publicar los listos */}
+      {paso === 4 && (
+        <Marco
+          id="t-borr"
+          titulo="Termina los borradores y publica"
+          descripcion="Lo que le falta a cada borrador de este proveedor. Completar con la web llena lo vacío (revísalo antes de publicar); Publicar los listos publica solo los completos."
+          pie={<Pie onAtras={() => irA(3)} estado={<Link href={`/admin/products?proveedor=${proveedorId}&filtro=borradores`} className="font-semibold text-brand-600 hover:underline">Ver sus borradores en Productos</Link>} />}
+        >
+          <Borradores proveedorId={proveedorId} version={versionBorradores} enPaso />
+        </Marco>
+      )}
+    </div>
+  );
+}
+
+/** C-205: la tarjeta de un paso: su título, lo que hay que hacer y, abajo, adónde ir */
+function Marco({ id, titulo, descripcion, accion, arrastrando = false, pie, children }: {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  accion?: ReactNode;
+  arrastrando?: boolean;
+  pie: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section aria-labelledby={id} className={`rounded-2xl border bg-white ${arrastrando ? 'border-brand-500 outline-2 outline-offset-2 outline-dashed outline-brand-500' : 'border-line'}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3 px-4 pt-4 sm:px-5 sm:pt-5">
+        <div className="min-w-0">
+          <h2 id={id} className="text-lg font-semibold text-ink">{titulo}</h2>
+          <p className="mt-0.5 max-w-prose text-sm text-muted">{descripcion}</p>
+        </div>
+        {accion}
+      </div>
+      <div className="min-w-0 space-y-4 px-4 py-4 sm:px-5 sm:py-5">{children}</div>
+      {pie}
+    </section>
+  );
+}
+
+/** C-205: el pie del paso, pegado abajo: volver, cómo va y el paso siguiente (con el porqué si todavía no se puede) */
+function Pie({ onAtras, estado, siguiente }: {
+  onAtras?: () => void;
+  estado?: ReactNode;
+  siguiente?: { texto: string; onClick: () => void; deshabilitado?: boolean; porque?: string };
+}) {
+  const bloqueado = Boolean(siguiente?.deshabilitado);
+  return (
+    <div className="sticky bottom-0 z-[var(--z-sticky)] flex items-center gap-3 rounded-b-2xl border-t border-line bg-surface px-4 py-3 sm:px-5">
+      {onAtras ? (
+        <button type="button" onClick={onAtras} className={adminSecondaryButton}><IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Atrás</button>
+      ) : <span />}
+      <div className="hidden min-w-0 flex-1 truncate text-center text-sm text-ink-soft sm:block" aria-live="polite">
+        {bloqueado ? siguiente?.porque : estado}
+      </div>
+      {siguiente && (
+        <button type="button" onClick={siguiente.onClick} disabled={bloqueado} title={bloqueado ? siguiente.porque : undefined} aria-label={siguiente.texto} className={`${adminPrimaryButton} ml-auto min-w-0 max-sm:flex-1 sm:ml-0`}>
+          {/* En el teléfono basta "Siguiente": lo que sigue ya lo dicen los pasos de arriba */}
+          <span className="sm:hidden">Siguiente</span><span className="hidden truncate sm:inline">{siguiente.texto}</span> <IconoFlechaDerecha className="h-4 w-4 shrink-0" aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 }
@@ -911,14 +1094,17 @@ function FotosPorCodigo({ proveedorId }: { proveedorId: string }) {
   };
 
   return (
-    <section className={`${adminCard} space-y-3`} aria-labelledby="t-fotos">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="t-fotos" className="text-base font-bold text-ink">4. Fotos para los que ya están en la tienda</h2>
-        <label className={`${adminSecondaryButton} ${proveedorId ? 'cursor-pointer' : 'pointer-events-none opacity-50'}`}>
-          <IconoImagen className="h-4 w-4" aria-hidden="true" /> Elegir fotos
-          <input type="file" accept="image/*" multiple className="sr-only" disabled={!proveedorId} onChange={(e) => { setArchivos(Array.from(e.target.files ?? [])); setHecho(null); e.target.value = ''; }} />
-        </label>
-      </div>
+    <details className="group rounded-xl border border-line p-3" open={archivos.length > 0 || hecho !== null}>
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm">
+        <IconoChevronDerecha className="h-4 w-4 shrink-0 text-ink-soft transition-transform duration-150 group-open:rotate-90" aria-hidden="true" />
+        <span className="font-semibold text-ink">Fotos para lo que ya está en la tienda</span>
+        <span className="text-muted">· sin su Excel</span>
+      </summary>
+      <div className="mt-2 space-y-3">
+      <label className={`${adminSecondaryButton} ${proveedorId ? 'cursor-pointer' : 'pointer-events-none opacity-50'}`}>
+        <IconoImagen className="h-4 w-4" aria-hidden="true" /> Elegir fotos
+        <input type="file" accept="image/*" multiple className="sr-only" disabled={!proveedorId} onChange={(e) => { setArchivos(Array.from(e.target.files ?? [])); setHecho(null); e.target.value = ''; }} />
+      </label>
       <p className={adminHint}>Para las fotos que llegan después. Llama cada foto con el código del proveedor: R023127.jpg, R023127-2.jpg, R023127-3.jpg. Se agregan a las que el producto ya tenga (hasta {FOTOS_MAX}), con fondo blanco y la cinta ES. Mejor con el fondo ya quitado en el teléfono.</p>
       {plan && (
         <div className="space-y-2">
@@ -934,6 +1120,7 @@ function FotosPorCodigo({ proveedorId }: { proveedorId: string }) {
           {hecho.fallos.length > 0 && <ul className="mt-1 list-disc pl-5 text-sm">{hecho.fallos.slice(0, 10).map((f) => <li key={f}>{f}</li>)}</ul>}
         </div>
       )}
-    </section>
+      </div>
+    </details>
   );
 }

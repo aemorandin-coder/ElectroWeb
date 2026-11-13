@@ -10,7 +10,18 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
-## [1.0.0-rc.32] - 2026-11-12
+## [1.0.0-rc.33] - 2026-11-13
+### Productos 1.11.0 (C-205)
+- **La Lista del proveedor, por pasos** (pedido de Andrés del 13/11; eligió la maqueta A): proveedor y precio, su lista y las fotos, revisar, crear y actualizar, y terminar y publicar.
+  - Arriba se ve en qué paso estás y lo que ya elegiste en cada uno.
+  - Abajo, "Atrás" y "Siguiente: …", que dice adónde lleva o por qué todavía no se puede.
+- **Cada campo, del tamaño de su dato:** el descuento y el margen ya no ocupan un cuarto de pantalla, y el proveedor y la ciudad no van de borde a borde.
+- **Los filtros, con ícono, cuenta y una línea** que dice qué juntan. Lo mismo en los borradores.
+- **"Así queda":** el precio de lista, el costo y la venta de un producto, para ver la cuenta antes de crear.
+### Marco del panel 1.4.0 (C-205)
+- **Reglas de ancho para todo el panel** (`PLAN.md` §1.5): la página empieza junto al menú y lo que se limita es lo de adentro. La ayuda de los campos va en líneas cortas.
+- **Piezas nuevas** para los trabajos de varios pasos y para los filtros.
+
 ### Tienda 1.8.0 y Carrito, checkout y cuenta del cliente 1.3.0 (C-199)
 - **"Calcula tu envío"** en la ficha y en el carrito:
   - el cliente elige su estado y su ciudad;

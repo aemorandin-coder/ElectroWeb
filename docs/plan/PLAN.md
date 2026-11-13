@@ -129,6 +129,44 @@ Todo panel fijo en móvil que tenga botones abajo usa `pb-[calc(var(--bottom-nav
 ### 1.4 Formato de precios
 Un único módulo, `lib/currency.ts` (C-12): `formatUSD(1099)` → `$1.099,00` y `formatVES(40113.5)` → `Bs. 40.113,50`. Nadie más usa `toFixed` ni `Intl.NumberFormat` para precios.
 
+### 1.5 Anchos: cada contenedor, del tamaño de lo que lleva (C-205)
+Lo pidió Andrés el 13/11: un campo con un "30" ocupaba 380 px, y los contenedores anchos desordenaban las rejillas. Vale para el panel y para la web.
+
+**La página:** en el panel empieza junto al menú y ocupa el ancho del marco (hasta 1600 px), como las demás. No se centra una página angosta dentro del marco ancho (`mx-auto max-w-…`): deja un hueco junto al menú y despega el título de la cabecera (Andrés lo marcó el 13/11). Lo que se limita es lo de adentro:
+- un formulario o un ajuste, hasta 48 rem (`max-w-3xl`), a la izquierda de su tarjeta;
+- un texto para leer, hasta 65 caracteres por línea (`max-w-prose`);
+- una tabla o un tablero, todo el ancho.
+
+**Los campos, según su dato:**
+- un número corto con unidad (%, und., kg): `CampoUnidad`, 8 rem;
+- un nombre, un proveedor, una categoría, una ciudad: hasta 24 rem (`sm:max-w-sm`);
+- una búsqueda: hasta 24 rem; un texto largo, todo el ancho del formulario.
+
+**Además:**
+- Las rejillas de formulario no pasan de 2 columnas.
+- Un dato corto no se estira para llenar una columna: si sobra espacio, queda a la izquierda.
+- La ayuda de un campo no pasa de 65 caracteres por línea (`adminHint` ya lleva `max-w-prose`).
+- No se mete una tarjeta dentro de otra: dentro de una tarjeta, los grupos se separan con espacio o con una línea.
+
+### 1.6 Trabajos de varios pasos (C-205)
+Un trabajo de más de dos pasos (cargar una lista, un asistente) lleva `components/admin/Pasos`, pegado bajo la cabecera.
+- Se ve en qué paso estás, lo que ya hiciste (en verde, con un resumen de lo que elegiste) y lo que sigue. En el teléfono: "Paso N de M", lo que sigue, una barra y "Ver pasos".
+- Un paso a la vez, en una tarjeta con su título, una línea de qué hacer y un pie pegado abajo:
+  - a la izquierda, "Atrás";
+  - a la derecha, "Siguiente: …", diciendo adónde lleva;
+  - si todavía no se puede, el botón queda apagado y el pie dice por qué.
+- Se puede volver a lo hecho, y saltar a un paso cuando ya tiene lo que necesita.
+- Es el mismo dibujo del asistente de productos (`WizardProgress`).
+
+### 1.7 Filtros en píldoras (C-205)
+Los filtros de una lista van con `components/admin/Filtros`:
+- **Cada píldora lleva** un ícono del pack, el nombre, la cuenta y un subtítulo de pocas palabras que dice qué junta ("Hay en su depósito", "Se pueden publicar").
+- **La elegida**, en azul.
+- **Una que junta lo que alguien tiene que revisar** lleva el ícono en ámbar (§1.1).
+- **Una con cuenta 0** se apaga, pero se puede tocar.
+- **En el teléfono** se deslizan de lado.
+- Son botones con `aria-pressed`, no pestañas.
+
 ---
 
 ## 2. Rediseño del header
@@ -429,6 +467,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-196** (**hecha**, rc.24): Admin → Productos para miles de productos. La lista por páginas, el proveedor y el costo en cada producto, y la lista del proveedor en lote (Excel, fotos por código). `estado/C-196.md`.
 - **C-196b** (**hecha**, rc.25): la casilla "Su lista trae el IVA incluido" en la carga en lote (el costo queda sin el IVA). `estado/C-196b.md`.
 - **C-197** (**hecha**, rc.25): la ficha en una sola tarjeta (la maqueta A que eligió Andrés). `estado/C-197.md`.
+- **C-205 · La Lista del proveedor por pasos y las reglas de ancho** (**hecha**, rc.33, 13/11; pedido de Andrés mirando la pantalla, la maqueta A): un paso a la vez con los pasos arriba, campos del ancho de su dato y filtros con ícono y subtítulo. Las reglas quedaron en §1.5 a §1.7. `estado/C-205.md`.
+- **C-206 · La regla de anchos en todo el panel y en la web** (pendiente, sigue a C-205): las páginas que se centran angostas dentro del marco y dejan un hueco junto al menú (Configuración, Equipo, Seguridad, Notificaciones, Cotizaciones y Marketing), los campos cortos estirados y las píldoras de filtro sin ícono. Una por una, con capturas a 360, 768, 1024 y 1440 px. El asistente de productos puede pasar a `Pasos`.
 - **C-198 · Variantes de color, talla y versión** (aprobada el 10/11, la propuesta recomendada; después de C-199 y C-200): familias de productos. Cada variante es un producto (su código, existencia, precio, fotos y enlace); la familia los une para el selector de la ficha y una sola tarjeta en el catálogo ("Elegir color"). El carrito, las órdenes y la existencia no cambian. El panel agrupa con "Agrupar como variantes" desde la lista.
 - **C-199 · El envío desde el proveedor** (**hecha**, rc.32, 12/11, junto con "Calcula tu envío" en la ficha y el carrito; `estado/C-199.md`). Decidida el 10/11; el plan de abajo es el que se siguió. Antes, la tienda calculaba todo como si saliera de Guanare (ZOOM 43) y ofrecía retiro y delivery en Guanare para todo. La ferretería despacha y envía sus pedidos desde La Victoria (ZOOM 244).
   - **El proveedor:** "Despacha él mismo desde [ciudad de ZOOM]", con la lista de ciudades de `ciudadesZoom()`. Sus productos son solo envío.

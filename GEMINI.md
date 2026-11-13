@@ -499,3 +499,11 @@ Andrés pidió pulir Mi panel, así que Claude entró a tu carril (`estado/C-201
 ## 17. Cambios de Claude del 10/11 que te afectan (C-200)
 - **El pack de íconos va en la v1.2:** 166 íconos, con 10 nuevos de ferretería (IconoFerreteria, IconoPintura, IconoTaladro, IconoEnchufe, IconoJardin, IconoAgua, IconoLlave, IconoBombillo, IconoHerramientas e IconoSoldadura). Úsalos donde corresponda. No dibujes otros ni traigas de librerías.
 - **Departamentos aparte:** la ferretería es un departamento (`categories.isDepartment`), con su acceso en la franja y en "Más" (`useNavDepartamentos` de `contexts/CatalogNavContext.tsx`). Si una tarjeta tuya toca menús o listas de categorías, no mezcles sus categorías con las de tecnología.
+
+## 18. Cambios de Claude del 13/11 que te afectan (C-205)
+- **Anchos (`PLAN.md` §1.5):** cada contenedor, del tamaño de lo que lleva.
+  - La página empieza a la izquierda, a lo ancho del marco: no la centres con `mx-auto max-w-…`. Adentro, un formulario no pasa de `max-w-3xl`. Un nombre o un select de una palabra, hasta `sm:max-w-sm`. Un número con unidad, `CampoUnidad` (`components/admin/CampoUnidad`).
+  - No estires un dato corto para llenar una columna, ni metas una tarjeta dentro de otra.
+  - Vale también para tus pantallas (`app/customer/**`, cursos, servicios): si una tarjeta tuya toca un formulario, aplícalo.
+- **Filtros en píldoras (§1.7):** ícono, nombre, cuenta y un subtítulo corto, con `components/admin/Filtros`. Si tu tarjeta tiene píldoras de filtro, úsalo; no armes otras a mano.
+- **Trabajos de varios pasos (§1.6):** `components/admin/Pasos`. No es de tu carril: si una pantalla tuya lo necesita, pídelo como `PEDIDO:`.

@@ -14,7 +14,8 @@ export const adminDivider = 'border-t border-line';
 
 /* ── Formularios ──────────────────────────────────────────────────────── */
 export const adminLabel = 'mb-1.5 block text-sm font-semibold text-ink';
-export const adminHint = 'mt-1 text-xs text-muted';
+/** C-205: la ayuda no pasa de 65 caracteres por línea (PLAN.md §1.5) */
+export const adminHint = 'mt-1 max-w-prose text-xs text-muted';
 export const adminError = 'mt-1 text-xs font-semibold text-deal';
 
 export function adminInput(hasError = false): string {

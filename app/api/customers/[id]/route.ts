@@ -67,12 +67,19 @@ export async function GET(
       return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 });
     }
 
-    // Calculate stats
-    const totalSpent = customer.orders.reduce((sum, order) => sum + Number(order.totalUSD || 0), 0);
-    const orderCount = customer.orders.length;
-    const activeOrders = customer.orders.filter((o) =>
-      ['PENDING', 'PROCESSING', 'SHIPPED'].includes(o.status)
-    ).length;
+    // C-213: los números salen de todas sus órdenes, no de las 10 que se muestran. "Total gastado" cuenta solo lo
+    // pagado y no cancelado ni devuelto (antes sumaba todo, pendientes y canceladas incluidas)
+    const [gastado, orderCount, activeOrders] = await Promise.all([
+      prisma.order.aggregate({
+        where: { userId: customer.id, paymentStatus: 'PAID', status: { notIn: ['CANCELLED', 'REFUNDED'] } },
+        _sum: { totalUSD: true },
+      }),
+      prisma.order.count({ where: { userId: customer.id } }),
+      prisma.order.count({
+        where: { userId: customer.id, status: { in: ['PENDING', 'CONFIRMED', 'PAID', 'PROCESSING', 'READY_FOR_PICKUP', 'SHIPPED'] } }, // abiertas, como en la lista
+      }),
+    ]);
+    const totalSpent = Number(gastado._sum.totalUSD ?? 0);
 
     return NextResponse.json({
       ...customer,

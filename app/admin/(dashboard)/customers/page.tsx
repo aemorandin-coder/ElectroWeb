@@ -37,14 +37,15 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import PildoraEstadoOrden from '@/components/admin/PildoraEstadoOrden';
+import ResumenCliente from '@/components/admin/clientes/ResumenCliente';
 
 interface CustomerOrder {
   id: string;
   orderNumber: string;
   createdAt: string;
   status: string;
-  totalUSD: number;
-  total?: number | string;
+  totalUSD: number | string;
 }
 
 interface Customer {
@@ -618,7 +619,7 @@ export default function CustomersPage() {
                   >
                     <div className="flex items-center gap-2">
                       <IconoReportes className="w-4 h-4" />
-                      Estadísticas
+                      Resumen
                     </div>
                   </button>
                 </div>
@@ -896,23 +897,25 @@ export default function CustomersPage() {
                       <div className="space-y-6 animate-fadeIn">
                         <div className="flex gap-3 overflow-x-auto">
                           <div className="min-w-max border-r border-line pr-4 last:border-0">
-                            <p className="text-xs text-muted mb-1">Total Gastado</p>
+                            <p className="text-xs text-muted mb-1">Total gastado</p>
                             <p className="text-xl font-bold text-ink">
                               {formatUSD(Number(selectedCustomer.stats?.totalSpent) || 0)}
                             </p>
                           </div>
                           <div className="min-w-max border-r border-line pr-4 last:border-0">
-                            <p className="text-xs text-muted mb-1">Órdenes Totales</p>
+                            <p className="text-xs text-muted mb-1">Órdenes totales</p>
                             <p className="text-xl font-bold text-ink">{selectedCustomer.stats?.orderCount || 0}</p>
                           </div>
                           <div className="min-w-max border-r border-line pr-4 last:border-0">
-                            <p className="text-xs text-muted mb-1">Órdenes Activas</p>
+                            <p className="text-xs text-muted mb-1">Órdenes abiertas</p>
                             <p className="text-xl font-bold text-ink">{selectedCustomer.stats?.activeOrders || 0}</p>
                           </div>
                         </div>
 
+                        <ResumenCliente clienteId={selectedCustomer.id} />
+
                         <div>
-                          <h4 className="text-sm font-bold text-ink mb-3">Últimas Órdenes</h4>
+                          <h4 className="text-sm font-bold text-ink mb-3">Últimas órdenes</h4>
                           {selectedCustomer.orders && selectedCustomer.orders.length > 0 ? (
                             <div className={adminTableWrap}>
                               <table className="w-full text-sm">
@@ -927,18 +930,13 @@ export default function CustomersPage() {
                                 <tbody>
                                   {selectedCustomer.orders.map((order: CustomerOrder) => (
                                     <tr key={order.id} className={adminRowHover}>
-                                      <td className={`${adminTd} font-medium text-brand-600`}>{order.orderNumber}</td>
+                                      <td className={`${adminTd} font-medium`}><Link href={`/admin/orders/${order.id}`} className="text-brand-600 hover:underline">{order.orderNumber}</Link></td>
                                       <td className={`${adminTd} text-muted`}>{formatDate(order.createdAt)}</td>
                                       <td className={adminTd}>
-                                        <span className={adminBadge(
-                                          order.status === 'PAID' ? 'success' :
-                                          order.status === 'PENDING' ? 'warning' : 'neutral'
-                                        )}>
-                                          {order.status}
-                                        </span>
+                                        <PildoraEstadoOrden status={order.status} />
                                       </td>
                                       <td className={`${adminTd} text-right font-medium text-ink`}>
-                                        {formatUSD(Number(order.total) || 0)}
+                                        {formatUSD(Number(order.totalUSD) || 0)}
                                       </td>
                                     </tr>
                                   ))}

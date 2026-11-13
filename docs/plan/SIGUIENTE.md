@@ -1,9 +1,13 @@
-# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.37, por subir)
+# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.38, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-213 · El resumen del cliente en su ficha (rc.38, por subir):** la primera de las ideas de Haiku que eligió Andrés (A). La pestaña Resumen dice lo que hay que atender y cómo compra, y a pedido Claude escribe quién es como cliente y qué ofrecerle (`estado/C-213.md`).
+  - **De paso:** "Total gastado" ya no suma lo pendiente ni lo cancelado, y las órdenes de la ficha tienen su monto.
+  - **La clave de Claude del 13/11 ya no sirve** (Anthropic da 401): hace falta una nueva para el paso 1 del bloque. Se probó con un Claude simulado.
+  - **Siguen** D y B (Mensajes y solicitudes), C (Campañas de correo) y F (el catálogo de la ferretería).
 - **C-212 · El sorteo de la PlayStation 4 (rc.37, por subir):** Andrés lo pidió el 13/11 y eligió los números para que la empresa no pierda (`estado/C-212.md`).
   - **Cómo se participa:** 1 boleto por cada compra pagada de USD 10 o más, o invitando a 2 amigos con su enlace, sin comprar (1 boleto por cada 2, hasta 3). El resultado, el 20/12.
   - **Dónde:** la página `/sorteo`, Mi panel y Marketing → Sorteo (lo que dejó, quiénes participan y "Sortear ahora").
@@ -174,7 +178,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.37` (C-210, C-211 y C-212, con rc.35 y rc.36 adentro; unos 30 minutos)
+### El bloque por subir: `v1.0.0-rc.38` (C-210 a C-213, con rc.35 a rc.37 adentro; unos 30 minutos)
 Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
 - **C-210 (rc.35):**
   - "Destacados" muestra solo lo que tiene estrella, de toda la tienda;
@@ -182,6 +186,7 @@ Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su
   - las píldoras del panel van llenas, como las de la tienda, y los botones se animan.
 - **C-211 (rc.36):** "Buscar en la web" con Claude Haiku 5.5 en esfuerzo alto, con Groq de respaldo. Una dependencia nueva (`@anthropic-ai/sdk`, la instala `deploy.sh`) y **una variable nueva en el `.env`**.
 - **C-212 (rc.37):** el sorteo de la PlayStation 4: `/sorteo`, la tarjeta en Mi panel y Marketing → Sorteo. Dos tablas nuevas.
+- **C-213 (rc.38):** la pestaña Resumen de la ficha del cliente, con Claude, y "Total gastado" sin lo pendiente ni lo cancelado. Sin cambio de base.
 
 **SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.34`). Es aditivo: una columna nueva y dos tablas nuevas; no toca ningún dato.
 ```sql
@@ -228,7 +233,7 @@ ALTER TABLE "sorteo_participantes" ADD CONSTRAINT "sorteo_participantes_userId_f
 ```
 Después, una sola vez, el relleno de lo ya publicado: `docs/plan/scripts/c210-fecha-de-publicacion.sql`. Sin crons.
 
-**Antes del deploy, la clave de Claude** (la que creaste en platform.claude.com). En la terminal del servidor, en `/var/www/electroshopve`:
+**Antes del deploy, la clave de Claude.** La del 13/11 ya no sirve (Anthropic responde "invalid x-api-key"): si la borraste, crea una nueva en platform.claude.com → API Keys. En la terminal del servidor, en `/var/www/electroshopve`:
 1. `nano .env` y, al final, una línea nueva: `ANTHROPIC_API_KEY="tu clave"`. Guarda con Ctrl + O, Enter, y sal con Ctrl + X.
 2. Comprueba que quedó una sola: `grep -c '^ANTHROPIC_API_KEY' .env` debe decir `1`.
 3. **Opcional:** `ANTHROPIC_EFFORT="high"` es el esfuerzo por defecto. `"max"` tarda más de lo que nginx espera: no lo pongas sin hablar con Claude.
@@ -240,7 +245,7 @@ DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg
 bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
 npx prisma db push && bash scripts/deploy.sh # agrega la columna y las dos tablas, y compila
 DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/c210-fecha-de-publicacion.sql
-git describe --tags --abbrev=0               # v1.0.0-rc.37
+git describe --tags --abbrev=0               # v1.0.0-rc.38
 ```
 - `prisma db push` no debería preguntar nada: la columna y las tablas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
 - **El relleno termina con `publicados_sin_fecha`, que debe decir 0.** Si dice otro número, pásale la salida a Claude.
@@ -256,7 +261,10 @@ git describe --tags --abbrev=0               # v1.0.0-rc.37
    - las píldoras van llenas: "Entregada" en verde con su ícono y "Digital" en azul, como en la tienda;
    - la guía de ZOOM va en gris con el camión;
    - al pasar el ratón por "Códigos" o por el ojo, el botón se levanta.
-6. **El sorteo: armarlo y encenderlo** (en la computadora, con tu cuenta).
+6. **El resumen del cliente:** en el panel, Clientes → "Ver detalles" de un cliente con compras → pestaña **Resumen**.
+   - "Lo que hay que atender" lista sus órdenes abiertas, garantías y cotizaciones; "Total gastado" no cuenta lo cancelado.
+   - Toca **"Resumir con Claude"**: en unos 15 segundos dice quién es como cliente y hasta 3 productos para ofrecerle, y abajo "Redactado por Claude Haiku 5.5 (esfuerzo alto)". Si dice que falta la clave o que Claude no respondió, la clave del `.env` no quedó bien.
+7. **El sorteo: armarlo y encenderlo** (en la computadora, con tu cuenta).
    1. **La foto de la consola:** súbela como foto de un producto (o en Configuración), ábrela y copia su dirección, la que empieza con `/api/uploads/`.
    2. **En el panel, Marketing → Sorteo:** revisa lo propuesto (premio, del día de hoy al 18/12, resultado el 20/12, USD 10 y 3 por invitar) y pon lo que te costó la consola.
    3. Pega la dirección de la foto, marca "En la tienda" y guarda.

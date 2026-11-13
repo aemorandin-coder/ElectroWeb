@@ -10,6 +10,24 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.38] - 2026-11-13
+Claude en el panel, la primera de las ideas que eligió Andrés.
+### Clientes 1.1.0 (C-213)
+- **La pestaña "Resumen" de la ficha del cliente** (antes "Estadísticas"):
+  - **lo que hay que atender:** órdenes abiertas, garantías, cotizaciones, pedidos de producto y descuentos, cada uno con su enlace y a quién le toca;
+  - **cómo compra:** la última compra, el promedio, sus Puntos ES, con qué paga y cómo recibe;
+  - **"Resumir con Claude":** quién es como cliente, lo que conviene hacer ahora y hasta 3 productos de la tienda para ofrecerle. Solo le llegan a la IA su primer nombre y su ciudad, no su correo ni su teléfono.
+- **"Total gastado" cuenta solo lo pagado:** antes sumaba lo pendiente y lo cancelado.
+- **En la ficha, cada orden tiene su monto y su estado:** antes salían en $0,00 y en inglés.
+- **"Órdenes abiertas" cuenta también las confirmadas, pagadas y listas para recoger.**
+### Marco del panel 1.6.0 (C-213)
+- **La base para usar Claude en todo el panel:**
+  - el modelo y el esfuerzo salen del `.env`;
+  - dice qué IA redactó cada cosa;
+  - las reglas se aplican aunque el modelo se equivoque: sin emojis y "Puntos ES", nunca saldo ni billetera.
+### Productos 1.13.1 (C-213)
+- "Buscar en la web" usa esa base. Hace lo mismo que antes.
+
 ## [1.0.0-rc.37] - 2026-11-13
 El sorteo de la PlayStation 4 (pedido de Andrés del 13/11; eligió los números para que la empresa no pierda).
 ### Marketing 1.9.0 (C-212)

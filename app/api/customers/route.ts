@@ -5,6 +5,11 @@ import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { idsPorTexto } from '@/lib/busqueda-sql';
+import type { OrderStatus } from '@prisma/client';
+
+/** C-213: una orden sigue abierta hasta que se entrega, se cancela o se devuelve */
+const ABIERTAS: OrderStatus[] = ['PENDING', 'CONFIRMED', 'PAID', 'PROCESSING', 'READY_FOR_PICKUP', 'SHIPPED'];
+const NO_CUENTAN: OrderStatus[] = ['CANCELLED', 'REFUNDED'];
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,6 +52,7 @@ export async function GET(request: NextRequest) {
               id: true,
               totalUSD: true,
               status: true,
+              paymentStatus: true,
               createdAt: true,
             },
           },
@@ -61,11 +67,12 @@ export async function GET(request: NextRequest) {
     // Calculate stats for each customer
     const customersWithStats = customers.map((customer) => {
       const orders = customer.orders || [];
-      const totalSpent = orders.reduce((sum, order) => sum + Number(order.totalUSD || 0), 0);
+      // C-213: lo gastado cuenta solo lo pagado y no cancelado ni devuelto (antes sumaba también lo pendiente y lo cancelado)
+      const totalSpent = orders
+        .filter((o) => o.paymentStatus === 'PAID' && !NO_CUENTAN.includes(o.status))
+        .reduce((sum, order) => sum + Number(order.totalUSD || 0), 0);
       const orderCount = orders.length;
-      const activeOrders = orders.filter((o) =>
-        ['PENDING', 'PROCESSING', 'SHIPPED'].includes(o.status)
-      ).length;
+      const activeOrders = orders.filter((o) => ABIERTAS.includes(o.status)).length;
 
       return {
         id: customer.id,
@@ -100,7 +107,7 @@ export async function GET(request: NextRequest) {
           orders: {
             some: {
               status: {
-                in: ['PENDING', 'PROCESSING', 'SHIPPED'],
+                in: [...ABIERTAS],
               },
             },
           },

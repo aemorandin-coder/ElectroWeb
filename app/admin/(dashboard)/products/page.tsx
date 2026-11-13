@@ -529,7 +529,7 @@ function Productos() {
               {porRevisar.map((f) => (
                 <button key={f} type="button" aria-pressed={filtro === f} title={REVISAR[f].ayuda} onClick={() => cambiarVista(() => setFiltro(filtro === f ? 'todos' : f))}
                   className={`${adminChoice(filtro === f)} flex min-h-11 shrink-0 items-center gap-2 px-3 text-sm`}>
-                  {REVISAR[f].label}<span className="rounded-full bg-warning/15 px-2 text-xs font-semibold tabular-nums text-warning-strong">{miles(conteo[f])}</span>
+                  {REVISAR[f].label}<span className="rounded-full bg-brand-950 px-2 text-xs font-semibold tabular-nums text-white">{miles(conteo[f])}</span>
                 </button>
               ))}
             </div>

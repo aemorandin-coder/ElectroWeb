@@ -463,7 +463,7 @@ export default function ReferralsPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold text-ink">Mi programa de promotor</h1>
             {influencer.status === 'PAUSED' && (
-              <span className={adminBadge('warning')}>
+              <span className={adminBadge('neutral')}>
                 Pausado
               </span>
             )}

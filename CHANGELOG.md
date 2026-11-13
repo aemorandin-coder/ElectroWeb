@@ -10,6 +10,15 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.41] - 2026-11-13
+Sin píldoras ámbar (Andrés, 13/11; eligió la opción A viendo las tres).
+### Marco del panel 1.6.1 y todos los módulos con píldoras (C-216)
+- **Lo que alguien tiene que hacer va en un sello azul noche,** con texto blanco y el ícono en cian, en todo el panel y en Mi panel: Pendiente, Te toca, Por revisar, Por firmar, Sin verificar, Sin guardar…
+- **Mensajes, solicitudes, descuentos, verificaciones, creadores y cursos tienen sus estados como el resto del panel:** azul lo que avanza, verde lo hecho, rojo lo rechazado.
+- **"Pausado", "Necesario para…" y los avisos del sorteo, en gris:** son datos, no tareas.
+- **En el documento de la cotización,** "Pendiente de aprobación" va en azul suave.
+- Parches en Órdenes y pagos 1.2.1, Productos 1.13.2, Ofertas y cupones 1.1.3, Marketing 1.9.1, ElectroStudio 1.2.2, Cursos 1.0.6, Cotizaciones 1.4.3, Clientes 1.3.1, Reportes y seguridad 1.1.4, Configuración 1.1.6, Tienda 1.10.2 y Carrito, checkout y cuenta del cliente 1.4.1.
+
 ## [1.0.0-rc.40] - 2026-11-13
 ### Clientes 1.3.0 (C-215)
 - **Mensajes y solicitudes por urgencia:**

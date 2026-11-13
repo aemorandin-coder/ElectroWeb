@@ -204,7 +204,7 @@ export default function Sorteo() {
                     <td className={adminTd}><span className="block font-medium">{p.nombre || 'Sin nombre'}</span><span className="block text-xs text-muted">{p.email}</span></td>
                     <td className={`${adminTd} tabular-nums`}>{p.porCompra}</td>
                     <td className={`${adminTd} tabular-nums`}>{p.porInvitar}{p.invitados > 0 && <span className="block text-xs text-muted">{p.invitados} invitados</span>}</td>
-                    <td className={adminTd}>{p.aviso ? <span className={adminBadge('warning')}>{p.aviso}</span> : <span className="text-xs text-muted">—</span>}</td>
+                    <td className={adminTd}>{p.aviso ? <span className={adminDato}>{p.aviso}</span> : <span className="text-xs text-muted">—</span>}</td>
                   </tr>
                 ))}
               </tbody>

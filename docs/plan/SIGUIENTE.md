@@ -1,9 +1,10 @@
-# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.40, por subir)
+# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.41, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-216 · Sin píldoras ámbar (rc.41, por subir):** Andrés las detesta ("se ven demasiado genéricas") y eligió la opción A: lo que alguien tiene que hacer va en un sello azul noche con el ícono en cian, en todo el panel y en Mi panel. La regla quedó en `PLAN.md` §1.1 y §1.8 y en `CLAUDE.md` (`estado/C-216.md`).
 - **C-215 · Mensajes y solicitudes por urgencia (rc.40, por subir):** la idea B, la parte de la tienda. Claude marca la urgencia, de qué trata y por qué, y en las solicitudes si ya está en la tienda; lo nuevo se revisa solo al llegar (`estado/C-215.md`). La lista de la ferretería entra con F.
 - **C-214 · Respuestas a clientes con Claude (rc.39, por subir):** la idea D. En cada mensaje de contacto, "Redactar con Claude" escribe la respuesta con su orden, los productos que nombra y lo que cobra ZOOM a su ciudad; se revisa y se manda por correo o WhatsApp (`estado/C-214.md`).
 - **C-213 · El resumen del cliente en su ficha (rc.38, por subir):** la primera de las ideas de Haiku que eligió Andrés (A). La pestaña Resumen dice lo que hay que atender y cómo compra, y a pedido Claude escribe quién es como cliente y qué ofrecerle (`estado/C-213.md`).
@@ -180,7 +181,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.40` (C-210 a C-215, con rc.35 a rc.39 adentro; unos 30 minutos)
+### El bloque por subir: `v1.0.0-rc.41` (C-210 a C-216, con rc.35 a rc.40 adentro; unos 30 minutos)
 Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
 - **C-210 (rc.35):**
   - "Destacados" muestra solo lo que tiene estrella, de toda la tienda;
@@ -191,6 +192,7 @@ Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su
 - **C-213 (rc.38):** la pestaña Resumen de la ficha del cliente, con Claude, y "Total gastado" sin lo pendiente ni lo cancelado. Sin cambio de base.
 - **C-214 (rc.39):** "Redactar con Claude" en los mensajes de contacto. Sin cambio de base.
 - **C-215 (rc.40):** los mensajes y las solicitudes por urgencia, con Claude. 9 columnas nuevas.
+- **C-216 (rc.41):** sin píldoras ámbar: lo que hay que hacer va en un sello azul noche. Sin cambio de base.
 
 **SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.34`). Es aditivo: 10 columnas nuevas y dos tablas nuevas; no toca ningún dato.
 ```sql
@@ -260,7 +262,7 @@ DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg
 bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
 npx prisma db push && bash scripts/deploy.sh # agrega las columnas y las dos tablas, y compila
 DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/c210-fecha-de-publicacion.sql
-git describe --tags --abbrev=0               # v1.0.0-rc.40
+git describe --tags --abbrev=0               # v1.0.0-rc.41
 ```
 - `prisma db push` no debería preguntar nada: las columnas y las tablas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
 - **El relleno termina con `publicados_sin_fecha`, que debe decir 0.** Si dice otro número, pásale la salida a Claude.
@@ -273,7 +275,7 @@ git describe --tags --abbrev=0               # v1.0.0-rc.40
 3. **Publica un borrador** (uno de la ferretería, en Productos → Borradores): recarga el inicio y sale primero en "Recién llegados".
 4. **En el panel, Productos → Nuevo producto → Producto físico:** escribe "Taladro de impacto 1/2 650 W Emtop" y toca "Buscar". En unos 20 segundos, la descripción dice "Redactada por Claude Haiku 5.5 (esfuerzo alto)…". Si dice Groq, la clave no quedó bien en el `.env`.
 5. **En el panel, Órdenes:**
-   - las píldoras van llenas: "Entregada" en verde con su ícono y "Digital" en azul, como en la tienda;
+   - las píldoras van llenas: "Entregada" en verde con su ícono y "Digital" en azul, como en la tienda; "Pendiente", en azul noche con el reloj en cian (ninguna píldora ámbar en el panel);
    - la guía de ZOOM va en gris con el camión;
    - al pasar el ratón por "Códigos" o por el ojo, el botón se levanta.
 6. **El resumen del cliente:** en el panel, Clientes → "Ver detalles" de un cliente con compras → pestaña **Resumen**.

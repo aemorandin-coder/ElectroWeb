@@ -353,7 +353,8 @@ export default function AdminCursosPage() {
                   )}
                 </div>
                 <div className="absolute top-2 right-2">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${course.isActive ? 'bg-success/10 text-success-strong' : enRevision(course) ? 'bg-warning/15 text-warning-strong' : 'bg-surface text-muted'}`}>
+                  {/* C-216: como el resto del panel: activo en verde, por revisar en azul noche, inactivo en gris */}
+                  <span className={adminBadge(course.isActive ? 'success' : enRevision(course) ? 'warning' : 'neutral')}>
                     {course.isActive ? 'Activo' : enRevision(course) ? 'En revisión' : 'Inactivo'}
                   </span>
                 </div>

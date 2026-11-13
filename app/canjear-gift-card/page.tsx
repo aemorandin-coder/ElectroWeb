@@ -222,7 +222,7 @@ export default function RedeemGiftCardPage() {
                           {cardInfo.balanceUSD !== undefined ? formatUSD(cardInfo.balanceUSD) : session ? '—' : 'Inicia sesión para ver su valor'}
                         </p>
                       </div>
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${cardInfo.isValid ? 'bg-success-strong/10 text-success-strong' : 'bg-warning/15 text-warning-strong'}`}>
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${cardInfo.isValid ? 'bg-success-strong/10 text-success-strong' : 'bg-deal-bg text-deal'}`}>
                         {STATUS_LABELS[cardInfo.status] || cardInfo.status}
                       </span>
                     </div>

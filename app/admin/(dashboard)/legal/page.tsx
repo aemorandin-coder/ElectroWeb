@@ -8,7 +8,7 @@ import {
   IconoMas, IconoVer,
 } from '@/components/iconos';
 import {
-  adminBadge, adminChoice, adminError, adminHint, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter,
+  adminBadge, adminChoice, adminDato, adminError, adminHint, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter,
   adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPageHeader, adminPageSubtitle,
   adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab,
 } from '@/lib/admin-ui';
@@ -288,7 +288,7 @@ export default function LegalPage() {
                       <p className="flex flex-wrap items-center gap-2">
                         <span className="font-semibold text-ink">{d.title}</span>
                         <span className={adminBadge('brand')}>Versión {d.version}</span>
-                        {d.requiredFor && <span className={adminBadge('warning')}>Necesario para: {opciones[d.requiredFor] ?? d.requiredFor}</span>}
+                        {d.requiredFor && <span className={adminDato}>Necesario para: {opciones[d.requiredFor] ?? d.requiredFor}</span>}
                         {d.publica && <span className={adminBadge('success')}>Página pública</span>}
                       </p>
                       <p className="text-sm text-muted">

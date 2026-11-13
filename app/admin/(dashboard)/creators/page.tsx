@@ -1,6 +1,6 @@
 'use client';
 
-import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminBadge, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 import { toast } from 'react-hot-toast';
@@ -22,11 +22,12 @@ type Creator = {
   _count: { courses: number };
 };
 
+// C-216: como el resto del panel (C-210): por aprobar en azul noche, aprobado en verde, rechazado en rojo, suspendido en gris
 const STATUS_STYLES: Record<string, string> = {
-  PENDING: 'bg-warning/10 text-warning-strong',
-  APPROVED: 'bg-success/10 text-success-strong',
-  REJECTED: 'bg-deal/10 text-deal',
-  SUSPENDED: 'bg-surface text-ink-soft',
+  PENDING: adminBadge('warning'),
+  APPROVED: adminBadge('success'),
+  REJECTED: adminBadge('danger'),
+  SUSPENDED: adminBadge('neutral'),
 };
 const STATUS_LABELS: Record<string, string> = {
   PENDING: 'Pendiente', APPROVED: 'Aprobado', REJECTED: 'Rechazado', SUSPENDED: 'Suspendido',
@@ -129,7 +130,7 @@ export default function AdminCreatorsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-bold text-ink">{creator.displayName}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${STATUS_STYLES[creator.status]}`}>
+                    <span className={STATUS_STYLES[creator.status] ?? adminBadge('neutral')}>
                       {STATUS_LABELS[creator.status]}
                     </span>
                     {creator.expertise && (

@@ -68,7 +68,9 @@ const TONES: Record<AdminTone, { badge: string; chip: string; notice: string }> 
   neutral: { badge: 'bg-surface text-ink-soft ring-1 ring-inset ring-line', chip: 'bg-surface text-ink-soft', notice: 'border-line bg-surface text-ink-soft' },
   brand: { badge: 'bg-brand-600 text-white', chip: 'bg-brand-50 text-brand-600', notice: 'border-brand-200 bg-brand-50 text-brand-700' },
   success: { badge: 'bg-success-strong text-white', chip: 'bg-success-strong/10 text-success-strong', notice: 'border-success-strong/20 bg-success-strong/5 text-success-strong' },
-  warning: { badge: 'bg-warning/15 text-warning-strong', chip: 'bg-warning/15 text-warning-strong', notice: 'border-warning/30 bg-warning/10 text-warning-strong' },
+  // C-216 (Andrés, 13/11: "esas píldoras ámbar, las detesto"): la píldora de lo que alguien tiene que hacer es un sello
+  // azul noche con texto blanco y el ícono en cian, como la gift card y el certificado. Los avisos en bloque siguen en ámbar.
+  warning: { badge: 'bg-brand-950 text-white [&_svg]:text-accent', chip: 'bg-warning/15 text-warning-strong', notice: 'border-warning/30 bg-warning/10 text-warning-strong' },
   danger: { badge: 'bg-deal text-white', chip: 'bg-deal-bg text-deal', notice: 'border-deal/30 bg-deal-bg text-deal' },
 };
 

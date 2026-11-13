@@ -1,6 +1,6 @@
 'use client';
 
-import { adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminBadge, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 
@@ -16,7 +16,6 @@ import {
   IconoEliminar, IconoPaquete, IconoTelefono,
 } from '@/components/iconos';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import BorradorRespuesta from '@/components/admin/consultas/BorradorRespuesta';
@@ -182,12 +181,12 @@ export default function InquiriesPage() {
         </select>
     );
 
+    // C-216: como el resto del panel: lo que hay que responder en sello azul noche, lo leído en gris y lo respondido en verde
     const getMessageStatusColor = (status: string) => {
         switch (status) {
-            case 'PENDING': return 'bg-warning/10 text-warning-strong';
-            case 'READ': return 'bg-brand-100 text-brand-700';
-            case 'RESPONDED': return 'bg-success/10 text-success-strong';
-            default: return 'bg-surface text-ink';
+            case 'PENDING': return adminBadge('warning');
+            case 'RESPONDED': return adminBadge('success');
+            default: return adminBadge('neutral');
         }
     };
 
@@ -281,16 +280,17 @@ export default function InquiriesPage() {
         setRequestModal(true);
     };
 
+    // C-216: como el resto del panel (C-210): por hacer en azul noche, en curso en azul, hecha en verde y rechazada en rojo
     const getRequestStatusBadge = (status: string) => {
-        const variants: Record<string, { variant: 'warning' | 'info' | 'success' | 'danger'; label: string }> = {
-            PENDING: { variant: 'warning', label: 'Pendiente' },
-            IN_PROGRESS: { variant: 'info', label: 'En Progreso' },
-            FULFILLED: { variant: 'success', label: 'Cumplida' },
-            REJECTED: { variant: 'danger', label: 'Rechazada' },
+        const variants: Record<string, { tono: 'warning' | 'brand' | 'success' | 'danger'; label: string }> = {
+            PENDING: { tono: 'warning', label: 'Pendiente' },
+            IN_PROGRESS: { tono: 'brand', label: 'En progreso' },
+            FULFILLED: { tono: 'success', label: 'Cumplida' },
+            REJECTED: { tono: 'danger', label: 'Rechazada' },
         };
 
         const config = variants[status] || variants.PENDING;
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <span className={adminBadge(config.tono)}>{config.label}</span>;
     };
 
     // ============== STATS ==============
@@ -415,7 +415,7 @@ export default function InquiriesPage() {
                                                 <p className="text-sm text-ink font-medium truncate mb-1">{msg.subject}</p>
                                                 <p className="text-xs text-muted truncate">{msg.message}</p>
                                                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getMessageStatusColor(msg.status)}`}>
+                                                    <span className={getMessageStatusColor(msg.status)}>
                                                         {getMessageStatusLabel(msg.status)}
                                                     </span>
                                                     <PildoraUrgencia urgencia={msg.iaUrgencia} tipo={msg.iaTipo} />

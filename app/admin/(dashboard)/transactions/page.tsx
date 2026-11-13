@@ -118,7 +118,7 @@ const TYPE_CONFIG: Record<string, { label: string; cls: string; icon: React.Reac
 };
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; cls: string }> = {
-    PENDING:   { label: 'Pendiente', dot: 'bg-warning-strong', cls: adminBadge('warning') },
+    PENDING:   { label: 'Pendiente', dot: 'bg-accent', cls: adminBadge('warning') },
     COMPLETED: { label: 'Aprobada',  dot: 'bg-success-strong', cls: adminBadge('success') },
     FAILED:    { label: 'Fallida',   dot: 'bg-deal',           cls: adminBadge('danger')  },
     CANCELLED: { label: 'Rechazada', dot: 'bg-deal',           cls: adminBadge('danger')  },

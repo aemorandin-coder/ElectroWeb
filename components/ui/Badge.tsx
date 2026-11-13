@@ -18,7 +18,7 @@ export function Badge({
     const variantStyles = {
         default: 'bg-surface text-ink-soft border border-line',
         success: 'bg-success-strong/10 text-success-strong border border-success-strong/20',
-        warning: 'bg-warning/15 text-warning-strong border border-warning/30',
+        warning: 'bg-brand-950 text-white border border-brand-950',
         danger: 'bg-deal-bg text-deal border border-deal/30',
         info: 'bg-brand-50 text-brand-700 border border-brand-200',
         secondary: 'bg-surface text-ink border border-line',

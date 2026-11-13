@@ -59,8 +59,8 @@ export default function DespachaDesde({ proveedorId, codigo, nombre, onGuardado 
   };
 
   return (
-    <div className="rounded-xl border border-line p-3">
-      <label htmlFor="despacha-desde" className="flex items-center gap-2 text-sm font-semibold text-ink">
+    <div>
+      <label htmlFor="despacha-desde" className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-ink">
         <IconoEnvio className="h-4 w-4 shrink-0 text-ink-soft" aria-hidden="true" /> Quién despacha sus pedidos
       </label>
       <select
@@ -68,7 +68,7 @@ export default function DespachaDesde({ proveedorId, codigo, nombre, onGuardado 
         value={codigo ?? ''}
         onChange={(e) => void cambiar(e.target.value)}
         disabled={guardando || (!lista && !codigo)}
-        className={`${adminInput()} mt-2`}
+        className={`${adminInput()} sm:max-w-sm`}
       >
         <option value="">La tienda: salen de Guanare</option>
         {codigo && !lista?.ciudades.some((c) => c.codigo === codigo) && <option value={codigo}>Él mismo, desde {nombre ?? codigo}</option>}

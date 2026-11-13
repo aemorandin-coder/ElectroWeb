@@ -34,6 +34,7 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
 - Colores y tipografía: solo los tokens de `PLAN.md` §1. Sin hex en className, sin `text-[<11px]`, sin `font-black`.
 - **El ámbar (`warning`) solo avisa que alguien tiene que hacer algo** (C-192, `PLAN.md` §1.1). Lo que se destaca va en azul; la pieza fuerte, en azul noche; notas y datos, neutros. Esperar va en azul. Nunca texto blanco sobre ámbar o verde.
 - Breakpoint móvil único: `lg`. Nada de `window.innerWidth` para decidir el layout: usa CSS.
+- **Cada contenedor, del tamaño de lo que lleva** (C-205, `PLAN.md` §1.5; pedido de Andrés): la página del panel empieza junto al menú, a lo ancho del marco y sin centrarse; adentro, el formulario hasta `max-w-3xl` y la tabla a lo ancho; un número con unidad en `CampoUnidad`, un nombre hasta `sm:max-w-sm`. Lo de varios pasos lleva `components/admin/Pasos` (§1.6) y los filtros, `components/admin/Filtros` con ícono y subtítulo (§1.7).
 - Capas: variables `--z-*` de `PLAN.md` §1.3. No uses `z-[9999]`.
 - Bloqueo de scroll: usa el hook `useBodyScrollLock`; no toques `document.body.style.overflow` a mano.
 - Nada que solo funcione con hover. Nada de `<button>` dentro de `<Link>` (usa *stretched link*).

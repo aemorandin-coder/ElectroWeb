@@ -9,35 +9,18 @@
 // - El texto de las páginas es ajeno: va como datos, la instrucción dice que no son órdenes y la lectura no tiene
 //   herramientas. Solo la búsqueda por su cuenta (sin páginas leídas) usa la búsqueda web de Anthropic.
 
-import Anthropic from '@anthropic-ai/sdk';
+import type Anthropic from '@anthropic-ai/sdk';
+import { api, avisarError, claudeDisponible, ESFUERZO, firmaDe, MODELO } from '@/lib/ia/claude';
 import {
   comprobarLectura, ESQUEMA, evidenciaDe, instrucciones, normalizarBusqueda, pedidoDeBusqueda,
   type BusquedaGroq, type LecturaGroq, type PaginaParaLeer,
 } from './groq';
 
-const MODELO = process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5';
-const ESFUERZOS = ['low', 'medium', 'high', 'xhigh', 'max'] as const;
-type Esfuerzo = (typeof ESFUERZOS)[number];
-const ESFUERZO: Esfuerzo = (ESFUERZOS as readonly string[]).includes(process.env.ANTHROPIC_EFFORT ?? '')
-  ? (process.env.ANTHROPIC_EFFORT as Esfuerzo)
-  : 'high';
-const NOMBRE_ESFUERZO: Record<Esfuerzo, string> = { low: 'bajo', medium: 'medio', high: 'alto', xhigh: 'muy alto', max: 'máximo' };
 /** Con más esfuerzo, el razonamiento ocupa buena parte de la respuesta: lugar de sobra y en flujo (sin el tope de tiempo de una respuesta entera) */
 const MAX_TOKENS = 32_000;
 
-export function claudeDisponible(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY);
-}
-
-let cliente: Anthropic | null = null;
-const api = () => (cliente ??= new Anthropic({ maxRetries: 1 }));
-
-/** "claude-haiku-5-5" → "Claude Haiku 5.5 (esfuerzo máximo)": el panel dice quién redactó la ficha */
-export function firmaDe(modelo: string): string {
-  const [marca, familia, ...version] = modelo.split('-');
-  const nombre = [marca, familia].map((p) => (p ? p[0].toUpperCase() + p.slice(1) : '')).join(' ');
-  return `${nombre} ${version.join('.')} (esfuerzo ${NOMBRE_ESFUERZO[ESFUERZO]})`.trim();
-}
+// El cliente, el modelo, el esfuerzo y la firma son los de todo el panel (lib/ia/claude.ts, C-213)
+export { claudeDisponible, firmaDe };
 
 // El esquema de groq.ts con "objeto o null" escrito como lo pide Anthropic (anyOf)
 const citaONula = (cita: unknown) => ({ anyOf: [{ ...(cita as Record<string, unknown>), type: 'object' }, { type: 'null' }] });
@@ -80,12 +63,6 @@ function jsonDe(respuesta: Anthropic.Message): Record<string, unknown> | null {
   } catch {
     return null;
   }
-}
-
-function avisarError(donde: string, error: unknown) {
-  // Sin la clave ni el texto del producto: solo qué falló, para el registro del servidor
-  const estado = error instanceof Anthropic.APIError ? `${error.status ?? 'sin estado'} ${error.name}` : error instanceof Error ? error.name : 'desconocido';
-  console.error(`[claude] ${donde}: ${estado}`);
 }
 
 /** La ficha ordenada por Claude, ya comprobada contra los datos, con quién la redactó. null: sigue Groq */

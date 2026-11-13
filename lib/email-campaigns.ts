@@ -14,12 +14,13 @@ import { CORREO, botonCorreo } from '@/lib/email-templates/estilo';
 
 /* ── Contenido ──────────────────────────────────────────────────────────── */
 
-// Imágenes: las subidas a la tienda (/api/uploads/…) o una dirección https. Los enlaces pueden ser rutas de la tienda.
+// Imágenes: las subidas a la tienda (/api/uploads/… o /uploads/…, las fotos viejas; también en carpetas como las de
+// productos, C-217) o una dirección https. Ninguna parte empieza con punto: nada de "..". Los enlaces pueden ser rutas de la tienda.
 const rutaImagen = z
   .string()
   .trim()
   .max(500)
-  .refine((v) => /^\/api\/uploads\/[\w.-]+$/.test(v) || /^https:\/\/[^\s"'<>]+$/i.test(v), 'La imagen debe subirse a la tienda o ser una dirección https');
+  .refine((v) => /^\/(?:api\/)?uploads\/(?:[\w-]+\/)*[\w-][\w.-]*$/.test(v) || /^https:\/\/[^\s"'<>]+$/i.test(v), 'La imagen debe subirse a la tienda o ser una dirección https');
 const enlace = z
   .string()
   .trim()

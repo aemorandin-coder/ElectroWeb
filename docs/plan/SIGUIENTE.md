@@ -1,16 +1,17 @@
-# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.41, por subir)
+# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.42, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-217 · Campañas de correo con Claude (rc.42, por subir):** la idea C. En el editor de campañas, "Armar con Claude" va del objetivo al asunto y el texto con hasta 4 productos reales; la foto, el precio y el enlace los pone la tienda (`estado/C-217.md`). Sigue F, el catálogo de la ferretería.
 - **C-216 · Sin píldoras ámbar (rc.41, por subir):** Andrés las detesta ("se ven demasiado genéricas") y eligió la opción A: lo que alguien tiene que hacer va en un sello azul noche con el ícono en cian, en todo el panel y en Mi panel. La regla quedó en `PLAN.md` §1.1 y §1.8 y en `CLAUDE.md` (`estado/C-216.md`).
 - **C-215 · Mensajes y solicitudes por urgencia (rc.40, por subir):** la idea B, la parte de la tienda. Claude marca la urgencia, de qué trata y por qué, y en las solicitudes si ya está en la tienda; lo nuevo se revisa solo al llegar (`estado/C-215.md`). La lista de la ferretería entra con F.
 - **C-214 · Respuestas a clientes con Claude (rc.39, por subir):** la idea D. En cada mensaje de contacto, "Redactar con Claude" escribe la respuesta con su orden, los productos que nombra y lo que cobra ZOOM a su ciudad; se revisa y se manda por correo o WhatsApp (`estado/C-214.md`).
 - **C-213 · El resumen del cliente en su ficha (rc.38, por subir):** la primera de las ideas de Haiku que eligió Andrés (A). La pestaña Resumen dice lo que hay que atender y cómo compra, y a pedido Claude escribe quién es como cliente y qué ofrecerle (`estado/C-213.md`).
   - **De paso:** "Total gastado" ya no suma lo pendiente ni lo cancelado, y las órdenes de la ficha tienen su monto.
   - **La clave de Claude del 13/11 ya no sirve** (Anthropic da 401): hace falta una nueva para el paso 1 del bloque. Se probó con un Claude simulado.
-  - **Siguen** C (Campañas de correo) y F (el catálogo de la ferretería, que completa B).
+  - **Sigue** F (el catálogo de la ferretería, que completa B).
 - **C-212 · El sorteo de la PlayStation 4 (rc.37, por subir):** Andrés lo pidió el 13/11 y eligió los números para que la empresa no pierda (`estado/C-212.md`).
   - **Cómo se participa:** 1 boleto por cada compra pagada de USD 10 o más, o invitando a 2 amigos con su enlace, sin comprar (1 boleto por cada 2, hasta 3). El resultado, el 20/12.
   - **Dónde:** la página `/sorteo`, Mi panel y Marketing → Sorteo (lo que dejó, quiénes participan y "Sortear ahora").
@@ -181,7 +182,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.41` (C-210 a C-216, con rc.35 a rc.40 adentro; unos 30 minutos)
+### El bloque por subir: `v1.0.0-rc.42` (C-210 a C-217, con rc.35 a rc.41 adentro; unos 30 minutos)
 Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
 - **C-210 (rc.35):**
   - "Destacados" muestra solo lo que tiene estrella, de toda la tienda;
@@ -193,6 +194,7 @@ Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su
 - **C-214 (rc.39):** "Redactar con Claude" en los mensajes de contacto. Sin cambio de base.
 - **C-215 (rc.40):** los mensajes y las solicitudes por urgencia, con Claude. 9 columnas nuevas.
 - **C-216 (rc.41):** sin píldoras ámbar: lo que hay que hacer va en un sello azul noche. Sin cambio de base.
+- **C-217 (rc.42):** "Armar con Claude" en las campañas de correo. Sin cambio de base.
 
 **SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.34`). Es aditivo: 10 columnas nuevas y dos tablas nuevas; no toca ningún dato.
 ```sql
@@ -262,7 +264,7 @@ DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg
 bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
 npx prisma db push && bash scripts/deploy.sh # agrega las columnas y las dos tablas, y compila
 DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/c210-fecha-de-publicacion.sql
-git describe --tags --abbrev=0               # v1.0.0-rc.41
+git describe --tags --abbrev=0               # v1.0.0-rc.42
 ```
 - `prisma db push` no debería preguntar nada: las columnas y las tablas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
 - **El relleno termina con `publicados_sin_fecha`, que debe decir 0.** Si dice otro número, pásale la salida a Claude.
@@ -287,7 +289,10 @@ git describe --tags --abbrev=0               # v1.0.0-rc.41
 8. **Los mensajes por urgencia:** en Mensajes y solicitudes, toca **"Ordenar por urgencia"** una vez (lo que llegó antes del deploy no está revisado).
    - En unos segundos, la lista queda con "Urgente", "Puede esperar" y de qué trata cada uno, y "Más urgentes primero" los ordena.
    - En **Solicitudes de productos**, si alguien pidió algo que ya vendes, sale "Ya está en la tienda" con el enlace.
-9. **El sorteo: armarlo y encenderlo** (en la computadora, con tu cuenta).
+9. **Una campaña con Claude:** en el panel, Marketing → Campañas de correo → **Nueva campaña**. En "¿De qué es la campaña?" escribe "Gift cards para Navidad" y toca **"Armar el borrador"**.
+   - En unos 20 segundos se llenan el asunto y los bloques, con las gift cards de la tienda, sus fotos y sus precios, y la vista previa los muestra.
+   - Revísala, envíate una prueba y bórrala o guárdala: nada se envía solo.
+10. **El sorteo: armarlo y encenderlo** (en la computadora, con tu cuenta).
    1. **La foto de la consola:** súbela como foto de un producto (o en Configuración), ábrela y copia su dirección, la que empieza con `/api/uploads/`.
    2. **En el panel, Marketing → Sorteo:** revisa lo propuesto (premio, del día de hoy al 18/12, resultado el 20/12, USD 10 y 3 por invitar) y pon lo que te costó la consola.
    3. Pega la dirección de la foto, marca "En la tienda" y guarda.

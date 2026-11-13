@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
-import { IconoEnviar, IconoPopup, IconoVer, IconoVerificado } from '@/components/iconos';
+import { IconoEnviar, IconoPopup, IconoRegalo, IconoVer, IconoVerificado } from '@/components/iconos';
 import type { IconType } from '@/components/iconos';
 import { useRouter } from 'next/navigation';
 import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab } from '@/lib/admin-ui';
@@ -9,13 +9,14 @@ import { IconoGorro } from '@/components/navidad/GorroSanta';
 import Promotores from './_components/Promotores';
 import Popup from './_components/Popup';
 import Navidad from './_components/Navidad';
+import Sorteo from './_components/Sorteo';
 import Campanas from './_components/Campanas';
 import Plantillas from './_components/Plantillas';
 
 // Marketing (C-75): una sección por tarea y un archivo por sección. Antes: 1.118 líneas en un archivo con 6 pestañas,
 // una de ellas la configuración SMTP (ahora en Configuración → Correo).
 
-type SeccionId = 'promotores' | 'campanas' | 'popup' | 'navidad' | 'plantillas';
+type SeccionId = 'promotores' | 'campanas' | 'popup' | 'navidad' | 'sorteo' | 'plantillas';
 
 const SECCIONES: { id: SeccionId; label: string; descripcion: string; icon: IconType }[] = [
   { id: 'promotores', label: 'Promotores', descripcion: 'Códigos de referido y comisiones por compras pagadas.', icon: IconoVerificado },
@@ -23,6 +24,8 @@ const SECCIONES: { id: SeccionId; label: string; descripcion: string; icon: Icon
   { id: 'popup', label: 'Popup del home', descripcion: 'La imagen promocional que aparece al entrar a la tienda.', icon: IconoPopup },
   // C-186: el ícono es el gorro de la tienda en la versión de un color del pack de íconos, no uno de librería
   { id: 'navidad', label: 'Navidad', descripcion: 'El tema navideño: el gorro de Santa en el logo, la franja navideña del inicio y hasta cuándo pedir para que llegue antes del 24.', icon: IconoGorro },
+  // C-212: el sorteo (la PlayStation 4 del 20/12)
+  { id: 'sorteo', label: 'Sorteo', descripcion: 'El sorteo de la tienda: las fechas, el premio, quiénes participan, lo que dejó y el sorteo en sí.', icon: IconoRegalo },
   { id: 'plantillas', label: 'Correos de la tienda', descripcion: 'Cómo se ven los correos automáticos que recibe el cliente.', icon: IconoVer },
   // C-116: la pestaña "ElectroStudio" (acceso directo desde C-112) se quitó: el estudio tiene su entrada en la barra lateral
 ];
@@ -82,6 +85,7 @@ export default function MarketingPage() {
       {activa === 'campanas' && <Campanas />}
       {activa === 'popup' && <Popup />}
       {activa === 'navidad' && <Navidad />}
+      {activa === 'sorteo' && <Sorteo />}
       {activa === 'plantillas' && <Plantillas />}
     </div>
   );

@@ -102,6 +102,14 @@ export async function POST(request: NextRequest) {
       recordRegistration(user.id).catch(() => {});
     }
 
+    // C-212: llegó por el enlace de un participante del sorteo (cookie de proxy.ts): queda como su invitado. Si falla, el
+    // registro sigue igual
+    const codigoSorteo = request.cookies.get('electroshop_sorteo')?.value;
+    if (codigoSorteo) {
+      const { registrarInvitacion } = await import('@/lib/sorteo/servidor');
+      await registrarInvitacion(codigoSorteo, user.id).catch(() => {});
+    }
+
     // Create verification token (24 hours expiry)
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours

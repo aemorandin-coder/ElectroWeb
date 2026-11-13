@@ -86,6 +86,9 @@ model User {
   influencerApplications InfluencerApplication[] @relation("InfluencerApplications")
   referralConversions ReferralConversion[] @relation("ReferredUser")
 
+  // C-212: sus participaciones en los sorteos (su código para invitar)
+  participacionesSorteo ParticipanteSorteo[]
+
   @@map("users")
 }
 
@@ -2244,4 +2247,58 @@ model AdminDashboardLayout {
   updatedAt DateTime @updatedAt
 
   @@map("admin_dashboard_layouts")
+}
+
+/// C-212: un sorteo de la tienda (Andrés, 13/11: la PlayStation 4 reacondicionada, con el resultado el 20/12). Los boletos
+/// no se guardan: se cuentan de las órdenes pagadas y de las invitaciones (lib/sorteo), y se congelan en una lista al sortear.
+model Sorteo {
+  id               String    @id @default(cuid())
+  titulo           String
+  premio           String
+  /// Foto del premio (una ruta de /uploads o https)
+  imagen           String?
+  /// Lo que le cuesta a la tienda el premio con su envío, para "lo que dejó el sorteo" en el panel. Nunca sale a la tienda
+  costoPremioUSD   Decimal   @default(0)
+  /// Una compra de esto o más en productos (sin envío) da un boleto
+  compraMinimaUSD  Decimal   @default(10)
+  /// Hasta cuántos boletos se ganan invitando (1 por cada 2 amigos)
+  topeInvitar      Int       @default(3)
+  desde            DateTime
+  /// Lo último que cuenta: compras pagadas y registros de invitados
+  hasta            DateTime
+  /// Cuándo se anuncia el resultado
+  resultadoEl      DateTime
+  /// Se ve en la tienda
+  activo           Boolean   @default(false)
+  sorteadoAt       DateTime?
+  ganadorUserId    String?
+  ganadorEmail     String?
+  /// "Compra ORD-2026-0041 ($24,50)" o "Invitó a 2 amigos"
+  ganadorDetalle   String?
+  /// Cuántos boletos había al sortear y la huella (sha256) de esa lista
+  boletosAlSortear Int?
+  huellaLista      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  participantes ParticipanteSorteo[]
+
+  @@map("sorteos")
+}
+
+/// C-212: quien abrió el sorteo con su cuenta (o llegó por el enlace de alguien): su código para invitar y quién lo invitó
+model ParticipanteSorteo {
+  id            String   @id @default(cuid())
+  sorteoId      String
+  sorteo        Sorteo   @relation(fields: [sorteoId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codigo        String   @unique
+  /// El participante cuyo enlace usó para registrarse
+  invitadoPorId String?
+  createdAt     DateTime @default(now())
+
+  @@unique([sorteoId, userId])
+  @@index([invitadoPorId])
+  @@map("sorteo_participantes")
 }

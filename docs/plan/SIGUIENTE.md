@@ -1,9 +1,14 @@
-# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.36, por subir)
+# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.37, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-212 · El sorteo de la PlayStation 4 (rc.37, por subir):** Andrés lo pidió el 13/11 y eligió los números para que la empresa no pierda (`estado/C-212.md`).
+  - **Cómo se participa:** 1 boleto por cada compra pagada de USD 10 o más, o invitando a 2 amigos con su enlace, sin comprar (1 boleto por cada 2, hasta 3). El resultado, el 20/12.
+  - **Dónde:** la página `/sorteo`, Mi panel y Marketing → Sorteo (lo que dejó, quiénes participan y "Sortear ahora").
+  - **Sin permiso de Conalot, por decisión de Andrés** (`PLAN.md` §7.2): no se vende ningún boleto y hay una forma de participar sin comprar.
+  - **Después del deploy:** crear el sorteo en el panel con la foto de la consola y encenderlo (paso 6 de las pruebas).
 - **C-211 · Claude Haiku 5.5 en "Buscar en la web" (rc.36, por subir):** Andrés pidió cambiar Groq por Claude y dio su clave (`estado/C-211.md`).
   - Claude lee las páginas, redacta la ficha y busca por su cuenta. Groq queda de respaldo.
   - La ficha dice qué IA la redactó.
@@ -169,17 +174,57 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.36` (C-210 y C-211, con rc.35 adentro; unos 20 minutos)
+### El bloque por subir: `v1.0.0-rc.37` (C-210, C-211 y C-212, con rc.35 y rc.36 adentro; unos 30 minutos)
 Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
 - **C-210 (rc.35):**
   - "Destacados" muestra solo lo que tiene estrella, de toda la tienda;
   - "Recién llegados" va por la fecha de publicación, con hasta 4 por departamento;
   - las píldoras del panel van llenas, como las de la tienda, y los botones se animan.
 - **C-211 (rc.36):** "Buscar en la web" con Claude Haiku 5.5 en esfuerzo alto, con Groq de respaldo. Una dependencia nueva (`@anthropic-ai/sdk`, la instala `deploy.sh`) y **una variable nueva en el `.env`**.
+- **C-212 (rc.37):** el sorteo de la PlayStation 4: `/sorteo`, la tarjeta en Mi panel y Marketing → Sorteo. Dos tablas nuevas.
 
-**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.34`). Es aditivo: una columna nueva, sin índices.
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.34`). Es aditivo: una columna nueva y dos tablas nuevas; no toca ningún dato.
 ```sql
 ALTER TABLE "products" ADD COLUMN "publishedAt" TIMESTAMP(3);
+
+CREATE TABLE "sorteos" (
+    "id" TEXT NOT NULL,
+    "titulo" TEXT NOT NULL,
+    "premio" TEXT NOT NULL,
+    "imagen" TEXT,
+    "costoPremioUSD" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "compraMinimaUSD" DECIMAL(65,30) NOT NULL DEFAULT 10,
+    "topeInvitar" INTEGER NOT NULL DEFAULT 3,
+    "desde" TIMESTAMP(3) NOT NULL,
+    "hasta" TIMESTAMP(3) NOT NULL,
+    "resultadoEl" TIMESTAMP(3) NOT NULL,
+    "activo" BOOLEAN NOT NULL DEFAULT false,
+    "sorteadoAt" TIMESTAMP(3),
+    "ganadorUserId" TEXT,
+    "ganadorEmail" TEXT,
+    "ganadorDetalle" TEXT,
+    "boletosAlSortear" INTEGER,
+    "huellaLista" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "sorteos_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE "sorteo_participantes" (
+    "id" TEXT NOT NULL,
+    "sorteoId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "codigo" TEXT NOT NULL,
+    "invitadoPorId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "sorteo_participantes_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX "sorteo_participantes_codigo_key" ON "sorteo_participantes"("codigo");
+CREATE INDEX "sorteo_participantes_invitadoPorId_idx" ON "sorteo_participantes"("invitadoPorId");
+CREATE UNIQUE INDEX "sorteo_participantes_sorteoId_userId_key" ON "sorteo_participantes"("sorteoId", "userId");
+ALTER TABLE "sorteo_participantes" ADD CONSTRAINT "sorteo_participantes_sorteoId_fkey" FOREIGN KEY ("sorteoId") REFERENCES "sorteos"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "sorteo_participantes" ADD CONSTRAINT "sorteo_participantes_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ```
 Después, una sola vez, el relleno de lo ya publicado: `docs/plan/scripts/c210-fecha-de-publicacion.sql`. Sin crons.
 
@@ -193,11 +238,11 @@ Después, una sola vez, el relleno de lo ya publicado: `docs/plan/scripts/c210-f
 git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.34 y sin cambios
 DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc35.dump
 bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
-npx prisma db push && bash scripts/deploy.sh # agrega la columna y compila
+npx prisma db push && bash scripts/deploy.sh # agrega la columna y las dos tablas, y compila
 DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/c210-fecha-de-publicacion.sql
-git describe --tags --abbrev=0               # v1.0.0-rc.36
+git describe --tags --abbrev=0               # v1.0.0-rc.37
 ```
-- `prisma db push` no debería preguntar nada: la columna es nueva. Si avisa de perder datos, no sigas y pásale el texto a Claude.
+- `prisma db push` no debería preguntar nada: la columna y las tablas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
 - **El relleno termina con `publicados_sin_fecha`, que debe decir 0.** Si dice otro número, pásale la salida a Claude.
 
 **Pruebas** (unos 10 minutos):
@@ -211,8 +256,15 @@ git describe --tags --abbrev=0               # v1.0.0-rc.36
    - las píldoras van llenas: "Entregada" en verde con su ícono y "Digital" en azul, como en la tienda;
    - la guía de ZOOM va en gris con el camión;
    - al pasar el ratón por "Códigos" o por el ojo, el botón se levanta.
+6. **El sorteo: armarlo y encenderlo** (en la computadora, con tu cuenta).
+   1. **La foto de la consola:** súbela como foto de un producto (o en Configuración), ábrela y copia su dirección, la que empieza con `/api/uploads/`.
+   2. **En el panel, Marketing → Sorteo:** revisa lo propuesto (premio, del día de hoy al 18/12, resultado el 20/12, USD 10 y 3 por invitar) y pon lo que te costó la consola.
+   3. Pega la dirección de la foto, marca "En la tienda" y guarda.
+   4. **En una ventana de incógnito,** abre `electroshopve.com/sorteo`: el premio con su foto, "Cómo participar" y las bases.
+   5. **Con una cuenta de cliente,** en el teléfono: "Tus boletos" y "Compartir por WhatsApp". En Mi panel sale la tarjeta "Tienes N boletos".
+   6. **El 20/12,** en Marketing → Sorteo, "Sortear ahora". Solo se puede después del cierre y una sola vez. Escríbele al ganador al correo que sale ahí.
 
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.34 && npm install && bash scripts/deploy.sh --sin-pull`. La columna nueva y la clave del `.env` no molestan al código anterior y se pueden quedar.
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.34 && npm install && bash scripts/deploy.sh --sin-pull`. La columna y las dos tablas nuevas, y la clave del `.env`, no molestan al código anterior y se pueden quedar.
 
 **Por confirmar de rc.33 (con una cuenta, unos 15 minutos):**
 1. **La Lista del proveedor por pasos:** arriba se ven los 5 pasos. En el paso 2, abre "1 - Cargar en la tienda" de la carpeta de la ferretería, selecciona todo (Ctrl + A) y suéltalo: dice "105 fotos · 74 códigos de su lista con foto".

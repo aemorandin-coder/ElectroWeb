@@ -20,6 +20,7 @@ import { getPublicSettings } from '@/lib/site-settings';
 import { leerSubida as leerFoto } from '@/lib/subidas';
 import { cargarMarca, prepararFoto } from './imagen';
 import { ALTO, ANCHO, TarjetaPagina, TarjetaProducto, TarjetaVitrina, type DatosProducto } from './tarjetas';
+import { getSorteoVigente } from '@/lib/sorteo/servidor';
 
 /** Se sube cuando cambia el diseño: todas las direcciones cambian y las redes piden las imágenes nuevas */
 const DISENO = '1';
@@ -30,7 +31,7 @@ const LADO_PRODUCTO = ALTO;
 export type TipoTarjeta = 'producto' | 'categoria' | 'pagina';
 
 /** Las páginas que tienen imagen propia. Solo estas: nadie puede pedir una imagen con un texto inventado */
-export const PAGINAS = ['inicio', 'productos', 'categorias', 'servicios', 'cursos', 'gift-cards', 'ideas-para-regalar', 'contacto', 'cotizacion', 'solicitar-producto', 'terminos', 'privacidad'] as const;
+export const PAGINAS = ['inicio', 'productos', 'categorias', 'servicios', 'cursos', 'gift-cards', 'ideas-para-regalar', 'contacto', 'cotizacion', 'solicitar-producto', 'terminos', 'privacidad', 'sorteo'] as const;
 export type PaginaCompartida = (typeof PAGINAS)[number];
 export const esPagina = (valor: string): valor is PaginaCompartida => (PAGINAS as readonly string[]).includes(valor);
 
@@ -89,7 +90,7 @@ const categoriasPrincipales = cache(async (cuantas: number): Promise<string[]> =
   return filas.map((f) => porId.get(f.categoryId)).filter((n): n is string => Boolean(n));
 });
 
-const FIJAS: Record<Exclude<PaginaCompartida, 'inicio' | 'productos' | 'categorias' | 'servicios' | 'cursos'>, ContenidoPagina> = {
+const FIJAS: Record<Exclude<PaginaCompartida, 'inicio' | 'productos' | 'categorias' | 'servicios' | 'cursos' | 'sorteo'>, ContenidoPagina> = {
   'gift-cards': { titulo: 'Gift Cards', bajada: 'Elige el diseño y el monto. Llega al correo de quien la recibe.', fotos: null },
   // C-190: el mismo texto todo el año (con el tema navideño la página cambia de adorno, no de título)
   'ideas-para-regalar': { titulo: 'Ideas para regalar', bajada: 'Regalos por presupuesto: hasta $20, de $20 a $50 y más de $50.', fotos: 'regalos' },
@@ -103,6 +104,13 @@ const FIJAS: Record<Exclude<PaginaCompartida, 'inicio' | 'productos' | 'categori
 /** Lo que dice la tarjeta de una página: lo de Configuración → SEO si está, o un texto armado con datos de la tienda */
 export const contenidoDePagina = cache(async (pagina: PaginaCompartida): Promise<ContenidoPagina> => {
   if (pagina in FIJAS) return FIJAS[pagina as keyof typeof FIJAS];
+  // C-212: el sorteo vigente, con su premio y la fecha del resultado (la versión de la imagen cambia con ellos)
+  if (pagina === 'sorteo') {
+    const sorteo = await getSorteoVigente();
+    if (!sorteo) return { titulo: 'Sorteo', bajada: null, fotos: null };
+    const dia = new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'long', timeZone: 'America/Caracas' }).format(sorteo.resultadoEl);
+    return { titulo: sorteo.titulo, bajada: `Gana: ${sorteo.premio}. Resultado el ${dia}.`, fotos: null };
+  }
   const [ajustes, publicos] = await Promise.all([
     prisma.companySettings.findFirst({
       select: { tagline: true, productsMetaTitle: true, productsMetaDescription: true, servicesMetaTitle: true, servicesMetaDescription: true, coursesMetaTitle: true, coursesMetaDescription: true },

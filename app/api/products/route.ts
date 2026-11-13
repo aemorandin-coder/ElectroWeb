@@ -13,6 +13,7 @@ import { conditionInputSchema, pickConditionInput } from '@/lib/product-conditio
 import { precioValido } from '@/lib/pricing';
 import { ELIMINADOS, EN_PAPELERA } from '@/lib/papelera';
 import { leerProveedorDeProducto } from '@/lib/proveedores/servidor';
+import { fechaDePublicacion } from '@/lib/productos/publicacion';
 
 /** specs de un producto nuevo: especificaciones del formulario y, en digitales, el margen del wizard (C-95). */
 function createSpecs(specifications: unknown, digitalMarginPercent: number | undefined): string | null {
@@ -281,6 +282,8 @@ export async function POST(request: NextRequest) {
         specs: createSpecs(body.specifications, body.productType === 'DIGITAL' ? parseDigitalMargin(body.digitalMarginPercent) : undefined),
         features: body.features ? JSON.stringify(body.features) : null,
         status: body.status || (body.isActive ? 'PUBLISHED' : 'DRAFT'),
+        // C-210: si sale publicado de una vez, esa es su fecha de publicación
+        ...fechaDePublicacion(body.status || (body.isActive ? 'PUBLISHED' : 'DRAFT'), null),
         // C-187: un archivado no se destaca
         isFeatured: body.isFeatured === true && body.status !== 'ARCHIVED',
         // SEO Fields

@@ -134,6 +134,8 @@ export interface Navegador {
   antesDeCargar(fn: string): Promise<void>;
   /** C-204: elige archivos de este equipo en un <input type="file"> (rutas absolutas) */
   archivos(selector: string, rutas: string[]): Promise<void>;
+  /** C-210: pasa el ratón por encima del primer elemento que coincide (para probar el estado :hover) */
+  pasar(selector: string): Promise<void>;
   cerrar(): Promise<void>;
 }
 
@@ -154,6 +156,9 @@ export async function abrirNavegador(carpeta: string, puerto = Number(process.en
     'user_pref("browser.sessionstore.max_tabs_undo", 0);',
     'user_pref("browser.tabs.unloadOnLowMemory", true);',
     'user_pref("media.memory_cache_max_size", 8192);',
+    // C-210: sin ventana, Firefox dice que no tiene ratón (hover: none) y Tailwind no aplica los hover: uno fino, con hover
+    'user_pref("ui.primaryPointerCapabilities", 6);',
+    'user_pref("ui.allPointerCapabilities", 6);',
   ].join('\n'));
   const firefox: ChildProcess = spawn('firefox', ['--headless', '--no-remote', '-profile', perfil, '--remote-debugging-port', String(puerto)], { stdio: 'ignore' });
   // Node 20 no trae WebSocket: se usa el que empaqueta Next
@@ -235,6 +240,12 @@ export async function abrirNavegador(carpeta: string, puerto = Number(process.en
       const sharedId = (r.result as { sharedId?: string } | undefined)?.sharedId;
       if (!sharedId) throw new Error(`No está ${selector}`);
       await cmd('input.setFiles', { context, element: { sharedId }, files: rutas });
+    },
+    async pasar(selector) {
+      const r = await cmd('script.evaluate', { expression: `document.querySelector(${JSON.stringify(selector)})`, target: { context }, awaitPromise: false, resultOwnership: 'root' });
+      const sharedId = (r.result as { sharedId?: string } | undefined)?.sharedId;
+      if (!sharedId) throw new Error(`No está ${selector}`);
+      await cmd('input.performActions', { context, actions: [{ type: 'pointer', id: 'raton', parameters: { pointerType: 'mouse' }, actions: [{ type: 'pointerMove', x: 0, y: 0, origin: { type: 'element', element: { sharedId } } }] }] });
     },
     async cerrar() {
       await cmd('browsingContext.close', { context }).catch(() => undefined);

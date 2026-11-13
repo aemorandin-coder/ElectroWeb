@@ -7,20 +7,21 @@ import { es } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/EmptyState';
 import {
   IconoActualizar, IconoBillete, IconoBuscar, IconoCargando, IconoCerrar, IconoCheck, IconoConfirmado, IconoCuenta,
-  IconoCuentaBorrada, IconoEnviar, IconoEnvio, IconoFlechaDerecha, IconoImpresora, IconoMonitor, IconoPaquete, IconoReloj,
+  IconoCuentaBorrada, IconoDigital, IconoEnviar, IconoEnvio, IconoFlechaDerecha, IconoImpresora, IconoMonitor, IconoPaquete, IconoReloj,
   IconoVer,
 } from '@/components/iconos';
+import PildoraEstadoOrden from '@/components/admin/PildoraEstadoOrden';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 import IvaIncluido from '@/components/ui/IvaIncluido';
-import { ETIQUETA_ESTADO } from '@/lib/order-admin';
 import { EMPRESAS_GUIA, NOMBRE_EMPRESA, siguientePaso, type PasoOrden } from '@/lib/envios/empresas';
 import FacturaOrden from './_components/FacturaOrden';
 import EntregaOrden from './_components/EntregaOrden';
 import {
   adminBadge,
+  adminDato,
   adminTab,
   adminModalHeader,
   adminModalBody,
@@ -48,7 +49,7 @@ import {
   adminDangerButton,
 } from '@/lib/admin-ui';
 import { useMontado } from '@/lib/hooks/useMontado';
-import { describirEntrega, describirPago, estadoPago, tonoEstadoOrden, type PagoMovilResumen } from '@/lib/order-pago';
+import { describirEntrega, describirPago, estadoPago, type PagoMovilResumen } from '@/lib/order-pago';
 import { formatVES } from '@/lib/currency';
 import { formatPaymentMethod } from '@/lib/format-helpers';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -595,18 +596,18 @@ export default function OrdersPage() {
                             #{order.orderNumber}
                           </button>
                         </h3>
-                        <span className={adminBadge(order.status === 'PENDING' ? 'warning' : order.status === 'CANCELLED' ? 'danger' : order.status === 'DELIVERED' ? 'success' : order.status === 'REFUNDED' ? 'neutral' : 'brand')}>
-                          {ETIQUETA_ESTADO[order.status as keyof typeof ETIQUETA_ESTADO] || getStatusText(order.status)}
-                        </span>
+                        {/* C-210: el estado lleno y con su ícono; "Digital", como el sello de la tienda; la guía, un dato en gris */}
+                        <PildoraEstadoOrden status={order.status} />
                         {order.hasDigital && (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 flex items-center gap-1">
-                            <IconoMonitor className="w-2.5 h-2.5" />
+                          <span className={adminBadge('brand')}>
+                            <IconoDigital className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                             Digital
                           </span>
                         )}
                         {order.trackingNumber && (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-700">
-                            {order.shippingCarrier}: {order.trackingNumber}
+                          <span className={adminDato} title="Número de guía">
+                            <IconoEnvio className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            {order.shippingCarrier} {order.trackingNumber}
                           </span>
                         )}
                       </div>
@@ -703,10 +704,9 @@ export default function OrdersPage() {
                     {format(new Date(selectedOrder.createdAt), "d 'de' MMMM, yyyy · h:mm a", { locale: es })}
                   </p>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className={adminBadge(tonoEstadoOrden(selectedOrder.status))}>
-                      {ETIQUETA_ESTADO[selectedOrder.status as keyof typeof ETIQUETA_ESTADO] || getStatusText(selectedOrder.status)}
+                    <PildoraEstadoOrden status={selectedOrder.status}>
                       {!selectedOrder.isOnlyDigital && ` · ${describirEntrega(selectedOrder)}`}
-                    </span>
+                    </PildoraEstadoOrden>
                     <span className={adminBadge(estadoPago(selectedOrder.paymentStatus).tono)}>
                       {selectedOrder.paymentStatus === 'PAID' ? <IconoConfirmado className="h-3.5 w-3.5" aria-hidden="true" /> : <IconoReloj className="h-3.5 w-3.5" aria-hidden="true" />}
                       {estadoPago(selectedOrder.paymentStatus).label}
@@ -873,8 +873,8 @@ export default function OrdersPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <h4 className="text-xs font-bold text-muted uppercase">Progreso del Pedido</h4>
                   {selectedOrder.isOnlyDigital && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-500 text-white flex items-center gap-1">
-                      <IconoMonitor className="w-2.5 h-2.5" /> Solo Digital
+                    <span className={adminBadge('brand')}>
+                      <IconoDigital className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> Solo digital
                     </span>
                   )}
                 </div>

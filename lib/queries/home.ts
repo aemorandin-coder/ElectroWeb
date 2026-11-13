@@ -132,13 +132,16 @@ export const getVitrinaDepartamento = cache(async (departamentoId: string, max =
   return conOfertas(rows.map(toPublicProduct));
 });
 
-/** Destacados (isFeatured). Sin `max`, usa maxFeaturedProducts del admin. */
+/**
+ * Destacados: lo que tiene la estrella, de toda la tienda (C-210, Andrés 13/11: también la ferretería; antes solo
+ * tecnología, C-200), lo último publicado primero. Sin `max`, usa maxFeaturedProducts del admin.
+ */
 export const getFeatured = cache(async (max?: number): Promise<PublicProduct[]> => {
   const limit = clampLimit(max ?? (await getHomeSettings()).maxFeaturedProducts);
   const rows = await prisma.product.findMany({
-    where: await visiblesDelInicio({ isFeatured: true }),
+    where: await visibleProducts({ isFeatured: true }),
     include: publicProductInclude,
-    orderBy: { createdAt: 'desc' },
+    orderBy: [{ publishedAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }],
     take: limit,
   });
   return conOfertas(rows.map(toPublicProduct));
@@ -188,27 +191,17 @@ export const getBestSellers = cache(async (days = 90, max = 12): Promise<PublicP
     .map(toPublicProduct));
 });
 
-/** Lo más nuevo de tecnología (sin los departamentos aparte): completa la vitrina de destacados cuando hay pocos. */
-export const getNewArrivals = cache(async (max = 12): Promise<PublicProduct[]> => {
-  const rows = await prisma.product.findMany({
-    where: await visiblesDelInicio(),
-    include: publicProductInclude,
-    orderBy: { createdAt: 'desc' },
-    take: clampLimit(max),
-  });
-  return conOfertas(rows.map(toPublicProduct));
-});
-
 /**
  * C-207: "Recién llegados" es lo último de toda la tienda, ferretería incluida (Andrés, 13/11: "se tiene que ver de
- * todo"). Trae más de los que se muestran: el inicio quita lo que ya salió arriba y deja pocos de cada departamento o
- * categoría (lib/inicio/reparto.ts).
+ * todo"). C-210: por la fecha en que salió a la tienda y no por la de creación: la carga del proveedor crea en borrador y
+ * se publica días después. Trae más de los que se muestran: el inicio quita lo que ya salió arriba y deja pocos de cada
+ * departamento o categoría (lib/inicio/reparto.ts).
  */
 export const getRecienLlegados = cache(async (max = 48): Promise<PublicProduct[]> => {
   const rows = await prisma.product.findMany({
     where: await visibleProducts(),
     include: publicProductInclude,
-    orderBy: { createdAt: 'desc' },
+    orderBy: [{ publishedAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }],
     take: clampLimit(max),
   });
   return conOfertas(rows.map(toPublicProduct));

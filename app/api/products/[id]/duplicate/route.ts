@@ -55,6 +55,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         slug,
         shortCode,
         status: 'DRAFT',
+        // C-210: la copia nunca salió a la tienda
+        publishedAt: null,
         isFeatured: false,
         stock: 0,
       },

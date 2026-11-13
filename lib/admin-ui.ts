@@ -35,15 +35,20 @@ export function adminChoice(selected: boolean): string {
 }
 
 /* ── Botones ──────────────────────────────────────────────────────────── */
+// C-210 (Andrés, 13/11: "los botones de acciones, animados"): responden al pasar el ratón (se levantan un poco, con
+// sombra) y al tocarlos (se hunden). Con "reducir movimiento" solo cambian de color. Uno apagado no se mueve.
+const MOVIMIENTO =
+  'transition duration-150 ease-out motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 motion-safe:active:scale-[0.97] ' +
+  'disabled:hover:translate-y-0 disabled:active:scale-100 disabled:hover:shadow-none';
 const buttonBase =
-  'inline-flex h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500';
-export const adminPrimaryButton = `${buttonBase} bg-brand-500 text-white hover:bg-brand-600`;
-export const adminSecondaryButton = `${buttonBase} border border-line bg-white text-ink hover:bg-surface`;
-export const adminDangerButton = `${buttonBase} bg-deal text-white hover:bg-deal/90`;
-export const adminSuccessButton = `${buttonBase} bg-success-strong text-white hover:bg-success-strong/90`;
+  `inline-flex h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold ${MOVIMIENTO} disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500`;
+export const adminPrimaryButton = `${buttonBase} bg-brand-500 text-white hover:bg-brand-600 hover:shadow-md hover:shadow-brand-500/25`;
+export const adminSecondaryButton = `${buttonBase} border border-line bg-white text-ink hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 hover:shadow-md hover:shadow-brand-600/10`;
+export const adminDangerButton = `${buttonBase} bg-deal text-white hover:bg-deal/90 hover:shadow-md hover:shadow-deal/25`;
+export const adminSuccessButton = `${buttonBase} bg-success-strong text-white hover:bg-success-strong/90 hover:shadow-md hover:shadow-success-strong/25`;
 /** Botón de solo ícono (editar, borrar, cerrar). Siempre con aria-label. */
 export const adminIconButton =
-  'inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-500 disabled:opacity-40';
+  `inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted ${MOVIMIENTO} hover:bg-brand-50 hover:text-brand-600 focus-visible:outline-2 focus-visible:outline-brand-500 disabled:opacity-40`;
 
 /* ── Tablas ───────────────────────────────────────────────────────────── */
 /** Envuelve siempre la <table>: en móvil se desliza en vez de romper la página. */
@@ -56,18 +61,25 @@ export const adminRowHover = 'hover:bg-surface';
 /* ── Estados (badges, chips de ícono, avisos) ─────────────────────────── */
 export type AdminTone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger';
 
+// C-210 (Andrés eligió la versión A, "como la tienda", para todo el panel): el badge va lleno y con texto blanco, como los
+// sellos de la tienda ("DIGITAL", "Envío gratis"): blanco sobre azul 8,4:1, sobre verde fuerte 5,5:1 y sobre rojo 4,8:1.
+// El ámbar sigue claro con texto oscuro: nunca texto blanco sobre ámbar (PLAN.md §1.1). El neutro es un dato: gris.
 const TONES: Record<AdminTone, { badge: string; chip: string; notice: string }> = {
-  neutral: { badge: 'bg-surface text-ink-soft', chip: 'bg-surface text-ink-soft', notice: 'border-line bg-surface text-ink-soft' },
-  brand: { badge: 'bg-brand-50 text-brand-700', chip: 'bg-brand-50 text-brand-600', notice: 'border-brand-200 bg-brand-50 text-brand-700' },
-  success: { badge: 'bg-success-strong/10 text-success-strong', chip: 'bg-success-strong/10 text-success-strong', notice: 'border-success-strong/20 bg-success-strong/5 text-success-strong' },
+  neutral: { badge: 'bg-surface text-ink-soft ring-1 ring-inset ring-line', chip: 'bg-surface text-ink-soft', notice: 'border-line bg-surface text-ink-soft' },
+  brand: { badge: 'bg-brand-600 text-white', chip: 'bg-brand-50 text-brand-600', notice: 'border-brand-200 bg-brand-50 text-brand-700' },
+  success: { badge: 'bg-success-strong text-white', chip: 'bg-success-strong/10 text-success-strong', notice: 'border-success-strong/20 bg-success-strong/5 text-success-strong' },
   warning: { badge: 'bg-warning/15 text-warning-strong', chip: 'bg-warning/15 text-warning-strong', notice: 'border-warning/30 bg-warning/10 text-warning-strong' },
-  danger: { badge: 'bg-deal-bg text-deal', chip: 'bg-deal-bg text-deal', notice: 'border-deal/30 bg-deal-bg text-deal' },
+  danger: { badge: 'bg-deal text-white', chip: 'bg-deal-bg text-deal', notice: 'border-deal/30 bg-deal-bg text-deal' },
 };
 
-/** Badge de estado: "Pendiente", "Pagado", "Rechazado". */
+/** Badge de estado: "Pendiente", "Pagado", "Rechazado". Con ícono cuando lo hay (estado de la orden: `PildoraEstadoOrden`). */
 export function adminBadge(tone: AdminTone): string {
-  return `inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${TONES[tone].badge}`;
+  return `inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${TONES[tone].badge}`;
 }
+
+/** C-210: un dato en píldora (la guía de ZOOM, un código): gris, con su ícono, para que no compita con el estado. */
+export const adminDato =
+  'inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-surface px-2.5 py-0.5 text-xs font-semibold tabular-nums text-ink-soft ring-1 ring-inset ring-line';
 
 /** Cuadro con ícono de una tarjeta de estadística o de una fila. */
 export function adminIconChip(tone: AdminTone): string {

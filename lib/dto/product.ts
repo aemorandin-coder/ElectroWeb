@@ -87,6 +87,8 @@ export interface PublicProduct {
   brand: { name: string; slug: string } | null;
   isFeatured: boolean;
   createdAt: string;
+  /** C-210: cuándo salió a la tienda por primera vez; null si nunca se publicó (o es de antes y no se supo) */
+  publishedAt: string | null;
   specs: Record<string, unknown> | null;
   features: string[];
   seoTitle: string | null;
@@ -243,6 +245,7 @@ export function toPublicProduct(product: ProductWithPublicRelations): PublicProd
     brand: product.brand ? { name: product.brand.name, slug: product.brand.slug } : null,
     isFeatured: product.isFeatured,
     createdAt: product.createdAt.toISOString(),
+    publishedAt: product.publishedAt?.toISOString() ?? null,
     specs: toPublicSpecs(product.specs),
     features: toPublicFeatures(product.features),
     seoTitle: product.seoTitle,

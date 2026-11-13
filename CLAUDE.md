@@ -32,7 +32,8 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
 - Server Components llaman a Prisma o a `lib/queries/*` directamente. **No hagas fetch a la propia API desde el servidor.**
 - Settings públicos: el servidor los lee una sola vez y los pasa a `SettingsProvider` como `initialSettings`. No agregues nuevos `fetch('/api/settings/public')`.
 - Colores y tipografía: solo los tokens de `PLAN.md` §1. Sin hex en className, sin `text-[<11px]`, sin `font-black`.
-- **El ámbar (`warning`) solo avisa que alguien tiene que hacer algo** (C-192, `PLAN.md` §1.1). Lo que se destaca va en azul; la pieza fuerte, en azul noche; notas y datos, neutros. Esperar va en azul. Nunca texto blanco sobre ámbar o verde.
+- **El ámbar (`warning`) solo avisa que alguien tiene que hacer algo** (C-192, `PLAN.md` §1.1). Lo que se destaca va en azul; la pieza fuerte, en azul noche; notas y datos, neutros. Esperar va en azul. Nunca texto blanco sobre ámbar ni sobre el verde claro (`success`); sobre el verde fuerte (`success-strong`) sí, 5,5:1.
+- **Píldoras y botones del panel** (C-210, `PLAN.md` §1.8): el estado lleno y con texto blanco (`adminBadge`), como los sellos de la tienda; un dato, en gris con su ícono (`adminDato`); los botones compartidos ya se animan al pasar y al tocar.
 - Breakpoint móvil único: `lg`. Nada de `window.innerWidth` para decidir el layout: usa CSS.
 - **Cada contenedor, del tamaño de lo que lleva** (C-205, `PLAN.md` §1.5; pedido de Andrés): la página del panel empieza junto al menú, a lo ancho del marco y sin centrarse; adentro, el formulario hasta `max-w-3xl` y la tabla a lo ancho; un número con unidad en `CampoUnidad`, un nombre hasta `sm:max-w-sm`. Lo de varios pasos lleva `components/admin/Pasos` (§1.6) y los filtros, `components/admin/Filtros` con ícono y subtítulo (§1.7).
 - Capas: variables `--z-*` de `PLAN.md` §1.3. No uses `z-[9999]`.

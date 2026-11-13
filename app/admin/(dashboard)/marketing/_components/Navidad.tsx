@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { IconoCheck, IconoGuardar, IconoRestablecer } from '@/components/iconos';
 import GorroSanta from '@/components/navidad/GorroSanta';
 import SelloNavidad from '@/components/navidad/SelloNavidad';
-import TarjetaNavidad from '@/components/navidad/TarjetaNavidad';
+import SaludoNavidad from '@/components/navidad/SaludoNavidad';
 import { VistaFranjaNavidad } from '@/components/navidad/FechaLimiteNavidad';
 import { Field, SettingsCard, SwitchRow, TextAreaField, TextField } from '@/app/admin/(dashboard)/settings/_components/fields';
 import { adminBadge, adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton, adminSpinner, type AdminTone } from '@/lib/admin-ui';
@@ -114,15 +114,15 @@ function LogoConGorro({ logo, gorro, className }: { logo: string | null; gorro: 
 }
 
 /**
- * Marketing → Navidad (C-186): el tema navideño de la tienda, el gorro y la tarjeta navideña del popup. Se guarda en
- * Configuración con el permiso de contenido, como el popup, y la tienda cambia sin deploy (la API revalida las páginas).
+ * Marketing → Navidad (C-186): el tema navideño de la tienda, el gorro y el saludo navideño del inicio (C-207: una franja
+ * dentro de la página; antes, la tarjeta del popup). Se guarda en Configuración con el permiso de contenido, como el
+ * popup, y la tienda cambia sin deploy (la API revalida las páginas).
  */
 export default function Navidad() {
   const [form, setForm] = useState<NavidadForm>(INICIAL);
   const [guardado, setGuardado] = useState<NavidadForm>(INICIAL);
   const [logo, setLogo] = useState<string | null>(null);
   const [nombre, setNombre] = useState('Electro Shop');
-  const [fondo, setFondo] = useState({ color: '#000000', opacidad: 70 });
   // C-190: qué formas de entrega tiene encendidas la tienda (Configuración → Envíos): la franja solo nombra esas
   const [formas, setFormas] = useState<FormasDeEntrega>({ envio: true, delivery: false, retiro: true });
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -146,8 +146,6 @@ export default function Navidad() {
         setLogo(texto(data.logo) || null);
         // Como el encabezado de la tienda: el nombre corto
         if (texto(data.companyName)) setNombre(texto(data.companyName).split(/\s+/).slice(0, 2).join(' '));
-        const opacidad = typeof data.hotAdBackdropOpacity === 'number' ? data.hotAdBackdropOpacity : 70;
-        setFondo({ color: texto(data.hotAdBackdropColor) || '#000000', opacidad });
         setFormas({ envio: data.deliveryEnabled !== false, delivery: data.localDeliveryEnabled === true, retiro: data.pickupEnabled !== false });
       })
       .catch(() => toast.error('No se pudo cargar el tema navideño'))
@@ -224,7 +222,7 @@ export default function Navidad() {
       <div className="min-w-0 space-y-5">
         <SettingsCard
           title="Tema navideño"
-          description="El gorro de Santa en el logo de toda la tienda y la tarjeta navideña al entrar. Apagado, la tienda se ve como siempre."
+          description="El gorro de Santa en el logo de toda la tienda y el saludo navideño en el inicio. Apagado, la tienda se ve como siempre."
           action={<span className={adminBadge(ESTADO[estado].tono)}>{ESTADO[estado].etiqueta}</span>}
         >
           <div className="space-y-5">
@@ -283,7 +281,7 @@ export default function Navidad() {
           </div>
         </SettingsCard>
 
-        <SettingsCard title="El gorro" description="Va sobre el logo del encabezado y del pie de página, en toda la tienda, y en la tarjeta navideña.">
+        <SettingsCard title="El gorro" description="Va sobre el logo del encabezado y del pie de página, en toda la tienda, y en la franja navideña.">
           <fieldset>
             <legend className="sr-only">Elige el gorro</legend>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -306,22 +304,25 @@ export default function Navidad() {
         </SettingsCard>
 
         <SettingsCard
-          title="Popup al entrar"
-          description="Mientras el tema se ve en la tienda. Sale igual que el popup: como mucho una vez cada 24 horas por visitante, y se cierra al primer toque."
+          title="El saludo en el inicio"
+          description="Mientras el tema se ve en la tienda. La franja va dentro del inicio, después de los destacados: se ve sin tapar nada."
         >
           <fieldset>
-            <legend className="sr-only">Qué sale al entrar</legend>
+            <legend className="sr-only">Qué sale en el inicio</legend>
             <div className="grid gap-3 sm:grid-cols-2">
               <Opcion name="navidad-popup" checked={form.christmasPopup} onChange={() => set('christmasPopup', true)}>
                 <span>
-                  <span className="block text-sm font-semibold text-ink">La tarjeta navideña</span>
-                  <span className="mt-0.5 block text-xs text-muted">Tu saludo y un botón, con el sello y Chispa con el gorro, como la felicitación de ElectroStudio.</span>
+                  <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink">
+                    La franja navideña
+                    <span className={adminBadge('brand')}>Recomendada</span>
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted">Tu saludo y un botón, con el sello y el gorro. Mientras sale, la imagen del popup no sale.</span>
                 </span>
               </Opcion>
               <Opcion name="navidad-popup" checked={!form.christmasPopup} onChange={() => set('christmasPopup', false)}>
                 <span>
                   <span className="block text-sm font-semibold text-ink">La imagen del popup</span>
-                  <span className="mt-0.5 block text-xs text-muted">La de la pestaña Popup del home, como siempre (si está activa).</span>
+                  <span className="mt-0.5 block text-xs text-muted">La de la pestaña Popup del home, como siempre (si está activa). Tapa la tienda hasta que se cierra.</span>
                 </span>
               </Opcion>
             </div>
@@ -329,8 +330,8 @@ export default function Navidad() {
 
           {form.christmasPopup && (
             <div className="mt-5 space-y-4 border-t border-line pt-5">
-              <TextField label="Título" value={form.christmasPopupTitle} onChange={(v) => set('christmasPopupTitle', v)} placeholder={TARJETA_NAVIDAD.titulo} maxLength={40} error={errores.christmasPopupTitle} hint="La última palabra sale en azul." />
-              <TextAreaField label="Mensaje" value={form.christmasPopupText} onChange={(v) => set('christmasPopupText', v)} placeholder={TARJETA_NAVIDAD.mensaje} maxLength={180} counter error={errores.christmasPopupText} />
+              <TextField label="Título" value={form.christmasPopupTitle} onChange={(v) => set('christmasPopupTitle', v)} placeholder={TARJETA_NAVIDAD.titulo} maxLength={40} error={errores.christmasPopupTitle} hint="La última palabra sale en rojo." />
+              <TextAreaField label="Mensaje" value={form.christmasPopupText} onChange={(v) => set('christmasPopupText', v)} placeholder={TARJETA_NAVIDAD.mensaje} maxLength={180} counter error={errores.christmasPopupText} hint="En la computadora, hasta dos líneas. En el teléfono la franja lleva solo el título y el botón." />
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextField label="Texto del botón" value={form.christmasPopupButton} onChange={(v) => set('christmasPopupButton', v)} placeholder={TARJETA_NAVIDAD.boton} maxLength={30} error={errores.christmasPopupButton} />
                 <TextField
@@ -344,7 +345,7 @@ export default function Navidad() {
                 />
               </div>
               <p className={adminHint}>
-                Lo que dejes vacío usa el texto de la tienda. Que la tarjeta no prometa lo que la tienda no cumple: descuentos, precios ni plazos de entrega.
+                Lo que dejes vacío usa el texto de la tienda. Que la franja no prometa lo que la tienda no cumple: descuentos, precios ni plazos de entrega.
               </p>
             </div>
           )}
@@ -418,19 +419,15 @@ export default function Navidad() {
             <span className="font-brand min-w-0 truncate bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-base font-bold tracking-tight text-transparent">{nombre}</span>
           </div>
           {form.christmasPopup ? (
-            <div className="relative overflow-hidden rounded-2xl p-4">
-              {/* El fondo del popup, con el color y la oscuridad de la pestaña Popup del home */}
-              <div className="absolute inset-0" style={{ backgroundColor: fondo.color, opacity: fondo.opacidad / 100 }} aria-hidden="true" />
-              <TarjetaNavidad
-                key={vuelta}
-                titulo={form.christmasPopupTitle.trim() || TARJETA_NAVIDAD.titulo}
-                mensaje={form.christmasPopupText.trim() || TARJETA_NAVIDAD.mensaje}
-                boton={form.christmasPopupButton.trim() || TARJETA_NAVIDAD.boton}
-                enlace={safeHotAdLink(form.christmasPopupLink.trim() || TARJETA_NAVIDAD.enlace)}
-                gorro={form.christmasHat}
-                className="relative mx-auto w-full max-w-[25rem]"
-              />
-            </div>
+            // C-207: la franja del inicio. La columna es angosta, como un teléfono grande: el mensaje sale desde sm
+            <SaludoNavidad
+              key={vuelta}
+              titulo={form.christmasPopupTitle.trim() || TARJETA_NAVIDAD.titulo}
+              mensaje={form.christmasPopupText.trim() || TARJETA_NAVIDAD.mensaje}
+              boton={form.christmasPopupButton.trim() || TARJETA_NAVIDAD.boton}
+              enlace={safeHotAdLink(form.christmasPopupLink.trim() || TARJETA_NAVIDAD.enlace)}
+              gorro={form.christmasHat}
+            />
           ) : (
             <p className="rounded-2xl border border-dashed border-line px-4 py-3 text-sm text-muted">
               Al entrar sale la imagen de la pestaña Popup del home, como siempre. El gorro va en el logo.

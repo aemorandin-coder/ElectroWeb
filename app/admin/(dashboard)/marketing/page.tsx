@@ -22,7 +22,7 @@ const SECCIONES: { id: SeccionId; label: string; descripcion: string; icon: Icon
   { id: 'campanas', label: 'Campañas de correo', descripcion: 'Correos con imágenes para los clientes que aceptan promociones.', icon: IconoEnviar },
   { id: 'popup', label: 'Popup del home', descripcion: 'La imagen promocional que aparece al entrar a la tienda.', icon: IconoPopup },
   // C-186: el ícono es el gorro de la tienda en la versión de un color del pack de íconos, no uno de librería
-  { id: 'navidad', label: 'Navidad', descripcion: 'El tema navideño: el gorro de Santa en el logo, la tarjeta navideña del popup y hasta cuándo pedir para que llegue antes del 24.', icon: IconoGorro },
+  { id: 'navidad', label: 'Navidad', descripcion: 'El tema navideño: el gorro de Santa en el logo, la franja navideña del inicio y hasta cuándo pedir para que llegue antes del 24.', icon: IconoGorro },
   { id: 'plantillas', label: 'Correos de la tienda', descripcion: 'Cómo se ven los correos automáticos que recibe el cliente.', icon: IconoVer },
   // C-116: la pestaña "ElectroStudio" (acceso directo desde C-112) se quitó: el estudio tiene su entrada en la barra lateral
 ];

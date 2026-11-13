@@ -10,6 +10,18 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.34] - 2026-11-13
+### Tienda 1.9.0 (C-207)
+- **El inicio que vende** (Andrés eligió el 13/11, después de ver el plan de los 5 cambios):
+  - **Cada producto sale una sola vez,** en la primera sección que le toca. Antes "Recién llegados" repetía los 8 destacados y las gift cards salían tres veces.
+  - **"Recién llegados" trae lo último de toda la tienda,** ferretería incluida, con pocos de cada departamento o categoría: una carga grande de un proveedor no llena la sección. El mismo día, los destacados primero.
+  - **"Destacados de la semana"** se completa solo hasta lo que necesita para verse (5): lo nuevo va a "Recién llegados".
+  - **Las gift cards y recargas, en una sola sección,** con cada plataforma y su monto. Antes la franja tenía enlaces a búsquedas, y las de Google Play y Apple no traían nada.
+  - **"Compra por categoría"** con la foto de un producto real, la cuenta solo desde 10 productos y las categorías chicas juntas en "Más categorías". Ninguna dice "1 producto".
+- **El saludo navideño ya no tapa la tienda al entrar:** es una franja dentro del inicio, después de los destacados.
+### Marketing 1.8.0 (C-207)
+- **Navidad:** "El saludo en el inicio", con la franja navideña (recomendada) o la imagen del popup. La vista previa muestra la franja.
+
 ## [1.0.0-rc.33] - 2026-11-13
 ### Productos 1.11.0 (C-205)
 - **La Lista del proveedor, por pasos** (pedido de Andrés del 13/11; eligió la maqueta A): proveedor y precio, su lista y las fotos, revisar, crear y actualizar, y terminar y publicar.

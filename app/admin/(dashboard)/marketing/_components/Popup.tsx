@@ -43,7 +43,7 @@ export default function Popup() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
-  // C-186: el tema navideño se ve hoy con su tarjeta: mientras tanto, esta imagen no sale
+  // C-186: el tema navideño se ve hoy con su saludo (C-207: la franja del inicio): mientras tanto, esta imagen no sale
   const [tarjetaNavidad, setTarjetaNavidad] = useState(false);
   const archivo = useRef<HTMLInputElement>(null);
 
@@ -120,8 +120,8 @@ export default function Popup() {
       <div className="space-y-5">
         {tarjetaNavidad && (
           <p className={adminNotice('brand')} role="status">
-            Tema navideño encendido: al entrar sale la tarjeta navideña en lugar de esta imagen. La imagen vuelve sola cuando
-            termine el tema, o antes si eliges la imagen en la pestaña Navidad.
+            Tema navideño encendido: el inicio lleva la franja navideña y esta imagen no sale. Vuelve sola cuando termine el
+            tema, o antes si eliges la imagen en la pestaña Navidad.
           </p>
         )}
         <section className={adminCard}>

@@ -1,5 +1,6 @@
 // El sello de Electro Shop dibujado con el pack de íconos (la pantalla con las letras ES, la V y la base) y con el gorro de
-// Santa: la ilustración de la tarjeta navideña del popup (C-186). Mismas coordenadas que el gorro (caja de 100 × 100).
+// Santa: la ilustración del saludo navideño del inicio (C-186; desde C-207, una franja). Mismas coordenadas que el gorro
+// (caja de 100 × 100).
 // Animado: la pantalla se enciende como un televisor (una línea que se abre de lado a lado y después hacia arriba y
 // abajo) y el gorro cae en el sello y se balancea hasta quedar quieto. Una sola vez, al aparecer; con "reducir
 // movimiento" el sistema la muestra quieta (app/globals.css).

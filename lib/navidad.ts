@@ -61,7 +61,7 @@ export function varianteGorro(valor: unknown): VarianteGorro {
   return GORROS.includes(valor as VarianteGorro) ? (valor as VarianteGorro) : GORRO_RECOMENDADO;
 }
 
-/** Lo que dice la tarjeta navideña del popup. */
+/** Lo que dice el saludo navideño del inicio (C-207: una franja; antes, la tarjeta del popup). */
 export interface TarjetaNavidadDatos {
   titulo: string;
   mensaje: string;
@@ -73,7 +73,7 @@ export interface TarjetaNavidadDatos {
 /** La página de regalos por presupuesto (C-190, app/ideas-para-regalar) */
 export const RUTA_REGALOS = '/ideas-para-regalar';
 
-/** Textos de la tarjeta cuando el panel los deja vacíos. Sin promesas de precio, de descuento ni de plazos de entrega. */
+/** Textos del saludo cuando el panel los deja vacíos. Sin promesas de precio, de descuento ni de plazos de entrega. */
 export const TARJETA_NAVIDAD: TarjetaNavidadDatos = {
   titulo: 'Feliz Navidad',
   mensaje: 'Gracias por confiar en Electro Shop este año. Te deseamos unas fiestas felices junto a los tuyos.',

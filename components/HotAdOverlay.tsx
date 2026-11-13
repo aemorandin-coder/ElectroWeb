@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { IconoCerrar } from '@/components/iconos';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -9,9 +9,8 @@ import type { HotAd } from '@/lib/queries/hot-ad';
 
 // Popup promocional del home (C-23, decisión D2): se puede cerrar al instante (X, Esc o el fondo),
 // aparece como mucho una vez cada 24 h por promoción y no antes de SHOW_DELAY_MS.
+// C-207: el saludo navideño ya no sale aquí (es una franja del inicio): este popup es solo el de la imagen.
 const STORAGE_KEY = 'hotAd:v2';
-// C-186: la tarjeta navideña lleva su propia cuenta: verla o descartarla no cambia lo que se recuerda de la imagen
-const CHRISTMAS_STORAGE_KEY = 'hotAd:navidad';
 const LEGACY_PERMANENT_KEY = 'hotAdPermanentlyDismissed';
 const LEGACY_SESSION_KEY = 'hotAdDismissed';
 const SHOW_DELAY_MS = 2500;
@@ -51,14 +50,9 @@ function hexToRgba(hex: string, opacity: number): string {
   return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${opacity})`;
 }
 
-/**
- * `hotAd` lo lee el home en el servidor (getHotAd): ya no viaja en los settings de todas las páginas (C-25).
- * `tarjeta` (C-186): la tarjeta navideña, dibujada en el servidor (app/page.tsx), que sale en lugar de la imagen. Con el
- * tema navideño apagado no llega y el popup es el de siempre.
- */
-export default function HotAdOverlay({ hotAd, tarjeta }: { hotAd: HotAd; tarjeta?: ReactNode }) {
+/** `hotAd` lo lee el home en el servidor (getHotAd): ya no viaja en los settings de todas las páginas (C-25). */
+export default function HotAdOverlay({ hotAd }: { hotAd: HotAd }) {
   const image = hotAd.image;
-  const storageKey = tarjeta ? CHRISTMAS_STORAGE_KEY : STORAGE_KEY;
   const [open, setOpen] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   // Copia para el manejador de Esc (se registra una vez al abrir)
@@ -71,31 +65,28 @@ export default function HotAdOverlay({ hotAd, tarjeta }: { hotAd: HotAd; tarjeta
   useEffect(() => {
     const timer = setTimeout(() => {
       let legacyPermanent = false;
-      // Las claves viejas son de la imagen: la tarjeta navideña no las toca
-      if (storageKey === STORAGE_KEY) {
-        try {
-          legacyPermanent = localStorage.getItem(LEGACY_PERMANENT_KEY) === 'true';
-          // Las claves viejas se migran: "no volver a mostrar" se respeta para la promoción actual
-          localStorage.removeItem(LEGACY_PERMANENT_KEY);
-          sessionStorage.removeItem(LEGACY_SESSION_KEY);
-        } catch {
-          // Sin acceso al almacenamiento: se decide solo con lo que haya
-        }
+      try {
+        legacyPermanent = localStorage.getItem(LEGACY_PERMANENT_KEY) === 'true';
+        // Las claves viejas se migran: "no volver a mostrar" se respeta para la promoción actual
+        localStorage.removeItem(LEGACY_PERMANENT_KEY);
+        sessionStorage.removeItem(LEGACY_SESSION_KEY);
+      } catch {
+        // Sin acceso al almacenamiento: se decide solo con lo que haya
       }
       const now = Date.now();
       if (legacyPermanent) {
-        writeRecord(storageKey, { image, shownAt: now, dismissed: true });
+        writeRecord(STORAGE_KEY, { image, shownAt: now, dismissed: true });
         return;
       }
-      if (!shouldShowHotAd(readRecord(storageKey), image, now)) return;
-      writeRecord(storageKey, { image, shownAt: now });
+      if (!shouldShowHotAd(readRecord(STORAGE_KEY), image, now)) return;
+      writeRecord(STORAGE_KEY, { image, shownAt: now });
       setOpen(true);
     }, SHOW_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [image, storageKey]);
+  }, [image]);
 
   const close = () => {
-    if (dontShowAgainRef.current) writeRecord(storageKey, { image, shownAt: Date.now(), dismissed: true });
+    if (dontShowAgainRef.current) writeRecord(STORAGE_KEY, { image, shownAt: Date.now(), dismissed: true });
     setOpen(false);
   };
   // El manejador de teclado usa siempre la versión actual de close
@@ -162,7 +153,7 @@ export default function HotAdOverlay({ hotAd, tarjeta }: { hotAd: HotAd; tarjeta
       type="button"
       onClick={close}
       aria-label="Cerrar promoción"
-      className={`absolute -right-2 -top-2 lg:-right-4 lg:-top-4 ${tarjeta ? 'z-10 ' : ''}flex h-11 w-11 lg:h-10 lg:w-10 items-center justify-center rounded-full bg-white text-ink shadow-lg hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer transition active:scale-95`}
+      className={`absolute -right-2 -top-2 lg:-right-4 lg:-top-4 flex h-11 w-11 lg:h-10 lg:w-10 items-center justify-center rounded-full bg-white text-ink shadow-lg hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer transition active:scale-95`}
     >
       <IconoCerrar className="h-6 w-6 lg:h-5 lg:w-5" aria-hidden="true" />
     </button>
@@ -176,15 +167,9 @@ export default function HotAdOverlay({ hotAd, tarjeta }: { hotAd: HotAd; tarjeta
         if (event.target === event.currentTarget) close();
       }}
     >
-      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={hotAd.tarjeta?.titulo ?? 'Promoción'} className="flex max-w-[calc(100vw-2rem)] lg:max-w-[min(960px,calc(100vw-6rem))] flex-col items-center gap-3 lg:gap-4 my-auto">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Promoción" className="flex max-w-[calc(100vw-2rem)] lg:max-w-[min(960px,calc(100vw-6rem))] flex-col items-center gap-3 lg:gap-4 my-auto">
         <div className="relative max-w-full">
-          {/* C-186: con la tarjeta, Cerrar va primero (encima, con z-10): el teclado recorre Cerrar, el botón de la tarjeta
-              y "No volver a mostrar", en el orden en que se ven */}
-          {tarjeta && botonCerrar}
-          {tarjeta ? (
-            // C-186: el botón de la tarjeta cierra el popup al tocarlo, como el enlace de la imagen (la tarjeta viene del servidor)
-            <div onClick={(event) => { if ((event.target as Element).closest('a')) close(); }}>{tarjeta}</div>
-          ) : link?.external ? (
+          {link?.external ? (
             <a href={link.href} target="_blank" rel="noopener noreferrer" onClick={close} className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
               {picture}
             </a>
@@ -195,7 +180,7 @@ export default function HotAdOverlay({ hotAd, tarjeta }: { hotAd: HotAd; tarjeta
           ) : (
             picture
           )}
-          {!tarjeta && botonCerrar}
+          {botonCerrar}
         </div>
 
         <label className="flex h-11 lg:h-9 cursor-pointer items-center gap-2 rounded-full bg-ink/60 lg:bg-ink/75 px-4 text-sm font-medium text-white transition-colors hover:bg-ink/90 select-none">

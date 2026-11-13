@@ -1,6 +1,7 @@
 // Popup promocional del home (C-25). Solo servidor.
 // La imagen puede estar guardada como archivo (/uploads/...) o, en datos viejos, como base64 dentro de la BD.
 // El base64 nunca se manda en el HTML: se sirve como archivo desde /api/public/hot-ad-image/<versión>.
+// C-207: el saludo navideño ya no es un popup: es una franja del inicio (getSaludoNavidad).
 
 import { createHash } from 'crypto';
 import { cache } from 'react';
@@ -8,7 +9,7 @@ import { prisma } from '@/lib/prisma';
 import { navidadActiva, TARJETA_NAVIDAD, varianteGorro, type TarjetaNavidadDatos, type VarianteGorro } from '@/lib/navidad';
 
 export interface HotAd {
-  /** URL de la imagen (archivo subido o la ruta que sirve el base64). Con la tarjeta navideña, la versión de sus textos */
+  /** URL de la imagen (archivo subido o la ruta que sirve el base64) */
   image: string;
   link: string | null;
   transparentBg: boolean;
@@ -17,9 +18,10 @@ export interface HotAd {
   shadowOpacity: number;
   backdropOpacity: number;
   backdropColor: string;
-  /** C-186: la tarjeta navideña en lugar de la imagen, mientras el tema se ve (Marketing → Navidad). Si no, no viene */
-  tarjeta?: TarjetaNavidadDatos & { gorro: VarianteGorro };
 }
+
+/** C-207: el saludo navideño del inicio (la franja que reemplazó a la tarjeta del popup), con su gorro */
+export type SaludoNavidad = TarjetaNavidadDatos & { gorro: VarianteGorro };
 
 // Solo formatos raster: un SVG servido desde el mismo dominio podría ejecutar scripts si se abre directo
 const DATA_URI = /^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=\s]+)$/;
@@ -50,8 +52,8 @@ export async function readHotAdImage(): Promise<{ mime: string; bytes: Buffer; v
   return raw && parsed ? { ...parsed, version: imageVersion(raw) } : null;
 }
 
-export const getHotAd = cache(async (): Promise<HotAd | null> => {
-  const row = await prisma.companySettings.findUnique({
+const leerPromociones = cache(() =>
+  prisma.companySettings.findUnique({
     where: { id: 'default' },
     select: {
       hotAdEnabled: true, hotAdImage: true, hotAdLink: true, hotAdTransparentBg: true, hotAdShadowEnabled: true,
@@ -59,32 +61,29 @@ export const getHotAd = cache(async (): Promise<HotAd | null> => {
       christmasTheme: true, christmasThemeFrom: true, christmasThemeUntil: true, christmasHat: true, christmasPopup: true,
       christmasPopupTitle: true, christmasPopupText: true, christmasPopupButton: true, christmasPopupLink: true,
     },
-  });
+  })
+);
 
-  // C-186: mientras el tema se ve, la tarjeta navideña reemplaza a la imagen (aunque el popup de imagen esté apagado).
-  // Lleva su propia versión, hecha con sus textos: si cambian, vuelve a salir a quien ya la había visto. Con la tarjeta
-  // apagada, la imagen sale como siempre, sin adornos
-  if (row?.christmasPopup && navidadActiva(row)) {
-    const tarjeta: TarjetaNavidadDatos = {
-      titulo: row.christmasPopupTitle || TARJETA_NAVIDAD.titulo,
-      mensaje: row.christmasPopupText || TARJETA_NAVIDAD.mensaje,
-      boton: row.christmasPopupButton || TARJETA_NAVIDAD.boton,
-      enlace: row.christmasPopupLink || TARJETA_NAVIDAD.enlace,
-    };
-    return {
-      image: `navidad-${imageVersion(JSON.stringify(tarjeta))}`,
-      link: null,
-      transparentBg: false,
-      shadowEnabled: false,
-      shadowBlur: 0,
-      shadowOpacity: 0,
-      backdropOpacity: row.hotAdBackdropOpacity ?? 70,
-      backdropColor: row.hotAdBackdropColor || '#000000',
-      tarjeta: { ...tarjeta, gorro: varianteGorro(row.christmasHat) },
-    };
-  }
+/**
+ * C-207: el saludo navideño va en una franja dentro del inicio y ya no tapa la tienda (Andrés, 13/11: "déjala como
+ * franja"). Sale mientras el tema se ve y con "La franja navideña" elegida en Marketing → Navidad; si no, null.
+ */
+export const getSaludoNavidad = cache(async (): Promise<SaludoNavidad | null> => {
+  const row = await leerPromociones();
+  if (!row?.christmasPopup || !navidadActiva(row)) return null;
+  return {
+    titulo: row.christmasPopupTitle || TARJETA_NAVIDAD.titulo,
+    mensaje: row.christmasPopupText || TARJETA_NAVIDAD.mensaje,
+    boton: row.christmasPopupButton || TARJETA_NAVIDAD.boton,
+    enlace: row.christmasPopupLink || TARJETA_NAVIDAD.enlace,
+    gorro: varianteGorro(row.christmasHat),
+  };
+});
 
-  if (!row?.hotAdEnabled || !row.hotAdImage) return null;
+export const getHotAd = cache(async (): Promise<HotAd | null> => {
+  const row = await leerPromociones();
+  // Mientras sale el saludo navideño, la imagen del popup no sale (como cuando era la tarjeta, C-186): nada tapa la tienda
+  if (!row?.hotAdEnabled || !row.hotAdImage || (row.christmasPopup && navidadActiva(row))) return null;
 
   const raw = row.hotAdImage.trim();
   let image: string | null = null;

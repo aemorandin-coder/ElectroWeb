@@ -148,6 +148,7 @@ export async function completarConLaWeb(supplierId: string, id: string): Promise
     llenado: [...new Set([...(previa && !previa.revisada ? previa.llenado : []), ...llenado])],
     fuentes: resultado.fuentes.slice(0, 6).map((f) => ({ dominio: f.dominio, url: f.url, titulo: f.titulo.slice(0, 120) })),
     redaccion: resultado.redaccion,
+    modeloIA: resultado.modeloIA,
     avisos: resultado.avisos.slice(0, 5),
   } satisfies FichaWeb;
   data.specs = JSON.stringify(specs);

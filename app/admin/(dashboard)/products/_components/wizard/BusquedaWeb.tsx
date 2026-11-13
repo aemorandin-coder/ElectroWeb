@@ -219,7 +219,7 @@ export default function BusquedaWeb({ data, onChange }: Props) {
                 })}
                 {r.descripcion && fila('descripcion', 'Descripción (borrador)', r.descripcion, {
                   nota: r.redaccion === 'ia'
-                    ? 'Redactada por la IA con los datos encontrados, sin copiar de ninguna página. Léela y ajústala con tus palabras.'
+                    ? `Redactada por ${r.modeloIA || 'la IA'} con los datos encontrados, sin copiar de ninguna página. Léela y ajústala con tus palabras.`
                     : 'Armada con los datos encontrados. Complétala con tus palabras.',
                   actual: data.description.trim() ? `${data.description.trim().slice(0, 80)}${data.description.trim().length > 80 ? '…' : ''}` : undefined,
                 })}

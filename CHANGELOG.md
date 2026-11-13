@@ -10,6 +10,14 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.36] - 2026-11-13
+### Productos 1.13.0 (C-211)
+- **"Buscar en la web" y "Completar con la web" usan Claude Haiku 5.5 en esfuerzo alto** (pedido de Andrés): lee las páginas del fabricante y redacta la ficha, y busca por su cuenta cuando no encuentra páginas. Lo que devuelve pasa por las mismas comprobaciones de la tienda que antes.
+  - Groq queda de respaldo, si Claude falla o se acaba el crédito.
+  - La ficha dice qué IA la redactó ("Claude Haiku 5.5 (esfuerzo alto)").
+  - El modelo y el esfuerzo se cambian en el `.env` (`ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`), sin deploy.
+- **Dependencia nueva:** `@anthropic-ai/sdk` 1.3.0, sin alertas de seguridad nuevas.
+
 ## [1.0.0-rc.35] - 2026-11-13
 Correcciones que pidió Andrés mirando producción. Eligió lo recomendado en las cuatro preguntas.
 ### Tienda 1.10.0 (C-210)

@@ -31,6 +31,8 @@ export interface FichaWeb {
   llenado: string[];
   fuentes: Array<{ dominio: string; url: string; titulo: string }>;
   redaccion: 'ia' | 'reglas';
+  /** C-211: qué IA la redactó ("Claude Haiku 5.5 (esfuerzo máximo)", "Groq"); '' en las de antes */
+  modeloIA: string;
   avisos: string[];
 }
 
@@ -51,6 +53,7 @@ export function leerFichaWeb(specs: Record<string, unknown>): FichaWeb | null {
       })
       : [],
     redaccion: v.redaccion === 'ia' ? 'ia' : 'reglas',
+    modeloIA: typeof v.modeloIA === 'string' ? v.modeloIA.slice(0, 60) : '',
     avisos: textos(v.avisos),
   };
 }

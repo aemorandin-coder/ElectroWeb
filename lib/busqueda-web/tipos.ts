@@ -44,8 +44,10 @@ export interface ResultadoBusquedaWeb {
   especificaciones: EspecificacionWeb[];
   /** Borrador redactado por la tienda con los datos hallados; '' si no hay con qué */
   descripcion: string;
-  /** Quién redactó y ordenó la ficha: la IA (Groq) con los datos leídos, o las reglas de la tienda */
+  /** Quién redactó y ordenó la ficha: la IA (Claude o Groq) con los datos leídos, o las reglas de la tienda */
   redaccion: 'ia' | 'reglas';
+  /** C-211: qué IA lo hizo, para decirlo en el panel ("Claude Haiku 5.5 (esfuerzo máximo)" o "Groq"); '' si ninguna */
+  modeloIA: string;
   /** Lo que no salió bien, en palabras para quien usa el panel */
   avisos: string[];
 }

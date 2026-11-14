@@ -636,11 +636,46 @@ model Supplier {
   dispatchCityName String?
   notes           String?
   products        Product[]
+  /// C-218: su lista completa, como la subió el equipo
+  articulos       ArticuloProveedor[]
 
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   @@map("suppliers")
+}
+
+/// C-218 (Andrés, 13/11, la idea F): la lista completa de un proveedor (su Excel), guardada cada vez que se sube en la
+/// Lista del proveedor. Sirve para que Claude proponga la categoría y el nombre de la tienda de cada código, una sola vez,
+/// y para buscar en ella lo que piden los clientes. Lo que deja de venir en su lista queda con enLista en false.
+model ArticuloProveedor {
+  id            String    @id @default(cuid())
+  supplierId    String
+  supplier      Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  codigo        String
+  /// Su nombre en la lista, tal cual
+  nombre        String
+  departamento  String?
+  categoria     String?
+  marca         String?
+  modelo        String?
+  existencia    Decimal?
+  precioLista   Decimal?
+  enLista       Boolean   @default(true)
+  vistoAt       DateTime  @default(now())
+  /// Lo que propuso Claude: el nombre y la categoría de la tienda, y una duda si la tiene. iaNombreDe es el nombre de su
+  /// lista con que se propuso: si cambia, se vuelve a proponer
+  iaNombre      String?
+  iaCategoriaId String?
+  iaDuda        String?
+  iaNombreDe    String?
+  iaRevisadoAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([supplierId, codigo])
+  @@index([supplierId, enLista])
+  @@map("articulos_proveedor")
 }
 
 model Brand {
@@ -1624,6 +1659,8 @@ model ProductRequest {
   iaProductoId     String?
   iaCoincide       String?
   iaRevisadoAt     DateTime?
+  /// C-218: el artículo de la lista de un proveedor que es lo pedido, cuando no está en la tienda
+  iaArticuloId     String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

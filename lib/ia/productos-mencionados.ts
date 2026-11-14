@@ -19,7 +19,7 @@ export function normalizar(texto: string): string {
 }
 
 /** Las palabras que cuentan: de 3 letras o más, o con números ("20v", "1/2" queda "1 2"), sin las vacías */
-function palabras(texto: string): string[] {
+export function palabrasClave(texto: string): string[] {
   return normalizar(texto).split(' ').filter((p) => (p.length >= 3 || /\d/.test(p)) && !VACIAS.has(p));
 }
 
@@ -39,7 +39,7 @@ export interface ProductoMencionado {
  * distingue (un modelo con letras y números, o una palabra de 6 letras o más, como "hidrolavadora").
  */
 export async function productosMencionados(texto: string, maximo = 4): Promise<ProductoMencionado[]> {
-  const delTexto = new Set(palabras(texto));
+  const delTexto = new Set(palabrasClave(texto));
   if (delTexto.size === 0) return [];
   const productos = await prisma.product.findMany({
     where: await visibleProducts(),
@@ -47,7 +47,7 @@ export async function productosMencionados(texto: string, maximo = 4): Promise<P
     take: 5000,
   });
   const puntuados = productos.flatMap((p) => {
-    const coincide = [...new Set(palabras(p.name))].filter((w) => delTexto.has(w));
+    const coincide = [...new Set(palabrasClave(p.name))].filter((w) => delTexto.has(w));
     // Fuerte: un modelo o una medida con letras ("pce011", "20v") o una palabra larga ("hidrolavadora"). Un número solo
     // ("20") no basta: lo comparten la batería y la hidrolavadora de 20 V
     const fuerte = coincide.some((w) => (/\d/.test(w) && /[a-z]/.test(w)) || (!/\d/.test(w) && w.length >= 6));

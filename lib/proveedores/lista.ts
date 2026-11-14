@@ -46,6 +46,9 @@ export const LISTA_MAX_FILAS = 20_000;
 export const LOTE_REVISAR = 1_000;
 export const LOTE_CREAR = 100;
 export const LOTE_ACTUALIZAR = 500;
+/** C-218: filas por envío al guardar la lista completa, y códigos por pedido a Claude para el catálogo */
+export const LOTE_GUARDAR = 500;
+export const LOTE_CATALOGO = 40;
 export const CODIGO_MAX = 64;
 export const NOMBRE_MAX = 200;
 export const MODELO_MAX = 60;

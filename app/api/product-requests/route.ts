@@ -62,7 +62,18 @@ export async function GET(request: NextRequest) {
       : [];
     const porId = new Map(productos.map((p) => [p.id, { nombre: p.name, slug: p.slug, precioUSD: Number(p.priceUSD) }]));
 
-    return NextResponse.json(requests.map((r) => ({ ...r, iaProducto: r.iaProductoId ? porId.get(r.iaProductoId) ?? null : null })));
+    // C-218: el artículo de la lista de un proveedor que es lo pedido (si sigue en su lista)
+    const idsArticulos = [...new Set(requests.map((r) => r.iaArticuloId).filter((x): x is string => Boolean(x)))];
+    const articulos = idsArticulos.length
+      ? await prisma.articuloProveedor.findMany({ where: { id: { in: idsArticulos }, enLista: true }, select: { id: true, codigo: true, nombre: true, iaNombre: true, existencia: true, supplier: { select: { name: true } } } })
+      : [];
+    const articuloPorId = new Map(articulos.map((a) => [a.id, { nombre: a.iaNombre || a.nombre, codigo: a.codigo, proveedor: a.supplier.name, existencia: a.existencia === null ? null : Number(a.existencia) }]));
+
+    return NextResponse.json(requests.map((r) => ({
+      ...r,
+      iaProducto: r.iaProductoId ? porId.get(r.iaProductoId) ?? null : null,
+      iaArticulo: r.iaArticuloId ? articuloPorId.get(r.iaArticuloId) ?? null : null,
+    })));
   } catch (error) {
     console.error('Error fetching product requests:', error);
     return NextResponse.json({ error: 'Error al obtener solicitudes' }, { status: 500 });

@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { IconoFlechaArriba, IconoNovedad, IconoTienda } from '@/components/iconos';
+import { IconoFlechaArriba, IconoNovedad, IconoPaquete, IconoTienda } from '@/components/iconos';
 import { formatUSD } from '@/lib/currency';
 import { adminBadge, adminDato, adminSecondaryButton } from '@/lib/admin-ui';
 
@@ -55,6 +55,23 @@ export function EnLaTienda({ coincide, producto }: { coincide?: string | null; p
       <IconoTienda className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       <span className="min-w-0">{igual ? 'Ya está en la tienda' : 'Parecido en la tienda'}: {producto.nombre} · {formatUSD(producto.precioUSD)}</span>
     </a>
+  );
+}
+
+/**
+ * C-218: lo pedido no está en la tienda, pero sí en la lista de un proveedor (la ferretería): con su código y su
+ * existencia, para pedírselo. En gris: es un dato.
+ */
+export function EnProveedor({ articulo }: { articulo?: { nombre: string; codigo: string; proveedor: string; existencia: number | null } | null }) {
+  if (!articulo) return null;
+  return (
+    <span className="inline-flex max-w-full items-start gap-1 rounded-2xl bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink-soft ring-1 ring-inset ring-line [overflow-wrap:anywhere]">
+      <IconoPaquete className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <span className="min-w-0">
+        Lo tiene {articulo.proveedor}: {articulo.nombre} · código {articulo.codigo}
+        {articulo.existencia === null ? '' : articulo.existencia > 0 ? ` · existencia ${articulo.existencia}` : ' · sin existencia'}
+      </span>
+    </span>
   );
 }
 

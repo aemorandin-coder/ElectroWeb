@@ -1,17 +1,18 @@
-# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.42, por subir)
+# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.43, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-217 · Campañas de correo con Claude (rc.42, por subir):** la idea C. En el editor de campañas, "Armar con Claude" va del objetivo al asunto y el texto con hasta 4 productos reales; la foto, el precio y el enlace los pone la tienda (`estado/C-217.md`). Sigue F, el catálogo de la ferretería.
+- **C-218 · El catálogo de la ferretería con Claude (rc.43, por subir):** la idea F y lo que faltaba de B. La lista completa de cada proveedor queda guardada al subirla; "Proponer con Claude" propone la categoría y el nombre de todo lo nuevo (los 3.114, en unos 7 minutos) y las solicitudes dicen si la ferretería lo tiene (`estado/C-218.md`). Con esto quedan hechas las cinco ideas de Haiku que eligió Andrés.
+- **C-217 · Campañas de correo con Claude (rc.42, por subir):** la idea C. En el editor de campañas, "Armar con Claude" va del objetivo al asunto y el texto con hasta 4 productos reales; la foto, el precio y el enlace los pone la tienda (`estado/C-217.md`).
 - **C-216 · Sin píldoras ámbar (rc.41, por subir):** Andrés las detesta ("se ven demasiado genéricas") y eligió la opción A: lo que alguien tiene que hacer va en un sello azul noche con el ícono en cian, en todo el panel y en Mi panel. La regla quedó en `PLAN.md` §1.1 y §1.8 y en `CLAUDE.md` (`estado/C-216.md`).
 - **C-215 · Mensajes y solicitudes por urgencia (rc.40, por subir):** la idea B, la parte de la tienda. Claude marca la urgencia, de qué trata y por qué, y en las solicitudes si ya está en la tienda; lo nuevo se revisa solo al llegar (`estado/C-215.md`). La lista de la ferretería entra con F.
 - **C-214 · Respuestas a clientes con Claude (rc.39, por subir):** la idea D. En cada mensaje de contacto, "Redactar con Claude" escribe la respuesta con su orden, los productos que nombra y lo que cobra ZOOM a su ciudad; se revisa y se manda por correo o WhatsApp (`estado/C-214.md`).
 - **C-213 · El resumen del cliente en su ficha (rc.38, por subir):** la primera de las ideas de Haiku que eligió Andrés (A). La pestaña Resumen dice lo que hay que atender y cómo compra, y a pedido Claude escribe quién es como cliente y qué ofrecerle (`estado/C-213.md`).
   - **De paso:** "Total gastado" ya no suma lo pendiente ni lo cancelado, y las órdenes de la ficha tienen su monto.
   - **La clave de Claude del 13/11 ya no sirve** (Anthropic da 401): hace falta una nueva para el paso 1 del bloque. Se probó con un Claude simulado.
-  - **Sigue** F (el catálogo de la ferretería, que completa B).
+  - **F y la parte de B que faltaba:** hechas en C-218.
 - **C-212 · El sorteo de la PlayStation 4 (rc.37, por subir):** Andrés lo pidió el 13/11 y eligió los números para que la empresa no pierda (`estado/C-212.md`).
   - **Cómo se participa:** 1 boleto por cada compra pagada de USD 10 o más, o invitando a 2 amigos con su enlace, sin comprar (1 boleto por cada 2, hasta 3). El resultado, el 20/12.
   - **Dónde:** la página `/sorteo`, Mi panel y Marketing → Sorteo (lo que dejó, quiénes participan y "Sortear ahora").
@@ -182,7 +183,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.42` (C-210 a C-217, con rc.35 a rc.41 adentro; unos 30 minutos)
+### El bloque por subir: `v1.0.0-rc.43` (C-210 a C-218, con rc.35 a rc.42 adentro; unos 30 minutos)
 Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
 - **C-210 (rc.35):**
   - "Destacados" muestra solo lo que tiene estrella, de toda la tienda;
@@ -195,8 +196,9 @@ Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su
 - **C-215 (rc.40):** los mensajes y las solicitudes por urgencia, con Claude. 9 columnas nuevas.
 - **C-216 (rc.41):** sin píldoras ámbar: lo que hay que hacer va en un sello azul noche. Sin cambio de base.
 - **C-217 (rc.42):** "Armar con Claude" en las campañas de correo. Sin cambio de base.
+- **C-218 (rc.43):** el catálogo de la ferretería con Claude y "Lo tiene <proveedor>" en las solicitudes. Una tabla y una columna nuevas.
 
-**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.34`). Es aditivo: 10 columnas nuevas y dos tablas nuevas; no toca ningún dato.
+**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.34`). Es aditivo: 11 columnas nuevas y tres tablas nuevas; no toca ningún dato.
 ```sql
 ALTER TABLE "products" ADD COLUMN "publishedAt" TIMESTAMP(3);
 
@@ -205,11 +207,38 @@ ADD COLUMN "iaRevisadoAt" TIMESTAMP(3),
 ADD COLUMN "iaTipo" TEXT,
 ADD COLUMN "iaUrgencia" TEXT;
 
-ALTER TABLE "product_requests" ADD COLUMN "iaCoincide" TEXT,
+ALTER TABLE "product_requests" ADD COLUMN "iaArticuloId" TEXT,
+ADD COLUMN "iaCoincide" TEXT,
 ADD COLUMN "iaMotivo" TEXT,
 ADD COLUMN "iaProductoId" TEXT,
 ADD COLUMN "iaRevisadoAt" TIMESTAMP(3),
 ADD COLUMN "iaUrgencia" TEXT;
+
+CREATE TABLE "articulos_proveedor" (
+    "id" TEXT NOT NULL,
+    "supplierId" TEXT NOT NULL,
+    "codigo" TEXT NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "departamento" TEXT,
+    "categoria" TEXT,
+    "marca" TEXT,
+    "modelo" TEXT,
+    "existencia" DECIMAL(65,30),
+    "precioLista" DECIMAL(65,30),
+    "enLista" BOOLEAN NOT NULL DEFAULT true,
+    "vistoAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "iaNombre" TEXT,
+    "iaCategoriaId" TEXT,
+    "iaDuda" TEXT,
+    "iaNombreDe" TEXT,
+    "iaRevisadoAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "articulos_proveedor_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "articulos_proveedor_supplierId_enLista_idx" ON "articulos_proveedor"("supplierId", "enLista");
+CREATE UNIQUE INDEX "articulos_proveedor_supplierId_codigo_key" ON "articulos_proveedor"("supplierId", "codigo");
+ALTER TABLE "articulos_proveedor" ADD CONSTRAINT "articulos_proveedor_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "suppliers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE TABLE "sorteos" (
     "id" TEXT NOT NULL,
@@ -262,9 +291,9 @@ Después, una sola vez, el relleno de lo ya publicado: `docs/plan/scripts/c210-f
 git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.34 y sin cambios
 DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc35.dump
 bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
-npx prisma db push && bash scripts/deploy.sh # agrega las columnas y las dos tablas, y compila
+npx prisma db push && bash scripts/deploy.sh # agrega las columnas y las tres tablas, y compila
 DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/c210-fecha-de-publicacion.sql
-git describe --tags --abbrev=0               # v1.0.0-rc.42
+git describe --tags --abbrev=0               # v1.0.0-rc.43
 ```
 - `prisma db push` no debería preguntar nada: las columnas y las tablas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
 - **El relleno termina con `publicados_sin_fecha`, que debe decir 0.** Si dice otro número, pásale la salida a Claude.
@@ -292,7 +321,10 @@ git describe --tags --abbrev=0               # v1.0.0-rc.42
 9. **Una campaña con Claude:** en el panel, Marketing → Campañas de correo → **Nueva campaña**. En "¿De qué es la campaña?" escribe "Gift cards para Navidad" y toca **"Armar el borrador"**.
    - En unos 20 segundos se llenan el asunto y los bloques, con las gift cards de la tienda, sus fotos y sus precios, y la vista previa los muestra.
    - Revísala, envíate una prueba y bórrala o guárdala: nada se envía solo.
-10. **El sorteo: armarlo y encenderlo** (en la computadora, con tu cuenta).
+10. **El catálogo de la ferretería:** en el panel, Productos → Más → Lista del proveedor. Elige la ferretería y sube su lista como siempre (así queda guardada).
+   - En el paso 3 sale **"Proponer con Claude"** con la cuenta de lo nuevo. La primera vez, para ver cómo propone, tócalo, deja que corra unos 30 segundos y toca **"Parar"**.
+   - Revisa unas filas: el nombre propuesto, "Claude: categoría …" y, si tiene, su duda (salen en "Nombres para revisar"). Si te gusta, toca otra vez "Proponer con Claude" para los demás: lo hecho no se repite.
+11. **El sorteo: armarlo y encenderlo** (en la computadora, con tu cuenta).
    1. **La foto de la consola:** súbela como foto de un producto (o en Configuración), ábrela y copia su dirección, la que empieza con `/api/uploads/`.
    2. **En el panel, Marketing → Sorteo:** revisa lo propuesto (premio, del día de hoy al 18/12, resultado el 20/12, USD 10 y 3 por invitar) y pon lo que te costó la consola.
    3. Pega la dirección de la foto, marca "En la tienda" y guarda.
@@ -300,7 +332,7 @@ git describe --tags --abbrev=0               # v1.0.0-rc.42
    5. **Con una cuenta de cliente,** en el teléfono: "Tus boletos" y "Compartir por WhatsApp". En Mi panel sale la tarjeta "Tienes N boletos".
    6. **El 20/12,** en Marketing → Sorteo, "Sortear ahora". Solo se puede después del cierre y una sola vez. Escríbele al ganador al correo que sale ahí.
 
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.34 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas y las dos tablas nuevas, y la clave del `.env`, no molestan al código anterior y se pueden quedar.
+**Vuelta atrás:** `git reset --hard v1.0.0-rc.34 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas y las tres tablas nuevas, y la clave del `.env`, no molestan al código anterior y se pueden quedar.
 
 **Por confirmar de rc.33 (con una cuenta, unos 15 minutos):**
 1. **La Lista del proveedor por pasos:** arriba se ven los 5 pasos. En el paso 2, abre "1 - Cargar en la tienda" de la carpeta de la ferretería, selecciona todo (Ctrl + A) y suéltalo: dice "105 fotos · 74 códigos de su lista con foto".

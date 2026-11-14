@@ -35,9 +35,10 @@ import { formatUSD } from '@/lib/currency';
 import { precioSugerido } from '@/lib/precio-sugerido';
 import { leerHoja, type Celda } from '@/lib/proveedores/hoja';
 import {
-  ETIQUETA_CAMPO, LOTE_ACTUALIZAR, LOTE_CREAR, LOTE_REVISAR, codigoDeFoto, costoDesdeLista, detectarColumnas, existenciaPublicable,
-  leerFilas, unirListas, type CampoLista, type Columnas, type FilaProveedor,
+  ETIQUETA_CAMPO, LOTE_ACTUALIZAR, LOTE_CATALOGO, LOTE_CREAR, LOTE_GUARDAR, LOTE_REVISAR, codigoDeFoto, costoDesdeLista, detectarColumnas,
+  existenciaPublicable, leerFilas, unirListas, type CampoLista, type Columnas, type FilaProveedor,
 } from '@/lib/proveedores/lista';
+import type { PropuestaCatalogo } from '@/lib/proveedores/articulos';
 import { proponedorDeNombres, type PropuestaNombre } from '@/lib/nombres/producto';
 import { esLaDeSiempre, palabrasDe, terminoQueNoSeEnvia, terminosEfectivos } from '@/lib/proveedores/no-se-envia';
 import { compararSugeridos, sugerencia, type Sugerencia } from '@/lib/proveedores/sugeridos';
@@ -72,11 +73,21 @@ async function post<T>(proveedorId: string, cuerpo: Record<string, unknown>): Pr
   return d as T;
 }
 
-/** Lo que viaja de cada fila: el servidor recalcula todo. El nombre es el de la tienda; el de su lista va aparte (C-202) */
-const filaParaEnviar = (f: FilaProveedor, nombreTienda?: string) => ({
+/**
+ * Lo que viaja de cada fila: el servidor recalcula todo. El nombre es el de la tienda; el de su lista va aparte (C-202).
+ * C-218: la categoría es la que propuso Claude (una de la tienda) o, si no hay, la de su archivo.
+ */
+const filaParaEnviar = (f: FilaProveedor, nombreTienda?: string, categoria?: string | null) => ({
   codigo: f.codigo, nombre: nombreTienda ?? f.nombre, nombreProveedor: f.nombre, precioLista: f.precioLista, existencia: f.existencia,
-  categoria: f.categoria, marca: f.marca, modelo: f.modelo, pesoKg: f.pesoKg, medidas: f.medidas,
+  categoria: categoria || f.categoria, marca: f.marca, modelo: f.modelo, pesoKg: f.pesoKg, medidas: f.medidas,
 });
+
+/** C-218: lo que se guarda de cada fila de su lista */
+const articuloParaGuardar = (f: FilaProveedor) => ({
+  codigo: f.codigo, nombre: f.nombre, departamento: f.departamento, categoria: f.categoria, marca: f.marca, modelo: f.modelo,
+  existencia: f.existencia, precioLista: f.precioLista,
+});
+const SIN_PROPUESTAS: Record<string, PropuestaCatalogo> = {};
 
 export default function ListaDelProveedorPage() {
   const [proveedores, setProveedores] = useState<Proveedor[] | null>(null);
@@ -116,6 +127,10 @@ export default function ListaDelProveedorPage() {
   // C-202: las marcas de la tienda (para escribirlas igual) y los nombres que el equipo corrigió, por código
   const [marcasTienda, setMarcasTienda] = useState<string[]>([]);
   const [nombres, setNombres] = useState<Record<string, string>>({});
+  // C-218: lo que propuso Claude (el nombre y la categoría de la tienda), por código y para esta lista; y el avance
+  const [propuestasIA, setPropuestasIA] = useState<{ para: object; mapa: Record<string, PropuestaCatalogo> } | null>(null);
+  const [proponiendo, setProponiendo] = useState<{ hechos: number; total: number } | null>(null);
+  const cortarPropuesta = useRef(false);
   // C-204: lo que no se envía (la lista del proveedor, como se está editando), las fotos que vinieron con el Excel y las
   // carpetas que se dejan fuera
   const [noSeEnvia, setNoSeEnvia] = useState<string[]>(() => [...terminosEfectivos(null)]);
@@ -168,6 +183,7 @@ export default function ListaDelProveedorPage() {
   // Cambia (y obliga a revisar de nuevo) cuando cambian el proveedor o los archivos
   const claveRevision = useMemo(() => ({ proveedorId, filas }), [proveedorId, filas]);
   const revision = revisado?.para === claveRevision ? revisado.enTienda : null;
+  const iaMapa = propuestasIA?.para === claveRevision ? propuestasIA.mapa : SIN_PROPUESTAS;
   const agotados = revisado?.para === claveRevision ? revisado.agotados : null;
   const revisando = Boolean(proveedorId && filas.length > 0 && revisado?.para !== claveRevision);
   const traeExistencia = archivos.some((a) => a.columnas.existencia !== undefined);
@@ -178,14 +194,41 @@ export default function ListaDelProveedorPage() {
     return new Map<string, PropuestaNombre>(filas.map((f) => [f.codigo, proponer(f.nombre)]));
   }, [filas, marcasTienda]);
   const paraRevisar = useCallback(
-    (codigo: string) => (propuestas.get(codigo)?.avisos.some((a) => a.tipo === 'cortado' || a.tipo === 'revisar') ?? false) && nombres[codigo] === undefined,
-    [propuestas, nombres],
+    (codigo: string) => nombres[codigo] === undefined && (iaMapa[codigo]
+      ? Boolean(iaMapa[codigo].duda)
+      : propuestas.get(codigo)?.avisos.some((a) => a.tipo === 'cortado' || a.tipo === 'revisar') ?? false),
+    [propuestas, iaMapa, nombres],
   );
   /** El nombre con que se crea: el que escribió el equipo o, si no tocó nada, el propuesto */
   const nombreTienda = useCallback(
-    (f: FilaProveedor) => nombres[f.codigo]?.trim() || propuestas.get(f.codigo)?.nombre || f.nombre,
-    [propuestas, nombres],
+    (f: FilaProveedor) => nombres[f.codigo]?.trim() || iaMapa[f.codigo]?.nombre || propuestas.get(f.codigo)?.nombre || f.nombre,
+    [propuestas, iaMapa, nombres],
   );
+
+  // C-218: su lista completa queda guardada (para Claude y para buscar lo que piden los clientes) y se lee lo que Claude
+  // ya propuso para estos códigos. Si algo falla, la pantalla sigue igual: solo se avisa
+  useEffect(() => {
+    if (!proveedorId || filas.length === 0) return;
+    let vigente = true;
+    const para = claveRevision;
+    (async () => {
+      let desde: string | undefined;
+      for (const parte of partir(filas, LOTE_GUARDAR)) {
+        const d = await post<{ desde: string }>(proveedorId, { accion: 'guardar-lista', desde, filas: parte.map(articuloParaGuardar) });
+        desde ??= d.desde;
+        if (!vigente) return;
+      }
+      if (desde) await post(proveedorId, { accion: 'cerrar-lista', desde });
+      const mapa: Record<string, PropuestaCatalogo> = {};
+      for (const parte of partir(filas.map((f) => f.codigo), LOTE_REVISAR)) {
+        const d = await post<{ propuestas: Record<string, PropuestaCatalogo> }>(proveedorId, { accion: 'propuestas-ia', codigos: parte });
+        Object.assign(mapa, d.propuestas);
+        if (!vigente) return;
+      }
+      if (vigente) setPropuestasIA((p) => (p?.para === para ? { para, mapa: { ...mapa, ...p.mapa } } : { para, mapa }));
+    })().catch((e: Error) => { if (vigente) toast.error(`No se pudo guardar su lista para Claude: ${e.message}`); });
+    return () => { vigente = false; };
+  }, [claveRevision, proveedorId, filas]);
 
   // Qué códigos ya están en la tienda (de este proveedor), por partes
   useEffect(() => {
@@ -369,9 +412,42 @@ export default function ListaDelProveedorPage() {
 
   const opciones = () => ({ descuento: pctDescuento, margen: pctMargen, reserva: unidadesReserva, ivaIncluido });
 
+  // C-218: lo nuevo (ni en la tienda ni de lo que no se envía) que todavía no tiene propuesta de Claude
+  const sinPropuesta = revision === null ? [] : filas.filter((f) => !iaMapa[f.codigo] && !revision[f.codigo] && !noSeEnviaPor.get(f.codigo));
+  // Tres pedidos de 40 a la vez, de unos 15 s cada uno: unos 4 pedidos por minuto en cada uno de los tres
+  const minutosClaude = Math.ceil(sinPropuesta.length / LOTE_CATALOGO / 3 / 4);
+  /** Claude propone de a 40 códigos, tres pedidos a la vez; cada respuesta queda guardada y llena las filas al llegar */
+  const proponerConClaude = async () => {
+    const codigos = sinPropuesta.map((f) => f.codigo);
+    if (!proveedorId || codigos.length === 0 || proponiendo) return;
+    const para = claveRevision;
+    const partes = partir(codigos, LOTE_CATALOGO);
+    cortarPropuesta.current = false;
+    let siguiente = 0, hechos = 0, error: string | null = null;
+    setProponiendo({ hechos: 0, total: codigos.length });
+    const trabajador = async () => {
+      while (siguiente < partes.length && !cortarPropuesta.current && error === null) {
+        const parte = partes[siguiente++];
+        try {
+          const d = await post<{ propuestas: Record<string, PropuestaCatalogo> }>(proveedorId, { accion: 'proponer-ia', codigos: parte });
+          setPropuestasIA((p) => (p?.para === para ? { para, mapa: { ...p.mapa, ...d.propuestas } } : { para, mapa: d.propuestas }));
+        } catch (e) {
+          error = e instanceof Error ? e.message : 'Claude no respondió';
+        }
+        hechos += parte.length;
+        setProponiendo({ hechos: Math.min(hechos, codigos.length), total: codigos.length });
+      }
+    };
+    await Promise.all([trabajador(), trabajador(), trabajador()]);
+    setProponiendo(null);
+    if (error) toast.error(`${error} Lo hecho quedó guardado: puedes seguir después.`);
+    else if (cortarPropuesta.current) toast('Paraste: lo hecho quedó guardado.');
+    else toast.success('Claude propuso la categoría y el nombre de todo lo nuevo. Revisa los marcados en "Nombres para revisar".');
+  };
+
   const crear = async () => {
     if (!proveedorId || nuevosSeleccionados.length === 0 || !opcionesValidas) return;
-    const sinCategoria = !categoriaDefecto && nuevosSeleccionados.some((f) => !f.categoria);
+    const sinCategoria = !categoriaDefecto && nuevosSeleccionados.some((f) => !(iaMapa[f.codigo]?.categoria || f.categoria));
     if (sinCategoria) { toast.error('Elige la categoría para los que no la traen en el archivo'); return; }
     setTrabajando(`Creando 0 de ${miles(nuevosSeleccionados.length)}…`);
     const hechos: typeof creados = [], fallos: typeof errores = [];
@@ -380,7 +456,7 @@ export default function ListaDelProveedorPage() {
     const suyas = conFotos ? fotosAgrupadas.porCodigo : new Map<string, File[]>();
     try {
       for (const parte of partir(nuevosSeleccionados, LOTE_CREAR)) {
-        const d = await post<{ creados: typeof creados; errores: typeof errores }>(proveedorId, { accion: 'crear', filas: parte.map((f) => filaParaEnviar(f, nombreTienda(f))), categoryId: categoriaDefecto || null, noSeEnvia, ...opciones() });
+        const d = await post<{ creados: typeof creados; errores: typeof errores }>(proveedorId, { accion: 'crear', filas: parte.map((f) => filaParaEnviar(f, nombreTienda(f), iaMapa[f.codigo]?.categoria)), categoryId: categoriaDefecto || null, noSeEnvia, ...opciones() });
         hechos.push(...d.creados); fallos.push(...d.errores);
         setTrabajando(`Creando ${miles(hechos.length + fallos.length)} de ${miles(nuevosSeleccionados.length)}…`);
         // C-204: cada producto nuevo con sus fotos, apenas se crea
@@ -740,6 +816,26 @@ export default function ListaDelProveedorPage() {
             )}
           </div>
 
+          {/* C-218: Claude propone la categoría y el nombre de la tienda de lo nuevo; queda guardado y se puede parar */}
+          {revision !== null && (sinPropuesta.length > 0 || proponiendo) && (
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3" aria-live="polite">
+              <IconoNovedad className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
+              <p className="min-w-0 flex-1 text-sm text-ink-soft">
+                {proponiendo
+                  ? <>Claude va por <strong className="tabular-nums text-ink">{miles(proponiendo.hechos)}</strong> de {miles(proponiendo.total)}. Lo que propone llena el nombre y la categoría de cada fila, y queda guardado.</>
+                  : <>Claude puede proponer la categoría y el nombre de la tienda de los <strong className="tabular-nums text-ink">{miles(sinPropuesta.length)}</strong> nuevos que faltan ({minutosClaude <= 1 ? 'un minuto o menos' : `unos ${miles(minutosClaude)} minutos`}). Lo que escribiste a mano no se toca, y puedes parar y seguir después.</>}
+              </p>
+              {proponiendo
+                ? <button type="button" onClick={() => { cortarPropuesta.current = true; }} className={`${adminSecondaryButton} min-h-11`}>Parar</button>
+                : <button type="button" onClick={() => void proponerConClaude()} className={`${adminPrimaryButton} min-h-11`}><IconoNovedad className="h-4 w-4" aria-hidden="true" /> Proponer con Claude</button>}
+              {proponiendo && (
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-line" role="progressbar" aria-valuemin={0} aria-valuemax={proponiendo.total} aria-valuenow={proponiendo.hechos} aria-label="Avance de Claude">
+                  <div className="h-full rounded-full bg-brand-500 transition-[width]" style={{ width: `${Math.round((proponiendo.hechos / Math.max(1, proponiendo.total)) * 100)}%` }} />
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <span className="text-muted">{miles(visibles.length)} filas{seleccion.size > 0 && ` · ${miles(seleccion.size)} marcadas`}</span>
             {todosVisiblesNuevos.length > 0 && (
@@ -794,6 +890,7 @@ export default function ListaDelProveedorPage() {
                           fila={f}
                           enTienda={actual?.name ?? null}
                           propuesta={propuestas.get(f.codigo) ?? null}
+                          claude={iaMapa[f.codigo] ?? null}
                           valor={nombres[f.codigo]}
                           onCambiar={(v) => setNombres((n) => {
                             const copia = { ...n };
@@ -986,10 +1083,12 @@ function Pie({ onAtras, estado, siguiente }: {
  * en su lista y lo que hay que mirar: en ámbar lo que alguien tiene que revisar (cortado, sin entender), en gris lo que
  * la tienda completó sola. Si ya está en la tienda, su nombre de la tienda.
  */
-function NombreEnTienda({ fila, enTienda, propuesta, valor, onCambiar }: {
+function NombreEnTienda({ fila, enTienda, propuesta, claude, valor, onCambiar }: {
   fila: FilaProveedor;
   enTienda: string | null;
   propuesta: PropuestaNombre | null;
+  /** C-218: lo que propuso Claude (gana a la regla; lo que escribe el equipo gana a los dos) */
+  claude: PropuestaCatalogo | null;
   valor: string | undefined;
   onCambiar: (v: string | undefined) => void;
 }) {
@@ -1001,9 +1100,10 @@ function NombreEnTienda({ fila, enTienda, propuesta, valor, onCambiar }: {
       </>
     );
   }
-  const propuesto = propuesta?.nombre || fila.nombre;
+  const propuesto = claude?.nombre || propuesta?.nombre || fila.nombre;
   const editado = valor !== undefined && valor !== propuesto;
-  const avisos = editado ? [] : propuesta?.avisos ?? [];
+  // Con propuesta de Claude, los avisos de la regla ya no aplican: vale su duda
+  const avisos = editado || claude ? [] : propuesta?.avisos ?? [];
   return (
     <>
       <div className="flex items-center gap-1">
@@ -1022,6 +1122,17 @@ function NombreEnTienda({ fila, enTienda, propuesta, valor, onCambiar }: {
         )}
       </div>
       <span className="mt-1 block text-xs text-muted">Su lista: {fila.nombre || 'sin nombre'}{fila.departamento ? ` · ${fila.departamento}` : ''}</span>
+      {claude && (
+        <span className="mt-0.5 flex items-start gap-1 text-xs text-ink-soft">
+          <IconoNovedad className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden="true" />
+          Claude: {claude.categoria ? <>categoría <strong className="font-semibold">{claude.categoria}</strong></> : 'sin categoría'}
+        </span>
+      )}
+      {claude?.duda && !editado && (
+        <span className="mt-0.5 flex items-start gap-1 text-xs text-warning-strong">
+          <IconoAdvertencia className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />{claude.duda}
+        </span>
+      )}
       {avisos.map((a) => {
         const revisar = a.tipo === 'cortado' || a.tipo === 'revisar';
         const Icono = revisar ? IconoAdvertencia : IconoInfo;

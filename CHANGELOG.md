@@ -10,6 +10,16 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.43] - 2026-11-13
+### Productos 1.14.0 (C-218)
+- **La lista completa de cada proveedor queda guardada al subirla** (tabla nueva, aditiva).
+- **"Proponer con Claude" en la Lista del proveedor:** la categoría y el nombre de la tienda de todo lo nuevo.
+  - Va de a 40 códigos, con su avance y "Parar". Los 3.114 de la ferretería, en unos 7 minutos.
+  - Queda guardado: no se vuelve a pagar.
+  - Llena el nombre y la categoría de cada fila y marca para revisar lo que Claude no tuvo claro. Lo que el equipo escribió no se toca.
+### Clientes 1.4.0 (C-218)
+- **Las solicitudes de productos buscan también en la lista de los proveedores:** "Lo tiene <proveedor>", con el código y su existencia (una columna nueva, aditiva).
+
 ## [1.0.0-rc.42] - 2026-11-13
 ### Marketing 1.10.0 (C-217)
 - **"Armar con Claude" en las campañas de correo:** se escribe el objetivo ("gift cards para Navidad") y Claude arma el asunto, la vista previa y el texto con hasta 4 productos de la tienda.

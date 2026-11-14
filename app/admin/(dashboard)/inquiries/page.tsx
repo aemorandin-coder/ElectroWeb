@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/Button';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import BorradorRespuesta from '@/components/admin/consultas/BorradorRespuesta';
-import { BotonUrgencia, EnLaTienda, PildoraUrgencia, porUrgencia } from '@/components/admin/consultas/Urgencia';
+import { BotonUrgencia, EnLaTienda, EnProveedor, PildoraUrgencia, porUrgencia } from '@/components/admin/consultas/Urgencia';
 
 // ============== TYPES ==============
 
@@ -55,6 +55,8 @@ interface ProductRequest {
     iaMotivo?: string | null;
     iaCoincide?: string | null;
     iaProducto?: { nombre: string; slug: string; precioUSD: number } | null;
+    // C-218: lo tiene un proveedor en su lista (no está en la tienda)
+    iaArticulo?: { nombre: string; codigo: string; proveedor: string; existencia: number | null } | null;
 }
 
 type Tab = 'messages' | 'requests';
@@ -597,10 +599,11 @@ export default function InquiriesPage() {
                                                             <p className="text-sm text-muted mb-2">
                                                                 {request.description}
                                                             </p>
-                                                            {(request.iaUrgencia || request.iaProducto) && (
+                                                            {(request.iaUrgencia || request.iaProducto || request.iaArticulo) && (
                                                                 <div className="mb-2 flex flex-wrap items-center gap-1.5">
                                                                     <PildoraUrgencia urgencia={request.iaUrgencia} />
                                                                     <EnLaTienda coincide={request.iaCoincide} producto={request.iaProducto} />
+                                                                    <EnProveedor articulo={request.iaArticulo} />
                                                                     {request.iaMotivo && <span className="text-xs text-ink-soft">{request.iaMotivo}</span>}
                                                                 </div>
                                                             )}

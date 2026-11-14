@@ -6,11 +6,15 @@ import { prisma } from '@/lib/prisma';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { getPublicSettings } from '@/lib/site-settings';
-import { LISTA_MAX_FILAS, LOTE_ACTUALIZAR, LOTE_CREAR, LOTE_REVISAR, limpiarCodigo } from '@/lib/proveedores/lista';
+import { LISTA_MAX_FILAS, LOTE_ACTUALIZAR, LOTE_CATALOGO, LOTE_CREAR, LOTE_REVISAR, limpiarCodigo } from '@/lib/proveedores/lista';
 import {
   actualizarDesdeLista, agotadosFueraDeLista, crearDesdeLista, leerFilasEntrada, leerOpciones, productosPorCodigo,
 } from '@/lib/proveedores/servidor';
 import { esLaDeSiempre, leerTerminos, terminosEfectivos } from '@/lib/proveedores/no-se-envia';
+import { cerrarCarga, guardarArticulos, leerArticulosEntrada, propuestasGuardadas } from '@/lib/proveedores/articulos';
+import { proponerCatalogo } from '@/lib/ia/catalogo-proveedor';
+import { FallaIA } from '@/lib/ia/claude';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -20,6 +24,10 @@ type Ctx = { params: Promise<{ id: string }> };
 //   que manda la pantalla, `noSeEnvia`, se guarda con el proveedor como el descuento).
 // - actualizar: costo, existencia y (si se pide) precio de los que ya están.
 // - agotados: los suyos que ya no salen en su lista; con `aplicar`, quedan en 0.
+// C-218 (la idea F):
+// - guardar-lista y cerrar-lista: su lista completa queda en la base (por partes; al cerrar, lo que no vino queda fuera).
+// - propuestas-ia: lo que Claude ya propuso (nombre y categoría de la tienda) para esos códigos.
+// - proponer-ia: Claude propone para hasta 40 códigos y queda guardado.
 // El costo, el precio y la existencia se calculan aquí con lo que diga la base; la pantalla solo manda la lista.
 export async function POST(request: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
@@ -49,6 +57,36 @@ export async function POST(request: NextRequest, { params }: Ctx) {
         }, request);
       }
       return NextResponse.json({ cantidad: r.cantidad, nombres: r.nombres, aplicado: aplicar });
+    }
+
+    if (body.accion === 'guardar-lista') {
+      const leidas = leerArticulosEntrada(body.filas);
+      if ('error' in leidas) return NextResponse.json({ error: leidas.error }, { status: 400 });
+      // La primera parte de una carga no trae `desde`: lo fija aquí, antes de guardar, para cerrar la carga al final
+      const desde = typeof body.desde === 'string' && !Number.isNaN(Date.parse(body.desde)) ? body.desde : new Date().toISOString();
+      return NextResponse.json({ guardados: await guardarArticulos(proveedor.id, leidas.filas), desde });
+    }
+
+    if (body.accion === 'cerrar-lista') {
+      const desde = typeof body.desde === 'string' ? new Date(body.desde) : null;
+      if (!desde || Number.isNaN(desde.getTime()) || desde.getTime() > Date.now()) return NextResponse.json({ error: 'Falta el inicio de la carga' }, { status: 400 });
+      return NextResponse.json({ fuera: await cerrarCarga(proveedor.id, desde) });
+    }
+
+    if (body.accion === 'propuestas-ia' || body.accion === 'proponer-ia') {
+      const maximo = body.accion === 'proponer-ia' ? LOTE_CATALOGO : LOTE_REVISAR;
+      const codigos = Array.isArray(body.codigos) ? body.codigos.map(limpiarCodigo).filter((c): c is string => c !== null) : [];
+      if (codigos.length === 0 || codigos.length > maximo) return NextResponse.json({ error: `De 1 a ${maximo} códigos por envío` }, { status: 400 });
+      if (body.accion === 'propuestas-ia') return NextResponse.json({ propuestas: await propuestasGuardadas(proveedor.id, codigos) });
+      // La pantalla pide de a tres partes a la vez: 30 por minuto alcanzan para recorrer miles de códigos
+      const limite = checkRateLimit(session!.user!.id, 'admin:proveedores:proponer-ia', { maxRequests: 30, windowSeconds: 60 });
+      if (!limite.success) return NextResponse.json({ error: `Demasiados pedidos seguidos. Espera ${limite.resetIn} s.` }, { status: 429 });
+      try {
+        return NextResponse.json(await proponerCatalogo(proveedor.id, codigos));
+      } catch (error) {
+        if (error instanceof FallaIA) return NextResponse.json({ error: error.message }, { status: error.motivo === 'sin-clave' ? 503 : 502 });
+        throw error;
+      }
     }
 
     const settings = await getPublicSettings();

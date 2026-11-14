@@ -7,12 +7,14 @@
 // - La tienda le da el contexto: si quien escribe tiene órdenes abiertas o una garantía, y los productos de la tienda que
 //   nombra (lib/ia/productos-mencionados.ts). Un producto que no estaba entre los candidatos no se guarda.
 // - A Claude le llegan el asunto, el mensaje y lo pedido: no el nombre, el correo ni el teléfono.
-// - La lista de la ferretería entra cuando esté guardada en la base (la idea F).
+// - C-218: también busca en las listas guardadas de los proveedores (la ferretería): si lo pedido no está en la tienda pero
+//   sí en su lista, lo dice ("La ferretería lo tiene").
 
 import { prisma } from '@/lib/prisma';
 import { formatUSD } from '@/lib/currency';
 import { claudeDisponible, pedirJSON } from '@/lib/ia/claude';
 import { productosMencionados, type ProductoMencionado } from '@/lib/ia/productos-mencionados';
+import { articulosMencionados, type ArticuloMencionado } from '@/lib/proveedores/articulos';
 import { limpiarTextoIA } from '@/lib/ia/texto';
 import { ETIQUETA_ESTADO } from '@/lib/order-admin';
 
@@ -39,6 +41,7 @@ Para cada mensaje, con su clave tal cual:
 Para cada solicitud de producto, con su clave:
 - "urgencia" y "motivo", con el mismo criterio (un presupuesto alto o "lo necesito ya" la suben).
 - "coincide": si uno de los productos de la tienda que se listan con ella es lo que pide ("igual"), se le parece y podría servirle ("parecido") o ninguno ("ninguno"), y "producto" con la clave de ese producto (null si ninguno). Solo claves de su lista.
+- "articulo": si no está en la tienda pero sí en la lista de un proveedor que se lista con ella (claves f1, f2…), la clave del que es lo pedido; si no, null. Que tenga existencia lo hace más fácil de conseguir.
 
 En español de Venezuela. Sin emojis. Lo que el cliente tiene a favor en la tienda se llama "Puntos ES"; nunca escribas saldo ni billetera.`;
 
@@ -61,8 +64,9 @@ const ESQUEMA = {
         properties: {
           clave: { type: 'string' }, urgencia: { type: 'string', enum: [...URGENCIAS] }, motivo: { type: 'string' },
           coincide: { type: 'string', enum: [...COINCIDE] }, producto: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+          articulo: { anyOf: [{ type: 'string' }, { type: 'null' }] },
         },
-        required: ['clave', 'urgencia', 'motivo', 'coincide', 'producto'],
+        required: ['clave', 'urgencia', 'motivo', 'coincide', 'producto', 'articulo'],
         additionalProperties: false,
       },
     },
@@ -119,15 +123,23 @@ export async function revisarUrgencia(cuales: { mensajes?: string[]; solicitudes
   const contexto = await contextoDe([...mensajes.map((m) => m.email), ...solicitudes.map((s) => s.customerEmail)]);
   // Claves cortas: Claude las copia sin errores y no ve los id de la base
   const candidatos = new Map<string, Map<string, ProductoMencionado>>();
+  const deProveedores = new Map<string, Map<string, ArticuloMencionado>>();
   const lineasSolicitudes = await Promise.all(solicitudes.map(async (s, i) => {
-    const productos = await productosMencionados(`${s.productName} ${s.description ?? ''}`, 3);
+    const [productos, articulos] = await Promise.all([
+      productosMencionados(`${s.productName} ${s.description ?? ''}`, 3),
+      articulosMencionados(`${s.productName} ${s.description ?? ''}`, 3),
+    ]);
     candidatos.set(`s${i + 1}`, new Map(productos.map((p, j) => [`p${j + 1}`, p])));
+    deProveedores.set(`s${i + 1}`, new Map(articulos.map((a, j) => [`f${j + 1}`, a])));
     return [
       `[s${i + 1}] ${hace(s.createdAt)}. Pide: ${s.productName}.${s.description ? ` Detalle: ${s.description.slice(0, 400)}` : ''}${s.category ? ` Categoría: ${s.category}.` : ''}${s.estimatedBudget ? ` Presupuesto: ${formatUSD(Number(s.estimatedBudget))}.` : ''} Quien pide: ${contexto.get(s.customerEmail.trim().toLowerCase()) ?? 'sin datos'}.`,
       productos.length
         ? `  Productos de la tienda que se le parecen: ${productos.map((p, j) => `[p${j + 1}] ${p.nombre} (${formatUSD(p.precioUSD)}${p.digital ? '' : p.stock > 0 ? ', hay' : ', agotado'})`).join('; ')}.`
         : '  Ningún producto de la tienda se le parece.',
-    ].join('\n');
+      articulos.length
+        ? `  En la lista de un proveedor (no están en la tienda): ${articulos.map((a, j) => `[f${j + 1}] ${a.nombre} (código ${a.codigo}, ${a.existencia === null ? 'sin dato de existencia' : a.existencia > 0 ? `existencia ${a.existencia}` : 'sin existencia'})`).join('; ')}.`
+        : null,
+    ].filter(Boolean).join('\n');
   }));
   const pedido = [
     `Mensajes del formulario de contacto (${mensajes.length}):`,
@@ -159,6 +171,7 @@ export async function revisarUrgencia(cuales: { mensajes?: string[]; solicitudes
     if (!clave || !s || !urgencia) continue;
     const producto = typeof r.producto === 'string' ? candidatos.get(clave)?.get(r.producto) : undefined;
     const coincide = producto ? enLista(COINCIDE, r.coincide) : 'ninguno';
+    const articulo = typeof r.articulo === 'string' ? deProveedores.get(clave)?.get(r.articulo) : undefined;
     nSolicitudes++;
     cambios.push(prisma.productRequest.update({
       where: { id: s.id },
@@ -166,6 +179,7 @@ export async function revisarUrgencia(cuales: { mensajes?: string[]; solicitudes
         iaUrgencia: urgencia, iaMotivo: limpiarTextoIA(r.motivo, 160), iaRevisadoAt: ahora,
         iaCoincide: coincide === 'igual' || coincide === 'parecido' ? coincide : 'ninguno',
         iaProductoId: coincide === 'igual' || coincide === 'parecido' ? producto!.id : null,
+        iaArticuloId: articulo?.id ?? null,
       },
     }));
   }

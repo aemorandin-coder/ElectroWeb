@@ -17,7 +17,7 @@ import { montoBs } from '@/lib/pago-movil/monto';
 import ProcessingOverlay, { CHECKOUT_STEPS } from '@/components/ProcessingOverlay';
 import {
   IconoAdvertencia, IconoBillete, IconoBuscar, IconoCandado, IconoCargando, IconoCarrito, IconoCerrar, IconoChat,
-  IconoCheck, IconoChevronAbajo, IconoChevronIzquierda, IconoConfirmado, IconoCorreo, IconoCuenta, IconoError,
+  IconoCheck, IconoChevronAbajo, IconoChevronIzquierda, IconoConfirmado, IconoCorreo, IconoCuenta, IconoEditar, IconoError, IconoFlechaIzquierda,
   IconoFlechaDerecha, IconoGarantia, IconoGiftCard, IconoInfo, IconoNumero, IconoOrdenes, IconoPaquete, IconoTarjeta,
 } from '@/components/iconos';
 import { GIFT_CARD_PIN_LENGTH } from '@/lib/gift-card-pin';
@@ -26,7 +26,7 @@ import PagoManualPanel from '@/components/checkout/PagoManualPanel';
 import PagoPuntosPanel from '@/components/checkout/PagoPuntosPanel';
 import { esPagoManual, leerReferenciaManual, repartirPuntos, type TipoPagoManual } from '@/lib/checkout-pago';
 import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
-import { adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
+import { adminBadge, adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import DatosDelCliente from '@/components/checkout/DatosDelCliente';
 import DatosFactura, { type EleccionFactura, type EmpresaFactura } from '@/components/checkout/DatosFactura';
@@ -415,8 +415,42 @@ export default function CheckoutPage() {
     [formData.customerName, formData.customerIdNumber, formData.customerPhone]
   );
 
+  // C-241 (el equipo, 14/11; la A: un paso a la vez, y pagar al final): Entrega (0), Revisar (1) y Pagar (2). Todo queda
+  // montado y se muestra solo el paso de ahora: lo escrito (la referencia del Pago Móvil, la dirección) no se pierde al
+  // volver. Lo que falta en cada paso sale de las mismas reglas de handleSubmit, que las sigue aplicando al final.
+  const [paso, setPaso] = useState<0 | 1 | 2>(0);
+  const datosCompletos = Boolean(formData.customerPhone && formData.customerIdNumber);
+  // Solo digital y con sus datos: no hay nada que elegir en Entrega
+  const pasoActual: 0 | 1 | 2 = paso === 0 && !hasPhysicalItems && datosCompletos ? 1 : paso;
+  const problemaEntrega = session?.user && !perfilCargado ? 'Cargando tus datos…'
+    : !datosCompletos ? 'Completa tu teléfono y tu cédula.'
+      : hasPhysicalItems ? validarEnvio(envio, clienteEnvio) : null;
+  const faltaDomicilioFiscal = factura.tipo === 'COMPANY' && empresaFactura !== null && !empresaFactura.domicilio && !leerDomicilioFiscal(factura.domicilio);
+  const problemaRevisar = faltaDomicilioFiscal ? 'Falta el domicilio fiscal de tu empresa para la factura.'
+    : !acceptedTerms ? 'Acepta los términos para seguir.' : null;
+  // Con un Pago Móvil ya verificado no se vuelve atrás: cambiar la entrega cambiaría el monto que ya se pagó
+  const bloqueadoAtras = paymentMode === 'PAGO_MOVIL' && mobilePaymentVerified;
+  const irAlPaso = (destino: 0 | 1 | 2) => {
+    if (destino < pasoActual && bloqueadoAtras) return;
+    if (destino >= 1 && problemaEntrega) return;
+    if (destino >= 2 && problemaRevisar) return;
+    setPaso(destino);
+    setError('');
+    const quieto = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: quieto ? 'auto' : 'smooth' });
+  };
+  const textoEntrega = !hasPhysicalItems ? 'Productos digitales: sin envío'
+    : envio.deliveryMethod === 'PICKUP' ? 'Retiro en la tienda'
+      : envio.deliveryMethod === 'LOCAL_DELIVERY' ? `Delivery en Guanare${envio.address ? ` · ${envio.address}` : ''}`
+        : `${envio.carrier || 'Envío nacional'}${envio.mode === 'OFFICE' ? ', retiras en su oficina' : ', a tu dirección'}${envio.city ? ` · ${envio.city}${envio.state ? `, ${envio.state}` : ''}` : ''}`;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // C-241: en Entrega y Revisar, Enter lleva al paso siguiente; solo en Pagar se hace el pedido
+    if (pasoActual < 2) {
+      irAlPaso((pasoActual + 1) as 1 | 2);
+      return;
+    }
     setLoading(true);
     setError('');
 
@@ -843,11 +877,19 @@ export default function CheckoutPage() {
         icon={<IconoCandado />}
         title="Finalizar compra"
         description="Completa tus datos para procesar tu pedido."
-        meta={<CheckoutSteps current={1} />}
       />
 
       {/* Main Content - Wider for Desktop */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        {/* C-241: los pasos de la compra, a lo ancho y arriba de todo */}
+        <div className="mb-6">
+          <CheckoutSteps
+            current={(pasoActual + 1) as 1 | 2 | 3}
+            onIr={(i) => irAlPaso((i - 1) as 0 | 1 | 2)}
+            disponibles={[!bloqueadoAtras, !bloqueadoAtras && !problemaEntrega, !problemaEntrega && !problemaRevisar]}
+            resumenes={[`${items.length} ${items.length === 1 ? 'producto' : 'productos'}`, textoEntrega, acceptedTerms ? 'Términos aceptados' : null, null]}
+          />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Checkout Form */}
@@ -862,6 +904,8 @@ export default function CheckoutPage() {
                 </div>
               )}
 
+              {/* C-241 · Paso 1: Entrega */}
+              <div className={pasoActual === 0 ? 'space-y-6' : 'hidden'}>
               {session?.user && perfilCargado && (
                 <DatosDelCliente
                   telefono={formData.customerPhone}
@@ -896,7 +940,21 @@ export default function CheckoutPage() {
                   paquetes={paquetesEnvio}
                 />
               )}
+              {!hasPhysicalItems && (
+                <p className="flex items-center gap-2 rounded-xl border border-line bg-white p-4 text-sm text-ink-soft">
+                  <IconoCorreo className="h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" /> Productos digitales: te llegan por correo, sin envío.
+                </p>
+              )}
+              <PieDelPaso
+                atras={<Link href="/carrito" className={adminSecondaryButton}><IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Volver al carrito</Link>}
+                siguiente="Siguiente: revisar"
+                problema={problemaEntrega}
+                onSiguiente={() => irAlPaso(1)}
+              />
+              </div>
 
+              {/* C-241 · Paso 3: Pagar (el método de pago y, más abajo, el botón final) */}
+              <div className={pasoActual === 2 ? '' : 'hidden'}>
               {/* Payment Method */}
               <div id="metodo-de-pago" className="bg-white rounded-lg shadow-md border border-line p-6 relative overflow-hidden">
                 <h2 className="text-lg font-bold text-ink mb-4 flex items-center gap-2">
@@ -994,8 +1052,8 @@ export default function CheckoutPage() {
                         <h3 className="font-bold text-ink text-base">Verificación Directa de Pago Móvil</h3>
                         <p className="text-xs text-muted">Transfiere a la cuenta de la tienda y confirma con la referencia</p>
                       </div>
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-success-strong/10 text-success-strong text-xs font-bold rounded-full">
-                        <IconoGarantia className="w-3.5 h-3.5" />
+                      <span className={adminBadge('success')}>
+                        <IconoGarantia className="w-3.5 h-3.5" aria-hidden="true" />
                         Conciliación BDV
                       </span>
                     </div>
@@ -1174,8 +1232,8 @@ export default function CheckoutPage() {
 
                                 {/* Puntos ES suficientes badge */}
                                 {userBalance >= finalTotal && (
-                                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-success/15 text-success-strong text-xs font-bold rounded-full mb-3">
-                                    <IconoCheck className="w-3.5 h-3.5" />
+                                  <span className={`${adminBadge('success')} mb-3`}>
+                                    <IconoCheck className="w-3.5 h-3.5" aria-hidden="true" />
                                     Puntos ES suficientes
                                   </span>
                                 )}
@@ -1235,6 +1293,22 @@ export default function CheckoutPage() {
                 )}
 
               </div>
+              </div>
+
+              {/* C-241 · Paso 2: Revisar (la entrega elegida, las notas y los términos) */}
+              <div className={pasoActual === 1 ? 'space-y-6' : 'hidden'}>
+              <div className="flex items-center gap-3 rounded-xl border border-line bg-white p-4">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-strong text-white"><IconoCheck className="h-4 w-4" aria-hidden="true" /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-ink">Entrega</span>
+                  <span className="block truncate text-xs text-muted">{textoEntrega}</span>
+                </span>
+                {!bloqueadoAtras && hasPhysicalItems && (
+                  <button type="button" onClick={() => irAlPaso(0)} className="inline-flex min-h-9 items-center gap-1.5 text-sm font-semibold text-brand-500 hover:underline">
+                    <IconoEditar className="h-4 w-4" aria-hidden="true" /> Cambiar
+                  </button>
+                )}
+              </div>
 
               {/* Notes - Collapsible */}
               <div className="bg-white rounded-lg shadow-md border border-line overflow-hidden">
@@ -1288,13 +1362,28 @@ export default function CheckoutPage() {
                       términos y condiciones
                     </button>
                     . Confirmo que la información de envío es correcta y entiendo que{' '}
-                    <strong className="font-bold text-warning-strong">
+                    <strong className="font-bold">
                       la empresa no se hace responsable por datos errados ingresados por el usuario
                     </strong>
                     .
                   </label>
                 </div>
               </div>
+              <PieDelPaso
+                atras={hasPhysicalItems || !datosCompletos ? <button type="button" onClick={() => irAlPaso(0)} className={adminSecondaryButton}><IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Atrás</button> : <Link href="/carrito" className={adminSecondaryButton}><IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Volver al carrito</Link>}
+                siguiente="Siguiente: pagar"
+                problema={problemaRevisar}
+                onSiguiente={() => irAlPaso(2)}
+              />
+              </div>
+
+              {/* C-241 · El botón final, solo en Pagar */}
+              <div className={pasoActual === 2 ? 'space-y-4' : 'hidden'}>
+              {!bloqueadoAtras && (
+                <button type="button" onClick={() => irAlPaso(1)} className={adminSecondaryButton}>
+                  <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Atrás
+                </button>
+              )}
 
               {/* Submit Button */}
               <button
@@ -1330,23 +1419,24 @@ export default function CheckoutPage() {
                 </p>
               )}
               {paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified && (
-                <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
-                  <IconoError className="w-3 h-3" />
+                <p className="text-center text-xs text-muted -mt-2 flex items-center justify-center gap-1">
+                  <IconoInfo className="w-3 h-3 text-brand-500" aria-hidden="true" />
                   Debes verificar tu Pago Móvil antes de completar el pedido
                 </p>
               )}
               {paymentMode === 'MANUAL' && metodoManual && !leerReferenciaManual(referenciaManual) && (
-                <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
-                  <IconoError className="w-3 h-3" />
+                <p className="text-center text-xs text-muted -mt-2 flex items-center justify-center gap-1">
+                  <IconoInfo className="w-3 h-3 text-brand-500" aria-hidden="true" />
                   Escribe la referencia de tu pago para completar el pedido
                 </p>
               )}
               {paymentMode === 'WALLET' && userBalance < finalTotal && (
-                <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
-                  <IconoError className="w-3 h-3" />
+                <p className="text-center text-xs text-muted -mt-2 flex items-center justify-center gap-1">
+                  <IconoInfo className="w-3 h-3 text-brand-500" aria-hidden="true" />
                   No te alcanzan los Puntos ES. Recárgalos para completar el pedido.
                 </p>
               )}
+              </div>
             </form>
           </div>
 
@@ -1363,10 +1453,10 @@ export default function CheckoutPage() {
                     Información de Contacto
                   </h2>
                   {Boolean((session?.user as { emailVerified?: unknown } | undefined)?.emailVerified) && (
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-success/15 border border-success/30 rounded-full">
-                      <IconoConfirmado className="w-3 h-3 text-success-strong" />
-                      <span className="text-xs font-bold text-success-strong">Verificado</span>
-                    </div>
+                    <span className={adminBadge('success')}>
+                      <IconoConfirmado className="w-3 h-3" aria-hidden="true" />
+                      Verificado
+                    </span>
                   )}
                 </div>
 
@@ -1755,6 +1845,21 @@ export default function CheckoutPage() {
         logoUrl={companySettings?.logo}
       />
 
+    </div>
+  );
+}
+
+/** C-241: el pie de un paso del checkout (PLAN.md §1.6): volver a la izquierda; a la derecha adónde lleva, o por qué todavía no */
+function PieDelPaso({ atras, siguiente, problema, onSiguiente }: { atras: React.ReactNode; siguiente: string; problema: string | null; onSiguiente: () => void }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white p-3">
+      {atras}
+      <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-3">
+        {problema && <p className="text-xs text-muted" role="status">{problema}</p>}
+        <button type="button" onClick={onSiguiente} disabled={Boolean(problema)} className={adminPrimaryButton}>
+          {siguiente} <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
     </div>
   );
 }

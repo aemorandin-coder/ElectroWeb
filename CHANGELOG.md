@@ -10,6 +10,24 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.76] - 2026-11-15
+El kit de onboarding: Chispa te guía (C-257). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Carrito, checkout y cuenta del cliente 1.9.0 (C-257)
+- **El recorrido de bienvenida, rehecho** con la A que eligió el equipo:
+  - **El foco:** todo se oscurece en el azul oscuro del logo menos lo que se explica, y un anillo blanco se dibuja una vez alrededor.
+  - **La tarjeta:** dos palabras grandes y una frase. La placa con el ícono se dibuja y hace su gesto (la lupa busca, el carrito llega rodando, la cuadrícula se acomoda, la cuenta saluda), y la flecha de "Siguiente" invita a seguir.
+  - **Chispa** se asoma por detrás de la tarjeta, con una pose por paso. Se le ven las manos, nunca tapa lo que se explica y nunca se le ve el corte. Entre un paso y otro se agacha y vuelve a asomarse.
+  - **La cuenta sin activar** ve primero "Activa tu cuenta con el enlace de tu correo y ya puedes comprar".
+  - **Al teclado:** el Tab ya no se sale del recorrido, y el contorno del foco solo aparece al usar el teclado.
+- **La hoja "Así funciona",** la primera vez, en el checkout ("Así compras: pagas solo en el último paso") y en Puntos ES ("1 Punto ES paga $1 de compras"). Su botón abre la recarga.
+### Marketing 1.20.0 (C-257)
+- **"Así participas" en `/sorteo`,** la primera vez: los dos caminos con la compra primero, en tres íconos, y "Quiero participar" baja a "Cómo participar".
+### Tienda 1.17.0 (C-257)
+- **Las animaciones del kit** (`.onb-*` en `app/globals.css`): pasan una sola vez y, con "reducir movimiento", todo llega quieto.
+- **El confeti va en los azules de la marca.** Llevaba el ámbar y el rojo de las ofertas.
+### Pruebas
+- **`scripts/e2e/lib.ts`** marca todas las guías como vistas (`electroweb_guias`) antes de cada prueba.
+
 ## [1.0.0-rc.75] - 2026-11-15
 El estrés de cada camino del cliente, medido, y lo que estaba roto en esos caminos (C-258). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Carrito, checkout y cuenta del cliente 1.8.4 (C-258)

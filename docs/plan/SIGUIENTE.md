@@ -1,9 +1,17 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.74; en `main`, rc.75 por subir: §2)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.74; en `main`, rc.76 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-257 · El kit de onboarding: Chispa te guía (rc.76, por subir: §2; `estado/C-257.md`):** el equipo pidió el 15/11 un kit para toda la tienda ("los onboarding parecen publicidad"). Eligió la A de las maquetas y aprobó el video del kit andando.
+  - **El recorrido de bienvenida, rehecho:**
+    - se oscurece en el azul del logo y un anillo blanco se dibuja alrededor de lo que se explica;
+    - el ícono se dibuja y hace su gesto, con dos palabras y una frase;
+    - Chispa se asoma por detrás de la tarjeta, cambia de pose en cada paso y nunca tapa lo que se explica;
+    - a la cuenta sin activar le dice primero que la active desde el correo.
+  - **La hoja "Así funciona",** la primera vez, en `/sorteo` ("Así participas", los dos caminos con la compra primero), `/checkout` ("Así compras") y Puntos ES.
+  - **Las reglas del kit,** en `PLAN.md` §1.11. Los videos están en la PC del equipo: `~/.cache/electroshop-trabajo/c257/prueba/ver.html`.
 - **C-258 · El estrés de cada camino del cliente (rc.75, por subir: §2; `estado/C-258.md`):** el pedido del equipo del 15/11, la parte de medir y arreglar. El kit de onboarding es C-257.
   - **La medida:** `scripts/e2e/estres-caminos.ts` recorre 13 caminos en el teléfono y la computadora: comprar, registrarse, recargar Puntos ES, la gift card, la garantía, el sorteo y más.
     - Cuenta pasos, toques, palabras, cuánto hay que bajar, opciones, el tiempo hasta usable, los errores, los pedidos en cascada y los enlaces muertos.
@@ -359,13 +367,14 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.75` (C-258; unos 15 minutos)
+### Lo que falta subir: `v1.0.0-rc.76` (C-258 y C-257; unos 30 minutos)
 Producción está en `v1.0.0-rc.74` (`c7d994b`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
 - **C-258 (rc.75):** los arreglos de los caminos del cliente: el teléfono de las cuentas viejas en el checkout, el latido de presencia, el carrito guardado sin cambios, la lista de ciudades una vez por visita, el login, los títulos y el ícono del carrito.
   - **Sin cambio de base,** sin SQL, sin variables nuevas y sin cron. No hace falta respaldo antes.
+- **C-257 (rc.76):** el kit de onboarding: el recorrido de bienvenida con Chispa y la hoja "Así funciona" en `/sorteo`, `/checkout` y Puntos ES. Sin cambio de base.
 - **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.75`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.76`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas de C-258** (unos 10 minutos, en la computadora y en el teléfono):
   1. **El login, en una ventana privada:** `/login` muestra de una vez "Iniciar sesión" con el correo y la contraseña, sin "Verificando sesión…".
   2. **Las pestañas:** el carrito dice "Carrito de compras | Electro Shop" (una vez la marca), y `/recuperar-contrasena` dice "Recuperar contraseña | Electro Shop".
   3. **El carrito, con tu cuenta, en la computadora:** agrega un producto. El ícono del carrito, arriba, abre la lista con "Ver Carrito Completo". Recarga la página: el producto sigue ahí.
@@ -376,6 +385,20 @@ Producción está en `v1.0.0-rc.74` (`c7d994b`); su bloque está en `HISTORIAL.m
   5. **"Calcula tu envío"** en una ficha: elige estado y ciudad. Sale lo que cobra ZOOM, como siempre.
   6. **Reportes → En vivo** (si se usa): con dos o tres teléfonos en el Wi-Fi de la tienda navegando a la vez, todos aparecen conectados.
   7. **El checkout con el teléfono viejo** (solo si alguna cuenta de producción lo tiene así; si no, se salta): con esa cuenta, "Siguiente: revisar" se puede tocar.
+- **Pruebas de C-257, el onboarding** (unos 15 minutos). Cada guía sale una sola vez por navegador, así que se prueban en una ventana privada:
+  1. **El recorrido, en el teléfono:**
+      1. En una ventana privada, entra con tu cuenta y ve al inicio. A los 1 o 2 segundos todo se oscurece en azul y sale la tarjeta "¡Hola, …!", con Chispa asomado por detrás, saludando.
+      2. Toca "Empezar". El foco viaja al buscador y un anillo blanco se dibuja alrededor. Chispa se agacha y vuelve señalando; la lupa se dibuja y "busca".
+      3. Sigue con "Siguiente": Explora, Tu carrito y Tu cuenta. Termina con "¡Listo!" y confeti azul.
+      4. En ningún paso Chispa tapa lo que se explica, ni se le ve el corte de la cintura.
+  2. **El recorrido, en la computadora:** lo mismo, con el buscador, Productos, el carrito y la cuenta del header. Con el teclado, → y ← cambian de paso y Esc cierra.
+  3. **Una cuenta sin activar** (la de prueba de rc.74, si no la activaste, o una nueva): en el inicio, la bienvenida dice "Activa tu cuenta con el enlace de tu correo y ya puedes comprar", con el sobre.
+  4. **`/sorteo`, en una ventana privada:**
+      1. A 1 o 2 segundos sube "Así participas": "Dos caminos: comprar o invitar amigos" y tres íconos que se dibujan uno tras otro.
+      2. "Quiero participar" baja a "Cómo participar".
+      3. Recarga la página: la hoja ya no sale.
+  5. **El checkout:** con un producto físico en el carrito, la primera vez sale "Así compras" ("Pagas solo en el último paso"). "Empezar" la cierra.
+  6. **Mi panel → Puntos ES:** sale "Así funcionan tus Puntos ES". "Recargar Puntos ES" abre la recarga: ciérrala sin recargar.
 - **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.74 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de base que deshacer.
 
 ### Por confirmar de rc.74 (C-255 y C-256; unos 15 minutos)

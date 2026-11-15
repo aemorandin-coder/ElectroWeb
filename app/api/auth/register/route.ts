@@ -8,6 +8,7 @@ import { buscarUsuarioPorCorreo } from '@/lib/correo';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { verifyCaptcha } from '@/lib/captcha';
 import { registroSchema } from '@/lib/validations/registro';
+import { rutaInternaSegura } from '@/lib/rutas';
 
 // Las reglas viven en lib/validations/registro.ts y son las mismas que usa la pantalla (C-84)
 
@@ -105,10 +106,13 @@ export async function POST(request: NextRequest) {
     // C-212: llegó por el enlace de un participante del sorteo (cookie de proxy.ts): queda como su invitado. Si falla, el
     // registro sigue igual
     const codigoSorteo = request.cookies.get('electroshop_sorteo')?.value;
+    let invitadoAlSorteo = false;
     if (codigoSorteo) {
       const { registrarInvitacion } = await import('@/lib/sorteo/servidor');
-      await registrarInvitacion(codigoSorteo, user.id).catch(() => {});
+      invitadoAlSorteo = await registrarInvitacion(codigoSorteo, user.id).catch(() => false);
     }
+    // C-255: el enlace del correo vuelve a donde estaba (/sorteo, el checkout): solo una ruta de la tienda
+    const destino = rutaInternaSegura(typeof body?.destino === 'string' ? body.destino : null);
 
     // Create verification token (24 hours expiry)
     const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -124,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     // Send verification email
     try {
-      await sendVerificationEmail(email, verificationToken, name);
+      await sendVerificationEmail(email, verificationToken, name, { destino, invitadoAlSorteo });
     } catch (emailError) {
       console.error('Error sending verification email:', emailError);
       // Continue with registration even if email fails

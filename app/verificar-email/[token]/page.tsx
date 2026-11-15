@@ -3,16 +3,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getSession } from 'next-auth/react';
 import { IconoCargando, IconoConfirmado, IconoError } from '@/components/iconos';
 import toast from 'react-hot-toast';
 import AuthShell from '@/components/auth/AuthShell';
 import { adminError, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import { rutaInternaSegura } from '@/lib/rutas';
+
+// C-255: el enlace del correo trae adónde volver (?destino=/sorteo, lo manda el registro). Con la sesión abierta desde el
+// registro, vuelve directo ahí (antes iba al login, que lo mandaba al inicio y se perdía el sorteo); sin sesión, al login,
+// que después lo lleva ahí.
 
 export default function VerifyEmailPage() {
   const params = useParams();
   const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
+  const [siguiente, setSiguiente] = useState({ href: '/login?verified=true', texto: 'Ir al Login', aviso: 'Te llevaremos al inicio de sesión en unos segundos.' });
   // Reenviar el enlace: campo en la página en vez del prompt() nativo (C-80)
   const [reenvio, setReenvio] = useState(false);
   const [correo, setCorreo] = useState('');
@@ -26,9 +33,16 @@ export default function VerifyEmailPage() {
         const response = await fetch(`/api/auth/verify-email/${params.token}`);
         const data = await response.json();
         if (response.ok) {
+          const destino = rutaInternaSegura(new URLSearchParams(window.location.search).get('destino'));
+          // La sesión ya sabe que el correo está activo (lib/auth.ts lo lee mientras no lo esté)
+          const sesion = await getSession().catch(() => null);
+          const ir = sesion?.user
+            ? { href: destino ?? '/', texto: destino === '/sorteo' ? 'Volver al sorteo' : 'Seguir', aviso: 'Te llevamos de vuelta en unos segundos.' }
+            : { href: `/login?verified=true${destino ? `&callbackUrl=${encodeURIComponent(destino)}` : ''}`, texto: 'Ir al Login', aviso: 'Te llevaremos al inicio de sesión en unos segundos.' };
           setStatus('success');
-          setMessage(data.message);
-          setTimeout(() => router.push('/login?verified=true'), 3000);
+          setMessage(sesion?.user ? 'Tu cuenta está activa.' : data.message);
+          setSiguiente(ir);
+          setTimeout(() => router.push(ir.href), 3000);
         } else {
           setStatus('error');
           setMessage(data.error || 'Error al verificar');
@@ -81,8 +95,8 @@ export default function VerifyEmailPage() {
             <IconoConfirmado className="mx-auto h-12 w-12 text-success-strong" aria-hidden="true" />
             <h1 className="mt-4 text-2xl font-bold text-ink">Correo verificado</h1>
             <p className="mt-2 text-sm leading-relaxed text-muted">{message}</p>
-            <p className="mt-2 text-xs text-muted">Te llevaremos al inicio de sesión en unos segundos.</p>
-            <Link href="/login?verified=true" className={`${adminPrimaryButton} mt-6 w-full`}>Ir al Login</Link>
+            <p className="mt-2 text-xs text-muted">{siguiente.aviso}</p>
+            <Link href={siguiente.href} className={`${adminPrimaryButton} mt-6 w-full`}>{siguiente.texto}</Link>
           </>
         )}
         {status === 'error' && (

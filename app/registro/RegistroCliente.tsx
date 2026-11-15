@@ -159,7 +159,8 @@ function RegistroContenido({ google }: { google: boolean }) {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...datosDe(valores), captchaToken }),
+        // C-255: adónde vuelve después de activar la cuenta (el enlace del correo lo lleva, por ejemplo a /sorteo)
+        body: JSON.stringify({ ...datosDe(valores), captchaToken, destino }),
       });
       const data = await response.json().catch(() => ({}));
 

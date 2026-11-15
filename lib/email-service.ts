@@ -318,8 +318,10 @@ export const sendWelcomeEmail = async (email: string, userName: string) => {
 };
 
 // EMAIL VERIFICATION
-export const sendVerificationEmail = async (email: string, token: string, userName?: string) => {
-  const verifyUrl = `${process.env.NEXTAUTH_URL}/verificar-email/${token}`;
+// C-255: `destino`, adónde vuelve al activarla (una ruta de la tienda: /sorteo, el checkout); `invitadoAlSorteo`, si se registró
+// con el enlace de un amigo del sorteo: su invitación cuenta cuando active la cuenta, y el correo se lo dice.
+export const sendVerificationEmail = async (email: string, token: string, userName?: string, opciones: { destino?: string | null; invitadoAlSorteo?: boolean } = {}) => {
+  const verifyUrl = `${process.env.NEXTAUTH_URL}/verificar-email/${token}${opciones.destino ? `?destino=${encodeURIComponent(opciones.destino)}` : ''}`;
   const nombre = e(primerNombre(userName));
   const html = await marcoCorreo({
     preheader: 'Un toque y tu cuenta queda lista para comprar sin miedo.',
@@ -330,6 +332,7 @@ export const sendVerificationEmail = async (email: string, token: string, userNa
     },
     cuerpo: `
       ${botonCorreo(verifyUrl, 'Activar mi cuenta')}
+      ${opciones.invitadoAlSorteo ? notaCorreo(`<strong style="${CORREO.fuerte}">Te invitó un amigo al sorteo.</strong> Al activar tu cuenta sumas para su boleto, y tú también puedes ganar los tuyos.`) : ''}
       <p style="${CORREO.nota}">El enlace vence en 24 horas. Si no creaste esta cuenta, ignora este correo: no pasa nada.</p>`,
     chispa: { pose: 'saluda', texto: '¡Qué bueno que llegaste! Apenas actives tu cuenta tienes todo el catálogo: tecnología, gaming, gift cards y ferretería, con envíos a toda Venezuela.' },
     motivo: 'Recibes este correo porque alguien creó una cuenta con esta dirección.',

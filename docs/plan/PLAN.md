@@ -601,6 +601,15 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - la bandera del inicio (la A1, con el logo de PS4);
     - el paso "Lo que trae" del panel y el aviso de marcas.
     - **Falta:** después del deploy, cargar en el panel el premio con el paréntesis, lo que trae, el sello y "PS4" (`SIGUIENTE.md` §2). El aviso de marcas conviene que lo mire el abogado, con lo de A4.
+  - **C-255 · "Cómo participar" en /sorteo, con íconos** (**hecha**, rc.73, 15/11; `estado/C-255.md`; el equipo eligió la B de las maquetas):
+    - los tres pasos por un camino: la cuenta gratis, los dos caminos para ganar boletos (comprando primero, e invitando) y el resultado, con tus boletos al lado;
+    - "Lo que más nos preguntan" (7) y los íconos que entran una vez;
+    - en el banner, el logo corto de PS4 donde dice "Sony" y el de ZOOM;
+    - el camino de registro: el correo vuelve a `/sorteo` y la sesión se entera de la activación.
+    - **Falta:** las pruebas en producción (`SIGUIENTE.md` §2).
+    - **Para decidir:**
+      - que el recorrido de bienvenida ("Te mostramos la tienda en 4 pasos") no salga sobre `/sorteo`: tapa los pasos cuando la cuenta nueva vuelve del registro. Es una línea en `components/onboarding/GuidedTourWrapper.tsx`, del carril de Gemini;
+      - si se quiere, una sola palabra para el correo (las bases dicen "verifiquen" y la página, "activan", como el botón del correo).
   - **C-254 · La semana del ganador** (pendiente, la sigue a C-253; el equipo, 15/11: "al terminar el sorteo, que la bandera permanezca una semana más mostrando quién ganó y un video de testimonio o una imagen de la persona"; eligió hacerla justo después de C-253, mucho antes del resultado del 20/12):
     - **La bandera, por etapas:**
       - abierto: "¡Gánate una PS4!", lo de C-253;

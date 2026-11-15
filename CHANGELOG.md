@@ -10,6 +10,36 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.55] - 2026-11-14
+Los correos al aliado comercial: el proveedor que despacha él mismo recibe cada venta con todo para despacharla (el equipo, 14/11; eligió lo recomendado en las ocho preguntas y el nombre de la relación, "aliado comercial").
+### Productos 1.15.0 (C-227)
+- **El proveedor que despacha él mismo es aliado comercial de Electro Shop.** En Productos → Lista del proveedor:
+  - "Su contacto de despacho": quién lo recibe, el correo y el WhatsApp;
+  - "Ver la bienvenida", con la vista previa antes de enviarla.
+- **Cada venta le llega por correo** al confirmarse el pago, nunca antes, con un enlace sin cuenta. Su página muestra:
+  - la empresa (ZOOM o MRW) en grande, la oficina y el plazo;
+  - los datos de la guía, con "Copiar los datos";
+  - sus productos con su código y su costo, y el empaque.
+  - Ahí marca "Lo estoy preparando" y anota la guía, con una revisión del número antes.
+- **El día del plazo** (un día hábil después del pago), si no hay guía, le llega un recordatorio y al equipo un aviso, una sola vez (cron diario nuevo, `cron-despachos.sh`).
+- **Nunca ve** el correo del cliente, lo que pagó ni el precio de venta.
+- **Cambio de base (aditivo):** cuatro columnas en `suppliers` y cuatro en `orders`, con un índice.
+### Órdenes y pagos 1.6.0 (C-227)
+- **La guía del proveedor deja la orden Enviada,** con el rastreo. Al cliente le llegan el correo y la campana de "va en camino", como cuando la marca el panel.
+- **Si la orden se cancela antes de la guía,** al proveedor le llega "Se canceló la orden: no la despache".
+- **El detalle de la orden** dice cuándo se le avisó, desde cuándo lo prepara y si se le recordó; el historial marca lo que hizo el proveedor.
+### Marketing 1.14.0 (C-227)
+- **Los cuatro correos del aliado comercial,** de usted y con su propio cierre ("Lo suyo llega a toda Venezuela"):
+  - la bienvenida, con su credencial;
+  - "¡Se vendió su producto!";
+  - el recordatorio de la guía;
+  - "Se canceló: no la despache".
+  - Están en Plantillas, en el grupo Proveedores.
+### Marco del panel 1.10.0 y Tienda 1.14.2 (C-227)
+- **Tres avisos nuevos para el equipo:** un proveedor sin correo de despacho, la guía que anotó un proveedor y el plazo vencido sin guía.
+- **Arreglo de C-219:** el cron del sorteo rebotaba al login; ahora responde.
+- La barra de abajo del teléfono no sale en la página del proveedor.
+
 ## [1.0.0-rc.54] - 2026-11-14
 La contadora en el equipo (el dueño, 14/11: "con invitación a ella como parte del equipo de trabajo, dame la opción a mí también de kickear a la contadora y colocar una nueva, su firma"; eligió que revise, declare y firme, sin facturar).
 ### Contabilidad 1.1.0 (C-235)

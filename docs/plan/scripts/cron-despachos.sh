@@ -4,7 +4,7 @@
 #
 # Instalación (en el servidor, como el usuario de la tienda):
 #   cp /var/www/electroshopve/docs/plan/scripts/cron-despachos.sh ~/cron-despachos.sh && chmod +x ~/cron-despachos.sh
-#   crontab -e   y agregar:   0 10 * * * /home/luami/cron-despachos.sh >> /home/luami/cron-despachos.log 2>&1
+#   crontab -e   y agregar:   5 10 * * * /home/luami/cron-despachos.sh >> /home/luami/cron-despachos.log 2>&1
 # Probarlo a mano: ~/cron-despachos.sh   (responde {"avisos":0,"recordatorios":0} mientras no haya nada pendiente)
 set -u
 DIR=/var/www/electroshopve

@@ -571,7 +571,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - Google en modo sin cookies hasta el sí (Consent Mode); el píxel, solo con el sí.
     - La medición propia, sin la IP completa.
     - La política nombra todo lo que se guarda (para el abogado, A4).
-  - **C-224 · Lo que nos hace únicos** (pendiente).
+  - **C-224 · Lo que nos hace únicos** (**hecha**, rc.51, 14/11; `estado/C-224.md`).
     - "Por qué comprar en Electro Shop" en lugar de "Compra con confianza": precio y envío claros, Pago Móvil confirmado por el banco y la tienda con taller propio (14 años en Portuguesa).
     - Cada uno se repite donde se decide la compra: la ficha, el carrito, el pago y el pie.
     - Servicios pasa de "más de 10 años" a 14.

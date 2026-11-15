@@ -1,4 +1,4 @@
-# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.54, por subir)
+# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.53, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.54, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
@@ -10,11 +10,11 @@
   - **Su firma:** la dibuja una vez con el dedo o el mouse, con su nombre, su título y su C.P.C. Va en los cierres y en el Excel (C-230 y C-232).
   - **Quitarla y poner otra:** Equipo → ella → "Administrar" → "Quitar el acceso", e invitar a la nueva. Su firma queda guardada.
   - **Al subir:** un rol y dos tablas nuevas (§2). **Después, el dueño la invita** (§3, paso 23).
-- **C-234 · Cuándo sale cada pedido (rc.52, por subir):** el cliente sabe antes de comprar qué día sale su pedido (`estado/C-234.md`).
+- **C-234 · Cuándo sale cada pedido (rc.52, en producción):** el cliente sabe antes de comprar qué día sale su pedido (`estado/C-234.md`).
   - **Las reglas:** lo pagado de lunes a viernes antes de las 2:00 p. m. sale ese día; lo del sábado y el domingo, el lunes; los feriados de Venezuela no cuentan, y lo de la ferretería sale un día hábil después.
   - **En la tienda:** "Compra en las próximas 2 h 15 min y sale hoy" o "Compra hoy y sale el lunes 16" en la ficha, el carrito y el checkout; "Sale el lunes 16 de noviembre" en Mi pedido y en el correo de la compra. Lo digital dice cuándo llega.
   - **En el panel:** Configuración → Envíos y retiro → "Cuándo sale cada pedido", con la hora de corte, los feriados (se puede abrir uno) y los días cerrados de más.
-- **C-229 · Contabilidad: las facturas de talonario (rc.50, por subir):** la primera parte del módulo, con la maqueta B alineada (`estado/C-229.md`).
+- **C-229 · Contabilidad: las facturas de talonario (rc.50, en producción):** la primera parte del módulo, con la maqueta B alineada (`estado/C-229.md`).
   - **Contabilidad → Facturas:** el talonario en uso (la próxima y cuántas quedan), lo cobrado este mes sin factura con "Facturar", y las facturas del mes.
   - **"Nueva factura de talonario" en 4 pasos:**
     - de dónde sale, a nombre de quién y qué se vendió;
@@ -23,7 +23,7 @@
   - **Anular:** una factura mal escrita o un papel dañado, con su motivo. Nada se borra.
   - **Desde la orden:** "Facturar en el talonario", o "Ver la factura" si ya la tiene.
   - **Al subir:** dos tablas y una columna nuevas (§2). **Después, el dueño carga el talonario** (§3, paso 22).
-- **C-219 · Los correos de la tienda (rc.47, por subir):** el equipo, el 14/11: "muy pobres, no tienen nuestra esencia". Eligió la maqueta C, clara con la cinta, con ELECTRO SHOP grande arriba y Chispa abajo, y textos "mucho más épicos" (`estado/C-219.md`, `AUDITORIA_CORREOS.md`).
+- **C-219 · Los correos de la tienda (rc.47, en producción):** el equipo, el 14/11: "muy pobres, no tienen nuestra esencia". Eligió la maqueta C, clara con la cinta, con ELECTRO SHOP grande arriba y Chispa abajo, y textos "mucho más épicos" (`estado/C-219.md`, `AUDITORIA_CORREOS.md`).
   - **Los 26 que ya salían, con el diseño nuevo,** y **19 nuevos:** el pago confirmado, listo para retirar, la bienvenida, las recargas, la garantía, el contacto, los presupuestos, los avisos de la gift card, el sorteo y más.
   - **En Mensajes:** "Enviar con el diseño de la tienda" responde desde la tienda.
   - **Al subir:** una columna nueva y un cron (`cron-sorteo.sh`), en el bloque de §2.
@@ -42,33 +42,33 @@
   - **Las 17 preguntas para la contadora,** listas para WhatsApp en tres mensajes: `~/Escritorio/Electro Shop/Preguntas para la contadora 14-11.txt`. Las urgentes son la 1 (factura en cada venta) y la 2 (el IVA de los digitales: la Factura 67 lo cobró y la web no).
   - **Las maquetas,** en la PC de Andrés: `~/Escritorio/Electro Shop/Contabilidad - maquetas (C-228)/` (Resumen, factura A y B, libro de ventas y "Mi mesa").
   - **Hechas:** C-229 (las facturas, rc.50) y C-235 (la contadora, rc.54). **Sigue:** C-230 (antes del 15/12), C-236, C-237, C-232, C-238, C-239, C-240, C-231 y C-233 (`PLAN.md` §5.2).
-- **C-226 · Ningún contenedor ámbar (rc.44, por subir):** el equipo, el 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados". Viendo tres opciones eligió el azul claro de la tienda con el ícono cian en su placa azul noche (`estado/C-226.md`).
+- **C-226 · Ningún contenedor ámbar (rc.44, en producción):** el equipo, el 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados". Viendo tres opciones eligió el azul claro de la tienda con el ícono cian en su placa azul noche (`estado/C-226.md`).
   - **La regla, para todas las IA:** `CLAUDE.md`, `GEMINI.md` y `PLAN.md` §1.1, §1.7 y §1.8. Ni cajas, ni avisos, ni fondos, ni bordes, ni píldoras ámbar.
   - **Lo que cambió:** el aviso compartido del panel (42 lugares), 24 pantallas de la tienda y del panel y la caja de aviso de los correos. Sin cambio de base.
 - **Siguen, con las decisiones del 14/11 en `PLAN.md` §7.2:**
   - **C-227 · Los correos para proveedores:** la bienvenida de "revendedor premium", "¡Se vendió tu producto!" y "Se canceló: no lo despaches".
 - **Tres sesiones de Claude a la vez el 14/11**, cada una en su worktree: la de los correos (C-219, C-226, C-227 y C-234), la del plan de crecimiento (C-220 a C-225 y C-241) y la de Contabilidad (C-228 a C-240).
-- **C-241 · El checkout por pasos (rc.53, por subir):** lo que eligió el equipo viendo las maquetas: un paso a la vez y pagar al final (`estado/C-241.md`).
+- **C-241 · El checkout por pasos (rc.53, en producción):** lo que eligió el equipo viendo las maquetas: un paso a la vez y pagar al final (`estado/C-241.md`).
   - Carrito, Entrega, Revisar y Pagar arriba, con su ícono. Cada paso dice qué le falta para seguir. Revisar muestra la entrega elegida con "Cambiar".
   - Nada se pierde al ir y volver. Con un Pago Móvil ya verificado no se vuelve atrás. El dinero no cambia: el servidor calcula y valida como antes.
   - Sin letras ámbar: la frase de los términos va en negrita. Los sellos ("Verificado", "Conciliación BDV", "Puntos ES suficientes") van llenos, en verde fuerte con letra blanca.
-- **C-224 · Lo que nos hace únicos (rc.51, por subir):** "Por qué comprar en Electro Shop" en el inicio, en lugar de "Compra con confianza" (`estado/C-224.md`).
+- **C-224 · Lo que nos hace únicos (rc.51, en producción):** "Por qué comprar en Electro Shop" en el inicio, en lugar de "Compra con confianza" (`estado/C-224.md`).
   - Sabes cuánto pagas antes de pagar; tu Pago Móvil lo confirma el banco (si la verificación del BDV está activa; si no, la atención por WhatsApp); una tienda de verdad, con taller propio.
   - Los 14 años en Portuguesa, también en el pie y en Servicios (se cuentan solos desde 2012). La garantía de la ficha dice que la atiende el servicio técnico.
-- **C-223 · El aviso de cookies (rc.49, por subir):** listo para cuando se pongan las claves de Google y del píxel (`estado/C-223.md`).
+- **C-223 · El aviso de cookies (rc.49, en producción):** listo para cuando se pongan las claves de Google y del píxel (`estado/C-223.md`).
   - Chico y abajo, con "Solo las necesarias" y "Aceptar" del mismo tamaño y "Elegir". "Cookies", al pie, lo vuelve a abrir.
   - Hasta el sí, Google va sin cookies (Consent Mode) y el píxel no carga. Sin claves no sale nada.
   - La medición propia guarda la IP sin su último tramo. El texto nuevo de la política espera al abogado (sección 3, paso 18).
-- **C-225 · Los textos para buscadores (rc.48, por subir):** ya no dicen "tienda de tecnología" (`estado/C-225.md`).
+- **C-225 · Los textos para buscadores (rc.48, en producción):** ya no dicen "tienda de tecnología" (`estado/C-225.md`).
   - Sin texto propio en Configuración → SEO, se arman con lo que vende la tienda hoy ("tecnología, ferretería y gift cards"): crecen solos con cada departamento.
   - La ficha para Google es de una tienda (Store), `llms.txt` dice "Tienda en Guanare" y la imagen de la portada lleva de título lo que vende, con el lema debajo.
   - El título, la descripción, las palabras clave y el lema de producción los cambia el SQL de datos del bloque (C-220).
-- **C-222 · "Desde Aragua" y el filtro de ubicación (rc.46, por subir):** lo que eligió el equipo el 14/11 (`estado/C-222.md`).
+- **C-222 · "Desde Aragua" y el filtro de ubicación (rc.46, en producción):** lo que eligió el equipo el 14/11 (`estado/C-222.md`).
   - La tarjeta de todo lo físico dice "Desde Aragua" o "Desde Portuguesa", con el ícono de ubicación. La ficha empieza la entrega con "Sale de La Victoria, estado Aragua".
   - El catálogo filtra por "Desde dónde sale", con la cuenta de cada lugar.
   - El carrito, el pago, "Calcula tu envío" y el detalle del pedido dicen "desde Aragua (La Victoria)".
   - Dos columnas nuevas (aditivas) y su relleno, en el bloque de la sección 2.
-- **C-221 · El sorteo por pasos (rc.45, por subir):** el primero hecho con las reglas de `PLAN.md` §1.9 (`estado/C-221.md`).
+- **C-221 · El sorteo por pasos (rc.45, en producción):** el primero hecho con las reglas de `PLAN.md` §1.9 (`estado/C-221.md`).
   - Crearlo: 4 pasos (el premio, cómo se gana, las fechas y "Revisar y publicar") con la vista previa de /sorteo y de Mi panel al lado. La foto se sube o se elige de la tienda.
   - Ya creado: su tablero, con el estado, la línea de tiempo, los números, Copiar enlace, Ver en la tienda, Cambiar y Publicar o Apagar.
   - Al cambiar algo: antes → después y a cuántos clientes les cambian los boletos, antes de guardar. Al cerrar, sortear en 3 pasos.
@@ -88,26 +88,26 @@
     - C-228 a C-233, Contabilidad.
     - Cada una trabaja en su worktree y mergea con `git status` limpio en la carpeta principal.
   - **¿rc.43 ya en producción?** El pie del panel en una captura del 14/11 dice "Versión 1.0.0-rc.43 · fcdc4c0". Falta comprobarlo (`OPERACION.md` §3) y pasar el bloque a `HISTORIAL.md`.
-- **C-218 · El catálogo de la ferretería con Claude (rc.43, por subir):** la idea F y lo que faltaba de B. La lista completa de cada proveedor queda guardada al subirla; "Proponer con Claude" propone la categoría y el nombre de todo lo nuevo (los 3.114, en unos 7 minutos) y las solicitudes dicen si la ferretería lo tiene (`estado/C-218.md`). Con esto quedan hechas las cinco ideas de Haiku que eligió Andrés.
-- **C-217 · Campañas de correo con Claude (rc.42, por subir):** la idea C. En el editor de campañas, "Armar con Claude" va del objetivo al asunto y el texto con hasta 4 productos reales; la foto, el precio y el enlace los pone la tienda (`estado/C-217.md`).
-- **C-216 · Sin píldoras ámbar (rc.41, por subir):** Andrés las detesta ("se ven demasiado genéricas") y eligió la opción A: lo que alguien tiene que hacer va en un sello azul noche con el ícono en cian, en todo el panel y en Mi panel. La regla quedó en `PLAN.md` §1.1 y §1.8 y en `CLAUDE.md` (`estado/C-216.md`).
-- **C-215 · Mensajes y solicitudes por urgencia (rc.40, por subir):** la idea B, la parte de la tienda. Claude marca la urgencia, de qué trata y por qué, y en las solicitudes si ya está en la tienda; lo nuevo se revisa solo al llegar (`estado/C-215.md`). La lista de la ferretería entra con F.
-- **C-214 · Respuestas a clientes con Claude (rc.39, por subir):** la idea D. En cada mensaje de contacto, "Redactar con Claude" escribe la respuesta con su orden, los productos que nombra y lo que cobra ZOOM a su ciudad; se revisa y se manda por correo o WhatsApp (`estado/C-214.md`).
-- **C-213 · El resumen del cliente en su ficha (rc.38, por subir):** la primera de las ideas de Haiku que eligió Andrés (A). La pestaña Resumen dice lo que hay que atender y cómo compra, y a pedido Claude escribe quién es como cliente y qué ofrecerle (`estado/C-213.md`).
+- **C-218 · El catálogo de la ferretería con Claude (rc.43, en producción):** la idea F y lo que faltaba de B. La lista completa de cada proveedor queda guardada al subirla; "Proponer con Claude" propone la categoría y el nombre de todo lo nuevo (los 3.114, en unos 7 minutos) y las solicitudes dicen si la ferretería lo tiene (`estado/C-218.md`). Con esto quedan hechas las cinco ideas de Haiku que eligió Andrés.
+- **C-217 · Campañas de correo con Claude (rc.42, en producción):** la idea C. En el editor de campañas, "Armar con Claude" va del objetivo al asunto y el texto con hasta 4 productos reales; la foto, el precio y el enlace los pone la tienda (`estado/C-217.md`).
+- **C-216 · Sin píldoras ámbar (rc.41, en producción):** Andrés las detesta ("se ven demasiado genéricas") y eligió la opción A: lo que alguien tiene que hacer va en un sello azul noche con el ícono en cian, en todo el panel y en Mi panel. La regla quedó en `PLAN.md` §1.1 y §1.8 y en `CLAUDE.md` (`estado/C-216.md`).
+- **C-215 · Mensajes y solicitudes por urgencia (rc.40, en producción):** la idea B, la parte de la tienda. Claude marca la urgencia, de qué trata y por qué, y en las solicitudes si ya está en la tienda; lo nuevo se revisa solo al llegar (`estado/C-215.md`). La lista de la ferretería entra con F.
+- **C-214 · Respuestas a clientes con Claude (rc.39, en producción):** la idea D. En cada mensaje de contacto, "Redactar con Claude" escribe la respuesta con su orden, los productos que nombra y lo que cobra ZOOM a su ciudad; se revisa y se manda por correo o WhatsApp (`estado/C-214.md`).
+- **C-213 · El resumen del cliente en su ficha (rc.38, en producción):** la primera de las ideas de Haiku que eligió Andrés (A). La pestaña Resumen dice lo que hay que atender y cómo compra, y a pedido Claude escribe quién es como cliente y qué ofrecerle (`estado/C-213.md`).
   - **De paso:** "Total gastado" ya no suma lo pendiente ni lo cancelado, y las órdenes de la ficha tienen su monto.
   - **La clave de Claude del 13/11 ya no sirve** (Anthropic da 401): hace falta una nueva para el paso 1 del bloque. Se probó con un Claude simulado.
   - **F y la parte de B que faltaba:** hechas en C-218.
-- **C-212 · El sorteo de la PlayStation 4 (rc.37, por subir):** Andrés lo pidió el 13/11 y eligió los números para que la empresa no pierda (`estado/C-212.md`).
+- **C-212 · El sorteo de la PlayStation 4 (rc.37, en producción):** Andrés lo pidió el 13/11 y eligió los números para que la empresa no pierda (`estado/C-212.md`).
   - **Cómo se participa:** 1 boleto por cada compra pagada de USD 10 o más, o invitando a 2 amigos con su enlace, sin comprar (1 boleto por cada 2, hasta 3). El resultado, el 20/12.
   - **Dónde:** la página `/sorteo`, Mi panel y Marketing → Sorteo (lo que dejó, quiénes participan y "Sortear ahora").
   - **Sin permiso de Conalot, por decisión de Andrés** (`PLAN.md` §7.2): no se vende ningún boleto y hay una forma de participar sin comprar.
   - **Después del deploy:** crear el sorteo en el panel con la foto de la consola y encenderlo (paso 6 de las pruebas).
-- **C-211 · Claude Haiku 5.5 en "Buscar en la web" (rc.36, por subir):** Andrés pidió cambiar Groq por Claude y dio su clave (`estado/C-211.md`).
+- **C-211 · Claude Haiku 5.5 en "Buscar en la web" (rc.36, en producción):** Andrés pidió cambiar Groq por Claude y dio su clave (`estado/C-211.md`).
   - Claude lee las páginas, redacta la ficha y busca por su cuenta. Groq queda de respaldo.
   - La ficha dice qué IA la redactó.
   - **Va en esfuerzo alto y no máximo:** el máximo tardó 98 y 158 s y nginx corta a los 60 s; el alto, 17 y 13 s, con casi la misma ficha. Se cambia en el `.env`.
   - **La clave va en el `.env` del servidor** (paso 1 del bloque).
-- **C-210 · Correcciones del 13/11 (rc.35, por subir):** Andrés miró producción con rc.34 y pidió tres cosas. Eligió lo recomendado en las cuatro preguntas (`estado/C-210.md`).
+- **C-210 · Correcciones del 13/11 (rc.35, en producción):** Andrés miró producción con rc.34 y pidió tres cosas. Eligió lo recomendado en las cuatro preguntas (`estado/C-210.md`).
   - **"Destacados" muestra solo lo que tiene estrella,** de toda la tienda. Antes se completaba con relleno y por eso no se iban los que desactivaba.
   - **"Recién llegados" va por la fecha de publicación** (columna nueva `products.publishedAt`, con su relleno), con hasta 4 por departamento.
   - **Las píldoras del panel van llenas,** como los sellos de la tienda, y los botones se animan al pasar y al tocar (`PLAN.md` §1.8).
@@ -267,70 +267,8 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.54` (C-226, C-221, C-222, C-219, C-225, C-223, C-229, C-224, C-234, C-241 y C-235, con rc.44 a rc.53 adentro; unos 75 minutos)
-**Producción ya está en `v1.0.0-rc.43`** (`fcdc4c0`, compilada el 14/11 a las 00:10 UTC). Lo comprobó Claude desde fuera el 14/11, leyendo la versión de la página pública. Nadie lo anotó: falta que el equipo confirme si se corrió el SQL del bloque de rc.43 (abajo) y cuáles de sus pruebas se hicieron. Con eso, ese bloque pasa a `HISTORIAL.md`.
-- **C-226 (rc.44):** ningún contenedor ámbar; lo que hay que hacer va en el azul claro de la tienda. **Sin SQL, sin variables nuevas y sin cron.**
-- **C-221 (rc.45):** el sorteo por pasos. **Sin cambio de base, sin variables nuevas y sin cron.** Lleva un **SQL de datos** (abajo).
-- **C-222 (rc.46):** "Desde Aragua" y el filtro de ubicación. **Cambia la base: dos columnas nuevas, aditivas.** Sin variables nuevas y sin cron.
-  - **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-rc46.dump`
-  - `deploy.sh` para y muestra este SQL; si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
-```sql
-ALTER TABLE "suppliers" ADD COLUMN "dispatchStateName" TEXT;
-ALTER TABLE "orders" ADD COLUMN "dispatchStateName" TEXT;
-```
-  - **Después del `db push`, el relleno** (con `psql "$DB"`): el estado de la ferretería y de sus pedidos de antes (La Victoria es la ciudad 244 de ZOOM).
-```sql
-UPDATE "suppliers" SET "dispatchStateName" = 'Aragua' WHERE "dispatchCityCode" = '244' AND "dispatchStateName" IS NULL;
-UPDATE "orders" SET "dispatchStateName" = 'Aragua' WHERE "dispatchCityCode" = '244' AND "dispatchStateName" IS NULL;
-```
-- **C-219 (rc.47):** los correos de la tienda, rediseñados, y los 19 que faltaban.
-  - **Cambia la base: una columna nueva, aditiva.** `deploy.sh` la muestra junto con las de C-222:
-```sql
-ALTER TABLE "sorteos" ADD COLUMN "recordatorioAt" TIMESTAMP(3);
-```
-  - **Un cron nuevo** (en la terminal del servidor, después del deploy): `cp /var/www/electroshopve/docs/plan/scripts/cron-sorteo.sh ~/cron-sorteo.sh && chmod +x ~/cron-sorteo.sh`, y en `crontab -e` la línea `0 10 * * * /home/luami/cron-sorteo.sh >> /home/luami/cron-sorteo.log 2>&1`. Probarlo con `~/cron-sorteo.sh`: hasta el 15/12 responde `{"recordatorio":0,"motivo":"Todavía faltan más de 3 días para el cierre"}`.
-  - Sin variables nuevas.
-- **SQL de datos (C-220 y C-221), antes de subir** (en la terminal del servidor). Cambia los textos para Google y el lema (lo que el equipo iba a cambiar en el panel) y crea el sorteo de Navidad ya publicado, con los números de Andrés del 13/11. Si ya hay un sorteo, no crea otro.
-  1. Guardar los textos de hoy, para poder volver:
-     `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -c "SELECT tagline, \"metaTitle\", \"metaDescription\", \"metaKeywords\", \"productsMetaDescription\" FROM company_settings" > ~/textos-antes-c221.txt`
-  2. Correr esto con `psql "$DB"`:
-```sql
-UPDATE company_settings SET
-  tagline = 'Todo lo encuentras con nosotros.',
-  "metaTitle" = 'Electro Shop: tecnología y ferretería, envíos a toda Venezuela',
-  "metaDescription" = 'Tienda en Guanare con tecnología, ferretería, gift cards y recargas. Precios en $ y Bs a tasa BCV, IVA incluido, y envío por ZOOM o MRW a todo el país.',
-  "metaKeywords" = 'tecnología, ferretería, herramientas, iluminación, gift cards, recargas, Guanare, Portuguesa, Venezuela, Pago Móvil',
-  "productsMetaDescription" = 'Tecnología, ferretería, gift cards y recargas con envío a toda Venezuela. Precios en dólares y bolívares a tasa BCV.';
-
-INSERT INTO sorteos (id, titulo, premio, imagen, "costoPremioUSD", "compraMinimaUSD", "topeInvitar", desde, hasta, "resultadoEl", activo, "createdAt", "updatedAt")
-SELECT 'sorteo-navidad-2026', 'Sorteo de Navidad', 'PlayStation 4 reacondicionada con 1 control y 1 TB', NULL, 220, 10, 3,
-  '2026-11-14 04:00:00', '2026-12-19 03:59:59.999', '2026-12-20 04:00:00', true, now(), now()
-WHERE NOT EXISTS (SELECT 1 FROM sorteos);
-```
-  - Las fechas van en UTC: del 14/11 al 18/12 (hasta las 11:59 p. m.) y el resultado el 20/12, hora de Venezuela.
-  - La foto de la consola se agrega después en Marketing → Sorteo → Cambiar (se sube desde la computadora). Sin foto, /sorteo se ve igual, sin el recuadro de la imagen.
-- **C-229 (rc.50):** Contabilidad → Facturas, las facturas de talonario.
-  - **Cambia la base: dos tablas y una columna nuevas, aditivas, con sus índices y llaves.** `deploy.sh` las muestra junto con las de C-222 y C-219:
-```sql
-ALTER TABLE "orders" ADD COLUMN "documentoFiscalId" TEXT;
-CREATE TABLE "talonarios" ("id" TEXT NOT NULL, "serie" TEXT NOT NULL, "numeroDesde" INTEGER NOT NULL, "numeroHasta" INTEGER NOT NULL, "proximo" INTEGER NOT NULL, "controlSerie" TEXT NOT NULL DEFAULT '00', "controlDesde" INTEGER NOT NULL, "controlHasta" INTEGER NOT NULL, "emisorNombre" TEXT NOT NULL, "emisorRif" TEXT NOT NULL, "emisorDomicilio" TEXT NOT NULL, "emisorTelefono" TEXT, "imprenta" TEXT NOT NULL, "imprentaRif" TEXT NOT NULL, "autorizacion" TEXT NOT NULL, "elaboradoEl" TIMESTAMP(3), "region" TEXT, "estado" TEXT NOT NULL DEFAULT 'EN_USO', "notas" TEXT, "creadoPorId" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "talonarios_pkey" PRIMARY KEY ("id"));
-CREATE TABLE "documentos_fiscales" ("id" TEXT NOT NULL, "tipo" TEXT NOT NULL DEFAULT 'FACTURA', "medio" TEXT NOT NULL DEFAULT 'TALONARIO', "talonarioId" TEXT, "serie" TEXT, "numero" INTEGER NOT NULL, "numeroControl" TEXT NOT NULL, "emitidaEl" TIMESTAMP(3) NOT NULL, "periodo" TEXT NOT NULL, "estado" TEXT NOT NULL DEFAULT 'EMITIDA', "motivoAnulacion" TEXT, "anuladaEl" TIMESTAMP(3), "anuladaPorId" TEXT, "origen" TEXT NOT NULL, "compradorTipo" TEXT, "compradorNombre" TEXT, "compradorDocumento" TEXT, "compradorDomicilio" TEXT, "compradorTelefono" TEXT, "condicionPago" TEXT NOT NULL DEFAULT 'CONTADO', "renglones" JSONB, "descuentoBs" DECIMAL(65,30) NOT NULL DEFAULT 0, "baseBs" DECIMAL(65,30) NOT NULL DEFAULT 0, "alicuota" DECIMAL(65,30) NOT NULL DEFAULT 16, "ivaBs" DECIMAL(65,30) NOT NULL DEFAULT 0, "exentoBs" DECIMAL(65,30) NOT NULL DEFAULT 0, "totalBs" DECIMAL(65,30) NOT NULL DEFAULT 0, "totalUSD" DECIMAL(65,30), "tasa" DECIMAL(65,30), "ivaRetenidoBs" DECIMAL(65,30), "comprobanteRetencion" TEXT, "documentoAfectadoId" TEXT, "creadoPorId" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "documentos_fiscales_pkey" PRIMARY KEY ("id"));
-CREATE INDEX "documentos_fiscales_periodo_idx" ON "documentos_fiscales"("periodo");
-CREATE UNIQUE INDEX "documentos_fiscales_talonarioId_numero_key" ON "documentos_fiscales"("talonarioId", "numero");
-ALTER TABLE "orders" ADD CONSTRAINT "orders_documentoFiscalId_fkey" FOREIGN KEY ("documentoFiscalId") REFERENCES "documentos_fiscales"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-ALTER TABLE "documentos_fiscales" ADD CONSTRAINT "documentos_fiscales_talonarioId_fkey" FOREIGN KEY ("talonarioId") REFERENCES "talonarios"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-```
-  - Sin variables nuevas y sin cron. **Después del deploy, el dueño carga el talonario** (§3, paso 22).
-- **C-224 (rc.51):** lo que nos hace únicos. Sin cambio de base, sin variables nuevas y sin cron.
-- **C-234 (rc.52):** cuándo sale cada pedido.
-  - **Cambia la base: tres columnas nuevas, aditivas, con su valor de siempre** (el corte a las 2:00 p. m. y sin días de más). `deploy.sh` las muestra junto con las de C-222, C-219 y C-229:
-```sql
-ALTER TABLE "company_settings" ADD COLUMN "diasAbiertos" TEXT[] DEFAULT ARRAY[]::TEXT[],
-ADD COLUMN "diasCerrados" TEXT[] DEFAULT ARRAY[]::TEXT[],
-ADD COLUMN "horaCorte" TEXT NOT NULL DEFAULT '14:00';
-```
-  - Sin variables nuevas y sin cron.
-- **C-241 (rc.53):** el checkout por pasos. Sin cambio de base, sin variables nuevas y sin cron.
+### El bloque por subir: `v1.0.0-rc.54` (C-235; unos 15 minutos)
+**Producción está en `v1.0.0-rc.53`** (`a604c77`). La subió el equipo el 14/11 y Claude la comprobó desde fuera el mismo día; su bloque está en `HISTORIAL.md`. Si C-227 (rc.55, de la otra sesión) entra antes de subir, trae su propio SQL y un cron nuevo, y su sesión lo agrega aquí.
 - **C-235 (rc.54):** la contadora en el equipo.
   - **Cambia la base: un rol nuevo y dos tablas, aditivos.** `deploy.sh` los muestra junto con lo de C-222, C-219, C-229 y C-234. El `ALTER TYPE` de la primera línea **es el esperado:** agrega el rol "Contadora" y no cambia a nadie.
 ```sql
@@ -341,8 +279,17 @@ CREATE UNIQUE INDEX "firmas_contables_userId_key" ON "firmas_contables"("userId"
 CREATE INDEX "notas_contables_periodo_idx" ON "notas_contables"("periodo");
 ```
   - Sin variables nuevas y sin cron. **Después del deploy, el dueño invita a la contadora** (§3, paso 23).
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.54`.
-- **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
+- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc54.dump`
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para y muestra el SQL de arriba; si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.54`.
+- **Pruebas** (unos 5 minutos, con la cuenta del dueño):
+  1. **La contadora** (C-235):
+      - Contabilidad → "Mesa de la contadora": el saludo con tu nombre, el mes en números y, a la derecha, "La firma de la contadora" (vacía hasta que ella la dibuje).
+      - Equipo → Invitar: está la opción "Contadora", con lo que puede y no puede hacer. **Invítala de verdad en el paso 23 de §3**, no con una cuenta de prueba.
+      - Cuando ella entre (después del paso 23): en su menú solo están Contabilidad, Mi seguridad y Versiones. Si escribe `/admin/orders`, vuelve a su mesa.
+- **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base: al ver las dos tablas de C-235, se para en el paso 2 y la tienda sigue como está (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las dos tablas no molestan al código anterior. **Si la contadora ya está invitada,** el código anterior no conoce su rol: antes de volver atrás, quítale el acceso en Equipo y corre con `psql "$DB"` `UPDATE "users" SET role = 'USER' WHERE role = 'ACCOUNTANT';` (vuelve a ser contadora con el deploy siguiente: Equipo → Invitar otra vez).
+
+### Por confirmar de rc.53 (C-226 a C-241; unos 30 minutos, en la computadora y en el teléfono)
+Ya en producción desde el 14/11 (`HISTORIAL.md`). **Claude ya comprobó desde fuera** la 4, la 13 (menos la vista previa en WhatsApp del teléfono), la 14, y la primera parte de la 5, la 7 y la 8. **El cron del sorteo:** `~/cron-sorteo.sh` rebota al inicio de sesión hasta C-227 (rc.55); la línea del `crontab` ya está.
   1. **En el panel:** Configuración → Respaldos con los respaldos apagados, y Productos → Nuevo → Publicar con un dato faltante. El aviso va en azul claro, con el ícono cian en su placa azul noche. No queda ninguna caja ámbar.
   2. **En la tienda,** con una cuenta sin verificar: el checkout muestra "Verificación requerida" con el círculo azul noche. Mi panel → Documentos con uno por firmar: la nota va en azul claro.
   3. **Un presupuesto** (Cotizaciones → uno con nota): "Lo que no incluye" va en azul claro, también al imprimirlo.
@@ -375,128 +322,9 @@ CREATE INDEX "notas_contables_periodo_idx" ON "notas_contables"("periodo");
       - En Revisar, sin los términos, "Siguiente: pagar" está apagado.
       - En Pagar están el método y "Completar Pedido". Tocar "Entrega" arriba vuelve, y lo elegido sigue ahí.
       - Ninguna letra ámbar; "Verificado" (a la derecha, en tu información de contacto) va en verde fuerte con letra blanca.
-  20. **La contadora** (C-235), con la cuenta del dueño:
-      - Contabilidad → "Mesa de la contadora": el saludo con tu nombre, el mes en números y, a la derecha, "La firma de la contadora" (vacía hasta que ella la dibuje).
-      - Equipo → Invitar: está la opción "Contadora", con lo que puede y no puede hacer. **Invítala de verdad en el paso 23 de §3**, no con una cuenta de prueba.
-      - Cuando ella entre (después del paso 23): en su menú solo están Contabilidad, Mi seguridad y Versiones. Si escribe `/admin/orders`, vuelve a su mesa.
-- **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas y la columna de C-229, las tres columnas de C-234 y las dos tablas de C-235 no molestan al código anterior. **Si la contadora ya está invitada,** el código anterior no conoce su rol: antes de volver atrás, quítale el acceso en Equipo y corre con `psql "$DB"` `UPDATE "users" SET role = 'USER' WHERE role = 'ACCOUNTANT';` (vuelve a ser contadora con el deploy siguiente: Equipo → Invitar otra vez). Los textos de antes quedan en `~/textos-antes-c221.txt`; el sorteo se apaga en Marketing → Sorteo → Apagar. La columna nueva de C-219 no molesta al código anterior; el cron del sorteo se quita con `crontab -e`.
 
-### Ya en producción, sin anotar: `v1.0.0-rc.43` (C-210 a C-218, con rc.35 a rc.42 adentro)
-Antes, producción estaba en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`. Lo que sigue es el bloque tal como se preparó: hay que confirmar su SQL y sus pruebas.
-- **C-210 (rc.35):**
-  - "Destacados" muestra solo lo que tiene estrella, de toda la tienda;
-  - "Recién llegados" va por la fecha de publicación, con hasta 4 por departamento;
-  - las píldoras del panel van llenas, como las de la tienda, y los botones se animan.
-- **C-211 (rc.36):** "Buscar en la web" con Claude Haiku 5.5 en esfuerzo alto, con Groq de respaldo. Una dependencia nueva (`@anthropic-ai/sdk`, la instala `deploy.sh`) y **una variable nueva en el `.env`**.
-- **C-212 (rc.37):** el sorteo de la PlayStation 4: `/sorteo`, la tarjeta en Mi panel y Marketing → Sorteo. Dos tablas nuevas.
-- **C-213 (rc.38):** la pestaña Resumen de la ficha del cliente, con Claude, y "Total gastado" sin lo pendiente ni lo cancelado. Sin cambio de base.
-- **C-214 (rc.39):** "Redactar con Claude" en los mensajes de contacto. Sin cambio de base.
-- **C-215 (rc.40):** los mensajes y las solicitudes por urgencia, con Claude. 9 columnas nuevas.
-- **C-216 (rc.41):** sin píldoras ámbar: lo que hay que hacer va en un sello azul noche. Sin cambio de base.
-- **C-217 (rc.42):** "Armar con Claude" en las campañas de correo. Sin cambio de base.
-- **C-218 (rc.43):** el catálogo de la ferretería con Claude y "Lo tiene <proveedor>" en las solicitudes. Una tabla y una columna nuevas.
-
-**SQL total** (`prisma migrate diff` contra el esquema de `v1.0.0-rc.34`). Es aditivo: 11 columnas nuevas y tres tablas nuevas; no toca ningún dato.
-```sql
-ALTER TABLE "products" ADD COLUMN "publishedAt" TIMESTAMP(3);
-
-ALTER TABLE "contact_messages" ADD COLUMN "iaMotivo" TEXT,
-ADD COLUMN "iaRevisadoAt" TIMESTAMP(3),
-ADD COLUMN "iaTipo" TEXT,
-ADD COLUMN "iaUrgencia" TEXT;
-
-ALTER TABLE "product_requests" ADD COLUMN "iaArticuloId" TEXT,
-ADD COLUMN "iaCoincide" TEXT,
-ADD COLUMN "iaMotivo" TEXT,
-ADD COLUMN "iaProductoId" TEXT,
-ADD COLUMN "iaRevisadoAt" TIMESTAMP(3),
-ADD COLUMN "iaUrgencia" TEXT;
-
-CREATE TABLE "articulos_proveedor" (
-    "id" TEXT NOT NULL,
-    "supplierId" TEXT NOT NULL,
-    "codigo" TEXT NOT NULL,
-    "nombre" TEXT NOT NULL,
-    "departamento" TEXT,
-    "categoria" TEXT,
-    "marca" TEXT,
-    "modelo" TEXT,
-    "existencia" DECIMAL(65,30),
-    "precioLista" DECIMAL(65,30),
-    "enLista" BOOLEAN NOT NULL DEFAULT true,
-    "vistoAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "iaNombre" TEXT,
-    "iaCategoriaId" TEXT,
-    "iaDuda" TEXT,
-    "iaNombreDe" TEXT,
-    "iaRevisadoAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    CONSTRAINT "articulos_proveedor_pkey" PRIMARY KEY ("id")
-);
-CREATE INDEX "articulos_proveedor_supplierId_enLista_idx" ON "articulos_proveedor"("supplierId", "enLista");
-CREATE UNIQUE INDEX "articulos_proveedor_supplierId_codigo_key" ON "articulos_proveedor"("supplierId", "codigo");
-ALTER TABLE "articulos_proveedor" ADD CONSTRAINT "articulos_proveedor_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "suppliers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-CREATE TABLE "sorteos" (
-    "id" TEXT NOT NULL,
-    "titulo" TEXT NOT NULL,
-    "premio" TEXT NOT NULL,
-    "imagen" TEXT,
-    "costoPremioUSD" DECIMAL(65,30) NOT NULL DEFAULT 0,
-    "compraMinimaUSD" DECIMAL(65,30) NOT NULL DEFAULT 10,
-    "topeInvitar" INTEGER NOT NULL DEFAULT 3,
-    "desde" TIMESTAMP(3) NOT NULL,
-    "hasta" TIMESTAMP(3) NOT NULL,
-    "resultadoEl" TIMESTAMP(3) NOT NULL,
-    "activo" BOOLEAN NOT NULL DEFAULT false,
-    "sorteadoAt" TIMESTAMP(3),
-    "ganadorUserId" TEXT,
-    "ganadorEmail" TEXT,
-    "ganadorDetalle" TEXT,
-    "boletosAlSortear" INTEGER,
-    "huellaLista" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    CONSTRAINT "sorteos_pkey" PRIMARY KEY ("id")
-);
-
-CREATE TABLE "sorteo_participantes" (
-    "id" TEXT NOT NULL,
-    "sorteoId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "codigo" TEXT NOT NULL,
-    "invitadoPorId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "sorteo_participantes_pkey" PRIMARY KEY ("id")
-);
-
-CREATE UNIQUE INDEX "sorteo_participantes_codigo_key" ON "sorteo_participantes"("codigo");
-CREATE INDEX "sorteo_participantes_invitadoPorId_idx" ON "sorteo_participantes"("invitadoPorId");
-CREATE UNIQUE INDEX "sorteo_participantes_sorteoId_userId_key" ON "sorteo_participantes"("sorteoId", "userId");
-ALTER TABLE "sorteo_participantes" ADD CONSTRAINT "sorteo_participantes_sorteoId_fkey" FOREIGN KEY ("sorteoId") REFERENCES "sorteos"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "sorteo_participantes" ADD CONSTRAINT "sorteo_participantes_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-```
-Después, una sola vez, el relleno de lo ya publicado: `docs/plan/scripts/c210-fecha-de-publicacion.sql`. Sin crons.
-
-**Antes del deploy, la clave de Claude.** La del 13/11 ya no sirve (Anthropic responde "invalid x-api-key"): si la borraste, crea una nueva en platform.claude.com → API Keys. En la terminal del servidor, en `/var/www/electroshopve`:
-1. `nano .env` y, al final, una línea nueva: `ANTHROPIC_API_KEY="tu clave"`. Guarda con Ctrl + O, Enter, y sal con Ctrl + X.
-2. Comprueba que quedó una sola: `grep -c '^ANTHROPIC_API_KEY' .env` debe decir `1`.
-3. **Opcional:** `ANTHROPIC_EFFORT="high"` es el esfuerzo por defecto. `"max"` tarda más de lo que nginx espera: no lo pongas sin hablar con Claude.
-
-**Paso a paso.** En la terminal del servidor, en `/var/www/electroshopve`:
-```bash
-git describe --tags --abbrev=0 && git status -sb                       # v1.0.0-rc.34 y sin cambios
-DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc35.dump
-bash scripts/deploy.sh                       # se detiene y muestra el SQL de arriba
-npx prisma db push && bash scripts/deploy.sh # agrega las columnas y las tres tablas, y compila
-DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/c210-fecha-de-publicacion.sql
-git describe --tags --abbrev=0               # v1.0.0-rc.43
-```
-- `prisma db push` no debería preguntar nada: las columnas y las tablas son nuevas. Si avisa de perder datos, no sigas y pásale el texto a Claude.
-- **El relleno termina con `publicados_sin_fecha`, que debe decir 0.** Si dice otro número, pásale la salida a Claude.
-
-**Pruebas** (unos 10 minutos):
+### Por confirmar de rc.43 (C-210 a C-218; unos 15 minutos)
+Ya en producción desde el 14/11 (`HISTORIAL.md`). Su SQL está confirmado. **Falta saber si se corrió el relleno de la fecha de publicación**, que ordena "Recién llegados". Correrlo otra vez no hace daño: solo llena lo que sigue vacío. En la terminal del servidor: `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -f docs/plan/scripts/c210-fecha-de-publicacion.sql`. Al final, `publicados_sin_fecha` debe decir 0.
 1. **En la computadora, en una ventana de incógnito,** abre el inicio.
    - "Destacados de la semana" muestra los que tienen la estrella: hoy, la hidrolavadora, el taladro, los audífonos y el SSD.
    - "Recién llegados" abre con la lijadora, el esmeril y la aspiradora.
@@ -530,7 +358,6 @@ git describe --tags --abbrev=0               # v1.0.0-rc.43
    5. **Con una cuenta de cliente,** en el teléfono: "Tus boletos" y "Compartir por WhatsApp". En Mi panel sale la tarjeta "Tienes N boletos".
    6. **El 20/12,** en Marketing → Sorteo, "Sortear ahora". Solo se puede después del cierre y una sola vez. Escríbele al ganador al correo que sale ahí.
 
-**Vuelta atrás:** `git reset --hard v1.0.0-rc.34 && npm install && bash scripts/deploy.sh --sin-pull`. Las columnas y las tres tablas nuevas, y la clave del `.env`, no molestan al código anterior y se pueden quedar.
 
 **Por confirmar de rc.33 (con una cuenta, unos 15 minutos):**
 1. **La Lista del proveedor por pasos:** arriba se ven los 5 pasos. En el paso 2, abre "1 - Cargar en la tienda" de la carpeta de la ferretería, selecciona todo (Ctrl + A) y suéltalo: dice "105 fotos · 74 códigos de su lista con foto".
@@ -788,7 +615,7 @@ En el orden en que más destraban:
 ## 4. Fila de Claude
 **Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) C-224 (los tres únicos, rc.51) y C-241 (el checkout por pasos, rc.53). También C-226 (sin ámbar, rc.44), C-219 (los correos, rc.47) y C-234 (cuándo sale cada pedido, rc.52).
 
-**Sigue:** C-227 (los correos a los proveedores, con el plazo de C-234; de la otra sesión). Del plan del 14/11 falta subirlo (el bloque de la sección 2) y, después, lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
+**Sigue:** C-227 (los correos a los proveedores, con el plazo de C-234; de la otra sesión). El plan del 14/11 está en producción desde ese día (rc.53). Falta lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
 
 **Contabilidad (C-228 y C-228b, `CONTABILIDAD.md`):** C-229 (rc.50, las facturas de talonario) y C-235 (rc.54, la contadora en el equipo) hechas. Sigue C-230 antes del 15/12, con sus respuestas. El resto en el orden de `PLAN.md` §5.2, todo antes del 19/04/2027.
 

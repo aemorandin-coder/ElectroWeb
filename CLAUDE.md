@@ -47,6 +47,7 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
   - una línea de ayuda como mucho; lo demás, detrás de (i), y las reglas, con un ejemplo;
   - al final, "Revisar y publicar" con la vista previa; al cambiar algo publicado, antes → después y a cuántos afecta;
   - las fotos se suben o se eligen, nunca se pega una dirección; los campos, del tamaño de su dato (§1.5).
+  - para elegir entre opciones, `components/admin/Opcion` (C-242, §1.10): `adminChoice` sola es solo la piel y deja el ícono encima y el texto pegado al borde.
 - Precios con `lib/currency.ts` (`formatUSD`, `formatVES`).
 - Sin `<style jsx>`, `console.log` ni `any` nuevos. Sin animaciones infinitas en la tienda.
 - **Nombres de producto escritos normal** (C-202, `PLAN.md` §7.2): como una oración, con siglas, unidades y marcas como se escriben. Para proponerlos está `lib/nombres/producto.ts`. Cambiar un nombre cambia la dirección: la anterior queda en `previousSlugs` y redirige; no la dejes sin guardar.

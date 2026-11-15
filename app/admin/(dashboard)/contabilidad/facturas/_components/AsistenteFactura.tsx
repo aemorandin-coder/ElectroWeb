@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import Ayuda from '@/components/admin/Ayuda';
+import Opcion, { OpcionRadio } from '@/components/admin/Opcion';
 import Pasos, { type Paso } from '@/components/admin/Pasos';
 import CasillaPorCasilla from '@/components/admin/contabilidad/CasillaPorCasilla';
 import ReplicaTalonario from '@/components/admin/contabilidad/ReplicaTalonario';
@@ -20,7 +21,7 @@ import {
   IconoImpresora, IconoLista, IconoMas, IconoOrdenes, IconoTienda, IconoVer,
 } from '@/components/iconos';
 import {
-  adminCard, adminChoice, adminError, adminHint, adminInput, adminLabel, adminNotice, adminPrimaryButton, adminSecondaryButton,
+  adminCard, adminError, adminHint, adminInput, adminLabel, adminNotice, adminPrimaryButton, adminSecondaryButton,
 } from '@/lib/admin-ui';
 import type { CompraSinFactura, Borrador } from '@/lib/contabilidad/servidor';
 import { normalizarDocumento, tipoComprador } from '@/lib/contabilidad/montos';
@@ -218,15 +219,11 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
         <section className={`${adminCard} max-w-3xl`} aria-labelledby="paso-origen">
           <h2 id="paso-origen" className="text-lg font-semibold text-ink">De dónde sale</h2>
           <p className="mt-1 text-sm text-muted">Una compra de la web, o una venta en la tienda sin orden.</p>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            <button type="button" onClick={() => setOrigen('ORDEN')} className={adminChoice(origen === 'ORDEN')} aria-pressed={origen === 'ORDEN'}>
-              <IconoOrdenes className="h-5 w-5" aria-hidden="true" />
-              <span className="text-left"><span className="block font-semibold">Una compra de la web</span><span className="block text-xs text-muted">Los montos salen de la orden</span></span>
-            </button>
-            <button type="button" onClick={() => { setOrigen('TIENDA'); setOrdenIds([]); }} className={adminChoice(origen === 'TIENDA')} aria-pressed={origen === 'TIENDA'}>
-              <IconoTienda className="h-5 w-5" aria-hidden="true" />
-              <span className="text-left"><span className="block font-semibold">Una venta en la tienda</span><span className="block text-xs text-muted">Escribes los renglones</span></span>
-            </button>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <Opcion elegida={origen === 'ORDEN'} aria-pressed={origen === 'ORDEN'} onClick={() => setOrigen('ORDEN')}
+              icono={IconoOrdenes} titulo="Una compra de la web" detalle="Los montos salen de la orden" />
+            <Opcion elegida={origen === 'TIENDA'} aria-pressed={origen === 'TIENDA'} onClick={() => { setOrigen('TIENDA'); setOrdenIds([]); }}
+              icono={IconoTienda} titulo="Una venta en la tienda" detalle="Escribes los renglones" />
           </div>
 
           {origen === 'ORDEN' && (
@@ -240,18 +237,18 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
                     const elegida = c.ordenIds.join() === ordenIds.join();
                     return (
                       <li key={c.ordenIds.join()}>
-                        <label className={`${adminChoice(elegida)} cursor-pointer`}>
-                          <input type="radio" name="compra" className="sr-only" checked={elegida} onChange={() => { setOrdenIds(c.ordenIds); setDescripciones(null); setComprador(vacio); }} />
-                          <span className="min-w-0 flex-1 text-left">
-                            <span className="block truncate font-semibold">{c.ordenes.join(' y ')} · {c.cliente}</span>
-                            <span className="block text-xs text-muted">
-                              {c.pagadaEl ? `Pagada el ${fechaCorta(c.pagadaEl)}` : 'Orden elegida'}
-                              {c.productos ? ` · ${c.productos} ${c.productos === 1 ? 'producto' : 'productos'}` : ''}
-                              {c.digital ? ' · sin IVA' : ''}
-                            </span>
-                          </span>
-                          {c.totalUSD > 0 && <span className="shrink-0 text-right text-sm font-semibold tabular-nums">{formatUSD(c.totalUSD)}</span>}
-                        </label>
+                        <OpcionRadio
+                          name="compra"
+                          elegida={elegida}
+                          onElegir={() => { setOrdenIds(c.ordenIds); setDescripciones(null); setComprador(vacio); }}
+                          titulo={<span className="block truncate">{c.ordenes.join(' y ')} · {c.cliente}</span>}
+                          detalle={<>
+                            {c.pagadaEl ? `Pagada el ${fechaCorta(c.pagadaEl)}` : 'Orden elegida'}
+                            {c.productos ? ` · ${c.productos} ${c.productos === 1 ? 'producto' : 'productos'}` : ''}
+                            {c.digital ? ' · sin IVA' : ''}
+                          </>}
+                          extra={c.totalUSD > 0 ? <span className="shrink-0 text-right text-sm font-semibold tabular-nums">{formatUSD(c.totalUSD)}</span> : undefined}
+                        />
                       </li>
                     );
                   })}
@@ -270,9 +267,8 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
               <span className={adminLabel}>Condiciones de pago</span>
               <div className="flex gap-2" role="radiogroup" aria-label="Condiciones de pago">
                 {(['CONTADO', 'CREDITO'] as const).map((c) => (
-                  <button key={c} type="button" role="radio" aria-checked={condicion === c} onClick={() => setCondicion(c)} className={`${adminChoice(condicion === c)} flex-1 justify-center py-2`}>
-                    {c === 'CONTADO' ? 'Contado' : 'Crédito'}
-                  </button>
+                  <Opcion key={c} tamano="chica" role="radio" aria-checked={condicion === c} elegida={condicion === c} onClick={() => setCondicion(c)}
+                    titulo={c === 'CONTADO' ? 'Contado' : 'Crédito'} className="flex-1" />
                 ))}
               </div>
             </div>
@@ -346,17 +342,16 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
           ) : (
             <>
               <p className="mt-1 text-sm text-muted">El precio de cada producto en dólares, como en la tienda: con el IVA ({alicuota} %) adentro.</p>
-              <div className="mt-4 hidden grid-cols-[4.5rem_minmax(0,1fr)_5.5rem_8rem_2.75rem] gap-2 text-xs font-semibold uppercase tracking-wide text-muted lg:grid">
+              <div className="mt-4 hidden grid-cols-[4.5rem_minmax(0,1fr)_8rem_8rem_2.75rem] gap-2 text-xs font-semibold uppercase tracking-wide text-muted lg:grid">
                 <span>Cant.</span><span>Descripción</span><span>(E)</span><span>Precio $</span><span />
               </div>
               <ul className="mt-2 space-y-3 lg:space-y-2">
                 {manuales.map((m, i) => (
-                  <li key={i} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-2 rounded-xl border border-line p-3 lg:grid-cols-[4.5rem_minmax(0,1fr)_5.5rem_8rem_2.75rem] lg:items-center lg:border-0 lg:p-0">
+                  <li key={i} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-2 rounded-xl border border-line p-3 lg:grid-cols-[4.5rem_minmax(0,1fr)_8rem_8rem_2.75rem] lg:items-center lg:border-0 lg:p-0">
                     <input aria-label={`Cantidad del renglón ${i + 1}`} value={m.cantidad} inputMode="numeric" maxLength={4} onChange={(e) => setManuales(manuales.map((x, j) => (j === i ? { ...x, cantidad: e.target.value.replace(/\D/g, '') } : x)))} className={`${adminInput()} text-center tabular-nums`} />
                     <input aria-label={`Descripción del renglón ${i + 1}`} value={m.descripcion} maxLength={90} placeholder="Control PlayStation 5" onChange={(e) => setManuales(manuales.map((x, j) => (j === i ? { ...x, descripcion: e.target.value } : x)))} className={adminInput()} />
-                    <button type="button" aria-pressed={m.exento} onClick={() => setManuales(manuales.map((x, j) => (j === i ? { ...x, exento: !x.exento } : x)))} className={`${adminChoice(m.exento)} justify-center py-2 text-sm`}>
-                      {m.exento ? '(E) exento' : 'Con IVA'}
-                    </button>
+                    <Opcion tamano="chica" aria-pressed={m.exento} elegida={m.exento} onClick={() => setManuales(manuales.map((x, j) => (j === i ? { ...x, exento: !x.exento } : x)))}
+                      titulo={m.exento ? '(E) exento' : 'Con IVA'} className="whitespace-nowrap" />
                     <input aria-label={`Precio en dólares del renglón ${i + 1}`} value={m.precio} inputMode="decimal" placeholder="0,00" onChange={(e) => setManuales(manuales.map((x, j) => (j === i ? { ...x, precio: e.target.value } : x)))} className={`${adminInput()} text-right tabular-nums`} />
                     <button type="button" aria-label={`Quitar el renglón ${i + 1}`} disabled={manuales.length === 1} onClick={() => setManuales(manuales.filter((_, j) => j !== i))} className={`${adminSecondaryButton} px-0`}>
                       <IconoEliminar className="h-4 w-4" aria-hidden="true" />

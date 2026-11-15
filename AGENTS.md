@@ -17,7 +17,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Pantallas del panel (todas las IA, desde el 14/11)
 
-Crear o cambiar algo en el panel sigue `docs/plan/PLAN.md` §1.9 (C-220): por pasos con su ícono, de 2 a 4 campos por paso, una línea de ayuda como mucho, "Revisar y publicar" con la vista previa, antes → después al cambiar algo publicado, fotos que se suben o se eligen y campos del tamaño de su dato (§1.5).
+Crear o cambiar algo en el panel sigue `docs/plan/PLAN.md` §1.9 (C-220): por pasos con su ícono, de 2 a 4 campos por paso, una línea de ayuda como mucho, "Revisar y publicar" con la vista previa, antes → después al cambiar algo publicado, fotos que se suben o se eligen y campos del tamaño de su dato (§1.5). Para elegir entre opciones, `components/admin/Opcion` (§1.10, C-242).
 
 ## Diseño (skills globales)
 

@@ -513,3 +513,4 @@ Andrés pidió pulir Mi panel, así que Claude entró a tu carril (`estado/C-201
   - Vale también para tus pantallas (`app/customer/**`, cursos, servicios): si una tarjeta tuya toca un formulario, aplícalo.
 - **Filtros en píldoras (§1.7):** ícono, nombre, cuenta y un subtítulo corto, con `components/admin/Filtros`. Si tu tarjeta tiene píldoras de filtro, úsalo; no armes otras a mano.
 - **Trabajos de varios pasos (§1.6):** `components/admin/Pasos`. No es de tu carril: si una pantalla tuya lo necesita, pídelo como `PEDIDO:`.
+- **Elegir entre opciones (§1.10, C-242):** `components/admin/Opcion` (ícono, título, línea y círculo, con su relleno). No uses `adminChoice` sola en una pieza nueva: es solo el borde y el color.

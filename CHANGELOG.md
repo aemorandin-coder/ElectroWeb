@@ -10,6 +10,16 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.63] - 2026-11-15
+Lo que eligió el equipo de C-245, la parte a: los filtros en las píldoras de estado, en todos los tamaños (la A). Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. La parte b (crear por pasos) sigue en C-249b.
+### Órdenes y pagos 1.6.4 (C-249)
+- **Órdenes:** los 7 estados en píldoras con ícono, cuenta y lo que juntan, en la computadora y en el teléfono (antes, un selector y pestañas). Lo que te toca, en el azul claro.
+- **Transacciones:** el estado en píldoras, con la cuenta de las pendientes. El tipo queda en su selector.
+### Clientes 1.5.2 (C-249)
+- **Mensajes y solicitudes:** el estado de los mensajes y el de las solicitudes de producto, en píldoras con su cuenta.
+### Cursos 1.1.3, Trabajos realizados 1.0.7 y ElectroStudio 1.2.7 (C-249)
+- Las categorías de los cursos y de los trabajos, los estados de Creadores y lo que hay que atender en ElectroStudio, en píldoras con ícono, cuenta y lo que juntan.
+
 ## [1.0.0-rc.62] - 2026-11-15
 Dos botones de Contabilidad con la regla de C-245: lo que se suma a un botón compartido gana con `!`. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Contabilidad 1.2.2 (C-248)

@@ -1,9 +1,13 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.62, por subir)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.63, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-249 · Lo que eligió el equipo de C-245 (rc.63, por subir; `estado/C-249.md`):** la A y la A (`PLAN.md` §7.2).
+  - **Hecho:** los filtros de Órdenes, Transacciones y Mensajes en las píldoras de estado, en todos los tamaños. Se fueron el selector y las pestañas.
+  - **También:** Cursos, Trabajos realizados, Creadores y ElectroStudio, con las píldoras de `Filtros`.
+  - **Sigue C-249b:** los ocho formularios por pasos en su propia página, empezando por el cupón.
 - **C-248 · Dos botones de Contabilidad (rc.62, por subir):** en una venta de la tienda, el tacho de "Quitar el renglón" se ve entero (quedaba en 4 px); "Copiar datos para facturar" se pone en verde al copiar (`estado/C-248.md`).
 - **C-245 · El panel entero con el kit de marca (rc.61, por subir):** lo pidió el equipo el 15/11 y lo hizo un agente aparte (`estado/C-245.md`).
   - **El inventario:** las 43 pantallas del panel, en el código y en capturas, con cada problema como mecánico o como rediseño.
@@ -303,7 +307,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.62` (C-243, C-244, C-247, C-246, C-245 y C-248; unos 45 minutos)
+### El bloque por subir: `v1.0.0-rc.63` (C-243, C-244, C-247, C-246, C-245, C-248 y C-249; unos 50 minutos)
 **Producción está en `v1.0.0-rc.56`** (`471a54d`); su bloque está en `HISTORIAL.md`.
 - **C-243 (rc.57):** el kit de marca. **Sin cambio de base, sin SQL, sin variables nuevas y sin cron.**
   - **Las imágenes para compartir cambian de dirección** (`?v=`): WhatsApp y Facebook las vuelven a pedir solas.
@@ -320,8 +324,9 @@ ADD COLUMN "taxId" TEXT;
   - Sin variables nuevas, sin SQL de datos y sin cron.
 - **C-245 (rc.61):** el panel entero con el kit. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **C-248 (rc.62):** dos botones de Contabilidad. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **C-249 (rc.63):** los filtros en píldoras de Órdenes, Transacciones, Mensajes, Cursos, Trabajos realizados, Creadores y ElectroStudio. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc60.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.62`, o una mayor si entró otra tarea antes del `git pull`.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.63`, o una mayor si entró otra tarea antes del `git pull`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **`/sorteo`:** la franja de arriba va en el azul oscuro del logo, sin azul casi negro ni letras cian.
   2. **En el teléfono, la barra de abajo** va en el mismo azul oscuro.
@@ -347,6 +352,10 @@ ADD COLUMN "taxId" TEXT;
       - **Clientes → Verificaciones:** toca "Ver detalles" y escribe en "Notas de revisión": la ventana no se cierra.
       - **Marketing:** empieza junto al menú, sin hueco a la izquierda.
   11. **Contabilidad** (C-248), en la computadora: Contabilidad → Facturas → "Nueva factura" → "Una venta en la tienda" → Siguiente con un nombre y una cédula. En "Qué se vendió", el tacho de la derecha de cada renglón se ve entero. Sal con "Atrás" sin registrar nada.
+  12. **Los filtros en píldoras** (C-249), en la computadora y en el teléfono:
+      - **Órdenes:** arriba de la lista, 7 píldoras con su ícono y su cuenta. Toca "Enviadas": quedan solo las enviadas. Ya no está el selector "Todas".
+      - **Transacciones:** toca "Pendientes": quedan las que esperan.
+      - **Mensajes:** toca "Pendientes": quedan los sin leer.
 - **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base: al ver las tres columnas de C-246, se para en el paso 2 y la tienda sigue como está (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las columnas no molestan al código anterior.
 
 ### Por confirmar de rc.55 y rc.56 (C-235, C-227 y C-242; unos 20 minutos)

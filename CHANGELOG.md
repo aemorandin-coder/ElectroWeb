@@ -10,6 +10,13 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.70] - 2026-11-15
+Dos fallas del servidor que dejó anotadas C-249e (C-252).
+### Cursos 1.2.1 (C-252)
+- **Al crear un curso,** el servidor revisa lo que llega con las mismas reglas que al cambiarlo. Un precio negativo, un precio que no es número o una portada `javascript:` dan 400. Antes se guardaban.
+### Trabajos realizados 1.1.1 (C-252)
+- **Las fotos de un trabajo** (miniatura, antes y después) solo pueden ser de la tienda o de una dirección http(s). `javascript:`, `data:` y `//dominio` dan 400, al crear y al cambiar.
+
 ## [1.0.0-rc.69] - 2026-11-15
 Mi panel (el panel del cliente) revisado a fondo, la primera parte (C-251): las fallas y lo nuevo que no le había llegado. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. El dinero no cambia. Sigue C-251b, con los arreglos del kit.
 ### Carrito, checkout y cuenta del cliente 1.8.0 (C-251)

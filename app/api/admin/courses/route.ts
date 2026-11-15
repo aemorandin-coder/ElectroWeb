@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
+import { adminCourseCreateSchema } from '@/lib/validations/creator-course';
 
 function toSlug(title: string): string {
   return title
@@ -42,13 +43,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { title, shortDesc, description, trailerUrl, category, tags, level, instructor,
-            creatorId, priceUSD, thumbnail, isFeatured, isActive, metaTitle, metaDescription } = body;
-
-    if (!title || !description || priceUSD === undefined) {
-      return NextResponse.json({ error: 'Título, descripción y precio son requeridos' }, { status: 400 });
+    const body = await request.json().catch(() => null);
+    // C-252: con las mismas reglas que el cambio de un curso (antes aceptaba un precio negativo)
+    const parsed = adminCourseCreateSchema.safeParse(body ?? {});
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 });
     }
+    const { title, shortDesc, description, trailerUrl, category, tags, level, instructor,
+            creatorId, priceUSD, thumbnail, isFeatured, isActive, metaTitle, metaDescription } = parsed.data;
 
     let slug = toSlug(title);
     const exists = await prisma.course.findUnique({ where: { slug } });
@@ -62,11 +64,11 @@ export async function POST(request: NextRequest) {
         description,
         trailerUrl: trailerUrl || null,
         category: category || null,
-        tags: tags ? JSON.stringify(tags) : null,
+        tags: tags && tags.length ? JSON.stringify(tags) : null,
         level: level || null,
         instructor: instructor || null,
         creatorId: creatorId || null,
-        priceUSD: parseFloat(priceUSD),
+        priceUSD,
         thumbnail: thumbnail || null,
         isFeatured: isFeatured ?? false,
         isActive: isActive ?? true,

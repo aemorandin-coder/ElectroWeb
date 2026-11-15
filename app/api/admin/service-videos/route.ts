@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isAuthorized } from '@/lib/auth-helpers';
 
+// C-252: las fotos (miniatura, antes y después) se suben a la tienda o vienen de una dirección http(s); nada más (ni javascript: ni data:).
+const fotoValida = (v: unknown) => v === undefined || v === null || v === '' || (typeof v === 'string' && v.length <= 500 && (/^https?:\/\/[^\s]+$/i.test(v) || /^\/(?!\/)[^\s]*$/.test(v)));
+const fotosInvalidas = (body: Record<string, unknown>) => (['thumbnail', 'beforeImage', 'afterImage'] as const).some((k) => !fotoValida(body[k]));
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -47,6 +51,9 @@ export async function POST(request: NextRequest) {
     // C-110: la tienda enlaza esta URL tal cual cuando no puede incrustarla: solo http o https
     if (body.videoUrl !== undefined && !/^https?:\/\/[^\s]+$/i.test(String(body.videoUrl))) {
       return NextResponse.json({ error: 'La URL del video debe empezar con https://' }, { status: 400 });
+    }
+    if (fotosInvalidas(body)) {
+      return NextResponse.json({ error: 'Las fotos se suben a la tienda o vienen de una dirección https://' }, { status: 400 });
     }
 
     const video = await prisma.techServiceVideo.create({

@@ -196,8 +196,6 @@ export default function AsistenteCampana({ campana, envio }: { campana: CampanaP
         base.current = { datos, version: leida?.updatedAt ?? '' };
         setGuardada(datos);
         setCampanaId(id);
-        // Si se recarga la página, abre esta campaña (sin volver a montar el asistente)
-        window.history.replaceState(null, '', `/admin/marketing/campanas/${id}`);
         await despues(id);
         return;
       }
@@ -223,7 +221,7 @@ export default function AsistenteCampana({ campana, envio }: { campana: CampanaP
         return;
       }
       toast.error(r.error);
-      if (r.conflicto?.tipo === 'no_existe' || r.status === 409) { router.push(LISTA); router.refresh(); }
+      if (r.conflicto?.tipo === 'no_existe' || r.status === 409) volverALaLista();
     } finally {
       setGuardando(false);
     }
@@ -235,7 +233,8 @@ export default function AsistenteCampana({ campana, envio }: { campana: CampanaP
     void guardar(form, () => { toast.success('Borrador guardado'); });
   };
 
-  const volverALaLista = () => { router.push(LISTA); router.refresh(); };
+  // La lista pide sus datos al montarse: no hace falta router.refresh()
+  const volverALaLista = () => { router.push(LISTA); };
 
   const finalizar = async () => {
     if (enviar) {

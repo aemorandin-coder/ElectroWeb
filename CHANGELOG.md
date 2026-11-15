@@ -10,6 +10,22 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.68] - 2026-11-15
+Crear por pasos, la última entrega (C-249e): el curso y el trabajo de Servicios, en su propia página, con la tarjeta de la tienda al lado y "Revisar y publicar" al final. Con esto, los 8 formularios que eligió el equipo van por pasos. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Las APIs que guardan no cambian; la subida de fotos suma dos tipos.
+### Cursos 1.2.0 (C-249e)
+- **Crear o cambiar un curso va por pasos** en `/admin/cursos/nuevo` y `/admin/cursos/<id>`: qué es, para quién (la categoría y el nivel con su tarjeta de opción), el precio y la portada, el temario y "Revisar y publicar". Al lado, la misma tarjeta de `/cursos`.
+- **La miniatura se sube** (antes se pegaba su dirección).
+- **Al cambiarlo,** antes → después y a cuántos inscritos toca: el precio nuevo vale para los que se inscriban, cuántas lecciones se borran y si se aprueba el de un creador.
+- **Arreglos de paso:** el último módulo ya se puede quitar, y lo que el creador escribió en una lección ya no se borra al guardar el temario desde el panel.
+### Trabajos realizados 1.1.0 (C-249e)
+- **Crear o cambiar un trabajo va por pasos** en `/admin/servicios/nuevo` y `/admin/servicios/<id>`: qué se hizo, el video, antes y después, el testimonio y "Revisar y publicar". Al lado, la misma tarjeta de `/servicios`, y las fotos de antes y después.
+- **La miniatura y las fotos de antes y después se suben** (antes se pegaba su dirección). Sin miniatura propia, la tienda usa la del video de YouTube, como antes.
+### Marketing 1.17.1 (C-249e)
+- **Arreglo de C-249d:** al guardar una campaña nueva, la vuelta a la lista a veces abría Promotores: Next dejaba la dirección con `#campanas#campanas`. Ahora Marketing lee el último y deja uno solo. Por precaución, una campaña guardada a mitad ya no cambia la dirección de la página.
+### Marco del panel 1.14.0 (C-249e)
+- **La foto que se sube en un asistente** (`components/admin/SubirFoto`), la del sorteo para todos.
+- **En el teléfono,** el botón "Siguiente: …" crece en lugar de cortar el texto.
+
 ## [1.0.0-rc.67] - 2026-11-15
 Crear por pasos, la cuarta entrega (C-249d): la campaña de correo y el promotor, en su propia página, con lo que verá el cliente al lado y "Revisar y publicar" al final. Van 6 de los 8 formularios; sigue C-249e (el curso y el trabajo de Servicios). Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Las APIs que guardan no cambian.
 ### Marketing 1.17.0 (C-249d)

@@ -31,7 +31,9 @@ const SECCIONES: { id: SeccionId; label: string; descripcion: string; icon: Icon
 ];
 
 function seccionDelHash(): SeccionId {
-  const hash = window.location.hash.slice(1);
+  // C-249e: al volver de un asistente con router.push('/admin/marketing#campanas'), Next a veces deja el hash repetido
+  // (#campanas#campanas): vale el último
+  const hash = window.location.hash.split('#').filter(Boolean).pop() ?? '';
   return SECCIONES.some((s) => s.id === hash) ? (hash as SeccionId) : 'promotores';
 }
 
@@ -50,7 +52,12 @@ export default function MarketingPage() {
   // C-249d: al volver de un asistente (/admin/marketing#campanas), Next cambia la dirección después de pintar la página: el
   // hash se vuelve a leer cuando ya está (si no, quedaba la primera sección)
   useEffect(() => {
-    const t = setTimeout(() => window.dispatchEvent(new HashChangeEvent('hashchange')), 0);
+    const t = setTimeout(() => {
+      // Y la dirección queda con uno solo
+      const partes = window.location.hash.split('#').filter(Boolean);
+      if (partes.length > 1) window.history.replaceState(window.history.state, '', `#${partes[partes.length - 1]}`);
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    }, 0);
     return () => clearTimeout(t);
   }, []);
 

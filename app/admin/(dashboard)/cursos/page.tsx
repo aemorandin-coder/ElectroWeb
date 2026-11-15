@@ -1,14 +1,17 @@
 'use client';
 
-import { adminBadge, adminModalOverlay, adminModalPanel, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+// Cursos del panel. C-249e: crear o cambiar uno va por pasos en su propia página (/admin/cursos/nuevo y /admin/cursos/<id>,
+// PLAN.md §1.9); "Nuevo curso" y "Editar" llevan ahí. Aquí quedan la lista, los filtros, activar o aprobar y eliminar.
+
+import Link from 'next/link';
+import { adminBadge, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState } from 'react';
 import {
-  IconoCandado, IconoCerrar, IconoCircuito, IconoCursos, IconoEliminar, IconoEstrella, IconoEstrellaLlena, IconoMaletin, IconoMas, IconoRouter,
+  IconoCandado, IconoCircuito, IconoCursos, IconoEliminar, IconoEstrella, IconoEstrellaLlena, IconoMaletin, IconoMas, IconoRouter,
   IconoSoftware, IconoVideojuegos, type IconType,
 } from '@/components/iconos';
 import Filtros from '@/components/admin/Filtros';
@@ -30,12 +33,6 @@ const CATEGORIES = [
   { value: 'NEGOCIOS', label: 'Negocios' },
 ];
 
-const LEVELS = [
-  { value: 'PRINCIPIANTE', label: 'Principiante' },
-  { value: 'INTERMEDIO', label: 'Intermedio' },
-  { value: 'AVANZADO', label: 'Avanzado' },
-];
-
 // C-192: la categoría no es un estado: todas con la misma etiqueta (antes verde, ámbar y rojo según el tema). C-245: un dato, en gris (§1.8)
 const CATEGORY_COLORS: Record<string, string> = {
   DESARROLLO: 'bg-white text-ink-soft ring-1 ring-inset ring-line',
@@ -44,22 +41,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   GAMING: 'bg-white text-ink-soft ring-1 ring-inset ring-line',
   SEGURIDAD: 'bg-white text-ink-soft ring-1 ring-inset ring-line',
   NEGOCIOS: 'bg-white text-ink-soft ring-1 ring-inset ring-line',
-};
-
-type Lesson = {
-  id?: string;
-  title: string;
-  videoUrl: string;
-  duration: string;
-  isFree: boolean;
-  order: number;
-};
-
-type Module = {
-  id?: string;
-  title: string;
-  order: number;
-  lessons: Lesson[];
 };
 
 type Course = {
@@ -87,37 +68,10 @@ type Course = {
 /** Curso de un creador que todavía no se publicó: es el que espera aprobación. */
 const enRevision = (course: Course) => !course.isActive && Boolean(course.creator);
 
-const EMPTY_FORM = {
-  title: '',
-  shortDesc: '',
-  description: '',
-  trailerUrl: '',
-  category: '',
-  level: '',
-  instructor: '',
-  priceUSD: '',
-  thumbnail: '',
-  isFeatured: false,
-  isActive: true,
-  metaTitle: '',
-  metaDescription: '',
-};
-
-function emptyLesson(order: number): Lesson {
-  return { title: '', videoUrl: '', duration: '', isFree: false, order };
-}
-
 export default function AdminCursosPage() {
   const { confirm } = useConfirm();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  useBodyScrollLock(showModal);
-  const [activeTab, setActiveTab] = useState<'info' | 'curriculum'>('info');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [curriculum, setCurriculum] = useState<Module[]>([]);
-  const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [filterCat, setFilterCat] = useState('');
 
@@ -132,94 +86,6 @@ export default function AdminCursosPage() {
   }
 
   useCargarAlMontar(loadCourses);
-
-  function openCreate() {
-    setEditingId(null);
-    setForm(EMPTY_FORM);
-    setCurriculum([]);
-    setActiveTab('info');
-    setShowModal(true);
-  }
-
-  async function openEdit(course: Course) {
-    setEditingId(course.id);
-    setForm({
-      title: course.title,
-      shortDesc: course.shortDesc || '',
-      description: course.description,
-      trailerUrl: course.trailerUrl || '',
-      category: course.category || '',
-      level: course.level || '',
-      instructor: course.instructor || '',
-      priceUSD: String(course.priceUSD),
-      thumbnail: course.thumbnail || '',
-      isFeatured: course.isFeatured,
-      isActive: course.isActive,
-      metaTitle: course.metaTitle || '',
-      metaDescription: course.metaDescription || '',
-    });
-    try {
-      const res = await fetch('/api/admin/courses/' + course.id);
-      if (res.ok) {
-        const data = await res.json();
-        setCurriculum(
-          (data.modules || []).map((mod: { id?: string; title: string; order: number; lessons?: Array<{ id?: string; title: string; videoUrl?: string | null; duration?: number | string | null; isFree: boolean; order: number }> }) => ({
-            id: mod.id,
-            title: mod.title,
-            order: mod.order,
-            lessons: (mod.lessons || []).map((l: { id?: string; title: string; videoUrl?: string | null; duration?: number | string | null; isFree: boolean; order: number }) => ({
-              id: l.id,
-              title: l.title,
-              videoUrl: l.videoUrl || '',
-              duration: l.duration ? String(l.duration) : '',
-              isFree: l.isFree,
-              order: l.order,
-            })),
-          }))
-        );
-      }
-    } catch {}
-    setActiveTab('info');
-    setShowModal(true);
-  }
-
-  async function handleSave() {
-    setSaving(true);
-    try {
-      const url = editingId ? '/api/admin/courses/' + editingId : '/api/admin/courses';
-      const method = editingId ? 'PATCH' : 'POST';
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, priceUSD: parseFloat(form.priceUSD) || 0 }),
-      });
-      const saved = await res.json().catch(() => null);
-      if (!res.ok) {
-        toast.error(saved?.error || 'Error al guardar el curso');
-        return;
-      }
-      const courseId = editingId || saved.id;
-      if (curriculum.length > 0) {
-        const resCurriculum = await fetch('/api/admin/courses/' + courseId, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ curriculum }),
-        });
-        if (!resCurriculum.ok) {
-          const data = await resCurriculum.json().catch(() => null);
-          toast.error(data?.error || 'El curso se guardó, pero el currículum no');
-          loadCourses();
-          return;
-        }
-      }
-      setShowModal(false);
-      loadCourses();
-    } catch {
-      toast.error('Error al guardar el curso');
-    } finally {
-      setSaving(false);
-    }
-  }
 
   // Antes no se revisaba la respuesta: si el servidor fallaba, el botón no hacía nada visible
   async function handleToggle(course: Course) {
@@ -249,47 +115,6 @@ export default function AdminCursosPage() {
     }
   }
 
-  function addModule() {
-    setCurriculum((prev) => [
-      ...prev,
-      { title: 'Módulo ' + (prev.length + 1), order: prev.length, lessons: [] },
-    ]);
-  }
-
-  function updateModule(idx: number, field: string, value: string | number) {
-    setCurriculum((prev) => prev.map((m, i) => (i === idx ? { ...m, [field]: value } : m)));
-  }
-
-  function removeModule(idx: number) {
-    setCurriculum((prev) => prev.filter((_, i) => i !== idx));
-  }
-
-  function addLesson(modIdx: number) {
-    setCurriculum((prev) =>
-      prev.map((m, i) =>
-        i === modIdx ? { ...m, lessons: [...m.lessons, emptyLesson(m.lessons.length)] } : m
-      )
-    );
-  }
-
-  function updateLesson(modIdx: number, lIdx: number, field: string, value: string | number | boolean) {
-    setCurriculum((prev) =>
-      prev.map((m, i) =>
-        i === modIdx
-          ? { ...m, lessons: m.lessons.map((l, j) => (j === lIdx ? { ...l, [field]: value } : l)) }
-          : m
-      )
-    );
-  }
-
-  function removeLesson(modIdx: number, lIdx: number) {
-    setCurriculum((prev) =>
-      prev.map((m, i) =>
-        i === modIdx ? { ...m, lessons: m.lessons.filter((_, j) => j !== lIdx) } : m
-      )
-    );
-  }
-
   const filtered = filterCat ? courses.filter((c) => c.category === filterCat) : courses;
 
   return (
@@ -300,14 +125,10 @@ export default function AdminCursosPage() {
           <h1 className={adminPageTitle}>Cursos / Plataforma</h1>
           <p className={adminPageSubtitle}>{courses.length} cursos en total</p>
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className={adminPrimaryButton}
-        >
-          <IconoMas className="w-4 h-4" />
+        <Link href="/admin/cursos/nuevo" className={adminPrimaryButton}>
+          <IconoMas className="w-4 h-4" aria-hidden="true" />
           Nuevo Curso
-        </button>
+        </Link>
       </div>
 
       {/* C-249: las categorías en píldoras con ícono, cuenta y lo que juntan (§1.7) */}
@@ -374,7 +195,7 @@ export default function AdminCursosPage() {
                   {course.rating && <span className="inline-flex items-center gap-1"><IconoEstrellaLlena className="h-3 w-3 text-warning shrink-0" aria-hidden="true" />{formatRating(course.rating)}</span>}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => openEdit(course)} className="flex-1 py-1.5 text-xs font-semibold text-brand-500 border border-brand-500 rounded-lg hover:bg-brand-500 hover:text-white transition-colors">Editar</button>
+                  <Link href={`/admin/cursos/${course.id}`} className="flex-1 py-1.5 text-center text-xs font-semibold text-brand-500 border border-brand-500 rounded-lg hover:bg-brand-500 hover:text-white transition-colors">Editar</Link>
                   <button
                     onClick={() => handleToggle(course)}
                     className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${course.isActive ? 'border-line text-ink-soft hover:bg-surface' : enRevision(course) ? 'border-success-strong bg-success-strong text-white hover:bg-success-strong/90' : 'border-success/30 text-success-strong hover:bg-success/10'}`}
@@ -391,153 +212,6 @@ export default function AdminCursosPage() {
         </div>
       )}
 
-      {/* Create / Edit Modal */}
-      {showModal && (
-        <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
-          <div className={`${adminModalPanel} sm:max-w-3xl`} role="dialog" aria-modal="true">
-            {/* Modal header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-line">
-              <h2 className="text-lg font-bold text-ink">{editingId ? 'Editar Curso' : 'Nuevo Curso'}</h2>
-              <button type="button" onClick={() => setShowModal(false)} aria-label="Cerrar" className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink">
-                <IconoCerrar className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex border-b border-line px-6">
-              {(['info', 'curriculum'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`py-3 px-4 text-sm font-semibold border-b-2 transition-colors ${activeTab === tab ? 'border-brand-500 text-brand-500' : 'border-transparent text-muted hover:text-ink'}`}
-                >
-                  {tab === 'info' ? 'Información' : 'Currículum'}
-                </button>
-              ))}
-            </div>
-
-            {/* Modal body */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              {activeTab === 'info' ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-muted mb-1">Título *</label>
-                    <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500" placeholder="Título del curso" />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-muted mb-1">Descripción corta</label>
-                    <input value={form.shortDesc} onChange={(e) => setForm({ ...form, shortDesc: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500" placeholder="Resumen para la tarjeta (1-2 líneas)" />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-muted mb-1">Descripción completa *</label>
-                    <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500 resize-none" placeholder="Describe el curso en detalle..." />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-muted mb-1">Categoría</label>
-                    <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500">
-                      <option value="">Seleccionar...</option>
-                      {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-muted mb-1">Nivel</label>
-                    <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500">
-                      <option value="">Seleccionar...</option>
-                      {LEVELS.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-muted mb-1">Instructor</label>
-                    <input value={form.instructor} onChange={(e) => setForm({ ...form, instructor: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500" placeholder="Nombre del instructor" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-muted mb-1">Precio (USD) *</label>
-                    <input type="number" min="0" step="0.01" value={form.priceUSD} onChange={(e) => setForm({ ...form, priceUSD: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500" placeholder="0.00" />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-muted mb-1">URL Miniatura</label>
-                    <input value={form.thumbnail} onChange={(e) => setForm({ ...form, thumbnail: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500" placeholder="https://..." />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-muted mb-1">URL Tráiler (YouTube/Vimeo unlisted)</label>
-                    <input value={form.trailerUrl} onChange={(e) => setForm({ ...form, trailerUrl: e.target.value })} className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500" placeholder="https://youtube.com/watch?v=..." />
-                  </div>
-                  <div className="col-span-2 flex gap-6">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} className="w-4 h-4 accent-brand-500" />
-                      <span className="text-sm font-medium text-ink">Destacado</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="w-4 h-4 accent-brand-500" />
-                      <span className="text-sm font-medium text-ink">Activo (visible en catálogo)</span>
-                    </label>
-                  </div>
-                </div>
-              ) : (
-                /* Curriculum tab */
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted">
-                      {curriculum.length} módulo(s) · {curriculum.reduce((s, m) => s + m.lessons.length, 0)} lección(es)
-                    </p>
-                    <button onClick={addModule} className="px-3 py-1.5 bg-brand-500 text-white text-xs font-semibold rounded-lg hover:bg-brand-600 transition-colors">
-                      + Añadir Módulo
-                    </button>
-                  </div>
-
-                  {curriculum.length === 0 && (
-                    <div className="text-center py-10 text-muted text-sm border-2 border-dashed border-line-strong rounded-xl">
-                      Aún no hay módulos. Añade el primero arriba.
-                    </div>
-                  )}
-
-                  {curriculum.map((mod, mIdx) => (
-                    <div key={mIdx} className="border border-line-strong rounded-xl overflow-hidden">
-                      <div className="flex items-center gap-3 px-4 py-3 bg-surface">
-                        <span className="text-xs font-bold text-muted">{mIdx + 1}.</span>
-                        <input value={mod.title} onChange={(e) => updateModule(mIdx, 'title', e.target.value)} className="flex-1 px-2 py-1 border border-line-strong rounded text-sm focus:outline-none focus:border-brand-500 bg-white" placeholder="Nombre del módulo" />
-                        <button onClick={() => addLesson(mIdx)} className="text-xs text-brand-500 font-semibold hover:underline whitespace-nowrap">+ Lección</button>
-                        <button onClick={() => removeModule(mIdx)} className="text-deal hover:text-deal">
-                          <IconoCerrar className="w-4 h-4" />
-                        </button>
-                      </div>
-                      {mod.lessons.map((lesson, lIdx) => (
-                        <div key={lIdx} className="border-t border-line px-4 py-3 bg-white">
-                          <div className="flex items-start gap-2">
-                            <span className="text-xs text-muted pt-2 w-5 shrink-0">{lIdx + 1}.</span>
-                            <div className="flex-1 grid grid-cols-2 gap-2">
-                              <input value={lesson.title} onChange={(e) => updateLesson(mIdx, lIdx, 'title', e.target.value)} className="col-span-2 px-2 py-1.5 border border-line-strong rounded text-sm focus:outline-none focus:border-brand-500" placeholder="Título de la lección" />
-                              <input value={lesson.videoUrl} onChange={(e) => updateLesson(mIdx, lIdx, 'videoUrl', e.target.value)} className="col-span-2 px-2 py-1.5 border border-line-strong rounded text-xs focus:outline-none focus:border-brand-500" placeholder="URL YouTube/Vimeo (sin listar)" />
-                              <input type="number" value={lesson.duration} onChange={(e) => updateLesson(mIdx, lIdx, 'duration', e.target.value)} className="px-2 py-1.5 border border-line-strong rounded text-xs focus:outline-none focus:border-brand-500" placeholder="Duración (segundos)" />
-                              <label className="flex items-center gap-2 text-xs text-muted cursor-pointer">
-                                <input type="checkbox" checked={lesson.isFree} onChange={(e) => updateLesson(mIdx, lIdx, 'isFree', e.target.checked)} className="accent-brand-500" />
-                                Lección gratuita (preview)
-                              </label>
-                            </div>
-                            <button onClick={() => removeLesson(mIdx, lIdx)} className="text-deal hover:text-deal pt-1 shrink-0">
-                              <IconoCerrar className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="flex gap-3 justify-end px-6 py-4 border-t border-line">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm font-semibold text-muted hover:text-ink transition-colors">
-                Cancelar
-              </button>
-              <button onClick={handleSave} disabled={saving || !form.title || !form.description} className="px-6 py-2 bg-brand-500 text-white text-sm font-semibold rounded-lg hover:bg-brand-600 transition-colors disabled:opacity-50">
-                {saving ? 'Guardando...' : editingId ? 'Guardar Cambios' : 'Crear Curso'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,11 +1,11 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.72; en `main`, rc.74 por subir: §2)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.74; nada por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-256 · La bienvenida fuera de /sorteo y "activar la cuenta" (rc.74, por subir; `estado/C-256.md`):** las dos decisiones del equipo sobre C-255. Sigue **C-257**, el kit de onboarding de toda la tienda (`PLAN.md` §5.2).
-- **C-255 · "Cómo participar" en /sorteo, con íconos (rc.73, por subir: §2; `estado/C-255.md`):** la gente le preguntaba al equipo "¿cómo participo?, ¿a juro tengo que comprar?, ¿cómo creo mi cuenta?". El equipo eligió la B de las maquetas, con los dos caminos y la compra primero.
+- **C-256 · La bienvenida fuera de /sorteo y "activar la cuenta" (rc.74, en producción; `estado/C-256.md`):** las dos decisiones del equipo sobre C-255. Sigue **C-257**, el kit de onboarding de toda la tienda (`PLAN.md` §5.2).
+- **C-255 · "Cómo participar" en /sorteo, con íconos (rc.73, en producción; `estado/C-255.md`):** la gente le preguntaba al equipo "¿cómo participo?, ¿a juro tengo que comprar?, ¿cómo creo mi cuenta?". El equipo eligió la B de las maquetas, con los dos caminos y la compra primero.
   - **Los tres pasos, unidos por un camino:** "Crea tu cuenta gratis"; "Gana boletos por dos caminos" (Camino 1, comprar $5 o más, sin límite; Camino 2, invitar amigos, hasta 3); "Espera el 20 de diciembre". Al lado, tus boletos.
   - **Pocos textos y los íconos animados:** entran una sola vez al llegar a la vista. Y "Lo que más nos preguntan", siete preguntas.
   - **El banner:** el logo corto de PS4 donde dice "Sony" y el de ZOOM en su píldora blanca.
@@ -346,14 +346,12 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.74` (C-255 y C-256; unos 20 minutos)
-**Producción está en `v1.0.0-rc.72`** (`e9fa074`); su bloque está en `HISTORIAL.md`.
-- **C-255 (rc.73):** "Cómo participar" en `/sorteo` con íconos (los tres pasos, los dos caminos con la compra primero y las preguntas), el logo corto de PS4 y el de ZOOM en el banner, y el camino de registro que vuelve al sorteo.
-  - **Sin cambio de base,** sin SQL, sin variables nuevas y sin cron. No hace falta respaldo antes.
-- **C-256 (rc.74):** las dos decisiones del equipo sobre C-255. El recorrido de bienvenida ya no sale en `/sorteo`, y se usa una sola palabra, "activar la cuenta". Sin cambio de base.
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.74`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 15 minutos, en la computadora y en el teléfono):
+### Lo que falta subir: nada por ahora
+Producción está en `v1.0.0-rc.74` (`c7d994b`); su bloque está en `HISTORIAL.md`.
+
+### Por confirmar de rc.74 (C-255 y C-256; unos 15 minutos)
+Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera la versión y `/sorteo`: "Cómo participar" con los dos caminos, las preguntas, el logo de ZOOM y las bases con "activen su cuenta desde el correo". En ningún lado dice "No tienes que comprar".
+Falta esto (unos 15 minutos, en la computadora y en el teléfono):
   1. **`/sorteo` en la computadora, en una ventana privada (sin entrar):**
       - arriba, "Gana una" y "PlayStation 4" con el logo de PS4 donde decía "Sony", del alto de las letras;
       - en "Envío gratis", el logo de ZOOM en una píldora blanca.
@@ -373,7 +371,6 @@
       6. Con esa cuenta nueva, en `/sorteo` no sale el recorrido de bienvenida ("Te mostramos la tienda en 4 pasos"); en el inicio, sí.
   6. **Las bases del sorteo** dicen "…y activen su cuenta desde el correo te dan 1 boleto…".
       - La cuenta de prueba queda como una cuenta normal. No da boletos: hacen falta 2 amigos.
-- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.72 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de base que deshacer.
 
 ### Por confirmar de rc.72 (C-253; unos 15 minutos)
 Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera:

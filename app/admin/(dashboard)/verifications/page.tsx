@@ -1,12 +1,17 @@
 'use client';
 
-import { adminBadge, adminTableWrap, adminTable, adminRowHover, adminModalOverlay } from '@/lib/admin-ui';
+import {
+    adminBadge, adminHint, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter, adminModalHeader, adminModalOverlay,
+    adminModalPanel, adminModalTitle, adminPageHeader, adminPageTitle, adminRowHover, adminSecondaryButton, adminSuccessButton, adminTable,
+    adminTableWrap, adminTd, adminTh,
+} from '@/lib/admin-ui';
+import Filtros from '@/components/admin/Filtros';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { IconoClientes, IconoConfirmado, IconoDescargar, IconoDocumento, IconoRechazado, IconoReloj, IconoVer } from '@/components/iconos';
+import { IconoCerrar, IconoConfirmado, IconoDescargar, IconoDocumento, IconoFlechaIzquierda, IconoLista, IconoRechazado, IconoReloj, IconoVer } from '@/components/iconos';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -93,78 +98,71 @@ export default function VerificationsPage() {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'APPROVED':
-                return <span className="px-2 py-1 bg-success/10 text-success-strong rounded-full text-xs font-bold flex items-center gap-1"><IconoConfirmado /> Aprobado</span>;
+                return <span className={adminBadge('success')}><IconoConfirmado className="h-3.5 w-3.5" aria-hidden="true" /> Aprobado</span>;
             case 'REJECTED':
-                return <span className="px-2 py-1 bg-deal/10 text-deal rounded-full text-xs font-bold flex items-center gap-1"><IconoRechazado /> Rechazado</span>;
+                return <span className={adminBadge('danger')}><IconoRechazado className="h-3.5 w-3.5" aria-hidden="true" /> Rechazado</span>;
             default:
                 return <span className={adminBadge('warning')}><IconoReloj className="h-3.5 w-3.5" aria-hidden="true" /> Pendiente</span>;
         }
     };
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                    <Link
-                        href="/admin/customers"
-                        className="flex items-center gap-2 px-3 py-2 bg-white border border-line rounded-lg hover:bg-surface transition-colors text-sm text-muted hover:text-brand-600"
-                    >
-                        <IconoClientes className="w-4 h-4" />
-                        <span>Clientes</span>
-                    </Link>
-                    <h1 className="text-2xl font-bold text-ink">Verificación de Empresas</h1>
+        <div className="space-y-4">
+            <div>
+                <Link href="/admin/customers" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700">
+                    <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Clientes
+                </Link>
+                <div className={adminPageHeader}>
+                    <h1 className={adminPageTitle}>Verificación de Empresas</h1>
                 </div>
-                <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-                    {['PENDING', 'APPROVED', 'REJECTED', 'ALL'].map((status) => (
-                        <button
-                            key={status}
-                            onClick={() => setFilter(status)}
-                            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === status
-                                ? 'bg-brand-500 text-white'
-                                : 'bg-white text-muted hover:bg-surface border border-line'
-                                }`}
-                        >
-                            {status === 'ALL' ? 'Todos' : status === 'PENDING' ? 'Pendientes' : status === 'APPROVED' ? 'Aprobados' : 'Rechazados'}
-                        </button>
-                    ))}
-                </div>
+                <Filtros
+                    etiqueta="Filtrar verificaciones"
+                    valor={filter}
+                    onCambiar={setFilter}
+                    filtros={[
+                        { valor: 'PENDING', etiqueta: 'Pendientes', ayuda: 'Esperan tu revisión', Icono: IconoReloj, tono: 'aviso' },
+                        { valor: 'APPROVED', etiqueta: 'Aprobados', ayuda: 'Ya verificadas', Icono: IconoConfirmado },
+                        { valor: 'REJECTED', etiqueta: 'Rechazados', ayuda: 'Con su motivo', Icono: IconoRechazado },
+                        { valor: 'ALL', etiqueta: 'Todos', ayuda: 'Todas las solicitudes', Icono: IconoLista },
+                    ]}
+                />
             </div>
 
             {/* List */}
-            <div className="bg-white rounded-xl shadow-sm border border-line overflow-hidden">
+            <div>
                 <div className={adminTableWrap}>
                     <table className={`${adminTable} min-w-[720px]`}>
-                        <thead className="bg-surface border-b border-line">
+                        <thead>
                             <tr>
-                                <th className="px-6 py-4 text-xs font-semibold text-muted uppercase">Empresa</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-muted uppercase">RIF / NIT</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-muted uppercase">Solicitante</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-muted uppercase">Estado</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-muted uppercase">Fecha</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-muted uppercase">Acciones</th>
+                                <th className={adminTh}>Empresa</th>
+                                <th className={adminTh}>RIF / NIT</th>
+                                <th className={adminTh}>Solicitante</th>
+                                <th className={adminTh}>Estado</th>
+                                <th className={adminTh}>Fecha</th>
+                                <th className={adminTh}>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-line">
+                        <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-8 text-center text-muted">
+                                    <td colSpan={6} className={`${adminTd} py-8 text-center text-muted`}>
                                         Cargando solicitudes...
                                     </td>
                                 </tr>
                             ) : requests.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-8 text-center text-muted">
+                                    <td colSpan={6} className={`${adminTd} py-8 text-center text-muted`}>
                                         No hay solicitudes en esta categoría
                                     </td>
                                 </tr>
                             ) : (
                                 requests.map((req) => (
                                     <tr key={req.id} className={adminRowHover}>
-                                        <td className="px-6 py-4">
+                                        <td className={adminTd}>
                                             <div className="font-medium text-ink">{req.companyName}</div>
                                         </td>
-                                        <td className="px-6 py-4 text-muted font-mono text-sm">{req.taxId}</td>
-                                        <td className="px-6 py-4">
+                                        <td className={`${adminTd} font-mono text-muted`}>{req.taxId}</td>
+                                        <td className={adminTd}>
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-full bg-line overflow-hidden relative">
                                                     {req.user?.image ? (
@@ -181,18 +179,18 @@ export default function VerificationsPage() {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className={adminTd}>
                                             {getStatusBadge(req.businessVerificationStatus)}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-muted">
-                                            {new Date(req.updatedAt).toLocaleDateString()}
+                                        <td className={`${adminTd} text-muted`}>
+                                            {new Date(req.updatedAt).toLocaleDateString('es-VE')}
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className={adminTd}>
                                             <button
                                                 onClick={() => setSelectedRequest(req)}
-                                                className="text-brand-600 hover:text-brand-700 font-medium text-sm flex items-center gap-1"
+                                                className={adminSecondaryButton}
                                             >
-                                                <IconoVer /> Ver detalles
+                                                <IconoVer className="h-4 w-4" aria-hidden="true" /> Ver detalles
                                             </button>
                                         </td>
                                     </tr>
@@ -205,19 +203,16 @@ export default function VerificationsPage() {
 
             {/* Detail Modal */}
             {selectedRequest && (
-                <div className={adminModalOverlay} onClick={() => setSelectedRequest(null)}>
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-                        <div className="p-6 border-b border-line flex justify-between items-center bg-surface">
-                            <h3 className="text-xl font-bold text-ink">Detalles de Verificación</h3>
-                            <button
-                                onClick={() => setSelectedRequest(null)}
-                                className="text-subtle hover:text-muted"
-                            >
-                                <IconoRechazado className="w-6 h-6" />
+                <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setSelectedRequest(null); }}>
+                    <div className={`${adminModalPanel} sm:max-w-2xl`} role="dialog" aria-modal="true" aria-labelledby="verificacion-titulo">
+                        <div className={adminModalHeader}>
+                            <h3 id="verificacion-titulo" className={adminModalTitle}>Detalles de Verificación</h3>
+                            <button type="button" onClick={() => setSelectedRequest(null)} className={adminIconButton} aria-label="Cerrar">
+                                <IconoCerrar className="h-5 w-5" aria-hidden="true" />
                             </button>
                         </div>
 
-                        <div className="p-6 overflow-y-auto flex-1 space-y-6">
+                        <div className={`${adminModalBody} flex-1 space-y-6`}>
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <label className="text-xs font-bold text-muted uppercase mb-1 block">Empresa</label>
@@ -267,17 +262,17 @@ export default function VerificationsPage() {
                             </div>
 
                             {selectedRequest.businessVerificationStatus === 'PENDING' && (
-                                <div className="bg-surface p-4 rounded-xl border border-line">
-                                    <label className="block text-sm font-medium text-ink mb-2">
-                                        Notas de revisión (Requerido para rechazar)
-                                    </label>
+                                <div>
+                                    <label htmlFor="verificacion-notas" className={adminLabel}>Notas de revisión</label>
                                     <textarea
+                                        id="verificacion-notas"
                                         value={actionNote}
                                         onChange={(e) => setActionNote(e.target.value)}
                                         placeholder="Escribe aquí las razones del rechazo o notas de aprobación..."
-                                        className="w-full p-3 rounded-lg border border-line bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                                        className={`${adminInput()} h-auto py-2.5`}
                                         rows={3}
                                     />
+                                    <p className={adminHint}>Para rechazar, escribe el motivo: el cliente lo recibe.</p>
                                 </div>
                             )}
 
@@ -290,18 +285,20 @@ export default function VerificationsPage() {
                         </div>
 
                         {selectedRequest.businessVerificationStatus === 'PENDING' && (
-                            <div className="p-6 border-t border-line bg-surface flex gap-3 justify-end">
+                            <div className={adminModalFooter}>
                                 <button
+                                    type="button"
                                     onClick={() => handleAction('REJECTED')}
                                     disabled={processing}
-                                    className="px-6 py-2.5 rounded-lg border border-deal/30 text-deal font-medium bg-deal/10 transition-colors disabled:opacity-50"
+                                    className={`${adminSecondaryButton} text-deal hover:text-deal`}
                                 >
                                     Rechazar
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => handleAction('APPROVED')}
                                     disabled={processing}
-                                    className="px-6 py-2.5 rounded-lg bg-success text-white font-medium bg-success transition-colors shadow-sm disabled:opacity-50"
+                                    className={adminSuccessButton}
                                 >
                                     {processing ? 'Procesando...' : 'Aprobar Verificación'}
                                 </button>

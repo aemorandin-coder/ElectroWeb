@@ -26,6 +26,7 @@ import {
   adminInput,
   adminBadge,
   adminCardFlush,
+  adminNotice,
 } from '@/lib/admin-ui';
 import {
   IconoActualizar, IconoAdvertencia, IconoBuscar, IconoCalendario, IconoCargando, IconoCerrar, IconoCheck, IconoClientes,
@@ -301,17 +302,15 @@ export default function CustomersPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/admin/verifications"
-              className={`relative flex items-center gap-2 px-3 py-2 border rounded-lg transition-all text-sm font-medium ${pendingVerifications > 0
-                  ? 'bg-deal text-white border-deal hover:bg-deal/90'
-                  : 'bg-white border-line text-muted hover:bg-surface hover:text-brand-700'
-                }`}
+              className={adminSecondaryButton}
               title="Verificaciones Empresariales"
             >
               <IconoGarantia className="w-4 h-4" />
               <span>Verificaciones</span>
               {pendingVerifications > 0 && (
-                <span className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center px-1.5 bg-deal text-white text-xs font-bold rounded-full shadow-md">
+                <span className={adminBadge('warning')}>
                   {pendingVerifications > 99 ? '99+' : pendingVerifications}
+                  <span className="sr-only"> por verificar</span>
                 </span>
               )}
             </Link>
@@ -327,8 +326,8 @@ export default function CustomersPage() {
         </div>
 
         {error && (
-          <div className="bg-deal-bg border border-deal/30 text-deal px-4 py-3 rounded-lg text-sm flex items-center gap-2">
-            <IconoError className="w-5 h-5 flex-shrink-0" />
+          <div className={`${adminNotice('danger')} flex items-center gap-2`} role="alert">
+            <IconoError className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
             {error}
           </div>
         )}
@@ -438,7 +437,7 @@ export default function CustomersPage() {
                         <div className="flex items-baseline gap-1">
                           <span className="text-lg font-bold text-ink">{customer.orderCount}</span>
                           {customer.activeOrders > 0 && (
-                            <span className="text-xs text-success-strong font-bold">({customer.activeOrders} activas)</span>
+                            <span className="text-xs font-semibold text-brand-600">({customer.activeOrders} {customer.activeOrders === 1 ? 'activa' : 'activas'})</span>
                           )}
                         </div>
                       </div>
@@ -513,8 +512,8 @@ export default function CustomersPage() {
                           <span className="inline-flex items-center gap-1">
                             <span className="font-medium text-ink">{customer.orderCount}</span>
                             {customer.activeOrders > 0 && (
-                              <span className="px-1.5 py-0.5 bg-success-strong/15 text-success-strong text-xs rounded-full">
-                                {customer.activeOrders} activas
+                              <span className={adminBadge('brand')}>
+                                {customer.activeOrders} {customer.activeOrders === 1 ? 'activa' : 'activas'}
                               </span>
                             )}
                           </span>

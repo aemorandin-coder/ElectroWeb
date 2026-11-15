@@ -157,6 +157,38 @@ export async function resumenDelSorteo(sorteo: Sorteo): Promise<ResumenSorteo> {
   return { boletos, participantes: [...filas.values()].sort((a, b) => b.porCompra + b.porInvitar - (a.porCompra + a.porInvitar)), ventasUSD: Math.round(ventasUSD * 100) / 100 };
 }
 
+export interface EfectoDelCambio {
+  boletosAntes: number;
+  boletosDespues: number;
+  /** Clientes que quedan con menos boletos que hoy, y con más */
+  pierden: number;
+  ganan: number;
+}
+
+/**
+ * C-221: qué les pasa a los clientes si el sorteo cambia a `nuevo`, sin guardarlo (PLAN.md §1.9: un cambio a algo publicado
+ * muestra a cuántos afecta antes de guardar). Cuenta los boletos de cada uno con los datos de hoy y con los nuevos.
+ */
+export async function efectoDelCambio(actual: Sorteo, nuevo: Sorteo): Promise<EfectoDelCambio> {
+  const [antes, despues] = await Promise.all([resumenDelSorteo(actual), resumenDelSorteo(nuevo)]);
+  const porCliente = (r: ResumenSorteo) => {
+    const cuenta = new Map<string, number>();
+    for (const b of r.boletos) cuenta.set(b.userId, (cuenta.get(b.userId) ?? 0) + 1);
+    return cuenta;
+  };
+  const a = porCliente(antes);
+  const d = porCliente(despues);
+  let pierden = 0;
+  let ganan = 0;
+  for (const userId of new Set([...a.keys(), ...d.keys()])) {
+    const x = a.get(userId) ?? 0;
+    const y = d.get(userId) ?? 0;
+    if (y < x) pierden++;
+    else if (y > x) ganan++;
+  }
+  return { boletosAntes: antes.boletos.length, boletosDespues: despues.boletos.length, pierden, ganan };
+}
+
 /** Sortea una sola vez, cuando ya cerró: congela la lista (su huella) y guarda el ganador */
 export async function sortearAhora(sorteoId: string): Promise<{ ok: true; sorteo: Sorteo } | { ok: false; error: string }> {
   const sorteo = await prisma.sorteo.findUnique({ where: { id: sorteoId } });

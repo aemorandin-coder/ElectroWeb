@@ -185,7 +185,7 @@ export default function PhysicalStep2Prices({ data, onChange, errors }: StepProp
 
         {/* C-155: un estimado de la búsqueda en la web se recuerda hasta que alguien toque el peso o las medidas */}
         {data.medidasEstimadas && (
-          <p className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning-strong">
+          <p className="flex items-start gap-2 rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-900 [&>svg]:h-7 [&>svg]:w-7 [&>svg]:shrink-0 [&>svg]:rounded-lg [&>svg]:bg-brand-950 [&>svg]:p-1.5 [&>svg]:text-accent">
             <IconoInfo className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <span>El peso o las medidas son un estimado de la búsqueda en la web. Compruébalos con la caja real: de aquí salen el embalaje y el flete.</span>
           </p>

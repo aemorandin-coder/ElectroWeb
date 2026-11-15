@@ -494,7 +494,7 @@ Por favor necesito ayuda para verificar mi pago.
                         <div className="text-right">
                             {montoEnBs ? (
                                 <>
-                                    <span className="text-2xl font-bold text-warning-strong">{formatVES(montoEnBs)}</span>
+                                    <span className="text-2xl font-bold text-brand-600">{formatVES(montoEnBs)}</span>
                                     <p className="text-xs text-muted">({formatUSD(montoEsperado)})</p>
                                 </>
                             ) : (
@@ -511,7 +511,7 @@ Por favor necesito ayuda para verificar mi pago.
                     className={`rounded-xl p-4 border animate-fadeIn text-center ${verificationState === 'success'
                         ? 'bg-success/5 border-success/30'
                         : verificationState === 'duplicate'
-                            ? 'bg-warning/10 border-warning/30'
+                            ? 'bg-brand-50 border-brand-200'
                             : 'bg-deal-bg border-deal/30'
                         }`}
                 >
@@ -520,7 +520,7 @@ Por favor necesito ayuda para verificar mi pago.
                             className={`w-6 h-6 rounded-full flex items-center justify-center ${verificationState === 'success'
                                 ? 'bg-success-strong'
                                 : verificationState === 'duplicate'
-                                    ? 'bg-warning'
+                                    ? 'bg-brand-950'
                                     : 'bg-deal'
                                 }`}
                         >
@@ -534,7 +534,7 @@ Por favor necesito ayuda para verificar mi pago.
                             className={`font-bold text-sm ${verificationState === 'success'
                                 ? 'text-success-strong'
                                 : verificationState === 'duplicate'
-                                    ? 'text-warning-strong'
+                                    ? 'text-brand-900'
                                     : 'text-deal'
                                 }`}
                         >
@@ -551,7 +551,7 @@ Por favor necesito ayuda para verificar mi pago.
                         className={`text-xs ${verificationState === 'success'
                             ? 'text-success-strong'
                             : verificationState === 'duplicate'
-                                ? 'text-warning-strong'
+                                ? 'text-brand-900'
                                 : 'text-deal'
                             }`}
                     >
@@ -561,7 +561,7 @@ Por favor necesito ayuda para verificar mi pago.
                         <button
                             onClick={handleContactRedirect}
                             className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-xs transition-all ${verificationState === 'duplicate'
-                                ? 'bg-warning/20 text-warning-strong hover:bg-warning/30'
+                                ? 'bg-brand-50 text-brand-900 hover:bg-brand-100'
                                 : 'bg-deal-bg text-deal hover:bg-deal/20'
                                 }`}
                         >

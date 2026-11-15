@@ -18,7 +18,7 @@ interface StatusConfig {
 
 const STATUS_MAP: Record<string, StatusConfig> = {
   // Pedidos
-  PENDING:    { bg: 'bg-warning/15',          text: 'text-warning-strong', dot: 'bg-warning-strong', label: 'Pendiente'   },
+  PENDING:    { bg: 'bg-brand-950',           text: 'text-white',          dot: 'bg-accent',        label: 'Pendiente'   },
   CONFIRMED:  { bg: 'bg-brand-50',            text: 'text-brand-700',      dot: 'bg-brand-500',    label: 'Confirmado'  },
   PROCESSING: { bg: 'bg-brand-50',            text: 'text-brand-700',      dot: 'bg-brand-500',    label: 'Procesando'  },
   COMPLETED:  { bg: 'bg-success-strong/10',   text: 'text-success-strong', dot: 'bg-success-strong', label: 'Completado' },
@@ -29,7 +29,7 @@ const STATUS_MAP: Record<string, StatusConfig> = {
   // Pagos
   PAID:       { bg: 'bg-success-strong/10',   text: 'text-success-strong', dot: 'bg-success-strong', label: 'Pagado'      },
   UNPAID:     { bg: 'bg-deal-bg',             text: 'text-deal',           dot: 'bg-deal',         label: 'Sin Pagar'   },
-  VERIFYING:  { bg: 'bg-warning/15',          text: 'text-warning-strong', dot: 'bg-warning-strong', label: 'Verificando' },
+  VERIFYING:  { bg: 'bg-brand-50',            text: 'text-brand-700',      dot: 'bg-brand-500',    label: 'Verificando' },
 };
 
 interface StatusBadgeProps {

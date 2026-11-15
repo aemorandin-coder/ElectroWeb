@@ -909,14 +909,14 @@ export default function CheckoutPage() {
                 {session?.user && !(session.user as { emailVerified?: unknown }).emailVerified && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/95 rounded-lg overflow-auto p-4">
                     <div className="text-center w-full max-w-sm mx-auto">
-                      <div className="w-12 h-12 bg-warning-strong rounded-full flex items-center justify-center mx-auto mb-3 text-white shadow-sm">
+                      <div className="w-12 h-12 bg-brand-950 rounded-full flex items-center justify-center mx-auto mb-3 text-accent shadow-sm">
                         <IconoCorreo className="w-6 h-6" />
                       </div>
                       <h3 className="text-base font-bold text-ink mb-1">Verificación requerida</h3>
                       <p className="text-xs text-muted mb-3">
                         Debes verificar tu correo electrónico antes de continuar.
                       </p>
-                      <p className="text-xs text-warning-strong font-medium mb-4 bg-warning/10 p-2 rounded-lg border border-warning/30">
+                      <p className="text-xs text-brand-900 font-medium mb-4 bg-brand-50 p-2 rounded-lg border border-brand-200">
                         Revisa tu bandeja de entrada
                       </p>
                       <Link
@@ -1643,9 +1643,9 @@ export default function CheckoutPage() {
             {/* Content */}
             <div className={`${adminModalBody} space-y-6 text-sm text-ink`}>
               {/* Critical Warning */}
-              <div className="p-4 bg-warning/10 border-l-4 border-warning-strong rounded-r-xl">
+              <div className="p-4 bg-brand-50 border-l-4 border-brand-950 rounded-r-xl">
                 <h3 className="font-bold text-ink mb-2 flex items-center gap-2">
-                  <IconoError className="w-5 h-5 text-warning-strong" />
+                  <IconoError className="h-7 w-7 shrink-0 rounded-lg bg-brand-950 p-1.5 text-accent" />
                   Responsabilidad del Usuario
                 </h3>
                 <p className="text-ink-soft leading-relaxed">

@@ -10,6 +10,16 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.44] - 2026-11-14
+Ningún contenedor ámbar (Andrés, 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados"; eligió el azul claro de la tienda viendo las tres opciones).
+### Marco del panel 1.6.2 y todos los módulos con avisos (C-226)
+- **Lo que alguien tiene que hacer, en bloque, va en el azul claro de la tienda** con el ícono cian en su placa azul noche: el aviso compartido del panel (42 lugares) y 24 pantallas escritas a mano.
+- **En la tienda:** el checkout (verificar el correo, la responsabilidad del envío), el pago por Pago Móvil, el cupón que no aplica, el cobro a destino de Mis pedidos, Mis documentos y la cuenta sin verificar.
+- **En los correos:** el aviso del cobro a destino y el del código digital ya no van en caja ámbar.
+- **"Lo que no incluye" del presupuesto** pasa al mismo azul.
+- **El monto a pagar del Pago Móvil, en azul de marca:** el ámbar no destaca.
+- Parches en Dashboard 1.1.3, Órdenes y pagos 1.2.2, Productos 1.14.1, Marketing 1.10.1, ElectroStudio 1.2.3, Cursos 1.0.7, Cotizaciones 1.4.4, Configuración 1.1.7, Tienda 1.10.3 y Carrito, checkout y cuenta del cliente 1.4.2.
+
 ## [1.0.0-rc.43] - 2026-11-13
 ### Productos 1.14.0 (C-218)
 - **La lista completa de cada proveedor queda guardada al subirla** (tabla nueva, aditiva).

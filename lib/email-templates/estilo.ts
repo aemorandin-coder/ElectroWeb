@@ -14,6 +14,7 @@ export const COLOR = {
   marca50: '#f4f7fc',
   marca200: '#d4e0f5',
   marca300: '#aac1eb',
+  marca900: '#0e1f44',
   noche: '#0a1530',
   acento: '#22d3ee',
   tinta: '#212529',
@@ -23,7 +24,6 @@ export const COLOR = {
   fondo: '#f4f6fb',
   superficie: '#f8f9fa',
   exito: '#047857',
-  aviso: '#b45309',
   peligro: '#b91c1c',
 } as const;
 
@@ -48,8 +48,11 @@ export const CORREO = {
   /** Nota informativa en el azul de la marca. Para destacar un código o un certificado va la placa (`placaCorreo`). */
   cajaInfo: caja(COLOR.marca50, COLOR.marca200),
   cajaExito: caja('#ecfdf5', '#a7f3d0'),
-  /** C-192: solo cuando el cliente tiene que hacer algo (pagar el flete, no compartir un código). Nunca para destacar. */
-  cajaAviso: caja('#fffbeb', '#fde68a'),
+  /**
+   * Solo cuando el cliente tiene que hacer algo (pagar el flete, no compartir un código). Nunca para destacar.
+   * C-226 (Andrés, 14/11: "ese color de contenedor ámbar lo detesto"): va en el azul claro de la tienda, nunca en ámbar.
+   */
+  cajaAviso: caja(COLOR.marca50, COLOR.marca200),
   cajaPeligro: caja('#fef2f2', '#fecaca'),
   /** Título y texto dentro de una caja. El color lo hereda de `tono*`. */
   cajaTitulo: 'margin:0 0 6px;font-size:15px;line-height:1.4;font-weight:700;',
@@ -57,7 +60,8 @@ export const CORREO = {
   tonoNeutro: `color:${COLOR.texto};`,
   tonoInfo: `color:${COLOR.marcaOscura};`,
   tonoExito: `color:${COLOR.exito};`,
-  tonoAviso: `color:${COLOR.aviso};`,
+  /** C-226: el texto de `cajaAviso`, en azul noche de la marca (antes ámbar). */
+  tonoAviso: `color:${COLOR.marca900};`,
   tonoPeligro: `color:${COLOR.peligro};`,
   /** Rótulo pequeño en mayúsculas sobre un dato. */
   rotulo: `margin:0 0 6px;color:${COLOR.suave};font-size:12px;line-height:1.4;text-transform:uppercase;letter-spacing:1px;`,

@@ -93,7 +93,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
   // C-143: al equipo no se le trata como a un cliente. En vez de "SIN VERIFICAR" (la verificación del correo es de
   // clientes) se muestra su rol, y el panel de administración va primero.
   const rolEquipo = isAdmin ? (session.user?.role === 'SUPER_ADMIN' ? 'SUPER ADMIN' : 'ADMINISTRADOR') : null;
-  const bordeAvatar = isAdmin ? 'border-brand-200 shadow-brand-500/20' : isVerified ? 'border-success shadow-success/20' : 'border-warning shadow-warning/20';
+  const bordeAvatar = isAdmin ? 'border-brand-200 shadow-brand-500/20' : isVerified ? 'border-success shadow-success/20' : 'border-brand-950 shadow-brand-950/20';
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -183,9 +183,9 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
                       <span className="text-success-strong text-xs font-bold tracking-wide">CUENTA VERIFICADA</span>
                     </div>
                   ) : (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-warning/15 rounded-lg border border-warning/30">
-                      <IconoError className="w-3 h-3 text-warning" />
-                      <span className="text-warning-strong text-xs font-bold tracking-wide">SIN VERIFICAR</span>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-950 rounded-lg border border-brand-950">
+                      <IconoError className="w-3 h-3 text-accent" />
+                      <span className="text-white text-xs font-bold tracking-wide">SIN VERIFICAR</span>
                     </div>
                   )}
                 </div>

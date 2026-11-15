@@ -168,7 +168,10 @@ Aplica **solo** a clases con la forma `utilidad-[#hex]` (ej. `bg-[#2a63cd]`, `ho
 | `#3b82f6` | `info` |
 | `#0f172a` | `brand-950` |
 
-**Ámbar (`#f59e0b`, `#d97706`, amarillos):** pásalo a `warning` **solo si avisa que alguien tiene que hacer algo** (falta pagar, poco stock). Si destaca, celebra o clasifica (un nivel, "Destacado", "Antes", el logo de Binance), no lo conviertas: déjalo y anótalo como `PEDIDO:` para Claude (`PLAN.md` §1.1, C-192). La tabla de arriba convirtió así 60 ámbares decorativos que Claude tuvo que deshacer el 06/11.
+**Ámbar (`#f59e0b`, `#d97706`, amarillos): ningún contenedor ámbar** (C-226, Andrés, 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados"). Ni cajas, ni avisos, ni fondos, ni bordes, ni píldoras (`bg-warning…`, `border-warning…`).
+- **Un aviso de lo que alguien tiene que hacer** va con `adminNotice('warning')` (o `avisoAccion` de `lib/admin-ui.ts`): azul claro de la tienda, con el ícono cian en su placa azul noche.
+- **El ámbar solo queda en un texto suelto** (`text-warning-strong`: "Quedan 3") y en las estrellas.
+- **Si destaca, celebra o clasifica** (un nivel, "Destacado", "Antes", el logo de Binance), no lo conviertas: déjalo y anótalo como `PEDIDO:` para Claude (`PLAN.md` §1.1, C-192). La tabla de arriba convirtió así 60 ámbares decorativos que Claude tuvo que deshacer el 06/11.
 
 **`navidad` (#e0263a)** es solo del tema navideño (C-186, `components/navidad/`): no se usa para errores ni para ofertas.
 

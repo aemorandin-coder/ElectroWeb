@@ -80,12 +80,14 @@ Claude lo implementa en C-10/C-11. Gemini **solo usa** estas clases y no inventa
 - **Azul de marca:** lo que se hace (botones, enlaces) y lo que la tienda destaca ("Destacado", el nivel de un curso, el monto a pagar).
 - **Azul noche (`brand-950`):** la pieza fuerte de una pantalla o de un correo, **una sola**, con texto blanco y el cian (`accent`) de acento: el certificado, la gift card, un código. Es la variante B que se eligió el 06/11 viendo las maquetas.
 - **Neutros:** la estructura: tarjetas, notas, mensajes, datos.
-- **Colores de estado, solo para estados:** verde = hecho (pagado, acreditado, en stock); **ámbar = alguien tiene que hacer algo** (falta pagar, falta verificar el correo, falta firmar, poco stock, por revisar, sin guardar), **solo en avisos de bloque y textos, nunca en una píldora**; rojo = error, rechazo o descuento (`deal`).
-  - **En una píldora, lo que alguien tiene que hacer va en un sello azul noche** (`brand-950`) con texto blanco y el ícono en cian (`accent`): es el tono `warning` de `adminBadge` desde C-216. Andrés, 13/11: "esas píldoras ámbar, las detesto, se ven demasiado genéricas"; eligió la A viendo las tres opciones. El azul noche de la regla siguiente ("una sola pieza fuerte") se refiere a bloques, no a estos sellos.
+- **Colores de estado, solo para estados:** verde = hecho (pagado, acreditado, en stock); **lo que alguien tiene que hacer** (falta pagar, falta verificar el correo, falta firmar, poco stock, por revisar, sin guardar) va en el azul de acción de abajo; rojo = error, rechazo o descuento (`deal`).
+- **Ningún contenedor ámbar, en ningún lado (C-226).** Andrés, 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados". Ni cajas, ni avisos de bloque, ni fondos, ni bordes, ni píldoras ámbar: en la tienda, el panel, los correos y los documentos que se imprimen.
+  - **En un bloque, lo que alguien tiene que hacer va en el azul claro de la tienda** (`brand-50`, borde `brand-200`, texto `brand-900`) **con el ícono cian en su placa azul noche** (`brand-950` con `accent`). Andrés lo eligió viendo las tres opciones el 14/11. Es `adminNotice('warning')`; fuera del panel, `avisoAccion` e `iconoAccion` de `lib/admin-ui.ts`, y en un correo, `CORREO.cajaAviso`.
+  - **En una píldora, un sello azul noche** (`brand-950`) con texto blanco y el ícono en cian: es `adminBadge('warning')` desde C-216 (Andrés, 13/11: "esas píldoras ámbar, las detesto, se ven demasiado genéricas"). **En un cuadro de ícono**, la misma placa: `placaAccion` o `adminIconChip('warning')`. El azul noche de "una sola pieza fuerte" se refiere a bloques, no a estos sellos y placas.
+  - **El ámbar queda solo en un texto suelto** ("Quedan 3", "Te faltan Bs. 120") **y en las excepciones con nombre.** Nunca destaca, celebra ni clasifica: ni un monto, ni un título, ni un nivel, ni una categoría, ni "Antes", ni una marca ajena como Binance.
   - Esperar no es un aviso: "En preparación", "Se acredita el…", "En revisión" (para quien espera) van en azul.
-  - El ámbar nunca destaca, celebra ni clasifica (un nivel, una categoría, "Antes", una marca ajena como Binance).
-- **Excepciones con nombre:** las estrellas de calificación (ámbar), la etiqueta amarilla `tag` de "Oferta del día" (con texto `ink`), el rojo `navidad` del tema y el recuadro ámbar de "Lo que no incluye" de las cotizaciones (Luis, C-182).
-- **Nunca texto blanco sobre ámbar ni sobre el verde claro (`success`):** no llega a 3:1. Sobre el verde fuerte (`success-strong`) sí: 5,5:1, como "Envío gratis" en la tienda y las píldoras de lo hecho en el panel (§1.8).
+- **Excepciones con nombre:** las estrellas de calificación y su barra (ámbar), la etiqueta amarilla `tag` de "Oferta del día" (con texto `ink`) y el rojo `navidad` del tema. El recuadro de "Lo que no incluye" de las cotizaciones (Luis, C-182) pasó al azul de acción con la regla de Andrés del 14/11.
+- **Nunca texto blanco sobre el verde claro (`success`):** no llega a 3:1. Sobre el verde fuerte (`success-strong`) sí: 5,5:1, como "Envío gratis" en la tienda y las píldoras de lo hecho en el panel (§1.8).
 - **Un correo, un acento:** el azul del botón y, si hace falta, una placa en azul noche (`placaCorreo` de `lib/email-templates/estilo.ts`). Lo demás, neutro.
 
 ### 1.2 Tipografía
@@ -164,7 +166,7 @@ Un trabajo de más de dos pasos (cargar una lista, un asistente) lleva `componen
 Los filtros de una lista van con `components/admin/Filtros`:
 - **Cada píldora lleva** un ícono del pack, el nombre, la cuenta y un subtítulo de pocas palabras que dice qué junta ("Hay en su depósito", "Se pueden publicar").
 - **La elegida**, en azul.
-- **Una que junta lo que alguien tiene que revisar** lleva el ícono en ámbar (§1.1).
+- **Una que junta lo que alguien tiene que revisar** va en el azul claro de la tienda, con su borde (§1.1, C-226; antes, ámbar).
 - **Una con cuenta 0** se apaga, pero se puede tocar.
 - **En el teléfono** se deslizan de lado.
 - Son botones con `aria-pressed`, no pestañas.
@@ -177,6 +179,7 @@ Andrés eligió la versión A ("como la tienda") el 13/11, para todo el panel.
   - rojo (`deal`) para lo cancelado o rechazado.
   - Es `adminBadge`. El estado de una orden lleva además su ícono (`components/admin/PildoraEstadoOrden`).
 - **Lo que alguien tiene que hacer va en un sello azul noche, con texto blanco y el ícono en cian** (C-216, Andrés, 13/11: nada de píldoras ámbar). Es `adminBadge('warning')`: el nombre del tono quedó, el color cambió.
+- **El aviso en bloque de lo que alguien tiene que hacer** (`adminNotice('warning')`) va en el azul claro de la tienda, y el ícono que va adentro toma solo su placa azul noche con el cian (C-226, Andrés, 14/11: nada de contenedores ámbar).
 - **Un nivel o una clasificación** (Urgente, el nivel de un curso) va en azul de marca, nunca en ámbar ni en azul noche (§1.1).
 - **Un dato en píldora** (una guía, un código) va en gris con su ícono (`adminDato`): informa sin competir con el estado.
 - **Los botones** (`adminPrimaryButton`, `adminSecondaryButton`, `adminIconButton`…) se levantan un poco al pasar el ratón y se hunden al tocarlos. Con "reducir movimiento" solo cambian de color, y apagados no se mueven.
@@ -512,7 +515,16 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **Después del deploy:** armarlo en el panel con la foto de la consola y encenderlo; el 20/12, "Sortear ahora".
   - **Sin pedir:** un correo automático al ganador, una franja del sorteo en el inicio y su flyer en ElectroStudio.
 - **C-216 · Sin píldoras ámbar** (**hecha**, rc.41, Andrés, 13/11: "las detesto, se ven demasiado genéricas"; eligió la A): lo que alguien tiene que hacer va en un sello azul noche con el ícono en cian, en todo el panel y en Mi panel (§1.1 y §1.8). `estado/C-216.md`.
-  - **Sin pedir:** los avisos en bloque y los textos en ámbar siguen (la regla los permite); si también molestan, se pasan con la misma idea.
+  - **Los avisos en bloque también molestaban:** pasaron al azul claro con C-226.
+- **C-226 · Ningún contenedor ámbar** (**hecha**, Andrés, 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados"; eligió el azul claro de la tienda). La regla quedó en §1.1, §1.7, §1.8, `CLAUDE.md` y `GEMINI.md`, y se pasaron 24 archivos, el aviso compartido del panel (42 usos) y la caja de aviso de los correos. `estado/C-226.md`.
+  - **Quedan, porque la regla los permite:** los textos sueltos en ámbar ("Te faltan Bs. 120", "Verifica tu pago"), las estrellas y su barra, y la etiqueta "Oferta del día".
+- **El reset de `app/globals.css` (hallado en C-226):** `* { box-sizing: border-box }` está fuera de `@layer`, así que le gana a las utilidades y `box-content` de Tailwind no funciona en ninguna parte. Tailwind ya trae ese reset: moverlo a `@layer base` lo arregla. Toca toda la tienda, así que va con una revisión visual completa. Prioridad baja.
+- **C-219 · Los correos de la tienda** (en curso, 14/11; decisiones en §7.2): el análisis completo, los 26 correos que ya salen con el diseño nuevo y los 19 que faltan. Usa C-234 para decir cuándo sale el pedido.
+- **C-227 · Los correos a los proveedores** (en curso, 14/11; decisiones en §7.2):
+  - el contacto del proveedor en el panel (columnas nuevas, aditivas);
+  - la bienvenida, el aviso de venta, la página firmada para anotar la guía, el recordatorio y la cancelación.
+  - Va después de C-219, que pone el diseño, y de C-234, que cuenta los días hábiles.
+- **C-234 · Cuándo sale cada pedido** (en curso, 14/11; decisiones en §7.2): el calendario (corte, sábado, feriados y días del panel) y la fecha de salida en la tienda, los correos y Mi pedido.
 - **Haiku en el panel** (Andrés eligió 5 de las 7 ideas el 13/11). Esfuerzo alto para lo que se espera en pantalla; el máximo, solo para trabajos de fondo. La base común está en `lib/ia/claude.ts` y las reglas del texto en `lib/ia/texto.ts` (C-213).
   - **A · El resumen del cliente en su ficha** (**hecha**, C-213, rc.38): la pestaña Resumen con lo que hay que atender y cómo compra, y a pedido el resumen de Claude con qué ofrecerle. De paso, "Total gastado" ya no suma lo pendiente ni lo cancelado. `estado/C-213.md`.
     - **Probada con un Claude simulado:** la clave del 13/11 da 401. Falta una clave nueva (en el servidor y aquí) y probarla con el modelo de verdad.
@@ -779,7 +791,32 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - **Destacados y "Recién llegados" (Andrés, 13/11, C-210; cambia lo de C-200 y C-207):**
     - "Destacados de la semana" muestra solo lo que tiene la estrella, de toda la tienda (la ferretería también) y sin relleno: "los he desactivado todos y siguen apareciendo los mismos". Sin ninguno, la sección no sale.
     - "Recién llegados" ordena por la fecha en que cada producto se publicó por primera vez, no por la de creación (la carga del proveedor crea en borrador). El mismo día, los destacados primero, y como mucho 4 de cada departamento o categoría.
-- **Sin píldoras ámbar (Andrés, 13/11, C-216):** "Esas píldoras ámbar, las detesto, se ven demasiado genéricas; por ahí tenemos una regla clara para no usarlas". Viendo las tres opciones, eligió la A: lo que alguien tiene que hacer va en un sello azul noche con texto blanco y el ícono en cian, en todo el panel y en Mi panel. Un nivel (Urgente) va en azul de marca. Los avisos en bloque siguen en ámbar.
+- **Sin píldoras ámbar (Andrés, 13/11, C-216):** "Esas píldoras ámbar, las detesto, se ven demasiado genéricas; por ahí tenemos una regla clara para no usarlas". Viendo las tres opciones, eligió la A: lo que alguien tiene que hacer va en un sello azul noche con texto blanco y el ícono en cian, en todo el panel y en Mi panel. Un nivel (Urgente) va en azul de marca.
+- **Ningún contenedor ámbar (Andrés, 14/11, C-226):** "En una regla clara escribir que ese color de contenedor ámbar lo detesto, está en todos lados". Viendo las tres opciones (azul noche, azul claro, blanco con raya azul), eligió el azul claro de la tienda con el ícono cian en su placa azul noche, para la tienda, el panel, los correos y los documentos (§1.1). El recuadro de "Lo que no incluye" de las cotizaciones, que Luis había dejado en ámbar (C-182), pasó también.
+- **Los correos de la tienda (equipo, 14/11, C-219):** "los diseños actuales de correos son muy pobres y no tienen nuestra esencia". Viendo las maquetas con datos reales:
+  - **El estilo:** la C, clara con la cinta, en todos los correos.
+  - **Arriba te recibe ELECTRO SHOP**, el logo grande. **Chispa va abajo**, con un globo que cambia según el correo y con gorro mientras esté encendido el de Navidad.
+  - **Los textos, "más dinámicos y mucho más épicos".**
+  - **Los 19 correos que faltan,** en sus tres prioridades: dinero, confianza y ventas.
+  - **Nada de factura en un correo** hasta que Contabilidad diga el campo (C-228 en adelante).
+- **Los correos a los proveedores (equipo, 14/11, C-227):** lo recomendado en las ocho preguntas.
+  - **El aviso "¡Se vendió tu producto!"** sale al confirmarse el pago y le llega al proveedor con copia al equipo.
+  - **La guía de ZOOM o MRW la hace el proveedor,** con lo que pide la guía: nombre, cédula y teléfono del cliente, y la oficina. Nunca el correo, la casa ni lo que pagó.
+  - **El proveedor ve su costo,** nunca el precio de venta.
+  - **Confirma con un botón:** un enlace firmado y sin cuenta para "Lo estoy preparando" y la guía. Con la guía, la orden se actualiza y al cliente le llega "Tu pedido va en camino".
+  - **Tiene 1 día hábil para despachar.** Si no, le llega un recordatorio y al equipo un aviso.
+  - **La bienvenida de "revendedor premium"** sale con un botón del panel cuando su catálogo ya está publicado. Lleva el flujo y su credencial, sin hablar de pagos.
+  - Siempre va el aviso "Se canceló: no lo despaches". Se le habla de usted.
+- **Cuándo sale cada pedido (equipo, 14/11, C-234):** "un cliente que compra un sábado al mediodía, su producto sí o sí sale el lunes; ser lo más transparente". Lo recomendado en las seis preguntas:
+  - **El corte de lunes a viernes, a las 2:00 p. m.:** lo pagado antes sale ese día. La hora se cambia en Configuración.
+  - **El sábado no se despacha:** lo pagado el sábado o el domingo sale el lunes.
+  - **Feriados:** los nacionales de Venezuela, más los días que el equipo marque en el panel.
+  - **Lo digital llega en horario de atención** (lunes a sábado de 9:00 a 19:00). Fuera de ese horario, al abrir.
+  - **Lo de La Victoria sale un día hábil después** que lo de Guanare, con el mismo calendario.
+  - **Dónde y cómo:**
+    - en la ficha y el carrito, la fecha exacta con cuenta regresiva ("Compra en las próximas 2 h 15 min y sale hoy");
+    - en el checkout, el correo de confirmación y Mi pedido, la fecha ("Sale el lunes 16 de noviembre").
+    - Con C-222, en una sola línea: "Sale el lunes 16 desde Aragua".
 - **El sorteo de la PlayStation 4 (Andrés, 13/11, C-212):** que la empresa no pierda.
   - **Boletos:** 1 por cada compra pagada de USD 10 o más; sin comprar, el enlace propio y 2 amigos que se registran y verifican el correo (1 boleto por cada 2, hasta 3). Las capturas del estado de WhatsApp no cuentan: no se pueden comprobar.
   - **El resultado, el 20/12,** para que el premio llegue a otro estado antes de Navidad. **El premio cuesta de USD 150 a 250.**

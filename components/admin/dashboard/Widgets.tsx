@@ -111,7 +111,7 @@ export function WidgetPorAtender({ porAtender, puede }: { porAtender: DashboardD
             return (
               <li key={p.clave}>
                 <Link href={p.href} className="flex min-h-12 items-center gap-3 px-4 py-2.5 text-sm text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
-                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full [&_svg]:h-4 [&_svg]:w-4 ${p.urgente ? 'bg-warning/15 text-warning-strong' : 'bg-surface text-muted'}`} aria-hidden="true">{p.icono}</span>
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full [&_svg]:h-4 [&_svg]:w-4 ${p.urgente ? 'bg-brand-950 text-accent' : 'bg-surface text-muted'}`} aria-hidden="true">{p.icono}</span>
                   <span className="min-w-0 flex-1 font-medium"><span className="tabular-nums">{cantidad}</span> {cantidad === 1 ? p.uno : p.varios}</span>
                   <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
                 </Link>

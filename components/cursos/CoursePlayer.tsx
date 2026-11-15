@@ -142,8 +142,8 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
 
       {/* Creator preview banner */}
       {isCreatorPreview && (
-        <div className="shrink-0 bg-warning/20 border-b border-warning/30 px-4 py-2 flex items-center justify-center gap-2">
-          <span className="text-warning text-xs font-bold inline-flex items-center gap-1.5"><IconoVer className="h-4 w-4 shrink-0" aria-hidden="true" />Vista previa de creador — el progreso no se guarda</span>
+        <div className="shrink-0 bg-brand-50 border-b border-brand-200 px-4 py-2 flex items-center justify-center gap-2">
+          <span className="text-brand-900 text-xs font-bold inline-flex items-center gap-1.5"><IconoVer className="h-4 w-4 shrink-0" aria-hidden="true" />Vista previa de creador — el progreso no se guarda</span>
         </div>
       )}
 

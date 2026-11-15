@@ -174,6 +174,10 @@ Build con el `DATABASE_URL` de `rev10_demo` y `NEXT_DIST_DIR=.next-test`, y `nex
 ### Pruebas
 - **Motor:** `scripts/e2e/lib.ts` (usuarios y sesiones de prueba, Firefox sin ventana). **Prueba de humo de todo junto:** `scripts/e2e/humo.ts` (59 comprobaciones: páginas públicas, una compra mixta, el panel con los dos roles y el teléfono). Se corre sobre `main` antes de cada bloque de deploy.
 - Los guiones de cada tarea se escriben en `scripts/e2e/_tNNN.ts`, se corren con `npx tsx` y se borran.
+- **El estrés de los caminos del cliente (C-258):** `scripts/e2e/estres-caminos.ts`. Son 13 caminos en el teléfono y en la computadora, con su puntaje, los errores, las cascadas y los enlaces muertos. Cómo se corre, en su encabezado.
+  - Se corre antes y después de cambiar un camino o una guía.
+  - Usa Playwright con el Chrome del sistema (`PLAYWRIGHT_CORE`).
+  - La tienda va con `E2E_ENVIOS=simulado`: ZOOM y MRW responden desde `fetch-mock.cjs`, porque la API pública de ZOOM se corta a ratos.
 - **HTTP** con Node y un JWT firmado con `encode` de `next-auth/jwt`:
   - Admin: `userType: 'admin'` y `dosPasos: true` (sin eso no tiene permisos y el `proxy` lo manda a Mi seguridad). Para el flujo real: login por HTTP y el código TOTP calculado con la clave que devuelve `POST /api/admin/dos-pasos {accion:'iniciar'}`.
   - Cliente: `userType: 'customer'` y `emailVerified`.

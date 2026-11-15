@@ -22,7 +22,9 @@ export default function DatosDelCliente({
   cedula: string;
   onGuardado: (datos: { telefono: string; cedula: string }) => void;
 }) {
-  const faltaTelefono = !telefono;
+  // C-258: un teléfono guardado que no sirve (un fijo, o mal escrito en una cuenta vieja) también se pide aquí: antes el
+  // checkout decía "Quien recibe: escribe tu número" y no había dónde escribirlo
+  const faltaTelefono = !telefono || !leerTelefono(telefono).ok;
   const faltaCedula = !cedula;
 
   const [codigo, setCodigo] = useState('+58');

@@ -12,7 +12,10 @@ export const dynamic = 'force-dynamic';
 // correo. Es lo que permite a Reportes decir cuántas personas están conectadas ahora, con cuenta y sin ella.
 //   POST { sesion, pagina: '/productos/x', carrito: 2, origen: 'instagram.com', salir?: true }
 
-const LIMITE = { maxRequests: 20, windowSeconds: 60 };
+// C-258: era 20 por minuto y por IP. Una persona que navega rápido manda unos 12 (uno por página y el latido); dos o tres
+// detrás de la misma IP (el Wi-Fi de una oficina, o los datos móviles, que comparten IP) ya lo pasaban, y el navegador
+// mostraba un error 429 por cada latido. Sigue con tope: la lista vive en memoria y tiene su máximo (lib/visitantes.ts).
+const LIMITE = { maxRequests: 120, windowSeconds: 60 };
 
 export async function POST(request: NextRequest) {
   if (!checkRateLimit(getClientIP(request), 'analytics:presencia', LIMITE).success) {

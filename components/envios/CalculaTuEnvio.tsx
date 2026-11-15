@@ -33,6 +33,24 @@ function guardar(d: Destino) {
   try { localStorage.setItem(CLAVE, JSON.stringify(d)); } catch { /* sin almacenamiento: no se recuerda */ }
 }
 
+// C-258: la lista de ciudades se pide una vez por visita, como en SelectorOficina (antes, cada ficha y el carrito la
+// volvían a pedir: unas 15 KB por pantalla). Si falla, la próxima vez se intenta de nuevo.
+type Lista = { estados: string[]; ciudades: Ciudad[] };
+let listaPedida: Promise<Lista | null> | null = null;
+function pedirLista(): Promise<Lista | null> {
+  listaPedida ??= fetch('/api/public/envio/destinos')
+    .then(async (r) => {
+      const d = r.ok ? await r.json() : null;
+      return Array.isArray(d?.ciudades) ? (d as Lista) : null;
+    })
+    .catch(() => null)
+    .then((lista) => {
+      if (!lista) listaPedida = null;
+      return lista;
+    });
+  return listaPedida;
+}
+
 export default function CalculaTuEnvio({ items, paquetes, className = '' }: {
   /** Lo que se manda: el servidor saca el peso, las medidas y el valor de la base */
   items: Array<{ productId: string; quantity: number }>;
@@ -41,7 +59,7 @@ export default function CalculaTuEnvio({ items, paquetes, className = '' }: {
   className?: string;
 }) {
   const { status } = useSession();
-  const [lista, setLista] = useState<{ estados: string[]; ciudades: Ciudad[] } | null>(null);
+  const [lista, setLista] = useState<Lista | null>(null);
   const [errorLista, setErrorLista] = useState(false);
   const [destino, setDestino] = useState<Destino>({ estado: '', ciudad: '' });
   const [estimado, setEstimado] = useState<{ para: string; datos: Estimado } | null>(null);
@@ -55,13 +73,8 @@ export default function CalculaTuEnvio({ items, paquetes, className = '' }: {
   useCargarAlMontar(async () => {
     const guardado = leerGuardado();
     if (guardado) setDestino(guardado);
-    try {
-      const r = await fetch('/api/public/envio/destinos');
-      const d = r.ok ? await r.json() : null;
-      if (Array.isArray(d?.ciudades)) setLista(d); else setErrorLista(true);
-    } catch {
-      setErrorLista(true);
-    }
+    const d = await pedirLista();
+    if (d) setLista(d); else setErrorLista(true);
   });
 
   // Sin destino guardado y con sesión: la agencia de ZOOM de "Mis direcciones" (la predeterminada primero)

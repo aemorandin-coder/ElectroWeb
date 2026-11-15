@@ -1,9 +1,22 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.74; nada por subir: §2)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.74; en `main`, rc.75 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-258 · El estrés de cada camino del cliente (rc.75, por subir: §2; `estado/C-258.md`):** el pedido del equipo del 15/11, la parte de medir y arreglar. El kit de onboarding es C-257.
+  - **La medida:** `scripts/e2e/estres-caminos.ts` recorre 13 caminos en el teléfono y la computadora: comprar, registrarse, recargar Puntos ES, la gift card, la garantía, el sorteo y más.
+    - Cuenta pasos, toques, palabras, cuánto hay que bajar, opciones, el tiempo hasta usable, los errores, los pedidos en cascada y los enlaces muertos.
+    - Con eso saca un puntaje de estrés por camino. Todos llegan a la meta, y no hay ningún enlace muerto (127 revisados).
+  - **Arreglado:**
+    - el checkout que se trababa con el teléfono de las cuentas viejas ("0414…");
+    - el latido de "quién está conectado", que daba error con varias personas en la misma IP;
+    - el carrito que se volvía a guardar igual en cada página (y pisaba otro dispositivo);
+    - la lista de ciudades de ZOOM, pedida en cada ficha;
+    - el login, que esperaba "Verificando sesión…";
+    - cuatro títulos de pestaña y el ícono del carrito sin nombre.
+    - **El resultado:** estrés 1945 → 1697 y errores 30 → 0.
+  - **Las cinco fricciones más grandes** y la lista de dónde ayudaría el kit, para C-257, están en el estado. Lo que pide decisión (solicitar producto sin cuenta, la garantía que abre en "Info", el "¿Estás seguro?" de la recarga), en `PLAN.md` §5.2.
 - **C-256 · La bienvenida fuera de /sorteo y "activar la cuenta" (rc.74, en producción; `estado/C-256.md`):** las dos decisiones del equipo sobre C-255. Sigue **C-257**, el kit de onboarding de toda la tienda (`PLAN.md` §5.2).
 - **C-255 · "Cómo participar" en /sorteo, con íconos (rc.73, en producción; `estado/C-255.md`):** la gente le preguntaba al equipo "¿cómo participo?, ¿a juro tengo que comprar?, ¿cómo creo mi cuenta?". El equipo eligió la B de las maquetas, con los dos caminos y la compra primero.
   - **Los tres pasos, unidos por un camino:** "Crea tu cuenta gratis"; "Gana boletos por dos caminos" (Camino 1, comprar $5 o más, sin límite; Camino 2, invitar amigos, hasta 3); "Espera el 20 de diciembre". Al lado, tus boletos.
@@ -346,8 +359,24 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Lo que falta subir: nada por ahora
-Producción está en `v1.0.0-rc.74` (`c7d994b`); su bloque está en `HISTORIAL.md`.
+### Lo que falta subir: `v1.0.0-rc.75` (C-258; unos 15 minutos)
+Producción está en `v1.0.0-rc.74` (`c7d994b`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-258 (rc.75):** los arreglos de los caminos del cliente: el teléfono de las cuentas viejas en el checkout, el latido de presencia, el carrito guardado sin cambios, la lista de ciudades una vez por visita, el login, los títulos y el ícono del carrito.
+  - **Sin cambio de base,** sin SQL, sin variables nuevas y sin cron. No hace falta respaldo antes.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.75`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
+  1. **El login, en una ventana privada:** `/login` muestra de una vez "Iniciar sesión" con el correo y la contraseña, sin "Verificando sesión…".
+  2. **Las pestañas:** el carrito dice "Carrito de compras | Electro Shop" (una vez la marca), y `/recuperar-contrasena` dice "Recuperar contraseña | Electro Shop".
+  3. **El carrito, con tu cuenta, en la computadora:** agrega un producto. El ícono del carrito, arriba, abre la lista con "Ver Carrito Completo". Recarga la página: el producto sigue ahí.
+  4. **El carrito en dos dispositivos, con la misma cuenta:**
+      1. en el teléfono, sube la cantidad a 2;
+      2. en la computadora, recarga la página sin tocar nada;
+      3. vuelve a abrir el carrito en el teléfono: sigue en 2. Antes, la recarga de la computadora lo devolvía a 1.
+  5. **"Calcula tu envío"** en una ficha: elige estado y ciudad. Sale lo que cobra ZOOM, como siempre.
+  6. **Reportes → En vivo** (si se usa): con dos o tres teléfonos en el Wi-Fi de la tienda navegando a la vez, todos aparecen conectados.
+  7. **El checkout con el teléfono viejo** (solo si alguna cuenta de producción lo tiene así; si no, se salta): con esa cuenta, "Siguiente: revisar" se puede tocar.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.74 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de base que deshacer.
 
 ### Por confirmar de rc.74 (C-255 y C-256; unos 15 minutos)
 Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera la versión y `/sorteo`: "Cómo participar" con los dos caminos, las preguntas, el logo de ZOOM y las bases con "activen su cuenta desde el correo". En ningún lado dice "No tienes que comprar".
@@ -821,7 +850,7 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
-**Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61), C-249 (los filtros en píldoras, rc.63), C-249b (la oferta o el cupón y las gift cards impresas por pasos, rc.64) C-249c (el método de pago y la categoría, rc.65) C-249d (la campaña y el promotor, rc.67), C-249e (el curso y Servicios, rc.68: los 8 formularios van por pasos) y C-251 (Mi panel: las fallas y lo nuevo, rc.69) y C-251b (Mi panel con el kit, rc.71); quedan sus tres decisiones (`estado/C-251.md`). También C-253 (el sorteo más atractivo, rc.72) y C-255 ("Cómo participar" con íconos y el camino de registro, rc.73). **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
+**Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61), C-249 (los filtros en píldoras, rc.63), C-249b (la oferta o el cupón y las gift cards impresas por pasos, rc.64) C-249c (el método de pago y la categoría, rc.65) C-249d (la campaña y el promotor, rc.67), C-249e (el curso y Servicios, rc.68: los 8 formularios van por pasos) y C-251 (Mi panel: las fallas y lo nuevo, rc.69) y C-251b (Mi panel con el kit, rc.71); quedan sus tres decisiones (`estado/C-251.md`). También C-253 (el sorteo más atractivo, rc.72) y C-255 ("Cómo participar" con íconos y el camino de registro, rc.73) y C-258 (el estrés de los caminos del cliente y sus arreglos, rc.75). **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
 
 **Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) C-224 (los tres únicos, rc.51) y C-241 (el checkout por pasos, rc.53), C-242 (Facturas, ordenada, rc.56). También C-226 (sin ámbar, rc.44), C-219 (los correos, rc.47) y C-234 (cuándo sale cada pedido, rc.52), y C-227 (los correos al aliado comercial, rc.55).
 

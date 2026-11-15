@@ -1,6 +1,6 @@
 # Plan maestro — ElectroShopVe WEB
 
-> **Al día: 2026-11-14 (C-220).** Este archivo es el plan completo: objetivo, sistema de diseño, carriles, tablero y decisiones. Los números de sección no cambian: `CLAUDE.md` y `GEMINI.md` los citan.
+> **Al día: 2026-11-14 (C-220 y C-228).** Este archivo es el plan completo: objetivo, sistema de diseño, carriles, tablero y decisiones. Los números de sección no cambian: `CLAUDE.md` y `GEMINI.md` los citan.
 
 | Documento | Para qué |
 |---|---|
@@ -13,6 +13,7 @@
 | [`estado/`](./estado/) | Un archivo por tarea (`C-01.md`, `G-05a.md`…): qué cambió, cómo se verificó y qué quedó. |
 | `AUDITORIA*.md` | Los siete diagnósticos. Cada uno abre con su cierre: qué tarea resolvió cada hallazgo y qué sigue abierto. |
 | [`REVISION_FINAL.md`](./REVISION_FINAL.md) | La lista de revisión en producción, con Andrés. |
+| [`CONTABILIDAD.md`](./CONTABILIDAD.md) | El plan del módulo Contabilidad (C-228): cómo trabaja el contador, las normas del SENIAT, la factura de talonario y cómo ajustarse al 19/04/2027. |
 | [`/CLAUDE.md`](../../CLAUDE.md) y [`/GEMINI.md`](../../GEMINI.md) | Reglas de cada agente. `CHATGPT.md` y `PLAN_CHATGPT.md` quedan como historial. |
 | `docs/API_SADES_EWEB.md` y `docs/INTEGRACION_PAGO_MOVIL_BDV.md` | Referencia de dos sistemas externos: la API de SADES y la de Conciliación del BDV. |
 
@@ -26,7 +27,7 @@
 
 **Desde el 30/09 (meta de Andrés), en curso:**
 5. **La tienda es la vitrina digital de la empresa para todo el país.** Que Google, las redes y las IA encuentren el catálogo; anuncios que se puedan medir; ventas a empresas e instituciones.
-6. **Una empresa formal y seria.** La web no emite facturas: prepara los datos y SADES o el talonario facturan. El IVA va a la vista y los términos solo prometen lo que la tienda cumple.
+6. **Una empresa formal y seria.** La web no emite facturas: prepara los datos y SADES o el talonario facturan. El IVA va a la vista y los términos solo prometen lo que la tienda cumple. Desde el 14/11 (C-228), Contabilidad registra cada factura del talonario y lleva el libro de ventas; desde el 19/04/2027 la factura sale del portal del SENIAT (`CONTABILIDAD.md`).
 7. **Que comprar sea fácil y dé confianza:** pagar con los métodos reales, saber cuánto cuesta el envío y el embalaje antes de pagar, y ver la garantía junto al botón.
 
 ---
@@ -630,6 +631,16 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **Las fotos (12/11):** las rehizo un agente aparte, con las mismas reglas del 10/11. 50 de los 85 códigos tienen foto; lo que falta se le pidió a la ferretería (`SIGUIENTE.md`).
   - **El proponedor de nombres** (`lib/nombres/marcas.ts`) tiene que conocer Belt-G (su lista dice "BG"), Protektor y V-Teg para la próxima lista.
 
+- **Contabilidad** (pedido del 14/11; el plan en `CONTABILIDAD.md`, C-228; las cuatro decisiones del 14/11, §7.2). En este orden:
+  - **C-229 · Las facturas de talonario** (pendiente, primero; espera la maqueta, A18).
+    - La sección Contabilidad en el menú, con los permisos `FACTURAR` (administradores) y `VER_CONTABILIDAD` (solo el dueño).
+    - Las tablas `talonarios` y `documentos_fiscales` y la columna `orders.documentoFiscalId` (aditivas).
+    - Cargar el talonario; la nueva factura por pasos (de dónde sale, a nombre de quién, qué se vendió, revisar y emitir) con la réplica; anular con motivo; la orden queda facturada sola.
+  - **C-230 · El libro de ventas y el resumen del mes** (antes del 15/12, para declarar noviembre).
+  - **C-231 · Los movimientos de la web:** cobros por forma de pago, Puntos ES, gift cards, devoluciones y comisiones; el costo y el margen, solo para el dueño.
+  - **C-232 · El IVA del mes y el paquete para el contador:** la hoja del IVA, el vencimiento con aviso, "Declarada" y "Pagada", y el mes cerrado. La tabla `periodos_iva` (aditiva).
+  - **C-233 · Listos para el 19/04/2027:** el talonario de contingencia, fecha y hora en cada factura, "Preparar para el portal" y la lista del calendario (`CONTABILIDAD.md` §7).
+
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
 - Hecho en C-185 (06/11): las ramas, el stash y los worktrees viejos de la máquina de Andrés, y los 40 uploads versionados (en el servidor se respaldan antes del próximo `git pull`, `SIGUIENTE.md` §2).
@@ -691,6 +702,9 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 | A13 | Promotores: ¿los productos digitales (códigos y recargas) pagan comisión? Hoy sí, pero no se acredita sola si supera la ganancia de la venta | `estado/C-167.md`. Opciones: no pagar en digitales, un % menor, o dejarlo. |
 | A14 | Promotores: % por defecto de la comisión y del descuento del código (quedó 5 % y 5 %), y los términos del programa para el abogado | `estado/C-167.md`. |
 | A11 | ¿La cinta ES también en los productos que no son nuevos (al menos en "Caja abierta")? | Hoy llevan su etiqueta de condición y no la cinta (decisión del 28/09). Andrés la echó de menos el 01/10 (`estado/C-161.md`). |
+| A16 | ¿Se factura en el talonario **cada venta de la web** desde ya, o solo la que pide factura, hasta el portal del 19/04/2027? La ley pide factura en cada venta (`CONTABILIDAD.md` §4) | Con el contador. Recomendado: esta semana. |
+| A17 | ¿Quién es el contador y cómo recibe el mes? Puede ser un archivo para Excel, uno para imprimir o un acceso de solo lectura al panel (sería un rol nuevo) | C-230 y C-232. |
+| A18 | La maqueta de la factura de talonario: A (en vivo al lado) o B (al final; en el teléfono, casilla por casilla; la recomendada) | C-229. Las capturas, en `~/Escritorio/Electro Shop/Contabilidad - maquetas (C-228)/`. |
 
 ### 7.2 Tomadas (no volver a preguntar)
 **Del plan original (D1 a D5):** `/comparar` se eliminó y redirige a `/productos` (C-06). El popup se cierra al instante y sale como mucho una vez cada 24 h (C-23). El modo mantenimiento se implementó (C-04). El precio se escribe `$1.099,00` (C-12). Las categorías de la franja son las dos con más productos (C-20).
@@ -756,6 +770,11 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - La web no emite facturas: prepara los datos, y SADES o el talonario facturan. No se construye un facturador ni se integra una imprenta digital.
   - El precio publicado ya lleva el IVA y se dice cuánto es. El precio sugerido es costo + 30 % + IVA.
   - Los productos digitales no llevan IVA (interruptor en Configuración, apagado).
+  - **Lo que respondió el equipo el 14/11 (C-228, en el chat desde la PC de Andrés):**
+    - Electro Shop Morandin C.A. es **contribuyente ordinaria**: declara el IVA cada mes y no cobra IGTF ni retiene IVA.
+    - **SADES no imprime factura fiscal** (el comprobante del paquete es un recibo): las facturas salen del talonario. Contabilidad las registra todas y lleva el libro de ventas de la empresa. La web no emite el documento: guía el llenado y lo anota.
+    - **Contabilidad:** los administradores facturan; los libros, el IVA y los márgenes, solo el dueño.
+    - **Desde el 19/04/2027 se factura con el portal o la app del SENIAT** (Providencia SNAT/2026/00093). Sigue sin integrarse una imprenta digital.
 - **ElectroStudio:** historias en la base, dos pantallas (inicio y editor), trabajo por fases. El plan semanal automático quedó fuera (28/09).
 - **La ferretería aliada (10/11, Andrés, en el chat):**
   - Su lista trabaja a BCV, igual que la tienda, y su "Precio Máximo" trae el IVA y es lo que la tienda le paga, sin descuento. El costo es su precio sin el IVA (C-196b).

@@ -1,7 +1,7 @@
 'use client';
 
 import { toast } from 'react-hot-toast';
-import { adminModalOverlay } from '@/lib/admin-ui';
+import { adminBadge, adminModalOverlay, adminModalPanel, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
@@ -24,9 +24,9 @@ const CATEGORIES = [
 ];
 
 const PLATFORMS = [
-  { value: 'YOUTUBE', label: 'YouTube', color: 'bg-deal/10 text-deal' },
-  { value: 'TIKTOK', label: 'TikTok', color: 'bg-ink text-white' },
-  { value: 'KICK', label: 'Kick', color: 'bg-success/10 text-success-strong' },
+  { value: 'YOUTUBE', label: 'YouTube', color: 'bg-white text-ink-soft ring-1 ring-inset ring-line' },
+  { value: 'TIKTOK', label: 'TikTok', color: 'bg-white text-ink-soft ring-1 ring-inset ring-line' },
+  { value: 'KICK', label: 'Kick', color: 'bg-white text-ink-soft ring-1 ring-inset ring-line' },
 ];
 
 const EMPTY_FORM = {
@@ -186,16 +186,17 @@ export default function AdminServiciosPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className={adminPageHeader}>
         <div>
-          <h1 className="text-2xl font-bold text-ink">Trabajos Realizados</h1>
-          <p className="text-sm text-muted mt-0.5">
+          <h1 className={adminPageTitle}>Trabajos Realizados</h1>
+          <p className={adminPageSubtitle}>
             Portafolio de servicios — {videos.length} fichas
           </p>
         </div>
         <button
+          type="button"
           onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl font-semibold text-sm hover:bg-brand-600 transition-all shadow-md hover:shadow-lg hover:scale-105"
+          className={adminPrimaryButton}
         >
           <IconoMas className="w-4 h-4" />
           Agregar Trabajo
@@ -349,9 +350,7 @@ export default function AdminServiciosPage() {
                   ) : (
                     <span className="text-xs text-line-strong">Sin reseñas</span>
                   )}
-                  <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${
-                    v.isActive ? 'bg-success/10 text-success-strong' : 'bg-surface text-muted'
-                  }`}>
+                  <span className={`ml-auto ${adminBadge(v.isActive ? 'success' : 'neutral')}`}>
                     {v.isActive ? 'Activo' : 'Inactivo'}
                   </span>
                 </div>
@@ -359,8 +358,9 @@ export default function AdminServiciosPage() {
                 {/* Actions */}
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => openEdit(v)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-surface hover:bg-line text-ink rounded-lg text-xs font-semibold transition-all"
+                    className={`${adminSecondaryButton} flex-1`}
                   >
                     <IconoEditar className="w-3.5 h-3.5" />
                     Editar
@@ -368,9 +368,10 @@ export default function AdminServiciosPage() {
                   <button
                     onClick={() => handleDelete(v.id)}
                     disabled={deletingId === v.id}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-deal/10 hover:bg-deal/20 text-deal rounded-lg text-xs font-semibold transition-all"
+                    aria-label="Eliminar este trabajo"
+                    className={`${adminSecondaryButton} w-11 px-0 text-deal hover:text-deal`}
                   >
-                    <IconoEliminar className="w-3.5 h-3.5" />
+                    <IconoEliminar className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -381,15 +382,17 @@ export default function AdminServiciosPage() {
 
       {/* Modal Crear/Editar */}
       {showModal && (
-        <div className={adminModalOverlay} onClick={() => setShowModal(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
+          <div className={`${adminModalPanel} overflow-y-auto sm:max-w-2xl`} role="dialog" aria-modal="true">
             <div className="flex items-center justify-between p-6 border-b border-line">
               <h2 className="text-lg font-bold text-ink">
                 {editingId ? 'Editar Trabajo' : 'Nuevo Trabajo'}
               </h2>
               <button
+                type="button"
                 onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-surface rounded-lg transition-colors"
+                aria-label="Cerrar"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors hover:bg-surface"
               >
                 <IconoCerrar className="w-5 h-5 text-muted" />
               </button>

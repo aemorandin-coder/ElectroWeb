@@ -3,19 +3,20 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { IconoCerrar, IconoEnvio, IconoImpresora, IconoPaquete, IconoReloj } from '@/components/iconos';
+import Link from 'next/link';
+import { IconoCerrar, IconoEnvio, IconoEstrella, IconoImpresora, IconoPaquete, IconoReloj } from '@/components/iconos';
 import OrderTracking from '@/components/orders/OrderTracking';
 import { formatUSD, formatVES } from '@/lib/currency';
 import IvaIncluido from '@/components/ui/IvaIncluido';
 import { formatOrderPaymentMethod } from '@/lib/format-helpers';
 import { conceptoEntrega } from '@/lib/facturacion';
 import { conditionBadge, warrantyDaysFor, type Condition, type Grade } from '@/lib/product-condition';
-import { estadoParaCliente } from '@/lib/order-pasos';
+import { estadoParaCliente, lineaDeSalida } from '@/lib/order-pasos';
 import { adminBadge } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useSettings } from '@/contexts/SettingsContext';
 import { paqueteDesde } from '@/lib/origen';
-import { calendarioDe, cuandoSale, enVenezuela, fechaDeSalida } from '@/lib/horarios';
+import { calendarioDe } from '@/lib/horarios';
 
 // C-137: detalle de un pedido y su recibo. El seguimiento (C-100 y C-126) arriba y, abajo, lo que se compró y cómo se
 // pagó. "Imprimir recibo" imprime solo el recibo (o lo guarda en PDF desde el mismo diálogo).
@@ -75,7 +76,8 @@ export interface PedidoCliente {
     productCondition?: Condition | null;
     conditionGrade?: Grade | null;
     warrantyDays?: number | null;
-    product?: { productType?: string | null; mainImage?: string | null } | null;
+    /** C-251: `slug` para "Dejar mi reseña" en lo entregado */
+    product?: { productType?: string | null; mainImage?: string | null; slug?: string | null } | null;
   }>;
 }
 
@@ -83,15 +85,9 @@ const n = (v: unknown) => Number(v) || 0;
 
 export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoCliente; onCerrar: () => void }) {
   const { settings: ajustes } = useSettings();
-  // C-234: el día que sale, si ya está pagado, es físico y no ha salido. Un día que ya pasó no se promete
-  const hoy = enVenezuela(new Date()).fecha;
-  const fechaSalida = pedido.paymentStatus === 'PAID' && pedido.paidAt && pedido.deliveryMethod !== 'DIGITAL'
-    && ['PENDING', 'CONFIRMED', 'PAID', 'PROCESSING'].includes(pedido.status)
-    ? fechaDeSalida(new Date(pedido.paidAt), calendarioDe(ajustes), pedido.dispatchCityName ? 1 : 0)
-    : null;
-  const salida = fechaSalida && fechaSalida >= hoy
-    ? `${pedido.deliveryMethod === 'PICKUP' ? 'Listo para retirar' : 'Sale'} ${cuandoSale(fechaSalida, new Date(), true)}`
-    : null;
+  // C-234: el día que sale, si ya está pagado, es físico y no ha salido. Un día que ya pasó no se promete.
+  // C-251: con el origen en la misma línea ("Sale el martes 17 de noviembre desde Aragua (La Victoria)", C-222)
+  const salida = lineaDeSalida(pedido, calendarioDe(ajustes));
   const tienda = { nombre: ajustes?.companyName || 'Electro Shop Morandin C.A.', address: ajustes?.address, city: ajustes?.city, state: ajustes?.state, phone: ajustes?.phone, email: ajustes?.email };
   const estado = estadoParaCliente(pedido);
   useBodyScrollLock(true);
@@ -131,10 +127,13 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
             {salida && (
               <p className="mb-3 flex items-start gap-2 rounded-lg bg-brand-50 p-3 text-sm font-semibold text-brand-900">
                 <IconoReloj className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
-                {salida}
+                <span>
+                  {salida}
+                  {pedido.dispatchCityName && <span className="block text-xs font-normal text-ink-soft">Este paquete va con su propia guía.</span>}
+                </span>
               </p>
             )}
-            {pedido.dispatchCityName && (
+            {pedido.dispatchCityName && !salida && (
               <p className="mb-3 flex items-start gap-2 rounded-lg bg-surface p-3 text-sm text-ink-soft">
                 <IconoEnvio className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
                 Este paquete sale {paqueteDesde(pedido.dispatchStateName, pedido.dispatchCityName)}, con su propia guía.
@@ -143,6 +142,7 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
             <OrderTracking
               status={pedido.status}
               paymentStatus={pedido.paymentStatus}
+              paymentReference={pedido.paymentReference ?? null}
               createdAt={pedido.createdAt}
               paidAt={pedido.paidAt ?? undefined}
               shippedAt={pedido.shippedAt ?? undefined}
@@ -192,6 +192,12 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
                         <span className="block text-xs text-ink-soft">{condicion} · garantía {warrantyDaysFor(item.productCondition, item.warrantyDays)} días</span>
                       )}
                       <span className="block text-xs tabular-nums text-muted">{item.quantity} × {formatUSD(item.priceUSD)}</span>
+                      {/* C-251: la reseña se deja en la ficha (C-157 la pide por correo); desde Mi panel no había cómo llegar */}
+                      {pedido.status === 'DELIVERED' && item.product?.slug && (
+                        <Link href={`/productos/${item.product.slug}#resenas`} className="mt-1 inline-flex min-h-8 items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 print:hidden">
+                          <IconoEstrella className="h-3.5 w-3.5" aria-hidden="true" /> Dejar mi reseña
+                        </Link>
+                      )}
                     </span>
                     <span className="shrink-0 text-sm font-semibold tabular-nums text-ink">{formatUSD(item.totalUSD)}</span>
                   </li>

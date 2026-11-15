@@ -15,6 +15,8 @@ interface OrderTrackingProps {
     status: string;
     /** C-137: con el pago sin validar, el primer paso dice "Pago por validar" */
     paymentStatus?: string | null;
+    /** C-251: sin referencia, el pedido pendiente está "Por pagar" */
+    paymentReference?: string | null;
     createdAt: string;
     paidAt?: string | null;
     shippedAt?: string | null;
@@ -39,6 +41,7 @@ interface OrderTrackingProps {
 export default function OrderTracking({
     status,
     paymentStatus,
+    paymentReference,
     deliveryMethod,
     shippingCarrier,
     trackingNumber,
@@ -59,8 +62,13 @@ export default function OrderTracking({
     const { pasos } = pasosPedido({
         status, paymentStatus, deliveryMethod, shippingCarrier, shippingMode, courierOfficeName,
         enOficina: shipmentEvents.some((e) => eventoEsEnOficina(e.description)),
+        ...(paymentReference !== undefined ? { paymentReference } : {}),
     });
     const empresa = shippingCarrier ? NOMBRE_EMPRESA[shippingCarrier as EmpresaGuia] ?? shippingCarrier : '';
+    // C-251: "Retiras en ZOOM ZOOM Barquisimeto Centro": la oficina ya trae el nombre de la empresa
+    const conEmpresa = Boolean(empresa && courierOfficeName?.toUpperCase().startsWith(empresa.toUpperCase()));
+    // C-251: el pendiente ya pagado se prepara (antes decía "Esperando confirmación" junto a "En preparación")
+    const pagado = paymentStatus === 'PAID';
     const enOficina = shippingMode === 'OFFICE';
     const local = deliveryMethod === 'LOCAL_DELIVERY';
     const mensajeEnviado = local
@@ -80,7 +88,8 @@ export default function OrderTracking({
     };
 
     const isDelivered = status === 'DELIVERED';
-    const isCancelled = status === 'CANCELLED';
+    // C-251: el reembolsado salía en una caja azul vacía
+    const isCancelled = status === 'CANCELLED' || status === 'REFUNDED';
 
     return (
         <div className="relative">
@@ -103,7 +112,7 @@ export default function OrderTracking({
                 {status === 'READY_FOR_PICKUP' && <IconoBolsa className="w-3.5 h-3.5" />}
                 {status === 'PAID' && <IconoTarjeta className="w-3.5 h-3.5" />}
                 {status === 'PROCESSING' && <IconoPaquete className="w-3.5 h-3.5" />}
-                {status === 'PENDING' && <IconoReloj className="w-3.5 h-3.5" />}
+                {status === 'PENDING' && (pagado ? <IconoPaquete className="w-3.5 h-3.5" /> : <IconoReloj className="w-3.5 h-3.5" />)}
                 {status === 'CONFIRMED' && <IconoConfirmado className="w-3.5 h-3.5" />}
                 <span>
                     {status === 'DELIVERED' && '¡Entregado! Gracias por tu compra'}
@@ -111,9 +120,10 @@ export default function OrderTracking({
                     {status === 'READY_FOR_PICKUP' && 'Listo para recoger en tienda'}
                     {status === 'PAID' && 'Preparando tu pedido'}
                     {status === 'PROCESSING' && 'Empacando productos'}
-                    {status === 'PENDING' && 'Esperando confirmación'}
+                    {status === 'PENDING' && (pagado ? 'Preparando tu pedido' : paymentReference === null ? 'Falta tu pago' : 'Estamos validando tu pago')}
                     {status === 'CONFIRMED' && 'Pedido confirmado'}
                     {status === 'CANCELLED' && 'Pedido cancelado'}
+                    {status === 'REFUNDED' && 'Pedido reembolsado'}
                 </span>
             </div>
 
@@ -125,7 +135,7 @@ export default function OrderTracking({
                         <span className="min-w-0 [overflow-wrap:anywhere]">
                             {enOficina && courierOfficeName ? (
                                 <>
-                                    Retiras en {empresa ? `${empresa} ` : ''}<strong>{courierOfficeName}</strong>
+                                    Retiras en {empresa && !conEmpresa ? `${empresa} ` : ''}<strong>{courierOfficeName}</strong>
                                     {courierOfficeAddress && <span className="block text-muted">{courierOfficeAddress}</span>}
                                 </>
                             ) : shippingAddress}
@@ -171,7 +181,7 @@ export default function OrderTracking({
                             <button
                                 type="button"
                                 onClick={copiarGuia}
-                                className="flex min-h-9 items-center gap-1 rounded-lg border border-line bg-white px-2 text-xs font-semibold text-ink hover:bg-surface"
+                                className="flex min-h-11 items-center gap-1 rounded-lg border border-line bg-white px-3 text-xs font-semibold text-ink hover:bg-surface"
                             >
                                 <IconoCopiar className="w-3 h-3" aria-hidden="true" />
                                 Copiar
@@ -181,7 +191,7 @@ export default function OrderTracking({
                                     href={trackingUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex min-h-9 items-center gap-1 px-2 bg-brand-500 text-white text-xs font-semibold rounded-lg hover:bg-brand-600 transition-colors"
+                                    className="flex min-h-11 items-center gap-1 px-3 bg-brand-500 text-white text-xs font-semibold rounded-lg hover:bg-brand-600 transition-colors"
                                 >
                                     <IconoAbrirAparte className="w-3 h-3" aria-hidden="true" />
                                     Rastrear
@@ -196,7 +206,7 @@ export default function OrderTracking({
                     )}
                     {estimatedDelivery && status === 'SHIPPED' && (
                         <p className="mt-1.5 text-xs text-muted inline-flex items-center gap-1">
-                            <IconoCalendario className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />Entrega estimada: <span className="font-semibold text-ink">{new Date(estimatedDelivery).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                            <IconoCalendario className="inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />Entrega estimada: <span className="font-semibold text-ink">{new Date(estimatedDelivery).toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Caracas' })}</span>
                         </p>
                     )}
                 </div>

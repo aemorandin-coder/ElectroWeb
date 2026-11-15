@@ -33,12 +33,17 @@ export async function GET() {
         });
 
         // Get orders count and stats
-        const [totalOrders, pendingOrders, recentOrders] = await Promise.all([
+        // C-251: "pending" son los pagos que la tienda valida (con su referencia); "porPagar", los que esperan el pago.
+        // Antes contaba los dos como "con el pago por validar"
+        const [totalOrders, pendingOrders, porPagar, recentOrders] = await Promise.all([
             prisma.order.count({
                 where: { userId },
             }),
             prisma.order.count({
-                where: { userId, status: 'PENDING' },
+                where: { userId, status: 'PENDING', paymentStatus: { not: 'PAID' }, paymentReference: { not: null } },
+            }),
+            prisma.order.count({
+                where: { userId, status: 'PENDING', paymentStatus: { not: 'PAID' }, paymentReference: null },
             }),
             prisma.order.findMany({
                 where: { userId },
@@ -56,15 +61,8 @@ export async function GET() {
             }),
         ]);
 
-        // Get wishlist count (if wishlist table exists)
-        let wishlistCount = 0;
-        try {
-            wishlistCount = await prisma.wishlist.count({
-                where: { userId },
-            });
-        } catch {
-            // Wishlist table might not exist yet
-        }
+        // C-251: los productos en favoritos (antes contaba las listas, una por cliente: siempre decía "1")
+        const wishlistCount = await prisma.wishlistItem.count({ where: { wishlist: { userId } } });
 
         // Misiones del panel (C-89): dirección guardada y teléfono + cédula (se piden en la primera compra desde C-85)
         const perfil = await prisma.profile.findUnique({
@@ -212,7 +210,7 @@ export async function GET() {
         });
 
         // C-128: pedidos en curso con lo que necesita el stepper (ZOOM avisa cuándo llegó a la oficina)
-        const [pedidosEnCurso, enCursoTotal, entregadas, reclamosAbiertos, comprado] = await Promise.all([
+        const [pedidosEnCurso, enCursoTotal, entregadas, reclamosAbiertos, comprado, esperanRespuesta] = await Promise.all([
             prisma.order.findMany({
                 where: { userId, status: { in: [...ACTIVOS] } },
                 orderBy: { createdAt: 'desc' },
@@ -220,6 +218,8 @@ export async function GET() {
                 select: {
                     id: true, orderNumber: true, status: true, paymentStatus: true, deliveryMethod: true, shippingCarrier: true,
                     shippingMode: true, courierOfficeName: true, trackingNumber: true, totalUSD: true, createdAt: true,
+                    // C-251: el día que sale (C-234) desde dónde (C-222) y si el pago espera su validación
+                    paidAt: true, dispatchCityName: true, dispatchStateName: true, paymentReference: true,
                     items: { select: { productName: true, quantity: true } },
                     shipmentEvents: { where: { source: 'ZOOM' }, select: { description: true } },
                 },
@@ -232,6 +232,8 @@ export async function GET() {
             }),
             prisma.warrantyClaim.count({ where: { userId, status: { notIn: ['RESOLVED', 'REJECTED'] } } }),
             prisma.order.aggregate({ where: { userId, paymentStatus: 'PAID', status: { notIn: ['CANCELLED', 'REFUNDED'] } }, _sum: { totalUSD: true } }),
+            // C-251: la garantía que espera al cliente (antes decía "en revisión" cuando le tocaba responder)
+            prisma.warrantyClaim.count({ where: { userId, status: 'WAITING_CUSTOMER' } }),
         ]);
 
         // Productos físicos entregados que siguen en garantía, y cuándo vence la primera
@@ -259,6 +261,7 @@ export async function GET() {
             totalSpent: Number(userBalance?.totalSpent || 0),
             orders: totalOrders,
             pending: pendingOrders,
+            porPagar,
             wishlist: wishlistCount,
             tieneDireccion: parseSavedAddresses(perfil?.savedAddresses).length > 0,
             datosCompletos: Boolean(perfil?.phone?.trim() && perfil?.idNumber?.trim()),
@@ -268,8 +271,12 @@ export async function GET() {
                 orderNumber: order.orderNumber,
                 total: Number(order.totalUSD),
                 status: order.status,
+                // C-251: el estado como lo ve el cliente en Mis pedidos ("Por pagar", "Verificando pago")
+                paymentStatus: order.paymentStatus,
+                paymentReference: Boolean(order.paymentReference),
                 createdAt: order.createdAt,
-                itemCount: order.items.length,
+                // Unidades, como en "Pedidos en curso" y en Mis pedidos (antes, las líneas del pedido)
+                itemCount: order.items.reduce((n, i) => n + i.quantity, 0),
                 items: order.items.slice(0, 3),
             })),
             recentActivity: limitedActivity,
@@ -290,11 +297,16 @@ export async function GET() {
                 itemCount: o.items.reduce((n, i) => n + i.quantity, 0),
                 firstItem: o.items[0]?.productName ?? null,
                 enOficina: o.shipmentEvents.some((e) => eventoEsEnOficina(e.description)),
+                paidAt: o.paidAt,
+                dispatchCityName: o.dispatchCityName,
+                dispatchStateName: o.dispatchStateName,
+                paymentReference: Boolean(o.paymentReference),
             })),
             warranties: {
                 active: garantiasVigentes,
                 nextExpiry: proximoVencimiento ? new Date(proximoVencimiento).toISOString() : null,
                 openClaims: reclamosAbiertos,
+                waitingCustomer: esperanRespuesta,
             },
             totalPurchased: Number(comprado._sum.totalUSD ?? 0),
         });

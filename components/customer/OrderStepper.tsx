@@ -25,7 +25,8 @@ export default function OrderStepper({ pasos }: { pasos: PasoPedido[] }) {
             >
               {hecho ? <IconoCheck className="h-3.5 w-3.5" aria-hidden="true" /> : i + 1}
             </span>
-            <span className={`mt-1.5 px-0.5 text-xs leading-tight ${actual ? 'font-semibold text-ink' : hecho ? 'text-ink-soft' : 'text-muted'}`}>
+            {/* C-251: a 360 px "Despachado" no cabía en su columna y se pegaba a "Listo para": se corta con guion (lang="es") */}
+            <span className={`mt-1.5 px-0.5 text-xs leading-tight hyphens-auto ${actual ? 'font-semibold text-ink' : hecho ? 'text-ink-soft' : 'text-muted'}`}>
               {paso.label}
               <span className="sr-only">{hecho ? ' (hecho)' : actual ? ' (en curso)' : ' (pendiente)'}</span>
             </span>

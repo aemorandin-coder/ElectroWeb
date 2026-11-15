@@ -527,7 +527,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - el carrito abandonado, que necesita guardar el carrito;
     - "Tu factura", desde el 19/04/2027 con Contabilidad;
     - el resumen de Puntos ES.
-- **C-227 · Los correos a los proveedores** (en curso, 14/11; decisiones en §7.2):
+- **C-227 · Los correos a los proveedores** (plan listo, 14/11; decisiones en §7.2 y el flujo en `PROPUESTA_C227.md`):
   - el contacto del proveedor en el panel (columnas nuevas, aditivas);
   - la bienvenida, el aviso de venta, la página firmada para anotar la guía, el recordatorio y la cancelación.
   - Va después de C-219, que pone el diseño, y de C-234, que cuenta los días hábiles.

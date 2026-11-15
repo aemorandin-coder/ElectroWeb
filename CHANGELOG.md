@@ -10,6 +10,14 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.77] - 2026-11-15
+Las tres decisiones del equipo sobre los callejones que midió C-258 (C-261). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Tienda 1.17.1 (C-261)
+- **"Solicitar producto" sin cuenta pide entrar antes del formulario:** "Entra para pedirlo", con "Crear mi cuenta gratis" y "Ya tengo cuenta". Los dos vuelven a la página. Antes se llenaba todo, se resolvía el captcha y el botón quedaba apagado.
+- **La recarga de Puntos ES con un método manual ya no pregunta "¿Estás seguro?".** El botón dice el monto y el método ("Recargar $20,00 con Binance Pay").
+### Carrito, checkout y cuenta del cliente 1.9.1 (C-261)
+- **Mi panel → Garantía abre donde hace falta.** Sin garantías en curso, en "Nueva". Con alguna, en Mis solicitudes, con "Pedir garantía" arriba. Antes abría en "Info".
+
 ## [1.0.0-rc.76] - 2026-11-15
 El kit de onboarding: Chispa te guía (C-257). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Carrito, checkout y cuenta del cliente 1.9.0 (C-257)

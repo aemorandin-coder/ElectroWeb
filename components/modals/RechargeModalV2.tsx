@@ -7,7 +7,6 @@ import {
   IconoAdvertencia, IconoBillete, IconoCargando, IconoCerrar, IconoCheck, IconoConfirmado, IconoFlechaIzquierda,
   IconoGarantia,
 } from '@/components/iconos';
-import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
@@ -31,7 +30,6 @@ function referenciaTemporal(): string {
 
 export default function RechargeModalV2({ isOpen, onClose, onSuccess }: RechargeModalProps) {
     const { data: session } = useSession();
-    const { confirm } = useConfirm();
     const [amount, setAmount] = useState('');
     const [reference, setReference] = useState('');
     const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
@@ -313,16 +311,8 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
             return;
         }
 
-        const confirmed = await confirm({
-            title: 'Confirmar Recarga',
-            message: `¿Estás seguro de que deseas recargar ${formatUSD(numAmount)} usando ${selectedMethod.name}?`,
-            confirmText: 'Sí, recargar',
-            cancelText: 'Cancelar',
-            variant: 'info'
-        });
-
-        if (!confirmed) return;
-
+        // C-261 (decisión del equipo sobre C-258): sin el "¿Estás seguro?" de después: el botón ya dice el monto y el método
+        // ("Recargar $20,00 con Binance Pay"), y los términos ya se firmaron. Era un toque de más en la primera recarga.
         setProcessing(true);
         try {
             const response = await fetch('/api/customer/balance/recharge', {
@@ -763,7 +753,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                         ) : (
                                             <>
                                                 <IconoCheck className="w-4 h-4 lg:w-5 lg:h-5" />
-                                                Confirmar Recarga
+                                                {parseFloat(amount) > 0 && selectedMethod ? `Recargar ${formatUSD(parseFloat(amount))} con ${selectedMethod.name}` : 'Recargar'}
                                             </>
                                         )}
                                     </button>

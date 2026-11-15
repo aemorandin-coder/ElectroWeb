@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { compartirPagina } from '@/lib/og/datos';
 import PublicHeader from '@/components/public/PublicHeader';
 import SolicitarProductoClient from './SolicitarProductoClient';
@@ -18,11 +20,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SolicitarProductoPage() {
+  // C-261: sin cuenta, la página pide entrar antes del formulario (el servidor no acepta pedidos sin cuenta)
+  const session = await getServerSession(authOptions);
   return (
     <div className="min-h-dvh bg-surface">
       <PublicHeader />
 
-      <SolicitarProductoClient />
+      <SolicitarProductoClient conCuenta={Boolean(session?.user)} />
 
       <Footer />
     </div>

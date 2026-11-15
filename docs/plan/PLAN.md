@@ -567,6 +567,9 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - Pasa a §1.9: los pasos de `Pasos` con su ícono (Entrega, Tus datos, Pago, Revisar y pagar), "Siguiente: …" con el motivo si falta algo, el resumen del pedido al lado como vista previa y, en el teléfono, "Paso N de M" con la barra.
     - **Primero las maquetas,** con datos reales y en las variantes posibles (pasos de a uno, o la misma página con los pasos marcándose al avanzar), para que el equipo elija.
     - **Es dinero:** no cambia ningún cálculo del servidor. Se prueban el caso normal y el manipulado, y nada que hoy se ve o se puede hacer desaparece (el inventario del método de `CHATGPT.md` §4).
+  - **Volver atrás con `deploy.sh` cuando la base creció** (pendiente; salió de la subida de rc.53 del 14/11):
+    - `git reset --hard <versión anterior>` y `deploy.sh --sin-pull` se paran en el paso 2: ven `DROP` de las tablas y columnas que agregó la versión nueva, y la tienda sigue como está.
+    - Falta una opción (`--volver`) que compile igual cuando lo único distinto sea lo que agregó la versión nueva, sin aplicarlo nunca a la base. Hasta entonces, cada bloque dice "avisa a Claude".
   - **Lo que queda de ámbar y de píldoras claras en la tienda** (pendiente; salió del checkout el 14/11, con la regla de §1.1 y §1.8):
     - letras ámbar en una veintena de archivos (35 usos): cursos, gift cards, servicios, recargas, firma de documentos, inicio de sesión. Las estrellas y un "Quedan 3" se quedan;
     - píldoras en verde claro con letra verde: la gift card válida, el certificado, el panel del creador, Mis cursos y el sello de la cotización.

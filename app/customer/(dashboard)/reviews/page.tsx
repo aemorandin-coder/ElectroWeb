@@ -35,7 +35,7 @@ export default function MyReviewsPage() {
 
   async function fetchMyReviews() {
     try {
-      const response = await fetch('/api/reviews');
+      const response = await fetch('/api/reviews?mine=1');
       if (response.ok) {
         const data = await response.json();
         setReviews(Array.isArray(data) ? data : []);

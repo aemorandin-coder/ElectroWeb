@@ -87,6 +87,8 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
   const [leido, setLeido] = useState(false);
   const [acepto, setAcepto] = useState(false);
   const [idNumber, setIdNumber] = useState('');
+  // C-251: la cédula registrada no se cambia al firmar (C-84); el servidor la exige igual
+  const [cedulaFija, setCedulaFija] = useState(false);
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [largo, setLargo] = useState(0);
@@ -108,6 +110,7 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
         if (!vigente) return;
         setDoc(data.document);
         setIdNumber((v) => v || data.profile?.idNumber || '');
+        setCedulaFija(Boolean(data.profile?.idNumber));
         setPhone((v) => v || data.profile?.phone || '');
         setAddress((v) => v || data.profile?.address || '');
         setError('');
@@ -224,7 +227,8 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label htmlFor="firma-cedula" className={adminLabel}>Cédula</label>
-                  <input id="firma-cedula" className={adminInput(Boolean(errores.idNumber))} value={idNumber} onChange={(e) => setIdNumber(e.target.value.toUpperCase())} placeholder="V12345678" autoComplete="off" maxLength={12} />
+                  <input id="firma-cedula" className={adminInput(Boolean(errores.idNumber))} value={idNumber} onChange={(e) => setIdNumber(e.target.value.toUpperCase())} readOnly={cedulaFija} placeholder="V12345678" autoComplete="off" maxLength={12} />
+                  {cedulaFija && <p className="mt-1 text-xs text-muted">La de tu cuenta. Si está mal, escríbenos.</p>}
                   {errores.idNumber && <p className={adminError}>{errores.idNumber}</p>}
                 </div>
                 <div>

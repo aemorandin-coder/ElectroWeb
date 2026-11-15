@@ -13,9 +13,10 @@ import PreguntarPromociones from '@/components/promociones/PreguntarPromociones'
 import TarjetaSorteo from '@/components/sorteo/TarjetaSorteo';
 import OrderStepper from '@/components/customer/OrderStepper';
 import { formatUSD } from '@/lib/currency';
-import { adminBadge, adminPrimaryButton, type AdminTone } from '@/lib/admin-ui';
-import { ETIQUETA_ESTADO } from '@/lib/order-admin';
-import { pasosPedido } from '@/lib/order-pasos';
+import { adminBadge, adminPrimaryButton } from '@/lib/admin-ui';
+import { estadoParaCliente, lineaDeSalida, pasosPedido } from '@/lib/order-pasos';
+import { calendarioDe } from '@/lib/horarios';
+import { useSettings } from '@/contexts/SettingsContext';
 import { useDelNavegador } from '@/lib/hooks/useMontado';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useTiempoReal } from '@/lib/realtime/hooks';
@@ -28,6 +29,8 @@ interface RecentOrder {
   id: string;
   orderNumber: string;
   status: string;
+  paymentStatus?: string;
+  paymentReference?: boolean;
   itemCount: number;
   total: number;
   createdAt: string;
@@ -48,6 +51,10 @@ interface ActiveOrder {
   itemCount: number;
   firstItem: string | null;
   enOficina: boolean;
+  paidAt?: string | null;
+  dispatchCityName?: string | null;
+  dispatchStateName?: string | null;
+  paymentReference?: boolean;
 }
 
 interface RecentActivity {
@@ -64,6 +71,7 @@ interface DashboardStats {
   totalSpent: number;
   orders: number;
   pending: number;
+  porPagar?: number;
   wishlist: number;
   tieneDireccion?: boolean;
   datosCompletos?: boolean;
@@ -73,16 +81,23 @@ interface DashboardStats {
   recentActivity: RecentActivity[];
   activeCount: number;
   activeOrders: ActiveOrder[];
-  warranties: { active: number; nextExpiry: string | null; openClaims: number };
+  warranties: { active: number; nextExpiry: string | null; openClaims: number; waitingCustomer?: number };
 }
 
 const fechaCorta = new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'short', timeZone: 'America/Caracas' });
 
-function tonoEstado(status: string): AdminTone {
-  if (status === 'DELIVERED') return 'success';
-  if (status === 'CANCELLED' || status === 'REFUNDED') return 'danger';
-  if (status === 'PENDING') return 'warning';
-  return 'brand';
+/**
+ * C-251: el mismo estado que Mis pedidos ("Por pagar", "Verificando pago", "En preparación"). Antes eran los nombres del
+ * panel ("Pendiente", "Pagada"): la misma orden se llamaba distinto en el inicio y en Mis pedidos.
+ */
+function SelloPedido({ pedido }: { pedido: RecentOrder }) {
+  const estado = estadoParaCliente({ status: pedido.status, paymentStatus: pedido.paymentStatus, paymentReference: pedido.paymentReference ? 'si' : null });
+  return (
+    <span className={adminBadge(estado.tono)}>
+      {pedido.status === 'CANCELLED' && <IconoRechazado className="h-3 w-3" aria-hidden="true" />}
+      {estado.label}
+    </span>
+  );
 }
 
 function Movimiento({ actividad }: { actividad: RecentActivity }) {
@@ -109,6 +124,7 @@ function Movimiento({ actividad }: { actividad: RecentActivity }) {
 
 export default function CustomerDashboard() {
   const { data: session } = useSession();
+  const { settings: ajustes } = useSettings();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   // Saludo según la hora del navegador (en el HTML del servidor, "Hola"): C-111
@@ -153,6 +169,11 @@ export default function CustomerDashboard() {
 
   const activos = stats?.activeOrders ?? [];
   const garantias = stats?.warranties ?? { active: 0, nextExpiry: null, openClaims: 0 };
+  const esperanRespuesta = garantias.waitingCustomer ?? 0;
+  // C-251: "Por pagar" y "por validar" por separado (antes los dos decían "con el pago por validar")
+  const porPagar = stats?.porPagar ?? 0;
+  const porValidar = stats?.pending ?? 0;
+  const lineaCompras = [porPagar > 0 && `${porPagar} por pagar`, porValidar > 0 && `${porValidar} con el pago por validar`].filter(Boolean).join(' · ');
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -190,7 +211,7 @@ export default function CustomerDashboard() {
           </p>
           <p className="mt-1 text-2xl font-bold tabular-nums text-ink lg:text-3xl">{stats?.activeCount ?? 0}</p>
           <p className="mt-2 flex items-center justify-between gap-1 text-xs text-ink-soft lg:text-sm">
-            {stats?.pending ? `${stats.pending} con el pago por validar` : 'En preparación o en camino'}
+            {lineaCompras || 'En preparación o en camino'}
             <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted group-hover:text-brand-600" aria-hidden="true" />
           </p>
         </Link>
@@ -201,7 +222,9 @@ export default function CustomerDashboard() {
           </p>
           <p className="mt-1 text-2xl font-bold tabular-nums text-ink lg:text-3xl">{garantias.active}</p>
           <p className="mt-2 flex items-center justify-between gap-1 text-xs text-ink-soft lg:text-sm">
-            {garantias.openClaims > 0
+            {esperanRespuesta > 0
+              ? <span className={adminBadge('warning')}>{esperanRespuesta === 1 ? 'Te toca responder' : `Responde ${esperanRespuesta}`}</span>
+              : garantias.openClaims > 0
               ? `${garantias.openClaims} ${garantias.openClaims === 1 ? 'solicitud' : 'solicitudes'} en revisión`
               : garantias.nextExpiry ? `La primera vence el ${fechaCorta.format(new Date(garantias.nextExpiry))}` : 'Productos cubiertos por la tienda'}
             <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted group-hover:text-brand-600" aria-hidden="true" />
@@ -226,6 +249,8 @@ export default function CustomerDashboard() {
           <ul className="space-y-3">
             {activos.slice(0, 3).map((orden) => {
               const { pasos, nota } = pasosPedido(orden);
+              // C-251 (C-234 y C-222): el día que sale y desde dónde, también en el inicio
+              const salida = lineaDeSalida(orden, calendarioDe(ajustes));
               return (
                 <li key={orden.id}>
                   <Link href={`/customer/orders?orden=${orden.id}`} className="block rounded-2xl border border-line bg-white p-4 transition-colors hover:border-brand-200 lg:p-5">
@@ -247,6 +272,7 @@ export default function CustomerDashboard() {
                         <span>
                           {nota}
                           {orden.trackingNumber && orden.status === 'SHIPPED' ? ` · Guía ${orden.trackingNumber}` : ''}
+                          {salida && <span className="block font-semibold text-brand-700">{salida}</span>}
                         </span>
                       </p>
                     )}
@@ -290,10 +316,7 @@ export default function CustomerDashboard() {
                     <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-semibold text-ink">#{order.orderNumber}</span>
-                        <span className={adminBadge(tonoEstado(order.status))}>
-                          {order.status === 'CANCELLED' && <IconoRechazado className="h-3 w-3" aria-hidden="true" />}
-                          {ETIQUETA_ESTADO[order.status as keyof typeof ETIQUETA_ESTADO] ?? order.status}
-                        </span>
+                        <SelloPedido pedido={order} />
                       </span>
                       <span className="block text-xs text-muted">
                         {order.itemCount} {order.itemCount === 1 ? 'producto' : 'productos'} · {fechaCorta.format(new Date(order.createdAt))}
@@ -309,7 +332,7 @@ export default function CustomerDashboard() {
           )}
           {(stats?.wishlist ?? 0) > 0 && (
             <Link href="/customer/wishlist" className="mt-2 flex min-h-11 items-center gap-2 border-t border-line pt-3 text-sm font-medium text-brand-600 hover:text-brand-700">
-              <IconoFavoritos className="h-4 w-4" aria-hidden="true" /> {stats?.wishlist} en tu lista de deseos
+              <IconoFavoritos className="h-4 w-4" aria-hidden="true" /> {stats?.wishlist} en tus favoritos
             </Link>
           )}
         </section>

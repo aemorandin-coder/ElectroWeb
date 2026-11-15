@@ -63,10 +63,13 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = (session.user as { id: string }).id;
-    const { productId, action } = await req.json();
+    // C-251: el id tiene que ser texto (un objeto llegaba al filtro de Prisma y "remove" vaciaba la lista) y la acción, una de las dos
+    const body = await req.json().catch(() => null) as { productId?: unknown; action?: unknown } | null;
+    const productId = typeof body?.productId === 'string' && body.productId.length <= 60 ? body.productId : '';
+    const action = body?.action;
 
-    if (!productId) {
-      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
+    if (!productId || (action !== 'add' && action !== 'remove')) {
+      return NextResponse.json({ error: 'Falta el producto o la acción' }, { status: 400 });
     }
 
     // Get or create wishlist
@@ -95,9 +98,7 @@ export async function POST(req: NextRequest) {
 
       if (!existingItem) {
         // Solo productos publicados (antes un id inventado daba 500 y se podían guardar borradores)
-        const row = typeof productId === 'string'
-          ? await prisma.product.findFirst({ where: { id: productId, status: 'PUBLISHED' }, include: publicProductInclude })
-          : null;
+        const row = await prisma.product.findFirst({ where: { id: productId, status: 'PUBLISHED' }, include: publicProductInclude });
         if (!row) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
         const [actual] = await conOfertas([toPublicProduct(row)]);
         await prisma.wishlistItem.create({

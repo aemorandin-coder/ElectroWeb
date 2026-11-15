@@ -141,7 +141,10 @@ function estadoDeComision(c: Conversion): { texto: string; tono: 'success' | 'wa
   if (c.status === 'REJECTED') return { texto: 'Anulada', tono: 'danger' };
   // C-192: esperar no es un aviso: el promotor no tiene que hacer nada
   if (c.enRevision) return { texto: 'En revisión', tono: 'brand' };
-  if (c.creditsAt) return { texto: `Se acredita el ${format(new Date(c.creditsAt), 'dd/MM', { locale: es })}`, tono: 'brand' };
+  // C-251: una fecha que ya pasó no se promete (la tarea diaria la acredita en estos días)
+  if (c.creditsAt) return new Date(c.creditsAt).getTime() > Date.now()
+    ? { texto: `Se acredita el ${format(new Date(c.creditsAt), 'dd/MM', { locale: es })}`, tono: 'brand' }
+    : { texto: 'Se acredita pronto', tono: 'brand' };
   return { texto: 'Espera la entrega', tono: 'brand' };
 }
 
@@ -733,59 +736,37 @@ export default function ReferralsPage() {
               <p className="text-xs mt-1">Comparte tu código para empezar a ganar Puntos ES.</p>
             </div>
           ) : (
-            <div className={`${adminCard} overflow-hidden`}>
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-line bg-surface text-[11px] font-semibold text-muted uppercase">
-                    <th className="px-3 py-2">Venta</th>
-                    <th className="px-3 py-2 text-right">Puntos ES</th>
-                    <th className="px-3 py-2 text-center">Estado</th>
-                    <th className="px-3 py-2 text-right">Fecha</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {conversions.slice(0, 10).map((conv) => {
-                    const typeInfo = CONVERSION_LABELS[conv.type] || {
-                      label: conv.type,
-                      Icon: IconoRegalo,
-                      color: 'text-muted',
-                    };
-                    const estado = estadoDeComision(conv);
-                    return (
-                      <tr key={conv.id} className="hover:bg-surface transition-colors">
-                        <td className="px-3 py-2.5">
-                          <div className="flex items-center gap-1.5">
-                            <typeInfo.Icon
-                              className={`w-3.5 h-3.5 ${typeInfo.color}`}
-                            />
-                            <span className="text-xs text-ink">
-                              {conv.type === 'PURCHASE'
-                                ? `${formatUSD(conv.baseAmount)} ${conv.source === 'CODE' ? 'con tu código' : 'con tu enlace'}`
-                                : typeInfo.label}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2.5 text-right">
-                          <span className="text-xs font-semibold text-ink">
-                            {conv.type === 'PURCHASE' ? formatUSD(conv.commission) : '—'}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 text-center">
-                          <span className={adminBadge(estado.tono)}>
-                            {estado.texto}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 text-right text-xs text-muted">
-                          {format(new Date(conv.createdAt), 'dd/MM/yy', {
-                            locale: es,
-                          })}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            // C-251: una lista y no una tabla: a 360 px la tabla se cortaba ("Se acredita el 12…" y sin la fecha)
+            <ul className={`${adminCard} divide-y divide-line p-0!`}>
+              {conversions.slice(0, 10).map((conv) => {
+                const typeInfo = CONVERSION_LABELS[conv.type] || {
+                  label: conv.type,
+                  Icon: IconoRegalo,
+                  color: 'text-muted',
+                };
+                const estado = estadoDeComision(conv);
+                return (
+                  <li key={conv.id} className="flex items-start gap-3 px-4 py-3">
+                    <typeInfo.Icon className={`mt-0.5 h-4 w-4 shrink-0 ${typeInfo.color}`} aria-hidden="true" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-ink">
+                        {conv.type === 'PURCHASE'
+                          ? `${formatUSD(conv.baseAmount)} ${conv.source === 'CODE' ? 'con tu código' : 'con tu enlace'}`
+                          : typeInfo.label}
+                      </p>
+                      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+                        <span className={adminBadge(estado.tono)}>{estado.texto}</span>
+                        <span>{format(new Date(conv.createdAt), 'dd/MM/yy', { locale: es })}</span>
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-right text-sm font-semibold tabular-nums text-ink">
+                      {conv.type === 'PURCHASE' ? formatUSD(conv.commission) : '—'}
+                      <span className="block text-xs font-normal text-muted">Puntos ES</span>
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
 

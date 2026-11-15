@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
         }
 
-        const canModerate = hasPermission(session, 'MANAGE_CONTENT');
+        // C-251: ?mine=1 es Mis reseñas en Mi panel: solo las propias, aunque quien entra sea del equipo (antes veía las de todos)
+        const canModerate = hasPermission(session, 'MANAGE_CONTENT') && searchParams.get('mine') !== '1';
         const reviews = await prisma.review.findMany({
             where: canModerate ? {} : { userId: session.user.id },
             orderBy: { createdAt: 'desc' },

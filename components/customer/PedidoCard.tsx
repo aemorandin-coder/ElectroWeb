@@ -4,10 +4,12 @@ import Image from 'next/image';
 import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { IconoAbrirAparte, IconoChevronDerecha, IconoDigital, IconoPaquete } from '@/components/iconos';
+import { IconoAbrirAparte, IconoChevronDerecha, IconoDigital, IconoPaquete, IconoReloj } from '@/components/iconos';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { adminBadge } from '@/lib/admin-ui';
-import { estadoParaCliente, pasosPedido } from '@/lib/order-pasos';
+import { estadoParaCliente, lineaDeSalida, pasosPedido } from '@/lib/order-pasos';
+import { calendarioDe } from '@/lib/horarios';
+import { useSettings } from '@/contexts/SettingsContext';
 import { NOMBRE_EMPRESA, type EmpresaGuia } from '@/lib/envios/empresas';
 import { eventoEsEnOficina } from '@/lib/envios/zoom';
 import OrderStepper from '@/components/customer/OrderStepper';
@@ -29,11 +31,14 @@ export function fotoDe(item: PedidoCliente['items'][number]): string | null {
 }
 
 export default function PedidoCard({ pedido, onDetalle }: { pedido: PedidoCliente; onDetalle: () => void }) {
+  const { settings: ajustes } = useSettings();
   const estado = estadoParaCliente(pedido);
   const enCurso = !['DELIVERED', 'CANCELLED', 'REFUNDED'].includes(pedido.status);
   // Como en el inicio del panel (C-128): ZOOM avisó que llegó a la oficina de destino
   const enOficina = (pedido.shipmentEvents ?? []).some((e) => eventoEsEnOficina(e.description));
   const pasos = enCurso ? pasosPedido({ ...pedido, enOficina }) : null;
+  // C-251 (C-234): el día que sale, también en la tarjeta (antes solo en el detalle)
+  const salida = enCurso ? lineaDeSalida(pedido, calendarioDe(ajustes)) : null;
   const unidades = pedido.items.reduce((s, i) => s + i.quantity, 0);
   const empresa = pedido.shippingCarrier ? NOMBRE_EMPRESA[pedido.shippingCarrier as EmpresaGuia] ?? pedido.shippingCarrier : 'la empresa de envíos';
   const conCodigos = pedido.items.some((i) => i.product?.productType === 'DIGITAL') && pedido.paymentStatus === 'PAID';
@@ -94,6 +99,11 @@ export default function PedidoCard({ pedido, onDetalle }: { pedido: PedidoClient
         <div className="mt-4 space-y-2">
           <OrderStepper pasos={pasos.pasos} />
           {pasos.nota && <p className="text-center text-xs font-medium text-ink-soft">{pasos.nota}</p>}
+          {salida && (
+            <p className="flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-brand-700">
+              <IconoReloj className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {salida}
+            </p>
+          )}
         </div>
       )}
 

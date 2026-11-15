@@ -591,6 +591,11 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **C-246 · El destino claro para la guía y los datos fiscales del proveedor** (**hecha**, rc.60, 15/11; `estado/C-246.md`): "Envíelo a" en el correo y la página del proveedor, sus datos fiscales (razón social, RIF y domicilio) y hasta 3 correos de despacho.
     - **Falta:** cargar los datos de Ferrecla en el panel después del deploy (`SIGUIENTE.md` §2, prueba 8) y decidir cuándo se le envía la bienvenida.
     - **Para C-237 (compras):** el proveedor y su RIF pueden leerse de `suppliers` (`legalName`, `taxId`).
+  - **C-251 · Mi panel revisado a fondo** (**hecha** la primera parte, rc.69, 15/11; `estado/C-251.md`; lo hizo un agente aparte): las fallas, la seguridad de la API del cliente y lo nuevo que no le había llegado ("Sale el… desde Aragua", "Dejar mi reseña", cómo canjear cada código, el certificado del curso). Queda:
+    - **C-251b:** los arreglos del kit que no son fallas, marcados "(a) C-251b" en el estado (las píldoras claras de Puntos ES y de Mis códigos, el ámbar de Direcciones, Garantía, Reseñas, Seguridad y la ventana de firmar, `Opcion` en Direcciones, los filtros en píldoras de Mis pedidos, Puntos ES, Reseñas y Notificaciones, y el perfil hasta `max-w-3xl`).
+    - **Tres decisiones del equipo, con maquetas** (`~/.cache/electroshop-trabajo/c251/decisiones.html`): Mis pedidos en la computadora (dos columnas, la recomendada), la garantía de los códigos y las recargas (aparte, la recomendada) y los sellos "Encriptado" y "Garantizado" de Mis códigos (decir lo que sí es verdad, la recomendada).
+    - Pagar un pedido "Por pagar" desde Mi panel no existe; solo nace así lo que arma el equipo. Si se quiere, es una tarea aparte.
+    - La dirección muy corta: la pantalla pide 10 letras y el servidor acepta menos.
   - **C-250 · Las categorías y la gift card impresa, con el kit** (**hecha**, rc.66, 15/11; `estado/C-250.md`; el equipo eligió lo recomendado en las dos preguntas de C-249b).
   - **C-247 · La foto del premio del sorteo** (**hecha**, rc.59, 15/11; `estado/C-247.md`; el equipo eligió la A, sobre el azul y más grande). La foto se sube desde el panel.
   - **C-243 · El kit de marca** (**hecha**, rc.57, 15/11; `estado/C-243.md`; el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo, §1.0).
@@ -613,7 +618,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - **Pendiente:** las pantallas que usan `adminChoice` con su propia disposición se ven bien y pasan a `Opcion` cuando se toquen. C-245 pasó Descuentos y la tasa de Configuración, y los filtros de Productos y Legal a `Filtros`. Quedan Equipo, la Lista del proveedor (casillas de varias), Reportes, ElectroStudio y las direcciones de Mi panel.
   - **Lo que queda de ámbar y de píldoras claras en la tienda** (pendiente; salió del checkout el 14/11, con la regla de §1.1 y §1.8):
     - letras ámbar en una veintena de archivos (35 usos): cursos, gift cards, servicios, recargas, firma de documentos, inicio de sesión. Las estrellas y un "Quedan 3" se quedan;
-    - píldoras en verde claro con letra verde: la gift card válida, el certificado, el panel del creador, Mis cursos y el sello de la cotización.
+    - píldoras en verde claro con letra verde: la gift card válida, el certificado, el panel del creador y el sello de la cotización (Mis cursos, hecha en C-251; Mis códigos va en C-251b).
   - **C-223 · El aviso de cookies** (**hecha**, rc.49, 14/11; `estado/C-223.md`). Sale cuando se pongan las claves de Google y del píxel. El texto de la política espera al abogado (A4).
     - "Solo las necesarias" y "Aceptar", del mismo tamaño, abajo; "Preferencias de cookies" en el pie.
     - Google en modo sin cookies hasta el sí (Consent Mode); el píxel, solo con el sí.

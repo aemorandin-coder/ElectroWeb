@@ -2,8 +2,34 @@
 // Los pasos dependen de cómo se entrega: por ZOOM o MRW, retiro en tienda, delivery en Guanare o digital.
 
 import { NOMBRE_EMPRESA, esRetiro, type EmpresaGuia } from '@/lib/envios/empresas';
+import { cuandoSale, enVenezuela, fechaDeSalida, type Calendario } from '@/lib/horarios';
+import { paqueteDesde } from '@/lib/origen';
 
 export type EstadoPaso = 'hecho' | 'actual' | 'pendiente';
+
+export interface PedidoParaSalida {
+  status: string;
+  paymentStatus?: string | null;
+  paidAt?: string | Date | null;
+  deliveryMethod?: string | null;
+  /** C-199: el paquete sale de la ciudad del proveedor (un día hábil más) */
+  dispatchCityName?: string | null;
+  dispatchStateName?: string | null;
+}
+
+/**
+ * C-234 y C-222, en una sola línea (C-251: antes solo la decía el detalle, en dos cajas): "Sale el lunes 16 de noviembre"
+ * o "Sale el martes 17 de noviembre desde Aragua (La Victoria)" mientras está pagado y todavía no sale; "Listo para retirar
+ * el…" si se retira. Un día que ya pasó no se promete. Lo digital no lleva fecha de salida.
+ */
+export function lineaDeSalida(o: PedidoParaSalida, cal: Calendario, ahora: Date = new Date()): string | null {
+  if (o.paymentStatus !== 'PAID' || !o.paidAt || o.deliveryMethod === 'DIGITAL') return null;
+  if (!['PENDING', 'CONFIRMED', 'PAID', 'PROCESSING'].includes(o.status)) return null;
+  const fecha = fechaDeSalida(new Date(o.paidAt), cal, o.dispatchCityName ? 1 : 0);
+  if (fecha < enVenezuela(ahora).fecha) return null;
+  const base = `${esRetiro(o.deliveryMethod) ? 'Listo para retirar' : 'Sale'} ${cuandoSale(fecha, ahora, true)}`;
+  return o.dispatchCityName ? `${base} ${paqueteDesde(o.dispatchStateName, o.dispatchCityName)}` : base;
+}
 
 export interface PasoPedido {
   label: string;
@@ -26,6 +52,12 @@ export interface PedidoParaPasos {
   courierOfficeName?: string | null;
   /** ZOOM avisó que el paquete llegó a la oficina de destino */
   enOficina?: boolean;
+  /**
+   * C-251: la referencia de un pago manual (o, en el inicio, si la hay). Sin ella, un pedido pendiente está "Por pagar":
+   * antes el paso decía "Pago por validar" y la nota "Estamos validando tu pago" junto al sello "Por pagar".
+   * `undefined`: no se sabe (se dice como antes).
+   */
+  paymentReference?: string | boolean | null;
 }
 
 const ENVIADA = ['SHIPPED', 'READY_FOR_PICKUP'];
@@ -65,8 +97,9 @@ export function pasosPedido(o: PedidoParaPasos): PasosPedido {
   const actual = indice(o, etiquetas.length);
   if (actual < 0) return { pasos: [], nota: o.status === 'REFUNDED' ? 'Pedido reembolsado' : 'Pedido cancelado', cancelado: true };
 
-  // Con el pago sin validar, el primer paso todavía no es "Confirmado"
-  if (actual === 0 && o.paymentStatus !== 'PAID') etiquetas[0] = 'Pago por validar';
+  // Con el pago sin validar, el primer paso todavía no es "Confirmado"; sin referencia, todavía falta pagar (C-251)
+  const porPagar = o.status === 'PENDING' && o.paymentStatus !== 'PAID' && o.paymentReference !== undefined && !o.paymentReference;
+  if (actual === 0 && o.paymentStatus !== 'PAID') etiquetas[0] = porPagar ? 'Por pagar' : 'Pago por validar';
 
   const pasos = etiquetas.map((label, i): PasoPedido => ({
     label,
@@ -74,7 +107,8 @@ export function pasosPedido(o: PedidoParaPasos): PasosPedido {
   }));
 
   let nota: string | null = null;
-  if (o.status === 'PENDING' && o.paymentStatus !== 'PAID') nota = 'Estamos validando tu pago';
+  if (porPagar) nota = 'Falta tu pago';
+  else if (o.status === 'PENDING' && o.paymentStatus !== 'PAID') nota = 'Estamos validando tu pago';
   else if (actual === 1) nota = o.deliveryMethod === 'DIGITAL' ? 'Estamos preparando tus códigos' : 'Estamos preparando tu pedido';
   else if (o.status === 'READY_FOR_PICKUP') nota = 'Ya puedes retirarlo en la tienda';
   else if (ENVIADA.includes(o.status) && o.enOficina) nota = `Llegó a ${o.courierOfficeName ?? 'la oficina'}: retíralo con tu cédula`;
@@ -97,7 +131,8 @@ export function estadoParaCliente(o: { status: string; paymentStatus?: string | 
     case 'SHIPPED': return { label: 'Despachado', tono: 'brand' };
     case 'READY_FOR_PICKUP': return { label: 'Listo para retirar', tono: 'brand' };
     case 'PENDING':
-      if (o.paymentStatus !== 'PAID') return o.paymentReference ? { label: 'Verificando pago', tono: 'warning' } : { label: 'Por pagar', tono: 'warning' };
+      // C-251: verificar es de la tienda (esperar va en azul, PLAN.md §1.1); pagar es del cliente (el sello de te toca)
+      if (o.paymentStatus !== 'PAID') return o.paymentReference ? { label: 'Verificando pago', tono: 'brand' } : { label: 'Por pagar', tono: 'warning' };
       return { label: 'En preparación', tono: 'brand' };
     default: return { label: 'En preparación', tono: 'brand' };
   }

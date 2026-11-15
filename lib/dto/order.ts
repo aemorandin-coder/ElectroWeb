@@ -73,7 +73,8 @@ export const customerOrderSelect = {
       productCondition: true,
       conditionGrade: true,
       warrantyDays: true,
-      product: { select: { id: true, name: true, sku: true, mainImage: true, productType: true } },
+      // C-251: slug para "Dejar mi reseña" en un pedido entregado (la ficha es pública)
+      product: { select: { id: true, name: true, sku: true, slug: true, mainImage: true, productType: true } },
     },
   },
 } satisfies Prisma.OrderSelect;

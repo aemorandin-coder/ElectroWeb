@@ -39,6 +39,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const idNumber = normalizarCedula(body.idNumber);
   if (!idNumber) return NextResponse.json({ error: 'Escribe tu cédula: V o E y 6 a 9 números', field: 'idNumber' }, { status: 400 });
+  // C-251: con la cédula ya registrada se firma con esa (C-84: no se cambia). Antes la constancia salía con la que se escribiera
+  const registrada = normalizarCedula((await prisma.profile.findUnique({ where: { userId }, select: { idNumber: true } }))?.idNumber ?? null);
+  if (registrada && registrada !== idNumber) {
+    return NextResponse.json({ error: `Firma con la cédula de tu cuenta (${registrada}). Si está mal, escríbenos.`, field: 'idNumber' }, { status: 400 });
+  }
   const phone = typeof body.phone === 'string' ? body.phone.replace(/[^\d+]/g, '').slice(0, 20) || null : null;
   const address = typeof body.address === 'string' ? body.address.trim().slice(0, 200) || null : null;
   const firma = await validarFirma(body.signature);

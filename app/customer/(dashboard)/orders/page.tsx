@@ -42,7 +42,9 @@ export default function OrdersPage() {
   async function cargar(silencioso = false) {
     if (!silencioso) setCargando(true);
     try {
-      const res = await fetch('/api/orders?mine=1');
+      // C-251: todos los suyos (`all`). Antes llegaban los 25 más nuevos: "Todos 25" con 29 pedidos, y un pedido viejo no
+      // se abría desde Puntos ES (?orden=<id>)
+      const res = await fetch('/api/orders?mine=1&all=true');
       if (!res.ok) throw new Error(String(res.status));
       const datos = await res.json();
       const lista = (Array.isArray(datos) ? datos : datos.orders || []).map(normalizar);

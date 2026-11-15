@@ -10,6 +10,33 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.69] - 2026-11-15
+Mi panel (el panel del cliente) revisado a fondo, la primera parte (C-251): las fallas y lo nuevo que no le había llegado. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. El dinero no cambia. Sigue C-251b, con los arreglos del kit.
+### Carrito, checkout y cuenta del cliente 1.8.0 (C-251)
+- **Mis pedidos trae todos los pedidos.** Antes llegaban los 25 más nuevos: con 29, decía "Todos 25", y un pedido viejo no se abría desde Puntos ES.
+- **El inicio:**
+  - el estado de cada pedido se llama igual que en Mis pedidos ("Por pagar", "Verificando pago", "En preparación"; antes "Pendiente" y "Pagada");
+  - "Compras activas" separa lo que está por pagar de lo que se está validando;
+  - los favoritos se cuentan por producto (decía "1 en tu lista de deseos" con 4);
+  - la garantía que espera tu respuesta sale con el sello "Te toca responder" (decía "en revisión").
+- **"Sale el…" con desde dónde** (C-234 y C-222), en una línea: en el inicio, en la tarjeta de Mis pedidos y en el detalle ("Sale el martes 17 de noviembre desde Aragua (La Victoria)").
+- **"Dejar mi reseña"** en cada producto de un pedido entregado, y **Mis reseñas** en el menú para quien dejó alguna (la página no tenía ningún enlace).
+- **Mis códigos:** cómo canjear cada código (lo escribe el equipo y no se mostraba); la recarga ya entregada dice "Recarga hecha" (seguía diciendo que se estaba haciendo); el plazo es el del checkout (decía "5 - 15 minutos" a cualquier hora).
+- **Mis cursos:** "Ver mi certificado" abre el certificado; a 360 px la tarjeta ya no se sale; si no carga, "Reintentar".
+- **Promotores:** las ventas, en una lista que se lee en el teléfono (la tabla se cortaba), y una fecha que ya pasó dice "Se acredita pronto".
+- **Favoritos:** "Desde Aragua" o "Desde Portuguesa", como en la tienda.
+- Fuera dos rutas de la API del cliente que ya no usaba ninguna pantalla, y los favoritos solo aceptan un producto y una acción válidos.
+### Órdenes y pagos 1.6.5 (C-251)
+- El seguimiento: "Por pagar" y "Falta tu pago" cuando no hay pago; "Verificando pago" en azul (esperar no es te toca); el reembolsado sin la caja vacía; "Retiras en ZOOM Barquisimeto Centro" sin "ZOOM ZOOM"; los botones de la guía de 44 px; a 360 px los pasos ya no se pegan.
+### Configuración 1.4.1 (C-251)
+- **Firmar un documento:** con la cédula ya registrada se firma con esa; el campo viene puesto y no se cambia (antes la constancia salía con la cédula que se escribiera).
+### Productos 1.17.2 (C-251)
+- Por dentro: Mis reseñas pide solo las propias, también desde una cuenta del equipo.
+### Clientes 1.6.2 (C-251)
+- Por dentro: el perfil le dice al menú de Mi panel si hay reseñas.
+### Tienda 1.15.1 (C-251)
+- Por dentro: el pedido del cliente trae la dirección de la ficha de cada producto (para "Dejar mi reseña").
+
 ## [1.0.0-rc.68] - 2026-11-15
 Crear por pasos, la última entrega (C-249e): el curso y el trabajo de Servicios, en su propia página, con la tarjeta de la tienda al lado y "Revisar y publicar" al final. Con esto, los 8 formularios que eligió el equipo van por pasos. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Las APIs que guardan no cambian; la subida de fotos suma dos tipos.
 ### Cursos 1.2.0 (C-249e)

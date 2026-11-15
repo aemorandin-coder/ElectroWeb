@@ -1,9 +1,64 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.71`, comprobada el 15/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.72`, comprobada el 15/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 15/11 · C-253 (de rc.71 a `v1.0.0-rc.72`)
+La subió el equipo el 15/11, con los pasos de Claude. `deploy.sh` se paró por las tres columnas de `sorteos`; después vinieron `npx prisma db push` y `deploy.sh --sin-pull` otra vez. Terminó en "Listo: sirviendo .next-b (e9fa074 Merge branch 'claude/C-253')" y `v1.0.0-rc.72` (captura del equipo).
+
+**Lo comprobado desde fuera, el 15/11:**
+- **La portada dice `1.0.0-rc.72`.**
+- **`/sorteo`, con el banner nuevo:** "Quiero mi boleto" lleva a `#como-participar`, la foto lleva el fundido de los bordes (`mask-image`) y está el aviso de marcas de Sony (en las bases y a la vista).
+- **El inicio, con la bandera** (`bandera-entra` y `bandera-sube`), que lleva a `/sorteo`. Dice "Sorteo" porque el nombre corto todavía no está cargado.
+- **La base:** la página lee el sorteo con las columnas nuevas y responde 200, así que el `db push` se aplicó.
+
+**La revisión de la falla que cerró rc.69** (las dos consultas del bloque de rc.71, corridas por el equipo después de esta subida): **nadie la usó.**
+- **Los Puntos ES que cambiaron sin un movimiento que lo explique:** ninguno (0 filas).
+- **Las cuentas con un rol que no es de cliente:** tres, las del equipo (dos superadministradores, uno de ellos el de Luis, y la contadora). Ninguna cuenta de cliente cambió de rol.
+
+**Falta que el equipo cargue en el panel** el premio con el paréntesis, lo que trae, el sello y "PS4", y que haga las pruebas (`SIGUIENTE.md`, "Por confirmar de rc.72").
+
+### El bloque que se subió: `v1.0.0-rc.72` (C-253)
+**Producción está en `v1.0.0-rc.71`** (`629d0c5`); su bloque está en `HISTORIAL.md`.
+- **C-253 (rc.72):** el banner nuevo de `/sorteo`, la bandera del sorteo en el inicio y el paso "Lo que trae" del panel.
+  - **Cambia la base: tres columnas nuevas en `sorteos`, aditivas.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
+```sql
+ALTER TABLE "sorteos" ADD COLUMN "incluye" JSONB,
+ADD COLUMN "lema" TEXT,
+ADD COLUMN "nombreCorto" TEXT;
+```
+  - Sin variables nuevas, sin SQL de datos y sin cron.
+- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc72.dump`
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.72`, o una mayor si entró otra tarea antes del `git pull`.
+- **Después, en el panel** (en la computadora). Sin esto, el banner sale sin "Lo que trae" y la bandera dice "Sorteo". Marketing → Sorteo → "Cambiar":
+  1. **"El premio":** en Premio, `PlayStation 4 Sony (Remanufacturada)`. Lo que va entre paréntesis sale aparte, como etiqueta.
+  2. **"Lo que trae":**
+      - "Agregar lo que trae": `1000 GB de almacenamiento`, y en el detalle, `para muchos juegos`;
+      - "Agregar otra": `1 control azul eléctrico`;
+      - "Agregar otra": `1 cable HDMI y 1 cable de poder`;
+      - Sello: `¡Lista para jugar!`;
+      - Nombre en el inicio: `PS4`. Al lado, la bandera con el logo.
+  3. **"Revisar y publicar":** "Lo que cambia" dice el premio, lo que trae, el sello y el nombre → "Guardar el cambio".
+- **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
+  1. **`/sorteo`, en la computadora:**
+      - arriba, "Gana una" y "PlayStation 4 Sony" en grande, con "¡Lista para jugar!" y "Remanufacturada";
+      - los días que faltan junto a "Envío gratis", y "Quiero mi boleto";
+      - la foto a la derecha, sin cuadro alrededor;
+      - abajo, la franja "Lo que trae" con las tres cosas y sus íconos.
+  2. **"Quiero mi boleto"** baja a "Cómo participar", y el título no queda tapado por el encabezado.
+  3. **Al final de la página,** debajo de las bases, el aviso: "Sony, PlayStation, PS4… son marcas registradas de Sony Interactive Entertainment Inc. … no está patrocinado, avalado ni administrado por Sony".
+  4. **El inicio en una pantalla ancha** (1440 px o más, como la de la oficina):
+      - al borde izquierdo, a media altura, entra la pestaña con la foto, "¡Gánate una", el logo de PS4 y el regalo;
+      - da dos destellos y se queda quieta;
+      - tocarla lleva a `/sorteo`.
+  5. **El inicio en el teléfono:** abajo a la izquierda, frente a WhatsApp, "¡Gánate una PS4!" con "Sorteo de Navidad" debajo. Lleva a `/sorteo`.
+  6. **`/sorteo` en el teléfono:** el nombre, la foto, los días con el envío, el botón y "Lo que trae" uno debajo del otro, sin moverse de lado.
+- **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las columnas no molestan al código anterior.
 
 
 ## 15/11 · C-243 a C-251b (de rc.56 a `v1.0.0-rc.71`)
@@ -12,7 +67,7 @@ La subió el equipo en dos pasos, el 15/11:
 - **rc.71** (C-249b a C-251b, sin base), con los pasos de Claude: `git pull`, `deploy.sh --sin-pull` y `git describe --tags`.
   - Se subió enseguida por una falla de seguridad que cerró rc.69 (C-251, `estado/C-251.md`).
   - Era una ruta de la API del cliente que ninguna pantalla usaba (`/api/customer/payment-methods`). Aceptaba más de lo que debía: con una cuenta de cliente se podían cambiar los Puntos ES o el rol de la cuenta. Estuvo en producción hasta el 15/11.
-  - Claude le pidió al equipo dos consultas de la base para saber si alguien la usó: las cuentas del equipo, y los Puntos ES que cambiaron sin un movimiento que lo explique. **Falta el resultado** (`SIGUIENTE.md`, "Por confirmar de rc.71").
+  - Claude le pidió al equipo dos consultas de la base para saber si alguien la usó: las cuentas del equipo, y los Puntos ES que cambiaron sin un movimiento que lo explique. **Nadie la usó** (el resultado, en el bloque de rc.72, arriba).
 
 **Lo comprobado desde fuera, el 15/11** (esta sesión y la de los correos):
 - **La portada dice `1.0.0-rc.71`.**
@@ -25,7 +80,7 @@ La subió el equipo en dos pasos, el 15/11:
 - **La base de C-246 está:** rc.63 y rc.71 se sirven, y `deploy.sh` se para en el paso 2 si faltan columnas.
 - **La ruta quitada no se puede ver desde fuera:** sin sesión, toda dirección de cliente manda al inicio de sesión (307), exista o no. La versión servida no la tiene. La prueba 22 la confirma con una sesión, y debe dar "404".
 
-**Falta que el equipo confirme** (`SIGUIENTE.md`, "Por confirmar de rc.71"): las consultas de la base y las pruebas 1 a 23. La 7, la foto del sorteo, ya está.
+**Falta que el equipo confirme** (`SIGUIENTE.md`, "Por confirmar de rc.71"): las pruebas 1 a 23. La 7, la foto del sorteo, ya está.
 
 ### El bloque que se subió: `v1.0.0-rc.71` (C-243 a C-251b; en dos pasos, rc.63 y después rc.71)
 Producción estaba en `v1.0.0-rc.56` (`471a54d`); su bloque está abajo. El bloque pedía un respaldo antes (`~/respaldo-antes-rc60.dump`).

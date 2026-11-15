@@ -8,7 +8,7 @@ Stack: Next.js 16 (App Router, `proxy.ts` como middleware), React 19, Tailwind C
 
 ## Rol en el equipo
 Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en `GEMINI.md`). **Claude** hace todo lo que requiere criterio: seguridad, dinero, datos, arquitectura, componentes compartidos, header, home y catálogo, y desde el 21/09 también el rediseño y la jerarquía de pantallas (`C-*`); revisa y mergea el trabajo de Gemini.
-**ChatGPT salió del equipo el 2026-09-21** (orden de Andrés). No se le asigna nada. Su carril y sus tarjetas pendientes pasaron a Claude (tabla en `docs/plan/PLAN_CHATGPT.md`, "Salida del 21/09"). `CHATGPT.md` y `PLAN_CHATGPT.md` quedan solo como historial.
+**ChatGPT salió del equipo el 2026-09-21** (orden de Andrés). No se le asigna nada. Su carril y sus tarjetas pendientes pasaron a Claude (tabla en `docs/plan/archivo/PLAN_CHATGPT.md`, "Salida del 21/09"). `CHATGPT.md` y `PLAN_CHATGPT.md` quedan solo como historial, en `docs/plan/archivo/`.
 
 1. Solo edita archivos del **carril Claude** (`PLAN.md` §4). Los archivos del carril Gemini no se tocan salvo que Andrés lo pida explícitamente.
 2. Una tarea = rama `claude/<ID>` = commits con prefijo `[C-XX]`. **Claude hace el merge a `main` y el push** cuando la tarea está verificada (regla de Andrés del 2026-09-30):
@@ -24,7 +24,7 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
 4. Si una tarea C cambia algo que Gemini usa (tokens, `<PublicHeader />`, `Footer`, rutas), mantén la compatibilidad o deja una nota en el estado **y** actualiza `GEMINI.md`.
 5. Si una tarjeta de Gemini queda desactualizada (líneas que se movieron, tokens que cambiaron), actualiza `GEMINI.md` antes de que Gemini la tome.
 6. Antes de mergear, revisa las ramas `gemini/*`: el diff debe quedar dentro de su carril y los greps de verificación deben dar lo esperado. Para ver solo la lógica que cambió, compara las dos versiones sin `className` ni sangría (C-86). Revisa también los commits de Gemini que lleguen a `main` sin rama (como `[Marketing]` del 21/09).
-7. Cuando Claude rediseña una pantalla que era de ChatGPT, aplica el método de `CHATGPT.md` §4 (anatomía, primera pantalla del teléfono, inventario de acciones): ninguna acción ni dato visible desaparece sin que Andrés lo apruebe.
+7. Cuando Claude rediseña una pantalla que era de ChatGPT, aplica el método de `docs/plan/archivo/CHATGPT.md` §4 (anatomía, primera pantalla del teléfono, inventario de acciones): ninguna acción ni dato visible desaparece sin que Andrés lo apruebe.
 
 ## Reglas de código (aprendidas en la auditoría)
 - **Nunca pases objetos Prisma crudos a componentes cliente ni a respuestas de API públicas.** Usa DTOs con lista blanca (`lib/dto/*`). `costPerItem`, `adminAlertEmails` y `maintenanceAllowedIPs` jamás salen del servidor.

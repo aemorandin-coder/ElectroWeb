@@ -312,7 +312,7 @@ En orden. Cada una sirve sola, sale de `main` actualizado y lleva su estado, su 
 - ~~**A18.**~~ Cerrada el 14/11 en la noche: la variante B, alineada (§10).
 
 ### Para la contadora (las 17 preguntas del WhatsApp)
-Escritas el 14/11 para mandárselas por WhatsApp, en tres mensajes. El texto está en la PC de Andrés: `~/Escritorio/Electro Shop/Preguntas para la contadora 14-11.txt`. Para la invitación también se le piden el correo, el nombre como quiere que salga en la firma y el número de C.P.C.
+Escritas el 14/11 para mandárselas por WhatsApp, en tres mensajes. El texto está en la PC de Andrés: `~/Escritorio/Electro Shop/Contabilidad/preguntas-contadora-14-11.txt`. Para la invitación también se le piden el correo, el nombre como quiere que salga en la firma y el número de C.P.C.
 1. **(Urgente) Factura en cada venta:** ¿se factura cada venta de la web desde ya (A16)? ¿Y lo vendido sin factura en los meses anteriores?
 2. **(Urgente) Los digitales:** la Factura 67 cobró IVA a un juego digital, y la web no (art. 16, numeral 2). ¿Cuál vale? ¿Y las recargas directas?
 3. **Dólares en el talonario:** ¿el monto en dólares y la tasa, en un renglón?
@@ -333,7 +333,7 @@ Escritas el 14/11 para mandárselas por WhatsApp, en tres mensajes. El texto est
 
 ## 10. Las maquetas (antes de programar)
 Hechas el 14/11, con clientes inventados y una tasa de ejemplo (Bs 905,00).
-- **Dónde están:** en la PC de Andrés, en `~/Escritorio/Electro Shop/Contabilidad - maquetas (C-228)/`, con sus capturas a 1440 y a 360 px.
+- **Dónde están:** en la PC de Andrés, en `~/Escritorio/Electro Shop/Contabilidad/Maquetas C-228/`, con sus capturas a 1440 y a 360 px.
   - No van al repositorio: la réplica lleva los datos de la imprenta y los números de control.
 - **`1-resumen.html`:** el Resumen del mes.
   - Arriba, cuatro cifras: lo cobrado, lo facturado, el IVA y la fecha para declarar.

@@ -5,7 +5,7 @@
 
 > Reglas obligatorias: [`/GEMINI.md`](../../GEMINI.md). Tarjetas G-01 a G-08: `GEMINI.md` §5. Tarjetas G-09 a G-14: **este archivo**, §4.
 > Lo que hace Claude al mismo tiempo: [`PLAN_CLAUDE.md`](./PLAN_CLAUDE.md).
-> Última revisión de Claude: [`revisiones/R1-R3.md`](./revisiones/R1-R3.md) — R1, R2 y R3 **aprobadas**.
+> Última revisión de Claude: [`archivo/R1-R3.md`](./archivo/R1-R3.md) — R1, R2 y R3 **aprobadas**.
 
 ## 1. Qué detectó la auditoría en tu carril
 

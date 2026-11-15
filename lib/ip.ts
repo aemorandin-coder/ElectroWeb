@@ -49,6 +49,16 @@ export function ipDelCliente(headers: Headers): string | null {
 }
 
 /** Para límites de intentos y registros: siempre un texto. "desconocida" agrupa lo que no trae IP. */
+/**
+ * C-223: la IP sin su último tramo (IPv4: 190.12.34.0; IPv6: sus tres primeros grupos), para la medición propia: dice
+ * de dónde llegan las visitas sin guardar la IP completa (la política lo nombra). La seguridad sigue con la completa.
+ */
+export function ipAnonima(ip: string): string {
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) return ip.replace(/\.\d{1,3}$/, '.0');
+  if (ip.includes(':')) return `${ip.split(':').slice(0, 3).join(':')}::`;
+  return ip;
+}
+
 export function ipParaRegistro(headers: Headers): string {
   return ipDelCliente(headers) ?? 'desconocida';
 }

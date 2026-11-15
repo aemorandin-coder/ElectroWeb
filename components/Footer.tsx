@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { abrirPreferencias, hayTerceros } from '@/lib/consentimiento';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -174,6 +175,8 @@ export default function Footer() {
             <Link href="/cotizacion" className="hover:text-brand-500 transition-colors">Cotizaciones</Link>
             <Link href="/terminos" className="hover:text-brand-500 transition-colors">Términos</Link>
             <Link href="/privacidad" className="hover:text-brand-500 transition-colors">Privacidad</Link>
+            {/* C-223: vuelve a abrir el aviso de cookies (solo si hay medición o anuncios que elegir) */}
+            {hayTerceros() && <button type="button" onClick={abrirPreferencias} className="hover:text-brand-500 transition-colors">Cookies</button>}
           </div>
         </div>
       </div>

@@ -4,6 +4,15 @@
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-228 · Contabilidad: el plan (14/11; solo documentos y maquetas, sin deploy):** un módulo nuevo del panel con lo que mueve la web, el libro de ventas, el IVA del mes y la factura de talonario guiada (`CONTABILIDAD.md`, `estado/C-228.md`).
+  - **Lo más importante:** el **19/04/2027** cambia la facturación (Providencia SNAT/2026/00093).
+    - El talonario queda solo para contingencias.
+    - Se factura con el portal o la app del SENIAT (elegido el 14/11).
+    - Lo que sobre del talonario ese día se anula.
+  - **Hoy:** la empresa es ordinaria y factura solo con el talonario (SADES no imprime factura fiscal). La ley pide factura en cada venta: decidirlo con el contador (A16).
+  - **La Factura 67 le cobró IVA a un juego digital,** y la web no se lo cobra desde el 01/10: es la pregunta 1 para el contador.
+  - **Las maquetas,** en la PC de Andrés: `~/Escritorio/Electro Shop/Contabilidad - maquetas (C-228)/`. Falta elegir A o B (A18; recomendada la B) para empezar C-229.
+  - **Sigue:** C-229 (facturas de talonario), C-230 (libro de ventas y resumen, antes del 15/12), C-231, C-232 y C-233 (`PLAN.md` §5.2).
 - **C-226 · Ningún contenedor ámbar (rc.44, por subir):** el equipo, el 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados". Viendo tres opciones eligió el azul claro de la tienda con el ícono cian en su placa azul noche (`estado/C-226.md`).
   - **La regla, para todas las IA:** `CLAUDE.md`, `GEMINI.md` y `PLAN.md` §1.1, §1.7 y §1.8. Ni cajas, ni avisos, ni fondos, ni bordes, ni píldoras ámbar.
   - **Lo que cambió:** el aviso compartido del panel (42 lugares), 24 pantallas de la tienda y del panel y la caja de aviso de los correos. Sin cambio de base.
@@ -613,11 +622,18 @@ En el orden en que más destraban:
 **Con el abogado y el contador**
 18. Abogado: términos y privacidad (ahora se editan en Legal → Documentos; `estado/C-120.md` §7) y las 3 afirmaciones de `estado/C-144.md` (el motivo "comprobante vencido o ilegible", los plazos y los datos de contacto).
 19. Contador: las preguntas de `estado/C-151.md` (IVA de los digitales), `estado/C-147b.md` (embalaje), `estado/C-120.md` §6 y **`estado/C-159.md` (retención del IVA: quiénes retienen, el comprobante y si hay retención de ISLR en los servicios)**.
+20. **Contador, para Contabilidad (`CONTABILIDAD.md` §9):**
+    - Las 10 preguntas. La primera es urgente: el IVA de los digitales (la Factura 67 lo cobró y la web no).
+    - Decidir A16: ¿cada venta de la web lleva factura desde ya?
+    - Decir cómo quiere recibir el mes (A17).
+21. **Elegir la maqueta de la factura de talonario** (A o B, A18): en tu PC, abre `~/Escritorio/Electro Shop/Contabilidad - maquetas (C-228)/` y mira las capturas o las páginas.
 
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
 **Sigue (el orden del 14/11, C-220):** C-221 (el sorteo por pasos), C-222 ("Desde Aragua" y el filtro), C-225 (los textos), C-223 (el aviso de cookies) y C-224 (los tres únicos). Lo de abajo queda después.
+
+**Contabilidad (C-228, `CONTABILIDAD.md`):** C-229 en cuanto el equipo elija la maqueta (A18); C-230 antes del 15/12, para declarar noviembre; después C-231, C-232 y C-233 (antes del 19/04/2027).
 
 **Hecho el 13/11:**
 - C-205 (la Lista del proveedor por pasos y las reglas de ancho, rc.33);

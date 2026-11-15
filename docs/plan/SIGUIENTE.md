@@ -1,4 +1,4 @@
-# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.50, por subir)
+# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.51, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
@@ -39,6 +39,9 @@
   - **C-227 · Los correos para proveedores:** la bienvenida de "revendedor premium", "¡Se vendió tu producto!" y "Se canceló: no lo despaches".
   - **C-234 · Cuándo sale cada pedido:** corte a las 2:00 p. m., lo del sábado sale el lunes, los feriados y "Sale el lunes 16" en la ficha, el carrito, el checkout, los correos y Mi pedido.
 - **Tres sesiones de Claude a la vez el 14/11**, cada una en su worktree: la de los correos (C-219, C-226, C-227 y C-234), la del plan de crecimiento (C-220 a C-225 y C-241) y la de Contabilidad (C-228 a C-240).
+- **C-224 · Lo que nos hace únicos (rc.51, por subir):** "Por qué comprar en Electro Shop" en el inicio, en lugar de "Compra con confianza" (`estado/C-224.md`).
+  - Sabes cuánto pagas antes de pagar; tu Pago Móvil lo confirma el banco (si la verificación del BDV está activa; si no, la atención por WhatsApp); una tienda de verdad, con taller propio.
+  - Los 14 años en Portuguesa, también en el pie y en Servicios (se cuentan solos desde 2012). La garantía de la ficha dice que la atiende el servicio técnico.
 - **C-223 · El aviso de cookies (rc.49, por subir):** listo para cuando se pongan las claves de Google y del píxel (`estado/C-223.md`).
   - Chico y abajo, con "Solo las necesarias" y "Aceptar" del mismo tamaño y "Elegir". "Cookies", al pie, lo vuelve a abrir.
   - Hasta el sí, Google va sin cookies (Consent Mode) y el píxel no carga. Sin claves no sale nada.
@@ -251,7 +254,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.50` (C-226, C-221, C-222, C-219, C-225, C-223 y C-229, con rc.44 a rc.49 adentro; unos 55 minutos)
+### El bloque por subir: `v1.0.0-rc.51` (C-226, C-221, C-222, C-219, C-225, C-223, C-229 y C-224, con rc.44 a rc.50 adentro; unos 60 minutos)
 **Producción ya está en `v1.0.0-rc.43`** (`fcdc4c0`, compilada el 14/11 a las 00:10 UTC). Lo comprobó Claude desde fuera el 14/11, leyendo la versión de la página pública. Nadie lo anotó: falta que el equipo confirme si se corrió el SQL del bloque de rc.43 (abajo) y cuáles de sus pruebas se hicieron. Con eso, ese bloque pasa a `HISTORIAL.md`.
 - **C-226 (rc.44):** ningún contenedor ámbar; lo que hay que hacer va en el azul claro de la tienda. **Sin SQL, sin variables nuevas y sin cron.**
 - **C-221 (rc.45):** el sorteo por pasos. **Sin cambio de base, sin variables nuevas y sin cron.** Lleva un **SQL de datos** (abajo).
@@ -305,7 +308,7 @@ ALTER TABLE "orders" ADD CONSTRAINT "orders_documentoFiscalId_fkey" FOREIGN KEY 
 ALTER TABLE "documentos_fiscales" ADD CONSTRAINT "documentos_fiscales_talonarioId_fkey" FOREIGN KEY ("talonarioId") REFERENCES "talonarios"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ```
   - Sin variables nuevas y sin cron. **Después del deploy, el dueño carga el talonario** (§3, paso 22).
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.50`.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.51`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **En el panel:** Configuración → Respaldos con los respaldos apagados, y Productos → Nuevo → Publicar con un dato faltante. El aviso va en azul claro, con el ícono cian en su placa azul noche. No queda ninguna caja ámbar.
   2. **En la tienda,** con una cuenta sin verificar: el checkout muestra "Verificación requerida" con el círculo azul noche. Mi panel → Documentos con uno por firmar: la nota va en azul claro.
@@ -329,6 +332,7 @@ ALTER TABLE "documentos_fiscales" ADD CONSTRAINT "documentos_fiscales_talonarioI
       - En "Revisar y emitir" la factura se ve con sus casillas numeradas, y en el teléfono, casilla por casilla.
       - **Si la escribes de verdad,** toca "Ya la escribí". Si es solo una prueba, no la registres: el número se gasta. En ese caso vuelve con "Atrás" o cierra la pestaña.
   16. **Con una cuenta de administrador:** Contabilidad → Facturas abre, pero "Cargar el talonario" no aparece, y `/admin/contabilidad/talonarios/nuevo` lleva al inicio del panel.
+  17. **Lo que nos hace únicos** (C-224): el inicio dice "Por qué comprar en Electro Shop", con "Tu Pago Móvil lo confirma el banco" y "Una tienda de verdad, con taller propio" (14 años en Portuguesa). El pie también dice los 14 años.
 - **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas y la columna de C-229 no molestan al código anterior. Los textos de antes quedan en `~/textos-antes-c221.txt`; el sorteo se apaga en Marketing → Sorteo → Apagar. La columna nueva de C-219 no molesta al código anterior; el cron del sorteo se quita con `crontab -e`.
 
 ### Ya en producción, sin anotar: `v1.0.0-rc.43` (C-210 a C-218, con rc.35 a rc.42 adentro)
@@ -730,9 +734,9 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
-**Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) y C-223 (el aviso de cookies, rc.49).
+**Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) y C-224 (los tres únicos, rc.51).
 
-**Sigue:** C-224 (los tres únicos) y C-241 (el checkout por pasos, que pidió el equipo después: primero las maquetas para elegir). Lo de abajo queda después.
+**Sigue:** C-241 (el checkout por pasos, que pidió el equipo después: las maquetas están listas para elegir). Lo de abajo queda después.
 
 **Contabilidad (C-228 y C-228b, `CONTABILIDAD.md`):** C-229 hecha (rc.50, las facturas de talonario). Sigue C-235 (la contadora en el equipo; sus datos llegaron el 14/11) y C-230 antes del 15/12. El resto en el orden de `PLAN.md` §5.2, todo antes del 19/04/2027.
 

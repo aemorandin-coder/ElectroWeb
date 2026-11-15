@@ -10,6 +10,17 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.51] - 2026-11-14
+Lo que nos hace únicos hoy (el equipo, 14/11: no hablar como si fuéramos fuertes en el mercado, sino decir lo que nos distingue).
+### Tienda 1.13.0 (C-224)
+- **"Por qué comprar en Electro Shop"** en el inicio, en lugar de "Compra con confianza", con tres cosas que la tienda ya cumple:
+  - **Sabes cuánto pagas antes de pagar:** dólares y bolívares a tasa BCV, IVA incluido y el envío calculado con ZOOM.
+  - **Tu Pago Móvil lo confirma el banco:** sin capturas. Sale solo si la verificación con el BDV está activa; si no, la atención por WhatsApp.
+  - **Una tienda de verdad, con taller propio:** 14 años en Portuguesa, ahora a toda Venezuela. Lleva a Servicios.
+- **El pie** dice los 14 años, y la garantía de la ficha, que la atiende el servicio técnico de la tienda.
+### Trabajos realizados 1.0.4 (C-224)
+- **Servicios** dice "14 años en Portuguesa" (antes "más de 10 años"). Se cuentan solos desde 2012.
+
 ## [1.0.0-rc.50] - 2026-11-14
 Contabilidad, primera parte: las facturas de talonario (el equipo, 14/11; el plan en `docs/plan/CONTABILIDAD.md`).
 ### Contabilidad 1.0.0 (C-229)

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { abrirPreferencias, hayTerceros } from '@/lib/consentimiento';
+import { aniosDeLaTienda, ORIGEN_TIENDA_ESTADO } from '@/lib/origen';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -51,9 +52,11 @@ export default function Footer() {
                 {settings?.companyName || 'Electro Shop'}
               </h3>
             </div>
-            <p className="text-xs text-subtle mb-3">
+            <p className="text-xs text-subtle mb-1">
               {settings?.tagline || 'Todo lo encuentras con nosotros.'}
             </p>
+            {/* C-224: una tienda de verdad (el equipo, 14/11: "14 años en el mercado de Portuguesa, ahora vamos a toda Venezuela") */}
+            <p className="text-xs text-subtle mb-3">{aniosDeLaTienda()} años en {ORIGEN_TIENDA_ESTADO}, ahora a toda Venezuela.</p>
             <div className="flex justify-center md:justify-start gap-2 flex-wrap">
               {settings?.instagram && (
                 <a href={settings.instagram} target="_blank" rel="noopener noreferrer"

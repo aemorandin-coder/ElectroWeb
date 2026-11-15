@@ -10,6 +10,12 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.59] - 2026-11-15
+La foto del premio del sorteo (C-247). El equipo, el 15/11, mirando /sorteo: "hazle una consola PS4 allí con el control", "usa imagen real", "esfuérzate con buen diseño, bien integrado, que no sea genérico". Eligió la A viendo la maqueta.
+### Marketing 1.15.2 (C-247)
+- **En /sorteo, la foto del premio va más grande** (28 rem en la computadora) y **sin fondo blanco**. Una foto hecha sobre el azul de la franja queda parada en ella, sin un cuadro alrededor; una foto de fondo blanco se sigue viendo como una tarjeta.
+- **La foto en sí** se sube desde el panel (Marketing → Sorteo → Cambiar → Subir foto). Es la PS4 Slim de 1 TB con el control azul translúcido del premio, sobre el azul del sorteo, con su luz y su reflejo. No va en el repositorio.
+
 ## [1.0.0-rc.58] - 2026-11-15
 La vista previa de los correos, fija mientras se recorre la lista (el equipo, 15/11: "el marco sale muy bajo, con su propio scroll, y debajo queda un espacio blanco enorme").
 ### Marketing 1.15.1 (C-244)

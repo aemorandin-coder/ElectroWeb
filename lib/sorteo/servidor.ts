@@ -160,7 +160,7 @@ export async function resumenDelSorteo(sorteo: Sorteo): Promise<ResumenSorteo> {
     fila.porInvitar = porInvitar;
     fila.invitados = invitados.length;
     // Para revisar a mano antes de sortear: invitados que no completaron la cuenta o repetidos
-    if (validos < invitados.length) fila.aviso = `${invitados.length - validos} de sus invitados no cuentan (sin verificar el correo, sin teléfono o repetidos)`;
+    if (validos < invitados.length) fila.aviso = `${invitados.length - validos} de sus invitados no cuentan (sin activar la cuenta, sin teléfono o repetidos)`;
     filas.set(p.userId, fila);
   }
   return { boletos, participantes: [...filas.values()].sort((a, b) => b.porCompra + b.porInvitar - (a.porCompra + a.porInvitar)), ventasUSD: Math.round(ventasUSD * 100) / 100 };

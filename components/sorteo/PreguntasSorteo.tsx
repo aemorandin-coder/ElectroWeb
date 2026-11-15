@@ -24,7 +24,7 @@ export default function PreguntasSorteo({ minimo, tope, hasta, resultadoEl }: { 
       ? {
         Icono: IconoCarrito,
         pregunta: '¿Hay más de una forma de ganar boletos?',
-        respuesta: `Sí, dos. Comprando: cada compra pagada de ${minimo} o más en productos es 1 boleto, sin límite. E invitando amigos: cada 2 que se registran con tu enlace y activan su correo te dan 1 boleto, hasta ${tope}.`,
+        respuesta: `Sí, dos. Comprando: cada compra pagada de ${minimo} o más en productos es 1 boleto, sin límite. E invitando amigos: cada 2 que se registran con tu enlace y activan su cuenta te dan 1 boleto, hasta ${tope}.`,
       }
       : {
         Icono: IconoCarrito,

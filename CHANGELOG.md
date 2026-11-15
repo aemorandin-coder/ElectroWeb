@@ -10,6 +10,13 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.74] - 2026-11-15
+Dos decisiones del equipo sobre lo de C-255 (C-256). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Carrito, checkout y cuenta del cliente 1.8.3 (C-256)
+- **El recorrido de bienvenida ya no sale en `/sorteo`.** Tapaba los pasos justo cuando la cuenta nueva volvía del registro a buscar su enlace. Sigue saliendo en el resto de la tienda.
+### Marketing 1.19.1 (C-256)
+- **Una sola palabra, "activar la cuenta",** como el botón del correo. Las bases decían "verifiquen su correo" y la página, "activan su correo". El aviso del panel de los invitados que no cuentan dice "sin activar la cuenta".
+
 ## [1.0.0-rc.73] - 2026-11-15
 "Cómo participar" en `/sorteo`, explicado con íconos (C-255): la gente le preguntaba al equipo "¿cómo participo?, ¿a juro tengo que comprar?, ¿cómo creo mi cuenta?". El equipo eligió la B de las maquetas, con los dos caminos y la compra primero. Y dos arreglos del camino de registro. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Marketing 1.19.0 (C-255)

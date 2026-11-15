@@ -173,7 +173,7 @@ export default async function ProductPage({ params }: PageProps) {
       ? {
         Icon: IconoGarantia,
         title: `Garantía de la tienda: ${product.warrantyDays} días`,
-        text: `${product.condition ? '' : 'Producto 100% original. '}Por fallas de funcionamiento: se repara; si no se puede, se cambia por uno igual o equivalente; y si tampoco, se devuelve lo pagado por el producto en Puntos ES.`,
+        text: `${product.condition ? '' : 'Producto 100% original. '}Por fallas de funcionamiento: se repara; si no se puede, se cambia por uno igual o equivalente; y si tampoco, se devuelve lo pagado por el producto en Puntos ES. La atiende nuestro servicio técnico.`,
         link: { href: '/terminos#garantia', label: 'Ver condiciones' },
       }
       : { Icon: IconoGarantia, title: 'Producto 100% original', text: 'Con respaldo de la tienda' },

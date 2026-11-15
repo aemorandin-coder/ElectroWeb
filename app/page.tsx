@@ -179,7 +179,8 @@ export default async function Home() {
           />
         ))}
 
-        <TrustBar whatsapp={settings.whatsapp} paymentMethods={paymentMethods} />
+        {/* C-224: el Pago Móvil verificado con el banco solo se promete si la conciliación del BDV está configurada */}
+        <TrustBar whatsapp={settings.whatsapp} paymentMethods={paymentMethods} pagoMovilVerificado={paymentMethods.includes('MOBILE_PAYMENT') && Boolean(process.env.BDV_API_KEY)} />
 
         <MoreFromElectroShop />
 

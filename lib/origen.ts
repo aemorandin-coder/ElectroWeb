@@ -17,6 +17,10 @@ export interface Origen {
 
 export const ORIGEN_TIENDA: Origen = { ciudad: ORIGEN_TIENDA_CIUDAD, estado: ORIGEN_TIENDA_ESTADO, propio: true };
 
+/** C-224: el equipo, 14/11: "Tenemos 14 años en el mercado de Portuguesa, ahora vamos a toda Venezuela" (desde 2012) */
+export const TIENDA_DESDE = 2012;
+export const aniosDeLaTienda = (hoy: Date = new Date()) => hoy.getFullYear() - TIENDA_DESDE;
+
 /** "aragua", "nueva-esparta": el estado en la dirección del filtro del catálogo (`?desde=`) */
 export function slugEstado(estado: string): string {
   return estado.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');

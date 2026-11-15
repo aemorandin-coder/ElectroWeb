@@ -7,6 +7,7 @@ import PublicHeader from '@/components/public/PublicHeader';
 import PageHeader from '@/components/ui/PageHeader';
 import { getPublicSettings } from '@/lib/site-settings';
 import ServiciosPortfolio, { type Video } from '@/components/servicios/ServiciosPortfolio';
+import { aniosDeLaTienda, ORIGEN_TIENDA_ESTADO } from '@/lib/origen';
 import {
   IconoCamaraSeguridad, IconoCheck, IconoClientes, IconoConfirmado, IconoCorreo, IconoGarantia, IconoMonitor,
   IconoPcGaming, IconoPremio, IconoReloj, IconoRouter, IconoServicioTecnico, IconoTarjeta, IconoVideo,
@@ -328,7 +329,7 @@ export default async function ServiciosPage() {
                 <IconoPremio className="w-5 h-5" />
               </div>
               <h3 className="font-semibold text-sm mb-1 text-ink">Experiencia Comprobada</h3>
-              <p className="text-muted text-[11px] leading-relaxed">Más de 10 años brindando soluciones de tecnología.</p>
+              <p className="text-muted text-[11px] leading-relaxed">{aniosDeLaTienda()} años en {ORIGEN_TIENDA_ESTADO} brindando soluciones de tecnología.</p>
             </div>
             <div className="text-center p-4 bg-surface rounded-2xl border border-line">
               <div className="w-10 h-10 bg-brand-500/10 text-brand-500 rounded-xl flex items-center justify-center mx-auto mb-3">

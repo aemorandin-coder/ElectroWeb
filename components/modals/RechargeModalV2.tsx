@@ -586,7 +586,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     {selectedMethod ? (
                                         <div className="space-y-1.5 lg:space-y-2">
                                             {selectedMethod.displayNote && (
-                                                <div className="p-2.5 rounded-lg bg-brand-50/70 border border-brand-200 text-xs text-brand-950 mb-2">
+                                                <div className="p-2.5 rounded-lg bg-brand-50/70 border border-brand-200 text-xs text-brand-700 mb-2">
                                                     <span className="font-bold block mb-0.5 text-brand-700">Nota del método:</span>
                                                     {selectedMethod.displayNote}
                                                 </div>

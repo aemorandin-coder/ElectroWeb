@@ -10,6 +10,21 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.57] - 2026-11-15
+El kit de marca (C-243). El equipo, el 14/11, viendo el sorteo y los correos: "hay demasiada discrepancia de colores… ¿por qué no tenemos todos los chats un concepto claro de cómo crear?". Eligió la paleta A viendo las maquetas: solo los dos azules del logo.
+### Marco del panel 1.12.0 (C-243)
+- **El kit de marca, en Marketing → Kit de marca** (`/admin/marca`): el logo y sus dos azules, la paleta con para qué es cada color, las reglas, y las piezas de verdad (botones, sellos, placas, el aviso, la opción, la pieza fuerte y un correo de muestra).
+- **La fuente única es `lib/marca.ts`.** `npm run check:marca` rechaza lo que quede fuera: el azul noche, el cian, los fondos más oscuros que el logo y los contenedores ámbar.
+- **El sello de "te toca"** va en el azul oscuro del logo, con texto e ícono blancos. **La placa de un aviso,** en el azul de la marca con el ícono blanco.
+### Tienda 1.15.0 (C-243)
+- **Sin azul noche ni cian:** el sorteo, la barra de abajo del teléfono, las tarjetas y los sellos van en el azul oscuro del logo.
+- **Las imágenes para compartir,** en el azul oscuro del logo con el lema en azul claro. Cambian de dirección, así que WhatsApp y Facebook las vuelven a pedir.
+### Marketing 1.15.0 (C-243)
+- **Los correos:** la gift card, el boleto y el certificado van en el azul oscuro del logo, con los rótulos en azul claro.
+- **Los íconos de los avisos y de las ventajas,** en blanco sobre el azul de la marca (`?v=2`, para que Gmail no muestre los viejos).
+### Y los demás módulos, con los mismos colores (C-243)
+- Dashboard 1.1.5, Órdenes 1.6.1, Contabilidad 1.2.1, Productos 1.15.1, ElectroStudio 1.2.5 (la pantalla; las imágenes para redes no cambian), Cursos 1.1.1, Trabajos realizados 1.0.5, Cotizaciones 1.5.2 (también el PDF), Reportes 1.1.8, Configuración 1.3.1 y Carrito, checkout y cuenta 1.7.2.
+
 ## [1.0.0-rc.56] - 2026-11-14
 Facturas, ordenada, y la tarjeta para elegir entre opciones. El equipo, 14/11, mirando Contabilidad → Facturas en producción: "los grids se ven perdidos, íconos amontonados". Eligió la A viendo las maquetas.
 ### Contabilidad 1.2.0 (C-242)

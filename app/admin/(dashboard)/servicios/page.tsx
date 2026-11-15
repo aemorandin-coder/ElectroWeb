@@ -324,7 +324,7 @@ export default function AdminServiciosPage() {
                 {(v.beforeImage || v.afterImage) && (
                   <div className="absolute bottom-2 left-2 flex gap-1">
                     {v.beforeImage && (
-                      <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-brand-950 text-white">ANTES</span>
+                      <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-brand-700 text-white">ANTES</span>
                     )}
                     {v.afterImage && (
                       <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-brand-500 text-white">DESPUÉS</span>
@@ -487,7 +487,7 @@ export default function AdminServiciosPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-ink mb-1.5">
-                    <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-brand-950 text-white mr-1">ANTES</span>
+                    <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-brand-700 text-white mr-1">ANTES</span>
                     URL imagen
                   </label>
                   <input

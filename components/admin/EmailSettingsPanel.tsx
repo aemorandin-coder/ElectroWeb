@@ -202,7 +202,7 @@ export default function EmailSettingsPanel() {
                         {settings?.isConfigured ? (
                             <IconoConfirmado className="w-5 h-5 text-success-strong" />
                         ) : (
-                            <IconoError className="w-7 h-7 shrink-0 rounded-lg bg-brand-950 p-1.5 text-accent" />
+                            <IconoError className="w-7 h-7 shrink-0 rounded-lg bg-brand-500 p-1.5 text-white" />
                         )}
                     </div>
                     <div className="flex-1 min-w-0">

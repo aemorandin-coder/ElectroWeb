@@ -49,7 +49,7 @@ function Membrete({ empresa, titulo, numero, filas, estado }: {
 }) {
   const contacto = [empresa.whatsapp && `WhatsApp: ${empresa.whatsapp}`, empresa.telefono && empresa.telefono !== empresa.whatsapp && `Tel.: ${empresa.telefono}`].filter(Boolean).join(' · ');
   return (
-    <header className="grid gap-4 border-b-2 border-brand-950 pb-4 sm:grid-cols-[1.45fr_1fr] sm:items-start print:grid-cols-[1.45fr_1fr] print:pb-3" data-bn="raya">
+    <header className="grid gap-4 border-b-2 border-brand-700 pb-4 sm:grid-cols-[1.45fr_1fr] sm:items-start print:grid-cols-[1.45fr_1fr] print:pb-3" data-bn="raya">
       <div className="flex min-w-0 items-start gap-3">
         {/* Membrete con el logo largo de la tienda (pedido de Andrés del 30/09): el ícono y el nombre con la letra de la
             marca. Color liso: un degradado no sale al imprimir. */}
@@ -60,14 +60,14 @@ function Membrete({ empresa, titulo, numero, filas, estado }: {
         )}
         <div className="min-w-0" data-membrete>
           <p className="font-brand text-2xl font-bold leading-none tracking-tight text-brand-600 sm:text-3xl" data-bn="tinta">{empresa.marca}</p>
-          {empresa.nombre !== empresa.marca && <p className="mt-1.5 text-xs font-bold uppercase tracking-wide text-brand-950">{empresa.nombre}</p>}
+          {empresa.nombre !== empresa.marca && <p className="mt-1.5 text-xs font-bold uppercase tracking-wide text-brand-700">{empresa.nombre}</p>}
           {empresa.lema && <p className="text-xs text-ink-soft">{empresa.lema}</p>}
           <p className="text-xs text-ink-soft">{[empresa.rif && `RIF: ${empresa.rif}`, empresa.direccion].filter(Boolean).join(' · ')}</p>
           <p className="text-xs text-ink-soft">{[contacto, empresa.correo, empresa.sitio].filter(Boolean).join(' · ')}</p>
         </div>
       </div>
-      <div className="rounded-lg border-[1.5px] border-brand-950 bg-surface px-3.5 py-2.5 sm:text-right print:text-right" data-bn="recuadro">
-        <p className="text-sm font-bold uppercase tracking-widest text-brand-950">{titulo}</p>
+      <div className="rounded-lg border-[1.5px] border-brand-700 bg-surface px-3.5 py-2.5 sm:text-right print:text-right" data-bn="recuadro">
+        <p className="text-sm font-bold uppercase tracking-widest text-brand-700">{titulo}</p>
         <p className="mt-0.5 text-lg font-bold tabular-nums text-brand-500" data-bn="tinta">N.º {numero}</p>
         <div className="mt-1 space-y-0.5 text-xs text-ink-soft">{filas}</div>
         {estado}
@@ -95,14 +95,14 @@ function Anexo({ texto }: { texto: string }) {
         <div key={i} className="mt-3 overflow-x-auto print:overflow-visible">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-brand-950 text-left text-xs font-semibold uppercase tracking-wide text-white" data-bn="cabeza">
+              <tr className="bg-brand-700 text-left text-xs font-semibold uppercase tracking-wide text-white" data-bn="cabeza">
                 {cabeza.map((c, k) => <th key={k} scope="col" className={`px-2.5 py-2 sm:px-3 ${k ? 'text-right' : ''} ${k === 0 ? 'rounded-tl-md' : ''} ${k === cabeza.length - 1 ? 'rounded-tr-md' : ''}`}>{c}</th>)}
               </tr>
             </thead>
             <tbody>
               {cuerpo.map((f, n) => (
                 <tr key={n} className="border-b border-line even:bg-surface">
-                  {cabeza.map((_, k) => <td key={k} className={`px-2.5 py-2 align-top sm:px-3 ${k ? 'whitespace-nowrap text-right tabular-nums' : 'min-w-32 font-semibold text-brand-950'}`}>{f[k] ?? ''}</td>)}
+                  {cabeza.map((_, k) => <td key={k} className={`px-2.5 py-2 align-top sm:px-3 ${k ? 'whitespace-nowrap text-right tabular-nums' : 'min-w-32 font-semibold text-brand-700'}`}>{f[k] ?? ''}</td>)}
                 </tr>
               ))}
             </tbody>
@@ -174,13 +174,13 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
 
         <div className="mt-4 grid gap-x-6 gap-y-1 rounded-lg border border-line-strong bg-surface px-4 py-3 text-sm text-ink-soft sm:grid-cols-[1.2fr_1fr] print:mt-3 print:grid-cols-[1.2fr_1fr] print:py-2" data-bn="recuadro">
           <div className="space-y-0.5">
-            <p><strong className="font-bold text-brand-950">Cliente o empresa:</strong> {c.clientName}</p>
-            {c.clientDoc && <p><strong className="font-bold text-brand-950">RIF o cédula:</strong> {c.clientDoc}</p>}
-            {c.contactName && <p><strong className="font-bold text-brand-950">Atención:</strong> {c.contactName}</p>}
+            <p><strong className="font-bold text-brand-700">Cliente o empresa:</strong> {c.clientName}</p>
+            {c.clientDoc && <p><strong className="font-bold text-brand-700">RIF o cédula:</strong> {c.clientDoc}</p>}
+            {c.contactName && <p><strong className="font-bold text-brand-700">Atención:</strong> {c.contactName}</p>}
           </div>
           <div className="space-y-0.5 sm:text-right print:text-right">
-            {c.location && <p><strong className="font-bold text-brand-950">Ubicación:</strong> {c.location}</p>}
-            {c.subject && <p><strong className="font-bold text-brand-950">Para:</strong> {c.subject}</p>}
+            {c.location && <p><strong className="font-bold text-brand-700">Ubicación:</strong> {c.location}</p>}
+            {c.subject && <p><strong className="font-bold text-brand-700">Para:</strong> {c.subject}</p>}
           </div>
         </div>
 
@@ -190,7 +190,7 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
         <table className="mt-4 hidden w-full text-sm sm:table print:mt-3 print:table">
           {grupos.map((g, n) => {
             const cabeza = (
-              <tr className="bg-brand-950 text-left text-xs font-semibold uppercase tracking-wide text-white" data-bn="cabeza">
+              <tr className="bg-brand-700 text-left text-xs font-semibold uppercase tracking-wide text-white" data-bn="cabeza">
                 <th scope="col" className="rounded-tl-md px-3 py-2">{g.titulo}</th>
                 <th scope="col" className="px-3 py-2 text-center">Cant.</th>
                 {conLista && <th scope="col" className="whitespace-nowrap px-3 py-2 text-right">{g.lista ? 'Precio de lista' : ''}</th>}
@@ -210,7 +210,7 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
                   {g.lineas.map((l) => (
                     <tr key={l.id} className="break-inside-avoid border-b border-line align-top even:bg-surface">
                       <td className="px-3 py-2.5 print:py-1.5">
-                        <p className="font-bold text-brand-950">{l.title}</p>
+                        <p className="font-bold text-brand-700">{l.title}</p>
                         {l.description && <p className="mt-0.5 whitespace-pre-line text-xs leading-relaxed text-ink-soft">{l.description}</p>}
                       </td>
                       <td className="px-3 py-2.5 text-center tabular-nums print:py-1.5">{l.quantity}</td>
@@ -227,11 +227,11 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
         <div className="mt-4 space-y-4 sm:hidden print:hidden">
           {grupos.map((g) => (
             <div key={g.titulo}>
-              {grupos.length > 1 && <h2 className="mb-1 text-xs font-bold uppercase tracking-wide text-brand-950">{g.titulo}</h2>}
+              {grupos.length > 1 && <h2 className="mb-1 text-xs font-bold uppercase tracking-wide text-brand-700">{g.titulo}</h2>}
               <ul className="divide-y divide-line border-y border-line">
                 {g.lineas.map((l) => (
                   <li key={l.id} className="py-3">
-                    <p className="font-bold text-brand-950">{l.title}</p>
+                    <p className="font-bold text-brand-700">{l.title}</p>
                     {l.description && <p className="mt-0.5 whitespace-pre-line text-xs leading-relaxed text-ink-soft">{l.description}</p>}
                     <p className="mt-1.5 flex items-baseline justify-between gap-3 text-sm">
                       <span className="tabular-nums text-ink-soft">
@@ -258,7 +258,7 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
               {desglose && (
                 <>
                   {(desglose.conLista || desglose.equiposUSD > 0) && (
-                    <tr><td className="px-3 py-1 text-ink-soft">{desglose.conLista ? 'Equipos a precio de lista' : 'Equipos'}</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-950">{formatUSD(desglose.conLista ? desglose.listaUSD : desglose.equiposUSD)}</td></tr>
+                    <tr><td className="px-3 py-1 text-ink-soft">{desglose.conLista ? 'Equipos a precio de lista' : 'Equipos'}</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-700">{formatUSD(desglose.conLista ? desglose.listaUSD : desglose.equiposUSD)}</td></tr>
                   )}
                   {desglose.conLista && (
                     <tr className="bg-success/10 text-success-strong" data-bn="resaltado" data-descuento>
@@ -267,20 +267,20 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
                     </tr>
                   )}
                   {desglose.conObra && (
-                    <tr><td className="px-3 py-1 text-ink-soft">Mano de obra</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-950">{formatUSD(desglose.manoDeObraUSD)}</td></tr>
+                    <tr><td className="px-3 py-1 text-ink-soft">Mano de obra</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-700">{formatUSD(desglose.manoDeObraUSD)}</td></tr>
                   )}
                   {totales.ivaUSD > 0 && <tr aria-hidden="true"><td colSpan={2} className="px-0 pb-1 pt-1.5"><div className="border-t border-line" /></td></tr>}
                 </>
               )}
               {totales.ivaUSD > 0 && (
                 <>
-                  <tr><td className="px-3 py-1 text-ink-soft">Base imponible</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-950">{formatUSD(totales.baseUSD)}</td></tr>
-                  <tr data-iva><td className="px-3 py-1 text-ink-soft">IVA ({c.taxPercent} %), incluido en los precios</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-950">{formatUSD(totales.ivaUSD)}</td></tr>
+                  <tr><td className="px-3 py-1 text-ink-soft">Base imponible</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-700">{formatUSD(totales.baseUSD)}</td></tr>
+                  <tr data-iva><td className="px-3 py-1 text-ink-soft">IVA ({c.taxPercent} %), incluido en los precios</td><td className="whitespace-nowrap px-3 py-1 text-right font-semibold tabular-nums text-brand-700">{formatUSD(totales.ivaUSD)}</td></tr>
                 </>
               )}
-              <tr className="border-t-[1.5px] border-brand-950" data-bn="raya">
-                <td className="px-3 pb-0.5 pt-2 text-base font-bold text-brand-950">Monto total</td>
-                <td className="whitespace-nowrap px-3 pb-0.5 pt-2 text-right text-xl font-bold tabular-nums text-brand-950" data-total>{formatUSD(totales.totalUSD)}</td>
+              <tr className="border-t-[1.5px] border-brand-700" data-bn="raya">
+                <td className="px-3 pb-0.5 pt-2 text-base font-bold text-brand-700">Monto total</td>
+                <td className="whitespace-nowrap px-3 pb-0.5 pt-2 text-right text-xl font-bold tabular-nums text-brand-700" data-total>{formatUSD(totales.totalUSD)}</td>
               </tr>
               {empresa.tasaVES > 0 && (
                 <tr><td colSpan={2} className="px-3 pb-1 text-right text-xs tabular-nums text-muted">{formatVES(Math.round(totales.totalUSD * empresa.tasaVES * 100) / 100)} a la tasa BCV de hoy ({formatVES(empresa.tasaVES)})</td></tr>
@@ -288,7 +288,7 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
               {conRetencion && (
                 <>
                   <tr data-retencion><td className="px-3 py-1 text-ink-soft">Retención del IVA ({c.ivaRetentionPercent} %), la practica el cliente</td><td className="whitespace-nowrap px-3 py-1 text-right tabular-nums text-ink-soft">−{formatUSD(totales.retencionUSD)}</td></tr>
-                  <tr><td className="px-3 py-1 font-bold text-ink">Neto a pagar a {empresa.marca}</td><td className="whitespace-nowrap px-3 py-1 text-right text-lg font-bold tabular-nums text-brand-950" data-neto>{formatUSD(totales.netoUSD)}</td></tr>
+                  <tr><td className="px-3 py-1 font-bold text-ink">Neto a pagar a {empresa.marca}</td><td className="whitespace-nowrap px-3 py-1 text-right text-lg font-bold tabular-nums text-brand-700" data-neto>{formatUSD(totales.netoUSD)}</td></tr>
                   {empresa.tasaVES > 0 && <tr><td colSpan={2} className="px-3 text-right text-xs tabular-nums text-muted">{formatVES(Math.round(totales.netoUSD * empresa.tasaVES * 100) / 100)} a la tasa BCV de hoy</td></tr>}
                   <tr><td colSpan={2} className="px-3 pb-1 text-xs leading-relaxed text-muted">El cliente retiene ese monto del IVA al pagar y le entrega a {empresa.nombre} su comprobante de retención.</td></tr>
                 </>
@@ -323,7 +323,7 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
         {/* Cada condición y cada forma de pago es una pieza: la lista puede seguir en la otra hoja sin dejar huecos */}
         {condiciones.length > 0 && (
           <section aria-labelledby="cot-condiciones" className="mt-4 border-t border-line pt-3 text-xs leading-relaxed text-ink-soft print:mt-3">
-            <h2 id="cot-condiciones" className="text-sm font-bold text-brand-950">Condiciones comerciales</h2>
+            <h2 id="cot-condiciones" className="text-sm font-bold text-brand-700">Condiciones comerciales</h2>
             <ul className={`mt-1 list-disc pl-4 ${condiciones.length > 2 ? 'gap-8 sm:columns-2 print:columns-2' : ''}`}>
               {condiciones.map((linea) => <li key={linea} className="mb-0.5 break-inside-avoid">{linea}</li>)}
             </ul>
@@ -331,7 +331,7 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
         )}
 
         <section aria-labelledby="cot-pagos" className="mt-4 border-t border-line pt-3 text-xs leading-relaxed text-ink-soft print:mt-3" data-pagos>
-          <h2 id="cot-pagos" className="text-sm font-bold text-brand-950">Formas de pago</h2>
+          <h2 id="cot-pagos" className="text-sm font-bold text-brand-700">Formas de pago</h2>
           {empresa.pagos.length > 0 ? (
             <table className="mt-1 w-full">
               <tbody>
@@ -354,7 +354,7 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
         <div className={terminos.length <= 8 ? 'break-inside-avoid' : undefined}>
           {terminos.length > 0 && (
             <section aria-labelledby="cot-terminos" className="mt-4 border-t border-line pt-3 print:mt-3">
-              <h2 id="cot-terminos" className="text-sm font-bold text-brand-950">Entrega y garantía</h2>
+              <h2 id="cot-terminos" className="text-sm font-bold text-brand-700">Entrega y garantía</h2>
               <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-xs leading-relaxed text-ink-soft">
                 {terminos.map((linea) => <li key={linea}>{linea}</li>)}
               </ol>
@@ -419,7 +419,7 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
             {c.annexTitle && <p><strong className="font-semibold text-ink">Contenido:</strong> {c.annexTitle}</p>}
             <p><strong className="font-semibold text-ink">Fecha:</strong> {fechaLarga(fecha)}</p>
           </>} />
-          {c.annexTitle && <h2 className="mt-4 text-base font-bold text-brand-950">{c.annexTitle}</h2>}
+          {c.annexTitle && <h2 className="mt-4 text-base font-bold text-brand-700">{c.annexTitle}</h2>}
           <Anexo texto={c.annex} />
           <p className="mt-6 text-center text-xs text-muted">Anexo del presupuesto {c.number}. No es una factura.</p>
         </section>

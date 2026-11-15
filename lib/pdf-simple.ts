@@ -162,7 +162,7 @@ function armar(paginas: string[][], imagenes: Array<{ jpeg: Buffer; ancho: numbe
 
 export type Rgb = [number, number, number];
 
-/** "#0a1530" → [0.04, 0.08, 0.19] */
+/** "#1a3b7e" → [0.10, 0.23, 0.49] */
 export function rgb(hex: string): Rgb {
   const n = Number.parseInt(hex.replace('#', ''), 16);
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];

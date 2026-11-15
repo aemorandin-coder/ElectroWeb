@@ -24,7 +24,8 @@ import { getSorteoVigente } from '@/lib/sorteo/servidor';
 import { getRubros, rubrosEnPalabras } from '@/lib/queries/home';
 
 /** Se sube cuando cambia el diseño: todas las direcciones cambian y las redes piden las imágenes nuevas */
-const DISENO = '1';
+// C-243: '2', los colores del kit de marca (la de noche, en el azul oscuro del logo)
+const DISENO = '2';
 /** Lado de cada foto del mosaico (TarjetaVitrina, estilo oscuro): (630 − 2 × 36 − 12) / 2 */
 const LADO_MOSAICO = 273;
 const LADO_PRODUCTO = ALTO;

@@ -30,7 +30,7 @@ export function TarjetaSorteoVista({ sorteo, total = 0, enlace = true }: { sorte
       : `Compra ${minimo} o más${invitar ? ', o invita a 2 amigos,' : ''} y participa. Resultado el ${dia}.`;
   const cuerpo = (
     <>
-      <span className="iconos-marca flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-950">
+      <span className="iconos-marca flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
         <IconoRegalo className="h-6 w-6" aria-hidden="true" />
       </span>
       <span className="min-w-0 flex-1">

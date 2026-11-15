@@ -18,7 +18,7 @@ interface StatusConfig {
 
 const STATUS_MAP: Record<string, StatusConfig> = {
   // Pedidos
-  PENDING:    { bg: 'bg-brand-950',           text: 'text-white',          dot: 'bg-accent',        label: 'Pendiente'   },
+  PENDING:    { bg: 'bg-brand-700',           text: 'text-white',          dot: 'bg-white',         label: 'Pendiente'   },
   CONFIRMED:  { bg: 'bg-brand-50',            text: 'text-brand-700',      dot: 'bg-brand-500',    label: 'Confirmado'  },
   PROCESSING: { bg: 'bg-brand-50',            text: 'text-brand-700',      dot: 'bg-brand-500',    label: 'Procesando'  },
   COMPLETED:  { bg: 'bg-success-strong/10',   text: 'text-success-strong', dot: 'bg-success-strong', label: 'Completado' },

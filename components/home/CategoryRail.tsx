@@ -48,7 +48,7 @@ export default function CategoryRail({ casillas, mas }: { casillas: CasillaCateg
                   {categoria.foto ? (
                     <Image src={categoria.foto} alt="" fill sizes="112px" className="object-contain" />
                   ) : (
-                    <span className="iconos-marca flex h-full items-center justify-center text-brand-950">
+                    <span className="iconos-marca flex h-full items-center justify-center text-brand-700">
                       <CategoryIconRenderer iconName={categoria.icon} className="h-8 w-8" />
                     </span>
                   )}
@@ -72,7 +72,7 @@ export default function CategoryRail({ casillas, mas }: { casillas: CasillaCateg
                       </span>
                     ))
                   ) : (
-                    <span className="iconos-marca col-span-2 row-span-2 text-brand-950">
+                    <span className="iconos-marca col-span-2 row-span-2 text-brand-700">
                       <IconoCuadricula className="h-8 w-8" aria-hidden="true" />
                     </span>
                   )}

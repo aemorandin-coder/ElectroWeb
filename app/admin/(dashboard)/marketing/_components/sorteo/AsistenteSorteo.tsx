@@ -184,7 +184,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-950 text-white [&_svg]:text-accent">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-700 text-white">
           <IconoRegalo className="h-5 w-5" aria-hidden="true" />
         </span>
         <h2 className="text-lg font-semibold text-ink">{modo === 'editar' ? `Cambiar: ${inicial.titulo}` : 'Nuevo sorteo'}</h2>
@@ -195,7 +195,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1fr)_18.5rem]">
         <section className={adminCard} aria-labelledby="sorteo-paso-titulo">
           <div className="mb-5 flex items-center gap-3">
-            <span className="iconos-marca flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-950">
+            <span className="iconos-marca flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
               {(() => { const Icono = PASOS[paso].icono; return <Icono className="h-5 w-5" aria-hidden="true" />; })()}
             </span>
             <div className="min-w-0">
@@ -265,7 +265,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
                 <div className="grid gap-3 lg:grid-cols-2">
                   <div className="rounded-2xl border border-line p-4">
                     <div className="mb-3 flex items-center gap-2.5">
-                      <span className="iconos-marca flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-950"><IconoBolsa className="h-4 w-4" aria-hidden="true" /></span>
+                      <span className="iconos-marca flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700"><IconoBolsa className="h-4 w-4" aria-hidden="true" /></span>
                       <p className="flex-1 text-sm font-semibold text-ink">Comprando</p>
                       <span className="text-xs text-muted">Siempre</span>
                     </div>
@@ -279,7 +279,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
                   </div>
                   <div className="rounded-2xl border border-line p-4">
                     <div className="mb-3 flex items-center gap-2.5">
-                      <span className="iconos-marca flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-950"><IconoClientes className="h-4 w-4" aria-hidden="true" /></span>
+                      <span className="iconos-marca flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700"><IconoClientes className="h-4 w-4" aria-hidden="true" /></span>
                       <p id="sorteo-invitar" className="flex-1 text-sm font-semibold text-ink">Invitando amigos</p>
                       <Interruptor
                         etiqueta="sorteo-invitar"
@@ -309,7 +309,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
                     {compraQueNo !== null && <Ficha icono={IconoBolsa}>Compra de {montoCorto(compraQueNo)} → 0</Ficha>}
                     {invitar && <Ficha icono={IconoClientes}>4 amigos → {porAmigos}</Ficha>}
                     <span className="font-bold text-ink-soft" aria-hidden="true">=</span>
-                    <span key={`${minimo}-${tope}`} className="inline-flex items-center gap-1.5 rounded-full bg-brand-950 px-3 py-1 text-sm font-bold text-white transition-transform duration-300 starting:scale-75 motion-reduce:transition-none [&_svg]:text-accent">
+                    <span key={`${minimo}-${tope}`} className="inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-3 py-1 text-sm font-bold text-white transition-transform duration-300 starting:scale-75 motion-reduce:transition-none">
                       <IconoCupon className="h-4 w-4" aria-hidden="true" /> {totalEjemplo} {totalEjemplo === 1 ? 'boleto' : 'boletos'}
                     </span>
                   </div>
@@ -498,7 +498,7 @@ function Hito({ icono: Icono, etiqueta, id, valor, onCambiar, error, fuerte = fa
 }) {
   return (
     <li className="flex flex-col items-start gap-1.5 lg:items-center lg:text-center">
-      <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${fuerte ? 'bg-brand-950 text-white [&_svg]:text-accent' : 'iconos-marca bg-brand-50 text-brand-950'}`}>
+      <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${fuerte ? 'bg-brand-700 text-white' : 'iconos-marca bg-brand-50 text-brand-700'}`}>
         <Icono className="h-5 w-5" aria-hidden="true" />
       </span>
       <label htmlFor={id} className="text-sm font-semibold text-ink">{etiqueta}</label>
@@ -521,7 +521,7 @@ function Tramo({ texto, fuerte = false }: { texto: string; fuerte?: boolean }) {
 function Resumen({ icono: Icono, titulo, detalle, onCambiar }: { icono: IconType; titulo: string; detalle: string; onCambiar: () => void }) {
   return (
     <li className="flex items-center gap-3 bg-white px-4 py-3">
-      <span className="iconos-marca flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-950"><Icono className="h-4 w-4" aria-hidden="true" /></span>
+      <span className="iconos-marca flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700"><Icono className="h-4 w-4" aria-hidden="true" /></span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-semibold text-ink">{titulo}</span>
         {detalle && <span className="block text-xs text-muted">{detalle}</span>}

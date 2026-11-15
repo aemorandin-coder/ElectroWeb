@@ -48,7 +48,7 @@ export default function CasillaPorCasilla({ datos }: { datos: DatosReplica }) {
     <ol className="divide-y divide-line text-sm">
       {casillas.map((casilla) => (
         <li key={casilla.n} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-3 py-2.5">
-          <span aria-hidden="true" className="grid h-6 w-6 place-items-center rounded-full bg-brand-950 text-xs font-bold text-white">{casilla.n}</span>
+          <span aria-hidden="true" className="grid h-6 w-6 place-items-center rounded-full bg-brand-700 text-xs font-bold text-white">{casilla.n}</span>
           <div className="min-w-0 [overflow-wrap:anywhere]">
             <p className="text-xs text-muted">{casilla.etiqueta}</p>
             <div className="font-semibold text-ink">{casilla.valor}</div>

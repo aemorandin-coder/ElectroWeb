@@ -22,7 +22,8 @@
   --color-brand-700: #1a3b7e;
   --color-brand-800: #142d61;
   --color-brand-900: #0e1f44;
-  --color-brand-950: #0a1530;
+  /* C-243 (el kit de marca, lib/marca.ts): sin azul noche (#0a1530) ni cian (#22d3ee), que no están en el logo.
+     La pieza fuerte va en brand-700, el azul oscuro del logo. `npm run check:marca` los rechaza. */
 
   /* Neutros */
   --color-ink: #212529;
@@ -34,7 +35,6 @@
   --color-surface: #f8f9fa;
 
   /* Acentos y estados */
-  --color-accent: #22d3ee;
   --color-deal: #dc2626;
   --color-deal-bg: #fef2f2;
   --color-tag: #f59e0b;
@@ -116,7 +116,7 @@ body:has(#mobile-bottom-nav) [data-site-footer] {
 
 /* C-188: los íconos propios (components/iconos) a dos tonos, como en las láminas del pack: el trazo toma el color del texto
    y las superficies y el detalle van en el azul de marca. Solo en contenedores claros con el texto en azul marino
-   (text-brand-950): las tarjetas de "Compra por categoría" y la barra de confianza. Sin la clase, van de un solo color. */
+   (text-brand-700): las tarjetas de "Compra por categoría" y la barra de confianza. Sin la clase, van de un solo color. */
 .iconos-marca {
   --es-acento: var(--color-brand-500);
   --es-acento-opacidad: 1;
@@ -937,7 +937,7 @@ html, body { overflow-x: clip; }
   [data-tinta='bn'] [data-bn='imagen'] {
     filter: grayscale(1) contrast(1.2);
   }
-  [data-tinta='bn'] .text-brand-950,
+  [data-tinta='bn'] .text-brand-700,
   [data-tinta='bn'] .text-brand-500,
   [data-tinta='bn'] .text-brand-600 {
     color: var(--color-ink) !important;

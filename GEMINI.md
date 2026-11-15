@@ -166,10 +166,11 @@ Aplica **solo** a clases con la forma `utilidad-[#hex]` (ej. `bg-[#2a63cd]`, `ho
 | `#ef4444` | `danger` |
 | `#dc2626` | `deal` |
 | `#3b82f6` | `info` |
-| `#0f172a` | `brand-950` |
+| `#0f172a` | `brand-700` (el azul noche salió del kit de marca, C-243) |
 
 **Ámbar (`#f59e0b`, `#d97706`, amarillos): ningún contenedor ámbar** (C-226, Andrés, 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados"). Ni cajas, ni avisos, ni fondos, ni bordes, ni píldoras (`bg-warning…`, `border-warning…`).
-- **Un aviso de lo que alguien tiene que hacer** va con `adminNotice('warning')` (o `avisoAccion` de `lib/admin-ui.ts`): azul claro de la tienda, con el ícono cian en su placa azul noche.
+- **Un aviso de lo que alguien tiene que hacer** va con `adminNotice('warning')` (o `avisoAccion` de `lib/admin-ui.ts`): azul claro de la tienda, con el ícono blanco en su placa del azul de la marca (C-243).
+- **Los colores salen del kit de marca** (C-243, `lib/marca.ts`, `/admin/marca`): los dos azules del logo y sus claros. Nada de `brand-950` ni `accent` (el azul noche y el cian salieron); `npm run check:marca` los rechaza.
 - **El ámbar solo queda en un texto suelto** (`text-warning-strong`: "Quedan 3") y en las estrellas. Nunca para destacar una frase dentro de un texto: eso va en negrita, del mismo color (14/11).
 - **Un estado en píldora va lleno** (`adminBadge`, `bg-success-strong text-white`), en la tienda también: nunca el verde claro con letra verde (14/11: "los colores están invertidos").
 - **Si destaca, celebra o clasifica** (un nivel, "Destacado", "Antes", el logo de Binance), no lo conviertas: déjalo y anótalo como `PEDIDO:` para Claude (`PLAN.md` §1.1, C-192). La tabla de arriba convirtió así 60 ámbares decorativos que Claude tuvo que deshacer el 06/11.
@@ -320,7 +321,7 @@ find $RUTAS -type f -name '*.tsx' -print0 | xargs -0 sed -i -E \
   -e 's/-\[#1e4ba3\]/-brand-600/gI' \
   -e 's/-\[#1a3b7e\]/-brand-700/gI' \
   -e 's/-\[#1e3a8a\]/-brand-700/gI' \
-  -e 's/-\[#0f172a\]/-brand-950/gI' \
+  -e 's/-\[#0f172a\]/-brand-700/gI' \
   -e 's/-\[#212529\]/-ink/gI' \
   -e 's/-\[#1a1a1a\]/-ink/gI' \
   -e 's/-\[#495057\]/-ink-soft/gI' \

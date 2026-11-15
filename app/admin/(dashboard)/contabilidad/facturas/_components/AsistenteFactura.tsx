@@ -427,7 +427,7 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
                   `Abajo, la base, lo exento, el IVA del ${borrador.alicuota} % y el total.`,
                 ].map((t, i) => (
                   <li key={t} className="flex gap-2.5">
-                    <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-950 text-xs font-bold text-white">{i + 1}</span>
+                    <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-700 text-xs font-bold text-white">{i + 1}</span>
                     <span>{t}</span>
                   </li>
                 ))}

@@ -19,8 +19,8 @@ export const COLOR = {
   marca200: '#d4e0f5',
   marca300: '#aac1eb',
   marca900: '#0e1f44',
-  noche: '#0a1530',
-  acento: '#22d3ee',
+  // C-243 (el kit de marca, lib/marca.ts): sin azul noche ni cian, que no están en el logo. La pieza fuerte va en
+  // `marcaOscura` (el azul oscuro del logo) y sus rótulos en `marca300`; la placa de un aviso, en `marca` con el ícono blanco.
   tinta: '#212529',
   texto: '#495057',
   suave: '#6a6c6b',
@@ -43,7 +43,8 @@ export function urlTienda(): string {
 
 /** Las imágenes propias de los correos (public/images/correo). `?v=` cambia si cambia el dibujo: Gmail guarda las imágenes. */
 export function imagenCorreo(archivo: string): string {
-  return `${urlTienda()}/images/correo/${archivo}?v=1`;
+  // C-243: v=2, los íconos de las placas pasaron de cian a blanco
+  return `${urlTienda()}/images/correo/${archivo}?v=2`;
 }
 
 const caja = (fondo: string, borde: string) =>
@@ -78,17 +79,17 @@ export const CORREO = {
   tonoNeutro: `color:${COLOR.texto};`,
   tonoInfo: `color:${COLOR.marcaOscura};`,
   tonoExito: `color:${COLOR.exito};`,
-  /** C-226: el texto de `cajaAviso`, en azul noche de la marca (antes ámbar). */
+  /** C-226: el texto de `cajaAviso`, en el azul más oscuro de la marca, como texto (antes ámbar). */
   tonoAviso: `color:${COLOR.marca900};`,
   tonoPeligro: `color:${COLOR.peligro};`,
   /** Rótulo de sección en mayúsculas ("LO QUE VIENE EN TU CAJA"). */
   rotulo: `margin:0 0 6px;color:${COLOR.marcaOscura};font-size:12px;line-height:1.4;text-transform:uppercase;letter-spacing:1.6px;font-weight:800;`,
   /** Dato grande: código, número de guía, monto. */
   dato: `margin:0;color:${COLOR.marcaOscura};font-size:26px;line-height:1.3;font-weight:800;letter-spacing:2px;word-break:break-all;`,
-  /** Dentro de la placa azul noche (`placaCorreo`): rótulo en cian, título en blanco y el texto en azul claro. */
-  placaRotulo: `margin:0;color:${COLOR.acento};font-size:11px;line-height:1.4;letter-spacing:2px;font-weight:800;text-transform:uppercase;`,
+  /** Dentro de la placa (`placaCorreo`, el azul oscuro del logo): rótulo en azul claro, título en blanco y el texto en azul más claro. */
+  placaRotulo: `margin:0;color:${COLOR.marca300};font-size:11px;line-height:1.4;letter-spacing:2px;font-weight:800;text-transform:uppercase;`,
   placaTitulo: `margin:10px 0 6px;color:#ffffff;font-family:${FUENTE_TITULO};font-size:24px;line-height:1.25;font-weight:800;`,
-  placaTexto: `margin:0;color:${COLOR.marca300};font-size:14px;line-height:1.6;`,
+  placaTexto: `margin:0;color:${COLOR.marca200};font-size:14px;line-height:1.6;`,
   /** Cita o mensaje escrito por una persona. */
   cita: `border-left:4px solid ${COLOR.marca};padding:8px 14px;margin:16px 0;color:${COLOR.texto};font-size:15px;line-height:1.6;white-space:pre-line;`,
 } as const;
@@ -131,12 +132,12 @@ export type IconoCorreo =
 
 /**
  * C-226: lo que el cliente tiene que hacer (o tiene que saber para no llevarse una sorpresa), en el azul claro de la tienda
- * con el ícono cian en su placa azul noche. Nunca ámbar. `titulo` y `texto` llegan escapados.
+ * con el ícono blanco en su placa del azul de la marca (C-243). Nunca ámbar. `titulo` y `texto` llegan escapados.
  */
 export function avisoCorreo(titulo: string, texto: string, icono: IconoCorreo = 'info'): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0 0;"><tr><td bgcolor="${COLOR.marca50}" style="background-color:${COLOR.marca50};border:1px solid ${COLOR.marca200};border-radius:14px;padding:14px 16px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td width="52" valign="top" style="padding:0 12px 0 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="40" height="40" align="center" valign="middle" bgcolor="${COLOR.noche}" style="width:40px;height:40px;background-color:${COLOR.noche};border-radius:12px;"><img src="${imagenCorreo(`icono-${icono}.png`)}" width="24" height="24" alt="" style="display:block;width:24px;height:24px;border:0;"></td></tr></table></td>
+      <td width="52" valign="top" style="padding:0 12px 0 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="40" height="40" align="center" valign="middle" bgcolor="${COLOR.marca}" style="width:40px;height:40px;background-color:${COLOR.marca};border-radius:12px;"><img src="${imagenCorreo(`icono-${icono}.png`)}" width="24" height="24" alt="" style="display:block;width:24px;height:24px;border:0;"></td></tr></table></td>
       <td valign="top"><p style="margin:0;font-size:15px;line-height:1.4;font-weight:700;color:${COLOR.marca900};">${titulo}</p><p style="margin:4px 0 0;font-size:14px;line-height:1.55;color:${COLOR.texto};">${texto}</p></td>
     </tr></table></td></tr></table>`;
 }
@@ -147,10 +148,10 @@ export function exitoCorreo(titulo: string, texto: string): string {
     <p style="margin:0;font-size:15px;line-height:1.4;font-weight:700;color:${COLOR.exito};">${titulo}</p><p style="margin:4px 0 0;font-size:14px;line-height:1.55;color:${COLOR.exito};">${texto}</p></td></tr></table>`;
 }
 
-/** Lo que gana el cliente, una ventaja por fila con su ícono en placa azul noche (la bienvenida, el promotor). */
+/** Lo que gana el cliente, una ventaja por fila con su ícono en su placa del azul de la marca (la bienvenida, el promotor). */
 export function ventajasCorreo(items: Array<{ icono: IconoCorreo; titulo: string; texto: string }>): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 0;">${items.map((it) => `<tr>
-    <td width="52" valign="top" style="padding:10px 12px 10px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="40" height="40" align="center" valign="middle" bgcolor="${COLOR.noche}" style="width:40px;height:40px;background-color:${COLOR.noche};border-radius:12px;"><img src="${imagenCorreo(`icono-${it.icono}.png`)}" width="24" height="24" alt="" style="display:block;width:24px;height:24px;border:0;"></td></tr></table></td>
+    <td width="52" valign="top" style="padding:10px 12px 10px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="40" height="40" align="center" valign="middle" bgcolor="${COLOR.marca}" style="width:40px;height:40px;background-color:${COLOR.marca};border-radius:12px;"><img src="${imagenCorreo(`icono-${it.icono}.png`)}" width="24" height="24" alt="" style="display:block;width:24px;height:24px;border:0;"></td></tr></table></td>
     <td valign="top" style="padding:10px 0;"><p style="margin:0;font-size:15px;line-height:1.4;font-weight:700;color:${COLOR.tinta};">${it.titulo}</p><p style="margin:2px 0 0;font-size:14px;line-height:1.5;color:${COLOR.texto};">${it.texto}</p></td>
   </tr>`).join('')}</table>`;
 }
@@ -240,11 +241,11 @@ export function datosCorreo(filas: [string, string][]): string {
 }
 
 /**
- * C-192: la pieza fuerte de un correo, una sola: el código, el certificado, la gift card, el boleto. Azul noche con texto
- * blanco y el cian de acento. `contenido` llega armado con `CORREO.placa*` y, si hace falta, `placaInteriorCorreo`.
+ * C-192: la pieza fuerte de un correo, una sola: el código, el certificado, la gift card, el boleto. C-243: en el azul
+ * oscuro del logo, con texto blanco y los rótulos en azul claro. `contenido` llega armado con `CORREO.placa*` y, si hace falta, `placaInteriorCorreo`.
  */
 export function placaCorreo(contenido: string, margen = '20px 0 24px'): string {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:${margen};"><tr><td bgcolor="${COLOR.noche}" style="background-color:${COLOR.noche};border-radius:18px;padding:26px 24px;text-align:center;">${contenido}</td></tr></table>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:${margen};"><tr><td bgcolor="${COLOR.marcaOscura}" style="background-color:${COLOR.marcaOscura};border-radius:18px;padding:26px 24px;text-align:center;">${contenido}</td></tr></table>`;
 }
 
 /** Recuadro blanco dentro de la placa, para el dato que se copia: el código o el ID de verificación. */
@@ -253,18 +254,18 @@ export function placaInteriorCorreo(rotulo: string, dato: string, extra = '', ta
 }
 
 /**
- * El boleto (sorteo) o una entrada: azul noche con el talón a la derecha, separado por una línea punteada.
+ * El boleto (sorteo) o una entrada: el azul oscuro del logo con el talón a la derecha, separado por una línea punteada.
  * `rotulo`, `titulo`, `texto` y el talón llegan escapados.
  */
 export function boletoCorreo(o: { rotulo: string; titulo: string; texto: string; numero: string; unidad: string }): string {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0;"><tr><td bgcolor="${COLOR.noche}" style="background-color:${COLOR.noche};border-radius:16px;padding:0;">
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0;"><tr><td bgcolor="${COLOR.marcaOscura}" style="background-color:${COLOR.marcaOscura};border-radius:16px;padding:0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td valign="middle" style="padding:18px 16px 18px 20px;border-right:2px dashed #2b3a5c;">
+      <td valign="middle" style="padding:18px 16px 18px 20px;border-right:2px dashed ${COLOR.marca};">
         <p style="${CORREO.placaRotulo}">${o.rotulo}</p>
         <p style="margin:6px 0 0;font-family:${FUENTE_TITULO};font-size:19px;line-height:1.25;font-weight:800;color:#ffffff;">${o.titulo}</p>
         <p style="margin:6px 0 0;font-size:13px;line-height:1.5;color:${COLOR.marca300};">${o.texto}</p>
       </td>
-      <td width="88" align="center" valign="middle" style="padding:12px;"><p style="margin:0;font-family:${FUENTE_TITULO};font-size:38px;line-height:1;font-weight:800;color:#ffffff;">${o.numero}</p><p style="margin:4px 0 0;font-size:11px;line-height:1.2;font-weight:800;letter-spacing:1.5px;color:${COLOR.acento};">${o.unidad}</p></td>
+      <td width="88" align="center" valign="middle" style="padding:12px;"><p style="margin:0;font-family:${FUENTE_TITULO};font-size:38px;line-height:1;font-weight:800;color:#ffffff;">${o.numero}</p><p style="margin:4px 0 0;font-size:11px;line-height:1.2;font-weight:800;letter-spacing:1.5px;color:${COLOR.marca300};">${o.unidad}</p></td>
     </tr></table></td></tr></table>`;
 }
 

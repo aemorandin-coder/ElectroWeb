@@ -54,7 +54,7 @@ export default function TrustBar({ whatsapp, paymentMethods, pagoMovilVerificado
           {promises.map(({ Icon, title, text, href, externo }) => {
             const content = (
               <>
-                <span className="iconos-marca flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-950">
+                <span className="iconos-marca flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
                   <Icon className="h-6 w-6" aria-hidden />
                 </span>
                 <span className="min-w-0 flex-1">

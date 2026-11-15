@@ -32,7 +32,7 @@ export default function PremioSorteo({ titulo, premio, imagen, resultadoEl, sort
 
   if (compacto) {
     return (
-      <div className="rounded-2xl bg-brand-950 p-4 text-white">
+      <div className="rounded-2xl bg-brand-700 p-4 text-white">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-200">{titulo || 'Título del sorteo'}</p>
         <p className="mt-1.5 text-xl font-bold leading-tight text-balance">Gana una {premio || '…'}</p>
         <p className="mt-2 flex items-center gap-1.5 text-xs text-brand-100">
@@ -53,7 +53,7 @@ export default function PremioSorteo({ titulo, premio, imagen, resultadoEl, sort
   }
 
   return (
-    <section aria-labelledby="sorteo-titulo" className="bg-brand-950 text-white">
+    <section aria-labelledby="sorteo-titulo" className="bg-brand-700 text-white">
       <Container className="grid items-center gap-6 py-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:py-14">
         <div className="min-w-0">
           <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">{titulo}</p>

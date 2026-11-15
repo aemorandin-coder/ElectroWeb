@@ -79,7 +79,7 @@ export default function CreatorProfilePage() {
               form.displayName?.[0]?.toUpperCase() || 'C'
             )}
           </div>
-          <div className="w-full min-w-0 flex-1 rounded-xl bg-brand-950 p-3">
+          <div className="w-full min-w-0 flex-1 rounded-xl bg-brand-700 p-3">
             <ImageUploadField
               label="Foto de Perfil"
               value={form.avatar}

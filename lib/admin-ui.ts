@@ -71,11 +71,11 @@ export type AdminTone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger';
  * azul noche. Nunca un contenedor ámbar (PLAN.md §1.1). El ícono hijo directo del aviso toma la placa solo.
  */
 export const avisoAccion =
-  'border-brand-200 bg-brand-50 text-brand-900 [&>svg]:h-7 [&>svg]:w-7 [&>svg]:shrink-0 [&>svg]:rounded-lg [&>svg]:bg-brand-950 [&>svg]:p-1.5 [&>svg]:text-accent';
+  'border-brand-200 bg-brand-50 text-brand-900 [&>svg]:h-7 [&>svg]:w-7 [&>svg]:shrink-0 [&>svg]:rounded-lg [&>svg]:bg-brand-500 [&>svg]:p-1.5 [&>svg]:text-white';
 /** C-226: la placa de un ícono de acción cuando no es hijo directo del aviso (dentro de un párrafo o de un título). */
-export const iconoAccion = 'h-7 w-7 shrink-0 rounded-lg bg-brand-950 p-1.5 text-accent';
+export const iconoAccion = 'h-7 w-7 shrink-0 rounded-lg bg-brand-500 p-1.5 text-white';
 /** C-226: el cuadro de ícono de lo que alguien tiene que hacer (una fila, una tarjeta): azul noche con el ícono cian. */
-export const placaAccion = 'bg-brand-950 text-accent';
+export const placaAccion = 'bg-brand-500 text-white';
 
 // C-210 (Andrés eligió la versión A, "como la tienda", para todo el panel): el badge va lleno y con texto blanco, como los
 // sellos de la tienda ("DIGITAL", "Envío gratis"): blanco sobre azul 8,4:1, sobre verde fuerte 5,5:1 y sobre rojo 4,8:1.
@@ -87,7 +87,7 @@ const TONES: Record<AdminTone, { badge: string; chip: string; notice: string }> 
   // C-216 (Andrés, 13/11: "esas píldoras ámbar, las detesto"): la píldora de lo que alguien tiene que hacer es un sello
   // azul noche con texto blanco y el ícono en cian, como la gift card y el certificado. C-226 (14/11): el aviso en bloque y
   // el cuadro de ícono tampoco son ámbar; el nombre del tono quedó, el color cambió.
-  warning: { badge: 'bg-brand-950 text-white [&_svg]:text-accent', chip: placaAccion, notice: avisoAccion },
+  warning: { badge: 'bg-brand-700 text-white', chip: placaAccion, notice: avisoAccion },
   danger: { badge: 'bg-deal text-white', chip: 'bg-deal-bg text-deal', notice: 'border-deal/30 bg-deal-bg text-deal' },
 };
 

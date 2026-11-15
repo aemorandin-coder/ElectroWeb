@@ -143,7 +143,7 @@ export default function NuevoCursoPage() {
           />
         </Field>
 
-        <div className="min-w-0 rounded-xl bg-brand-950 p-3">
+        <div className="min-w-0 rounded-xl bg-brand-700 p-3">
         <ImageUploadField
           label="Miniatura del Curso (Thumbnail)"
           value={form.thumbnail}
@@ -169,7 +169,7 @@ export default function NuevoCursoPage() {
         </div>
       </div>
 
-      <div className="p-4 bg-brand-50 border border-brand-200 rounded-xl text-xs text-brand-950 leading-relaxed">
+      <div className="p-4 bg-brand-50 border border-brand-200 rounded-xl text-xs text-brand-700 leading-relaxed">
         <strong className="text-brand-700">Nota:</strong> Los nuevos cursos se crean en estado &quot;En revisión&quot; y necesitan aprobación del equipo de ElectroShop para ser visibles en el catálogo. Una vez aprobado podrás seguir editando el contenido.
       </div>
     </div>

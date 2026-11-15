@@ -54,7 +54,7 @@ export default function AccionesDespacho({ token, preparando, empresa }: Props) 
       <h2 id="despacho-pasos" className="text-base font-semibold text-ink">Lo que falta</h2>
       <ol className="mt-4 space-y-5">
         <li className="flex gap-3">
-          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${preparando ? 'bg-success-strong text-white' : 'bg-brand-950 text-accent'}`}>
+          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${preparando ? 'bg-success-strong text-white' : 'bg-brand-500 text-white'}`}>
             {preparando ? <IconoCheck className="h-5 w-5" aria-hidden="true" /> : <IconoPaquete className="h-5 w-5" aria-hidden="true" />}
           </span>
           <div className="min-w-0 flex-1">
@@ -74,7 +74,7 @@ export default function AccionesDespacho({ token, preparando, empresa }: Props) 
         </li>
 
         <li className="flex gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-950 text-accent">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white">
             <IconoEnvio className="h-5 w-5" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">

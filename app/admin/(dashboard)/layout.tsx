@@ -7,7 +7,7 @@ import { avisoAccion } from '@/lib/admin-ui';
 import Link from 'next/link';
 import {
   IconoAbrirAparte, IconoAdministrador, IconoAdvertencia, IconoBillete, IconoBolsa, IconoCandado, IconoCargando,
-  IconoCerrar, IconoChat, IconoChevronAbajo, IconoClaqueta, IconoClientes, IconoConfiguracion, IconoCuadricula,
+  IconoCerrar, IconoChat, IconoChevronAbajo, IconoClaqueta, IconoPintura, IconoClientes, IconoConfiguracion, IconoCuadricula,
   IconoCursos, IconoDocumento, IconoEstrella, IconoGarantia, IconoGiftCard, IconoMaletin, IconoMenu, IconoNotificaciones, IconoOrdenes,
   IconoPaquete, IconoPorcentaje, IconoRegistrarse, IconoReportes, IconoSalir, IconoSalvavidas, IconoServicioTecnico,
   IconoTarjeta, IconoVariantes, IconoVentas, IconoVerificado, IconoVersiones,
@@ -240,6 +240,8 @@ export default function AdminLayout({
         // C-112: reemplaza a "Imágenes para redes" de Marketing
         { name: 'ElectroStudio', href: '/admin/studio', icon: <IconoClaqueta className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
         { name: 'Trabajos Realizados', href: '/admin/servicios', icon: <IconoServicioTecnico className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
+        // C-243: los colores y las piezas de la marca, para el equipo y para las IA
+        { name: 'Kit de marca', href: '/admin/marca', icon: <IconoPintura className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
       ],
     },
     {
@@ -482,7 +484,7 @@ export default function AdminLayout({
             </Link>
             <NotificationBell />
             <span className="hidden items-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-ink sm:inline-flex">
-              <span className={`h-2 w-2 rounded-full ${session.user.role === 'SUPER_ADMIN' ? 'bg-brand-700' : session.user.role === 'ADMIN' ? 'bg-brand-500' : session.user.role === 'ACCOUNTANT' ? 'bg-accent' : 'bg-subtle'}`} aria-hidden="true" />
+              <span className={`h-2 w-2 rounded-full ${session.user.role === 'SUPER_ADMIN' ? 'bg-brand-700' : session.user.role === 'ADMIN' ? 'bg-brand-500' : session.user.role === 'ACCOUNTANT' ? 'bg-brand-300' : 'bg-subtle'}`} aria-hidden="true" />
               {roleLabel}
             </span>
           </div>

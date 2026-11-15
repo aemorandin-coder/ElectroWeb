@@ -264,7 +264,7 @@ export default function CheckoutPagoMovilForm({
       {pagos.length > 0 && conciliacion && (
         <div className={`rounded-2xl border p-4 ${cubierto ? 'border-success/40 bg-success/5' : 'border-brand-200 bg-brand-50'}`} role="status">
           <div className="flex items-start gap-3">
-            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white ${cubierto ? 'bg-success-strong' : 'bg-brand-950 [&_svg]:text-accent'}`}>
+            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white ${cubierto ? 'bg-success-strong' : 'bg-brand-500'}`}>
               {cubierto ? <IconoCheck className="h-5 w-5" aria-hidden="true" /> : <IconoError className="h-5 w-5" aria-hidden="true" />}
             </span>
             <div className="min-w-0 flex-1 space-y-1">

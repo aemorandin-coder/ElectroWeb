@@ -66,7 +66,7 @@ export default function DocumentosPage() {
           <ul className="space-y-3">
             {docs.map((d) => (
               <li key={d.slug} className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 sm:flex-row sm:items-center">
-                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${d.signed ? 'bg-success-strong/10 text-success-strong' : 'bg-brand-950 text-accent'}`}>
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${d.signed ? 'bg-success-strong/10 text-success-strong' : 'bg-brand-500 text-white'}`}>
                   {d.signed ? <IconoConfirmado className="h-5 w-5" aria-hidden="true" /> : <IconoReloj className="h-5 w-5" aria-hidden="true" />}
                 </span>
                 <div className="min-w-0 flex-1">

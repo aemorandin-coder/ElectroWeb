@@ -32,7 +32,7 @@ export default function VitrinaDepartamento({ departamento, products, exchangeRa
         <div className="rounded-2xl border border-line bg-surface p-4 lg:p-6">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
             <div className="flex min-w-0 items-start gap-3">
-              <span className="iconos-marca flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-line bg-white text-brand-950">
+              <span className="iconos-marca flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-line bg-white text-brand-700">
                 <CategoryIconRenderer iconName={departamento.icon} className="h-6 w-6" />
               </span>
               <div className="min-w-0">
@@ -54,7 +54,7 @@ export default function VitrinaDepartamento({ departamento, products, exchangeRa
                       href={`/categorias/${hijo.slug}`}
                       className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-white px-3.5 text-sm font-medium text-ink-soft hover:border-brand-200 hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-500"
                     >
-                      <CategoryIconRenderer iconName={hijo.icon} className="h-4 w-4 text-brand-950" />
+                      <CategoryIconRenderer iconName={hijo.icon} className="h-4 w-4 text-brand-700" />
                       {hijo.name}
                     </Link>
                   </li>

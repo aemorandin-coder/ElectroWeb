@@ -206,7 +206,7 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
           <Field label="URL Trailer">
             <input value={form.trailerUrl} onChange={(e) => upd('trailerUrl', e.target.value)} className={INPUT} placeholder="https://youtube.com/watch?v=..." />
           </Field>
-          <div className="min-w-0 rounded-xl bg-brand-950 p-3">
+          <div className="min-w-0 rounded-xl bg-brand-700 p-3">
           <ImageUploadField
             label="Miniatura del Curso (Thumbnail)"
             value={form.thumbnail}

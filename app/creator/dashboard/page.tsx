@@ -192,7 +192,7 @@ export default function CreatorDashboardPage() {
       {/* Info card */}
       <div className="bg-brand-50 border border-brand-200 rounded-2xl p-5">
         <h3 className="text-brand-700 font-bold mb-1.5 text-sm">¿Cómo funcionan tus ingresos?</h3>
-        <p className="text-brand-950 text-xs leading-relaxed">
+        <p className="text-brand-700 text-xs leading-relaxed">
           Por cada venta recibes el{' '}
           <strong className="text-brand-700">{creator.commissionRate}%</strong> del precio del curso.
           El <strong className="text-brand-700">{100 - creator.commissionRate}%</strong> restante es la comisión

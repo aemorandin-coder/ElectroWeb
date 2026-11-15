@@ -48,7 +48,7 @@ export default function SaludoNavidad({ titulo, mensaje, boton, enlace, gorro, a
       <div className="min-w-0 flex-1 @xl:flex @xl:items-center @xl:gap-4">
         <div className="min-w-0 @xl:flex-1">
           {/* 20 px en negrita: el rojo navideño sobre el azul claro (4,3:1) pide texto grande */}
-          <p className="text-xl font-bold leading-tight tracking-tight text-brand-950">
+          <p className="text-xl font-bold leading-tight tracking-tight text-brand-700">
             {inicio}
             {final && <span className="text-navidad">{final}</span>}
           </p>

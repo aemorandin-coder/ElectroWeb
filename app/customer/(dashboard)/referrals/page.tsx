@@ -815,7 +815,7 @@ export default function ReferralsPage() {
                   <div
                     className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                       entry.rank === 1
-                        ? 'bg-brand-950 text-white'
+                        ? 'bg-brand-700 text-white'
                         : entry.rank === 2
                           ? 'bg-brand-100 text-brand-800'
                           : entry.rank === 3
@@ -824,7 +824,7 @@ export default function ReferralsPage() {
                     }`}
                   >
                     {entry.rank <= 3
-                      ? <IconoPremio className={`h-5 w-5 ${['text-accent', 'text-brand-700', 'text-brand-600'][entry.rank - 1]}`} aria-hidden="true" />
+                      ? <IconoPremio className={`h-5 w-5 ${['text-brand-500', 'text-brand-700', 'text-brand-600'][entry.rank - 1]}`} aria-hidden="true" />
                       : `#${entry.rank}`}
                   </div>
                   <div className="flex-1 min-w-0">

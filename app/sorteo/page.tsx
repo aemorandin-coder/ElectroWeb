@@ -81,13 +81,13 @@ export default async function SorteoPage() {
             <h2 className="text-xl font-bold text-ink lg:text-2xl">Cómo participar</h2>
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-line bg-white p-5">
-                <span className="iconos-marca flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-950"><IconoCarrito className="h-6 w-6" aria-hidden="true" /></span>
+                <span className="iconos-marca flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><IconoCarrito className="h-6 w-6" aria-hidden="true" /></span>
                 <h3 className="mt-3 text-lg font-semibold text-ink">Compra {minimo} o más</h3>
                 <p className="mt-1 text-sm text-ink-soft">Cada compra pagada de {minimo} o más en productos es 1 boleto. Mientras más compras, más oportunidades.</p>
                 <Link href="/productos" className="mt-4 inline-flex min-h-11 items-center rounded-full bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">Ver productos</Link>
               </div>
               <div className="rounded-2xl border border-line bg-white p-5">
-                <span className="iconos-marca flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-950"><IconoClientes className="h-6 w-6" aria-hidden="true" /></span>
+                <span className="iconos-marca flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><IconoClientes className="h-6 w-6" aria-hidden="true" /></span>
                 <h3 className="mt-3 text-lg font-semibold text-ink">O invita a 2 amigos, sin comprar</h3>
                 <p className="mt-1 text-sm text-ink-soft">
                   Comparte tu enlace en tu estado de WhatsApp. Cuando 2 amigos se registran con él y verifican su correo, ganas 1 boleto. Hasta {sorteo.topeInvitar}.

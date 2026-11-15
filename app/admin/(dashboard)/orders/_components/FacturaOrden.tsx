@@ -148,7 +148,7 @@ export default function FacturaOrden({ orden, onGuardada }: { orden: OrdenFactur
         </Link>
       )}
 
-      <button type="button" onClick={copiar} className={`${adminSecondaryButton} w-full ${copiado ? 'border-success-strong text-success-strong' : ''}`} aria-live="polite">
+      <button type="button" onClick={copiar} className={`${adminSecondaryButton} w-full ${copiado ? 'border-success-strong! text-success-strong!' : ''}`} aria-live="polite">
         {copiado ? <IconoCheck className="h-4 w-4" aria-hidden="true" /> : <IconoCopiar className="h-4 w-4" aria-hidden="true" />}
         {copiado ? '¡Copiado!' : 'Copiar datos para facturar'}
       </button>

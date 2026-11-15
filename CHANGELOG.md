@@ -10,6 +10,13 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.62] - 2026-11-15
+Dos botones de Contabilidad con la regla de C-245: lo que se suma a un botón compartido gana con `!`. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Contabilidad 1.2.2 (C-248)
+- **"Quitar el renglón"** (Nueva factura → una venta en la tienda → Qué se vendió): el tacho se ve entero en su cuadrado de 44 px. El relleno del botón compartido lo dejaba en 4 px.
+### Órdenes y pagos 1.6.3 (C-248)
+- **"Copiar datos para facturar"** (el detalle de la orden → Facturación) se pone en verde con "¡Copiado!", como estaba pensado: el borde y la letra del botón le ganaban al verde.
+
 ## [1.0.0-rc.61] - 2026-11-15
 El panel entero con el kit de marca (el equipo, 15/11: "repase todo el admin panel para rediseñar con ese kit nuevo"). Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Dos cosas quedan para decidir, con maquetas (`docs/plan/estado/C-245.md`).
 ### Marco del panel 1.12.1 (C-245)

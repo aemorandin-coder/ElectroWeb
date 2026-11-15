@@ -521,8 +521,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **Quedan, porque la regla los permite:** los textos sueltos en ámbar ("Te faltan Bs. 120", "Verifica tu pago"), las estrellas y su barra, y la etiqueta "Oferta del día".
 - **El reset de `app/globals.css` (hallado en C-226):** `* { box-sizing: border-box }` está fuera de `@layer`, así que le gana a las utilidades y `box-content` de Tailwind no funciona en ninguna parte. Tailwind ya trae ese reset: moverlo a `@layer base` lo arregla. Toca toda la tienda, así que va con una revisión visual completa. Prioridad baja.
 - **C-219 · Los correos de la tienda** (**hecha**, rc.47, 14/11; decisiones en §7.2): el marco nuevo (la maqueta C), los 26 correos que ya salían y los 19 que faltaban; la vista previa con los 54 (`estado/C-219.md`, `AUDITORIA_CORREOS.md`).
-  - **Sigue:**
-    - "Sale el lunes 16" en los correos de compra, con C-234;
+  - **Sigue** ("Sale el lunes 16" en el correo de la compra ya está, con C-234):
     - responder un mensaje sin el borrador de Claude también con la plantilla (hoy abre el correo personal);
     - el carrito abandonado, que necesita guardar el carrito;
     - "Tu factura", desde el 19/04/2027 con Contabilidad;
@@ -531,7 +530,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - el contacto del proveedor en el panel (columnas nuevas, aditivas);
   - la bienvenida, el aviso de venta, la página firmada para anotar la guía, el recordatorio y la cancelación.
   - Va después de C-219, que pone el diseño, y de C-234, que cuenta los días hábiles.
-- **C-234 · Cuándo sale cada pedido** (plan listo, 14/11; decisiones en §7.2 y las reglas en `PROPUESTA_C234.md`): el calendario (corte, sábado, feriados y días del panel) y la fecha de salida en la tienda, los correos y Mi pedido.
+- **C-234 · Cuándo sale cada pedido** (**hecha**, rc.52, 14/11; decisiones en §7.2 y las reglas en `PROPUESTA_C234.md`): el calendario en `lib/horarios` (corte, sábado, feriados y días del panel) y la fecha de salida en la ficha, el carrito, el checkout, el correo de la compra y Mi pedido. `estado/C-234.md`.
+  - **Si el equipo quiere otro plazo por proveedor** (hoy, un día hábil para todos): `fechaDeSalida` ya lo recibe; faltaría guardarlo en `suppliers`.
 - **Haiku en el panel** (Andrés eligió 5 de las 7 ideas el 13/11). Esfuerzo alto para lo que se espera en pantalla; el máximo, solo para trabajos de fondo. La base común está en `lib/ia/claude.ts` y las reglas del texto en `lib/ia/texto.ts` (C-213).
   - **A · El resumen del cliente en su ficha** (**hecha**, C-213, rc.38): la pestaña Resumen con lo que hay que atender y cómo compra, y a pedido el resumen de Claude con qué ofrecerle. De paso, "Total gastado" ya no suma lo pendiente ni lo cancelado. `estado/C-213.md`.
     - **Probada con un Claude simulado:** la clave del 13/11 da 401. Falta una clave nueva (en el servidor y aquí) y probarla con el modelo de verdad.

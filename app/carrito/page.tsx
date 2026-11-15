@@ -27,6 +27,7 @@ import CouponBox from '@/components/cart/CouponBox';
 import FechaLimiteNavidad from '@/components/navidad/FechaLimiteNavidad';
 import { parseCartItemId, toOrderItem } from '@/lib/cart-items';
 import { paqueteDesde } from '@/lib/origen';
+import SalidaDelPedido from '@/components/envios/SalidaDelPedido';
 
 // Diseño de una gift card del carrito: el id es "gift-card-<diseño>-<fecha>" (app/gift-cards).
 // Antes se leía un campo `design` que el carrito no guarda y todas salían con el mismo diseño (revisión R11).
@@ -496,6 +497,17 @@ export default function CarritoPage() {
                         className="mt-3"
                       />
                     )}
+                    {/* C-234: cuándo sale si paga ahora, cada paquete con su día */}
+                    {hasPhysical && (
+                      <div className="mt-3 space-y-1">
+                        {paquetes.length > 1
+                          ? paquetes.map((p) => (
+                            <SalidaDelPedido key={p.origen ?? 'tienda'} diasProveedor={p.origen ? 1 : 0} desde={paqueteDesde(p.origenEstado, p.origenNombre)} />
+                          ))
+                          : <SalidaDelPedido diasProveedor={paquetes[0]?.origen ? 1 : 0} desde={paquetes[0]?.origen ? paqueteDesde(paquetes[0].origenEstado, paquetes[0].origenNombre) : undefined} />}
+                      </div>
+                    )}
+                    {!hasPhysical && items.length > 0 && <SalidaDelPedido digital className="mt-3" />}
                     {hasPhysical && enviosNacionales && paquetes.length > 1 && (
                       <p className="mt-3 text-xs text-ink-soft">
                         {/* C-222: el estado y la ciudad de cada paquete (lib/origen.ts) */}

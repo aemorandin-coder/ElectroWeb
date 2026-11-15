@@ -8,6 +8,8 @@ import { es } from 'date-fns/locale';
 import { formatOrderPaymentMethod } from '@/lib/format-helpers';
 import { conditionBadge, warrantyDaysFor } from '@/lib/product-condition';
 import { ETIQUETA_ENTREGA } from '@/lib/envios/empresas';
+import { getPublicSettings } from '@/lib/site-settings';
+import { calendarioDe, cuandoSale, entregaDigital, fechaDeSalida } from '@/lib/horarios';
 import { asuntoConfirmacion, generateOrderConfirmationEmail } from './OrderConfirmation';
 import type { Correo } from './pedidos';
 
@@ -15,6 +17,15 @@ export type OrdenParaCorreo = Prisma.OrderGetPayload<{ include: { items: true; u
 
 export async function correoDeCompra(order: OrdenParaCorreo): Promise<Correo> {
   const pagado = order.paymentStatus === 'PAID';
+  // C-234: el día que sale (con el corte, los feriados y el día de más del proveedor) o cuándo llega lo digital
+  const ajustes = await getPublicSettings().catch(() => null);
+  const calendario = calendarioDe(ajustes);
+  const ahora = new Date();
+  const salida = !pagado
+    ? null
+    : order.deliveryMethod === 'DIGITAL'
+      ? entregaDigital(ahora, ajustes?.businessHours, calendario).texto
+      : `${order.deliveryMethod === 'PICKUP' ? 'Listo para retirar' : 'Sale'} ${cuandoSale(fechaDeSalida(order.paidAt ?? ahora, calendario, order.dispatchCityCode ? 1 : 0), ahora, true)}`;
   const html = await generateOrderConfirmationEmail({
     orderNumber: order.orderNumber,
     customerName: order.user?.name || '',
@@ -44,6 +55,7 @@ export async function correoDeCompra(order: OrdenParaCorreo): Promise<Correo> {
     dispatchStateName: order.dispatchStateName,
     totalVES: Number(order.totalVES) || null,
     exchangeRate: Number(order.exchangeRate) || null,
+    salida,
   });
   return { asunto: asuntoConfirmacion({ orderNumber: order.orderNumber, paid: pagado }), html };
 }

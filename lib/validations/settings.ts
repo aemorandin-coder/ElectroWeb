@@ -165,6 +165,10 @@ export const settingsUpdateSchema = z.object({
   pickupEnabled: z.boolean(),
   pickupAddress: optionalText(250),
   pickupInstructions: optionalText(500),
+  // C-234: cuándo sale cada pedido
+  horaCorte: z.string().regex(/^([01]?\d|2[0-3]):[0-5]\d$/, 'Escribe la hora como 14:00'),
+  diasCerrados: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida')).max(120, 'Máximo 120 días'),
+  diasAbiertos: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida')).max(60, 'Máximo 60 días'),
 
   // Tienda
   heroVideoEnabled: z.boolean(),

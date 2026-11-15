@@ -54,6 +54,8 @@ interface OrderConfirmationData {
   totalVES?: number | null;
   exchangeRate?: number | null;
   trackingUrl?: string;
+  /** C-234: "Sale el lunes 16 de noviembre" (lo físico pagado) o cuándo llega lo digital ("Te llega en minutos") */
+  salida?: string | null;
 }
 
 const e = escapeHtml;
@@ -86,7 +88,7 @@ export async function generateOrderConfirmationEmail(data: OrderConfirmationData
       sello: 'PAGO CONFIRMADO',
       titulo: `¡Es oficial${nombre ? `, ${nombre}` : ''}!<br>Tu pedido ya arrancó`,
       texto: digital
-        ? `Tu pago con ${pago} entró perfecto. Ya estamos preparando tu compra digital: te llega por correo y en Mi pedido.`
+        ? `Tu pago con ${pago} entró perfecto. ${data.salida ? `${e(data.salida)}: por correo y en Mi pedido.` : 'Ya estamos preparando tu compra digital: te llega por correo y en Mi pedido.'}`
         : `Tu pago con ${pago} entró perfecto. Ya estamos armando tu caja y te avisamos en cuanto salga.`,
     }
     : {
@@ -121,6 +123,7 @@ export async function generateOrderConfirmationEmail(data: OrderConfirmationData
 
   const entrega = digital ? '' : `
     ${rotuloCorreo('Así te llega')}
+    ${data.salida ? `<p style="margin:0 0 6px;font-size:17px;line-height:1.4;font-weight:800;color:#0e1f44;">${e(data.salida)}</p>` : ''}
     <p style="margin:0;font-size:15px;line-height:1.5;font-weight:700;color:#212529;">${e(ETIQUETA_ENTREGA[codigo] || data.deliveryMethod)}</p>
     ${data.deliveryAddress ? `<p style="margin:2px 0 0;font-size:14px;line-height:1.5;color:#495057;">${e(data.deliveryAddress)}</p>` : ''}
     ${data.dispatchCityName || data.dispatchStateName ? `<p style="margin:2px 0 0;font-size:14px;line-height:1.5;color:#495057;">${e(origenDelPaquete(data.dispatchStateName, data.dispatchCityName))}</p>` : ''}

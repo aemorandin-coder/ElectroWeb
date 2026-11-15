@@ -10,6 +10,26 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.52] - 2026-11-14
+Cuándo sale cada pedido, dicho antes de comprar (el equipo, 14/11: "un cliente que compra un sábado al mediodía, su producto sí o sí sale el lunes; ser lo más transparente"; eligió lo recomendado en las seis preguntas).
+### Órdenes y pagos 1.5.0 (C-234)
+- **Las reglas de los despachos, en un solo lugar** (`lib/horarios`), en hora de Venezuela:
+  - lo pagado de lunes a viernes antes de las 2:00 p. m. sale ese día; lo de después, el siguiente día hábil;
+  - el sábado y el domingo no se despacha: sale el lunes;
+  - no se despacha en los feriados de Venezuela, con el 24 y el 31 de diciembre (Carnaval y Semana Santa se calculan cada año);
+  - lo de un proveedor (la ferretería de La Victoria) sale un día hábil después.
+- **Cambio de base (aditivo):** las columnas `horaCorte`, `diasCerrados` y `diasAbiertos` de `company_settings`.
+### Configuración 1.2.0 (C-234)
+- **Envíos y retiro → "Cuándo sale cada pedido":** la hora de corte, los feriados que vienen (con "Abre" para el que la tienda abra) y los días cerrados de más.
+- **Abajo, el ejemplo con lo escrito:** "si alguien paga el sábado a las 12:00, lo de la tienda sale el lunes y lo de un proveedor, el martes".
+### Tienda 1.14.0 y Carrito, checkout y cuenta del cliente 1.6.0 (C-234)
+- **La ficha, junto al botón de comprar:** "Compra en las próximas 2 h 15 min y sale hoy" o "Compra hoy y sale el lunes 16"; lo de la ferretería, "desde Aragua".
+  - Lo digital dice cuándo llega: "Te llega en minutos" o "Te llega al abrir: el lunes 16 a las 9:00".
+- **El carrito,** una línea por paquete. **El checkout,** apenas se elige cómo recibirlo. **Mi pedido,** "Sale el lunes 16 de noviembre" mientras está pagado y sin salir.
+- La cuenta se rehace sola cada minuto, sin animación.
+### Marketing 1.13.0 (C-234)
+- **El correo de la compra** dice en "Así te llega" el día que sale ("Sale el lunes 16 de noviembre") y, en lo digital, cuándo llega.
+
 ## [1.0.0-rc.51] - 2026-11-14
 Lo que nos hace únicos hoy (el equipo, 14/11: no hablar como si fuéramos fuertes en el mercado, sino decir lo que nos distingue).
 ### Tienda 1.13.0 (C-224)

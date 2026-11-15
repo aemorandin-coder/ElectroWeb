@@ -1069,6 +1069,11 @@ model CompanySettings {
   // delivery o retiro en Guanare. Sin fecha no se promete nada: la franja de la ficha y del carrito no sale
   christmasCutoffShipping DateTime? @db.Date
   christmasCutoffLocal    DateTime? @db.Date
+  /// C-234: la hora de corte de los despachos (lo pagado antes sale ese día, de lunes a viernes), los días que la tienda no
+  /// despacha además de los feriados y los feriados que sí despacha. Fechas "2026-12-26" en hora de Venezuela (lib/horarios)
+  horaCorte               String    @default("14:00")
+  diasCerrados            String[]  @default([])
+  diasAbiertos            String[]  @default([])
 
   // Admin Alert Emails — comma-separated or JSON array of emails to notify on key events
   adminAlertEmails      String?

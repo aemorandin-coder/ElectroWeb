@@ -6,6 +6,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { reglasEmbalajeActivas, type ReglasEmbalaje } from '@/lib/embalaje';
 import { entregaNavidad, navidadActiva, varianteGorro, type EntregaNavidad, type VarianteGorro } from '@/lib/navidad';
+import { HORA_CORTE_POR_DEFECTO } from '@/lib/horarios';
 
 export interface SiteSettings {
     companyName: string;
@@ -187,6 +188,10 @@ export interface PublicSettings {
     /** C-190: el último día para pedir y que llegue antes del 24 (ZOOM o MRW, y delivery o retiro en Guanare), solo con el
      *  tema activo y las fechas que siguen en pie. null: no sale la franja */
     entregaNavidad: EntregaNavidad | null;
+    /** C-234: el calendario de los despachos (lib/horarios): la hora de corte, los días cerrados y los feriados abiertos */
+    horaCorte: string;
+    diasCerrados: string[];
+    diasAbiertos: string[];
     // El popup (hotAd*) no va aquí: estos settings viajan en el HTML de TODAS las páginas y la imagen
     // podía ser un base64 de cientos de KB. El home lo lee aparte con getHotAd() (C-25).
 }
@@ -212,6 +217,7 @@ const PUBLIC_SETTINGS_SELECT = {
     rif: true, legalName: true,
     christmasTheme: true, christmasThemeFrom: true, christmasThemeUntil: true, christmasHat: true,
     christmasCutoffShipping: true, christmasCutoffLocal: true,
+    horaCorte: true, diasCerrados: true, diasAbiertos: true,
 } satisfies Prisma.CompanySettingsSelect;
 
 type PublicSettingsRow = Prisma.CompanySettingsGetPayload<{ select: typeof PUBLIC_SETTINGS_SELECT }>;
@@ -240,6 +246,9 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     rif: null, legalName: null,
     gorroNavidad: null,
     entregaNavidad: null,
+    horaCorte: HORA_CORTE_POR_DEFECTO,
+    diasCerrados: [],
+    diasAbiertos: [],
 };
 
 function parseJson<T>(value: string | null, fallback: T): T {

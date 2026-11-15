@@ -12,6 +12,7 @@ import ProductGallery from '@/components/product/ProductGallery';
 import ProductReviews from '@/components/product/ProductReviews';
 import PurchasePanel from '@/components/product/PurchasePanel';
 import CalculaTuEnvio from '@/components/envios/CalculaTuEnvio';
+import SalidaDelPedido from '@/components/envios/SalidaDelPedido';
 import CouponOffers from '@/components/product/CouponOffers';
 import ConditionDetails, { ConditionNotice } from '@/components/product/ConditionDetails';
 import FechaLimiteNavidad from '@/components/navidad/FechaLimiteNavidad';
@@ -290,6 +291,14 @@ export default async function ProductPage({ params }: PageProps) {
                               </li>
                             ))}
                           </ul>
+                        )}
+                        {/* C-234: cuándo sale si compra ahora, con la cuenta regresiva del corte (lo digital, cuándo le llega) */}
+                        {(isDigital || product.stock > 0) && (
+                          <SalidaDelPedido
+                            digital={isDigital}
+                            diasProveedor={despacho ? 1 : 0}
+                            desde={despacho ? `desde ${despacho.estado || despacho.ciudad}` : undefined}
+                          />
                         )}
                         {/* C-190: con el tema navideño y la fecha cargada, hasta cuándo pedir para que llegue antes del 24 */}
                         {!isDigital && product.stock > 0 && <FechaLimiteNavidad />}

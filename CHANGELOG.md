@@ -10,6 +10,14 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.66] - 2026-11-15
+Dos preguntas del informe de C-249b, con lo que eligió el equipo (C-250).
+### Productos 1.17.1 (C-250)
+- **El color de cada categoría,** que solo se ve en el panel, va solo con los azules del kit de marca: el de la marca, el medio, el oscuro del logo y el claro.
+- Las que tenían morado, rosa, cian u otro color pasan al azul más parecido, sin tocar la base. Ya no hay color personalizado.
+### Clientes 1.6.1 (C-250)
+- **La gift card impresa:** "Se activa al pagar en caja" en el azul oscuro del logo, ya no en ámbar.
+
 ## [1.0.0-rc.65] - 2026-11-15
 Crear por pasos, la tercera entrega (C-249c): el método de pago y la categoría, en su propia página, con lo que verá el cliente al lado y "Revisar y publicar" al final. Van 4 de los 8 formularios; siguen C-249d y C-249e. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Las APIs que guardan no cambian.
 ### Configuración 1.4.0 (C-249c)

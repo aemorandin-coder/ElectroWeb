@@ -2,6 +2,7 @@
 // C-249b: sale de la página de Gift cards para que la use el asistente del lote (/admin/gift-cards/nuevo). La tarjeta
 // impresa es la misma; solo la nota de la pantalla (no se imprime) deja el ámbar por el azul claro de lo que hay que
 // hacer (C-226).
+// C-250 (el equipo, 15/11): en la tarjeta impresa, "Se activa al pagar en caja" pasa del ámbar al azul oscuro del logo.
 import { toast } from 'react-hot-toast';
 import { formatUSD } from '@/lib/currency';
 import { formatGiftCardCode } from '@/lib/gift-card-designs';
@@ -57,7 +58,7 @@ export function printBatch(cards: PrintedCard[]) {
       .pin { width: 40mm; height: 12mm; border-radius: 2mm; border: .3mm dashed #5d6677; display: flex; flex-direction: column; align-items: center; justify-content: center;
         font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; font-size: 5mm; letter-spacing: .16em; }
       .pin em { font-family: system-ui, sans-serif; font-style: normal; font-size: 1.8mm; letter-spacing: .06em; font-weight: 600; color: #5d6677; }
-      .state { font-size: 2.2mm; font-weight: 700; color: #b45309; text-align: right; max-width: 28mm; }
+      .state { font-size: 2.2mm; font-weight: 700; color: #1a3b7e; text-align: right; max-width: 28mm; }
       .foot { position: absolute; left: 5mm; right: 5mm; bottom: 4mm; font-size: 2.1mm; color: #5d6677; }
       @media print { .note { display: none; } }
     </style></head><body>

@@ -1,9 +1,10 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.65, por subir)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.66, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-250 · Las categorías y la gift card impresa, con el kit (rc.66, por subir):** el color de cada categoría, solo con los azules del kit, y el aviso de la gift card impresa en el azul oscuro del logo (`estado/C-250.md`).
 - **C-249c · Crear por pasos: el método de pago y la categoría (rc.65, por subir; `estado/C-249c.md`):** 4 de los 8 formularios, con el marco de C-249b.
   - **El método de pago,** en su propia página: el método, la cuenta, lo que ve el cliente, el logo y el QR, y "Revisar y publicar", con el panel del checkout al lado. Antes de guardar, el servidor dice si los datos pasan; al cambiar uno, cuántas recargas y órdenes esperan un pago con los datos de antes.
   - **De paso:** Zinli ya se puede guardar (pedía el teléfono y no el titular que exige el servidor).
@@ -317,7 +318,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.65` (C-243, C-244, C-247, C-246, C-245, C-248, C-249, C-249b y C-249c; unos 60 minutos)
+### El bloque por subir: `v1.0.0-rc.66` (C-243, C-244, C-247, C-246, C-245, C-248, C-249, C-249b, C-249c y C-250; unos 60 minutos)
 **Producción está en `v1.0.0-rc.56`** (`471a54d`); su bloque está en `HISTORIAL.md`.
 - **C-243 (rc.57):** el kit de marca. **Sin cambio de base, sin SQL, sin variables nuevas y sin cron.**
   - **Las imágenes para compartir cambian de dirección** (`?v=`): WhatsApp y Facebook las vuelven a pedir solas.
@@ -337,8 +338,9 @@ ADD COLUMN "taxId" TEXT;
 - **C-249 (rc.63):** los filtros en píldoras de Órdenes, Transacciones, Mensajes, Cursos, Trabajos realizados, Creadores y ElectroStudio. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **C-249b (rc.64):** la oferta o el cupón y las gift cards impresas, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una ruta nueva que solo lee (`POST /api/admin/promotions/vista-previa`).
 - **C-249c (rc.65):** el método de pago y la categoría, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una ruta nueva que solo lee (`POST /api/admin/payments/vista-previa`).
+- **C-250 (rc.66):** el color de las categorías, solo con los azules del kit, y el aviso de la gift card impresa en azul. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc60.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.65`, o una mayor si entró otra tarea antes del `git pull`.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.66`, o una mayor si entró otra tarea antes del `git pull`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **`/sorteo`:** la franja de arriba va en el azul oscuro del logo, sin azul casi negro ni letras cian.
   2. **En el teléfono, la barra de abajo** va en el mismo azul oscuro.
@@ -380,6 +382,7 @@ ADD COLUMN "taxId" TEXT;
       - En "Para el cliente", cambia la nota → "Revisar y publicar": "Lo que cambia" dice la nota de antes y la de ahora, y si hay recargas u órdenes esperando un pago.
       - **Sal con "Métodos de pago", arriba, sin guardar.** Así no cambia nada de lo que ven los clientes.
   16. **Una categoría por pasos** (C-249c): Catálogo → Categorías → elige una → "Crear subcategoría". El título dice de cuál es y "Dentro de" ya la trae. Escribe un nombre → "Cómo se ve": elige un ícono → la casilla y el chip de la tienda, al lado. Sal con "Categorías", arriba, sin crearla.
+  17. **Los colores de categoría** (C-250): Catálogo → Categorías. En el árbol, todas en azules (ninguna morada, rosa ni naranja). Al cambiar una, en "Cómo se ve" hay cuatro azules para elegir.
 - **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base: al ver las tres columnas de C-246, se para en el paso 2 y la tienda sigue como está (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las columnas no molestan al código anterior.
 
 ### Por confirmar de rc.55 y rc.56 (C-235, C-227 y C-242; unos 20 minutos)

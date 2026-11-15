@@ -137,18 +137,20 @@ export function getAutoIcon(categoryName: string): string {
 
 // ─── Color system ────────────────────────────────────────────────────────────
 
+// C-250 (el equipo, 15/11): solo los azules del kit de marca (lib/marca.ts). Los colores de antes (morado, rosa, cian…)
+// siguen guardados como estaban y se muestran con el azul más parecido; uno personalizado (#…), según lo claro que sea.
 export const COLOR_OPTIONS = [
-  { name: 'blue',   label: 'Azul',         from: '#3b82f6', to: '#2563eb', swatch: '#3b82f6', text: '#2563eb' },
-  { name: 'purple', label: 'Morado',        from: '#a855f7', to: '#9333ea', swatch: '#a855f7', text: '#9333ea' },
-  { name: 'green',  label: 'Verde',         from: '#10b981', to: '#059669', swatch: '#10b981', text: '#059669' },
-  { name: 'red',    label: 'Rojo',          from: '#ef4444', to: '#dc2626', swatch: '#ef4444', text: '#dc2626' },
-  { name: 'orange', label: 'Naranja',       from: '#f97316', to: '#ea580c', swatch: '#f97316', text: '#ea580c' },
-  { name: 'cyan',   label: 'Cian',          from: '#06b6d4', to: '#0891b2', swatch: '#06b6d4', text: '#0891b2' },
-  { name: 'amber',  label: 'Ámbar',         from: '#f59e0b', to: '#d97706', swatch: '#f59e0b', text: '#d97706' },
-  { name: 'indigo', label: 'Índigo',        from: '#6366f1', to: '#4f46e5', swatch: '#6366f1', text: '#4f46e5' },
-  { name: 'rose',   label: 'Rosa',          from: '#f43f5e', to: '#e11d48', swatch: '#f43f5e', text: '#e11d48' },
-  { name: 'teal',   label: 'Verde Azulado', from: '#14b8a6', to: '#0d9488', swatch: '#14b8a6', text: '#0d9488' },
+  { name: 'azul',   label: 'Azul de la marca',     from: '#2a63cd', to: '#1e4ba3', swatch: '#2a63cd', text: '#1e4ba3' },
+  { name: 'medio',  label: 'Azul medio',           from: '#1e4ba3', to: '#1a3b7e', swatch: '#1e4ba3', text: '#1a3b7e' },
+  { name: 'oscuro', label: 'Azul oscuro del logo', from: '#1a3b7e', to: '#1a3b7e', swatch: '#1a3b7e', text: '#1a3b7e' },
+  { name: 'claro',  label: 'Azul claro',           from: '#aac1eb', to: '#2a63cd', swatch: '#aac1eb', text: '#1e4ba3' },
 ];
+
+/** Los colores de antes del kit, con su azul más parecido */
+const ANTES: Record<string, string> = {
+  blue: 'azul', cyan: 'claro', teal: 'claro', green: 'claro', indigo: 'medio', purple: 'medio',
+  rose: 'oscuro', red: 'oscuro', orange: 'oscuro', amber: 'oscuro',
+};
 
 const AUTO_COLORS = COLOR_OPTIONS.map(c => c.name);
 
@@ -156,13 +158,20 @@ export function getAutoColor(index: number): string {
   return AUTO_COLORS[index % AUTO_COLORS.length];
 }
 
+/** Un color personalizado (#rrggbb) va al azul del kit de su misma luz */
+function azulPorLuz(hex: string) {
+  const n = parseInt(hex.slice(1, 7).padEnd(6, '0'), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  const luz = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  const nombre = luz > 0.62 ? 'claro' : luz > 0.4 ? 'azul' : luz > 0.25 ? 'medio' : 'oscuro';
+  return COLOR_OPTIONS.find(c => c.name === nombre) || COLOR_OPTIONS[0];
+}
+
 export function getCategoryColor(color: string | null | undefined, index = 0) {
   if (!color) {
     const key = getAutoColor(index);
     return COLOR_OPTIONS.find(c => c.name === key) || COLOR_OPTIONS[0];
   }
-  if (color.startsWith('#')) {
-    return { name: 'custom', label: 'Personalizado', from: color, to: color, swatch: color, text: color };
-  }
-  return COLOR_OPTIONS.find(c => c.name === color) || COLOR_OPTIONS[0];
+  if (color.startsWith('#')) return azulPorLuz(color);
+  return COLOR_OPTIONS.find(c => c.name === (ANTES[color] ?? color)) || COLOR_OPTIONS[0];
 }

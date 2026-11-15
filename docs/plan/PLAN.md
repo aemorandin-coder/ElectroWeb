@@ -566,7 +566,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - Pasa a §1.9: los pasos de `Pasos` con su ícono (Entrega, Tus datos, Pago, Revisar y pagar), "Siguiente: …" con el motivo si falta algo, el resumen del pedido al lado como vista previa y, en el teléfono, "Paso N de M" con la barra.
     - **Primero las maquetas,** con datos reales y en las variantes posibles (pasos de a uno, o la misma página con los pasos marcándose al avanzar), para que el equipo elija.
     - **Es dinero:** no cambia ningún cálculo del servidor. Se prueban el caso normal y el manipulado, y nada que hoy se ve o se puede hacer desaparece (el inventario del método de `CHATGPT.md` §4).
-  - **C-223 · El aviso de cookies** (pendiente; antes de poner las claves de Google y del píxel).
+  - **C-223 · El aviso de cookies** (**hecha**, rc.49, 14/11; `estado/C-223.md`). Sale cuando se pongan las claves de Google y del píxel. El texto de la política espera al abogado (A4).
     - "Solo las necesarias" y "Aceptar", del mismo tamaño, abajo; "Preferencias de cookies" en el pie.
     - Google en modo sin cookies hasta el sí (Consent Mode); el píxel, solo con el sí.
     - La medición propia, sin la IP completa.

@@ -10,6 +10,17 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.49] - 2026-11-14
+El aviso de cookies, antes de encender Google Analytics y el píxel de Meta (el equipo, 14/11).
+### Tienda 1.12.0 (C-223)
+- **El aviso de cookies:** chico y abajo (en el teléfono, encima de la barra), con "Solo las necesarias" y "Aceptar" del mismo tamaño, y "Elegir" para la medición y los anuncios por separado.
+- **Hasta el sí del cliente,** Google Analytics va sin cookies (Consent Mode) y el píxel de Meta no se carga. Si después dice que no, el píxel deja de enviar.
+- **"Cookies", al pie,** vuelve a abrir el aviso con lo que eligió.
+- **Sale solo cuando la tienda tiene Google Analytics o el píxel configurados.** Hoy no los tiene: no cambia nada a la vista.
+### Reportes y seguridad 1.1.5 y Configuración 1.1.10 (C-223)
+- **La medición propia guarda la IP sin su último tramo.** Los límites de intentos y la bitácora siguen con la completa.
+- **El texto inicial de la política de privacidad** nombra todas las cookies. El publicado se cambia en Legal → Documentos, con el abogado.
+
 ## [1.0.0-rc.48] - 2026-11-14
 Los textos para buscadores dicen lo que la tienda es hoy (el equipo, 14/11: "ya estamos creciendo, eso debe cambiar desde ya").
 ### Tienda 1.11.1 (C-225)

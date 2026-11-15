@@ -22,6 +22,11 @@ function paraElPanel(sorteo: Sorteo) {
     cerrado: new Date() > sorteo.hasta,
     sorteadoAt: sorteo.sorteadoAt?.toISOString() ?? null, ganadorEmail: sorteo.ganadorEmail, ganadorDetalle: sorteo.ganadorDetalle,
     boletosAlSortear: sorteo.boletosAlSortear, huellaLista: sorteo.huellaLista,
+    // C-254: la entrega (lo que sale en la tienda con el permiso de la persona)
+    entrega: {
+      nombre: sorteo.entregaNombre ?? '', ciudad: sorteo.entregaCiudad ?? '', foto: sorteo.entregaFoto ?? '', video: sorteo.entregaVideo ?? '',
+      permiso: sorteo.entregaPermiso, publicadaAt: sorteo.entregaPublicadaAt?.toISOString() ?? null,
+    },
   };
 }
 

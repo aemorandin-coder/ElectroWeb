@@ -656,7 +656,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - **Menor:**
       - al registrarse, la página alcanza a pedir la sesión, el carrito y los avisos antes de recargar (3 pedidos que se pierden);
       - si se toca "Firmar" en el instante en que termina el trazo, la firma dice "un trazo completo".
-  - **C-254 · La semana del ganador** (pendiente, la sigue a C-253; el equipo, 15/11: "al terminar el sorteo, que la bandera permanezca una semana más mostrando quién ganó y un video de testimonio o una imagen de la persona"; eligió hacerla justo después de C-253, mucho antes del resultado del 20/12):
+  - **C-254 · La semana del ganador** (**hecha**, rc.79, 15/11; `estado/C-254.md`; el equipo eligió lo recomendado en las 7 preguntas, viendo las maquetas; el equipo, 15/11: "al terminar el sorteo, que la bandera permanezca una semana más mostrando quién ganó y un video de testimonio o una imagen de la persona"). Lo que se pidió y quedó hecho:
     - **La bandera, por etapas:**
       - abierto: "¡Gánate una PS4!", lo de C-253;
       - cerrado, esperando el resultado: "Resultado el 20 de diciembre";
@@ -669,6 +669,9 @@ Quedan para después de C-177 (`estado/C-177.md`):
       - el video va a YouTube (oculto o Short), y aquí se pone su enlace, como los demás videos de la tienda;
       - una casilla obligatoria: "La persona aceptó salir en la tienda". Sin ella, solo el correo tapado, como hoy.
     - **La base:** columnas aditivas en `sorteos` (el nombre que se muestra, la foto, el video, el permiso y cuándo se publicó).
+    - **Queda:**
+      - la base 6 nueva de `/sorteo` (la publicación con el permiso de la persona), para el abogado junto con A4;
+      - los otros videos de la tienda (el inicio, los cursos y Servicios) leen YouTube cada uno a su manera: pasarlos a `lib/youtube.ts` cuando se toquen. Cursos y Servicios son del carril de Gemini.
   - **C-252 · El curso nuevo y las fotos de Servicios, validados** (**hecha**, rc.70, 15/11; `estado/C-252.md`): las dos fallas del servidor que anotó C-249e.
   - **C-250 · Las categorías y la gift card impresa, con el kit** (**hecha**, rc.66, 15/11; `estado/C-250.md`; el equipo eligió lo recomendado en las dos preguntas de C-249b).
   - **C-247 · La foto del premio del sorteo** (**hecha**, rc.59, 15/11; `estado/C-247.md`; el equipo eligió la A, sobre el azul y más grande). La foto se sube desde el panel.

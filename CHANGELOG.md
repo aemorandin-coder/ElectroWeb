@@ -10,6 +10,30 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.79] - 2026-11-15
+La semana del ganador del sorteo (C-254). **Cambia la base:** seis columnas nuevas en `sorteos`, aditivas (`SIGUIENTE.md` §2). Sin variables nuevas, sin SQL de datos y sin cron.
+### Marketing 1.21.0 (C-254)
+- **"Publicar la entrega",** en el sorteo ya hecho (Marketing → Sorteo, debajo del ganador), en 3 pasos con la vista previa al lado:
+  - **la foto y el video:** la foto se sube o se toma con el teléfono, y se achica antes de subirla (una de teléfono pasaba los 5 MB). El enlace de YouTube dice si es un Short o un video, o que no es de YouTube;
+  - **su nombre:** el nombre y de dónde es;
+  - **revisar y publicar:** con la casilla "La persona aceptó salir en la tienda". Sin ella, no se publica.
+  - Publicada, "Cambiar" y "Quitar de la tienda" (si la persona cambia de idea: se borra lo suyo, también su foto del disco, y vuelve el correo tapado). Cambiarla no alarga la semana de la bandera.
+- **El servidor:**
+  - exige el permiso, una foto subida del sorteo y, si hay video, un enlace de YouTube válido. Lo guarda de una sola forma (`lib/youtube.ts`);
+  - el nombre, sin números ni @;
+  - la foto se publica sin el EXIF (el GPS de un teléfono) y de hasta 1600 px.
+- **`/sorteo`, ya sorteado:**
+  - el banner cuenta quién ganó: "¡Ya hay ganador!", su nombre y de dónde es, y su foto, que es la portada del video. El video se abre ahí mismo con youtube-nocookie, y antes de tocarlo no se le pide nada a YouTube;
+  - sin permiso, el correo tapado y la foto del premio;
+  - ya no dice "Gana una" ni "Si ganas…";
+  - las bases dicen que el nombre, la foto y el video se publican solo si la persona lo acepta.
+### Tienda 1.19.0 (C-254)
+- **La bandera del sorteo en el inicio, por etapas:**
+  - cerrado, "Resultado el 20 de diciembre" (el día, "Hoy sale el ganador"), con el calendario que pasa la hoja;
+  - sorteado, "¡Ya hay ganador!" con la foto del premio y la medalla que salta;
+  - con la entrega publicada, la foto de la persona y "¡Ganó una PS4!" ("¡María G. ganó una PS4!" en el teléfono), 7 días desde que se publica. Sin entrega, se va a los 7 días del sorteo.
+- **La imagen para compartir `/sorteo`,** ya sorteado, dice "¡Ya hay ganador!", sin la cara ni el nombre de la persona.
+
 ## [1.0.0-rc.78] - 2026-11-15
 El kit de onboarding en más lugares, y las misiones de Mi panel (C-260). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Tienda 1.18.0 (C-260)

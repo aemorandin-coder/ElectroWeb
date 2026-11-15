@@ -231,7 +231,7 @@ interface OrderGroup {
   packagingPlan: string | null;
   tag: string;
   /** C-199: el paquete sale de otra ciudad (lo despacha su proveedor); null = de la tienda */
-  despacho: { codigo: string; nombre: string } | null;
+  despacho: { codigo: string; nombre: string; estado: string } | null;
 }
 
 // ORD-{año}-{secuencia}. Se llama dentro de la transacción. El advisory lock serializa la creación
@@ -672,7 +672,7 @@ export async function POST(request: NextRequest) {
         shippingPaidBy: paquete.shipping.paidBy,
         packagingPlan: embalaje ? JSON.stringify(embalaje) : null,
         tag: paquete.origen ? `[Desde ${paquete.origenNombre}]` : '[Productos Físicos]',
-        despacho: paquete.origen ? { codigo: paquete.origen, nombre: paquete.origenNombre } : null,
+        despacho: paquete.origen ? { codigo: paquete.origen, nombre: paquete.origenNombre, estado: paquete.origenEstado } : null,
       });
     }
     if (calculation.digital) {
@@ -774,6 +774,7 @@ export async function POST(request: NextRequest) {
             packagingPlan: group.packagingPlan,
             dispatchCityCode: group.despacho?.codigo ?? null,
             dispatchCityName: group.despacho?.nombre ?? null,
+            dispatchStateName: group.despacho?.estado || null,
             subtotalUSD: montoDecimal(totals.subtotalUSD),
             taxUSD: montoDecimal(totals.taxUSD),
             shippingUSD: montoDecimal(totals.shippingUSD),

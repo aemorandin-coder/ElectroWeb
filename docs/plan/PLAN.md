@@ -544,7 +544,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - Después, su tablero: el estado, la línea de tiempo con "hoy", los números con su ícono y las acciones a la vista.
     - Un cambio muestra antes → después y cuántos boletos cambian. Sortear, en 3 pasos.
     - `Pasos` recibe un ícono por paso (opcional: lo de hoy sigue igual).
-  - **C-222 · "Desde Aragua" y el filtro de ubicación** (pendiente).
+  - **C-222 · "Desde Aragua" y el filtro de ubicación** (**hecha**, rc.46, 14/11; `estado/C-222.md`). Dos columnas nuevas, aditivas. Queda el correo de confirmación, que hace C-219 con `paqueteDesde` de `lib/origen.ts`.
     - "Desde Aragua" o "Desde Portuguesa", con el ícono de ubicación, en la tarjeta de todo lo físico. La ciudad va en la ficha.
     - El filtro "Desde dónde sale" en el catálogo (`?desde=`), con su cuenta.
     - La misma frase en "Calcula tu envío", el carrito, el pago, el detalle del pedido y el correo de confirmación (este, con C-219).
@@ -555,6 +555,11 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - llms.txt, el título oculto del inicio y la descripción de /productos, armados con los departamentos que tienen productos.
     - Los textos de reserva, sin "tecnología" donde no corresponde.
     - El título y la descripción los cambia el equipo en Configuración → SEO (`SIGUIENTE.md` §3).
+  - **C-241 · El checkout por pasos** (pendiente; lo pidió el equipo el 14/11: "justo en el checkout necesitamos, como te comenté, las reglas: crear un breadcrumb"). Va después de C-225.
+    - Hoy es una sola página larga (Entrega, Método de pago, Notas, Información de contacto y Resumen) con tres píldoras generales arriba (`CheckoutSteps`: Carrito · Pago · Listo).
+    - Pasa a §1.9: los pasos de `Pasos` con su ícono (Entrega, Tus datos, Pago, Revisar y pagar), "Siguiente: …" con el motivo si falta algo, el resumen del pedido al lado como vista previa y, en el teléfono, "Paso N de M" con la barra.
+    - **Primero las maquetas,** con datos reales y en las variantes posibles (pasos de a uno, o la misma página con los pasos marcándose al avanzar), para que el equipo elija.
+    - **Es dinero:** no cambia ningún cálculo del servidor. Se prueban el caso normal y el manipulado, y nada que hoy se ve o se puede hacer desaparece (el inventario del método de `CHATGPT.md` §4).
   - **C-223 · El aviso de cookies** (pendiente; antes de poner las claves de Google y del píxel).
     - "Solo las necesarias" y "Aceptar", del mismo tamaño, abajo; "Preferencias de cookies" en el pie.
     - Google en modo sin cookies hasta el sí (Consent Mode); el píxel, solo con el sí.

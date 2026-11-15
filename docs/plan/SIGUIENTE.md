@@ -1,4 +1,4 @@
-# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.45, por subir)
+# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.46, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
@@ -27,6 +27,11 @@
   - **C-227 · Los correos para proveedores:** la bienvenida de "revendedor premium", "¡Se vendió tu producto!" y "Se canceló: no lo despaches".
   - **C-234 · Cuándo sale cada pedido:** corte a las 2:00 p. m., lo del sábado sale el lunes, los feriados y "Sale el lunes 16" en la ficha, el carrito, el checkout, los correos y Mi pedido.
 - **Tres sesiones de Claude a la vez el 14/11**, cada una en su worktree: esta (C-219, C-226, C-227 y C-234), la del plan de crecimiento (C-220 a C-225) y la de Contabilidad (C-228 a C-233).
+- **C-222 · "Desde Aragua" y el filtro de ubicación (rc.46, por subir):** lo que eligió el equipo el 14/11 (`estado/C-222.md`).
+  - La tarjeta de todo lo físico dice "Desde Aragua" o "Desde Portuguesa", con el ícono de ubicación. La ficha empieza la entrega con "Sale de La Victoria, estado Aragua".
+  - El catálogo filtra por "Desde dónde sale", con la cuenta de cada lugar.
+  - El carrito, el pago, "Calcula tu envío" y el detalle del pedido dicen "desde Aragua (La Victoria)".
+  - Dos columnas nuevas (aditivas) y su relleno, en el bloque de la sección 2.
 - **C-221 · El sorteo por pasos (rc.45, por subir):** el primero hecho con las reglas de `PLAN.md` §1.9 (`estado/C-221.md`).
   - Crearlo: 4 pasos (el premio, cómo se gana, las fechas y "Revisar y publicar") con la vista previa de /sorteo y de Mi panel al lado. La foto se sube o se elige de la tienda.
   - Ya creado: su tablero, con el estado, la línea de tiempo, los números, Copiar enlace, Ver en la tienda, Cambiar y Publicar o Apagar.
@@ -226,10 +231,22 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.45` (C-226 y C-221, con rc.44 adentro; unos 20 minutos)
+### El bloque por subir: `v1.0.0-rc.46` (C-226, C-221 y C-222, con rc.44 y rc.45 adentro; unos 25 minutos)
 **Producción ya está en `v1.0.0-rc.43`** (`fcdc4c0`, compilada el 14/11 a las 00:10 UTC). Lo comprobó Claude desde fuera el 14/11, leyendo la versión de la página pública. Nadie lo anotó: falta que el equipo confirme si se corrió el SQL del bloque de rc.43 (abajo) y cuáles de sus pruebas se hicieron. Con eso, ese bloque pasa a `HISTORIAL.md`.
 - **C-226 (rc.44):** ningún contenedor ámbar; lo que hay que hacer va en el azul claro de la tienda. **Sin SQL, sin variables nuevas y sin cron.**
 - **C-221 (rc.45):** el sorteo por pasos. **Sin cambio de base, sin variables nuevas y sin cron.** Lleva un **SQL de datos** (abajo).
+- **C-222 (rc.46):** "Desde Aragua" y el filtro de ubicación. **Cambia la base: dos columnas nuevas, aditivas.** Sin variables nuevas y sin cron.
+  - **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-deploy-rc46.dump`
+  - `deploy.sh` para y muestra este SQL; si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
+```sql
+ALTER TABLE "suppliers" ADD COLUMN "dispatchStateName" TEXT;
+ALTER TABLE "orders" ADD COLUMN "dispatchStateName" TEXT;
+```
+  - **Después del `db push`, el relleno** (con `psql "$DB"`): el estado de la ferretería y de sus pedidos de antes (La Victoria es la ciudad 244 de ZOOM).
+```sql
+UPDATE "suppliers" SET "dispatchStateName" = 'Aragua' WHERE "dispatchCityCode" = '244' AND "dispatchStateName" IS NULL;
+UPDATE "orders" SET "dispatchStateName" = 'Aragua' WHERE "dispatchCityCode" = '244' AND "dispatchStateName" IS NULL;
+```
 - **SQL de datos (C-220 y C-221), antes de subir** (en la terminal del servidor). Cambia los textos para Google y el lema (lo que el equipo iba a cambiar en el panel) y crea el sorteo de Navidad ya publicado, con los números de Andrés del 13/11. Si ya hay un sorteo, no crea otro.
   1. Guardar los textos de hoy, para poder volver:
      `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -c "SELECT tagline, \"metaTitle\", \"metaDescription\", \"metaKeywords\", \"productsMetaDescription\" FROM company_settings" > ~/textos-antes-c221.txt`
@@ -257,6 +274,8 @@ WHERE NOT EXISTS (SELECT 1 FROM sorteos);
   4. **Los textos:** `https://electroshopve.com` dice en la pestaña "Electro Shop: tecnología y ferretería, envíos a toda Venezuela", y el pie, "Todo lo encuentras con nosotros." (un minuto después del SQL).
   5. **El sorteo** (Marketing → Sorteo): sale su tablero, "En la tienda", con la línea de tiempo y los cuatro números. `/sorteo` muestra "Gana una PlayStation 4…". Cambiar → Cómo se gana → poner $15 → Revisar: dice qué cambia y cuántos boletos quedan; volver sin guardar.
   6. **La Lista del proveedor** (Productos → Más): los pasos se ven igual que antes, con su número, y la línea entre ellos.
+  7. **"Desde Aragua"** (en el teléfono): `/productos` muestra "Desde Aragua" en la ferretería y "Desde Portuguesa" en lo de la tienda, con el ícono de ubicación. En Filtros, "Desde dónde sale": al tocar Aragua quedan solo los de la ferretería y arriba sale "Desde Aragua" para quitarlo.
+  8. **La ficha** de un producto de la ferretería empieza la entrega con "Sale de La Victoria, estado Aragua". El carrito con uno de cada lugar dice "uno desde Portuguesa (Guanare) y uno desde Aragua (La Victoria)".
 - **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`. Los textos de antes quedan en `~/textos-antes-c221.txt`; el sorteo se apaga en Marketing → Sorteo → Apagar.
 
 ### Ya en producción, sin anotar: `v1.0.0-rc.43` (C-210 a C-218, con rc.35 a rc.42 adentro)
@@ -654,9 +673,9 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
-**Hecho el 14/11:** C-220 (el plan) y C-221 (el sorteo por pasos, rc.45).
+**Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45) y C-222 ("Desde Aragua" y el filtro, rc.46).
 
-**Sigue (el orden del 14/11, C-220):** C-222 ("Desde Aragua" y el filtro), C-225 (los textos), C-223 (el aviso de cookies) y C-224 (los tres únicos). Lo de abajo queda después.
+**Sigue (el orden del 14/11, C-220):** C-225 (los textos), C-241 (el checkout por pasos, que pidió el equipo después: primero las maquetas), C-223 (el aviso de cookies) y C-224 (los tres únicos). Lo de abajo queda después.
 
 **Contabilidad (C-228 y C-228b, `CONTABILIDAD.md`):** sigue C-229 (la factura de talonario, maqueta B). Después, C-235 (la contadora en el equipo) y C-230 antes del 15/12. El resto en el orden de `PLAN.md` §5.2, todo antes del 19/04/2027.
 

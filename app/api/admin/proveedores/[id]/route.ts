@@ -21,7 +21,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
   const actual = await prisma.supplier.findUnique({ where: { id } });
   if (!actual) return NextResponse.json({ error: 'Proveedor no encontrado' }, { status: 404 });
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const data: { name?: string; discountPercent?: number; pricesIncludeTax?: boolean; notes?: string | null; noShipTerms?: string[]; dispatchCityCode?: string | null; dispatchCityName?: string | null } = {};
+  const data: { name?: string; discountPercent?: number; pricesIncludeTax?: boolean; notes?: string | null; noShipTerms?: string[]; dispatchCityCode?: string | null; dispatchCityName?: string | null; dispatchStateName?: string | null } = {};
   if (body?.name !== undefined) {
     const name = leerNombreProveedor(body.name);
     if (!name) return NextResponse.json({ error: 'El nombre del proveedor lleva de 2 a 80 caracteres' }, { status: 400 });
@@ -49,6 +49,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
     if (body.dispatchCityCode === null || body.dispatchCityCode === '') {
       data.dispatchCityCode = null;
       data.dispatchCityName = null;
+      data.dispatchStateName = null;
     } else {
       // La ciudad tiene que estar en la lista de ZOOM (con cobro a destino): el nombre sale de ahí, no del navegador
       const ciudad = typeof body.dispatchCityCode === 'string' && /^\d{1,6}$/.test(body.dispatchCityCode)
@@ -57,6 +58,8 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
       if (!ciudad) return NextResponse.json({ error: 'Esa ciudad no está en la lista de ZOOM' }, { status: 400 });
       data.dispatchCityCode = ciudad.codigo;
       data.dispatchCityName = ciudad.nombre;
+      // C-222: el estado, para "Desde Aragua" en la tarjeta y el filtro del catálogo
+      data.dispatchStateName = ciudad.estado;
     }
   }
   const guardado = await prisma.supplier.update({ where: { id }, data });

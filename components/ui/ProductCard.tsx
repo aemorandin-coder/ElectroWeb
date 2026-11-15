@@ -5,6 +5,8 @@ import OfferNote from './OfferNote';
 import Price from './Price';
 import ProductBadge, { getProductBadges } from './ProductBadge';
 import ShareButton from './ShareButton';
+import { IconoUbicacion } from '@/components/iconos';
+import { lugarDe } from '@/lib/origen';
 import { getStockLabel, hasPriceRange, type ProductCardData } from './productCardData';
 
 export type { ProductCardData } from './productCardData';
@@ -67,8 +69,13 @@ export default function ProductCard({ product, exchangeRateVES, lowStockThreshol
         <Price priceUSD={product.priceUSD} compareAtPriceUSD={product.compareAtPriceUSD} exchangeRateVES={exchangeRateVES} from={hasPriceRange(product)} />
         <OfferNote oferta={product.oferta} />
         {stockLabel && <p className={`text-xs font-medium ${stockLabel.className}`}>{stockLabel.text}</p>}
-        {/* C-199: lo que despacha un proveedor desde otra ciudad (la ferretería, desde La Victoria) */}
-        {product.despacho && <p className="text-xs text-muted">Sale desde {product.despacho.ciudad}</p>}
+        {/* C-222 (el equipo, 14/11: "Sale desde La Victoria" no se entiende): el estado desde donde sale, con su ícono */}
+        {product.desde && (
+          <p className="flex items-center gap-1 text-xs text-ink-soft">
+            <IconoUbicacion className="h-3.5 w-3.5 shrink-0 text-brand-500" aria-hidden="true" />
+            <span className="min-w-0 truncate">Desde <span className="font-semibold text-ink">{lugarDe(product.desde)}</span></span>
+          </p>
+        )}
         <div className="mt-auto pt-1">
           <AddToCartButton product={product} />
         </div>

@@ -44,6 +44,8 @@ export const customerOrderSelect = {
   shippingPaidBy: true,
   // C-199: el paquete sale de otra ciudad (solo la ciudad; quién lo despacha no sale del servidor)
   dispatchCityName: true,
+  // C-222: su estado, para decir "desde Aragua (La Victoria)"
+  dispatchStateName: true,
   shippingState: true,
   shippingCity: true,
   courierOfficeCode: true,

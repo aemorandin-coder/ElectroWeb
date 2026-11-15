@@ -129,6 +129,7 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
         freeShipping: !isDigital && product.freeShipping === true,
         origen: product.despacho?.codigo,
         origenNombre: product.despacho?.ciudad,
+        origenEstado: product.despacho?.estado,
         digitalUsername: isManual ? cleanUser : undefined,
         digitalVariantId: selected?.id,
         conditionBadge: product.condition?.badge,

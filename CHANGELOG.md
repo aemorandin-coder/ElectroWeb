@@ -10,6 +10,17 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.46] - 2026-11-14
+Desde dónde sale cada producto, dicho por su estado (el equipo, 14/11: "Sale desde La Victoria" no se entiende).
+### Tienda 1.11.0 (C-222)
+- **La tarjeta de todo lo físico** lleva el ícono de ubicación con "Desde Aragua" o "Desde Portuguesa". Antes, solo lo de la ferretería decía "Sale desde La Victoria".
+- **La ficha** empieza la entrega con "Sale de La Victoria, estado Aragua" ("Solo envío, por ZOOM o MRW. La garantía la atiende la tienda.") o "Sale de Guanare, estado Portuguesa".
+- **El catálogo filtra por "Desde dónde sale",** con la cuenta de cada lugar. Filtra al tocarlo, como las categorías, y se quita con un toque desde arriba. Esas páginas no se indexan.
+### Carrito, checkout y cuenta del cliente 1.4.4 (C-222)
+- **Un pedido en dos paquetes** dice el estado y la ciudad de cada uno en el carrito, el pago, "Calcula tu envío" y el detalle del pedido: "desde Portuguesa (Guanare)" y "desde Aragua (La Victoria)".
+### Productos 1.14.2 y Órdenes y pagos 1.2.3 (C-222)
+- **El proveedor guarda el estado de su ciudad de ZOOM, y la orden el de su paquete** (dos columnas nuevas, aditivas, con su relleno para la ferretería).
+
 ## [1.0.0-rc.45] - 2026-11-14
 El sorteo por pasos, el primero hecho con las reglas nuevas del panel (`docs/plan/PLAN.md` §1.9; el equipo, 14/11: "básico, sin comprensión, desordenado").
 ### Marketing 1.11.0 (C-221)

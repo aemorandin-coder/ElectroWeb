@@ -101,6 +101,7 @@ export default function WishlistPage() {
             freeShipping: !isDigital && p.freeShipping === true,
             origen: p.despacho?.codigo,
             origenNombre: p.despacho?.ciudad,
+            origenEstado: p.despacho?.estado,
         }, 1);
     };
 

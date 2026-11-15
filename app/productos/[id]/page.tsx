@@ -37,6 +37,7 @@ import { normalizar } from '@/lib/cotizaciones/busqueda';
 import JsonLd from '@/components/seo/JsonLd';
 import { imagenGenerada, versionDeProducto } from '@/lib/og/datos';
 import { absoluteUrl, breadcrumbJsonLd, plainText, productJsonLd } from '@/lib/seo';
+import { ORIGEN_TIENDA_ESTADO, saleDe } from '@/lib/origen';
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -128,7 +129,7 @@ export default async function ProductPage({ params }: PageProps) {
         productId: product.id, name: product.name, productType: 'PHYSICAL', unitPriceUSD: product.priceUSD, quantity: 1,
         weightKg: product.weightKg, dimensions: product.dimensions, isConsolidable: product.isConsolidable,
         shippingCostUSD: 0, freeShipping: product.freeShipping, discountPercent: 0,
-        origen: product.despacho?.codigo ?? null, origenNombre: product.despacho?.ciudad ?? null,
+        origen: product.despacho?.codigo ?? null, origenNombre: product.despacho?.ciudad ?? null, origenEstado: product.despacho?.estado ?? null,
       }],
       toPricingSettings(settings),
       'SHIPPING'
@@ -139,7 +140,7 @@ export default async function ProductPage({ params }: PageProps) {
   // C-199: lo que despacha un proveedor desde otra ciudad (la ferretería, desde La Victoria) es solo con envío
   const despacho = isDigital ? null : product.despacho;
   const textoEnvio = [
-    despacho ? `Sale desde ${despacho.ciudad}, por ZOOM o MRW con cobro a destino: el flete lo pagas al retirar.` : 'Por ZOOM o MRW con cobro a destino: el flete lo pagas al retirar.',
+    'Por ZOOM o MRW con cobro a destino: el flete lo pagas al retirar.',
     embalaje > 0
       ? empaque ? `Embalaje de este producto: ${formatUSD(embalaje)} (${empaque}).` : `Embalaje: ${formatUSD(embalaje)} por pedido.`
       : envio?.packagingFreeByThreshold ? 'El embalaje es gratis con este producto.' : '',
@@ -148,6 +149,10 @@ export default async function ProductPage({ params }: PageProps) {
   ].filter(Boolean).join(' ');
 
   const delivery: Array<{ Icon: typeof IconoEnvio; title: string; text: string; link?: { href: string; label: string } }> = [
+    // C-222: desde dónde sale, primero y con su ícono (el equipo, 14/11: "Sale desde La Victoria" no se entendía)
+    ...(product.desde
+      ? [{ Icon: IconoUbicacion, title: saleDe(product.desde), text: product.desde.propio ? 'Lo despacha la tienda.' : 'Solo envío, por ZOOM o MRW. La garantía la atiende la tienda.' }]
+      : []),
     ...(isDigital
       ? [{ Icon: IconoDigital, title: deliveryMode.store, text: deliveryMode.storeHelp }]
       : settings.deliveryEnabled
@@ -319,7 +324,7 @@ export default async function ProductPage({ params }: PageProps) {
                   <CalculaTuEnvio
                     className="mt-4"
                     items={[{ productId: product.id, quantity: 1 }]}
-                    paquetes={[{ origen: despacho?.codigo ?? null, origenNombre: despacho?.ciudad ?? ORIGEN_TIENDA_NOMBRE, gratis: false }]}
+                    paquetes={[{ origen: despacho?.codigo ?? null, origenNombre: despacho?.ciudad ?? ORIGEN_TIENDA_NOMBRE, origenEstado: despacho ? despacho.estado : ORIGEN_TIENDA_ESTADO, gratis: false }]}
                   />
                 )}
 

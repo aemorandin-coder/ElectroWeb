@@ -14,6 +14,7 @@ import { estadoParaCliente } from '@/lib/order-pasos';
 import { adminBadge } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useSettings } from '@/contexts/SettingsContext';
+import { paqueteDesde } from '@/lib/origen';
 
 // C-137: detalle de un pedido y su recibo. El seguimiento (C-100 y C-126) arriba y, abajo, lo que se compró y cómo se
 // pagó. "Imprimir recibo" imprime solo el recibo (o lo guarda en PDF desde el mismo diálogo).
@@ -56,6 +57,8 @@ export interface PedidoCliente {
   shippingPaidBy?: string | null;
   /** C-199: el paquete sale de otra ciudad (la compra llega en varios paquetes, cada uno con su guía) */
   dispatchCityName?: string | null;
+  /** C-222: el estado de esa ciudad ("Aragua") */
+  dispatchStateName?: string | null;
   courierOfficeName?: string | null;
   courierOfficeAddress?: string | null;
   recipientName?: string | null;
@@ -117,7 +120,7 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
             {pedido.dispatchCityName && (
               <p className="mb-3 flex items-start gap-2 rounded-lg bg-surface p-3 text-sm text-ink-soft">
                 <IconoEnvio className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
-                Este paquete sale desde {pedido.dispatchCityName}, con su propia guía.
+                Este paquete sale {paqueteDesde(pedido.dispatchStateName, pedido.dispatchCityName)}, con su propia guía.
               </p>
             )}
             <OrderTracking

@@ -1,10 +1,14 @@
 import Form from 'next/form';
 import Link from 'next/link';
-import { catalogHref, hasActiveFilters, ordenPorDefecto, type CatalogCategoryFacet, type CatalogParams } from '@/lib/queries/catalog';
+import { IconoPaquete, IconoTienda, IconoUbicacion } from '@/components/iconos';
+import { catalogHref, hasActiveFilters, ordenPorDefecto, type CatalogCategoryFacet, type CatalogParams, type CatalogUbicacion } from '@/lib/queries/catalog';
 
 interface CatalogFiltersProps {
   params: CatalogParams;
   categories: CatalogCategoryFacet[];
+  /** C-222: desde dónde sale, con su cuenta; y cuántos hay de todas partes */
+  ubicaciones?: CatalogUbicacion[];
+  totalSinDesde?: number;
   /** Se dibuja dos veces (columna de escritorio y panel móvil): prefijo para ids únicos */
   idPrefix: string;
 }
@@ -13,13 +17,18 @@ interface CatalogFiltersProps {
  * Filtros del catálogo. Las categorías son enlaces (cambio inmediato); precio, disponibilidad y tipo van
  * en un formulario GET que escribe la URL. Funciona sin JavaScript.
  */
-export default function CatalogFilters({ params, categories, idPrefix }: CatalogFiltersProps) {
+export default function CatalogFilters({ params, categories, ubicaciones = [], totalSinDesde = 0, idPrefix }: CatalogFiltersProps) {
   const id = (name: string) => `${idPrefix}-${name}`;
   const categoryLinkClass = (active: boolean) =>
     `flex min-h-10 items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-brand-500 ${
       active ? 'bg-brand-50 font-semibold text-brand-700' : 'text-ink-soft hover:bg-surface hover:text-ink'
     }`;
   const allCount = categories.reduce((sum, c) => sum + c.count, 0);
+  // C-222: los lugares son enlaces, como las categorías: filtran al tocarlos
+  const lugarClass = (active: boolean) =>
+    `flex min-h-11 items-center gap-2.5 rounded-xl border px-2.5 py-2 text-sm focus-visible:outline-2 focus-visible:outline-brand-500 ${
+      active ? 'border-brand-500 bg-brand-50 font-semibold text-brand-700' : 'border-line bg-white text-ink-soft hover:border-brand-200 hover:text-ink'
+    }`;
 
   return (
     <div className="space-y-6">
@@ -47,9 +56,44 @@ export default function CatalogFilters({ params, categories, idPrefix }: Catalog
         </ul>
       </section>
 
+      {/* C-222: desde dónde sale (el equipo, 14/11). Solo si hay más de un lugar */}
+      {ubicaciones.length > 1 && (
+        <section aria-labelledby={id('desde')}>
+          <h2 id={id('desde')} className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-ink">
+            <IconoUbicacion className="h-4 w-4 text-brand-500" aria-hidden="true" /> Desde dónde sale
+          </h2>
+          <ul className="space-y-1.5">
+            <li>
+              <Link href={catalogHref(params, { desde: null })} className={lugarClass(!params.desde)} aria-current={!params.desde ? 'true' : undefined}>
+                <span className="flex-1">De todas partes</span>
+                <span className="text-xs font-normal text-muted">{totalSinDesde}</span>
+              </Link>
+            </li>
+            {ubicaciones.map((u) => {
+              const Icono = u.propio ? IconoTienda : IconoPaquete;
+              return (
+                <li key={u.slug}>
+                  <Link href={catalogHref(params, { desde: u.slug })} className={lugarClass(params.desde === u.slug)} aria-current={params.desde === u.slug ? 'true' : undefined}>
+                    <span className="iconos-marca flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-950">
+                      <Icono className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">{u.estado}</span>
+                      <span className="block text-xs font-normal text-muted">{u.ciudades.join(', ')}{u.propio ? '' : ' · solo envío'}</span>
+                    </span>
+                    <span className="text-xs font-normal text-muted">{u.count}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       <Form action="/productos" className="space-y-6">
         {params.search && <input type="hidden" name="search" value={params.search} />}
         {params.category && <input type="hidden" name="category" value={params.category} />}
+        {params.desde && <input type="hidden" name="desde" value={params.desde} />}
         {params.sort !== ordenPorDefecto(params.search) && <input type="hidden" name="sort" value={params.sort} />}
 
         <fieldset>
@@ -129,7 +173,7 @@ export default function CatalogFilters({ params, categories, idPrefix }: Catalog
           </button>
           {hasActiveFilters(params) && (
             <Link
-              href={params.search ? catalogHref({ ...params, category: null, min: null, max: null, offers: false, inStock: false, type: null, condition: null }) : '/productos'}
+              href={params.search ? catalogHref({ ...params, category: null, min: null, max: null, offers: false, inStock: false, type: null, condition: null, desde: null }) : '/productos'}
               className="flex h-11 items-center justify-center rounded-lg border border-line bg-white px-4 text-sm font-semibold text-ink-soft hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500"
             >
               Quitar filtros

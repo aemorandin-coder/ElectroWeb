@@ -81,7 +81,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 }
 
 /** Filtros aplicados como chips con enlace para quitar cada uno. */
-function activeChips(params: CatalogParams, categoryName: string | null): Array<{ label: string; href: string }> {
+function activeChips(params: CatalogParams, categoryName: string | null, lugar: string | null): Array<{ label: string; href: string }> {
   const chips: Array<{ label: string; href: string }> = [];
   if (params.search) chips.push({ label: `"${params.search}"`, href: catalogHref(params, { search: '' }) });
   if (params.category) chips.push({ label: categoryName ?? params.category, href: catalogHref(params, { category: null }) });
@@ -91,6 +91,8 @@ function activeChips(params: CatalogParams, categoryName: string | null): Array<
   if (params.inStock) chips.push({ label: 'Disponibles', href: catalogHref(params, { inStock: false }) });
   if (params.type) chips.push({ label: params.type === 'digital' ? 'Digitales' : 'Físicos', href: catalogHref(params, { type: null }) });
   if (params.condition) chips.push({ label: params.condition === 'nuevo' ? 'Nuevos' : 'Usados y reacondicionados', href: catalogHref(params, { condition: null }) });
+  // C-222: desde dónde sale
+  if (params.desde && lugar) chips.push({ label: `Desde ${lugar}`, href: catalogHref(params, { desde: null }) });
   return chips;
 }
 
@@ -112,13 +114,13 @@ export default async function ProductosPage({ searchParams }: PageProps) {
     getCatalog(params),
     params.category ? getCategorySummary(params.category) : null,
   ]);
-  const { products, total, page, totalPages, categories, currentCategory, aproximado } = catalog;
+  const { products, total, page, totalPages, categories, currentCategory, aproximado, ubicaciones, totalSinDesde } = catalog;
   const current = { ...params, page };
   // Solo la página que se indexa (el catálogo o una categoría, sin búsqueda ni filtros) lleva datos estructurados
   const indexable = isIndexableCatalog(params);
 
   const heading = params.search ? `Resultados para "${params.search}"` : currentCategory?.name ?? 'Productos';
-  const chips = activeChips(current, currentCategory?.name ?? null);
+  const chips = activeChips(current, currentCategory?.name ?? null, ubicaciones.find((u) => u.slug === current.desde)?.estado ?? null);
   const filterCount = chips.filter((chip) => !chip.label.startsWith('"')).length;
   // "Más relevantes" solo con una búsqueda (C-160)
   const sortOptions = (params.search ? [SORT_RELEVANCIA, ...SORT_OPTIONS] : SORT_OPTIONS).map((option) => ({ ...option, href: catalogHref(current, { sort: option.value }) }));
@@ -178,7 +180,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
           {/* Móvil: filtros y orden en una fila, categorías deslizables debajo */}
           <div className="mt-3 flex gap-2 lg:hidden">
             <FiltersDrawer activeCount={filterCount}>
-              <CatalogFilters params={current} categories={categories} idPrefix="movil" />
+              <CatalogFilters params={current} categories={categories} ubicaciones={ubicaciones} totalSinDesde={totalSinDesde} idPrefix="movil" />
             </FiltersDrawer>
             <SortSelect id="sort-mobile" value={params.sort} options={sortOptions} />
           </div>
@@ -253,7 +255,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
           <div className="mt-4 lg:mt-6 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">
             <aside className="hidden lg:block" aria-label="Filtros">
               <div className="sticky top-28 rounded-xl border border-line bg-white p-4">
-                <CatalogFilters params={current} categories={categories} idPrefix="escritorio" />
+                <CatalogFilters params={current} categories={categories} ubicaciones={ubicaciones} totalSinDesde={totalSinDesde} idPrefix="escritorio" />
               </div>
             </aside>
 

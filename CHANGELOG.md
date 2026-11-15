@@ -21,7 +21,7 @@ La semana del ganador del sorteo (C-254). **Cambia la base:** seis columnas nuev
 - **El servidor:**
   - exige el permiso, una foto subida del sorteo y, si hay video, un enlace de YouTube válido. Lo guarda de una sola forma (`lib/youtube.ts`);
   - el nombre, sin números ni @;
-  - la foto se publica sin el EXIF (el GPS de un teléfono) y de hasta 1600 px.
+  - la foto se publica sin el EXIF (el GPS de un teléfono) y de hasta 1600 px, y la subida original se borra (nunca la foto del premio).
 - **`/sorteo`, ya sorteado:**
   - el banner cuenta quién ganó: "¡Ya hay ganador!", su nombre y de dónde es, y su foto, que es la portada del video. El video se abre ahí mismo con youtube-nocookie, y antes de tocarlo no se le pide nada a YouTube;
   - sin permiso, el correo tapado y la foto del premio;

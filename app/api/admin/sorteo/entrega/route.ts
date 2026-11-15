@@ -11,7 +11,7 @@ import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { z } from '@/lib/zod';
 import { esquemaEntrega } from '@/lib/sorteo/entrega';
 import { erroresPorCampo } from '@/lib/sorteo/esquema';
-import { borrarFotoEntrega, prepararFotoEntrega } from '@/lib/sorteo/foto-entrega';
+import { borrarFotoEntrega, borrarSubidaOriginal, prepararFotoEntrega } from '@/lib/sorteo/foto-entrega';
 import { enlaceYoutube, leerYoutube } from '@/lib/youtube';
 
 /** El sorteo de la entrega: el más reciente y ya sorteado (no se publica la de uno viejo ni la de uno sin ganador) */
@@ -49,6 +49,9 @@ export async function PUT(request: NextRequest) {
   });
   // Cambió la foto: la de antes no queda en el disco
   if (r.sorteo.entregaFoto && r.sorteo.entregaFoto !== foto) await borrarFotoEntrega(r.sorteo.entregaFoto);
+  // Se hizo una copia limpia nueva: la subida original (que puede traer el GPS) tampoco queda. Nunca la foto de un premio,
+  // la de este sorteo ni la de otro ("Sorteo nuevo con estos datos" la repite)
+  if (foto !== d.foto && (await prisma.sorteo.count({ where: { imagen: { endsWith: d.foto } } })) === 0) await borrarSubidaOriginal(d.foto, r.sorteo.imagen);
   await registrarAccionAdmin(session, 'SETTINGS_UPDATED', { type: 'SORTEO', id: sorteo.id }, {
     accion: r.sorteo.entregaPublicadaAt ? 'Cambió la entrega' : 'Publicó la entrega', nombre: d.nombre, video: Boolean(video),
   }, request);

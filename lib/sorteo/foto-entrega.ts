@@ -39,3 +39,18 @@ export async function borrarFotoEntrega(url: string | null | undefined): Promise
   if (!nombre) return;
   await unlink(path.join(process.cwd(), 'public', 'uploads', nombre)).catch(() => undefined);
 }
+
+/**
+ * Borra del disco la subida original de la foto, una vez que se publicó su copia limpia. El panel achica la foto en el
+ * navegador antes de subirla (y así se va el EXIF), pero si el navegador no puede, sube la original con su EXIF y su GPS:
+ * aunque nadie conoce su dirección, se podía abrir. Solo con las tres condiciones:
+ * 1. es una subida del sorteo (`/api/uploads/sorteo-…` con extensión de foto);
+ * 2. no es una copia limpia (`sorteo-entrega-…`);
+ * 3. no es la foto del premio (`fotoDelPremio`): la entrega se puede publicar con ella y el banner la sigue usando.
+ */
+export async function borrarSubidaOriginal(url: string, fotoDelPremio: string | null | undefined): Promise<void> {
+  const nombre = /^\/api\/uploads\/(sorteo-[A-Za-z0-9-]+\.(jpg|jpeg|png|webp))$/.exec(url)?.[1];
+  // La del premio puede estar guardada con la dirección completa (https://…/api/uploads/…)
+  if (!nombre || nombre.startsWith(PREFIJO) || (fotoDelPremio && fotoDelPremio.endsWith(url))) return;
+  await unlink(path.join(process.cwd(), 'public', 'uploads', nombre)).catch(() => undefined);
+}

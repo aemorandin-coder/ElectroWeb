@@ -56,6 +56,12 @@ export function leerDocumento(valor: string): Lectura {
 
 /** "+58 4121234567": código del país y dígitos, sin el 0 inicial en Venezuela (el formato que usa WhatsApp). */
 export function leerTelefono(valor: string): Lectura {
+  // C-258: los perfiles de antes del selector de país guardaron el celular sin el código ("04145551234", "0414-555-1234")
+  // o pegado a él ("+584145551234"). Es venezolano: sin esto, el checkout mostraba el número en "Quién recibe" y a la vez
+  // pedía "Escribe tu número de teléfono", sin un campo para arreglarlo.
+  const local = valor.replace(/[\s().-]/g, '');
+  if (/^(?:\+?58|0)?4\d{9}$/.test(local)) return { ok: true, valor: `+58 ${local.slice(-10)}` };
+  if (/^(?:\+?58|0)2\d{9}$/.test(local)) return { ok: false, error: 'Escribe un celular venezolano, por ejemplo 0412 123 4567' };
   const partes = valor.trim().match(/^(\+\d{1,4})\s*([\d\s()-]*)$/);
   if (!partes) return { ok: false, error: 'Escribe tu número de teléfono' };
   const pais = PAISES_TELEFONO.find((p) => p.codigo === partes[1]);

@@ -51,8 +51,12 @@ export default function CartIcon() {
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Cart Button */}
+      {/* C-258: solo tenía el dibujo; el lector de pantalla decía "botón" sin nombre */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
+        aria-label={totalItems > 0 ? `Carrito, ${totalItems} ${totalItems === 1 ? 'producto' : 'productos'}` : 'Carrito'}
+        aria-expanded={isOpen}
         className="relative p-2 hover:bg-brand-50 rounded-lg transition-all duration-300"
         style={{ overflow: 'visible' }}
       >

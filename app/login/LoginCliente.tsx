@@ -41,7 +41,7 @@ function mensajeDeEspera(error: string): string {
   return `Demasiados intentos con esta cuenta. Espera ${minutos === 1 ? '1 minuto' : `${minutos} minutos`} o recupera tu contraseña con "¿La olvidaste?".`;
 }
 
-function LoginPageContent({ google }: { google: boolean }) {
+function LoginPageContent({ google, conCookie }: { google: boolean; conCookie: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -299,7 +299,7 @@ function LoginPageContent({ google }: { google: boolean }) {
 
   // Mostrar spinner solo si la sesión está cargando Y no ha pasado el timeout
   // Con la sesión resuelta el formulario se ve siempre; si tarda, a los 800 ms igual (C-111: derivado, sin efecto)
-  if (status === 'loading' && !forceShowForm) {
+  if (status === 'loading' && !forceShowForm && conCookie) {
     return (
       <div className="min-h-dvh bg-surface flex items-center justify-center">
         <div className="text-center">
@@ -495,10 +495,10 @@ function LoginPageContent({ google }: { google: boolean }) {
   );
 }
 
-export default function LoginCliente({ google }: { google: boolean }) {
+export default function LoginCliente({ google, conCookie }: { google: boolean; conCookie: boolean }) {
   return (
     <Suspense fallback={<div className="min-h-dvh bg-white lg:bg-surface" />}>
-      <LoginPageContent google={google} />
+      <LoginPageContent google={google} conCookie={conCookie} />
     </Suspense>
   );
 }

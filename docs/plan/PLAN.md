@@ -615,6 +615,23 @@ Quedan para después de C-177 (`estado/C-177.md`):
       - revisar cada página que lo necesita, sobre todo los recorridos nuevos;
       - medir el estrés de cada camino, para que el cliente entienda la web y le encante navegar sin leer tanto, con íconos y animación;
       - en cada camino, buscar fallas, código mal hecho, rutas muertas y cascadas de código innecesarias.
+    - **La medida y los arreglos van en C-258** (abajo); el kit, aquí. La lista de dónde ayudaría, con su ícono y su frase, está en `estado/C-258.md`.
+  - **C-258 · El estrés de cada camino del cliente** (**hecha**, rc.75, 15/11; `estado/C-258.md`): la medida (`scripts/e2e/estres-caminos.ts`, 13 caminos en el teléfono y la computadora) y los arreglos. Estrés 1945 → 1697 y errores 30 → 0. Queda:
+    - **Para decidir:**
+      - Solicitar producto sin cuenta: hoy se llena todo, se resuelve el captcha y el botón queda apagado. ¿Pedir la cuenta antes del formulario o aceptarlo sin cuenta? "Crear cuenta" tampoco vuelve a la página.
+      - Garantía abre en "Info": ¿abrir en "Nueva" o poner "Pedir garantía" arriba?
+      - La recarga de Puntos ES pregunta "¿Estás seguro?" después de "Confirmar Recarga": ¿quitarlo?
+      - Después de cambiar la contraseña hay que entrar otra vez: ¿entrar solo?
+      - `/api/customer/discount-requests` (los descuentos de antes de C-102) se pide en cada checkout: quitarlo cuando no quede ninguno vigente en producción (una consulta lo dice).
+      - `/favicon.ico` da 404 en producción para quien lo pide directo: un `favicon.ico` con el ícono de la tienda.
+      - La sesión se pide en el navegador antes que todo lo demás (3 o 4 niveles en cada carga con sesión). Pasarla desde el servidor haría dinámicas todas las páginas: decisión técnica para más adelante.
+    - **Del carril de Gemini** (con el sí del equipo):
+      - Mi panel y `/canjear-gift-card` no tienen título propio: la pestaña dice el de la portada.
+      - `/cursos`, `/cursos/[slug]` y `/servicios` no tienen `<main>`.
+      - La recarga (`RechargeModalV2`) y la firma (`SignDocumentModal`) piden dos veces los términos de los Puntos ES.
+    - **Menor:**
+      - al registrarse, la página alcanza a pedir la sesión, el carrito y los avisos antes de recargar (3 pedidos que se pierden);
+      - si se toca "Firmar" en el instante en que termina el trazo, la firma dice "un trazo completo".
   - **C-254 · La semana del ganador** (pendiente, la sigue a C-253; el equipo, 15/11: "al terminar el sorteo, que la bandera permanezca una semana más mostrando quién ganó y un video de testimonio o una imagen de la persona"; eligió hacerla justo después de C-253, mucho antes del resultado del 20/12):
     - **La bandera, por etapas:**
       - abierto: "¡Gánate una PS4!", lo de C-253;

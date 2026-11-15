@@ -10,6 +10,30 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.75] - 2026-11-15
+El estrés de cada camino del cliente, medido, y lo que estaba roto en esos caminos (C-258). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Carrito, checkout y cuenta del cliente 1.8.4 (C-258)
+- **El checkout ya no se traba con el teléfono de una cuenta vieja.**
+  - Pasaba si estaba guardado sin el código del país ("0414-555-1234") o pegado a él ("+584145551234").
+  - "Quién recibe" mostraba el número y a la vez pedía "Escribe tu número de teléfono", sin dónde escribirlo.
+  - Ahora se lee como venezolano.
+  - Si lo guardado es un fijo, el checkout pide el celular ahí mismo.
+- **El login sale de una vez,** sin "Verificando sesión…" para quien no tiene sesión abierta.
+- **Las pestañas** dicen "Carrito de compras", "Checkout", "Recuperar contraseña" y "Activar tu cuenta". Decían la marca dos veces o el título de la portada.
+- **Con la sesión abierta, el carrito ya no se vuelve a guardar igual en cada página.** Tampoco pisa el carrito que el cliente cambió en otro dispositivo.
+- **El ícono del carrito tiene nombre** para el lector de pantalla ("Carrito, 1 producto").
+### Tienda 1.16.2 y Órdenes y pagos 1.6.6 (C-258)
+- **"Calcula tu envío" pide la lista de ciudades de ZOOM una vez por visita.** Antes la pedía cada ficha y el carrito.
+### Reportes y seguridad 1.1.10 (C-258)
+- **El latido de "quién está conectado" aguanta 120 por minuto por IP** (eran 20).
+  - Dos o tres personas detrás de la misma IP ya lo pasaban: el Wi-Fi de una oficina o los datos móviles.
+  - El navegador mostraba un error por cada latido, y Reportes contaba de menos.
+### Pruebas
+- **`scripts/e2e/estres-caminos.ts`:** el estrés de 13 caminos del cliente, en el teléfono y en la computadora.
+  - Mide pasos, toques, palabras, cuánto bajar, opciones, el tiempo hasta usable, los errores, las cascadas de pedidos y los enlaces muertos, con un puntaje por camino.
+  - Del primer recorrido: estrés 1945 → 1697 y errores 30 → 0.
+- **`fetch-mock.cjs` simula ZOOM y MRW** con `E2E_ENVIOS=simulado`.
+
 ## [1.0.0-rc.74] - 2026-11-15
 Dos decisiones del equipo sobre lo de C-255 (C-256). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Carrito, checkout y cuenta del cliente 1.8.3 (C-256)

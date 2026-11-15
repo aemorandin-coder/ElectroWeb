@@ -13,6 +13,10 @@ const COUPON_KEY = 'cart-coupon';
 const GUEST_OWNER = 'guest';
 // sessionStorage: marca que esta pestaña ya reconcilió el carrito con la BD para ese usuario
 const DB_SYNC_KEY_PREFIX = 'cart-db-synced:';
+// C-258: lo último que la BD tiene de este carrito (lo que se leyó o se guardó). Sin esto, cada carga completa de una
+// página con sesión volvía a mandar el mismo carrito (GET /api/cart y enseguida POST /api/cart sin cambios). Lleva el
+// mismo prefijo: se borra al cerrar sesión con las marcas de arriba.
+const guardadoKey = (userId: string) => `${DB_SYNC_KEY_PREFIX}guardado:${userId}`;
 
 // localStorage/sessionStorage pueden fallar (modo privado, almacenamiento bloqueado)
 function readStorage(storage: 'local' | 'session', key: string): string | null {
@@ -168,6 +172,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         });
 
         writeStorage('session', syncKey, '1');
+        writeStorage('session', guardadoKey(userId), JSON.stringify(dbCart));
         writeStorage('local', CART_OWNER_KEY, userId);
         // Solo después de reconciliar se guarda en la BD, para no pisarla con un carrito viejo
         setDbSynced(true);
@@ -199,18 +204,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Save cart to database with debounce
   useEffect(() => {
-    if (status === 'authenticated' && dbSynced && isLoaded) {
+    if (status === 'authenticated' && userId && dbSynced && isLoaded) {
+      // C-258: si la BD ya tiene este mismo carrito, no se vuelve a mandar
+      const cuerpo = JSON.stringify(items);
+      if (readStorage('session', guardadoKey(userId)) === cuerpo) return;
       const delayDebounceFn = setTimeout(() => {
         fetch('/api/cart', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ cartItems: items })
-        }).catch(err => console.error('Error auto-saving cart to DB:', err));
+        })
+          .then((res) => { if (res.ok) writeStorage('session', guardadoKey(userId), cuerpo); })
+          .catch(err => console.error('Error auto-saving cart to DB:', err));
       }, 1000);
 
       return () => clearTimeout(delayDebounceFn);
     }
-  }, [items, status, dbSynced, isLoaded]);
+  }, [items, status, userId, dbSynced, isLoaded]);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {

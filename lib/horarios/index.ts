@@ -63,12 +63,12 @@ export function pascua(año: number): string {
   return `${año}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
 }
 
-export interface Feriado { fecha: string; nombre: string; /** No es feriado nacional: la tienda cierra por costumbre */ costumbre?: boolean }
+export interface Feriado { fecha: string; nombre: string }
 
-/** Los feriados de Venezuela de un año, y los dos días que la tienda cierra por costumbre (24 y 31 de diciembre) */
+/** Los feriados de Venezuela de un año: los de la LOTTT (art. 184, con el 24 y el 31 de diciembre) y los de la Ley de Fiestas Nacionales */
 export function feriadosDelAño(año: number): Feriado[] {
   const p = pascua(año);
-  const fijo = (mmdd: string, nombre: string, costumbre = false): Feriado => ({ fecha: `${año}-${mmdd}`, nombre, ...(costumbre ? { costumbre } : {}) });
+  const fijo = (mmdd: string, nombre: string): Feriado => ({ fecha: `${año}-${mmdd}`, nombre });
   return [
     fijo('01-01', 'Año Nuevo'),
     { fecha: sumarDias(p, -48), nombre: 'Lunes de Carnaval' },
@@ -81,9 +81,9 @@ export function feriadosDelAño(año: number): Feriado[] {
     fijo('07-05', 'Día de la Independencia'),
     fijo('07-24', 'Natalicio de Simón Bolívar'),
     fijo('10-12', 'Día de la Resistencia Indígena'),
-    fijo('12-24', 'Nochebuena', true),
+    fijo('12-24', 'Nochebuena'),
     fijo('12-25', 'Navidad'),
-    fijo('12-31', 'Fin de año', true),
+    fijo('12-31', 'Fin de año'),
   ].sort((x, y) => x.fecha.localeCompare(y.fecha));
 }
 

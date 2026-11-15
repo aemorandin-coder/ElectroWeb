@@ -47,7 +47,7 @@ export default function DespachosCard({ form, set, errors }: SectionProps) {
             type="time"
             value={form.horaCorte}
             onChange={(e) => set('horaCorte', e.target.value)}
-            className={`${adminInput(Boolean(errors.horaCorte))} w-36`}
+            className={`${adminInput(Boolean(errors.horaCorte))} max-w-40`}
           />
         </Field>
 
@@ -61,7 +61,7 @@ export default function DespachosCard({ form, set, errors }: SectionProps) {
                 <li key={f.fecha} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                   <span className="min-w-0">
                     <span className="font-medium text-ink">{dia(f.fecha)}</span>
-                    <span className="text-muted"> · {f.nombre}{f.costumbre ? ' (la tienda cierra por costumbre)' : ''}</span>
+                    <span className="text-muted"> · {f.nombre}</span>
                   </span>
                   <label className="flex shrink-0 items-center gap-2 text-xs font-semibold text-ink-soft">
                     <input
@@ -83,7 +83,7 @@ export default function DespachosCard({ form, set, errors }: SectionProps) {
           <p className="text-sm font-semibold text-ink">Otros días cerrados</p>
           <p className={adminHint}>Un inventario, un viaje: lo pagado ese día se corre al siguiente día hábil.</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <input type="date" value={nuevo} min={hoy} onChange={(e) => setNuevo(e.target.value)} aria-label="Día cerrado" className={`${adminInput(false)} w-44`} />
+            <input type="date" value={nuevo} min={hoy} onChange={(e) => setNuevo(e.target.value)} aria-label="Día cerrado" className={`${adminInput(false)} max-w-48`} />
             <button type="button" onClick={agregar} disabled={!nuevo || nuevo < hoy || cerrados.includes(nuevo)} className={adminSecondaryButton}>
               <IconoMas className="h-4 w-4" aria-hidden="true" /> Agregar
             </button>

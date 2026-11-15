@@ -17,9 +17,10 @@ import { notifyStockCrossings } from '@/lib/stock-alerts';
 import { OrderStatus, PaymentStatus, PaymentMethodType, Prisma } from '@prisma/client';
 import {
   sendEmail,
-  sendOrderShippedEmail,
   sendOrderDeliveredEmail,
 } from '@/lib/email-service';
+import { avisarClienteEnvio } from '@/lib/order-enviada';
+import { avisarCancelacionAlProveedor, avisarVentaAlProveedor } from '@/lib/proveedores/despacho';
 import { correoDeCompra } from '@/lib/email-templates/compra';
 import { correoListoParaRetirar, correoOrdenCancelada } from '@/lib/email-templates/pedidos';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
@@ -952,6 +953,10 @@ export async function POST(request: NextRequest) {
     // Pagada al crearla (saldo o Pago Móvil verificado): si trae digitales, el equipo tiene que enviarlos (C-60b)
     if (isPaymentConfirmed) {
       for (const order of orders) void avisarPedidoDigitalPorEntregar(order.id);
+      // C-227: "¡Se vendió su producto!" al proveedor que despacha él mismo (solo las órdenes con dispatchCityCode)
+      after(async () => {
+        for (const order of orders) await avisarVentaAlProveedor(order.id);
+      });
     }
 
     // Stock descontado ya (pago confirmado): aviso si algún producto quedó bajo o agotado
@@ -1250,7 +1255,11 @@ export async function PATCH(request: NextRequest) {
       recordPaidOrder(order.id).catch((error) => console.error('Error registrando comisión de promotor:', error));
       void avisarBoletoPorCompra(order.id);
       void avisarPedidoDigitalPorEntregar(order.id);
+      // C-227: si lo despacha un proveedor, su aviso de venta (nunca antes del pago)
+      after(() => avisarVentaAlProveedor(order.id));
     }
+    // C-227: cancelada antes de la guía: "Se canceló: no lo despache" al proveedor que ya tenía el aviso
+    if (cancelando) after(() => avisarCancelacionAlProveedor(order.id));
 
     // Avisos al cliente (fuera de la transacción: correos y notificaciones no deben bloquear el cambio)
     if (confirmandoPago && oldOrder.userId) {
@@ -1317,40 +1326,10 @@ export async function PATCH(request: NextRequest) {
           }
           break;
 
-        case 'SHIPPED': {
-          const local = order.deliveryMethod === 'LOCAL_DELIVERY';
-          const empresa = order.shippingCarrier ? NOMBRE_EMPRESA[order.shippingCarrier as EmpresaGuia] ?? order.shippingCarrier : '';
-          const carrierInfo = empresa ? ` por ${empresa}` : '';
-          const trackingInfo = order.trackingNumber ? `. Guía: ${order.trackingNumber}` : '';
-          const cobro = order.shippingPaidBy === 'CUSTOMER' ? '. El flete lo pagas al retirar (cobro a destino)' : '';
-          // Una sola notificación (antes salían dos: la genérica y esta con guía y transportista)
-          await createNotification({
-            userId: oldOrder.userId,
-            type: 'ORDER_SHIPPED',
-            title: local ? 'Tu pedido va en camino' : 'Pedido enviado',
-            message: local
-              ? `Tu pedido #${oldOrder.orderNumber} salió a entregar en Guanare.`
-              : `Tu pedido #${oldOrder.orderNumber} salió${carrierInfo}${trackingInfo}${cobro}.`,
-            link: `/customer/orders`,
-            icon: 'shipping'
-          });
-          if (order.user?.email) {
-            try {
-              await sendOrderShippedEmail(order.user.email, {
-                orderNumber: oldOrder.orderNumber,
-                customerName: order.user.name || 'Cliente',
-                trackingNumber: order.trackingNumber || undefined,
-                shippingCarrier: order.shippingCarrier ? NOMBRE_EMPRESA[order.shippingCarrier as EmpresaGuia] ?? order.shippingCarrier : undefined,
-                destination: order.shippingAddress || undefined,
-                payOnDelivery: order.shippingPaidBy === 'CUSTOMER',
-                local,
-              });
-            } catch (emailError) {
-              console.error('Error sending shipped email:', emailError);
-            }
-          }
+        case 'SHIPPED':
+          // C-227: la campana y el correo con la guía, en lib/order-enviada (también los usa la guía que anota el proveedor)
+          await avisarClienteEnvio({ ...order, userId: oldOrder.userId, orderNumber: oldOrder.orderNumber });
           break;
-        }
 
         case 'DELIVERED':
           await notifyOrderDelivered(oldOrder.userId, oldOrder.orderNumber, order.id);

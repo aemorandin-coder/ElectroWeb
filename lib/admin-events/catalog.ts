@@ -44,6 +44,10 @@ export const ADMIN_EVENTS = {
   ORDER_CREATED: { category: 'ventas', label: 'Nueva venta', description: 'Un cliente hizo una orden, con total, pago y entrega.', defaults: on(true, true, true) },
   ORDER_PAID: { category: 'ventas', label: 'Pago de orden confirmado', description: 'Un administrador marcó una orden como pagada.', defaults: on(true, false, true) },
   DIGITAL_ORDER_PENDING: { category: 'ventas', label: 'Pedido digital por entregar', description: 'Una orden pagada trae códigos o recargas que hay que comprar y enviar desde el pedido.', defaults: on(true, true, true) },
+  // C-227: lo que despacha el aliado comercial (la ferretería): sin correo cargado, la guía anotada y el plazo vencido
+  SUPPLIER_NO_CONTACT: { category: 'ventas', label: 'Proveedor sin correo de despacho', description: 'Se vendió algo que despacha un proveedor que no tiene correo cargado: hay que pasarle el pedido a mano.', defaults: on(true, true, true) },
+  SUPPLIER_GUIDE_ADDED: { category: 'ventas', label: 'El proveedor anotó la guía', description: 'Un proveedor anotó la guía desde su enlace: la orden quedó enviada y el cliente recibió su correo.', defaults: on(true, false, true), silent: true },
+  SUPPLIER_DISPATCH_LATE: { category: 'ventas', label: 'Proveedor sin guía en su plazo', description: 'Un proveedor no anotó la guía el día de su plazo: le llegó un recordatorio y hay que escribirle.', defaults: on(true, true, true) },
   QUOTE_APPROVED: { category: 'ventas', label: 'Cotización aprobada', description: 'Un cliente dio su conformidad a una cotización desde su enlace.', defaults: on(true, true, true) },
   ORDER_CANCELLED: { category: 'ventas', label: 'Orden cancelada', description: 'Una orden pasó a cancelada, con el motivo.', defaults: on(true, false, true) },
 

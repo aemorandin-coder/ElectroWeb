@@ -13,7 +13,7 @@ import { ciudadesZoom } from '@/lib/envios/zoom';
 type Ctx = { params: Promise<{ id: string }> };
 
 // C-196: cambiar el nombre, el descuento o las notas de un proveedor. C-204: y la lista de lo que no se envía.
-// C-199: y desde qué ciudad de ZOOM despacha él mismo (null = sus productos salen de la tienda)
+// C-199: y desde qué ciudad de ZOOM despacha él mismo (null = sus productos salen de la tienda). C-227: y su contacto de despacho
 export async function PATCH(request: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
   if (!isAuthorized(session, 'MANAGE_PRODUCTS')) return NextResponse.json({ error: 'No autorizado' }, { status: session ? 403 : 401 });
@@ -21,7 +21,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
   const actual = await prisma.supplier.findUnique({ where: { id } });
   if (!actual) return NextResponse.json({ error: 'Proveedor no encontrado' }, { status: 404 });
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const data: { name?: string; discountPercent?: number; pricesIncludeTax?: boolean; notes?: string | null; noShipTerms?: string[]; dispatchCityCode?: string | null; dispatchCityName?: string | null; dispatchStateName?: string | null } = {};
+  const data: { name?: string; discountPercent?: number; pricesIncludeTax?: boolean; notes?: string | null; noShipTerms?: string[]; dispatchCityCode?: string | null; dispatchCityName?: string | null; dispatchStateName?: string | null; contactName?: string | null; contactEmail?: string | null; contactWhatsapp?: string | null } = {};
   if (body?.name !== undefined) {
     const name = leerNombreProveedor(body.name);
     if (!name) return NextResponse.json({ error: 'El nombre del proveedor lleva de 2 a 80 caracteres' }, { status: 400 });
@@ -62,16 +62,38 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
       data.dispatchStateName = ciudad.estado;
     }
   }
+  // C-227: a quién le llegan sus ventas ("¡Se vendió su producto!") y su WhatsApp. Vacío = sin cargar
+  if (body?.contactName !== undefined) {
+    const nombre = typeof body.contactName === 'string' ? body.contactName.trim().replace(/\s+/g, ' ') : '';
+    if (nombre.length > 80) return NextResponse.json({ error: 'El nombre del contacto lleva hasta 80 caracteres' }, { status: 400 });
+    data.contactName = nombre || null;
+  }
+  if (body?.contactEmail !== undefined) {
+    const correo = typeof body.contactEmail === 'string' ? body.contactEmail.trim().toLowerCase() : '';
+    if (correo && (correo.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo))) {
+      return NextResponse.json({ error: 'Ese correo no parece válido' }, { status: 400 });
+    }
+    data.contactEmail = correo || null;
+  }
+  if (body?.contactWhatsapp !== undefined) {
+    const numero = typeof body.contactWhatsapp === 'string' ? body.contactWhatsapp.trim() : '';
+    const digitos = numero.replace(/\D/g, '');
+    if (numero && (!/^[+\d\s()-]+$/.test(numero) || digitos.length < 10 || digitos.length > 15)) {
+      return NextResponse.json({ error: 'El WhatsApp lleva de 10 a 15 dígitos, con el código del país (+58)' }, { status: 400 });
+    }
+    data.contactWhatsapp = numero || null;
+  }
   const guardado = await prisma.supplier.update({ where: { id }, data });
   await registrarAccionAdmin(session, 'PANEL_RECORD_UPDATED', { type: 'SUPPLIER', id }, {
     accion: 'Proveedor cambiado', proveedor: guardado.name,
     ...(data.discountPercent !== undefined && data.discountPercent !== Number(actual.discountPercent) ? { descuento: { antes: Number(actual.discountPercent), despues: data.discountPercent } } : {}),
     ...(data.noShipTerms !== undefined ? { noSeEnvia: data.noShipTerms.length === 0 ? 'la lista de siempre' : data.noShipTerms } : {}),
     ...(data.dispatchCityCode !== undefined ? { despachaDesde: { antes: actual.dispatchCityName ?? 'la tienda', despues: data.dispatchCityName ?? 'la tienda' } } : {}),
+    ...(data.contactEmail !== undefined && data.contactEmail !== actual.contactEmail ? { correoDeDespacho: { antes: actual.contactEmail, despues: data.contactEmail } } : {}),
   }, request);
   // C-199: cambia de dónde salen sus productos publicados (la ficha, la tarjeta y el envío)
   if (data.dispatchCityCode !== undefined && data.dispatchCityCode !== actual.dispatchCityCode) revalidateStorefront();
-  return NextResponse.json({ id: guardado.id, name: guardado.name, discountPercent: Number(guardado.discountPercent), pricesIncludeTax: guardado.pricesIncludeTax, notes: guardado.notes, noShipTerms: guardado.noShipTerms, dispatchCityCode: guardado.dispatchCityCode, dispatchCityName: guardado.dispatchCityName });
+  return NextResponse.json({ id: guardado.id, name: guardado.name, discountPercent: Number(guardado.discountPercent), pricesIncludeTax: guardado.pricesIncludeTax, notes: guardado.notes, noShipTerms: guardado.noShipTerms, dispatchCityCode: guardado.dispatchCityCode, dispatchCityName: guardado.dispatchCityName, contactName: guardado.contactName, contactEmail: guardado.contactEmail, contactWhatsapp: guardado.contactWhatsapp, bienvenidaAt: guardado.bienvenidaAt });
 }
 
 // Se borra solo si no tiene productos (ni en la papelera): el costo y el código de cada producto dependen de él

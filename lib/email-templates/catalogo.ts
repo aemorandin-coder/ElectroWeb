@@ -29,6 +29,10 @@ import { correoCotizacion } from '@/lib/cotizaciones/correo';
 import { buildAlertEmailHtml } from '@/lib/admin-alerts';
 import { renderCampana } from '@/lib/email-campaigns';
 import type { CotizacionAdmin } from '@/lib/cotizaciones';
+import {
+    correoBienvenidaProveedor, correoCancelacionProveedor, correoRecordatorioProveedor, correoVentaProveedor, type DespachoCorreo,
+} from '@/lib/email-templates/proveedores';
+import { fotoCorreo } from '@/lib/email-templates/marco';
 
 
 const DESTINO = 'cliente@ejemplo.com';
@@ -39,6 +43,18 @@ const PS5 = { nombre: 'Assassins creed mirage PlayStation 5 launch edition', slu
 const PROTECTOR = { nombre: 'Protector de voltaje Protektor PAR-110V', slug: 'protector-de-voltaje-protektor-par-110v', imagen: '/api/uploads/products/product-1794581452490-dvs0t7.webp', precioUSD: 33.55 };
 
 const SORTEO: DatosSorteo = { titulo: 'Sorteo de Navidad', premio: 'una PlayStation 4', imagen: null, resultadoEl: new Date('2026-12-20T16:00:00-04:00') };
+
+/** C-227: una venta de ejemplo del aliado comercial (la ferretería despacha desde La Victoria) */
+const DESPACHO: DespachoCorreo = {
+    proveedor: 'Ferretería La Victoria', contacto: 'Carlos', numero: 'ORD-2026-0143', pagadaEl: '2026-11-13', plazo: '2026-11-16',
+    empresa: 'ZOOM', modo: 'OFFICE', oficina: { nombre: 'Barquisimeto Centro', codigo: '1205', direccion: 'Av. 20 entre calles 25 y 26' },
+    ciudad: 'Barquisimeto', estado: 'Lara', direccion: null,
+    destinatario: { nombre: 'María González', cedula: 'V-18.456.789', telefono: '0414-555-1234' }, cobroADestino: true,
+    productos: [{ nombre: 'PROTECTOR VOLTAJE NEVERA 110V PROTEKTOR', codigo: 'R016087', cantidad: 2, costo: 9.86, foto: fotoCorreo(PROTECTOR.imagen) }],
+    ivaIncluido: true,
+    empaque: { piezas: 1, pesoKg: 1.2, renglones: ['1 × Caja pequeña (30 × 20 × 15 cm): 2 × PROTECTOR VOLTAJE NEVERA 110V PROTEKTOR, 1,2 kg'] },
+    url: 'https://electroshopve.com/proveedor/despacho/enlace-de-ejemplo',
+};
 
 export type Vista = { subject?: string; html?: string };
 const deCorreo = async (p: Promise<{ asunto: string; html: string }>): Promise<Vista> => {
@@ -173,6 +189,11 @@ export const PLANTILLAS: { id: string; grupo: string; name: string; description:
     },
     { id: 'team_alert', grupo: 'Equipo y marketing', name: 'Aviso al equipo', description: 'Ventas, pagos, garantías y más', render: async () => ({ subject: `Nueva venta · ${ORDEN}`, html: await buildAlertEmailHtml({ title: `Nueva venta · ${ORDEN}`, lines: [{ label: 'Total', value: '$87,33' }, { label: 'Pago', value: 'Pago Móvil · confirmado' }, { label: 'Entrega', value: 'Envío nacional' }], actionUrl: `${process.env.NEXTAUTH_URL || ''}/admin/orders` }) }) },
     { id: 'team_invite', grupo: 'Equipo y marketing', name: 'Invitación al panel', description: 'Al invitar a alguien del equipo', render: () => deCorreo(correoInvitacionEquipo({ nombre: 'Luis', rol: 'Administrador', invitadoPor: 'Andrés', enlace: `${process.env.NEXTAUTH_URL || ''}/recuperar-contrasena/token-de-ejemplo?invitacion=1` })) },
+    // C-227: el aliado comercial (el proveedor que despacha él mismo), de usted
+    { id: 'supplier_welcome', grupo: 'Proveedores', name: 'Bienvenida de aliado comercial', description: 'Con un botón del panel, cuando su catálogo ya está publicado', render: () => deCorreo(correoBienvenidaProveedor({ proveedor: DESPACHO.proveedor, contacto: 'Carlos', publicados: 70, desde: '2026-11-14', enlaceCatalogo: 'https://electroshopve.com/productos?desde=aragua', estado: 'Aragua' })) },
+    { id: 'supplier_sale', grupo: 'Proveedores', name: '¡Se vendió su producto!', description: 'Al confirmarse el pago, con copia al equipo', render: () => deCorreo(correoVentaProveedor(DESPACHO)) },
+    { id: 'supplier_reminder', grupo: 'Proveedores', name: 'Recordatorio de la guía', description: 'El día del plazo, si no anotó la guía', render: () => deCorreo(correoRecordatorioProveedor(DESPACHO, DESPACHO.plazo)) },
+    { id: 'supplier_cancelled', grupo: 'Proveedores', name: 'Se canceló: no lo despache', description: 'Si la orden se cancela antes de la guía', render: () => deCorreo(correoCancelacionProveedor({ ...DESPACHO, url: null })) },
     { id: 'test', grupo: 'Equipo y marketing', name: 'Correo de prueba', description: 'Configuración → Correo', render: () => capturarCorreo(() => sendTestEmail(DESTINO)) },
 ];
 

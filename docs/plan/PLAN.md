@@ -527,10 +527,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - el carrito abandonado, que necesita guardar el carrito;
     - "Tu factura", desde el 19/04/2027 con Contabilidad;
     - el resumen de Puntos ES.
-- **C-227 · Los correos a los proveedores** (plan listo, 14/11; decisiones en §7.2 y el flujo en `PROPUESTA_C227.md`):
-  - el contacto del proveedor en el panel (columnas nuevas, aditivas);
-  - la bienvenida, el aviso de venta, la página firmada para anotar la guía, el recordatorio y la cancelación.
-  - Va después de C-219, que pone el diseño, y de C-234, que cuenta los días hábiles.
+- **C-227 · Los correos al aliado comercial** (**hecha**, rc.55, 14/11; decisiones en §7.2 y el flujo en `PROPUESTA_C227.md`): el contacto del proveedor en el panel; la bienvenida, el aviso de venta, la página firmada para "Lo estoy preparando" y la guía, el recordatorio (cron diario) y la cancelación. `estado/C-227.md`.
+  - **Falta:** probarlo con la ferretería de verdad (cargar su correo y enviarle la bienvenida) y seguir su primera venta.
 - **C-234 · Cuándo sale cada pedido** (**hecha**, rc.52, 14/11; decisiones en §7.2 y las reglas en `PROPUESTA_C234.md`): el calendario en `lib/horarios` (corte, sábado, feriados y días del panel) y la fecha de salida en la ficha, el carrito, el checkout, el correo de la compra y Mi pedido. `estado/C-234.md`.
   - **Si el equipo quiere otro plazo por proveedor** (hoy, un día hábil para todos): `fechaDeSalida` ya lo recibe; faltaría guardarlo en `suppliers`.
 - **Haiku en el panel** (Andrés eligió 5 de las 7 ideas el 13/11). Esfuerzo alto para lo que se espera en pantalla; el máximo, solo para trabajos de fondo. La base común está en `lib/ia/claude.ts` y las reglas del texto en `lib/ia/texto.ts` (C-213).
@@ -858,10 +856,12 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 - **Los correos a los proveedores (equipo, 14/11, C-227):** lo recomendado en las ocho preguntas.
   - **El aviso "¡Se vendió tu producto!"** sale al confirmarse el pago y le llega al proveedor con copia al equipo.
   - **La guía de ZOOM o MRW la hace el proveedor,** con lo que pide la guía: nombre, cédula y teléfono del cliente, y la oficina. Nunca el correo, la casa ni lo que pagó.
+    - **Puerta a puerta** (C-227, al programarlo): la guía pide la dirección, así que esa sí va. Si el equipo prefiere pasársela a mano, se quita en `lib/proveedores/despacho.ts`.
   - **El proveedor ve su costo,** nunca el precio de venta.
   - **Confirma con un botón:** un enlace firmado y sin cuenta para "Lo estoy preparando" y la guía. Con la guía, la orden se actualiza y al cliente le llega "Tu pedido va en camino".
   - **Tiene 1 día hábil para despachar.** Si no, le llega un recordatorio y al equipo un aviso.
-  - **La bienvenida de "revendedor premium"** sale con un botón del panel cuando su catálogo ya está publicado. Lleva el flujo y su credencial, sin hablar de pagos.
+  - **La bienvenida de "aliado comercial"** sale con un botón del panel cuando su catálogo ya está publicado. Lleva el flujo y su credencial, sin hablar de pagos.
+    - **El nombre (el equipo, 14/11):** el proveedor es **aliado comercial** de Electro Shop. El primero que se usó era jerga: no va en ningún correo, pantalla ni documento.
   - Siempre va el aviso "Se canceló: no lo despaches". Se le habla de usted.
 - **Cuándo sale cada pedido (equipo, 14/11, C-234):** "un cliente que compra un sábado al mediodía, su producto sí o sí sale el lunes; ser lo más transparente". Lo recomendado en las seis preguntas:
   - **El corte de lunes a viernes, a las 2:00 p. m.:** lo pagado antes sale ese día. La hora se cambia en Configuración.

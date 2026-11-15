@@ -10,7 +10,8 @@ import { escapeHtml } from '@/lib/html';
 import { botonCorreo, datosCorreo } from '@/lib/email-templates/estilo';
 import { marcoCorreo } from '@/lib/email-templates/marco';
 
-async function getAdminAlertEmails(): Promise<string[]> {
+/** La lista de Configuración → Avisos y mantenimiento. C-227: también la usa la copia de los despachos al equipo */
+export async function getAdminAlertEmails(): Promise<string[]> {
   try {
     const settings = await prisma.companySettings.findUnique({
       where: { id: 'default' },

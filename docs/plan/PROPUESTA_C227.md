@@ -4,7 +4,7 @@
 
 ## El pedido
 "Quiero que prepares una sección de correo para Proveedores":
-- primero, el agradecimiento por "habernos elegido como su revendedor premium de sus productos y confiar en nuestros flujos";
+- primero, el agradecimiento por habernos elegido para vender sus productos y "confiar en nuestros flujos". El nombre de esa relación es **aliado comercial** (el equipo, 14/11: el primero que se usó era jerga y no va en ningún lado);
 - después, avisarle al proveedor "que se vendió uno de sus productos", que prepare el embalaje y "por cuál empresa de encomienda debe irse".
 
 ## Cómo es hoy
@@ -27,7 +27,7 @@
 5. **Plazo:** 1 día hábil. Si no anotó la guía, le llega un recordatorio y al equipo un aviso.
 6. **A quién:** al correo de despacho del proveedor, con copia a los correos de avisos del equipo.
 7. **La bienvenida** sale con un botón del panel, cuando el catálogo del proveedor ya está publicado.
-8. **Lo que promete la bienvenida:** el agradecimiento, su credencial de "revendedor premium" y el flujo en pasos, **sin hablar de pagos** (eso queda en el acuerdo).
+8. **Lo que promete la bienvenida:** el agradecimiento, su credencial de "aliado comercial" y el flujo en pasos, **sin hablar de pagos** (eso queda en el acuerdo).
 
 **Además, sin pregunta:**
 - se le habla de usted;
@@ -45,7 +45,7 @@
 ## Los correos (con el marco de C-219, el pie del proveedor y de usted)
 | Correo | Cuándo | Qué lleva |
 |---|---|---|
-| **Bienvenida "revendedor premium"** | Botón del panel | El agradecimiento; su credencial en la placa azul noche ("Electro Shop · revendedor premium de <proveedor> · desde <fecha>"); cuántos de sus productos están publicados, con un enlace a verlos; "cómo trabajamos juntos" en 5 pasos; a quién escribir |
+| **Bienvenida "aliado comercial"** | Botón del panel | El agradecimiento; su credencial en la placa azul noche ("<proveedor> · aliado comercial de Electro Shop · desde <fecha>"); cuántos de sus productos están publicados, con un enlace a verlos; "cómo trabajamos juntos" en 5 pasos; a quién escribir |
 | **"¡Se vendió su producto!"** | Pago confirmado | La orden; sus productos con su código y su nombre de lista (`supplierSku`, `supplierName`), cantidad y costo; el empaque que toca (del plan de embalaje de la orden, C-153); **la empresa en grande (ZOOM o MRW, con su logo)** y la oficina; los datos de la guía; el plazo ("antes del martes 17"); el botón "Anotar la guía" |
 | **Recordatorio** | 1 día hábil sin guía | Lo mismo, más corto, con el botón |
 | **"Se canceló: no lo despache"** | Orden cancelada sin guía | La orden y sus productos, en azul claro (C-226) |

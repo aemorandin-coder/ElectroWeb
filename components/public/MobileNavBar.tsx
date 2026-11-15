@@ -105,6 +105,8 @@ export default function MobileNavBar() {
     pathname?.startsWith('/customer') ||
     pathname?.startsWith('/admin') ||
     pathname?.startsWith('/creator/dashboard') ||
+    // C-227: la página del proveedor que despacha (no es un cliente de la tienda)
+    pathname?.startsWith('/proveedor/') ||
     esRutaDeAcceso(pathname)
   ) {
     return null;

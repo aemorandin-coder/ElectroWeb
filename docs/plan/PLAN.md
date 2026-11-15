@@ -591,6 +591,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **C-246 · El destino claro para la guía y los datos fiscales del proveedor** (**hecha**, rc.60, 15/11; `estado/C-246.md`): "Envíelo a" en el correo y la página del proveedor, sus datos fiscales (razón social, RIF y domicilio) y hasta 3 correos de despacho.
     - **Falta:** cargar los datos de Ferrecla en el panel después del deploy (`SIGUIENTE.md` §2, prueba 8) y decidir cuándo se le envía la bienvenida.
     - **Para C-237 (compras):** el proveedor y su RIF pueden leerse de `suppliers` (`legalName`, `taxId`).
+  - **C-250 · Las categorías y la gift card impresa, con el kit** (**hecha**, rc.66, 15/11; `estado/C-250.md`; el equipo eligió lo recomendado en las dos preguntas de C-249b).
   - **C-247 · La foto del premio del sorteo** (**hecha**, rc.59, 15/11; `estado/C-247.md`; el equipo eligió la A, sobre el azul y más grande). La foto se sube desde el panel.
   - **C-243 · El kit de marca** (**hecha**, rc.57, 15/11; `estado/C-243.md`; el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo, §1.0).
     - **C-245 · El panel entero con el kit** (**hecha** la parte mecánica, rc.61, 15/11; `estado/C-245.md`; lo hizo un agente aparte). El inventario de las 43 pantallas y los arreglos de 14 módulos, incluida Marketing a lo ancho (lo marcó C-244). Queda:
@@ -930,6 +931,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
     - "Tenemos 14 años en el mercado de Portuguesa; ahora vamos a toda Venezuela."
   - **El lema:** "Todo lo encuentras con nosotros." (la frase de la portada, del 16/10).
   - **El orden:** el sorteo (C-221), la ubicación (C-222), los textos (C-225), las cookies (C-223) y los tres únicos (C-224).
+- **Los colores de las categorías (el equipo, 15/11, C-250):** solo los azules del kit; los de antes pasan al azul más parecido. La gift card impresa, también en azul.
 - **El kit de marca (el equipo, 14/11, C-243):** la paleta A, solo los dos azules del logo (`brand-500` y `brand-700`) y sus claros. Salen el azul noche y el cian. La fuente única es `lib/marca.ts`, con la página `/admin/marca` y `npm run check:marca`. El arte de redes (ElectroStudio, Chispa) queda fuera.
 - **El checkout por pasos (el equipo, 14/11, C-241):** la A de las maquetas, un paso a la vez (Entrega, Revisar y Pagar), y **pagar al final**, cuando ya se revisó todo. Con un Pago Móvil ya verificado no se vuelve atrás.
 - **Claude sube desde la PC de Andrés (el equipo, 14/11):** con su propia llave (`~/.ssh/electroshop_claude`), una vez que el equipo la autorice en el servidor, y con la aprobación de cada deploy (regla 2 de `CLAUDE.md`).

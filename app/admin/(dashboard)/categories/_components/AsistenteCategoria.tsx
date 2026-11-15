@@ -141,7 +141,7 @@ export default function AsistenteCategoria({ categoria, categorias, padre = null
     if (k === 'isDepartment') return !f.parentId && f.isDepartment ? 'Sí' : 'No';
     if (k === 'icon') return getCategoryIconOption(f.icon)?.label ?? (f.icon ? 'Otros' : 'Automático por el nombre');
     if (k === 'image') return f.image ? 'Ícono propio' : 'Sin ícono propio';
-    if (k === 'color') return COLOR_OPTIONS.find((c) => c.name === f.color)?.label ?? (f.color ? f.color : 'Automático');
+    if (k === 'color') return f.color ? getCategoryColor(f.color).label : 'Automático';
     return f[k].trim() || '(vacío)';
   };
   const cambios: CambioCampo[] = categoria
@@ -293,25 +293,18 @@ export default function AsistenteCategoria({ categoria, categorias, padre = null
               <p className="mt-1 text-xs text-muted">PNG · SVG · WebP · fondo transparente recomendado · máx. 2 MB</p>
             </div>
             <fieldset>
-              <legend className="mb-1.5 flex items-center gap-1 text-sm font-semibold text-ink">Color <Ayuda>Solo se ve en el panel, en el árbol de categorías. Sin elegir, se asigna solo.</Ayuda></legend>
+              <legend className="mb-1.5 flex items-center gap-1 text-sm font-semibold text-ink">Color <Ayuda>Solo se ve en el panel, en el árbol de categorías, y solo con los azules del kit de marca. Sin elegir, se asigna solo.</Ayuda></legend>
               <div className="flex flex-wrap items-center gap-2">
-                {COLOR_OPTIONS.map(({ name, label, swatch }) => (
-                  <button key={name} type="button" title={label} aria-label={label} aria-pressed={form.color === name}
-                    onClick={() => set('color', form.color === name ? '' : name)}
-                    className={`h-11 w-11 rounded-full border-4 transition-shadow ${form.color === name ? 'border-ink shadow-lg' : 'border-white shadow hover:shadow-md'}`}
-                    style={{ backgroundColor: swatch }} />
-                ))}
-                <label title="Color personalizado" className={`relative flex h-11 w-11 cursor-pointer items-center justify-center overflow-hidden rounded-full border-4 ${form.color.startsWith('#') ? 'border-ink shadow-lg' : 'border-white bg-surface shadow hover:shadow-md'}`}
-                  style={form.color.startsWith('#') ? { backgroundColor: form.color } : {}}>
-                  <span className="sr-only">Color personalizado</span>
-                  <input type="color" className="absolute inset-0 cursor-pointer opacity-0"
-                    value={form.color.startsWith('#') ? form.color : (COLOR_OPTIONS.find((c) => c.name === form.color)?.swatch || '#3b82f6')}
-                    onChange={(e) => set('color', e.target.value)} />
-                </label>
+                {COLOR_OPTIONS.map(({ name, label, swatch }) => {
+                  const elegido = Boolean(form.color) && getCategoryColor(form.color).name === name;
+                  return (
+                    <button key={name} type="button" title={label} aria-label={label} aria-pressed={elegido}
+                      onClick={() => set('color', elegido ? '' : name)}
+                      className={`h-11 w-11 rounded-full border-4 transition-shadow ${elegido ? 'border-ink shadow-lg' : 'border-white shadow hover:shadow-md'}`}
+                      style={{ backgroundColor: swatch }} />
+                  );
+                })}
               </div>
-              {form.color.startsWith('#') && (
-                <p className="mt-1 text-xs text-muted">Color personalizado: <span className="font-mono">{form.color}</span> · <button type="button" className="font-semibold text-brand-500 hover:underline" onClick={() => set('color', '')}>Quitar</button></p>
-              )}
             </fieldset>
           </div>
         )}

@@ -15,6 +15,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **Claude:** `CLAUDE.md` y `docs/plan/PLAN_CLAUDE.md`.
 - Punto de partida de todos: `docs/plan/SIGUIENTE.md`.
 
+## Pantallas del panel (todas las IA, desde el 14/11)
+
+Crear o cambiar algo en el panel sigue `docs/plan/PLAN.md` §1.9 (C-220): por pasos con su ícono, de 2 a 4 campos por paso, una línea de ayuda como mucho, "Revisar y publicar" con la vista previa, antes → después al cambiar algo publicado, fotos que se suben o se eligen y campos del tamaño de su dato (§1.5).
+
 ## Diseño (skills globales)
 
 Las skills de diseño instaladas (`impeccable`, `design-taste-frontend` y variantes de Taste, `ui-ux-pro-max`) y el MCP de Refero Styles **sí se pueden usar** para criticar, pulir y elevar la UI de ElectroShopVe, pero **el sistema de diseño de este repo manda siempre**:

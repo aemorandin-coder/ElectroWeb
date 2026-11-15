@@ -1,6 +1,6 @@
 # Plan maestro — ElectroShopVe WEB
 
-> **Al día: 2026-11-10 (C-196).** Este archivo es el plan completo: objetivo, sistema de diseño, carriles, tablero y decisiones. Los números de sección no cambian: `CLAUDE.md` y `GEMINI.md` los citan.
+> **Al día: 2026-11-14 (C-220).** Este archivo es el plan completo: objetivo, sistema de diseño, carriles, tablero y decisiones. Los números de sección no cambian: `CLAUDE.md` y `GEMINI.md` los citan.
 
 | Documento | Para qué |
 |---|---|
@@ -157,6 +157,7 @@ Un trabajo de más de dos pasos (cargar una lista, un asistente) lleva `componen
   - a la derecha, "Siguiente: …", diciendo adónde lleva;
   - si todavía no se puede, el botón queda apagado y el pie dice por qué.
 - Se puede volver a lo hecho, y saltar a un paso cuando ya tiene lo que necesita.
+- **Cada paso lleva su ícono del pack** (C-220, la A que eligió el equipo el 14/11): al terminarlo, la línea hasta el siguiente se llena y aparece el check.
 - Es el mismo dibujo del asistente de productos (`WizardProgress`).
 
 ### 1.7 Filtros en píldoras (C-205)
@@ -179,6 +180,27 @@ Andrés eligió la versión A ("como la tienda") el 13/11, para todo el panel.
 - **Un nivel o una clasificación** (Urgente, el nivel de un curso) va en azul de marca, nunca en ámbar ni en azul noche (§1.1).
 - **Un dato en píldora** (una guía, un código) va en gris con su ícono (`adminDato`): informa sin competir con el estado.
 - **Los botones** (`adminPrimaryButton`, `adminSecondaryButton`, `adminIconButton`…) se levantan un poco al pasar el ratón y se hunden al tocarlos. Con "reducir movimiento" solo cambian de color, y apagados no se mueven.
+
+### 1.9 Crear y cambiar cosas en el panel (C-220)
+Lo pidió el equipo el 14/11 mirando Marketing → Sorteo ("es básico, sin comprensión, desordenado y su lógica cuesta entender"), y lo hizo regla **para todas las IA y todo lo nuevo del panel**. Lo que ya existe se pasa con C-206. Las maquetas están en la hoja de C-220.
+- **Crear algo nuevo va por pasos** (`Pasos`, §1.6): un sorteo, una campaña, un cupón, un proveedor. Para dos o tres campos basta un formulario corto.
+- **Un paso, una idea:** de 2 a 4 campos, con un título que dice qué se decide ("El premio", "Cómo se gana", "Fechas").
+- **Poco texto:**
+  - el título del paso y una línea de qué hacer;
+  - como mucho una línea de ayuda por campo (hasta 65 caracteres);
+  - lo demás, detrás de un botón (i) que se abre al tocarlo, no solo al pasar el ratón;
+  - una regla se explica con un ejemplo ("Compra de $25 → 1 boleto"), no con un párrafo.
+- **Íconos que se mueven una vez:** cada paso, sección y estado lleva su ícono del pack.
+  - Al terminar un paso, la línea se llena y aparece el check; el paso actual hace un pulso corto.
+  - Nada se repite sin fin. Con "reducir movimiento", nada se mueve.
+- **Revisar antes de publicar:** el último paso es "Revisar y publicar".
+  - Trae el resumen de cada paso, con "Cambiar", y la vista previa de lo que verá el cliente: la tienda, Mi panel o el correo.
+  - Ahí se elige publicar o guardar sin publicar. Un interruptor "En la tienda" no va en el formulario de algo que todavía no existe.
+- **Un cambio a algo publicado se revisa antes de guardar:** antes → después de cada campo y, si toca lo que el cliente ya tiene (boletos, precios, Puntos ES, envío), a cuántos afecta.
+- **Fotos:** se suben o se eligen de la tienda, y se ven antes de guardar. Nunca se pega una dirección.
+- **Campos del tamaño de su dato** (§1.5).
+- **Lo creado tiene su tablero:** el estado en su sello (§1.8), los números que importan con su ícono y las acciones a la vista (Editar, Apagar, Ver en la tienda, Copiar enlace).
+- El primero hecho así es el sorteo (C-221).
 
 ---
 
@@ -501,7 +523,34 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **F · El catálogo de la ferretería** (**hecha**, C-218, rc.43; Andrés eligió guardar su lista en la base): la lista completa de cada proveedor queda guardada al subirla, y "Proponer con Claude" propone la categoría y el nombre de todo lo nuevo, guardado y sin repetir. `estado/C-218.md`.
     - **Pendiente:** probarla con la clave nueva en unos 40 códigos antes de correr los 3.114, y volver a subir la lista de la ferretería después del deploy.
 - **C-208 · Videos de creadores, fase 1** (pendiente; plan maestro de Andrés del 13/11): el equipo carga videos de TikTok y YouTube (Instagram como enlace) y salen en la ficha y en el inicio, con el código del promotor. Una tabla nueva (aditiva), una pantalla en Marketing y la revisión semanal de los enlaces. Las fases 2 y 3 esperan sus decisiones.
-- **C-206 · La regla de anchos en todo el panel y en la web** (pendiente, sigue a C-205): las páginas que se centran angostas dentro del marco y dejan un hueco junto al menú (Configuración, Equipo, Seguridad, Notificaciones, Cotizaciones y Marketing), los campos cortos estirados y las píldoras de filtro sin ícono. Una por una, con capturas a 360, 768, 1024 y 1440 px. El asistente de productos puede pasar a `Pasos`.
+- **C-206 · La regla de anchos en todo el panel y en la web** (pendiente, sigue a C-205): las páginas que se centran angostas dentro del marco y dejan un hueco junto al menú (Configuración, Equipo, Seguridad, Notificaciones, Cotizaciones y Marketing), los campos cortos estirados y las píldoras de filtro sin ícono. Una por una, con capturas a 360, 768, 1024 y 1440 px. El asistente de productos puede pasar a `Pasos`. Desde el 14/11 también pasa cada pantalla a las reglas de §1.9 (C-220).
+- **El plan de crecimiento del 14/11** (C-220, `estado/C-220.md`; el equipo eligió lo recomendado viendo las maquetas, §7.2). En este orden:
+  - **C-221 · El sorteo por pasos** (pendiente, primero). Sin cambio de base.
+    - Crearlo en 4 pasos: el premio, cómo se gana, las fechas y "Revisar y publicar", con la vista previa de /sorteo y de Mi panel.
+    - La foto se sube o se elige de la tienda.
+    - Después, su tablero: el estado, la línea de tiempo con "hoy", los números con su ícono y las acciones a la vista.
+    - Un cambio muestra antes → después y cuántos boletos cambian. Sortear, en 3 pasos.
+    - `Pasos` recibe un ícono por paso (opcional: lo de hoy sigue igual).
+  - **C-222 · "Desde Aragua" y el filtro de ubicación** (pendiente).
+    - "Desde Aragua" o "Desde Portuguesa", con el ícono de ubicación, en la tarjeta de todo lo físico. La ciudad va en la ficha.
+    - El filtro "Desde dónde sale" en el catálogo (`?desde=`), con su cuenta.
+    - La misma frase en "Calcula tu envío", el carrito, el pago, el detalle del pedido y el correo de confirmación (este, con C-219).
+    - El estado del proveedor, en una columna nueva (aditiva), con el estado de su ciudad de ZOOM.
+  - **C-225 · Los textos para buscadores** (pendiente).
+    - El lema "Todo lo encuentras con nosotros.".
+    - La ficha para Google como tienda ("Store"), no "ElectronicsStore".
+    - llms.txt, el título oculto del inicio y la descripción de /productos, armados con los departamentos que tienen productos.
+    - Los textos de reserva, sin "tecnología" donde no corresponde.
+    - El título y la descripción los cambia el equipo en Configuración → SEO (`SIGUIENTE.md` §3).
+  - **C-223 · El aviso de cookies** (pendiente; antes de poner las claves de Google y del píxel).
+    - "Solo las necesarias" y "Aceptar", del mismo tamaño, abajo; "Preferencias de cookies" en el pie.
+    - Google en modo sin cookies hasta el sí (Consent Mode); el píxel, solo con el sí.
+    - La medición propia, sin la IP completa.
+    - La política nombra todo lo que se guarda (para el abogado, A4).
+  - **C-224 · Lo que nos hace únicos** (pendiente).
+    - "Por qué comprar en Electro Shop" en lugar de "Compra con confianza": precio y envío claros, Pago Móvil confirmado por el banco y la tienda con taller propio (14 años en Portuguesa).
+    - Cada uno se repite donde se decide la compra: la ficha, el carrito, el pago y el pie.
+    - Servicios pasa de "más de 10 años" a 14.
 - **C-198 · Variantes de color, talla y versión** (aprobada el 10/11, la propuesta recomendada; después de C-199 y C-200): familias de productos. Cada variante es un producto (su código, existencia, precio, fotos y enlace); la familia los une para el selector de la ficha y una sola tarjeta en el catálogo ("Elegir color"). El carrito, las órdenes y la existencia no cambian. El panel agrupa con "Agrupar como variantes" desde la lista.
 - **C-199 · El envío desde el proveedor** (**hecha**, rc.32, 12/11, junto con "Calcula tu envío" en la ficha y el carrito; `estado/C-199.md`). Decidida el 10/11; el plan de abajo es el que se siguió. Antes, la tienda calculaba todo como si saliera de Guanare (ZOOM 43) y ofrecía retiro y delivery en Guanare para todo. La ferretería despacha y envía sus pedidos desde La Victoria (ZOOM 244).
   - **El proveedor:** "Despacha él mismo desde [ciudad de ZOOM]", con la lista de ciudades de `ciudadesZoom()`. Sus productos son solo envío.
@@ -736,6 +785,15 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - **El resultado, el 20/12,** para que el premio llegue a otro estado antes de Navidad. **El premio cuesta de USD 150 a 250.**
   - **Sin permiso de Conalot:** "El sorteo lo podemos hacer tranquilamente, no es necesario el Conalot; es simple, elegiremos un correo al azar". Es decisión de Andrés: Claude le avisó que las rifas, también las de redes, piden autorización previa (Providencia CONALOT/P/2025-001). Por eso no se vende ningún boleto, hay una forma sin comprar y las bases son públicas.
   - **El ganador:** al azar entre todos los boletos, publicado con el correo tapado. El equipo no participa.
+- **El plan de crecimiento (el equipo, 14/11, C-220; eligió lo recomendado en las ocho preguntas, viendo las maquetas):**
+  - Crear y cambiar cosas en el panel sigue §1.9, para todas las IA. Los pasos van en fila, con un ícono cada uno (la A).
+  - El origen de lo físico: "Desde Aragua" o "Desde Portuguesa", con el ícono de ubicación; la ciudad, en la ficha. El catálogo filtra por "Desde dónde sale".
+  - El aviso de cookies va ahora, antes de encender Google Analytics y el píxel de Meta.
+  - **Lo que nos hace únicos:** precio y envío claros antes de pagar, el Pago Móvil confirmado por el banco y la tienda con taller propio.
+    - Toda garantía la atiende el taller de Guanare, también la de lo que vende la ferretería.
+    - "Tenemos 14 años en el mercado de Portuguesa; ahora vamos a toda Venezuela."
+  - **El lema:** "Todo lo encuentras con nosotros." (la frase de la portada, del 16/10).
+  - **El orden:** el sorteo (C-221), la ubicación (C-222), los textos (C-225), las cookies (C-223) y los tres únicos (C-224).
 - **Videos de creadores (Andrés, 13/11):** videos de quienes compraron el producto (TikTok, Instagram o YouTube), en la ficha y en el inicio, enganchados con el programa de promotores. El plan maestro está en un documento de Claude Docs de Andrés ("Plan maestro de videos de creadores"). Faltan sus decisiones de la fase 2: el premio, quién manda videos, Instagram, los en vivo y el abogado.
 - **Taller:** espera a SADES (30/09).
 - **Credenciales del historial (C-40):** revisado el 26/09, no había nada que cambiar. Si algún día se configura el webhook de SADES, usar un secreto nuevo.

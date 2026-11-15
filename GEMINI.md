@@ -26,6 +26,8 @@ Contexto: `docs/plan/PLAN.md` (plan maestro: diseño en §1, carriles en §4, de
 
 ---
 
+**Pantallas del panel (desde 14/11, C-220, para todas las IA):** lo nuevo del panel sigue `docs/plan/PLAN.md` §1.9: pasos con su ícono, poco texto (una línea de ayuda), "Revisar y publicar" con la vista previa, fotos que se suben o se eligen y campos del tamaño de su dato. Si tu tarjeta toca una pantalla y no dice cómo, PARA (regla 12).
+
 **Regla de informes (desde 24/09, G-67):** en un informe o estado, cada texto que cites entre comillas y cada número de línea sale de un `grep -n` que pegas al lado. Si no lo encontraste con `grep`, no lo escribes. G-67 inventó 21 de 49 citas y se rechazó.
 
 ## 2. Tu carril (lo único que puedes editar)

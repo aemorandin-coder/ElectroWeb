@@ -138,7 +138,7 @@ export default function SeguridadPage() {
     }
   };
 
-  if (errorCarga) return <p className={`${adminNotice('danger')} mx-auto max-w-2xl`} role="alert">{errorCarga}</p>;
+  if (errorCarga) return <p className={`${adminNotice('danger')} max-w-2xl`} role="alert">{errorCarga}</p>;
   if (!estado || pendienteDeEntrar) {
     return (
       <div className="flex justify-center py-16" role="status" aria-label="Cargando">
@@ -148,7 +148,7 @@ export default function SeguridadPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="max-w-2xl">
       <div className="mb-6">
         <h1 className={adminPageTitle}>Mi seguridad</h1>
         <p className={adminPageSubtitle}>

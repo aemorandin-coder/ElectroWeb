@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { IconoActualizar, IconoNovedad } from '@/components/iconos';
-import { adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import { adminPrimaryButton, adminSecondaryButton, avisoAccion } from '@/lib/admin-ui';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { novedadesDesde } from '@/lib/modulos';
 import { useTiempoReal } from '@/lib/realtime/hooks';
@@ -60,8 +60,8 @@ export default function AvisosDeVersion() {
 
   if (servidor.id !== VERSION_BUILD.id) {
     return (
-      <div role="status" className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-700">
-        <IconoActualizar className="h-5 w-5 shrink-0" aria-hidden="true" />
+      <div role="status" className={`mb-4 flex flex-wrap items-center gap-3 rounded-xl border p-4 text-sm ${avisoAccion}`}>
+        <IconoActualizar aria-hidden="true" />
         <p className="min-w-0 flex-1 basis-60">
           <span className="font-semibold">El panel se actualizó a la versión {servidor.version}.</span> Recarga para usar la versión nueva. Si estás
           editando algo, termina y guárdalo primero.

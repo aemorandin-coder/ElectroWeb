@@ -13,7 +13,7 @@ export interface Filtro<T extends string> {
   ayuda: string;
   Icono: ComponentType<SVGProps<SVGSVGElement>>;
   cuenta?: number | null;
-  /** "aviso": junta lo que alguien tiene que revisar (ámbar, §1.1) */
+  /** "aviso": junta lo que alguien tiene que revisar (el azul claro con su borde, §1.7) */
   tono?: 'aviso';
 }
 

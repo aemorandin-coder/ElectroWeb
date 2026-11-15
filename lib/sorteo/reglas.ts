@@ -3,7 +3,7 @@
 // cada vez, y se congelan en una lista al sortear.
 // - Por compra: 1 boleto por cada compra pagada de la compra mínima o más en productos (el envío no suma). Una compra
 //   que se partió en dos paquetes (C-199) cuenta como una. Cancelada o devuelta, no cuenta.
-// - Sin comprar: 1 boleto por cada 2 amigos que se registran con tu enlace y verifican su correo, hasta un tope.
+// - Invitando amigos: 1 boleto por cada 2 amigos que se registran con tu enlace y activan su cuenta, hasta un tope.
 // - El equipo no participa. El ganador sale al azar entre todos los boletos.
 
 import { createHash, randomInt } from 'node:crypto';

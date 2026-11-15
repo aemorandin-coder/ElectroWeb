@@ -158,7 +158,7 @@ export default function ComoParticipar({ minimo, tope, resultadoEl, cuenta, enla
                         <span className="relative"><Placa Icono={IconoClientes} i={2} /><MasUno i={2} /></span>
                         <Titulo linea={`2 amigos = 1 boleto. Hasta ${tope}.`}>Invita a tus amigos</Titulo>
                       </div>
-                      <p className="mt-3 text-sm text-ink-soft">Cuenta cuando se registran con tu enlace y activan su correo.</p>
+                      <p className="mt-3 text-sm text-ink-soft">Cuenta cuando se registran con tu enlace y activan su cuenta.</p>
                       {enlace ? (
                         <div className="mt-3"><CompartirEnlace enlace={enlace} mensaje={mensaje} /></div>
                       ) : (
@@ -206,7 +206,7 @@ export default function ComoParticipar({ minimo, tope, resultadoEl, cuenta, enla
               {invitar && (
                 <p className="mt-3 text-sm text-ink-soft">
                   Por invitar: {boletos.porInvitar} {boletos.porInvitar === 1 ? 'boleto' : 'boletos'}
-                  {boletos.invitados > 0 ? ` (${boletos.invitadosValidos} de ${boletos.invitados} amigos ya activaron su correo)` : ''}.
+                  {boletos.invitados > 0 ? ` (${boletos.invitadosValidos} de ${boletos.invitados} amigos ya activaron su cuenta)` : ''}.
                 </p>
               )}
             </section>

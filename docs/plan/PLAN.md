@@ -607,9 +607,14 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - en el banner, el logo corto de PS4 donde dice "Sony" y el de ZOOM;
     - el camino de registro: el correo vuelve a `/sorteo` y la sesión se entera de la activación.
     - **Falta:** las pruebas en producción (`SIGUIENTE.md` §2).
-    - **Para decidir:**
-      - que el recorrido de bienvenida ("Te mostramos la tienda en 4 pasos") no salga sobre `/sorteo`: tapa los pasos cuando la cuenta nueva vuelve del registro. Es una línea en `components/onboarding/GuidedTourWrapper.tsx`, del carril de Gemini;
-      - si se quiere, una sola palabra para el correo (las bases dicen "verifiquen" y la página, "activan", como el botón del correo).
+    - **Decidido y hecho en C-256** (rc.74, `estado/C-256.md`): el recorrido de bienvenida ya no sale en `/sorteo`, y se usa una sola palabra, "activar la cuenta".
+  - **C-257 · El kit de onboarding de toda la tienda** (pendiente; pedido del equipo, 15/11):
+    - **El pedido:** "los onboarding de toda la web son demasiado genéricos, simples, sin animaciones, sin íconos nuestros, sin sabor, sin efectos de spotlight; parecen publicidad".
+    - **Qué se hace:**
+      - un kit de onboarding claro para todo el proyecto;
+      - revisar cada página que lo necesita, sobre todo los recorridos nuevos;
+      - medir el estrés de cada camino, para que el cliente entienda la web y le encante navegar sin leer tanto, con íconos y animación;
+      - en cada camino, buscar fallas, código mal hecho, rutas muertas y cascadas de código innecesarias.
   - **C-254 · La semana del ganador** (pendiente, la sigue a C-253; el equipo, 15/11: "al terminar el sorteo, que la bandera permanezca una semana más mostrando quién ganó y un video de testimonio o una imagen de la persona"; eligió hacerla justo después de C-253, mucho antes del resultado del 20/12):
     - **La bandera, por etapas:**
       - abierto: "¡Gánate una PS4!", lo de C-253;

@@ -16,9 +16,11 @@ const GuidedTour = dynamic(
 
 export function GuidedTourWrapper() {
   const pathname = usePathname();
-  // El tour habla de la tienda (catálogo, carrito): no pinta nada sobre los paneles, el acceso ni el checkout (C-89)
+  // El tour habla de la tienda (catálogo, carrito): no pinta nada sobre los paneles, el acceso ni el checkout (C-89).
+  // C-256 (el equipo, 15/11): tampoco en /sorteo, donde tapaba los pasos justo cuando el cliente vuelve del registro a buscar su enlace
   if (
     pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/sorteo') ||
     pathname?.startsWith('/creator') ||
     pathname?.startsWith('/customer') ||
     pathname?.startsWith('/checkout') ||

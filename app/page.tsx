@@ -31,6 +31,8 @@ import {
   getRecienLlegados,
   getTopCategoriesWithProducts,
   getVitrinaDepartamento,
+  getRubros,
+  rubrosEnPalabras,
 } from '@/lib/queries/home';
 import { getHotAd, getSaludoNavidad } from '@/lib/queries/hot-ad';
 import { safeHotAdLink } from '@/lib/hot-ad';
@@ -70,6 +72,8 @@ export default async function Home() {
     getSaludoNavidad(),
   ]);
   // C-200: cada departamento aparte (Ferretería) tiene una sola vitrina, después de "Recién llegados"
+  // C-225: lo que vende la tienda, para el título oculto del inicio
+  const rubros = await getRubros();
   const [railCategories, compraPorCategoria, departamentos] = await Promise.all([
     homeSettings.showCategories ? getCategoriesRail(homeSettings.maxCategoriesDisplay) : [],
     homeSettings.showCategories ? getCompraPorCategoria(homeSettings.maxCategoriesDisplay) : { casillas: [], mas: null },
@@ -121,7 +125,7 @@ export default async function Home() {
       <JsonLd data={websiteJsonLd(settings)} />
 
       <main>
-        <h1 className="sr-only">{settings.companyName}: tecnología, gaming y gift cards con envíos a toda Venezuela</h1>
+        <h1 className="sr-only">{settings.companyName}: {rubrosEnPalabras(rubros)} con envíos a toda Venezuela</h1>
 
         <CategoryChips categories={railCategories} />
 

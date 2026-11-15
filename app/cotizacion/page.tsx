@@ -12,7 +12,7 @@ import PedirCotizacion from '@/components/cotizaciones/PedirCotizacion';
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Cotizaciones para empresas e instituciones',
-    description: 'Pide un presupuesto formal para tu empresa o institución: equipos de tecnología, cantidades y condiciones, con el RIF de tu empresa.',
+    description: 'Pide un presupuesto formal para tu empresa o institución: tecnología, ferretería y más, con cantidades, condiciones y el RIF de tu empresa.',
     ...(await compartirPagina('cotizacion', '/cotizacion')),
   };
 }

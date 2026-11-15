@@ -51,7 +51,7 @@ export default function Footer() {
               </h3>
             </div>
             <p className="text-xs text-subtle mb-3">
-              {settings?.tagline || 'Tu tienda de tecnología en Venezuela'}
+              {settings?.tagline || 'Todo lo encuentras con nosotros.'}
             </p>
             <div className="flex justify-center md:justify-start gap-2 flex-wrap">
               {settings?.instagram && (

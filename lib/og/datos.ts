@@ -21,6 +21,7 @@ import { leerSubida as leerFoto } from '@/lib/subidas';
 import { cargarMarca, prepararFoto } from './imagen';
 import { ALTO, ANCHO, TarjetaPagina, TarjetaProducto, TarjetaVitrina, type DatosProducto } from './tarjetas';
 import { getSorteoVigente } from '@/lib/sorteo/servidor';
+import { getRubros, rubrosEnPalabras } from '@/lib/queries/home';
 
 /** Se sube cuando cambia el diseño: todas las direcciones cambian y las redes piden las imágenes nuevas */
 const DISENO = '1';
@@ -111,11 +112,13 @@ export const contenidoDePagina = cache(async (pagina: PaginaCompartida): Promise
     const dia = new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'long', timeZone: 'America/Caracas' }).format(sorteo.resultadoEl);
     return { titulo: sorteo.titulo, bajada: `Gana: ${sorteo.premio}. Resultado el ${dia}.`, fotos: null };
   }
-  const [ajustes, publicos] = await Promise.all([
+  const [ajustes, publicos, rubros] = await Promise.all([
     prisma.companySettings.findFirst({
       select: { tagline: true, productsMetaTitle: true, productsMetaDescription: true, servicesMetaTitle: true, servicesMetaDescription: true, coursesMetaTitle: true, coursesMetaDescription: true },
     }),
     getPublicSettings(),
+    // C-225: lo que vende la tienda, para el título de la portada
+    pagina === 'inicio' ? getRubros() : Promise.resolve([] as string[]),
   ]);
   const envios = publicos.deliveryEnabled ? ' Envíos a toda Venezuela.' : '';
   const corta = (texto: string | null | undefined) => (texto ? plainText(texto, 110) : null);
@@ -124,7 +127,10 @@ export const contenidoDePagina = cache(async (pagina: PaginaCompartida): Promise
       // La frase es de Andrés (chispa/conocimiento/01-reglas-de-marca.md); se eligió el 16/10 en vez de la lista de
       // categorías, para que la portada diga "aquí lo encuentras", como Amazon o Walmart
       return {
-        titulo: ajustes?.tagline || 'Tu tienda de tecnología en Venezuela',
+        // C-225: si el lema del panel es esta misma frase (lo es desde el 14/11), el título dice lo que vende la tienda
+        titulo: ajustes?.tagline && ajustes.tagline.trim() !== 'Todo lo encuentras con nosotros.'
+          ? ajustes.tagline
+          : (() => { const r = rubrosEnPalabras(rubros); return r.charAt(0).toLocaleUpperCase('es') + r.slice(1); })(),
         lema: 'Todo lo encuentras con nosotros.',
         bajada: envios.trim() || null,
         fotos: 'destacados',

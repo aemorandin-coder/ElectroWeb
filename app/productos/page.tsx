@@ -28,7 +28,10 @@ import {
   type CatalogParams,
 } from '@/lib/queries/catalog';
 import { getAutoIcon } from '@/lib/category-icons';
-import { getHomeSettings } from '@/lib/queries/home';
+import { getHomeSettings, getRubros, rubrosEnPalabras } from '@/lib/queries/home';
+
+/** "Tecnología, ferretería…": la primera letra en mayúscula */
+const mayuscula = (texto: string) => texto.charAt(0).toLocaleUpperCase('es') + texto.slice(1);
 import { getPublicSettings } from '@/lib/site-settings';
 import JsonLd from '@/components/seo/JsonLd';
 import { compartirPagina, imagenDeCategoria } from '@/lib/og/datos';
@@ -49,7 +52,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   // C-149: cada categoría tiene su propio texto en los buscadores (antes todas repetían el del catálogo)
   const description = category
     ? plainText(categoryText(category, publicSettings.deliveryEnabled), 160)
-    : settings?.productsMetaDescription || 'Tecnología, gaming, gift cards y recargas digitales con envíos a toda Venezuela. Precios en dólares y bolívares.';
+    : settings?.productsMetaDescription || `${mayuscula(rubrosEnPalabras(await getRubros()))} con envíos a toda Venezuela. Precios en dólares y bolívares.`;
   // La dirección propia de la categoría es /categorias/<slug>: /productos?category=<slug> apunta a ella
   const canonical = category ? `/categorias/${category.slug}` : '/productos';
   // C-178: la categoría lleva su tarjeta con sus productos; el catálogo, la imagen de Configuración → SEO o la generada
@@ -115,6 +118,8 @@ export default async function ProductosPage({ searchParams }: PageProps) {
     params.category ? getCategorySummary(params.category) : null,
   ]);
   const { products, total, page, totalPages, categories, currentCategory, aproximado, ubicaciones, totalSinDesde } = catalog;
+  // C-225: lo que vende la tienda, para el texto del catálogo
+  const rubros = await getRubros();
   const current = { ...params, page };
   // Solo la página que se indexa (el catálogo o una categoría, sin búsqueda ni filtros) lleva datos estructurados
   const indexable = isIndexableCatalog(params);
@@ -163,7 +168,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
           description={
             params.search ? undefined
               : summary ? categoryText(summary, settings.deliveryEnabled)
-                : 'Tecnología, gaming y gift cards con envíos a toda Venezuela. Precios en dólares y bolívares.'
+                : `${mayuscula(rubrosEnPalabras(rubros))} con envíos a toda Venezuela. Precios en dólares y bolívares.`
           }
           meta={
             <p className="text-sm text-muted" aria-live="polite">

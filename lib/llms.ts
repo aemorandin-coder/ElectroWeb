@@ -64,7 +64,7 @@ export function buildLlmsTxt({ settings, categories, products, paymentMethods }:
   };
 
   lines.push(`# ${md(settings.companyName)}`, '');
-  lines.push(`> Tienda de tecnología${lugar ? ` en ${md(lugar)}` : ''}, Venezuela, con venta por internet en ${site}. ${categories.length > 0 ? `Vende ${md(categories.slice(0, 6).map((c) => c.name).join(', '), 300)}. ` : ''}Los precios se publican en dólares (USD) con su equivalente en bolívares.`);
+  lines.push(`> Tienda en ${lugar ? `${md(lugar)}, ` : ''}Venezuela, con venta por internet en ${site}. ${categories.length > 0 ? `Vende ${md(categories.slice(0, 6).map((c) => c.name).join(', '), 300)}. ` : ''}Los precios se publican en dólares (USD) con su equivalente en bolívares.`);
 
   section('La tienda', [
     settings.legalName && `- Razón social: ${md(settings.legalName)}`,

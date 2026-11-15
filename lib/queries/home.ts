@@ -108,6 +108,32 @@ export const getDepartamentos = cache(async (): Promise<Departamento[]> => {
 });
 
 /**
+ * C-225: lo que vende la tienda, en palabras, armado con lo que tiene publicado: tecnología (lo físico fuera de los
+ * departamentos aparte), cada departamento con productos (C-200, "ferretería") y las gift cards (lo digital). Los textos
+ * para buscadores lo usan cuando el panel no tiene uno propio: así crecen con la tienda (el equipo, 14/11: "ya estamos
+ * creciendo, eso debe cambiar desde ya").
+ */
+export const getRubros = cache(async (): Promise<string[]> => {
+  const departamentos = await getDepartamentos();
+  const fuera = departamentos.flatMap((d) => d.ids);
+  const [tecnologia, digitales] = await Promise.all([
+    prisma.product.count({ where: await visibleProducts(fuera.length > 0 ? { productType: 'PHYSICAL', categoryId: { notIn: fuera } } : { productType: 'PHYSICAL' }) }),
+    prisma.product.count({ where: await visibleProducts({ productType: 'DIGITAL' }) }),
+  ]);
+  return [
+    ...(tecnologia > 0 ? ['tecnología'] : []),
+    ...departamentos.map((d) => d.name.toLocaleLowerCase('es')),
+    ...(digitales > 0 ? ['gift cards'] : []),
+  ];
+});
+
+/** "tecnología, ferretería y gift cards"; sin nada publicado, "tecnología" */
+export function rubrosEnPalabras(rubros: string[]): string {
+  const lista = rubros.length > 0 ? rubros : ['tecnología'];
+  return lista.length === 1 ? lista[0] : `${lista.slice(0, -1).join(', ')} y ${lista[lista.length - 1]}`;
+}
+
+/**
  * Lo visible del inicio de tecnología: lo publicado, fuera de los departamentos aparte (C-200). Sin esto, los productos
  * de la ferretería llenarían "Recién llegados" el día que se publiquen y sus categorías pasarían a ser los estantes.
  */

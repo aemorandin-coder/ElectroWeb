@@ -87,7 +87,8 @@ export function storeJsonLd(settings: PublicSettings): Record<string, unknown> {
 
   return {
     '@context': 'https://schema.org',
-    '@type': hasAddress ? 'ElectronicsStore' : 'OnlineStore',
+    // C-225: una tienda de todo (tecnología, ferretería, gift cards…), ya no solo de electrónica
+    '@type': hasAddress ? 'Store' : 'OnlineStore',
     '@id': storeId(),
     name: settings.companyName,
     legalName: settings.legalName || undefined,

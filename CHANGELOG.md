@@ -10,6 +10,18 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.65] - 2026-11-15
+Crear por pasos, la tercera entrega (C-249c): el método de pago y la categoría, en su propia página, con lo que verá el cliente al lado y "Revisar y publicar" al final. Van 4 de los 8 formularios; siguen C-249d y C-249e. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Las APIs que guardan no cambian.
+### Configuración 1.4.0 (C-249c)
+- **Crear o cambiar un método de pago va por pasos** en `/admin/payments/nuevo` y `/admin/payments/<id>`: el método, la cuenta, lo que ve el cliente, el logo y el QR, y "Revisar y publicar". Al lado, el mismo panel del checkout.
+- **Antes de guardar, el servidor dice si los datos pasan** (`POST /api/admin/payments/vista-previa`, que no guarda nada). Al cambiar uno, antes → después y cuántas recargas y órdenes esperan un pago con los datos de antes.
+- **Arreglo:** Zinli pide el titular, que el servidor exige; antes pedía el teléfono, que no se guarda, y no se podía guardar.
+### Productos 1.17.0 (C-249c)
+- **Crear o cambiar una categoría va por pasos** en `/admin/categories/nueva` y `/admin/categories/<id>`: qué es, cómo se ve y "Revisar y publicar", con la casilla y el chip de la tienda al lado.
+- Al cambiarla, antes → después y cuántos productos y subcategorías van con ella. "Dentro de" ya no ofrece sus propias subcategorías. La edición entre dos personas sigue igual.
+### Marco del panel 1.13.1 (C-249c)
+- "Lo que cambia", en el teléfono, sin cortar las palabras.
+
 ## [1.0.0-rc.64] - 2026-11-15
 Lo que eligió el equipo de C-245, la parte b: crear por pasos en su propia página, con lo que verá el cliente al lado y "Revisar y publicar" al final (la A). Esta entrega trae la oferta o el cupón y las gift cards impresas; los otros seis formularios siguen en C-249c, C-249d y C-249e. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Las APIs que guardan no cambian.
 ### Marco del panel 1.13.0 (C-249b)

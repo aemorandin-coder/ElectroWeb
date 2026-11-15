@@ -538,7 +538,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-208 · Videos de creadores, fase 1** (pendiente; plan maestro de Andrés del 13/11): el equipo carga videos de TikTok y YouTube (Instagram como enlace) y salen en la ficha y en el inicio, con el código del promotor. Una tabla nueva (aditiva), una pantalla en Marketing y la revisión semanal de los enlaces. Las fases 2 y 3 esperan sus decisiones.
 - **C-206 · La regla de anchos en todo el panel y en la web** (pendiente, sigue a C-205): las páginas que se centran angostas dentro del marco y dejan un hueco junto al menú (Configuración, Equipo, Seguridad, Notificaciones, Cotizaciones y Marketing), los campos cortos estirados y las píldoras de filtro sin ícono. Una por una, con capturas a 360, 768, 1024 y 1440 px. El asistente de productos puede pasar a `Pasos`. Desde el 14/11 también pasa cada pantalla a las reglas de §1.9 (C-220).
 - **El plan de crecimiento del 14/11** (C-220, `estado/C-220.md`; el equipo eligió lo recomendado viendo las maquetas, §7.2). En este orden:
-  - **C-221 · El sorteo por pasos** (pendiente, primero). Sin cambio de base.
+  - **C-221 · El sorteo por pasos** (**hecha**, rc.45, 14/11; `estado/C-221.md`). Sin cambio de base. Los textos para Google, el lema y el sorteo de Navidad van en el SQL de datos de su bloque.
     - Crearlo en 4 pasos: el premio, cómo se gana, las fechas y "Revisar y publicar", con la vista previa de /sorteo y de Mi panel.
     - La foto se sube o se elige de la tienda.
     - Después, su tablero: el estado, la línea de tiempo con "hoy", los números con su ícono y las acciones a la vista.

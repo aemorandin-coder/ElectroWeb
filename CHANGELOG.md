@@ -10,6 +10,23 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.45] - 2026-11-14
+El sorteo por pasos, el primero hecho con las reglas nuevas del panel (`docs/plan/PLAN.md` §1.9; el equipo, 14/11: "básico, sin comprensión, desordenado").
+### Marketing 1.11.0 (C-221)
+- **Crear el sorteo es un asistente de 4 pasos:** el premio, cómo se gana, las fechas y "Revisar y publicar".
+  - Al lado, la vista previa de /sorteo en un teléfono; al revisar, también la tarjeta de Mi panel.
+  - La foto se sube o se elige de un producto de la tienda: ya no se pega una dirección.
+  - Cómo se gana se explica con un ejemplo ("Compra de $25 → 1, 4 amigos → 2 = 3 boletos").
+  - Publicar o guardarlo sin publicar se elige al final, no con un interruptor antes de que exista.
+- **Ya creado, su tablero:** el estado en su sello, la línea de tiempo con "hoy", los cuatro números con su ícono, cuánto del premio ya está pagado y quiénes participan. Arriba: Copiar enlace, Ver en la tienda, Cambiar y Publicar o Apagar.
+- **Al cambiar algo,** el último paso dice qué cambia (antes → después) y cuántos boletos quedan y a cuántos clientes les cambian, antes de guardar.
+- **Al cerrar, sortear en 3 pasos:** revisa, sortea (con su confirmación) y avísale. El ganador tiene "Escribirle".
+### Marco del panel 1.7.0 (C-221)
+- **Los pasos de un trabajo largo llevan su ícono:** la línea hasta el siguiente se llena y aparece el visto al terminar cada uno, una sola vez. En el teléfono, una barra con un tramo por paso. La Lista del proveedor sigue igual, con sus números.
+- **La ayuda que no cabe en una línea va detrás de un (i)** que se abre al tocarlo.
+### Carrito, checkout y cuenta del cliente 1.4.3 (C-221)
+- **La tarjeta del sorteo en Mi panel** dice la compra mínima de verdad (decía "$10" fijo).
+
 ## [1.0.0-rc.44] - 2026-11-14
 Ningún contenedor ámbar (Andrés, 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados"; eligió el azul claro de la tienda viendo las tres opciones).
 ### Marco del panel 1.6.2 y todos los módulos con avisos (C-226)

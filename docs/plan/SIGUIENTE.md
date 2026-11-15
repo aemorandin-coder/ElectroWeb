@@ -1,4 +1,4 @@
-# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.44, por subir)
+# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.45, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
@@ -21,6 +21,11 @@
   - **C-227 · Los correos para proveedores:** la bienvenida de "revendedor premium", "¡Se vendió tu producto!" y "Se canceló: no lo despaches".
   - **C-234 · Cuándo sale cada pedido:** corte a las 2:00 p. m., lo del sábado sale el lunes, los feriados y "Sale el lunes 16" en la ficha, el carrito, el checkout, los correos y Mi pedido.
 - **Tres sesiones de Claude a la vez el 14/11**, cada una en su worktree: esta (C-219, C-226, C-227 y C-234), la del plan de crecimiento (C-220 a C-225) y la de Contabilidad (C-228 a C-233).
+- **C-221 · El sorteo por pasos (rc.45, por subir):** el primero hecho con las reglas de `PLAN.md` §1.9 (`estado/C-221.md`).
+  - Crearlo: 4 pasos (el premio, cómo se gana, las fechas y "Revisar y publicar") con la vista previa de /sorteo y de Mi panel al lado. La foto se sube o se elige de la tienda.
+  - Ya creado: su tablero, con el estado, la línea de tiempo, los números, Copiar enlace, Ver en la tienda, Cambiar y Publicar o Apagar.
+  - Al cambiar algo: antes → después y a cuántos clientes les cambian los boletos, antes de guardar. Al cerrar, sortear en 3 pasos.
+  - **Los textos para Google, el lema y el sorteo de Navidad ya publicado van en el SQL de datos del bloque** (el equipo pidió el 14/11 no hacerlos a mano).
 - **C-220 · El plan de crecimiento del 14/11 (solo documentos, sin deploy):** cinco pedidos del equipo, con maquetas hechas con datos reales. El equipo eligió lo recomendado en las ocho preguntas (`estado/C-220.md`, `PLAN.md` §7.2).
   - **Reglas nuevas para todas las IA** (`PLAN.md` §1.9, `CLAUDE.md`, `GEMINI.md` y `AGENTS.md`): crear algo en el panel va por pasos con su ícono, con poco texto y una vista previa antes de publicar; al cambiar algo publicado, antes → después.
   - **El orden:**
@@ -215,15 +220,38 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.44` (C-226; unos 10 minutos)
+### El bloque por subir: `v1.0.0-rc.45` (C-226 y C-221, con rc.44 adentro; unos 20 minutos)
 **Producción ya está en `v1.0.0-rc.43`** (`fcdc4c0`, compilada el 14/11 a las 00:10 UTC). Lo comprobó Claude desde fuera el 14/11, leyendo la versión de la página pública. Nadie lo anotó: falta que el equipo confirme si se corrió el SQL del bloque de rc.43 (abajo) y cuáles de sus pruebas se hicieron. Con eso, ese bloque pasa a `HISTORIAL.md`.
 - **C-226 (rc.44):** ningún contenedor ámbar; lo que hay que hacer va en el azul claro de la tienda. **Sin SQL, sin variables nuevas y sin cron.**
+- **C-221 (rc.45):** el sorteo por pasos. **Sin cambio de base, sin variables nuevas y sin cron.** Lleva un **SQL de datos** (abajo).
+- **SQL de datos (C-220 y C-221), antes de subir** (en la terminal del servidor). Cambia los textos para Google y el lema (lo que el equipo iba a cambiar en el panel) y crea el sorteo de Navidad ya publicado, con los números de Andrés del 13/11. Si ya hay un sorteo, no crea otro.
+  1. Guardar los textos de hoy, para poder volver:
+     `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -c "SELECT tagline, \"metaTitle\", \"metaDescription\", \"metaKeywords\", \"productsMetaDescription\" FROM company_settings" > ~/textos-antes-c221.txt`
+  2. Correr esto con `psql "$DB"`:
+```sql
+UPDATE company_settings SET
+  tagline = 'Todo lo encuentras con nosotros.',
+  "metaTitle" = 'Electro Shop: tecnología y ferretería, envíos a toda Venezuela',
+  "metaDescription" = 'Tienda en Guanare con tecnología, ferretería, gift cards y recargas. Precios en $ y Bs a tasa BCV, IVA incluido, y envío por ZOOM o MRW a todo el país.',
+  "metaKeywords" = 'tecnología, ferretería, herramientas, iluminación, gift cards, recargas, Guanare, Portuguesa, Venezuela, Pago Móvil',
+  "productsMetaDescription" = 'Tecnología, ferretería, gift cards y recargas con envío a toda Venezuela. Precios en dólares y bolívares a tasa BCV.';
+
+INSERT INTO sorteos (id, titulo, premio, imagen, "costoPremioUSD", "compraMinimaUSD", "topeInvitar", desde, hasta, "resultadoEl", activo, "createdAt", "updatedAt")
+SELECT 'sorteo-navidad-2026', 'Sorteo de Navidad', 'PlayStation 4 reacondicionada con 1 control y 1 TB', NULL, 220, 10, 3,
+  '2026-11-14 04:00:00', '2026-12-19 03:59:59.999', '2026-12-20 04:00:00', true, now(), now()
+WHERE NOT EXISTS (SELECT 1 FROM sorteos);
+```
+  - Las fechas van en UTC: del 14/11 al 18/12 (hasta las 11:59 p. m.) y el resultado el 20/12, hora de Venezuela.
+  - La foto de la consola se agrega después en Marketing → Sorteo → Cambiar (se sube desde la computadora). Sin foto, /sorteo se ve igual, sin el recuadro de la imagen.
 - **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.44`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **En el panel:** Configuración → Respaldos con los respaldos apagados, y Productos → Nuevo → Publicar con un dato faltante. El aviso va en azul claro, con el ícono cian en su placa azul noche. No queda ninguna caja ámbar.
   2. **En la tienda,** con una cuenta sin verificar: el checkout muestra "Verificación requerida" con el círculo azul noche. Mi panel → Documentos con uno por firmar: la nota va en azul claro.
   3. **Un presupuesto** (Cotizaciones → uno con nota): "Lo que no incluye" va en azul claro, también al imprimirlo.
-- **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`.
+  4. **Los textos:** `https://electroshopve.com` dice en la pestaña "Electro Shop: tecnología y ferretería, envíos a toda Venezuela", y el pie, "Todo lo encuentras con nosotros." (un minuto después del SQL).
+  5. **El sorteo** (Marketing → Sorteo): sale su tablero, "En la tienda", con la línea de tiempo y los cuatro números. `/sorteo` muestra "Gana una PlayStation 4…". Cambiar → Cómo se gana → poner $15 → Revisar: dice qué cambia y cuántos boletos quedan; volver sin guardar.
+  6. **La Lista del proveedor** (Productos → Más): los pasos se ven igual que antes, con su número, y la línea entre ellos.
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`. Los textos de antes quedan en `~/textos-antes-c221.txt`; el sorteo se apaga en Marketing → Sorteo → Apagar.
 
 ### Ya en producción, sin anotar: `v1.0.0-rc.43` (C-210 a C-218, con rc.35 a rc.42 adentro)
 Antes, producción estaba en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`. Lo que sigue es el bloque tal como se preparó: hay que confirmar su SQL y sus pruebas.
@@ -558,15 +586,7 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
 ## 3. Tareas del equipo (Andrés y Luis, sin código)
 En el orden en que más destraban:
 
-**Del plan del 14/11 (C-220), en el panel, hoy, sin deploy**
-- **A. Los textos para Google** (Configuración → SEO):
-  1. Pestaña "Inicio". Título: `Electro Shop: tecnología y ferretería, envíos a toda Venezuela`.
-  2. Descripción: `Tienda en Guanare con tecnología, ferretería, gift cards y recargas. Precios en $ y Bs a tasa BCV, IVA incluido, y envío por ZOOM o MRW a todo el país.`
-  3. Palabras clave: `tecnología, ferretería, herramientas, iluminación, gift cards, recargas, Guanare, Portuguesa, Venezuela, Pago Móvil`.
-  4. Pestaña "Productos". Descripción: `Tecnología, ferretería, gift cards y recargas con envío a toda Venezuela. Precios en dólares y bolívares a tasa BCV.`
-  5. Guardar. Al día siguiente, `https://electroshopve.com` debe mostrar el título nuevo en la pestaña del navegador.
-- **B. El lema** (Configuración → Negocio → Slogan): `Todo lo encuentras con nosotros.` Sale en el pie, en los correos y en la ficha para Google.
-- **C. El sorteo se puede crear hoy** con la pantalla de ahora (pasos en `estado/C-212.md`, "Pendiente"). C-221 cambia la pantalla, no sus datos.
+**Del plan del 14/11 (C-220):** los textos para Google, el lema y el sorteo de Navidad ya no los hace el equipo en el panel: van en el SQL de datos del bloque de rc.45 (sección 2). Después del deploy queda subir la foto de la consola (Marketing → Sorteo → Cambiar).
 
 **La ferretería aliada (pedido del 10/11)**
 0. **Despacho (acordado el 10/11):** la ferretería despacha y envía los pedidos de la web.
@@ -631,7 +651,9 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
-**Sigue (el orden del 14/11, C-220):** C-221 (el sorteo por pasos), C-222 ("Desde Aragua" y el filtro), C-225 (los textos), C-223 (el aviso de cookies) y C-224 (los tres únicos). Lo de abajo queda después.
+**Hecho el 14/11:** C-220 (el plan) y C-221 (el sorteo por pasos, rc.45).
+
+**Sigue (el orden del 14/11, C-220):** C-222 ("Desde Aragua" y el filtro), C-225 (los textos), C-223 (el aviso de cookies) y C-224 (los tres únicos). Lo de abajo queda después.
 
 **Contabilidad (C-228, `CONTABILIDAD.md`):** C-229 en cuanto el equipo elija la maqueta (A18); C-230 antes del 15/12, para declarar noviembre; después C-231, C-232 y C-233 (antes del 19/04/2027).
 

@@ -1,10 +1,53 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.72`, comprobada el 15/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.74`, comprobada el 15/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 15/11 · C-255 y C-256 (de rc.72 a `v1.0.0-rc.74`)
+La subió el equipo el 15/11, con el bloque de Claude: `git pull --ff-only` y `deploy.sh --sin-pull`. No cambiaba la base.
+
+**Lo comprobado desde fuera, el 15/11:**
+- **La portada dice `1.0.0-rc.74`.** El inicio, `/registro` y la vista previa de `/sorteo` para WhatsApp responden 200.
+- **`/sorteo`:**
+  - "Cómo participar" (`#como-participar`) con sus tres pasos y "Crea tu cuenta gratis";
+  - "Gana boletos por dos caminos", con Camino 1 (comprar) antes que Camino 2 (invitar);
+  - "Lo que más nos preguntan" y el logo de ZOOM;
+  - las bases, con "activen su cuenta desde el correo";
+  - en ningún lado dice "No tienes que comprar".
+
+**Falta que el equipo haga las pruebas** (`SIGUIENTE.md`, "Por confirmar de rc.74"): el camino de registro en el teléfono, con la activación desde el correo, y que la bienvenida no salga en `/sorteo`.
+
+### El bloque que se subió: `v1.0.0-rc.74` (C-255 y C-256)
+**Producción está en `v1.0.0-rc.72`** (`e9fa074`); su bloque está en `HISTORIAL.md`.
+- **C-255 (rc.73):** "Cómo participar" en `/sorteo` con íconos (los tres pasos, los dos caminos con la compra primero y las preguntas), el logo corto de PS4 y el de ZOOM en el banner, y el camino de registro que vuelve al sorteo.
+  - **Sin cambio de base,** sin SQL, sin variables nuevas y sin cron. No hace falta respaldo antes.
+- **C-256 (rc.74):** las dos decisiones del equipo sobre C-255. El recorrido de bienvenida ya no sale en `/sorteo`, y se usa una sola palabra, "activar la cuenta". Sin cambio de base.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.74`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 15 minutos, en la computadora y en el teléfono):
+  1. **`/sorteo` en la computadora, en una ventana privada (sin entrar):**
+      - arriba, "Gana una" y "PlayStation 4" con el logo de PS4 donde decía "Sony", del alto de las letras;
+      - en "Envío gratis", el logo de ZOOM en una píldora blanca.
+  2. **"Quiero mi boleto"** baja a "Cómo participar":
+      - tres pasos con su número, unidos por una línea que se dibuja, y los íconos que entran una vez y se quedan quietos;
+      - el paso 2, "Gana boletos por dos caminos": primero "Camino 1 · Compra $5 o más" (con "Ver productos"), después "Camino 2 · Invita a tus amigos";
+      - al lado, "Cada boleto es una oportunidad";
+      - en ningún lado dice "No tienes que comprar".
+  3. **"Lo que más nos preguntan":** siete preguntas, la primera abierta ("¿Hay más de una forma de ganar boletos? Sí, dos…"). "¿Cuánto me cuesta si gano?" lleva el logo de ZOOM.
+  4. **En el teléfono:** lo mismo, uno debajo del otro, sin moverse de lado.
+  5. **El camino entero, en el teléfono** (con un correo de prueba, por ejemplo `tucorreo+sorteo@gmail.com`, que llega a tu bandeja):
+      1. En una ventana privada, `/sorteo` → "Crear mi cuenta gratis". Llena el registro.
+      2. Vuelve solo a `/sorteo`: el paso 1 dice "Ya tienes tu cuenta" y pide activarla; en el paso 2 sale su enlace para invitar.
+      3. Copia ese enlace. Ábrelo en otra ventana privada: arriba del paso 1 dice "Te invitó un amigo". No hace falta registrarse.
+      4. En tu correo, "Activa tu cuenta de Electro Shop" → "Activar mi cuenta". Si se abre en el mismo navegador, dice "Volver al sorteo" y vuelve solo; si se abre en otro, va al login y después al sorteo.
+      5. En `/sorteo` ya no pide activar la cuenta.
+      6. Con esa cuenta nueva, en `/sorteo` no sale el recorrido de bienvenida ("Te mostramos la tienda en 4 pasos"); en el inicio, sí.
+  6. **Las bases del sorteo** dicen "…y activen su cuenta desde el correo te dan 1 boleto…".
+      - La cuenta de prueba queda como una cuenta normal. No da boletos: hacen falta 2 amigos.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.72 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de base que deshacer.
 
 ## 15/11 · C-253 (de rc.71 a `v1.0.0-rc.72`)
 La subió el equipo el 15/11, con los pasos de Claude. `deploy.sh` se paró por las tres columnas de `sorteos`; después vinieron `npx prisma db push` y `deploy.sh --sin-pull` otra vez. Terminó en "Listo: sirviendo .next-b (e9fa074 Merge branch 'claude/C-253')" y `v1.0.0-rc.72` (captura del equipo).

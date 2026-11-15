@@ -1,10 +1,60 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.74`, comprobada el 15/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.76`, comprobada el 15/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 15/11 · C-258 y C-257 (de rc.74 a `v1.0.0-rc.76`)
+La subió el equipo el 15/11, con el bloque de Claude: `git pull --ff-only` y `deploy.sh --sin-pull`. No cambiaba la base.
+
+**Lo comprobado desde fuera, el 15/11:**
+- **La portada dice `1.0.0-rc.76`.**
+- **`/sorteo` trae la hoja "Así participas"** (C-257): "Dos caminos: comprar o invitar amigos." y "Quiero participar", que lleva a `#como-participar`. La vista previa para WhatsApp responde 200.
+- **Las pestañas** (C-258) dicen, con la marca una sola vez:
+  - "Carrito de compras | Electro Shop";
+  - "Recuperar contraseña | Electro Shop";
+  - "Activar tu cuenta | Electro Shop".
+- **`/login` sin sesión sale de una vez,** sin "Verificando sesión…", con el campo de la contraseña.
+- **El latido de presencia** responde 204. Claude mandó uno de prueba, que se borra solo en unos minutos.
+- **Las poses de Chispa** (`/images/studio/chispa-3/`) cargan.
+
+**Falta que el equipo haga las pruebas** (`SIGUIENTE.md`, "Por confirmar de rc.76"): el recorrido con una cuenta y las hojas del checkout y de Puntos ES, que piden sesión.
+
+### El bloque que se subió: `v1.0.0-rc.76` (C-258 y C-257)
+Producción está en `v1.0.0-rc.74` (`c7d994b`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-258 (rc.75):** los arreglos de los caminos del cliente: el teléfono de las cuentas viejas en el checkout, el latido de presencia, el carrito guardado sin cambios, la lista de ciudades una vez por visita, el login, los títulos y el ícono del carrito.
+  - **Sin cambio de base,** sin SQL, sin variables nuevas y sin cron. No hace falta respaldo antes.
+- **C-257 (rc.76):** el kit de onboarding: el recorrido de bienvenida con Chispa y la hoja "Así funciona" en `/sorteo`, `/checkout` y Puntos ES. Sin cambio de base.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.76`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas de C-258** (unos 10 minutos, en la computadora y en el teléfono):
+  1. **El login, en una ventana privada:** `/login` muestra de una vez "Iniciar sesión" con el correo y la contraseña, sin "Verificando sesión…".
+  2. **Las pestañas:** el carrito dice "Carrito de compras | Electro Shop" (una vez la marca), y `/recuperar-contrasena` dice "Recuperar contraseña | Electro Shop".
+  3. **El carrito, con tu cuenta, en la computadora:** agrega un producto. El ícono del carrito, arriba, abre la lista con "Ver Carrito Completo". Recarga la página: el producto sigue ahí.
+  4. **El carrito en dos dispositivos, con la misma cuenta:**
+      1. en el teléfono, sube la cantidad a 2;
+      2. en la computadora, recarga la página sin tocar nada;
+      3. vuelve a abrir el carrito en el teléfono: sigue en 2. Antes, la recarga de la computadora lo devolvía a 1.
+  5. **"Calcula tu envío"** en una ficha: elige estado y ciudad. Sale lo que cobra ZOOM, como siempre.
+  6. **Reportes → En vivo** (si se usa): con dos o tres teléfonos en el Wi-Fi de la tienda navegando a la vez, todos aparecen conectados.
+  7. **El checkout con el teléfono viejo** (solo si alguna cuenta de producción lo tiene así; si no, se salta): con esa cuenta, "Siguiente: revisar" se puede tocar.
+- **Pruebas de C-257, el onboarding** (unos 15 minutos). Cada guía sale una sola vez por navegador, así que se prueban en una ventana privada:
+  1. **El recorrido, en el teléfono:**
+      1. En una ventana privada, entra con tu cuenta y ve al inicio. A los 1 o 2 segundos todo se oscurece en azul y sale la tarjeta "¡Hola, …!", con Chispa asomado por detrás, saludando.
+      2. Toca "Empezar". El foco viaja al buscador y un anillo blanco se dibuja alrededor. Chispa se agacha y vuelve señalando; la lupa se dibuja y "busca".
+      3. Sigue con "Siguiente": Explora, Tu carrito y Tu cuenta. Termina con "¡Listo!" y confeti azul.
+      4. En ningún paso Chispa tapa lo que se explica, ni se le ve el corte de la cintura.
+  2. **El recorrido, en la computadora:** lo mismo, con el buscador, Productos, el carrito y la cuenta del header. Con el teclado, → y ← cambian de paso y Esc cierra.
+  3. **Una cuenta sin activar** (la de prueba de rc.74, si no la activaste, o una nueva): en el inicio, la bienvenida dice "Activa tu cuenta con el enlace de tu correo y ya puedes comprar", con el sobre.
+  4. **`/sorteo`, en una ventana privada:**
+      1. A 1 o 2 segundos sube "Así participas": "Dos caminos: comprar o invitar amigos" y tres íconos que se dibujan uno tras otro.
+      2. "Quiero participar" baja a "Cómo participar".
+      3. Recarga la página: la hoja ya no sale.
+  5. **El checkout:** con un producto físico en el carrito, la primera vez sale "Así compras" ("Pagas solo en el último paso"). "Empezar" la cierra.
+  6. **Mi panel → Puntos ES:** sale "Así funcionan tus Puntos ES". "Recargar Puntos ES" abre la recarga: ciérrala sin recargar.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.74 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de base que deshacer.
 
 ## 15/11 · C-255 y C-256 (de rc.72 a `v1.0.0-rc.74`)
 La subió el equipo el 15/11, con el bloque de Claude: `git pull --ff-only` y `deploy.sh --sin-pull`. No cambiaba la base.

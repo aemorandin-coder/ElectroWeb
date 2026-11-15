@@ -1,9 +1,24 @@
-# Lo de ahora (actualizado 2026-11-13 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.43, por subir)
+# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.43, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-220 · El plan de crecimiento del 14/11 (solo documentos, sin deploy):** cinco pedidos del equipo, con maquetas hechas con datos reales. El equipo eligió lo recomendado en las ocho preguntas (`estado/C-220.md`, `PLAN.md` §7.2).
+  - **Reglas nuevas para todas las IA** (`PLAN.md` §1.9, `CLAUDE.md`, `GEMINI.md` y `AGENTS.md`): crear algo en el panel va por pasos con su ícono, con poco texto y una vista previa antes de publicar; al cambiar algo publicado, antes → después.
+  - **El orden:**
+    1. el sorteo por pasos (C-221);
+    2. "Desde Aragua" y el filtro de ubicación (C-222);
+    3. los textos para buscadores (C-225);
+    4. el aviso de cookies (C-223);
+    5. los tres que nos hacen únicos (C-224).
+  - **Cookies, cómo estamos:** hoy no hay cookies de Google ni de Meta, porque faltan sus claves. El aviso va antes de ponerlas (C-223).
+  - **Las maquetas,** en la PC de Andrés: `~/.cache/electroshop-trabajo/c220/maquetas.html`.
+  - **Otras sesiones de Claude, el mismo día:**
+    - C-219 (los correos), C-226 (el ámbar en contenedores), C-227 (los correos a proveedores) y C-234 (horarios y fecha de salida);
+    - C-228 a C-233, Contabilidad.
+    - Cada una trabaja en su worktree y mergea con `git status` limpio en la carpeta principal.
+  - **¿rc.43 ya en producción?** El pie del panel en una captura del 14/11 dice "Versión 1.0.0-rc.43 · fcdc4c0". Falta comprobarlo (`OPERACION.md` §3) y pasar el bloque a `HISTORIAL.md`.
 - **C-218 · El catálogo de la ferretería con Claude (rc.43, por subir):** la idea F y lo que faltaba de B. La lista completa de cada proveedor queda guardada al subirla; "Proponer con Claude" propone la categoría y el nombre de todo lo nuevo (los 3.114, en unos 7 minutos) y las solicitudes dicen si la ferretería lo tiene (`estado/C-218.md`). Con esto quedan hechas las cinco ideas de Haiku que eligió Andrés.
 - **C-217 · Campañas de correo con Claude (rc.42, por subir):** la idea C. En el editor de campañas, "Armar con Claude" va del objetivo al asunto y el texto con hasta 4 productos reales; la foto, el precio y el enlace los pone la tienda (`estado/C-217.md`).
 - **C-216 · Sin píldoras ámbar (rc.41, por subir):** Andrés las detesta ("se ven demasiado genéricas") y eligió la opción A: lo que alguien tiene que hacer va en un sello azul noche con el ícono en cian, en todo el panel y en Mi panel. La regla quedó en `PLAN.md` §1.1 y §1.8 y en `CLAUDE.md` (`estado/C-216.md`).
@@ -516,6 +531,16 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
 ## 3. Tareas del equipo (Andrés y Luis, sin código)
 En el orden en que más destraban:
 
+**Del plan del 14/11 (C-220), en el panel, hoy, sin deploy**
+- **A. Los textos para Google** (Configuración → SEO):
+  1. Pestaña "Inicio". Título: `Electro Shop: tecnología y ferretería, envíos a toda Venezuela`.
+  2. Descripción: `Tienda en Guanare con tecnología, ferretería, gift cards y recargas. Precios en $ y Bs a tasa BCV, IVA incluido, y envío por ZOOM o MRW a todo el país.`
+  3. Palabras clave: `tecnología, ferretería, herramientas, iluminación, gift cards, recargas, Guanare, Portuguesa, Venezuela, Pago Móvil`.
+  4. Pestaña "Productos". Descripción: `Tecnología, ferretería, gift cards y recargas con envío a toda Venezuela. Precios en dólares y bolívares a tasa BCV.`
+  5. Guardar. Al día siguiente, `https://electroshopve.com` debe mostrar el título nuevo en la pestaña del navegador.
+- **B. El lema** (Configuración → Negocio → Slogan): `Todo lo encuentras con nosotros.` Sale en el pie, en los correos y en la ficha para Google.
+- **C. El sorteo se puede crear hoy** con la pantalla de ahora (pasos en `estado/C-212.md`, "Pendiente"). C-221 cambia la pantalla, no sus datos.
+
 **La ferretería aliada (pedido del 10/11)**
 0. **Despacho (acordado el 10/11):** la ferretería despacha y envía los pedidos de la web.
 0a. **Los 70 en borrador, después de subir rc.30** (no se ven en la tienda: se publican después de C-199):
@@ -574,6 +599,8 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
+**Sigue (el orden del 14/11, C-220):** C-221 (el sorteo por pasos), C-222 ("Desde Aragua" y el filtro), C-225 (los textos), C-223 (el aviso de cookies) y C-224 (los tres únicos). Lo de abajo queda después.
+
 **Hecho el 13/11:**
 - C-205 (la Lista del proveedor por pasos y las reglas de ancho, rc.33);
 - las fotos de Hydrogen y de otras tiendas, revisadas: 74 de 85 con foto;

@@ -39,6 +39,11 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
 - Capas: variables `--z-*` de `PLAN.md` §1.3. No uses `z-[9999]`.
 - Bloqueo de scroll: usa el hook `useBodyScrollLock`; no toques `document.body.style.overflow` a mano.
 - Nada que solo funcione con hover. Nada de `<button>` dentro de `<Link>` (usa *stretched link*).
+- **Crear o cambiar algo en el panel** (C-220, `PLAN.md` §1.9; regla del equipo del 14/11 para todas las IA):
+  - va por pasos, con su ícono (`components/admin/Pasos`), de 2 a 4 campos por paso;
+  - una línea de ayuda como mucho; lo demás, detrás de (i), y las reglas, con un ejemplo;
+  - al final, "Revisar y publicar" con la vista previa; al cambiar algo publicado, antes → después y a cuántos afecta;
+  - las fotos se suben o se eligen, nunca se pega una dirección; los campos, del tamaño de su dato (§1.5).
 - Precios con `lib/currency.ts` (`formatUSD`, `formatVES`).
 - Sin `<style jsx>`, `console.log` ni `any` nuevos. Sin animaciones infinitas en la tienda.
 - **Nombres de producto escritos normal** (C-202, `PLAN.md` §7.2): como una oración, con siglas, unidades y marcas como se escriben. Para proponerlos está `lib/nombres/producto.ts`. Cambiar un nombre cambia la dirección: la anterior queda en `previousSlugs` y redirige; no la dejes sin guardar.

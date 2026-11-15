@@ -1,8 +1,21 @@
 import { porcentajeIva } from '@/lib/pricing';
-import { getBaseTemplate } from '@/lib/email-service';
-import { CORREO, COLOR, botonCorreo } from './estilo';
-import { ETIQUETA_ENTREGA } from '@/lib/envios/empresas';
+import { formatUSD, formatVES } from '@/lib/currency';
 import { escapeHtml } from '@/lib/html';
+import { ETIQUETA_ENTREGA } from '@/lib/envios/empresas';
+import { paqueteDesde } from '@/lib/origen';
+import {
+  CORREO, avisoCorreo, botonCorreo, enlaceWhatsAppCorreo, notaCorreo, productosCorreo, rotuloCorreo, seguimientoCorreo,
+  totalesCorreo, urlTienda,
+} from './estilo';
+import { ajustesCorreo, fotoCorreo, marcoCorreo } from './marco';
+
+/**
+ * C-219: de dónde sale un paquete que no es de Guanare, en una sola frase, con el estado y la ciudad de C-222:
+ * "Paquete desde Aragua (La Victoria), con su propia guía".
+ */
+export function origenDelPaquete(estado: string | null | undefined, ciudad: string | null | undefined): string {
+  return `Paquete ${paqueteDesde(estado, ciudad)}, con su propia guía`;
+}
 
 interface OrderConfirmationData {
   orderNumber: string;
@@ -16,6 +29,8 @@ interface OrderConfirmationData {
     condition?: string | null;
     /** Garantía de la tienda que guardó el pedido */
     warrantyDays?: number | null;
+    /** C-219: la foto del producto (ruta de la tienda) */
+    image?: string | null;
   }>;
   subtotal: string;
   /** Descuento de cupón u ofertas; sin él, el total no cuadraba con el subtotal */
@@ -24,144 +39,111 @@ interface OrderConfirmationData {
   tax: string;
   total: string;
   currency: string;
-  /** Ya legible ("Saldo de la tienda", "Pago Móvil") */
+  /** Ya legible ("Puntos ES", "Pago Móvil") */
   paymentMethod: string;
-  /** Saldo o Pago Móvil verificado. Si no, el pago está por confirmar */
+  /** Puntos ES o Pago Móvil verificado. Si no, el pago está por confirmar */
   paid: boolean;
+  /** C-219: el método tal cual (SHIPPING, LOCAL_DELIVERY, PICKUP, DIGITAL); `deliveryMethod` queda por compatibilidad */
+  deliveryCode?: string | null;
   deliveryMethod: string;
   deliveryAddress?: string;
+  /** C-199 y C-222: el estado y la ciudad de los que sale el paquete, si no es Guanare */
+  dispatchCityName?: string | null;
+  dispatchStateName?: string | null;
+  /** C-219: el total en bolívares y la tasa que guardó la orden */
+  totalVES?: number | null;
+  exchangeRate?: number | null;
   trackingUrl?: string;
 }
 
-/** El HTML completo del correo, con el marco de todos los correos (C-175). */
+const e = escapeHtml;
+
+/** El asunto del correo de la compra, según si el pago ya entró. */
+export function asuntoConfirmacion(data: Pick<OrderConfirmationData, 'orderNumber' | 'paid'>): string {
+  return data.paid
+    ? `¡Pago confirmado! Tu pedido ${data.orderNumber} ya arrancó`
+    : `Recibimos tu pedido ${data.orderNumber}: estamos revisando tu pago`;
+}
+
+/**
+ * El correo de la compra (C-219: uno solo, antes eran dos a la vez cuando el pago quedaba en revisión). Si el pago ya entró
+ * dice "¡Es oficial!"; si no, "¡Pedido recibido!" y que el pago se está revisando. También es el de "Pago confirmado".
+ */
 export async function generateOrderConfirmationEmail(data: OrderConfirmationData): Promise<string> {
-  const {
-    orderNumber,
-    customerName,
-    orderDate,
-    items,
-    subtotal,
-    discount,
-    shipping,
-    tax,
-    total,
-    currency,
-    paymentMethod,
-    paid,
-    deliveryMethod,
-    deliveryAddress,
-    trackingUrl,
-  } = data;
-  // C-121: antes decía "debitado de tu billetera prepago" también en un Pago Móvil por verificar
-  const hasSecondHand = items.some((item) => item.condition);
-  const hasDiscount = !!discount && Number(discount) > 0;
+  const a = await ajustesCorreo();
+  const app = urlTienda();
+  const nombre = e((data.customerName || '').trim().split(/\s+/)[0] || '');
+  const codigo = data.deliveryCode
+    || Object.entries(ETIQUETA_ENTREGA).find(([, etiqueta]) => data.deliveryMethod.startsWith(etiqueta))?.[0]
+    || '';
+  const digital = codigo === 'DIGITAL';
+  const num = (v: string | undefined) => Number(String(v ?? '').replace(',', '.')) || 0;
+  const pago = e(data.paymentMethod);
 
-  const getMethodLabel = (method: string) => {
-    switch (method) {
-      case 'PICKUP': return 'Retiro en Tienda';
-      case 'HOME_DELIVERY': return 'Entrega a Domicilio';
-      case 'SHIPPING': return 'Envío Nacional (ZOOM / MRW)';
-      default: return method;
+  // C-121: con Puntos ES no hay que verificar nada; con un Pago Móvil por confirmar, sí
+  const encabezado = data.paid
+    ? {
+      sello: 'PAGO CONFIRMADO',
+      titulo: `¡Es oficial${nombre ? `, ${nombre}` : ''}!<br>Tu pedido ya arrancó`,
+      texto: digital
+        ? `Tu pago con ${pago} entró perfecto. Ya estamos preparando tu compra digital: te llega por correo y en Mi pedido.`
+        : `Tu pago con ${pago} entró perfecto. Ya estamos armando tu caja y te avisamos en cuanto salga.`,
     }
-  };
+    : {
+      sello: 'PEDIDO RECIBIDO',
+      titulo: `¡Pedido recibido${nombre ? `, ${nombre}` : ''}!`,
+      texto: `Ya lo tenemos. Estamos confirmando tu pago con ${pago} y, apenas esté, arrancamos. No tienes que hacer nada más.`,
+    };
 
-  // C-106: en ZOOM/MRW la tienda cobra solo el embalaje; el flete es cobro a destino y no va en este total.
-  // `deliveryMethod` llega ya traducido con ETIQUETA_ENTREGA (app/api/orders/route.ts).
-  const etiquetaEnvio = deliveryMethod === ETIQUETA_ENTREGA.SHIPPING
-    ? 'Embalaje (el flete se paga al retirar):'
-    : deliveryMethod === ETIQUETA_ENTREGA.LOCAL_DELIVERY ? 'Delivery en Guanare:' : 'Envío:';
+  const pasos = digital ? ['Recibido', 'Pagado', 'Te llega'] : ['Recibido', 'Pagado', 'Preparando', 'En camino', '¡Es tuyo!'];
+  const hayUsados = data.items.some((item) => item.condition);
 
-  // C-146: los precios ya llevan el IVA. Se dice cuánto del total es; un pedido sin IVA guardado no muestra nada.
-  // Antes decía "Impuestos (Exento)", que no es cierto para lo que vende la tienda.
-  const ivaNum = Number(tax) || 0;
-  const totalNum = Number(total) || 0;
-  const ivaTexto = ivaNum > 0 && totalNum > ivaNum
-    ? `Incluye IVA (${porcentajeIva(totalNum, ivaNum)} %): ${ivaNum.toFixed(2)} ${currency} · Base imponible: ${(totalNum - ivaNum).toFixed(2)} ${currency}`
-    : '';
+  const productos = productosCorreo(data.items.map((item) => {
+    const cantidad = item.quantity || 1;
+    const detalle = [`Cantidad: ${cantidad}`, item.condition ? `${e(item.condition)} · garantía de ${item.warrantyDays ?? 30} días` : ''].filter(Boolean).join(' · ');
+    return { nombre: e(item.name), detalle, monto: formatUSD(num(item.price) * cantidad), foto: fotoCorreo(item.image) };
+  }));
 
-  const celda = `padding:12px 6px;border-bottom:1px solid ${COLOR.linea};font-size:14px;`;
-  const encabezado = `padding:10px 6px;border-bottom:2px solid ${COLOR.linea};color:${COLOR.suave};font-size:12px;text-transform:uppercase;letter-spacing:0.5px;`;
-  const filaTotal = (etiqueta: string, valor: string, color: string = COLOR.texto) => `
-              <tr>
-                <td style="padding:4px 0;color:${COLOR.suave};font-size:14px;">${etiqueta}</td>
-                <td style="padding:4px 0;text-align:right;font-weight:600;color:${color};font-size:14px;">${valor}</td>
-              </tr>`;
+  // C-106: en ZOOM y MRW la tienda cobra solo el embalaje; el flete es cobro a destino y no va en este total
+  const envio = num(data.shipping);
+  const etiquetaEnvio = codigo === 'SHIPPING' ? 'Embalaje' : codigo === 'LOCAL_DELIVERY' ? 'Delivery en Guanare' : 'Envío';
+  const filas: [string, string][] = [['Subtotal', formatUSD(num(data.subtotal))]];
+  if (num(data.discount) > 0) filas.push(['Descuento', `-${formatUSD(num(data.discount))}`]);
+  if (envio > 0) filas.push([etiquetaEnvio, formatUSD(envio)]);
 
-  const content = `
-    <h2 style="${CORREO.titulo}">¡Gracias por tu compra, ${escapeHtml(customerName)}!</h2>
-    <p style="${CORREO.subtitulo}">Orden #${escapeHtml(orderNumber)}</p>
-    <p style="${CORREO.texto}">${paid
-      ? 'Recibimos tu pago y tu pedido ya está en preparación.'
-      : 'Recibimos tu pedido. Te avisaremos apenas confirmemos el pago.'}</p>
+  // C-146: los precios ya llevan el IVA; se dice cuánto del total es. C-219: y el total en bolívares, con la tasa de la orden
+  const total = num(data.total);
+  const iva = num(data.tax);
+  const notas = [
+    data.totalVES && data.exchangeRate ? `${formatVES(Number(data.totalVES))} al cambio BCV del día (${Number(data.exchangeRate).toLocaleString('es-VE', { maximumFractionDigits: 2 })})` : '',
+    iva > 0 && total > iva ? `Incluye IVA (${porcentajeIva(total, iva)} %): ${formatUSD(iva)}` : '',
+  ].filter(Boolean).join('<br>');
 
-    <div style="${CORREO.caja}">
-      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">
-        <strong style="${CORREO.fuerte}">Fecha:</strong> ${escapeHtml(orderDate)}<br>
-        <strong style="${CORREO.fuerte}">Método de pago:</strong> ${escapeHtml(paymentMethod)}${paid ? '' : ' (por confirmar)'}<br>
-        <strong style="${CORREO.fuerte}">Método de despacho:</strong> ${escapeHtml(getMethodLabel(deliveryMethod))}
-        ${deliveryAddress ? `<br><strong style="${CORREO.fuerte}">Dirección de entrega:</strong> ${escapeHtml(deliveryAddress)}` : ''}
-      </p>
-    </div>
+  const entrega = digital ? '' : `
+    ${rotuloCorreo('Así te llega')}
+    <p style="margin:0;font-size:15px;line-height:1.5;font-weight:700;color:#212529;">${e(ETIQUETA_ENTREGA[codigo] || data.deliveryMethod)}</p>
+    ${data.deliveryAddress ? `<p style="margin:2px 0 0;font-size:14px;line-height:1.5;color:#495057;">${e(data.deliveryAddress)}</p>` : ''}
+    ${data.dispatchCityName || data.dispatchStateName ? `<p style="margin:2px 0 0;font-size:14px;line-height:1.5;color:#495057;">${e(origenDelPaquete(data.dispatchStateName, data.dispatchCityName))}</p>` : ''}
+    ${codigo === 'SHIPPING' ? avisoCorreo('Al retirar: tu cédula y el flete', 'Tu caja viaja con cobro a destino: el flete se lo pagas a ZOOM o MRW en la oficina y, con tu cédula en mano, es tuya.', 'envio') : ''}`;
 
-    <p style="${CORREO.rotulo}margin:24px 0 0;">Recibo digital</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin-top:6px;">
-      <tr>
-        <th align="left" style="${encabezado}">Producto</th>
-        <th align="center" style="${encabezado}">Cant.</th>
-        <th align="right" style="${encabezado}">Total</th>
-      </tr>
-      ${items.map(item => {
-        const priceNum = parseFloat(item.price.replace(',', '.')) || 0;
-        const qty = item.quantity || 1;
-        const rowTotal = priceNum * qty;
-        return `
-      <tr>
-        <td style="${celda}color:${COLOR.tinta};">
-          <strong>${escapeHtml(item.name)}</strong>
-          ${item.condition ? `<br><span style="display:inline-block;margin-top:4px;padding:2px 6px;background-color:${COLOR.tinta};color:#ffffff;border-radius:4px;font-size:11px;font-weight:600;text-transform:uppercase;">${escapeHtml(item.condition)}</span>
-          <span style="font-size:12px;color:${COLOR.suave};">Garantía de la tienda: ${item.warrantyDays ?? 30} días</span>` : ''}
-        </td>
-        <td align="center" style="${celda}color:${COLOR.texto};">${qty}</td>
-        <td align="right" style="${celda}font-weight:600;color:${COLOR.tinta};white-space:nowrap;">${rowTotal.toFixed(2)} ${currency}</td>
-      </tr>`;
-      }).join('')}
-    </table>
+  const whatsapp = enlaceWhatsAppCorreo(a.whatsapp, 'Escríbenos por WhatsApp', `Hola, tengo una duda con mi pedido ${data.orderNumber}`);
+  const chispa = data.paid
+    ? { pose: 'celebra' as const, texto: `¡Buena elección${nombre ? `, ${nombre}` : ''}! Ya le pasé tu pedido al equipo de despacho.${whatsapp ? ` ¿Una duda? ${whatsapp} y lo resolvemos.` : ''}` }
+    : { pose: 'explica' as const, texto: `Estoy pendiente de tu pago: apenas el banco lo confirme, te escribo otra vez.${whatsapp ? ` ¿Una duda? ${whatsapp}.` : ''}` };
 
-    ${hasSecondHand ? `
-    <p style="${CORREO.textoMenor}font-size:12px;margin:12px 0 0;">
-      Los productos usados, reacondicionados o de caja abierta se venden en el estado descrito en su ficha. Tienen la garantía de la tienda indicada, contada desde la entrega, por fallas de funcionamiento.
-    </p>
-    ` : ''}
-
-    <div style="${CORREO.caja}">
-      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
-        ${filaTotal('Subtotal:', `${subtotal} ${currency}`)}
-        ${hasDiscount ? filaTotal('Descuento:', `-${discount} ${currency}`, COLOR.exito) : ''}
-        ${shipping && shipping !== '0' && shipping !== '0.00' ? filaTotal(etiquetaEnvio, `${shipping} ${currency}`) : ''}
-        <tr>
-          <td style="padding:12px 0 0;border-top:2px solid ${COLOR.linea};color:${COLOR.marca};font-size:17px;font-weight:700;">${paid ? 'Total pagado:' : 'Total a pagar:'}</td>
-          <td style="padding:12px 0 0;border-top:2px solid ${COLOR.linea};text-align:right;color:${COLOR.marca};font-size:17px;font-weight:700;white-space:nowrap;">${total} ${currency}</td>
-        </tr>
-        ${ivaTexto ? `
-        <tr>
-          <td colspan="2" style="padding:6px 0 0;text-align:right;font-size:12px;color:${COLOR.suave};">${ivaTexto}</td>
-        </tr>
-        ` : ''}
-      </table>
-    </div>
-
-    ${deliveryMethod !== ETIQUETA_ENTREGA.DIGITAL ? `
-    <div style="${CORREO.caja}">
-      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Tu comprobante de compra</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Va dentro del paquete, junto con tus productos.</p>
-    </div>
-    ` : ''}
-
-    ${trackingUrl ? botonCorreo(escapeHtml(trackingUrl), 'Seguimiento de envío') : ''}
-
-    <p style="${CORREO.nota}text-align:center;">
-      ¿Tienes alguna duda con tu compra? Escríbenos a nuestro WhatsApp de soporte.
-    </p>`;
-
-  return getBaseTemplate(content, paid ? `Tu pedido ${orderNumber} ya está en preparación` : `Recibimos tu pedido ${orderNumber}`);
+  return marcoCorreo({
+    preheader: data.paid ? `Tu pedido ${data.orderNumber} ya está en marcha. Mira lo que viene.` : `Recibimos tu pedido ${data.orderNumber}. Estamos revisando tu pago.`,
+    encabezado: { ...encabezado, dato: `Orden ${e(data.orderNumber)} · ${e(data.orderDate)}` },
+    cuerpo: `
+      ${seguimientoCorreo(pasos, data.paid ? 1 : 0)}
+      ${rotuloCorreo(digital ? 'Lo que compraste' : 'Lo que viene en tu caja')}
+      ${productos}
+      ${hayUsados ? `<p style="${CORREO.textoMenor}font-size:12px;margin:10px 0 0;">Los productos usados, reacondicionados o de caja abierta se venden en el estado de su ficha, con la garantía de la tienda indicada, contada desde la entrega.</p>` : ''}
+      ${totalesCorreo(filas, [data.paid ? 'Total pagado' : 'Total a pagar', formatUSD(total)], notas)}
+      ${entrega}
+      ${data.trackingUrl ? botonCorreo(e(data.trackingUrl), 'Seguir mi envío') : botonCorreo(`${app}/customer/orders`, 'Seguir mi pedido')}
+      ${digital ? '' : notaCorreo('Tu comprobante de compra viaja dentro de la caja, junto con tus productos.')}`,
+    chispa,
+    motivo: `Te escribimos por tu compra en ${e(app.replace(/^https?:\/\//, ''))}.`,
+  });
 }

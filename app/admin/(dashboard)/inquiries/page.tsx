@@ -500,7 +500,16 @@ export default function InquiriesPage() {
                                             {/* C-214: responder, con o sin el borrador de Claude (key: uno nuevo por mensaje). El botón
                                                 "Responder por Email" de antes vive ahí como "Responder por correo" */}
                                             <div className="mt-6">
-                                                <BorradorRespuesta key={selectedMessage.id} mensaje={selectedMessage} />
+                                                <BorradorRespuesta
+                                                    key={selectedMessage.id}
+                                                    mensaje={selectedMessage}
+                                                    onRespondido={() => {
+                                                        // C-219: lo envió la tienda y la ruta ya lo marcó respondido
+                                                        setMessages((lista) => lista.map((m) => (m.id === selectedMessage.id ? { ...m, status: 'RESPONDED' } : m)));
+                                                        setSelectedMessage({ ...selectedMessage, status: 'RESPONDED' });
+                                                        window.dispatchEvent(new Event('refresh-sidebar-counts'));
+                                                    }}
+                                                />
                                             </div>
                                         </div>
                                     </div>

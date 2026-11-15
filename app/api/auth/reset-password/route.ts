@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { sendEmail } from '@/lib/email-service';
+import { correoContrasenaCambiada } from '@/lib/email-templates/cuenta';
 import { contrasenaSchema } from '@/lib/validations/registro';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 
@@ -73,6 +75,15 @@ export async function POST(request: NextRequest) {
                 { message: 'Este enlace ya se usó. Solicita uno nuevo si lo necesitas.' },
                 { status: 400 }
             );
+        }
+
+        // C-219: el aviso de que la contraseña cambió (las sesiones se cerraron todas con sessionVersion). No sale cuando
+        // alguien del equipo crea su primera contraseña desde la invitación.
+        if (resetToken.user.email && !verificarCorreo) {
+            const destino = resetToken.user.email;
+            void correoContrasenaCambiada({ nombre: resetToken.user.name, sesionesCerradas: true })
+                .then(({ asunto, html }) => sendEmail({ to: destino, subject: asunto, html }))
+                .catch((error) => console.error('Error enviando el aviso de contraseña cambiada:', error));
         }
 
         await createAuditLog({

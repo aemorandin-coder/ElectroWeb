@@ -5,10 +5,8 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { createNotification } from '@/lib/notifications';
-import { getBaseTemplate, sendEmail } from '@/lib/email-service';
-import { CORREO, botonCorreo, placaCorreo, placaInteriorCorreo } from '@/lib/email-templates/estilo';
-import { escapeHtml } from '@/lib/html';
-import { siteUrl } from '@/lib/seo';
+import { sendEmail } from '@/lib/email-service';
+import { correoPromotorAprobado, correoPromotorNoAprobado } from '@/lib/email-templates/comunidad';
 import { aprobarSolicitudSchema, crearPromotor, PromotorError, rechazarSolicitudSchema } from '@/lib/influencer-admin';
 import { DIAS_PARA_ACREDITAR } from '@/lib/influencer-commission';
 import { nombrePorId } from '@/lib/edicion/servidor';
@@ -47,6 +45,13 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       link: '/customer/referrals',
       icon: 'gift',
     });
+    // C-219: también por correo (antes solo la campanita). La nota la escribe el equipo: se escapa en la plantilla
+    if (solicitud.user.email) {
+      const destino = solicitud.user.email;
+      void correoPromotorNoAprobado({ nombre: solicitud.user.name, nota: datos.data.note || null })
+        .then(({ asunto, html }) => sendEmail({ to: destino, subject: asunto, html }))
+        .catch((error) => console.error('Error enviando el correo de promotor no aprobado:', error));
+    }
     await registrarAccionAdmin(session, 'CREATOR_STATUS_CHANGED', { type: 'USER', id: solicitud.userId }, { programa: 'promotores', cambio: 'Solicitud rechazada', motivo: datos.data.note ?? null }, request);
     return NextResponse.json({ ok: true });
   }
@@ -65,18 +70,17 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       link: '/customer/referrals',
       icon: 'gift',
     });
-    const contenido = `
-      <h2 style="${CORREO.titulo}">Ya eres promotor</h2>
-      <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(solicitud.user.name || 'promotor')}</strong>, aprobamos tu solicitud.</p>
-      ${placaCorreo(`
-        <p style="${CORREO.placaRotulo}">TU CÓDIGO DE PROMOTOR</p>
-        ${placaInteriorCorreo('Código', escapeHtml(promotor.code))}`)}
-      <p style="${CORREO.texto}">Quien lo escriba en el carrito recibe <strong style="${CORREO.fuerte}">${promotor.customerDiscountPercent} % de descuento</strong> y tú ganas <strong style="${CORREO.fuerte}">${Number(promotor.commissionRate)} %</strong> del valor de los productos (sin IVA ni envío), en <strong style="${CORREO.fuerte}">Puntos ES</strong> para comprar en la tienda. Se acreditan ${DIAS_PARA_ACREDITAR} días después de que el cliente recibe su pedido.</p>
-      ${botonCorreo(`${siteUrl()}/customer/referrals`, 'Ver mi panel de promotor')}`;
+    // C-219: la plantilla está en lib/email-templates/comunidad
     const correo = solicitud.user.email;
     if (correo) {
-      void getBaseTemplate(contenido, 'Ya eres promotor de ElectroShop')
-        .then((html) => sendEmail({ to: correo, subject: `Ya eres promotor: tu código es ${promotor.code}`, html }))
+      void correoPromotorAprobado({
+        nombre: solicitud.user.name,
+        codigo: promotor.code,
+        descuento: promotor.customerDiscountPercent,
+        comision: Number(promotor.commissionRate),
+        diasParaAcreditar: DIAS_PARA_ACREDITAR,
+      })
+        .then(({ asunto, html }) => sendEmail({ to: correo, subject: asunto, html }))
         .catch((error) => console.error('Error enviando el correo de promotor:', error));
     }
 

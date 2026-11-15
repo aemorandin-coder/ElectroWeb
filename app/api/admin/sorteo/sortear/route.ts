@@ -1,12 +1,13 @@
 // C-212: sortear (una sola vez, cuando ya cerró). Queda en la bitácora quién lo hizo, cuántos boletos había y la huella de
 // la lista, para poder mostrar después que no cambió.
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { sortearAhora } from '@/lib/sorteo/servidor';
+import { avisarResultadoSorteo } from '@/lib/sorteo/correos';
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -19,5 +20,7 @@ export async function POST(request: NextRequest) {
     sorteo: r.sorteo.titulo, ganador: r.sorteo.ganadorEmail, detalle: r.sorteo.ganadorDetalle, boletos: r.sorteo.boletosAlSortear, huella: r.sorteo.huellaLista,
   }, request);
   revalidateStorefront();
+  // C-219: el correo al ganador y el resultado a los demás, después de responder (con pausa entre correos)
+  after(() => avisarResultadoSorteo(r.sorteo.id));
   return NextResponse.json({ ganadorEmail: r.sorteo.ganadorEmail, ganadorDetalle: r.sorteo.ganadorDetalle, boletos: r.sorteo.boletosAlSortear, huella: r.sorteo.huellaLista, sorteadoAt: r.sorteo.sorteadoAt });
 }

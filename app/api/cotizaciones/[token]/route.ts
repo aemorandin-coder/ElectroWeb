@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { sendEmail } from '@/lib/email-service';
+import { correoPresupuestoAprobado } from '@/lib/email-templates/servicio';
 import { formatUSD } from '@/lib/currency';
 import { aprobarCotizacion, cotizacionPorToken, resumenInventario } from '@/lib/cotizaciones';
 import { estaVencida } from '@/lib/cotizaciones/core';
@@ -48,5 +50,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     fields: [['Total', formatUSD(Number(cotizacion.totalUSD))], ['Descontado del inventario', inventario.descontado || null], ['Faltó inventario', inventario.faltante || null], ['Documento', datos.data.documento], ['Contacto', cotizacion.contactPhone]],
     link: `/admin/cotizaciones/${cotizacion.id}`,
   });
+  // C-219: la confirmación al cliente, con lo que sigue
+  if (cotizacion.contactEmail) {
+    const destino = cotizacion.contactEmail;
+    const base = (process.env.APP_URL || process.env.NEXTAUTH_URL || '').replace(/\/+$/, '');
+    void correoPresupuestoAprobado({ nombre: datos.data.nombre, numero: cotizacion.number, total: Number(cotizacion.totalUSD), enlace: `${base}/cotizacion/${token}` })
+      .then(({ asunto, html }) => sendEmail({ to: destino, subject: asunto, html }))
+      .catch((error) => console.error('Error enviando la confirmación del presupuesto:', error));
+  }
   return NextResponse.json({ ok: true });
 }

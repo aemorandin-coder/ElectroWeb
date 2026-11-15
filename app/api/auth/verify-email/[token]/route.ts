@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendWelcomeEmail } from '@/lib/email-service';
+import { avisarBoletoPorInvitados } from '@/lib/sorteo/correos';
 
 export async function GET(
     request: NextRequest,
@@ -51,6 +53,14 @@ export async function GET(
         await prisma.emailVerificationToken.delete({
             where: { id: verificationToken.id },
         });
+
+        // C-219: la bienvenida sale al activar la cuenta (antes existía y nadie la enviaba). Solo la primera vez.
+        const { user } = verificationToken;
+        if (!user.emailVerified && user.email) {
+            void sendWelcomeEmail(user.email, user.name || '').catch((error) => console.error('Error enviando la bienvenida:', error));
+            // C-219: si llegó con el enlace del sorteo de un amigo, quizá ese amigo completó un boleto
+            void avisarBoletoPorInvitados(user.id);
+        }
 
         return NextResponse.json({
             success: true,

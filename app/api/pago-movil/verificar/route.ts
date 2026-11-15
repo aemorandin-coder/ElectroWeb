@@ -443,30 +443,17 @@ export async function POST(req: NextRequest) {
 
                     // Email de confirmación al usuario
                     try {
-                        const { sendEmail, getBaseTemplate } = await import('@/lib/email-service');
-                        const { CORREO, botonCorreo, selloCorreo } = await import('@/lib/email-templates/estilo');
-                        const { escapeHtml } = await import('@/lib/html');
-                        const tienda = (process.env.APP_URL || process.env.NEXTAUTH_URL || '').replace(/\/+$/, '');
-                        await sendEmail({
-                            to: session.user.email!,
-                            subject: `Recarga de $${montoUsd.toFixed(2)} aprobada — Electro Shop`,
-                            // La referencia y el banco los escribe el cliente: van escapados
-                            html: await getBaseTemplate(
-                                `<div style="text-align:center;">
-                                    ${selloCorreo('exito')}
-                                    <h2 style="${CORREO.titulo}">Recarga aprobada</h2>
-                                </div>
-                                <p style="${CORREO.texto}">
-                                    Tu recarga de <strong style="${CORREO.tonoExito}">$${montoUsd.toFixed(2)} USD</strong>
-                                    se verificó sola con el Banco de Venezuela y ya está disponible en tus Puntos ES.
-                                </p>
-                                <div style="${CORREO.caja}">
-                                    <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Referencia BDV: <strong>${escapeHtml(String(referencia))}</strong><br>Banco: <strong>${escapeHtml(String(bancoOrigen))}</strong></p>
-                                </div>
-                                ${botonCorreo(`${tienda}/customer/balance`, 'Ver mis Puntos ES')}`,
-                                'Tu recarga fue procesada automáticamente'
-                            ),
+                        // C-219: la plantilla está en lib/email-templates/puntos. La referencia y el banco los escribe el cliente: se escapan ahí
+                        const { sendEmail } = await import('@/lib/email-service');
+                        const { correoRecargaAprobada } = await import('@/lib/email-templates/puntos');
+                        const { asunto, html } = await correoRecargaAprobada({
+                            nombre: session.user.name ?? null,
+                            monto: montoUsd,
+                            automatica: true,
+                            referencia: String(referencia),
+                            banco: String(bancoOrigen),
                         });
+                        await sendEmail({ to: session.user.email!, subject: asunto, html });
                     } catch (emailErr) {
                         console.error('[API] Error enviando email de confirmación de recarga:', emailErr);
                         // No bloquear la respuesta si el email falla

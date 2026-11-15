@@ -5,9 +5,10 @@
 
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { getBaseTemplate, sendEmail } from '@/lib/email-service';
-import { CORREO, COLOR } from '@/lib/email-templates/estilo';
-import { enlaceBaja, escaparHtml, urlAbsoluta, urlBase } from '@/lib/email-campaigns';
+import { sendEmail } from '@/lib/email-service';
+import { CORREO, productosCorreo } from '@/lib/email-templates/estilo';
+import { fotoCorreo, marcoCorreo } from '@/lib/email-templates/marco';
+import { enlaceBaja, escaparHtml, urlBase } from '@/lib/email-campaigns';
 import { primeraImagen } from '@/lib/favoritos-avisos';
 
 const DIA_MS = 24 * 60 * 60 * 1000;
@@ -183,26 +184,22 @@ export async function correoPedirResenas(
   const nombre = (nombreCliente || '').trim().split(/\s+/)[0] || 'cliente';
   const asunto = productos.length === 1 ? `¿Qué te pareció ${productos[0].nombre}?` : '¿Qué te parecieron tus productos?';
 
-  const filas = productos.map((p) => {
-    const url = escaparHtml(`${urlBase()}/productos/${p.slug}#resenas`);
-    // Sin foto no se deja el hueco de la columna
-    const foto = p.imagen
-      ? `<td style="padding:12px 12px 12px 0;width:72px;vertical-align:top;border-bottom:1px solid ${COLOR.linea};"><a href="${url}"><img src="${escaparHtml(urlAbsoluta(p.imagen))}" alt="" width="72" height="72" style="display:block;width:72px;height:72px;object-fit:contain;border-radius:8px;background-color:#ffffff;border:1px solid ${COLOR.linea};"></a></td>`
-      : '';
-    return `<tr>
-      ${foto}
-      <td style="padding:12px 0;vertical-align:middle;border-bottom:1px solid ${COLOR.linea};">
-        <a href="${url}" style="color:${COLOR.tinta};font-size:15px;font-weight:600;text-decoration:none;">${escaparHtml(p.nombre)}</a>
-        <p style="margin:8px 0 0;"><a href="${url}" style="display:inline-block;padding:9px 18px;border-radius:8px;background-color:${COLOR.marca};color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;">Dejar mi reseña</a></p>
-      </td>
-    </tr>`;
-  }).join('');
-
-  const contenido = `
-    <h2 style="${CORREO.titulo}">¿Qué te pareció tu compra?</h2>
-    <p style="${CORREO.texto}">Hola ${escaparHtml(nombre)}, ya pasaron unos días desde que recibiste tu pedido. Tu opinión ayuda a otros clientes a decidir y a nosotros a mejorar.</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border-top:1px solid ${COLOR.linea};">${filas}</table>
-    <p style="${CORREO.textoMenor}margin:14px 0 0;">Solo opinan quienes compraron y recibieron el producto. El equipo revisa cada reseña antes de publicarla.</p>
-    <p style="${CORREO.nota}text-align:center;">Recibes este correo porque compraste en nuestra tienda. <a href="${escaparHtml(enlaceBaja(userId, 'resenas'))}" style="${CORREO.enlace}">No recibir más este pedido de reseñas</a></p>`;
-  return { asunto, html: await getBaseTemplate(contenido, asunto) };
+  // C-219: el marco nuevo; cada producto con su foto en JPEG y su botón
+  const html = await marcoCorreo({
+    preheader: 'En 1 minuto ayudas a otros a comprar sin miedo.',
+    encabezado: {
+      sello: 'TU OPINIÓN CUENTA',
+      titulo: `¿Qué tal te va con tu compra, ${escaparHtml(nombre)}?`,
+      texto: 'Ya pasaron unos días desde que la recibiste. Cuéntanos en 1 minuto: tu opinión ayuda a otros a decidir y a nosotros a mejorar.',
+    },
+    cuerpo: `
+      ${productosCorreo(productos.map((p) => {
+        const url = escaparHtml(`${urlBase()}/productos/${p.slug}#resenas`);
+        return { nombre: escaparHtml(p.nombre), foto: fotoCorreo(p.imagen), enlace: url, boton: { texto: 'Dejar mi reseña', url } };
+      }))}
+      <p style="${CORREO.textoMenor}margin:14px 0 0;">Solo opinan quienes compraron y recibieron el producto. El equipo revisa cada reseña antes de publicarla.</p>`,
+    chispa: { pose: 'senala', texto: 'Con unas pocas palabras ya ayudas muchísimo. ¡Gracias por tomarte el tiempo!' },
+    motivo: `Recibes este correo porque compraste en nuestra tienda. <a href="${escaparHtml(enlaceBaja(userId, 'resenas'))}" style="color:inherit;text-decoration:underline;">No recibir más este pedido de reseñas</a>`,
+  });
+  return { asunto, html };
 }

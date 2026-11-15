@@ -520,7 +520,13 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-226 · Ningún contenedor ámbar** (**hecha**, Andrés, 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados"; eligió el azul claro de la tienda). La regla quedó en §1.1, §1.7, §1.8, `CLAUDE.md` y `GEMINI.md`, y se pasaron 24 archivos, el aviso compartido del panel (42 usos) y la caja de aviso de los correos. `estado/C-226.md`.
   - **Quedan, porque la regla los permite:** los textos sueltos en ámbar ("Te faltan Bs. 120", "Verifica tu pago"), las estrellas y su barra, y la etiqueta "Oferta del día".
 - **El reset de `app/globals.css` (hallado en C-226):** `* { box-sizing: border-box }` está fuera de `@layer`, así que le gana a las utilidades y `box-content` de Tailwind no funciona en ninguna parte. Tailwind ya trae ese reset: moverlo a `@layer base` lo arregla. Toca toda la tienda, así que va con una revisión visual completa. Prioridad baja.
-- **C-219 · Los correos de la tienda** (en curso, 14/11; decisiones en §7.2): el análisis completo, los 26 correos que ya salen con el diseño nuevo y los 19 que faltan. Usa C-234 para decir cuándo sale el pedido.
+- **C-219 · Los correos de la tienda** (**hecha**, rc.47, 14/11; decisiones en §7.2): el marco nuevo (la maqueta C), los 26 correos que ya salían y los 19 que faltaban; la vista previa con los 54 (`estado/C-219.md`, `AUDITORIA_CORREOS.md`).
+  - **Sigue:**
+    - "Sale el lunes 16" en los correos de compra, con C-234;
+    - responder un mensaje sin el borrador de Claude también con la plantilla (hoy abre el correo personal);
+    - el carrito abandonado, que necesita guardar el carrito;
+    - "Tu factura", desde el 19/04/2027 con Contabilidad;
+    - el resumen de Puntos ES.
 - **C-227 · Los correos a los proveedores** (en curso, 14/11; decisiones en §7.2):
   - el contacto del proveedor en el panel (columnas nuevas, aditivas);
   - la bienvenida, el aviso de venta, la página firmada para anotar la guía, el recordatorio y la cancelación.

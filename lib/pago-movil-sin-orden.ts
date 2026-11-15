@@ -10,6 +10,8 @@ import { roundMoney, montoDecimal } from '@/lib/pricing';
 import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { createNotification } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { correoPagoAPuntos } from '@/lib/email-templates/puntos';
+import { enviarAUsuario } from '@/lib/email-templates/enviar';
 import { ETIQUETA_ESTADO } from '@/lib/order-admin';
 import { formatPaymentMethod } from '@/lib/format-helpers';
 
@@ -78,6 +80,8 @@ export async function acreditarPagoSinOrden(verificacionId: string, motivo: stri
       message: `No pudimos crear tu pedido, así que tu Pago Móvil (ref. ${resultado.referencia}) quedó en tu cuenta: ${formatPuntos(resultado.montoUSD)}. Puedes usarlo en tu próxima compra.`,
       link: '/customer/balance',
     });
+    // C-219: también por correo: es dinero del cliente que cambió de lugar
+    void enviarAUsuario(resultado.userId, (u) => correoPagoAPuntos({ nombre: u.name, monto: resultado.montoUSD, referencia: resultado.referencia }));
     emitAdminEvent({
       type: 'ORDER_PAYMENT_ORPHAN',
       title: `Pago sin orden · ref. ${resultado.referencia}`,

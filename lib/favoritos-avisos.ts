@@ -10,9 +10,10 @@ import { mejorOferta } from '@/lib/promotions-core';
 import { montoDecimal } from '@/lib/pricing';
 import { formatUSD } from '@/lib/currency';
 import { createNotification } from '@/lib/notifications';
-import { getBaseTemplate, sendEmail } from '@/lib/email-service';
-import { CORREO, COLOR, botonCorreo } from '@/lib/email-templates/estilo';
-import { enlaceBaja, escaparHtml, urlAbsoluta, urlBase } from '@/lib/email-campaigns';
+import { sendEmail } from '@/lib/email-service';
+import { CORREO, botonCorreo, productosCorreo } from '@/lib/email-templates/estilo';
+import { fotoCorreo, marcoCorreo } from '@/lib/email-templates/marco';
+import { enlaceBaja, escaparHtml, urlBase } from '@/lib/email-campaigns';
 
 /** Baja mínima para avisar: 1 %. Un ajuste de centavos no es noticia. */
 const BAJA_MINIMA = 0.01;
@@ -32,7 +33,7 @@ export function avisoDeFavorito(e: EstadoFavorito): 'precio' | 'disponible' | nu
   return e.ahoraUSD <= e.antesUSD * (1 - BAJA_MINIMA) ? 'precio' : null;
 }
 
-interface Aviso {
+export interface Aviso {
   tipo: 'precio' | 'disponible';
   nombre: string;
   slug: string;
@@ -175,33 +176,33 @@ function asunto(lista: Aviso[]): string {
   return a.tipo === 'precio' ? `Bajó de precio: ${a.nombre}` : `Volvió a estar disponible: ${a.nombre}`;
 }
 
-async function correoFavoritos(userId: string, nombreCliente: string | null, lista: Aviso[]): Promise<string> {
-  const nombre = (nombreCliente || '').trim().split(/\s+/)[0] || 'cliente';
-  const filas = lista.map((a) => {
-    const url = escaparHtml(`${urlBase()}/productos/${a.slug}`);
-    const foto = a.imagen
-      ? `<img src="${escaparHtml(urlAbsoluta(a.imagen))}" alt="" width="72" height="72" style="display:block;width:72px;height:72px;object-fit:contain;border-radius:8px;background-color:#ffffff;border:1px solid ${COLOR.linea};">`
-      : '';
-    const etiqueta = a.tipo === 'precio' ? (a.enOferta ? 'En oferta' : 'Bajó de precio') : 'Disponible otra vez';
-    const antes = a.tipo === 'precio' && a.antesUSD !== null
-      ? ` <span style="color:${COLOR.suave};text-decoration:line-through;font-weight:400;">${escaparHtml(formatUSD(a.antesUSD))}</span>`
-      : '';
-    return `<tr>
-      <td style="padding:12px 12px 12px 0;width:72px;vertical-align:top;border-bottom:1px solid ${COLOR.linea};"><a href="${url}">${foto}</a></td>
-      <td style="padding:12px 0;vertical-align:top;border-bottom:1px solid ${COLOR.linea};">
-        <p style="margin:0 0 4px;color:${COLOR.marca};font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">${escaparHtml(etiqueta)}</p>
-        <a href="${url}" style="color:${COLOR.tinta};font-size:15px;font-weight:600;text-decoration:none;">${escaparHtml(a.nombre)}</a>
-        <p style="margin:4px 0 0;color:${COLOR.tinta};font-size:16px;font-weight:700;">${escaparHtml(formatUSD(a.ahoraUSD))}${antes}</p>
-      </td>
-    </tr>`;
-  }).join('');
-  const contenido = `
-    <h2 style="${CORREO.titulo}">Novedades de tus favoritos</h2>
-    <p style="${CORREO.texto}">Hola ${escaparHtml(nombre)}, esto cambió en los productos que guardaste:</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border-top:1px solid ${COLOR.linea};">${filas}</table>
-    <p style="${CORREO.textoMenor}margin:14px 0 0;">Los precios y la disponibilidad pueden cambiar. Se confirman al pagar.</p>
-    ${botonCorreo(`${escaparHtml(urlBase())}/customer/wishlist`, 'Ver mis favoritos')}
-    <p style="${CORREO.nota}text-align:center;">Recibes este correo porque guardaste estos productos en Favoritos. <a href="${escaparHtml(enlaceBaja(userId, 'favoritos'))}" style="${CORREO.enlace}">No recibir más estos avisos</a></p>`;
-  return getBaseTemplate(contenido, asunto(lista));
+/** El correo de los favoritos (también lo usa la vista previa del panel, C-219). */
+export async function correoFavoritos(userId: string, nombreCliente: string | null, lista: Aviso[]): Promise<string> {
+  const nombre = (nombreCliente || '').trim().split(/\s+/)[0] || '';
+  const bajo = lista.some((a) => a.tipo === 'precio');
+  // C-219: el marco nuevo; cada producto con su foto en JPEG, su etiqueta, su precio y el de antes
+  return marcoCorreo({
+    preheader: asunto(lista),
+    encabezado: {
+      sello: 'TUS FAVORITOS',
+      titulo: bajo
+        ? `¡Bajó lo que te gusta${nombre ? `, ${escaparHtml(nombre)}` : ''}!`
+        : `¡Volvió lo que te gusta${nombre ? `, ${escaparHtml(nombre)}` : ''}!`,
+      texto: lista.length > 1 ? 'Esto cambió en los productos que guardaste.' : 'Esto cambió en un producto que guardaste.',
+    },
+    cuerpo: `
+      ${productosCorreo(lista.map((a) => ({
+        nombre: escaparHtml(a.nombre),
+        detalle: a.tipo === 'precio' ? (a.enOferta ? 'En oferta' : 'Bajó de precio') : 'Disponible otra vez',
+        monto: escaparHtml(formatUSD(a.ahoraUSD)),
+        antes: a.tipo === 'precio' && a.antesUSD !== null ? escaparHtml(formatUSD(a.antesUSD)) : undefined,
+        foto: fotoCorreo(a.imagen),
+        enlace: escaparHtml(`${urlBase()}/productos/${a.slug}`),
+      })))}
+      <p style="${CORREO.textoMenor}margin:14px 0 0;">Los precios y la disponibilidad pueden cambiar: se confirman al pagar.</p>
+      ${botonCorreo(`${escaparHtml(urlBase())}/customer/wishlist`, 'Ver mis favoritos')}`,
+    chispa: { pose: 'senala', texto: 'Te aviso apenas cambian: así no te pierdes nada de lo que te gusta.' },
+    motivo: `Recibes este correo porque guardaste estos productos en Favoritos. <a href="${escaparHtml(enlaceBaja(userId, 'favoritos'))}" style="color:inherit;text-decoration:underline;">No recibir más estos avisos</a>`,
+  });
 }
 

@@ -1,6 +1,6 @@
-import { getBaseTemplate } from '@/lib/email-service';
 import { escapeHtml } from '@/lib/html';
-import { CORREO, COLOR, botonCorreo, selloCorreo } from './estilo';
+import { botonCorreo } from './estilo';
+import { marcoCorreo } from './marco';
 
 interface ReviewApprovedData {
     customerName: string;
@@ -9,26 +9,25 @@ interface ReviewApprovedData {
     rating: number;
 }
 
-/** El HTML completo del correo, con el marco de todos los correos (C-175). El nombre del cliente y del producto van escapados. */
+/** El HTML completo del correo (C-219: el marco nuevo). El nombre del cliente y del producto van escapados. */
 export async function generateReviewApprovedEmail(data: ReviewApprovedData): Promise<string> {
     const { customerName, productName, productUrl, rating } = data;
+    const nombre = escapeHtml((customerName || '').trim().split(/\s+/)[0] || '');
+    // Las estrellas de calificación son la excepción con nombre del ámbar (PLAN.md §1.1)
     const estrellas = [...Array(5)]
-        .map((_, i) => `<span style="color:${i < rating ? '#f59e0b' : COLOR.linea};">&#9733;</span>`)
+        .map((_, i) => `<span style="color:${i < rating ? '#f59e0b' : '#d5dbe5'};">&#9733;</span>`)
         .join('');
 
-    const content = `
-    <div style="text-align:center;">
-      ${selloCorreo('exito')}
-      <h2 style="${CORREO.titulo}">Tu reseña ya está publicada</h2>
-      <p style="margin:0 0 20px;font-size:30px;line-height:1;letter-spacing:4px;">${estrellas}</p>
-    </div>
-    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(customerName)}</strong>,</p>
-    <p style="${CORREO.texto}">Gracias por compartir tu experiencia con <strong style="${CORREO.fuerte}">${escapeHtml(productName)}</strong>. Aprobamos tu reseña y ya la ven los demás clientes.</p>
-    ${botonCorreo(escapeHtml(productUrl), 'Ver tu reseña')}
-    <div style="${CORREO.caja}">
-      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">¿Sabías que?</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Las reseñas de quienes compraron son las que más ayudan a otros clientes a decidir.</p>
-    </div>`;
-
-    return getBaseTemplate(content, `Tu reseña de ${productName} ya está publicada`);
+    return marcoCorreo({
+        preheader: `Tu reseña de ${productName} ya la ven todos en la tienda.`,
+        encabezado: {
+            sello: 'RESEÑA PUBLICADA',
+            titulo: `¡Gracias por tu opinión${nombre ? `, ${nombre}` : ''}!`,
+            texto: `Tu reseña de <strong style="color:#212529;">${escapeHtml(productName)}</strong> ya está publicada y la ven todos en la tienda.`,
+        },
+        cuerpo: `
+            <p style="margin:0;font-size:34px;line-height:1;letter-spacing:6px;text-align:center;">${estrellas}</p>
+            ${botonCorreo(escapeHtml(productUrl), 'Ver mi reseña')}`,
+        chispa: { pose: 'celebra', texto: 'Las reseñas de quienes compraron son las que más ayudan a otros a decidir. ¡Gracias por ser parte!' },
+    });
 }

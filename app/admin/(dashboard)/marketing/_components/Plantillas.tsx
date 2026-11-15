@@ -5,15 +5,15 @@ import { toast } from 'react-hot-toast';
 import { IconoCelular, IconoMonitor } from '@/components/iconos';
 import { adminCardFlush, adminSpinner, adminTab } from '@/lib/admin-ui';
 
-interface Plantilla { id: string; name: string; description: string }
+interface Plantilla { id: string; grupo?: string; name: string; description: string }
 
 /**
  * Vista previa de los correos que envía la tienda. Desde C-75 se generan con las mismas funciones
- * de los envíos reales (antes era una copia aparte que podía no parecerse).
+ * de los envíos reales (antes era una copia aparte que podía no parecerse). C-219: todos, por grupo.
  */
 export default function Plantillas() {
   const [plantillas, setPlantillas] = useState<Plantilla[]>([]);
-  const [elegida, setElegida] = useState('welcome');
+  const [elegida, setElegida] = useState('order_paid');
   const [vista, setVista] = useState<{ id: string; subject: string; html: string } | null>(null);
   const [modo, setModo] = useState<'escritorio' | 'movil'>('escritorio');
 
@@ -39,8 +39,11 @@ export default function Plantillas() {
     <div className="grid gap-5 lg:grid-cols-[16rem_minmax(0,1fr)]">
       <nav aria-label="Plantillas de correo" className="-mx-1 overflow-x-auto px-1 lg:mx-0 lg:overflow-visible lg:px-0">
         <ul className="flex w-max gap-1 lg:w-auto lg:flex-col">
-          {plantillas.map((p) => (
+          {plantillas.map((p, i) => (
             <li key={p.id}>
+              {p.grupo && p.grupo !== plantillas[i - 1]?.grupo && (
+                <span className={`hidden px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted lg:block ${i === 0 ? '' : 'pt-3'}`}>{p.grupo}</span>
+              )}
               <button
                 type="button"
                 onClick={() => setElegida(p.id)}

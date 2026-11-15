@@ -1,0 +1,93 @@
+/**
+ * C-219: correos de la cuenta y la seguridad. El inicio de sesión y la invitación al panel estaban escritos en
+ * lib/sesiones y lib/equipo; la contraseña cambiada y el pedido de eliminar la cuenta no tenían correo.
+ */
+import { escapeHtml } from '@/lib/html';
+import { CORREO, avisoCorreo, botonCorreo, datosCorreo, enlaceWhatsAppCorreo, notaCorreo, urlTienda } from './estilo';
+import { ajustesCorreo, marcoCorreo } from './marco';
+import type { Correo } from './pedidos';
+
+const e = escapeHtml;
+const nombreDe = (nombre: string | null | undefined) => e((nombre || '').trim().split(/\s+/)[0] || '');
+
+/** Entraron a la cuenta desde un dispositivo nuevo (C-140). */
+export async function correoSesionNueva(d: { nombre: string | null; dispositivo: string; cuando: string; conGoogle: boolean }): Promise<Correo> {
+  const nombre = nombreDe(d.nombre);
+  const html = await marcoCorreo({
+    preheader: `Entraron a tu cuenta desde ${d.dispositivo}.`,
+    encabezado: {
+      sello: 'SEGURIDAD',
+      titulo: `¿Fuiste tú${nombre ? `, ${nombre}` : ''}?`,
+      texto: 'Alguien entró a tu cuenta desde un dispositivo que no habías usado.',
+    },
+    cuerpo: `
+      ${datosCorreo([['Dispositivo', e(d.dispositivo)], ['Cuándo', e(d.cuando)], ['Cómo', d.conGoogle ? 'Con Google' : 'Con tu contraseña']])}
+      ${avisoCorreo('¿No fuiste tú?', 'Cambia tu contraseña y cierra esa sesión desde Mi perfil → Seguridad.', 'candado')}
+      ${botonCorreo(`${urlTienda()}/customer/profile?tab=seguridad`, 'Revisar mis sesiones')}`,
+    chispa: { pose: 'explica', texto: 'Te aviso cada vez que entras desde un equipo nuevo. Si fuiste tú, no tienes que hacer nada.' },
+    motivo: 'Recibes este correo para proteger tu cuenta.',
+  });
+  return { asunto: `Nuevo inicio de sesión: ${d.dispositivo}`, html };
+}
+
+/** La contraseña cambió (con el enlace de "Olvidé mi contraseña" o desde Mi perfil). */
+export async function correoContrasenaCambiada(d: { nombre: string | null; sesionesCerradas: boolean }): Promise<Correo> {
+  const a = await ajustesCorreo();
+  const nombre = nombreDe(d.nombre);
+  const cuando = new Date().toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' });
+  const whatsapp = enlaceWhatsAppCorreo(a.whatsapp, 'escríbenos por WhatsApp de una vez', 'Hola, cambiaron la contraseña de mi cuenta y no fui yo');
+  const html = await marcoCorreo({
+    preheader: 'Tu contraseña de Electro Shop cambió.',
+    encabezado: {
+      sello: 'SEGURIDAD',
+      titulo: `Tu contraseña cambió${nombre ? `, ${nombre}` : ''}`,
+      texto: `Listo: desde el ${e(cuando)} entras con tu contraseña nueva.${d.sesionesCerradas ? ' Por seguridad, cerramos las demás sesiones abiertas.' : ''}`,
+    },
+    cuerpo: `
+      ${avisoCorreo('¿No fuiste tú?', 'Pide una contraseña nueva con "Olvidé mi contraseña" y revisa tus sesiones en Mi perfil → Seguridad.', 'candado')}
+      ${botonCorreo(`${urlTienda()}/customer/profile?tab=seguridad`, 'Revisar mi cuenta')}`,
+    chispa: { pose: 'explica', texto: `Si no reconoces este cambio, ${whatsapp || 'escríbenos'}: lo revisamos contigo.` },
+    motivo: 'Recibes este correo para proteger tu cuenta.',
+  });
+  return { asunto: 'Tu contraseña de Electro Shop cambió', html };
+}
+
+/** El cliente pidió eliminar su cuenta desde Mi perfil: el equipo le escribe para confirmarlo. */
+export async function correoEliminarCuenta(d: { nombre: string | null }): Promise<Correo> {
+  const a = await ajustesCorreo();
+  const nombre = nombreDe(d.nombre);
+  const whatsapp = enlaceWhatsAppCorreo(a.whatsapp, 'escríbenos por WhatsApp', 'Hola, pedí eliminar mi cuenta y quiero dejarla activa');
+  const html = await marcoCorreo({
+    preheader: 'Recibimos tu pedido. Te escribimos para confirmarlo.',
+    encabezado: {
+      sello: 'TU CUENTA',
+      titulo: `Recibimos tu pedido${nombre ? `, ${nombre}` : ''}`,
+      texto: 'Pediste eliminar tu cuenta. Antes de hacerlo, alguien del equipo te escribe a este correo para confirmarlo contigo.',
+    },
+    cuerpo: notaCorreo(`<strong style="${CORREO.fuerte}">Si tienes pedidos,</strong> la cuenta se desactiva en lugar de borrarse, y desde ese momento nadie puede entrar con ella.`),
+    chispa: { pose: 'explica', texto: `¿Te arrepentiste o no fuiste tú? ${whatsapp ? `Solo ${whatsapp}` : 'Escríbenos'} y la dejamos como estaba.` },
+    motivo: 'Recibes este correo porque se pidió eliminar esta cuenta.',
+  });
+  return { asunto: 'Recibimos tu pedido de eliminar la cuenta', html };
+}
+
+/** Invitación al panel (lib/equipo). `rol` llega legible ("Ventas"). */
+export async function correoInvitacionEquipo(d: { nombre: string; rol: string; invitadoPor: string; enlace: string }): Promise<Correo> {
+  const nombre = nombreDe(d.nombre);
+  const html = await marcoCorreo({
+    preheader: 'Crea tu contraseña para entrar al panel.',
+    encabezado: {
+      sello: 'INVITACIÓN AL PANEL',
+      titulo: `¡Ya eres del equipo${nombre ? `, ${nombre}` : ''}!`,
+      texto: `${e(d.invitadoPor)} te dio acceso al panel de Electro Shop como <strong style="${CORREO.fuerte}">${e(d.rol)}</strong>.`,
+    },
+    cuerpo: `
+      ${avisoCorreo('Dos pasos para entrar', 'Crea tu contraseña y después configura la verificación en dos pasos con una app de códigos en tu teléfono (Google Authenticator o Authy).', 'clave')}
+      ${botonCorreo(e(d.enlace), 'Crear mi contraseña')}
+      <p style="${CORREO.nota}">El enlace sirve 24 horas y una sola vez. Si no esperabas esta invitación, ignora este correo: sin la contraseña nadie puede entrar.</p>`,
+    chispa: { pose: 'saluda', texto: '¡Qué bueno tenerte! Desde el panel se mueve toda la tienda: pedidos, productos y clientes.' },
+    pie: 'equipo',
+    motivo: 'Recibes este correo porque te invitaron al panel de la tienda.',
+  });
+  return { asunto: 'Te invitaron al panel de Electro Shop', html };
+}

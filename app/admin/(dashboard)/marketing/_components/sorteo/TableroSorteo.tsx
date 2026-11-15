@@ -186,7 +186,7 @@ export default function TableroSorteo({ datos, onEditar, onNuevo, onRecargar }: 
                 <IconoPremio className="h-4 w-4" aria-hidden="true" /> Sortear ahora
               </button>
             </PasoSortear>
-            <PasoSortear icono={IconoCorreo} titulo="3. Avísale" detalle="Le escribes al correo de su cuenta para coordinar la entrega." />
+            <PasoSortear icono={IconoCorreo} titulo="3. Le llega el correo" detalle="Al ganador le llega solo, y a los demás el resultado. Tú coordinas la entrega." />
           </ol>
         </section>
       )}
@@ -207,7 +207,7 @@ export default function TableroSorteo({ datos, onEditar, onNuevo, onRecargar }: 
               <div className="mt-3 flex flex-wrap gap-2">
                 {s.ganadorEmail && (
                   <a href={`mailto:${s.ganadorEmail}?subject=${encodeURIComponent(`Ganaste el ${s.titulo}`)}`} className={`${adminPrimaryButton} h-9 px-3`}>
-                    <IconoCorreo className="h-4 w-4" aria-hidden="true" /> Escribirle
+                    <IconoCorreo className="h-4 w-4" aria-hidden="true" /> Escribirle para la entrega
                   </a>
                 )}
                 <button type="button" onClick={onNuevo} className={`${adminSecondaryButton} h-9 px-3`}><IconoRegalo className="h-4 w-4" aria-hidden="true" /> Sorteo nuevo con estos datos</button>

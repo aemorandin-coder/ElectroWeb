@@ -5,6 +5,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { sendEmail } from '@/lib/email-service';
+import { correoGarantiaRecibida } from '@/lib/email-templates/servicio';
 import { CONDITION_LABEL, WARRANTY_REASONS, warrantyDaysFor } from '@/lib/product-condition';
 import { claimCode, WARRANTY_MESSAGE_MAX } from '@/lib/warranty';
 import { parseCustomerPhotos, photosToJson } from '@/lib/warranty-server';
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest) {
       orderNumber: true,
       status: true,
       deliveredAt: true,
-      user: { select: { name: true } },
+      user: { select: { name: true, email: true } },
       items: { where: { id: itemId }, select: { id: true, productName: true, productCondition: true, warrantyDays: true } },
     },
   });
@@ -121,6 +123,14 @@ export async function POST(request: NextRequest) {
     ],
     link: `/admin/garantias/${claim.id}`,
   });
+
+  // C-219: el acuse al cliente, con su código y lo que sigue (antes solo le avisaba al equipo)
+  if (order.user?.email) {
+    const destino = order.user.email;
+    void correoGarantiaRecibida({ nombre: order.user.name, codigo: claimCode(claim.number), producto: productName, numeroOrden: order.orderNumber })
+      .then(({ asunto, html }) => sendEmail({ to: destino, subject: asunto, html }))
+      .catch((error) => console.error('Error enviando el acuse de garantía:', error));
+  }
 
   return NextResponse.json({ ok: true, id: claim.id, code: claimCode(claim.number) }, { status: 201 });
 }

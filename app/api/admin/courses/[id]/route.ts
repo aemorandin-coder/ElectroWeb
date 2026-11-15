@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { createNotification } from '@/lib/notifications';
+import { correoCursoAprobado } from '@/lib/email-templates/comunidad';
+import { enviarAUsuario } from '@/lib/email-templates/enviar';
 import { adminCoursePatchSchema, curriculumSchema } from '@/lib/validations/creator-course';
 
 export async function GET(
@@ -139,6 +141,9 @@ export async function PATCH(
         link: `/cursos/${previo.slug}`,
         icon: 'confirm',
       });
+      // C-219: también por correo
+      const creadorId = previo.creator.userId;
+      void enviarAUsuario(creadorId, (u) => correoCursoAprobado({ nombre: u.name, curso: previo.title, slug: previo.slug }));
     }
 
     return NextResponse.json(course);

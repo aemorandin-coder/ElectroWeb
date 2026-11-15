@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 import { verifyCaptcha } from '@/lib/captcha';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { sendEmail } from '@/lib/email-service';
+import { correoPresupuestoPedido } from '@/lib/email-templates/servicio';
 import { crearCotizacion } from '@/lib/cotizaciones';
 import { CONDICIONES_POR_DEFECTO, TERMINOS_POR_DEFECTO, solicitudSchema } from '@/lib/cotizaciones/core';
 
@@ -52,6 +54,14 @@ export async function POST(request: NextRequest) {
       fields: [['Número', cotizacion.number], ['Contacto', cliente.contactName], ['Teléfono', cliente.contactPhone], ['Productos elegidos', items.length]],
       link: `/admin/cotizaciones/${cotizacion.id}`,
     });
+
+    // C-219: el acuse al cliente, con lo que sigue
+    if (cliente.contactEmail) {
+      const destino = cliente.contactEmail;
+      void correoPresupuestoPedido({ nombre: cliente.contactName || cliente.clientName, numero: cotizacion.number })
+        .then(({ asunto, html }) => sendEmail({ to: destino, subject: asunto, html }))
+        .catch((error) => console.error('Error enviando el acuse del presupuesto:', error));
+    }
 
     return NextResponse.json({ ok: true, numero: cotizacion.number }, { status: 201 });
   } catch (error) {

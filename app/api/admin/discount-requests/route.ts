@@ -6,6 +6,8 @@ import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { formatUSD } from '@/lib/currency';
+import { correoDescuentoAprobado } from '@/lib/email-templates/comunidad';
+import { enviarAUsuario } from '@/lib/email-templates/enviar';
 
 // GET - List all discount requests for admin
 export async function GET(request: NextRequest) {
@@ -128,6 +130,18 @@ export async function PATCH(request: NextRequest) {
                     icon: 'FiCheckCircle',
                 },
             });
+            // C-219: también por correo, con la foto, el precio de antes y el de ahora, y hasta cuándo vale
+            const producto = await prisma.product.findUnique({ where: { id: discountRequest.productId }, select: { name: true, slug: true, mainImage: true } });
+            if (producto) {
+                const antes = Number(discountRequest.originalPrice);
+                void enviarAUsuario(discountRequest.userId, (u) => correoDescuentoAprobado({
+                    nombre: u.name,
+                    producto: { nombre: producto.name, slug: producto.slug, imagen: producto.mainImage },
+                    precioAntes: antes,
+                    precioAhora: antes - discountAmount,
+                    vence: updated.expiresAt,
+                }));
+            }
         } else {
             await prisma.notification.create({
                 data: {

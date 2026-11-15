@@ -4,7 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { esAdminVerificado } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { montoDecimal } from '@/lib/pricing';
-import { sendGiftCardEmail } from '@/lib/email-service';
+import { sendEmail, sendGiftCardEmail } from '@/lib/email-service';
+import { correoGiftCardEntregada } from '@/lib/email-templates/comunidad';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD } from '@/lib/currency';
 import {
@@ -266,6 +267,13 @@ export async function POST(request: Request) {
             } catch (emailError) {
                 console.error('[GIFT CARD] Failed to send email to recipient:', emailError);
                 // Don't fail the request if email fails - gift card is still created
+            }
+            // C-219: a quien la compró, que su regalo ya llegó (si se la regaló a otra persona)
+            const comprador = session?.user?.email;
+            if (!isAdmin && comprador && comprador.toLowerCase() !== String(recipientEmail).toLowerCase()) {
+                void correoGiftCardEntregada({ nombre: session.user.name ?? null, para: recipientName || String(recipientEmail), correoPara: String(recipientEmail), monto: amountUSD })
+                    .then(({ asunto, html }) => sendEmail({ to: comprador, subject: asunto, html }))
+                    .catch((error) => console.error('[GIFT CARD] Failed to send delivery notice to buyer:', error));
             }
         }
 

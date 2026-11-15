@@ -1,4 +1,4 @@
-# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.48, por subir)
+# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.49, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
@@ -30,6 +30,10 @@
   - **C-227 · Los correos para proveedores:** la bienvenida de "revendedor premium", "¡Se vendió tu producto!" y "Se canceló: no lo despaches".
   - **C-234 · Cuándo sale cada pedido:** corte a las 2:00 p. m., lo del sábado sale el lunes, los feriados y "Sale el lunes 16" en la ficha, el carrito, el checkout, los correos y Mi pedido.
 - **Tres sesiones de Claude a la vez el 14/11**, cada una en su worktree: la de los correos (C-219, C-226, C-227 y C-234), la del plan de crecimiento (C-220 a C-225 y C-241) y la de Contabilidad (C-228 a C-240).
+- **C-223 · El aviso de cookies (rc.49, por subir):** listo para cuando se pongan las claves de Google y del píxel (`estado/C-223.md`).
+  - Chico y abajo, con "Solo las necesarias" y "Aceptar" del mismo tamaño y "Elegir". "Cookies", al pie, lo vuelve a abrir.
+  - Hasta el sí, Google va sin cookies (Consent Mode) y el píxel no carga. Sin claves no sale nada.
+  - La medición propia guarda la IP sin su último tramo. El texto nuevo de la política espera al abogado (sección 3, paso 18).
 - **C-225 · Los textos para buscadores (rc.48, por subir):** ya no dicen "tienda de tecnología" (`estado/C-225.md`).
   - Sin texto propio en Configuración → SEO, se arman con lo que vende la tienda hoy ("tecnología, ferretería y gift cards"): crecen solos con cada departamento.
   - La ficha para Google es de una tienda (Store), `llms.txt` dice "Tienda en Guanare" y la imagen de la portada lleva de título lo que vende, con el lema debajo.
@@ -238,7 +242,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.48` (C-226, C-221, C-222, C-219 y C-225, con rc.44 a rc.47 adentro; unos 45 minutos)
+### El bloque por subir: `v1.0.0-rc.49` (C-226, C-221, C-222, C-219, C-225 y C-223, con rc.44 a rc.48 adentro; unos 50 minutos)
 **Producción ya está en `v1.0.0-rc.43`** (`fcdc4c0`, compilada el 14/11 a las 00:10 UTC). Lo comprobó Claude desde fuera el 14/11, leyendo la versión de la página pública. Nadie lo anotó: falta que el equipo confirme si se corrió el SQL del bloque de rc.43 (abajo) y cuáles de sus pruebas se hicieron. Con eso, ese bloque pasa a `HISTORIAL.md`.
 - **C-226 (rc.44):** ningún contenedor ámbar; lo que hay que hacer va en el azul claro de la tienda. **Sin SQL, sin variables nuevas y sin cron.**
 - **C-221 (rc.45):** el sorteo por pasos. **Sin cambio de base, sin variables nuevas y sin cron.** Lleva un **SQL de datos** (abajo).
@@ -280,7 +284,7 @@ WHERE NOT EXISTS (SELECT 1 FROM sorteos);
 ```
   - Las fechas van en UTC: del 14/11 al 18/12 (hasta las 11:59 p. m.) y el resultado el 20/12, hora de Venezuela.
   - La foto de la consola se agrega después en Marketing → Sorteo → Cambiar (se sube desde la computadora). Sin foto, /sorteo se ve igual, sin el recuadro de la imagen.
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.48`.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.49`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **En el panel:** Configuración → Respaldos con los respaldos apagados, y Productos → Nuevo → Publicar con un dato faltante. El aviso va en azul claro, con el ícono cian en su placa azul noche. No queda ninguna caja ámbar.
   2. **En la tienda,** con una cuenta sin verificar: el checkout muestra "Verificación requerida" con el círculo azul noche. Mi panel → Documentos con uno por firmar: la nota va en azul claro.
@@ -297,6 +301,7 @@ WHERE NOT EXISTS (SELECT 1 FROM sorteos);
   11. **Una compra pequeña con Pago Móvil, con tu cuenta de cliente:** llega un solo correo, "¡Pago confirmado!", con la foto, el total en $ y en Bs., y el aviso del flete en azul claro.
   12. **Contacto:** manda un mensaje desde `/contacto` con tu correo: llega "¡Te leímos!". En el panel, Mensajes → ese mensaje → "Redactar con Claude" → "Enviar con el diseño de la tienda": llega la respuesta y el mensaje queda "Respondido".
   13. **Los buscadores** (C-225): `https://electroshopve.com/llms.txt` empieza "Tienda en Guanare, Portuguesa, Venezuela". Al compartir `https://electroshopve.com` por WhatsApp, la imagen dice "Tecnología, ferretería y gift cards" con "Todo lo encuentras con nosotros." debajo (desde el teléfono: el de escritorio guarda la vista previa vieja).
+  14. **Las cookies** (C-223): sin las claves de Google y del píxel en el `.env` (como hoy), no sale ningún aviso ni "Cookies" en el pie. El aviso sale cuando se pongan (sección 3, paso 10).
 - **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`. Los textos de antes quedan en `~/textos-antes-c221.txt`; el sorteo se apaga en Marketing → Sorteo → Apagar. La columna nueva de C-219 no molesta al código anterior; el cron del sorteo se quita con `crontab -e`.
 
 ### Ya en producción, sin anotar: `v1.0.0-rc.43` (C-210 a C-218, con rc.35 a rc.42 adentro)
@@ -672,7 +677,7 @@ En el orden en que más destraban:
 
 **Medición (antes de pagar un anuncio)**
 9. **Google Search Console:** agregar `electroshopve.com`, enviar `https://electroshopve.com/sitemap.xml` y revisar "Páginas" una semana después.
-10. **Google Analytics y píxel de Meta:** poner `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_FB_PIXEL_ID` en el `.env` del servidor y correr el deploy (`estado/C-145.md`).
+10. **Google Analytics y píxel de Meta:** poner `NEXT_PUBLIC_GA_ID` y `NEXT_PUBLIC_FB_PIXEL_ID` en el `.env` del servidor y correr el deploy (`estado/C-145.md`). Hace falta el deploy: esas claves entran al compilar. **Desde rc.49 (C-223) sale solo el aviso de cookies:** Google va sin cookies y el píxel no carga hasta el sí del cliente. Para probarlo, en el teléfono: el aviso, "Solo las necesarias" y "Cookies" al pie.
 11. Cuando vaya a pagar anuncios en Meta: el catálogo con `https://electroshopve.com/feed/productos.xml` (pasos en `HISTORIAL.md`, C-149).
 
 **Datos y decisiones que tienen tareas paradas** (`PLAN.md` §7.1)
@@ -686,7 +691,7 @@ En el orden en que más destraban:
 17. Avisar cuando SADES vuelva (taller).
 
 **Con el abogado y el contador**
-18. Abogado: términos y privacidad (ahora se editan en Legal → Documentos; `estado/C-120.md` §7) y las 3 afirmaciones de `estado/C-144.md` (el motivo "comprobante vencido o ilegible", los plazos y los datos de contacto).
+18. Abogado: términos y privacidad (ahora se editan en Legal → Documentos; `estado/C-120.md` §7). **La sección 6 de privacidad, "Cookies", tiene un texto nuevo listo** (`estado/C-223.md`): nombra todas las cookies, la medición propia y que Google y Meta van solo con permiso. Se publica con "Nueva versión" cuando el abogado lo apruebe y las 3 afirmaciones de `estado/C-144.md` (el motivo "comprobante vencido o ilegible", los plazos y los datos de contacto).
 19. Contador: las preguntas de `estado/C-151.md` (IVA de los digitales), `estado/C-147b.md` (embalaje), `estado/C-120.md` §6 y **`estado/C-159.md` (retención del IVA: quiénes retienen, el comprobante y si hay retención de ISLR en los servicios)**.
 20. **Mandarle a la contadora las preguntas, por WhatsApp desde tu teléfono:** los tres mensajes de `Preguntas para la contadora 14-11.txt`, en `~/Escritorio/Electro Shop/` de tu PC. Se copian uno por uno. Los asteriscos son las negritas.
 21. **Cuando responda, pásale a Claude** su correo, su nombre como quiere que salga y su número de C.P.C. (para invitarla cuando C-235 esté arriba), y sus respuestas: las columnas, las alícuotas y las fechas salen de ahí.
@@ -694,9 +699,9 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
-**Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) y C-225 (los textos para buscadores, rc.48).
+**Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) y C-223 (el aviso de cookies, rc.49).
 
-**Sigue (el orden del 14/11, C-220):** C-241 (el checkout por pasos, que pidió el equipo después: primero las maquetas), C-223 (el aviso de cookies) y C-224 (los tres únicos). Lo de abajo queda después.
+**Sigue:** C-224 (los tres únicos) y C-241 (el checkout por pasos, que pidió el equipo después: primero las maquetas para elegir). Lo de abajo queda después.
 
 **Contabilidad (C-228 y C-228b, `CONTABILIDAD.md`):** sigue C-229 (la factura de talonario, maqueta B). Después, C-235 (la contadora en el equipo) y C-230 antes del 15/12. El resto en el orden de `PLAN.md` §5.2, todo antes del 19/04/2027.
 

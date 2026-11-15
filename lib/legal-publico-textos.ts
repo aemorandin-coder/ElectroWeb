@@ -163,7 +163,7 @@ Recopilamos información personal que usted nos proporciona voluntariamente al:
 Cuando utiliza nuestra plataforma, recopilamos automáticamente cierta información técnica:
 - **Dirección IP:** Registrada durante acciones críticas como aceptación de términos y transacciones
 - **User Agent:** Información del navegador y dispositivo utilizado
-- **Cookies de sesión:** Para mantener su sesión activa y preferencias
+- **Cookies y almacenamiento del navegador:** Para mantener su sesión, el carrito y sus preferencias (detalle en la sección 6)
 - **Registros de actividad:** Notificaciones recibidas, acciones realizadas en la cuenta
 
 ## 3. Uso de la Información {#uso}
@@ -199,12 +199,13 @@ Implementamos medidas de seguridad técnicas y organizativas para proteger su in
 - **Auditoría:** Mantenemos registros de acceso y modificaciones a datos sensibles
 
 ## 6. Cookies y Tecnologías Similares {#cookies}
-Utilizamos cookies para mejorar su experiencia en nuestra plataforma:
-- **Cookies esenciales:** Necesarias para mantener su sesión activa y el funcionamiento del carrito de compras
-- **Cookies de preferencias:** Recuerdan sus configuraciones y preferencias
-- **Cookies de autenticación:** Mantienen su sesión segura entre visitas
+Usamos cookies y el almacenamiento de su navegador para que la tienda funcione y, solo si usted lo acepta, para medir visitas y anuncios:
+- **Necesarias (siempre):** su sesión, el carrito, el cupón, la ciudad que eligió para calcular el envío y su elección sobre las cookies.
+- **De los enlaces que comparten otros:** si llega por el enlace de un promotor (30 días), de un amigo que lo invita al sorteo (30 días) o de una historia de la tienda (7 días), lo recordamos para saber quién lo invitó.
+- **Medición propia:** las páginas que visita, el tipo de dispositivo y de navegador y su dirección IP sin el último tramo. Sirve para saber qué se ve y qué falla; no se vende ni se comparte.
+- **Medición de Google (Google Analytics) y anuncios de Meta (píxel de Facebook e Instagram):** solo si usted las acepta en el aviso de cookies. Sin su permiso, Google no guarda cookies y el píxel no se carga.
 
-Puede configurar su navegador para rechazar las cookies, pero esto podría limitar algunas funcionalidades del sitio, como el inicio de sesión automático o el carrito de compras.
+Puede cambiar su elección cuando quiera en "Cookies", al pie de cada página. También puede configurar su navegador para rechazar las cookies, aunque así algunas funciones, como el inicio de sesión o el carrito, podrían no funcionar.
 
 ## 7. Compartir Información {#compartir}
 **No vendemos ni alquilamos su información personal a terceros.** Solo compartimos su información en las siguientes circunstancias:

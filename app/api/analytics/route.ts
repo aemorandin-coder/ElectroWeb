@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, getClientIP, getRateLimitHeaders } from '@/lib/rate-limit';
-import { ipParaRegistro } from '@/lib/ip';
+import { ipAnonima, ipParaRegistro } from '@/lib/ip';
 import { getToken } from 'next-auth/jwt';
 import { BOT_UA } from '@/lib/analytics-bots';
 
@@ -63,7 +63,8 @@ export async function POST(request: NextRequest) {
             : 'interaction';
 
         // Get IP and user agent from headers
-        const ipAddress = ipParaRegistro(request.headers);
+        // C-223: sin la IP completa (la medición cuenta por sesión, no por IP)
+        const ipAddress = ipAnonima(ipParaRegistro(request.headers));
         const userAgent = request.headers.get('user-agent') || 'unknown';
         if (userAgent === 'unknown' || BOT_UA.test(userAgent)) {
             return NextResponse.json({ success: true, ignored: 'bot' });

@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { isFlyerCode } from '@/lib/studio/code';
 import { useCartSafe } from '@/contexts/CartContext';
+import { EVENTO_CONSENTIMIENTO, leerConsentimiento, type Consentimiento } from '@/lib/consentimiento';
 
 // Declare global window properties for TypeScript
 declare global {
@@ -144,45 +145,60 @@ export default function AnalyticsTracker() {
         };
     }, [pathname, totalItems]);
 
-    // Inject scripts on mount
+    // C-223 (el equipo, 14/11): Google Analytics en modo sin cookies hasta el sí del cliente (Consent Mode) y el píxel de
+    // Meta solo con su sí. El aviso (components/consent/AvisoCookies) guarda la elección y avisa con un evento.
     useEffect(() => {
         const gaId = process.env.NEXT_PUBLIC_GA_ID;
         const pixelId = process.env.NEXT_PUBLIC_FB_PIXEL_ID;
 
-        // Inject Google Analytics
+        // Google: el permiso por defecto, negado, va antes del config
         if (gaId && !window.gtag) {
-            const script = document.createElement('script');
-            script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-            script.async = true;
-            document.head.appendChild(script);
-
             const inlineScript = document.createElement('script');
             inlineScript.innerHTML = `
                 window.dataLayer = window.dataLayer || [];
                 window.gtag = function() { window.dataLayer.push(arguments); };
+                window.gtag('consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' });
                 window.gtag('js', new Date());
                 window.gtag('config', '${gaId}', { page_path: window.location.pathname });
             `;
             document.head.appendChild(inlineScript);
+            const script = document.createElement('script');
+            script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+            script.async = true;
+            document.head.appendChild(script);
         }
 
-        // Inject Facebook Pixel
-        if (pixelId && !window.fbq) {
-            const inlinePixelScript = document.createElement('script');
-            inlinePixelScript.innerHTML = `
-                !function(f,b,e,v,n,t,s)
-                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-                n.queue=[];t=b.createElement(e);t.async=!0;
-                t.src=v;s=b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t,s)}(window, document,'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-                fbq('init', '${pixelId}');
-                fbq('track', 'PageView');
-            `;
-            document.head.appendChild(inlinePixelScript);
-        }
+        const aplicar = (c: Consentimiento | null) => {
+            if (gaId && window.gtag) {
+                const anuncios = c?.anuncios ? 'granted' : 'denied';
+                window.gtag('consent', 'update', { analytics_storage: c?.medicion ? 'granted' : 'denied', ad_storage: anuncios, ad_user_data: anuncios, ad_personalization: anuncios });
+            }
+            if (!pixelId) return;
+            if (c?.anuncios) {
+                if (window.fbq) { window.fbq('consent', 'grant'); return; }
+                const inlinePixelScript = document.createElement('script');
+                inlinePixelScript.innerHTML = `
+                    !function(f,b,e,v,n,t,s)
+                    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+                    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+                    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+                    n.queue=[];t=b.createElement(e);t.async=!0;
+                    t.src=v;s=b.getElementsByTagName(e)[0];
+                    s.parentNode.insertBefore(t,s)}(window, document,'script',
+                    'https://connect.facebook.net/en_US/fbevents.js');
+                    fbq('init', '${pixelId}');
+                    fbq('track', 'PageView');
+                `;
+                document.head.appendChild(inlinePixelScript);
+            } else if (window.fbq) {
+                // Dijo que no después de decir que sí: el píxel ya cargado deja de enviar
+                window.fbq('consent', 'revoke');
+            }
+        };
+        aplicar(leerConsentimiento());
+        const alElegir = (e: Event) => aplicar((e as CustomEvent<Consentimiento>).detail);
+        window.addEventListener(EVENTO_CONSENTIMIENTO, alElegir);
+        return () => window.removeEventListener(EVENTO_CONSENTIMIENTO, alElegir);
     }, []);
 
     // Track page views - exclude admin paths

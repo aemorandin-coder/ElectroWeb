@@ -6,6 +6,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import { NotificationProvider } from "@/components/notifications/NotificationProvider";
 import ShareEarnModal from "@/components/social/ShareEarnModal";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import AvisoCookies from '@/components/consent/AvisoCookies';
 import MobileNavBar from "@/components/public/MobileNavBar";
 import { GuidedTourWrapper } from "@/components/onboarding/GuidedTourWrapper";
 import { getPublicSettings, getSiteSettings } from "@/lib/site-settings";
@@ -142,6 +143,8 @@ export default async function RootLayout({
             <WhatsAppButton />
             <ShareEarnModal />
             <AnalyticsTracker />
+            {/* C-223: el aviso de cookies, antes de Google Analytics y el píxel */}
+            <AvisoCookies />
             {/* Issue #26 — Tour guiado post-registro */}
             <GuidedTourWrapper />
           </NotificationProvider>

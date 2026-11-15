@@ -1,6 +1,6 @@
 'use client';
 
-import { adminBadge, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminBadge, adminInput, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 
@@ -176,7 +176,7 @@ export default function InquiriesPage() {
             value={ordenUrgencia ? 'urgencia' : 'recientes'}
             onChange={(e) => setOrdenUrgencia(e.target.value === 'urgencia')}
             aria-label="Orden"
-            className="px-4 py-2 border border-line rounded-lg focus:outline-none focus:border-brand-500 text-sm bg-white"
+            className={`${adminInput()} sm:w-auto`}
         >
             <option value="recientes">Más recientes</option>
             <option value="urgencia">Más urgentes primero</option>
@@ -367,7 +367,7 @@ export default function InquiriesPage() {
                                 <select
                                     value={messageFilterStatus}
                                     onChange={(e) => setMessageFilterStatus(e.target.value as 'ALL' | 'PENDING' | 'READ' | 'RESPONDED')}
-                                    className="px-4 py-2 border border-line rounded-lg focus:outline-none focus:border-brand-500 text-sm bg-white"
+                                    className={`${adminInput()} sm:w-auto`}
                                 >
                                     <option value="ALL">Todos ({messages.length})</option>
                                     <option value="PENDING">Pendientes ({messageStats.pending})</option>
@@ -535,15 +535,15 @@ export default function InquiriesPage() {
                                 </div>
                                 <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
                                     <p className="text-xs text-muted font-medium mb-1">Pendientes</p>
-                                    <p className="text-2xl font-semibold text-warning-strong">{requestStats.pending}</p>
+                                    <p className="text-2xl font-semibold text-ink">{requestStats.pending}</p>
                                 </div>
                                 <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
                                     <p className="text-xs text-muted font-medium mb-1">En Progreso</p>
-                                    <p className="text-2xl font-semibold text-brand-600">{requestStats.inProgress}</p>
+                                    <p className="text-2xl font-semibold text-ink">{requestStats.inProgress}</p>
                                 </div>
                                 <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
                                     <p className="text-xs text-muted font-medium mb-1">Cumplidas</p>
-                                    <p className="text-2xl font-semibold text-success-strong">
+                                    <p className="text-2xl font-semibold text-ink">
                                         {requests.filter(r => r.status === 'FULFILLED').length}
                                     </p>
                                 </div>
@@ -553,7 +553,7 @@ export default function InquiriesPage() {
                                 <select
                                     value={requestFilterStatus}
                                     onChange={(e) => setRequestFilterStatus(e.target.value)}
-                                    className="px-3 py-2 text-sm bg-surface border border-line rounded-lg focus:outline-none focus:border-brand-500"
+                                    className={`${adminInput()} sm:w-auto`}
                                 >
                                     <option value="all">Todas</option>
                                     <option value="PENDING">Pendientes</option>

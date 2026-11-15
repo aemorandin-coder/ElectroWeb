@@ -4,9 +4,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { IconoBuscar, IconoSalvavidas } from '@/components/iconos';
+import { IconoArchivar, IconoBuscar, IconoLista, IconoReloj, IconoSalvavidas } from '@/components/iconos';
+import Filtros, { type Filtro as PildoraFiltro } from '@/components/admin/Filtros';
 import {
-  adminBadge, adminCard, adminEmpty, adminInput, adminPageHeader, adminPageSubtitle, adminPageTitle, adminSpinner, adminTab,
+  adminBadge, adminCard, adminEmpty, adminInput, adminPageHeader, adminPageSubtitle, adminPageTitle, adminSpinner,
 } from '@/lib/admin-ui';
 import { conditionBadge, WARRANTY_REASONS, type Condition, type WarrantyReason } from '@/lib/product-condition';
 import { CLAIM_STATUS_LABEL, CLAIM_STATUS_TONE, RESOLUTION_LABEL, type ClaimStatus, type Resolution } from '@/lib/warranty';
@@ -29,11 +30,12 @@ interface ClaimRow {
 }
 
 type Filtro = 'atender' | 'abiertas' | 'cerradas' | 'todas';
-const FILTROS: { value: Filtro; label: string }[] = [
-  { value: 'atender', label: 'Por atender' },
-  { value: 'abiertas', label: 'Abiertas' },
-  { value: 'cerradas', label: 'Cerradas' },
-  { value: 'todas', label: 'Todas' },
+// C-245: los filtros en píldoras con ícono, cuenta y lo que juntan (PLAN.md §1.7)
+const FILTROS: Omit<PildoraFiltro<Filtro>, 'cuenta'>[] = [
+  { valor: 'atender', etiqueta: 'Por atender', ayuda: 'Esperan tu respuesta', Icono: IconoReloj, tono: 'aviso' },
+  { valor: 'abiertas', etiqueta: 'Abiertas', ayuda: 'Todavía sin cerrar', Icono: IconoSalvavidas },
+  { valor: 'cerradas', etiqueta: 'Cerradas', ayuda: 'Resueltas o rechazadas', Icono: IconoArchivar },
+  { valor: 'todas', etiqueta: 'Todas', ayuda: 'Desde la primera', Icono: IconoLista },
 ];
 
 const fecha = (iso: string) => new Date(iso).toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -81,14 +83,12 @@ export default function GarantiasPage() {
       </div>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex gap-1 overflow-x-auto" role="tablist" aria-label="Filtrar solicitudes">
-          {FILTROS.map((f) => (
-            <button key={f.value} type="button" role="tab" aria-selected={filtro === f.value} onClick={() => { setCargando(true); setFiltro(f.value); }} className={adminTab(filtro === f.value)}>
-              {f.label}
-              {f.value === 'atender' && counts.atender > 0 && <span className="rounded-full bg-deal-bg px-2 text-xs font-semibold text-deal tabular-nums">{counts.atender}</span>}
-            </button>
-          ))}
-        </div>
+        <Filtros
+          etiqueta="Filtrar solicitudes"
+          valor={filtro}
+          onCambiar={(v) => { if (v !== filtro) { setCargando(true); setFiltro(v); } }}
+          filtros={FILTROS.map((f) => ({ ...f, cuenta: f.valor === 'atender' ? counts.atender : f.valor === 'abiertas' ? counts.abiertas : undefined }))}
+        />
         <label className="relative block lg:w-80">
           <span className="sr-only">Buscar</span>
           <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
@@ -118,7 +118,7 @@ export default function GarantiasPage() {
                   <span className={adminBadge(CLAIM_STATUS_TONE[c.status])}>
                     {CLAIM_STATUS_LABEL[c.status]}{c.status === 'RESOLVED' && c.resolution ? ` · ${RESOLUTION_LABEL[c.resolution]}` : ''}
                   </span>
-                  {c.awaitingStaff && c.status !== 'RESOLVED' && c.status !== 'REJECTED' && <span className={adminBadge('danger')}>Por atender</span>}
+                  {c.awaitingStaff && c.status !== 'RESOLVED' && c.status !== 'REJECTED' && <span className={adminBadge('warning')}>Por atender</span>}
                   <span className="ml-auto text-xs text-muted">Actualizada el {fecha(c.updatedAt)}</span>
                 </div>
                 <p className="mt-2 font-semibold text-ink">

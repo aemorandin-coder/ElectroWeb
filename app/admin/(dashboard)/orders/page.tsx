@@ -629,7 +629,7 @@ export default function OrdersPage() {
 
                   {/* Price & Quick Actions */}
                   <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                    <div className="text-left sm:text-right">
+                    <div className="basis-full text-left sm:basis-auto sm:text-right">
                       <p className="text-lg font-bold text-ink">{formatUSD(Number(order.totalUSD) || 0)}</p>
                     </div>
 
@@ -642,7 +642,7 @@ export default function OrdersPage() {
                           avanzar(order, paso);
                         }}
                         disabled={updatingStatus}
-                        className={`${adminSecondaryButton} relative min-h-11 w-full sm:w-auto`}
+                        className={`${adminSecondaryButton} relative min-h-11 flex-1 sm:flex-none`}
                       >
                         {paso.pideGuia ? <IconoEnvio className="w-3 h-3" aria-hidden="true" /> : <IconoFlechaDerecha className="w-3 h-3" aria-hidden="true" />}
                         {paso.accion}
@@ -797,17 +797,17 @@ export default function OrdersPage() {
                   </button>
                 )}
                 {!['CANCELLED', 'DELIVERED', 'REFUNDED', 'SHIPPED'].includes(selectedOrder.status) && (
-                  <button onClick={() => { setCancelReason(''); setShowCancelModal(true); }} disabled={updatingStatus} className="px-4 py-2 bg-deal-bg text-deal text-sm font-medium rounded-lg hover:bg-deal/15 disabled:opacity-50 flex items-center gap-2">
-                    <IconoCerrar className="w-4 h-4" /> Cancelar Orden
+                  <button onClick={() => { setCancelReason(''); setShowCancelModal(true); }} disabled={updatingStatus} className={`${adminSecondaryButton} text-deal!`}>
+                    <IconoCerrar className="w-4 h-4" aria-hidden="true" /> Cancelar orden
                   </button>
                 )}
                 {/* Digital Codes Button */}
                 {selectedOrder.hasDigital && selectedOrder.paymentStatus === 'PAID' && (
                   <a
                     href={`/admin/orders/${selectedOrder.id}/digital`}
-                    className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-lg hover:bg-brand-600 flex items-center gap-2"
+                    className={adminSecondaryButton}
                   >
-                    <IconoEnviar className="w-4 h-4" /> Enviar Códigos Digitales
+                    <IconoEnviar className="w-4 h-4" aria-hidden="true" /> Enviar códigos digitales
                   </a>
                 )}
               </div>

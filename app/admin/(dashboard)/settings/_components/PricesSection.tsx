@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { IconoActualizar, IconoDescargar, IconoFlechaDerecha, IconoTarjeta } from '@/components/iconos';
-import { adminChoice, adminIconChip, adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
+import { IconoActualizar, IconoDescargar, IconoEditar, IconoFlechaDerecha, IconoTarjeta } from '@/components/iconos';
+import Opcion from '@/components/admin/Opcion';
+import { adminIconChip, adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { roundMoney } from '@/lib/pricing';
 import type { SectionProps } from './settings-form';
@@ -75,20 +76,19 @@ export default function PricesSection({ form, set, errors, savedAutoExchangeRate
       <SettingsCard title="Tasa BCV" description="Con esta tasa se calculan todos los precios en bolívares de la tienda y de las órdenes.">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Cómo se actualiza la tasa">
           {[
-            { auto: true, title: 'Automática', text: 'Se trae sola del BCV cada hora.' },
-            { auto: false, title: 'Manual', text: 'La escribes tú cuando cambie.' },
+            { auto: true, title: 'Automática', text: 'Se trae sola del BCV cada hora.', icono: IconoActualizar },
+            { auto: false, title: 'Manual', text: 'La escribes tú cuando cambie.', icono: IconoEditar },
           ].map((option) => (
-            <button
+            <Opcion
               key={option.title}
-              type="button"
               role="radio"
               aria-checked={form.autoExchangeRates === option.auto}
+              elegida={form.autoExchangeRates === option.auto}
               onClick={() => set('autoExchangeRates', option.auto)}
-              className={`${adminChoice(form.autoExchangeRates === option.auto)} p-4`}
-            >
-              <span className="block text-sm font-semibold text-ink">{option.title}</span>
-              <span className="mt-0.5 block text-sm text-muted">{option.text}</span>
-            </button>
+              icono={option.icono}
+              titulo={option.title}
+              detalle={option.text}
+            />
           ))}
         </div>
 

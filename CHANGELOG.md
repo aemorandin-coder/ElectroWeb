@@ -10,6 +10,42 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.61] - 2026-11-15
+El panel entero con el kit de marca (el equipo, 15/11: "repase todo el admin panel para rediseñar con ese kit nuevo"). Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Dos cosas quedan para decidir, con maquetas (`docs/plan/estado/C-245.md`).
+### Marco del panel 1.12.1 (C-245)
+- **El aviso de una versión nueva** va como lo que hay que hacer, con su placa; borrar una notificación se ve siempre; la sesión por cerrarse, sin ámbar.
+- **Seguridad y Notificaciones** empiezan junto al menú.
+- **Los botones cuadrados** ya no aprietan el ícono y rechazar, borrar y cancelar van en rojo (lo que se suma a un botón compartido gana con `!`).
+### Dashboard 1.1.6 (C-245)
+- Lo que falta configurar de la tienda, con el ícono en el azul de la marca.
+### Órdenes y pagos 1.6.2 (C-245)
+- **El detalle de una orden tiene una sola acción principal:** cancelar y enviar códigos pasan a secundarios. En el teléfono, "Ver detalles" va al lado de la acción.
+- **Transacciones:** el estado, lleno y con su ícono; el tipo, como dato en gris; "Salidas" en vez de "Retiros"; el selector de estado, del ancho de su dato.
+- **Garantías:** "Por atender" en el sello de te toca (antes, en el rojo de lo cancelado), y los filtros en píldoras con ícono.
+### Productos 1.16.1 (C-245)
+- **Los filtros de la lista y de Reseñas** van en píldoras con ícono, cuenta y lo que juntan; lo que hay que revisar, en el azul claro.
+- **Las acciones de las fotos y "Importar" de SADES se ven siempre** (antes, solo al pasar el ratón; "Importar" no se veía en el teléfono).
+- Las variantes, las etiquetas y el margen son datos en gris. Categorías, con números en neutro y el estado lleno.
+### Ofertas y cupones 1.2.1 (C-245)
+- Oferta o cupón y su alcance se eligen con la tarjeta de opción; los filtros, en píldoras.
+- El historial de solicitudes: estados llenos, números en neutro, el descuento en rojo y los botones del panel.
+### Marketing 1.16.1 (C-245)
+- Marketing ocupa el ancho del marco, junto al menú. En Campañas, "Desactivados" sin ámbar y "Verificado" lleno.
+### Promotores 1.2.1, ElectroStudio 1.2.6 y Reportes y seguridad 1.1.9 (C-245)
+- Sin ámbar en la comisión por acreditar, los accesos fallidos y las alertas por IP. El comentario de los sellos de ElectroStudio, al día.
+### Cursos 1.1.2 y Trabajos realizados 1.0.6 (C-245)
+- **Los formularios de un curso y de un trabajo ya no se cierran al tocar adentro** (se perdía lo escrito).
+- La cabecera y los botones del panel; la categoría y la plataforma, como datos en gris; el estado, lleno.
+- En Creadores, aprobar, rechazar y suspender con los botones del panel.
+### Cotizaciones 1.5.3 (C-245)
+- La lista y el detalle empiezan junto al menú; los filtros, en píldoras; el inventario que faltó, en negrita (sin ámbar).
+### Clientes 1.5.1 (C-245)
+- **Verificaciones**, con la cabecera, la tabla y la ventana del panel. La ventana ya no se cierra al tocar adentro, y "Aprobar" va en el verde fuerte (antes, letra blanca sobre el verde claro).
+- En Clientes, el pendiente de verificar como te toca y las órdenes activas en azul. En Mensajes, los números en neutro.
+### Configuración 1.3.2 (C-245)
+- **Métodos de pago** con la cabecera del panel y los títulos de cada método en neutro (Binance y Zinli iban en ámbar).
+- La tasa automática o manual, con la tarjeta de opción. Configuración y Equipo, junto al menú; los filtros de Legal, en píldoras.
+
 ## [1.0.0-rc.60] - 2026-11-15
 El destino claro para la guía y los datos fiscales del proveedor (el equipo, 15/11: "tienes que insertar claramente dónde el cliente necesita el envío, eso va a la guía de ZOOM"; y el RIF de Ferrecla).
 ### Marketing 1.16.0 (C-246)

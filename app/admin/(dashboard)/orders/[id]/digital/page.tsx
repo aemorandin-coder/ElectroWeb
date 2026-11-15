@@ -232,7 +232,7 @@ export default function AdminDigitalCodesPage() {
     const completedItems = data.digitalItems.filter(item => item.codes.length >= item.quantity);
 
     return (
-        <div className="mx-auto max-w-5xl">
+        <div className="max-w-5xl">
             {/* Header */}
             <div className="mb-6">
                 <Link
@@ -313,7 +313,7 @@ export default function AdminDigitalCodesPage() {
             {pendingItems.length > 0 && (
                 <div className="mb-8">
                     <h2 className={`${adminSectionTitle} mb-4 flex items-center gap-2`}>
-                        <IconoReloj className="text-warning-strong" />
+                        <IconoReloj className="text-brand-500" aria-hidden="true" />
                         Pendientes de Envío ({pendingItems.length})
                     </h2>
 

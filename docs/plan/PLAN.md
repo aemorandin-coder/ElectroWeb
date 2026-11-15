@@ -196,6 +196,7 @@ Andrés eligió la versión A ("como la tienda") el 13/11, para todo el panel.
 - **Un nivel o una clasificación** (Urgente, el nivel de un curso) va en azul de marca, nunca en ámbar ni en el azul oscuro de los sellos (§1.1).
 - **Un dato en píldora** (una guía, un código) va en gris con su ícono (`adminDato`): informa sin competir con el estado.
 - **Los botones** (`adminPrimaryButton`, `adminSecondaryButton`, `adminIconButton`…) se levantan un poco al pasar el ratón y se hunden al tocarlos. Con "reducir movimiento" solo cambian de color, y apagados no se mueven.
+- **Lo que se suma a un botón compartido no siempre gana** (C-245): en el CSS, `px-5`, `h-11` y `text-ink` del botón van después de `px-0`, `h-9` y `text-deal`. Un cuadrado de 44 px lleva `w-11 px-0!`, y el rojo de borrar o rechazar sobre el secundario, `text-deal!`.
 
 ### 1.9 Crear y cambiar cosas en el panel (C-220)
 Lo pidió el equipo el 14/11 mirando Marketing → Sorteo ("es básico, sin comprensión, desordenado y su lógica cuesta entender"), y lo hizo regla **para todas las IA y todo lo nuevo del panel**. Lo que ya existe se pasa con C-206. Las maquetas están en la hoja de C-220.
@@ -591,11 +592,17 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - **Para C-237 (compras):** el proveedor y su RIF pueden leerse de `suppliers` (`legalName`, `taxId`).
   - **C-247 · La foto del premio del sorteo** (**hecha**, rc.59, 15/11; `estado/C-247.md`; el equipo eligió la A, sobre el azul y más grande). La foto se sube desde el panel.
   - **C-243 · El kit de marca** (**hecha**, rc.57, 15/11; `estado/C-243.md`; el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo, §1.0).
-    - **C-245 · El panel entero con el kit** (pendiente; pedido del equipo el 15/11: "envíalo a un chat nuevo con Opus 5.5 extra alto que repase todo el admin panel para rediseñar con ese kit"). Lo hace un agente aparte, pantalla por pantalla, con maquetas para lo que haya que decidir.
-      - **De C-244:** Marketing sigue centrada (`max-w-7xl`), y la regla de §1.5 pide que la página empiece junto al menú.
+    - **C-245 · El panel entero con el kit** (**hecha** la parte mecánica, rc.61, 15/11; `estado/C-245.md`; lo hizo un agente aparte). El inventario de las 43 pantallas y los arreglos de 14 módulos, incluida Marketing a lo ancho (lo marcó C-244). Queda:
+      - **Dos decisiones del equipo,** con maquetas en `~/.cache/electroshop-trabajo/c245/decisiones.html`:
+        1. **crear por pasos** los ocho formularios de una sola vez (oferta o cupón, método de pago, campaña, promotor, curso, trabajo de Servicios, gift cards impresas y categoría): A, en su propia página como el sorteo (recomendada); B, en la ventana; C, una página por grupos;
+        2. **los filtros de Órdenes** (y los selectores de Transacciones y Mensajes): A, las 7 píldoras de estado (recomendada); B, cuatro de trabajo; C, como hoy.
+      - **Arreglos de la misma clase, para la próxima vuelta (con C-206):**
+        - las píldoras de categoría de Cursos y Servicios, las pestañas de Creadores y los sellos de "por atender" de ElectroStudio, a `Filtros`;
+        - las fotos de antes y después de Servicios se pegan como dirección: §1.9 pide subirlas o elegirlas.
+      - **Los botones compartidos con tamaño cambiado** (`h-9 px-3 text-xs` en Marketing, Navidad, Campañas, Sorteo, Notificaciones…) se ven de 44 px: en el CSS, `h-11` y `px-5` del botón ganan. Hoy no molesta (44 px es el toque del teléfono). Si se quieren compactos, hace falta un botón chico compartido (`adminSmallButton`) y no clases sumadas (§1.8).
   - **C-244 · La vista previa de los correos, fija mientras se recorre la lista** (**hecha**, rc.58, 15/11; `estado/C-244.md`; el equipo lo vio en producción: el marco salía bajo, con su propio scroll, y quedaba un espacio en blanco).
   - **C-242 · Facturas, ordenada, y la tarjeta de opción** (**hecha**, rc.56, 14/11; `estado/C-242.md`; el equipo eligió la A y la tarjeta con el círculo para todo el panel, §1.10).
-    - **Pendiente:** las pantallas que usan `adminChoice` con su propia disposición (Promociones, Legal, Productos, Equipo, la Lista del proveedor, Reportes, Studio, las direcciones de Mi panel) se ven bien y pasan a `Opcion` cuando se toquen.
+    - **Pendiente:** las pantallas que usan `adminChoice` con su propia disposición se ven bien y pasan a `Opcion` cuando se toquen. C-245 pasó Descuentos y la tasa de Configuración, y los filtros de Productos y Legal a `Filtros`. Quedan Equipo, la Lista del proveedor (casillas de varias), Reportes, ElectroStudio y las direcciones de Mi panel.
   - **Lo que queda de ámbar y de píldoras claras en la tienda** (pendiente; salió del checkout el 14/11, con la regla de §1.1 y §1.8):
     - letras ámbar en una veintena de archivos (35 usos): cursos, gift cards, servicios, recargas, firma de documentos, inicio de sesión. Las estrellas y un "Quedan 3" se quedan;
     - píldoras en verde claro con letra verde: la gift card válida, el certificado, el panel del creador, Mis cursos y el sello de la cotización.

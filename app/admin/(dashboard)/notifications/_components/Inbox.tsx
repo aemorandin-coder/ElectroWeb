@@ -173,7 +173,7 @@ export default function Inbox({ puedeElegir }: { puedeElegir: boolean }) {
                   type="button"
                   onClick={() => remove(item)}
                   aria-label={`Eliminar: ${item.title}`}
-                  className="relative z-10 inline-flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg text-muted hover:bg-white hover:text-deal lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
+                  className="relative z-10 inline-flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg text-muted hover:bg-white hover:text-deal"
                 >
                   <IconoEliminar className="h-4 w-4" aria-hidden="true" />
                 </button>

@@ -356,7 +356,7 @@ export default function EditorCotizacion() {
   if (cargando) return <div className="flex justify-center py-16" role="status" aria-label="Cargando"><span className={adminSpinner} aria-hidden="true" /></div>;
   if (noExiste) {
     return (
-      <div className="mx-auto max-w-3xl">
+      <div className="max-w-3xl">
         <p className={adminNotice('danger')} role="alert">Esa cotización no existe.</p>
         <Link href="/admin/cotizaciones" className={`${adminSecondaryButton} mt-4`}>Volver a Cotizaciones</Link>
       </div>
@@ -414,7 +414,7 @@ export default function EditorCotizacion() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl pb-10">
+    <div className="max-w-4xl pb-10">
       <Link href="/admin/cotizaciones" className="mb-3 inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-ink">
         <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" />
         Cotizaciones
@@ -447,7 +447,7 @@ export default function EditorCotizacion() {
               </span>
             )}
             {cotizacion.inventario.some((l) => l.falto > 0) && (
-              <strong className="mt-1 block text-warning-strong" data-faltante>
+              <strong className="mt-1 block" data-faltante>
                 Faltó inventario: {cotizacion.inventario.filter((l) => l.falto > 0).map((l) => `${l.falto} de ${l.quantity} × ${l.title}`).join(', ')}. Consíguelo antes de entregar.
               </strong>
             )}

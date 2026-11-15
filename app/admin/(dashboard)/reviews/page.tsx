@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
-import { IconoAbrirAparte, IconoActualizar, IconoCerrar, IconoCheck, IconoEliminar, IconoEstrella } from '@/components/iconos';
+import { IconoAbrirAparte, IconoActualizar, IconoCerrar, IconoCheck, IconoConfirmado, IconoEliminar, IconoEstrella, IconoLista, IconoRechazado, IconoReloj } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -29,7 +30,6 @@ import {
     adminSecondaryButton,
     adminSpinner,
     adminSuccessButton,
-    adminTab,
     adminTableWrap,
     adminTd,
     adminTh,
@@ -54,12 +54,13 @@ interface Review {
 
 type Filtro = 'ALL' | ReviewStatus;
 
-const FILTROS: Array<[Filtro, string]> = [
-    ['PENDING', 'Pendientes'],
-    ['APPROVED', 'Publicadas'],
-    ['REJECTED', 'Rechazadas'],
-    ['ALL', 'Todas'],
-];
+// C-245: en píldoras con ícono y lo que juntan (PLAN.md §1.7)
+const FILTROS = [
+    { valor: 'PENDING', etiqueta: 'Pendientes', ayuda: 'Esperan tu revisión', Icono: IconoReloj, tono: 'aviso' },
+    { valor: 'APPROVED', etiqueta: 'Publicadas', ayuda: 'Se ven en la tienda', Icono: IconoConfirmado },
+    { valor: 'REJECTED', etiqueta: 'Rechazadas', ayuda: 'No se publican', Icono: IconoRechazado },
+    { valor: 'ALL', etiqueta: 'Todas', ayuda: 'Desde la primera', Icono: IconoLista },
+] as const satisfies ReadonlyArray<{ valor: Filtro; etiqueta: string; ayuda: string; Icono: typeof IconoLista; tono?: 'aviso' }>;
 
 const TONO: Record<ReviewStatus, AdminTone> = { PENDING: 'warning', APPROVED: 'success', REJECTED: 'danger' };
 
@@ -249,16 +250,12 @@ export default function AdminReviewsPage() {
                 </button>
             </div>
 
-            <nav aria-label="Filtrar reseñas" className="-mx-1 overflow-x-auto px-1 pb-1">
-                <div className="flex w-max gap-2">
-                    {FILTROS.map(([valor, etiqueta]) => (
-                        <button key={valor} type="button" onClick={() => setFiltro(valor)} aria-pressed={filtro === valor} className={`${adminTab(filtro === valor)} h-11`}>
-                            {etiqueta}
-                            {!loading && <span className="tabular-nums">{conteo[valor]}</span>}
-                        </button>
-                    ))}
-                </div>
-            </nav>
+            <Filtros<Filtro>
+                etiqueta="Filtrar reseñas"
+                valor={filtro}
+                onCambiar={setFiltro}
+                filtros={FILTROS.map((f) => ({ ...f, cuenta: loading ? null : conteo[f.valor] }))}
+            />
 
             {loading ? (
                 <div className="flex justify-center py-12"><div className={adminSpinner} /></div>

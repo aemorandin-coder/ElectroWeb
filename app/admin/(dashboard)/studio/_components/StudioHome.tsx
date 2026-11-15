@@ -294,7 +294,7 @@ export default function StudioHome() {
                     changeView('lista');
                   }}
                   className={`inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-sm font-semibold transition-colors ${
-                    // C-216: lo que hay que hacer, sin ámbar: elegido, el sello azul noche con el ícono en cian; si no, su contorno
+                    // C-216: lo que hay que hacer, sin ámbar: elegido, el sello del azul oscuro del logo con el ícono blanco (C-243); si no, su contorno
                     attention === a.kind ? 'border-brand-700 bg-brand-700 text-white' : 'border-brand-700/40 bg-white text-brand-700 hover:bg-brand-50'
                   }`}
                 >

@@ -50,6 +50,9 @@ export const adminPrimaryButton = `${buttonBase} bg-brand-500 text-white hover:b
 export const adminSecondaryButton = `${buttonBase} border border-line bg-white text-ink hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 hover:shadow-md hover:shadow-brand-600/10`;
 export const adminDangerButton = `${buttonBase} bg-deal text-white hover:bg-deal/90 hover:shadow-md hover:shadow-deal/25`;
 export const adminSuccessButton = `${buttonBase} bg-success-strong text-white hover:bg-success-strong/90 hover:shadow-md hover:shadow-success-strong/25`;
+// C-245: lo que se suma a un botón compartido no siempre le gana a lo que ya trae: en el CSS, `px-5` va después de
+// `px-0`, `h-11` después de `h-9` y `text-ink` después de `text-deal`. Para un cuadrado de 44 px, `w-11 px-0!`; para el
+// rojo de borrar o rechazar sobre el secundario, `text-deal!` (el `!` lo hace ganar).
 /** Botón de solo ícono (editar, borrar, cerrar). Siempre con aria-label. */
 export const adminIconButton =
   `inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted ${MOVIMIENTO} hover:bg-brand-50 hover:text-brand-600 focus-visible:outline-2 focus-visible:outline-brand-500 disabled:opacity-40`;
@@ -67,14 +70,15 @@ export type AdminTone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger';
 
 /**
  * C-226 (Andrés, 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados"; eligió el azul claro viendo las
- * tres opciones): lo que alguien tiene que hacer, en bloque, va en el azul claro de la tienda con el ícono cian en su placa
- * azul noche. Nunca un contenedor ámbar (PLAN.md §1.1). El ícono hijo directo del aviso toma la placa solo.
+ * tres opciones): lo que alguien tiene que hacer, en bloque, va en el azul claro de la tienda con el ícono blanco en su placa
+ * del azul de la marca (C-243, el kit; antes, cian sobre azul noche). Nunca un contenedor ámbar (PLAN.md §1.1). El ícono
+ * hijo directo del aviso toma la placa solo.
  */
 export const avisoAccion =
   'border-brand-200 bg-brand-50 text-brand-900 [&>svg]:h-7 [&>svg]:w-7 [&>svg]:shrink-0 [&>svg]:rounded-lg [&>svg]:bg-brand-500 [&>svg]:p-1.5 [&>svg]:text-white';
 /** C-226: la placa de un ícono de acción cuando no es hijo directo del aviso (dentro de un párrafo o de un título). */
 export const iconoAccion = 'h-7 w-7 shrink-0 rounded-lg bg-brand-500 p-1.5 text-white';
-/** C-226: el cuadro de ícono de lo que alguien tiene que hacer (una fila, una tarjeta): azul noche con el ícono cian. */
+/** C-226: el cuadro de ícono de lo que alguien tiene que hacer (una fila, una tarjeta): el azul de la marca con el ícono blanco (C-243). */
 export const placaAccion = 'bg-brand-500 text-white';
 
 // C-210 (Andrés eligió la versión A, "como la tienda", para todo el panel): el badge va lleno y con texto blanco, como los
@@ -85,8 +89,8 @@ const TONES: Record<AdminTone, { badge: string; chip: string; notice: string }> 
   brand: { badge: 'bg-brand-600 text-white', chip: 'bg-brand-50 text-brand-600', notice: 'border-brand-200 bg-brand-50 text-brand-700' },
   success: { badge: 'bg-success-strong text-white', chip: 'bg-success-strong/10 text-success-strong', notice: 'border-success-strong/20 bg-success-strong/5 text-success-strong' },
   // C-216 (Andrés, 13/11: "esas píldoras ámbar, las detesto"): la píldora de lo que alguien tiene que hacer es un sello
-  // azul noche con texto blanco y el ícono en cian, como la gift card y el certificado. C-226 (14/11): el aviso en bloque y
-  // el cuadro de ícono tampoco son ámbar; el nombre del tono quedó, el color cambió.
+  // del azul oscuro del logo (brand-700) con texto e ícono blancos (C-243, el kit; antes, azul noche con cian). C-226
+  // (14/11): el aviso en bloque y el cuadro de ícono tampoco son ámbar; el nombre del tono quedó, el color cambió.
   warning: { badge: 'bg-brand-700 text-white', chip: placaAccion, notice: avisoAccion },
   danger: { badge: 'bg-deal text-white', chip: 'bg-deal-bg text-deal', notice: 'border-deal/30 bg-deal-bg text-deal' },
 };

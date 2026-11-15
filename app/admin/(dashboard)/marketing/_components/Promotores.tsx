@@ -416,7 +416,7 @@ export default function Promotores() {
                 <div className="flex items-center justify-between gap-4 sm:justify-end">
                   <div className="text-left sm:text-right">
                     <p className="text-xs text-muted">Por acreditar</p>
-                    <p className={`text-sm font-bold ${p.stats.pendingCommission > 0 ? 'text-warning-strong' : 'text-ink'}`}>{formatUSD(p.stats.pendingCommission)}</p>
+                    <p className="text-sm font-bold text-ink">{formatUSD(p.stats.pendingCommission)}</p>
                   </div>
                   <div className="flex items-center gap-1">
                     <button type="button" onClick={() => copiar(p.code)} className={adminIconButton} aria-label={`Copiar enlace de ${p.name}`} title="Copiar enlace de referido"><IconoEnlace className="h-4 w-4" /></button>

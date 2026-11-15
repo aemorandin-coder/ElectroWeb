@@ -119,7 +119,7 @@ export default function DigitalStep2Variants({ data, onChange, errors }: StepPro
                     </span>
                   </label>
                   {margin !== null && (
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${belowCost ? 'bg-deal-bg text-deal' : 'bg-success-strong/10 text-success-strong'}`}>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${belowCost ? 'bg-deal text-white' : 'bg-surface text-ink-soft ring-1 ring-inset ring-line'}`}>
                       {belowCost && <IconoAdvertencia className="h-3.5 w-3.5" aria-hidden="true" />}
                       Margen {formatMargen(margin)}
                     </span>

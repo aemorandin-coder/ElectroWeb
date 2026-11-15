@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import {
-  IconoBuscar, IconoCerrar, IconoCopiar, IconoCupon, IconoEditar, IconoEliminar, IconoMas, IconoOferta, IconoPausa,
-  IconoPlay,
+  IconoArchivar, IconoBuscar, IconoCerrar, IconoCopiar, IconoCupon, IconoEditar, IconoEliminar, IconoLista, IconoMas, IconoOferta,
+  IconoPausa, IconoPlay,
 } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
+import Opcion from '@/components/admin/Opcion';
 import {
-    adminBadge, adminCard, adminChoice, adminError, adminHint, adminInput, adminLabel, adminModalBody, adminModalFooter,
+    adminBadge, adminCard, adminError, adminHint, adminInput, adminLabel, adminModalBody, adminModalFooter,
     adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPrimaryButton,
     adminSecondaryButton, adminIconButton, type AdminTone,
 } from '@/lib/admin-ui';
@@ -59,10 +61,11 @@ const ESTADO: Record<Estado, { label: string; tone: AdminTone }> = {
     AGOTADA: { label: 'Agotada', tone: 'neutral' },
     VENCIDA: { label: 'Terminada', tone: 'neutral' },
 };
+// C-245: en píldoras con ícono y lo que juntan (PLAN.md §1.7)
 const FILTROS = [
-    { value: 'vigentes', label: 'Vigentes' },
-    { value: 'todas', label: 'Todas' },
-    { value: 'terminadas', label: 'Terminadas' },
+    { value: 'vigentes', label: 'Vigentes', ayuda: 'Activas, programadas o en pausa', Icono: IconoOferta },
+    { value: 'todas', label: 'Todas', ayuda: 'Desde la primera', Icono: IconoLista },
+    { value: 'terminadas', label: 'Terminadas', ayuda: 'Vencidas o agotadas', Icono: IconoArchivar },
 ] as const;
 
 interface Formulario {
@@ -321,7 +324,7 @@ export default function Promociones() {
                 </div>
                 <div className={adminCard}>
                     <p className="text-sm text-muted">Ahorro de los clientes</p>
-                    <p className="text-2xl font-bold tabular-nums text-success-strong">{formatUSD(ahorroTotal)}</p>
+                    <p className="text-2xl font-bold tabular-nums text-ink">{formatUSD(ahorroTotal)}</p>
                     <p className="text-xs text-muted">Suma de compras que usaron una oferta o cupón (sin las canceladas)</p>
                 </div>
                 <div className={`${adminNotice('brand')} text-sm`}>
@@ -338,13 +341,9 @@ export default function Promociones() {
                 <button type="button" onClick={() => abrir('COUPON')} className={adminSecondaryButton}>
                     <IconoCupon className="h-4 w-4" aria-hidden="true" /> Nuevo cupón
                 </button>
-                <div className="ml-auto flex gap-1" role="group" aria-label="Filtrar">
-                    {FILTROS.map((f) => (
-                        <button key={f.value} type="button" aria-pressed={filtro === f.value} onClick={() => setFiltro(f.value)}
-                            className={`${adminChoice(filtro === f.value)} min-h-11 px-3 text-sm`}>
-                            {f.label}
-                        </button>
-                    ))}
+                <div className="w-full sm:ml-auto sm:w-auto">
+                    <Filtros etiqueta="Filtrar" valor={filtro} onCambiar={setFiltro}
+                        filtros={FILTROS.map((f) => ({ valor: f.value, etiqueta: f.label, ayuda: f.ayuda, Icono: f.Icono }))} />
                 </div>
             </div>
 
@@ -360,7 +359,7 @@ export default function Promociones() {
                     {visibles.map((p) => (
                         <li key={p.id} className={`${adminCard} flex flex-col gap-3`}>
                             <div className="flex items-start gap-3">
-                                <span className={`flex h-12 min-w-16 shrink-0 items-center justify-center rounded-xl px-2 text-base font-bold ${p.kind === 'COUPON' ? 'bg-success-strong/10 text-success-strong' : 'bg-deal-bg text-deal'}`}>
+                                <span className={`flex h-12 min-w-16 shrink-0 items-center justify-center rounded-xl px-2 text-base font-bold ${p.kind === 'COUPON' ? 'bg-brand-50 text-brand-700' : 'bg-deal-bg text-deal'}`}>
                                     {valorTexto(p)}
                                 </span>
                                 <div className="min-w-0 flex-1">
@@ -394,7 +393,7 @@ export default function Promociones() {
                                         {p.isActive ? <><IconoPausa className="h-4 w-4" aria-hidden="true" /> Pausar</> : <><IconoPlay className="h-4 w-4" aria-hidden="true" /> Reanudar</>}
                                     </button>
                                 )}
-                                <button type="button" onClick={() => eliminar(p)} className={`${adminSecondaryButton} text-deal`}><IconoEliminar className="h-4 w-4" aria-hidden="true" /> Eliminar</button>
+                                <button type="button" onClick={() => eliminar(p)} className={`${adminSecondaryButton} text-deal!`}><IconoEliminar className="h-4 w-4" aria-hidden="true" /> Eliminar</button>
                             </div>
                         </li>
                     ))}
@@ -413,13 +412,13 @@ export default function Promociones() {
                         <div className={`${adminModalBody} space-y-5`}>
                             {editando && <PresenciaEnEditor recurso={`promotion:${editando.id}`} etiqueta={editando.name} nombreRecurso={editando.kind === 'COUPON' ? 'cupón' : 'oferta'} femenino={editando.kind !== 'COUPON'} />}
                             {!editando && (
-                                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Tipo">
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Tipo">
                                     {(['AUTOMATIC', 'COUPON'] as const).map((k) => (
-                                        <button key={k} type="button" role="radio" aria-checked={form.kind === k} onClick={() => setForm({ ...vacio(k), name: form.name, value: form.value, valueType: form.valueType })}
-                                            className={`${adminChoice(form.kind === k)} p-3`}>
-                                            <span className="block text-sm font-semibold text-ink">{k === 'AUTOMATIC' ? 'Oferta' : 'Cupón'}</span>
-                                            <span className="block text-xs text-muted">{k === 'AUTOMATIC' ? 'Precio rebajado para todos, sin código' : 'Descuento al pagar con un código'}</span>
-                                        </button>
+                                        <Opcion key={k} role="radio" aria-checked={form.kind === k} elegida={form.kind === k}
+                                            onClick={() => setForm({ ...vacio(k), name: form.name, value: form.value, valueType: form.valueType })}
+                                            icono={k === 'AUTOMATIC' ? IconoOferta : IconoCupon}
+                                            titulo={k === 'AUTOMATIC' ? 'Oferta' : 'Cupón'}
+                                            detalle={k === 'AUTOMATIC' ? 'Precio rebajado para todos, sin código' : 'Descuento al pagar con un código'} />
                                     ))}
                                 </div>
                             )}
@@ -478,8 +477,8 @@ export default function Promociones() {
                                 <legend className={adminLabel}>Aplica a</legend>
                                 <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Alcance">
                                     {([['ALL', 'Toda la tienda'], ['CATEGORY', 'Categorías'], ['PRODUCT', 'Productos']] as const).map(([v, l]) => (
-                                        <button key={v} type="button" role="radio" aria-checked={form.scope === v} onClick={() => set('scope', v)}
-                                            className={`${adminChoice(form.scope === v)} min-h-11 px-2 text-sm font-semibold text-ink`}>{l}</button>
+                                        <Opcion key={v} tamano="chica" role="radio" aria-checked={form.scope === v} elegida={form.scope === v}
+                                            onClick={() => set('scope', v)} titulo={l} />
                                     ))}
                                 </div>
                                 {form.scope === 'CATEGORY' && (

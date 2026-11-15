@@ -352,18 +352,18 @@ export default function CategoriesPage() {
         <div className="flex-1 overflow-y-auto p-4 lg:p-8">
           {/* Analytics */}
           <div className="grid grid-cols-2 gap-3 mb-8 sm:grid-cols-3 sm:gap-6">
-            <div className="bg-surface p-5 rounded-xl border border-brand-200 shadow-sm">
-              <div className="text-sm text-brand-600 font-medium mb-1">Total Categorías</div>
+            <div className="rounded-xl border border-line bg-white p-5">
+              <div className="mb-1 text-sm text-muted">Total Categorías</div>
               <div className="text-3xl font-bold text-ink">{totalCategories}</div>
             </div>
-            <div className="bg-surface p-5 rounded-xl border border-brand-200 shadow-sm">
-              <div className="text-sm text-brand-600 font-medium mb-1">Total Productos</div>
+            <div className="rounded-xl border border-line bg-white p-5">
+              <div className="mb-1 text-sm text-muted">Total Productos</div>
               <div className="text-3xl font-bold text-ink">{totalProducts}</div>
             </div>
-            <div className="col-span-2 bg-surface p-5 rounded-xl border border-success/20 shadow-sm sm:col-span-1">
-              <div className="text-sm text-success-strong font-medium mb-1">Categoría Top</div>
+            <div className="col-span-2 rounded-xl border border-line bg-white p-5 sm:col-span-1">
+              <div className="mb-1 text-sm text-muted">Categoría Top</div>
               <div className="text-lg font-bold text-ink truncate">{topCategory?.name || '-'}</div>
-              <div className="text-xs text-success-strong/80 mt-1">{topCategory?._count?.products || 0} productos</div>
+              <div className="mt-1 text-xs text-muted">{topCategory?._count?.products || 0} productos</div>
             </div>
           </div>
 
@@ -680,7 +680,7 @@ export default function CategoriesPage() {
                       </div>
                       <div className="flex justify-between items-center py-2">
                         <span className="text-muted text-sm">Estado</span>
-                        <span className="text-success-strong font-medium bg-success/10 px-3 py-1 rounded-full text-xs border border-success/20">
+                        <span className={adminBadge('success')}>
                           Activo
                         </span>
                       </div>
@@ -707,11 +707,11 @@ export default function CategoriesPage() {
                         onClick={() => router.push(`/admin/products?category=${selectedCategory.id}`)}
                         className="w-full flex items-center gap-4 p-4 bg-white border border-line rounded-2xl hover:border-brand-500 transition-all group text-left"
                       >
-                        <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600 group-bg-brand-600 group-hover:text-white transition-colors">
+                        <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600 group-hover:bg-brand-500 group-hover:text-white transition-colors">
                           <IconoReportes className="w-5 h-5" />
                         </div>
                         <div>
-                          <div className="font-semibold text-ink text-sm group-text-brand-600 transition-colors">Ver Productos</div>
+                          <div className="font-semibold text-ink text-sm group-hover:text-brand-600 transition-colors">Ver Productos</div>
                           <div className="text-xs text-muted mt-0.5">Gestionar inventario de esta categoría</div>
                         </div>
                       </button>

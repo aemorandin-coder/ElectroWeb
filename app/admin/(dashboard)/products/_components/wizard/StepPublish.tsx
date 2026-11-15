@@ -98,7 +98,7 @@ export default function StepPublish({ data, errors, isLoading, isEditing, estado
           {!isPhysical && activeVariants.length > 0 && (
             <div className="mt-3 flex max-w-xs flex-wrap gap-1.5">
               {activeVariants.map((v) => (
-                <span key={v.key} className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
+                <span key={v.key} className="rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-ink-soft ring-1 ring-inset ring-line">
                   {v.label} · {formatUSD(num(v.priceUSD))}
                 </span>
               ))}

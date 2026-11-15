@@ -417,7 +417,7 @@ export default function ReportsPage() {
                                             <p className="text-xs text-muted">Registros</p>
                                         </div>
                                         <div>
-                                            <IconoCandado className="mx-auto mb-1 h-5 w-5 text-warning-strong" aria-hidden="true" />
+                                            <IconoCandado className="mx-auto mb-1 h-5 w-5 text-brand-500" aria-hidden="true" />
                                             <p className="text-xl font-bold tabular-nums text-ink">{overview.security.failedLogins}</p>
                                             <p className="text-xs text-muted">Accesos fallidos</p>
                                         </div>
@@ -595,7 +595,7 @@ export default function ReportsPage() {
                                                         <span className="text-xs text-muted">Última: {fechaHora(ip.lastSeen)}</span>
                                                     </span>
                                                     <span className="shrink-0 text-right text-xs">
-                                                        <span className="block font-semibold text-warning-strong">{ip.count} {ip.count === 1 ? 'alerta' : 'alertas'}</span>
+                                                        <span className="block font-semibold text-ink">{ip.count} {ip.count === 1 ? 'alerta' : 'alertas'}</span>
                                                         {ip.accounts > 0 && <span className={ip.accounts > 2 ? 'font-semibold text-deal' : 'text-muted'}>{ip.accounts} {ip.accounts === 1 ? 'cuenta' : 'cuentas'}</span>}
                                                     </span>
                                                 </li>

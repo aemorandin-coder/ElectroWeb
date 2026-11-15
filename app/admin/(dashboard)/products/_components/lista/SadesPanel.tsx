@@ -110,7 +110,7 @@ export default function SadesPanel({ onSincronizado }: { onSincronizado: () => v
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
+    <div className="max-w-4xl space-y-6 animate-fadeIn">
       {/* Status Card */}
       {/* C-187: en el teléfono todo va en columna; antes el botón de sincronizar quedaba fuera de la pantalla, a la derecha */}
       <div className="bg-white rounded-xl shadow-sm border border-line p-4 sm:p-6">

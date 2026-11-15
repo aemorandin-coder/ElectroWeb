@@ -38,6 +38,7 @@ import {
       adminInput,
     adminLabel,
     adminBadge,
+    adminDato,
     } from '@/lib/admin-ui';
 import PagosSinOrden from './_components/PagosSinOrden';
 import ConsultarPagoMovil from './_components/ConsultarPagoMovil';
@@ -109,19 +110,20 @@ const REJECTION_REASONS = [
 // ─── Design tokens ───────────────────────────────────────────────────────────
 
 const TYPE_CONFIG: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
-    RECHARGE:   { label: 'Recarga',    cls: adminBadge('success'), icon: <IconoEntradaPuntos   className="w-3 h-3" /> },
-    DEPOSIT:    { label: 'Abono',      cls: adminBadge('success'), icon: <IconoEntradaPuntos   className="w-3 h-3" /> },
-    PURCHASE:   { label: 'Compra',     cls: adminBadge('brand'),   icon: <IconoPaquete         className="w-3 h-3" /> },
-    REFUND:     { label: 'Reembolso',  cls: adminBadge('brand'),   icon: <IconoRepetir          className="w-3 h-3" /> },
-    BONUS:      { label: 'Bono',       cls: adminBadge('success'), icon: <IconoRegalo            className="w-3 h-3" /> },
-    WITHDRAWAL: { label: 'Salida',     cls: adminBadge('neutral'), icon: <IconoSalidaPuntos className="w-3 h-3" /> },
+    RECHARGE:   { label: 'Recarga',    cls: adminDato, icon: <IconoEntradaPuntos   className="w-3 h-3" /> },
+    DEPOSIT:    { label: 'Abono',      cls: adminDato, icon: <IconoEntradaPuntos   className="w-3 h-3" /> },
+    PURCHASE:   { label: 'Compra',     cls: adminDato,   icon: <IconoPaquete         className="w-3 h-3" /> },
+    REFUND:     { label: 'Reembolso',  cls: adminDato,   icon: <IconoRepetir          className="w-3 h-3" /> },
+    BONUS:      { label: 'Bono',       cls: adminDato, icon: <IconoRegalo            className="w-3 h-3" /> },
+    WITHDRAWAL: { label: 'Salida',     cls: adminDato, icon: <IconoSalidaPuntos className="w-3 h-3" /> },
 };
 
-const STATUS_CONFIG: Record<string, { label: string; dot: string; cls: string }> = {
-    PENDING:   { label: 'Pendiente', dot: 'bg-brand-700', cls: adminBadge('warning') },
-    COMPLETED: { label: 'Aprobada',  dot: 'bg-success-strong', cls: adminBadge('success') },
-    FAILED:    { label: 'Fallida',   dot: 'bg-deal',           cls: adminBadge('danger')  },
-    CANCELLED: { label: 'Rechazada', dot: 'bg-deal',           cls: adminBadge('danger')  },
+// C-245: lleno y con su ícono, como el estado de una orden (el punto de color quedaba invisible sobre su mismo color)
+const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
+    PENDING:   { label: 'Pendiente', icon: <IconoReloj      className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />, cls: adminBadge('warning') },
+    COMPLETED: { label: 'Aprobada',  icon: <IconoConfirmado className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />, cls: adminBadge('success') },
+    FAILED:    { label: 'Fallida',   icon: <IconoError      className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />, cls: adminBadge('danger')  },
+    CANCELLED: { label: 'Rechazada', icon: <IconoCerrar     className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />, cls: adminBadge('danger')  },
 };
 
 // ─── Stat Card ───────────────────────────────────────────────────────────────
@@ -395,7 +397,7 @@ export default function TransactionsPage() {
                         <option value="PURCHASE">Compras</option>
                         <option value="REFUND">Reembolsos</option>
                         <option value="BONUS">Bonos</option>
-                        <option value="WITHDRAWAL">Retiros</option>
+                        <option value="WITHDRAWAL">Salidas</option>
                     </select>
                 </div>
 
@@ -404,7 +406,7 @@ export default function TransactionsPage() {
                     aria-label="Estado de transacción"
                     value={filterStatus}
                     onChange={e => setFilterStatus(e.target.value)}
-                    className={`${adminInput()} w-auto`}
+                    className={`${adminInput()} sm:w-52`}
                 >
                     <option value="all">Todos los estados</option>
                     <option value="PENDING">Pendientes</option>
@@ -426,7 +428,7 @@ export default function TransactionsPage() {
                         icon={<IconoReloj className="w-5 h-5" />}
                         label="Pendientes"
                         value={stats.pendingCount}
-                        sub={<span className={stats.pendingCount > 0 ? 'text-warning-strong font-semibold' : 'text-muted'}>
+                        sub={<span className={stats.pendingCount > 0 ? 'text-ink font-semibold' : 'text-muted'}>
                             {fmtAmount(stats.pendingAmount)} por aprobar
                         </span>}
                         accent={stats.pendingCount > 0}
@@ -492,15 +494,15 @@ export default function TransactionsPage() {
                                         {/* Top row */}
                                         <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
                                             <div className="flex items-center gap-2">
-                                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold border ${typeConf.cls}`}>
+                                                <span className={typeConf.cls}>
                                                     {typeConf.icon}{typeConf.label}
                                                 </span>
                                                 <span className="text-xs text-muted">
                                                     {format(new Date(t.createdAt), 'dd MMM · HH:mm', { locale: es })}
                                                 </span>
                                             </div>
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${statusConf.cls}`}>
-                                                <span className={`w-1.5 h-1.5 rounded-full ${statusConf.dot}`} />
+                                            <span className={statusConf.cls}>
+                                                {statusConf.icon}
                                                 {statusConf.label}
                                             </span>
                                         </div>
@@ -560,7 +562,7 @@ export default function TransactionsPage() {
                                                 <button
                                                     onClick={() => openRejectModal(t)}
                                                     disabled={processingId === t.id}
-                                                    className={`${adminSecondaryButton} flex-1 px-3 text-deal`}
+                                                    className={`${adminSecondaryButton} flex-1 px-3 text-deal!`}
                                                 >
                                                     <IconoCerrar className="w-3.5 h-3.5" />
                                                     Rechazar
@@ -616,7 +618,7 @@ export default function TransactionsPage() {
 
                                                 {/* Tipo + método */}
                                                 <td className={adminTd}>
-                                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold border ${typeConf.cls}`}>
+                                                    <span className={typeConf.cls}>
                                                         {typeConf.icon}{typeConf.label}
                                                     </span>
                                                     {t.paymentMethod && (
@@ -651,8 +653,8 @@ export default function TransactionsPage() {
 
                                                 {/* Estado */}
                                                 <td className={adminTd}>
-                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${statusConf.cls}`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusConf.dot}`} />
+                                                    <span className={statusConf.cls}>
+                                                        {statusConf.icon}
                                                         {statusConf.label}
                                                     </span>
                                                     {t.status === 'CANCELLED' && t.rejectionReason && (
@@ -677,7 +679,7 @@ export default function TransactionsPage() {
                                                 <td className={`${adminTd} text-right`}>
                                                     {t.status === 'PENDING' && t.type === 'RECHARGE' ? (
                                                         anim ? (
-                                                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${anim === 'approve' ? 'bg-success-strong/15 text-success-strong' : 'bg-deal-bg text-deal'}`}>
+                                                            <span className={adminBadge(anim === 'approve' ? 'success' : 'danger')}>
                                                                 {anim === 'approve' ? <><IconoCheck className="w-3.5 h-3.5" /> Aprobada</> : <><IconoCerrar className="w-3.5 h-3.5" /> Rechazada</>}
                                                             </span>
                                                         ) : (
@@ -685,7 +687,7 @@ export default function TransactionsPage() {
                                                                 <button
                                                                     onClick={() => openApproveModal(t)}
                                                                     disabled={processingId === t.id}
-                                                                    className={`${adminSuccessButton} w-11 px-0`}
+                                                                    className={`${adminSuccessButton} w-11 px-0!`}
                                                                     aria-label="Aprobar recarga"
                                                                     title="Aprobar recarga"
                                                                 >
@@ -696,7 +698,7 @@ export default function TransactionsPage() {
                                                                 <button
                                                                     onClick={() => openRejectModal(t)}
                                                                     disabled={processingId === t.id}
-                                                                    className={`${adminSecondaryButton} w-11 px-0 text-deal`}
+                                                                    className={`${adminSecondaryButton} w-11 px-0! text-deal!`}
                                                                     aria-label="Rechazar recarga"
                                                                     title="Rechazar recarga"
                                                                 >

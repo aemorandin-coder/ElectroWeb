@@ -950,3 +950,24 @@ html, body { overflow-x: clip; }
 @page presupuesto {
   margin: 12mm 13mm 13mm;
 }
+
+/* C-229: "Imprimir borrador" de una factura de talonario. Sale solo la réplica, para copiarla a mano (no se imprime sobre
+   el talonario: se llena a mano). En el teléfono la réplica está oculta en pantalla, pero sale igual al imprimir. */
+@media print {
+  body.imprimiendo-factura * {
+    visibility: hidden !important;
+  }
+  body.imprimiendo-factura .factura-imprimible,
+  body.imprimiendo-factura .factura-imprimible * {
+    visibility: visible !important;
+  }
+  body.imprimiendo-factura .factura-imprimible {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

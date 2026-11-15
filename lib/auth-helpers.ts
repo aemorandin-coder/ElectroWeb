@@ -7,11 +7,14 @@ import { Session } from 'next-auth';
  *   métodos de pago, correo, Telegram y avisos, documentos legales) y el equipo (MANAGE_TEAM).
  * - Ningún admin tiene permisos hasta entrar con la verificación en dos pasos (`dosPasos` en la sesión).
  * - Otros roles: solo los permisos de su lista (hoy ninguno).
+ * - C-229, Contabilidad (decisión del 14/11, docs/plan/CONTABILIDAD.md §5): los administradores facturan (FACTURAR);
+ *   ver los libros, el IVA y los márgenes (VER_CONTABILIDAD) y declarar y firmar (DECLARAR) son del dueño, y desde
+ *   C-235 también de la contadora.
  * El menú del panel usa esta misma función.
  */
-export const SOLO_DUENO = ['MANAGE_SETTINGS', 'MANAGE_TEAM'];
+export const SOLO_DUENO = ['MANAGE_SETTINGS', 'MANAGE_TEAM', 'VER_CONTABILIDAD', 'DECLARAR'];
 /** Páginas del panel que solo abre el super admin (el `proxy` devuelve a los demás al inicio del panel). */
-export const PAGINAS_SOLO_DUENO = ['/admin/settings', '/admin/payments', '/admin/equipo'];
+export const PAGINAS_SOLO_DUENO = ['/admin/settings', '/admin/payments', '/admin/equipo', '/admin/contabilidad/talonarios'];
 
 export function hasPermission(session: Session | null, permission: string): boolean {
     if (!session) return false;

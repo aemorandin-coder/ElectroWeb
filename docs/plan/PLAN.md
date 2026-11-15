@@ -643,7 +643,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **El proponedor de nombres** (`lib/nombres/marcas.ts`) tiene que conocer Belt-G (su lista dice "BG"), Protektor y V-Teg para la próxima lista.
 
 - **Contabilidad** (pedido del 14/11, ampliado esa noche; el plan en `CONTABILIDAD.md`, C-228 y C-228b; las decisiones, en §7.2). En este orden:
-  - **C-229 · Las facturas de talonario** (pendiente, primero; la maqueta B, alineada).
+  - **C-229 · Las facturas de talonario** (**hecha**, rc.50, 14/11; la maqueta B, alineada; `estado/C-229.md`). Pendiente: que el dueño cargue el talonario después del deploy.
     - La sección Contabilidad en el menú, con los permisos `FACTURAR`, `VER_CONTABILIDAD` y `DECLARAR`.
     - Las tablas `talonarios` y `documentos_fiscales` y la columna `orders.documentoFiscalId` (aditivas). Avisar a la sesión de C-222, que también suma columnas a `orders`.
     - Cargar el talonario. La nueva factura va por pasos: de dónde sale, a nombre de quién, qué se vendió, y revisar y emitir con la réplica.

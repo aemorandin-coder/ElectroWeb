@@ -8,7 +8,7 @@ import Link from 'next/link';
 import {
   IconoAbrirAparte, IconoAdministrador, IconoAdvertencia, IconoBillete, IconoBolsa, IconoCandado, IconoCargando,
   IconoCerrar, IconoChat, IconoChevronAbajo, IconoClaqueta, IconoClientes, IconoConfiguracion, IconoCuadricula,
-  IconoCursos, IconoDocumento, IconoEstrella, IconoGarantia, IconoGiftCard, IconoMenu, IconoNotificaciones, IconoOrdenes,
+  IconoCursos, IconoDocumento, IconoEstrella, IconoGarantia, IconoGiftCard, IconoMaletin, IconoMenu, IconoNotificaciones, IconoOrdenes,
   IconoPaquete, IconoPorcentaje, IconoRegistrarse, IconoReportes, IconoSalir, IconoSalvavidas, IconoServicioTecnico,
   IconoTarjeta, IconoVariantes, IconoVentas, IconoVerificado, IconoVersiones,
 } from '@/components/iconos';
@@ -194,6 +194,16 @@ export default function AdminLayout({
         // C-122: antes las solicitudes llegaban mezcladas en Mensajes y Solicitudes
         { name: 'Garantías', href: '/admin/garantias', icon: <IconoSalvavidas className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingWarranty' },
         { name: 'Gift Cards', href: '/admin/gift-cards', icon: <IconoGiftCard className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS' },
+      ],
+    },
+    {
+      // C-229: Contabilidad (docs/plan/CONTABILIDAD.md). Facturas es de quien factura (FACTURAR); el resumen, los libros y el
+      // IVA, del dueño y de la contadora, llegan con C-230 y C-235
+      id: 'contabilidad',
+      name: 'Contabilidad',
+      icon: <IconoMaletin className={icono} aria-hidden="true" />,
+      items: [
+        { name: 'Facturas', href: '/admin/contabilidad/facturas', icon: <IconoDocumento className={icono} aria-hidden="true" />, permission: 'FACTURAR' },
       ],
     },
     {

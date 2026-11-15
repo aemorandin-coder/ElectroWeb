@@ -45,7 +45,7 @@ docs/plan/estado/G-*.md      (solo archivos que empiecen con G-)
 # Desde el 2026-09-16 ya NO son tuyos:
 #   app/login/**, app/registro/** → Claude (C-84: registro y Google)
 #   app/creator/**, app/recuperar-contrasena/**, app/verificar-email/** y el panel admin
-#   (dashboard, orders, customers, transactions, gift-cards, reports) → ChatGPT (CHATGPT.md)
+#   (dashboard, orders, customers, transactions, gift-cards, reports) → Claude (eran de ChatGPT hasta el 21/09)
 # R13 (17/09): solo tu carril, sin app/customer/(dashboard)/orders/[id]/digital/** (lo rediseñó ChatGPT)
 # R14: app/api/** y lib/** SOLO TIPOS (sin lib/auth.ts ni app/api/customers/[id]/route.ts)
 # R15: scripts/** (G-52), emojis de correos y APIs y tildes (G-53)

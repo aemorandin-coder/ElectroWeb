@@ -133,8 +133,8 @@
     - Se factura con el portal o la app del SENIAT (elegido el 14/11).
     - Lo que sobre del talonario ese día se anula.
   - **Hoy:** la empresa es ordinaria y factura solo con el talonario (SADES no imprime factura fiscal). La ley pide factura en cada venta: decidirlo con la contadora (A16).
-  - **Las 17 preguntas para la contadora,** listas para WhatsApp en tres mensajes: `~/Escritorio/Electro Shop/Preguntas para la contadora 14-11.txt`. Las urgentes son la 1 (factura en cada venta) y la 2 (el IVA de los digitales: la Factura 67 lo cobró y la web no).
-  - **Las maquetas,** en la PC de Andrés: `~/Escritorio/Electro Shop/Contabilidad - maquetas (C-228)/` (Resumen, factura A y B, libro de ventas y "Mi mesa").
+  - **Las 17 preguntas para la contadora,** listas para WhatsApp en tres mensajes: `~/Escritorio/Electro Shop/Contabilidad/preguntas-contadora-14-11.txt`. Las urgentes son la 1 (factura en cada venta) y la 2 (el IVA de los digitales: la Factura 67 lo cobró y la web no).
+  - **Las maquetas,** en la PC de Andrés: `~/Escritorio/Electro Shop/Contabilidad/Maquetas C-228/` (Resumen, factura A y B, libro de ventas y "Mi mesa").
   - **Hechas:** C-229 (las facturas, rc.50) y C-235 (la contadora, rc.54). **Sigue:** C-230 (antes del 15/12), C-236, C-237, C-232, C-238, C-239, C-240, C-231 y C-233 (`PLAN.md` §5.2).
 - **C-226 · Ningún contenedor ámbar (rc.44, en producción):** el equipo, el 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados". Viendo tres opciones eligió el azul claro de la tienda con el ícono cian en su placa azul noche (`estado/C-226.md`).
   - **La regla, para todas las IA:** `CLAUDE.md`, `GEMINI.md` y `PLAN.md` §1.1, §1.7 y §1.8. Ni cajas, ni avisos, ni fondos, ni bordes, ni píldoras ámbar.
@@ -444,7 +444,7 @@ Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera 
   6. **La vista previa de los correos** (C-244), en la computadora: Marketing → Correos de la tienda → "Pago confirmado". Baja por la lista hasta "Gift cards": la vista previa se queda fija a la derecha, con el alto de la pantalla, y el correo se lee completo con la rueda del ratón sobre él. Abajo no queda ningún espacio en blanco.
   7. **La foto del sorteo** (C-247): **hecha**. El equipo la subió desde el panel el 15/11 y `/sorteo` la muestra.
   8. **Los datos de Ferrecla** (C-246), en el panel: Productos → Lista del proveedor → la ferretería:
-      - "Datos fiscales": la razón social, el RIF y el domicilio fiscal, como en `Escritorio/Proveedores/RIF FCLA 2027.pdf`. Un RIF mal escrito avisa y no deja guardar;
+      - "Datos fiscales": la razón social, el RIF y el domicilio fiscal, como en `Escritorio/Electro Shop/Proveedores/Ferrecla/rif-ferrecla-2027.pdf`. Un RIF mal escrito avisa y no deja guardar;
       - "Quién lo recibe": su representante; y en "Correos de despacho", los tres de la ferretería separados por coma (o, para la prueba 9, primero el tuyo) → "Guardar los datos";
       - "Ver la bienvenida": la credencial dice la razón social y el RIF. **No la envíes todavía**, salvo que el equipo lo decida.
   9. **El destino claro** (C-246): Marketing → Correos → Plantillas → Proveedores → "¡Se vendió su producto!": bajo el logo de ZOOM, "Envíelo a" con la ciudad en grande, la oficina con su código y a nombre de quién. En la venta de prueba de "Por confirmar de rc.55", la página del enlace dice lo mismo.
@@ -834,7 +834,7 @@ En el orden en que más destraban:
 **Con el abogado y el contador**
 18. Abogado: términos y privacidad (ahora se editan en Legal → Documentos; `estado/C-120.md` §7). **La sección 6 de privacidad, "Cookies", tiene un texto nuevo listo** (`estado/C-223.md`): nombra todas las cookies, la medición propia y que Google y Meta van solo con permiso. Se publica con "Nueva versión" cuando el abogado lo apruebe y las 3 afirmaciones de `estado/C-144.md` (el motivo "comprobante vencido o ilegible", los plazos y los datos de contacto).
 19. Contador: las preguntas de `estado/C-151.md` (IVA de los digitales), `estado/C-147b.md` (embalaje), `estado/C-120.md` §6 y **`estado/C-159.md` (retención del IVA: quiénes retienen, el comprobante y si hay retención de ISLR en los servicios)**.
-20. **Mandarle a la contadora las preguntas, por WhatsApp desde tu teléfono:** los tres mensajes de `Preguntas para la contadora 14-11.txt`, en `~/Escritorio/Electro Shop/` de tu PC. Se copian uno por uno. Los asteriscos son las negritas.
+20. **Mandarle a la contadora las preguntas, por WhatsApp desde tu teléfono:** los tres mensajes de `preguntas-contadora-14-11.txt`, en `~/Escritorio/Electro Shop/Contabilidad/` de tu PC. Se copian uno por uno. Los asteriscos son las negritas.
 21. **Cuando responda, pásale a Claude sus respuestas:** las columnas, las alícuotas y las fechas del libro de ventas (C-230) salen de ahí. Su correo, su nombre y su C.P.C. ya llegaron el 14/11 (no van al repositorio).
 22. **Cargar el talonario, después del deploy** (en el panel, con la cuenta del dueño):
     1. Contabilidad → Facturas → "Cargar el talonario".

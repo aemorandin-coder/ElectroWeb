@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Equipo de ElectroShopVe
 
-- **ChatGPT:** antes de trabajar lee `CHATGPT.md` completo y tu ronda en `docs/plan/PLAN_CHATGPT.md`.
+- **ChatGPT** salió del equipo el 21/09: `CHATGPT.md` y `PLAN_CHATGPT.md` quedan como historial en `docs/plan/archivo/`.
 - **Gemini:** `GEMINI.md` y `docs/plan/PLAN_GEMINI.md`.
 - **Claude:** `CLAUDE.md` y `docs/plan/PLAN_CLAUDE.md`.
 - Punto de partida de todos: `docs/plan/SIGUIENTE.md`.

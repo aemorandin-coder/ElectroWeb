@@ -14,7 +14,8 @@
 | `AUDITORIA*.md` | Los siete diagnósticos. Cada uno abre con su cierre: qué tarea resolvió cada hallazgo y qué sigue abierto. |
 | [`REVISION_FINAL.md`](./REVISION_FINAL.md) | La lista de revisión en producción, con Andrés. |
 | [`CONTABILIDAD.md`](./CONTABILIDAD.md) | El plan del módulo Contabilidad (C-228): cómo trabaja el contador, las normas del SENIAT, la factura de talonario y cómo ajustarse al 19/04/2027. |
-| [`/CLAUDE.md`](../../CLAUDE.md) y [`/GEMINI.md`](../../GEMINI.md) | Reglas de cada agente. `CHATGPT.md` y `PLAN_CHATGPT.md` quedan como historial. |
+| [`/CLAUDE.md`](../../CLAUDE.md) y [`/GEMINI.md`](../../GEMINI.md) | Reglas de cada agente. |
+| [`archivo/`](./archivo/) | Lo terminado que ya no se usa para trabajar: lo de ChatGPT (`CHATGPT.md`, cuyo §4 sigue siendo el método de rediseño, y `PLAN_CHATGPT.md`), la propuesta de C-168 a C-172 y la revisión R1-R3 de Gemini. |
 | `docs/API_SADES_EWEB.md` y `docs/INTEGRACION_PAGO_MOVIL_BDV.md` | Referencia de dos sistemas externos: la API de SADES y la de Conciliación del BDV. |
 
 ## 0. Objetivo
@@ -355,7 +356,7 @@ Todo se renderiza en el servidor (`revalidate = 60`). Solo son componentes clien
 | **Gemini** | Tareas mecánicas y cerradas, solo con una tarjeta `G-*` abierta. |
 | **Andrés** | Decide el negocio (§7), hace el deploy y las pruebas en producción, y trae los datos reales. |
 
-ChatGPT salió del equipo el 21/09. Sus pantallas (panel admin, `app/creator/**`, `app/recuperar-contrasena/**`, `app/verificar-email/**`) son de Claude, que las rediseña con el método de `CHATGPT.md` §4.
+ChatGPT salió del equipo el 21/09. Sus pantallas (panel admin, `app/creator/**`, `app/recuperar-contrasena/**`, `app/verificar-email/**`) son de Claude, que las rediseña con el método de `archivo/CHATGPT.md` §4.
 
 ### Carril CLAUDE
 Todo el repositorio, salvo el carril Gemini de abajo. Lo que más pesa:
@@ -372,7 +373,7 @@ components/checkout/**   components/cart/**   components/cotizaciones/**   compo
 components/notifications/**   components/legal/**   components/seo/**   components/forms/**   components/gift-card/**
 components/Footer.tsx   components/CartIcon.tsx   components/UserAccountButton.tsx   components/WhatsAppButton.tsx
 components/HotAdOverlay.tsx   components/AnalyticsTracker.tsx
-CLAUDE.md  GEMINI.md  CHATGPT.md  README.md  docs/plan/*.md  docs/plan/estado/C-*.md
+CLAUDE.md  GEMINI.md  AGENTS.md  README.md  docs/plan/*.md  docs/plan/archivo/*.md  docs/plan/estado/C-*.md
 ```
 
 ### Carril GEMINI (solo con una tarjeta `G-*` abierta)
@@ -436,7 +437,7 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 ### 5.2 Lista única de pendientes
 Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
-**En curso (aprobado por Andrés el 02/10, `PROPUESTA_C168-C172.md`), en este orden:** C-168 versiones por módulo (**hecha**); C-169 productos sin pérdidas (borrador, papelera, conflicto, presencia) (**hecha**); C-174 marquesina del equipo (quién está conectado y en qué sector) (**hecha**); C-170 lo mismo en el resto del panel (**hecha**); C-173 Reportes en vivo con visitantes conectados, con y sin cuenta (**hecha**); C-172 Destacados que rotan (**hecha**); C-171 Dashboard a tu gusto (**hecha**, adelantada el 03/10 a pedido de Andrés). Lotes de deploy: rc.4 (C-168 y C-169, **etiquetada**), rc.5 (C-174, **etiquetada**), rc.6 (C-173, **etiquetada**), rc.7 (C-171, **etiquetada**); rc.8 (C-170, **etiquetada**); rc.9 (C-175, rediseño de todos los correos con el logo largo, pedido el 03/10; **hecha y etiquetada**; rc.10 corrige el logo para que sea el del encabezado); rc.11 (C-172, **hecha y etiquetada**). **El ciclo de `PROPUESTA_C168-C172.md` está completo.** Ideas opcionales que quedaron sin pedir: orden y fechas de los destacados desde el panel, estrella fija y cuenta regresiva de oferta en la estrella.
+**En curso (aprobado por Andrés el 02/10, `archivo/PROPUESTA_C168-C172.md`), en este orden:** C-168 versiones por módulo (**hecha**); C-169 productos sin pérdidas (borrador, papelera, conflicto, presencia) (**hecha**); C-174 marquesina del equipo (quién está conectado y en qué sector) (**hecha**); C-170 lo mismo en el resto del panel (**hecha**); C-173 Reportes en vivo con visitantes conectados, con y sin cuenta (**hecha**); C-172 Destacados que rotan (**hecha**); C-171 Dashboard a tu gusto (**hecha**, adelantada el 03/10 a pedido de Andrés). Lotes de deploy: rc.4 (C-168 y C-169, **etiquetada**), rc.5 (C-174, **etiquetada**), rc.6 (C-173, **etiquetada**), rc.7 (C-171, **etiquetada**); rc.8 (C-170, **etiquetada**); rc.9 (C-175, rediseño de todos los correos con el logo largo, pedido el 03/10; **hecha y etiquetada**; rc.10 corrige el logo para que sea el del encabezado); rc.11 (C-172, **hecha y etiquetada**). **El ciclo de `PROPUESTA_C168-C172.md` está completo.** Ideas opcionales que quedaron sin pedir: orden y fechas de los destacados desde el panel, estrella fija y cuenta regresiva de oferta en la estrella.
 
 **En curso (pedido del 16/10: salud del servidor e imágenes para compartir; primero el plan y después el código), en este orden:**
 - **C-176** mantenimiento del servidor (**hecha**).
@@ -584,7 +585,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - Hoy es una sola página larga (Entrega, Método de pago, Notas, Información de contacto y Resumen) con tres píldoras generales arriba (`CheckoutSteps`: Carrito · Pago · Listo).
     - Pasa a §1.9: los pasos de `Pasos` con su ícono (Entrega, Tus datos, Pago, Revisar y pagar), "Siguiente: …" con el motivo si falta algo, el resumen del pedido al lado como vista previa y, en el teléfono, "Paso N de M" con la barra.
     - **Primero las maquetas,** con datos reales y en las variantes posibles (pasos de a uno, o la misma página con los pasos marcándose al avanzar), para que el equipo elija.
-    - **Es dinero:** no cambia ningún cálculo del servidor. Se prueban el caso normal y el manipulado, y nada que hoy se ve o se puede hacer desaparece (el inventario del método de `CHATGPT.md` §4).
+    - **Es dinero:** no cambia ningún cálculo del servidor. Se prueban el caso normal y el manipulado, y nada que hoy se ve o se puede hacer desaparece (el inventario del método de `archivo/CHATGPT.md` §4).
   - **Volver atrás con `deploy.sh` cuando la base creció** (pendiente; salió de la subida de rc.53 del 14/11):
     - `git reset --hard <versión anterior>` y `deploy.sh --sin-pull` se paran en el paso 2: ven `DROP` de las tablas y columnas que agregó la versión nueva, y la tienda sigue como está.
     - Falta una opción (`--volver`) que compile igual cuando lo único distinto sea lo que agregó la versión nueva, sin aplicarlo nunca a la base. Hasta entonces, cada bloque dice "avisa a Claude".

@@ -15,6 +15,7 @@ import { formatUSD } from '@/lib/currency';
 import { compartirPagina } from '@/lib/og/datos';
 import { siteUrl } from '@/lib/seo';
 import { getPublicSettings } from '@/lib/site-settings';
+import { avisoDeMarcas, leerQueTrae } from '@/lib/sorteo/premio';
 import { correoTapado } from '@/lib/sorteo/reglas';
 import { boletosDeCliente, getSorteoVigente } from '@/lib/sorteo/servidor';
 
@@ -58,13 +59,17 @@ export default async function SorteoPage() {
   const cerrado = new Date() > sorteo.hasta;
   const boletos = session?.user?.id && !cerrado ? await boletosDeCliente(sorteo, session.user.id) : null;
   const enlace = boletos ? `${siteUrl()}${boletos.enlace}` : null;
+  const marcas = avisoDeMarcas(sorteo.premio, sorteo.nombreCorto);
 
   return (
     <div className="min-h-dvh bg-surface">
       <PublicHeader />
       <main>
-        {/* El premio: la pieza fuerte, en azul noche (la misma pieza que revisa el panel antes de publicar, C-221) */}
-        <PremioSorteo titulo={sorteo.titulo} premio={sorteo.premio} imagen={sorteo.imagen} resultadoEl={sorteo.resultadoEl} sorteadoAt={sorteo.sorteadoAt} />
+        {/* El premio: la pieza fuerte, en el azul oscuro del logo (la misma pieza que revisa el panel antes de publicar, C-221) */}
+        <PremioSorteo
+          titulo={sorteo.titulo} premio={sorteo.premio} imagen={sorteo.imagen} resultadoEl={sorteo.resultadoEl} sorteadoAt={sorteo.sorteadoAt}
+          incluye={leerQueTrae(sorteo.incluye)} lema={sorteo.lema} participar={!cerrado}
+        />
 
         {sorteo.sorteadoAt && sorteo.ganadorEmail && (
           <Container className="pt-8">
@@ -78,7 +83,7 @@ export default async function SorteoPage() {
 
         {!cerrado && (
           <Container className="py-8 lg:py-10">
-            <h2 className="text-xl font-bold text-ink lg:text-2xl">Cómo participar</h2>
+            <h2 id="como-participar" className="scroll-mt-40 text-xl font-bold text-ink lg:text-2xl">Cómo participar</h2>
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-line bg-white p-5">
                 <span className="iconos-marca flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><IconoCarrito className="h-6 w-6" aria-hidden="true" /></span>
@@ -140,8 +145,11 @@ export default async function SorteoPage() {
               <li>El ganador se elige al azar entre todos los boletos: cada boleto es una oportunidad. Se publica en esta página con el correo tapado y se le escribe al correo de su cuenta.</li>
               <li>El premio es una {sorteo.premio}. Se entrega en la tienda en Guanare o se envía sin costo por ZOOM a cualquier estado. No se cambia por dinero.</li>
               <li>Los correos de los participantes se usan solo para el sorteo y no se publican completos.</li>
+              <li>{marcas}</li>
             </ol>
           </details>
+          {/* C-253 (pedido del equipo, 15/11): de quién son las marcas del premio, a la vista y no solo dentro de las bases */}
+          <p className="mt-4 text-xs leading-relaxed text-muted">{marcas}</p>
         </Container>
       </main>
       <Footer />

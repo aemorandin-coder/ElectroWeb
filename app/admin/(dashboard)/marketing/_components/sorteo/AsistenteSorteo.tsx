@@ -3,6 +3,8 @@
 // C-221: crear o cambiar el sorteo en 4 pasos (PLAN.md §1.9, la A que eligió el equipo el 14/11): el premio, cómo se gana,
 // las fechas y "Revisar y publicar", con la vista previa de lo que verá el cliente al lado. Al cambiar uno que ya existe, el
 // último paso dice qué cambia (antes → después) y a cuántos clientes les cambian los boletos, antes de guardar.
+// C-253: un paso más, "Lo que trae" (lo que viene con el premio, el sello del banner y el nombre corto de la bandera del
+// inicio), con la bandera al lado como sale en la tienda.
 
 import { useRef, useState, type ReactNode } from 'react';
 import Image from 'next/image';
@@ -12,10 +14,13 @@ import CampoUnidad from '@/components/admin/CampoUnidad';
 import Pasos, { type Paso } from '@/components/admin/Pasos';
 import {
   IconoBolsa, IconoBuscar, IconoCalendario, IconoCheck, IconoClientes, IconoCupon, IconoEditar, IconoEliminar, IconoFlechaDerecha,
-  IconoFlechaIzquierda, IconoGuardar, IconoImagen, IconoInterruptorEncendido, IconoOcultar, IconoPremio, IconoRegalo, IconoSubir, IconoVer,
-  IconoWeb, type IconType,
+  IconoFlechaIzquierda, IconoGuardar, IconoImagen, IconoInterruptorEncendido, IconoMas, IconoOcultar, IconoPaquete, IconoPremio, IconoRegalo,
+  IconoSubir, IconoVer, IconoWeb, type IconType,
 } from '@/components/iconos';
 import PremioSorteo from '@/components/sorteo/PremioSorteo';
+import { CuerpoPestana } from '@/components/sorteo/BanderaSorteo';
+import { iconoDeCosa } from '@/components/sorteo/iconosQueTrae';
+import { logoDelNombreCorto, MAX_QUE_TRAE, partesDelPremio } from '@/lib/sorteo/premio';
 import { TarjetaSorteoVista, montoCorto } from '@/components/sorteo/TarjetaSorteo';
 import ProductPicker from '@/app/admin/(dashboard)/studio/_components/ProductPicker';
 import { adminCard, adminError, adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
@@ -26,8 +31,12 @@ import {
 
 interface Efecto { boletosAntes: number; boletosDespues: number; pierden: number; ganan: number }
 
+/** El último paso, "Revisar y publicar" (el quinto) */
+const REVISAR = 4;
+
 const PASOS: { titulo: string; icono: IconType; queHacer: string }[] = [
   { titulo: 'El premio', icono: IconoRegalo, queHacer: 'Qué se lleva el ganador y cómo se ve.' },
+  { titulo: 'Lo que trae', icono: IconoPaquete, queHacer: 'Lo que viene con el premio, el sello y el nombre de la bandera.' },
   { titulo: 'Cómo se gana', icono: IconoCupon, queHacer: 'Cuándo una compra o un amigo da un boleto.' },
   { titulo: 'Fechas', icono: IconoCalendario, queHacer: 'Desde cuándo cuenta, la última compra y el resultado.' },
   { titulo: 'Revisar y publicar', icono: IconoVer, queHacer: 'Mira cómo queda antes de guardarlo.' },
@@ -38,6 +47,9 @@ const CAMPOS: { k: keyof Formulario; nombre: string; ver: (f: Formulario) => str
   { k: 'titulo', nombre: 'Título', ver: (f) => f.titulo.trim() },
   { k: 'premio', nombre: 'Premio', ver: (f) => f.premio.trim() },
   { k: 'imagen', nombre: 'Foto', ver: (f) => (f.imagen ? 'con foto' : 'sin foto') },
+  { k: 'incluye', nombre: 'Lo que trae', ver: (f) => (f.incluye.length ? f.incluye.map((c) => c.texto.trim()).join(' · ') : 'nada') },
+  { k: 'lema', nombre: 'Sello', ver: (f) => f.lema.trim() || 'sin sello' },
+  { k: 'nombreCorto', nombre: 'Nombre en el inicio', ver: (f) => f.nombreCorto.trim() || 'sin nombre corto' },
   { k: 'costoPremioUSD', nombre: 'Costo del premio', ver: (f) => montoCorto(numero(f.costoPremioUSD) ?? 0) },
   { k: 'compraMinimaUSD', nombre: 'Compra mínima', ver: (f) => montoCorto(numero(f.compraMinimaUSD) ?? 0) },
   { k: 'topeInvitar', nombre: 'Tope por invitar', ver: (f) => ((numero(f.topeInvitar) ?? 0) > 0 ? `${numero(f.topeInvitar)} boletos` : 'sin invitar') },
@@ -47,7 +59,9 @@ const CAMPOS: { k: keyof Formulario; nombre: string; ver: (f: Formulario) => str
 ];
 const CUENTAN_BOLETOS: (keyof Formulario)[] = ['desde', 'hasta', 'compraMinimaUSD', 'topeInvitar'];
 
-const mismo = (a: Formulario, b: Formulario, k: keyof Formulario) => String(a[k]).trim() === String(b[k]).trim();
+// "Lo que trae" es una lista: se compara entera
+const valor = (f: Formulario, k: keyof Formulario) => (k === 'incluye' ? JSON.stringify(f.incluye.map((c) => [c.texto.trim(), c.detalle.trim()])) : String(f[k]).trim());
+const mismo = (a: Formulario, b: Formulario, k: keyof Formulario) => valor(a, k) === valor(b, k);
 
 export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0, onCancelar, onListo }: {
   modo: 'nuevo' | 'editar';
@@ -62,7 +76,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
   const [form, setForm] = useState<Formulario>(inicial);
   const [paso, setPaso] = useState(pasoInicial);
   // Hasta dónde llegó: lo de antes está hecho. Al cambiar uno que ya existe, todo está hecho desde el principio
-  const [alcanzado, setAlcanzado] = useState(modo === 'editar' ? PASOS.length - 1 : pasoInicial);
+  const [alcanzado, setAlcanzado] = useState(modo === 'editar' ? REVISAR : pasoInicial);
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [publicar, setPublicar] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -78,7 +92,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
     setErrores((e) => { const r = { ...e }; delete r[k]; return r; });
   };
 
-  const problemas = [0, 1, 2].map((i) => problemaDe(i, form));
+  const problemas = [0, 1, 2, 3].map((i) => problemaDe(i, form));
   const listoHasta = (i: number) => problemas.slice(0, i).every((p) => p === null);
   const cambios = modo === 'editar' ? CAMPOS.filter((c) => !mismo(form, inicial, c.k)) : [];
   const cambianBoletos = cambios.some((c) => CUENTAN_BOLETOS.includes(c.k));
@@ -91,16 +105,19 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
   const pasos: Paso[] = PASOS.map((p, i) => ({
     titulo: p.titulo,
     icono: p.icono,
-    hecho: i < 3 && i < alcanzado + (modo === 'editar' ? 1 : 0) && problemas[i] === null,
+    hecho: i < REVISAR && i < alcanzado + (modo === 'editar' ? 1 : 0) && problemas[i] === null,
     disponible: listoHasta(i),
     resumen: i === 0 ? (form.premio.trim() ? `${form.premio.trim()} · ${montoCorto(costo)}` : 'Qué se lleva el ganador')
-      : i === 1 ? `Desde ${montoCorto(minimo)} · ${invitar ? '2 amigos' : 'sin invitar'}`
-        : i === 2 ? (esDia(form.hasta) ? `Última compra el ${diaMes(form.hasta)}` : 'Cuándo y hasta cuándo')
+      : i === 1 ? (form.incluye.length ? `${form.incluye.length} ${form.incluye.length === 1 ? 'cosa' : 'cosas'}${form.nombreCorto.trim() ? ` · ${form.nombreCorto.trim()}` : ''}` : 'Opcional')
+      : i === 2 ? `Desde ${montoCorto(minimo)} · ${invitar ? '2 amigos' : 'sin invitar'}`
+        : i === 3 ? (esDia(form.hasta) ? `Última compra el ${diaMes(form.hasta)}` : 'Cuándo y hasta cuándo')
           : modo === 'editar' ? `${cambios.length} ${cambios.length === 1 ? 'cambio' : 'cambios'}` : 'Vista previa',
   }));
 
   const cuerpo = () => ({
     titulo: form.titulo.trim(), premio: form.premio.trim(), imagen: form.imagen.trim(),
+    incluye: form.incluye.map((c) => ({ texto: c.texto.trim(), detalle: c.detalle.trim() })).filter((c) => c.texto),
+    lema: form.lema.trim(), nombreCorto: form.nombreCorto.trim(),
     costoPremioUSD: numero(form.costoPremioUSD), compraMinimaUSD: numero(form.compraMinimaUSD), topeInvitar: numero(form.topeInvitar),
     desde: form.desde, hasta: form.hasta, resultadoEl: form.resultadoEl,
     activo: modo === 'nuevo' ? publicar : form.activo,
@@ -127,7 +144,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
     setPaso(i);
     setAlcanzado((a) => Math.max(a, i));
     setElegir(false);
-    if (i === 3) void calcularEfecto();
+    if (i === REVISAR) void calcularEfecto();
   };
 
   const guardar = async () => {
@@ -172,7 +189,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
   const fechaResultado = esDia(form.resultadoEl) ? new Date(`${form.resultadoEl}T00:00:00-04:00`) : new Date();
   const dias = esDia(form.desde) && esDia(form.hasta) ? diasEntre(form.desde, form.hasta) + 1 : null;
   const alResultado = esDia(form.hasta) && esDia(form.resultadoEl) ? diasEntre(form.hasta, form.resultadoEl) : null;
-  const problema = paso < 3 ? problemas[paso] : null;
+  const problema = paso < REVISAR ? problemas[paso] : null;
   const sinCambios = modo === 'editar' && cambios.length === 0;
 
   // El ejemplo de "Cómo se gana": una compra que llega al mínimo, una que no y 4 amigos
@@ -210,7 +227,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
                 <Campo etiqueta="Título" id="sorteo-titulo" error={errores.titulo}>
                   <input id="sorteo-titulo" value={form.titulo} maxLength={60} onChange={(e) => set('titulo', e.target.value)} className={`${adminInput(Boolean(errores.titulo))} sm:max-w-sm`} />
                 </Campo>
-                <Campo etiqueta="Premio" id="sorteo-premio" error={errores.premio} pista="Tal como es: si es reacondicionado, dilo.">
+                <Campo etiqueta="Premio" id="sorteo-premio" error={errores.premio} pista='Tal como es. Lo que va entre paréntesis sale aparte: "PlayStation 4 Sony (Remanufacturada)".'>
                   <input id="sorteo-premio" value={form.premio} maxLength={120} onChange={(e) => set('premio', e.target.value)} className={`${adminInput(Boolean(errores.premio))} sm:max-w-lg`} />
                 </Campo>
                 <div>
@@ -261,6 +278,10 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
             )}
 
             {paso === 1 && (
+              <PasoQueTrae form={form} set={set} errores={errores} />
+            )}
+
+            {paso === 2 && (
               <div className="space-y-4">
                 <div className="grid gap-3 lg:grid-cols-2">
                   <div className="rounded-2xl border border-line p-4">
@@ -317,7 +338,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
               </div>
             )}
 
-            {paso === 2 && (
+            {paso === 3 && (
               <div className="space-y-3">
                 <ol className="grid gap-4 lg:grid-cols-[auto_minmax(4rem,1fr)_auto_minmax(4rem,1fr)_auto] lg:items-start lg:gap-0">
                   <Hito icono={IconoInterruptorEncendido} etiqueta="Empieza" id="sorteo-desde" valor={form.desde} onCambiar={(v) => set('desde', v)} error={errores.desde} />
@@ -333,12 +354,13 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
               </div>
             )}
 
-            {paso === 3 && (
+            {paso === REVISAR && (
               <div className="space-y-4">
                 <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line">
                   <Resumen icono={IconoRegalo} titulo={form.premio.trim()} detalle={`${form.titulo.trim()} · ${form.imagen ? 'con foto' : 'sin foto'} · costo ${formatUSD(costo)} (solo el equipo)`} onCambiar={() => ir(0)} />
-                  <Resumen icono={IconoCupon} titulo={`Compras de ${montoCorto(minimo)} o más${invitar ? ' · 2 amigos = 1 boleto' : ''}`} detalle={invitar ? `Hasta ${tope} ${tope === 1 ? 'boleto' : 'boletos'} por invitar` : 'Sin boletos por invitar'} onCambiar={() => ir(1)} />
-                  <Resumen icono={IconoCalendario} titulo={`Del ${diaMes(form.desde)} al ${diaMes(form.hasta)} · resultado el ${diaMes(form.resultadoEl)}`} detalle={dias ? `${dias} ${dias === 1 ? 'día' : 'días'} para participar` : ''} onCambiar={() => ir(2)} />
+                  <Resumen icono={IconoPaquete} titulo={form.incluye.length ? form.incluye.map((c) => c.texto.trim()).join(' · ') : 'Sin "Lo que trae"'} detalle={[form.lema.trim() && `Sello: ${form.lema.trim()}`, form.nombreCorto.trim() && `En el inicio: ${form.nombreCorto.trim()}`].filter(Boolean).join(' · ')} onCambiar={() => ir(1)} />
+                  <Resumen icono={IconoCupon} titulo={`Compras de ${montoCorto(minimo)} o más${invitar ? ' · 2 amigos = 1 boleto' : ''}`} detalle={invitar ? `Hasta ${tope} ${tope === 1 ? 'boleto' : 'boletos'} por invitar` : 'Sin boletos por invitar'} onCambiar={() => ir(2)} />
+                  <Resumen icono={IconoCalendario} titulo={`Del ${diaMes(form.desde)} al ${diaMes(form.hasta)} · resultado el ${diaMes(form.resultadoEl)}`} detalle={dias ? `${dias} ${dias === 1 ? 'día' : 'días'} para participar` : ''} onCambiar={() => ir(3)} />
                 </ul>
 
                 {modo === 'nuevo' ? (
@@ -404,13 +426,13 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
             ) : <span />}
             <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-3">
               {problema && <p className="text-xs text-muted" role="status">{problema}</p>}
-              {sinCambios && paso === 3 && <p className="text-xs text-muted" role="status">No hay cambios que guardar.</p>}
-              {paso < 3 ? (
+              {sinCambios && paso === REVISAR && <p className="text-xs text-muted" role="status">No hay cambios que guardar.</p>}
+              {paso < REVISAR ? (
                 <button type="button" onClick={() => ir(paso + 1)} disabled={Boolean(problema)} className={adminPrimaryButton}>
                   Siguiente: {PASOS[paso + 1].titulo.toLowerCase()} <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
                 </button>
               ) : (
-                <button type="button" onClick={() => void guardar()} disabled={guardando || sinCambios || !listoHasta(3)} className={adminPrimaryButton}>
+                <button type="button" onClick={() => void guardar()} disabled={guardando || sinCambios || !listoHasta(REVISAR)} className={adminPrimaryButton}>
                   {guardando ? 'Guardando…' : modo === 'editar'
                     ? <><IconoGuardar className="h-4 w-4" aria-hidden="true" /> Guardar el cambio</>
                     : publicar ? <><IconoCheck className="h-4 w-4" aria-hidden="true" /> Publicar el sorteo</>
@@ -422,14 +444,14 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
         </section>
 
         {/* La vista previa: lo que verá el cliente, con los datos de ahora. En el teléfono, solo al revisar */}
-        <aside className={`${paso === 3 ? '' : 'hidden lg:block'} space-y-4 lg:sticky lg:top-44`} aria-label="Vista previa">
+        <aside className={`${paso === REVISAR ? '' : 'hidden lg:block'} space-y-4 lg:sticky lg:top-44`} aria-label="Vista previa">
           <div>
             <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-soft">
               <IconoVer className="h-4 w-4 text-brand-500" aria-hidden="true" /> Así se ve en la tienda
             </p>
             <div className="mx-auto w-full max-w-[17rem] rounded-[2rem] border-8 border-ink bg-white p-2.5">
               <div className="mx-auto mb-2 h-1.5 w-16 rounded-full bg-line-strong" aria-hidden="true" />
-              <PremioSorteo titulo={form.titulo.trim()} premio={form.premio.trim()} imagen={form.imagen || null} resultadoEl={fechaResultado} compacto />
+              <PremioSorteo titulo={form.titulo.trim()} premio={form.premio.trim()} imagen={form.imagen || null} resultadoEl={fechaResultado} incluye={form.incluye.filter((c) => c.texto.trim())} lema={form.lema} compacto />
               <div className="mt-2 rounded-xl border border-line p-3">
                 <p className="text-xs font-semibold text-ink">Cómo participar</p>
                 <ul className="mt-1.5 grid gap-1 text-xs text-ink-soft">
@@ -439,7 +461,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
               </div>
             </div>
           </div>
-          {paso === 3 && (
+          {paso === REVISAR && (
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-soft">
                 <IconoVer className="h-4 w-4 text-brand-500" aria-hidden="true" /> En Mi panel del cliente
@@ -543,5 +565,73 @@ function Opcion({ marcada, onElegir, icono: Icono, titulo, detalle }: { marcada:
       </span>
       <Icono className={`h-5 w-5 shrink-0 ${marcada ? 'text-brand-500' : 'text-muted'}`} aria-hidden="true" />
     </label>
+  );
+}
+
+/** C-253: el paso "Lo que trae": hasta 4 cosas con su ícono (sale solo, por lo que dice), el sello y el nombre corto */
+function PasoQueTrae({ form, set, errores }: {
+  form: Formulario;
+  set: <K extends keyof Formulario>(k: K, v: Formulario[K]) => void;
+  errores: Record<string, string>;
+}) {
+  const cosas = form.incluye;
+  const cambiar = (i: number, campo: 'texto' | 'detalle', v: string) => set('incluye', cosas.map((c, j) => (j === i ? { ...c, [campo]: v } : c)));
+  const { nombre } = partesDelPremio(form.premio);
+  const corto = form.nombreCorto.trim() || null;
+  const logo = logoDelNombreCorto(corto);
+  return (
+    <div className="space-y-6">
+      <fieldset className="min-w-0">
+        <legend className="mb-1.5 flex items-center gap-1 text-sm font-semibold text-ink">
+          Lo que trae
+          <Ayuda>Sale en /sorteo, en una franja debajo del premio, cada cosa con su ícono. El ícono sale solo por lo que escribes (GB, control, cable…). El detalle es una línea chica debajo, si hace falta.</Ayuda>
+        </legend>
+        {cosas.length > 0 && (
+          <ul className="grid gap-2">
+            {cosas.map((c, i) => {
+              const Icono = iconoDeCosa(c.texto);
+              return (
+                <li key={i} className="flex flex-wrap items-center gap-2">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-white"><Icono className="h-5 w-5" aria-hidden="true" /></span>
+                  <input aria-label={`Cosa ${i + 1}`} value={c.texto} maxLength={60} placeholder="1 control azul eléctrico" onChange={(e) => cambiar(i, 'texto', e.target.value)} className={`${adminInput(false)} min-w-0 flex-1 sm:max-w-xs`} />
+                  <input aria-label={`Detalle de la cosa ${i + 1}`} value={c.detalle} maxLength={40} placeholder="Detalle (si quieres)" onChange={(e) => cambiar(i, 'detalle', e.target.value)} className={`${adminInput(false)} min-w-0 flex-1 sm:max-w-56`} />
+                  <button type="button" onClick={() => set('incluye', cosas.filter((_, j) => j !== i))} aria-label={`Quitar ${c.texto || `la cosa ${i + 1}`}`} className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-deal">
+                    <IconoEliminar className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {cosas.length < MAX_QUE_TRAE && (
+          <button type="button" onClick={() => set('incluye', [...cosas, { texto: '', detalle: '' }])} className={`${adminSecondaryButton} mt-2`}>
+            <IconoMas className="h-4 w-4" aria-hidden="true" /> {cosas.length ? 'Agregar otra' : 'Agregar lo que trae'}
+          </button>
+        )}
+        {errores.incluye && <p className={adminError} role="alert">{errores.incluye}</p>}
+      </fieldset>
+
+      <Campo etiqueta="Sello" id="sorteo-lema" error={errores.lema} pista="Una frase corta junto al nombre. Ej.: ¡Lista para jugar!">
+        <input id="sorteo-lema" value={form.lema} maxLength={30} onChange={(e) => set('lema', e.target.value)} className={`${adminInput(Boolean(errores.lema))} sm:max-w-xs`} />
+      </Campo>
+
+      <div className="flex flex-wrap items-start gap-5">
+        <Campo
+          etiqueta="Nombre en el inicio"
+          id="sorteo-corto"
+          error={errores.nombreCorto}
+          ayuda={`Va en la bandera del inicio, al borde de la pantalla: "¡Gánate una …". Con PS4 o PS5 sale su logo oficial. Vacío, la bandera dice "Sorteo".${nombre ? ` El premio completo (${nombre}) sigue en /sorteo.` : ''}`}
+          pista={logo ? 'Sale con el logo oficial.' : 'Corto, hasta 16 letras. Ej.: PS4'}
+        >
+          <input id="sorteo-corto" value={form.nombreCorto} maxLength={16} onChange={(e) => set('nombreCorto', e.target.value)} className={`${adminInput(Boolean(errores.nombreCorto))} w-40`} />
+        </Campo>
+        <div>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-ink-soft">Así se ve en el inicio</p>
+          <div className="flex w-24 flex-col items-center gap-2.5 rounded-r-2xl bg-brand-700 pb-3.5 pl-2 pr-2.5 pt-2.5 text-center text-white shadow-lg">
+            <CuerpoPestana foto={form.imagen && form.imagen.startsWith('/') ? form.imagen : null} corto={corto} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -10,6 +10,27 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.72] - 2026-11-15
+El sorteo, más atractivo (C-253): el banner nuevo de `/sorteo`, la bandera del inicio y el paso "Lo que trae" del panel. El equipo eligió cada pieza viendo las maquetas. **Cambia la base: tres columnas nuevas en `sorteos`, aditivas** (`incluye`, `lema` y `nombreCorto`). Sin variables nuevas, sin SQL de datos y sin cron.
+### Marketing 1.18.0 (C-253)
+- **`/sorteo`, el banner nuevo** (la C2):
+  - arriba, "Gana una" y el nombre en grande, con el sello ("¡Lista para jugar!") y la etiqueta. La etiqueta es lo que va entre paréntesis en el premio: "PlayStation 4 Sony (Remanufacturada)";
+  - los días que faltan junto al envío gratis, y "Quiero mi boleto", que baja a Cómo participar;
+  - la foto a la derecha, sin nada encima: sus bordes se funden con la franja y ya no se ve el cuadro;
+  - abajo, de lado a lado, "Lo que trae", cada cosa con su ícono.
+- **El aviso de marcas:** Sony, PlayStation, PS4 y sus logos son de Sony Interactive Entertainment. Electro Shop no está afiliada a Sony, y el sorteo no está patrocinado, avalado ni administrado por Sony. Va en las bases y a la vista, debajo. Se arma con lo que dice el premio; con otra marca, va el aviso general.
+- **El panel, Marketing → Sorteo:** un paso nuevo, "Lo que trae", entre "El premio" y "Cómo se gana".
+  - **Lo que trae:** hasta 4 cosas, con un detalle si hace falta. El ícono sale solo, por lo que dice.
+  - **El sello** y **el nombre corto de la bandera:** con PS4 o PS5 sale su logo oficial. Al lado se ve la bandera como sale en el inicio.
+  - **Al cambiar el sorteo,** "Lo que cambia" también dice estas tres cosas.
+  - **Un panel abierto de antes** no las borra al guardar.
+### Tienda 1.16.0 (C-253)
+- **La bandera del sorteo en el inicio,** mientras se puede participar. Lleva a `/sorteo`.
+  - **En pantallas de 1440 px o más:** una pestaña pegada al borde izquierdo, a media altura, con la foto del premio, "¡Gánate una", el logo de PS4 y el regalo.
+  - **Más angosto:** una píldora abajo a la izquierda, frente a WhatsApp.
+  - **Entra una sola vez:** se desliza, da dos destellos, el regalo se mueve y se queda quieta. Con "reducir movimiento", no se anima.
+  - **Al cerrar el sorteo,** se va sola. La semana del ganador es C-254.
+
 ## [1.0.0-rc.71] - 2026-11-15
 Mi panel con el kit de marca, la segunda parte (C-251b): los arreglos que quedaron de C-251. Solo pantallas: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Nada desaparece y el dinero no cambia.
 ### Carrito, checkout y cuenta del cliente 1.8.1 (C-251b)

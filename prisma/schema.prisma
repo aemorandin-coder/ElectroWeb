@@ -2342,6 +2342,12 @@ model Sorteo {
   premio           String
   /// Foto del premio (una ruta de /uploads o https)
   imagen           String?
+  /// C-253: lo que trae el premio, para el banner de /sorteo: [{ texto, detalle }], hasta 4
+  incluye          Json?
+  /// C-253: el sello del banner ("¡Lista para jugar!")
+  lema             String?
+  /// C-253: el nombre corto para la bandera del inicio ("PS4"); con PS4 o PS5 sale su logo
+  nombreCorto      String?
   /// Lo que le cuesta a la tienda el premio con su envío, para "lo que dejó el sorteo" en el panel. Nunca sale a la tienda
   costoPremioUSD   Decimal   @default(0)
   /// Una compra de esto o más en productos (sin envío) da un boleto

@@ -152,8 +152,12 @@ export async function marcoCorreo(o: OpcionesCorreo): Promise<string> {
       <p style="margin:0;font-family:${FUENTE_TITULO};font-size:26px;line-height:1.25;font-weight:800;color:#ffffff;">Compra tecnología<br><span style="display:inline-block;margin-top:8px;background-color:#ffffff;color:${COLOR.marcaOscura};border-radius:999px;padding:3px 18px;transform:rotate(-3deg);">sin miedo</span></p>
       <div style="margin-top:18px;">${pastilla(e(dominio))}${a.whatsappVisible ? pastilla(`WhatsApp ${e(a.whatsappVisible)}`) : ''}${pastilla(`14 años en ${e(a.ciudad)} · Envíos a toda Venezuela`)}</div>
       ${iconos ? `<div style="margin-top:14px;">${iconos}</div>` : ''}
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto 0;"><tr><td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:12px;padding:9px 16px;">
-        <span style="font-family:${FUENTE};font-size:11px;line-height:1;font-weight:600;color:${COLOR.suave};vertical-align:middle;">Envíos por&nbsp;&nbsp;</span><img src="${imagenCorreo('zoom.png')}" height="20" width="102" alt="ZOOM" style="display:inline-block;vertical-align:middle;height:20px;width:102px;border:0;font-family:${FUENTE};font-size:12px;font-weight:700;color:${COLOR.marca};">&nbsp;&nbsp;<img src="${imagenCorreo('mrw.png')}" height="20" width="123" alt="MRW" style="display:inline-block;vertical-align:middle;height:20px;width:123px;border:0;font-family:${FUENTE};font-size:12px;font-weight:700;color:${COLOR.tinta};">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto 0;"><tr><td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:12px;padding:8px 14px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+          <td valign="middle" style="padding:0 8px 0 0;font-family:${FUENTE};font-size:11px;line-height:1;font-weight:600;color:${COLOR.suave};white-space:nowrap;">Envíos por</td>
+          <td valign="middle" width="82" style="padding:0 8px 0 0;"><img src="${imagenCorreo('zoom.png')}" height="16" width="82" alt="ZOOM" style="display:block;height:16px;width:82px;border:0;font-family:${FUENTE};font-size:12px;font-weight:700;color:${COLOR.marca};"></td>
+          <td valign="middle" width="98"><img src="${imagenCorreo('mrw.png')}" height="16" width="98" alt="MRW" style="display:block;height:16px;width:98px;border:0;font-family:${FUENTE};font-size:12px;font-weight:700;color:${COLOR.tinta};"></td>
+        </tr></table>
       </td></tr></table>
       ${legal('#c9d8f6')}
       <p style="margin:6px 0 0;font-family:${FUENTE};font-size:11px;line-height:1.5;color:#c9d8f6;">ZOOM y MRW son marcas de sus dueños.</p>
@@ -172,7 +176,8 @@ export async function marcoCorreo(o: OpcionesCorreo): Promise<string> {
 <style>
   @media (max-width:520px){
     .marco{padding:12px 8px !important}
-    .cabeza{padding:30px 16px 0 !important}
+    .cabeza{padding:30px 58px 0 !important}
+    .cabeza-fondo{background-size:56px 56px !important}
     .cabeza-msj{padding:22px 16px 28px !important}
     .cuerpo{padding:24px 18px 10px !important}
     .pie{padding:4px 10px 10px !important}
@@ -188,9 +193,9 @@ ${o.preheader ? `<div style="display:none;max-height:0;max-width:0;overflow:hidd
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
 
   <!-- ELECTRO SHOP te recibe: el logo grande, la cinta en la esquina y el lema -->
-  <tr><td bgcolor="#ffffff" align="center" style="background-color:#ffffff;background-image:url('${imagenCorreo('cinta.png')}');background-repeat:no-repeat;background-position:right top;background-size:84px 84px;border-radius:20px 20px 0 0;padding:0;${o.encabezado ? `border-bottom:1px solid ${COLOR.linea};` : ''}">
+  <tr><td bgcolor="#ffffff" align="center" class="cabeza-fondo" style="background-color:#ffffff;background-image:url('${imagenCorreo('cinta.png')}');background-repeat:no-repeat;background-position:right top;background-size:84px 84px;border-radius:20px 20px 0 0;padding:0;${o.encabezado ? `border-bottom:1px solid ${COLOR.linea};` : ''}">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr><td align="center" class="cabeza" style="padding:40px 30px ${o.encabezado ? '0' : '26px'};">
+      <tr><td align="center" class="cabeza" style="padding:40px 84px ${o.encabezado ? '0' : '26px'};">
         <a href="${app}" target="_blank" style="text-decoration:none;"><img src="${imagenCorreo('logo.png')}" width="340" alt="ELECTRO SHOP" style="display:block;margin:0 auto;width:340px;max-width:100%;height:auto;border:0;font-family:${FUENTE};font-size:30px;line-height:1.2;font-weight:800;letter-spacing:4px;color:${COLOR.marca};"></a>
         <p style="margin:10px 0 0;font-family:${FUENTE};font-size:13px;line-height:1.4;color:${COLOR.suave};">${e(a.lema)}</p>
       </td></tr>${encabezado}

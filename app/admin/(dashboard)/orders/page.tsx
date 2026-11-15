@@ -797,7 +797,7 @@ export default function OrdersPage() {
                   </button>
                 )}
                 {!['CANCELLED', 'DELIVERED', 'REFUNDED', 'SHIPPED'].includes(selectedOrder.status) && (
-                  <button onClick={() => { setCancelReason(''); setShowCancelModal(true); }} disabled={updatingStatus} className={`${adminSecondaryButton} text-deal hover:text-deal`}>
+                  <button onClick={() => { setCancelReason(''); setShowCancelModal(true); }} disabled={updatingStatus} className={`${adminSecondaryButton} text-deal!`}>
                     <IconoCerrar className="w-4 h-4" aria-hidden="true" /> Cancelar orden
                   </button>
                 )}

@@ -562,7 +562,7 @@ export default function TransactionsPage() {
                                                 <button
                                                     onClick={() => openRejectModal(t)}
                                                     disabled={processingId === t.id}
-                                                    className={`${adminSecondaryButton} flex-1 px-3 text-deal`}
+                                                    className={`${adminSecondaryButton} flex-1 px-3 text-deal!`}
                                                 >
                                                     <IconoCerrar className="w-3.5 h-3.5" />
                                                     Rechazar
@@ -687,7 +687,7 @@ export default function TransactionsPage() {
                                                                 <button
                                                                     onClick={() => openApproveModal(t)}
                                                                     disabled={processingId === t.id}
-                                                                    className={`${adminSuccessButton} w-11 px-0`}
+                                                                    className={`${adminSuccessButton} w-11 px-0!`}
                                                                     aria-label="Aprobar recarga"
                                                                     title="Aprobar recarga"
                                                                 >
@@ -698,7 +698,7 @@ export default function TransactionsPage() {
                                                                 <button
                                                                     onClick={() => openRejectModal(t)}
                                                                     disabled={processingId === t.id}
-                                                                    className={`${adminSecondaryButton} w-11 px-0 text-deal`}
+                                                                    className={`${adminSecondaryButton} w-11 px-0! text-deal!`}
                                                                     aria-label="Rechazar recarga"
                                                                     title="Rechazar recarga"
                                                                 >

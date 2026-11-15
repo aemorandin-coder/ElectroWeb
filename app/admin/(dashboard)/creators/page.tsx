@@ -173,7 +173,7 @@ export default function AdminCreatorsPage() {
                   {creator.status !== 'REJECTED' && (
                     <button
                       onClick={() => { setModal({ creator, action: 'REJECTED' }); setNotes(''); }}
-                      className={`${adminSecondaryButton} text-deal hover:text-deal`}
+                      className={`${adminSecondaryButton} text-deal!`}
                     >
                       Rechazar
                     </button>

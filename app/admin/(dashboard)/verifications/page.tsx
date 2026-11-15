@@ -290,7 +290,7 @@ export default function VerificationsPage() {
                                     type="button"
                                     onClick={() => handleAction('REJECTED')}
                                     disabled={processing}
-                                    className={`${adminSecondaryButton} text-deal hover:text-deal`}
+                                    className={`${adminSecondaryButton} text-deal!`}
                                 >
                                     Rechazar
                                 </button>

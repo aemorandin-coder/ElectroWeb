@@ -316,7 +316,7 @@ export default function CustomersPage() {
             </Link>
             <button
               onClick={() => fetchCustomers()}
-              className={`${adminSecondaryButton} w-11 px-0`}
+              className={`${adminSecondaryButton} w-11 px-0!`}
               aria-label="Actualizar clientes"
               title="Actualizar"
             >

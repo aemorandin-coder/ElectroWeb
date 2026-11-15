@@ -393,7 +393,7 @@ export default function Promociones() {
                                         {p.isActive ? <><IconoPausa className="h-4 w-4" aria-hidden="true" /> Pausar</> : <><IconoPlay className="h-4 w-4" aria-hidden="true" /> Reanudar</>}
                                     </button>
                                 )}
-                                <button type="button" onClick={() => eliminar(p)} className={`${adminSecondaryButton} text-deal`}><IconoEliminar className="h-4 w-4" aria-hidden="true" /> Eliminar</button>
+                                <button type="button" onClick={() => eliminar(p)} className={`${adminSecondaryButton} text-deal!`}><IconoEliminar className="h-4 w-4" aria-hidden="true" /> Eliminar</button>
                             </div>
                         </li>
                     ))}

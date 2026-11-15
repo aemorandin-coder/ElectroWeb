@@ -244,7 +244,7 @@ export default function Solicitudes() {
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => openActionModal(request, 'approve')}
-                                                    className={`${adminSuccessButton} w-11 px-0`}
+                                                    className={`${adminSuccessButton} w-11 px-0!`}
                                                     aria-label="Aprobar"
                                                     title="Aprobar"
                                                 >
@@ -252,7 +252,7 @@ export default function Solicitudes() {
                                                 </button>
                                                 <button
                                                     onClick={() => openActionModal(request, 'reject')}
-                                                    className={`${adminSecondaryButton} w-11 px-0 text-deal hover:text-deal`}
+                                                    className={`${adminSecondaryButton} w-11 px-0! text-deal!`}
                                                     aria-label="Rechazar"
                                                     title="Rechazar"
                                                 >

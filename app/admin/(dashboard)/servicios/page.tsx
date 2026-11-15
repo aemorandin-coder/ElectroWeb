@@ -369,7 +369,7 @@ export default function AdminServiciosPage() {
                     onClick={() => handleDelete(v.id)}
                     disabled={deletingId === v.id}
                     aria-label="Eliminar este trabajo"
-                    className={`${adminSecondaryButton} w-11 px-0 text-deal hover:text-deal`}
+                    className={`${adminSecondaryButton} w-11 px-0! text-deal!`}
                   >
                     <IconoEliminar className="w-4 h-4" aria-hidden="true" />
                   </button>

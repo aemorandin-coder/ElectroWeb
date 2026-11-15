@@ -50,6 +50,9 @@ export const adminPrimaryButton = `${buttonBase} bg-brand-500 text-white hover:b
 export const adminSecondaryButton = `${buttonBase} border border-line bg-white text-ink hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 hover:shadow-md hover:shadow-brand-600/10`;
 export const adminDangerButton = `${buttonBase} bg-deal text-white hover:bg-deal/90 hover:shadow-md hover:shadow-deal/25`;
 export const adminSuccessButton = `${buttonBase} bg-success-strong text-white hover:bg-success-strong/90 hover:shadow-md hover:shadow-success-strong/25`;
+// C-245: lo que se suma a un botón compartido no siempre le gana a lo que ya trae: en el CSS, `px-5` va después de
+// `px-0`, `h-11` después de `h-9` y `text-ink` después de `text-deal`. Para un cuadrado de 44 px, `w-11 px-0!`; para el
+// rojo de borrar o rechazar sobre el secundario, `text-deal!` (el `!` lo hace ganar).
 /** Botón de solo ícono (editar, borrar, cerrar). Siempre con aria-label. */
 export const adminIconButton =
   `inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted ${MOVIMIENTO} hover:bg-brand-50 hover:text-brand-600 focus-visible:outline-2 focus-visible:outline-brand-500 disabled:opacity-40`;

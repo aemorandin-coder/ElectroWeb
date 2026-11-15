@@ -153,9 +153,9 @@ export default function DigitalStep1Platform({ data, onChange, errors, categorie
           {data.tags.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-2">
               {data.tags.map((tag) => (
-                <li key={tag} className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+                <li key={tag} className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-xs font-semibold text-ink-soft ring-1 ring-inset ring-line">
                   {tag}
-                  <button type="button" onClick={() => onChange({ tags: data.tags.filter((t) => t !== tag) })} aria-label={`Quitar etiqueta ${tag}`} className="text-brand-700 hover:text-ink"><IconoCerrar className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => onChange({ tags: data.tags.filter((t) => t !== tag) })} aria-label={`Quitar etiqueta ${tag}`} className="text-muted hover:text-deal"><IconoCerrar className="h-3.5 w-3.5" /></button>
                 </li>
               ))}
             </ul>

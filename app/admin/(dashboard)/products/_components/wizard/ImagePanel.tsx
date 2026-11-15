@@ -167,8 +167,8 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
           <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-brand-500/30 group bg-surface">
             <Image src={images[0]} alt="Principal" fill className="object-cover" sizes="300px" />
             <div className="absolute top-2 left-2 bg-brand-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm">Principal</div>
-            {/* Acciones siempre visibles en pantallas táctiles; en escritorio al pasar el mouse o con el teclado */}
-            <div className="absolute right-2 top-2 flex gap-1 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
+            {/* C-245: las acciones siempre a la vista (antes, en la computadora, solo al pasar el ratón) */}
+            <div className="absolute right-2 top-2 flex gap-1">
               <button
                 type="button"
                 onClick={() => handleRemove(0)}
@@ -186,7 +186,7 @@ export default function ImagePanel({ images, onChange, error, badge = true }: Pr
             {images.slice(1).map((url, idx) => (
               <div key={idx + 1} className="relative aspect-square rounded-lg overflow-hidden border border-line group bg-surface">
                 <Image src={url} alt="" fill className="object-cover" sizes="100px" />
-                <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1 p-1 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
+                <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1 p-1">
                   <button
                     type="button"
                     onClick={() => handleSetMain(idx + 1)}

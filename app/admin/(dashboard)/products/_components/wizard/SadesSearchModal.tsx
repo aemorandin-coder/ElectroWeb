@@ -170,7 +170,7 @@ export default function SadesSearchModal({ onImport, onClose }: Props) {
               <button
                 onClick={() => handleImport(product)}
                 disabled={importing === product.sku}
-                className="flex items-center gap-1.5 px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-xl hover:bg-brand-600 transition-colors disabled:opacity-60 flex-shrink-0 opacity-0 group-hover:opacity-100"
+                className="flex items-center gap-1.5 px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-xl hover:bg-brand-600 transition-colors disabled:opacity-60 flex-shrink-0"
               >
                 {importing === product.sku ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

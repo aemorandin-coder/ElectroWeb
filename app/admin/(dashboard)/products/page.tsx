@@ -6,11 +6,12 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import {
-  IconoBaseDeDatos, IconoBuscar, IconoCerrar, IconoDescargar, IconoEditar, IconoEliminar, IconoMas, IconoMasOpciones,
-  IconoPaquete, IconoPorcentaje, IconoSubir, IconoVariantes,
+  IconoAdvertencia, IconoArchivar, IconoBaseDeDatos, IconoBuscar, IconoCerrar, IconoCupon, IconoDescargar, IconoEditar, IconoEliminar,
+  IconoImagen, IconoLista, IconoMas, IconoMasOpciones, IconoPaquete, IconoPorcentaje, IconoSubir, IconoTienda, IconoVariantes,
 } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
 import {
-  adminChoice, adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab,
+  adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab,
 } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { hasPermission } from '@/lib/auth-helpers';
@@ -50,13 +51,20 @@ interface Pagina {
 interface Proveedor { id: string; name: string; productos: number }
 
 // C-187: "Archivados" va al final y aparte: no cuenta en "Todos" ni en "Sin stock"
-const FILTROS: Array<{ value: FiltroEstado; label: string }> = [
-  { value: 'todos', label: 'Todos' },
-  { value: 'publicados', label: 'Activos' },
-  { value: 'borradores', label: 'Borradores' },
-  { value: 'sin-stock', label: 'Sin stock' },
-  { value: 'archivados', label: 'Archivados' },
+// C-245: en píldoras con ícono y lo que juntan (PLAN.md §1.7)
+const FILTROS: Array<{ value: FiltroEstado; label: string; ayuda: string; Icono: typeof IconoLista }> = [
+  { value: 'todos', label: 'Todos', ayuda: 'Sin los archivados', Icono: IconoLista },
+  { value: 'publicados', label: 'Activos', ayuda: 'Se ven en la tienda', Icono: IconoTienda },
+  { value: 'borradores', label: 'Borradores', ayuda: 'Todavía sin publicar', Icono: IconoEditar },
+  { value: 'sin-stock', label: 'Sin stock', ayuda: 'Publicados sin existencia', Icono: IconoAdvertencia },
+  { value: 'archivados', label: 'Archivados', ayuda: 'Fuera de la tienda', Icono: IconoArchivar },
 ];
+/** El subtítulo corto de cada "Por revisar" (la explicación larga va en el aviso al elegirlo) */
+const REVISAR_CORTO: Record<(typeof FILTROS_REVISAR)[number], { ayuda: string; Icono: typeof IconoLista }> = {
+  'sin-foto': { ayuda: 'Publicados sin foto', Icono: IconoImagen },
+  'sin-marca': { ayuda: 'Google y Meta la piden', Icono: IconoCupon },
+  'sin-medidas': { ayuda: 'El envío se estima', Icono: IconoPaquete },
+};
 const FILTROS_VALIDOS = new Set<string>([...FILTROS.map((f) => f.value), ...FILTROS_REVISAR]);
 const ORDENES_VALIDOS = new Set<string>(ORDENES.map((o) => o.value));
 /** C-187: a 360 px las tres pestañas (con el número de la papelera) no cabían: un poco menos de aire en el teléfono */
@@ -513,25 +521,26 @@ function Productos() {
       ) : (
         <>
           {/* Estados como filtros rápidos: tocar "Sin stock" filtra. Los números respetan la búsqueda, la categoría y el proveedor */}
-          <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filtrar por estado">
-            {FILTROS.map((f) => (
-              <button key={f.value} type="button" aria-pressed={filtro === f.value} onClick={() => cambiarVista(() => setFiltro(f.value))}
-                className={`${adminChoice(filtro === f.value)} flex min-h-11 shrink-0 items-center gap-2 px-3 text-sm`}>
-                {f.label}<span className={`rounded-full px-2 text-xs font-semibold tabular-nums ${f.value === 'sin-stock' && (conteo?.['sin-stock'] ?? 0) > 0 ? 'bg-deal-bg text-deal' : 'bg-surface text-muted'}`}>{conteo ? miles(conteo[f.value]) : '…'}</span>
-              </button>
-            ))}
-          </div>
+          <Filtros
+            etiqueta="Filtrar por estado"
+            valor={filtro}
+            onCambiar={(v) => cambiarVista(() => setFiltro(v))}
+            filtros={FILTROS.map((f) => ({
+              valor: f.value, etiqueta: f.label, ayuda: f.ayuda, Icono: f.Icono, cuenta: conteo ? conteo[f.value] : null,
+              ...(f.value === 'sin-stock' && (conteo?.['sin-stock'] ?? 0) > 0 ? { tono: 'aviso' as const } : {}),
+            }))}
+          />
 
           {/* C-187: lo mismo que avisa el Dashboard, a un toque. Solo aparece lo que tiene algo por arreglar */}
           {conteo && porRevisar.length > 0 && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Por revisar">
-              <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-muted">Por revisar</span>
-              {porRevisar.map((f) => (
-                <button key={f} type="button" aria-pressed={filtro === f} title={REVISAR[f].ayuda} onClick={() => cambiarVista(() => setFiltro(filtro === f ? 'todos' : f))}
-                  className={`${adminChoice(filtro === f)} flex min-h-11 shrink-0 items-center gap-2 px-3 text-sm`}>
-                  {REVISAR[f].label}<span className="rounded-full bg-brand-700 px-2 text-xs font-semibold tabular-nums text-white">{miles(conteo[f])}</span>
-                </button>
-              ))}
+            <div>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Por revisar</p>
+              <Filtros
+                etiqueta="Por revisar"
+                valor={filtro}
+                onCambiar={(v) => cambiarVista(() => setFiltro(filtro === v ? 'todos' : v))}
+                filtros={porRevisar.map((f) => ({ valor: f, etiqueta: REVISAR[f].label, ayuda: REVISAR_CORTO[f].ayuda, Icono: REVISAR_CORTO[f].Icono, cuenta: conteo[f], tono: 'aviso' as const }))}
+              />
             </div>
           )}
 

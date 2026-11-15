@@ -10,6 +10,41 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.47] - 2026-11-14
+Los correos de la tienda, rediseñados (el equipo, 14/11: "muy pobres, no tienen nuestra esencia"; eligió la maqueta C, clara con la cinta, con ELECTRO SHOP grande arriba y Chispa abajo).
+### Marketing 1.12.0 (C-219)
+- **Todos los correos con el marco nuevo:**
+  - arriba, el logo grande, la cinta ES y el lema;
+  - el sello y el título del momento ("¡Es oficial, María! Tu pedido ya arrancó");
+  - abajo, Chispa en su globo, con gorro mientras esté encendido el tema de Navidad;
+  - el cierre "Compra tecnología sin miedo", con el WhatsApp, ZOOM y MRW, la razón social y el RIF.
+- **En los de compra:** la barra de seguimiento, la foto de cada producto (en JPEG, para que Outlook la muestre), el total en $ y en Bs. con la tasa de la orden, y el IVA incluido.
+- **19 correos que faltaban.** Antes solo había el aviso dentro de la web, o nada.
+- **La vista previa** (Marketing → Correos → Plantillas) muestra los 54, por grupo. Antes, 15.
+- **La versión de solo texto** se arma ordenada, con los enlaces a la vista.
+- **El sorteo:** el boleto ganado, el recordatorio de los últimos días (un cron nuevo), el resultado a todos y el correo al ganador.
+### Órdenes y pagos 1.3.0 (C-219)
+- **Pagos y entregas:**
+  - "¡Pago confirmado!" cuando el equipo confirma el pago;
+  - "Listo para retirar", con la dirección y el horario;
+  - el delivery en Guanare, con su propio texto.
+- **La recarga de Puntos ES aprobada o rechazada a mano,** también por correo.
+- **Al comprar sale un solo correo.** Antes salían dos cuando el pago quedaba en revisión.
+### Clientes 1.5.0 (C-219)
+- **"Enviar con el diseño de la tienda"** en la respuesta a un mensaje de contacto: sale desde la tienda y el mensaje queda respondido.
+- **Correos nuevos:** la garantía recibida, el mensaje recibido, la solicitud de producto recibida y "¡Ya llegó lo que pediste!".
+### Carrito, checkout y cuenta del cliente 1.5.0 (C-219)
+- **La bienvenida sale al activar la cuenta o al entrar con Google.** Existía y nadie la enviaba.
+- **Correos nuevos:** la contraseña cambiada y el pedido de eliminar la cuenta. La gift card avisa a quien la compró cuando le llega a la otra persona y cuando la canjea.
+### Cotizaciones 1.5.0, Promotores 1.2.0, Cursos 1.1.0 y Ofertas y cupones 1.2.0 (C-219)
+- **Correos nuevos:**
+  - el acuse del presupuesto pedido y la confirmación del aprobado;
+  - el promotor no aprobado, "¡Alguien compró con tu código!" y la comisión acreditada;
+  - el curso aprobado, al creador;
+  - el descuento aprobado de la lista de deseos.
+- Parches en Marco del panel 1.7.1 (los avisos al equipo), Productos 1.14.3 (el pedido de reseña) y Configuración 1.1.8 (el correo de prueba).
+- **Base (aditiva):** `sorteos.recordatorioAt`.
+
 ## [1.0.0-rc.46] - 2026-11-14
 Desde dónde sale cada producto, dicho por su estado (el equipo, 14/11: "Sale desde La Victoria" no se entiende).
 ### Tienda 1.11.0 (C-222)

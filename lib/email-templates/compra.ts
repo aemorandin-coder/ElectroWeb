@@ -41,6 +41,7 @@ export async function correoDeCompra(order: OrdenParaCorreo): Promise<Correo> {
     deliveryAddress: order.shippingAddress || undefined,
     // C-199: si la compra llega en varios paquetes, cada correo dice de dónde sale el suyo
     dispatchCityName: order.dispatchCityName,
+    dispatchStateName: order.dispatchStateName,
     totalVES: Number(order.totalVES) || null,
     exchangeRate: Number(order.exchangeRate) || null,
   });

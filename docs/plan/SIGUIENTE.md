@@ -1,9 +1,13 @@
-# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.46, por subir)
+# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.47, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-219 · Los correos de la tienda (rc.47, por subir):** el equipo, el 14/11: "muy pobres, no tienen nuestra esencia". Eligió la maqueta C, clara con la cinta, con ELECTRO SHOP grande arriba y Chispa abajo, y textos "mucho más épicos" (`estado/C-219.md`, `AUDITORIA_CORREOS.md`).
+  - **Los 26 que ya salían, con el diseño nuevo,** y **19 nuevos:** el pago confirmado, listo para retirar, la bienvenida, las recargas, la garantía, el contacto, los presupuestos, los avisos de la gift card, el sorteo y más.
+  - **En Mensajes:** "Enviar con el diseño de la tienda" responde desde la tienda.
+  - **Al subir:** una columna nueva y un cron (`cron-sorteo.sh`), en el bloque de §2.
 - **C-228 y C-228b · Contabilidad: el plan completo (14/11; solo documentos y maquetas, sin deploy):** un módulo nuevo del panel (`CONTABILIDAD.md`, `estado/C-228.md` y `estado/C-228b.md`).
   - **Qué lleva:**
     - la factura de talonario guiada, con la maqueta B elegida y alineada;
@@ -22,11 +26,10 @@
 - **C-226 · Ningún contenedor ámbar (rc.44, por subir):** el equipo, el 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados". Viendo tres opciones eligió el azul claro de la tienda con el ícono cian en su placa azul noche (`estado/C-226.md`).
   - **La regla, para todas las IA:** `CLAUDE.md`, `GEMINI.md` y `PLAN.md` §1.1, §1.7 y §1.8. Ni cajas, ni avisos, ni fondos, ni bordes, ni píldoras ámbar.
   - **Lo que cambió:** el aviso compartido del panel (42 lugares), 24 pantallas de la tienda y del panel y la caja de aviso de los correos. Sin cambio de base.
-- **En curso en esta sesión, con las decisiones del 14/11 en `PLAN.md` §7.2:**
-  - **C-219 · Los correos de la tienda:** el análisis, el rediseño (la maqueta C, clara con la cinta, con ELECTRO SHOP grande arriba y Chispa abajo) y los 19 correos que faltan.
+- **Siguen, con las decisiones del 14/11 en `PLAN.md` §7.2:**
   - **C-227 · Los correos para proveedores:** la bienvenida de "revendedor premium", "¡Se vendió tu producto!" y "Se canceló: no lo despaches".
   - **C-234 · Cuándo sale cada pedido:** corte a las 2:00 p. m., lo del sábado sale el lunes, los feriados y "Sale el lunes 16" en la ficha, el carrito, el checkout, los correos y Mi pedido.
-- **Tres sesiones de Claude a la vez el 14/11**, cada una en su worktree: esta (C-219, C-226, C-227 y C-234), la del plan de crecimiento (C-220 a C-225) y la de Contabilidad (C-228 a C-233).
+- **Tres sesiones de Claude a la vez el 14/11**, cada una en su worktree: la de los correos (C-219, C-226, C-227 y C-234), la del plan de crecimiento (C-220 a C-225 y C-241) y la de Contabilidad (C-228 a C-240).
 - **C-222 · "Desde Aragua" y el filtro de ubicación (rc.46, por subir):** lo que eligió el equipo el 14/11 (`estado/C-222.md`).
   - La tarjeta de todo lo físico dice "Desde Aragua" o "Desde Portuguesa", con el ícono de ubicación. La ficha empieza la entrega con "Sale de La Victoria, estado Aragua".
   - El catálogo filtra por "Desde dónde sale", con la cuenta de cada lugar.
@@ -231,7 +234,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.46` (C-226, C-221 y C-222, con rc.44 y rc.45 adentro; unos 25 minutos)
+### El bloque por subir: `v1.0.0-rc.47` (C-226, C-221, C-222 y C-219, con rc.44 a rc.46 adentro; unos 40 minutos)
 **Producción ya está en `v1.0.0-rc.43`** (`fcdc4c0`, compilada el 14/11 a las 00:10 UTC). Lo comprobó Claude desde fuera el 14/11, leyendo la versión de la página pública. Nadie lo anotó: falta que el equipo confirme si se corrió el SQL del bloque de rc.43 (abajo) y cuáles de sus pruebas se hicieron. Con eso, ese bloque pasa a `HISTORIAL.md`.
 - **C-226 (rc.44):** ningún contenedor ámbar; lo que hay que hacer va en el azul claro de la tienda. **Sin SQL, sin variables nuevas y sin cron.**
 - **C-221 (rc.45):** el sorteo por pasos. **Sin cambio de base, sin variables nuevas y sin cron.** Lleva un **SQL de datos** (abajo).
@@ -247,6 +250,13 @@ ALTER TABLE "orders" ADD COLUMN "dispatchStateName" TEXT;
 UPDATE "suppliers" SET "dispatchStateName" = 'Aragua' WHERE "dispatchCityCode" = '244' AND "dispatchStateName" IS NULL;
 UPDATE "orders" SET "dispatchStateName" = 'Aragua' WHERE "dispatchCityCode" = '244' AND "dispatchStateName" IS NULL;
 ```
+- **C-219 (rc.47):** los correos de la tienda, rediseñados, y los 19 que faltaban.
+  - **Cambia la base: una columna nueva, aditiva.** `deploy.sh` la muestra junto con las de C-222:
+```sql
+ALTER TABLE "sorteos" ADD COLUMN "recordatorioAt" TIMESTAMP(3);
+```
+  - **Un cron nuevo** (en la terminal del servidor, después del deploy): `cp /var/www/electroshopve/docs/plan/scripts/cron-sorteo.sh ~/cron-sorteo.sh && chmod +x ~/cron-sorteo.sh`, y en `crontab -e` la línea `0 10 * * * /home/luami/cron-sorteo.sh >> /home/luami/cron-sorteo.log 2>&1`. Probarlo con `~/cron-sorteo.sh`: hasta el 15/12 responde `{"recordatorio":0,"motivo":"Todavía faltan más de 3 días para el cierre"}`.
+  - Sin variables nuevas.
 - **SQL de datos (C-220 y C-221), antes de subir** (en la terminal del servidor). Cambia los textos para Google y el lema (lo que el equipo iba a cambiar en el panel) y crea el sorteo de Navidad ya publicado, con los números de Andrés del 13/11. Si ya hay un sorteo, no crea otro.
   1. Guardar los textos de hoy, para poder volver:
      `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && psql "$DB" -c "SELECT tagline, \"metaTitle\", \"metaDescription\", \"metaKeywords\", \"productsMetaDescription\" FROM company_settings" > ~/textos-antes-c221.txt`
@@ -266,7 +276,7 @@ WHERE NOT EXISTS (SELECT 1 FROM sorteos);
 ```
   - Las fechas van en UTC: del 14/11 al 18/12 (hasta las 11:59 p. m.) y el resultado el 20/12, hora de Venezuela.
   - La foto de la consola se agrega después en Marketing → Sorteo → Cambiar (se sube desde la computadora). Sin foto, /sorteo se ve igual, sin el recuadro de la imagen.
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.44`.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.47`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **En el panel:** Configuración → Respaldos con los respaldos apagados, y Productos → Nuevo → Publicar con un dato faltante. El aviso va en azul claro, con el ícono cian en su placa azul noche. No queda ninguna caja ámbar.
   2. **En la tienda,** con una cuenta sin verificar: el checkout muestra "Verificación requerida" con el círculo azul noche. Mi panel → Documentos con uno por firmar: la nota va en azul claro.
@@ -276,7 +286,13 @@ WHERE NOT EXISTS (SELECT 1 FROM sorteos);
   6. **La Lista del proveedor** (Productos → Más): los pasos se ven igual que antes, con su número, y la línea entre ellos.
   7. **"Desde Aragua"** (en el teléfono): `/productos` muestra "Desde Aragua" en la ferretería y "Desde Portuguesa" en lo de la tienda, con el ícono de ubicación. En Filtros, "Desde dónde sale": al tocar Aragua quedan solo los de la ferretería y arriba sale "Desde Aragua" para quitarlo.
   8. **La ficha** de un producto de la ferretería empieza la entrega con "Sale de La Victoria, estado Aragua". El carrito con uno de cada lugar dice "uno desde Portuguesa (Guanare) y uno desde Aragua (La Victoria)".
-- **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`. Los textos de antes quedan en `~/textos-antes-c221.txt`; el sorteo se apaga en Marketing → Sorteo → Apagar.
+  9. **Un correo de verdad** (C-219): Configuración → Correo → "Probar conexión" a tu Gmail.
+     - Ábrelo en la computadora y en el teléfono, también en modo oscuro: arriba ELECTRO SHOP con la cinta, abajo Chispa con gorro y el cierre "sin miedo" con el RIF.
+     - Si puedes, reenvíalo a un Outlook o Hotmail. Si algo se ve mal, manda la captura.
+  10. **Los 54** (Marketing → Correos → Plantillas): salen por grupo. Abre "Pago confirmado" en Escritorio y en Móvil: las fotos de los productos se ven.
+  11. **Una compra pequeña con Pago Móvil, con tu cuenta de cliente:** llega un solo correo, "¡Pago confirmado!", con la foto, el total en $ y en Bs., y el aviso del flete en azul claro.
+  12. **Contacto:** manda un mensaje desde `/contacto` con tu correo: llega "¡Te leímos!". En el panel, Mensajes → ese mensaje → "Redactar con Claude" → "Enviar con el diseño de la tienda": llega la respuesta y el mensaje queda "Respondido".
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`. Los textos de antes quedan en `~/textos-antes-c221.txt`; el sorteo se apaga en Marketing → Sorteo → Apagar. La columna nueva de C-219 no molesta al código anterior; el cron del sorteo se quita con `crontab -e`.
 
 ### Ya en producción, sin anotar: `v1.0.0-rc.43` (C-210 a C-218, con rc.35 a rc.42 adentro)
 Antes, producción estaba en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`. Lo que sigue es el bloque tal como se preparó: hay que confirmar su SQL y sus pruebas.

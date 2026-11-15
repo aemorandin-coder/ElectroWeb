@@ -2,13 +2,27 @@
 
 El equipo, el 14/11: "Siento que los diseños actuales de correos son muy pobres y no tienen nuestra esencia". Pidió primero un análisis exhaustivo (dónde hace falta un correo, qué mensajes faltan) y después el rediseño de todas las plantillas: "más épico, más Electro Shop", sin que dejen de verse.
 
-## Cierre
-**En curso (C-219).** Decisiones del 14/11 en `PLAN.md` §7.2: la maqueta C (clara, con la cinta), con ELECTRO SHOP grande arriba y Chispa abajo, textos "más dinámicos y mucho más épicos" y los 19 correos nuevos. El ámbar de los correos se fue con C-226.
+## Cierre (2026-11-14, C-219)
+**Resuelto en C-219 y C-226.** Decisiones del 14/11 en `PLAN.md` §7.2: la maqueta C (clara, con la cinta), con ELECTRO SHOP grande arriba y Chispa abajo, textos "más dinámicos y mucho más épicos" y los 19 correos nuevos.
 
 | Hallazgos | Cerrado en | Cómo quedó |
 |---|---|---|
+| 1 (la bienvenida) | C-219 | Sale al activar la cuenta y al entrar con Google. |
+| 2 (dos correos al comprar) | C-219 | Uno solo, que dice si el pago entró o se está revisando. |
+| 3 (el recibo) | C-219 | `formatUSD`, la foto de cada producto y el total en Bs. con la tasa de la orden. |
+| 4 (los asuntos) | C-219 | Sin mayúsculas en cada palabra y siempre "Electro Shop". |
+| 5 (las fotos en WebP) | C-219 | En JPEG desde `/api/public/foto-correo`. |
+| 6 (la versión de texto) | C-219 | `htmlATexto`: un renglón por párrafo y los enlaces con su dirección. |
+| 7 (los correos sueltos en las rutas) | C-219 | En `lib/email-templates`; la vista previa muestra los 54. |
+| 8 (el pie) | C-219 | La razón social, el RIF, la dirección y por qué le escribimos. |
+| 9 (el delivery en Guanare) | C-219 | Su propio correo: "Sale a tu puerta". |
 | 10 (cajas ámbar) | C-226 | La caja de aviso va en el azul claro de la tienda. |
-| 1 a 9 y los 19 que faltan | C-219 (en curso) | — |
+| Los 19 que faltaban | C-219 | Todos, con su disparo (`estado/C-219.md`). |
+
+**Lo que sigue abierto (`PLAN.md` §5.2):**
+- "Sale el lunes 16" con C-234;
+- responder sin el borrador de Claude con la plantilla;
+- el carrito abandonado, "Tu factura" y el resumen de Puntos ES.
 
 ---
 

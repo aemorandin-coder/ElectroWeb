@@ -176,8 +176,8 @@ export async function marcoCorreo(o: OpcionesCorreo): Promise<string> {
 <style>
   @media (max-width:520px){
     .marco{padding:12px 8px !important}
-    .cabeza{padding:30px 58px 0 !important}
-    .cabeza-fondo{background-size:56px 56px !important}
+    .cabeza{padding:30px 66px 0 !important}
+    .cabeza-fondo{background-size:52px 52px !important}
     .cabeza-msj{padding:22px 16px 28px !important}
     .cuerpo{padding:24px 18px 10px !important}
     .pie{padding:4px 10px 10px !important}

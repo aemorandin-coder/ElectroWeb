@@ -2,6 +2,7 @@ import { porcentajeIva } from '@/lib/pricing';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { escapeHtml } from '@/lib/html';
 import { ETIQUETA_ENTREGA } from '@/lib/envios/empresas';
+import { paqueteDesde } from '@/lib/origen';
 import {
   CORREO, avisoCorreo, botonCorreo, enlaceWhatsAppCorreo, notaCorreo, productosCorreo, rotuloCorreo, seguimientoCorreo,
   totalesCorreo, urlTienda,
@@ -9,11 +10,11 @@ import {
 import { ajustesCorreo, fotoCorreo, marcoCorreo } from './marco';
 
 /**
- * C-219: de dónde sale un paquete que no es de Guanare, en una sola frase. La sesión de C-222 ("Desde Aragua") la cambia
- * aquí cuando la orden guarde también el estado: "Paquete desde Aragua (La Victoria), con su propia guía".
+ * C-219: de dónde sale un paquete que no es de Guanare, en una sola frase, con el estado y la ciudad de C-222:
+ * "Paquete desde Aragua (La Victoria), con su propia guía".
  */
-export function origenDelPaquete(ciudad: string): string {
-  return `Paquete desde ${ciudad}, con su propia guía`;
+export function origenDelPaquete(estado: string | null | undefined, ciudad: string | null | undefined): string {
+  return `Paquete ${paqueteDesde(estado, ciudad)}, con su propia guía`;
 }
 
 interface OrderConfirmationData {
@@ -46,8 +47,9 @@ interface OrderConfirmationData {
   deliveryCode?: string | null;
   deliveryMethod: string;
   deliveryAddress?: string;
-  /** C-199: la ciudad de la que sale el paquete, si no es Guanare */
+  /** C-199 y C-222: el estado y la ciudad de los que sale el paquete, si no es Guanare */
   dispatchCityName?: string | null;
+  dispatchStateName?: string | null;
   /** C-219: el total en bolívares y la tasa que guardó la orden */
   totalVES?: number | null;
   exchangeRate?: number | null;
@@ -121,7 +123,7 @@ export async function generateOrderConfirmationEmail(data: OrderConfirmationData
     ${rotuloCorreo('Así te llega')}
     <p style="margin:0;font-size:15px;line-height:1.5;font-weight:700;color:#212529;">${e(ETIQUETA_ENTREGA[codigo] || data.deliveryMethod)}</p>
     ${data.deliveryAddress ? `<p style="margin:2px 0 0;font-size:14px;line-height:1.5;color:#495057;">${e(data.deliveryAddress)}</p>` : ''}
-    ${data.dispatchCityName ? `<p style="margin:2px 0 0;font-size:14px;line-height:1.5;color:#495057;">${e(origenDelPaquete(data.dispatchCityName))}</p>` : ''}
+    ${data.dispatchCityName || data.dispatchStateName ? `<p style="margin:2px 0 0;font-size:14px;line-height:1.5;color:#495057;">${e(origenDelPaquete(data.dispatchStateName, data.dispatchCityName))}</p>` : ''}
     ${codigo === 'SHIPPING' ? avisoCorreo('Al retirar: tu cédula y el flete', 'Tu caja viaja con cobro a destino: el flete se lo pagas a ZOOM o MRW en la oficina y, con tu cédula en mano, es tuya.', 'envio') : ''}`;
 
   const whatsapp = enlaceWhatsAppCorreo(a.whatsapp, 'Escríbenos por WhatsApp', `Hola, tengo una duda con mi pedido ${data.orderNumber}`);

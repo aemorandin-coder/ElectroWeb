@@ -57,7 +57,7 @@ export default function MarketingPage() {
   const seccion = SECCIONES.find((s) => s.id === activa) ?? SECCIONES[0];
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div>
       <div className={adminPageHeader}>
         <div>
           <h1 className={adminPageTitle}>Marketing</h1>

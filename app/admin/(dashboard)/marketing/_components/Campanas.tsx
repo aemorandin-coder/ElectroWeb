@@ -204,7 +204,7 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
         <div className={`${adminCard} flex items-center justify-between gap-3 p-4`}>
           <div>
             <p className="text-xs text-muted">Correos de marketing</p>
-            <p className={`text-lg font-bold ${datos.marketingActivo ? 'text-success-strong' : 'text-warning-strong'}`}>{datos.marketingActivo ? 'Activados' : 'Desactivados'}</p>
+            <p className={`text-lg font-bold ${datos.marketingActivo ? 'text-success-strong' : 'text-ink'}`}>{datos.marketingActivo ? 'Activados' : 'Desactivados'}</p>
           </div>
           <Link href="/admin/settings#correo" className="text-xs font-semibold text-brand-600 hover:underline">Configurar</Link>
         </div>
@@ -721,7 +721,7 @@ function ModalDestinatarios({ abierto, alCerrar }: { abierto: boolean; alCerrar:
                     <p className="truncate font-mono text-xs text-brand-600">{item.email}</p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <span className="inline-block rounded bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success-strong">Verificado</span>
+                    <span className={adminBadge('success')}>Verificado</span>
                     <p className="mt-0.5 text-[11px] text-muted">Desde {new Date(item.createdAt).toLocaleDateString('es-VE')}</p>
                   </div>
                 </li>

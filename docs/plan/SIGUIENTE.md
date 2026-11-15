@@ -1,9 +1,27 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.60, por subir)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.61, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-245 · El panel entero con el kit de marca (rc.61, por subir):** lo pidió el equipo el 15/11 y lo hizo un agente aparte (`estado/C-245.md`).
+  - **El inventario:** las 43 pantallas del panel, en el código y en capturas, con cada problema como mecánico o como rediseño.
+  - **Lo mecánico, ya hecho en 14 módulos:**
+    - los estados llenos en lugar de las píldoras claras;
+    - el tipo y la plataforma como datos en gris;
+    - sin ámbar en números, títulos ni frases;
+    - el sello de te toca en Garantías y Clientes;
+    - una sola acción principal en el detalle de la orden;
+    - los filtros en píldoras con ícono en Productos, Reseñas, Garantías, Descuentos, Cotizaciones, Legal y Verificaciones;
+    - las páginas que se centraban, junto al menú (Marketing, Notificaciones, Seguridad, Configuración, Equipo y Cotizaciones).
+  - **Arreglos de paso:**
+    - los formularios de Cursos, Servicios y Verificaciones ya no se cierran al tocar adentro;
+    - "Aprobar verificación" ya no lleva letra blanca sobre el verde claro;
+    - "Importar" de SADES se ve en el teléfono;
+    - los botones cuadrados ya no aprietan el ícono.
+  - **Para decidir, con maquetas** (en la PC de Andrés: `~/.cache/electroshop-trabajo/c245/decisiones.html`):
+    1. crear por pasos los ocho formularios de una sola vez (cupón, método de pago, campaña…);
+    2. los filtros de Órdenes.
 - **C-246 · El destino claro para la guía y los datos de Ferrecla (rc.60, por subir):** pedido del equipo el 15/11 (`estado/C-246.md`).
   - **El correo y la página del proveedor dicen claramente a dónde va el paquete:** "Envíelo a" con la ciudad en grande (y su código de ZOOM), la oficina con su código o la casa del cliente si es puerta a puerta, y a nombre de quién. Los datos de la guía van en el orden de ZOOM.
   - **El proveedor tiene datos fiscales** (razón social, RIF y domicilio, como en su RIF) y **hasta 3 correos de despacho**: a todos les llega cada venta. La credencial de la bienvenida lleva la razón social y el RIF.
@@ -12,7 +30,7 @@
 - **C-244 · La vista previa de los correos (rc.58, por subir):** en Marketing → Correos de la tienda, la vista previa queda fija con el alto de la pantalla mientras se recorre la lista, y el correo se lee con un solo scroll (`estado/C-244.md`). Antes salía baja, con su propio scroll, y debajo quedaba un espacio en blanco.
 - **C-243 · El kit de marca (rc.57, por subir):** el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo (`estado/C-243.md`).
   - La fuente única es `lib/marca.ts`, con su página en Marketing → Kit de marca, y `npm run check:marca` rechaza lo de fuera. Salen el azul noche y el cian, también de los correos y de las imágenes para compartir.
-  - Sigue **C-245**: un agente aparte (Opus 5.5, esfuerzo extra alto) repasa todo el panel con el kit.
+  - **C-245** (rc.61) repasó todo el panel con el kit (arriba).
 - **C-242 · Facturas, ordenada (rc.56, en producción):** el equipo la vio en producción el 14/11 ("los grids se ven perdidos, íconos amontonados") y eligió la A viendo las maquetas (`estado/C-242.md`).
   - Tres datos del mismo alto: la próxima, el talonario y lo cobrado sin factura ("Al día" o "Te toca"). Lo raro, en gris bajo el talonario; las notas de la ley, detrás de su (i).
   - La tarjeta para elegir una opción trae todo adentro (`components/admin/Opcion`, `PLAN.md` §1.10): el asistente de factura ya no tiene el ícono encima ni el texto pegado al borde.
@@ -284,7 +302,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.60` (C-243, C-244, C-247 y C-246; unos 35 minutos)
+### El bloque por subir: `v1.0.0-rc.61` (C-243, C-244, C-247, C-246 y C-245; unos 45 minutos)
 **Producción está en `v1.0.0-rc.56`** (`471a54d`); su bloque está en `HISTORIAL.md`.
 - **C-243 (rc.57):** el kit de marca. **Sin cambio de base, sin SQL, sin variables nuevas y sin cron.**
   - **Las imágenes para compartir cambian de dirección** (`?v=`): WhatsApp y Facebook las vuelven a pedir solas.
@@ -299,8 +317,9 @@ ADD COLUMN "legalName" TEXT,
 ADD COLUMN "taxId" TEXT;
 ```
   - Sin variables nuevas, sin SQL de datos y sin cron.
+- **C-245 (rc.61):** el panel entero con el kit. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc60.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.60`, o una mayor si entró otra tarea antes del `git pull`.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.61`, o una mayor si entró otra tarea antes del `git pull`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **`/sorteo`:** la franja de arriba va en el azul oscuro del logo, sin azul casi negro ni letras cian.
   2. **En el teléfono, la barra de abajo** va en el mismo azul oscuro.
@@ -318,6 +337,13 @@ ADD COLUMN "taxId" TEXT;
       - "Quién lo recibe": su representante; y en "Correos de despacho", los tres de la ferretería separados por coma (o, para la prueba 9, primero el tuyo) → "Guardar los datos";
       - "Ver la bienvenida": la credencial dice la razón social y el RIF. **No la envíes todavía**, salvo que el equipo lo decida.
   9. **El destino claro** (C-246): Marketing → Correos → Plantillas → Proveedores → "¡Se vendió su producto!": bajo el logo de ZOOM, "Envíelo a" con la ciudad en grande, la oficina con su código y a nombre de quién. En la venta de prueba de "Por confirmar de rc.55", la página del enlace dice lo mismo.
+  10. **El panel con el kit** (C-245; en la computadora y en el teléfono):
+      - **Productos:** los filtros llevan ícono y una línea ("Se ven en la tienda", "Publicados sin foto"); tocar "Borradores" filtra.
+      - **Transacciones:** el estado va lleno, con su ícono; el tipo ("Recarga", "Abono"), en gris.
+      - **Garantías:** "Por atender" va en el sello azul oscuro, no en rojo.
+      - **Una orden con códigos digitales:** en el detalle, un solo botón azul lleno (avanzar); "Cancelar orden" va en rojo sobre blanco.
+      - **Clientes → Verificaciones:** toca "Ver detalles" y escribe en "Notas de revisión": la ventana no se cierra.
+      - **Marketing:** empieza junto al menú, sin hueco a la izquierda.
 - **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base: al ver las tres columnas de C-246, se para en el paso 2 y la tienda sigue como está (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las columnas no molestan al código anterior.
 
 ### Por confirmar de rc.55 y rc.56 (C-235, C-227 y C-242; unos 20 minutos)
@@ -669,6 +695,8 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
+**Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61). **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
+
 **Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) C-224 (los tres únicos, rc.51) y C-241 (el checkout por pasos, rc.53), C-242 (Facturas, ordenada, rc.56). También C-226 (sin ámbar, rc.44), C-219 (los correos, rc.47) y C-234 (cuándo sale cada pedido, rc.52), y C-227 (los correos al aliado comercial, rc.55).
 
 **Sigue:** El plan del 14/11 está en producción desde ese día (rc.53). rc.56 está en producción desde el 15/11; falta confirmar sus pruebas (§2) y lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.

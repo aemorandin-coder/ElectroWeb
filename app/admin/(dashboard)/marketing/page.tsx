@@ -47,6 +47,12 @@ export default function MarketingPage() {
   useEffect(() => {
     if (window.location.hash === '#redes') router.replace('/admin/studio');
   }, [router]);
+  // C-249d: al volver de un asistente (/admin/marketing#campanas), Next cambia la dirección después de pintar la página: el
+  // hash se vuelve a leer cuando ya está (si no, quedaba la primera sección)
+  useEffect(() => {
+    const t = setTimeout(() => window.dispatchEvent(new HashChangeEvent('hashchange')), 0);
+    return () => clearTimeout(t);
+  }, []);
 
   // Cambiar el hash dispara hashchange y la sección se lee de ahí; replaceState no lo dispara, por eso se avisa a mano
   const ir = useCallback((id: SeccionId) => {

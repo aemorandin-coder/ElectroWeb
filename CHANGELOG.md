@@ -10,6 +10,21 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.67] - 2026-11-15
+Crear por pasos, la cuarta entrega (C-249d): la campaña de correo y el promotor, en su propia página, con lo que verá el cliente al lado y "Revisar y publicar" al final. Van 6 de los 8 formularios; sigue C-249e (el curso y el trabajo de Servicios). Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Las APIs que guardan no cambian.
+### Marketing 1.17.0 (C-249d)
+- **Crear o cambiar una campaña va por pasos** en `/admin/marketing/campanas/nueva` y `/admin/marketing/campanas/<id>`: lo que dice (el asunto y la línea de la bandeja), el contenido, la prueba a tu correo y "Revisar y enviar". Al lado, la bandeja y el correo, del mismo `renderCampana` de siempre en un iframe sin scripts.
+- **"Armar con Claude" sigue al principio,** en el primer paso: llena el asunto, la vista previa y los bloques sin cambiar de paso.
+- **Al revisar:** a cuántos clientes llega, quiénes no y por qué, si pasa del límite del día y "Ver destinatarios". Se guarda como borrador o se envía a todos, con la confirmación de siempre. Al cambiar un borrador, antes → después.
+- **"Guardar borrador"** sigue en cualquier paso. Una campaña nueva guardada a mitad ya no pide recargar para el siguiente guardado (le faltaba su versión).
+- La edición entre dos personas sigue igual.
+### Promotores 1.3.0 (C-249d)
+- **Crear o cambiar un promotor va por pasos** en `/admin/marketing/promotores/nuevo` y `/admin/marketing/promotores/<id>`: quién es, su código (solo al crearlo), la comisión y el descuento, y "Revisar y publicar". Al lado, su código en el carrito con una compra de la tienda y lo que gana en Puntos ES, con las cuentas del servidor (sin IVA ni envío).
+- **Antes de guardar, el servidor dice si pasa** (`POST /api/influencers/vista-previa`, que no guarda nada): el código libre y la cuenta. Al cambiarlo, cuántas comisiones por acreditar siguen con el % de antes y cuántas compras usaron su código.
+- **Nuevo:** se puede crear en pausa, y al cambiarlo, sus notas. La edición entre dos personas sigue igual.
+### Marco del panel 1.13.2 (C-249d)
+- Un asistente puede llevar la vista previa más ancha (la de un correo).
+
 ## [1.0.0-rc.66] - 2026-11-15
 Dos preguntas del informe de C-249b, con lo que eligió el equipo (C-250).
 ### Productos 1.17.1 (C-250)

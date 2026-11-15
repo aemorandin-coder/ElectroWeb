@@ -15,7 +15,8 @@ type Contenido = Pick<BorradorCampana, 'subject' | 'preheader' | 'bloques'>;
 
 const EJEMPLOS = ['Gift cards para Navidad, con la fecha límite de envío', 'Herramientas para el taller, con lo nuevo de la ferretería', 'Audífonos y accesorios para regalar'];
 
-export default function ArmarConClaude({ hayContenido, alArmar }: { hayContenido: boolean; alArmar: (c: Contenido) => void }) {
+/** C-249d: `enTarjeta={false}` dentro del primer paso del asistente de la campaña (una tarjeta no va dentro de otra, PLAN.md §1.5) */
+export default function ArmarConClaude({ hayContenido, alArmar, enTarjeta = true }: { hayContenido: boolean; alArmar: (c: Contenido) => void; enTarjeta?: boolean }) {
   const { confirm } = useConfirm();
   const [objetivo, setObjetivo] = useState('');
   const [pensando, setPensando] = useState(false);
@@ -46,7 +47,7 @@ export default function ArmarConClaude({ hayContenido, alArmar }: { hayContenido
   };
 
   return (
-    <section className={`${adminCard} space-y-3`} aria-labelledby="armar-claude">
+    <section className={enTarjeta ? `${adminCard} space-y-3` : 'space-y-3 border-b border-line pb-5'} aria-labelledby="armar-claude">
       <h3 id="armar-claude" className="flex items-center gap-2 text-sm font-bold text-ink">
         <IconoNovedad className="h-4 w-4 text-brand-600" aria-hidden="true" /> Armar con Claude
       </h3>

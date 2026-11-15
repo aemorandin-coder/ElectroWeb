@@ -40,7 +40,7 @@ export interface BotonFinal {
 }
 
 export default function Asistente({
-  titulo, subtitulo, icono: Icono, volver, etiqueta, pasos, paso, onPaso, editar = false, arriba, final, vistaPrevia, children,
+  titulo, subtitulo, icono: Icono, volver, etiqueta, pasos, paso, onPaso, editar = false, arriba, final, vistaPrevia, vistaAncha = false, children,
 }: {
   titulo: string;
   subtitulo?: string;
@@ -57,6 +57,8 @@ export default function Asistente({
   arriba?: ReactNode;
   final: BotonFinal;
   vistaPrevia: ReactNode;
+  /** C-249d: una vista previa que necesita más ancho (un correo: con 20 rem se corta) */
+  vistaAncha?: boolean;
   children: ReactNode;
 }) {
   const ultimo = pasos.length - 1;
@@ -114,7 +116,7 @@ export default function Asistente({
         </button>
       )}
 
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className={`grid grid-cols-[minmax(0,1fr)] items-start gap-4 ${vistaAncha ? 'lg:grid-cols-[minmax(0,1fr)_24rem] xl:grid-cols-[minmax(0,1fr)_28rem]' : 'lg:grid-cols-[minmax(0,1fr)_20rem]'}`}>
         <section ref={tarjeta} className={`${adminCard} scroll-mt-36`} aria-labelledby="asistente-paso-titulo">
           <div className="mb-5 flex items-center gap-3">
             <span className="iconos-marca flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">

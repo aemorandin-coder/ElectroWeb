@@ -600,9 +600,9 @@ Quedan para después de C-177 (`estado/C-177.md`):
         - **Hecha C-249b** (rc.64; `estado/C-249b.md`): la oferta o el cupón y las gift cards impresas, por pasos en su propia página, con el marco `components/admin/Asistente`.
         - **Hecha C-249c** (rc.65; `estado/C-249c.md`): el método de pago y la categoría. De paso, Zinli ya se puede guardar (pedía el teléfono y no el titular que exige el servidor).
         - **Para decidir:** el color de una categoría solo se ve en el panel y sus colores están fuera del kit (`estado/C-249c.md`).
-        - **Siguen, de a dos por entrega** (el plan en `estado/C-249b.md`):
-          - **C-249d:** la campaña de correo (la vista previa con `renderCampana`, avisando antes a la sesión de los correos) y el promotor;
-          - **C-249e:** el curso y el trabajo de Servicios, con las fotos que se suben en lugar de pegar la dirección.
+        - **Hecha C-249d** (rc.67; `estado/C-249d.md`): la campaña de correo (con "Armar con Claude" al principio y el correo de `renderCampana` en un iframe sin scripts) y el promotor (el servidor revisa el código y cuenta las comisiones por acreditar, `POST /api/influencers/vista-previa`).
+          - **Queda de C-249d:** "Revisar" una solicitud para ser promotor sigue en su ventana (aprobar o rechazar, con el código y los %). Si el equipo la quiere por pasos, se lleva al mismo asistente.
+        - **Sigue C-249e:** el curso y el trabajo de Servicios, con las fotos que se suben en lugar de pegar la dirección (el plan en `estado/C-249d.md`).
         - **La hoja impresa de las gift cards** dice "Se activa al pagar en caja" en ámbar, como texto suelto sobre la tarjeta física: si el equipo lo quiere en azul, es una línea de `gift-cards/_components/hoja.ts`.
       - **Los botones compartidos con tamaño cambiado** (`h-9 px-3 text-xs`) se quedan de 44 px, que es el toque del teléfono (`estado/C-249.md`).
   - **C-248 · Dos botones de Contabilidad con la regla del "!"** (**hecha**, rc.62, 15/11; `estado/C-248.md`): el tacho de "Quitar el renglón" y el verde de "¡Copiado!" en la orden. Lo demás de Contabilidad ya cumplía.

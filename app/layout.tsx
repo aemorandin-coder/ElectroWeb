@@ -13,6 +13,8 @@ import { getNavCategories, getNavDepartamentos } from "@/lib/queries/navigation"
 import { imagenDePagina } from "@/lib/og/datos";
 import { absoluteUrl, siteUrl } from "@/lib/seo";
 import { GUION_VERSION_PESTANA } from "@/lib/version-build";
+import { getRubros, rubrosEnPalabras } from '@/lib/queries/home';
+import { ORIGEN_TIENDA_CIUDAD, ORIGEN_TIENDA_ESTADO } from '@/lib/origen';
 
 // Los settings públicos se leen aquí para todo el sitio: cada ruta se regenera como mucho
 // cada 60 s para que la tasa BCV no quede congelada en las páginas estáticas.
@@ -62,9 +64,11 @@ export async function generateMetadata(): Promise<Metadata> {
   // (1200 × 630, lib/og). Antes, sin imagen subida, salía el logo cuadrado.
   const ogImage = await imagenDePagina('inicio', settings.homeMetaImage);
 
-  const titleText = settings.metaTitle || settings.companyName || "Electro Shop Morandin C.A. | Gaming, Laptops & Tecnología";
-  const descText = settings.metaDescription || settings.tagline || "Tienda de tecnología especializada en Guanare. Computadoras gaming, laptops, consolas, CCTV y más.";
-  const defaultKeywords = ["gaming", "laptops", "tecnología", "Guanare", "Venezuela", "servicio técnico", "cursos online", "electro shop", "electroshopve", "computadoras Venezuela", "pago móvil"];
+  // C-225: sin textos en Configuración → SEO, se arman con lo que vende la tienda hoy (ya no "Gaming, Laptops & Tecnología")
+  const rubros = settings.metaTitle && settings.metaDescription && settings.metaKeywords ? [] : await getRubros();
+  const titleText = settings.metaTitle || `${settings.companyName || "Electro Shop"}: ${rubrosEnPalabras(rubros)}, envíos a toda Venezuela`;
+  const descText = settings.metaDescription || `Tienda en ${ORIGEN_TIENDA_CIUDAD} con ${rubrosEnPalabras(rubros)}. Precios en $ y Bs a tasa BCV y envíos a toda Venezuela.`;
+  const defaultKeywords = ["electro shop", "electroshopve", ...rubros, ORIGEN_TIENDA_CIUDAD, ORIGEN_TIENDA_ESTADO, "Venezuela", "envíos a toda Venezuela", "pago móvil"];
   const keywordsList = settings.metaKeywords ? settings.metaKeywords.split(',').map(k => k.trim()) : defaultKeywords;
 
   return {

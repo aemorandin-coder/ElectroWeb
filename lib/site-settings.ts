@@ -50,7 +50,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 
         cachedSettings = {
             companyName: settings?.companyName || 'Electro Shop Morandin C.A.',
-            tagline: settings?.tagline || 'Tu tienda de tecnología',
+            tagline: settings?.tagline || 'Todo lo encuentras con nosotros.',
             favicon: settings?.favicon || null,
             logo: settings?.logo || null,
             primaryColor: settings?.primaryColor || '#2a63cd',
@@ -66,7 +66,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         console.error('Error fetching site settings:', error);
         return {
             companyName: 'Electro Shop Morandin C.A.',
-            tagline: 'Tu tienda de tecnología',
+            tagline: 'Todo lo encuentras con nosotros.',
             favicon: null,
             logo: null,
             primaryColor: '#2a63cd',
@@ -218,7 +218,7 @@ type PublicSettingsRow = Prisma.CompanySettingsGetPayload<{ select: typeof PUBLI
 
 export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     companyName: 'Electro Shop Morandin C.A.',
-    tagline: 'Tu tienda de tecnología',
+    tagline: 'Todo lo encuentras con nosotros.',
     logo: null, favicon: null, primaryColor: null, secondaryColor: null,
     phone: null, whatsapp: null, email: null, address: null, city: null, state: null,
     instagram: null, facebook: null, twitter: null, youtube: null, telegram: null, tiktok: null,

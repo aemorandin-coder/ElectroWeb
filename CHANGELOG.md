@@ -10,6 +10,15 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.48] - 2026-11-14
+Los textos para buscadores dicen lo que la tienda es hoy (el equipo, 14/11: "ya estamos creciendo, eso debe cambiar desde ya").
+### Tienda 1.11.1 (C-225)
+- **Sin texto propio en Configuración → SEO,** el título, la descripción, las palabras clave, el título oculto del inicio y la presentación del catálogo se arman con lo que vende la tienda: "tecnología, ferretería y gift cards". Crecen solos con cada departamento nuevo. Antes decían "Gaming, Laptops & Tecnología" y "tecnología, gaming y gift cards".
+- **La ficha para Google** es de una tienda (Store), no de electrónica. **llms.txt** dice "Tienda en Guanare, Portuguesa".
+- **La imagen de la portada al compartir:** con el lema nuevo, el título dice lo que vende y el lema va debajo, sin repetirse.
+### Configuración 1.1.9, Cotizaciones 1.5.1, Cuenta 1.5.1 y ElectroStudio 1.2.4 (C-225)
+- **El lema de respaldo** es "Todo lo encuentras con nosotros.". Y tres textos más sin "tecnología": el presupuesto, el código del promotor y compartir un producto.
+
 ## [1.0.0-rc.47] - 2026-11-14
 Los correos de la tienda, rediseñados (el equipo, 14/11: "muy pobres, no tienen nuestra esencia"; eligió la maqueta C, clara con la cinta, con ELECTRO SHOP grande arriba y Chispa abajo).
 ### Marketing 1.12.0 (C-219)

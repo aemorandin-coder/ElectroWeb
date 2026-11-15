@@ -403,7 +403,7 @@ export default function ReferralsPage() {
 
   // Lo que el promotor pega en sus redes: el código y lo que gana quien lo usa
   const textoParaCompartir = data?.influencer
-    ? `Compra tecnología en Electro Shop con mi código ${data.influencer.code} y recibe ${data.influencer.customerDiscountPercent} % de descuento`
+    ? `Compra en Electro Shop con mi código ${data.influencer.code} y recibe ${data.influencer.customerDiscountPercent} % de descuento`
     : '';
 
   const shareWhatsApp = () => {

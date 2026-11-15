@@ -555,7 +555,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - El filtro "Desde dónde sale" en el catálogo (`?desde=`), con su cuenta.
     - La misma frase en "Calcula tu envío", el carrito, el pago, el detalle del pedido y el correo de confirmación (este, con C-219).
     - El estado del proveedor, en una columna nueva (aditiva), con el estado de su ciudad de ZOOM.
-  - **C-225 · Los textos para buscadores** (pendiente).
+  - **C-225 · Los textos para buscadores** (**hecha**, rc.48, 14/11; `estado/C-225.md`).
     - El lema "Todo lo encuentras con nosotros.".
     - La ficha para Google como tienda ("Store"), no "ElectronicsStore".
     - llms.txt, el título oculto del inicio y la descripción de /productos, armados con los departamentos que tienen productos.

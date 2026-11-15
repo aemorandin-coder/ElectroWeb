@@ -219,7 +219,7 @@ export default function ShareEarnModal() {
                       {item.title}
                     </h4>
                     <p className="text-xs text-muted line-clamp-2 leading-relaxed">
-                      {item.description || 'Tienda de tecnología especializada en laptops, consolas, repuestos y cursos online.'}
+                      {item.description || 'Electro Shop: todo lo encuentras con nosotros.'}
                     </p>
                   </div>
                 </div>

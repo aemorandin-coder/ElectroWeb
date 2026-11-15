@@ -207,6 +207,13 @@ Lo pidió el equipo el 14/11 mirando Marketing → Sorteo ("es básico, sin comp
 - **Lo creado tiene su tablero:** el estado en su sello (§1.8), los números que importan con su ícono y las acciones a la vista (Editar, Apagar, Ver en la tienda, Copiar enlace).
 - El primero hecho así es el sorteo (C-221).
 
+### 1.10 Elegir entre opciones (C-242)
+El equipo, el 14/11, mirando el asistente de factura: "los grids se ven perdidos, íconos amontonados".
+- **Para elegir una cosa entre varias, `components/admin/Opcion`:** el ícono en su placa, el título, una línea y el círculo de elegida, con su relleno adentro.
+  - `tamano="chica"` para una o dos palabras centradas (Contado / Crédito).
+  - `OpcionRadio` para una lista con radio de verdad (la compra que se factura).
+- **`adminChoice` sola es solo la piel** (borde y color). Sin la pieza, el ícono queda encima y el texto pegado al borde. Las pantallas que ya la usan con su propia disposición se quedan así hasta que se toquen.
+
 ---
 
 ## 2. Rediseño del header
@@ -568,6 +575,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **Volver atrás con `deploy.sh` cuando la base creció** (pendiente; salió de la subida de rc.53 del 14/11):
     - `git reset --hard <versión anterior>` y `deploy.sh --sin-pull` se paran en el paso 2: ven `DROP` de las tablas y columnas que agregó la versión nueva, y la tienda sigue como está.
     - Falta una opción (`--volver`) que compile igual cuando lo único distinto sea lo que agregó la versión nueva, sin aplicarlo nunca a la base. Hasta entonces, cada bloque dice "avisa a Claude".
+  - **C-242 · Facturas, ordenada, y la tarjeta de opción** (**hecha**, rc.56, 14/11; `estado/C-242.md`; el equipo eligió la A y la tarjeta con el círculo para todo el panel, §1.10).
+    - **Pendiente:** las pantallas que usan `adminChoice` con su propia disposición (Promociones, Legal, Productos, Equipo, la Lista del proveedor, Reportes, Studio, las direcciones de Mi panel) se ven bien y pasan a `Opcion` cuando se toquen.
   - **Lo que queda de ámbar y de píldoras claras en la tienda** (pendiente; salió del checkout el 14/11, con la regla de §1.1 y §1.8):
     - letras ámbar en una veintena de archivos (35 usos): cursos, gift cards, servicios, recargas, firma de documentos, inicio de sesión. Las estrellas y un "Quedan 3" se quedan;
     - píldoras en verde claro con letra verde: la gift card válida, el certificado, el panel del creador, Mis cursos y el sello de la cotización.

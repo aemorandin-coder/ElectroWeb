@@ -2,16 +2,20 @@
 
 // C-229: Contabilidad → Facturas. El talonario en uso (la próxima y cuántas quedan), lo cobrado este mes que todavía no
 // tiene factura, y las facturas del mes, emitidas y anuladas. Desde aquí se anula un papel que se dañó sin escribirlo.
+// C-242 (la A que eligió el equipo el 14/11: "los grids se ven perdidos, íconos amontonados"): tres datos del mismo alto
+// (la próxima, el talonario y lo cobrado sin factura), como el inicio del panel; lo raro (anular, cargar otro) va en gris
+// bajo el talonario, y las dos notas de la ley detrás de su (i). Lo que falta facturar, en su lista, solo si hay.
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import Ayuda from '@/components/admin/Ayuda';
 import {
-  IconoAdvertencia, IconoCalendario, IconoCerrar, IconoDocumento, IconoEliminar, IconoInfo, IconoMas, IconoOrdenes, IconoReloj, IconoVer,
+  IconoAdvertencia, IconoArchivo, IconoCerrar, IconoConfirmado, IconoDocumento, IconoEliminar, IconoFlechaDerecha, IconoMas, IconoReloj, IconoVer,
 } from '@/components/iconos';
 import {
-  adminBadge, adminCard, adminDangerButton, adminDato, adminEmpty, adminError, adminHint, adminLabel, adminModalBody, adminModalFooter,
+  adminBadge, adminCard, adminDangerButton, adminDato, adminError, adminHint, adminIconChip, adminLabel, adminModalBody, adminModalFooter,
   adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminPageHeader, adminPageSubtitle, adminPageTitle,
   adminPrimaryButton, adminSecondaryButton, adminTable, adminTableWrap, adminTd, adminTh,
 } from '@/lib/admin-ui';
@@ -20,6 +24,15 @@ import { nombreMes } from '@/lib/contabilidad/montos';
 import type { FacturaDTO, TalonarioDTO } from '@/lib/dto/contabilidad';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+
+// C-242: las tres tarjetas de arriba
+const tarjeta = `${adminCard} flex flex-col gap-4`;
+const etiqueta = 'flex items-center gap-1 text-xs font-semibold text-muted';
+const cifra = 'mt-0.5 text-3xl font-bold leading-tight tabular-nums';
+const pie = 'mt-auto flex flex-wrap gap-x-4 gap-y-1 border-t border-line pt-3';
+const enlace = 'inline-flex min-h-9 items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700';
+const enlaceGris = 'inline-flex min-h-9 items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-brand-600';
+const tres = (n: number) => String(n).padStart(3, '0');
 
 const fecha = (iso: string) => new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(iso));
 
@@ -92,83 +105,150 @@ export default function PanelFacturas({ mes, meses, talonario, facturas, compras
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-start">
-        {/* Lo cobrado sin factura */}
-        <section className={adminCard} aria-labelledby="sin-factura">
-          <h2 id="sin-factura" className="flex flex-wrap items-center gap-2 text-base font-semibold text-ink">
-            <IconoOrdenes className="h-5 w-5" aria-hidden="true" /> Cobradas sin factura
-            {compras.length > 0 && puedeFacturar && <span className={adminBadge('warning')}><IconoReloj className="h-3.5 w-3.5" aria-hidden="true" /> Te toca</span>}
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            {compras.length === 0 ? `Todo lo cobrado en ${nombreMes(mes)} tiene su factura.` : `${compras.length} ${compras.length === 1 ? 'compra pagada' : 'compras pagadas'} en ${nombreMes(mes)} todavía sin factura.`}
-          </p>
-          {compras.length > 0 && (
-            <ul className="mt-3 divide-y divide-line">
-              {compras.slice(0, 8).map((c) => (
-                <li key={c.ordenIds.join()} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
-                  <div className="min-w-0 flex-1 basis-56">
-                    <p className="truncate text-sm font-semibold text-ink">{c.ordenes.join(' y ')} · {c.cliente}</p>
-                    <p className="text-xs text-muted">
-                      {c.pagadaEl ? `Pagada el ${fecha(c.pagadaEl)}` : ''}{c.metodo ? ` · ${c.metodo}` : ''}{c.digital ? ' · sin IVA' : ''}
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold tabular-nums text-ink">{formatUSD(c.totalUSD)}</span>
-                  {puedeFacturar && (
-                    <Link href={`/admin/contabilidad/facturas/nueva?ordenes=${c.ordenIds.join(',')}`} className={`${adminSecondaryButton} h-9`}>
-                      <IconoDocumento className="h-4 w-4" aria-hidden="true" /> Facturar
+      <div className="grid gap-4 lg:grid-cols-3">
+        {talonario ? (
+          <>
+            {/* La próxima */}
+            <section className={tarjeta} aria-labelledby="la-proxima">
+              <div className="flex items-start gap-4">
+                <span className={adminIconChip('brand')}><IconoDocumento className="h-5 w-5" aria-hidden="true" /></span>
+                <div className="min-w-0">
+                  <h2 id="la-proxima" className={etiqueta}>La próxima factura</h2>
+                  {talonario.proximoTexto ? (
+                    <>
+                      <p className={`${cifra} text-ink`}>{talonario.proximoTexto}</p>
+                      <p className="mt-0.5 text-xs text-muted">Control <span className="tabular-nums">{talonario.proximoControl}</span></p>
+                    </>
+                  ) : (
+                    <>
+                      <p className={`${cifra} text-ink`}>Se terminó</p>
+                      <p className="mt-0.5 text-xs text-muted">Para seguir facturando, carga el talonario que sigue.</p>
+                    </>
+                  )}
+                </div>
+              </div>
+              {puedeFacturar && talonario.proximoTexto && (
+                <div className={pie}>
+                  <Link href="/admin/contabilidad/facturas/nueva" className={enlace}>
+                    <IconoMas className="h-4 w-4" aria-hidden="true" /> Escribir la {talonario.proximoTexto}
+                  </Link>
+                </div>
+              )}
+            </section>
+
+            {/* El talonario */}
+            <section className={tarjeta} aria-labelledby="talonario">
+              <div className="flex items-start gap-4">
+                <span className={adminIconChip('brand')}><IconoArchivo className="h-5 w-5" aria-hidden="true" /></span>
+                <div className="min-w-0 flex-1">
+                  <h2 id="talonario" className={etiqueta}>
+                    Talonario Serie {talonario.serie}
+                    <Ayuda etiqueta="Hasta cuándo sirve el talonario">Desde el 19/04/2027 el talonario es solo para contingencias, y las que sobren ese día se anulan (Providencia 00093).</Ayuda>
+                  </h2>
+                  <p className={`${cifra} text-ink`}>{talonario.quedan} <span className="text-base font-semibold text-ink-soft">por usar</span></p>
+                  <p className="mt-0.5 text-xs text-muted">Facturas {tres(talonario.numeroDesde)} a {tres(talonario.numeroHasta)} · {talonario.usadas} usadas</p>
+                </div>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-brand-100" aria-hidden="true"><div className="h-full rounded-full bg-brand-500" style={{ width: `${porcentaje}%` }} /></div>
+              {((puedeFacturar && talonario.proximoTexto) || esDueno) && (
+                <div className={pie}>
+                  {puedeFacturar && talonario.proximoTexto && (
+                    <button type="button" onClick={() => { setAnulando(true); setError(null); }} className={enlaceGris}>
+                      <IconoEliminar className="h-4 w-4" aria-hidden="true" /> Anular un papel dañado
+                    </button>
+                  )}
+                  {esDueno && (
+                    <Link href="/admin/contabilidad/talonarios/nuevo" className={enlaceGris}>
+                      <IconoMas className="h-4 w-4" aria-hidden="true" /> Cargar otro talonario
                     </Link>
                   )}
-                </li>
-              ))}
-            </ul>
-          )}
-          {compras.length > 8 && <p className={`${adminHint} mt-2`}>Y {compras.length - 8} más: aparecen al facturar las de arriba.</p>}
-          <p className="mt-3 flex gap-2 text-xs text-muted">
-            <IconoInfo className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-            La ley pide factura en cada venta, aunque el cliente no la pida. Se decide con la contadora (A16).
-          </p>
-        </section>
-
-        {/* El talonario */}
-        <section className={adminCard} aria-labelledby="talonario">
-          <h2 id="talonario" className="flex items-center gap-2 text-base font-semibold text-ink">
-            <IconoDocumento className="h-5 w-5" aria-hidden="true" /> {talonario ? `Talonario Serie ${talonario.serie}` : 'El talonario'}
-          </h2>
-          {talonario ? (
-            <>
-              <p className="mt-1 text-sm text-muted">
-                Facturas {String(talonario.numeroDesde).padStart(3, '0')} a {String(talonario.numeroHasta).padStart(3, '0')} · la próxima es la{' '}
-                <strong className="tabular-nums text-ink">{talonario.proximoTexto}</strong> (control <span className="whitespace-nowrap tabular-nums">{talonario.proximoControl}</span>).
-              </p>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-brand-100" aria-hidden="true"><div className="h-full rounded-full bg-brand-500" style={{ width: `${porcentaje}%` }} /></div>
-              <p className="mt-1.5 flex justify-between text-xs text-ink-soft"><span>{talonario.usadas} usadas</span><strong className="tabular-nums">{talonario.quedan} por usar</strong></p>
-              {puedeFacturar && (
-                <button type="button" onClick={() => { setAnulando(true); setError(null); }} className={`${adminSecondaryButton} mt-4 w-full`}>
-                  <IconoEliminar className="h-4 w-4" aria-hidden="true" /> Se dañó un papel: anular la {talonario.proximoTexto}
-                </button>
+                </div>
               )}
-              <p className="mt-3 flex gap-2 text-xs text-muted">
-                <IconoCalendario className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                Desde el 19/04/2027 el talonario es solo para contingencias, y las que sobren ese día se anulan (Providencia 00093).
-              </p>
-            </>
-          ) : (
-            <div className="mt-3">
-              <p className="text-sm text-muted">Todavía no hay un talonario cargado. Se carga una vez, con los datos que trae impresos.</p>
-              {esDueno ? (
-                <Link href="/admin/contabilidad/talonarios/nuevo" className={`${adminPrimaryButton} mt-3`}>
-                  <IconoMas className="h-4 w-4" aria-hidden="true" /> Cargar el talonario
-                </Link>
+            </section>
+          </>
+        ) : (
+          <section className={`${tarjeta} lg:col-span-2`} aria-labelledby="talonario">
+            <div className="flex items-start gap-4">
+              <span className={adminIconChip('brand')}><IconoArchivo className="h-5 w-5" aria-hidden="true" /></span>
+              <div className="min-w-0">
+                <h2 id="talonario" className="text-base font-semibold text-ink">El talonario</h2>
+                <div className="mt-1">
+                  <p className="text-sm text-muted">Todavía no hay un talonario cargado. Se carga una vez, con los datos que trae impresos.</p>
+                  {esDueno ? (
+                    <Link href="/admin/contabilidad/talonarios/nuevo" className={`${adminPrimaryButton} mt-3`}>
+                      <IconoMas className="h-4 w-4" aria-hidden="true" /> Cargar el talonario
+                    </Link>
+                  ) : (
+                    <p className={`${adminHint} mt-2`}>Lo carga el dueño, desde esta misma pantalla.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Lo cobrado sin factura */}
+        <section className={tarjeta} aria-labelledby="sin-factura">
+          <div className="flex items-start gap-4">
+            <span className={adminIconChip(compras.length > 0 ? 'warning' : 'success')}>
+              {compras.length > 0 ? <IconoReloj className="h-5 w-5" aria-hidden="true" /> : <IconoConfirmado className="h-5 w-5" aria-hidden="true" />}
+            </span>
+            <div className="min-w-0">
+              <h2 id="sin-factura" className={etiqueta}>
+                Cobradas sin factura
+                <Ayuda etiqueta="Por qué cada venta lleva factura">La ley pide factura en cada venta, aunque el cliente no la pida. Se decide con la contadora (A16).</Ayuda>
+              </h2>
+              {compras.length === 0 ? (
+                <>
+                  <p className={`${cifra} text-success-strong`}>Al día</p>
+                  <p className="mt-0.5 text-xs text-muted">Todo lo cobrado en {nombreMes(mes)} tiene su factura.</p>
+                </>
               ) : (
-                <p className={`${adminHint} mt-2`}>Lo carga el dueño, desde esta misma pantalla.</p>
+                <>
+                  <p className={`${cifra} flex flex-wrap items-center gap-2 text-ink`}>
+                    {compras.length}
+                    {puedeFacturar && <span className={adminBadge('warning')}><IconoReloj className="h-3.5 w-3.5" aria-hidden="true" /> Te toca</span>}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted">{compras.length === 1 ? 'Compra pagada' : 'Compras pagadas'} en {nombreMes(mes)} todavía sin factura.</p>
+                </>
               )}
             </div>
-          )}
-          {talonario && esDueno && (
-            <Link href="/admin/contabilidad/talonarios/nuevo" className="mt-3 block text-center text-sm font-semibold text-brand-600 hover:text-brand-700">Cargar otro talonario</Link>
+          </div>
+          {compras.length > 0 && (
+            <div className={pie}>
+              <a href="#por-facturar" className={enlace}>
+                <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" /> {puedeFacturar ? 'Ver y facturar' : 'Ver cuáles'}
+              </a>
+            </div>
           )}
         </section>
       </div>
+
+      {/* Lo que falta facturar, solo si hay */}
+      {compras.length > 0 && (
+        <section id="por-facturar" className={`${adminCard} scroll-mt-24`} aria-labelledby="por-facturar-titulo">
+          <h2 id="por-facturar-titulo" className="text-base font-semibold text-ink">Por facturar</h2>
+          <ul className="mt-1 divide-y divide-line">
+            {compras.slice(0, 8).map((c) => (
+              <li key={c.ordenIds.join()} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
+                <div className="min-w-0 flex-1 basis-56">
+                  <p className="truncate text-sm font-semibold text-ink">{c.ordenes.join(' y ')} · {c.cliente}</p>
+                  <p className="text-xs text-muted">
+                    {c.pagadaEl ? `Pagada el ${fecha(c.pagadaEl)}` : ''}{c.metodo ? ` · ${c.metodo}` : ''}{c.digital ? ' · sin IVA' : ''}
+                  </p>
+                </div>
+                <span className="text-sm font-semibold tabular-nums text-ink">{formatUSD(c.totalUSD)}</span>
+                {puedeFacturar && (
+                  <Link href={`/admin/contabilidad/facturas/nueva?ordenes=${c.ordenIds.join(',')}`} className={`${adminSecondaryButton} h-9`}>
+                    <IconoDocumento className="h-4 w-4" aria-hidden="true" /> Facturar
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+          {compras.length > 8 && <p className={`${adminHint} mt-2`}>Y {compras.length - 8} más: aparecen al facturar las de arriba.</p>}
+        </section>
+      )}
 
       {/* Las facturas del mes */}
       <section aria-labelledby="del-mes" className="space-y-2">
@@ -177,10 +257,12 @@ export default function PanelFacturas({ mes, meses, talonario, facturas, compras
           {emitidas.length > 0 && <span className={adminDato}>{emitidas.length} emitidas · {formatVES(totalBs)}</span>}
         </div>
         {facturas.length === 0 ? (
-          <div className={adminEmpty}>
-            <IconoDocumento className="h-8 w-8 text-subtle" aria-hidden="true" />
-            <p className="mt-2 font-semibold text-ink">Sin facturas registradas en {nombreMes(mes)}</p>
-            <p className="mt-1 text-sm text-muted">Cada factura del talonario se registra aquí al escribirla.</p>
+          <div className="flex items-center gap-4 rounded-2xl border border-dashed border-line-strong bg-white p-5">
+            <span className={adminIconChip('brand')}><IconoDocumento className="h-5 w-5" aria-hidden="true" /></span>
+            <div className="min-w-0">
+              <p className="font-semibold text-ink">Sin facturas registradas en {nombreMes(mes)}</p>
+              <p className="mt-0.5 text-sm text-muted">Cada factura del talonario se registra aquí al escribirla.</p>
+            </div>
           </div>
         ) : (
           <div className={adminTableWrap}>

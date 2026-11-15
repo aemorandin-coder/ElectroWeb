@@ -10,6 +10,20 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.56] - 2026-11-14
+Facturas, ordenada, y la tarjeta para elegir entre opciones. El equipo, 14/11, mirando Contabilidad → Facturas en producción: "los grids se ven perdidos, íconos amontonados". Eligió la A viendo las maquetas.
+### Contabilidad 1.2.0 (C-242)
+- **Tres datos del mismo alto,** como el inicio del panel:
+  - la próxima factura, con su control y "Escribir la 0072";
+  - el talonario, con cuántas quedan y su barra;
+  - lo cobrado sin factura: "Al día", o cuántas faltan con "Te toca" y "Ver y facturar".
+- **Lo raro, en gris bajo el talonario:** "Anular un papel dañado" (antes, "Se dañó un papel", un botón a todo lo ancho) y "Cargar otro talonario", solo el dueño.
+- **Las dos notas de la ley,** detrás de su (i). Lo que falta facturar va en su lista, solo si hay.
+- **El asistente de factura:** "De dónde sale" con el ícono al lado del título, "Contado / Crédito" centrados, la compra que se elige y el "(E)" de cada renglón, con la tarjeta nueva. También los títulos de la firma de la contadora.
+### Marco del panel 1.11.0 (C-242)
+- **La tarjeta para elegir una cosa entre varias** (`components/admin/Opcion`): el ícono en su placa, el título, una línea y el círculo de elegida, con su relleno adentro.
+- **La causa:** `adminChoice` solo da el borde y el color, y una pantalla la usó sin lo demás. La regla quedó en `PLAN.md` §1.10, `CLAUDE.md`, `GEMINI.md` y `AGENTS.md`.
+
 ## [1.0.0-rc.55] - 2026-11-14
 Los correos al aliado comercial: el proveedor que despacha él mismo recibe cada venta con todo para despacharla (el equipo, 14/11; eligió lo recomendado en las ocho preguntas y el nombre de la relación, "aliado comercial").
 ### Productos 1.15.0 (C-227)

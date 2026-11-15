@@ -7,8 +7,9 @@ import { useCallback, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import SignaturePad, { type SignaturePadHandle } from '@/components/legal/SignaturePad';
 import { IconoCerrar, IconoCheck, IconoEliminar } from '@/components/iconos';
+import Opcion from '@/components/admin/Opcion';
 import {
-  adminChoice, adminError, adminHint, adminInput, adminLabel, adminModalBody, adminModalFooter, adminModalHeader, adminModalOverlay,
+  adminError, adminHint, adminInput, adminLabel, adminModalBody, adminModalFooter, adminModalHeader, adminModalOverlay,
   adminModalPanel, adminModalTitle, adminPrimaryButton, adminSecondaryButton,
 } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -88,7 +89,7 @@ export default function FirmaModal({ actual, nombreSugerido, onCerrar, onGuardad
               <span className={adminLabel}>Título</span>
               <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Título">
                 {TITULOS.map((t) => (
-                  <button key={t} type="button" role="radio" aria-checked={titulo === t} onClick={() => setTitulo(t)} className={`${adminChoice(titulo === t)} px-4 py-2 text-sm font-semibold text-ink`}>{t}</button>
+                  <Opcion key={t} tamano="chica" role="radio" aria-checked={titulo === t} elegida={titulo === t} onClick={() => setTitulo(t)} titulo={t} />
                 ))}
               </div>
             </div>

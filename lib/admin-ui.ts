@@ -26,7 +26,11 @@ export function adminInput(hasError = false): string {
   ].join(' ');
 }
 
-/** Tarjeta o botón elegible (tipo, plan, método). */
+/**
+ * Solo la piel (borde y color) de algo elegible, para una pieza que arma su propia disposición.
+ * C-242: para elegir una cosa entre varias usa `components/admin/Opcion`, que trae el ícono, el título, la línea y el relleno.
+ * Esta clase sola deja el ícono encima y el texto pegado al borde (el asistente de factura, 14/11).
+ */
 export function adminChoice(selected: boolean): string {
   return [
     'rounded-xl border-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',

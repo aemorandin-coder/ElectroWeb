@@ -586,6 +586,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **Volver atrás con `deploy.sh` cuando la base creció** (pendiente; salió de la subida de rc.53 del 14/11):
     - `git reset --hard <versión anterior>` y `deploy.sh --sin-pull` se paran en el paso 2: ven `DROP` de las tablas y columnas que agregó la versión nueva, y la tienda sigue como está.
     - Falta una opción (`--volver`) que compile igual cuando lo único distinto sea lo que agregó la versión nueva, sin aplicarlo nunca a la base. Hasta entonces, cada bloque dice "avisa a Claude".
+  - **C-247 · La foto del premio del sorteo** (**hecha**, rc.59, 15/11; `estado/C-247.md`; el equipo eligió la A, sobre el azul y más grande). La foto se sube desde el panel.
   - **C-243 · El kit de marca** (**hecha**, rc.57, 15/11; `estado/C-243.md`; el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo, §1.0).
     - **C-245 · El panel entero con el kit** (pendiente; pedido del equipo el 15/11: "envíalo a un chat nuevo con Opus 5.5 extra alto que repase todo el admin panel para rediseñar con ese kit"). Lo hace un agente aparte, pantalla por pantalla, con maquetas para lo que haya que decidir.
       - **De C-244:** Marketing sigue centrada (`max-w-7xl`), y la regla de §1.5 pide que la página empiece junto al menú.

@@ -1,13 +1,17 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.63, por subir)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.64, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-249b · Crear por pasos: la oferta o el cupón y las gift cards impresas (rc.64, por subir; `estado/C-249b.md`):** la parte b de lo que eligió el equipo (la A), 2 de los 8 formularios.
+  - **La oferta o el cupón,** en su propia página: qué es, el descuento, el código, las fechas y "Revisar y publicar", con la tarjeta del producto o el cupón como los ve el cliente al lado. Se puede guardar en pausa. Al cambiar una, antes → después y a cuántos productos y compras toca.
+  - **Las gift cards impresas:** el monto, cuántas y "Revisar y generar", con la tarjeta impresa al lado. El lote con los PIN y la hoja, como siempre.
+  - **El marco** (`components/admin/Asistente`) sirve para los otros seis. **Siguen:** C-249c (método de pago y categoría), C-249d (campaña y promotor) y C-249e (curso y trabajo de Servicios).
 - **C-249 · Lo que eligió el equipo de C-245 (rc.63, por subir; `estado/C-249.md`):** la A y la A (`PLAN.md` §7.2).
   - **Hecho:** los filtros de Órdenes, Transacciones y Mensajes en las píldoras de estado, en todos los tamaños. Se fueron el selector y las pestañas.
   - **También:** Cursos, Trabajos realizados, Creadores y ElectroStudio, con las píldoras de `Filtros`.
-  - **Sigue C-249b:** los ocho formularios por pasos en su propia página, empezando por el cupón.
+  - **La parte b, crear por pasos,** va en C-249b (arriba).
 - **C-248 · Dos botones de Contabilidad (rc.62, por subir):** en una venta de la tienda, el tacho de "Quitar el renglón" se ve entero (quedaba en 4 px); "Copiar datos para facturar" se pone en verde al copiar (`estado/C-248.md`).
 - **C-245 · El panel entero con el kit de marca (rc.61, por subir):** lo pidió el equipo el 15/11 y lo hizo un agente aparte (`estado/C-245.md`).
   - **El inventario:** las 43 pantallas del panel, en el código y en capturas, con cada problema como mecánico o como rediseño.
@@ -307,7 +311,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.63` (C-243, C-244, C-247, C-246, C-245, C-248 y C-249; unos 50 minutos)
+### El bloque por subir: `v1.0.0-rc.64` (C-243, C-244, C-247, C-246, C-245, C-248, C-249 y C-249b; unos 55 minutos)
 **Producción está en `v1.0.0-rc.56`** (`471a54d`); su bloque está en `HISTORIAL.md`.
 - **C-243 (rc.57):** el kit de marca. **Sin cambio de base, sin SQL, sin variables nuevas y sin cron.**
   - **Las imágenes para compartir cambian de dirección** (`?v=`): WhatsApp y Facebook las vuelven a pedir solas.
@@ -325,8 +329,9 @@ ADD COLUMN "taxId" TEXT;
 - **C-245 (rc.61):** el panel entero con el kit. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **C-248 (rc.62):** dos botones de Contabilidad. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **C-249 (rc.63):** los filtros en píldoras de Órdenes, Transacciones, Mensajes, Cursos, Trabajos realizados, Creadores y ElectroStudio. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **C-249b (rc.64):** la oferta o el cupón y las gift cards impresas, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una ruta nueva que solo lee (`POST /api/admin/promotions/vista-previa`).
 - **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc60.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.63`, o una mayor si entró otra tarea antes del `git pull`.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.64`, o una mayor si entró otra tarea antes del `git pull`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **`/sorteo`:** la franja de arriba va en el azul oscuro del logo, sin azul casi negro ni letras cian.
   2. **En el teléfono, la barra de abajo** va en el mismo azul oscuro.
@@ -356,6 +361,13 @@ ADD COLUMN "taxId" TEXT;
       - **Órdenes:** arriba de la lista, 7 píldoras con su ícono y su cuenta. Toca "Enviadas": quedan solo las enviadas. Ya no está el selector "Todas".
       - **Transacciones:** toca "Pendientes": quedan las que esperan.
       - **Mensajes:** toca "Pendientes": quedan los sin leer.
+  13. **Un cupón por pasos** (C-249b), en la computadora: Catálogo → Descuentos → "Nuevo cupón".
+      - Son 5 pasos con su ícono. Nombre "Prueba pasos" → Siguiente → 10 % → Siguiente → código `PRUEBAPASOS` y "Solo con el código" → Siguiente → Siguiente.
+      - A la derecha, en cada paso, el cupón al pagar con "PRUEBAPASOS aplicado: ahorras …".
+      - En "Revisar y publicar", elige **"Guardarlo en pausa"** → "Guardar en pausa". En la lista sale "Pausada" y en la tienda no aplica.
+      - "Editar" → "El descuento" → 15 % → "Revisar y publicar": "Lo que cambia" dice 10 % → 15 % y a cuántos productos aplica. "Guardar el cambio", y después "Eliminar" en la lista (nunca se usó: se borra).
+      - **En el teléfono:** "Nueva oferta" → un nombre → Siguiente → 20 % → "Ver cómo queda" abre la tarjeta de un producto con el precio rebajado y el anterior tachado. Sal con "Ofertas y cupones", arriba, sin guardar.
+  14. **Gift cards impresas por pasos** (C-249b): Ventas → Gift Cards → "Generar impresas": el monto, cuántas y "Revisar y generar", con la tarjeta al lado. **No generes** si no vas a imprimir: sal con "Gift cards", arriba.
 - **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base: al ver las tres columnas de C-246, se para en el paso 2 y la tienda sigue como está (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las columnas no molestan al código anterior.
 
 ### Por confirmar de rc.55 y rc.56 (C-235, C-227 y C-242; unos 20 minutos)
@@ -707,7 +719,7 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
-**Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61). **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
+**Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61), C-249 (los filtros en píldoras, rc.63) y C-249b (la oferta o el cupón y las gift cards impresas por pasos, rc.64). **Siguen C-249c, C-249d y C-249e** (`estado/C-249b.md`). **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
 
 **Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) C-224 (los tres únicos, rc.51) y C-241 (el checkout por pasos, rc.53), C-242 (Facturas, ordenada, rc.56). También C-226 (sin ámbar, rc.44), C-219 (los correos, rc.47) y C-234 (cuándo sale cada pedido, rc.52), y C-227 (los correos al aliado comercial, rc.55).
 

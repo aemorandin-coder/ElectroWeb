@@ -85,7 +85,7 @@ Claude lo implementa en C-10/C-11. Gemini **solo usa** estas clases y no inventa
 - **Ningún contenedor ámbar, en ningún lado (C-226).** Andrés, 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados". Ni cajas, ni avisos de bloque, ni fondos, ni bordes, ni píldoras ámbar: en la tienda, el panel, los correos y los documentos que se imprimen.
   - **En un bloque, lo que alguien tiene que hacer va en el azul claro de la tienda** (`brand-50`, borde `brand-200`, texto `brand-900`) **con el ícono cian en su placa azul noche** (`brand-950` con `accent`). Andrés lo eligió viendo las tres opciones el 14/11. Es `adminNotice('warning')`; fuera del panel, `avisoAccion` e `iconoAccion` de `lib/admin-ui.ts`, y en un correo, `CORREO.cajaAviso`.
   - **En una píldora, un sello azul noche** (`brand-950`) con texto blanco y el ícono en cian: es `adminBadge('warning')` desde C-216 (Andrés, 13/11: "esas píldoras ámbar, las detesto, se ven demasiado genéricas"). **En un cuadro de ícono**, la misma placa: `placaAccion` o `adminIconChip('warning')`. El azul noche de "una sola pieza fuerte" se refiere a bloques, no a estos sellos y placas.
-  - **El ámbar queda solo en un texto suelto** ("Quedan 3", "Te faltan Bs. 120") **y en las excepciones con nombre.** Nunca destaca, celebra ni clasifica: ni un monto, ni un título, ni un nivel, ni una categoría, ni "Antes", ni una marca ajena como Binance.
+  - **El ámbar queda solo en un texto suelto** ("Quedan 3", "Te faltan Bs. 120") **y en las excepciones con nombre.** Nunca destaca, celebra ni clasifica: ni un monto, ni un título, ni un nivel, ni una categoría, ni "Antes", ni una marca ajena como Binance. Tampoco una frase dentro de un texto (el equipo, 14/11, mirando los términos del checkout: "esas letras ámbar no me gustan, es dispar"): lo que se destaca ahí va en negrita, del mismo color. Lo que falta para seguir ("Debes verificar tu Pago Móvil") va en gris, como en los pasos (C-241).
   - Esperar no es un aviso: "En preparación", "Se acredita el…", "En revisión" (para quien espera) van en azul.
 - **Excepciones con nombre:** las estrellas de calificación y su barra (ámbar), la etiqueta amarilla `tag` de "Oferta del día" (con texto `ink`) y el rojo `navidad` del tema. El recuadro de "Lo que no incluye" de las cotizaciones (Luis, C-182) pasó al azul de acción con la regla de Andrés del 14/11.
 - **Nunca texto blanco sobre el verde claro (`success`):** no llega a 3:1. Sobre el verde fuerte (`success-strong`) sí: 5,5:1, como "Envío gratis" en la tienda y las píldoras de lo hecho en el panel (§1.8).
@@ -179,6 +179,7 @@ Andrés eligió la versión A ("como la tienda") el 13/11, para todo el panel.
   - verde fuerte (`success-strong`) para lo hecho;
   - rojo (`deal`) para lo cancelado o rechazado.
   - Es `adminBadge`. El estado de una orden lleva además su ícono (`components/admin/PildoraEstadoOrden`).
+- **En la tienda, igual** (el equipo, 14/11: "la píldora de verificado, los colores están invertidos"): un estado en píldora va lleno, nunca el verde claro con letra verde. En el checkout, "Verificado", "Conciliación BDV" y "Puntos ES suficientes" (C-241). Los cuadros de ícono siguen claros (`adminIconChip`).
 - **Lo que alguien tiene que hacer va en un sello azul noche, con texto blanco y el ícono en cian** (C-216, Andrés, 13/11: nada de píldoras ámbar). Es `adminBadge('warning')`: el nombre del tono quedó, el color cambió.
 - **El aviso en bloque de lo que alguien tiene que hacer** (`adminNotice('warning')`) va en el azul claro de la tienda, y el ícono que va adentro toma solo su placa azul noche con el cian (C-226, Andrés, 14/11: nada de contenedores ámbar).
 - **Un nivel o una clasificación** (Urgente, el nivel de un curso) va en azul de marca, nunca en ámbar ni en azul noche (§1.1).
@@ -561,11 +562,14 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - llms.txt, el título oculto del inicio y la descripción de /productos, armados con los departamentos que tienen productos.
     - Los textos de reserva, sin "tecnología" donde no corresponde.
     - El título y la descripción los cambia el equipo en Configuración → SEO (`SIGUIENTE.md` §3).
-  - **C-241 · El checkout por pasos** (pendiente; lo pidió el equipo el 14/11: "justo en el checkout necesitamos, como te comenté, las reglas: crear un breadcrumb"). Va después de C-225.
+  - **C-241 · El checkout por pasos** (**hecha**, rc.53, 14/11; `estado/C-241.md`; el equipo eligió la A, un paso a la vez, y pagar al final; lo pidió el equipo el 14/11: "justo en el checkout necesitamos, como te comenté, las reglas: crear un breadcrumb").
     - Hoy es una sola página larga (Entrega, Método de pago, Notas, Información de contacto y Resumen) con tres píldoras generales arriba (`CheckoutSteps`: Carrito · Pago · Listo).
     - Pasa a §1.9: los pasos de `Pasos` con su ícono (Entrega, Tus datos, Pago, Revisar y pagar), "Siguiente: …" con el motivo si falta algo, el resumen del pedido al lado como vista previa y, en el teléfono, "Paso N de M" con la barra.
     - **Primero las maquetas,** con datos reales y en las variantes posibles (pasos de a uno, o la misma página con los pasos marcándose al avanzar), para que el equipo elija.
     - **Es dinero:** no cambia ningún cálculo del servidor. Se prueban el caso normal y el manipulado, y nada que hoy se ve o se puede hacer desaparece (el inventario del método de `CHATGPT.md` §4).
+  - **Lo que queda de ámbar y de píldoras claras en la tienda** (pendiente; salió del checkout el 14/11, con la regla de §1.1 y §1.8):
+    - letras ámbar en una veintena de archivos (35 usos): cursos, gift cards, servicios, recargas, firma de documentos, inicio de sesión. Las estrellas y un "Quedan 3" se quedan;
+    - píldoras en verde claro con letra verde: la gift card válida, el certificado, el panel del creador, Mis cursos y el sello de la cotización.
   - **C-223 · El aviso de cookies** (**hecha**, rc.49, 14/11; `estado/C-223.md`). Sale cuando se pongan las claves de Google y del píxel. El texto de la política espera al abogado (A4).
     - "Solo las necesarias" y "Aceptar", del mismo tamaño, abajo; "Preferencias de cookies" en el pie.
     - Google en modo sin cookies hasta el sí (Consent Mode); el píxel, solo con el sí.
@@ -876,6 +880,8 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
     - "Tenemos 14 años en el mercado de Portuguesa; ahora vamos a toda Venezuela."
   - **El lema:** "Todo lo encuentras con nosotros." (la frase de la portada, del 16/10).
   - **El orden:** el sorteo (C-221), la ubicación (C-222), los textos (C-225), las cookies (C-223) y los tres únicos (C-224).
+- **El checkout por pasos (el equipo, 14/11, C-241):** la A de las maquetas, un paso a la vez (Entrega, Revisar y Pagar), y **pagar al final**, cuando ya se revisó todo. Con un Pago Móvil ya verificado no se vuelve atrás.
+- **Claude sube desde la PC de Andrés (el equipo, 14/11):** con su propia llave (`~/.ssh/electroshop_claude`), una vez que el equipo la autorice en el servidor, y con la aprobación de cada deploy (regla 2 de `CLAUDE.md`).
 - **Videos de creadores (Andrés, 13/11):** videos de quienes compraron el producto (TikTok, Instagram o YouTube), en la ficha y en el inicio, enganchados con el programa de promotores. El plan maestro está en un documento de Claude Docs de Andrés ("Plan maestro de videos de creadores"). Faltan sus decisiones de la fase 2: el premio, quién manda videos, Instagram, los en vivo y el abogado.
 - **Taller:** espera a SADES (30/09).
 - **Credenciales del historial (C-40):** revisado el 26/09, no había nada que cambiar. Si algún día se configura el webhook de SADES, usar un secreto nuevo.

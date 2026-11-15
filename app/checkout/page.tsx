@@ -26,7 +26,7 @@ import PagoManualPanel from '@/components/checkout/PagoManualPanel';
 import PagoPuntosPanel from '@/components/checkout/PagoPuntosPanel';
 import { esPagoManual, leerReferenciaManual, repartirPuntos, type TipoPagoManual } from '@/lib/checkout-pago';
 import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
-import { adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
+import { adminBadge, adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import DatosDelCliente from '@/components/checkout/DatosDelCliente';
 import DatosFactura, { type EleccionFactura, type EmpresaFactura } from '@/components/checkout/DatosFactura';
@@ -1052,8 +1052,8 @@ export default function CheckoutPage() {
                         <h3 className="font-bold text-ink text-base">Verificación Directa de Pago Móvil</h3>
                         <p className="text-xs text-muted">Transfiere a la cuenta de la tienda y confirma con la referencia</p>
                       </div>
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-success-strong/10 text-success-strong text-xs font-bold rounded-full">
-                        <IconoGarantia className="w-3.5 h-3.5" />
+                      <span className={adminBadge('success')}>
+                        <IconoGarantia className="w-3.5 h-3.5" aria-hidden="true" />
                         Conciliación BDV
                       </span>
                     </div>
@@ -1232,8 +1232,8 @@ export default function CheckoutPage() {
 
                                 {/* Puntos ES suficientes badge */}
                                 {userBalance >= finalTotal && (
-                                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-success/15 text-success-strong text-xs font-bold rounded-full mb-3">
-                                    <IconoCheck className="w-3.5 h-3.5" />
+                                  <span className={`${adminBadge('success')} mb-3`}>
+                                    <IconoCheck className="w-3.5 h-3.5" aria-hidden="true" />
                                     Puntos ES suficientes
                                   </span>
                                 )}
@@ -1362,7 +1362,7 @@ export default function CheckoutPage() {
                       términos y condiciones
                     </button>
                     . Confirmo que la información de envío es correcta y entiendo que{' '}
-                    <strong className="font-bold text-warning-strong">
+                    <strong className="font-bold">
                       la empresa no se hace responsable por datos errados ingresados por el usuario
                     </strong>
                     .
@@ -1419,20 +1419,20 @@ export default function CheckoutPage() {
                 </p>
               )}
               {paymentMode === 'PAGO_MOVIL' && !mobilePaymentVerified && (
-                <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
-                  <IconoError className="w-3 h-3" />
+                <p className="text-center text-xs text-muted -mt-2 flex items-center justify-center gap-1">
+                  <IconoInfo className="w-3 h-3 text-brand-500" aria-hidden="true" />
                   Debes verificar tu Pago Móvil antes de completar el pedido
                 </p>
               )}
               {paymentMode === 'MANUAL' && metodoManual && !leerReferenciaManual(referenciaManual) && (
-                <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
-                  <IconoError className="w-3 h-3" />
+                <p className="text-center text-xs text-muted -mt-2 flex items-center justify-center gap-1">
+                  <IconoInfo className="w-3 h-3 text-brand-500" aria-hidden="true" />
                   Escribe la referencia de tu pago para completar el pedido
                 </p>
               )}
               {paymentMode === 'WALLET' && userBalance < finalTotal && (
-                <p className="text-center text-xs text-warning-strong -mt-2 flex items-center justify-center gap-1">
-                  <IconoError className="w-3 h-3" />
+                <p className="text-center text-xs text-muted -mt-2 flex items-center justify-center gap-1">
+                  <IconoInfo className="w-3 h-3 text-brand-500" aria-hidden="true" />
                   No te alcanzan los Puntos ES. Recárgalos para completar el pedido.
                 </p>
               )}
@@ -1453,10 +1453,10 @@ export default function CheckoutPage() {
                     Información de Contacto
                   </h2>
                   {Boolean((session?.user as { emailVerified?: unknown } | undefined)?.emailVerified) && (
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-success/15 border border-success/30 rounded-full">
-                      <IconoConfirmado className="w-3 h-3 text-success-strong" />
-                      <span className="text-xs font-bold text-success-strong">Verificado</span>
-                    </div>
+                    <span className={adminBadge('success')}>
+                      <IconoConfirmado className="w-3 h-3" aria-hidden="true" />
+                      Verificado
+                    </span>
                   )}
                 </div>
 

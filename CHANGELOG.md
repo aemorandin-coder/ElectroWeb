@@ -10,6 +10,20 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.53] - 2026-11-14
+El checkout por pasos (el equipo, 14/11: "en el checkout necesitamos, como te comenté, las reglas: crear un breadcrumb"; eligió la A viendo las maquetas, y pagar al final).
+### Carrito, checkout y cuenta del cliente 1.7.0 (C-241)
+- **Un paso a la vez:** Entrega, Revisar y Pagar. Cada paso dice qué le falta para seguir ("Elige ZOOM o MRW para tu envío", "Acepta los términos para seguir").
+- **Se paga al final,** cuando ya se revisó todo. Revisar muestra la entrega elegida, con "Cambiar".
+- **Lo escrito no se pierde al ir y volver.** Con un Pago Móvil ya verificado no se vuelve atrás.
+- **El resumen del pedido sigue a la derecha.** El dinero no cambia: el servidor calcula y valida como antes.
+- **Sin letras ámbar y con los sellos llenos** (el equipo, 14/11, mirando las capturas: "esas letras ámbar no me gustan, es dispar" y "la píldora de verificado, los colores están invertidos"):
+  - la frase de los términos va en negrita, del mismo color del texto;
+  - lo que falta para pagar va en gris, como en los otros pasos;
+  - "Verificado", "Conciliación BDV" y "Puntos ES suficientes" van en verde fuerte con letra blanca.
+### Tienda 1.14.1 (C-241)
+- **Los pasos de la compra** (Carrito, Entrega, Revisar y Pagar) con su ícono, la línea que se llena y el visto, como los del panel. Lo hecho se toca para volver.
+
 ## [1.0.0-rc.52] - 2026-11-14
 Cuándo sale cada pedido, dicho antes de comprar (el equipo, 14/11: "un cliente que compra un sábado al mediodía, su producto sí o sí sale el lunes; ser lo más transparente"; eligió lo recomendado en las seis preguntas).
 ### Órdenes y pagos 1.5.0 (C-234)

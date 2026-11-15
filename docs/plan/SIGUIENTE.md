@@ -1,4 +1,4 @@
-# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.52, por subir)
+# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.53, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
@@ -42,6 +42,10 @@
 - **Siguen, con las decisiones del 14/11 en `PLAN.md` §7.2:**
   - **C-227 · Los correos para proveedores:** la bienvenida de "revendedor premium", "¡Se vendió tu producto!" y "Se canceló: no lo despaches".
 - **Tres sesiones de Claude a la vez el 14/11**, cada una en su worktree: la de los correos (C-219, C-226, C-227 y C-234), la del plan de crecimiento (C-220 a C-225 y C-241) y la de Contabilidad (C-228 a C-240).
+- **C-241 · El checkout por pasos (rc.53, por subir):** lo que eligió el equipo viendo las maquetas: un paso a la vez y pagar al final (`estado/C-241.md`).
+  - Carrito, Entrega, Revisar y Pagar arriba, con su ícono. Cada paso dice qué le falta para seguir. Revisar muestra la entrega elegida con "Cambiar".
+  - Nada se pierde al ir y volver. Con un Pago Móvil ya verificado no se vuelve atrás. El dinero no cambia: el servidor calcula y valida como antes.
+  - Sin letras ámbar: la frase de los términos va en negrita. Los sellos ("Verificado", "Conciliación BDV", "Puntos ES suficientes") van llenos, en verde fuerte con letra blanca.
 - **C-224 · Lo que nos hace únicos (rc.51, por subir):** "Por qué comprar en Electro Shop" en el inicio, en lugar de "Compra con confianza" (`estado/C-224.md`).
   - Sabes cuánto pagas antes de pagar; tu Pago Móvil lo confirma el banco (si la verificación del BDV está activa; si no, la atención por WhatsApp); una tienda de verdad, con taller propio.
   - Los 14 años en Portuguesa, también en el pie y en Servicios (se cuentan solos desde 2012). La garantía de la ficha dice que la atiende el servicio técnico.
@@ -257,7 +261,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.52` (C-226, C-221, C-222, C-219, C-225, C-223, C-229, C-224 y C-234, con rc.44 a rc.51 adentro; unos 65 minutos)
+### El bloque por subir: `v1.0.0-rc.53` (C-226, C-221, C-222, C-219, C-225, C-223, C-229, C-224, C-234 y C-241, con rc.44 a rc.52 adentro; unos 70 minutos)
 **Producción ya está en `v1.0.0-rc.43`** (`fcdc4c0`, compilada el 14/11 a las 00:10 UTC). Lo comprobó Claude desde fuera el 14/11, leyendo la versión de la página pública. Nadie lo anotó: falta que el equipo confirme si se corrió el SQL del bloque de rc.43 (abajo) y cuáles de sus pruebas se hicieron. Con eso, ese bloque pasa a `HISTORIAL.md`.
 - **C-226 (rc.44):** ningún contenedor ámbar; lo que hay que hacer va en el azul claro de la tienda. **Sin SQL, sin variables nuevas y sin cron.**
 - **C-221 (rc.45):** el sorteo por pasos. **Sin cambio de base, sin variables nuevas y sin cron.** Lleva un **SQL de datos** (abajo).
@@ -320,7 +324,7 @@ ADD COLUMN "diasCerrados" TEXT[] DEFAULT ARRAY[]::TEXT[],
 ADD COLUMN "horaCorte" TEXT NOT NULL DEFAULT '14:00';
 ```
   - Sin variables nuevas y sin cron.
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.52`.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.53`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **En el panel:** Configuración → Respaldos con los respaldos apagados, y Productos → Nuevo → Publicar con un dato faltante. El aviso va en azul claro, con el ícono cian en su placa azul noche. No queda ninguna caja ámbar.
   2. **En la tienda,** con una cuenta sin verificar: el checkout muestra "Verificación requerida" con el círculo azul noche. Mi panel → Documentos con uno por firmar: la nota va en azul claro.
@@ -349,6 +353,11 @@ ADD COLUMN "horaCorte" TEXT NOT NULL DEFAULT '14:00';
       - **En el panel,** Configuración → Envíos y retiro → "Cuándo sale cada pedido": la hora de corte dice 2:00 p. m. y la lista trae los feriados que vienen, desde el 24 de diciembre (Nochebuena). El ejemplo de abajo dice que lo pagado el sábado a las 12:00 sale el lunes, y lo de un proveedor, el martes. No cambies nada si no hace falta.
       - **En el teléfono,** la ficha de un producto de la tienda: junto a "Agregar", "Compra en las próximas … y sale hoy" (de lunes a viernes antes de las 2:00 p. m.) o "Compra hoy y sale el …". Uno de la ferretería sale un día hábil después, "desde Aragua". Una gift card dice cuándo llega.
       - **El carrito y el checkout** dicen la misma fecha por paquete. En la compra de la prueba 11, el correo dice "Sale el …" en "Así te llega", y Mi pedido también.
+  19. **El checkout por pasos** (C-241), en el teléfono, con una compra pequeña: arriba Carrito, Entrega, Revisar y Pagar.
+      - En Entrega, sin elegir ZOOM o MRW, "Siguiente: revisar" está apagado y dice por qué.
+      - En Revisar, sin los términos, "Siguiente: pagar" está apagado.
+      - En Pagar están el método y "Completar Pedido". Tocar "Entrega" arriba vuelve, y lo elegido sigue ahí.
+      - Ninguna letra ámbar; "Verificado" (a la derecha, en tu información de contacto) va en verde fuerte con letra blanca.
 - **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas y la columna de C-229 y las tres columnas de C-234 no molestan al código anterior. Los textos de antes quedan en `~/textos-antes-c221.txt`; el sorteo se apaga en Marketing → Sorteo → Apagar. La columna nueva de C-219 no molesta al código anterior; el cron del sorteo se quita con `crontab -e`.
 
 ### Ya en producción, sin anotar: `v1.0.0-rc.43` (C-210 a C-218, con rc.35 a rc.42 adentro)
@@ -750,9 +759,9 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
-**Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) y C-224 (los tres únicos, rc.51). También C-226 (sin ámbar, rc.44), C-219 (los correos, rc.47) y C-234 (cuándo sale cada pedido, rc.52).
+**Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) C-224 (los tres únicos, rc.51) y C-241 (el checkout por pasos, rc.53). También C-226 (sin ámbar, rc.44), C-219 (los correos, rc.47) y C-234 (cuándo sale cada pedido, rc.52).
 
-**Sigue:** C-227 (los correos a los proveedores, con el plazo de C-234) y C-241 (el checkout por pasos, que pidió el equipo después: las maquetas están listas para elegir). Lo de abajo queda después.
+**Sigue:** C-227 (los correos a los proveedores, con el plazo de C-234; de la otra sesión). Del plan del 14/11 falta subirlo (el bloque de la sección 2) y, después, lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
 
 **Contabilidad (C-228 y C-228b, `CONTABILIDAD.md`):** C-229 hecha (rc.50, las facturas de talonario). Sigue C-235 (la contadora en el equipo; sus datos llegaron el 14/11) y C-230 antes del 15/12. El resto en el orden de `PLAN.md` §5.2, todo antes del 19/04/2027.
 

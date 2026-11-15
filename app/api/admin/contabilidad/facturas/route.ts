@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { pedidoFacturaSchema } from '@/lib/contabilidad/esquemas';
 import { periodoDe } from '@/lib/contabilidad/montos';
-import { errorDeEsquema, respuestaError, sesionCon } from '@/lib/contabilidad/ruta';
+import { errorDeEsquema, LEER_FACTURAS, respuestaError, sesionCon } from '@/lib/contabilidad/ruta';
 import { comprasSinFactura, emitirFactura, facturaPorId, facturasDelMes } from '@/lib/contabilidad/servidor';
 import { rangoMes } from '@/lib/relacion-ventas';
 import { publicarOrdenes } from '@/lib/realtime/bus';
 
 /** GET /api/admin/contabilidad/facturas?mes=2026-11 (C-229): las facturas del mes y lo cobrado sin factura. */
 export async function GET(request: NextRequest) {
-  const s = await sesionCon('FACTURAR');
+  const s = await sesionCon(LEER_FACTURAS);
   if (s instanceof NextResponse) return s;
   const pedido = request.nextUrl.searchParams.get('mes');
   const mes = pedido && rangoMes(pedido) ? pedido : periodoDe(new Date());

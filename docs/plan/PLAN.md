@@ -652,7 +652,11 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - Las tablas `talonarios` y `documentos_fiscales` y la columna `orders.documentoFiscalId` (aditivas). Avisar a la sesión de C-222, que también suma columnas a `orders`.
     - Cargar el talonario. La nueva factura va por pasos: de dónde sale, a nombre de quién, qué se vendió, y revisar y emitir con la réplica.
     - Anular con motivo, y la orden queda facturada sola.
-  - **C-235 · La contadora en el equipo:** el rol `ACCOUNTANT` (enum aditivo), la invitación, quitarla y poner otra, su firma y sello, y "Mi mesa" (`CONTABILIDAD.md` §13.1).
+  - **C-235 · La contadora en el equipo** (**hecha**, rc.54, 14/11; `estado/C-235.md`). Pendiente: que el dueño la invite después del deploy (`SIGUIENTE.md` §3, paso 23) y que ella dibuje su firma.
+    - El rol `ACCOUNTANT` (enum aditivo) con `VER_CONTABILIDAD` y `DECLARAR`, solo con los dos pasos; `CARGAR_TALONARIO`, nuevo, solo del dueño. `proxy.ts` le abre solo Contabilidad, Mi seguridad y Versiones.
+    - La invitación desde Equipo, y quitarla y poner otra (su firma queda guardada).
+    - La mesa de la contadora: el mes en números, las últimas facturas, lo que viene, su firma y sello (`firmas_contables`) y las notas del mes (`notas_contables`).
+    - Para después: el aviso de una nota nueva (con C-236) y "Descargar" el mes (con C-230).
   - **C-230 · El libro de ventas y el resumen del mes** (antes del 15/12, para declarar noviembre).
   - **C-236 · El calendario de obligaciones y los avisos** (campana y Telegram; feriados con C-234), con las obligaciones de §13.2.
   - **C-237 · Gastos y compras:** la foto y los datos de cada factura; el libro de compras y el crédito fiscal.

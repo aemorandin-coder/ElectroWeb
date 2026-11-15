@@ -9,6 +9,7 @@ import { registrarAccionAdmin } from '@/lib/audit-log';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { superAdminsConAcceso } from '@/lib/equipo';
+import { esRolDelPanel } from '@/lib/auth-helpers';
 
 // Verificación en dos pasos del propio admin (C-141): Mi seguridad.
 // Es la única API del panel que responde sin los dos pasos hechos: sirve para configurarlos (ver proxy.ts).
@@ -16,7 +17,7 @@ import { superAdminsConAcceso } from '@/lib/equipo';
 async function quien(request: NextRequest) {
   const session = await getServerSession(authOptions);
   const user = session?.user;
-  if (!session || !user?.id || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) return null;
+  if (!session || !user?.id || !esRolDelPanel(user.role)) return null;
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
   return { session, userId: user.id, correo: user.email ?? '', nombre: user.name ?? user.email ?? 'Admin', sid: typeof token?.sid === 'string' ? token.sid : undefined };
 }

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { esAdminVerificado } from '@/lib/auth-helpers';
+import { esAdminVerificado, esDelPanelVerificado } from '@/lib/auth-helpers';
 import { pagoSinOrdenWhere } from '@/lib/pago-movil-sin-orden';
 
 export const dynamic = 'force-dynamic';
@@ -14,6 +14,12 @@ export async function GET() {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    // C-235: la contadora no ve contadores del negocio, pero esta llamada le sirve al panel para saber si su sesión
+    // sigue viva (el 401 de arriba)
+    if (esDelPanelVerificado(session) && !esAdminVerificado(session)) {
+      return NextResponse.json({});
     }
 
     // 403 y no 401 para el admin sin los dos pasos: con 401 el panel cierra la sesión (C-140) y no podría configurarlos

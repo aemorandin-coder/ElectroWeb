@@ -24,8 +24,11 @@ import type { EstadoMiembro, MiembroEquipo, RolEquipo } from '@/lib/equipo';
 const ROLES: { rol: RolEquipo; nombre: string; detalle: string }[] = [
   { rol: 'ADMIN', nombre: 'Administrador', detalle: 'Todo el día a día: productos, órdenes, pagos, clientes, garantías y contenido. No ve Configuración, Métodos de pago ni Equipo.' },
   { rol: 'SUPER_ADMIN', nombre: 'Super admin', detalle: 'Todo, incluidos Configuración, Métodos de pago y Equipo. Solo para los dueños.' },
+  // C-235: la contadora (docs/plan/CONTABILIDAD.md §13.1)
+  { rol: 'ACCOUNTANT', nombre: 'Contadora', detalle: 'Solo Contabilidad: ve las facturas y los libros, los descarga en Excel, declara y firma el cierre del mes. No factura ni ve la tienda, las órdenes ni Configuración.' },
 ];
-const nombreRol = (rol: RolEquipo) => (rol === 'SUPER_ADMIN' ? 'Super admin' : 'Administrador');
+const nombreRol = (rol: RolEquipo) => (rol === 'SUPER_ADMIN' ? 'Super admin' : rol === 'ACCOUNTANT' ? 'Contadora' : 'Administrador');
+// La contadora no cambia de rol: para reemplazarla se le quita el acceso y se invita a otra
 const otroRol = (rol: RolEquipo): RolEquipo => (rol === 'SUPER_ADMIN' ? 'ADMIN' : 'SUPER_ADMIN');
 
 const ESTADOS: Record<EstadoMiembro, { texto: string; tono: 'success' | 'warning' | 'danger' }> = {
@@ -51,7 +54,7 @@ const ACCIONES: Record<Accion, { Icon: IconType; titulo: (m: MiembroEquipo) => s
     detalle: (m) => `${m.nombre} pasa de ${nombreRol(m.rol)} a ${nombreRol(otroRol(m.rol))}. ${ROLES.find((r) => r.rol === otroRol(m.rol))?.detalle} Si tiene una sesión abierta se cierra y vuelve a entrar con el rol nuevo.`,
     boton: 'Cambiar el rol',
     hecho: 'Rol cambiado',
-    para: () => true,
+    para: (m) => m.rol !== 'ACCOUNTANT',
   },
   reiniciar_dos_pasos: {
     Icon: IconoActualizar,

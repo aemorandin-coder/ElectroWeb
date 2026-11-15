@@ -22,7 +22,9 @@ function ultimosMeses(hoy: string): string[] {
 
 export default async function PaginaFacturas({ searchParams }: { searchParams: Promise<{ mes?: string }> }) {
   const session = await getServerSession(authOptions);
-  if (!hasPermission(session, 'FACTURAR')) redirect('/admin');
+  const puedeFacturar = hasPermission(session, 'FACTURAR');
+  // C-235: la contadora las ve (VER_CONTABILIDAD) pero no factura
+  if (!puedeFacturar && !hasPermission(session, 'VER_CONTABILIDAD')) redirect('/admin');
   const { mes: pedido } = await searchParams;
   const actual = periodoDe(new Date());
   const mes = pedido && rangoMes(pedido) && pedido <= actual ? pedido : actual;
@@ -37,7 +39,8 @@ export default async function PaginaFacturas({ searchParams }: { searchParams: P
       talonario={activo ? talonarioDTO(activo) : null}
       facturas={facturas}
       compras={compras}
-      esDueno={hasPermission(session, 'VER_CONTABILIDAD')}
+      esDueno={hasPermission(session, 'CARGAR_TALONARIO')}
+      puedeFacturar={puedeFacturar}
     />
   );
 }

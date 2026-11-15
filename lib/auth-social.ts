@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { buscarUsuarioPorCorreo, normalizarCorreo } from '@/lib/correo';
+import { esRolDelPanel } from '@/lib/auth-helpers';
 
 /**
  * Registro e inicio con Google (C-85). Decisiones de Andrés del 16/09:
@@ -35,7 +36,8 @@ export interface DatosProveedor {
   tipoCuenta?: string;
 }
 
-const esAdmin = (role: string) => role === 'ADMIN' || role === 'SUPER_ADMIN';
+// C-235: la contadora tampoco entra con Google: el panel es con contraseña y dos pasos
+const esAdmin = (role: string) => esRolDelPanel(role);
 
 /** Nombre para la cuenta: sin HTML ni espacios de más; si Google no lo trae, la parte del correo antes de la @. */
 function nombreLimpio(nombre: string | null | undefined, email: string): string {

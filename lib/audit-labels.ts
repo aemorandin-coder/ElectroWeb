@@ -30,6 +30,7 @@ export const ETIQUETA_ACCION: Record<string, string> = {
     INVOICE_ISSUED: 'Factura de talonario registrada',
     INVOICE_VOIDED: 'Factura de talonario anulada',
     TALONARIO_CREATED: 'Talonario de facturas cargado',
+    FIRMA_CONTABLE_GUARDADA: 'Firma y sello de la contadora guardados',
     ORDER_CANCELLED: 'Orden cancelada',
     ORDER_REFUNDED: 'Orden reembolsada',
     GIFT_CARD_CREATED: 'Gift card creada',

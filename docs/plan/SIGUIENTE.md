@@ -1,9 +1,15 @@
-# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.53, por subir)
+# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.54, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-235 · La contadora en el equipo (rc.54, por subir):** se invita como "Contadora" y entra a su propia mesa, con su firma y su sello (`estado/C-235.md`).
+  - **Solo Contabilidad:** ve las facturas, lo cobrado sin factura y el mes, sin facturar ni anular. Lo demás del panel (órdenes, clientes, productos, Configuración) no lo ve, ni con la dirección escrita.
+  - **Su mesa** (Contabilidad → Mesa de la contadora): el saludo con su nombre, el mes en números (base, IVA y exento), las últimas facturas, lo que viene, su firma y las notas del mes con el dueño.
+  - **Su firma:** la dibuja una vez con el dedo o el mouse, con su nombre, su título y su C.P.C. Va en los cierres y en el Excel (C-230 y C-232).
+  - **Quitarla y poner otra:** Equipo → ella → "Administrar" → "Quitar el acceso", e invitar a la nueva. Su firma queda guardada.
+  - **Al subir:** un rol y dos tablas nuevas (§2). **Después, el dueño la invita** (§3, paso 23).
 - **C-234 · Cuándo sale cada pedido (rc.52, por subir):** el cliente sabe antes de comprar qué día sale su pedido (`estado/C-234.md`).
   - **Las reglas:** lo pagado de lunes a viernes antes de las 2:00 p. m. sale ese día; lo del sábado y el domingo, el lunes; los feriados de Venezuela no cuentan, y lo de la ferretería sale un día hábil después.
   - **En la tienda:** "Compra en las próximas 2 h 15 min y sale hoy" o "Compra hoy y sale el lunes 16" en la ficha, el carrito y el checkout; "Sale el lunes 16 de noviembre" en Mi pedido y en el correo de la compra. Lo digital dice cuándo llega.
@@ -35,7 +41,7 @@
   - **Hoy:** la empresa es ordinaria y factura solo con el talonario (SADES no imprime factura fiscal). La ley pide factura en cada venta: decidirlo con la contadora (A16).
   - **Las 17 preguntas para la contadora,** listas para WhatsApp en tres mensajes: `~/Escritorio/Electro Shop/Preguntas para la contadora 14-11.txt`. Las urgentes son la 1 (factura en cada venta) y la 2 (el IVA de los digitales: la Factura 67 lo cobró y la web no).
   - **Las maquetas,** en la PC de Andrés: `~/Escritorio/Electro Shop/Contabilidad - maquetas (C-228)/` (Resumen, factura A y B, libro de ventas y "Mi mesa").
-  - **Sigue:** C-229, C-235, C-230 (antes del 15/12), C-236, C-237, C-232, C-238, C-239, C-240, C-231 y C-233 (`PLAN.md` §5.2).
+  - **Hechas:** C-229 (las facturas, rc.50) y C-235 (la contadora, rc.54). **Sigue:** C-230 (antes del 15/12), C-236, C-237, C-232, C-238, C-239, C-240, C-231 y C-233 (`PLAN.md` §5.2).
 - **C-226 · Ningún contenedor ámbar (rc.44, por subir):** el equipo, el 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados". Viendo tres opciones eligió el azul claro de la tienda con el ícono cian en su placa azul noche (`estado/C-226.md`).
   - **La regla, para todas las IA:** `CLAUDE.md`, `GEMINI.md` y `PLAN.md` §1.1, §1.7 y §1.8. Ni cajas, ni avisos, ni fondos, ni bordes, ni píldoras ámbar.
   - **Lo que cambió:** el aviso compartido del panel (42 lugares), 24 pantallas de la tienda y del panel y la caja de aviso de los correos. Sin cambio de base.
@@ -261,7 +267,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.53` (C-226, C-221, C-222, C-219, C-225, C-223, C-229, C-224, C-234 y C-241, con rc.44 a rc.52 adentro; unos 70 minutos)
+### El bloque por subir: `v1.0.0-rc.54` (C-226, C-221, C-222, C-219, C-225, C-223, C-229, C-224, C-234, C-241 y C-235, con rc.44 a rc.53 adentro; unos 75 minutos)
 **Producción ya está en `v1.0.0-rc.43`** (`fcdc4c0`, compilada el 14/11 a las 00:10 UTC). Lo comprobó Claude desde fuera el 14/11, leyendo la versión de la página pública. Nadie lo anotó: falta que el equipo confirme si se corrió el SQL del bloque de rc.43 (abajo) y cuáles de sus pruebas se hicieron. Con eso, ese bloque pasa a `HISTORIAL.md`.
 - **C-226 (rc.44):** ningún contenedor ámbar; lo que hay que hacer va en el azul claro de la tienda. **Sin SQL, sin variables nuevas y sin cron.**
 - **C-221 (rc.45):** el sorteo por pasos. **Sin cambio de base, sin variables nuevas y sin cron.** Lleva un **SQL de datos** (abajo).
@@ -324,7 +330,18 @@ ADD COLUMN "diasCerrados" TEXT[] DEFAULT ARRAY[]::TEXT[],
 ADD COLUMN "horaCorte" TEXT NOT NULL DEFAULT '14:00';
 ```
   - Sin variables nuevas y sin cron.
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.53`.
+- **C-241 (rc.53):** el checkout por pasos. Sin cambio de base, sin variables nuevas y sin cron.
+- **C-235 (rc.54):** la contadora en el equipo.
+  - **Cambia la base: un rol nuevo y dos tablas, aditivos.** `deploy.sh` los muestra junto con lo de C-222, C-219, C-229 y C-234. El `ALTER TYPE` de la primera línea **es el esperado:** agrega el rol "Contadora" y no cambia a nadie.
+```sql
+ALTER TYPE "Role" ADD VALUE 'ACCOUNTANT';
+CREATE TABLE "firmas_contables" ("id" TEXT NOT NULL, "userId" TEXT NOT NULL, "nombre" TEXT NOT NULL, "titulo" TEXT NOT NULL, "cpc" TEXT NOT NULL, "imagen" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "firmas_contables_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "notas_contables" ("id" TEXT NOT NULL, "periodo" TEXT NOT NULL, "autorId" TEXT NOT NULL, "texto" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "notas_contables_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "firmas_contables_userId_key" ON "firmas_contables"("userId");
+CREATE INDEX "notas_contables_periodo_idx" ON "notas_contables"("periodo");
+```
+  - Sin variables nuevas y sin cron. **Después del deploy, el dueño invita a la contadora** (§3, paso 23).
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.54`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **En el panel:** Configuración → Respaldos con los respaldos apagados, y Productos → Nuevo → Publicar con un dato faltante. El aviso va en azul claro, con el ícono cian en su placa azul noche. No queda ninguna caja ámbar.
   2. **En la tienda,** con una cuenta sin verificar: el checkout muestra "Verificación requerida" con el círculo azul noche. Mi panel → Documentos con uno por firmar: la nota va en azul claro.
@@ -358,7 +375,11 @@ ADD COLUMN "horaCorte" TEXT NOT NULL DEFAULT '14:00';
       - En Revisar, sin los términos, "Siguiente: pagar" está apagado.
       - En Pagar están el método y "Completar Pedido". Tocar "Entrega" arriba vuelve, y lo elegido sigue ahí.
       - Ninguna letra ámbar; "Verificado" (a la derecha, en tu información de contacto) va en verde fuerte con letra blanca.
-- **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas y la columna de C-229 y las tres columnas de C-234 no molestan al código anterior. Los textos de antes quedan en `~/textos-antes-c221.txt`; el sorteo se apaga en Marketing → Sorteo → Apagar. La columna nueva de C-219 no molesta al código anterior; el cron del sorteo se quita con `crontab -e`.
+  20. **La contadora** (C-235), con la cuenta del dueño:
+      - Contabilidad → "Mesa de la contadora": el saludo con tu nombre, el mes en números y, a la derecha, "La firma de la contadora" (vacía hasta que ella la dibuje).
+      - Equipo → Invitar: está la opción "Contadora", con lo que puede y no puede hacer. **Invítala de verdad en el paso 23 de §3**, no con una cuenta de prueba.
+      - Cuando ella entre (después del paso 23): en su menú solo están Contabilidad, Mi seguridad y Versiones. Si escribe `/admin/orders`, vuelve a su mesa.
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas y la columna de C-229, las tres columnas de C-234 y las dos tablas de C-235 no molestan al código anterior. **Si la contadora ya está invitada,** el código anterior no conoce su rol: antes de volver atrás, quítale el acceso en Equipo y corre con `psql "$DB"` `UPDATE "users" SET role = 'USER' WHERE role = 'ACCOUNTANT';` (vuelve a ser contadora con el deploy siguiente: Equipo → Invitar otra vez). Los textos de antes quedan en `~/textos-antes-c221.txt`; el sorteo se apaga en Marketing → Sorteo → Apagar. La columna nueva de C-219 no molesta al código anterior; el cron del sorteo se quita con `crontab -e`.
 
 ### Ya en producción, sin anotar: `v1.0.0-rc.43` (C-210 a C-218, con rc.35 a rc.42 adentro)
 Antes, producción estaba en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`. Lo que sigue es el bloque tal como se preparó: hay que confirmar su SQL y sus pruebas.
@@ -750,11 +771,17 @@ En el orden en que más destraban:
 18. Abogado: términos y privacidad (ahora se editan en Legal → Documentos; `estado/C-120.md` §7). **La sección 6 de privacidad, "Cookies", tiene un texto nuevo listo** (`estado/C-223.md`): nombra todas las cookies, la medición propia y que Google y Meta van solo con permiso. Se publica con "Nueva versión" cuando el abogado lo apruebe y las 3 afirmaciones de `estado/C-144.md` (el motivo "comprobante vencido o ilegible", los plazos y los datos de contacto).
 19. Contador: las preguntas de `estado/C-151.md` (IVA de los digitales), `estado/C-147b.md` (embalaje), `estado/C-120.md` §6 y **`estado/C-159.md` (retención del IVA: quiénes retienen, el comprobante y si hay retención de ISLR en los servicios)**.
 20. **Mandarle a la contadora las preguntas, por WhatsApp desde tu teléfono:** los tres mensajes de `Preguntas para la contadora 14-11.txt`, en `~/Escritorio/Electro Shop/` de tu PC. Se copian uno por uno. Los asteriscos son las negritas.
-21. **Cuando responda, pásale a Claude** su correo, su nombre como quiere que salga y su número de C.P.C. (para invitarla cuando C-235 esté arriba), y sus respuestas: las columnas, las alícuotas y las fechas salen de ahí.
+21. **Cuando responda, pásale a Claude sus respuestas:** las columnas, las alícuotas y las fechas del libro de ventas (C-230) salen de ahí. Su correo, su nombre y su C.P.C. ya llegaron el 14/11 (no van al repositorio).
 22. **Cargar el talonario, después del deploy** (en el panel, con la cuenta del dueño):
     1. Contabilidad → Facturas → "Cargar el talonario".
     2. Copia lo que trae impreso: la serie, la primera y la última factura, y **la próxima por usar, que es la primera en blanco** (confírmala en el papel ese día). Después el control (el número rojo de abajo), los datos de la empresa y el pie de la imprenta.
     3. En "Revisar y guardar", compara la réplica con el papel y toca "Guardar el talonario".
+23. **Invitar a la contadora, después del deploy** (en el panel, con la cuenta del dueño):
+    1. Administración → Equipo → "Invitar".
+    2. Su nombre, su correo (el que te pasó el 14/11) y el rol **Contadora**. "Enviar invitación". Si dice que ese correo es de una clienta de la tienda, pídele otro.
+    3. Avísale por WhatsApp que le llegó un correo de Electro Shop con un enlace de 24 horas. Ahí crea su contraseña; al entrar, el panel le pide los dos pasos (una app como Google Authenticator en su teléfono).
+    4. Ya adentro, en su mesa, toca "Dibujar mi firma": su firma, su nombre como quiere que salga y su número de C.P.C.
+    5. **Para cambiarla por otra persona más adelante:** Equipo → ella → "Administrar" → "Quitar el acceso", e invitar a la nueva.
 
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
@@ -763,7 +790,7 @@ En el orden en que más destraban:
 
 **Sigue:** C-227 (los correos a los proveedores, con el plazo de C-234; de la otra sesión). Del plan del 14/11 falta subirlo (el bloque de la sección 2) y, después, lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
 
-**Contabilidad (C-228 y C-228b, `CONTABILIDAD.md`):** C-229 hecha (rc.50, las facturas de talonario). Sigue C-235 (la contadora en el equipo; sus datos llegaron el 14/11) y C-230 antes del 15/12. El resto en el orden de `PLAN.md` §5.2, todo antes del 19/04/2027.
+**Contabilidad (C-228 y C-228b, `CONTABILIDAD.md`):** C-229 (rc.50, las facturas de talonario) y C-235 (rc.54, la contadora en el equipo) hechas. Sigue C-230 antes del 15/12, con sus respuestas. El resto en el orden de `PLAN.md` §5.2, todo antes del 19/04/2027.
 
 **Hecho el 13/11:**
 - C-205 (la Lista del proveedor por pasos y las reglas de ancho, rc.33);

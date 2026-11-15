@@ -243,7 +243,7 @@ function avisarEntradaAdmin(userId: string, sid: string, dispositivo: string, ip
         type: 'ADMIN_LOGIN',
         title: `Inicio de sesión · ${u.name || u.email || 'Admin'}`,
         summary: 'Entró al panel de administración. Si no fue esa persona, toca "No fui yo".',
-        fields: [['Dispositivo', dispositivo], ['IP', ip], ['Rol', u.role === 'SUPER_ADMIN' ? 'Super admin' : 'Admin']],
+        fields: [['Dispositivo', dispositivo], ['IP', ip], ['Rol', u.role === 'SUPER_ADMIN' ? 'Super admin' : u.role === 'ACCOUNTANT' ? 'Contadora' : 'Admin']],
         link: rutaNoFuiYo(sid),
         boton: 'No fui yo: cerrar y bloquear',
       });

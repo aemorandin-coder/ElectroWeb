@@ -283,8 +283,8 @@ En orden. Cada una sirve sola, sale de `main` actualizado y lleva su estado, su 
 - **Fuera del plan, a pedido:** las notas de crédito por garantía o cancelación, con su réplica (cuando haga falta la primera), y la retención de ISLR de lo que paga la empresa.
 
 **Desde el 14/11 en la noche (C-228b), el orden es:**
-1. C-229, las facturas de talonario (la maqueta B).
-2. C-235, la contadora en el equipo (§13.1).
+1. C-229, las facturas de talonario (la maqueta B). Hecha, rc.50.
+2. C-235, la contadora en el equipo (§13.1). Hecha, rc.54.
 3. C-230, el libro de ventas y el resumen (antes del 15/12).
 4. C-236, el calendario y los avisos (§13.2).
 5. C-237, gastos y compras (§13.3).

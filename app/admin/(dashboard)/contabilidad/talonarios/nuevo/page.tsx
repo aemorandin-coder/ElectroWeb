@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function PaginaNuevoTalonario() {
   const session = await getServerSession(authOptions);
-  if (!hasPermission(session, 'VER_CONTABILIDAD')) redirect('/admin/contabilidad/facturas');
+  if (!hasPermission(session, 'CARGAR_TALONARIO')) redirect('/admin/contabilidad/facturas');
   const [empresa, { alicuota }] = await Promise.all([datosEmpresa(), tasaYAlicuota()]);
   return (
     <div className="space-y-4">

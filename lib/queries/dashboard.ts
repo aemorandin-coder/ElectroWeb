@@ -13,7 +13,7 @@ const VENTA: Prisma.OrderWhereInput = {
   paymentStatus: PaymentStatus.PAID,
   status: { notIn: [OrderStatus.CANCELLED, OrderStatus.REFUNDED] },
 };
-const CLIENTES: Prisma.UserWhereInput = { role: { notIn: ['ADMIN', 'SUPER_ADMIN', 'SUPPORT'] } };
+const CLIENTES: Prisma.UserWhereInput = { role: { notIn: ['ADMIN', 'SUPER_ADMIN', 'SUPPORT', 'ACCOUNTANT'] } };
 const FISICO_PUBLICADO: Prisma.ProductWhereInput = { status: 'PUBLISHED', productType: 'PHYSICAL' };
 const DIA_MS = 24 * 60 * 60 * 1000;
 

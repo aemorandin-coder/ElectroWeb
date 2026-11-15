@@ -23,7 +23,7 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 const fecha = (iso: string) => new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(iso));
 
-export default function PanelFacturas({ mes, meses, talonario, facturas, compras, esDueno }: {
+export default function PanelFacturas({ mes, meses, talonario, facturas, compras, esDueno, puedeFacturar }: {
   mes: string;
   /** Los meses para elegir, del más nuevo al más viejo */
   meses: string[];
@@ -31,6 +31,8 @@ export default function PanelFacturas({ mes, meses, talonario, facturas, compras
   facturas: FacturaDTO[];
   compras: CompraSinFactura[];
   esDueno: boolean;
+  /** C-235: la contadora ve todo, pero no factura ni anula */
+  puedeFacturar: boolean;
 }) {
   const router = useRouter();
   const [anulando, setAnulando] = useState(false);
@@ -82,7 +84,7 @@ export default function PanelFacturas({ mes, meses, talonario, facturas, compras
           <select id="facturas-mes" value={mes} onChange={(e) => router.push(`/admin/contabilidad/facturas?mes=${e.target.value}`)} className="h-11 rounded-lg border border-line-strong bg-white px-3 text-sm font-semibold text-ink">
             {meses.map((m) => <option key={m} value={m}>{nombreMes(m).replace(/^./, (c) => c.toUpperCase())}</option>)}
           </select>
-          {talonario && (
+          {talonario && puedeFacturar && (
             <Link href="/admin/contabilidad/facturas/nueva" className={adminPrimaryButton}>
               <IconoMas className="h-4 w-4" aria-hidden="true" /> Nueva factura
             </Link>
@@ -95,7 +97,7 @@ export default function PanelFacturas({ mes, meses, talonario, facturas, compras
         <section className={adminCard} aria-labelledby="sin-factura">
           <h2 id="sin-factura" className="flex flex-wrap items-center gap-2 text-base font-semibold text-ink">
             <IconoOrdenes className="h-5 w-5" aria-hidden="true" /> Cobradas sin factura
-            {compras.length > 0 && <span className={adminBadge('warning')}><IconoReloj className="h-3.5 w-3.5" aria-hidden="true" /> Te toca</span>}
+            {compras.length > 0 && puedeFacturar && <span className={adminBadge('warning')}><IconoReloj className="h-3.5 w-3.5" aria-hidden="true" /> Te toca</span>}
           </h2>
           <p className="mt-1 text-sm text-muted">
             {compras.length === 0 ? `Todo lo cobrado en ${nombreMes(mes)} tiene su factura.` : `${compras.length} ${compras.length === 1 ? 'compra pagada' : 'compras pagadas'} en ${nombreMes(mes)} todavía sin factura.`}
@@ -111,9 +113,11 @@ export default function PanelFacturas({ mes, meses, talonario, facturas, compras
                     </p>
                   </div>
                   <span className="text-sm font-semibold tabular-nums text-ink">{formatUSD(c.totalUSD)}</span>
-                  <Link href={`/admin/contabilidad/facturas/nueva?ordenes=${c.ordenIds.join(',')}`} className={`${adminSecondaryButton} h-9`}>
-                    <IconoDocumento className="h-4 w-4" aria-hidden="true" /> Facturar
-                  </Link>
+                  {puedeFacturar && (
+                    <Link href={`/admin/contabilidad/facturas/nueva?ordenes=${c.ordenIds.join(',')}`} className={`${adminSecondaryButton} h-9`}>
+                      <IconoDocumento className="h-4 w-4" aria-hidden="true" /> Facturar
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -138,9 +142,11 @@ export default function PanelFacturas({ mes, meses, talonario, facturas, compras
               </p>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-brand-100" aria-hidden="true"><div className="h-full rounded-full bg-brand-500" style={{ width: `${porcentaje}%` }} /></div>
               <p className="mt-1.5 flex justify-between text-xs text-ink-soft"><span>{talonario.usadas} usadas</span><strong className="tabular-nums">{talonario.quedan} por usar</strong></p>
-              <button type="button" onClick={() => { setAnulando(true); setError(null); }} className={`${adminSecondaryButton} mt-4 w-full`}>
-                <IconoEliminar className="h-4 w-4" aria-hidden="true" /> Se dañó un papel: anular la {talonario.proximoTexto}
-              </button>
+              {puedeFacturar && (
+                <button type="button" onClick={() => { setAnulando(true); setError(null); }} className={`${adminSecondaryButton} mt-4 w-full`}>
+                  <IconoEliminar className="h-4 w-4" aria-hidden="true" /> Se dañó un papel: anular la {talonario.proximoTexto}
+                </button>
+              )}
               <p className="mt-3 flex gap-2 text-xs text-muted">
                 <IconoCalendario className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 Desde el 19/04/2027 el talonario es solo para contingencias, y las que sobren ese día se anulan (Providencia 00093).

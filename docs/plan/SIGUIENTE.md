@@ -1,9 +1,14 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.76; nada por subir: §2)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.76; en `main`, rc.77 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-261 · Las tres decisiones de C-258 (rc.77, por subir: §2; `estado/C-261.md`):** el equipo eligió lo recomendado en los tres callejones que midió C-258.
+  - **"Solicitar producto" sin cuenta** pide entrar antes del formulario, y crear la cuenta vuelve a la página.
+  - **La garantía** abre en "Nueva" o en Mis solicitudes, con "Pedir garantía" arriba.
+  - **La recarga con un método manual** ya no pregunta "¿Estás seguro?": el botón dice el monto y el método.
+  - **Siguen en paralelo:** C-260 (el kit de onboarding en más lugares y las misiones de Mi panel) y C-254 (la semana del ganador, con maquetas para elegir).
 - **C-257 · El kit de onboarding: Chispa te guía (rc.76, en producción; `estado/C-257.md`):** el equipo pidió el 15/11 un kit para toda la tienda ("los onboarding parecen publicidad"). Eligió la A de las maquetas y aprobó el video del kit andando.
   - **El recorrido de bienvenida, rehecho:**
     - se oscurece en el azul del logo y un anillo blanco se dibuja alrededor de lo que se explica;
@@ -367,8 +372,22 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Lo que falta subir: nada por ahora
-Producción está en `v1.0.0-rc.76` (`38cd1f7`); su bloque está en `HISTORIAL.md`.
+### Lo que falta subir: `v1.0.0-rc.77` (C-261; unos 10 minutos)
+Producción está en `v1.0.0-rc.76` (`38cd1f7`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-261 (rc.77):** las tres decisiones de C-258. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo antes.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.77`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 10 minutos, en el teléfono y en la computadora):
+  1. **`/solicitar-producto` en una ventana privada, sin entrar:**
+      - sale "Entra para pedirlo", con "Crear mi cuenta gratis" y "Ya tengo cuenta: entrar", y no el formulario;
+      - "Ya tengo cuenta: entrar" lleva al login y, al entrar, vuelve a la página con el formulario.
+  2. **Mi panel → Garantía:**
+      - con una cuenta sin garantías pedidas, abre en "Nueva";
+      - con una que tiene una en curso, abre en "Mis solicitudes", con "Pedir garantía" arriba.
+  3. **Mi panel → Puntos ES → Recargar,** con un método que no sea Pago Móvil (por ejemplo Binance Pay):
+      1. escribe el monto: el botón dice "Recargar $… con …";
+      2. sal con "Cancelar" sin recargar. Si haces una recarga de verdad, ya no sale "¿Estás seguro?".
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.76 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de base que deshacer.
 
 ### Por confirmar de rc.76 (C-258 y C-257; unos 25 minutos)
 Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera:

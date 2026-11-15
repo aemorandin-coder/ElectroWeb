@@ -202,7 +202,9 @@ export default function WarrantyPage() {
   // Hora de referencia para la garantía: una vez por carga, no en cada render (C-111)
   const [ahora] = useState(Date.now);
   const [loading, setLoading] = useState(true);
-  const [selectedTab, setSelectedTab] = useState<'info' | 'requests' | 'new'>('info');
+  // C-261 (decisión del equipo sobre C-258): abre donde está lo que el cliente vino a hacer. Sin garantías en curso, en
+  // "Nueva"; con alguna, en sus solicitudes (con "Pedir garantía" arriba). Antes abría en "Info". Se decide al llegar la lista.
+  const [selectedTab, setSelectedTab] = useState<'info' | 'requests' | 'new' | null>(null);
   const [abierta, setAbierta] = useState<string | null>(null);
   const { settings } = useSettings();
   const whatsappAyuda = settings?.whatsapp?.replace(/\D/g, '') || '';
@@ -226,16 +228,21 @@ export default function WarrantyPage() {
     return () => window.removeEventListener('keydown', cerrar);
   }, [showFormModal]);
 
-  async function fetchRequests() {
+  async function fetchRequests(): Promise<Claim[]> {
     const res = await fetch('/api/customer/warranty').catch(() => null);
-    if (res?.ok) setClaims(((await res.json()) as { claims: Claim[] }).claims);
+    if (!res?.ok) return [];
+    const lista = ((await res.json()) as { claims: Claim[] }).claims;
+    setClaims(lista);
+    return lista;
   }
 
   async function fetchDeliveredOrders() {
-    void fetchRequests();
     // Desde el aviso de la campana o del correo: ?solicitud=<id> abre esa solicitud
     const desdeAviso = new URLSearchParams(window.location.search).get('solicitud');
     if (desdeAviso) { setSelectedTab('requests'); setAbierta(desdeAviso); }
+    void fetchRequests().then((lista) => {
+      if (!desdeAviso) setSelectedTab((t) => t ?? (lista.some((c) => !isClosedStatus(c.status)) ? 'requests' : 'new'));
+    });
     try {
       // mine=1: una cuenta del equipo que compra ve solo sus pedidos, no los de todos
       const response = await fetch('/api/orders?status=DELIVERED&mine=1&limit=50');
@@ -418,10 +425,21 @@ export default function WarrantyPage() {
         </div>
       )}
 
+      {/* Mientras llega la lista no se elige pestaña: así no salta de una a otra */}
+      {selectedTab === null && <div className="h-40" aria-busy="true" />}
+
       {selectedTab === 'requests' && (abierta ? (
         <DetalleSolicitud id={abierta} onVolver={() => setAbierta(null)} onCambio={() => void fetchRequests()} />
       ) : (
         <div className="space-y-3">
+          {claims.length > 0 && (
+            <div className="flex justify-end">
+              <button type="button" onClick={() => setSelectedTab('new')} className={adminPrimaryButton}>
+                <IconoActualizar className="h-4 w-4" aria-hidden="true" />
+                Pedir garantía
+              </button>
+            </div>
+          )}
           {claims.length === 0 ? (
             <div className={`${adminCard} text-center py-10`}>
               <IconoDocumento className="w-8 h-8 text-subtle mx-auto mb-2" aria-hidden="true" />

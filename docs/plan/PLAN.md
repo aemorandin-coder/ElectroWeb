@@ -641,9 +641,10 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - **Falta también:** las misiones de Mi panel (`CustomerOnboarding`) con el toque del kit: las placas que se dibujan, y "¿Cómo funciona la tienda?" como la hoja.
   - **C-258 · El estrés de cada camino del cliente** (**hecha**, rc.75, 15/11; `estado/C-258.md`): la medida (`scripts/e2e/estres-caminos.ts`, 13 caminos en el teléfono y la computadora) y los arreglos. Estrés 1945 → 1697 y errores 30 → 0. Queda:
     - **Para decidir:**
-      - Solicitar producto sin cuenta: hoy se llena todo, se resuelve el captcha y el botón queda apagado. ¿Pedir la cuenta antes del formulario o aceptarlo sin cuenta? "Crear cuenta" tampoco vuelve a la página.
-      - Garantía abre en "Info": ¿abrir en "Nueva" o poner "Pedir garantía" arriba?
-      - La recarga de Puntos ES pregunta "¿Estás seguro?" después de "Confirmar Recarga": ¿quitarlo?
+      - **Decididas y hechas en C-261** (rc.77, `estado/C-261.md`):
+        - solicitar producto pide la cuenta antes del formulario;
+        - la garantía abre en "Nueva" o en tus solicitudes;
+        - la recarga ya no pregunta "¿Estás seguro?".
       - Después de cambiar la contraseña hay que entrar otra vez: ¿entrar solo?
       - `/api/customer/discount-requests` (los descuentos de antes de C-102) se pide en cada checkout: quitarlo cuando no quede ninguno vigente en producción (una consulta lo dice).
       - `/favicon.ico` da 404 en producción para quien lo pide directo: un `favicon.ico` con el ícono de la tienda.

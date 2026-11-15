@@ -10,7 +10,7 @@ import {
   IconoPaquete, IconoPedirProducto, IconoReloj, IconoTelefono,
 } from '@/components/iconos';
 import HCaptchaWrapper from '@/components/HCaptchaWrapper';
-import { adminPrimaryButton } from '@/lib/admin-ui';
+import { adminPrimaryButton, adminSecondaryButton, placaAccion } from '@/lib/admin-ui';
 import PageHeader, { PageHeaderChip } from '@/components/ui/PageHeader';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
@@ -34,9 +34,13 @@ interface ValidationErrors {
   category?: string;
 }
 
-export default function SolicitarProductoClient() {
+export default function SolicitarProductoClient({ conCuenta }: { conCuenta: boolean }) {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  // C-261 (decisión del equipo sobre C-258): sin cuenta no se puede pedir (el servidor responde 401), así que la página lo
+  // dice antes del formulario. Antes se llenaba todo, se resolvía el captcha y el botón quedaba apagado. El servidor dice si
+  // hay sesión al cargar: sin eso, el formulario se asomaba un instante mientras el navegador preguntaba.
+  const sinCuenta = status === 'unauthenticated' || (status === 'loading' && !conCuenta);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -277,6 +281,22 @@ export default function SolicitarProductoClient() {
               </div>
             </div>
           </div>
+        ) : sinCuenta ? (
+          <div className="mx-auto max-w-xl rounded-2xl border border-line bg-white p-6 text-center shadow-sm lg:p-8">
+            <span className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl ${placaAccion}`}>
+              <IconoCuenta className="h-7 w-7" aria-hidden="true" />
+            </span>
+            <h2 className="mt-4 text-xl font-bold text-ink">Entra para pedirlo</h2>
+            <p className="mt-1 text-sm text-ink-soft">Con tu cuenta te avisamos cuando lo consigamos. Crearla es gratis.</p>
+            <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
+              <Link href="/registro?callbackUrl=%2Fsolicitar-producto" className={adminPrimaryButton}>
+                Crear mi cuenta gratis
+              </Link>
+              <Link href="/login?callbackUrl=%2Fsolicitar-producto" className={adminSecondaryButton}>
+                Ya tengo cuenta: entrar
+              </Link>
+            </div>
+          </div>
         ) : (
           <div className="max-w-3xl mx-auto">
             {/* Form Section */}
@@ -297,26 +317,6 @@ export default function SolicitarProductoClient() {
                       <IconoError className="w-4 h-4" />
                       <span className="text-xs font-semibold">{error}</span>
                     </div>
-                  </div>
-                )}
-
-                {!session && (
-                  <div className="mb-4 p-3 bg-brand-50 border border-brand-200 rounded-xl text-xs text-brand-700">
-                    <span>Para solicitar un producto necesitas una cuenta. </span>
-                    <Link
-                      href="/login?callbackUrl=%2Fsolicitar-producto"
-                      className="font-bold text-brand-600 underline hover:text-brand-700 transition-colors"
-                    >
-                      Iniciar sesión
-                    </Link>
-                    <span> o </span>
-                    <Link
-                      href="/registro"
-                      className="font-bold text-brand-600 underline hover:text-brand-700 transition-colors"
-                    >
-                      Crear cuenta
-                    </Link>
-                    <span>.</span>
                   </div>
                 )}
 

@@ -228,6 +228,23 @@ El equipo, el 14/11, mirando el asistente de factura: "los grids se ven perdidos
   - `OpcionRadio` para una lista con radio de verdad (la compra que se factura).
 - **`adminChoice` sola es solo la piel** (borde y color). Sin la pieza, el ícono queda encima y el texto pegado al borde. Las pantallas que ya la usan con su propia disposición se quedan así hasta que se toquen.
 
+### 1.11 El kit de onboarding: Chispa te guía (C-257)
+El equipo, el 15/11: los onboarding eran "genéricos, sin animaciones, sin íconos nuestros, sin sabor; parecen publicidad". Eligió la A viendo las maquetas: "muy minucioso con las animaciones… amigable e iconizado, que invite a aprender".
+- **Dos piezas, en `components/onboarding`; una guía nueva usa una de las dos:**
+  - **el recorrido** (`GuidedTour`), una vez por cuenta, con el foco sobre cada cosa;
+  - **la hoja "Así funciona"** (`AsiFunciona`), una vez por página con un camino nuevo: tres íconos y un solo botón.
+- **Poco texto:** dos o tres palabras grandes y una frase corta. El ícono del pack va en su placa azul, se dibuja y hace su gesto (`IconoDibujado` con `accion`).
+- **Chispa se asoma por detrás de la pieza** (`ChispaGuia`):
+  - el corte nunca se ve;
+  - el 86 % por encima del borde, para que se le vean las manos;
+  - nunca tapa lo que se explica.
+- **El oscurecido** es el azul oscuro del logo. **El anillo** es blanco, por fuera del hueco, y se dibuja una vez.
+- **Todo pasa una sola vez.** Con "reducir movimiento", todo quieto y completo. El confeti, en los azules de la marca.
+- **Una guía:**
+  - espera a que no haya otro diálogo abierto;
+  - se recuerda en el navegador (`compartido.ts`);
+  - la marca `electroweb_guias = 'todo'` las apaga todas (la usan las pruebas).
+
 ---
 
 ## 2. Rediseño del header
@@ -609,14 +626,19 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - el camino de registro: el correo vuelve a `/sorteo` y la sesión se entera de la activación.
     - **Falta:** las pruebas en producción (`SIGUIENTE.md` §2).
     - **Decidido y hecho en C-256** (rc.74, `estado/C-256.md`): el recorrido de bienvenida ya no sale en `/sorteo`, y se usa una sola palabra, "activar la cuenta".
-  - **C-257 · El kit de onboarding de toda la tienda** (pendiente; pedido del equipo, 15/11):
-    - **El pedido:** "los onboarding de toda la web son demasiado genéricos, simples, sin animaciones, sin íconos nuestros, sin sabor, sin efectos de spotlight; parecen publicidad".
-    - **Qué se hace:**
-      - un kit de onboarding claro para todo el proyecto;
-      - revisar cada página que lo necesita, sobre todo los recorridos nuevos;
-      - medir el estrés de cada camino, para que el cliente entienda la web y le encante navegar sin leer tanto, con íconos y animación;
-      - en cada camino, buscar fallas, código mal hecho, rutas muertas y cascadas de código innecesarias.
-    - **La medida y los arreglos van en C-258** (abajo); el kit, aquí. La lista de dónde ayudaría, con su ícono y su frase, está en `estado/C-258.md`.
+  - **C-257 · El kit de onboarding de toda la tienda** (hecho; el equipo eligió la A, "Chispa te guía", y aprobó el video; `estado/C-257.md`, reglas en §1.11):
+    - **Hecho:**
+      - el recorrido de bienvenida rehecho;
+      - la hoja "Así funciona" en `/sorteo`, `/checkout` y Puntos ES;
+      - la bienvenida de una cuenta sin activar dice primero que la active desde el correo.
+    - **La medición la hizo C-258** (`estado/C-258.md`).
+    - **Falta, de los lugares donde ayudaría el kit según C-258:**
+      - "Ver carrito" en el aviso de "Agregar";
+      - "Tu carrito vive aquí", la primera vez, en la computadora;
+      - "Baja hasta el final para aceptar" en los términos de los Puntos ES, y "Firma con el dedo";
+      - "Voltéala y raspa" en Mis códigos;
+      - "¿Algo falló? Pide tu garantía aquí".
+    - **Falta también:** las misiones de Mi panel (`CustomerOnboarding`) con el toque del kit: las placas que se dibujan, y "¿Cómo funciona la tienda?" como la hoja.
   - **C-258 · El estrés de cada camino del cliente** (**hecha**, rc.75, 15/11; `estado/C-258.md`): la medida (`scripts/e2e/estres-caminos.ts`, 13 caminos en el teléfono y la computadora) y los arreglos. Estrés 1945 → 1697 y errores 30 → 0. Queda:
     - **Para decidir:**
       - Solicitar producto sin cuenta: hoy se llena todo, se resuelve el captcha y el botón queda apagado. ¿Pedir la cuenta antes del formulario o aceptarlo sin cuenta? "Crear cuenta" tampoco vuelve a la página.

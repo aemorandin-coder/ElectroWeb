@@ -579,6 +579,343 @@ body {
   }
 }
 
+/* C-257: el kit de onboarding (components/onboarding: el recorrido de bienvenida y la hoja "Así funciona"). El equipo,
+   15/11: "muy minucioso con las animaciones, amigable e iconizado, que invite a aprender" y "anima el ícono de acción".
+   Todo pasa una sola vez, al aparecer (cada paso del recorrido se vuelve a montar con otra key):
+   - .onb-dibuja: el ícono se dibuja trazo a trazo, en cascada (--onb-i), se rellena y hace su gesto (data-accion): la
+     lupa busca, el carrito llega rodando y frena, la cuadrícula gira y se acomoda, la cuenta saluda, el destello brilla.
+   - .onb-placa: la placa azul aparece con un pop; .onb-sube: el título y la frase suben; .onb-empuja: la flecha de
+     "Siguiente" empuja dos veces hacia adelante.
+   - La hoja "Así funciona": el velo, la lámina que sube (en la PC, una tarjeta que aparece), Chispa que se asoma por
+     detrás, los pasos en cascada (--i) y la línea que los une, que se dibuja mientras aparecen.
+   --onb-retraso: cuándo empieza cada pieza. Con "reducir movimiento" nada de esto corre: todo se ve quieto y completo. */
+.onb-tarjeta {
+  box-shadow: 0 26px 60px color-mix(in srgb, var(--color-brand-900) 40%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .onb-dibuja svg > * {
+    animation:
+      onb-trazo 0.7s cubic-bezier(0.3, 0.7, 0.2, 1) calc(var(--onb-retraso, 0s) + var(--onb-i, 0) * 0.12s) backwards,
+      onb-relleno 0.45s ease-out calc(var(--onb-retraso, 0s) + 0.35s + var(--onb-i, 0) * 0.12s) backwards;
+  }
+
+  .onb-dibuja svg > :nth-child(2) {
+    --onb-i: 1;
+  }
+
+  .onb-dibuja svg > :nth-child(3) {
+    --onb-i: 2;
+  }
+
+  .onb-dibuja svg > :nth-child(n + 4) {
+    --onb-i: 3;
+  }
+
+  /* El gesto, cuando el trazo ya terminó (el carrito llega rodando mientras se dibuja) */
+  .onb-dibuja[data-accion='buscar'] svg {
+    animation: onb-lupa 0.9s ease-in-out calc(var(--onb-retraso, 0s) + 0.7s) backwards;
+  }
+
+  .onb-dibuja[data-accion='carrito'] svg {
+    transform-origin: 50% 90%;
+    animation: onb-rueda 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) var(--onb-retraso, 0s) backwards;
+  }
+
+  .onb-dibuja[data-accion='catalogo'] svg {
+    animation: onb-acomoda 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) calc(var(--onb-retraso, 0s) + 0.55s) backwards;
+  }
+
+  .onb-dibuja[data-accion='cuenta'] svg {
+    transform-origin: 50% 100%;
+    animation: onb-saluda 0.9s ease-in-out calc(var(--onb-retraso, 0s) + 0.6s) backwards;
+  }
+
+  .onb-dibuja[data-accion='destello'] svg {
+    animation: onb-destella 0.8s cubic-bezier(0.2, 0.8, 0.3, 1) calc(var(--onb-retraso, 0s) + 0.5s) backwards;
+  }
+
+  .onb-dibuja[data-accion='salta'] svg {
+    animation: onb-salta 0.7s cubic-bezier(0.3, 0.7, 0.4, 1) calc(var(--onb-retraso, 0s) + 0.6s) backwards;
+  }
+
+  .onb-placa {
+    animation: onb-placa 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) var(--onb-retraso, 0s) backwards;
+  }
+
+  .onb-sube {
+    animation: onb-sube 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) var(--onb-retraso, 0s) backwards;
+  }
+
+  .onb-empuja {
+    animation: onb-empuja 1.2s ease-in-out 1.5s backwards;
+  }
+
+  /* La hoja "Así funciona" */
+  .onb-velo {
+    animation: onb-aparece 0.3s ease-out backwards;
+  }
+
+  .onb-lamina {
+    animation: onb-lamina 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.05s backwards;
+  }
+
+  .onb-asoma {
+    animation: onb-asoma 0.6s cubic-bezier(0.25, 1.35, 0.5, 1) 0.4s backwards;
+  }
+
+  .onb-item {
+    animation: onb-placa 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) calc(0.45s + var(--i, 0) * 0.4s) backwards;
+  }
+
+  .onb-conector {
+    animation: onb-conector 0.9s ease-in-out 0.65s backwards;
+  }
+
+  [data-saliendo] .onb-velo {
+    animation: onb-desaparece 0.25s ease-in forwards;
+  }
+
+  [data-saliendo] .onb-lamina {
+    animation: onb-lamina-sale 0.28s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+  }
+
+  /* Al irse, Chispa se agacha primero: no baja asomado con la hoja */
+  [data-saliendo] .onb-asoma {
+    animation: onb-agacha 0.16s ease-in forwards;
+  }
+}
+
+/* En la PC la hoja es una tarjeta: aparece y se va sin subir desde el borde */
+@media (width >= 64rem) and (prefers-reduced-motion: no-preference) {
+  .onb-lamina {
+    animation-name: onb-lamina-lg;
+  }
+
+  [data-saliendo] .onb-lamina {
+    animation-name: onb-lamina-lg-sale;
+  }
+}
+
+/* El largo (160) cubre cualquier trazo del pack, que se dibuja en una cuadrícula de 24 */
+@keyframes onb-trazo {
+  from {
+    stroke-dasharray: 160;
+    stroke-dashoffset: 160;
+  }
+
+  to {
+    stroke-dasharray: 160;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Sin "to": termina en el relleno propio de cada parte del ícono (la superficie al 25 %, el detalle entero) */
+@keyframes onb-relleno {
+  from {
+    fill-opacity: 0;
+  }
+}
+
+@keyframes onb-lupa {
+  0%,
+  100% {
+    transform: none;
+  }
+
+  20% {
+    transform: translate(-1.5px, -1px) rotate(-10deg);
+  }
+
+  45% {
+    transform: translate(1.5px, -1.5px) rotate(6deg);
+  }
+
+  70% {
+    transform: translate(1px, 1px) rotate(-4deg);
+  }
+}
+
+@keyframes onb-rueda {
+  0% {
+    opacity: 0;
+    transform: translateX(-75%);
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  62% {
+    transform: translateX(6%) rotate(7deg);
+  }
+
+  82% {
+    transform: translateX(-2%) rotate(-2deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes onb-acomoda {
+  0% {
+    transform: rotate(-90deg) scale(0.7);
+  }
+
+  70% {
+    transform: rotate(6deg) scale(1.06);
+  }
+
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes onb-saluda {
+  0%,
+  100% {
+    transform: none;
+  }
+
+  25% {
+    transform: rotate(-9deg);
+  }
+
+  50% {
+    transform: rotate(7deg);
+  }
+
+  75% {
+    transform: rotate(-3deg);
+  }
+}
+
+@keyframes onb-destella {
+  0% {
+    transform: none;
+  }
+
+  45% {
+    transform: scale(1.18) rotate(-12deg);
+  }
+
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes onb-salta {
+  0%,
+  100% {
+    transform: none;
+  }
+
+  40% {
+    transform: translateY(-18%) scale(1.06);
+  }
+
+  70% {
+    transform: translateY(3%) scale(0.98, 1.02);
+  }
+}
+
+@keyframes onb-placa {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-14deg);
+  }
+
+  65% {
+    opacity: 1;
+    transform: scale(1.07) rotate(3deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes onb-sube {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes onb-empuja {
+  0%,
+  36%,
+  72%,
+  100% {
+    transform: none;
+  }
+
+  18%,
+  54% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes onb-aparece {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes onb-desaparece {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes onb-lamina {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes onb-lamina-sale {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes onb-lamina-lg {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+  }
+}
+
+@keyframes onb-lamina-lg-sale {
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+}
+
+@keyframes onb-asoma {
+  from {
+    transform: translateY(105%);
+  }
+}
+
+@keyframes onb-agacha {
+  to {
+    transform: translateY(105%);
+  }
+}
+
+@keyframes onb-conector {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
 /* Shimmer Effect */
 @keyframes shimmer {
   0% {

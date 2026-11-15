@@ -255,9 +255,9 @@ export async function abrirNavegador(carpeta: string, puerto = Number(process.en
     },
   };
 
-  // El recorrido guiado del panel tapa la pantalla: se marca como visto antes de entrar
+  // El recorrido de bienvenida y las hojas "Así funciona" (C-257) tapan la pantalla: se marcan como vistos antes de entrar
   await navegador.ir('/robots.txt');
-  await js(`() => { localStorage.setItem('electroweb_onboarding_done', '1'); }`);
+  await js(`() => { localStorage.setItem('electroweb_onboarding_done', '1'); localStorage.setItem('electroweb_guias', 'todo'); }`);
   return navegador;
 }
 

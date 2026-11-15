@@ -24,6 +24,7 @@ import { NOMBRE_EMPRESA, urlRastreo, type EmpresaGuia } from '@/lib/envios/empre
 import { problemaTransicion, transicionPermitida } from '@/lib/order-admin';
 import { avisarClienteEnvio } from '@/lib/order-enviada';
 import { slugEstado } from '@/lib/origen';
+import { correosDe } from '@/lib/proveedores/contacto';
 import { urlTienda } from '@/lib/email-templates/estilo';
 import { fotoCorreo } from '@/lib/email-templates/marco';
 import {
@@ -54,7 +55,7 @@ export const urlDeDespacho = (token: string) => `${urlTienda()}/proveedor/despac
 const seleccion = {
   id: true, orderNumber: true, userId: true, status: true, paymentStatus: true, paidAt: true, createdAt: true,
   deliveryMethod: true, shippingCarrier: true, shippingMode: true, shippingPaidBy: true, shippingAddress: true,
-  shippingCity: true, shippingState: true, courierOfficeCode: true, courierOfficeName: true, courierOfficeAddress: true,
+  shippingCity: true, shippingState: true, courierCityCode: true, courierOfficeCode: true, courierOfficeName: true, courierOfficeAddress: true,
   recipientName: true, recipientIdNumber: true, recipientPhone: true, packagingPlan: true, dispatchCityCode: true,
   trackingNumber: true, proveedorAvisoAt: true, proveedorPreparandoAt: true, proveedorRecordatorioAt: true,
   user: { select: { name: true, email: true } },
@@ -110,6 +111,9 @@ async function ajustesDespacho(): Promise<AjustesDespacho> {
 /** El último día para entregarlo en la agencia: un día hábil después del pago (decisión 5 del 14/11, con C-234) */
 const plazoDe = (o: Pick<OrdenDespacho, 'paidAt' | 'createdAt'>, cal: Calendario) => fechaDeSalida(o.paidAt ?? o.createdAt, cal, 1);
 
+/** "ZOOM · A domicilio: Calle 5 con 6, casa 12, Barquisimeto, Lara. Referencia: …" → sin la empresa adelante (ya se ve) */
+const direccionDeCasa = (texto: string | null) => (texto ? texto.replace(/^[^·]*·\s*A domicilio:\s*/i, '').trim() : null);
+
 /** Lo que va en sus correos y en su página: lo que pide la guía y su costo (DTO, sin objetos de Prisma) */
 function aDespacho(o: OrdenDespacho, prov: ProveedorDespacho, aj: AjustesDespacho, url: string | null): DespachoCorreo {
   const puerta = o.shippingMode === 'DOOR';
@@ -127,8 +131,9 @@ function aDespacho(o: OrdenDespacho, prov: ProveedorDespacho, aj: AjustesDespach
     oficina: puerta ? null : { nombre: o.courierOfficeName ?? '', codigo: o.courierOfficeCode, direccion: o.courierOfficeAddress },
     ciudad: o.shippingCity,
     estado: o.shippingState,
-    // Puerta a puerta, la guía pide la dirección (la decisión 2: "con lo que pide la guía")
-    direccion: puerta ? o.shippingAddress : null,
+    codigoCiudad: o.courierCityCode,
+    // Puerta a puerta, la guía pide la dirección (C-246, el equipo: "eso va a la guía de ZOOM")
+    direccion: puerta ? direccionDeCasa(o.shippingAddress) : null,
     destinatario: { nombre: o.recipientName ?? '', cedula: o.recipientIdNumber ?? '', telefono: o.recipientPhone ?? '' },
     cobroADestino: o.shippingPaidBy !== 'STORE',
     productos: o.items
@@ -194,13 +199,13 @@ export async function avisarVentaAlProveedor(orderId: string): Promise<Resultado
     const aj = await ajustesDespacho();
     const datos = aDespacho(o, prov, aj, urlDeDespacho(token));
     const { asunto, html } = await correoVentaProveedor(datos);
-    const envio = await sendEmail({ to: prov.contactEmail, subject: asunto, html });
+    const envio = await sendEmail({ to: correosDe(prov.contactEmail), subject: asunto, html });
     if (!envio.success) {
       // Lo vuelve a intentar el cron de los despachos (el enlace de este intento no llegó a nadie)
       await prisma.order.updateMany({ where: { id: o.id, proveedorAvisoAt: avisoAt }, data: { proveedorAvisoAt: null, proveedorTokenHash: null } });
       return 'fallo';
     }
-    const para = prov.contactEmail;
+    const para = correosDe(prov.contactEmail).join(', ');
     await copiaAlEquipo(() => correoVentaProveedor(datos, { para }));
     void publicarOrdenes([o.id]);
     return 'enviado';
@@ -361,8 +366,8 @@ export async function avisarCancelacionAlProveedor(orderId: string): Promise<voi
     if (!prov?.contactEmail) return;
     const datos = aDespacho(o, prov, await ajustesDespacho(), null);
     const { asunto, html } = await correoCancelacionProveedor(datos);
-    await sendEmail({ to: prov.contactEmail, subject: asunto, html });
-    const para = prov.contactEmail;
+    await sendEmail({ to: correosDe(prov.contactEmail), subject: asunto, html });
+    const para = correosDe(prov.contactEmail).join(', ');
     await copiaAlEquipo(() => correoCancelacionProveedor(datos, { para }));
   } catch (error) {
     console.error('Error avisando la cancelación al proveedor:', error);
@@ -411,7 +416,7 @@ export async function revisarDespachos(ahora = new Date()): Promise<{ avisos: nu
     if (reclamada.count !== 1) continue;
     const datos = aDespacho(o, prov, aj, urlDeDespacho(tokenDeDespacho(o.id, o.proveedorAvisoAt)));
     const { asunto, html } = await correoRecordatorioProveedor(datos, hoy);
-    await sendEmail({ to: prov.contactEmail, subject: asunto, html }).catch((error) => console.error('Error enviando el recordatorio al proveedor:', error));
+    await sendEmail({ to: correosDe(prov.contactEmail), subject: asunto, html }).catch((error) => console.error('Error enviando el recordatorio al proveedor:', error));
     emitAdminEvent({
       type: 'SUPPLIER_DISPATCH_LATE',
       title: `Sin guía · ${o.orderNumber}`,
@@ -430,7 +435,7 @@ export async function revisarDespachos(ahora = new Date()): Promise<{ avisos: nu
 export async function datosBienvenida(supplierId: string): Promise<{ para: string | null; enviadaEl: Date | null; datos: DatosBienvenida } | null> {
   const s = await prisma.supplier.findUnique({
     where: { id: supplierId },
-    select: { name: true, contactName: true, contactEmail: true, dispatchStateName: true, bienvenidaAt: true },
+    select: { name: true, contactName: true, contactEmail: true, dispatchStateName: true, bienvenidaAt: true, legalName: true, taxId: true },
   });
   if (!s) return null;
   const publicados = await prisma.product.count({ where: { supplierId, status: 'PUBLISHED', deletedAt: null } });
@@ -445,6 +450,8 @@ export async function datosBienvenida(supplierId: string): Promise<{ para: strin
       desde: enVenezuela(s.bienvenidaAt ?? new Date()).fecha,
       enlaceCatalogo: s.dispatchStateName ? `${urlTienda()}/productos?desde=${slugEstado(s.dispatchStateName)}` : `${urlTienda()}/productos`,
       estado: s.dispatchStateName,
+      razonSocial: s.legalName,
+      rif: s.taxId,
     },
   };
 }

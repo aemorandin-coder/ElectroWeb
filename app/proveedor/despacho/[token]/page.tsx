@@ -21,22 +21,30 @@ export const metadata: Metadata = { title: 'Despacho del pedido', robots: { inde
 const kilos = (kg: number) => `${String(Math.round(kg * 100) / 100).replace('.', ',')} kg`;
 const lugar = (d: DespachoCorreo) => [d.ciudad, d.estado].filter(Boolean).join(', ');
 
-/** Lo que se pega en el formulario de la guía de ZOOM o MRW */
-function textoGuia(d: DespachoCorreo): string {
-  const destino = d.modo === 'DOOR'
-    ? `Dirección: ${[d.direccion, lugar(d)].filter(Boolean).join(', ')}`
-    : `${d.empresa === 'MRW' ? 'Agencia' : 'Oficina'} de destino: ${d.oficina?.nombre ?? ''}${d.oficina?.codigo ? ` (código ${d.oficina.codigo})` : ''}${lugar(d) ? `, ${lugar(d)}` : ''}`;
+/**
+ * Lo que pide la guía de ZOOM o MRW, en el orden de su formulario (C-246, el equipo: "tienes que insertar claramente dónde
+ * el cliente necesita el envío, eso va a la guía de ZOOM"). Lo mismo se ve en la página y se copia con un toque.
+ */
+function filasGuia(d: DespachoCorreo): [string, string][] {
   return [
-    `Orden: ${d.numero}`,
-    `Destinatario: ${d.destinatario.nombre}`,
-    `Cédula: ${d.destinatario.cedula}`,
-    `Teléfono: ${d.destinatario.telefono}`,
-    destino,
-    `Flete: ${d.cobroADestino ? 'cobro a destino' : 'confirmar con Electro Shop'}`,
-    `Contenido: ${d.productos.map((p) => `${p.cantidad} x ${p.nombre}`).join(', ')}`,
-    ...(d.empaque ? [`Piezas: ${d.empaque.piezas}`, `Peso aprox.: ${kilos(d.empaque.pesoKg)}`] : []),
-  ].join('\n');
+    ['Destinatario', d.destinatario.nombre],
+    ['Cédula', d.destinatario.cedula],
+    ['Teléfono', d.destinatario.telefono],
+    ['Ciudad de destino', `${lugar(d)}${d.codigoCiudad ? ` (código ${d.codigoCiudad})` : ''}`],
+    ...(d.modo === 'DOOR'
+      ? [['Dirección de entrega', d.direccion ?? ''] as [string, string]]
+      : [
+        [`${d.empresa === 'MRW' ? 'Agencia' : 'Oficina'} de destino`, `${d.oficina?.nombre ?? ''}${d.oficina?.codigo ? ` (código ${d.oficina.codigo})` : ''}`] as [string, string],
+        ...(d.oficina?.direccion ? [['Dirección de la oficina', d.oficina.direccion] as [string, string]] : []),
+      ]),
+    ['Contenido', d.productos.map((p) => `${p.cantidad} x ${p.nombre}`).join(', ')],
+    ...(d.empaque ? [['Piezas', String(d.empaque.piezas)], ['Peso aprox.', kilos(d.empaque.pesoKg)]] as [string, string][] : []),
+  ];
 }
+
+/** Lo que se pega en el formulario de la guía */
+const textoGuia = (d: DespachoCorreo) =>
+  [`Orden: ${d.numero}`, ...filasGuia(d).map(([r, v]) => `${r}: ${v}`), `Flete: ${d.cobroADestino ? 'cobro a destino' : 'confirmar con Electro Shop'}`].join('\n');
 
 export default async function DespachoProveedorPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -95,15 +103,30 @@ export default async function DespachoProveedorPage({ params }: { params: Promis
           <section className="rounded-2xl border-2 border-brand-200 bg-white p-5 text-center" aria-label="Empresa de envío">
             <p className="text-xs font-bold uppercase tracking-widest text-brand-700">Va por</p>
             <p className="mt-1 text-4xl font-bold tracking-tight text-ink">{empresa}</p>
-            <p className="mt-3 flex items-center justify-center gap-1.5 font-semibold text-ink">
-              <IconoUbicacion className="h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
-              {d.modo === 'DOOR'
-                ? 'Puerta a puerta'
-                : `${d.empresa === 'MRW' ? 'Agencia' : 'Oficina'} ${d.oficina?.nombre ?? ''}${d.oficina?.codigo ? ` · código ${d.oficina.codigo}` : ''}`}
-            </p>
-            {d.modo === 'DOOR' && d.direccion && <p className="text-sm text-ink-soft">{d.direccion}</p>}
-            {d.modo === 'OFFICE' && d.oficina?.direccion && <p className="text-sm text-ink-soft">{d.oficina.direccion}</p>}
-            {lugar(d) && <p className="text-sm text-ink-soft">{lugar(d)}</p>}
+            <div className="mt-4 rounded-xl bg-brand-50 px-4 py-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-brand-700">Envíelo a</p>
+              <p className="mt-1 flex items-center justify-center gap-1.5 text-2xl font-bold text-brand-700">
+                <IconoUbicacion className="h-6 w-6 shrink-0" aria-hidden="true" />
+                {lugar(d) || 'Destino sin ciudad'}
+              </p>
+              {d.codigoCiudad && <p className="text-xs text-muted">Ciudad de destino en {empresa}: código {d.codigoCiudad}</p>}
+              {d.modo === 'DOOR' ? (
+                <>
+                  <p className="mt-2 text-sm text-ink-soft">Puerta a puerta, a la casa del cliente:</p>
+                  {d.direccion && <p className="font-semibold text-ink">{d.direccion}</p>}
+                </>
+              ) : (
+                <>
+                  <p className="mt-2 font-semibold text-ink">
+                    {d.empresa === 'MRW' ? 'Agencia' : 'Oficina'} {empresa} {d.oficina?.nombre ?? ''}{d.oficina?.codigo ? ` · código ${d.oficina.codigo}` : ''}
+                  </p>
+                  {d.oficina?.direccion && <p className="text-sm text-ink-soft">{d.oficina.direccion}</p>}
+                </>
+              )}
+              <p className="mt-2 text-sm text-ink-soft">
+                A nombre de <strong className="text-ink">{d.destinatario.nombre}</strong> · {d.destinatario.cedula} · {d.destinatario.telefono}
+              </p>
+            </div>
             <p className="mt-3 text-sm font-semibold text-brand-800">
               {d.cobroADestino ? 'Cobro a destino: el flete lo paga el cliente al retirar.' : 'El flete no va a cobro a destino: confírmelo con el equipo antes de enviarlo.'}
             </p>
@@ -123,15 +146,7 @@ export default async function DespachoProveedorPage({ params }: { params: Promis
             {abierta && <CopiarDatos texto={textoGuia(d)} />}
           </div>
           <dl className="mt-3 divide-y divide-line text-sm">
-            {[
-              ['Destinatario', d.destinatario.nombre],
-              ['Cédula', d.destinatario.cedula],
-              ['Teléfono', d.destinatario.telefono],
-              d.modo === 'DOOR'
-                ? ['Dirección', [d.direccion, lugar(d)].filter(Boolean).join(', ')]
-                : [`${d.empresa === 'MRW' ? 'Agencia' : 'Oficina'} de destino`, `${d.oficina?.nombre ?? ''}${d.oficina?.codigo ? ` (código ${d.oficina.codigo})` : ''}${lugar(d) ? `, ${lugar(d)}` : ''}`],
-              ...(d.empaque ? [['Piezas', String(d.empaque.piezas)], ['Peso aprox.', kilos(d.empaque.pesoKg)]] : []),
-            ].map(([rotulo, valor]) => (
+            {filasGuia(d).map(([rotulo, valor]) => (
               <div key={rotulo} className="flex gap-3 py-2">
                 <dt className="w-36 shrink-0 text-muted">{rotulo}</dt>
                 <dd className="min-w-0 font-semibold text-ink">{valor}</dd>

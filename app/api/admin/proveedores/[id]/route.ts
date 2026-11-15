@@ -9,6 +9,8 @@ import { DESCUENTO_MAX } from '@/lib/proveedores/lista';
 import { leerNombreProveedor, leerPorcentaje } from '@/lib/proveedores/servidor';
 import { esLaDeSiempre, leerTerminos } from '@/lib/proveedores/no-se-envia';
 import { ciudadesZoom } from '@/lib/envios/zoom';
+import { DOMICILIO_MAX, RAZON_SOCIAL_MAX, limpiarTexto, normalizarRif } from '@/lib/proveedores/fiscal';
+import { CORREOS_MAX, leerCorreos } from '@/lib/proveedores/contacto';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -21,7 +23,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
   const actual = await prisma.supplier.findUnique({ where: { id } });
   if (!actual) return NextResponse.json({ error: 'Proveedor no encontrado' }, { status: 404 });
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const data: { name?: string; discountPercent?: number; pricesIncludeTax?: boolean; notes?: string | null; noShipTerms?: string[]; dispatchCityCode?: string | null; dispatchCityName?: string | null; dispatchStateName?: string | null; contactName?: string | null; contactEmail?: string | null; contactWhatsapp?: string | null } = {};
+  const data: { name?: string; discountPercent?: number; pricesIncludeTax?: boolean; notes?: string | null; noShipTerms?: string[]; dispatchCityCode?: string | null; dispatchCityName?: string | null; dispatchStateName?: string | null; contactName?: string | null; contactEmail?: string | null; contactWhatsapp?: string | null; legalName?: string | null; taxId?: string | null; fiscalAddress?: string | null } = {};
   if (body?.name !== undefined) {
     const name = leerNombreProveedor(body.name);
     if (!name) return NextResponse.json({ error: 'El nombre del proveedor lleva de 2 a 80 caracteres' }, { status: 400 });
@@ -69,11 +71,10 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
     data.contactName = nombre || null;
   }
   if (body?.contactEmail !== undefined) {
-    const correo = typeof body.contactEmail === 'string' ? body.contactEmail.trim().toLowerCase() : '';
-    if (correo && (correo.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo))) {
-      return NextResponse.json({ error: 'Ese correo no parece válido' }, { status: 400 });
-    }
-    data.contactEmail = correo || null;
+    // C-246: hasta 3 correos de despacho, separados por coma: cada venta les llega a todos
+    const correos = leerCorreos(body.contactEmail ?? '');
+    if (correos === null) return NextResponse.json({ error: `Revisa los correos de despacho: hasta ${CORREOS_MAX}, separados por coma` }, { status: 400 });
+    data.contactEmail = correos.length > 0 ? correos.join(', ') : null;
   }
   if (body?.contactWhatsapp !== undefined) {
     const numero = typeof body.contactWhatsapp === 'string' ? body.contactWhatsapp.trim() : '';
@@ -83,6 +84,23 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
     }
     data.contactWhatsapp = numero || null;
   }
+  // C-246: sus datos fiscales, como en su RIF. Vacío = sin cargar
+  if (body?.legalName !== undefined) {
+    const razon = limpiarTexto(body.legalName ?? '', RAZON_SOCIAL_MAX);
+    if (razon === null) return NextResponse.json({ error: `La razón social lleva hasta ${RAZON_SOCIAL_MAX} caracteres` }, { status: 400 });
+    data.legalName = razon || null;
+  }
+  if (body?.taxId !== undefined) {
+    const escrito = typeof body.taxId === 'string' ? body.taxId.trim() : '';
+    const rif = escrito ? normalizarRif(escrito) : null;
+    if (escrito && !rif) return NextResponse.json({ error: 'El RIF lleva una letra y 9 números, como J-12345678-9' }, { status: 400 });
+    data.taxId = rif;
+  }
+  if (body?.fiscalAddress !== undefined) {
+    const domicilio = limpiarTexto(body.fiscalAddress ?? '', DOMICILIO_MAX);
+    if (domicilio === null) return NextResponse.json({ error: `El domicilio fiscal lleva hasta ${DOMICILIO_MAX} caracteres` }, { status: 400 });
+    data.fiscalAddress = domicilio || null;
+  }
   const guardado = await prisma.supplier.update({ where: { id }, data });
   await registrarAccionAdmin(session, 'PANEL_RECORD_UPDATED', { type: 'SUPPLIER', id }, {
     accion: 'Proveedor cambiado', proveedor: guardado.name,
@@ -90,10 +108,12 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
     ...(data.noShipTerms !== undefined ? { noSeEnvia: data.noShipTerms.length === 0 ? 'la lista de siempre' : data.noShipTerms } : {}),
     ...(data.dispatchCityCode !== undefined ? { despachaDesde: { antes: actual.dispatchCityName ?? 'la tienda', despues: data.dispatchCityName ?? 'la tienda' } } : {}),
     ...(data.contactEmail !== undefined && data.contactEmail !== actual.contactEmail ? { correoDeDespacho: { antes: actual.contactEmail, despues: data.contactEmail } } : {}),
+    ...(data.taxId !== undefined && data.taxId !== actual.taxId ? { rif: { antes: actual.taxId, despues: data.taxId } } : {}),
+    ...(data.legalName !== undefined && data.legalName !== actual.legalName ? { razonSocial: { antes: actual.legalName, despues: data.legalName } } : {}),
   }, request);
   // C-199: cambia de dónde salen sus productos publicados (la ficha, la tarjeta y el envío)
   if (data.dispatchCityCode !== undefined && data.dispatchCityCode !== actual.dispatchCityCode) revalidateStorefront();
-  return NextResponse.json({ id: guardado.id, name: guardado.name, discountPercent: Number(guardado.discountPercent), pricesIncludeTax: guardado.pricesIncludeTax, notes: guardado.notes, noShipTerms: guardado.noShipTerms, dispatchCityCode: guardado.dispatchCityCode, dispatchCityName: guardado.dispatchCityName, contactName: guardado.contactName, contactEmail: guardado.contactEmail, contactWhatsapp: guardado.contactWhatsapp, bienvenidaAt: guardado.bienvenidaAt });
+  return NextResponse.json({ id: guardado.id, name: guardado.name, discountPercent: Number(guardado.discountPercent), pricesIncludeTax: guardado.pricesIncludeTax, notes: guardado.notes, noShipTerms: guardado.noShipTerms, dispatchCityCode: guardado.dispatchCityCode, dispatchCityName: guardado.dispatchCityName, contactName: guardado.contactName, contactEmail: guardado.contactEmail, contactWhatsapp: guardado.contactWhatsapp, bienvenidaAt: guardado.bienvenidaAt, legalName: guardado.legalName, taxId: guardado.taxId, fiscalAddress: guardado.fiscalAddress });
 }
 
 // Se borra solo si no tiene productos (ni en la papelera): el costo y el código de cada producto dependen de él

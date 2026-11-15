@@ -1,9 +1,13 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.59, por subir)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.60, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-246 · El destino claro para la guía y los datos de Ferrecla (rc.60, por subir):** pedido del equipo el 15/11 (`estado/C-246.md`).
+  - **El correo y la página del proveedor dicen claramente a dónde va el paquete:** "Envíelo a" con la ciudad en grande (y su código de ZOOM), la oficina con su código o la casa del cliente si es puerta a puerta, y a nombre de quién. Los datos de la guía van en el orden de ZOOM.
+  - **El proveedor tiene datos fiscales** (razón social, RIF y domicilio, como en su RIF) y **hasta 3 correos de despacho**: a todos les llega cada venta. La credencial de la bienvenida lleva la razón social y el RIF.
+  - **Ferrecla:** sus datos se cargan en el panel después del deploy (§2, prueba 8).
 - **C-247 · La foto del premio del sorteo (rc.59, por subir):** la PS4 Slim con el control azul del premio, sobre el azul de la franja (`estado/C-247.md`). La foto se sube desde el panel; la página la muestra más grande y sin fondo blanco.
 - **C-244 · La vista previa de los correos (rc.58, por subir):** en Marketing → Correos de la tienda, la vista previa queda fija con el alto de la pantalla mientras se recorre la lista, y el correo se lee con un solo scroll (`estado/C-244.md`). Antes salía baja, con su propio scroll, y debajo quedaba un espacio en blanco.
 - **C-243 · El kit de marca (rc.57, por subir):** el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo (`estado/C-243.md`).
@@ -280,14 +284,23 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.59` (C-243, C-244 y C-247; unos 25 minutos)
+### El bloque por subir: `v1.0.0-rc.60` (C-243, C-244, C-247 y C-246; unos 35 minutos)
 **Producción está en `v1.0.0-rc.56`** (`471a54d`); su bloque está en `HISTORIAL.md`.
 - **C-243 (rc.57):** el kit de marca. **Sin cambio de base, sin SQL, sin variables nuevas y sin cron.**
   - **Las imágenes para compartir cambian de dirección** (`?v=`): WhatsApp y Facebook las vuelven a pedir solas.
   - **Los íconos de los correos** pasan a `?v=2`.
 - **C-244 (rc.58):** la vista previa de los correos, fija mientras se recorre la lista. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **C-247 (rc.59):** la foto del premio del sorteo, más grande y sin fondo blanco. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. La foto se sube desde el panel (prueba 7).
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull && git describe --tags`. No debe pararse por la base. Al terminar debe decir `v1.0.0-rc.59`, o una mayor si entró otra tarea antes del `git pull`.
+- **C-246 (rc.60):** el destino claro para la guía, los datos fiscales del proveedor y hasta 3 correos de despacho.
+  - **Cambia la base: tres columnas nuevas en `suppliers`, aditivas.** `deploy.sh` se para y muestra esto, y nada más; si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
+```sql
+ALTER TABLE "suppliers" ADD COLUMN "fiscalAddress" TEXT,
+ADD COLUMN "legalName" TEXT,
+ADD COLUMN "taxId" TEXT;
+```
+  - Sin variables nuevas, sin SQL de datos y sin cron.
+- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc60.dump`
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.60`, o una mayor si entró otra tarea antes del `git pull`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **`/sorteo`:** la franja de arriba va en el azul oscuro del logo, sin azul casi negro ni letras cian.
   2. **En el teléfono, la barra de abajo** va en el mismo azul oscuro.
@@ -300,7 +313,12 @@
   7. **La foto del sorteo** (C-247). Se puede subir antes del deploy; con él se ve más grande.
       - **En la computadora**, en el panel: Marketing → Sorteo → Cambiar → "Subir foto". Elige `Escritorio/Electro Shop/sorteo/premio-sorteo-ps4-slim.jpg` → Revisar y publicar.
       - **En `/sorteo`:** la PS4 Slim y el control azul quedan parados sobre la franja azul, con su luz y su reflejo, sin un cuadro blanco. En el teléfono, debajo del texto.
-- **Vuelta atrás:** sin cambio de base, así que esta sí funciona: `git reset --hard v1.0.0-rc.56 && bash scripts/deploy.sh --sin-pull`.
+  8. **Los datos de Ferrecla** (C-246), en el panel: Productos → Lista del proveedor → la ferretería:
+      - "Datos fiscales": la razón social, el RIF y el domicilio fiscal, como en `Escritorio/Proveedores/RIF FCLA 2027.pdf`. Un RIF mal escrito avisa y no deja guardar;
+      - "Quién lo recibe": su representante; y en "Correos de despacho", los tres de la ferretería separados por coma (o, para la prueba 9, primero el tuyo) → "Guardar los datos";
+      - "Ver la bienvenida": la credencial dice la razón social y el RIF. **No la envíes todavía**, salvo que el equipo lo decida.
+  9. **El destino claro** (C-246): Marketing → Correos → Plantillas → Proveedores → "¡Se vendió su producto!": bajo el logo de ZOOM, "Envíelo a" con la ciudad en grande, la oficina con su código y a nombre de quién. En la venta de prueba de "Por confirmar de rc.55", la página del enlace dice lo mismo.
+- **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base: al ver las tres columnas de C-246, se para en el paso 2 y la tienda sigue como está (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las columnas no molestan al código anterior.
 
 ### Por confirmar de rc.55 y rc.56 (C-235, C-227 y C-242; unos 20 minutos)
 Ya en producción desde el 15/11 (`HISTORIAL.md`). Las sesiones comprobaron desde fuera la versión, la base del aliado comercial y que los crons responden. Falta esto:

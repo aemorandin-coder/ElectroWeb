@@ -645,6 +645,11 @@ model Supplier {
   contactWhatsapp String?
   /// C-227: cuándo se le envió la bienvenida de aliado comercial (el panel la puede reenviar)
   bienvenidaAt    DateTime?
+  /// C-246: sus datos fiscales, como en su RIF (razón social, "J-12345678-9" y domicilio fiscal). Van en la credencial de
+  /// la bienvenida y sirven para sus facturas de compra (Contabilidad, C-237)
+  legalName       String?
+  taxId           String?
+  fiscalAddress   String?
   products        Product[]
   /// C-218: su lista completa, como la subió el equipo
   articulos       ArticuloProveedor[]

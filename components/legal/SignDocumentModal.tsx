@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
-import { IconoAdvertencia, IconoCerrar, IconoCheck, IconoDescargar, IconoDocumento } from '@/components/iconos';
+import { IconoAdvertencia, IconoCerrar, IconoCheck, IconoDescargar, IconoDocumento, IconoEditar, IconoFlechaAbajo } from '@/components/iconos';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import {
   adminError, adminHint, adminInput, adminLabel, adminModalOverlay, adminModalPanel, adminPrimaryButton, adminSecondaryButton, avisoAccion,
@@ -93,6 +93,8 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [largo, setLargo] = useState(0);
+  // C-260: la pista "Firma aquí" se va apenas se toca el recuadro (el largo llega recién al terminar el trazo)
+  const [firmando, setFirmando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [firmaId, setFirmaId] = useState<string | null>(null);
@@ -209,6 +211,23 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
               aria-label="Texto del documento"
             >
               <TextoDocumento content={doc.content} />
+              {/* C-260 (C-258 midió que había que bajar 811 palabras sin saber cuánto faltaba): la píldora del kit, con la flecha que
+                  baja dos veces; tocarla baja una pantalla. Se va cuando se llega al final */}
+              {!leido && (
+                <div className="pointer-events-none sticky bottom-0 -mx-5 flex justify-center bg-linear-to-t from-white via-white/90 to-transparent pb-1 pt-10">
+                  <button
+                    type="button"
+                    onClick={() => textoRef.current?.scrollBy({ top: textoRef.current.clientHeight * 0.8, behavior: prefiereMenosMovimiento() ? 'auto' : 'smooth' })}
+                    className="onb-sube pointer-events-auto inline-flex h-11 items-center gap-2 rounded-full bg-brand-700 px-4 text-sm font-semibold text-white shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                    style={{ '--onb-retraso': '0.5s' } as CSSProperties}
+                  >
+                    <span className="onb-baja inline-flex">
+                      <IconoFlechaAbajo className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    Baja hasta el final para firmar
+                  </button>
+                </div>
+              )}
             </div>
             <div className="space-y-3 border-t border-line bg-surface px-5 py-4">
               {/* C-251b: lo que falta para seguir, en gris (como los pasos del checkout, C-241) */}
@@ -245,10 +264,22 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <span className={adminLabel}>Tu firma</span>
-                  <button type="button" onClick={() => padRef.current?.clear()} className="min-h-11 px-2 text-sm font-semibold text-deal">Borrar</button>
+                  <button type="button" onClick={() => { padRef.current?.clear(); setFirmando(false); }} className="min-h-11 px-2 text-sm font-semibold text-deal">Borrar</button>
                 </div>
-                <div className={`rounded-xl border-2 border-dashed p-1 ${errores.signature ? 'border-deal' : 'border-line'}`}>
+                <div onPointerDownCapture={() => setFirmando(true)} className={`relative rounded-xl border-2 border-dashed p-1 ${errores.signature ? 'border-deal' : 'border-line'}`}>
                   <SignaturePad ref={padRef} onChange={onChangeFirma} label="Recuadro para firmar con el dedo, el lápiz o el mouse" />
+                  {/* C-260: con el recuadro vacío, una firma que se dibuja sola, una vez, y "Firma aquí". Se va al empezar a firmar */}
+                  {largo === 0 && !firmando && (
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 text-brand-500">
+                      <svg viewBox="0 0 120 40" className="onb-firma h-10 w-32 opacity-60">
+                        <path d="M6 28c10-20 22-24 24-8s-10 18-4 6 16-18 22-4 4 14 12 2 14-16 20-4 10 8 16-2 10-8 18-4" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span className="flex items-center gap-1.5 text-sm font-semibold">
+                        <IconoEditar className="h-4 w-4" />
+                        Firma aquí
+                      </span>
+                    </div>
+                  )}
                 </div>
                 {errores.signature ? <p className={adminError}>{errores.signature}</p> : <p className={adminHint}>Firma con el dedo o el mouse, como en tu cédula. La página no se mueve mientras firmas.</p>}
               </div>

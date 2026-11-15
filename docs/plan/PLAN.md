@@ -632,13 +632,13 @@ Quedan para después de C-177 (`estado/C-177.md`):
       - la hoja "Así funciona" en `/sorteo`, `/checkout` y Puntos ES;
       - la bienvenida de una cuenta sin activar dice primero que la active desde el correo.
     - **La medición la hizo C-258** (`estado/C-258.md`).
-    - **Falta, de los lugares donde ayudaría el kit según C-258:**
-      - "Ver carrito" en el aviso de "Agregar";
-      - "Tu carrito vive aquí", la primera vez, en la computadora;
-      - "Baja hasta el final para aceptar" en los términos de los Puntos ES, y "Firma con el dedo";
-      - "Voltéala y raspa" en Mis códigos;
-      - "¿Algo falló? Pide tu garantía aquí".
-    - **Falta también:** las misiones de Mi panel (`CustomerOnboarding`) con el toque del kit: las placas que se dibujan, y "¿Cómo funciona la tienda?" como la hoja.
+    - **Hecho en C-260** (rc.78, `estado/C-260.md`), de los lugares que midió C-258:
+      - "Ver carrito" en el aviso de "Agregar", con el carrito que salta;
+      - "Baja hasta el final para firmar" en los términos, y la firma de muestra;
+      - "Voltear tarjeta" como el botón principal en Mis códigos;
+      - las misiones de Mi panel, con "¿Cómo funciona la tienda?" como la hoja.
+    - **La garantía** la resolvió C-261.
+    - **Quedan ideas chicas** que no traban ningún camino (`estado/C-260.md`): se hacen cuando se toque cada pantalla.
   - **C-258 · El estrés de cada camino del cliente** (**hecha**, rc.75, 15/11; `estado/C-258.md`): la medida (`scripts/e2e/estres-caminos.ts`, 13 caminos en el teléfono y la computadora) y los arreglos. Estrés 1945 → 1697 y errores 30 → 0. Queda:
     - **Para decidir:**
       - **Decididas y hechas en C-261** (rc.77, `estado/C-261.md`):

@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { IconoCarrito, IconoMas, IconoMenos } from '@/components/iconos';
 import Price from '@/components/ui/Price';
 import { getStockLabel } from '@/components/ui/productCardData';
+import { avisarAgregado } from '@/components/onboarding/AvisoAgregado';
 import { useCart } from '@/contexts/CartContext';
 import type { PublicDigitalVariant, PublicProduct } from '@/lib/dto/product';
 import { formatUSD } from '@/lib/currency';
@@ -91,7 +92,8 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
     };
   }, [soldOut]);
 
-  const addToCart = (): boolean => {
+  // `avisar`: "Comprar ahora" va directo al checkout, sin el aviso de "Ver carrito"
+  const addToCart = (avisar = true): boolean => {
     if (variants.length > 0 && !selected) {
       toast.error('Elige un monto');
       return false;
@@ -136,7 +138,8 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
       },
       quantity
     );
-    toast.success(selected ? `Agregado: ${product.name} (${selected.label})` : 'Agregado al carrito');
+    // C-260: el aviso con "Ver carrito" y el carrito del header que salta
+    if (avisar) avisarAgregado(selected ? `${product.name} (${selected.label})` : product.name);
     setQuantity(1);
     return true;
   };
@@ -147,7 +150,7 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
       router.push(`/login?callbackUrl=${encodeURIComponent(`/productos/${product.slug}`)}&action=buy`);
       return;
     }
-    if (addToCart()) router.push('/checkout');
+    if (addToCart(false)) router.push('/checkout');
   };
 
   const stepperButton =
@@ -240,7 +243,7 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
               </div>
               <button
                 type="button"
-                onClick={addToCart}
+                onClick={() => addToCart()}
                 aria-label="Agregar al carrito"
                 className="inline-flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
               >
@@ -279,7 +282,7 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
             </div>
             <button
               type="button"
-              onClick={addToCart}
+              onClick={() => addToCart()}
               className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
             >
               <IconoCarrito className="h-4 w-4" aria-hidden="true" />

@@ -270,7 +270,7 @@
 ### El bloque por subir: `v1.0.0-rc.54` (C-235; unos 15 minutos)
 **Producción está en `v1.0.0-rc.53`** (`a604c77`). La subió el equipo el 14/11 y Claude la comprobó desde fuera el mismo día; su bloque está en `HISTORIAL.md`. Si C-227 (rc.55, de la otra sesión) entra antes de subir, trae su propio SQL y un cron nuevo, y su sesión lo agrega aquí.
 - **C-235 (rc.54):** la contadora en el equipo.
-  - **Cambia la base: un rol nuevo y dos tablas, aditivos.** `deploy.sh` los muestra junto con lo de C-222, C-219, C-229 y C-234. El `ALTER TYPE` de la primera línea **es el esperado:** agrega el rol "Contadora" y no cambia a nadie.
+  - **Cambia la base: un rol nuevo y dos tablas, aditivos.** `deploy.sh` muestra solo estas cinco líneas (lo de rc.53 ya está en la base). El `ALTER TYPE` de la primera línea **es el esperado:** agrega el rol "Contadora" y no cambia a nadie.
 ```sql
 ALTER TYPE "Role" ADD VALUE 'ACCOUNTANT';
 CREATE TABLE "firmas_contables" ("id" TEXT NOT NULL, "userId" TEXT NOT NULL, "nombre" TEXT NOT NULL, "titulo" TEXT NOT NULL, "cpc" TEXT NOT NULL, "imagen" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "firmas_contables_pkey" PRIMARY KEY ("id"));

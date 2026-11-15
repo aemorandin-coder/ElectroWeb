@@ -63,7 +63,7 @@ export default function AvisoCookies() {
       {!eligiendo ? (
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-5">
           <p className="flex flex-1 items-start gap-3 text-sm text-ink">
-            <span className="iconos-marca flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-950">
+            <span className="iconos-marca flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
               <IconoCandado className="h-4 w-4" aria-hidden="true" />
             </span>
             <span>
@@ -112,7 +112,7 @@ function Fila({ icono: Icono, titulo, detalle, encendido, bloqueado = false, onC
 }) {
   return (
     <li className="flex items-center gap-3 px-3 py-2.5">
-      <span className="iconos-marca flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-950">
+      <span className="iconos-marca flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
         <Icono className="h-4 w-4" aria-hidden="true" />
       </span>
       <span className="min-w-0 flex-1">

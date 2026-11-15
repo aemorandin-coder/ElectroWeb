@@ -69,7 +69,7 @@ const LEVEL_COLORS: Record<string, string> = {
   // C-192: el nivel no es un estado (verde, ámbar y rojo decían "bien, cuidado, error"): la misma familia azul, de menos a más
   PRINCIPIANTE: 'bg-brand-50 text-brand-700',
   INTERMEDIO: 'bg-brand-100 text-brand-800',
-  AVANZADO: 'bg-brand-950 text-white',
+  AVANZADO: 'bg-brand-700 text-white',
 };
 
 function StarRating({ rating }: { rating: number }) {

@@ -17,10 +17,11 @@ const TEXTO = ANCHO - ALTO - MARGEN_IZQUIERDO - MARGEN_DERECHO;
 const ESPACIADO_NOMBRE = -0.5;
 
 const C = {
-  brand50: '#f4f7fc', brand200: '#d4e0f5', brand300: '#aac1eb', brand400: '#7599de', brand500: '#2a63cd',
-  brand700: '#1a3b7e', brand800: '#142d61', brand950: '#0a1530',
+  brand50: '#f4f7fc', brand200: '#d4e0f5', brand300: '#aac1eb', brand400: '#7599de', brand500: '#2a63cd', brand600: '#1e4ba3',
+  // C-243 (el kit de marca, lib/marca.ts): la de noche va en el azul oscuro del logo, sin azul noche ni cian
+  brand700: '#1a3b7e',
   ink: '#212529', inkSoft: '#495057', muted: '#6a6c6b', line: '#e9ecef', surface: '#f8f9fa',
-  accent: '#22d3ee', deal: '#dc2626', dealBg: '#fef2f2', blanco: '#ffffff',
+  deal: '#dc2626', dealBg: '#fef2f2', blanco: '#ffffff',
 };
 
 /** Lo que dice la tarjeta de un producto, ya formateado ("$52,78") */
@@ -50,12 +51,12 @@ export interface Marca {
 }
 
 const tema = (estilo: EstiloTarjeta) => estilo === 'claro'
-  ? { fondo: C.blanco, texto: C.ink, suave: C.muted, precio: C.brand500, chipFondo: C.brand50, chipBorde: C.brand200, chipTexto: C.brand700, antes: C.muted, ahorroFondo: C.dealBg, ahorroTexto: C.deal }
-  : { fondo: C.brand950, texto: C.blanco, suave: C.brand300, precio: C.accent, chipFondo: C.brand800, chipBorde: C.brand700, chipTexto: C.brand200, antes: C.brand300, ahorroFondo: C.deal, ahorroTexto: C.blanco };
+  ? { fondo: C.blanco, texto: C.ink, suave: C.muted, precio: C.brand500, lema: C.brand500, chipFondo: C.brand50, chipBorde: C.brand200, chipTexto: C.brand700, antes: C.muted, ahorroFondo: C.dealBg, ahorroTexto: C.deal }
+  : { fondo: C.brand700, texto: C.blanco, suave: C.brand200, precio: C.blanco, lema: C.brand300, chipFondo: C.brand600, chipBorde: C.brand500, chipTexto: C.brand200, antes: C.brand300, ahorroFondo: C.deal, ahorroTexto: C.blanco };
 
 /** De noche, detrás de la foto, la luz de una vitrina. Satori falla con una propiedad en undefined: solo se agrega si va */
 const luzDeVitrina = (oscuro: boolean) =>
-  oscuro ? { backgroundImage: `radial-gradient(circle at 76% 50%, ${C.brand800} 0%, ${C.brand950} 58%)` } : {};
+  oscuro ? { backgroundImage: `radial-gradient(circle at 76% 50%, ${C.brand600} 0%, ${C.brand700} 58%)` } : {};
 
 // Avance de cada carácter de Inter Bold (lib/og/fuentes/Inter-Bold.ttf), en fracciones del tamaño de la letra.
 // Medido con fontTools (hmtx / unitsPerEm). Las letras con acento miden lo mismo que su base (á = a, Ñ = N).
@@ -188,7 +189,7 @@ export function TarjetaPagina({ titulo, lema, bajada, marca }: { titulo: string;
         <Wordmark estilo="oscuro" marca={marca} alto={50} />
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', fontSize: tamanoDeTitulo(titulo), fontWeight: 800, lineHeight: 1.05, letterSpacing: -1.5 }}>{titulo}</div>
-          {lema && <div style={{ display: 'flex', fontSize: 34, fontWeight: 700, color: t.precio, lineHeight: 1.2, letterSpacing: -0.5, marginTop: 24 }}>{lema}</div>}
+          {lema && <div style={{ display: 'flex', fontSize: 34, fontWeight: 700, color: t.lema, lineHeight: 1.2, letterSpacing: -0.5, marginTop: 24 }}>{lema}</div>}
           {bajada && <div style={{ display: 'flex', fontSize: 30, fontWeight: 500, color: t.suave, lineHeight: 1.3, marginTop: lema ? 10 : 20 }}>{bajada}</div>}
         </div>
         <div style={{ display: 'flex', fontSize: 26, fontWeight: 500, color: t.suave }}>{marca.dominio}</div>
@@ -221,7 +222,7 @@ export function TarjetaVitrina({ titulo, lema, bajada, fotos, marca, estilo }: {
         <Wordmark estilo={estilo} marca={marca} alto={50} />
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', fontSize: tamanoTitulo, fontWeight: 800, lineHeight: 1.05, letterSpacing: -1.5 }}>{titulo}</div>
-          {lema && <div style={{ display: 'flex', fontSize: 34, fontWeight: 700, color: t.precio, lineHeight: 1.2, letterSpacing: -0.5, marginTop: 24 }}>{lema}</div>}
+          {lema && <div style={{ display: 'flex', fontSize: 34, fontWeight: 700, color: t.lema, lineHeight: 1.2, letterSpacing: -0.5, marginTop: 24 }}>{lema}</div>}
           {bajada && <div style={{ display: 'flex', fontSize: 30, fontWeight: 500, color: t.suave, lineHeight: 1.3, marginTop: lema ? 10 : 20 }}>{bajada}</div>}
         </div>
         <div style={{ display: 'flex', fontSize: 26, fontWeight: 500, color: t.suave }}>{marca.dominio}</div>

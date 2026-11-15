@@ -76,7 +76,7 @@ export default function DatosDelCliente({
   return (
     <section id="datos-del-cliente" aria-labelledby="datos-del-cliente-titulo" className={`${adminCard} scroll-mt-24 border-brand-200 p-5 lg:p-6`}>
       <div className="mb-4 flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-950 text-accent">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white">
           <IconoVerificado className="h-5 w-5" aria-hidden="true" />
         </span>
         <div>

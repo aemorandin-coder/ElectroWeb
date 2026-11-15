@@ -1,6 +1,6 @@
 {
   "name": "electro-shop",
-  "version": "1.0.0-rc.56",
+  "version": "1.0.0-rc.57",
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 next dev -H 0.0.0.0",
@@ -8,6 +8,7 @@
     "start": "next start -H 127.0.0.1",
     "lint": "eslint",
     "check:modulos": "tsx scripts/revisar-modulos.ts",
+    "check:marca": "tsx scripts/revisar-marca.ts",
     "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate"
   },

@@ -26,7 +26,7 @@ export function VistaFranjaNavidad({ franja, nota, className = '' }: VistaProps)
   const { numero, mes } = partesDelDia(franja.dia);
   return (
     <div className={`flex items-start gap-3 rounded-xl border border-brand-100 bg-brand-50 p-3 ${className}`}>
-      <span aria-hidden="true" className="flex w-12 shrink-0 flex-col overflow-hidden rounded-lg border-2 border-brand-900 bg-white text-center">
+      <span aria-hidden="true" className="flex w-12 shrink-0 flex-col overflow-hidden rounded-lg border-2 border-brand-700 bg-white text-center">
         <span className="bg-navidad text-[11px] font-semibold uppercase leading-5 tracking-wide text-white">{mes.slice(0, 3)}</span>
         <span className="py-0.5 text-xl font-bold leading-7 text-brand-900">{numero}</span>
       </span>

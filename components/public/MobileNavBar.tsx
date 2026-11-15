@@ -131,7 +131,7 @@ export default function MobileNavBar() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="mobile-more-title"
-            className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-brand-950 px-4 pt-3 text-white shadow-lg motion-safe:animate-slideInUp pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
+            className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-brand-700 px-4 pt-3 text-white shadow-lg motion-safe:animate-slideInUp pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
           >
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20" aria-hidden="true" />
             <div className="mb-4 flex items-center justify-between">
@@ -175,7 +175,7 @@ export default function MobileNavBar() {
       <nav
         id="mobile-bottom-nav"
         aria-label="Navegación inferior"
-        className="fixed inset-x-3 z-[var(--z-bottomnav)] rounded-2xl bg-brand-950/95 shadow-lg ring-1 ring-white/10 backdrop-blur-md lg:hidden bottom-[calc(0.75rem+env(safe-area-inset-bottom))]"
+        className="fixed inset-x-3 z-[var(--z-bottomnav)] rounded-2xl bg-brand-700/95 shadow-lg ring-1 ring-white/10 backdrop-blur-md lg:hidden bottom-[calc(0.75rem+env(safe-area-inset-bottom))]"
       >
         <ul className="flex h-16 items-stretch px-1.5 py-1.5">
           {MAIN_ITEMS.map(({ href, label, Icon }) => {

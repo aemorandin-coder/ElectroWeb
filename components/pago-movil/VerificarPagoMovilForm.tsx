@@ -520,7 +520,7 @@ Por favor necesito ayuda para verificar mi pago.
                             className={`w-6 h-6 rounded-full flex items-center justify-center ${verificationState === 'success'
                                 ? 'bg-success-strong'
                                 : verificationState === 'duplicate'
-                                    ? 'bg-brand-950'
+                                    ? 'bg-brand-700'
                                     : 'bg-deal'
                                 }`}
                         >

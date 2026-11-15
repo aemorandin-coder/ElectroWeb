@@ -34,7 +34,7 @@ function Marca({ n, activa }: { n: number; activa: boolean }) {
   return (
     <span
       aria-hidden="true"
-      className="absolute -left-2.5 top-1/2 z-[1] grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full bg-brand-950 text-[11px] font-bold text-white ring-2 ring-white"
+      className="absolute -left-2.5 top-1/2 z-[1] grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full bg-brand-700 text-[11px] font-bold text-white ring-2 ring-white"
     >
       {n}
     </span>

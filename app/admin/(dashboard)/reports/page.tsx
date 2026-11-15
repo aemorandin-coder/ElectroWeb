@@ -117,7 +117,7 @@ const EVENTO: Record<string, string> = {
     // C-145: el embudo de compra
     add_to_cart: 'Agregados al carrito', begin_checkout: 'Pagos iniciados', purchase: 'Compras', sign_up: 'Registros',
 };
-const COLORES = ['var(--color-brand-500)', 'var(--color-success)', 'var(--color-warning)', 'var(--color-accent)'];
+const COLORES = ['var(--color-brand-500)', 'var(--color-success)', 'var(--color-warning)', 'var(--color-brand-300)'];
 const TONO_GRAVEDAD: Record<string, AdminTone> = { INFO: 'neutral', WARNING: 'warning', CRITICAL: 'danger' };
 const tooltipStyle = { background: 'var(--color-surface)', border: '1px solid var(--color-line-strong)', borderRadius: '8px', fontSize: '12px' };
 

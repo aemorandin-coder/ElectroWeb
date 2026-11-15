@@ -457,7 +457,7 @@ function EnrollCard({
             {thumbnail ? (
               <Image src={thumbnail} alt="Miniatura del curso" width={640} height={360} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-brand-950">
+              <div className="w-full h-full flex items-center justify-center bg-brand-700">
                 <IconoPlay className="w-12 h-12 text-white/20" />
               </div>
             )}

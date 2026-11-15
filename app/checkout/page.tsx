@@ -968,7 +968,7 @@ export default function CheckoutPage() {
                 {session?.user && !(session.user as { emailVerified?: unknown }).emailVerified && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/95 rounded-lg overflow-auto p-4">
                     <div className="text-center w-full max-w-sm mx-auto">
-                      <div className="w-12 h-12 bg-brand-950 rounded-full flex items-center justify-center mx-auto mb-3 text-accent shadow-sm">
+                      <div className="w-12 h-12 bg-brand-500 rounded-full flex items-center justify-center mx-auto mb-3 text-white shadow-sm">
                         <IconoCorreo className="w-6 h-6" />
                       </div>
                       <h3 className="text-base font-bold text-ink mb-1">Verificación requerida</h3>
@@ -1734,9 +1734,9 @@ export default function CheckoutPage() {
             {/* Content */}
             <div className={`${adminModalBody} space-y-6 text-sm text-ink`}>
               {/* Critical Warning */}
-              <div className="p-4 bg-brand-50 border-l-4 border-brand-950 rounded-r-xl">
+              <div className="p-4 bg-brand-50 border-l-4 border-brand-700 rounded-r-xl">
                 <h3 className="font-bold text-ink mb-2 flex items-center gap-2">
-                  <IconoError className="h-7 w-7 shrink-0 rounded-lg bg-brand-950 p-1.5 text-accent" />
+                  <IconoError className="h-7 w-7 shrink-0 rounded-lg bg-brand-500 p-1.5 text-white" />
                   Responsabilidad del Usuario
                 </h3>
                 <p className="text-ink-soft leading-relaxed">

@@ -1,6 +1,6 @@
 .wrapper { width: 100%; max-width: 460px; margin-inline: auto; }
 /* Los colores de plataforma son parte de la identidad solicitada para estas tarjetas. */
-.scene { position: relative; width: 100%; perspective: 1100px; --platform-bg: var(--color-brand-950); --platform-edge: var(--color-brand-700); --platform-muted: var(--color-brand-200); --platform-mark: var(--color-brand-100); --platform-sheen: var(--color-brand-500); }
+.scene { position: relative; width: 100%; perspective: 1100px; --platform-bg: var(--color-brand-700); --platform-edge: var(--color-brand-600); --platform-muted: var(--color-brand-200); --platform-mark: var(--color-brand-100); --platform-sheen: var(--color-brand-500); }
 .scene[data-platform='NINTENDO'] { --platform-bg: #e60012; --platform-edge: #a9000d; --platform-muted: #ffe4e6; --platform-mark: #ffffff; --platform-sheen: #ff6773; }
 .scene[data-platform='STEAM'] { --platform-bg: #171a21; --platform-edge: #31536c; --platform-muted: #c7d5e0; --platform-mark: #ffffff; --platform-sheen: #66c0f4; }
 .scene[data-platform='ROBLOX'] { --platform-bg: #191919; --platform-edge: #555555; --platform-muted: #eeeeee; --platform-mark: #ffffff; --platform-sheen: #e2231a; }

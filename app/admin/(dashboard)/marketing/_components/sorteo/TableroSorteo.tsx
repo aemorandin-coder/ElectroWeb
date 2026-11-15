@@ -110,7 +110,7 @@ export default function TableroSorteo({ datos, onEditar, onNuevo, onRecargar }: 
       {/* El sorteo: su estado y lo que se puede hacer con él */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-950 text-white [&_svg]:text-accent">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-700 text-white">
             <IconoRegalo className="h-6 w-6" aria-hidden="true" />
           </span>
           <div className="min-w-0">
@@ -139,7 +139,7 @@ export default function TableroSorteo({ datos, onEditar, onNuevo, onRecargar }: 
           <span className="absolute inset-y-0 left-0 origin-left rounded-full bg-brand-500 transition-transform duration-700 starting:scale-x-0 motion-reduce:transition-none" style={{ width: `${hoyEn}%` }} />
           <span className="absolute top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-ink-soft" style={{ left: `${pos(instante(s.hasta, true))}%` }} aria-hidden="true" />
           {!sorteado && ahora >= t0 && ahora <= tFin && (
-            <span className="absolute -top-7 -translate-x-1/2 whitespace-nowrap rounded-md bg-brand-950 px-1.5 py-0.5 text-xs font-semibold text-white" style={{ left: `${Math.min(92, Math.max(8, hoyEn))}%` }}>
+            <span className="absolute -top-7 -translate-x-1/2 whitespace-nowrap rounded-md bg-brand-700 px-1.5 py-0.5 text-xs font-semibold text-white" style={{ left: `${Math.min(92, Math.max(8, hoyEn))}%` }}>
               Hoy, {diaMes(new Date(ahora - 4 * 3600 * 1000).toISOString().slice(0, 10))}
             </span>
           )}
@@ -247,7 +247,7 @@ export default function TableroSorteo({ datos, onEditar, onNuevo, onRecargar }: 
 function Numero({ icono: Icono, etiqueta, valor }: { icono: IconType; etiqueta: string; valor: string }) {
   return (
     <div className={adminStatCard}>
-      <span className="iconos-marca flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-950"><Icono className="h-5 w-5" aria-hidden="true" /></span>
+      <span className="iconos-marca flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><Icono className="h-5 w-5" aria-hidden="true" /></span>
       <div className="min-w-0">
         <span className={adminStatLabel}>{etiqueta}</span>
         <p className={`${adminStatValue} tabular-nums`}>{valor}</p>
@@ -259,7 +259,7 @@ function Numero({ icono: Icono, etiqueta, valor }: { icono: IconType; etiqueta: 
 function PasoSortear({ icono: Icono, titulo, detalle, fuerte = false, children }: { icono: IconType; titulo: string; detalle: string; fuerte?: boolean; children?: ReactNode }) {
   return (
     <li className="flex items-start gap-3 rounded-xl border border-line p-3">
-      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${fuerte ? 'bg-brand-950 text-white [&_svg]:text-accent' : 'iconos-marca bg-brand-50 text-brand-950'}`}><Icono className="h-4 w-4" aria-hidden="true" /></span>
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${fuerte ? 'bg-brand-700 text-white' : 'iconos-marca bg-brand-50 text-brand-700'}`}><Icono className="h-4 w-4" aria-hidden="true" /></span>
       <div className="min-w-0 flex-1 space-y-2">
         <div>
           <p className="text-sm font-semibold text-ink">{titulo}</p>

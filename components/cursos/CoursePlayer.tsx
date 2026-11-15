@@ -138,7 +138,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
   const embedUrl = activeLesson?.videoUrl ? getEmbedUrl(activeLesson.videoUrl) : null;
 
   return (
-    <div className="flex flex-col h-dvh bg-brand-950 overflow-hidden">
+    <div className="flex flex-col h-dvh bg-brand-700 overflow-hidden">
 
       {/* Creator preview banner */}
       {isCreatorPreview && (
@@ -148,7 +148,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
       )}
 
       {/* ── Top Bar ── */}
-      <header className="shrink-0 flex items-center gap-4 px-4 py-2.5 bg-brand-950 border-b border-white/10 z-20">
+      <header className="shrink-0 flex items-center gap-4 px-4 py-2.5 bg-brand-700 border-b border-white/10 z-20">
         <button
           onClick={() => setSidebarOpen((v) => !v)}
           className="text-white/80 hover:text-white transition-colors"
@@ -192,7 +192,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
 
         {/* ── Sidebar (curriculum) ── */}
         <aside
-          className={`shrink-0 flex flex-col bg-brand-950 border-r border-white/10 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'w-72 lg:w-80' : 'w-0'} overflow-hidden`}
+          className={`shrink-0 flex flex-col bg-brand-700 border-r border-white/10 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'w-72 lg:w-80' : 'w-0'} overflow-hidden`}
         >
           <div className="p-4 border-b border-white/10">
             <p className="text-white/80 text-xs font-semibold uppercase tracking-wider mb-1">Contenido del Curso</p>
@@ -258,7 +258,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
         <div className="flex-1 flex flex-col overflow-hidden">
 
           {/* Video area */}
-          <div className="flex-1 bg-brand-950 flex items-center justify-center overflow-hidden">
+          <div className="flex-1 bg-brand-700 flex items-center justify-center overflow-hidden">
             {activeLesson ? (
               embedUrl ? (
                 <iframe
@@ -284,7 +284,7 @@ export default function CoursePlayer({ course, enrollment, isCreatorPreview = fa
 
           {/* Controls bar */}
           {activeLesson && (
-            <div className="shrink-0 bg-brand-950 border-t border-white/10 px-4 py-3">
+            <div className="shrink-0 bg-brand-700 border-t border-white/10 px-4 py-3">
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 {/* Lesson title */}
                 <div className="min-w-0">

@@ -1,7 +1,7 @@
 // Reproductor del curso (C-78): pantalla completa oscura como el reproductor, sin el encabezado de la tienda
 export default function AprenderLoading() {
   return (
-    <div className="flex h-dvh flex-col bg-brand-950" aria-busy="true" aria-label="Cargando lección">
+    <div className="flex h-dvh flex-col bg-brand-700" aria-busy="true" aria-label="Cargando lección">
       <div className="flex h-12 shrink-0 items-center gap-4 border-b border-white/10 px-4">
         <div className="h-5 w-5 rounded bg-white/10" />
         <div className="h-4 w-48 rounded bg-white/10" />

@@ -36,6 +36,17 @@
 
 Claude lo implementa en C-10/C-11. Gemini **solo usa** estas clases y no inventa otras.
 
+### 1.0 El kit de marca (C-243)
+El equipo, el 14/11, viendo el sorteo y los correos: "hay demasiada discrepancia de colores… ¿por qué no tenemos todos los chats un concepto claro de cómo crear?". Eligió la paleta A viendo las maquetas: **solo los dos azules del logo y sus claros**.
+- **La fuente única es `lib/marca.ts`:** la paleta, para qué es cada color y las reglas. La página del panel `/admin/marca` (Marketing → Kit de marca) la muestra con las piezas de verdad, y `npm run check:marca` rechaza lo de fuera.
+- **Los colores:**
+  - `brand-500` (#2a63cd), lo que se toca, lo que avanza y la placa de un aviso;
+  - `brand-700` (#1a3b7e), la pieza fuerte (una por pantalla o correo) y el sello de "te toca", con texto e ícono blancos;
+  - `brand-600` entre los dos; `brand-300` para los rótulos sobre el oscuro; `brand-50` y `brand-200` para fondos y bordes claros;
+  - los neutros, el verde de lo hecho, el rojo de lo cancelado y del descuento, y el ámbar solo en texto suelto y estrellas.
+- **Salieron del kit** el azul noche (`brand-950`, #0a1530) y el cian (`accent`, #22d3ee): no están en el logo. Lo que queda de esta sección que los nombra es historial; manda el kit.
+- **Fuera del kit:** el arte de redes (ElectroStudio, Chispa), que tiene su propia paleta.
+
 ### 1.1 Paleta (tokens `@theme` → clases Tailwind)
 
 | Token | Hex | Clase ejemplo | Uso |
@@ -50,7 +61,7 @@ Claude lo implementa en C-10/C-11. Gemini **solo usa** estas clases y no inventa
 | `brand-700` | `#1a3b7e` | | Fondos oscuros de marca |
 | `brand-800` | `#142d61` | | |
 | `brand-900` | `#0e1f44` | | |
-| `brand-950` | `#0a1530` | `bg-brand-950` | Barra inferior móvil y drawer (reemplaza `#0f172a`) |
+| ~~`brand-950`~~ | ~~`#0a1530`~~ | — | Salió del kit (C-243): la barra inferior móvil y el drawer van en `brand-700` |
 | `ink` | `#212529` | `text-ink` | Texto principal |
 | `ink-soft` | `#495057` | `text-ink-soft` | Texto secundario fuerte |
 | `muted` | `#6a6c6b` | `text-muted` | Texto secundario (gris de marca) |
@@ -58,7 +69,7 @@ Claude lo implementa en C-10/C-11. Gemini **solo usa** estas clases y no inventa
 | `line` | `#e9ecef` | `border-line` | Bordes |
 | `line-strong` | `#dee2e6` | `border-line-strong` | Divisores marcados |
 | `surface` | `#f8f9fa` | `bg-surface` | Fondo de secciones y página |
-| `accent` | `#22d3ee` | `text-accent` | Detalle cian, solo sobre fondos oscuros |
+| ~~`accent`~~ | ~~`#22d3ee`~~ | — | Salió del kit (C-243): sobre el azul oscuro, blanco o `brand-300` |
 | `deal` | `#dc2626` | `text-deal` | "Ahorra $X", % de descuento |
 | `deal-bg` | `#fef2f2` | `bg-deal-bg` | Fondo del badge de oferta |
 | `tag` | `#f59e0b` | `bg-tag text-ink` | Etiqueta amarilla estilo BestBuy ("Oferta del día") |
@@ -79,17 +90,17 @@ Claude lo implementa en C-10/C-11. Gemini **solo usa** estas clases y no inventa
 
 **Jerarquía del color (C-192, 06/11: "el ámbar se repite en todo el proyecto y se ve genérico")**
 - **Azul de marca:** lo que se hace (botones, enlaces) y lo que la tienda destaca ("Destacado", el nivel de un curso, el monto a pagar).
-- **Azul noche (`brand-950`):** la pieza fuerte de una pantalla o de un correo, **una sola**, con texto blanco y el cian (`accent`) de acento: el certificado, la gift card, un código. Es la variante B que se eligió el 06/11 viendo las maquetas.
+- **Azul oscuro del logo (`brand-700`):** la pieza fuerte de una pantalla o de un correo, **una sola**, con texto blanco y los rótulos en `brand-300`: el certificado, la gift card, un código, el sorteo. Desde C-243 (14/11); antes, el azul noche con el cian (C-192).
 - **Neutros:** la estructura: tarjetas, notas, mensajes, datos.
 - **Colores de estado, solo para estados:** verde = hecho (pagado, acreditado, en stock); **lo que alguien tiene que hacer** (falta pagar, falta verificar el correo, falta firmar, poco stock, por revisar, sin guardar) va en el azul de acción de abajo; rojo = error, rechazo o descuento (`deal`).
 - **Ningún contenedor ámbar, en ningún lado (C-226).** Andrés, 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados". Ni cajas, ni avisos de bloque, ni fondos, ni bordes, ni píldoras ámbar: en la tienda, el panel, los correos y los documentos que se imprimen.
-  - **En un bloque, lo que alguien tiene que hacer va en el azul claro de la tienda** (`brand-50`, borde `brand-200`, texto `brand-900`) **con el ícono cian en su placa azul noche** (`brand-950` con `accent`). Andrés lo eligió viendo las tres opciones el 14/11. Es `adminNotice('warning')`; fuera del panel, `avisoAccion` e `iconoAccion` de `lib/admin-ui.ts`, y en un correo, `CORREO.cajaAviso`.
-  - **En una píldora, un sello azul noche** (`brand-950`) con texto blanco y el ícono en cian: es `adminBadge('warning')` desde C-216 (Andrés, 13/11: "esas píldoras ámbar, las detesto, se ven demasiado genéricas"). **En un cuadro de ícono**, la misma placa: `placaAccion` o `adminIconChip('warning')`. El azul noche de "una sola pieza fuerte" se refiere a bloques, no a estos sellos y placas.
+  - **En un bloque, lo que alguien tiene que hacer va en el azul claro de la tienda** (`brand-50`, borde `brand-200`, texto `brand-900`) **con el ícono blanco en su placa del azul de la marca** (`brand-500`; C-243, antes azul noche con cian). Andrés lo eligió viendo las tres opciones el 14/11. Es `adminNotice('warning')`; fuera del panel, `avisoAccion` e `iconoAccion` de `lib/admin-ui.ts`, y en un correo, `CORREO.cajaAviso`.
+  - **En una píldora, el sello del azul oscuro del logo** (`brand-700`) con texto e ícono blancos (C-243): es `adminBadge('warning')` desde C-216 (Andrés, 13/11: "esas píldoras ámbar, las detesto, se ven demasiado genéricas"). **En un cuadro de ícono**, la placa del azul de la marca con el ícono blanco: `placaAccion` o `adminIconChip('warning')`.
   - **El ámbar queda solo en un texto suelto** ("Quedan 3", "Te faltan Bs. 120") **y en las excepciones con nombre.** Nunca destaca, celebra ni clasifica: ni un monto, ni un título, ni un nivel, ni una categoría, ni "Antes", ni una marca ajena como Binance. Tampoco una frase dentro de un texto (el equipo, 14/11, mirando los términos del checkout: "esas letras ámbar no me gustan, es dispar"): lo que se destaca ahí va en negrita, del mismo color. Lo que falta para seguir ("Debes verificar tu Pago Móvil") va en gris, como en los pasos (C-241).
   - Esperar no es un aviso: "En preparación", "Se acredita el…", "En revisión" (para quien espera) van en azul.
 - **Excepciones con nombre:** las estrellas de calificación y su barra (ámbar), la etiqueta amarilla `tag` de "Oferta del día" (con texto `ink`) y el rojo `navidad` del tema. El recuadro de "Lo que no incluye" de las cotizaciones (Luis, C-182) pasó al azul de acción con la regla de Andrés del 14/11.
 - **Nunca texto blanco sobre el verde claro (`success`):** no llega a 3:1. Sobre el verde fuerte (`success-strong`) sí: 5,5:1, como "Envío gratis" en la tienda y las píldoras de lo hecho en el panel (§1.8).
-- **Un correo, un acento:** el azul del botón y, si hace falta, una placa en azul noche (`placaCorreo` de `lib/email-templates/estilo.ts`). Lo demás, neutro.
+- **Un correo, un acento:** el azul del botón y, si hace falta, una placa en el azul oscuro del logo (`placaCorreo` de `lib/email-templates/estilo.ts`). Lo demás, neutro.
 
 ### 1.2 Tipografía
 
@@ -180,9 +191,9 @@ Andrés eligió la versión A ("como la tienda") el 13/11, para todo el panel.
   - rojo (`deal`) para lo cancelado o rechazado.
   - Es `adminBadge`. El estado de una orden lleva además su ícono (`components/admin/PildoraEstadoOrden`).
 - **En la tienda, igual** (el equipo, 14/11: "la píldora de verificado, los colores están invertidos"): un estado en píldora va lleno, nunca el verde claro con letra verde. En el checkout, "Verificado", "Conciliación BDV" y "Puntos ES suficientes" (C-241). Los cuadros de ícono siguen claros (`adminIconChip`).
-- **Lo que alguien tiene que hacer va en un sello azul noche, con texto blanco y el ícono en cian** (C-216, Andrés, 13/11: nada de píldoras ámbar). Es `adminBadge('warning')`: el nombre del tono quedó, el color cambió.
-- **El aviso en bloque de lo que alguien tiene que hacer** (`adminNotice('warning')`) va en el azul claro de la tienda, y el ícono que va adentro toma solo su placa azul noche con el cian (C-226, Andrés, 14/11: nada de contenedores ámbar).
-- **Un nivel o una clasificación** (Urgente, el nivel de un curso) va en azul de marca, nunca en ámbar ni en azul noche (§1.1).
+- **Lo que alguien tiene que hacer va en el sello del azul oscuro del logo, con texto e ícono blancos** (C-216, Andrés, 13/11: nada de píldoras ámbar; C-243 cambió el azul noche y el cian por el kit). Es `adminBadge('warning')`: el nombre del tono quedó, el color cambió.
+- **El aviso en bloque de lo que alguien tiene que hacer** (`adminNotice('warning')`) va en el azul claro de la tienda, y el ícono que va adentro toma solo su placa del azul de la marca, en blanco (C-226, Andrés, 14/11: nada de contenedores ámbar; C-243).
+- **Un nivel o una clasificación** (Urgente, el nivel de un curso) va en azul de marca, nunca en ámbar ni en el azul oscuro de los sellos (§1.1).
 - **Un dato en píldora** (una guía, un código) va en gris con su ícono (`adminDato`): informa sin competir con el estado.
 - **Los botones** (`adminPrimaryButton`, `adminSecondaryButton`, `adminIconButton`…) se levantan un poco al pasar el ratón y se hunden al tocarlos. Con "reducir movimiento" solo cambian de color, y apagados no se mueven.
 
@@ -575,6 +586,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **Volver atrás con `deploy.sh` cuando la base creció** (pendiente; salió de la subida de rc.53 del 14/11):
     - `git reset --hard <versión anterior>` y `deploy.sh --sin-pull` se paran en el paso 2: ven `DROP` de las tablas y columnas que agregó la versión nueva, y la tienda sigue como está.
     - Falta una opción (`--volver`) que compile igual cuando lo único distinto sea lo que agregó la versión nueva, sin aplicarlo nunca a la base. Hasta entonces, cada bloque dice "avisa a Claude".
+  - **C-243 · El kit de marca** (**hecha**, rc.57, 15/11; `estado/C-243.md`; el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo, §1.0).
+    - **C-245 · El panel entero con el kit** (pendiente; pedido del equipo el 15/11: "envíalo a un chat nuevo con Opus 5.5 extra alto que repase todo el admin panel para rediseñar con ese kit"). Lo hace un agente aparte, pantalla por pantalla, con maquetas para lo que haya que decidir.
   - **C-242 · Facturas, ordenada, y la tarjeta de opción** (**hecha**, rc.56, 14/11; `estado/C-242.md`; el equipo eligió la A y la tarjeta con el círculo para todo el panel, §1.10).
     - **Pendiente:** las pantallas que usan `adminChoice` con su propia disposición (Promociones, Legal, Productos, Equipo, la Lista del proveedor, Reportes, Studio, las direcciones de Mi panel) se ven bien y pasan a `Opcion` cuando se toquen.
   - **Lo que queda de ámbar y de píldoras claras en la tienda** (pendiente; salió del checkout el 14/11, con la regla de §1.1 y §1.8):
@@ -896,6 +909,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
     - "Tenemos 14 años en el mercado de Portuguesa; ahora vamos a toda Venezuela."
   - **El lema:** "Todo lo encuentras con nosotros." (la frase de la portada, del 16/10).
   - **El orden:** el sorteo (C-221), la ubicación (C-222), los textos (C-225), las cookies (C-223) y los tres únicos (C-224).
+- **El kit de marca (el equipo, 14/11, C-243):** la paleta A, solo los dos azules del logo (`brand-500` y `brand-700`) y sus claros. Salen el azul noche y el cian. La fuente única es `lib/marca.ts`, con la página `/admin/marca` y `npm run check:marca`. El arte de redes (ElectroStudio, Chispa) queda fuera.
 - **El checkout por pasos (el equipo, 14/11, C-241):** la A de las maquetas, un paso a la vez (Entrega, Revisar y Pagar), y **pagar al final**, cuando ya se revisó todo. Con un Pago Móvil ya verificado no se vuelve atrás.
 - **Claude sube desde la PC de Andrés (el equipo, 14/11):** con su propia llave (`~/.ssh/electroshop_claude`), una vez que el equipo la autorice en el servidor, y con la aprobación de cada deploy (regla 2 de `CLAUDE.md`).
 - **Videos de creadores (Andrés, 13/11):** videos de quienes compraron el producto (TikTok, Instagram o YouTube), en la ficha y en el inicio, enganchados con el programa de promotores. El plan maestro está en un documento de Claude Docs de Andrés ("Plan maestro de videos de creadores"). Faltan sus decisiones de la fase 2: el premio, quién manda videos, Instagram, los en vivo y el abogado.

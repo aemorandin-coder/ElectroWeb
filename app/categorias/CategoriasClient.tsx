@@ -53,7 +53,7 @@ export default function CategoriasClient({ categories }: { categories: Category[
                   href={`/categorias/${category.slug}`}
                   className="group flex h-full flex-col gap-3 rounded-2xl border border-line bg-white p-4 hover:border-brand-200 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500 lg:p-5"
                 >
-                  <span className="iconos-marca flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-950 group-hover:bg-white">
+                  <span className="iconos-marca flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700 group-hover:bg-white">
                     <CategoryIconRenderer iconName={category.icon || getAutoIcon(category.name)} className="h-6 w-6" />
                   </span>
                   <span className="min-w-0">

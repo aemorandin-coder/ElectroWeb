@@ -51,7 +51,7 @@ export async function sendCourseCertificateEmail(
       texto: 'Terminaste el curso y tu certificado ya está listo para mostrarlo.',
     },
     cuerpo: `
-      <!-- C-192: el certificado es la pieza fuerte (placa azul noche) -->
+      <!-- C-192: el certificado es la pieza fuerte (la placa, en el azul oscuro del logo desde C-243) -->
       ${placaCorreo(`
         <p style="${CORREO.placaRotulo}">Certificado de finalización</p>
         <p style="${CORREO.placaTitulo}">${e(data.courseTitle)}</p>

@@ -82,14 +82,14 @@ export default function MesaContadora({ yo, saludo, hoy, periodo, empresa, resum
   return (
     <div className="space-y-4">
       {/* La pieza azul noche: el saludo y el mes */}
-      <section className="grid gap-5 rounded-2xl bg-brand-950 p-5 text-white sm:p-7 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center" aria-labelledby="mesa-saludo">
+      <section className="grid gap-5 rounded-2xl bg-brand-700 p-5 text-white sm:p-7 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center" aria-labelledby="mesa-saludo">
         <div className="min-w-0">
           <h1 id="mesa-saludo" className="text-2xl font-bold lg:text-3xl">{saludo}{primerNombre ? `, ${primerNombre}` : ''}</h1>
           <p className="mt-1 text-sm text-white/80">
             {yo.esContadora ? 'Contadora' : 'Contabilidad'} de {empresa.nombre || 'la empresa'}{empresa.rif ? ` · RIF ${empresa.rif}` : ''} · {hoy}
           </p>
-          <p className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-xl border border-accent/40 bg-accent/10 px-3 py-2 text-sm">
-            <IconoInfo className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+          <p className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-3 py-2 text-sm">
+            <IconoInfo className="h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />
             {resumen.emitidas === 0 && resumen.sinFactura === 0
               ? `${Mes} todavía no tiene facturas ni compras cobradas.`
               : `${Mes}: ${resumen.emitidas} ${resumen.emitidas === 1 ? 'factura' : 'facturas'} · IVA ${formatVES(resumen.ivaBs)} · ${resumen.sinFactura} ${resumen.sinFactura === 1 ? 'compra cobrada' : 'compras cobradas'} sin factura`}
@@ -99,7 +99,7 @@ export default function MesaContadora({ yo, saludo, hoy, periodo, empresa, resum
           <p className="text-sm text-white/80">Facturado en {mes}</p>
           <p className="mt-1 text-2xl font-bold tabular-nums">{formatVES(resumen.totalBs)}</p>
           <p className="text-xs text-white/80">{talonario ? `Talonario Serie ${talonario.serie} · quedan ${talonario.quedan}` : 'Sin talonario cargado'}</p>
-          <Link href="/admin/contabilidad/facturas" className="mt-3 flex h-11 items-center justify-center gap-2 rounded-lg bg-white text-sm font-semibold text-brand-950 transition hover:bg-brand-50">
+          <Link href="/admin/contabilidad/facturas" className="mt-3 flex h-11 items-center justify-center gap-2 rounded-lg bg-white text-sm font-semibold text-brand-700 transition hover:bg-brand-50">
             Ver las facturas <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>

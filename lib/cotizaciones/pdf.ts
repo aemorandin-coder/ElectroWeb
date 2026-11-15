@@ -22,7 +22,7 @@ const W = 612 - MX * 2;
 const T = { xs: 7.9, sm: 9.2, base: 10.5, xl: 13 };
 
 const COLOR = {
-  noche: rgb('#0a1530'), azul: rgb('#2a63cd'), sello: rgb('#1e4ba3'), tinta: rgb('#212529'), suave: rgb('#495057'),
+  noche: rgb('#1a3b7e'), azul: rgb('#2a63cd'), sello: rgb('#1e4ba3'), tinta: rgb('#212529'), suave: rgb('#495057'),
   gris: rgb('#6a6c6b'), linea: rgb('#e9ecef'), lineaFuerte: rgb('#dee2e6'), fondo: rgb('#f8f9fa'), blanco: [1, 1, 1] as Rgb,
   // Los tonos de la hoja: success/10, warning/10 y sus bordes, mezclados sobre blanco
   verde: rgb('#047857'), verdeFondo: rgb('#e7f8f2'), verdeBorde: rgb('#94e0c6'),

@@ -350,7 +350,7 @@ export default function CustomerDashboard() {
           <dl className="mt-2 grid grid-cols-3 gap-2 border-t border-line pt-3 text-center">
             <div>
               <dt className="text-xs text-muted">Recargado</dt>
-              <dd className="text-sm font-semibold tabular-nums text-success-strong">{formatUSD(stats?.totalRecharges ?? 0)}</dd>
+              <dd className="text-sm font-semibold tabular-nums text-ink">{formatUSD(stats?.totalRecharges ?? 0)}</dd>
             </div>
             <div>
               <dt className="text-xs text-muted">En compras</dt>
@@ -358,7 +358,7 @@ export default function CustomerDashboard() {
             </div>
             <div>
               <dt className="text-xs text-muted">Este mes</dt>
-              <dd className="text-sm font-semibold tabular-nums text-brand-600">{formatUSD(stats?.totalSpentThisMonth ?? 0)}</dd>
+              <dd className="text-sm font-semibold tabular-nums text-ink">{formatUSD(stats?.totalSpentThisMonth ?? 0)}</dd>
             </div>
           </dl>
         </section>

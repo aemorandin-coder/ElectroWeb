@@ -7,9 +7,22 @@ import { es } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/EmptyState';
 import {
   IconoActualizar, IconoBillete, IconoBuscar, IconoCargando, IconoCerrar, IconoCheck, IconoConfirmado, IconoCuenta,
-  IconoCuentaBorrada, IconoDigital, IconoEnviar, IconoEnvio, IconoFlechaDerecha, IconoImpresora, IconoMonitor, IconoPaquete, IconoReloj,
-  IconoVer,
+  IconoCuentaBorrada, IconoDigital, IconoEntregado, IconoEnviar, IconoEnvio, IconoFlechaDerecha, IconoImpresora, IconoLista, IconoMonitor,
+  IconoPaquete, IconoReloj, IconoVer,
 } from '@/components/iconos';
+import Filtros, { type Filtro } from '@/components/admin/Filtros';
+
+// C-249 (el equipo eligió la A el 15/11): los 7 estados en píldoras con ícono, cuenta y lo que juntan, en todos los
+// tamaños (antes, un selector en la computadora y pestañas en el teléfono). Lo que te toca, en el azul claro (§1.7).
+const FILTROS_ESTADO: Omit<Filtro<string>, 'cuenta'>[] = [
+  { valor: 'all', etiqueta: 'Todas', ayuda: 'Las de la lista', Icono: IconoLista },
+  { valor: 'PENDING', etiqueta: 'Pendientes', ayuda: 'Esperan el pago', Icono: IconoReloj, tono: 'aviso' },
+  { valor: 'CONFIRMED', etiqueta: 'Confirmadas', ayuda: 'Falta marcarlas pagadas', Icono: IconoCheck, tono: 'aviso' },
+  { valor: 'PAID', etiqueta: 'Pagadas', ayuda: 'Por preparar', Icono: IconoBillete, tono: 'aviso' },
+  { valor: 'PROCESSING', etiqueta: 'En preparación', ayuda: 'Se están armando', Icono: IconoPaquete },
+  { valor: 'SHIPPED', etiqueta: 'Enviadas', ayuda: 'Van en camino', Icono: IconoEnvio },
+  { valor: 'DELIVERED', etiqueta: 'Entregadas', ayuda: 'Ya las tiene el cliente', Icono: IconoEntregado },
+];
 import PildoraEstadoOrden from '@/components/admin/PildoraEstadoOrden';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
@@ -22,7 +35,6 @@ import EntregaOrden from './_components/EntregaOrden';
 import {
   adminBadge,
   adminDato,
-  adminTab,
   adminModalHeader,
   adminModalBody,
   adminPageHeader,
@@ -486,20 +498,6 @@ export default function OrdersPage() {
               className={`${adminInput()} pl-9`}
             />
           </div>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            aria-label="Estado"
-            className={`${adminInput()} hidden shrink-0 lg:block lg:w-44`}
-          >
-            <option value="all">Todas</option>
-            <option value="PENDING">Pendientes</option>
-            <option value="CONFIRMED">Confirmadas</option>
-            <option value="PAID">Pagadas</option>
-            <option value="PROCESSING">En preparación</option>
-            <option value="SHIPPED">Enviadas</option>
-            <option value="DELIVERED">Entregadas</option>
-          </select>
         </div>
         <button
           onClick={() => fetchOrders(1)}
@@ -511,19 +509,12 @@ export default function OrdersPage() {
         </button>
       </div>
 
-      <nav aria-label="Filtrar órdenes por estado" className="overflow-x-auto pb-1 lg:hidden">
-        <div className="flex w-max gap-2">
-          {[
-            ['all', 'Todas'], ['PENDING', 'Pendientes'], ['CONFIRMED', 'Confirmadas'],
-            ['PAID', 'Pagadas'], ['PROCESSING', 'En preparación'], ['SHIPPED', 'Enviadas'], ['DELIVERED', 'Entregadas'],
-          ].map(([value, label]) => (
-            <button key={value} type="button" onClick={() => setFilterStatus(value)} aria-pressed={filterStatus === value} className={`${adminTab(filterStatus === value)} h-11`}>
-              {label}
-              {!loading && summary && <span className="tabular-nums">{value === 'all' ? summary.total : summary.byStatus[value] ?? 0}</span>}
-            </button>
-          ))}
-        </div>
-      </nav>
+      <Filtros
+        etiqueta="Filtrar órdenes por estado"
+        valor={filterStatus}
+        onCambiar={setFilterStatus}
+        filtros={FILTROS_ESTADO.map((f) => ({ ...f, cuenta: loading || !summary ? null : f.valor === 'all' ? summary.total : summary.byStatus[f.valor] ?? 0 }))}
+      />
 
       {/* Stats Cards */}
       <div className="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-4">

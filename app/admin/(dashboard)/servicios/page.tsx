@@ -9,8 +9,15 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useState } from 'react';
 import {
   IconoCerrar, IconoEditar, IconoEliminar, IconoEstrella, IconoGuardar, IconoImagen, IconoInterruptorApagado,
-  IconoInterruptorEncendido, IconoMas, IconoVideo,
+  IconoInterruptorEncendido, IconoMas, IconoVideo, IconoCamaraSeguridad, IconoRouter, IconoTarjeta, IconoPcGaming, IconoConsola, IconoCircuito,
+  IconoServicioTecnico, type IconType,
 } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
+
+/** C-249: el ícono de cada categoría en su píldora de filtro (§1.7) */
+const ICONO_CATEGORIA: Record<string, IconType> = {
+  CCTV: IconoCamaraSeguridad, REDES: IconoRouter, POS: IconoTarjeta, GAMING: IconoPcGaming, CONSOLAS: IconoConsola, ELECTRONICA: IconoCircuito,
+};
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { formatRating } from '@/lib/currency';
 
@@ -235,34 +242,20 @@ export default function AdminServiciosPage() {
         </div>
       </div>
 
-      {/* Filtros por categoría */}
-      <div className="flex gap-2 flex-wrap mb-6">
-        <button
-          onClick={() => setFilterCategory('')}
-          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-            filterCategory === ''
-              ? 'bg-brand-500 text-white shadow'
-              : 'bg-surface text-muted hover:bg-line'
-          }`}
-        >
-          Todos ({videos.length})
-        </button>
-        {CATEGORIES.map((c) => {
-          const count = videos.filter((v) => v.category === c.value).length;
-          return (
-            <button
-              key={c.value}
-              onClick={() => setFilterCategory(c.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                filterCategory === c.value
-                  ? 'bg-brand-500 text-white shadow'
-                  : 'bg-surface text-muted hover:bg-line'
-              }`}
-            >
-              {c.label} ({count})
-            </button>
-          );
-        })}
+      {/* C-249: las categorías en píldoras con ícono, cuenta y lo que juntan (§1.7) */}
+      <div className="mb-6">
+        <Filtros
+          etiqueta="Filtrar por categoría"
+          valor={filterCategory}
+          onCambiar={setFilterCategory}
+          filtros={[
+            { valor: '', etiqueta: 'Todos', ayuda: 'Todo el portafolio', Icono: IconoServicioTecnico, cuenta: videos.length },
+            ...CATEGORIES.map((c) => ({
+              valor: c.value, etiqueta: c.label, ayuda: `Trabajos de ${c.label.toLowerCase()}`, Icono: ICONO_CATEGORIA[c.value] ?? IconoServicioTecnico,
+              cuenta: videos.filter((v) => v.category === c.value).length,
+            })),
+          ]}
+        />
       </div>
 
       {/* Grid de trabajos */}

@@ -8,8 +8,9 @@ import { toast } from 'react-hot-toast';
 import {
   IconoActualizar, IconoBillete, IconoBuscar, IconoCerrar, IconoCheck, IconoConfirmado, IconoDescargar,
   IconoEntradaPuntos, IconoError, IconoFiltro, IconoPagoMovil, IconoPaquete, IconoRegalo, IconoReloj, IconoRepetir,
-  IconoSalidaPuntos, IconoTarjeta, IconoVentas, IconoWeb,
+  IconoLista, IconoSalidaPuntos, IconoTarjeta, IconoVentas, IconoWeb,
 } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
 import { SiBinance } from 'react-icons/si';
 import { formatPaymentMethod, isCreditTransaction } from '@/lib/format-helpers';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -363,6 +364,19 @@ export default function TransactionsPage() {
                 </button>
             )}
 
+            {/* C-249 (el equipo eligió la A el 15/11): el estado en píldoras con ícono y lo que juntan (antes, un selector) */}
+            <Filtros
+                etiqueta="Estado de transacción"
+                valor={filterStatus}
+                onCambiar={setFilterStatus}
+                filtros={[
+                    { valor: 'all', etiqueta: 'Todas', ayuda: 'Hasta 200 movimientos', Icono: IconoLista },
+                    { valor: 'PENDING', etiqueta: 'Pendientes', ayuda: 'Esperan tu revisión', Icono: IconoReloj, tono: 'aviso', cuenta: stats ? stats.pendingCount : null },
+                    { valor: 'COMPLETED', etiqueta: 'Aprobadas', ayuda: 'Ya procesadas', Icono: IconoConfirmado },
+                    { valor: 'CANCELLED', etiqueta: 'Rechazadas', ayuda: 'Con su motivo', Icono: IconoCerrar },
+                ]}
+            />
+
             {/* ── Filters ── */}
             <div className="flex flex-wrap gap-2 items-center">
                 {/* Search */}
@@ -401,18 +415,6 @@ export default function TransactionsPage() {
                     </select>
                 </div>
 
-                {/* Status */}
-                <select
-                    aria-label="Estado de transacción"
-                    value={filterStatus}
-                    onChange={e => setFilterStatus(e.target.value)}
-                    className={`${adminInput()} sm:w-52`}
-                >
-                    <option value="all">Todos los estados</option>
-                    <option value="PENDING">Pendientes</option>
-                    <option value="COMPLETED">Aprobadas</option>
-                    <option value="CANCELLED">Rechazadas</option>
-                </select>
 
                 {searchQuery && (
                     <div className="px-3 py-2 bg-surface border border-line rounded-lg text-xs text-muted font-medium">

@@ -1,5 +1,7 @@
 'use client';
 
+import { IconoConfirmado, IconoLista, IconoRechazado, IconoReloj } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
 import { adminBadge, adminModalOverlay, adminModalPanel, adminPageHeader, adminPageSubtitle, adminPageTitle, adminSecondaryButton, adminSuccessButton } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
@@ -88,24 +90,19 @@ export default function AdminCreatorsPage() {
         </div>
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex gap-2 mb-6 border-b border-line pb-4">
-        {(['ALL', 'PENDING', 'APPROVED', 'REJECTED'] as const).map((s) => (
-          <button
-            key={s}
-            onClick={() => setFilter(s)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
-              filter === s
-                ? 'bg-brand-500 text-white'
-                : 'bg-surface text-muted hover:bg-line'
-            }`}
-          >
-            {s === 'ALL' ? 'Todos' : STATUS_LABELS[s]}
-            <span className="ml-1.5 text-xs opacity-70">
-              {counts[s as keyof typeof counts]}
-            </span>
-          </button>
-        ))}
+      {/* C-249: el estado en píldoras con ícono, cuenta y lo que juntan (§1.7) */}
+      <div className="mb-6">
+        <Filtros
+          etiqueta="Filtrar solicitudes"
+          valor={filter}
+          onCambiar={setFilter}
+          filtros={[
+            { valor: 'ALL', etiqueta: 'Todos', ayuda: 'Todas las solicitudes', Icono: IconoLista, cuenta: counts.ALL },
+            { valor: 'PENDING', etiqueta: 'Pendientes', ayuda: 'Esperan tu revisión', Icono: IconoReloj, tono: 'aviso', cuenta: counts.PENDING },
+            { valor: 'APPROVED', etiqueta: 'Aprobados', ayuda: 'Ya tienen acceso', Icono: IconoConfirmado, cuenta: counts.APPROVED },
+            { valor: 'REJECTED', etiqueta: 'Rechazados', ayuda: 'Con sus notas', Icono: IconoRechazado, cuenta: counts.REJECTED },
+          ]}
+        />
       </div>
 
       {loading ? (

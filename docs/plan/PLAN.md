@@ -593,13 +593,10 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **C-247 · La foto del premio del sorteo** (**hecha**, rc.59, 15/11; `estado/C-247.md`; el equipo eligió la A, sobre el azul y más grande). La foto se sube desde el panel.
   - **C-243 · El kit de marca** (**hecha**, rc.57, 15/11; `estado/C-243.md`; el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo, §1.0).
     - **C-245 · El panel entero con el kit** (**hecha** la parte mecánica, rc.61, 15/11; `estado/C-245.md`; lo hizo un agente aparte). El inventario de las 43 pantallas y los arreglos de 14 módulos, incluida Marketing a lo ancho (lo marcó C-244). Queda:
-      - **Dos decisiones del equipo,** con maquetas en `~/.cache/electroshop-trabajo/c245/decisiones.html`:
-        1. **crear por pasos** los ocho formularios de una sola vez (oferta o cupón, método de pago, campaña, promotor, curso, trabajo de Servicios, gift cards impresas y categoría): A, en su propia página como el sorteo (recomendada); B, en la ventana; C, una página por grupos;
-        2. **los filtros de Órdenes** (y los selectores de Transacciones y Mensajes): A, las 7 píldoras de estado (recomendada); B, cuatro de trabajo; C, como hoy.
-      - **Arreglos de la misma clase, para la próxima vuelta (con C-206):**
-        - las píldoras de categoría de Cursos y Servicios, las pestañas de Creadores y los sellos de "por atender" de ElectroStudio, a `Filtros`;
-        - las fotos de antes y después de Servicios se pegan como dirección: §1.9 pide subirlas o elegirlas.
-      - **Los botones compartidos con tamaño cambiado** (`h-9 px-3 text-xs` en Marketing, Navidad, Campañas, Sorteo, Notificaciones…) se ven de 44 px: en el CSS, `h-11` y `px-5` del botón ganan. Hoy no molesta (44 px es el toque del teléfono). Si se quieren compactos, hace falta un botón chico compartido (`adminSmallButton`) y no clases sumadas (§1.8).
+      - **Las dos decisiones, tomadas** (el equipo, 15/11: la A y la A, §7.2): las hace **C-249** (`estado/C-249.md`).
+        - **Hecha la parte a** (rc.63): los filtros en píldoras de Órdenes, Transacciones, Mensajes, Cursos, Trabajos realizados, Creadores y ElectroStudio.
+        - **Sigue C-249b:** los ocho formularios por pasos en su propia página, con su vista previa y "Revisar y publicar", empezando por el cupón. También las fotos de Servicios, que se suben en lugar de pegar la dirección. El plan está en `estado/C-249.md`.
+      - **Los botones compartidos con tamaño cambiado** (`h-9 px-3 text-xs`) se quedan de 44 px, que es el toque del teléfono (`estado/C-249.md`).
   - **C-248 · Dos botones de Contabilidad con la regla del "!"** (**hecha**, rc.62, 15/11; `estado/C-248.md`): el tacho de "Quitar el renglón" y el verde de "¡Copiado!" en la orden. Lo demás de Contabilidad ya cumplía.
   - **C-244 · La vista previa de los correos, fija mientras se recorre la lista** (**hecha**, rc.58, 15/11; `estado/C-244.md`; el equipo lo vio en producción: el marco salía bajo, con su propio scroll, y quedaba un espacio en blanco).
   - **C-242 · Facturas, ordenada, y la tarjeta de opción** (**hecha**, rc.56, 14/11; `estado/C-242.md`; el equipo eligió la A y la tarjeta con el círculo para todo el panel, §1.10).
@@ -776,6 +773,9 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - Migraciones autorizadas siempre que sean aditivas y con respaldo (29/09).
   - Sin emojis en la web ni en el código (14/09).
   - Cuidado con los términos: ninguna promesa escrita a mano que la tienda no cumpla; ante la duda, preguntar (30/09).
+- **El panel con el kit (el equipo, 15/11, viendo las maquetas de C-245; las hace C-249):**
+  - **Crear algo nuevo va por pasos en su propia página, como el sorteo** (la A): los pasos arriba, lo que verá el cliente al lado y "Revisar y publicar" al final. Vale para los ocho formularios que se llenaban de una vez (oferta o cupón, método de pago, campaña, promotor, curso, trabajo de Servicios, gift cards impresas y categoría) y para todo lo nuevo.
+  - **Los filtros de una lista van en las píldoras de estado, en todos los tamaños** (la A): Órdenes con sus 7 estados, y con la misma forma Transacciones y Mensajes. Se van el selector de la computadora y las pestañas del teléfono.
 - **Servidor e imágenes para compartir (16/10, C-176 a C-178; las decidió Luis, del equipo, con Claude):**
   - El mantenimiento del servidor se hace en vivo, con Claude conectado: Claude corre lo que no pide `sudo`, y lo que sí lo pide lo corre el equipo con los bloques que prepara Claude.
   - SSH solo con llave y con fail2ban.

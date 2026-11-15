@@ -13,8 +13,9 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   IconoBillete, IconoCalendario, IconoCerrar, IconoChat, IconoCheck, IconoChevronIzquierda, IconoCorreo, IconoCuenta,
-  IconoEliminar, IconoPaquete, IconoTelefono,
+  IconoConfirmado, IconoEliminar, IconoLista, IconoPaquete, IconoRechazado, IconoReloj, IconoTelefono, IconoVer,
 } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -364,16 +365,19 @@ export default function InquiriesPage() {
                         {/* Filter */}
                         <div className="flex-shrink-0 mb-4">
                             <div className="flex flex-wrap gap-2">
-                                <select
-                                    value={messageFilterStatus}
-                                    onChange={(e) => setMessageFilterStatus(e.target.value as 'ALL' | 'PENDING' | 'READ' | 'RESPONDED')}
-                                    className={`${adminInput()} sm:w-auto`}
-                                >
-                                    <option value="ALL">Todos ({messages.length})</option>
-                                    <option value="PENDING">Pendientes ({messageStats.pending})</option>
-                                    <option value="READ">Leídos</option>
-                                    <option value="RESPONDED">Respondidos</option>
-                                </select>
+                                <div className="w-full">
+                                    <Filtros
+                                        etiqueta="Filtrar mensajes"
+                                        valor={messageFilterStatus}
+                                        onCambiar={setMessageFilterStatus}
+                                        filtros={[
+                                            { valor: 'ALL', etiqueta: 'Todos', ayuda: 'Los de la lista', Icono: IconoLista, cuenta: messages.length },
+                                            { valor: 'PENDING', etiqueta: 'Pendientes', ayuda: 'Sin leer', Icono: IconoReloj, tono: 'aviso', cuenta: messageStats.pending },
+                                            { valor: 'READ', etiqueta: 'Leídos', ayuda: 'Falta responder', Icono: IconoVer },
+                                            { valor: 'RESPONDED', etiqueta: 'Respondidos', ayuda: 'Ya tienen respuesta', Icono: IconoConfirmado },
+                                        ]}
+                                    />
+                                </div>
                                 {selectorOrden}
                                 <BotonUrgencia alTerminar={despuesDeOrdenar} />
                             </div>
@@ -550,17 +554,18 @@ export default function InquiriesPage() {
                             </div>
 
                             <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
-                                <select
-                                    value={requestFilterStatus}
-                                    onChange={(e) => setRequestFilterStatus(e.target.value)}
-                                    className={`${adminInput()} sm:w-auto`}
-                                >
-                                    <option value="all">Todas</option>
-                                    <option value="PENDING">Pendientes</option>
-                                    <option value="IN_PROGRESS">En Progreso</option>
-                                    <option value="FULFILLED">Cumplidas</option>
-                                    <option value="REJECTED">Rechazadas</option>
-                                </select>
+                                <Filtros
+                                    etiqueta="Filtrar solicitudes"
+                                    valor={requestFilterStatus}
+                                    onCambiar={setRequestFilterStatus}
+                                    filtros={[
+                                        { valor: 'all', etiqueta: 'Todas', ayuda: 'Las de la lista', Icono: IconoLista, cuenta: requestStats.total },
+                                        { valor: 'PENDING', etiqueta: 'Pendientes', ayuda: 'Esperan respuesta', Icono: IconoReloj, tono: 'aviso', cuenta: requestStats.pending },
+                                        { valor: 'IN_PROGRESS', etiqueta: 'En progreso', ayuda: 'Se están buscando', Icono: IconoPaquete, cuenta: requestStats.inProgress },
+                                        { valor: 'FULFILLED', etiqueta: 'Cumplidas', ayuda: 'Ya se consiguieron', Icono: IconoConfirmado },
+                                        { valor: 'REJECTED', etiqueta: 'Rechazadas', ayuda: 'No se pudieron conseguir', Icono: IconoRechazado },
+                                    ]}
+                                />
                                 <div className="mt-2 flex flex-wrap gap-2">
                                     {selectorOrden}
                                     <BotonUrgencia alTerminar={despuesDeOrdenar} />

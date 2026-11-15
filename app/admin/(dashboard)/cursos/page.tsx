@@ -7,7 +7,16 @@ import { formatUSD } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState } from 'react';
-import { IconoCerrar, IconoCursos, IconoEliminar, IconoEstrella, IconoEstrellaLlena, IconoMas } from '@/components/iconos';
+import {
+  IconoCandado, IconoCerrar, IconoCircuito, IconoCursos, IconoEliminar, IconoEstrella, IconoEstrellaLlena, IconoMaletin, IconoMas, IconoRouter,
+  IconoSoftware, IconoVideojuegos, type IconType,
+} from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
+
+/** C-249: el ícono de cada categoría en su píldora de filtro (§1.7) */
+const ICONO_CATEGORIA: Record<string, IconType> = {
+  DESARROLLO: IconoSoftware, REDES: IconoRouter, ELECTRONICA: IconoCircuito, GAMING: IconoVideojuegos, SEGURIDAD: IconoCandado, NEGOCIOS: IconoMaletin,
+};
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { formatRating } from '@/lib/currency';
@@ -301,26 +310,20 @@ export default function AdminCursosPage() {
         </button>
       </div>
 
-      {/* Category filter pills */}
-      <div className="flex gap-2 flex-wrap mb-6">
-        <button
-          onClick={() => setFilterCat('')}
-          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${!filterCat ? 'bg-brand-500 text-white' : 'bg-surface text-muted hover:bg-line'}`}
-        >
-          Todos ({courses.length})
-        </button>
-        {CATEGORIES.map((cat) => {
-          const count = courses.filter((c) => c.category === cat.value).length;
-          return (
-            <button
-              key={cat.value}
-              onClick={() => setFilterCat(cat.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${filterCat === cat.value ? 'bg-brand-500 text-white' : 'bg-surface text-muted hover:bg-line'}`}
-            >
-              {cat.label} ({count})
-            </button>
-          );
-        })}
+      {/* C-249: las categorías en píldoras con ícono, cuenta y lo que juntan (§1.7) */}
+      <div className="mb-6">
+        <Filtros
+          etiqueta="Filtrar por categoría"
+          valor={filterCat}
+          onCambiar={setFilterCat}
+          filtros={[
+            { valor: '', etiqueta: 'Todos', ayuda: 'Todos los cursos', Icono: IconoCursos, cuenta: courses.length },
+            ...CATEGORIES.map((cat) => ({
+              valor: cat.value, etiqueta: cat.label, ayuda: `Cursos de ${cat.label.toLowerCase()}`, Icono: ICONO_CATEGORIA[cat.value] ?? IconoCursos,
+              cuenta: courses.filter((c) => c.category === cat.value).length,
+            })),
+          ]}
+        />
       </div>
 
       {/* Courses grid */}

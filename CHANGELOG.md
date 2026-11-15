@@ -10,6 +10,19 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.78] - 2026-11-15
+El kit de onboarding en más lugares, y las misiones de Mi panel (C-260). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Tienda 1.18.0 (C-260)
+- **Al agregar al carrito,** el aviso dice "¡Listo! Ya está en tu carrito", con el producto y "Ver carrito". Los carritos a la vista saltan una vez, para que se vea dónde quedó. "Comprar ahora" va directo al checkout, sin el aviso.
+- **Las animaciones nuevas del kit:** la vuelta de las flechas de girar, la flecha que baja y la firma que se dibuja. Una sola vez, y quietas con "reducir movimiento".
+### Carrito, checkout y cuenta del cliente 1.10.0 (C-260)
+- **Mis códigos:** "Voltear tarjeta" es el botón principal hasta ver el código, y su ícono da una vuelta.
+- **Las misiones de Mi panel** dibujan sus íconos. "¿Cómo funciona la tienda?" abre la hoja del kit con el camino en tres íconos: recargar Puntos ES, pagar al instante y recibir el pedido.
+### Configuración 1.4.4 (C-260)
+- **Al firmar un documento** (los términos de los Puntos ES y los demás):
+  - "Baja hasta el final para firmar" mientras falta leer; tocarla baja una pantalla;
+  - con el recuadro vacío, una firma de muestra se dibuja con "Firma aquí", y se va al empezar a firmar.
+
 ## [1.0.0-rc.77] - 2026-11-15
 Las tres decisiones del equipo sobre los callejones que midió C-258 (C-261). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Tienda 1.17.1 (C-261)

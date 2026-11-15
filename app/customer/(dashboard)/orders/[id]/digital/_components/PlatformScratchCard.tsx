@@ -7,7 +7,8 @@ import { BsNintendoSwitch } from 'react-icons/bs';
 import { SiSteam, SiPlaystation, SiRoblox, SiNetflix, SiSpotify, SiApple } from 'react-icons/si';
 import { FaXbox } from 'react-icons/fa';
 import { createCardEngine, type GiftCardFace } from '@/components/gift-card/cardEngine';
-import { adminSecondaryButton } from '@/lib/admin-ui';
+import { adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import IconoDibujado from '@/components/onboarding/IconoDibujado';
 import styles from './PlatformScratchCard.module.css';
 
 const subscribeReduced = (notify: () => void) => {
@@ -236,7 +237,9 @@ export default function PlatformScratchCard({ code, platform, productName, image
         </div>
       </div>
       <div className="mt-6 flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => { engine.pointerLeave({ clientX: 0, clientY: 0, pointerType: 'mouse' }); engine.flip(); }} className={`${adminSecondaryButton} flex-1 px-3`}><IconoGirar className="h-4 w-4" aria-hidden="true" />{face === 'front' ? 'Voltear tarjeta' : 'Ver portada'}</button>
+        {/* C-260 (C-258 midió que había que voltear y raspar sin saberlo): mientras falta ver el código, voltear es lo principal y su
+            ícono gira una vez para invitar; ya volteada o revelada, vuelve a ser secundario */}
+        <button type="button" onClick={() => { engine.pointerLeave({ clientX: 0, clientY: 0, pointerType: 'mouse' }); engine.flip(); }} className={`${face === 'front' && !revealed ? adminPrimaryButton : adminSecondaryButton} flex-1 px-3`}>{face === 'front' && !revealed ? <IconoDibujado Icono={IconoGirar} accion="gira" className="h-4 w-4" retraso={0.8} /> : <IconoGirar className="h-4 w-4" aria-hidden="true" />}{face === 'front' ? 'Voltear tarjeta' : 'Ver portada'}</button>
         {face === 'back' && !revealed && <button type="button" onClick={reveal} className={`${adminSecondaryButton} flex-1 px-3`}><IconoAbrirCandado className="h-4 w-4" aria-hidden="true" />Revelar sin raspar</button>}
       </div>
       <p role="status" className="mt-2 flex items-center gap-1.5 text-xs text-muted">{revealed ? <><IconoCheck className="h-4 w-4 text-success-strong" aria-hidden="true" />Código revelado</> : face === 'front' ? 'Toca o arrastra la tarjeta para voltearla.' : `Lámina raspada: ${progress}%`}</p>

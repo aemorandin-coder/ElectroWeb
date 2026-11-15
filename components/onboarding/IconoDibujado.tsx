@@ -5,7 +5,7 @@
 import type { CSSProperties } from 'react';
 import type { IconType } from '@/components/iconos';
 
-export type AccionIcono = 'buscar' | 'carrito' | 'catalogo' | 'cuenta' | 'destello' | 'salta';
+export type AccionIcono = 'buscar' | 'carrito' | 'catalogo' | 'cuenta' | 'destello' | 'salta' | 'gira';
 
 export default function IconoDibujado({
   Icono,

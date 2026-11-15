@@ -1,9 +1,14 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.76; en `main`, rc.77 por subir: §2)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.76; en `main`, rc.78 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-260 · El kit de onboarding en más lugares, y las misiones de Mi panel (rc.78, por subir: §2; `estado/C-260.md`):** lo que midió C-258.
+  - **"Agregar":** "¡Listo! Ya está en tu carrito" con "Ver carrito", y el carrito que salta.
+  - **Al firmar los términos:** "Baja hasta el final para firmar", y la firma de muestra.
+  - **Mis códigos:** "Voltear tarjeta" como el botón principal.
+  - **Las misiones de Mi panel:** los íconos que se dibujan, y "¿Cómo funciona la tienda?" como la hoja del kit.
 - **C-261 · Las tres decisiones de C-258 (rc.77, por subir: §2; `estado/C-261.md`):** el equipo eligió lo recomendado en los tres callejones que midió C-258.
   - **"Solicitar producto" sin cuenta** pide entrar antes del formulario, y crear la cuenta vuelve a la página.
   - **La garantía** abre en "Nueva" o en Mis solicitudes, con "Pedir garantía" arriba.
@@ -372,11 +377,12 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.77` (C-261; unos 10 minutos)
+### Lo que falta subir: `v1.0.0-rc.78` (C-261 y C-260; unos 20 minutos)
 Producción está en `v1.0.0-rc.76` (`38cd1f7`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
 - **C-261 (rc.77):** las tres decisiones de C-258. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo antes.
+- **C-260 (rc.78):** el kit de onboarding en más lugares y las misiones de Mi panel. Sin cambio de base.
 - **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.77`, o una mayor si entró otra tarea antes del `git pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.78`, o una mayor si entró otra tarea antes del `git pull`.
 - **Pruebas** (unos 10 minutos, en el teléfono y en la computadora):
   1. **`/solicitar-producto` en una ventana privada, sin entrar:**
       - sale "Entra para pedirlo", con "Crear mi cuenta gratis" y "Ya tengo cuenta: entrar", y no el formulario;
@@ -387,6 +393,12 @@ Producción está en `v1.0.0-rc.76` (`38cd1f7`); su bloque está en `HISTORIAL.m
   3. **Mi panel → Puntos ES → Recargar,** con un método que no sea Pago Móvil (por ejemplo Binance Pay):
       1. escribe el monto: el botón dice "Recargar $… con …";
       2. sal con "Cancelar" sin recargar. Si haces una recarga de verdad, ya no sale "¿Estás seguro?".
+  4. **"Agregar" en una tarjeta del inicio** (en el teléfono y en la computadora): sale "¡Listo! Ya está en tu carrito" con "Ver carrito", y el carrito salta una vez. "Ver carrito" lleva al carrito.
+  5. **Los términos de Puntos ES**, con una cuenta que todavía no los firmó (o en la ventana de firmar de otro documento):
+      - mientras falta leer, abajo sale "Baja hasta el final para firmar", y tocarla baja el texto;
+      - en el paso de la firma, el recuadro vacío muestra una firma que se dibuja y "Firma aquí", que se va al tocar.
+  6. **Mis códigos** (un pedido con un código digital, si hay uno a mano): "Voltear tarjeta" es el botón azul lleno.
+  7. **Mi panel**, con una cuenta que todavía tiene misiones: "¿Cómo funciona la tienda?" abre la hoja con los tres pasos. "Entendido" la cierra.
 - **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.76 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de base que deshacer.
 
 ### Por confirmar de rc.76 (C-258 y C-257; unos 25 minutos)

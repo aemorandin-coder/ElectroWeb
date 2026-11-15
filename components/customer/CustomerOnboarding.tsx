@@ -2,13 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import {
-  IconoBolsa, IconoCerrar, IconoCheck, IconoChevronAbajo, IconoChevronDerecha, IconoCorreo, IconoEnvio, IconoTarjeta,
-  IconoUbicacion, IconoVerificado,
-} from '@/components/iconos';
+import { IconoBolsa, IconoCerrar, IconoCheck, IconoChevronDerecha, IconoCorreo, IconoUbicacion, IconoVerificado } from '@/components/iconos';
 import type { IconType } from '@/components/iconos';
 import { useSession } from 'next-auth/react';
 import { adminCard } from '@/lib/admin-ui';
+import AsiFunciona from '@/components/onboarding/AsiFunciona';
+import IconoDibujado from '@/components/onboarding/IconoDibujado';
 import { lanzarConfeti } from '@/lib/motion/confeti';
 import { RESORTES, avanzarResorte, crearResorte, fijarResorte, prefiereMenosMovimiento, useBucleAnimacion } from '@/lib/motion/resorte';
 
@@ -229,7 +228,8 @@ export default function CustomerOnboarding({ stats }: { stats: Stats }) {
               }`}
             >
               <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-brand-600 ring-1 ring-line">
-                <m.Icono className="h-4 w-4" aria-hidden="true" />
+                {/* C-260: el ícono de cada misión se dibuja una vez, en cascada (el kit de onboarding, PLAN §1.11) */}
+                <IconoDibujado Icono={m.Icono} className="h-4 w-4" retraso={0.15 + i * 0.12} />
                 {/* El check crece con rebote encima del ícono cuando la misión está hecha */}
                 <span
                   ref={(el) => {
@@ -256,36 +256,31 @@ export default function CustomerOnboarding({ stats }: { stats: Stats }) {
       </ul>
 
       <div className="mt-4 border-t border-line pt-3">
+        {/* C-260: "¿Cómo funciona la tienda?" abre la hoja del kit (C-257), con el camino en tres íconos que se dibujan.
+            Antes era una lista que se desplegaba, con más texto */}
         <button
           type="button"
-          onClick={() => setVerGuia((v) => !v)}
-          aria-expanded={verGuia}
-          aria-controls="guia-tienda"
+          onClick={() => setVerGuia(true)}
+          aria-haspopup="dialog"
           className="flex h-10 w-full items-center justify-between text-sm font-semibold text-brand-600 hover:text-brand-700"
         >
           ¿Cómo funciona la tienda?
-          <IconoChevronAbajo className={`h-4 w-4 transition-transform duration-300 ${verGuia ? 'rotate-180' : ''}`} aria-hidden="true" />
+          <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
         </button>
-        {/* Se abre midiendo su alto con grid-rows: sin saltos y sin alturas fijas */}
-        <div id="guia-tienda" className={`grid transition-[grid-template-rows] duration-300 ${verGuia ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-          <div className="overflow-hidden" inert={!verGuia || undefined}>
-            <ol className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-3">
-              {[
-                { Icono: IconoTarjeta, titulo: '1. Recarga Puntos ES', texto: 'Con Pago Móvil desde Puntos ES. La tasa es la de la tienda.' },
-                { Icono: IconoBolsa, titulo: '2. Paga al instante', texto: 'Usa tus Puntos ES en el checkout, sin esperar confirmaciones.' },
-                { Icono: IconoEnvio, titulo: '3. Recibe tu pedido', texto: 'Envío por MRW o ZOOM, o retiro en tienda.' },
-              ].map(({ Icono, titulo, texto }) => (
-                <li key={titulo} className="flex gap-3 rounded-xl border border-line bg-surface p-3">
-                  <Icono className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
-                  <span>
-                    <span className="block text-sm font-semibold text-ink">{titulo}</span>
-                    <span className="block text-xs text-muted">{texto}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
+        {verGuia && (
+          <AsiFunciona
+            clave="tienda"
+            aMano={{ alCerrar: () => setVerGuia(false) }}
+            titulo="Así funciona la tienda"
+            nota="Con Puntos ES pagas al instante, a la tasa de la tienda."
+            pasos={[
+              { icono: 'recargar', texto: 'Recarga Puntos ES con Pago Móvil' },
+              { icono: 'bolsa', texto: 'Paga al instante en el checkout', accion: 'salta' },
+              { icono: 'envio', texto: 'Recibe por MRW, ZOOM o retiro' },
+            ]}
+            boton="Entendido"
+          />
+        )}
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import toast from 'react-hot-toast';
+import { avisarAgregado } from '@/components/onboarding/AvisoAgregado';
 import { useCart } from '@/contexts/CartContext';
 import { needsProductPage, type ProductCardData } from './productCardData';
 
@@ -56,7 +56,8 @@ export default function AddToCartButton({ product, className = '' }: AddToCartBu
       origenEstado: product.despacho?.estado,
       conditionBadge: product.condition?.badge,
     });
-    toast.success('Agregado al carrito');
+    // C-260: el aviso con "Ver carrito" y el carrito del header que salta
+    avisarAgregado(product.name);
   };
 
   return (

@@ -60,6 +60,7 @@ export default function AsiFunciona({
   alAceptar,
   pose = 'explica',
   activa = true,
+  aMano,
 }: {
   /** Una por página: 'sorteo', 'checkout', 'puntos' */
   clave: string;
@@ -74,12 +75,18 @@ export default function AsiFunciona({
   pose?: PoseGuia;
   /** false: esta vez no sale (por ejemplo, el sorteo ya cerró) */
   activa?: boolean;
+  /**
+   * C-260: abierta a mano (un botón "¿Cómo funciona…?"). Sale al montarse, no se marca como vista, y al cerrarse avisa
+   * para que quien la abrió la desmonte.
+   */
+  aMano?: { alCerrar: () => void };
 }) {
-  const [abierta, setAbierta] = useState(false);
+  const manual = Boolean(aMano);
+  const [abierta, setAbierta] = useState(manual);
   const [saliendo, setSaliendo] = useState(false);
   const raizRef = useRef<HTMLDivElement>(null);
   const botonRef = useRef<HTMLButtonElement>(null);
-  const focoPrevio = useRef<Element | null>(null);
+  const focoPrevio = useRef<Element | null>(manual && typeof document !== 'undefined' ? document.activeElement : null);
   const aceptada = useRef(false);
   const tituloId = useId();
   const notaId = useId();
@@ -87,7 +94,7 @@ export default function AsiFunciona({
 
   // La primera vez: espera un momento (que la página se vea) y que no haya otro diálogo abierto
   useEffect(() => {
-    if (!activa) return;
+    if (!activa || manual) return;
     const k = claveAsiFunciona(clave);
     if (yaVista(k)) return;
     let intentos = 0;
@@ -106,12 +113,12 @@ export default function AsiFunciona({
     };
     timer = setTimeout(probar, 1200);
     return () => clearTimeout(timer);
-  }, [activa, clave]);
+  }, [activa, clave, manual]);
 
   useEffect(() => {
-    // Se abrió sola: el botón toma el foco sin el contorno (sale al usar el teclado)
-    if (abierta) botonRef.current?.focus({ preventScroll: true, focusVisible: false } as FocusOptions);
-  }, [abierta]);
+    // Se abrió sola: el botón toma el foco sin el contorno (sale al usar el teclado). Abierta a mano, como venga
+    if (abierta) botonRef.current?.focus(manual ? { preventScroll: true } : ({ preventScroll: true, focusVisible: false } as FocusOptions));
+  }, [abierta, manual]);
 
   // Ya cerrada (y con el scroll de la página liberado): el teclado vuelve a donde estaba y el botón hace lo suyo
   const yaAbrio = useRef(false);
@@ -123,10 +130,11 @@ export default function AsiFunciona({
     if (!yaAbrio.current) return;
     yaAbrio.current = false;
     if (focoPrevio.current instanceof HTMLElement) focoPrevio.current.focus({ preventScroll: true });
+    aMano?.alCerrar();
     if (!aceptada.current) return;
     alAceptar?.();
     if (destino) document.getElementById(destino)?.scrollIntoView({ behavior: prefiereMenosMovimiento() ? 'auto' : 'smooth', block: 'start' });
-  }, [abierta, alAceptar, destino]);
+  }, [abierta, alAceptar, destino, aMano]);
 
   const cerrar = useCallback((aceptar: boolean) => {
     aceptada.current = aceptar;

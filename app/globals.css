@@ -639,6 +639,20 @@ body {
     animation: onb-salta 0.7s cubic-bezier(0.3, 0.7, 0.4, 1) calc(var(--onb-retraso, 0s) + 0.6s) backwards;
   }
 
+  /* C-260: las flechas de girar dan una vuelta (voltear la tarjeta de Mis códigos) */
+  .onb-dibuja[data-accion='gira'] svg {
+    animation: onb-gira 0.9s cubic-bezier(0.3, 0.7, 0.2, 1) calc(var(--onb-retraso, 0s) + 0.5s) backwards;
+  }
+
+  /* C-260: la flecha de "Baja hasta el final" baja dos veces; la firma de muestra se dibuja una vez */
+  .onb-baja {
+    animation: onb-baja 0.8s ease-in-out 1s 2 backwards;
+  }
+
+  .onb-firma path {
+    animation: onb-firma 1.6s cubic-bezier(0.45, 0, 0.3, 1) 0.4s backwards;
+  }
+
   .onb-placa {
     animation: onb-placa 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) var(--onb-retraso, 0s) backwards;
   }
@@ -819,6 +833,36 @@ body {
 
   70% {
     transform: translateY(3%) scale(0.98, 1.02);
+  }
+}
+
+@keyframes onb-gira {
+  from {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes onb-baja {
+  0%,
+  100% {
+    transform: none;
+  }
+
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+/* 400 cubre el trazo de la firma de muestra (unos 230 en su caja de 120 × 40); al terminar vuelve a ser una línea entera */
+@keyframes onb-firma {
+  from {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+  }
+
+  to {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 0;
   }
 }
 

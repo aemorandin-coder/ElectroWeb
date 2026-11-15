@@ -1,5 +1,5 @@
 // C-212: el sorteo en el panel (Marketing → Sorteo): leerlo con sus números y guardarlo. Permiso de contenido, como el resto
-// de Marketing. El costo del premio es solo del panel: nunca sale a la tienda.
+// de Marketing. El costo del premio es solo del panel: nunca sale a la tienda. C-221: encender y apagar desde el tablero.
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -7,29 +7,10 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { z } from '@/lib/zod';
+import { diaDe, erroresPorCampo, esquemaSorteo, finDelDia, inicioDelDia } from '@/lib/sorteo/esquema';
 import { MARGEN_ESTIMADO, resumenDelSorteo } from '@/lib/sorteo/servidor';
 import { safeHotAdLink } from '@/lib/hot-ad';
 import type { Sorteo } from '@prisma/client';
-
-/** Un día de Venezuela ('2026-12-18') como el primer o el último instante de ese día (UTC-4) */
-const inicioDelDia = (dia: string) => new Date(`${dia}T00:00:00-04:00`);
-const finDelDia = (dia: string) => new Date(`${dia}T23:59:59.999-04:00`);
-const diaDe = (fecha: Date) => new Date(fecha.getTime() - 4 * 3600 * 1000).toISOString().slice(0, 10);
-
-const dia = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Elige un día');
-const esquema = z.object({
-  titulo: z.string().trim().min(3, 'Ponle un título').max(60),
-  premio: z.string().trim().min(3, 'Escribe el premio').max(120),
-  imagen: z.string().trim().max(300).optional().default(''),
-  costoPremioUSD: z.coerce.number().min(0).max(100_000),
-  compraMinimaUSD: z.coerce.number().min(1, 'Desde $1').max(10_000),
-  topeInvitar: z.coerce.number().int().min(0).max(20),
-  desde: dia,
-  hasta: dia,
-  resultadoEl: dia,
-  activo: z.boolean(),
-}).refine((d) => d.hasta >= d.desde, { path: ['hasta'], message: 'El cierre no puede ser antes del inicio' })
-  .refine((d) => d.resultadoEl >= d.hasta, { path: ['resultadoEl'], message: 'El resultado va el día del cierre o después' });
 
 function paraElPanel(sorteo: Sorteo) {
   return {
@@ -64,10 +45,9 @@ export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!isAuthorized(session, 'MANAGE_CONTENT')) return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   const body = await request.json().catch(() => null);
-  const parsed = esquema.safeParse(body);
+  const parsed = esquemaSorteo.safeParse(body);
   if (!parsed.success) {
-    const fields = Object.fromEntries(parsed.error.issues.map((i) => [String(i.path[0] ?? ''), i.message]));
-    return NextResponse.json({ error: 'Revisa los campos marcados', fields }, { status: 400 });
+    return NextResponse.json({ error: 'Revisa los campos marcados', fields: erroresPorCampo(parsed.error.issues) }, { status: 400 });
   }
   const d = parsed.data;
   // La foto: una ruta de la tienda o https (como el popup); otra cosa no se guarda
@@ -85,6 +65,23 @@ export async function PUT(request: NextRequest) {
     ? await prisma.sorteo.update({ where: { id: actual.id }, data: datos })
     : await prisma.sorteo.create({ data: datos });
   // Solo uno activo a la vez
+  if (sorteo.activo) await prisma.sorteo.updateMany({ where: { id: { not: sorteo.id }, activo: true }, data: { activo: false } });
+  revalidateStorefront();
+  return NextResponse.json({ sorteo: paraElPanel(sorteo) });
+}
+
+const esquemaEncendido = z.object({ activo: z.boolean() });
+
+/** C-221: encender o apagar el sorteo vigente desde su tablero, sin tocar lo demás. Uno ya sorteado no se enciende. */
+export async function PATCH(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!isAuthorized(session, 'MANAGE_CONTENT')) return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  const parsed = esquemaEncendido.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: 'Falta si se enciende o se apaga' }, { status: 400 });
+  const actual = await prisma.sorteo.findFirst({ orderBy: { createdAt: 'desc' } });
+  if (!actual) return NextResponse.json({ error: 'Todavía no hay un sorteo' }, { status: 404 });
+  if (actual.sorteadoAt && parsed.data.activo) return NextResponse.json({ error: 'Este sorteo ya se hizo: no se vuelve a encender' }, { status: 409 });
+  const sorteo = await prisma.sorteo.update({ where: { id: actual.id }, data: { activo: parsed.data.activo } });
   if (sorteo.activo) await prisma.sorteo.updateMany({ where: { id: { not: sorteo.id }, activo: true }, data: { activo: false } });
   revalidateStorefront();
   return NextResponse.json({ sorteo: paraElPanel(sorteo) });

@@ -2,13 +2,13 @@
 // los boletos de quien entró con su cuenta y su enlace para invitar, las bases y, cuando ya se sorteó, quién ganó (con el
 // correo tapado). Sin sorteo activo, lo dice y lleva al catálogo.
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { getServerSession } from 'next-auth';
 import Footer from '@/components/Footer';
-import { IconoCalendario, IconoCarrito, IconoClientes, IconoRegalo } from '@/components/iconos';
+import { IconoCarrito, IconoClientes, IconoRegalo } from '@/components/iconos';
 import PublicHeader from '@/components/public/PublicHeader';
 import CompartirEnlace from '@/components/sorteo/CompartirEnlace';
+import PremioSorteo, { diaLargo } from '@/components/sorteo/PremioSorteo';
 import Container from '@/components/ui/Container';
 import { authOptions } from '@/lib/auth';
 import { formatUSD } from '@/lib/currency';
@@ -33,13 +33,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-/** Los días que faltan para una fecha (0 si ya pasó) */
-function diasHasta(fecha: Date): number {
-  return Math.max(0, Math.ceil((fecha.getTime() - Date.now()) / 86_400_000));
-}
-
-const diaLargo = (fecha: Date) => new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'long', timeZone: 'America/Caracas' }).format(fecha);
-
 export default async function SorteoPage() {
   const [sorteo, session, settings] = await Promise.all([getSorteoVigente(), getServerSession(authOptions), getPublicSettings()]);
 
@@ -63,34 +56,15 @@ export default async function SorteoPage() {
   const monto = Number(sorteo.compraMinimaUSD);
   const minimo = Number.isInteger(monto) ? `$${monto}` : formatUSD(monto);
   const cerrado = new Date() > sorteo.hasta;
-  const faltan = diasHasta(sorteo.resultadoEl);
   const boletos = session?.user?.id && !cerrado ? await boletosDeCliente(sorteo, session.user.id) : null;
   const enlace = boletos ? `${siteUrl()}${boletos.enlace}` : null;
-  const foto = sorteo.imagen && sorteo.imagen.startsWith('/') && !sorteo.imagen.startsWith('//') ? sorteo.imagen : null;
 
   return (
     <div className="min-h-dvh bg-surface">
       <PublicHeader />
       <main>
-        {/* El premio: la pieza fuerte, en azul noche */}
-        <section aria-labelledby="sorteo-titulo" className="bg-brand-950 text-white">
-          <Container className="grid items-center gap-6 py-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:py-14">
-            <div className="min-w-0">
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-200">{sorteo.titulo}</p>
-              <h1 id="sorteo-titulo" className="mt-2 text-3xl font-bold leading-tight text-balance lg:text-5xl">Gana una {sorteo.premio}</h1>
-              <p className="mt-4 flex items-center gap-2 text-base text-brand-100">
-                <IconoCalendario className="h-5 w-5 shrink-0" aria-hidden="true" />
-                {sorteo.sorteadoAt ? `Se sorteó el ${diaLargo(sorteo.sorteadoAt)}.` : `Resultado el ${diaLargo(sorteo.resultadoEl)}${faltan > 0 ? ` · faltan ${faltan} ${faltan === 1 ? 'día' : 'días'}` : ''}.`}
-              </p>
-              <p className="mt-2 text-sm text-brand-200">Si ganas, te lo enviamos sin costo por ZOOM a cualquier estado.</p>
-            </div>
-            {foto && (
-              <div className="relative aspect-square w-full max-w-[22rem] overflow-hidden rounded-2xl bg-white">
-                <Image src={foto} alt={sorteo.premio} fill sizes="352px" className="object-contain" priority />
-              </div>
-            )}
-          </Container>
-        </section>
+        {/* El premio: la pieza fuerte, en azul noche (la misma pieza que revisa el panel antes de publicar, C-221) */}
+        <PremioSorteo titulo={sorteo.titulo} premio={sorteo.premio} imagen={sorteo.imagen} resultadoEl={sorteo.resultadoEl} sorteadoAt={sorteo.sorteadoAt} />
 
         {sorteo.sorteadoAt && sorteo.ganadorEmail && (
           <Container className="pt-8">

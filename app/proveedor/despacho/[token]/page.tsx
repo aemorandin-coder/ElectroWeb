@@ -112,6 +112,8 @@ export default async function DespachoProveedorPage({ params }: { params: Promis
 
         {abierta && <AccionesDespacho token={token} preparando={despacho.preparando} empresa={empresa} />}
 
+        {/* Cancelada o sin pagar, los datos del cliente ya no hacen falta */}
+        {(abierta || despacho.estado === 'enviada') && (
         <section className="rounded-2xl border border-line bg-white p-5" aria-labelledby="datos-guia">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 id="datos-guia" className="flex items-center gap-2 text-base font-semibold text-ink">
@@ -137,6 +139,7 @@ export default async function DespachoProveedorPage({ params }: { params: Promis
             ))}
           </dl>
         </section>
+        )}
 
         <section className="rounded-2xl border border-line bg-white p-5" aria-labelledby="en-la-caja">
           <h2 id="en-la-caja" className="flex items-center gap-2 text-base font-semibold text-ink">

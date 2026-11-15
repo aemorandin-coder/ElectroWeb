@@ -235,7 +235,7 @@ export function WidgetTienda({ tienda }: { tienda: DashboardData['tienda'] }) {
           {tienda.map((item) => (
             <li key={item.clave}>
               <Link href={item.href} className="flex min-h-11 items-start gap-3 px-4 py-2.5 text-sm text-ink-soft hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
-                <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" aria-hidden="true" />
+                <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />
                 <span className="min-w-0 flex-1">{item.texto}</span>
                 <IconoChevronDerecha className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
               </Link>

@@ -2,7 +2,8 @@
 
 import { useCallback, useState } from 'react';
 import Link from 'next/link';
-import { IconoBuscar, IconoChevronDerecha, IconoDocumento, IconoMas } from '@/components/iconos';
+import { IconoBandeja, IconoBuscar, IconoChevronDerecha, IconoConfirmado, IconoDocumento, IconoEditar, IconoEnviar, IconoLista, IconoMas, IconoRechazado } from '@/components/iconos';
+import Filtros, { type Filtro } from '@/components/admin/Filtros';
 import {
   adminBadge, adminCard, adminEmpty, adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSpinner,
 } from '@/lib/admin-ui';
@@ -25,13 +26,14 @@ interface Fila {
   createdAt: string;
 }
 
-const FILTROS: { id: '' | EstadoCotizacion; label: string }[] = [
-  { id: '', label: 'Todas' },
-  { id: 'REQUESTED', label: 'Pedidas' },
-  { id: 'DRAFT', label: 'Borradores' },
-  { id: 'SENT', label: 'Enviadas' },
-  { id: 'APPROVED', label: 'Aprobadas' },
-  { id: 'REJECTED', label: 'No concretadas' },
+// C-245: en píldoras con ícono y lo que juntan (PLAN.md §1.7)
+const FILTROS: Omit<Filtro<'' | EstadoCotizacion>, 'cuenta'>[] = [
+  { valor: '', etiqueta: 'Todas', ayuda: 'Desde la primera', Icono: IconoLista },
+  { valor: 'REQUESTED', etiqueta: 'Pedidas', ayuda: 'Las pidió un cliente', Icono: IconoBandeja, tono: 'aviso' },
+  { valor: 'DRAFT', etiqueta: 'Borradores', ayuda: 'Todavía sin enviar', Icono: IconoEditar },
+  { valor: 'SENT', etiqueta: 'Enviadas', ayuda: 'Esperan la respuesta', Icono: IconoEnviar },
+  { valor: 'APPROVED', etiqueta: 'Aprobadas', ayuda: 'El cliente dijo que sí', Icono: IconoConfirmado },
+  { valor: 'REJECTED', etiqueta: 'No concretadas', ayuda: 'Rechazadas o vencidas', Icono: IconoRechazado },
 ];
 
 const fecha = (iso: string) => new Date(iso).toLocaleDateString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'short', year: 'numeric' });
@@ -59,7 +61,7 @@ export default function CotizacionesPage() {
   useCargarAlMontar(cargar, [estado]);
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="max-w-5xl">
       <div className={adminPageHeader}>
         <div>
           <h1 className={adminPageTitle}>Cotizaciones</h1>
@@ -78,19 +80,13 @@ export default function CotizacionesPage() {
           <input type="search" value={buscar} onChange={(e) => setBuscar(e.target.value)} placeholder="Número, cliente o RIF" className={`${adminInput()} pl-9`} />
         </label>
       </form>
-      <div className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
-        {FILTROS.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            aria-pressed={estado === f.id}
-            onClick={() => setEstado(f.id)}
-            className={`h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold ${estado === f.id ? 'bg-brand-500 text-white' : 'border border-line bg-white text-ink-soft hover:bg-surface'}`}
-          >
-            {f.label}
-            {f.id && porEstado[f.id] ? <span className={estado === f.id ? ' text-white/80' : ' text-muted'}> {porEstado[f.id]}</span> : null}
-          </button>
-        ))}
+      <div className="mb-4">
+        <Filtros
+          etiqueta="Filtrar cotizaciones"
+          valor={estado}
+          onCambiar={setEstado}
+          filtros={FILTROS.map((f) => ({ ...f, cuenta: f.valor && Object.keys(porEstado).length > 0 ? porEstado[f.valor] ?? 0 : undefined }))}
+        />
       </div>
 
       {error ? (

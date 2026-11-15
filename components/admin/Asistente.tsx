@@ -218,7 +218,7 @@ export function ListaCambios({ cambios, children }: { cambios: CambioCampo[]; ch
       ) : (
         <ul className="mt-2 grid gap-1.5">
           {cambios.map((c) => (
-            <li key={c.campo} className="grid grid-cols-[minmax(0,8rem)_minmax(0,1fr)] items-center gap-2 rounded-xl bg-surface px-3 py-2 text-sm">
+            <li key={c.campo} className="grid gap-1 rounded-xl bg-surface px-3 py-2 text-sm sm:grid-cols-[minmax(0,8rem)_minmax(0,1fr)] sm:items-center sm:gap-2">
               <span className="text-ink-soft">{c.nombre}</span>
               <span className="flex min-w-0 flex-wrap items-center gap-1.5">
                 <s className="min-w-0 text-muted [overflow-wrap:anywhere]">{c.antes}</s>

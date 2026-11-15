@@ -1,25 +1,20 @@
 'use client';
 
-import { adminBadge, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminBadge, adminModalOverlay, adminModalPanel, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 import { toast } from 'react-hot-toast';
 
-import { useState, useMemo, useRef, createElement } from 'react';
+import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import CategoryIconRenderer from '@/components/CategoryIconRenderer';
-import {
-  ICON_OPTIONS, COLOR_OPTIONS,
-  getCategoryIcon, getCategoryIconOption, getCategoryColor, getAutoIcon,
-} from '@/lib/category-icons';
+import { getCategoryColor, getAutoIcon } from '@/lib/category-icons';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
-import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
-import { enviarConVersion } from '@/lib/edicion/guardado';
-import { useConflictoDeFormulario } from '@/lib/edicion/useConflictoDeFormulario';
-import { IconoBuscar, IconoCerrar, IconoChevronDerecha, IconoMas, IconoReportes, IconoSubir } from '@/components/iconos';
+import { IconoBuscar, IconoChevronDerecha, IconoMas, IconoReportes } from '@/components/iconos';
 
 interface Category {
   id: string;
@@ -42,28 +37,9 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    image: '',
-    parentId: '' as string | null,
-    icon: '',
-    color: '',
-    isDepartment: false,
-  });
-  // C-170: lo que había al abrir el editor, para combinar si otra persona guardó antes
-  const [formBase, setFormBase] = useState<typeof formData | null>(null);
+  // C-249b: crear y cambiar una categoría van por pasos en su propia página (/admin/categories/nueva y /[id], PLAN.md §1.9)
   const { confirm } = useConfirm();
-  const { resolver: resolverConflicto, dialogo: dialogoConflicto } = useConflictoDeFormulario({
-    name: 'Nombre', description: 'Descripción', image: 'Imagen', parentId: 'Categoría principal', icon: 'Ícono', color: 'Color', isDepartment: 'Departamento aparte',
-  });
-  const [saveLoading, setSaveLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [uploadingIcon, setUploadingIcon] = useState(false);
-  const customIconRef = useRef<HTMLInputElement>(null);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   useBodyScrollLock(showDeleteModal);
@@ -111,108 +87,6 @@ export default function CategoriesPage() {
     return categories.filter(cat => cat.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [categories, searchTerm]);
 
-  const handleCreate = (parentId: string | null = null) => {
-    setSelectedCategory(null);
-    setFormData({ name: '', description: '', image: '', parentId, icon: '', color: '', isDepartment: false });
-    setIsCreating(true);
-    setIsEditing(false);
-  };
-
-  const handleEdit = (category: Category) => {
-    const formulario = {
-      name: category.name,
-      description: category.description || '',
-      image: category.image || '',
-      parentId: category.parentId || null,
-      icon: category.icon || '',
-      color: category.color || '',
-      isDepartment: Boolean(category.isDepartment),
-    };
-    setSelectedCategory(category);
-    setFormData(formulario);
-    setFormBase(formulario);
-    setIsEditing(true);
-    setIsCreating(false);
-  };
-
-  /** El cuerpo del guardado: lo vacío viaja como null */
-  const cuerpoDe = (formulario: typeof formData) => ({
-    ...formulario,
-    parentId: formulario.parentId || null,
-    icon: formulario.icon || null,
-    color: formulario.color || null,
-    // C-200: solo una categoría principal puede ser un departamento aparte
-    isDepartment: !formulario.parentId && formulario.isDepartment,
-  });
-
-  /** Edición con la versión con que se abrió (C-170): si otra persona guardó antes, se combina lo de cada una y solo se pregunta por lo que las dos tocaron */
-  const guardarEdicion = async (formulario: typeof formData, version: string | undefined) => {
-    if (!selectedCategory) return;
-    setSaveLoading(true);
-    try {
-      const r = await enviarConVersion<Category>('/api/categories', 'PATCH', { id: selectedCategory.id, ...cuerpoDe(formulario) }, version);
-      if (r.ok) {
-        await fetchCategories();
-        setIsCreating(false);
-        setIsEditing(false);
-        setSelectedCategory(r.datos);
-        toast.success('Categoría guardada');
-        return;
-      }
-      if (r.conflicto?.tipo === 'cambiado') {
-        const actual = r.conflicto.actual as Category;
-        const suyo = { name: actual.name, description: actual.description || '', image: actual.image || '', parentId: actual.parentId || null, icon: actual.icon || '', color: actual.color || '', isDepartment: Boolean(actual.isDepartment) };
-        resolverConflicto({
-          base: formBase ?? suyo, mio: formulario, suyo, quien: r.conflicto.por?.nombre ?? 'Otra persona',
-          continuar: (final) => { setFormData(final); setFormBase(suyo); return guardarEdicion(final, actual.updatedAt); },
-        });
-        return;
-      }
-      toast.error(r.error);
-      if (r.conflicto?.tipo === 'no_existe') {
-        await fetchCategories();
-        setIsEditing(false);
-        setSelectedCategory(null);
-      }
-    } finally {
-      setSaveLoading(false);
-    }
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim()) return;
-    if (isEditing && selectedCategory) {
-      await guardarEdicion(formData, selectedCategory.updatedAt);
-      return;
-    }
-    setSaveLoading(true);
-    try {
-      const response = await fetch('/api/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cuerpoDe(formData)),
-      });
-
-      const data = await response.json().catch(() => ({}));
-      if (response.ok) {
-        await fetchCategories();
-        setIsCreating(false);
-        setIsEditing(false);
-        setSelectedCategory(data);
-        toast.success('Categoría guardada');
-      } else {
-        // Antes un rechazo del servidor (nombre repetido, categoría en ciclo) no decía nada (C-110)
-        toast.error(data.error || 'No se pudo guardar la categoría');
-      }
-    } catch (error) {
-      console.error('Error saving category:', error);
-      toast.error('No se pudo guardar la categoría');
-    } finally {
-      setSaveLoading(false);
-    }
-  };
-
   const handleDelete = async () => {
     if (!selectedCategory) return;
     setDeleteLoading(true);
@@ -231,7 +105,6 @@ export default function CategoriesPage() {
         await fetchCategories();
         setSelectedCategory(null);
         setShowDeleteModal(false);
-        setIsEditing(false);
         toast.success('Categoría eliminada');
       } else {
         const data = await response.json().catch(() => ({}));
@@ -246,27 +119,6 @@ export default function CategoriesPage() {
     }
   };
 
-  const handleCustomIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingIcon(true);
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      if (res.ok) {
-        const data = await res.json();
-        setFormData(prev => ({ ...prev, image: data.url, icon: '' }));
-      }
-    } catch (err) {
-      console.error('Error uploading icon:', err);
-      toast.error('No se pudo subir el ícono');
-    } finally {
-      setUploadingIcon(false);
-      if (customIconRef.current) customIconRef.current.value = '';
-    }
-  };
-
   const toggleExpand = (id: string) => {
     const newExpanded = new Set(expandedNodes);
     if (newExpanded.has(id)) { newExpanded.delete(id); } else { newExpanded.add(id); }
@@ -277,12 +129,6 @@ export default function CategoriesPage() {
   const totalCategories = categories.length;
   const topCategory = [...categories].sort((a, b) => (b._count?.products || 0) - (a._count?.products || 0))[0];
 
-  // Live preview for form
-  const PreviewIcon = getCategoryIcon(formData.icon || (formData.name ? getAutoIcon(formData.name) : ''));
-  const previewColor = getCategoryColor(formData.color || null, 0);
-  // C-189: la opción del pack que corresponde al ícono guardado (también los nombres de antes, como "GiGameConsole")
-  const iconoElegido = getCategoryIconOption(formData.icon);
-
   return (
     <div className="-m-4 flex flex-col md:-m-6 lg:min-h-[calc(100dvh-10rem)] lg:flex-row">
       {/* Left Panel: Category Tree */}
@@ -290,13 +136,14 @@ export default function CategoriesPage() {
         <div className="p-4 border-b border-line bg-white flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-lg text-ink">Categorías</h2>
-            <button
-              onClick={() => handleCreate(null)}
+            <Link
+              href="/admin/categories/nueva"
               className="p-1.5 bg-brand-50 text-brand-600 rounded-md hover:bg-brand-100 transition-colors"
               title="Nueva Categoría Raíz"
+              aria-label="Nueva categoría principal"
             >
               <IconoMas className="w-5 h-5" />
-            </button>
+            </Link>
           </div>
           <div className="relative">
             <input
@@ -323,7 +170,7 @@ export default function CategoriesPage() {
                 filteredCategories?.map(cat => (
                   <button
                     key={cat.id}
-                    onClick={() => { setSelectedCategory(cat); setIsCreating(false); setIsEditing(false); }}
+                    onClick={() => setSelectedCategory(cat)}
                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                       selectedCategory?.id === cat.id
                         ? 'bg-brand-500 text-white font-medium shadow-sm'
@@ -340,7 +187,7 @@ export default function CategoriesPage() {
               nodes={categoryTree}
               selectedId={selectedCategory?.id}
               expandedNodes={expandedNodes}
-              onSelect={(cat) => { setSelectedCategory(cat); setIsCreating(false); setIsEditing(false); }}
+              onSelect={(cat) => setSelectedCategory(cat)}
               onToggle={toggleExpand}
             />
           )}
@@ -369,247 +216,7 @@ export default function CategoriesPage() {
 
           {/* Main Content */}
           <div className="min-h-[400px]">
-            {(isCreating || isEditing) ? (
-              /* ── FORM ── */
-              <div className="max-w-2xl animate-fadeIn">
-                <div className="flex items-center justify-between mb-8 pb-4 border-b border-line">
-                  <div>
-                    <h2 className="text-2xl font-bold text-ink">
-                      {isCreating ? 'Nueva Categoría' : 'Editar Categoría'}
-                    </h2>
-                    <p className="text-muted text-sm mt-1">Configura el icono, color y datos de la categoría.</p>
-                  </div>
-                  <button
-                    onClick={() => { setIsCreating(false); setIsEditing(false); }}
-                    className="p-2 text-subtle hover:text-muted hover:bg-surface rounded-full transition-all"
-                  >
-                    <IconoCerrar className="w-6 h-6" />
-                  </button>
-                </div>
-
-                <form onSubmit={handleSave} className="space-y-6">
-                  {isEditing && selectedCategory && (
-                    <PresenciaEnEditor recurso={`category:${selectedCategory.id}`} etiqueta={selectedCategory.name} nombreRecurso="categoría" femenino />
-                  )}
-
-                  {/* ── Preview ── */}
-                  <div className="flex items-center gap-4 p-4 bg-surface rounded-2xl border border-line">
-                    <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md overflow-hidden"
-                      style={{ background: `linear-gradient(135deg, ${previewColor.from}, ${previewColor.to})` }}
-                    >
-                      {formData.image ? (
-                        <Image src={formData.image} alt="Icono" width={48} height={48} className="w-full h-full object-contain p-1" />
-                      ) : (
-                        // createElement: el ícono se elige en cada render (C-111, regla static-components)
-                        createElement(PreviewIcon, { className: 'w-8 h-8 text-white drop-shadow' })
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-ink">{formData.name || 'Nombre de la categoría'}</p>
-                      <p className="text-xs text-subtle mt-0.5">Vista previa del icono y color</p>
-                    </div>
-                  </div>
-
-                  {/* ── Name ── */}
-                  <div>
-                    <label className="block text-sm font-medium text-ink-soft mb-2">
-                      Nombre <span className="text-deal">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-4 py-3 rounded-xl bg-surface border border-line focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 transition-all outline-none"
-                      placeholder="Ej. Smartphones"
-                      required
-                    />
-                  </div>
-
-                  {/* ── Icon Picker ── */}
-                  <div>
-                    <label className="block text-sm font-medium text-ink-soft mb-2">Icono</label>
-                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
-                      {ICON_OPTIONS.map(({ name, label, Icon }) => (
-                        <button
-                          key={name}
-                          type="button"
-                          title={label}
-                          aria-label={label}
-                          aria-pressed={iconoElegido?.name === name}
-                          onClick={() => setFormData(prev => ({ ...prev, icon: getCategoryIconOption(prev.icon)?.name === name ? '' : name }))}
-                          className={[
-                            'flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all',
-                            iconoElegido?.name === name
-                              ? 'border-brand-500 bg-brand-50 text-brand-600 shadow-sm'
-                              : 'border-line hover:border-line-strong text-subtle hover:text-ink-soft',
-                          ].join(' ')}
-                        >
-                          <Icon className="w-5 h-5" />
-                        </button>
-                      ))}
-                    </div>
-                    {formData.icon && (
-                      <p className="text-xs text-muted mt-1.5">
-                        Seleccionado: <span className="font-medium text-brand-600">{iconoElegido?.label ?? 'uno que ya no está en la lista (se ve como "Otros")'}</span>
-                        {' · '}
-                        <button type="button" className="text-subtle text-deal transition-colors" onClick={() => setFormData(prev => ({ ...prev, icon: '' }))}>
-                          Quitar
-                        </button>
-                      </p>
-                    )}
-                    {!formData.icon && !formData.image && formData.name && (
-                      <p className="text-xs text-subtle mt-1.5">Se asignará automáticamente por el nombre si no seleccionas uno.</p>
-                    )}
-
-                    {/* Custom icon upload */}
-                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-line">
-                      <input
-                        ref={customIconRef}
-                        type="file"
-                        className="hidden"
-                        accept="image/png,image/svg+xml,image/webp"
-                        onChange={handleCustomIconUpload}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => customIconRef.current?.click()}
-                        disabled={uploadingIcon}
-                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium border border-line rounded-lg hover:bg-surface transition-colors text-muted disabled:opacity-50"
-                      >
-                        {uploadingIcon ? (
-                          <div className="w-3.5 h-3.5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <IconoSubir className="w-3.5 h-3.5" />
-                        )}
-                        Subir icono personalizado
-                      </button>
-                      {formData.image && (
-                        <div className="flex items-center gap-2">
-                          <Image src={formData.image} alt="Custom" width={28} height={28} className="w-7 h-7 rounded object-contain border border-line bg-surface" />
-                          <button
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
-                            className="text-xs text-deal text-deal transition-colors"
-                          >
-                            Quitar
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-subtle mt-1">PNG · SVG · WebP · fondo transparente recomendado · máx. 2 MB</p>
-                  </div>
-
-                  {/* ── Color Palette ── */}
-                  <div>
-                    <label className="block text-sm font-medium text-ink-soft mb-2">Color</label>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {COLOR_OPTIONS.map(({ name, label, swatch }) => (
-                        <button
-                          key={name}
-                          type="button"
-                          title={label}
-                          onClick={() => setFormData(prev => ({ ...prev, color: prev.color === name ? '' : name }))}
-                          className={[
-                            'w-9 h-9 rounded-full border-4 transition-all',
-                            formData.color === name
-                              ? 'border-ink shadow-lg'
-                              : 'border-white shadow hover:shadow-md',
-                          ].join(' ')}
-                          style={{ backgroundColor: swatch }}
-                        />
-                      ))}
-
-                      {/* Custom color picker */}
-                      <label
-                        title="Color personalizado"
-                        className={[
-                          'w-9 h-9 rounded-full border-4 cursor-pointer transition-all relative overflow-hidden flex items-center justify-center',
-                          formData.color?.startsWith('#')
-                            ? 'border-ink shadow-lg'
-                            : 'border-white shadow hover:shadow-md bg-surface',
-                        ].join(' ')}
-                        style={formData.color?.startsWith('#') ? { backgroundColor: formData.color } : {}}
-                      >
-                        <input
-                          type="color"
-                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                          value={
-                            formData.color?.startsWith('#')
-                              ? formData.color
-                              : (COLOR_OPTIONS.find(c => c.name === formData.color)?.swatch || '#3b82f6')
-                          }
-                          onChange={e => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                        />
-                      </label>
-                    </div>
-                    {!formData.color && (
-                      <p className="text-xs text-subtle mt-1.5">Se asignará automáticamente si no seleccionas un color.</p>
-                    )}
-                    {formData.color?.startsWith('#') && (
-                      <p className="text-xs text-muted mt-1.5">
-                        Color personalizado: <span className="font-mono font-medium">{formData.color}</span>
-                        {' · '}
-                        <button type="button" className="text-subtle text-deal transition-colors" onClick={() => setFormData(prev => ({ ...prev, color: '' }))}>Quitar</button>
-                      </p>
-                    )}
-                  </div>
-
-                  {/* ── Category Parent ── */}
-                  <div>
-                    <label className="block text-sm font-medium text-ink-soft mb-2">Categoría Padre (Opcional)</label>
-                    <select
-                      value={formData.parentId || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value || null }))}
-                      className="w-full px-4 py-3 rounded-xl bg-surface border border-line focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 transition-all outline-none"
-                    >
-                      <option value="">Ninguna (Categoría Raíz)</option>
-                      {categories
-                        .filter(c => c.id !== selectedCategory?.id)
-                        .map(cat => (
-                          <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                    </select>
-                    <p className="text-xs text-muted mt-1">Si seleccionas una categoría padre, esta será una subcategoría.</p>
-                    {/* C-200: el departamento aparte (Ferretería) */}
-                    <label className={`mt-3 flex items-start gap-2 text-sm ${formData.parentId ? 'text-muted' : 'text-ink-soft'}`}>
-                      <input
-                        type="checkbox"
-                        className="mt-0.5 h-4 w-4 shrink-0"
-                        checked={!formData.parentId && formData.isDepartment}
-                        disabled={Boolean(formData.parentId)}
-                        onChange={(e) => setFormData(prev => ({ ...prev, isDepartment: e.target.checked }))}
-                      />
-                      <span>
-                        <span className="font-medium text-ink">Departamento aparte</span>, como Ferretería. Sus productos y los de sus subcategorías no se mezclan con el inicio de tecnología: tienen su vitrina, su acceso en la franja y su página, con la descripción como aviso arriba.
-                        {formData.parentId && ' Solo para una categoría raíz.'}
-                      </span>
-                    </label>
-                  </div>
-
-                  {/* ── Description ── */}
-                  <div>
-                    <label className="block text-sm font-medium text-ink-soft mb-2">Descripción</label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      rows={3}
-                      className="w-full px-4 py-3 rounded-xl bg-surface border border-line focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 transition-all outline-none resize-none"
-                      placeholder="Describe brevemente esta categoría..."
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-4 border-t border-line">
-                    <Button variant="ghost" type="button" onClick={() => { setIsCreating(false); setIsEditing(false); }}>
-                      Cancelar
-                    </Button>
-                    <Button variant="primary" type="submit" isLoading={saveLoading} className="bg-brand-500 hover:bg-brand-500 text-white px-8">
-                      Guardar Categoría
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            ) : selectedCategory ? (
+            {selectedCategory ? (
               /* ── DETAIL VIEW ── */
               <div className="animate-fadeIn">
                 <div className="flex items-start justify-between mb-8">
@@ -653,9 +260,9 @@ export default function CategoriesPage() {
                   </div>
 
                   <div className="flex gap-3 flex-shrink-0">
-                    <Button variant="secondary" onClick={() => handleEdit(selectedCategory)} className="border border-line shadow-sm">
+                    <Link href={`/admin/categories/${selectedCategory.id}`} className={adminSecondaryButton}>
                       Editar
-                    </Button>
+                    </Link>
                     <Button variant="ghost" className="text-deal bg-deal/10 text-deal" onClick={() => setShowDeleteModal(true)}>
                       Eliminar
                     </Button>
@@ -690,8 +297,8 @@ export default function CategoriesPage() {
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-ink">Acciones Rápidas</h3>
                     <div className="space-y-3">
-                      <button
-                        onClick={() => handleCreate(selectedCategory.id)}
+                      <Link
+                        href={`/admin/categories/nueva?padre=${selectedCategory.id}`}
                         className="w-full flex items-center gap-4 p-4 bg-white border border-line rounded-2xl hover:border-brand-500 hover:shadow-md transition-all group text-left"
                       >
                         <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600 group-hover:bg-brand-500 group-hover:text-white transition-colors">
@@ -701,7 +308,7 @@ export default function CategoriesPage() {
                           <div className="font-semibold text-ink text-sm group-hover:text-brand-600 transition-colors">Crear Subcategoría</div>
                           <div className="text-xs text-muted mt-0.5">Añadir hija a {selectedCategory.name}</div>
                         </div>
-                      </button>
+                      </Link>
 
                       <button
                         onClick={() => router.push(`/admin/products?category=${selectedCategory.id}`)}
@@ -728,13 +335,9 @@ export default function CategoriesPage() {
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold text-ink mb-4">Selecciona una categoría</h3>
-                <Button
-                  variant="primary"
-                  className="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white"
-                  onClick={() => handleCreate(null)}
-                >
+                <Link href="/admin/categories/nueva" className={adminPrimaryButton}>
                   Crear Categoría Raíz
-                </Button>
+                </Link>
               </div>
             )}
           </div>
@@ -763,7 +366,6 @@ export default function CategoriesPage() {
           </div>
         </div>
       )}
-      {dialogoConflicto}
     </div>
   );
 }

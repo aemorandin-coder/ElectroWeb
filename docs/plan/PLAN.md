@@ -597,8 +597,9 @@ Quedan para después de C-177 (`estado/C-177.md`):
       - **Las dos decisiones, tomadas** (el equipo, 15/11: la A y la A, §7.2): las hace **C-249** (`estado/C-249.md`).
         - **Hecha la parte a** (rc.63): los filtros en píldoras de Órdenes, Transacciones, Mensajes, Cursos, Trabajos realizados, Creadores y ElectroStudio.
         - **Hecha C-249b** (rc.64; `estado/C-249b.md`): la oferta o el cupón y las gift cards impresas, por pasos en su propia página, con el marco `components/admin/Asistente`.
+        - **Hecha C-249c** (rc.65; `estado/C-249c.md`): el método de pago y la categoría. De paso, Zinli ya se puede guardar (pedía el teléfono y no el titular que exige el servidor).
+        - **Para decidir:** el color de una categoría solo se ve en el panel y sus colores están fuera del kit (`estado/C-249c.md`).
         - **Siguen, de a dos por entrega** (el plan en `estado/C-249b.md`):
-          - **C-249c:** el método de pago y la categoría;
           - **C-249d:** la campaña de correo (la vista previa con `renderCampana`, avisando antes a la sesión de los correos) y el promotor;
           - **C-249e:** el curso y el trabajo de Servicios, con las fotos que se suben en lugar de pegar la dirección.
         - **La hoja impresa de las gift cards** dice "Se activa al pagar en caja" en ámbar, como texto suelto sobre la tarjeta física: si el equipo lo quiere en azul, es una línea de `gift-cards/_components/hoja.ts`.

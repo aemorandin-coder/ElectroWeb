@@ -1,9 +1,58 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.56`, comprobada el 15/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.71`, comprobada el 15/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 15/11 · C-243 a C-251b (de rc.56 a `v1.0.0-rc.71`)
+La subió el equipo en dos pasos, el 15/11:
+- **rc.63** (C-243 a C-249), con el `db push` de C-246. Ese día no quedó registrada. Claude la vio desde fuera más tarde: la portada decía "1.0.0-rc.63".
+- **rc.71** (C-249b a C-251b, sin base), con los pasos de Claude: `git pull`, `deploy.sh --sin-pull` y `git describe --tags`.
+  - Se subió enseguida por una falla de seguridad que cerró rc.69 (C-251, `estado/C-251.md`).
+  - Era una ruta de la API del cliente que ninguna pantalla usaba (`/api/customer/payment-methods`). Aceptaba más de lo que debía: con una cuenta de cliente se podían cambiar los Puntos ES o el rol de la cuenta. Estuvo en producción hasta el 15/11.
+  - Claude le pidió al equipo dos consultas de la base para saber si alguien la usó: las cuentas del equipo, y los Puntos ES que cambiaron sin un movimiento que lo explique. **Falta el resultado** (`SIGUIENTE.md`, "Por confirmar de rc.71").
+
+**Lo comprobado desde fuera, el 15/11** (esta sesión y la de los correos):
+- **La portada dice `1.0.0-rc.71`.**
+- **Una pestaña de una versión anterior se recarga sola:** `/categorias` con `sec-fetch-dest: empty` responde 204.
+- **Los íconos de los correos** con `?v=2` responden 200. **Las imágenes para compartir** de la portada y de `/sorteo` llevan su versión (`og:image`).
+- **La foto del sorteo:** el equipo la subió desde el panel (prueba 7), y `/sorteo` la sirve desde `/api/uploads/` en 448 px.
+- **El aliado comercial y los crons** (lo comprobó la sesión de los correos):
+  - `POST /api/proveedor/despacho/<un enlace inventado>` responde 404 `{"error":"Este enlace no existe."}`;
+  - `POST /api/cron/despachos` y `/api/cron/sorteo` sin clave responden 401, y con GET, 405.
+- **La base de C-246 está:** rc.63 y rc.71 se sirven, y `deploy.sh` se para en el paso 2 si faltan columnas.
+- **La ruta quitada no se puede ver desde fuera:** sin sesión, toda dirección de cliente manda al inicio de sesión (307), exista o no. La versión servida no la tiene. La prueba 22 la confirma con una sesión, y debe dar "404".
+
+**Falta que el equipo confirme** (`SIGUIENTE.md`, "Por confirmar de rc.71"): las consultas de la base y las pruebas 1 a 23. La 7, la foto del sorteo, ya está.
+
+### El bloque que se subió: `v1.0.0-rc.71` (C-243 a C-251b; en dos pasos, rc.63 y después rc.71)
+Producción estaba en `v1.0.0-rc.56` (`471a54d`); su bloque está abajo. El bloque pedía un respaldo antes (`~/respaldo-antes-rc60.dump`).
+- **C-243 (rc.57):** el kit de marca. **Sin cambio de base, sin SQL, sin variables nuevas y sin cron.**
+  - **Las imágenes para compartir cambian de dirección** (`?v=`): WhatsApp y Facebook las vuelven a pedir solas.
+  - **Los íconos de los correos** pasan a `?v=2`.
+- **C-244 (rc.58):** la vista previa de los correos, fija mientras se recorre la lista. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **C-247 (rc.59):** la foto del premio del sorteo, más grande y sin fondo blanco. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. La foto se sube desde el panel (prueba 7).
+- **C-246 (rc.60):** el destino claro para la guía, los datos fiscales del proveedor y hasta 3 correos de despacho.
+  - **Cambia la base: tres columnas nuevas en `suppliers`, aditivas.** `deploy.sh` se para y muestra esto, y nada más; si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
+```sql
+ALTER TABLE "suppliers" ADD COLUMN "fiscalAddress" TEXT,
+ADD COLUMN "legalName" TEXT,
+ADD COLUMN "taxId" TEXT;
+```
+  - Sin variables nuevas, sin SQL de datos y sin cron.
+- **C-245 (rc.61):** el panel entero con el kit. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **C-248 (rc.62):** dos botones de Contabilidad. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **C-249 (rc.63):** los filtros en píldoras de Órdenes, Transacciones, Mensajes, Cursos, Trabajos realizados, Creadores y ElectroStudio. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **C-249b (rc.64):** la oferta o el cupón y las gift cards impresas, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una ruta nueva que solo lee (`POST /api/admin/promotions/vista-previa`).
+- **C-249c (rc.65):** el método de pago y la categoría, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una ruta nueva que solo lee (`POST /api/admin/payments/vista-previa`).
+- **C-250 (rc.66):** el color de las categorías, solo con los azules del kit, y el aviso de la gift card impresa en azul. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **C-249d (rc.67):** la campaña de correo y el promotor, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una ruta nueva que solo lee (`POST /api/influencers/vista-previa`).
+- **C-249e (rc.68):** el curso y el trabajo de Servicios, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. La subida de fotos del panel acepta dos tipos más (`curso` y `servicio`), en `public/uploads` como las demás.
+- **C-251 (rc.69):** Mi panel revisado: las fallas y lo nuevo. **Conviene subirlo pronto** (lo de seguridad de `estado/C-251.md`). Sin cambio de base, sin SQL, sin variables nuevas y sin cron. Se quitan dos rutas de la API del cliente que ninguna pantalla usaba (`/api/customer/payment-methods` y `/api/customer/chat`).
+- **C-252 (rc.70):** el precio de un curso nuevo y las fotos de Servicios, validados en el servidor. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **C-251b (rc.71):** Mi panel con el kit (colores, filtros en píldoras y la tarjeta de opción). Solo pantallas: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 
 
 ## 15/11 · C-235, C-227 y C-242 (de rc.53 a `v1.0.0-rc.56`)

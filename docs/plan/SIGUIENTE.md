@@ -1,41 +1,47 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.71, por subir)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.71, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.72, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-251b · Mi panel con el kit (rc.71, por subir; `estado/C-251b.md`):** lo que quedó de C-251. Los estados en su sello lleno (Puntos ES, Mis códigos, Direcciones), sin ámbar (Direcciones, Garantía, Reseñas, Seguridad y la ventana de firmar), el aviso de lo que hay que hacer con su placa (también el "IMPORTANTE" de `/terminos` y `/privacidad`, que iba en rojo), los filtros en píldoras (Mis pedidos, Puntos ES, Reseñas y Notificaciones), Direcciones con la tarjeta de opción y Mi perfil del ancho de un formulario. Siguen las tres decisiones de C-251.
-- **C-252 · El curso nuevo y las fotos de Servicios, validados (rc.70, por subir):** el servidor ya no acepta un precio negativo al crear un curso, ni fotos de Servicios que no sean de la tienda o http(s) (`estado/C-252.md`).
-- **C-251 · Mi panel (el panel del cliente), revisado a fondo: las fallas y lo nuevo (rc.69, por subir; `estado/C-251.md`):** el equipo lo pidió el 15/11 ("revisa con calma: no solo el rediseño, sino también las fallas, y que se conecten las actualizaciones"). Lo hizo un agente aparte.
+- **C-253 · El sorteo, más atractivo (rc.72, por subir; cambia la base; `estado/C-253.md`):** el equipo eligió cada pieza viendo las maquetas.
+  - **El banner de `/sorteo`:** el nombre en grande con el sello y la etiqueta, los días con el envío gratis, "Quiero mi boleto", la foto limpia y "Lo que trae" en una franja abajo.
+  - **La bandera del inicio:** la pestaña al borde izquierdo con el logo de PS4 o, más angosto, la píldora frente a WhatsApp. Entra una sola vez y se queda quieta.
+  - **El panel:** el paso "Lo que trae". **En `/sorteo`:** el aviso de marcas de Sony.
+  - **Después del deploy,** el equipo carga el premio, lo que trae, el sello y "PS4" en el panel (§2).
+  - **Sigue C-254:** la semana del ganador (`PLAN.md` §5.2).
+- **C-251b · Mi panel con el kit (rc.71, en producción; `estado/C-251b.md`):** lo que quedó de C-251. Los estados en su sello lleno (Puntos ES, Mis códigos, Direcciones), sin ámbar (Direcciones, Garantía, Reseñas, Seguridad y la ventana de firmar), el aviso de lo que hay que hacer con su placa (también el "IMPORTANTE" de `/terminos` y `/privacidad`, que iba en rojo), los filtros en píldoras (Mis pedidos, Puntos ES, Reseñas y Notificaciones), Direcciones con la tarjeta de opción y Mi perfil del ancho de un formulario. Siguen las tres decisiones de C-251.
+- **C-252 · El curso nuevo y las fotos de Servicios, validados (rc.70, en producción):** el servidor ya no acepta un precio negativo al crear un curso, ni fotos de Servicios que no sean de la tienda o http(s) (`estado/C-252.md`).
+- **C-251 · Mi panel (el panel del cliente), revisado a fondo: las fallas y lo nuevo (rc.69, en producción; `estado/C-251.md`):** el equipo lo pidió el 15/11 ("revisa con calma: no solo el rediseño, sino también las fallas, y que se conecten las actualizaciones"). Lo hizo un agente aparte.
   - **Fallas arregladas:** Mis pedidos traía solo los 25 más nuevos; el inicio llamaba distinto a cada pedido, contaba mal los favoritos y decía "en revisión" a la garantía que espera tu respuesta; un pedido sin pago decía "validando tu pago"; a 360 px los pasos se pegaban, la tabla del promotor se cortaba y la tarjeta del curso se salía. Y lo de seguridad del estado.
   - **Conectado con lo nuevo:** "Sale el… desde Aragua" en el inicio, la tarjeta y el detalle (C-234 y C-222); "Dejar mi reseña" en lo entregado y Mis reseñas en el menú (C-157); cómo canjear cada código y el plazo del checkout (C-234); el certificado del curso; "Desde Aragua" en Favoritos.
   - **Para decidir, con maquetas** (en la PC de Andrés: `~/.cache/electroshop-trabajo/c251/decisiones.html`): Mis pedidos en la computadora, la garantía de los códigos y los sellos de Mis códigos.
   - **C-251b** (arriba) hizo los arreglos del kit que no eran fallas.
-- **C-249e · Crear por pasos: el curso y el trabajo de Servicios (rc.68, por subir; `estado/C-249e.md`):** los 8 formularios ya van por pasos.
+- **C-249e · Crear por pasos: el curso y el trabajo de Servicios (rc.68, en producción; `estado/C-249e.md`):** los 8 formularios ya van por pasos.
   - **El curso,** en su propia página: qué es, para quién, el precio y la portada, el temario y "Revisar y publicar", con la tarjeta de `/cursos` al lado. La miniatura se sube.
   - **El trabajo de Servicios:** qué se hizo, el video, antes y después, el testimonio y "Revisar y publicar", con la tarjeta de `/servicios` al lado. Las fotos se suben, ya no se pega su dirección.
   - **Para decidir, cuando se pueda:** el alta de un curso por la API no valida el precio (uno negativo entra); el panel ya no lo deja escribir (`PLAN.md` §5.2).
-- **C-249d · Crear por pasos: la campaña de correo y el promotor (rc.67, por subir; `estado/C-249d.md`):** 6 de los 8 formularios, con el marco de C-249b.
+- **C-249d · Crear por pasos: la campaña de correo y el promotor (rc.67, en producción; `estado/C-249d.md`):** 6 de los 8 formularios, con el marco de C-249b.
   - **La campaña,** en su propia página: lo que dice, el contenido, la prueba a tu correo y "Revisar y enviar", con la bandeja y el correo al lado. "Armar con Claude" sigue al principio. Al revisar, a cuántos clientes llega; se guarda como borrador o se envía a todos.
   - **El promotor:** quién es, su código, la comisión y el descuento, y "Revisar y publicar", con su código en el carrito y lo que gana al lado. Antes de guardar, el servidor dice si el código está libre; al cambiarlo, cuántas comisiones por acreditar siguen con el % de antes. Se puede crear en pausa.
   - **Sigue** C-249e (el curso y el trabajo de Servicios).
-- **C-250 · Las categorías y la gift card impresa, con el kit (rc.66, por subir):** el color de cada categoría, solo con los azules del kit, y el aviso de la gift card impresa en el azul oscuro del logo (`estado/C-250.md`).
-- **C-249c · Crear por pasos: el método de pago y la categoría (rc.65, por subir; `estado/C-249c.md`):** 4 de los 8 formularios, con el marco de C-249b.
+- **C-250 · Las categorías y la gift card impresa, con el kit (rc.66, en producción):** el color de cada categoría, solo con los azules del kit, y el aviso de la gift card impresa en el azul oscuro del logo (`estado/C-250.md`).
+- **C-249c · Crear por pasos: el método de pago y la categoría (rc.65, en producción; `estado/C-249c.md`):** 4 de los 8 formularios, con el marco de C-249b.
   - **El método de pago,** en su propia página: el método, la cuenta, lo que ve el cliente, el logo y el QR, y "Revisar y publicar", con el panel del checkout al lado. Antes de guardar, el servidor dice si los datos pasan; al cambiar uno, cuántas recargas y órdenes esperan un pago con los datos de antes.
   - **De paso:** Zinli ya se puede guardar (pedía el teléfono y no el titular que exige el servidor).
   - **La categoría:** qué es, cómo se ve y revisar, con la casilla y el chip de la tienda. Al cambiarla, cuántos productos y subcategorías van con ella.
   - **Para decidir, cuando se pueda:** el color de una categoría solo se ve en el panel y sus colores están fuera del kit.
   - **Siguen:** C-249d (campaña y promotor) y C-249e (curso y trabajo de Servicios).
-- **C-249b · Crear por pasos: la oferta o el cupón y las gift cards impresas (rc.64, por subir; `estado/C-249b.md`):** la parte b de lo que eligió el equipo (la A), 2 de los 8 formularios.
+- **C-249b · Crear por pasos: la oferta o el cupón y las gift cards impresas (rc.64, en producción; `estado/C-249b.md`):** la parte b de lo que eligió el equipo (la A), 2 de los 8 formularios.
   - **La oferta o el cupón,** en su propia página: qué es, el descuento, el código, las fechas y "Revisar y publicar", con la tarjeta del producto o el cupón como los ve el cliente al lado. Se puede guardar en pausa. Al cambiar una, antes → después y a cuántos productos y compras toca.
   - **Las gift cards impresas:** el monto, cuántas y "Revisar y generar", con la tarjeta impresa al lado. El lote con los PIN y la hoja, como siempre.
   - **El marco** (`components/admin/Asistente`) sirve para los otros seis. C-249c ya hizo el método de pago y la categoría (arriba); **siguen** C-249d (campaña y promotor) y C-249e (curso y trabajo de Servicios).
-- **C-249 · Lo que eligió el equipo de C-245 (rc.63, por subir; `estado/C-249.md`):** la A y la A (`PLAN.md` §7.2).
+- **C-249 · Lo que eligió el equipo de C-245 (rc.63, en producción; `estado/C-249.md`):** la A y la A (`PLAN.md` §7.2).
   - **Hecho:** los filtros de Órdenes, Transacciones y Mensajes en las píldoras de estado, en todos los tamaños. Se fueron el selector y las pestañas.
   - **También:** Cursos, Trabajos realizados, Creadores y ElectroStudio, con las píldoras de `Filtros`.
   - **La parte b, crear por pasos,** va en C-249b (arriba).
-- **C-248 · Dos botones de Contabilidad (rc.62, por subir):** en una venta de la tienda, el tacho de "Quitar el renglón" se ve entero (quedaba en 4 px); "Copiar datos para facturar" se pone en verde al copiar (`estado/C-248.md`).
-- **C-245 · El panel entero con el kit de marca (rc.61, por subir):** lo pidió el equipo el 15/11 y lo hizo un agente aparte (`estado/C-245.md`).
+- **C-248 · Dos botones de Contabilidad (rc.62, en producción):** en una venta de la tienda, el tacho de "Quitar el renglón" se ve entero (quedaba en 4 px); "Copiar datos para facturar" se pone en verde al copiar (`estado/C-248.md`).
+- **C-245 · El panel entero con el kit de marca (rc.61, en producción):** lo pidió el equipo el 15/11 y lo hizo un agente aparte (`estado/C-245.md`).
   - **El inventario:** las 43 pantallas del panel, en el código y en capturas, con cada problema como mecánico o como rediseño.
   - **Lo mecánico, ya hecho en 14 módulos:**
     - los estados llenos en lugar de las píldoras claras;
@@ -53,13 +59,13 @@
   - **Para decidir, con maquetas** (en la PC de Andrés: `~/.cache/electroshop-trabajo/c245/decisiones.html`):
     1. crear por pasos los ocho formularios de una sola vez (cupón, método de pago, campaña…);
     2. los filtros de Órdenes.
-- **C-246 · El destino claro para la guía y los datos de Ferrecla (rc.60, por subir):** pedido del equipo el 15/11 (`estado/C-246.md`).
+- **C-246 · El destino claro para la guía y los datos de Ferrecla (rc.60, en producción):** pedido del equipo el 15/11 (`estado/C-246.md`).
   - **El correo y la página del proveedor dicen claramente a dónde va el paquete:** "Envíelo a" con la ciudad en grande (y su código de ZOOM), la oficina con su código o la casa del cliente si es puerta a puerta, y a nombre de quién. Los datos de la guía van en el orden de ZOOM.
   - **El proveedor tiene datos fiscales** (razón social, RIF y domicilio, como en su RIF) y **hasta 3 correos de despacho**: a todos les llega cada venta. La credencial de la bienvenida lleva la razón social y el RIF.
   - **Ferrecla:** sus datos se cargan en el panel después del deploy (§2, prueba 8).
-- **C-247 · La foto del premio del sorteo (rc.59, por subir):** la PS4 Slim con el control azul del premio, sobre el azul de la franja (`estado/C-247.md`). La foto se sube desde el panel; la página la muestra más grande y sin fondo blanco.
-- **C-244 · La vista previa de los correos (rc.58, por subir):** en Marketing → Correos de la tienda, la vista previa queda fija con el alto de la pantalla mientras se recorre la lista, y el correo se lee con un solo scroll (`estado/C-244.md`). Antes salía baja, con su propio scroll, y debajo quedaba un espacio en blanco.
-- **C-243 · El kit de marca (rc.57, por subir):** el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo (`estado/C-243.md`).
+- **C-247 · La foto del premio del sorteo (rc.59, en producción):** la PS4 Slim con el control azul del premio, sobre el azul de la franja (`estado/C-247.md`). La foto se sube desde el panel; la página la muestra más grande y sin fondo blanco.
+- **C-244 · La vista previa de los correos (rc.58, en producción):** en Marketing → Correos de la tienda, la vista previa queda fija con el alto de la pantalla mientras se recorre la lista, y el correo se lee con un solo scroll (`estado/C-244.md`). Antes salía baja, con su propio scroll, y debajo quedaba un espacio en blanco.
+- **C-243 · El kit de marca (rc.57, en producción):** el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo (`estado/C-243.md`).
   - La fuente única es `lib/marca.ts`, con su página en Marketing → Kit de marca, y `npm run check:marca` rechaza lo de fuera. Salen el azul noche y el cian, también de los correos y de las imágenes para compartir.
   - **C-245** (rc.61) repasó todo el panel con el kit (arriba).
 - **C-242 · Facturas, ordenada (rc.56, en producción):** el equipo la vio en producción el 14/11 ("los grids se ven perdidos, íconos amontonados") y eligió la A viendo las maquetas (`estado/C-242.md`).
@@ -333,35 +339,48 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.71` (C-243, C-244, C-247, C-246, C-245, C-248, C-249, C-249b, C-249c, C-250, C-249d, C-249e, C-251, C-252 y C-251b; unos 85 minutos)
-**Producción está en `v1.0.0-rc.56`** (`471a54d`); su bloque está en `HISTORIAL.md`.
-- **C-243 (rc.57):** el kit de marca. **Sin cambio de base, sin SQL, sin variables nuevas y sin cron.**
-  - **Las imágenes para compartir cambian de dirección** (`?v=`): WhatsApp y Facebook las vuelven a pedir solas.
-  - **Los íconos de los correos** pasan a `?v=2`.
-- **C-244 (rc.58):** la vista previa de los correos, fija mientras se recorre la lista. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
-- **C-247 (rc.59):** la foto del premio del sorteo, más grande y sin fondo blanco. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. La foto se sube desde el panel (prueba 7).
-- **C-246 (rc.60):** el destino claro para la guía, los datos fiscales del proveedor y hasta 3 correos de despacho.
-  - **Cambia la base: tres columnas nuevas en `suppliers`, aditivas.** `deploy.sh` se para y muestra esto, y nada más; si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
+### El bloque por subir: `v1.0.0-rc.72` (C-253; unos 20 minutos)
+**Producción está en `v1.0.0-rc.71`** (`629d0c5`); su bloque está en `HISTORIAL.md`.
+- **C-253 (rc.72):** el banner nuevo de `/sorteo`, la bandera del sorteo en el inicio y el paso "Lo que trae" del panel.
+  - **Cambia la base: tres columnas nuevas en `sorteos`, aditivas.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
 ```sql
-ALTER TABLE "suppliers" ADD COLUMN "fiscalAddress" TEXT,
-ADD COLUMN "legalName" TEXT,
-ADD COLUMN "taxId" TEXT;
+ALTER TABLE "sorteos" ADD COLUMN "incluye" JSONB,
+ADD COLUMN "lema" TEXT,
+ADD COLUMN "nombreCorto" TEXT;
 ```
   - Sin variables nuevas, sin SQL de datos y sin cron.
-- **C-245 (rc.61):** el panel entero con el kit. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
-- **C-248 (rc.62):** dos botones de Contabilidad. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
-- **C-249 (rc.63):** los filtros en píldoras de Órdenes, Transacciones, Mensajes, Cursos, Trabajos realizados, Creadores y ElectroStudio. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
-- **C-249b (rc.64):** la oferta o el cupón y las gift cards impresas, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una ruta nueva que solo lee (`POST /api/admin/promotions/vista-previa`).
-- **C-249c (rc.65):** el método de pago y la categoría, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una ruta nueva que solo lee (`POST /api/admin/payments/vista-previa`).
-- **C-250 (rc.66):** el color de las categorías, solo con los azules del kit, y el aviso de la gift card impresa en azul. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
-- **C-249d (rc.67):** la campaña de correo y el promotor, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una ruta nueva que solo lee (`POST /api/influencers/vista-previa`).
-- **C-249e (rc.68):** el curso y el trabajo de Servicios, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. La subida de fotos del panel acepta dos tipos más (`curso` y `servicio`), en `public/uploads` como las demás.
-- **C-251 (rc.69):** Mi panel revisado: las fallas y lo nuevo. **Conviene subirlo pronto** (lo de seguridad de `estado/C-251.md`). Sin cambio de base, sin SQL, sin variables nuevas y sin cron. Se quitan dos rutas de la API del cliente que ninguna pantalla usaba (`/api/customer/payment-methods` y `/api/customer/chat`).
-- **C-252 (rc.70):** el precio de un curso nuevo y las fotos de Servicios, validados en el servidor. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
-- **C-251b (rc.71):** Mi panel con el kit (colores, filtros en píldoras y la tarjeta de opción). Solo pantallas: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
-- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc60.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.71`, o una mayor si entró otra tarea antes del `git pull`.
+- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc72.dump`
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.72`, o una mayor si entró otra tarea antes del `git pull`.
+- **Después, en el panel** (en la computadora). Sin esto, el banner sale sin "Lo que trae" y la bandera dice "Sorteo". Marketing → Sorteo → "Cambiar":
+  1. **"El premio":** en Premio, `PlayStation 4 Sony (Remanufacturada)`. Lo que va entre paréntesis sale aparte, como etiqueta.
+  2. **"Lo que trae":**
+      - "Agregar lo que trae": `1000 GB de almacenamiento`, y en el detalle, `para muchos juegos`;
+      - "Agregar otra": `1 control azul eléctrico`;
+      - "Agregar otra": `1 cable HDMI y 1 cable de poder`;
+      - Sello: `¡Lista para jugar!`;
+      - Nombre en el inicio: `PS4`. Al lado, la bandera con el logo.
+  3. **"Revisar y publicar":** "Lo que cambia" dice el premio, lo que trae, el sello y el nombre → "Guardar el cambio".
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
+  1. **`/sorteo`, en la computadora:**
+      - arriba, "Gana una" y "PlayStation 4 Sony" en grande, con "¡Lista para jugar!" y "Remanufacturada";
+      - los días que faltan junto a "Envío gratis", y "Quiero mi boleto";
+      - la foto a la derecha, sin cuadro alrededor;
+      - abajo, la franja "Lo que trae" con las tres cosas y sus íconos.
+  2. **"Quiero mi boleto"** baja a "Cómo participar", y el título no queda tapado por el encabezado.
+  3. **Al final de la página,** debajo de las bases, el aviso: "Sony, PlayStation, PS4… son marcas registradas de Sony Interactive Entertainment Inc. … no está patrocinado, avalado ni administrado por Sony".
+  4. **El inicio en una pantalla ancha** (1440 px o más, como la de la oficina):
+      - al borde izquierdo, a media altura, entra la pestaña con la foto, "¡Gánate una", el logo de PS4 y el regalo;
+      - da dos destellos y se queda quieta;
+      - tocarla lleva a `/sorteo`.
+  5. **El inicio en el teléfono:** abajo a la izquierda, frente a WhatsApp, "¡Gánate una PS4!" con "Sorteo de Navidad" debajo. Lleva a `/sorteo`.
+  6. **`/sorteo` en el teléfono:** el nombre, la foto, los días con el envío, el botón y "Lo que trae" uno debajo del otro, sin moverse de lado.
+- **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las columnas no molestan al código anterior.
+
+### Por confirmar de rc.71 (C-243 a C-251b; unos 60 minutos, en la computadora y en el teléfono)
+Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera la versión, la recarga de las pestañas viejas, los íconos de los correos, las imágenes para compartir y la foto del sorteo. La sesión de los correos comprobó el enlace del aliado comercial y los crons. Falta esto:
+  0. **La revisión de la base que pidió Claude el 15/11** (en la terminal del servidor, las dos consultas del chat): las cuentas del equipo y los Puntos ES que cambiaron sin un movimiento que lo explique. Pégale el resultado a Claude. Es para saber si alguien usó la falla que cerró rc.69 (`HISTORIAL.md`).
   1. **`/sorteo`:** la franja de arriba va en el azul oscuro del logo, sin azul casi negro ni letras cian.
   2. **En el teléfono, la barra de abajo** va en el mismo azul oscuro.
   3. **En el panel, Marketing → Kit de marca:** el logo, la paleta, las reglas, las piezas y un correo de muestra.
@@ -370,9 +389,7 @@ ADD COLUMN "taxId" TEXT;
       - el ícono de los avisos, en blanco sobre el azul de la marca.
   5. **Desde el teléfono, comparte `electroshopve.com` por WhatsApp:** la imagen va en el azul oscuro del logo, con el lema en azul claro.
   6. **La vista previa de los correos** (C-244), en la computadora: Marketing → Correos de la tienda → "Pago confirmado". Baja por la lista hasta "Gift cards": la vista previa se queda fija a la derecha, con el alto de la pantalla, y el correo se lee completo con la rueda del ratón sobre él. Abajo no queda ningún espacio en blanco.
-  7. **La foto del sorteo** (C-247). Se puede subir antes del deploy; con él se ve más grande.
-      - **En la computadora**, en el panel: Marketing → Sorteo → Cambiar → "Subir foto". Elige `Escritorio/Electro Shop/sorteo/premio-sorteo-ps4-slim.jpg` → Revisar y publicar.
-      - **En `/sorteo`:** la PS4 Slim y el control azul quedan parados sobre la franja azul, con su luz y su reflejo, sin un cuadro blanco. En el teléfono, debajo del texto.
+  7. **La foto del sorteo** (C-247): **hecha**. El equipo la subió desde el panel el 15/11 y `/sorteo` la muestra.
   8. **Los datos de Ferrecla** (C-246), en el panel: Productos → Lista del proveedor → la ferretería:
       - "Datos fiscales": la razón social, el RIF y el domicilio fiscal, como en `Escritorio/Proveedores/RIF FCLA 2027.pdf`. Un RIF mal escrito avisa y no deja guardar;
       - "Quién lo recibe": su representante; y en "Correos de despacho", los tres de la ferretería separados por coma (o, para la prueba 9, primero el tuyo) → "Guardar los datos";
@@ -430,7 +447,6 @@ ADD COLUMN "taxId" TEXT;
       - **Puntos ES:** la franja de arriba en el azul oscuro del logo; una recarga por confirmar, con el sello azul lleno; los filtros con su ícono.
       - **Direcciones** → "Agregar": "Retiro en agencia" y "A domicilio" son tarjetas con su ícono y el círculo de elegida; ZOOM y MRW, con su logo.
       - **Mis documentos** (si te falta firmar algo): el aviso con el ícono blanco en su placa azul. En la ventana de firmar, "IMPORTANTE" va en ese azul claro, no en rojo.
-- **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base: al ver las tres columnas de C-246, se para en el paso 2 y la tienda sigue como está (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las columnas no molestan al código anterior.
 
 ### Por confirmar de rc.55 y rc.56 (C-235, C-227 y C-242; unos 20 minutos)
 Ya en producción desde el 15/11 (`HISTORIAL.md`). Las sesiones comprobaron desde fuera la versión, la base del aliado comercial y que los crons responden. Falta esto:

@@ -10,11 +10,13 @@ import { z } from '@/lib/zod';
 import { diaDe, erroresPorCampo, esquemaSorteo, finDelDia, inicioDelDia } from '@/lib/sorteo/esquema';
 import { MARGEN_ESTIMADO, resumenDelSorteo } from '@/lib/sorteo/servidor';
 import { safeHotAdLink } from '@/lib/hot-ad';
-import type { Sorteo } from '@prisma/client';
+import { Prisma, type Sorteo } from '@prisma/client';
+import { leerQueTrae } from '@/lib/sorteo/premio';
 
 function paraElPanel(sorteo: Sorteo) {
   return {
     id: sorteo.id, titulo: sorteo.titulo, premio: sorteo.premio, imagen: sorteo.imagen ?? '', activo: sorteo.activo,
+    incluye: leerQueTrae(sorteo.incluye), lema: sorteo.lema ?? '', nombreCorto: sorteo.nombreCorto ?? '',
     costoPremioUSD: Number(sorteo.costoPremioUSD), compraMinimaUSD: Number(sorteo.compraMinimaUSD), topeInvitar: sorteo.topeInvitar,
     desde: diaDe(sorteo.desde), hasta: diaDe(sorteo.hasta), resultadoEl: diaDe(sorteo.resultadoEl),
     cerrado: new Date() > sorteo.hasta,
@@ -55,6 +57,10 @@ export async function PUT(request: NextRequest) {
   const datos = {
     titulo: d.titulo, premio: d.premio, imagen, costoPremioUSD: d.costoPremioUSD, compraMinimaUSD: d.compraMinimaUSD,
     topeInvitar: d.topeInvitar, desde: inicioDelDia(d.desde), hasta: finDelDia(d.hasta), resultadoEl: inicioDelDia(d.resultadoEl), activo: d.activo,
+    // C-253: sin mandarlos (un panel de antes), quedan como estaban
+    ...(d.incluye === undefined ? {} : { incluye: d.incluye.length ? d.incluye : Prisma.DbNull }),
+    ...(d.lema === undefined ? {} : { lema: d.lema || null }),
+    ...(d.nombreCorto === undefined ? {} : { nombreCorto: d.nombreCorto || null }),
   };
   const actual = await prisma.sorteo.findFirst({ orderBy: { createdAt: 'desc' } });
   // Uno ya sorteado no se cambia: el próximo es un sorteo nuevo

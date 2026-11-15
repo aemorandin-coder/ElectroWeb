@@ -596,6 +596,24 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - **Tres decisiones del equipo, con maquetas** (`~/.cache/electroshop-trabajo/c251/decisiones.html`): Mis pedidos en la computadora (dos columnas, la recomendada), la garantía de los códigos y las recargas (aparte, la recomendada) y los sellos "Encriptado" y "Garantizado" de Mis códigos (decir lo que sí es verdad, la recomendada).
     - Pagar un pedido "Por pagar" desde Mi panel no existe; solo nace así lo que arma el equipo. Si se quiere, es una tarea aparte.
     - La dirección muy corta: la pantalla pide 10 letras y el servidor acepta menos.
+  - **C-253 · El sorteo, más atractivo** (**hecha**, rc.72, 15/11; `estado/C-253.md`; el equipo eligió viendo las maquetas):
+    - el banner de `/sorteo` (la C2: la foto limpia y "Lo que trae" en una franja abajo);
+    - la bandera del inicio (la A1, con el logo de PS4);
+    - el paso "Lo que trae" del panel y el aviso de marcas.
+    - **Falta:** después del deploy, cargar en el panel el premio con el paréntesis, lo que trae, el sello y "PS4" (`SIGUIENTE.md` §2). El aviso de marcas conviene que lo mire el abogado, con lo de A4.
+  - **C-254 · La semana del ganador** (pendiente, la sigue a C-253; el equipo, 15/11: "al terminar el sorteo, que la bandera permanezca una semana más mostrando quién ganó y un video de testimonio o una imagen de la persona"; eligió hacerla justo después de C-253, mucho antes del resultado del 20/12):
+    - **La bandera, por etapas:**
+      - abierto: "¡Gánate una PS4!", lo de C-253;
+      - cerrado, esperando el resultado: "Resultado el 20 de diciembre";
+      - sorteado, durante 7 días: "¡Ya hay ganador!", con la foto de la persona y su premio;
+      - pasada la semana, desaparece.
+      - Si la entrega se publica días después del sorteo, los 7 días cuentan desde que se publica.
+    - **En `/sorteo`, "La entrega":** la foto, el video y el nombre como la persona quiera salir ("María G., de Barquisimeto").
+    - **En el panel, en el tablero del sorteo ya hecho, "Publicar la entrega":**
+      - la foto se sube;
+      - el video va a YouTube (oculto o Short), y aquí se pone su enlace, como los demás videos de la tienda;
+      - una casilla obligatoria: "La persona aceptó salir en la tienda". Sin ella, solo el correo tapado, como hoy.
+    - **La base:** columnas aditivas en `sorteos` (el nombre que se muestra, la foto, el video, el permiso y cuándo se publicó).
   - **C-252 · El curso nuevo y las fotos de Servicios, validados** (**hecha**, rc.70, 15/11; `estado/C-252.md`): las dos fallas del servidor que anotó C-249e.
   - **C-250 · Las categorías y la gift card impresa, con el kit** (**hecha**, rc.66, 15/11; `estado/C-250.md`; el equipo eligió lo recomendado en las dos preguntas de C-249b).
   - **C-247 · La foto del premio del sorteo** (**hecha**, rc.59, 15/11; `estado/C-247.md`; el equipo eligió la A, sobre el azul y más grande). La foto se sube desde el panel.

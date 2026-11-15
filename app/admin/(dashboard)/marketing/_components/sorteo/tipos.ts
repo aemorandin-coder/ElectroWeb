@@ -1,10 +1,13 @@
 // C-221: lo que comparten el asistente y el tablero del sorteo (Marketing → Sorteo): los datos que llegan del servidor, el
 // formulario, lo que se propone para el primero y las cuentas de días y montos.
 import type { AdminTone } from '@/lib/admin-ui';
+import type { CosaQueTrae } from '@/lib/sorteo/premio';
 
 export interface Formulario {
   titulo: string; premio: string; imagen: string; costoPremioUSD: string; compraMinimaUSD: string; topeInvitar: string;
   desde: string; hasta: string; resultadoEl: string; activo: boolean;
+  /** C-253: lo que trae el premio, el sello del banner y el nombre corto de la bandera del inicio */
+  incluye: CosaQueTrae[]; lema: string; nombreCorto: string;
 }
 
 export interface SorteoPanel extends Omit<Formulario, 'costoPremioUSD' | 'compraMinimaUSD' | 'topeInvitar'> {
@@ -54,11 +57,13 @@ export function numero(valor: string): number | null {
 export const PROPUESTO = (): Formulario => ({
   titulo: 'Sorteo de Navidad', premio: 'PlayStation 4 reacondicionada con 1 control y 1 TB', imagen: '', costoPremioUSD: '220',
   compraMinimaUSD: '10', topeInvitar: '3', desde: hoy(), hasta: '2026-12-18', resultadoEl: '2026-12-20', activo: false,
+  incluye: [], lema: '', nombreCorto: '',
 });
 
 export const formularioDe = (s: SorteoPanel): Formulario => ({
   titulo: s.titulo, premio: s.premio, imagen: s.imagen, costoPremioUSD: String(s.costoPremioUSD), compraMinimaUSD: String(s.compraMinimaUSD),
   topeInvitar: String(s.topeInvitar), desde: s.desde, hasta: s.hasta, resultadoEl: s.resultadoEl, activo: s.activo,
+  incluye: s.incluye.map((c) => ({ ...c })), lema: s.lema, nombreCorto: s.nombreCorto,
 });
 
 /** "Sorteo nuevo con estos datos": el mismo premio y las mismas reglas, con las fechas corridas a hoy y el mismo largo */
@@ -85,13 +90,17 @@ export function problemaDe(paso: number, f: Formulario): string | null {
     return null;
   }
   if (paso === 1) {
+    if (f.incluye.some((c) => c.texto.trim().length < 2)) return 'Escribe qué trae en cada renglón, o quítalo.';
+    return null;
+  }
+  if (paso === 2) {
     const minimo = numero(f.compraMinimaUSD);
     if (minimo === null || minimo < 1) return 'La compra mínima va desde $1.';
     const tope = numero(f.topeInvitar);
     if (tope === null || !Number.isInteger(tope) || tope < 0 || tope > 20) return 'El tope por invitar va de 1 a 20 boletos.';
     return null;
   }
-  if (paso === 2) {
+  if (paso === 3) {
     if (!esDia(f.desde) || !esDia(f.hasta) || !esDia(f.resultadoEl)) return 'Elige las tres fechas.';
     if (f.hasta < f.desde) return 'La última compra no puede ser antes de que empiece.';
     if (f.resultadoEl < f.hasta) return 'El resultado va el día de la última compra o después.';
@@ -102,5 +111,6 @@ export function problemaDe(paso: number, f: Formulario): string | null {
 
 /** El paso donde está cada campo, para llevar ahí al que tiene un error del servidor */
 export const PASO_DE: Record<string, number> = {
-  titulo: 0, premio: 0, imagen: 0, costoPremioUSD: 0, compraMinimaUSD: 1, topeInvitar: 1, desde: 2, hasta: 2, resultadoEl: 2,
+  titulo: 0, premio: 0, imagen: 0, costoPremioUSD: 0, incluye: 1, lema: 1, nombreCorto: 1,
+  compraMinimaUSD: 2, topeInvitar: 2, desde: 3, hasta: 3, resultadoEl: 3,
 };

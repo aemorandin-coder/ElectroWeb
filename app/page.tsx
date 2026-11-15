@@ -13,6 +13,7 @@ import TrustBar from '@/components/home/TrustBar';
 import VitrinaDepartamento from '@/components/home/VitrinaDepartamento';
 import VideoPlayer from '@/components/home/VideoPlayer';
 import SaludoNavidad from '@/components/navidad/SaludoNavidad';
+import BanderaSorteo from '@/components/sorteo/BanderaSorteo';
 import PublicHeader from '@/components/public/PublicHeader';
 import Container from '@/components/ui/Container';
 import SectionHeader from '@/components/ui/SectionHeader';
@@ -37,6 +38,7 @@ import {
 import { getHotAd, getSaludoNavidad } from '@/lib/queries/hot-ad';
 import { safeHotAdLink } from '@/lib/hot-ad';
 import { getPublicSettings } from '@/lib/site-settings';
+import { getSorteoVigente } from '@/lib/sorteo/servidor';
 import JsonLd from '@/components/seo/JsonLd';
 import { storeJsonLd, websiteJsonLd } from '@/lib/seo';
 
@@ -71,6 +73,9 @@ export default async function Home() {
     getHotAd(),
     getSaludoNavidad(),
   ]);
+  // C-253: la bandera del sorteo, mientras se puede participar (la página se regenera cada minuto: al cerrar, se va sola)
+  const sorteo = await getSorteoVigente();
+  const bandera = sorteo && !sorteo.sorteadoAt && new Date() <= sorteo.hasta ? sorteo : null;
   // C-200: cada departamento aparte (Ferretería) tiene una sola vitrina, después de "Recién llegados"
   // C-225: lo que vende la tienda, para el título oculto del inicio
   const rubros = await getRubros();
@@ -198,6 +203,7 @@ export default async function Home() {
 
       <Footer />
 
+      {bandera && <BanderaSorteo titulo={bandera.titulo} premio={bandera.premio} imagen={bandera.imagen} nombreCorto={bandera.nombreCorto} />}
       {hotAd && <HotAdOverlay hotAd={hotAd} />}
     </div>
   );

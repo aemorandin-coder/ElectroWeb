@@ -5,9 +5,11 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import {
-  IconoActualizar, IconoBillete, IconoBloqueado, IconoBolsa, IconoChevronDerecha, IconoFlechaAbajoIzquierda,
-  IconoFlechaArribaDerecha, IconoInfo, IconoMas, IconoRechazado, IconoReloj,
+  IconoActualizar, IconoBillete, IconoBloqueado, IconoBolsa, IconoChevronDerecha, IconoEntradaPuntos, IconoFlechaAbajoIzquierda,
+  IconoFlechaArribaDerecha, IconoInfo, IconoLista, IconoMas, IconoRecargarPuntos, IconoRechazado, IconoRegalo, IconoReloj,
 } from '@/components/iconos';
+import Filtros, { type Filtro as FiltroPildora } from '@/components/admin/Filtros';
+import { adminBadge, type AdminTone } from '@/lib/admin-ui';
 import RechargeModal from '@/components/modals/RechargeModalV2';
 import { formatUSD } from '@/lib/currency';
 import { useTiempoReal } from '@/lib/realtime/hooks';
@@ -28,19 +30,21 @@ interface Resumen {
   porConfirmar: { cantidad: number; monto: number };
 }
 
+// C-251b: los filtros en píldoras con su ícono y lo que juntan (PLAN.md §1.7)
 const FILTROS = [
-  { id: '', label: 'Todos', vacio: 'Todavía no tienes movimientos.' },
-  { id: 'RECHARGE', label: 'Recargas', vacio: 'No tienes recargas.' },
-  { id: 'PURCHASE', label: 'Compras', vacio: 'No tienes compras con Puntos ES.' },
-  { id: 'REFUND', label: 'Devoluciones', vacio: 'No tienes devoluciones.' },
-  { id: 'DEPOSIT', label: 'Abonos', vacio: 'No tienes abonos (gift cards, comisiones o ajustes de la tienda).' },
+  { id: '', label: 'Todos', ayuda: 'Todo el historial', Icono: IconoLista, vacio: 'Todavía no tienes movimientos.' },
+  { id: 'RECHARGE', label: 'Recargas', ayuda: 'Lo que recargaste', Icono: IconoRecargarPuntos, vacio: 'No tienes recargas.' },
+  { id: 'PURCHASE', label: 'Compras', ayuda: 'Lo que usaste', Icono: IconoBolsa, vacio: 'No tienes compras con Puntos ES.' },
+  { id: 'REFUND', label: 'Devoluciones', ayuda: 'Lo que te devolvimos', Icono: IconoEntradaPuntos, vacio: 'No tienes devoluciones.' },
+  { id: 'DEPOSIT', label: 'Abonos', ayuda: 'Gift cards y comisiones', Icono: IconoRegalo, vacio: 'No tienes abonos (gift cards, comisiones o ajustes de la tienda).' },
 ] as const;
 type Filtro = (typeof FILTROS)[number]['id'];
 
-const ESTADOS: Record<Exclude<EstadoMovimiento, 'COMPLETADO'>, { texto: string; clase: string }> = {
-  POR_CONFIRMAR: { texto: 'Por confirmar', clase: 'bg-brand-50 text-brand-700' },
-  RECHAZADO: { texto: 'Rechazada', clase: 'bg-deal-bg text-deal' },
-  NO_COMPLETADO: { texto: 'No completada', clase: 'bg-surface text-ink-soft' },
+// C-251b: el estado en su sello lleno (PLAN.md §1.8); antes, píldoras claras con la letra del mismo color
+const ESTADOS: Record<Exclude<EstadoMovimiento, 'COMPLETADO'>, { texto: string; tono: AdminTone }> = {
+  POR_CONFIRMAR: { texto: 'Por confirmar', tono: 'brand' },
+  RECHAZADO: { texto: 'Rechazada', tono: 'danger' },
+  NO_COMPLETADO: { texto: 'No completada', tono: 'neutral' },
 };
 
 const fecha = (iso: string) => new Date(iso).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -69,7 +73,7 @@ function Movimiento({ m }: { m: MovimientoDTO }) {
         </p>
         {m.estado !== 'COMPLETADO' && (
           <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-soft">
-            <span className={`inline-flex items-center rounded-full px-2 py-0.5 font-semibold ${ESTADOS[m.estado].clase}`}>{ESTADOS[m.estado].texto}</span>
+            <span className={adminBadge(ESTADOS[m.estado].tono)}>{ESTADOS[m.estado].texto}</span>
             {m.estado === 'POR_CONFIRMAR' && <span>La tienda está confirmando tu pago. Te avisamos cuando tus Puntos ES estén disponibles.</span>}
             {m.estado === 'RECHAZADO' && <span>{m.motivo ? <>Motivo: {m.motivo}</> : 'No pudimos confirmar este pago. Escríbenos si crees que es un error.'}</span>}
             {m.estado === 'NO_COMPLETADO' && <span>Cerraste la recarga antes de terminarla. No se sumó nada.</span>}
@@ -159,7 +163,8 @@ export default function BalancePage() {
 
   return (
     <div className="space-y-4 pb-24 lg:pb-6">
-      <header className="rounded-2xl bg-brand-600 p-4 text-white lg:p-6">
+      {/* C-251b: la pieza fuerte de la pantalla, en el azul oscuro del logo (PLAN.md §1.0) */}
+      <header className="rounded-2xl bg-brand-700 p-4 text-white lg:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="flex items-center gap-2 text-sm font-semibold text-white/80">
@@ -214,18 +219,13 @@ export default function BalancePage() {
             <IconoActualizar className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
         </div>
-        <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1">
-          {FILTROS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              aria-pressed={filtro === f.id}
-              onClick={() => setFiltro(f.id)}
-              className={`h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold ${filtro === f.id ? 'bg-brand-500 text-white' : 'border border-line bg-white text-ink-soft hover:bg-surface'}`}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div className="mb-3">
+          <Filtros
+            filtros={FILTROS.map((f): FiltroPildora<Filtro> => ({ valor: f.id, etiqueta: f.label, ayuda: f.ayuda, Icono: f.Icono }))}
+            valor={filtro}
+            onCambiar={setFiltro}
+            etiqueta="Filtrar movimientos"
+          />
         </div>
 
         {cargando ? (

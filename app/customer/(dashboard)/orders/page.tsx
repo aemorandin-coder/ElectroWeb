@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import { IconoActualizar, IconoBolsa, IconoBuscar, IconoPaquete } from '@/components/iconos';
+import { IconoActualizar, IconoBolsa, IconoBuscar, IconoEntregado, IconoEnvio, IconoLista, IconoPaquete, IconoRechazado, IconoTarjeta } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
 import { formatUSD } from '@/lib/currency';
 import { useTiempoReal } from '@/lib/realtime/hooks';
 import { useMontado } from '@/lib/hooks/useMontado';
@@ -29,6 +30,15 @@ function normalizar(o: Crudo): PedidoCliente {
     items: (o.items ?? []).map((i) => ({ ...i, priceUSD: Number(i.priceUSD) || 0, totalUSD: Number(i.totalUSD) || 0 })),
   };
 }
+
+const AYUDA_FILTRO: Record<FiltroPedidos, { ayuda: string; Icono: typeof IconoLista }> = {
+  TODOS: { ayuda: 'Todos tus pedidos', Icono: IconoLista },
+  POR_PAGAR: { ayuda: 'Por pagar o por validar', Icono: IconoTarjeta },
+  PREPARACION: { ayuda: 'Pagados, sin salir', Icono: IconoPaquete },
+  DESPACHADO: { ayuda: 'En camino o por retirar', Icono: IconoEnvio },
+  ENTREGADO: { ayuda: 'Ya los tienes', Icono: IconoEntregado },
+  CANCELADO: { ayuda: 'Cancelados o devueltos', Icono: IconoRechazado },
+};
 
 export default function OrdersPage() {
   const [pedidos, setPedidos] = useState<PedidoCliente[]>([]);
@@ -121,23 +131,19 @@ export default function OrdersPage() {
               className="h-11 w-full rounded-xl border border-line bg-white pl-9 pr-3 text-sm text-ink focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
             />
           </label>
-          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" role="group" aria-label="Filtrar pedidos">
-            {FILTROS_PEDIDOS.map((f) => {
-              const cuenta = f.id === 'TODOS' ? pedidos.length : pedidos.filter((o) => pasaFiltro(o, f.id)).length;
-              if (f.id !== 'TODOS' && cuenta === 0) return null;
-              return (
-                <button
-                  key={f.id}
-                  type="button"
-                  aria-pressed={filtro === f.id}
-                  onClick={() => setFiltro(f.id)}
-                  className={`h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold ${filtro === f.id ? 'bg-brand-500 text-white' : 'border border-line bg-white text-ink-soft hover:bg-surface'}`}
-                >
-                  {f.label} <span className={filtro === f.id ? 'text-white/80' : 'text-muted'}>{cuenta}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* C-251b: en píldoras con su ícono y lo que juntan (PLAN.md §1.7). Las que no tienen pedidos no salen, como antes */}
+          <Filtros
+            etiqueta="Filtrar pedidos"
+            valor={filtro}
+            onCambiar={setFiltro}
+            filtros={FILTROS_PEDIDOS.map((f) => ({
+              valor: f.id,
+              etiqueta: f.label,
+              ayuda: AYUDA_FILTRO[f.id].ayuda,
+              Icono: AYUDA_FILTRO[f.id].Icono,
+              cuenta: f.id === 'TODOS' ? pedidos.length : pedidos.filter((o) => pasaFiltro(o, f.id)).length,
+            })).filter((f) => f.valor === 'TODOS' || f.valor === filtro || (f.cuenta ?? 0) > 0)}
+          />
         </div>
       )}
 

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { IconoCheck, IconoConfirmado, IconoNotificaciones } from '@/components/iconos';
+import { IconoCheck, IconoConfirmado, IconoLista, IconoNotificaciones } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
 import { useNotifications } from '@/components/notifications/NotificationProvider';
 import { notificationMeta, timeAgo } from '@/components/notifications/notification-meta';
-import { adminTab, adminIconChip } from '@/lib/admin-ui';
+import { adminIconChip, adminSecondaryButton } from '@/lib/admin-ui';
 import Link from 'next/link';
 
 export default function NotificationsPage() {
@@ -33,8 +34,8 @@ export default function NotificationsPage() {
 
     return (
         <div className="space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between">
+            {/* Header (C-251b: en el teléfono el botón baja a su línea en vez de apretar el título) */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-xl font-bold text-ink">Notificaciones</h1>
                     <p className="text-sm text-muted">
@@ -44,8 +45,9 @@ export default function NotificationsPage() {
                 <div className="flex items-center gap-2">
                     {unreadCount > 0 && (
                         <button
+                            type="button"
                             onClick={markAllAsRead}
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-brand-600 bg-brand-50 rounded-lg hover:bg-brand-100 transition-colors"
+                            className={adminSecondaryButton}
                         >
                             <IconoConfirmado className="w-4 h-4" />
                             Marcar todas como leídas
@@ -54,21 +56,16 @@ export default function NotificationsPage() {
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-                <button
-                    onClick={() => setFilter('all')}
-                    className={adminTab(filter === 'all')}
-                >
-                    Todas ({notifications.length})
-                </button>
-                <button
-                    onClick={() => setFilter('unread')}
-                    className={adminTab(filter === 'unread')}
-                >
-                    No leídas ({unreadCount})
-                </button>
-            </div>
+            {/* C-251b: los filtros en píldoras (PLAN.md §1.7) */}
+            <Filtros
+                etiqueta="Filtrar notificaciones"
+                valor={filter}
+                onCambiar={setFilter}
+                filtros={[
+                    { valor: 'all', etiqueta: 'Todas', ayuda: 'Las últimas 30', Icono: IconoLista, cuenta: notifications.length },
+                    { valor: 'unread', etiqueta: 'No leídas', ayuda: 'Lo nuevo para ti', Icono: IconoNotificaciones, cuenta: unreadCount },
+                ]}
+            />
 
             {/* Notifications List */}
             {filteredNotifications.length === 0 ? (

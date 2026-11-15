@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { IconoCerrar, IconoCheck, IconoEstrella, IconoPaquete, IconoReloj } from '@/components/iconos';
+import { IconoCerrar, IconoCheck, IconoEstrella, IconoLista, IconoPaquete, IconoReloj } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import {
   adminCard,
   adminPrimaryButton,
-  adminTab,
   adminBadge,
 } from '@/lib/admin-ui';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -88,30 +88,17 @@ export default function MyReviewsPage() {
         <h1 className="text-xl lg:text-2xl font-bold text-ink">Mis reseñas</h1>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        <button
-          type="button"
-          onClick={() => setFilter('all')}
-          className={adminTab(filter === 'all')}
-        >
-          Todas
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter('approved')}
-          className={adminTab(filter === 'approved')}
-        >
-          Publicadas
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter('pending')}
-          className={adminTab(filter === 'pending')}
-        >
-          Pendientes
-        </button>
-      </div>
+      {/* C-251b: los filtros en píldoras con su ícono, su cuenta y lo que juntan (PLAN.md §1.7) */}
+      <Filtros
+        etiqueta="Filtrar reseñas"
+        valor={filter}
+        onCambiar={setFilter}
+        filtros={[
+          { valor: 'all', etiqueta: 'Todas', ayuda: 'Las que dejaste', Icono: IconoLista, cuenta: reviews.length },
+          { valor: 'approved', etiqueta: 'Publicadas', ayuda: 'Se ven en la ficha', Icono: IconoCheck, cuenta: reviews.filter((r) => reviewStatus(r) === 'APPROVED').length },
+          { valor: 'pending', etiqueta: 'Pendientes', ayuda: 'El equipo las revisa', Icono: IconoReloj, cuenta: reviews.filter((r) => reviewStatus(r) === 'PENDING').length },
+        ]}
+      />
 
       {/* Reviews List */}
       {loading ? (
@@ -136,7 +123,7 @@ export default function MyReviewsPage() {
             className={`${adminPrimaryButton} inline-flex items-center gap-2`}
           >
             <IconoPaquete className="w-5 h-5" />
-            Ver Productos
+            Ver productos
           </Link>
         </div>
       ) : (
@@ -169,7 +156,7 @@ export default function MyReviewsPage() {
                       ))}
                     </div>
                     <span className="text-xs text-muted">
-                      {new Date(review.createdAt).toLocaleDateString('es-ES', {
+                      {new Date(review.createdAt).toLocaleDateString('es-VE', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
@@ -192,7 +179,8 @@ export default function MyReviewsPage() {
               {reviewStatus(review) === 'PENDING' && (
                 <div className="mt-4 p-3 bg-surface border border-line rounded-xl">
                   <p className="text-xs text-ink-soft flex items-center gap-2">
-                    <IconoReloj className="w-4 h-4 text-warning-strong flex-shrink-0" />
+                    {/* C-251b: esperar va en azul (PLAN.md §1.1); el ámbar queda solo en las estrellas */}
+                    <IconoReloj className="w-4 h-4 text-brand-600 flex-shrink-0" aria-hidden="true" />
                     Tu reseña está siendo revisada por nuestro equipo. Será publicada pronto.
                   </p>
                 </div>

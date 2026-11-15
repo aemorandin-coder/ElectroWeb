@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { IconoAdvertencia, IconoCerrar, IconoCheck, IconoDescargar, IconoDocumento } from '@/components/iconos';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import {
-  adminError, adminHint, adminInput, adminLabel, adminModalOverlay, adminModalPanel, adminPrimaryButton, adminSecondaryButton,
+  adminError, adminHint, adminInput, adminLabel, adminModalOverlay, adminModalPanel, adminPrimaryButton, adminSecondaryButton, avisoAccion,
 } from '@/lib/admin-ui';
 import { parsearDocumento, segmentosNegrita } from '@/lib/legal-docs-core';
 import { RESORTES, avanzarResorte, crearResorte, prefiereMenosMovimiento } from '@/lib/motion/resorte';
@@ -40,7 +40,8 @@ export function TextoDocumento({ content }: { content: string }) {
       {parsearDocumento(content).map((b, i) => {
         if (b.tipo === 'subtitulo') return <h3 key={i} className="pt-2 text-sm font-bold text-ink">{b.texto}</h3>;
         if (b.tipo === 'subsubtitulo') return <h4 key={i} className="pt-1 text-sm font-semibold text-ink">{b.texto}</h4>;
-        if (b.tipo === 'aviso') return <p key={i} className="rounded-lg border border-deal/30 bg-deal-bg p-3 font-semibold text-deal">{linea(b.texto)}</p>;
+        // C-251b: lo que hay que leer antes de firmar es un aviso de acción (PLAN.md §1.1); el rojo es error o rechazo
+        if (b.tipo === 'aviso') return <p key={i} className={`flex items-start gap-3 rounded-lg border p-3 font-semibold ${avisoAccion}`}><IconoAdvertencia aria-hidden="true" /><span>{linea(b.texto)}</span></p>;
         if (b.tipo === 'lista') return <ul key={i} className="list-disc space-y-1 pl-6">{b.items.map((it, j) => <li key={j}>{linea(it)}</li>)}</ul>;
         return <p key={i}>{linea(b.texto)}</p>;
       })}
@@ -192,7 +193,7 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
 
         {error ? (
           <div className="p-6 text-center">
-            <IconoAdvertencia className="mx-auto mb-2 h-8 w-8 text-warning-strong" aria-hidden="true" />
+            <IconoAdvertencia className="mx-auto mb-2 h-8 w-8 text-deal" aria-hidden="true" />
             <p className="text-sm text-ink">{error}</p>
             <button type="button" onClick={() => setRecargas((n) => n + 1)} className={`${adminSecondaryButton} mt-4`}>Reintentar</button>
           </div>
@@ -210,7 +211,8 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
               <TextoDocumento content={doc.content} />
             </div>
             <div className="space-y-3 border-t border-line bg-surface px-5 py-4">
-              {!leido && <p className="text-xs font-medium text-warning-strong">Desplázate hasta el final para continuar.</p>}
+              {/* C-251b: lo que falta para seguir, en gris (como los pasos del checkout, C-241) */}
+              {!leido && <p className="text-xs font-medium text-ink-soft">Desplázate hasta el final para continuar.</p>}
               <label className={`flex min-h-11 items-start gap-3 text-sm ${leido ? 'text-ink' : 'text-subtle'}`}>
                 <input type="checkbox" className="mt-0.5 h-5 w-5" checked={acepto} disabled={!leido} onChange={(e) => setAcepto(e.target.checked)} />
                 <span>Leí y acepto &quot;{doc.title}&quot;.</span>

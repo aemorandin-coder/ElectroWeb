@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 import PlatformScratchCard from './_components/PlatformScratchCard';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useSettings } from '@/contexts/SettingsContext';
+import { adminBadge, adminDato } from '@/lib/admin-ui';
 import { calendarioDe, entregaDigital } from '@/lib/horarios';
 
 interface DigitalCode {
@@ -257,12 +258,13 @@ export default function DigitalCodesPage() {
                                     {/* Info */}
                                     <div className="flex-1 min-w-0 text-left">
                                         <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
-                                            <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-700 uppercase bg-brand-50 border border-brand-200 px-1.5 py-0.5 rounded">
+                                            {/* C-251b: la plataforma y la región son datos, en gris (PLAN.md §1.8) */}
+                                            <span className={`${adminDato} uppercase`}>
                                                 {getPlatformIcon(item.platform)}
                                                 {item.platform || 'Digital'}
                                             </span>
                                             {item.region && (
-                                                <span className="text-xs font-bold text-ink-soft uppercase bg-surface border border-line px-1.5 py-0.5 rounded">
+                                                <span className={`${adminDato} uppercase`}>
                                                     {item.region}
                                                 </span>
                                             )}
@@ -295,8 +297,9 @@ export default function DigitalCodesPage() {
                                                             Código digital {item.codes.length > 1 ? `#${index + 1}` : ''}
                                                         </span>
                                                         {revealedCodes[code.id] && (
-                                                            <span className="text-xs text-success-strong font-bold uppercase flex items-center gap-0.5 bg-success-strong/10 border border-success-strong/20 px-1.5 py-0.5 rounded-full">
-                                                                <IconoCheck className="w-2 h-2" />
+                                                            // C-251b: lo hecho, en su sello lleno (antes verde claro con letra verde)
+                                                            <span className={adminBadge('success')}>
+                                                                <IconoCheck className="h-3 w-3" aria-hidden="true" />
                                                                 Recibido
                                                             </span>
                                                         )}

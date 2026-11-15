@@ -169,10 +169,13 @@ export default function ProfilePage() {
         </ul>
       </nav>
 
-      {pestana === 'datos' && <DatosPersonales key={datos.user.id} datos={datos} onGuardado={alGuardar} />}
-      {pestana === 'seguridad' && <Seguridad ajustes={ajustes} onCambio={cargar} />}
-      {pestana === 'notificaciones' && <Notificaciones inicial={ajustes.notificaciones} />}
-      {pestana === 'empresa' && <Empresa datos={datos} onEnviado={cargar} />}
+      {/* C-251b: cada contenedor del tamaño de lo que lleva (PLAN.md §1.5): los formularios hasta 48 rem, a la izquierda */}
+      <div className="max-w-3xl">
+        {pestana === 'datos' && <DatosPersonales key={datos.user.id} datos={datos} onGuardado={alGuardar} />}
+        {pestana === 'seguridad' && <Seguridad ajustes={ajustes} onCambio={cargar} />}
+        {pestana === 'notificaciones' && <Notificaciones inicial={ajustes.notificaciones} />}
+        {pestana === 'empresa' && <Empresa datos={datos} onEnviado={cargar} />}
+      </div>
     </div>
   );
 }

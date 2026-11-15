@@ -175,7 +175,8 @@ export default function Seguridad({ ajustes, onCambio }: { ajustes: Ajustes; onC
 function FilaActividad({ actividad }: { actividad: Actividad }) {
   const meta = TEXTO_ACTIVIDAD[actividad.accion] ?? { texto: actividad.accion, Icono: IconoMonitor, tono: 'brand' as const };
   const { Icono } = meta;
-  const color = meta.tono === 'danger' ? 'text-deal' : meta.tono === 'success' ? 'text-success-strong' : meta.tono === 'warning' ? 'text-warning-strong' : 'text-brand-600';
+  // C-251b: sin ámbar en un ícono (PLAN.md §1.1): lo que hay que mirar va en el azul oscuro del logo
+  const color = meta.tono === 'danger' ? 'text-deal' : meta.tono === 'success' ? 'text-success-strong' : meta.tono === 'warning' ? 'text-brand-700' : 'text-brand-600';
   return (
     <li className="flex items-start gap-3 py-3">
       <Icono className={`mt-0.5 h-4 w-4 shrink-0 ${color}`} aria-hidden="true" />

@@ -1,14 +1,14 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.71, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.72, por subir)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.72, igual que `main`; subida por el equipo y comprobada desde fuera)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-253 · El sorteo, más atractivo (rc.72, por subir; cambia la base; `estado/C-253.md`):** el equipo eligió cada pieza viendo las maquetas.
+- **C-253 · El sorteo, más atractivo (rc.72, en producción; `estado/C-253.md`):** el equipo eligió cada pieza viendo las maquetas.
   - **El banner de `/sorteo`:** el nombre en grande con el sello y la etiqueta, los días con el envío gratis, "Quiero mi boleto", la foto limpia y "Lo que trae" en una franja abajo.
   - **La bandera del inicio:** la pestaña al borde izquierdo con el logo de PS4 o, más angosto, la píldora frente a WhatsApp. Entra una sola vez y se queda quieta.
   - **El panel:** el paso "Lo que trae". **En `/sorteo`:** el aviso de marcas de Sony.
-  - **Después del deploy,** el equipo carga el premio, lo que trae, el sello y "PS4" en el panel (§2).
+  - **Falta que el equipo cargue en el panel** el premio, lo que trae, el sello y "PS4" (§2, "Por confirmar de rc.72").
   - **Sigue C-254:** la semana del ganador (`PLAN.md` §5.2).
 - **C-251b · Mi panel con el kit (rc.71, en producción; `estado/C-251b.md`):** lo que quedó de C-251. Los estados en su sello lleno (Puntos ES, Mis códigos, Direcciones), sin ámbar (Direcciones, Garantía, Reseñas, Seguridad y la ventana de firmar), el aviso de lo que hay que hacer con su placa (también el "IMPORTANTE" de `/terminos` y `/privacidad`, que iba en rojo), los filtros en píldoras (Mis pedidos, Puntos ES, Reseñas y Notificaciones), Direcciones con la tarjeta de opción y Mi perfil del ancho de un formulario. Siguen las tres decisiones de C-251.
 - **C-252 · El curso nuevo y las fotos de Servicios, validados (rc.70, en producción):** el servidor ya no acepta un precio negativo al crear un curso, ni fotos de Servicios que no sean de la tienda o http(s) (`estado/C-252.md`).
@@ -339,21 +339,16 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.72` (C-253; unos 20 minutos)
-**Producción está en `v1.0.0-rc.71`** (`629d0c5`); su bloque está en `HISTORIAL.md`.
-- **C-253 (rc.72):** el banner nuevo de `/sorteo`, la bandera del sorteo en el inicio y el paso "Lo que trae" del panel.
-  - **Cambia la base: tres columnas nuevas en `sorteos`, aditivas.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
-```sql
-ALTER TABLE "sorteos" ADD COLUMN "incluye" JSONB,
-ADD COLUMN "lema" TEXT,
-ADD COLUMN "nombreCorto" TEXT;
-```
-  - Sin variables nuevas, sin SQL de datos y sin cron.
-- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc72.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.72`, o una mayor si entró otra tarea antes del `git pull`.
-- **Después, en el panel** (en la computadora). Sin esto, el banner sale sin "Lo que trae" y la bandera dice "Sorteo". Marketing → Sorteo → "Cambiar":
+### Nada por subir
+**Producción está en `v1.0.0-rc.72`** (`e9fa074`), igual que `main`. Su bloque está en `HISTORIAL.md`.
+
+### Por confirmar de rc.72 (C-253; unos 15 minutos)
+Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera:
+- el banner nuevo de `/sorteo`, con el botón que baja a Cómo participar, la foto fundida y el aviso de marcas;
+- la bandera del inicio, que dice "Sorteo" hasta que se cargue el nombre corto.
+
+Falta esto:
+- **En el panel** (en la computadora). Sin esto, el banner sale sin "Lo que trae" y la bandera dice "Sorteo". Marketing → Sorteo → "Cambiar":
   1. **"El premio":** en Premio, `PlayStation 4 Sony (Remanufacturada)`. Lo que va entre paréntesis sale aparte, como etiqueta.
   2. **"Lo que trae":**
       - "Agregar lo que trae": `1000 GB de almacenamiento`, y en el detalle, `para muchos juegos`;
@@ -376,11 +371,10 @@ ADD COLUMN "nombreCorto" TEXT;
       - tocarla lleva a `/sorteo`.
   5. **El inicio en el teléfono:** abajo a la izquierda, frente a WhatsApp, "¡Gánate una PS4!" con "Sorteo de Navidad" debajo. Lleva a `/sorteo`.
   6. **`/sorteo` en el teléfono:** el nombre, la foto, los días con el envío, el botón y "Lo que trae" uno debajo del otro, sin moverse de lado.
-- **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las columnas no molestan al código anterior.
 
 ### Por confirmar de rc.71 (C-243 a C-251b; unos 60 minutos, en la computadora y en el teléfono)
 Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera la versión, la recarga de las pestañas viejas, los íconos de los correos, las imágenes para compartir y la foto del sorteo. La sesión de los correos comprobó el enlace del aliado comercial y los crons. Falta esto:
-  0. **La revisión de la base que pidió Claude el 15/11** (en la terminal del servidor, las dos consultas del chat): las cuentas del equipo y los Puntos ES que cambiaron sin un movimiento que lo explique. Pégale el resultado a Claude. Es para saber si alguien usó la falla que cerró rc.69 (`HISTORIAL.md`).
+  0. **La revisión de la base de la falla que cerró rc.69:** hecha el 15/11. Nadie la usó (`HISTORIAL.md`).
   1. **`/sorteo`:** la franja de arriba va en el azul oscuro del logo, sin azul casi negro ni letras cian.
   2. **En el teléfono, la barra de abajo** va en el mismo azul oscuro.
   3. **En el panel, Marketing → Kit de marca:** el logo, la paleta, las reglas, las piezas y un correo de muestra.

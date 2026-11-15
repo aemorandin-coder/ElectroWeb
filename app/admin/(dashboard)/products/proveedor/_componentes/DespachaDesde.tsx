@@ -12,7 +12,7 @@ interface Ciudad { codigo: string; nombre: string; estado: string }
 /**
  * C-199: quién despacha los pedidos de este proveedor. La tienda (salen de Guanare) o él mismo desde su ciudad de ZOOM:
  * entonces sus productos van en su propio paquete, solo con envío y siempre con cobro a destino (Andrés, 10/11; la
- * ferretería aliada despacha desde La Victoria). La ficha y la tarjeta dicen "Sale desde …".
+ * ferretería aliada despacha desde La Victoria). C-222: la tarjeta dice "Desde <estado>" y la ficha, la ciudad y el estado.
  */
 export default function DespachaDesde({ proveedorId, codigo, nombre, onGuardado }: {
   proveedorId: string;
@@ -39,7 +39,7 @@ export default function DespachaDesde({ proveedorId, codigo, nombre, onGuardado 
     const ok = await confirm({
       title: ciudad ? `Despacha él mismo, desde ${ciudad.nombre}` : 'Sus pedidos los despacha la tienda',
       message: ciudad
-        ? `Sus productos van en su propio paquete, solo con envío por ZOOM o MRW (sin retiro ni delivery en Guanare) y siempre con cobro a destino. La ficha y la tarjeta dicen "Sale desde ${ciudad.nombre}".`
+        ? `Sus productos van en su propio paquete, solo con envío por ZOOM o MRW (sin retiro ni delivery en Guanare) y siempre con cobro a destino. La tarjeta dice "Desde ${ciudad.estado}" y la ficha, "Sale de ${ciudad.nombre}, estado ${ciudad.estado}".`
         : 'Sus productos vuelven a salir de Guanare, en el mismo paquete que lo demás.',
       confirmText: 'Guardar', cancelText: 'Cancelar', type: 'warning',
     });

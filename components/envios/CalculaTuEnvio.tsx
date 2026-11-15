@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { IconoCargando, IconoEnvio, IconoInfo } from '@/components/iconos';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { paqueteDesde } from '@/lib/origen';
 
 // C-199: "Calcula tu envío" en la ficha y en el carrito (Andrés, 12/11). El cliente elige estado y ciudad de ZOOM y ve
 // lo que le cobrará ZOOM al retirar en su oficina, en dólares y bolívares, por cada paquete (la tienda sale de Guanare;
@@ -17,7 +18,7 @@ interface Ciudad { codigo: string; nombre: string; estado: string }
 interface Destino { estado: string; ciudad: string }
 interface Estimado {
   ciudad: Ciudad | null;
-  paquetes: Array<{ origen: string | null; origenNombre: string; totalUSD: number; totalBs: number | null; aproximado: boolean }>;
+  paquetes: Array<{ origen: string | null; origenNombre: string; origenEstado?: string; totalUSD: number; totalBs: number | null; aproximado: boolean }>;
 }
 
 function leerGuardado(): Destino | null {
@@ -36,7 +37,7 @@ export default function CalculaTuEnvio({ items, paquetes, className = '' }: {
   /** Lo que se manda: el servidor saca el peso, las medidas y el valor de la base */
   items: Array<{ productId: string; quantity: number }>;
   /** Los paquetes como los ve la página: su origen y si la tienda paga su envío */
-  paquetes: Array<{ origen: string | null; origenNombre: string; gratis: boolean }>;
+  paquetes: Array<{ origen: string | null; origenNombre: string; origenEstado?: string; gratis: boolean }>;
   className?: string;
 }) {
   const { status } = useSession();
@@ -164,7 +165,7 @@ export default function CalculaTuEnvio({ items, paquetes, className = '' }: {
                 const e = vigente.paquetes.find((x) => x.origen === p.origen);
                 return (
                   <li key={p.origen ?? 'tienda'} className="flex flex-wrap items-baseline justify-between gap-x-3">
-                    <span className="text-ink-soft">{varios ? `Desde ${p.origenNombre}` : `A ${ciudadNombre}`}</span>
+                    <span className="text-ink-soft">{varios ? paqueteDesde(p.origenEstado, p.origenNombre, true) : `A ${ciudadNombre}`}</span>
                     {p.gratis
                       ? <span className="font-semibold text-success-strong">Envío gratis</span>
                       : e

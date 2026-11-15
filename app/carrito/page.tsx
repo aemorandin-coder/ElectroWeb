@@ -26,6 +26,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import CouponBox from '@/components/cart/CouponBox';
 import FechaLimiteNavidad from '@/components/navidad/FechaLimiteNavidad';
 import { parseCartItemId, toOrderItem } from '@/lib/cart-items';
+import { paqueteDesde } from '@/lib/origen';
 
 // Diseño de una gift card del carrito: el id es "gift-card-<diseño>-<fecha>" (app/gift-cards).
 // Antes se leía un campo `design` que el carrito no guarda y todas salían con el mismo diseño (revisión R11).
@@ -153,6 +154,7 @@ export default function CarritoPage() {
         discountPercent: 0,
         origen: item.origen ?? null,
         origenNombre: item.origenNombre ?? null,
+        origenEstado: item.origenEstado ?? null,
       })),
       toPricingSettings(settings),
       'SHIPPING'
@@ -162,7 +164,7 @@ export default function CarritoPage() {
   const envio = server?.envio ?? calculoLocal.shipping;
   // C-199: los paquetes de la compra (la tienda sale de Guanare; la ferretería, de La Victoria) y lo físico para
   // "Calcula tu envío" (el servidor saca el peso y el valor de la base)
-  const paquetes = calculoLocal.paquetes.map((p) => ({ origen: p.origen, origenNombre: p.origenNombre, gratis: p.shipping.isFreeShipping }));
+  const paquetes = calculoLocal.paquetes.map((p) => ({ origen: p.origen, origenNombre: p.origenNombre, origenEstado: p.origenEstado, gratis: p.shipping.isFreeShipping }));
   const itemsEnvio = useMemo(() => {
     const porProducto = new Map<string, number>();
     for (const item of items) {
@@ -496,7 +498,8 @@ export default function CarritoPage() {
                     )}
                     {hasPhysical && enviosNacionales && paquetes.length > 1 && (
                       <p className="mt-3 text-xs text-ink-soft">
-                        Tu pedido llega en {paquetes.length} paquetes: {paquetes.map((p) => `uno sale desde ${p.origenNombre}`).join(' y ')}. Cada uno con su embalaje y su guía{paquetes.some((p) => p.origen === null) ? `; el envío gratis de la tienda vale solo para el de ${paquetes.find((p) => p.origen === null)?.origenNombre}` : ''}.
+                        {/* C-222: el estado y la ciudad de cada paquete (lib/origen.ts) */}
+                        Tu pedido llega en {paquetes.length} paquetes, cada uno con su embalaje y su guía: {paquetes.map((p) => `uno ${paqueteDesde(p.origenEstado, p.origenNombre)}`).join(' y ')}{paquetes.some((p) => p.origen === null) ? `. El envío gratis de la tienda vale solo para el que sale ${paqueteDesde(paquetes.find((p) => p.origen === null)?.origenEstado, paquetes.find((p) => p.origen === null)?.origenNombre)}` : ''}.
                       </p>
                     )}
                     {hasPhysical && enviosNacionales && itemsEnvio.length > 0 && (

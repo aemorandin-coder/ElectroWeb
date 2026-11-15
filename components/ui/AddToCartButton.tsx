@@ -53,6 +53,7 @@ export default function AddToCartButton({ product, className = '' }: AddToCartBu
       freeShipping: !isDigital && product.freeShipping === true,
       origen: product.despacho?.codigo,
       origenNombre: product.despacho?.ciudad,
+      origenEstado: product.despacho?.estado,
       conditionBadge: product.condition?.badge,
     });
     toast.success('Agregado al carrito');

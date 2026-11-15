@@ -14,6 +14,7 @@ import { etiquetaModo, type Empresa, type ModoEnvio } from '@/lib/envios/empresa
 import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
 import type { DeliveryMethod, ShippingBreakdown } from '@/lib/pricing';
 import { resumenEmbalaje } from '@/lib/embalaje';
+import { paqueteDesde } from '@/lib/origen';
 
 /**
  * Entrega del checkout (C-100). ZOOM o MRW con cobro a destino (oficina real de su lista o puerta a puerta),
@@ -216,7 +217,7 @@ export default function EntregaEnvio({
   direcciones: Array<{ address: string; city?: string; state?: string }>;
   error?: string;
   /** C-199: los paquetes de la compra, si llega en más de uno (la tienda sale de Guanare; la ferretería, de La Victoria) */
-  paquetes?: Array<{ origen: string | null; origenNombre: string; gratis: boolean }>;
+  paquetes?: Array<{ origen: string | null; origenNombre: string; origenEstado?: string; gratis: boolean }>;
 }) {
   const [zoom, setZoom] = useState<DestinosZoom | null>(null);
   const [mrw, setMrw] = useState<DestinosMrw | null>(null);
@@ -226,7 +227,7 @@ export default function EntregaEnvio({
   const [tarifa, setTarifa] = useState<{
     clave: string; totalBs: number; totalUSD: number | null;
     /** C-199: la de cada paquete, si llega en varios */
-    paquetes: Array<{ origenNombre: string; gratis: boolean; totalBs: number; totalUSD: number | null }>;
+    paquetes: Array<{ origenNombre: string; origenEstado?: string; gratis: boolean; totalBs: number; totalUSD: number | null }>;
   } | null>(null);
   const ultimaTarifa = useRef('');
 
@@ -588,13 +589,13 @@ export default function EntregaEnvio({
             {envio.packagingFee > 0 ? 'Aquí solo pagas el embalaje.' : 'El embalaje es gratis en este pedido.'}
           </p>
           {paquetes.length > 1 && (
-            <p>Tu pedido llega en {paquetes.length} paquetes, cada uno con su guía: {paquetes.map((p) => `uno sale desde ${p.origenNombre}`).join(' y ')}.</p>
+            <p>Tu pedido llega en {paquetes.length} paquetes, cada uno con su guía: {paquetes.map((p) => `uno ${paqueteDesde(p.origenEstado, p.origenNombre)}`).join(' y ')}.</p>
           )}
           {value.carrier === 'ZOOM' && tarifaVigente && tarifaVigente.paquetes.length > 1 ? (
             <ul className="tabular-nums">
               {tarifaVigente.paquetes.map((p) => (
                 <li key={p.origenNombre}>
-                  Desde {p.origenNombre}: {p.gratis ? <strong>envío gratis</strong> : <>ZOOM te cobrará aprox. <strong>{formatVES(p.totalBs)}</strong>{p.totalUSD ? ` (≈ ${formatUSD(p.totalUSD)})` : ''}</>}
+                  {paqueteDesde(p.origenEstado, p.origenNombre, true)}: {p.gratis ? <strong>envío gratis</strong> : <>ZOOM te cobrará aprox. <strong>{formatVES(p.totalBs)}</strong>{p.totalUSD ? ` (≈ ${formatUSD(p.totalUSD)})` : ''}</>}
                 </li>
               ))}
               <li className="text-xs">Es una referencia: la tarifa final la da ZOOM.</li>

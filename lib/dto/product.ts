@@ -20,13 +20,14 @@ import {
   type Grade,
   type Packaging,
 } from '@/lib/product-condition';
+import { ORIGEN_TIENDA, type Origen } from '@/lib/origen';
 
 // category es obligatoria en el esquema: consultar siempre con publicProductInclude
 export type ProductWithPublicRelations = Product & {
   category: Pick<Category, 'id' | 'name' | 'slug'>;
   brand?: Pick<Brand, 'name' | 'slug'> | null;
   /** C-199: solo la ciudad desde donde despacha (el proveedor y su costo no salen del servidor) */
-  supplier?: { dispatchCityCode: string | null; dispatchCityName: string | null } | null;
+  supplier?: { dispatchCityCode: string | null; dispatchCityName: string | null; dispatchStateName?: string | null } | null;
   digitalVariants?: Pick<DigitalVariant, 'id' | 'label' | 'faceValue' | 'unit' | 'priceUSD'>[];
 };
 
@@ -82,7 +83,12 @@ export interface PublicProduct {
    * C-199: sale de otra ciudad, solo con envío (la ferretería, desde La Victoria): el código de ZOOM y la ciudad.
    * null = sale de la tienda. Nunca el proveedor.
    */
-  despacho: { codigo: string; ciudad: string } | null;
+  despacho: { codigo: string; ciudad: string; estado: string } | null;
+  /**
+   * C-222: desde dónde sale, para decirlo ("Desde Aragua" en la tarjeta, la ciudad y el estado en la ficha). Lo físico
+   * siempre lo tiene: el de su proveedor o el de la tienda (Guanare, Portuguesa). null = digital.
+   */
+  desde: Origen | null;
   category: { id: string; name: string; slug: string };
   brand: { name: string; slug: string } | null;
   isFeatured: boolean;
@@ -239,8 +245,12 @@ export function toPublicProduct(product: ProductWithPublicRelations): PublicProd
     shippingCost: toNumberOrNull(product.shippingCost),
     freeShipping: product.productType !== 'DIGITAL' && product.freeShipping,
     despacho: product.productType !== 'DIGITAL' && product.supplier?.dispatchCityCode
-      ? { codigo: product.supplier.dispatchCityCode, ciudad: product.supplier.dispatchCityName || 'otra ciudad' }
+      ? { codigo: product.supplier.dispatchCityCode, ciudad: product.supplier.dispatchCityName || 'otra ciudad', estado: product.supplier.dispatchStateName ?? '' }
       : null,
+    desde: product.productType === 'DIGITAL' ? null
+      : product.supplier?.dispatchCityCode
+        ? { ciudad: product.supplier.dispatchCityName || 'otra ciudad', estado: product.supplier.dispatchStateName ?? '', propio: false }
+        : ORIGEN_TIENDA,
     category: { id: product.category.id, name: product.category.name, slug: product.category.slug },
     brand: product.brand ? { name: product.brand.name, slug: product.brand.slug } : null,
     isFeatured: product.isFeatured,
@@ -262,7 +272,7 @@ export const publicProductInclude = {
   category: { select: { id: true, name: true, slug: true } },
   brand: { select: { name: true, slug: true } },
   // C-199: del proveedor, solo la ciudad desde donde despacha (su nombre y sus costos no se consultan)
-  supplier: { select: { dispatchCityCode: true, dispatchCityName: true } },
+  supplier: { select: { dispatchCityCode: true, dispatchCityName: true, dispatchStateName: true } },
   // Solo activas y solo campos públicos: el costo y el proveedor no se consultan
   digitalVariants: {
     where: { isActive: true },

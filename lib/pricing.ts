@@ -4,6 +4,7 @@
 
 import { formatUSD } from '@/lib/currency';
 import { armarPaquetes, reglasEmbalajeActivas, type PlanEmbalaje, type ReglasEmbalaje } from '@/lib/embalaje';
+import { ORIGEN_TIENDA_CIUDAD, ORIGEN_TIENDA_ESTADO } from './origen';
 
 // C-100: SHIPPING = ZOOM o MRW (oficina o puerta a puerta), LOCAL_DELIVERY = delivery propio en Guanare.
 // Las órdenes viejas pueden decir HOME_DELIVERY o STORE_PICKUP; el checkout ya no los manda.
@@ -46,10 +47,12 @@ export interface PricingLine {
   /** C-199: la ciudad de ZOOM desde donde la despacha su proveedor (null = sale de la tienda, Guanare) y su nombre */
   origen?: string | null;
   origenNombre?: string | null;
+  /** C-222: el estado de esa ciudad ("Aragua"), para decir "desde Aragua (La Victoria)" */
+  origenEstado?: string | null;
 }
 
-/** C-199: de dónde salen los paquetes de la tienda */
-export const ORIGEN_TIENDA_NOMBRE = 'Guanare';
+/** C-199: de dónde salen los paquetes de la tienda. C-222: el nombre y el estado viven en lib/origen.ts */
+export const ORIGEN_TIENDA_NOMBRE = ORIGEN_TIENDA_CIUDAD;
 
 /** Descuento de una línea: el mayor entre el porcentaje aprobado y el monto de oferta o cupón, sin pasar del total. */
 export function lineDiscountUSD(line: Pick<PricingLine, 'unitPriceUSD' | 'quantity' | 'discountPercent' | 'discountUSD'>): number {
@@ -129,6 +132,8 @@ export interface PaqueteEnvio {
   /** Ciudad de ZOOM desde donde sale; null = la tienda */
   origen: string | null;
   origenNombre: string;
+  /** C-222: su estado ("Portuguesa", "Aragua"); vacío si no se sabe */
+  origenEstado: string;
   lines: PricingLine[];
   shipping: ShippingBreakdown;
   totals: OrderGroupTotals;
@@ -421,6 +426,7 @@ export function calculateOrder(
       return {
         origen: origen || null,
         origenNombre: origen ? delPaquete[0].origenNombre || 'otra ciudad' : ORIGEN_TIENDA_NOMBRE,
+        origenEstado: origen ? delPaquete[0].origenEstado || '' : ORIGEN_TIENDA_ESTADO,
         lines: delPaquete,
         shipping,
         totals: calculateGroup(delPaquete, shipping.total, settings, 'PHYSICAL') as OrderGroupTotals,

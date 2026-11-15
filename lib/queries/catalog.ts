@@ -10,6 +10,7 @@ import { conOfertas, filtroEnOferta, getOfertasVigentes } from '@/lib/promotions
 import { mejorOferta } from '@/lib/promotions-core';
 import { visibleProducts } from '@/lib/queries/home';
 import { buscarEnCatalogo } from '@/lib/queries/busqueda-catalogo';
+import { ORIGEN_TIENDA_CIUDAD, ORIGEN_TIENDA_ESTADO, slugEstado } from '@/lib/origen';
 
 export const CATALOG_PAGE_SIZE = 24;
 const MAX_PRICE = 10_000_000;
@@ -42,6 +43,8 @@ export interface CatalogParams {
   type: CatalogType | null;
   /** C-119: nuevos, o usados/reacondicionados/caja abierta */
   condition: CatalogCondition | null;
+  /** C-222: desde dónde sale, por estado (`?desde=aragua`); null = de todas partes */
+  desde: string | null;
   page: number;
 }
 
@@ -68,6 +71,7 @@ export function parseCatalogParams(raw: RawSearchParams): CatalogParams {
   if (min !== null && max !== null && min > max) [min, max] = [max, min];
   const typeRaw = first(raw.tipo);
   const conditionRaw = first(raw.condicion);
+  const desdeRaw = first(raw.desde).trim().toLowerCase();
   const page = Math.min(1000, Math.max(1, Number.parseInt(first(raw.page), 10) || 1));
   return {
     search,
@@ -79,6 +83,7 @@ export function parseCatalogParams(raw: RawSearchParams): CatalogParams {
     inStock: first(raw.disponible) === '1',
     type: typeRaw === 'digital' || typeRaw === 'fisico' ? typeRaw : null,
     condition: conditionRaw === 'nuevo' || conditionRaw === 'usado' ? conditionRaw : null,
+    desde: /^[a-z0-9-]{2,40}$/.test(desdeRaw) ? desdeRaw : null,
     page,
   };
 }
@@ -101,6 +106,7 @@ export function catalogHref(params: CatalogParams, changes: Partial<CatalogParam
   if (next.inStock) query.set('disponible', '1');
   if (next.type) query.set('tipo', next.type);
   if (next.condition) query.set('condicion', next.condition);
+  if (next.desde) query.set('desde', next.desde);
   if (next.sort !== ordenPorDefecto(next.search)) query.set('sort', next.sort);
   if (next.page > 1) query.set('page', String(next.page));
   const qs = query.toString();
@@ -109,7 +115,7 @@ export function catalogHref(params: CatalogParams, changes: Partial<CatalogParam
 
 /** ¿Hay algún filtro aplicado (sin contar orden ni página)? */
 export function hasActiveFilters(params: CatalogParams): boolean {
-  return Boolean(params.search || params.category || params.min !== null || params.max !== null || params.offers || params.inStock || params.type || params.condition);
+  return Boolean(params.search || params.category || params.min !== null || params.max !== null || params.offers || params.inStock || params.type || params.condition || params.desde);
 }
 
 /** La página que se indexa: el catálogo o una categoría, sin búsqueda, filtros, orden ni páginas siguientes. */
@@ -117,7 +123,7 @@ export function isIndexableCatalog(params: CatalogParams): boolean {
   return !hasActiveFilters({ ...params, category: null }) && params.page === 1 && params.sort === ordenPorDefecto(params.search);
 }
 
-function filterConditions(params: CatalogParams, { withCategory, ofertas, busqueda }: { withCategory: boolean; ofertas: Prisma.ProductWhereInput; busqueda: string[] | null }): Prisma.ProductWhereInput[] {
+function filterConditions(params: CatalogParams, { withCategory, ofertas, busqueda, desde = null }: { withCategory: boolean; ofertas: Prisma.ProductWhereInput; busqueda: string[] | null; desde?: Prisma.ProductWhereInput | null }): Prisma.ProductWhereInput[] {
   const conditions: Prisma.ProductWhereInput[] = [];
   // La búsqueda (C-158) ya se resolvió sin acentos ni mayúsculas: aquí solo se pide esos productos
   if (busqueda) conditions.push({ id: { in: busqueda } });
@@ -130,7 +136,45 @@ function filterConditions(params: CatalogParams, { withCategory, ofertas, busque
   if (params.condition === 'nuevo') conditions.push({ condition: 'NEW' });
   if (params.condition === 'usado') conditions.push({ condition: { not: 'NEW' } });
   if (params.type) conditions.push({ productType: params.type === 'digital' ? 'DIGITAL' : 'PHYSICAL' });
+  if (desde) conditions.push(desde);
   return conditions;
+}
+
+/** C-222: un lugar desde donde sale lo físico: la tienda o el estado de los proveedores que despachan ellos mismos */
+export interface CatalogUbicacion {
+  /** El estado en la dirección (`?desde=aragua`) */
+  slug: string;
+  estado: string;
+  ciudades: string[];
+  /** Es la tienda (Guanare): se puede retirar ahí */
+  propio: boolean;
+  count: number;
+}
+
+type Ubicacion = Omit<CatalogUbicacion, 'count'> & { proveedores: string[] };
+
+/** Los lugares desde donde sale algo: la tienda y cada estado de los proveedores que despachan ellos mismos (C-199) */
+async function ubicaciones(): Promise<Ubicacion[]> {
+  const proveedores = await prisma.supplier.findMany({ where: { dispatchCityCode: { not: null } }, select: { id: true, dispatchCityName: true, dispatchStateName: true } });
+  const porSlug = new Map<string, Ubicacion>();
+  porSlug.set(slugEstado(ORIGEN_TIENDA_ESTADO), { slug: slugEstado(ORIGEN_TIENDA_ESTADO), estado: ORIGEN_TIENDA_ESTADO, ciudades: [ORIGEN_TIENDA_CIUDAD], propio: true, proveedores: [] });
+  for (const p of proveedores) {
+    const estado = p.dispatchStateName || p.dispatchCityName || 'Otra ciudad';
+    const slug = slugEstado(estado);
+    const u = porSlug.get(slug) ?? { slug, estado, ciudades: [], propio: false, proveedores: [] };
+    if (p.dispatchCityName && !u.ciudades.includes(p.dispatchCityName)) u.ciudades.push(p.dispatchCityName);
+    u.proveedores.push(p.id);
+    porSlug.set(slug, u);
+  }
+  return [...porSlug.values()];
+}
+
+/** Lo físico que sale de ese lugar: de la tienda (sin proveedor que despache) o de esos proveedores */
+function condicionDe(u: Ubicacion): Prisma.ProductWhereInput {
+  const partes: Prisma.ProductWhereInput[] = [];
+  if (u.propio) partes.push({ OR: [{ supplierId: null }, { supplier: { dispatchCityCode: null } }] });
+  if (u.proveedores.length > 0) partes.push({ supplierId: { in: u.proveedores } });
+  return { productType: 'PHYSICAL', OR: partes };
 }
 
 const ORDER_BY: Record<CatalogSort, Prisma.ProductOrderByWithRelationInput[]> = {
@@ -179,6 +223,10 @@ export interface CatalogResult {
   currentCategory: CatalogCurrentCategory | null;
   /** La búsqueda no coincidió exacto: se muestran productos que se parecen (C-158) */
   aproximado: boolean;
+  /** C-222: desde dónde sale, con cuántos productos hay en cada lugar para los demás filtros (sin los que no tienen) */
+  ubicaciones: CatalogUbicacion[];
+  /** C-222: cuántos hay de todas partes con los demás filtros (el "De todas partes" del filtro) */
+  totalSinDesde: number;
 }
 
 /**
@@ -215,12 +263,19 @@ export async function getCatalog(params: CatalogParams): Promise<CatalogResult> 
   const ofertas = params.offers ? await filtroEnOferta() : {};
   const coincidencias = params.search ? await buscarEnCatalogo(params.search) : null;
   const busqueda = coincidencias?.ids ?? null;
-  const where = await visibleProducts({ AND: filterConditions(params, { withCategory: true, ofertas, busqueda }) });
-  const whereWithoutCategory = await visibleProducts({ AND: filterConditions(params, { withCategory: false, ofertas, busqueda }) });
+  // C-222: desde dónde sale (un estado que no existe se ignora)
+  const lugares = await ubicaciones();
+  const elegido = params.desde ? lugares.find((u) => u.slug === params.desde) ?? null : null;
+  const desde = elegido ? condicionDe(elegido) : null;
+  const where = await visibleProducts({ AND: filterConditions(params, { withCategory: true, ofertas, busqueda, desde }) });
+  const whereWithoutCategory = await visibleProducts({ AND: filterConditions(params, { withCategory: false, ofertas, busqueda, desde }) });
+  const whereSinDesde = await visibleProducts({ AND: filterConditions(params, { withCategory: true, ofertas, busqueda }) });
 
-  const [total, counts] = await Promise.all([
+  const [total, counts, porLugar, totalSinDesde] = await Promise.all([
     prisma.product.count({ where }),
     prisma.product.groupBy({ by: ['categoryId'], where: whereWithoutCategory, _count: { categoryId: true } }),
+    Promise.all(lugares.map((u) => prisma.product.count({ where: { AND: [whereSinDesde, condicionDe(u)] } }))),
+    elegido ? prisma.product.count({ where: whereSinDesde }) : null,
   ]);
 
   const totalPages = Math.max(1, Math.ceil(total / CATALOG_PAGE_SIZE));
@@ -273,6 +328,10 @@ export async function getCatalog(params: CatalogParams): Promise<CatalogResult> 
     categories,
     currentCategory: selected ? categoriaElegida(selected, countById) : null,
     aproximado: coincidencias?.aproximado ?? false,
+    ubicaciones: lugares
+      .map((u, i) => ({ slug: u.slug, estado: u.estado, ciudades: u.ciudades, propio: u.propio, count: porLugar[i] }))
+      .filter((u) => u.count > 0 || u.slug === elegido?.slug),
+    totalSinDesde: totalSinDesde ?? total,
   };
 }
 

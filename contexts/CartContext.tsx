@@ -60,6 +60,8 @@ interface CartItem {
   // C-199: sale de otra ciudad (su paquete aparte, solo envío): el código de ZOOM y la ciudad
   origen?: string;
   origenNombre?: string;
+  // C-222: el estado de esa ciudad ("Aragua"), para decir "desde Aragua (La Victoria)"
+  origenEstado?: string;
   digitalUsername?: string;
   // C-60: variante digital elegida (el precio lo vuelve a calcular el servidor)
   digitalVariantId?: string;

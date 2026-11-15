@@ -37,6 +37,8 @@ export interface EstimadoPaquete {
   /** Ciudad de ZOOM desde donde sale; null = la tienda */
   origen: string | null;
   origenNombre: string;
+  /** C-222: su estado ("Aragua"); vacío si no se sabe */
+  origenEstado: string;
   /** Kilos que cobra ZOOM */
   pesoKg: number;
   totalUSD: number;
@@ -57,7 +59,7 @@ export async function estimarEnvio(items: Array<{ productId: string; quantity: n
       where: { id: { in: [...new Set(items.map((i) => i.productId))] }, status: 'PUBLISHED', productType: 'PHYSICAL', deletedAt: null },
       select: {
         id: true, name: true, priceUSD: true, weightKg: true, dimensions: true, isConsolidable: true, freeShipping: true,
-        supplier: { select: { dispatchCityCode: true, dispatchCityName: true } },
+        supplier: { select: { dispatchCityCode: true, dispatchCityName: true, dispatchStateName: true } },
       },
     }),
     prisma.companySettings.findUnique({ where: { id: 'default' } }),
@@ -72,7 +74,7 @@ export async function estimarEnvio(items: Array<{ productId: string; quantity: n
       productId: p.id, name: p.name, productType: 'PHYSICAL' as const, unitPriceUSD: Number(p.priceUSD), quantity: i.quantity,
       weightKg: p.weightKg === null ? null : Number(p.weightKg), dimensions: p.dimensions, isConsolidable: p.isConsolidable,
       shippingCostUSD: 0, freeShipping: p.freeShipping, discountPercent: 0,
-      origen: p.supplier?.dispatchCityCode ?? null, origenNombre: p.supplier?.dispatchCityName ?? null,
+      origen: p.supplier?.dispatchCityCode ?? null, origenNombre: p.supplier?.dispatchCityName ?? null, origenEstado: p.supplier?.dispatchStateName ?? null,
     }];
   });
   const ciudad = ciudades?.find((c) => c.codigo === ciudadCodigo) ?? null;
@@ -95,10 +97,10 @@ export async function estimarEnvio(items: Array<{ productId: string; quantity: n
       if (tarifa) { totalBs = roundMoney(tarifa.totalBs); break; }
     }
     if (totalBs !== null && tasa > 0) {
-      return { origen: paquete.origen, origenNombre: paquete.origenNombre, pesoKg, totalUSD: roundMoney(totalBs / tasa), totalBs, aproximado: false };
+      return { origen: paquete.origen, origenNombre: paquete.origenNombre, origenEstado: paquete.origenEstado, pesoKg, totalUSD: roundMoney(totalBs / tasa), totalBs, aproximado: false };
     }
     const totalUSD = estimadoPropioUSD(pesoKg, valorUSD);
-    return { origen: paquete.origen, origenNombre: paquete.origenNombre, pesoKg, totalUSD, totalBs: tasa > 0 ? roundMoney(totalUSD * tasa) : null, aproximado: true };
+    return { origen: paquete.origen, origenNombre: paquete.origenNombre, origenEstado: paquete.origenEstado, pesoKg, totalUSD, totalBs: tasa > 0 ? roundMoney(totalUSD * tasa) : null, aproximado: true };
   }));
   return { ciudad, paquetes };
 }

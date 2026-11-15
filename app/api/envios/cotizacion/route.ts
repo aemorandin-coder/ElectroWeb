@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     const paquetes = calculation.paquetes.map((paquete, i) => {
       const totalBs = roundMoney(tarifas[i]!.totalBs);
       return {
-        origen: paquete.origen, origenNombre: paquete.origenNombre, pesoKg: paquete.shipping.totalWeight,
+        origen: paquete.origen, origenNombre: paquete.origenNombre, origenEstado: paquete.origenEstado, pesoKg: paquete.shipping.totalWeight,
         // El paquete con envío gratis lo paga la tienda: la referencia es para el que paga el cliente
         gratis: paquete.shipping.isFreeShipping,
         totalBs, totalUSD: tasa > 0 ? roundMoney(totalBs / tasa) : null,

@@ -634,6 +634,8 @@ model Supplier {
   /// de la tienda (Guanare). La ferretería aliada: La Victoria (244).
   dispatchCityCode String?
   dispatchCityName String?
+  /// C-222: el estado de esa ciudad, como lo da ZOOM ("Aragua"). La tarjeta dice "Desde Aragua" y el catálogo filtra por él
+  dispatchStateName String?
   notes           String?
   products        Product[]
   /// C-218: su lista completa, como la subió el equipo
@@ -744,6 +746,8 @@ model Order {
   /// con productos de los dos lados se divide en una orden por paquete, cada una con su guía.
   dispatchCityCode     String?
   dispatchCityName     String?
+  /// C-222: el estado de esa ciudad ("Aragua"), para decir "desde Aragua (La Victoria)" en el pedido y el correo
+  dispatchStateName    String?
   shippingState        String?
   shippingCity         String?
   courierCityCode      String?  // Código de ciudad de ZOOM

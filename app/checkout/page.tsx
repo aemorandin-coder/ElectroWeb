@@ -275,6 +275,7 @@ export default function CheckoutPage() {
       discountPercent: activeDiscount ? (activeDiscount.approvedDiscount || activeDiscount.requestedDiscount) : 0,
       origen: item.productType !== 'DIGITAL' ? item.origen ?? null : null,
       origenNombre: item.productType !== 'DIGITAL' ? item.origenNombre ?? null : null,
+      origenEstado: item.productType !== 'DIGITAL' ? item.origenEstado ?? null : null,
     };
   }), [items, activeDiscounts]);
 
@@ -284,7 +285,7 @@ export default function CheckoutPage() {
   );
   // C-199: los paquetes (la tienda sale de Guanare; la ferretería, de La Victoria). Lo de otra ciudad es solo envío
   const paquetesEnvio = useMemo(
-    () => localCalculation.paquetes.map((p) => ({ origen: p.origen, origenNombre: p.origenNombre, gratis: p.shipping.isFreeShipping })),
+    () => localCalculation.paquetes.map((p) => ({ origen: p.origen, origenNombre: p.origenNombre, origenEstado: p.origenEstado, gratis: p.shipping.isFreeShipping })),
     [localCalculation]
   );
   const hayDeOtraCiudad = paquetesEnvio.some((p) => p.origen !== null);

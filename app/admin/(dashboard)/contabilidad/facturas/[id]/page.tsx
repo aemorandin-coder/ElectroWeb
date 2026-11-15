@@ -10,9 +10,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function PaginaFactura({ params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
-  if (!hasPermission(session, 'FACTURAR')) redirect('/admin');
+  const puedeFacturar = hasPermission(session, 'FACTURAR');
+  if (!puedeFacturar && !hasPermission(session, 'VER_CONTABILIDAD')) redirect('/admin');
   const { id } = await params;
   const factura = await facturaPorId(id);
   if (!factura) notFound();
-  return <FichaFactura factura={factura} />;
+  return <FichaFactura factura={factura} puedeAnular={puedeFacturar} />;
 }

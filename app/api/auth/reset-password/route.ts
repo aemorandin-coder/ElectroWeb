@@ -5,6 +5,7 @@ import { sendEmail } from '@/lib/email-service';
 import { correoContrasenaCambiada } from '@/lib/email-templates/cuenta';
 import { contrasenaSchema } from '@/lib/validations/registro';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
+import { esRolDelPanel } from '@/lib/auth-helpers';
 
 export async function POST(request: NextRequest) {
     try {
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
         const hashedPassword = await bcrypt.hash(password, 12);
         // C-141: quien acepta una invitación al panel crea aquí su contraseña; abrir el enlace prueba que el correo es suyo
-        const esEquipo = resetToken.user.role === 'ADMIN' || resetToken.user.role === 'SUPER_ADMIN';
+        const esEquipo = esRolDelPanel(resetToken.user.role);
         const verificarCorreo = esEquipo && !resetToken.user.emailVerified;
 
         // C-88: el enlace sirve una sola vez aunque se envíe dos veces a la vez (se borra antes de cambiar la clave),

@@ -92,7 +92,7 @@ export default function UserAccountButton({ useBlueHeader = false }: UserAccount
   const isAdmin = session.user?.userType === 'admin';
   // C-143: al equipo no se le trata como a un cliente. En vez de "SIN VERIFICAR" (la verificación del correo es de
   // clientes) se muestra su rol, y el panel de administración va primero.
-  const rolEquipo = isAdmin ? (session.user?.role === 'SUPER_ADMIN' ? 'SUPER ADMIN' : 'ADMINISTRADOR') : null;
+  const rolEquipo = isAdmin ? (session.user?.role === 'SUPER_ADMIN' ? 'SUPER ADMIN' : session.user?.role === 'ACCOUNTANT' ? 'CONTADORA' : 'ADMINISTRADOR') : null;
   const bordeAvatar = isAdmin ? 'border-brand-200 shadow-brand-500/20' : isVerified ? 'border-success shadow-success/20' : 'border-brand-950 shadow-brand-950/20';
 
   return (

@@ -5,13 +5,20 @@ import { getServerSession, type Session } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 
-/** FACTURAR: administradores y dueño. VER_CONTABILIDAD: el dueño (y desde C-235 la contadora). */
-export type PermisoContable = 'FACTURAR' | 'VER_CONTABILIDAD';
+/**
+ * FACTURAR: administradores y dueño. VER_CONTABILIDAD y DECLARAR: el dueño y la contadora (C-235). CARGAR_TALONARIO: solo
+ * el dueño. Con una lista basta uno de ellos (las facturas se ven con FACTURAR o con VER_CONTABILIDAD).
+ */
+export type PermisoContable = 'FACTURAR' | 'VER_CONTABILIDAD' | 'DECLARAR' | 'CARGAR_TALONARIO';
 
-export async function sesionCon(permiso: PermisoContable): Promise<{ session: Session; usuarioId: string } | NextResponse> {
+/** Las facturas las leen quien factura y quien lleva la contabilidad (la contadora las ve, pero no factura) */
+export const LEER_FACTURAS: PermisoContable[] = ['FACTURAR', 'VER_CONTABILIDAD'];
+
+export async function sesionCon(permiso: PermisoContable | PermisoContable[]): Promise<{ session: Session; usuarioId: string } | NextResponse> {
   const session = await getServerSession(authOptions);
   const usuarioId = (session?.user as { id?: string } | undefined)?.id;
-  if (!session || !usuarioId || !isAuthorized(session, permiso)) {
+  const permisos = Array.isArray(permiso) ? permiso : [permiso];
+  if (!session || !usuarioId || !permisos.some((p) => isAuthorized(session, p))) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
   return { session, usuarioId };

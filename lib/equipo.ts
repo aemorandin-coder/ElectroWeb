@@ -8,12 +8,13 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email-service';
 import { correoInvitacionEquipo } from '@/lib/email-templates/cuenta';
 
-export const ROLES_EQUIPO = ['ADMIN', 'SUPER_ADMIN'] as const;
+// C-235 (Andrés, 14/11): la contadora entra al equipo por invitación, como los admin, y el dueño la quita o la cambia.
+export const ROLES_EQUIPO = ['ADMIN', 'SUPER_ADMIN', 'ACCOUNTANT'] as const;
 export type RolEquipo = (typeof ROLES_EQUIPO)[number];
 export const VIGENCIA_INVITACION_MS = 24 * 60 * 60 * 1000;
 
-export const esRolEquipo = (rol: Role | string | null | undefined): rol is RolEquipo => rol === 'ADMIN' || rol === 'SUPER_ADMIN';
-export const nombreRol = (rol: RolEquipo) => (rol === 'SUPER_ADMIN' ? 'Super admin' : 'Administrador');
+export const esRolEquipo = (rol: Role | string | null | undefined): rol is RolEquipo => rol === 'ADMIN' || rol === 'SUPER_ADMIN' || rol === 'ACCOUNTANT';
+export const nombreRol = (rol: RolEquipo) => (rol === 'SUPER_ADMIN' ? 'Super admin' : rol === 'ACCOUNTANT' ? 'Contadora' : 'Administrador');
 
 /** Super admins con acceso: con contraseña y sin suspender. Sin ninguno, nadie abre Configuración ni Equipo. */
 export function superAdminsConAcceso(db: Prisma.TransactionClient = prisma): Promise<number> {

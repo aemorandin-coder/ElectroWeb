@@ -275,6 +275,8 @@ enum Role {
   ADMIN
   SUPER_ADMIN
   SUPPORT
+  /// C-235: la contadora. Entra al panel solo a Contabilidad: ve, descarga, declara y firma (docs/plan/CONTABILIDAD.md §13.1)
+  ACCOUNTANT
 }
 
 model Product {
@@ -2462,4 +2464,36 @@ model DocumentoFiscal {
   @@unique([talonarioId, numero])
   @@index([periodo])
   @@map("documentos_fiscales")
+}
+
+/// C-235: la firma y el sello de quien declara (la contadora). Se dibuja una vez en el panel y se estampa en cada cierre
+/// y en cada Excel o PDF. Si la contadora deja el equipo, su firma queda: lo que firmó sigue firmado con su nombre.
+model FirmaContable {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  /// "Lic. María Pérez", como quiere que salga
+  nombre    String
+  /// "Contadora Pública" o "Contador Público"
+  titulo    String
+  /// El número de inscripción en el Colegio de Contadores Públicos
+  cpc       String
+  /// El trazo, en PNG (base64), recortado y reducido en el servidor
+  imagen    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("firmas_contables")
+}
+
+/// C-235: las notas entre el dueño y la contadora, por mes ("Falta la factura de la luz de noviembre").
+model NotaContable {
+  id        String   @id @default(cuid())
+  /// El mes al que se refiere ("2026-11")
+  periodo   String
+  autorId   String
+  texto     String
+  createdAt DateTime @default(now())
+
+  @@index([periodo])
+  @@map("notas_contables")
 }

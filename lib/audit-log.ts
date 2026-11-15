@@ -43,6 +43,8 @@ export type AuditAction =
     | 'INVOICE_ISSUED'
     | 'INVOICE_VOIDED'
     | 'TALONARIO_CREATED'
+    // C-235: la contadora dibujó o cambió su firma y su sello
+    | 'FIRMA_CONTABLE_GUARDADA'
     | 'ORDER_CANCELLED'
     | 'ORDER_REFUNDED'
     // Gift Cards

@@ -5,6 +5,7 @@ import { sendPasswordResetEmail } from '@/lib/email-service';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { verifyCaptcha } from '@/lib/captcha';
 import { buscarUsuarioPorCorreo, normalizarCorreo } from '@/lib/correo';
+import { esRolDelPanel } from '@/lib/auth-helpers';
 
 export async function POST(request: NextRequest) {
     try {
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
 
         // C-141: una invitación al panel sin aceptar (sin contraseña) solo se renueva desde Equipo: si no, el enlace
         // de 24 horas no vencería nunca
-        const invitacionSinAceptar = Boolean(user && !user.password && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'));
+        const invitacionSinAceptar = Boolean(user && !user.password && esRolDelPanel(user.role));
 
         // Always return success to prevent email enumeration
         if (!user || !user.email || invitacionSinAceptar) {

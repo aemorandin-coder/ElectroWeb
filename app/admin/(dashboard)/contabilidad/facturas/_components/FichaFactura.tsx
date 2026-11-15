@@ -22,7 +22,7 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 const cuando = (iso: string) => new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: '2-digit', month: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
 
-export default function FichaFactura({ factura }: { factura: FacturaDTO }) {
+export default function FichaFactura({ factura, puedeAnular }: { factura: FacturaDTO; /** C-235: la contadora la ve, pero no anula */ puedeAnular: boolean }) {
   const router = useRouter();
   const [anulando, setAnulando] = useState(false);
   const [motivo, setMotivo] = useState('');
@@ -85,7 +85,7 @@ export default function FichaFactura({ factura }: { factura: FacturaDTO }) {
           {replica && factura.origen !== 'EN_BLANCO' && (
             <button type="button" onClick={imprimirFactura} className={adminSecondaryButton}><IconoImpresora className="h-4 w-4" aria-hidden="true" /> Imprimir</button>
           )}
-          {!anulada && (
+          {!anulada && puedeAnular && (
             <button type="button" onClick={() => { setAnulando(true); setError(null); }} className={adminSecondaryButton}>
               <IconoEliminar className="h-4 w-4" aria-hidden="true" /> Anular
             </button>

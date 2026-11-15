@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getMaintenanceState, getRequestIP, isMaintenanceExemptPath, maintenanceResponse } from '@/lib/maintenance';
 import { scheduleExchangeRateRefresh } from '@/lib/exchange-rate';
 import { isFlyerCode, STUDIO_COOKIE, STUDIO_COOKIE_DAYS } from '@/lib/studio/code';
-import { PAGINAS_SOLO_DUENO } from '@/lib/auth-helpers';
+import { APIS_CONTADORA, INICIO_CONTADORA, PAGINAS_CONTADORA, PAGINAS_SOLO_DUENO } from '@/lib/auth-helpers';
 import { direccionActual } from '@/lib/direcciones-anteriores';
 import { CABECERA_VERSION, VERSION_PESTANA } from '@/lib/version-build';
 
@@ -122,8 +122,23 @@ export default withAuth(
 
       // Páginas solo del dueño (C-141): Configuración, Métodos de pago y Equipo. Sus APIs ya responden 403
       if (userRole !== 'SUPER_ADMIN' && PAGINAS_SOLO_DUENO.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-        return NextResponse.redirect(new URL('/admin', req.url));
+        return NextResponse.redirect(new URL(userRole === 'ACCOUNTANT' ? INICIO_CONTADORA : '/admin', req.url));
       }
+
+      // C-235: la mesa es del dueño y de la contadora; un administrador vuelve a Facturas
+      if (userRole === 'ADMIN' && (pathname === INICIO_CONTADORA || pathname.startsWith(`${INICIO_CONTADORA}/`))) {
+        return NextResponse.redirect(new URL('/admin/contabilidad/facturas', req.url));
+      }
+
+      // C-235: la contadora solo abre Contabilidad, Mi seguridad y Versiones; lo demás del panel la lleva a su mesa
+      if (userRole === 'ACCOUNTANT' && !PAGINAS_CONTADORA.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+        return NextResponse.redirect(new URL(INICIO_CONTADORA, req.url));
+      }
+    }
+
+    // C-235: y de las APIs del panel, solo las suyas (las demás ya le responden 403 por permiso; esto es una segunda llave)
+    if (userRole === 'ACCOUNTANT' && pathname.startsWith('/api/admin/') && !APIS_CONTADORA.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
     // ── DOS PASOS (C-141) ────────────────────────────────────────────

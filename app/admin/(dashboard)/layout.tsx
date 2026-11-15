@@ -27,7 +27,8 @@ interface NavigationItem {
   name: string;
   href: string;
   icon: ReactNode;
-  permission?: string;
+  /** Con una lista basta uno (C-235: Facturas se ve con FACTURAR o con VER_CONTABILIDAD) */
+  permission?: string | string[];
   countKey?: keyof SidebarCounts;
 }
 
@@ -197,13 +198,14 @@ export default function AdminLayout({
       ],
     },
     {
-      // C-229: Contabilidad (docs/plan/CONTABILIDAD.md). Facturas es de quien factura (FACTURAR); el resumen, los libros y el
-      // IVA, del dueño y de la contadora, llegan con C-230 y C-235
+      // C-229: Contabilidad (docs/plan/CONTABILIDAD.md). Facturas es de quien factura (FACTURAR) y de quien lleva la
+      // contabilidad (VER_CONTABILIDAD: el dueño y la contadora, C-235), que la ve sin facturar. La mesa, del dueño y de ella
       id: 'contabilidad',
       name: 'Contabilidad',
       icon: <IconoMaletin className={icono} aria-hidden="true" />,
       items: [
-        { name: 'Facturas', href: '/admin/contabilidad/facturas', icon: <IconoDocumento className={icono} aria-hidden="true" />, permission: 'FACTURAR' },
+        { name: 'Mesa de la contadora', href: '/admin/contabilidad/mesa', icon: <IconoCuadricula className={icono} aria-hidden="true" />, permission: 'VER_CONTABILIDAD' },
+        { name: 'Facturas', href: '/admin/contabilidad/facturas', icon: <IconoDocumento className={icono} aria-hidden="true" />, permission: ['FACTURAR', 'VER_CONTABILIDAD'] },
       ],
     },
     {
@@ -270,8 +272,13 @@ export default function AdminLayout({
   ];
 
   // Los mismos permisos que revisa el servidor (C-141): antes el menú tenía su propia copia, que le daba todo al Administrador
+  // C-235: la contadora ve solo Contabilidad, Mi seguridad y Versiones (lo que no pide permiso, como Notificaciones, es del equipo)
+  const esContadora = session?.user?.role === 'ACCOUNTANT';
+  const deLaContadora = (item: NavigationItem) => !esContadora || item.href.startsWith('/admin/contabilidad') || item.href === '/admin/seguridad' || item.href === '/admin/versiones';
+  const permite = (item: NavigationItem) => !item.permission
+    || (Array.isArray(item.permission) ? item.permission.some((p) => hasPermission(session, p)) : hasPermission(session, item.permission));
   const gruposVisibles = grupos
-    .map((grupo) => ({ ...grupo, items: grupo.items.filter((item) => !item.permission || hasPermission(session, item.permission)) }))
+    .map((grupo) => ({ ...grupo, items: grupo.items.filter((item) => permite(item) && deLaContadora(item)) }))
     .filter((grupo) => grupo.items.length > 0);
   const activo = (item: NavigationItem) => pathname === item.href || (item.href !== '/admin' && pathname.startsWith(`${item.href}/`));
   const grupoActivo = gruposVisibles.find((grupo) => grupo.items.some(activo))?.id ?? null;
@@ -320,6 +327,7 @@ export default function AdminLayout({
   const modulo = moduloDeRuta(pathname);
   const roleLabel = session.user.role === 'SUPER_ADMIN' ? 'Super Admin'
     : session.user.role === 'ADMIN' ? 'Administrador'
+      : session.user.role === 'ACCOUNTANT' ? 'Contadora'
       : session.user.role === 'SUPPORT' ? 'Soporte' : 'Usuario';
 
   // Sin dos pasos: solo la pantalla para configurarlos, sin menú, campana ni contadores
@@ -377,7 +385,7 @@ export default function AdminLayout({
 
         <nav className="flex-1 overflow-y-auto px-3 py-2">
           <ul className="space-y-0.5">
-            {enlace(dashboard, false)}
+            {!esContadora && enlace(dashboard, false)}
             {gruposVisibles.map((grupo) => {
               const abierta = secciones[grupo.id] ?? grupo.id === grupoActivo;
               const contiene = grupo.id === grupoActivo;
@@ -474,14 +482,15 @@ export default function AdminLayout({
             </Link>
             <NotificationBell />
             <span className="hidden items-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-ink sm:inline-flex">
-              <span className={`h-2 w-2 rounded-full ${session.user.role === 'SUPER_ADMIN' ? 'bg-brand-700' : session.user.role === 'ADMIN' ? 'bg-brand-500' : 'bg-subtle'}`} aria-hidden="true" />
+              <span className={`h-2 w-2 rounded-full ${session.user.role === 'SUPER_ADMIN' ? 'bg-brand-700' : session.user.role === 'ADMIN' ? 'bg-brand-500' : session.user.role === 'ACCOUNTANT' ? 'bg-accent' : 'bg-subtle'}`} aria-hidden="true" />
               {roleLabel}
             </span>
           </div>
         </header>
 
         {/* C-174: quién del equipo está conectado y en qué sector (solo si hay alguien más) */}
-        <MarquesinaEquipo pathname={pathname} yo={session.user.id} />
+        {/* C-235: la contadora no ve quién del equipo está en qué sector (la presencia es del equipo de la tienda) */}
+        {!esContadora && <MarquesinaEquipo pathname={pathname} yo={session.user.id} />}
 
         {/* Sin transform ni backdrop-filter en los contenedores: si no, los modales `fixed` de las páginas quedan encerrados aquí */}
         <main className="p-3 sm:p-4 lg:p-6">

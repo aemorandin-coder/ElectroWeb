@@ -15,6 +15,7 @@ import { createAuditLog, getSeverityForAction, type AuditAction } from '@/lib/au
 import { describirDispositivo } from '@/lib/dispositivo';
 import { abrirSesion, sesionValida } from '@/lib/sesiones';
 import { estadoDosPasos, verificarCodigo } from '@/lib/dos-pasos';
+import { esRolDelPanel } from '@/lib/auth-helpers';
 
 /** Inicios de sesión en la bitácora (C-104): Reportes → Seguridad cuenta aciertos, fallos y bloqueos por IP. */
 async function registrarEnBitacora(action: AuditAction, datos: { userId?: string; email?: string | null; details?: Record<string, unknown> }) {
@@ -135,7 +136,8 @@ export const authOptions: NextAuthOptions = {
               throw new Error('CUENTA_SUSPENDIDA');
             }
 
-            const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+            // C-235: la contadora también entra al panel (con su sesión de admin y sus dos pasos); sus poderes los limita hasPermission
+            const isAdmin = esRolDelPanel(user.role);
 
             // C-141: con dos pasos activos, la contraseña sola no alcanza. Un código equivocado cuenta como fallo
             // (mismo límite de intentos que la contraseña). Sin dos pasos, el admin entra solo a configurarlos.
@@ -292,7 +294,7 @@ export const authOptions: NextAuthOptions = {
           token.name = dbUser.name;
           token.image = dbUser.image;
           token.role = dbUser.role;
-          token.userType = (dbUser.role === 'ADMIN' || dbUser.role === 'SUPER_ADMIN') ? 'admin' : 'customer';
+          token.userType = esRolDelPanel(dbUser.role) ? 'admin' : 'customer';
           token.emailVerified = dbUser.emailVerified ? true : false;
           token.sessionVersion = dbUser.sessionVersion;
           // C-141: al activar los dos pasos la sesión pasa a verificada sin volver a entrar

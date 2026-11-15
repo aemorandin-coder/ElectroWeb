@@ -1,9 +1,17 @@
-# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.34; `main` en 1.0.0-rc.43, por subir)
+# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.44, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-226 · Ningún contenedor ámbar (rc.44, por subir):** el equipo, el 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados". Viendo tres opciones eligió el azul claro de la tienda con el ícono cian en su placa azul noche (`estado/C-226.md`).
+  - **La regla, para todas las IA:** `CLAUDE.md`, `GEMINI.md` y `PLAN.md` §1.1, §1.7 y §1.8. Ni cajas, ni avisos, ni fondos, ni bordes, ni píldoras ámbar.
+  - **Lo que cambió:** el aviso compartido del panel (42 lugares), 24 pantallas de la tienda y del panel y la caja de aviso de los correos. Sin cambio de base.
+- **En curso en esta sesión, con las decisiones del 14/11 en `PLAN.md` §7.2:**
+  - **C-219 · Los correos de la tienda:** el análisis, el rediseño (la maqueta C, clara con la cinta, con ELECTRO SHOP grande arriba y Chispa abajo) y los 19 correos que faltan.
+  - **C-227 · Los correos para proveedores:** la bienvenida de "revendedor premium", "¡Se vendió tu producto!" y "Se canceló: no lo despaches".
+  - **C-234 · Cuándo sale cada pedido:** corte a las 2:00 p. m., lo del sábado sale el lunes, los feriados y "Sale el lunes 16" en la ficha, el carrito, el checkout, los correos y Mi pedido.
+- **Tres sesiones de Claude a la vez el 14/11**, cada una en su worktree: esta (C-219, C-226, C-227 y C-234), la del plan de crecimiento (C-220 a C-225) y la de Contabilidad (C-228 a C-233).
 - **C-220 · El plan de crecimiento del 14/11 (solo documentos, sin deploy):** cinco pedidos del equipo, con maquetas hechas con datos reales. El equipo eligió lo recomendado en las ocho preguntas (`estado/C-220.md`, `PLAN.md` §7.2).
   - **Reglas nuevas para todas las IA** (`PLAN.md` §1.9, `CLAUDE.md`, `GEMINI.md` y `AGENTS.md`): crear algo en el panel va por pasos con su ícono, con poco texto y una vista previa antes de publicar; al cambiar algo publicado, antes → después.
   - **El orden:**
@@ -198,8 +206,18 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.43` (C-210 a C-218, con rc.35 a rc.42 adentro; unos 30 minutos)
-Producción está en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`.
+### El bloque por subir: `v1.0.0-rc.44` (C-226; unos 10 minutos)
+**Producción ya está en `v1.0.0-rc.43`** (`fcdc4c0`, compilada el 14/11 a las 00:10 UTC). Lo comprobó Claude desde fuera el 14/11, leyendo la versión de la página pública. Nadie lo anotó: falta que el equipo confirme si se corrió el SQL del bloque de rc.43 (abajo) y cuáles de sus pruebas se hicieron. Con eso, ese bloque pasa a `HISTORIAL.md`.
+- **C-226 (rc.44):** ningún contenedor ámbar; lo que hay que hacer va en el azul claro de la tienda. **Sin SQL, sin variables nuevas y sin cron.**
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.44`.
+- **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
+  1. **En el panel:** Configuración → Respaldos con los respaldos apagados, y Productos → Nuevo → Publicar con un dato faltante. El aviso va en azul claro, con el ícono cian en su placa azul noche. No queda ninguna caja ámbar.
+  2. **En la tienda,** con una cuenta sin verificar: el checkout muestra "Verificación requerida" con el círculo azul noche. Mi panel → Documentos con uno por firmar: la nota va en azul claro.
+  3. **Un presupuesto** (Cotizaciones → uno con nota): "Lo que no incluye" va en azul claro, también al imprimirlo.
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`.
+
+### Ya en producción, sin anotar: `v1.0.0-rc.43` (C-210 a C-218, con rc.35 a rc.42 adentro)
+Antes, producción estaba en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`. Lo que sigue es el bloque tal como se preparó: hay que confirmar su SQL y sus pruebas.
 - **C-210 (rc.35):**
   - "Destacados" muestra solo lo que tiene estrella, de toda la tienda;
   - "Recién llegados" va por la fecha de publicación, con hasta 4 por departamento;

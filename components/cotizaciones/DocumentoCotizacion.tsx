@@ -312,8 +312,8 @@ export default function DocumentoCotizacion({ cotizacion: c, empresa, qr }: { co
         </section>
 
         {c.notice && (
-          <section className="mt-4 break-inside-avoid rounded-lg border border-l-4 border-warning/45 border-l-warning bg-warning/10 px-3.5 py-2.5 text-xs leading-relaxed text-ink-soft print:mt-3" data-bn="nota" data-nota>
-            <h2 className="flex items-center gap-1.5 text-sm font-bold text-warning-strong" data-bn="tinta">
+          <section className="mt-4 break-inside-avoid rounded-lg border border-l-4 border-brand-200 border-l-brand-500 bg-brand-50 px-3.5 py-2.5 text-xs leading-relaxed text-ink-soft print:mt-3" data-bn="nota" data-nota>
+            <h2 className="flex items-center gap-1.5 text-sm font-bold text-brand-900" data-bn="tinta">
               <IconoAdvertencia className="h-4 w-4" aria-hidden="true" /> Nota importante: lo que no incluye
             </h2>
             <p className="mt-0.5 whitespace-pre-line">{c.notice}</p>

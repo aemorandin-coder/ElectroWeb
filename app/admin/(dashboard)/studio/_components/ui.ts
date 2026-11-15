@@ -16,6 +16,6 @@ export function toggleButton(active: boolean): string {
 export function dropZone(over: boolean, missing: boolean): string {
   return [
     'flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed p-3 transition-colors focus-within:outline-2 focus-within:outline-brand-500',
-    over ? 'border-brand-500 bg-brand-50' : missing ? 'border-warning bg-warning/10' : 'border-line bg-surface hover:border-brand-200',
+    over ? 'border-brand-500 bg-brand-50' : missing ? 'border-brand-300 bg-brand-50' : 'border-line bg-surface hover:border-brand-200',
   ].join(' ');
 }

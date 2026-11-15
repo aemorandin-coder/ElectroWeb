@@ -137,7 +137,7 @@ export default function OrderTracking({
                         </p>
                     )}
                     {shippingPaidBy === 'CUSTOMER' && (
-                        <p className="rounded-lg bg-warning/10 px-2 py-1.5 font-medium text-warning-strong">
+                        <p className="rounded-lg border border-brand-200 bg-brand-50 px-2 py-1.5 font-medium text-brand-900">
                             Cobro a destino: el flete se lo pagas a {empresa || 'la empresa'} al {enOficina ? 'retirar' : 'recibir'}. Lleva tu cédula.
                         </p>
                     )}

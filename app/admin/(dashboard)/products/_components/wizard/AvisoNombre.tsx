@@ -23,9 +23,9 @@ export default function AvisoNombre({ nombre, marcas = [], onUsar }: {
     ? 'Está en mayúsculas.'
     : `Tiene ${revision.abreviaturas.length === 1 ? 'una abreviatura' : 'abreviaturas'}: ${revision.abreviaturas.join(', ')}.`;
   return (
-    <div role="status" className="mt-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning-strong">
+    <div role="status" className="mt-2 rounded-lg border border-brand-200 bg-brand-50 p-3 text-sm text-brand-900">
       <p className="flex items-start gap-1.5">
-        <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <IconoAdvertencia className="h-7 w-7 shrink-0 rounded-lg bg-brand-950 p-1.5 text-accent" aria-hidden="true" />
         <span>{motivo} En la tienda los nombres van escritos normal, con las siglas y las marcas como se escriben:</span>
       </p>
       <p className="mt-1.5 break-words pl-5 font-medium text-ink">{propuesta}</p>

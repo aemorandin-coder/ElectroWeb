@@ -107,15 +107,15 @@ export default function StepPublish({ data, errors, isLoading, isEditing, estado
         </div>
 
         <div className="space-y-4">
-          <div className={`rounded-2xl border-2 p-4 ${missing === 0 ? 'border-success-strong/30 bg-success-strong/5' : 'border-warning-strong/30 bg-warning/10'}`}>
-            <p className={`mb-3 flex items-center gap-2 text-sm font-bold ${missing === 0 ? 'text-success-strong' : 'text-warning-strong'}`}>
-              {missing === 0 ? <IconoCheck className="h-5 w-5" aria-hidden="true" /> : <IconoError className="h-5 w-5" aria-hidden="true" />}
+          <div className={`rounded-2xl border-2 p-4 ${missing === 0 ? 'border-success-strong/30 bg-success-strong/5' : 'border-brand-200 bg-brand-50'}`}>
+            <p className={`mb-3 flex items-center gap-2 text-sm font-bold ${missing === 0 ? 'text-success-strong' : 'text-brand-900'}`}>
+              {missing === 0 ? <IconoCheck className="h-5 w-5" aria-hidden="true" /> : <IconoError className="h-7 w-7 shrink-0 rounded-lg bg-brand-950 p-1.5 text-accent" aria-hidden="true" />}
               {missing === 0 ? 'Listo para publicar' : `Falta${missing === 1 ? '' : 'n'} ${missing} dato${missing === 1 ? '' : 's'}`}
             </p>
             <ul className="space-y-2">
               {checks.map((c) => (
-                <li key={c.label} className={`flex items-center gap-2 text-sm ${c.ok ? 'text-ink' : c.recomendado ? 'text-muted' : 'text-warning-strong'}`}>
-                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${c.ok ? 'bg-success-strong text-white' : c.recomendado ? 'bg-line' : 'bg-warning/30'}`}>
+                <li key={c.label} className={`flex items-center gap-2 text-sm ${c.ok ? 'text-ink' : c.recomendado ? 'text-muted' : 'text-brand-900'}`}>
+                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${c.ok ? 'bg-success-strong text-white' : c.recomendado ? 'bg-line' : 'bg-brand-950 text-accent'}`}>
                     {c.ok ? <IconoCheck className="h-3 w-3" aria-hidden="true" /> : <IconoError className="h-3 w-3" aria-hidden="true" />}
                   </span>
                   {c.label}{!c.ok && c.recomendado && ' (recomendado)'}

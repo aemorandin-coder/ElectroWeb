@@ -496,7 +496,7 @@ export default function GiftCardsPage() {
                                         onChange={(e) => { if (!isForMyself) { setRecipientEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); } }}
                                         className={`w-full px-3 py-2 pr-8 rounded-lg border outline-none transition-colors text-xs ${isForMyself ? 'bg-brand-50 border-brand-200 text-brand-700 cursor-default' :
                                             errors.email ? 'border-deal bg-deal-bg' :
-                                                recipientExists === false ? 'border-warning' :
+                                                recipientExists === false ? 'border-brand-500' :
                                                     recipientExists === true ? 'border-success' :
                                                         'border-line focus:border-brand-500'
                                             }`}

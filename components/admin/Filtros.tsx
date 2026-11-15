@@ -47,7 +47,7 @@ export default function Filtros<T extends string>({ filtros, valor, onCambiar, e
             <span
               className={[
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
-                activo ? 'bg-brand-500 text-white' : tono === 'aviso' ? 'bg-warning/10 text-warning-strong' : 'bg-surface text-ink-soft',
+                activo ? 'bg-brand-500 text-white' : tono === 'aviso' ? 'bg-brand-50 text-brand-900 ring-1 ring-inset ring-brand-200' : 'bg-surface text-ink-soft',
               ].join(' ')}
             >
               <Icono className="h-4 w-4" aria-hidden="true" />

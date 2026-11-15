@@ -203,7 +203,7 @@ export default function SettingsPage() {
                     {errorSections.has(item.id) ? (
                       <span className={`h-2 w-2 shrink-0 rounded-full ${selected ? 'bg-white' : 'bg-deal'}`} aria-label="con errores" />
                     ) : dirtySections.has(item.id) ? (
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${selected ? 'bg-white' : 'bg-warning'}`} aria-label="con cambios sin guardar" />
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${selected ? 'bg-white' : 'bg-brand-950'}`} aria-label="con cambios sin guardar" />
                     ) : null}
                   </button>
                 </li>

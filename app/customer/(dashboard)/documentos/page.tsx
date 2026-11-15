@@ -59,14 +59,14 @@ export default function DocumentosPage() {
       ) : (
         <>
           {pendientes.length > 0 && (
-            <p className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm text-warning-strong">
+            <p className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-900">
               Tienes {pendientes.length === 1 ? 'un documento' : `${pendientes.length} documentos`} por firmar.
             </p>
           )}
           <ul className="space-y-3">
             {docs.map((d) => (
               <li key={d.slug} className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 sm:flex-row sm:items-center">
-                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${d.signed ? 'bg-success-strong/10 text-success-strong' : 'bg-warning/15 text-warning-strong'}`}>
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${d.signed ? 'bg-success-strong/10 text-success-strong' : 'bg-brand-950 text-accent'}`}>
                   {d.signed ? <IconoConfirmado className="h-5 w-5" aria-hidden="true" /> : <IconoReloj className="h-5 w-5" aria-hidden="true" />}
                 </span>
                 <div className="min-w-0 flex-1">

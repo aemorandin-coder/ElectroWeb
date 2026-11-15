@@ -5,7 +5,7 @@ import {
   IconoNovedad, IconoReloj,
 } from '@/components/iconos';
 import { toast } from 'react-hot-toast';
-import { adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import { adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton, avisoAccion } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { buildCaption } from '@/lib/studio/caption';
 import type { FlyerCheck } from '@/lib/studio/checks';
@@ -16,7 +16,7 @@ import type { Studio } from './useStudio';
 // C-116: cómo se ve cada revisión. Lo que impide descargar, en rojo; los avisos, en ámbar
 const CHECK_STYLE: Record<FlyerCheck['level'], string> = {
   ok: 'border-line bg-surface text-success-strong',
-  warn: 'border-warning/30 bg-warning/10 text-warning-strong',
+  warn: avisoAccion,
   block: 'border-deal/30 bg-deal-bg text-deal',
 };
 

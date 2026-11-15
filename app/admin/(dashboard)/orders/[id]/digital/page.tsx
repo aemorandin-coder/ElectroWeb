@@ -268,10 +268,10 @@ export default function AdminDigitalCodesPage() {
             {/* Warning if not paid */}
             {!isPaid && (
                 <div className={`mb-6 flex items-start gap-3 ${adminNotice('warning')}`}>
-                    <IconoError className="w-5 h-5 text-warning-strong flex-shrink-0 mt-0.5" />
+                    <IconoError className="w-5 h-5 flex-shrink-0" />
                     <div>
-                        <p className="font-medium text-warning-strong">Orden no pagada</p>
-                        <p className="text-sm text-warning-strong">
+                        <p className="font-medium">Orden no pagada</p>
+                        <p className="text-sm">
                             No puedes enviar códigos hasta que el pago sea confirmado.
                         </p>
                     </div>
@@ -321,9 +321,9 @@ export default function AdminDigitalCodesPage() {
                         {pendingItems.map((item, index) => (
                             <div
                                 key={item.orderItemId}
-                                className="bg-white rounded-xl border border-warning/30 overflow-hidden"
+                                className="bg-white rounded-xl border border-brand-200 overflow-hidden"
                             >
-                                <div className="p-4 bg-warning/10 border-b border-warning/20">
+                                <div className="p-4 bg-brand-50 border-b border-brand-200">
                                     <div className="flex items-center gap-4">
                                         {item.image && (
                                             <div className="w-14 h-14 rounded-lg overflow-hidden bg-white border border-line flex-shrink-0">

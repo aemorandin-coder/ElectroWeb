@@ -262,13 +262,13 @@ export default function CheckoutPagoMovilForm({
     <div className={`space-y-4 ${className}`}>
       {/* Pagos ya verificados */}
       {pagos.length > 0 && conciliacion && (
-        <div className={`rounded-2xl border p-4 ${cubierto ? 'border-success/40 bg-success/5' : 'border-warning/40 bg-warning/10'}`} role="status">
+        <div className={`rounded-2xl border p-4 ${cubierto ? 'border-success/40 bg-success/5' : 'border-brand-200 bg-brand-50'}`} role="status">
           <div className="flex items-start gap-3">
-            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white ${cubierto ? 'bg-success-strong' : 'bg-warning-strong'}`}>
+            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white ${cubierto ? 'bg-success-strong' : 'bg-brand-950 [&_svg]:text-accent'}`}>
               {cubierto ? <IconoCheck className="h-5 w-5" aria-hidden="true" /> : <IconoError className="h-5 w-5" aria-hidden="true" />}
             </span>
             <div className="min-w-0 flex-1 space-y-1">
-              <p className={`font-semibold ${cubierto ? 'text-success-strong' : 'text-warning-strong'}`}>
+              <p className={`font-semibold ${cubierto ? 'text-success-strong' : 'text-brand-900'}`}>
                 {cubierto ? 'Pago verificado' : `Te faltan ${formatVES(-conciliacion.diferenciaBs)}`}
               </p>
               <p className="text-sm text-ink-soft">
@@ -484,7 +484,7 @@ export default function CheckoutPagoMovilForm({
               )}
 
               {error && (
-                <div className={`rounded-xl border p-3 text-sm ${error.duplicateReference ? 'border-warning/40 bg-warning/10 text-warning-strong' : 'border-deal/30 bg-deal-bg text-deal'}`} role="alert">
+                <div className={`rounded-xl border p-3 text-sm ${error.duplicateReference ? 'border-brand-200 bg-brand-50 text-brand-900' : 'border-deal/30 bg-deal-bg text-deal'}`} role="alert">
                   <p className="font-semibold">{error.duplicateReference ? 'Referencia ya usada' : 'No pudimos verificar el pago'}</p>
                   <p className="mt-1">{error.message}</p>
                   {error.montoNoCoincide && (

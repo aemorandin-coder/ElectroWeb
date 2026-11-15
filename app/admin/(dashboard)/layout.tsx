@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useCallback, type ReactNode } from 'react';
+import { avisoAccion } from '@/lib/admin-ui';
 import Link from 'next/link';
 import {
   IconoAbrirAparte, IconoAdministrador, IconoAdvertencia, IconoBillete, IconoBolsa, IconoCandado, IconoCargando,
@@ -477,7 +478,7 @@ export default function AdminLayout({
           <div className="mx-auto min-w-0 max-w-[1600px]">
             <AvisosDeVersion />
             {sinSuperAdmin && (
-              <div className="mb-4 flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning-strong" role="alert">
+              <div className={`mb-4 flex items-start gap-3 rounded-xl border p-4 text-sm ${avisoAccion}`} role="alert">
                 <IconoAdvertencia className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
                 <div className="min-w-0">
                   <p className="font-semibold">Esta tienda no tiene ningún super admin.</p>

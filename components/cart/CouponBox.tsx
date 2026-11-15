@@ -28,7 +28,7 @@ export default function CouponBox({ code, onApply, onRemove, status, pendingText
   const [value, setValue] = useState('');
 
   if (code) {
-    const tone = status === null ? 'border-line bg-surface' : status.applied ? 'border-success-strong/40 bg-success/5' : 'border-warning/40 bg-warning/10';
+    const tone = status === null ? 'border-line bg-surface' : status.applied ? 'border-success-strong/40 bg-success/5' : 'border-brand-200 bg-brand-50';
     return (
       <div className={`rounded-lg border px-3 py-2 ${tone}`}>
         <div className="flex items-center gap-2">
@@ -43,7 +43,7 @@ export default function CouponBox({ code, onApply, onRemove, status, pendingText
             <IconoCerrar className="h-4 w-4" aria-hidden="true" /> Quitar
           </button>
         </div>
-        <p className={`text-xs ${status?.applied ? 'text-success-strong' : status ? 'text-warning-strong' : 'text-muted'}`} role="status">
+        <p className={`text-xs ${status?.applied ? 'text-success-strong' : status ? 'text-brand-900' : 'text-muted'}`} role="status">
           {status ? status.message : pendingText}
         </p>
       </div>

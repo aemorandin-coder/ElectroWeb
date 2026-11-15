@@ -195,14 +195,14 @@ export default function EmailSettingsPanel() {
             {/* C-192: antes, texto blanco sobre verde o ámbar (no se leía) */}
             <div className={`relative overflow-hidden rounded-xl border p-4 ${settings?.isConfigured
                 ? 'border-success-strong/20 bg-success-strong/5'
-                : 'border-warning/30 bg-warning/10'
+                : 'border-brand-200 bg-brand-50'
                 }`}>
                 <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 w-10 h-10 bg-white rounded-lg flex items-center justify-center">
                         {settings?.isConfigured ? (
                             <IconoConfirmado className="w-5 h-5 text-success-strong" />
                         ) : (
-                            <IconoError className="w-5 h-5 text-warning-strong" />
+                            <IconoError className="w-7 h-7 shrink-0 rounded-lg bg-brand-950 p-1.5 text-accent" />
                         )}
                     </div>
                     <div className="flex-1 min-w-0">

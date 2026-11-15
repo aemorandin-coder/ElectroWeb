@@ -10,6 +10,7 @@ import { useSession } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import CheckoutSteps from '@/components/ui/CheckoutSteps';
+import AsiFunciona from '@/components/onboarding/AsiFunciona';
 import PageHeader from '@/components/ui/PageHeader';
 import RechargeModal from '@/components/modals/RechargeModalV2';
 import CheckoutPagoMovilForm, { conciliarPagos, type PagoMovilVerificado } from '@/components/checkout/CheckoutPagoMovilForm';
@@ -890,6 +891,20 @@ export default function CheckoutPage() {
             resumenes={[`${items.length} ${items.length === 1 ? 'producto' : 'productos'}`, textoEntrega, acceptedTerms ? 'Términos aceptados' : null, null]}
           />
         </div>
+        {/* C-257: la primera vez, el camino de la compra en tres íconos (lo mismo que dicen los pasos de arriba): se paga al final */}
+        <AsiFunciona
+          clave="checkout"
+          titulo="Así compras"
+          nota="Pagas solo en el último paso."
+          pasos={[
+            { icono: 'envio', texto: 'Elige la entrega' },
+            { icono: 'ver', texto: 'Revisa tu pedido' },
+            { icono: 'pagoMovil', texto: 'Paga y listo' },
+          ]}
+          boton="Empezar"
+          pose="senala"
+          activa={hasPhysicalItems && pasoActual === 0 && !showProcessingOverlay}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Checkout Form */}

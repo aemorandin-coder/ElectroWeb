@@ -3,7 +3,8 @@ import { prefiereMenosMovimiento } from '@/lib/motion/resorte';
 /**
  * Confeti con física (C-89): gravedad, resistencia del aire, giro y el volteo de un papel que cae.
  * Dura menos de 2,5 s, no se repite y borra su canvas al terminar. Con movimiento reducido no hace nada.
- * Los colores salen de los tokens de la tienda (--color-*), no de hex sueltos.
+ * Los colores salen de los tokens de la tienda (--color-*), no de hex sueltos: desde C-257, solo los azules del kit de
+ * marca (antes llevaba el ámbar y el rojo de las ofertas).
  */
 
 type Particula = {
@@ -21,7 +22,7 @@ type Particula = {
   duracion: number;
 };
 
-const TOKENS = ['--color-brand-500', '--color-brand-300', '--color-warning', '--color-success', '--color-brand-700', '--color-deal'];
+const TOKENS = ['--color-brand-500', '--color-brand-300', '--color-brand-700', '--color-brand-400', '--color-brand-200'];
 const GRAVEDAD = 1500; // px/s²
 const RESISTENCIA = 2.2; // por segundo
 

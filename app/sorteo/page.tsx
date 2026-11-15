@@ -10,6 +10,7 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { getServerSession } from 'next-auth';
 import Footer from '@/components/Footer';
+import AsiFunciona from '@/components/onboarding/AsiFunciona';
 import { IconoRegalo } from '@/components/iconos';
 import PublicHeader from '@/components/public/PublicHeader';
 import ComoParticipar from '@/components/sorteo/ComoParticipar';
@@ -107,6 +108,19 @@ export default async function SorteoPage({ searchParams }: { searchParams: Promi
               boletos={boletos} invitado={invitado}
             />
             <PreguntasSorteo minimo={minimo} tope={sorteo.topeInvitar} hasta={sorteo.hasta} resultadoEl={sorteo.resultadoEl} />
+            {/* C-257: la primera vez, el camino en tres íconos y un botón que lleva a "Cómo participar". Los dos caminos, la compra primero */}
+            <AsiFunciona
+              clave="sorteo"
+              titulo="Así participas"
+              nota={sorteo.topeInvitar > 0 ? 'Dos caminos: comprar o invitar amigos.' : 'Cada compra es 1 boleto.'}
+              pasos={[
+                { icono: 'verificado', texto: 'Crea tu cuenta gratis', hecho: Boolean(session?.user?.id) },
+                { icono: 'carrito', texto: `Compra ${minimo} o más`, accion: 'carrito' },
+                { icono: 'calendario', texto: `Ganador el ${diaLargo(sorteo.resultadoEl)}` },
+              ]}
+              boton="Quiero participar"
+              destino="como-participar"
+            />
           </Container>
         )}
 

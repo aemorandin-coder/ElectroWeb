@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
@@ -9,6 +9,7 @@ import {
   IconoFlechaArribaDerecha, IconoInfo, IconoLista, IconoMas, IconoRecargarPuntos, IconoRechazado, IconoRegalo, IconoReloj,
 } from '@/components/iconos';
 import Filtros, { type Filtro as FiltroPildora } from '@/components/admin/Filtros';
+import AsiFunciona from '@/components/onboarding/AsiFunciona';
 import { adminBadge, type AdminTone } from '@/lib/admin-ui';
 import RechargeModal from '@/components/modals/RechargeModalV2';
 import { formatUSD } from '@/lib/currency';
@@ -99,6 +100,9 @@ export default function BalancePage() {
   const [cargandoMas, setCargandoMas] = useState(false);
   const [error, setError] = useState(false);
   const [recargar, setRecargar] = useState(false);
+  // C-257: la hoja "Así funcionan tus Puntos ES", la primera vez; no si llegó directo a recargar
+  const [conGuia, setConGuia] = useState(false);
+  const abrirRecarga = useCallback(() => setRecargar(true), []);
   const montado = useMontado();
   // Cambiar de filtro con una carga en camino: solo vale la respuesta del último pedido
   const pedido = useRef(0);
@@ -149,6 +153,7 @@ export default function BalancePage() {
   // C-128: "Recargar" del inicio llega con ?recargar=1 y abre el modal directo
   useCargarAlMontar(() => {
     if (new URLSearchParams(window.location.search).get('recargar') === '1') setRecargar(true);
+    else setConGuia(true);
   });
 
   // C-127: cuando el equipo aprueba o rechaza una recarga (o el banco la confirma), la página se actualiza sola
@@ -290,6 +295,21 @@ export default function BalancePage() {
           <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
         </Link>
       </section>
+
+      <AsiFunciona
+        clave="puntos"
+        titulo="Así funcionan tus Puntos ES"
+        nota="1 Punto ES paga $1 de compras."
+        pasos={[
+          { icono: 'recargar', texto: 'Recarga con tu pago' },
+          { icono: 'verificado', texto: 'Lo confirmamos' },
+          { icono: 'bolsa', texto: 'Compra al instante' },
+        ]}
+        boton="Recargar Puntos ES"
+        alAceptar={abrirRecarga}
+        pose="pulgar"
+        activa={conGuia && !recargar}
+      />
 
       {montado && createPortal(
         <RechargeModal isOpen={recargar} onClose={() => setRecargar(false)} onSuccess={() => void cargar(filtro, true)} />,

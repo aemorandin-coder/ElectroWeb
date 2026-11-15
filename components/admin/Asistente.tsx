@@ -20,6 +20,9 @@ import {
 } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
+// C-249e: en el teléfono, "Siguiente: revisar y publicar" no cabe en una línea: el botón crece en lugar de cortar el texto
+const ALTO_FLEXIBLE = 'h-auto! min-h-11 py-2 text-center';
+
 export interface PasoAsistente {
   titulo: string;
   icono: IconType;
@@ -141,11 +144,11 @@ export default function Asistente({
               {problema && <p className="text-xs text-muted" role="status">{problema}</p>}
               {paso === ultimo && final.motivo && <p className="text-xs text-muted" role="status">{final.motivo}</p>}
               {paso < ultimo ? (
-                <button type="button" onClick={() => ir(paso + 1)} disabled={Boolean(problema)} className={adminPrimaryButton}>
+                <button type="button" onClick={() => ir(paso + 1)} disabled={Boolean(problema)} className={`${adminPrimaryButton} ${ALTO_FLEXIBLE}`}>
                   Siguiente: {pasos[paso + 1].titulo.toLowerCase()} <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
                 </button>
               ) : (
-                <button type="button" onClick={final.onClick} disabled={final.deshabilitado || !listoHasta(ultimo)} className={adminPrimaryButton}>
+                <button type="button" onClick={final.onClick} disabled={final.deshabilitado || !listoHasta(ultimo)} className={`${adminPrimaryButton} ${ALTO_FLEXIBLE}`}>
                   {final.contenido}
                 </button>
               )}

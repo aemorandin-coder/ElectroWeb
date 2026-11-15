@@ -1,14 +1,17 @@
 'use client';
 
-import { toast } from 'react-hot-toast';
-import { adminBadge, adminModalOverlay, adminModalPanel, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+// Trabajos realizados (el portafolio de Servicios). C-249e: crear o cambiar uno va por pasos en su propia página
+// (/admin/servicios/nuevo y /admin/servicios/<id>, PLAN.md §1.9), con las fotos que se suben; "Agregar trabajo" y "Editar"
+// llevan ahí. Aquí quedan la lista, los filtros, activar o desactivar y eliminar.
+
+import Link from 'next/link';
+import { adminBadge, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 import { useState } from 'react';
 import {
-  IconoCerrar, IconoEditar, IconoEliminar, IconoEstrella, IconoGuardar, IconoImagen, IconoInterruptorApagado,
+  IconoEditar, IconoEliminar, IconoEstrella, IconoInterruptorApagado,
   IconoInterruptorEncendido, IconoMas, IconoVideo, IconoCamaraSeguridad, IconoRouter, IconoTarjeta, IconoPcGaming, IconoConsola, IconoCircuito,
   IconoServicioTecnico, type IconType,
 } from '@/components/iconos';
@@ -35,21 +38,6 @@ const PLATFORMS = [
   { value: 'TIKTOK', label: 'TikTok', color: 'bg-white text-ink-soft ring-1 ring-inset ring-line' },
   { value: 'KICK', label: 'Kick', color: 'bg-white text-ink-soft ring-1 ring-inset ring-line' },
 ];
-
-const EMPTY_FORM = {
-  title: '',
-  description: '',
-  videoUrl: '',
-  thumbnail: '',
-  platform: 'YOUTUBE',
-  category: '',
-  beforeImage: '',
-  afterImage: '',
-  customerName: '',
-  testimonial: '',
-  isActive: true,
-  order: 0,
-};
 
 type Video = {
   id: string;
@@ -92,11 +80,6 @@ export default function AdminServiciosPage() {
   const { confirm } = useConfirm();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  useBodyScrollLock(showModal);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ ...EMPTY_FORM });
-  const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState('');
 
@@ -109,57 +92,6 @@ export default function AdminServiciosPage() {
   };
 
   useCargarAlMontar(loadVideos);
-
-  const openCreate = () => {
-    setForm({ ...EMPTY_FORM });
-    setEditingId(null);
-    setShowModal(true);
-  };
-
-  const openEdit = (v: Video) => {
-    setForm({
-      title: v.title,
-      description: v.description || '',
-      videoUrl: v.videoUrl,
-      thumbnail: v.thumbnail || '',
-      platform: v.platform || 'YOUTUBE',
-      category: v.category || '',
-      beforeImage: v.beforeImage || '',
-      afterImage: v.afterImage || '',
-      customerName: v.customerName || '',
-      testimonial: v.testimonial || '',
-      isActive: v.isActive,
-      order: v.order,
-    });
-    setEditingId(v.id);
-    setShowModal(true);
-  };
-
-  const handleSave = async () => {
-    if (!form.title || !form.videoUrl) return;
-    setSaving(true);
-    const method = editingId ? 'PATCH' : 'POST';
-    const url = editingId
-      ? `/api/admin/service-videos/${editingId}`
-      : '/api/admin/service-videos';
-
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
-
-    if (res.ok) {
-      setShowModal(false);
-      loadVideos();
-      toast.success(editingId ? 'Trabajo actualizado' : 'Trabajo agregado');
-    } else {
-      // Antes un error del servidor dejaba el modal abierto sin decir nada (C-110)
-      const data = await res.json().catch(() => ({}));
-      toast.error(data.error || 'No se pudo guardar');
-    }
-    setSaving(false);
-  };
 
   const handleToggle = async (v: Video) => {
     await fetch(`/api/admin/service-videos/${v.id}`, {
@@ -200,14 +132,10 @@ export default function AdminServiciosPage() {
             Portafolio de servicios — {videos.length} fichas
           </p>
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className={adminPrimaryButton}
-        >
-          <IconoMas className="w-4 h-4" />
+        <Link href="/admin/servicios/nuevo" className={adminPrimaryButton}>
+          <IconoMas className="w-4 h-4" aria-hidden="true" />
           Agregar Trabajo
-        </button>
+        </Link>
       </div>
 
       {/* Tarjeta Informativa de Uso */}
@@ -228,7 +156,7 @@ export default function AdminServiciosPage() {
             </div>
             <div className="flex gap-2 text-xs text-muted items-start">
               <span className="w-1.5 h-1.5 bg-brand-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span><strong>Comparativa Antes/Después:</strong> Sube URLs de imágenes del estado inicial y del resultado final.</span>
+              <span><strong>Comparativa Antes/Después:</strong> Sube las fotos del estado inicial y del resultado final.</span>
             </div>
             <div className="flex gap-2 text-xs text-muted items-start">
               <span className="w-1.5 h-1.5 bg-brand-500 rounded-full mt-1.5 flex-shrink-0"></span>
@@ -269,9 +197,9 @@ export default function AdminServiciosPage() {
         <div className="text-center py-16 bg-surface rounded-xl border-2 border-dashed border-line">
           <IconoVideo className="w-12 h-12 text-line-strong mx-auto mb-3" />
           <p className="text-muted font-medium">No hay trabajos en esta categoría</p>
-          <button onClick={openCreate} className="mt-4 px-4 py-2 bg-brand-500 text-white rounded-lg text-sm font-semibold">
+          <Link href="/admin/servicios/nuevo" className="mt-4 inline-block px-4 py-2 bg-brand-500 text-white rounded-lg text-sm font-semibold">
             Agregar el primero
-          </button>
+          </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -350,14 +278,10 @@ export default function AdminServiciosPage() {
 
                 {/* Actions */}
                 <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(v)}
-                    className={`${adminSecondaryButton} flex-1`}
-                  >
-                    <IconoEditar className="w-3.5 h-3.5" />
+                  <Link href={`/admin/servicios/${v.id}`} className={`${adminSecondaryButton} flex-1`}>
+                    <IconoEditar className="w-3.5 h-3.5" aria-hidden="true" />
                     Editar
-                  </button>
+                  </Link>
                   <button
                     onClick={() => handleDelete(v.id)}
                     disabled={deletingId === v.id}
@@ -373,217 +297,6 @@ export default function AdminServiciosPage() {
         </div>
       )}
 
-      {/* Modal Crear/Editar */}
-      {showModal && (
-        <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
-          <div className={`${adminModalPanel} overflow-y-auto sm:max-w-2xl`} role="dialog" aria-modal="true">
-            <div className="flex items-center justify-between p-6 border-b border-line">
-              <h2 className="text-lg font-bold text-ink">
-                {editingId ? 'Editar Trabajo' : 'Nuevo Trabajo'}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowModal(false)}
-                aria-label="Cerrar"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors hover:bg-surface"
-              >
-                <IconoCerrar className="w-5 h-5 text-muted" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-5">
-              {/* Título */}
-              <div>
-                <label className="block text-sm font-semibold text-ink mb-1.5">
-                  Título <span className="text-deal">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="¿Cómo arreglar un drift de mando PS5?"
-                  className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:border-brand-500 text-sm transition-colors"
-                />
-              </div>
-
-              {/* Descripción */}
-              <div>
-                <label className="block text-sm font-semibold text-ink mb-1.5">Descripción</label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  rows={3}
-                  placeholder="Breve descripción del trabajo realizado..."
-                  className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:border-brand-500 text-sm transition-colors resize-none"
-                />
-              </div>
-
-              {/* Plataforma + Categoría */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-ink mb-1.5">Plataforma</label>
-                  <select
-                    value={form.platform}
-                    onChange={(e) => setForm({ ...form, platform: e.target.value })}
-                    className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:border-brand-500 text-sm bg-white"
-                  >
-                    {PLATFORMS.map((p) => (
-                      <option key={p.value} value={p.value}>{p.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-ink mb-1.5">Categoría</label>
-                  <select
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                    className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:border-brand-500 text-sm bg-white"
-                  >
-                    <option value="">Sin categoría</option>
-                    {CATEGORIES.map((c) => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Video URL */}
-              <div>
-                <label className="block text-sm font-semibold text-ink mb-1.5">
-                  URL del Video <span className="text-deal">*</span>
-                </label>
-                <div className="relative">
-                  <IconoVideo className="absolute left-3 top-3 text-muted w-4 h-4" />
-                  <input
-                    type="url"
-                    value={form.videoUrl}
-                    onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
-                    placeholder="https://youtube.com/watch?v=..."
-                    className="w-full pl-10 pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:border-brand-500 text-sm transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Thumbnail */}
-              <div>
-                <label className="block text-sm font-semibold text-ink mb-1.5">URL de Miniatura</label>
-                <div className="relative">
-                  <IconoImagen className="absolute left-3 top-3 text-muted w-4 h-4" />
-                  <input
-                    type="url"
-                    value={form.thumbnail}
-                    onChange={(e) => setForm({ ...form, thumbnail: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full pl-10 pr-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:border-brand-500 text-sm transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Antes / Después */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-ink mb-1.5">
-                    <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-brand-700 text-white mr-1">ANTES</span>
-                    URL imagen
-                  </label>
-                  <input
-                    type="url"
-                    value={form.beforeImage}
-                    onChange={(e) => setForm({ ...form, beforeImage: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:border-brand-500 text-sm transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-ink mb-1.5">
-                    <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-brand-500 text-white mr-1">DESPUÉS</span>
-                    URL imagen
-                  </label>
-                  <input
-                    type="url"
-                    value={form.afterImage}
-                    onChange={(e) => setForm({ ...form, afterImage: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:border-brand-500 text-sm transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Testimonio */}
-              <div className="p-4 bg-brand-50 rounded-xl border border-brand-200">
-                <p className="text-xs font-bold text-brand-500 mb-3">Testimonio del cliente (anónimo)</p>
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={form.customerName}
-                    onChange={(e) => setForm({ ...form, customerName: e.target.value })}
-                    placeholder='Ej: "Cliente en Barquisimeto"'
-                    className="w-full px-4 py-2 border border-brand-200 rounded-lg text-sm bg-white focus:outline-none focus:border-brand-500"
-                  />
-                  <textarea
-                    value={form.testimonial}
-                    onChange={(e) => setForm({ ...form, testimonial: e.target.value })}
-                    rows={2}
-                    placeholder="Testimonio del cliente..."
-                    className="w-full px-4 py-2 border border-brand-200 rounded-lg text-sm bg-white focus:outline-none focus:border-brand-500 resize-none"
-                  />
-                </div>
-              </div>
-
-              {/* Orden + Estado */}
-              <div className="flex gap-4 items-end">
-                <div className="flex-1">
-                  <label className="block text-sm font-semibold text-ink mb-1.5">Orden de aparición</label>
-                  <input
-                    type="number"
-                    value={form.order}
-                    onChange={(e) => setForm({ ...form, order: parseInt(e.target.value) || 0 })}
-                    min="0"
-                    className="w-full px-4 py-2.5 border-2 border-line rounded-xl focus:outline-none focus:border-brand-500 text-sm"
-                  />
-                </div>
-                <label className="flex items-center gap-3 cursor-pointer pb-2.5">
-                  <div
-                    onClick={() => setForm({ ...form, isActive: !form.isActive })}
-                    className={`relative w-12 h-6 rounded-full transition-colors ${
-                      form.isActive ? 'bg-success' : 'bg-line-strong'
-                    }`}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                      form.isActive ? 'translate-x-7' : 'translate-x-1'
-                    }`} />
-                  </div>
-                  <span className="text-sm font-semibold text-ink">
-                    {form.isActive ? 'Activo' : 'Inactivo'}
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex gap-3 p-6 border-t border-line">
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 py-2.5 bg-surface hover:bg-line text-ink rounded-xl font-semibold text-sm transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving || !form.title || !form.videoUrl}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white rounded-xl font-semibold text-sm transition-all"
-              >
-                {saving ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <IconoGuardar className="w-4 h-4" />
-                )}
-                {saving ? 'Guardando...' : editingId ? 'Guardar Cambios' : 'Crear Trabajo'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

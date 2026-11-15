@@ -535,7 +535,7 @@ Ya en producción desde el 15/11 (`HISTORIAL.md`). Las sesiones comprobaron desd
       - Contabilidad → "Mesa de la contadora": el saludo con tu nombre, el mes en números y, a la derecha, "La firma de la contadora" (vacía hasta que ella la dibuje).
       - Equipo → Invitar: está la opción "Contadora", con lo que puede y no puede hacer. **Invítala de verdad en el paso 23 de §3**, no con una cuenta de prueba.
       - Cuando ella entre (después del paso 23): en su menú solo están Contabilidad, Mi seguridad y Versiones. Si escribe `/admin/orders`, vuelve a su mesa.
-  2. **Los crons** (en la terminal del servidor): `~/cron-despachos.sh` responde `{"avisos":0,"recordatorios":0}`, y `~/cron-sorteo.sh` ahora sí responde `{"recordatorio":0,"motivo":"Todavía faltan más de 3 días para el cierre"}`.
+  2. ~~**Los crons** (en la terminal del servidor): `~/cron-despachos.sh` y `~/cron-sorteo.sh`.~~ **Listos:** el equipo lo confirmó el 15/11 (el de despachos, a las 10:05 de cada día).
   3. **El aliado comercial** (C-227), en Productos → Lista del proveedor → la ferretería:
       - en "Su contacto de despacho", **por ahora tu propio correo** como correo de despacho, con el nombre y el WhatsApp de la ferretería → "Guardar contacto";
       - "Ver la bienvenida": "¡Gracias por elegirnos!", la credencial "Aliado comercial de Electro Shop" y cuántos productos suyos están publicados. "Enviarla": te llega a ti; ábrela en el teléfono;

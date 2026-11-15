@@ -223,7 +223,7 @@ export default function CustomerDashboard() {
           <p className="mt-1 text-2xl font-bold tabular-nums text-ink lg:text-3xl">{garantias.active}</p>
           <p className="mt-2 flex items-center justify-between gap-1 text-xs text-ink-soft lg:text-sm">
             {esperanRespuesta > 0
-              ? <span className={adminBadge('warning')}>{esperanRespuesta === 1 ? 'Una espera tu respuesta' : `${esperanRespuesta} esperan tu respuesta`}</span>
+              ? <span className={adminBadge('warning')}>{esperanRespuesta === 1 ? 'Te toca responder' : `Responde ${esperanRespuesta}`}</span>
               : garantias.openClaims > 0
               ? `${garantias.openClaims} ${garantias.openClaims === 1 ? 'solicitud' : 'solicitudes'} en revisión`
               : garantias.nextExpiry ? `La primera vence el ${fechaCorta.format(new Date(garantias.nextExpiry))}` : 'Productos cubiertos por la tienda'}

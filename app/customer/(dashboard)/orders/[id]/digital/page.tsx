@@ -256,7 +256,7 @@ export default function DigitalCodesPage() {
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0 text-left">
-                                        <div className="flex items-center gap-1.5 mb-0.5">
+                                        <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
                                             <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-700 uppercase bg-brand-50 border border-brand-200 px-1.5 py-0.5 rounded">
                                                 {getPlatformIcon(item.platform)}
                                                 {item.platform || 'Digital'}

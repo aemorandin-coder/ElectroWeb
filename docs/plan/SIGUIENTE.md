@@ -1,9 +1,14 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.68, por subir)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.69, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-251 · Mi panel (el panel del cliente), revisado a fondo: las fallas y lo nuevo (rc.69, por subir; `estado/C-251.md`):** el equipo lo pidió el 15/11 ("revisa con calma: no solo el rediseño, sino también las fallas, y que se conecten las actualizaciones"). Lo hizo un agente aparte.
+  - **Fallas arregladas:** Mis pedidos traía solo los 25 más nuevos; el inicio llamaba distinto a cada pedido, contaba mal los favoritos y decía "en revisión" a la garantía que espera tu respuesta; un pedido sin pago decía "validando tu pago"; a 360 px los pasos se pegaban, la tabla del promotor se cortaba y la tarjeta del curso se salía. Y lo de seguridad del estado.
+  - **Conectado con lo nuevo:** "Sale el… desde Aragua" en el inicio, la tarjeta y el detalle (C-234 y C-222); "Dejar mi reseña" en lo entregado y Mis reseñas en el menú (C-157); cómo canjear cada código y el plazo del checkout (C-234); el certificado del curso; "Desde Aragua" en Favoritos.
+  - **Para decidir, con maquetas** (en la PC de Andrés: `~/.cache/electroshop-trabajo/c251/decisiones.html`): Mis pedidos en la computadora, la garantía de los códigos y los sellos de Mis códigos.
+  - **Sigue C-251b:** los arreglos del kit que no son fallas (las píldoras claras, el ámbar que queda, `Opcion` en Direcciones y los filtros en píldoras).
 - **C-249e · Crear por pasos: el curso y el trabajo de Servicios (rc.68, por subir; `estado/C-249e.md`):** los 8 formularios ya van por pasos.
   - **El curso,** en su propia página: qué es, para quién, el precio y la portada, el temario y "Revisar y publicar", con la tarjeta de `/cursos` al lado. La miniatura se sube.
   - **El trabajo de Servicios:** qué se hizo, el video, antes y después, el testimonio y "Revisar y publicar", con la tarjeta de `/servicios` al lado. Las fotos se suben, ya no se pega su dirección.
@@ -326,7 +331,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.68` (C-243, C-244, C-247, C-246, C-245, C-248, C-249, C-249b, C-249c, C-250, C-249d y C-249e; unos 70 minutos)
+### El bloque por subir: `v1.0.0-rc.69` (C-243, C-244, C-247, C-246, C-245, C-248, C-249, C-249b, C-249c, C-250, C-249d, C-249e y C-251; unos 80 minutos)
 **Producción está en `v1.0.0-rc.56`** (`471a54d`); su bloque está en `HISTORIAL.md`.
 - **C-243 (rc.57):** el kit de marca. **Sin cambio de base, sin SQL, sin variables nuevas y sin cron.**
   - **Las imágenes para compartir cambian de dirección** (`?v=`): WhatsApp y Facebook las vuelven a pedir solas.
@@ -349,8 +354,9 @@ ADD COLUMN "taxId" TEXT;
 - **C-250 (rc.66):** el color de las categorías, solo con los azules del kit, y el aviso de la gift card impresa en azul. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **C-249d (rc.67):** la campaña de correo y el promotor, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una ruta nueva que solo lee (`POST /api/influencers/vista-previa`).
 - **C-249e (rc.68):** el curso y el trabajo de Servicios, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. La subida de fotos del panel acepta dos tipos más (`curso` y `servicio`), en `public/uploads` como las demás.
+- **C-251 (rc.69):** Mi panel revisado: las fallas y lo nuevo. **Conviene subirlo pronto** (lo de seguridad de `estado/C-251.md`). Sin cambio de base, sin SQL, sin variables nuevas y sin cron. Se quitan dos rutas de la API del cliente que ninguna pantalla usaba (`/api/customer/payment-methods` y `/api/customer/chat`).
 - **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc60.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.68`, o una mayor si entró otra tarea antes del `git pull`.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.69`, o una mayor si entró otra tarea antes del `git pull`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **`/sorteo`:** la franja de arriba va en el azul oscuro del logo, sin azul casi negro ni letras cian.
   2. **En el teléfono, la barra de abajo** va en el mismo azul oscuro.
@@ -410,6 +416,12 @@ ADD COLUMN "taxId" TEXT;
       - Son 5 pasos; a la derecha, la tarjeta de `/servicios`.
       - En "Antes y después", las fotos se suben ("Subir foto"); no hay campo para pegar una dirección.
       - Sal con "Trabajos realizados", arriba, sin guardar.
+  22. **Mi panel** (C-251), con tu cuenta de cliente, en el teléfono y en la computadora:
+      - **Mis pedidos:** arriba, "Todos" dice cuántos pedidos tienes en total (antes, como mucho 25). Un pedido pagado y sin salir dice "Sale el…" en su tarjeta; uno de la ferretería, "… desde Aragua (La Victoria)".
+      - **El inicio:** "Últimos pedidos" llama a cada pedido igual que Mis pedidos, y abajo "N en tus favoritos" cuenta los productos que guardaste.
+      - **Un pedido entregado** → "Detalle y recibo": cada producto tiene "Dejar mi reseña", que lleva a la reseña de su ficha.
+      - **Mis códigos** de un pedido de gift cards: debajo de los códigos, "Cómo canjearlo" (si el producto tiene instrucciones).
+      - **`/api/customer/payment-methods`** en el navegador, con la sesión abierta: "404".
 - **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base: al ver las tres columnas de C-246, se para en el paso 2 y la tienda sigue como está (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las columnas no molestan al código anterior.
 
 ### Por confirmar de rc.55 y rc.56 (C-235, C-227 y C-242; unos 20 minutos)
@@ -761,7 +773,7 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
-**Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61), C-249 (los filtros en píldoras, rc.63), C-249b (la oferta o el cupón y las gift cards impresas por pasos, rc.64) C-249c (el método de pago y la categoría, rc.65) C-249d (la campaña y el promotor, rc.67) y C-249e (el curso y Servicios, rc.68): los 8 formularios van por pasos. **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
+**Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61), C-249 (los filtros en píldoras, rc.63), C-249b (la oferta o el cupón y las gift cards impresas por pasos, rc.64) C-249c (el método de pago y la categoría, rc.65) C-249d (la campaña y el promotor, rc.67), C-249e (el curso y Servicios, rc.68: los 8 formularios van por pasos) y C-251 (Mi panel: las fallas y lo nuevo, rc.69; siguen C-251b con el kit y sus tres decisiones). **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
 
 **Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) C-224 (los tres únicos, rc.51) y C-241 (el checkout por pasos, rc.53), C-242 (Facturas, ordenada, rc.56). También C-226 (sin ámbar, rc.44), C-219 (los correos, rc.47) y C-234 (cuándo sale cada pedido, rc.52), y C-227 (los correos al aliado comercial, rc.55).
 

@@ -353,7 +353,7 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
                     <Opcion tamano="chica" aria-pressed={m.exento} elegida={m.exento} onClick={() => setManuales(manuales.map((x, j) => (j === i ? { ...x, exento: !x.exento } : x)))}
                       titulo={m.exento ? '(E) exento' : 'Con IVA'} className="whitespace-nowrap" />
                     <input aria-label={`Precio en dólares del renglón ${i + 1}`} value={m.precio} inputMode="decimal" placeholder="0,00" onChange={(e) => setManuales(manuales.map((x, j) => (j === i ? { ...x, precio: e.target.value } : x)))} className={`${adminInput()} text-right tabular-nums`} />
-                    <button type="button" aria-label={`Quitar el renglón ${i + 1}`} disabled={manuales.length === 1} onClick={() => setManuales(manuales.filter((_, j) => j !== i))} className={`${adminSecondaryButton} px-0`}>
+                    <button type="button" aria-label={`Quitar el renglón ${i + 1}`} disabled={manuales.length === 1} onClick={() => setManuales(manuales.filter((_, j) => j !== i))} className={`${adminSecondaryButton} px-0!`}>
                       <IconoEliminar className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </li>

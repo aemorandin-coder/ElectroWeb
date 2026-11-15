@@ -531,7 +531,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - el contacto del proveedor en el panel (columnas nuevas, aditivas);
   - la bienvenida, el aviso de venta, la página firmada para anotar la guía, el recordatorio y la cancelación.
   - Va después de C-219, que pone el diseño, y de C-234, que cuenta los días hábiles.
-- **C-234 · Cuándo sale cada pedido** (en curso, 14/11; decisiones en §7.2): el calendario (corte, sábado, feriados y días del panel) y la fecha de salida en la tienda, los correos y Mi pedido.
+- **C-234 · Cuándo sale cada pedido** (plan listo, 14/11; decisiones en §7.2 y las reglas en `PROPUESTA_C234.md`): el calendario (corte, sábado, feriados y días del panel) y la fecha de salida en la tienda, los correos y Mi pedido.
 - **Haiku en el panel** (Andrés eligió 5 de las 7 ideas el 13/11). Esfuerzo alto para lo que se espera en pantalla; el máximo, solo para trabajos de fondo. La base común está en `lib/ia/claude.ts` y las reglas del texto en `lib/ia/texto.ts` (C-213).
   - **A · El resumen del cliente en su ficha** (**hecha**, C-213, rc.38): la pestaña Resumen con lo que hay que atender y cómo compra, y a pedido el resumen de Claude con qué ofrecerle. De paso, "Total gastado" ya no suma lo pendiente ni lo cancelado. `estado/C-213.md`.
     - **Probada con un Claude simulado:** la clave del 13/11 da 401. Falta una clave nueva (en el servidor y aquí) y probarla con el modelo de verdad.

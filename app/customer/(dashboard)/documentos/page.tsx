@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { IconoConfirmado, IconoDescargar, IconoDocumento, IconoReloj } from '@/components/iconos';
-import { adminBadge, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import { adminBadge, adminDato, adminPrimaryButton, adminSecondaryButton, avisoAccion } from '@/lib/admin-ui';
+
 import SignDocumentModal from '@/components/legal/SignDocumentModal';
 
 // Mis documentos (C-103): lo que el cliente firmó, con su constancia en PDF, y lo que falta firmar.
@@ -59,7 +60,9 @@ export default function DocumentosPage() {
       ) : (
         <>
           {pendientes.length > 0 && (
-            <p className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-900">
+            // C-251b: lo que alguien tiene que hacer, con el ícono en su placa (PLAN.md §1.1)
+            <p className={`flex items-center gap-3 rounded-xl border p-3 text-sm ${avisoAccion}`}>
+              <IconoDocumento aria-hidden="true" />
               Tienes {pendientes.length === 1 ? 'un documento' : `${pendientes.length} documentos`} por firmar.
             </p>
           )}
@@ -73,7 +76,8 @@ export default function DocumentosPage() {
                   <p className="font-semibold text-ink">{d.title}</p>
                   <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
                     <span>Versión {d.version}</span>
-                    {d.requiredFor && <span className={adminBadge('brand')}>Necesario para: {d.requiredFor}</span>}
+                    {/* C-251b: un dato, en gris (PLAN.md §1.8) */}
+                    {d.requiredFor && <span className={adminDato}>Necesario para: {d.requiredFor}</span>}
                     {d.signed
                       ? <span className={adminBadge('success')}>{d.signedAt ? `Firmado el ${fecha(d.signedAt)}` : 'Firmado'}</span>
                       : <span className={adminBadge('warning')}>Por firmar</span>}

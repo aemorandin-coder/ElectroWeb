@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
 import { createPortal } from 'react-dom';
 import {
-  IconoCerrar, IconoEditar, IconoEliminar, IconoEstrella, IconoInicio, IconoMas, IconoPaquete, IconoUbicacion,
+  IconoCerrar, IconoEditar, IconoEliminar, IconoEstrella, IconoInfo, IconoInicio, IconoMas, IconoPaquete, IconoUbicacion,
 } from '@/components/iconos';
+import { OpcionRadio } from '@/components/admin/Opcion';
 import { toast } from 'react-hot-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -14,7 +15,6 @@ import { useMontado } from '@/lib/hooks/useMontado';
 import { ESTADOS_VENEZUELA } from '@/lib/envios/empresas';
 import {
   adminBadge,
-  adminChoice,
   adminHint,
   adminInput,
   adminLabel,
@@ -256,7 +256,8 @@ export default function AddressesPage() {
                       {ETIQUETA_TIPO[d.type] ?? 'Dirección'}
                     </span>
                   )}
-                  {d.isDefault && <span className={adminBadge('success')}><IconoEstrella className="h-3.5 w-3.5" aria-hidden="true" />Predeterminada</span>}
+                  {/* C-251b: lo que se destaca va en azul (PLAN.md §1.1); el verde es lo hecho */}
+                  {d.isDefault && <span className={adminBadge('brand')}><IconoEstrella className="h-3.5 w-3.5" aria-hidden="true" />Predeterminada</span>}
                 </div>
                 <p className="mt-2 text-sm font-semibold text-ink [overflow-wrap:anywhere]">
                   {agencia ? d.agencyName || 'Agencia sin elegir' : d.addressLine1}
@@ -268,7 +269,8 @@ export default function AddressesPage() {
                 <p className="text-sm text-muted">{[d.city, d.state].filter(Boolean).join(', ')}</p>
                 {receptor && <p className="mt-1 text-xs text-ink-soft">Recibe: {receptor}</p>}
                 {agencia && !d.agencyCode && (
-                  <p className="mt-1 text-xs font-medium text-warning-strong">Escrita a mano: edítala y elige la oficina de la lista para usarla en el checkout.</p>
+                  // C-251b: lo que falta para seguir va en gris, como en el checkout (C-241); antes, en ámbar
+                  <p className="mt-1 flex items-start gap-1.5 text-xs font-medium text-ink-soft"><IconoInfo className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden="true" />Escrita a mano: edítala y elige la oficina de la lista para usarla en el checkout.</p>
                 )}
                 <div className="mt-3 flex flex-wrap gap-2 border-t border-line pt-3">
                   {!d.isDefault && (
@@ -301,16 +303,10 @@ export default function AddressesPage() {
             <div className={`${adminModalBody} space-y-5`}>
               <fieldset>
                 <legend className={adminLabel}>¿Cómo recibes tus pedidos?</legend>
-                <div className="grid grid-cols-2 gap-2">
+                {/* C-251b: la tarjeta de opción con todo adentro (PLAN.md §1.10; pendiente desde C-242) */}
+                <div className="grid gap-2 sm:grid-cols-2">
                   {([['AGENCIA', 'Retiro en agencia', 'ZOOM o MRW, cobro a destino', IconoPaquete], ['DOMICILIO', 'A domicilio', 'Casa o trabajo', IconoInicio]] as const).map(([id, titulo, detalle, Icono]) => (
-                    <label key={id} className={`${adminChoice(form.entrega === id)} flex cursor-pointer items-start gap-2 p-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500`}>
-                      <input type="radio" name="entrega" className="sr-only" checked={form.entrega === id} onChange={() => set({ entrega: id })} />
-                      <Icono className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
-                      <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-ink">{titulo}</span>
-                        <span className="block text-xs text-muted">{detalle}</span>
-                      </span>
-                    </label>
+                    <OpcionRadio key={id} name="entrega" elegida={form.entrega === id} onElegir={() => set({ entrega: id })} titulo={titulo} detalle={detalle} icono={Icono} />
                   ))}
                 </div>
               </fieldset>
@@ -321,10 +317,8 @@ export default function AddressesPage() {
                     <legend className={adminLabel}>Empresa</legend>
                     <div className="grid grid-cols-2 gap-2">
                       {(['ZOOM', 'MRW'] as const).map((e) => (
-                        <label key={e} className={`${adminChoice(form.empresa === e)} flex h-11 cursor-pointer items-center justify-center text-sm font-bold text-ink has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500`}>
-                          <input type="radio" name="empresa" className="sr-only" checked={form.empresa === e} onChange={() => set({ empresa: e, oficina: OFICINA_VACIA })} />
-                          <LogoEmpresa empresa={e} className={e === 'MRW' ? 'h-5' : 'h-6'} />
-                        </label>
+                        <OpcionRadio key={e} name="empresa" tamano="chica" elegida={form.empresa === e} onElegir={() => set({ empresa: e, oficina: OFICINA_VACIA })}
+                          titulo={<LogoEmpresa empresa={e} className={e === 'MRW' ? 'h-5' : 'h-6'} />} />
                       ))}
                     </div>
                   </fieldset>
@@ -334,10 +328,7 @@ export default function AddressesPage() {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     {([['HOME', 'Casa'], ['WORK', 'Trabajo']] as const).map(([id, titulo]) => (
-                      <label key={id} className={`${adminChoice(form.lugar === id)} flex h-11 cursor-pointer items-center justify-center text-sm font-semibold text-ink has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500`}>
-                        <input type="radio" name="lugar" className="sr-only" checked={form.lugar === id} onChange={() => set({ lugar: id })} />
-                        {titulo}
-                      </label>
+                      <OpcionRadio key={id} name="lugar" tamano="chica" elegida={form.lugar === id} onElegir={() => set({ lugar: id })} titulo={titulo} />
                     ))}
                   </div>
                   <div>

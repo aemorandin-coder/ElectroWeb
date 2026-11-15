@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import {
   IconoActualizar, IconoAyuda, IconoCamaraFotos, IconoCerrar, IconoCheck, IconoChevronDerecha, IconoCorreo,
-  IconoDocumento, IconoEliminar, IconoError, IconoFlechaIzquierda, IconoGarantia, IconoPaquete,
+  IconoDocumento, IconoEliminar, IconoError, IconoFlechaIzquierda, IconoGarantia, IconoInfo, IconoPaquete,
 } from '@/components/iconos';
 import { FaWhatsapp } from 'react-icons/fa6';
 import { toast } from 'react-hot-toast';
@@ -328,7 +328,8 @@ export default function WarrantyPage() {
         <button type="button" role="tab" aria-selected={selectedTab === 'requests'} onClick={() => { setSelectedTab('requests'); setAbierta(null); }} className={`${adminTab(selectedTab === 'requests')} max-sm:px-2.5`}>
           <span className="inline-flex items-center gap-1.5">
             <IconoDocumento className="w-3.5 h-3.5 max-sm:hidden" aria-hidden="true" /><span className="sm:hidden">Solicitudes</span><span className="max-sm:hidden">Mis solicitudes</span>
-            {claims.some((c) => c.status === 'WAITING_CUSTOMER') && <span className="h-2 w-2 rounded-full bg-deal" aria-label="Hay una solicitud esperando tu respuesta" />}
+            {/* C-251b: lo que te toca va en el azul oscuro del logo (el rojo es error o cancelado) */}
+            {claims.some((c) => c.status === 'WAITING_CUSTOMER') && <span className="h-2 w-2 rounded-full bg-brand-700" aria-label="Hay una solicitud esperando tu respuesta" />}
           </span>
         </button>
         <button type="button" role="tab" aria-selected={selectedTab === 'new'} onClick={() => setSelectedTab('new')} className={`${adminTab(selectedTab === 'new')} max-sm:px-2.5`}>
@@ -427,7 +428,7 @@ export default function WarrantyPage() {
               <p className="text-xs text-muted mb-3">No tienes solicitudes de garantía</p>
               <button type="button" onClick={() => setSelectedTab('new')} className={`${adminPrimaryButton} text-xs inline-flex items-center gap-1.5`}>
                 <IconoActualizar className="w-3.5 h-3.5" aria-hidden="true" />
-                Nueva Solicitud
+                Nueva solicitud
               </button>
             </div>
           ) : (
@@ -459,7 +460,7 @@ export default function WarrantyPage() {
         <div className="space-y-4">
           {/* Eligible Orders */}
           <div>
-            <h3 className="text-xs font-bold text-ink mb-2 uppercase tracking-wider">Pedidos Elegibles</h3>
+            <h3 className="text-sm font-semibold text-ink mb-2">Pedidos elegibles</h3>
             {loading ? (
               <div className="flex items-center justify-center py-6" role="status" aria-label="Cargando">
                 <div className="w-6 h-6 border-2 border-line border-t-brand-500 rounded-full animate-spin" />
@@ -521,7 +522,7 @@ export default function WarrantyPage() {
 
           {/* Info Note */}
           <div className="flex items-start gap-2.5 p-3.5 bg-surface border border-line rounded-xl">
-            <IconoError className="w-4 h-4 text-warning-strong flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <IconoInfo className="w-4 h-4 text-brand-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="text-xs">
               <p className="font-semibold text-ink mb-0.5">Importante</p>
               <p className="text-muted">
@@ -539,7 +540,7 @@ export default function WarrantyPage() {
           <div className={`${adminModalPanel} w-full max-w-lg h-[85dvh] sm:h-auto sm:max-h-[90dvh] flex flex-col overflow-hidden`}>
             <div className="bg-surface border-b border-line p-5 text-ink flex-shrink-0 flex justify-between items-center">
               <div>
-                <h2 id="w-titulo" className="text-base lg:text-lg font-bold text-ink">Solicitar Garantía</h2>
+                <h2 id="w-titulo" className="text-base lg:text-lg font-bold text-ink">Solicitar garantía</h2>
                 <p className="text-xs text-muted">Pedido #{selectedOrderForWarranty.orderNumber}</p>
               </div>
               <button type="button" onClick={() => setShowFormModal(false)} className="flex h-11 w-11 items-center justify-center text-muted hover:bg-surface rounded-lg transition-colors" aria-label="Cerrar">
@@ -594,7 +595,7 @@ export default function WarrantyPage() {
                     disabled={isSubmitting || !selectedItemId || !warrantyReason || !warrantyDescription}
                     className={`${adminPrimaryButton} w-full py-3 flex items-center justify-center gap-2`}
                   >
-                    {isSubmitting ? 'Enviando...' : 'Confirmar Solicitud'}
+                    {isSubmitting ? 'Enviando...' : 'Confirmar solicitud'}
                   </button>
                 </div>
               </form>

@@ -39,6 +39,10 @@ export type AuditAction =
     | 'ORDER_PAYMENT_UPDATED'
     // C-147: el equipo anotó (o corrigió) el número de la factura de una orden
     | 'ORDER_INVOICE_NOTED'
+    // C-229: Contabilidad, las facturas de talonario
+    | 'INVOICE_ISSUED'
+    | 'INVOICE_VOIDED'
+    | 'TALONARIO_CREATED'
     | 'ORDER_CANCELLED'
     | 'ORDER_REFUNDED'
     // Gift Cards
@@ -210,6 +214,8 @@ export function getSeverityForAction(action: AuditAction): AuditSeverity {
         'AUTH_PASSWORD_RESET',
         'USER_BALANCE_MODIFIED',
         'ORDER_CANCELLED',
+        // C-229: una factura anulada se revisa (el papel se guarda)
+        'INVOICE_VOIDED',
         'PRODUCT_DELETED',
         'PRODUCT_PURGED',
         'SECURITY_RATE_LIMIT_HIT',

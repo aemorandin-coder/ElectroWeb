@@ -1,14 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { IconoCheck, IconoCopiar, IconoCuentaBorrada, IconoDocumento } from '@/components/iconos';
-import { adminBadge, adminHint, adminInput, adminLabel, adminSecondaryButton } from '@/lib/admin-ui';
+import { adminBadge, adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { NUMERO_FACTURA, textoParaFacturar } from '@/lib/facturacion';
 import { describirPago, type PagoMovilResumen } from '@/lib/order-pago';
 
 // Facturación de la orden (C-147). La web no emite la factura: aquí están los datos a nombre de quién va
 // (la copia que guardó la orden al comprar), el botón para pasarlos a SADES o al talonario, y el número de la factura emitida.
+// C-229: la factura del talonario se registra en Contabilidad ("Facturar en el talonario"). Con ella, el número lo pone
+// Contabilidad y no se escribe a mano; el campo de abajo queda para una factura hecha fuera del sistema.
 
 export interface OrdenFactura {
   id: string;
@@ -23,6 +26,8 @@ export interface OrdenFactura {
   billingAddress?: string | null;
   invoiceNumber?: string | null;
   invoicedAt?: string | null;
+  /** C-229: la factura del talonario registrada en Contabilidad */
+  documentoFiscalId?: string | null;
   items: Array<{ productName?: string; quantity?: number; priceUSD?: number; totalUSD?: number; product?: { name?: string } }>;
   discountUSD?: number | string | null;
   shippingUSD?: number | string | null;
@@ -133,13 +138,23 @@ export default function FacturaOrden({ orden, onGuardada }: { orden: OrdenFactur
         </div>
       )}
 
+      {orden.documentoFiscalId ? (
+        <Link href={`/admin/contabilidad/facturas/${orden.documentoFiscalId}`} className={`${adminSecondaryButton} w-full`}>
+          <IconoDocumento className="h-4 w-4" aria-hidden="true" /> Ver la factura {orden.invoiceNumber}
+        </Link>
+      ) : (
+        <Link href={`/admin/contabilidad/facturas/nueva?ordenes=${orden.id}`} className={`${adminPrimaryButton} w-full`}>
+          <IconoDocumento className="h-4 w-4" aria-hidden="true" /> Facturar en el talonario
+        </Link>
+      )}
+
       <button type="button" onClick={copiar} className={`${adminSecondaryButton} w-full ${copiado ? 'border-success-strong text-success-strong' : ''}`} aria-live="polite">
         {copiado ? <IconoCheck className="h-4 w-4" aria-hidden="true" /> : <IconoCopiar className="h-4 w-4" aria-hidden="true" />}
         {copiado ? '¡Copiado!' : 'Copiar datos para facturar'}
       </button>
 
-      <div>
-        <label htmlFor="orden-factura-numero" className={adminLabel}>N.º de la factura emitida</label>
+      {!orden.documentoFiscalId && <div>
+        <label htmlFor="orden-factura-numero" className={adminLabel}>N.º de una factura hecha fuera del sistema</label>
         <div className="flex gap-2">
           <div className="relative min-w-0 flex-1">
             <IconoDocumento className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
@@ -163,9 +178,9 @@ export default function FacturaOrden({ orden, onGuardada }: { orden: OrdenFactur
         </div>
         <p id="orden-factura-ayuda" className={adminHint}>
           {!valido ? 'Solo letras, números, guiones, puntos o barras.'
-            : 'La factura se hace en SADES o en el talonario. El cliente ve este número en su pedido.'}
+            : 'Solo si se facturó sin Contabilidad. El cliente ve este número en su pedido.'}
         </p>
-      </div>
+      </div>}
     </div>
   );
 }

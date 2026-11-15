@@ -10,6 +10,31 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.50] - 2026-11-14
+Contabilidad, primera parte: las facturas de talonario (el equipo, 14/11; el plan en `docs/plan/CONTABILIDAD.md`).
+### Contabilidad 1.0.0 (C-229)
+- **Una sección nueva del panel, Contabilidad → Facturas.**
+  - El dueño carga el talonario una vez, con lo que trae impreso: la serie, los números, el control, el emisor, la imprenta y la próxima por usar.
+- **"Nueva factura de talonario", en 4 pasos** (la maqueta B):
+  - de dónde sale: una compra de la web o una venta en la tienda, con la fecha y la condición de pago;
+  - a nombre de quién;
+  - qué se vendió;
+  - "Revisar y emitir", con la factura tal como se escribe: cada casilla numerada en la computadora y casilla por casilla en el teléfono.
+- **"Ya la escribí: registrar la 0072":** queda registrada con su número y su control, y la orden queda facturada sola.
+  - Los montos en bolívares (sin IVA, base, IVA, exentos con "(E)" y total) los calcula el servidor desde la orden.
+  - Dos personas no pueden registrar el mismo número.
+- **Lo cobrado en el mes sin factura**, por compra, con "Facturar".
+- **Una factura mal escrita se anula con su motivo**, y la orden vuelve a quedar sin factura. Un papel dañado sin escribir también se anula. Nada se borra.
+- **"Imprimir borrador":** sale solo la réplica, para copiarla a mano.
+- **Cambio de base (aditivo):** las tablas `talonarios` y `documentos_fiscales` y la columna `orders.documentoFiscalId`.
+### Marco del panel 1.8.0, Órdenes y pagos 1.4.0, Reportes y seguridad 1.1.6 y Tienda 1.12.1 (C-229)
+- **El menú tiene la sección Contabilidad.** Permisos nuevos: facturar (administradores y dueño), y ver la contabilidad y declarar (el dueño; la contadora llega con C-235).
+- **En el detalle de la orden:**
+  - "Facturar en el talonario" lleva a la factura con esa orden ya elegida.
+  - Con la factura hecha, "Ver la factura A-0072".
+  - El número escrito a mano queda solo para una factura hecha fuera del sistema.
+- **La bitácora nombra** las facturas registradas y anuladas, y el talonario cargado.
+
 ## [1.0.0-rc.49] - 2026-11-14
 El aviso de cookies, antes de encender Google Analytics y el píxel de Meta (el equipo, 14/11).
 ### Tienda 1.12.0 (C-223)

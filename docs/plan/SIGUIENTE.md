@@ -1,9 +1,18 @@
-# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.49, por subir)
+# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.43, comprobado desde fuera; `main` en 1.0.0-rc.50, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-229 · Contabilidad: las facturas de talonario (rc.50, por subir):** la primera parte del módulo, con la maqueta B alineada (`estado/C-229.md`).
+  - **Contabilidad → Facturas:** el talonario en uso (la próxima y cuántas quedan), lo cobrado este mes sin factura con "Facturar", y las facturas del mes.
+  - **"Nueva factura de talonario" en 4 pasos:**
+    - de dónde sale, a nombre de quién y qué se vendió;
+    - al final, la factura tal como se escribe, con cada casilla numerada (en el teléfono, casilla por casilla);
+    - "Ya la escribí: registrar la 00xx". Los montos los calcula el servidor desde la orden.
+  - **Anular:** una factura mal escrita o un papel dañado, con su motivo. Nada se borra.
+  - **Desde la orden:** "Facturar en el talonario", o "Ver la factura" si ya la tiene.
+  - **Al subir:** dos tablas y una columna nuevas (§2). **Después, el dueño carga el talonario** (§3, paso 22).
 - **C-219 · Los correos de la tienda (rc.47, por subir):** el equipo, el 14/11: "muy pobres, no tienen nuestra esencia". Eligió la maqueta C, clara con la cinta, con ELECTRO SHOP grande arriba y Chispa abajo, y textos "mucho más épicos" (`estado/C-219.md`, `AUDITORIA_CORREOS.md`).
   - **Los 26 que ya salían, con el diseño nuevo,** y **19 nuevos:** el pago confirmado, listo para retirar, la bienvenida, las recargas, la garantía, el contacto, los presupuestos, los avisos de la gift card, el sorteo y más.
   - **En Mensajes:** "Enviar con el diseño de la tienda" responde desde la tienda.
@@ -242,7 +251,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.49` (C-226, C-221, C-222, C-219, C-225 y C-223, con rc.44 a rc.48 adentro; unos 50 minutos)
+### El bloque por subir: `v1.0.0-rc.50` (C-226, C-221, C-222, C-219, C-225, C-223 y C-229, con rc.44 a rc.49 adentro; unos 55 minutos)
 **Producción ya está en `v1.0.0-rc.43`** (`fcdc4c0`, compilada el 14/11 a las 00:10 UTC). Lo comprobó Claude desde fuera el 14/11, leyendo la versión de la página pública. Nadie lo anotó: falta que el equipo confirme si se corrió el SQL del bloque de rc.43 (abajo) y cuáles de sus pruebas se hicieron. Con eso, ese bloque pasa a `HISTORIAL.md`.
 - **C-226 (rc.44):** ningún contenedor ámbar; lo que hay que hacer va en el azul claro de la tienda. **Sin SQL, sin variables nuevas y sin cron.**
 - **C-221 (rc.45):** el sorteo por pasos. **Sin cambio de base, sin variables nuevas y sin cron.** Lleva un **SQL de datos** (abajo).
@@ -284,7 +293,19 @@ WHERE NOT EXISTS (SELECT 1 FROM sorteos);
 ```
   - Las fechas van en UTC: del 14/11 al 18/12 (hasta las 11:59 p. m.) y el resultado el 20/12, hora de Venezuela.
   - La foto de la consola se agrega después en Marketing → Sorteo → Cambiar (se sube desde la computadora). Sin foto, /sorteo se ve igual, sin el recuadro de la imagen.
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.49`.
+- **C-229 (rc.50):** Contabilidad → Facturas, las facturas de talonario.
+  - **Cambia la base: dos tablas y una columna nuevas, aditivas, con sus índices y llaves.** `deploy.sh` las muestra junto con las de C-222 y C-219:
+```sql
+ALTER TABLE "orders" ADD COLUMN "documentoFiscalId" TEXT;
+CREATE TABLE "talonarios" ("id" TEXT NOT NULL, "serie" TEXT NOT NULL, "numeroDesde" INTEGER NOT NULL, "numeroHasta" INTEGER NOT NULL, "proximo" INTEGER NOT NULL, "controlSerie" TEXT NOT NULL DEFAULT '00', "controlDesde" INTEGER NOT NULL, "controlHasta" INTEGER NOT NULL, "emisorNombre" TEXT NOT NULL, "emisorRif" TEXT NOT NULL, "emisorDomicilio" TEXT NOT NULL, "emisorTelefono" TEXT, "imprenta" TEXT NOT NULL, "imprentaRif" TEXT NOT NULL, "autorizacion" TEXT NOT NULL, "elaboradoEl" TIMESTAMP(3), "region" TEXT, "estado" TEXT NOT NULL DEFAULT 'EN_USO', "notas" TEXT, "creadoPorId" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "talonarios_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "documentos_fiscales" ("id" TEXT NOT NULL, "tipo" TEXT NOT NULL DEFAULT 'FACTURA', "medio" TEXT NOT NULL DEFAULT 'TALONARIO', "talonarioId" TEXT, "serie" TEXT, "numero" INTEGER NOT NULL, "numeroControl" TEXT NOT NULL, "emitidaEl" TIMESTAMP(3) NOT NULL, "periodo" TEXT NOT NULL, "estado" TEXT NOT NULL DEFAULT 'EMITIDA', "motivoAnulacion" TEXT, "anuladaEl" TIMESTAMP(3), "anuladaPorId" TEXT, "origen" TEXT NOT NULL, "compradorTipo" TEXT, "compradorNombre" TEXT, "compradorDocumento" TEXT, "compradorDomicilio" TEXT, "compradorTelefono" TEXT, "condicionPago" TEXT NOT NULL DEFAULT 'CONTADO', "renglones" JSONB, "descuentoBs" DECIMAL(65,30) NOT NULL DEFAULT 0, "baseBs" DECIMAL(65,30) NOT NULL DEFAULT 0, "alicuota" DECIMAL(65,30) NOT NULL DEFAULT 16, "ivaBs" DECIMAL(65,30) NOT NULL DEFAULT 0, "exentoBs" DECIMAL(65,30) NOT NULL DEFAULT 0, "totalBs" DECIMAL(65,30) NOT NULL DEFAULT 0, "totalUSD" DECIMAL(65,30), "tasa" DECIMAL(65,30), "ivaRetenidoBs" DECIMAL(65,30), "comprobanteRetencion" TEXT, "documentoAfectadoId" TEXT, "creadoPorId" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "documentos_fiscales_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "documentos_fiscales_periodo_idx" ON "documentos_fiscales"("periodo");
+CREATE UNIQUE INDEX "documentos_fiscales_talonarioId_numero_key" ON "documentos_fiscales"("talonarioId", "numero");
+ALTER TABLE "orders" ADD CONSTRAINT "orders_documentoFiscalId_fkey" FOREIGN KEY ("documentoFiscalId") REFERENCES "documentos_fiscales"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "documentos_fiscales" ADD CONSTRAINT "documentos_fiscales_talonarioId_fkey" FOREIGN KEY ("talonarioId") REFERENCES "talonarios"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+```
+  - Sin variables nuevas y sin cron. **Después del deploy, el dueño carga el talonario** (§3, paso 22).
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.50`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **En el panel:** Configuración → Respaldos con los respaldos apagados, y Productos → Nuevo → Publicar con un dato faltante. El aviso va en azul claro, con el ícono cian en su placa azul noche. No queda ninguna caja ámbar.
   2. **En la tienda,** con una cuenta sin verificar: el checkout muestra "Verificación requerida" con el círculo azul noche. Mi panel → Documentos con uno por firmar: la nota va en azul claro.
@@ -302,7 +323,13 @@ WHERE NOT EXISTS (SELECT 1 FROM sorteos);
   12. **Contacto:** manda un mensaje desde `/contacto` con tu correo: llega "¡Te leímos!". En el panel, Mensajes → ese mensaje → "Redactar con Claude" → "Enviar con el diseño de la tienda": llega la respuesta y el mensaje queda "Respondido".
   13. **Los buscadores** (C-225): `https://electroshopve.com/llms.txt` empieza "Tienda en Guanare, Portuguesa, Venezuela". Al compartir `https://electroshopve.com` por WhatsApp, la imagen dice "Tecnología, ferretería y gift cards" con "Todo lo encuentras con nosotros." debajo (desde el teléfono: el de escritorio guarda la vista previa vieja).
   14. **Las cookies** (C-223): sin las claves de Google y del píxel en el `.env` (como hoy), no sale ningún aviso ni "Cookies" en el pie. El aviso sale cuando se pongan (sección 3, paso 10).
-- **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`. Los textos de antes quedan en `~/textos-antes-c221.txt`; el sorteo se apaga en Marketing → Sorteo → Apagar. La columna nueva de C-219 no molesta al código anterior; el cron del sorteo se quita con `crontab -e`.
+  15. **Contabilidad** (C-229), con la cuenta del dueño:
+      - En el menú está Contabilidad → Facturas. Carga el talonario (§3, paso 22).
+      - "Nueva factura": elige una compra de este mes y sigue los 4 pasos.
+      - En "Revisar y emitir" la factura se ve con sus casillas numeradas, y en el teléfono, casilla por casilla.
+      - **Si la escribes de verdad,** toca "Ya la escribí". Si es solo una prueba, no la registres: el número se gasta. En ese caso vuelve con "Atrás" o cierra la pestaña.
+  16. **Con una cuenta de administrador:** Contabilidad → Facturas abre, pero "Cargar el talonario" no aparece, y `/admin/contabilidad/talonarios/nuevo` lleva al inicio del panel.
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.43 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas y la columna de C-229 no molestan al código anterior. Los textos de antes quedan en `~/textos-antes-c221.txt`; el sorteo se apaga en Marketing → Sorteo → Apagar. La columna nueva de C-219 no molesta al código anterior; el cron del sorteo se quita con `crontab -e`.
 
 ### Ya en producción, sin anotar: `v1.0.0-rc.43` (C-210 a C-218, con rc.35 a rc.42 adentro)
 Antes, producción estaba en `v1.0.0-rc.34` (C-207), comprobada desde fuera el 13/11; su bloque está en `HISTORIAL.md`. Lo que sigue es el bloque tal como se preparó: hay que confirmar su SQL y sus pruebas.
@@ -695,6 +722,10 @@ En el orden en que más destraban:
 19. Contador: las preguntas de `estado/C-151.md` (IVA de los digitales), `estado/C-147b.md` (embalaje), `estado/C-120.md` §6 y **`estado/C-159.md` (retención del IVA: quiénes retienen, el comprobante y si hay retención de ISLR en los servicios)**.
 20. **Mandarle a la contadora las preguntas, por WhatsApp desde tu teléfono:** los tres mensajes de `Preguntas para la contadora 14-11.txt`, en `~/Escritorio/Electro Shop/` de tu PC. Se copian uno por uno. Los asteriscos son las negritas.
 21. **Cuando responda, pásale a Claude** su correo, su nombre como quiere que salga y su número de C.P.C. (para invitarla cuando C-235 esté arriba), y sus respuestas: las columnas, las alícuotas y las fechas salen de ahí.
+22. **Cargar el talonario, después del deploy** (en el panel, con la cuenta del dueño):
+    1. Contabilidad → Facturas → "Cargar el talonario".
+    2. Copia lo que trae impreso: la serie, la primera y la última factura, y **la próxima por usar, que es la primera en blanco** (confírmala en el papel ese día). Después el control (el número rojo de abajo), los datos de la empresa y el pie de la imprenta.
+    3. En "Revisar y guardar", compara la réplica con el papel y toca "Guardar el talonario".
 
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
@@ -703,7 +734,7 @@ En el orden en que más destraban:
 
 **Sigue:** C-224 (los tres únicos) y C-241 (el checkout por pasos, que pidió el equipo después: primero las maquetas para elegir). Lo de abajo queda después.
 
-**Contabilidad (C-228 y C-228b, `CONTABILIDAD.md`):** sigue C-229 (la factura de talonario, maqueta B). Después, C-235 (la contadora en el equipo) y C-230 antes del 15/12. El resto en el orden de `PLAN.md` §5.2, todo antes del 19/04/2027.
+**Contabilidad (C-228 y C-228b, `CONTABILIDAD.md`):** C-229 hecha (rc.50, las facturas de talonario). Sigue C-235 (la contadora en el equipo; sus datos llegaron el 14/11) y C-230 antes del 15/12. El resto en el orden de `PLAN.md` §5.2, todo antes del 19/04/2027.
 
 **Hecho el 13/11:**
 - C-205 (la Lista del proveedor por pasos y las reglas de ancho, rc.33);

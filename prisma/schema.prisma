@@ -771,6 +771,10 @@ model Order {
   // La factura se emite fuera de la web (SADES o el talonario): aquí solo se anota su número
   invoiceNumber  String?
   invoicedAt     DateTime?
+  /// C-229: la factura del talonario registrada en Contabilidad (una factura puede cubrir las dos órdenes de una compra).
+  /// Al emitirla se llenan también invoiceNumber e invoicedAt; al anularla se vacían.
+  documentoFiscalId String?
+  documentoFiscal   DocumentoFiscal? @relation(fields: [documentoFiscalId], references: [id], onDelete: SetNull)
 
   // Status Timestamps
   confirmedAt   DateTime?   // Cuando el admin confirma el pedido
@@ -2358,4 +2362,99 @@ model ParticipanteSorteo {
   @@unique([sorteoId, userId])
   @@index([invitadoPorId])
   @@map("sorteo_participantes")
+}
+
+// ───────────── Contabilidad (C-229, docs/plan/CONTABILIDAD.md) ─────────────
+
+/// C-229: un talonario de facturas impreso por una imprenta autorizada. La web no emite la factura: guía el llenado del
+/// papel y registra lo escrito. Desde el 19/04/2027 (Providencia SNAT/2026/00093) el talonario es solo de contingencia.
+/// Los datos del emisor y de la imprenta se copian como están impresos: la réplica del panel tiene que verse igual.
+model Talonario {
+  id              String    @id @default(cuid())
+  serie           String
+  numeroDesde     Int
+  numeroHasta     Int
+  /// La próxima factura por usar: la que el panel ofrece. Sube de a una al emitir o al anular una en blanco
+  proximo         Int
+  /// El control impreso: "00" en 00-000501, y su rango
+  controlSerie    String    @default("00")
+  controlDesde    Int
+  controlHasta    Int
+  emisorNombre    String
+  emisorRif       String
+  emisorDomicilio String
+  emisorTelefono  String?
+  imprenta        String
+  imprentaRif     String
+  /// "Providencia SENIAT/03/00692 del 03-04-2008", como está impreso
+  autorizacion    String
+  elaboradoEl     DateTime?
+  region          String?
+  /// EN_USO, AGOTADO o ANULADO (los sobrantes, el 19/04/2027)
+  estado          String    @default("EN_USO")
+  notas           String?
+  creadoPorId     String?
+  documentos      DocumentoFiscal[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("talonarios")
+}
+
+/// C-229: una factura (o nota) de la empresa, como se escribió. Nada se borra: se anula con motivo y el papel se guarda.
+/// Los montos van en bolívares (los libros y la declaración son en bolívares); el total en dólares y la tasa, como dato.
+model DocumentoFiscal {
+  id                   String    @id @default(cuid())
+  /// FACTURA, NOTA_CREDITO o NOTA_DEBITO
+  tipo                 String    @default("FACTURA")
+  /// TALONARIO; desde el 19/04/2027, PORTAL_SENIAT
+  medio                String    @default("TALONARIO")
+  talonarioId          String?
+  talonario            Talonario? @relation(fields: [talonarioId], references: [id])
+  serie                String?
+  numero               Int
+  numeroControl        String
+  /// Lo que se escribió en "Fecha de emisión"
+  emitidaEl            DateTime
+  /// El mes del libro de ventas ("2026-11"), en hora de Venezuela
+  periodo              String
+  /// EMITIDA o ANULADA
+  estado               String    @default("EMITIDA")
+  motivoAnulacion      String?
+  anuladaEl            DateTime?
+  anuladaPorId         String?
+  /// ORDEN (de la web), TIENDA (venta sin orden) o EN_BLANCO (un papel que se dañó y se anuló sin usar)
+  origen               String
+  /// PERSONA o EMPRESA
+  compradorTipo        String?
+  compradorNombre      String?
+  compradorDocumento   String?
+  compradorDomicilio   String?
+  compradorTelefono    String?
+  /// CONTADO o CREDITO
+  condicionPago        String    @default("CONTADO")
+  /// Los renglones como se escribieron: [{ cantidad, descripcion, exento, precioUnitarioBs, montoBs }]
+  renglones            Json?
+  descuentoBs          Decimal   @default(0)
+  baseBs               Decimal   @default(0)
+  alicuota             Decimal   @default(16)
+  ivaBs                Decimal   @default(0)
+  exentoBs             Decimal   @default(0)
+  totalBs              Decimal   @default(0)
+  /// Lo cobrado en dólares y la tasa usada (la de la orden o la escrita)
+  totalUSD             Decimal?
+  tasa                 Decimal?
+  /// Si un contribuyente especial retuvo el IVA (Providencia SNAT/2025/000054)
+  ivaRetenidoBs        Decimal?
+  comprobanteRetencion String?
+  /// En una nota de crédito o de débito, la factura que afecta
+  documentoAfectadoId  String?
+  ordenes              Order[]
+  creadoPorId          String
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@unique([talonarioId, numero])
+  @@index([periodo])
+  @@map("documentos_fiscales")
 }

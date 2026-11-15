@@ -1,9 +1,10 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.57, por subir)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.58, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-244 · La vista previa de los correos (rc.58, por subir):** en Marketing → Correos de la tienda, la vista previa queda fija con el alto de la pantalla mientras se recorre la lista, y el correo se lee con un solo scroll (`estado/C-244.md`). Antes salía baja, con su propio scroll, y debajo quedaba un espacio en blanco.
 - **C-243 · El kit de marca (rc.57, por subir):** el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo (`estado/C-243.md`).
   - La fuente única es `lib/marca.ts`, con su página en Marketing → Kit de marca, y `npm run check:marca` rechaza lo de fuera. Salen el azul noche y el cian, también de los correos y de las imágenes para compartir.
   - Sigue **C-245**: un agente aparte (Opus 5.5, esfuerzo extra alto) repasa todo el panel con el kit.
@@ -278,12 +279,13 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.57` (C-243; unos 15 minutos)
+### El bloque por subir: `v1.0.0-rc.58` (C-243 y C-244; unos 20 minutos)
 **Producción está en `v1.0.0-rc.56`** (`471a54d`); su bloque está en `HISTORIAL.md`.
 - **C-243 (rc.57):** el kit de marca. **Sin cambio de base, sin SQL, sin variables nuevas y sin cron.**
   - **Las imágenes para compartir cambian de dirección** (`?v=`): WhatsApp y Facebook las vuelven a pedir solas.
   - **Los íconos de los correos** pasan a `?v=2`.
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull && git describe --tags`. No debe pararse por la base. Al terminar debe decir `v1.0.0-rc.57`, o una mayor si entró otra tarea antes del `git pull`.
+- **C-244 (rc.58):** la vista previa de los correos, fija mientras se recorre la lista. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull && git describe --tags`. No debe pararse por la base. Al terminar debe decir `v1.0.0-rc.58`, o una mayor si entró otra tarea antes del `git pull`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **`/sorteo`:** la franja de arriba va en el azul oscuro del logo, sin azul casi negro ni letras cian.
   2. **En el teléfono, la barra de abajo** va en el mismo azul oscuro.
@@ -292,6 +294,7 @@
       - la pieza fuerte va en el azul oscuro del logo, con los rótulos en azul claro;
       - el ícono de los avisos, en blanco sobre el azul de la marca.
   5. **Desde el teléfono, comparte `electroshopve.com` por WhatsApp:** la imagen va en el azul oscuro del logo, con el lema en azul claro.
+  6. **La vista previa de los correos** (C-244), en la computadora: Marketing → Correos de la tienda → "Pago confirmado". Baja por la lista hasta "Gift cards": la vista previa se queda fija a la derecha, con el alto de la pantalla, y el correo se lee completo con la rueda del ratón sobre él. Abajo no queda ningún espacio en blanco.
 - **Vuelta atrás:** sin cambio de base, así que esta sí funciona: `git reset --hard v1.0.0-rc.56 && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de rc.55 y rc.56 (C-235, C-227 y C-242; unos 20 minutos)

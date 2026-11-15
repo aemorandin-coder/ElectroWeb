@@ -588,6 +588,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - Falta una opción (`--volver`) que compile igual cuando lo único distinto sea lo que agregó la versión nueva, sin aplicarlo nunca a la base. Hasta entonces, cada bloque dice "avisa a Claude".
   - **C-243 · El kit de marca** (**hecha**, rc.57, 15/11; `estado/C-243.md`; el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo, §1.0).
     - **C-245 · El panel entero con el kit** (pendiente; pedido del equipo el 15/11: "envíalo a un chat nuevo con Opus 5.5 extra alto que repase todo el admin panel para rediseñar con ese kit"). Lo hace un agente aparte, pantalla por pantalla, con maquetas para lo que haya que decidir.
+      - **De C-244:** Marketing sigue centrada (`max-w-7xl`), y la regla de §1.5 pide que la página empiece junto al menú.
+  - **C-244 · La vista previa de los correos, fija mientras se recorre la lista** (**hecha**, rc.58, 15/11; `estado/C-244.md`; el equipo lo vio en producción: el marco salía bajo, con su propio scroll, y quedaba un espacio en blanco).
   - **C-242 · Facturas, ordenada, y la tarjeta de opción** (**hecha**, rc.56, 14/11; `estado/C-242.md`; el equipo eligió la A y la tarjeta con el círculo para todo el panel, §1.10).
     - **Pendiente:** las pantallas que usan `adminChoice` con su propia disposición (Promociones, Legal, Productos, Equipo, la Lista del proveedor, Reportes, Studio, las direcciones de Mi panel) se ven bien y pasan a `Opcion` cuando se toquen.
   - **Lo que queda de ámbar y de píldoras claras en la tienda** (pendiente; salió del checkout el 14/11, con la regla de §1.1 y §1.8):

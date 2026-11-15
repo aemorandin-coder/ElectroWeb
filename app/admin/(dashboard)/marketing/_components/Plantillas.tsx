@@ -36,7 +36,10 @@ export default function Plantillas() {
   const cargando = vista?.id !== elegida;
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[16rem_minmax(0,1fr)]">
+    // C-244 (el equipo, 15/11, en una pantalla de 1900 px: "el marco sale muy bajo, con su propio scroll, y debajo queda un
+    // espacio blanco enorme"): la lista es larga (58 correos), así que la vista previa queda fija a la altura de la pantalla
+    // mientras se recorre y el correo se lee con un solo scroll, el del marco. En el teléfono, el marco toma casi la pantalla.
+    <div className="grid gap-5 lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start">
       <nav aria-label="Plantillas de correo" className="-mx-1 overflow-x-auto px-1 lg:mx-0 lg:overflow-visible lg:px-0">
         <ul className="flex w-max gap-1 lg:w-auto lg:flex-col">
           {plantillas.map((p, i) => (
@@ -51,15 +54,15 @@ export default function Plantillas() {
                 className={`${adminTab(elegida === p.id)} h-auto w-full flex-col items-start gap-0 py-2 text-left`}
               >
                 <span>{p.name}</span>
-                <span className={`hidden text-xs font-normal lg:block ${elegida === p.id ? 'text-white/80' : 'text-muted'}`}>{p.description}</span>
+                <span className={`hidden whitespace-normal text-xs font-normal lg:block ${elegida === p.id ? 'text-white/80' : 'text-muted'}`}>{p.description}</span>
               </button>
             </li>
           ))}
         </ul>
       </nav>
 
-      <section className={adminCardFlush}>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+      <section className={`${adminCardFlush} flex flex-col lg:sticky lg:top-20 lg:h-[calc(100dvh-6rem)]`}>
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
           <p className="min-w-0 text-sm text-muted">
             Asunto: <span className="font-semibold text-ink">{vista?.subject || '—'}</span>
           </p>
@@ -72,7 +75,7 @@ export default function Plantillas() {
             </button>
           </div>
         </div>
-        <div className="flex min-h-[40rem] justify-center overflow-x-auto bg-surface p-4">
+        <div className="flex h-[78dvh] min-h-[28rem] justify-center overflow-x-auto bg-surface p-3 sm:p-4 lg:h-auto lg:min-h-0 lg:flex-1">
           {cargando || !vista ? (
             <span className={`${adminSpinner} mt-20`} aria-label="Cargando" />
           ) : (
@@ -80,7 +83,7 @@ export default function Plantillas() {
               title="Vista previa del correo"
               srcDoc={vista.html}
               sandbox=""
-              className={`h-[44rem] rounded-xl border border-line bg-white ${modo === 'movil' ? 'w-[375px]' : 'w-full max-w-[680px]'}`}
+              className={`h-full rounded-xl border border-line bg-white ${modo === 'movil' ? 'w-[375px] shrink-0' : 'w-full max-w-[680px]'}`}
             />
           )}
         </div>

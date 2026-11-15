@@ -10,6 +10,13 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.58] - 2026-11-15
+La vista previa de los correos, fija mientras se recorre la lista (el equipo, 15/11: "el marco sale muy bajo, con su propio scroll, y debajo queda un espacio blanco enorme").
+### Marketing 1.15.1 (C-244)
+- **Correos de la tienda:** en la computadora, la vista previa queda fija debajo de la barra del panel, con el alto de la pantalla, mientras se recorre la lista de los 58 correos. El correo se lee con un solo scroll, el del marco.
+  - En el teléfono, el marco toma casi la pantalla.
+- **Las descripciones largas de la lista bajan de línea** (antes se cortaban contra el marco).
+
 ## [1.0.0-rc.57] - 2026-11-15
 El kit de marca (C-243). El equipo, el 14/11, viendo el sorteo y los correos: "hay demasiada discrepancia de colores… ¿por qué no tenemos todos los chats un concepto claro de cómo crear?". Eligió la paleta A viendo las maquetas: solo los dos azules del logo.
 ### Marco del panel 1.12.0 (C-243)

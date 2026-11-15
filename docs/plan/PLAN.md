@@ -861,7 +861,8 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - **El proveedor ve su costo,** nunca el precio de venta.
   - **Confirma con un botón:** un enlace firmado y sin cuenta para "Lo estoy preparando" y la guía. Con la guía, la orden se actualiza y al cliente le llega "Tu pedido va en camino".
   - **Tiene 1 día hábil para despachar.** Si no, le llega un recordatorio y al equipo un aviso.
-  - **La bienvenida de "revendedor premium"** sale con un botón del panel cuando su catálogo ya está publicado. Lleva el flujo y su credencial, sin hablar de pagos.
+  - **La bienvenida de "aliado comercial"** sale con un botón del panel cuando su catálogo ya está publicado. Lleva el flujo y su credencial, sin hablar de pagos.
+    - **El nombre (el equipo, 14/11):** el proveedor es **aliado comercial** de Electro Shop. El primero que se usó era jerga: no va en ningún correo, pantalla ni documento.
   - Siempre va el aviso "Se canceló: no lo despaches". Se le habla de usted.
 - **Cuándo sale cada pedido (equipo, 14/11, C-234):** "un cliente que compra un sábado al mediodía, su producto sí o sí sale el lunes; ser lo más transparente". Lo recomendado en las seis preguntas:
   - **El corte de lunes a viernes, a las 2:00 p. m.:** lo pagado antes sale ese día. La hora se cambia en Configuración.

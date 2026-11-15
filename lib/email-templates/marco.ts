@@ -10,6 +10,7 @@
 
 import { getPublicSettings } from '@/lib/site-settings';
 import { escapeHtml } from '@/lib/html';
+import { aniosDeLaTienda } from '@/lib/origen';
 import { COLOR, FUENTE, FUENTE_TITULO, chispaCorreo, imagenCorreo, urlTienda, type PoseChispa } from './estilo';
 
 export interface AjustesCorreo {
@@ -100,7 +101,7 @@ export interface EncabezadoCorreo {
   dato?: string;
 }
 
-export type PieCorreo = 'cliente' | 'equipo';
+export type PieCorreo = 'cliente' | 'equipo' | 'proveedor';
 
 export interface OpcionesCorreo {
   /** El texto que se ve en la bandeja junto al asunto. Va sin escapar: se escapa aquí. */
@@ -109,7 +110,7 @@ export interface OpcionesCorreo {
   cuerpo: string;
   /** Chispa abajo, con su globo */
   chispa?: { pose: PoseChispa; texto: string };
-  /** 'cliente' (el cierre "sin miedo") o 'equipo' (los avisos internos) */
+  /** 'cliente' (el cierre "sin miedo"), 'equipo' (los avisos internos) o 'proveedor' (C-227: el aliado comercial, de usted) */
   pie?: PieCorreo;
   /** Por qué le escribimos (va en el pie). Por defecto, su cuenta en la tienda. */
   motivo?: string;
@@ -139,8 +140,19 @@ export async function marcoCorreo(o: OpcionesCorreo): Promise<string> {
     .join('');
   const pastilla = (texto: string) => `<span style="display:inline-block;margin:4px 3px;padding:7px 13px;border-radius:999px;background-color:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.32);font-family:${FUENTE};font-size:12px;line-height:1.2;font-weight:600;color:#ffffff;white-space:nowrap;">${texto}</span>`;
   const legal = (color: string) => `<p style="margin:16px 0 0;font-family:${FUENTE};font-size:11px;line-height:1.6;color:${color};">${e(a.razonSocial)}${a.rif ? ` · RIF ${e(a.rif)}` : ''}${a.direccion ? `<br>${e(a.direccion)}` : ''}<br>${motivo}</p>`;
+  const anios = `${aniosDeLaTienda()} años en ${e(a.ciudad)}`;
 
-  const cierre = pie === 'equipo'
+  // C-227: el cierre del aliado comercial. La misma franja azul, con lo que hacemos juntos en lugar de "sin miedo"
+  const cierreProveedor = `
+  <tr><td bgcolor="#ffffff" class="pie" style="background-color:#ffffff;border-radius:0 0 20px 20px;padding:4px 18px 18px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${COLOR.marca}" align="center" style="background-color:${COLOR.marca};background-image:url('${imagenCorreo('fondo-azul.jpg')}');background-size:cover;background-position:center;border-radius:16px;padding:30px 18px 24px;text-align:center;">
+      <p style="margin:0;font-family:${FUENTE_TITULO};font-size:26px;line-height:1.25;font-weight:800;color:#ffffff;">Lo suyo llega<br><span style="display:inline-block;margin-top:8px;background-color:#ffffff;color:${COLOR.marcaOscura};border-radius:999px;padding:3px 18px;transform:rotate(-3deg);">a toda Venezuela</span></p>
+      <div style="margin-top:18px;">${pastilla(e(dominio))}${a.whatsappVisible ? pastilla(`WhatsApp ${e(a.whatsappVisible)}`) : ''}${pastilla(anios)}</div>
+      ${legal('#c9d8f6')}
+    </td></tr></table>
+  </td></tr>`;
+
+  const cierre = pie === 'proveedor' ? cierreProveedor : pie === 'equipo'
     ? `
   <tr><td bgcolor="#ffffff" align="center" style="background-color:#ffffff;border-radius:0 0 20px 20px;border-top:1px solid ${COLOR.linea};padding:20px 30px 26px;text-align:center;">
     <p style="margin:0;font-family:${FUENTE};font-size:12px;line-height:1.6;color:${COLOR.suave};">Mensaje automático para el equipo de ${e(a.empresa)}. Qué avisos te llegan se cambia en el panel, en Notificaciones.</p>
@@ -150,7 +162,7 @@ export async function marcoCorreo(o: OpcionesCorreo): Promise<string> {
   <tr><td bgcolor="#ffffff" class="pie" style="background-color:#ffffff;border-radius:0 0 20px 20px;padding:4px 18px 18px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${COLOR.marca}" align="center" style="background-color:${COLOR.marca};background-image:url('${imagenCorreo('fondo-azul.jpg')}');background-size:cover;background-position:center;border-radius:16px;padding:30px 18px 24px;text-align:center;">
       <p style="margin:0;font-family:${FUENTE_TITULO};font-size:26px;line-height:1.25;font-weight:800;color:#ffffff;">Compra tecnología<br><span style="display:inline-block;margin-top:8px;background-color:#ffffff;color:${COLOR.marcaOscura};border-radius:999px;padding:3px 18px;transform:rotate(-3deg);">sin miedo</span></p>
-      <div style="margin-top:18px;">${pastilla(e(dominio))}${a.whatsappVisible ? pastilla(`WhatsApp ${e(a.whatsappVisible)}`) : ''}${pastilla(`14 años en ${e(a.ciudad)} · Envíos a toda Venezuela`)}</div>
+      <div style="margin-top:18px;">${pastilla(e(dominio))}${a.whatsappVisible ? pastilla(`WhatsApp ${e(a.whatsappVisible)}`) : ''}${pastilla(`${anios} · Envíos a toda Venezuela`)}</div>
       ${iconos ? `<div style="margin-top:14px;">${iconos}</div>` : ''}
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto 0;"><tr><td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:12px;padding:8px 14px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>

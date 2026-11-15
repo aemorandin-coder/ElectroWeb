@@ -205,6 +205,8 @@ export default withAuth(
           /^\/api\/cotizaciones\/[A-Za-z0-9_-]{16,40}$/.test(pathname) ||
           // C-181: la página del cliente avisa que se abrió (límite en el handler). C-182: el presupuesto en PDF
           /^\/api\/cotizaciones\/[A-Za-z0-9_-]{16,40}\/(vista|pdf)$/.test(pathname) ||
+          // C-227: el proveedor marca "Lo estoy preparando" y anota la guía con su enlace firmado, sin cuenta. Límite en el handler
+          /^\/api\/proveedor\/despacho\/[A-Za-z0-9_-]{43}$/.test(pathname) ||
           // C-181: Numen, de servidor a servidor. Se autoriza con NUMEN_API_KEY dentro del handler (lib/numen-auth.ts)
           pathname.startsWith('/api/numen/') ||
           // Exige sesión dentro del handler y responde 401 en JSON (sin redirigir al login)
@@ -218,6 +220,9 @@ export default withAuth(
           pathname === '/api/cron/favoritos' ||
           pathname === '/api/cron/resenas' ||
           pathname === '/api/cron/respaldos' ||
+          // C-219 (faltaba: el cron del sorteo rebotaba al login) y C-227 (los despachos de los proveedores)
+          pathname === '/api/cron/sorteo' ||
+          pathname === '/api/cron/despachos' ||
           pathname === '/api/cron/promotores' ||
           pathname === '/api/cron/papelera' ||
           // Avisos de la Content-Security-Policy (C-166): los manda el navegador del visitante, sin sesión. Límite en el handler

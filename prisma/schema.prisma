@@ -639,6 +639,12 @@ model Supplier {
   /// C-222: el estado de esa ciudad, como lo da ZOOM ("Aragua"). La tarjeta dice "Desde Aragua" y el catálogo filtra por él
   dispatchStateName String?
   notes           String?
+  /// C-227: a quién le escribe la tienda cuando se vende algo suyo (su correo de despacho) y su WhatsApp. Solo lo ve el equipo
+  contactName     String?
+  contactEmail    String?
+  contactWhatsapp String?
+  /// C-227: cuándo se le envió la bienvenida de aliado comercial (el panel la puede reenviar)
+  bienvenidaAt    DateTime?
   products        Product[]
   /// C-218: su lista completa, como la subió el equipo
   articulos       ArticuloProveedor[]
@@ -761,6 +767,12 @@ model Order {
   recipientPhone       String?
   trackingCheckedAt    DateTime? // Última consulta del rastreo a la empresa
   shipmentEvents       ShipmentEvent[]
+  /// C-227: si lo despacha un proveedor: cuándo se le avisó la venta, el hash de su enlace firmado (el enlace no se guarda),
+  /// cuándo marcó "Lo estoy preparando" y cuándo se le recordó la guía (una sola vez)
+  proveedorAvisoAt        DateTime?
+  proveedorTokenHash      String?
+  proveedorPreparandoAt   DateTime?
+  proveedorRecordatorioAt DateTime?
 
   notes         String?
   adminNotes    String?     // Notas internas del admin
@@ -795,6 +807,8 @@ model Order {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
+  /// C-227: la página del proveedor busca su orden por el hash del enlace (índice normal: el hash sale de un id único)
+  @@index([proveedorTokenHash])
   @@map("orders")
 }
 

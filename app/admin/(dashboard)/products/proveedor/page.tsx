@@ -46,6 +46,7 @@ import Borradores from './_componentes/Borradores';
 import Miniatura from './_componentes/Miniatura';
 import NoSeEnvia from './_componentes/NoSeEnvia';
 import DespachaDesde from './_componentes/DespachaDesde';
+import ContactoProveedor from './_componentes/ContactoProveedor';
 import {
   agruparFotos, archivosDeLaCaida, archivosDelInput, FOTOS_MAX, subirFotosAProducto, type ArchivosLlegados, type FotoSuelta,
 } from './_componentes/fotos';
@@ -54,6 +55,8 @@ interface Proveedor {
   id: string; name: string; discountPercent: number; pricesIncludeTax: boolean; noShipTerms: string[];
   /** C-199: despacha él mismo desde esta ciudad de ZOOM (null = la tienda) */
   dispatchCityCode: string | null; dispatchCityName: string | null;
+  /** C-227: su contacto de despacho y la bienvenida de aliado comercial */
+  contactName: string | null; contactEmail: string | null; contactWhatsapp: string | null; bienvenidaAt: string | null;
   productos: number;
 }
 interface EnTienda { id: string; name: string; sku: string; status: string; stock: number; priceUSD: number; costo: number | null; enPapelera: boolean; fotos: number }
@@ -672,6 +675,16 @@ export default function ListaDelProveedorPage() {
                 codigo={proveedor.dispatchCityCode}
                 nombre={proveedor.dispatchCityName}
                 onGuardado={(codigo, nombre) => setProveedores((l) => l?.map((p) => (p.id === proveedor.id ? { ...p, dispatchCityCode: codigo, dispatchCityName: nombre } : p)) ?? l)}
+              />
+            )}
+            {proveedor && (
+              <ContactoProveedor
+                key={`contacto-${proveedor.id}`}
+                proveedorId={proveedor.id}
+                nombreProveedor={proveedor.name}
+                despachaElMismo={Boolean(proveedor.dispatchCityCode)}
+                contacto={{ contactName: proveedor.contactName, contactEmail: proveedor.contactEmail, contactWhatsapp: proveedor.contactWhatsapp, bienvenidaAt: proveedor.bienvenidaAt }}
+                onGuardado={(c) => setProveedores((l) => l?.map((p) => (p.id === proveedor.id ? { ...p, ...c } : p)) ?? l)}
               />
             )}
             {proveedorId && (

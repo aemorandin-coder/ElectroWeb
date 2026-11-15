@@ -27,6 +27,10 @@ export interface EntregaOrdenDatos {
   /** C-199: el paquete sale de otra ciudad: lo despacha su proveedor (la ferretería, desde La Victoria) */
   dispatchCityCode?: string | null;
   dispatchCityName?: string | null;
+  /** C-227: el aviso al proveedor (con su enlace para la guía), cuándo marcó "Lo estoy preparando" y el recordatorio */
+  proveedorAvisoAt?: string | null;
+  proveedorPreparandoAt?: string | null;
+  proveedorRecordatorioAt?: string | null;
   shippingState?: string | null;
   shippingCity?: string | null;
   courierOfficeCode?: string | null;
@@ -42,6 +46,9 @@ export interface EntregaOrdenDatos {
   items?: Array<{ quantity?: number; productName?: string | null; product?: { name?: string } | null }>;
   shipmentEvents?: Array<{ id: string; source: string; description: string; occurredAt: string }>;
 }
+
+/** "14 nov., 3:20 p. m." en hora de Venezuela */
+const cuando = (iso: string) => new Date(iso).toLocaleString('es-VE', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Caracas' });
 
 const nombreEmpresa = (empresa?: string | null) => (empresa ? NOMBRE_EMPRESA[empresa as EmpresaGuia] ?? empresa : '');
 
@@ -141,7 +148,15 @@ export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrden
 
       {orden.dispatchCityName && (
         <p className={adminNotice('warning')}>
-          Este paquete sale desde {orden.dispatchCityName}: lo despacha el proveedor. Pásale el pedido con &quot;Copiar datos para la guía&quot; y anota aquí su número de guía cuando te lo dé.
+          Este paquete sale desde {orden.dispatchCityName}: lo despacha el proveedor.{' '}
+          {orden.proveedorAvisoAt
+            ? <>
+              Se le avisó por correo el {cuando(orden.proveedorAvisoAt)}
+              {orden.proveedorPreparandoAt ? `; lo está preparando desde el ${cuando(orden.proveedorPreparandoAt)}` : ''}
+              {orden.proveedorRecordatorioAt ? `; se le recordó la guía el ${cuando(orden.proveedorRecordatorioAt)}` : ''}.
+              {' '}Cuando anote la guía desde su enlace, la orden pasa sola a Enviada y el cliente recibe su correo.
+            </>
+            : <>Se le avisa por correo al confirmarse el pago. Si no tiene correo de despacho (Productos → Lista del proveedor), pásale el pedido con &quot;Copiar datos para la guía&quot; y anota aquí su número de guía.</>}
         </p>
       )}
 
@@ -231,7 +246,7 @@ export default function EntregaOrden({ orden, onRastreo }: { orden: EntregaOrden
                 <span className="text-ink">{evento.description}</span>
                 <span className="block text-xs text-muted">
                   {new Date(evento.occurredAt).toLocaleString('es-VE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                  {evento.source === 'ZOOM' ? ' · ZOOM' : ''}
+                  {evento.source === 'ZOOM' ? ' · ZOOM' : evento.source === 'PROVEEDOR' ? ' · Proveedor' : ''}
                 </span>
               </span>
             </li>

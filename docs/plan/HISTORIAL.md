@@ -1,10 +1,77 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.53`, comprobada el 14/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.56`, comprobada el 15/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 15/11 · C-235, C-227 y C-242 (de rc.53 a `v1.0.0-rc.56`)
+La subió el equipo en dos pasos, la noche del 14 al 15/11:
+- **rc.55** (C-235 y C-227), con los pasos de la sesión de los correos. Respaldo en `~/respaldo-antes-rc55.dump`, el SQL de abajo con `npx prisma db push` y el cron de los despachos.
+- **rc.56** (C-242, sin base), con los pasos de Claude: `git pull` y `deploy.sh --sin-pull`.
+
+**Lo comprobaron las dos sesiones desde fuera, el 15/11:**
+- **La portada dice `1.0.0-rc.56`,** y el panel, "Versión 1.0.0-rc.56 · 471a54d" (captura del equipo).
+- **La base del aliado comercial está:** `/proveedor/despacho/<enlace inventado>` da 404 y su API responde `{"error":"Este enlace no existe."}`, una consulta por `orders.proveedorTokenHash` que daría 500 si faltara la columna. El `db push` se aplicó.
+- **Los crons responden en JSON:** `/api/cron/sorteo` y `/api/cron/despachos` sin clave dan 401 `{"error":"No autorizado"}`. Antes rebotaban al inicio de sesión, así que el arreglo del proxy está arriba y `CRON_SECRET` está configurado.
+
+**Falta que el equipo confirme** (`SIGUIENTE.md`, "Por confirmar de rc.55 y rc.56"):
+- lo que responden `~/cron-sorteo.sh` y `~/cron-despachos.sh`, y que la línea `5 10 * * *` de los despachos quedó en el `crontab`;
+- las pruebas de la contadora, del aliado comercial y de Facturas.
+
+### El bloque que se subió: `v1.0.0-rc.56` (C-235, C-227 y C-242; en dos pasos, rc.55 y después rc.56)
+Producción estaba en `v1.0.0-rc.53` (`a604c77`); su bloque está abajo.
+- **C-235 (rc.54):** la contadora en el equipo.
+  - **Cambia la base: un rol nuevo y dos tablas, aditivos.** `deploy.sh` muestra estas cinco líneas y las de C-227, abajo (lo de rc.53 ya está en la base). El `ALTER TYPE` de la primera línea **es el esperado:** agrega el rol "Contadora" y no cambia a nadie.
+```sql
+ALTER TYPE "Role" ADD VALUE 'ACCOUNTANT';
+CREATE TABLE "firmas_contables" ("id" TEXT NOT NULL, "userId" TEXT NOT NULL, "nombre" TEXT NOT NULL, "titulo" TEXT NOT NULL, "cpc" TEXT NOT NULL, "imagen" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "firmas_contables_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "notas_contables" ("id" TEXT NOT NULL, "periodo" TEXT NOT NULL, "autorId" TEXT NOT NULL, "texto" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "notas_contables_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "firmas_contables_userId_key" ON "firmas_contables"("userId");
+CREATE INDEX "notas_contables_periodo_idx" ON "notas_contables"("periodo");
+```
+  - Sin variables nuevas y sin cron. **Después del deploy, el dueño invita a la contadora** (§3, paso 23).
+- **C-227 (rc.55):** los correos al aliado comercial (el proveedor que despacha él mismo).
+  - **Cambia la base: ocho columnas nuevas y un índice, aditivos.** `deploy.sh` los muestra junto con lo de C-235 (no pide `--accept-data-loss`):
+```sql
+ALTER TABLE "suppliers" ADD COLUMN "bienvenidaAt" TIMESTAMP(3),
+ADD COLUMN "contactEmail" TEXT,
+ADD COLUMN "contactName" TEXT,
+ADD COLUMN "contactWhatsapp" TEXT;
+ALTER TABLE "orders" ADD COLUMN "proveedorAvisoAt" TIMESTAMP(3),
+ADD COLUMN "proveedorPreparandoAt" TIMESTAMP(3),
+ADD COLUMN "proveedorRecordatorioAt" TIMESTAMP(3),
+ADD COLUMN "proveedorTokenHash" TEXT;
+CREATE INDEX "orders_proveedorTokenHash_idx" ON "orders"("proveedorTokenHash");
+```
+  - **Un cron nuevo** (en la terminal del servidor, después del deploy): `cp /var/www/electroshopve/docs/plan/scripts/cron-despachos.sh ~/cron-despachos.sh && chmod +x ~/cron-despachos.sh`, y en `crontab -e` la línea `5 10 * * * /home/luami/cron-despachos.sh >> /home/luami/cron-despachos.log 2>&1`.
+  - Sin variables nuevas ni SQL de datos. **Arregla el cron del sorteo de C-219,** que rebotaba al login (su línea del crontab ya está).
+- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc55.dump`
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para y muestra el SQL de arriba; si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.56`.
+- **Pruebas** (unos 20 minutos, con la cuenta del dueño):
+  1. **La contadora** (C-235):
+      - Contabilidad → "Mesa de la contadora": el saludo con tu nombre, el mes en números y, a la derecha, "La firma de la contadora" (vacía hasta que ella la dibuje).
+      - Equipo → Invitar: está la opción "Contadora", con lo que puede y no puede hacer. **Invítala de verdad en el paso 23 de §3**, no con una cuenta de prueba.
+      - Cuando ella entre (después del paso 23): en su menú solo están Contabilidad, Mi seguridad y Versiones. Si escribe `/admin/orders`, vuelve a su mesa.
+  2. **Los crons** (en la terminal del servidor): `~/cron-despachos.sh` responde `{"avisos":0,"recordatorios":0}`, y `~/cron-sorteo.sh` ahora sí responde `{"recordatorio":0,"motivo":"Todavía faltan más de 3 días para el cierre"}`.
+  3. **El aliado comercial** (C-227), en Productos → Lista del proveedor → la ferretería:
+      - en "Su contacto de despacho", **por ahora tu propio correo** como correo de despacho, con el nombre y el WhatsApp de la ferretería → "Guardar contacto";
+      - "Ver la bienvenida": "¡Gracias por elegirnos!", la credencial "Aliado comercial de Electro Shop" y cuántos productos suyos están publicados. "Enviarla": te llega a ti; ábrela en el teléfono;
+      - Marketing → Correos → Plantillas → Proveedores: los cuatro, en Escritorio y en Móvil.
+  4. **Una venta de prueba de la ferretería** (con tu cuenta de cliente y un producto barato). Págala con Puntos ES, que al cancelarla vuelven solos; o con un pago manual sin dinero de verdad y, en el panel, "Marcar pagado":
+      - te llega "¡Se vendió su producto!" (con tu correo como el del proveedor) y su copia a los correos de avisos;
+      - "Anotar la guía", en el teléfono: ZOOM en grande, la oficina, el plazo, los datos de la guía y el costo;
+      - "Lo estoy preparando": en el panel, la orden queda En preparación y su detalle lo dice;
+      - **no anotes una guía de mentira:** cancela la orden en el panel, con su motivo. Te llega "Se canceló la orden: no la despache" y la página lo dice.
+      - Al terminar, pon el correo de despacho real de la ferretería. La bienvenida de verdad se la envían cuando el equipo lo decida.
+  5. **Facturas** (C-242), en Contabilidad → Facturas, con la cuenta del dueño:
+      - arriba, tres tarjetas del mismo alto: "La próxima factura" (0072), "Talonario Serie A" (29 por usar, con su barra) y "Cobradas sin factura" ("Al día" en verde, o el número con "Te toca");
+      - bajo el talonario, en gris, "Anular un papel dañado" y "Cargar otro talonario". **No anules ninguno de prueba:** el número se gasta;
+      - las (i) de "Talonario Serie A" y de "Cobradas sin factura" abren su nota;
+      - "Nueva factura": en "De dónde sale" el ícono va al lado del título y "Contado / Crédito" quedan centrados. Vuelve con "Atrás" sin emitir;
+      - en el teléfono, las tres tarjetas una debajo de otra.
+- **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base: al ver las dos tablas de C-235, se para en el paso 2 y la tienda sigue como está (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las dos tablas no molestan al código anterior. **Si la contadora ya está invitada,** el código anterior no conoce su rol: antes de volver atrás, quítale el acceso en Equipo y corre con `psql "$DB"` `UPDATE "users" SET role = 'USER' WHERE role = 'ACCOUNTANT';` (vuelve a ser contadora con el deploy siguiente: Equipo → Invitar otra vez). Las columnas de C-227 tampoco molestan al código anterior; el cron de los despachos se quita con `crontab -e`.
 
 ## 14/11 · De rc.43 a `v1.0.0-rc.53` (C-226, C-221, C-222, C-219, C-225, C-223, C-229, C-224, C-234 y C-241)
 La subió el equipo el 14/11, hacia las 23:00 (hora del servidor), con los pasos que preparó Claude ese día. El `git pull` trajo `a604c77`: C-235 (rc.54) entró a `main` minutos después y va en el bloque siguiente.

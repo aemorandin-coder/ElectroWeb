@@ -1,20 +1,20 @@
-# Lo de ahora (actualizado 2026-11-14 · producción en 1.0.0-rc.53, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.56, por subir)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.56)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-242 · Facturas, ordenada (rc.56, por subir):** el equipo la vio en producción el 14/11 ("los grids se ven perdidos, íconos amontonados") y eligió la A viendo las maquetas (`estado/C-242.md`).
+- **C-242 · Facturas, ordenada (rc.56, en producción):** el equipo la vio en producción el 14/11 ("los grids se ven perdidos, íconos amontonados") y eligió la A viendo las maquetas (`estado/C-242.md`).
   - Tres datos del mismo alto: la próxima, el talonario y lo cobrado sin factura ("Al día" o "Te toca"). Lo raro, en gris bajo el talonario; las notas de la ley, detrás de su (i).
   - La tarjeta para elegir una opción trae todo adentro (`components/admin/Opcion`, `PLAN.md` §1.10): el asistente de factura ya no tiene el ícono encima ni el texto pegado al borde.
-- **C-227 · Los correos al aliado comercial (rc.55, por subir):** el proveedor que despacha él mismo (la ferretería, desde La Victoria) recibe cada venta con todo para despacharla (`estado/C-227.md`).
+- **C-227 · Los correos al aliado comercial (rc.55, en producción):** el proveedor que despacha él mismo (la ferretería, desde La Victoria) recibe cada venta con todo para despacharla (`estado/C-227.md`).
   - **El nombre:** el proveedor es **aliado comercial** de Electro Shop (el equipo, 14/11: nada de jerga).
   - **Cada venta,** al confirmarse el pago: "¡Se vendió su producto!", con la empresa (ZOOM o MRW) en grande, la oficina, el plazo de un día hábil, los datos de la guía, su costo y el empaque. Copia al equipo.
   - **Su enlace, sin cuenta:** "Lo estoy preparando" y la guía. La guía deja la orden Enviada y al cliente le llega "va en camino".
   - **El día del plazo sin guía,** un recordatorio y un aviso al equipo. **Si se cancela,** "no la despache".
   - **En el panel,** Productos → Lista del proveedor: su contacto de despacho y la bienvenida con su credencial, que se envía con un botón.
   - **Arreglo:** el cron del sorteo (C-219) rebotaba al login; ahora responde.
-- **C-235 · La contadora en el equipo (rc.54, por subir):** se invita como "Contadora" y entra a su propia mesa, con su firma y su sello (`estado/C-235.md`).
+- **C-235 · La contadora en el equipo (rc.54, en producción):** se invita como "Contadora" y entra a su propia mesa, con su firma y su sello (`estado/C-235.md`).
   - **Solo Contabilidad:** ve las facturas, lo cobrado sin factura y el mes, sin facturar ni anular. Lo demás del panel (órdenes, clientes, productos, Configuración) no lo ve, ni con la dirección escrita.
   - **Su mesa** (Contabilidad → Mesa de la contadora): el saludo con su nombre, el mes en números (base, IVA y exento), las últimas facturas, lo que viene, su firma y las notas del mes con el dueño.
   - **Su firma:** la dibuja una vez con el dedo o el mouse, con su nombre, su título y su C.P.C. Va en los cierres y en el Excel (C-230 y C-232).
@@ -275,36 +275,8 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.56` (C-235, C-227 y C-242; unos 40 minutos)
-**Producción está en `v1.0.0-rc.53`** (`a604c77`). La subió el equipo el 14/11 y Claude la comprobó desde fuera el mismo día; su bloque está en `HISTORIAL.md`.
-- **C-235 (rc.54):** la contadora en el equipo.
-  - **Cambia la base: un rol nuevo y dos tablas, aditivos.** `deploy.sh` muestra estas cinco líneas y las de C-227, abajo (lo de rc.53 ya está en la base). El `ALTER TYPE` de la primera línea **es el esperado:** agrega el rol "Contadora" y no cambia a nadie.
-```sql
-ALTER TYPE "Role" ADD VALUE 'ACCOUNTANT';
-CREATE TABLE "firmas_contables" ("id" TEXT NOT NULL, "userId" TEXT NOT NULL, "nombre" TEXT NOT NULL, "titulo" TEXT NOT NULL, "cpc" TEXT NOT NULL, "imagen" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "firmas_contables_pkey" PRIMARY KEY ("id"));
-CREATE TABLE "notas_contables" ("id" TEXT NOT NULL, "periodo" TEXT NOT NULL, "autorId" TEXT NOT NULL, "texto" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "notas_contables_pkey" PRIMARY KEY ("id"));
-CREATE UNIQUE INDEX "firmas_contables_userId_key" ON "firmas_contables"("userId");
-CREATE INDEX "notas_contables_periodo_idx" ON "notas_contables"("periodo");
-```
-  - Sin variables nuevas y sin cron. **Después del deploy, el dueño invita a la contadora** (§3, paso 23).
-- **C-227 (rc.55):** los correos al aliado comercial (el proveedor que despacha él mismo).
-  - **Cambia la base: ocho columnas nuevas y un índice, aditivos.** `deploy.sh` los muestra junto con lo de C-235 (no pide `--accept-data-loss`):
-```sql
-ALTER TABLE "suppliers" ADD COLUMN "bienvenidaAt" TIMESTAMP(3),
-ADD COLUMN "contactEmail" TEXT,
-ADD COLUMN "contactName" TEXT,
-ADD COLUMN "contactWhatsapp" TEXT;
-ALTER TABLE "orders" ADD COLUMN "proveedorAvisoAt" TIMESTAMP(3),
-ADD COLUMN "proveedorPreparandoAt" TIMESTAMP(3),
-ADD COLUMN "proveedorRecordatorioAt" TIMESTAMP(3),
-ADD COLUMN "proveedorTokenHash" TEXT;
-CREATE INDEX "orders_proveedorTokenHash_idx" ON "orders"("proveedorTokenHash");
-```
-  - **Un cron nuevo** (en la terminal del servidor, después del deploy): `cp /var/www/electroshopve/docs/plan/scripts/cron-despachos.sh ~/cron-despachos.sh && chmod +x ~/cron-despachos.sh`, y en `crontab -e` la línea `5 10 * * * /home/luami/cron-despachos.sh >> /home/luami/cron-despachos.log 2>&1`.
-  - Sin variables nuevas ni SQL de datos. **Arregla el cron del sorteo de C-219,** que rebotaba al login (su línea del crontab ya está).
-- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc55.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para y muestra el SQL de arriba; si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.56`.
-- **Pruebas** (unos 20 minutos, con la cuenta del dueño):
+### Por confirmar de rc.55 y rc.56 (C-235, C-227 y C-242; unos 20 minutos)
+Ya en producción desde el 15/11 (`HISTORIAL.md`). Las sesiones comprobaron desde fuera la versión, la base del aliado comercial y que los crons responden. Falta esto:
   1. **La contadora** (C-235):
       - Contabilidad → "Mesa de la contadora": el saludo con tu nombre, el mes en números y, a la derecha, "La firma de la contadora" (vacía hasta que ella la dibuje).
       - Equipo → Invitar: está la opción "Contadora", con lo que puede y no puede hacer. **Invítala de verdad en el paso 23 de §3**, no con una cuenta de prueba.
@@ -326,7 +298,6 @@ CREATE INDEX "orders_proveedorTokenHash_idx" ON "orders"("proveedorTokenHash");
       - las (i) de "Talonario Serie A" y de "Cobradas sin factura" abren su nota;
       - "Nueva factura": en "De dónde sale" el ícono va al lado del título y "Contado / Crédito" quedan centrados. Vuelve con "Atrás" sin emitir;
       - en el teléfono, las tres tarjetas una debajo de otra.
-- **Vuelta atrás:** `deploy.sh` no vuelve solo a una versión con menos base: al ver las dos tablas de C-235, se para en el paso 2 y la tienda sigue como está (`PLAN.md` §5.2). Si hace falta volver, avisa a Claude. Las dos tablas no molestan al código anterior. **Si la contadora ya está invitada,** el código anterior no conoce su rol: antes de volver atrás, quítale el acceso en Equipo y corre con `psql "$DB"` `UPDATE "users" SET role = 'USER' WHERE role = 'ACCOUNTANT';` (vuelve a ser contadora con el deploy siguiente: Equipo → Invitar otra vez). Las columnas de C-227 tampoco molestan al código anterior; el cron de los despachos se quita con `crontab -e`.
 
 ### Por confirmar de rc.53 (C-226 a C-241; unos 30 minutos, en la computadora y en el teléfono)
 Ya en producción desde el 14/11 (`HISTORIAL.md`). **Claude ya comprobó desde fuera** la 4, la 13 (menos la vista previa en WhatsApp del teléfono), la 14, y la primera parte de la 5, la 7 y la 8. **El cron del sorteo:** `~/cron-sorteo.sh` rebota al inicio de sesión hasta C-227 (rc.55); la línea del `crontab` ya está.
@@ -655,7 +626,7 @@ En el orden en que más destraban:
 ## 4. Fila de Claude
 **Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) C-224 (los tres únicos, rc.51) y C-241 (el checkout por pasos, rc.53), C-242 (Facturas, ordenada, rc.56). También C-226 (sin ámbar, rc.44), C-219 (los correos, rc.47) y C-234 (cuándo sale cada pedido, rc.52), y C-227 (los correos al aliado comercial, rc.55).
 
-**Sigue:** El plan del 14/11 está en producción desde ese día (rc.53). Falta subir rc.56 (C-235, C-227 y C-242, §2) y lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
+**Sigue:** El plan del 14/11 está en producción desde ese día (rc.53). rc.56 está en producción desde el 15/11; falta confirmar sus pruebas (§2) y lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
 
 **Contabilidad (C-228 y C-228b, `CONTABILIDAD.md`):** C-229 (rc.50, las facturas de talonario) y C-235 (rc.54, la contadora en el equipo) hechas. Sigue C-230 antes del 15/12, con sus respuestas. El resto en el orden de `PLAN.md` §5.2, todo antes del 19/04/2027.
 

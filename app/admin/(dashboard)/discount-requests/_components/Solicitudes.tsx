@@ -1,13 +1,14 @@
 'use client';
 
-import { adminBadge, adminTab, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminBadge, adminInput, adminModalOverlay, adminModalPanel, adminSecondaryButton, adminSuccessButton } from '@/lib/admin-ui';
+import Filtros from '@/components/admin/Filtros';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 
 
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { IconoBuscar, IconoCerrar, IconoCheck, IconoCuenta, IconoPaquete, IconoPorcentaje, IconoReloj } from '@/components/iconos';
+import { IconoBuscar, IconoCerrar, IconoCheck, IconoConfirmado, IconoCuenta, IconoLista, IconoPaquete, IconoPorcentaje, IconoRechazado, IconoReloj } from '@/components/iconos';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -128,13 +129,13 @@ export default function Solicitudes() {
             case 'PENDING':
                 return <span className={adminBadge('warning')}>Pendiente</span>;
             case 'APPROVED':
-                return <span className="px-2.5 py-1 bg-success/10 text-success-strong text-xs font-bold rounded-full">Aprobado</span>;
+                return <span className={adminBadge('success')}>Aprobado</span>;
             case 'REJECTED':
-                return <span className="px-2.5 py-1 bg-deal/10 text-deal text-xs font-bold rounded-full">Rechazado</span>;
+                return <span className={adminBadge('danger')}>Rechazado</span>;
             case 'EXPIRED':
-                return <span className="px-2.5 py-1 bg-surface text-muted text-xs font-bold rounded-full">Expirado</span>;
+                return <span className={adminBadge('neutral')}>Expirado</span>;
             case 'USED':
-                return <span className="px-2.5 py-1 bg-brand-100 text-brand-600 text-xs font-bold rounded-full">Usado</span>;
+                return <span className={adminBadge('brand')}>Usado</span>;
             default:
                 return null;
         }
@@ -158,11 +159,11 @@ export default function Solicitudes() {
                 </p>
                 <div className="flex gap-3">
                     <div className="rounded-xl border border-line bg-white px-4 py-2">
-                        <div className="text-2xl font-bold text-warning-strong">{stats.PENDING || 0}</div>
+                        <div className="text-2xl font-bold tabular-nums text-ink">{stats.PENDING || 0}</div>
                         <div className="text-xs text-muted">Pendientes</div>
                     </div>
                     <div className="rounded-xl border border-line bg-white px-4 py-2">
-                        <div className="text-2xl font-bold text-success-strong">{stats.APPROVED || 0}</div>
+                        <div className="text-2xl font-bold tabular-nums text-ink">{stats.APPROVED || 0}</div>
                         <div className="text-xs text-muted">Aprobados</div>
                     </div>
                 </div>
@@ -179,27 +180,22 @@ export default function Solicitudes() {
                             placeholder="Buscar por producto o cliente..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-surface border border-line rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+                            className={`${adminInput()} pl-10`}
                         />
                     </div>
 
                     {/* Filter tabs */}
-                    <div className="-mx-1 flex max-w-full gap-2 overflow-x-auto px-1 pb-1">
-                        {[
-                            { value: 'all', label: 'Todos' },
-                            { value: 'PENDING', label: 'Pendientes' },
-                            { value: 'APPROVED', label: 'Aprobados' },
-                            { value: 'REJECTED', label: 'Rechazados' },
-                        ].map((tab) => (
-                            <button
-                                key={tab.value}
-                                onClick={() => setFilter(tab.value as 'all' | 'PENDING' | 'APPROVED' | 'REJECTED')}
-                                className={adminTab(filter === tab.value)}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
+                    <Filtros
+                        etiqueta="Filtrar solicitudes"
+                        valor={filter}
+                        onCambiar={setFilter}
+                        filtros={[
+                            { valor: 'all', etiqueta: 'Todos', ayuda: 'El historial completo', Icono: IconoLista },
+                            { valor: 'PENDING', etiqueta: 'Pendientes', ayuda: 'Esperan tu respuesta', Icono: IconoReloj, tono: 'aviso', cuenta: stats.PENDING || 0 },
+                            { valor: 'APPROVED', etiqueta: 'Aprobados', ayuda: 'Valen hasta que venzan', Icono: IconoConfirmado, cuenta: stats.APPROVED || 0 },
+                            { valor: 'REJECTED', etiqueta: 'Rechazados', ayuda: 'Con su respuesta', Icono: IconoRechazado },
+                        ]}
+                    />
                 </div>
             </div>
 
@@ -234,8 +230,8 @@ export default function Solicitudes() {
                                             <p className="font-semibold text-ink text-sm truncate">{request.productName}</p>
                                             <div className="flex items-center gap-3 mt-1">
                                                 <span className="text-xs text-muted">Precio: {formatUSD(Number(request.originalPrice))}</span>
-                                                <span className="text-xs font-bold text-warning-strong">Solicita: {request.requestedDiscount}%</span>
-                                                <span className="text-xs text-success-strong">(-{formatUSD(Number(request.originalPrice) * request.requestedDiscount / 100)})</span>
+                                                <span className="text-xs font-semibold text-ink">Solicita: {request.requestedDiscount}%</span>
+                                                <span className="text-xs text-deal">(-{formatUSD(Number(request.originalPrice) * request.requestedDiscount / 100)})</span>
                                             </div>
                                         </div>
                                     </div>
@@ -248,14 +244,16 @@ export default function Solicitudes() {
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => openActionModal(request, 'approve')}
-                                                    className="p-2 bg-success/10 text-success-strong rounded-lg hover:bg-success/20 transition-all"
+                                                    className={`${adminSuccessButton} w-11 px-0`}
+                                                    aria-label="Aprobar"
                                                     title="Aprobar"
                                                 >
                                                     <IconoCheck className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => openActionModal(request, 'reject')}
-                                                    className="p-2 bg-deal/10 text-deal rounded-lg hover:bg-deal/20 transition-all"
+                                                    className={`${adminSecondaryButton} w-11 px-0 text-deal hover:text-deal`}
+                                                    aria-label="Rechazar"
                                                     title="Rechazar"
                                                 >
                                                     <IconoCerrar className="w-4 h-4" />
@@ -279,8 +277,8 @@ export default function Solicitudes() {
                                 {/* Approved Info */}
                                 {request.status === 'APPROVED' && request.expiresAt && (
                                     <div className="mt-3 flex items-center gap-2 text-xs">
-                                        <IconoReloj className="w-3.5 h-3.5 text-success-strong" />
-                                        <span className="text-success-strong font-semibold">
+                                        <IconoReloj className="w-3.5 h-3.5 text-muted" aria-hidden="true" />
+                                        <span className="font-semibold text-ink-soft">
                                             Descuento de {request.approvedDiscount}% aprobado -
                                             Expira: {new Date(request.expiresAt).toLocaleString('es-VE')}
                                         </span>

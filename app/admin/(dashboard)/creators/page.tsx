@@ -1,6 +1,6 @@
 'use client';
 
-import { adminBadge, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
+import { adminBadge, adminModalOverlay, adminModalPanel, adminPageHeader, adminPageSubtitle, adminPageTitle, adminSecondaryButton, adminSuccessButton } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 import { toast } from 'react-hot-toast';
@@ -81,12 +81,11 @@ export default function AdminCreatorsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className={adminPageHeader}>
         <div>
-          <h1 className="text-xl font-bold text-ink">Solicitudes de Creadores</h1>
-          <p className="text-sm text-muted mt-0.5">Revisa y aprueba solicitudes para acceder a la plataforma de creadores.</p>
+          <h1 className={adminPageTitle}>Solicitudes de Creadores</h1>
+          <p className={adminPageSubtitle}>Revisa y aprueba solicitudes para acceder a la plataforma de creadores · {creators.length} en total</p>
         </div>
-        <span className="text-sm text-muted bg-surface px-3 py-1 rounded-full">{creators.length} total</span>
       </div>
 
       {/* Filter tabs */}
@@ -166,7 +165,7 @@ export default function AdminCreatorsPage() {
                   {creator.status !== 'APPROVED' && (
                     <button
                       onClick={() => { setModal({ creator, action: 'APPROVED' }); setNotes(''); }}
-                      className="px-4 py-1.5 bg-success/10 text-success-strong text-xs font-semibold rounded-lg bg-success/10 transition-colors border border-success/20"
+                      className={adminSuccessButton}
                     >
                       Aprobar
                     </button>
@@ -174,7 +173,7 @@ export default function AdminCreatorsPage() {
                   {creator.status !== 'REJECTED' && (
                     <button
                       onClick={() => { setModal({ creator, action: 'REJECTED' }); setNotes(''); }}
-                      className="px-4 py-1.5 bg-deal/10 text-deal text-xs font-semibold rounded-lg bg-deal/10 transition-colors border border-deal/30"
+                      className={`${adminSecondaryButton} text-deal hover:text-deal`}
                     >
                       Rechazar
                     </button>
@@ -182,7 +181,7 @@ export default function AdminCreatorsPage() {
                   {creator.status === 'APPROVED' && (
                     <button
                       onClick={() => { setModal({ creator, action: 'SUSPENDED' }); setNotes(''); }}
-                      className="px-4 py-1.5 bg-surface text-muted text-xs font-semibold rounded-lg hover:bg-surface transition-colors border border-line"
+                      className={adminSecondaryButton}
                     >
                       Suspender
                     </button>

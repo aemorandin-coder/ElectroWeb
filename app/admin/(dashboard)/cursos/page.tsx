@@ -1,6 +1,6 @@
 'use client';
 
-import { adminBadge, adminModalOverlay } from '@/lib/admin-ui';
+import { adminBadge, adminModalOverlay, adminModalPanel, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatUSD } from '@/lib/currency';
 
@@ -27,14 +27,14 @@ const LEVELS = [
   { value: 'AVANZADO', label: 'Avanzado' },
 ];
 
-// C-192: la categoría no es un estado: todas con la misma etiqueta (antes verde, ámbar y rojo según el tema)
+// C-192: la categoría no es un estado: todas con la misma etiqueta (antes verde, ámbar y rojo según el tema). C-245: un dato, en gris (§1.8)
 const CATEGORY_COLORS: Record<string, string> = {
-  DESARROLLO: 'bg-brand-50 text-brand-700',
-  REDES: 'bg-brand-50 text-brand-700',
-  ELECTRONICA: 'bg-brand-50 text-brand-700',
-  GAMING: 'bg-brand-50 text-brand-700',
-  SEGURIDAD: 'bg-brand-50 text-brand-700',
-  NEGOCIOS: 'bg-brand-50 text-brand-700',
+  DESARROLLO: 'bg-white text-ink-soft ring-1 ring-inset ring-line',
+  REDES: 'bg-white text-ink-soft ring-1 ring-inset ring-line',
+  ELECTRONICA: 'bg-white text-ink-soft ring-1 ring-inset ring-line',
+  GAMING: 'bg-white text-ink-soft ring-1 ring-inset ring-line',
+  SEGURIDAD: 'bg-white text-ink-soft ring-1 ring-inset ring-line',
+  NEGOCIOS: 'bg-white text-ink-soft ring-1 ring-inset ring-line',
 };
 
 type Lesson = {
@@ -286,14 +286,15 @@ export default function AdminCursosPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className={adminPageHeader}>
         <div>
-          <h1 className="text-2xl font-bold text-ink">Cursos / Plataforma</h1>
-          <p className="text-sm text-muted mt-1">{courses.length} cursos en total</p>
+          <h1 className={adminPageTitle}>Cursos / Plataforma</h1>
+          <p className={adminPageSubtitle}>{courses.length} cursos en total</p>
         </div>
         <button
+          type="button"
           onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white text-sm font-semibold rounded-lg hover:bg-brand-600 transition-colors"
+          className={adminPrimaryButton}
         >
           <IconoMas className="w-4 h-4" />
           Nuevo Curso
@@ -389,12 +390,12 @@ export default function AdminCursosPage() {
 
       {/* Create / Edit Modal */}
       {showModal && (
-        <div className={adminModalOverlay} onClick={() => setShowModal(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+        <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
+          <div className={`${adminModalPanel} sm:max-w-3xl`} role="dialog" aria-modal="true">
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-line">
               <h2 className="text-lg font-bold text-ink">{editingId ? 'Editar Curso' : 'Nuevo Curso'}</h2>
-              <button onClick={() => setShowModal(false)} className="text-muted hover:text-ink">
+              <button type="button" onClick={() => setShowModal(false)} aria-label="Cerrar" className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink">
                 <IconoCerrar className="w-5 h-5" />
               </button>
             </div>

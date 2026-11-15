@@ -1,9 +1,10 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.69, por subir)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.56, subida por el equipo y comprobada desde fuera; `main` en 1.0.0-rc.70, por subir)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-252 · El curso nuevo y las fotos de Servicios, validados (rc.70, por subir):** el servidor ya no acepta un precio negativo al crear un curso, ni fotos de Servicios que no sean de la tienda o http(s) (`estado/C-252.md`).
 - **C-251 · Mi panel (el panel del cliente), revisado a fondo: las fallas y lo nuevo (rc.69, por subir; `estado/C-251.md`):** el equipo lo pidió el 15/11 ("revisa con calma: no solo el rediseño, sino también las fallas, y que se conecten las actualizaciones"). Lo hizo un agente aparte.
   - **Fallas arregladas:** Mis pedidos traía solo los 25 más nuevos; el inicio llamaba distinto a cada pedido, contaba mal los favoritos y decía "en revisión" a la garantía que espera tu respuesta; un pedido sin pago decía "validando tu pago"; a 360 px los pasos se pegaban, la tabla del promotor se cortaba y la tarjeta del curso se salía. Y lo de seguridad del estado.
   - **Conectado con lo nuevo:** "Sale el… desde Aragua" en el inicio, la tarjeta y el detalle (C-234 y C-222); "Dejar mi reseña" en lo entregado y Mis reseñas en el menú (C-157); cómo canjear cada código y el plazo del checkout (C-234); el certificado del curso; "Desde Aragua" en Favoritos.
@@ -331,7 +332,7 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### El bloque por subir: `v1.0.0-rc.69` (C-243, C-244, C-247, C-246, C-245, C-248, C-249, C-249b, C-249c, C-250, C-249d, C-249e y C-251; unos 80 minutos)
+### El bloque por subir: `v1.0.0-rc.70` (C-243, C-244, C-247, C-246, C-245, C-248, C-249, C-249b, C-249c, C-250, C-249d, C-249e, C-251 y C-252; unos 80 minutos)
 **Producción está en `v1.0.0-rc.56`** (`471a54d`); su bloque está en `HISTORIAL.md`.
 - **C-243 (rc.57):** el kit de marca. **Sin cambio de base, sin SQL, sin variables nuevas y sin cron.**
   - **Las imágenes para compartir cambian de dirección** (`?v=`): WhatsApp y Facebook las vuelven a pedir solas.
@@ -355,8 +356,9 @@ ADD COLUMN "taxId" TEXT;
 - **C-249d (rc.67):** la campaña de correo y el promotor, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una ruta nueva que solo lee (`POST /api/influencers/vista-previa`).
 - **C-249e (rc.68):** el curso y el trabajo de Servicios, por pasos en su propia página. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. La subida de fotos del panel acepta dos tipos más (`curso` y `servicio`), en `public/uploads` como las demás.
 - **C-251 (rc.69):** Mi panel revisado: las fallas y lo nuevo. **Conviene subirlo pronto** (lo de seguridad de `estado/C-251.md`). Sin cambio de base, sin SQL, sin variables nuevas y sin cron. Se quitan dos rutas de la API del cliente que ninguna pantalla usaba (`/api/customer/payment-methods` y `/api/customer/chat`).
+- **C-252 (rc.70):** el precio de un curso nuevo y las fotos de Servicios, validados en el servidor. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc60.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.69`, o una mayor si entró otra tarea antes del `git pull`.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Se para por la base de C-246 (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.70`, o una mayor si entró otra tarea antes del `git pull`.
 - **Pruebas** (unos 10 minutos, en la computadora y en el teléfono):
   1. **`/sorteo`:** la franja de arriba va en el azul oscuro del logo, sin azul casi negro ni letras cian.
   2. **En el teléfono, la barra de abajo** va en el mismo azul oscuro.

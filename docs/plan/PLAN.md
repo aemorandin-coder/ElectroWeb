@@ -596,6 +596,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - **Tres decisiones del equipo, con maquetas** (`~/.cache/electroshop-trabajo/c251/decisiones.html`): Mis pedidos en la computadora (dos columnas, la recomendada), la garantía de los códigos y las recargas (aparte, la recomendada) y los sellos "Encriptado" y "Garantizado" de Mis códigos (decir lo que sí es verdad, la recomendada).
     - Pagar un pedido "Por pagar" desde Mi panel no existe; solo nace así lo que arma el equipo. Si se quiere, es una tarea aparte.
     - La dirección muy corta: la pantalla pide 10 letras y el servidor acepta menos.
+  - **C-252 · El curso nuevo y las fotos de Servicios, validados** (**hecha**, rc.70, 15/11; `estado/C-252.md`): las dos fallas del servidor que anotó C-249e.
   - **C-250 · Las categorías y la gift card impresa, con el kit** (**hecha**, rc.66, 15/11; `estado/C-250.md`; el equipo eligió lo recomendado en las dos preguntas de C-249b).
   - **C-247 · La foto del premio del sorteo** (**hecha**, rc.59, 15/11; `estado/C-247.md`; el equipo eligió la A, sobre el azul y más grande). La foto se sube desde el panel.
   - **C-243 · El kit de marca** (**hecha**, rc.57, 15/11; `estado/C-243.md`; el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo, §1.0).

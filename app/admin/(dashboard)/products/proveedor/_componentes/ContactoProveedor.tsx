@@ -57,7 +57,7 @@ export default function ContactoProveedor({ proveedorId, nombreProveedor, despac
   const rifEscrito = rif.trim() ? normalizarRif(rif) : '';
   const cambio = nombre.trim() !== (contacto.contactName ?? '') || nuevoCorreo !== (contacto.contactEmail ?? '') || whatsapp.trim() !== (contacto.contactWhatsapp ?? '')
     || razon.trim() !== (contacto.legalName ?? '') || (rifEscrito ?? rif.trim()) !== (contacto.taxId ?? '') || domicilio.trim() !== (contacto.fiscalAddress ?? '');
-  const problema = correosEscritos.length > CORREOS_MAX ? `Hasta ${CORREOS_MAX} correos de despacho` : rifEscrito === null ? 'El RIF lleva una letra y 9 números, como J-30838235-3' : null;
+  const problema = correosEscritos.length > CORREOS_MAX ? `Hasta ${CORREOS_MAX} correos de despacho` : rifEscrito === null ? 'El RIF lleva una letra y 9 números, como J-12345678-9' : null;
 
   const guardar = async () => {
     if (nuevoCorreo !== (contacto.contactEmail ?? '') && contacto.contactEmail) {
@@ -160,7 +160,7 @@ export default function ContactoProveedor({ proveedorId, nombreProveedor, despac
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-semibold text-ink-soft">RIF</span>
-          <input value={rif} onChange={(e) => setRif(e.target.value)} maxLength={14} placeholder="J-30838235-3" autoComplete="off" className={`${adminInput(rifEscrito === null)} sm:max-w-48`} />
+          <input value={rif} onChange={(e) => setRif(e.target.value)} maxLength={14} placeholder="J-12345678-9" autoComplete="off" className={`${adminInput(rifEscrito === null)} sm:max-w-48`} />
         </label>
         <label className="block sm:col-span-2">
           <span className="mb-1 block text-xs font-semibold text-ink-soft">Domicilio fiscal</span>

@@ -175,7 +175,7 @@ export interface DatosBienvenida {
   enlaceCatalogo: string | null;
   /** "Aragua": de dónde salen sus paquetes */
   estado: string | null;
-  /** C-246: como en su RIF ("Ferreconstrulacer, Ferrecla, C.A." y "J-30838235-3"), si se cargaron */
+  /** C-246: como en su RIF ("Ferretería Ejemplo, C.A." y "J-12345678-9"), si se cargaron */
   razonSocial: string | null;
   rif: string | null;
 }

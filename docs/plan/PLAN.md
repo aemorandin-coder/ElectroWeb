@@ -586,6 +586,9 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **Volver atrás con `deploy.sh` cuando la base creció** (pendiente; salió de la subida de rc.53 del 14/11):
     - `git reset --hard <versión anterior>` y `deploy.sh --sin-pull` se paran en el paso 2: ven `DROP` de las tablas y columnas que agregó la versión nueva, y la tienda sigue como está.
     - Falta una opción (`--volver`) que compile igual cuando lo único distinto sea lo que agregó la versión nueva, sin aplicarlo nunca a la base. Hasta entonces, cada bloque dice "avisa a Claude".
+  - **C-246 · El destino claro para la guía y los datos fiscales del proveedor** (**hecha**, rc.60, 15/11; `estado/C-246.md`): "Envíelo a" en el correo y la página del proveedor, sus datos fiscales (razón social, RIF y domicilio) y hasta 3 correos de despacho.
+    - **Falta:** cargar los datos de Ferrecla en el panel después del deploy (`SIGUIENTE.md` §2, prueba 8) y decidir cuándo se le envía la bienvenida.
+    - **Para C-237 (compras):** el proveedor y su RIF pueden leerse de `suppliers` (`legalName`, `taxId`).
   - **C-247 · La foto del premio del sorteo** (**hecha**, rc.59, 15/11; `estado/C-247.md`; el equipo eligió la A, sobre el azul y más grande). La foto se sube desde el panel.
   - **C-243 · El kit de marca** (**hecha**, rc.57, 15/11; `estado/C-243.md`; el equipo eligió la paleta A viendo las maquetas: solo los dos azules del logo, §1.0).
     - **C-245 · El panel entero con el kit** (pendiente; pedido del equipo el 15/11: "envíalo a un chat nuevo con Opus 5.5 extra alto que repase todo el admin panel para rediseñar con ese kit"). Lo hace un agente aparte, pantalla por pantalla, con maquetas para lo que haya que decidir.
@@ -881,7 +884,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 - **Los correos a los proveedores (equipo, 14/11, C-227):** lo recomendado en las ocho preguntas.
   - **El aviso "¡Se vendió tu producto!"** sale al confirmarse el pago y le llega al proveedor con copia al equipo.
   - **La guía de ZOOM o MRW la hace el proveedor,** con lo que pide la guía: nombre, cédula y teléfono del cliente, y la oficina. Nunca el correo, la casa ni lo que pagó.
-    - **Puerta a puerta** (C-227, al programarlo): la guía pide la dirección, así que esa sí va. Si el equipo prefiere pasársela a mano, se quita en `lib/proveedores/despacho.ts`.
+    - **Puerta a puerta** (el equipo, 15/11, C-246: "tienes que insertar claramente dónde el cliente necesita el envío, eso va a la guía de ZOOM"): va la dirección de la casa del cliente, clara, con su referencia. En una oficina, la oficina con su código; nunca la casa.
   - **El proveedor ve su costo,** nunca el precio de venta.
   - **Confirma con un botón:** un enlace firmado y sin cuenta para "Lo estoy preparando" y la guía. Con la guía, la orden se actualiza y al cliente le llega "Tu pedido va en camino".
   - **Tiene 1 día hábil para despachar.** Si no, le llega un recordatorio y al equipo un aviso.

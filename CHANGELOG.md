@@ -10,6 +10,21 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.60] - 2026-11-15
+El destino claro para la guía y los datos fiscales del proveedor (el equipo, 15/11: "tienes que insertar claramente dónde el cliente necesita el envío, eso va a la guía de ZOOM"; y el RIF de Ferrecla).
+### Marketing 1.16.0 (C-246)
+- **"¡Se vendió su producto!" y el recordatorio dicen claramente a dónde va el paquete.** Bajo el logo de la empresa, "Envíelo a" con:
+  - la ciudad en grande y su código de ZOOM;
+  - la oficina con su código y su dirección, o, puerta a puerta, la casa del cliente con su referencia;
+  - a nombre de quién, con la cédula y el teléfono.
+- **Los datos para la guía** van en el orden de su formulario: destinatario, cédula, teléfono, ciudad, oficina o dirección, contenido, piezas y peso.
+- **La credencial de la bienvenida** lleva la razón social y el RIF del proveedor.
+### Productos 1.16.0 (C-246)
+- **Lista del proveedor → "Datos fiscales":** la razón social, el RIF (se escribe como sea y queda como J-12345678-9) y el domicilio fiscal, como en su RIF. Sirven también para sus facturas de compra (Contabilidad).
+- **Hasta 3 correos de despacho,** separados por coma: a todos les llega cada venta, el recordatorio y la cancelación.
+- **La página del proveedor** muestra el mismo "Envíelo a", y "Copiar los datos" los copia en el orden de la guía.
+- **Cambio de base (aditivo):** las columnas `legalName`, `taxId` y `fiscalAddress` de `suppliers`.
+
 ## [1.0.0-rc.59] - 2026-11-15
 La foto del premio del sorteo (C-247). El equipo, el 15/11, mirando /sorteo: "hazle una consola PS4 allí con el control", "usa imagen real", "esfuérzate con buen diseño, bien integrado, que no sea genérico". Eligió la A viendo la maqueta.
 ### Marketing 1.15.2 (C-247)

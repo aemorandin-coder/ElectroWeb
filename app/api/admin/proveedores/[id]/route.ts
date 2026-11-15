@@ -93,7 +93,7 @@ export async function PATCH(request: NextRequest, { params }: Ctx) {
   if (body?.taxId !== undefined) {
     const escrito = typeof body.taxId === 'string' ? body.taxId.trim() : '';
     const rif = escrito ? normalizarRif(escrito) : null;
-    if (escrito && !rif) return NextResponse.json({ error: 'El RIF lleva una letra y 9 números, como J-30838235-3' }, { status: 400 });
+    if (escrito && !rif) return NextResponse.json({ error: 'El RIF lleva una letra y 9 números, como J-12345678-9' }, { status: 400 });
     data.taxId = rif;
   }
   if (body?.fiscalAddress !== undefined) {

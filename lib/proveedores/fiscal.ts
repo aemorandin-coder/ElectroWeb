@@ -1,6 +1,6 @@
 // C-246: los datos fiscales del proveedor (el equipo, 15/11, con el RIF de Ferrecla). Puro: lo usan la API y el panel.
 
-/** "J308382353", "j-30838235-3" o "J 30838235 3" → "J-30838235-3". null si no es un RIF (letra y 9 dígitos) */
+/** "J123456789", "j-12345678-9" o "J 12345678 9" → "J-12345678-9". null si no es un RIF (letra y 9 dígitos) */
 export function normalizarRif(texto: unknown): string | null {
   if (typeof texto !== 'string') return null;
   const limpio = texto.replace(/[\s.-]/g, '').toUpperCase();
@@ -8,7 +8,7 @@ export function normalizarRif(texto: unknown): string | null {
   return m ? `${m[1]}-${m[2].slice(0, 8)}-${m[2].slice(8)}` : null;
 }
 
-/** "FERRECONSTRULACER, FERRECLA, C. A." → igual, sin espacios de más (la razón social se respeta como está en el RIF) */
+/** "FERRETERÍA EJEMPLO, C. A." → igual, sin espacios de más (la razón social se respeta como está en el RIF) */
 export const limpiarTexto = (texto: unknown, max: number): string | null => {
   if (typeof texto !== 'string') return null;
   const limpio = texto.trim().replace(/\s+/g, ' ');

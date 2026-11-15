@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import {
   IconoAdvertencia, IconoArchivar, IconoChevronDerecha, IconoChevronIzquierda, IconoConfirmado, IconoCopiar,
-  IconoDescargar, IconoEditar, IconoEliminar, IconoMas,
+  IconoDescargar, IconoEditar, IconoEliminar, IconoImagen, IconoMas, IconoTienda, type IconType,
 } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
 import { adminBadge, adminEmpty, adminHint, adminIconButton, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminTab } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { downloadIssues, flyerChecks, flyerStatus, type CheckKind, type FlyerCheck, type TextIssues } from '@/lib/studio/checks';
@@ -27,11 +28,12 @@ const storeSrc: ProductSrc = (p) => p.imageUrl;
 const editHref = (id: string, step?: number) => `/admin/studio/${id}${step ? `?paso=${step}` : ''}`;
 
 /** Lo que se muestra en "Por atender": cada grupo filtra la lista */
-const ATTENTION: { kind: CheckKind; blocksOnly?: boolean; one: string; many: string }[] = [
-  { kind: 'content', blocksOnly: true, one: '1 incompleta', many: 'incompletas' },
-  { kind: 'store', one: '1 con un problema en la tienda', many: 'con problemas en la tienda' },
-  { kind: 'photo', one: '1 sin foto', many: 'sin foto' },
-  { kind: 'redownload', one: '1 para descargar de nuevo', many: 'para descargar de nuevo' },
+// C-249: cada uno con su píldora de `Filtros` (ícono, nombre y lo que junta; §1.7)
+const ATTENTION: { kind: CheckKind; blocksOnly?: boolean; one: string; many: string; etiqueta: string; ayuda: string; Icono: IconType }[] = [
+  { kind: 'content', blocksOnly: true, one: '1 incompleta', many: 'incompletas', etiqueta: 'Incompletas', ayuda: 'Les falta algo para publicar', Icono: IconoEditar },
+  { kind: 'store', one: '1 con un problema en la tienda', many: 'con problemas en la tienda', etiqueta: 'Problema en la tienda', ayuda: 'El cupón o el producto cambió', Icono: IconoTienda },
+  { kind: 'photo', one: '1 sin foto', many: 'sin foto', etiqueta: 'Sin foto', ayuda: 'Les falta la imagen', Icono: IconoImagen },
+  { kind: 'redownload', one: '1 para descargar de nuevo', many: 'para descargar de nuevo', etiqueta: 'Descargar de nuevo', ayuda: 'Cambió el precio o la tasa', Icono: IconoDescargar },
 ];
 
 function ymd(d: Date): string {
@@ -284,24 +286,12 @@ export default function StudioHome() {
           {attentionCounts.length > 0 && (
             <section aria-label="Por atender" className="-mx-1 mb-4 flex items-center gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
               <span className="shrink-0 text-sm font-semibold text-ink">Por atender:</span>
-              {attentionCounts.map((a) => (
-                <button
-                  key={a.kind}
-                  type="button"
-                  aria-pressed={attention === a.kind}
-                  onClick={() => {
-                    setAttention(attention === a.kind ? null : a.kind);
-                    changeView('lista');
-                  }}
-                  className={`inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-sm font-semibold transition-colors ${
-                    // C-216: lo que hay que hacer, sin ámbar: elegido, el sello del azul oscuro del logo con el ícono blanco (C-243); si no, su contorno
-                    attention === a.kind ? 'border-brand-700 bg-brand-700 text-white' : 'border-brand-700/40 bg-white text-brand-700 hover:bg-brand-50'
-                  }`}
-                >
-                  <IconoAdvertencia className="h-4 w-4" aria-hidden="true" />
-                  {a.count === 1 ? a.one : `${a.count} ${a.many}`}
-                </button>
-              ))}
+              <Filtros
+                etiqueta="Por atender"
+                valor={attention ?? ''}
+                onCambiar={(v) => { setAttention(attention === v ? null : v as CheckKind); changeView('lista'); }}
+                filtros={attentionCounts.map((a) => ({ valor: a.kind, etiqueta: a.etiqueta, ayuda: a.ayuda, Icono: a.Icono, cuenta: a.count, tono: 'aviso' as const }))}
+              />
               {attention && (
                 <button type="button" onClick={() => setAttention(null)} className="h-9 shrink-0 whitespace-nowrap px-1 text-sm font-semibold text-brand-600 hover:underline">
                   Ver todas

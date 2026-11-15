@@ -164,7 +164,7 @@ export default function SettingsPage() {
   const dirtyLabels = SECTIONS.filter((item) => dirtySections.has(item.id)).map((item) => item.label);
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="max-w-6xl">
       <div className={adminPageHeader}>
         <div>
           <h1 className={adminPageTitle}>Configuración</h1>

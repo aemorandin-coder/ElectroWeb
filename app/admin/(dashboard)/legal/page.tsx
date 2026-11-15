@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import {
-  IconoActualizar, IconoAdvertencia, IconoBuscar, IconoCerrar, IconoDescargar, IconoDocumento, IconoEditar, IconoGarantia,
-  IconoMas, IconoVer,
+  IconoActualizar, IconoAdvertencia, IconoBuscar, IconoCerrar, IconoConfirmado, IconoDescargar, IconoDocumento, IconoEditar, IconoGarantia,
+  IconoLista, IconoMas, IconoRepetir, IconoVer,
 } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
 import {
-  adminBadge, adminChoice, adminDato, adminError, adminHint, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter,
+  adminBadge, adminDato, adminError, adminHint, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter,
   adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPageHeader, adminPageSubtitle,
   adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab,
 } from '@/lib/admin-ui';
@@ -219,10 +220,17 @@ export default function LegalPage() {
               <input type="search" aria-label="Buscar firmas" value={buscar} onChange={(e) => setBuscar(e.target.value)} placeholder="Nombre, correo o cédula" className={`${adminInput()} pl-9`} />
             </form>
             <div className="flex flex-wrap gap-2">
-              {([['', 'Todas'], ['vigentes', 'Vigentes'], ['revocadas', 'Pedidas de nuevo']] as const).map(([v, l]) => (
-                <button key={v} type="button" aria-pressed={estado === v} onClick={() => { setCargando(true); setEstado(v); setPagina((p) => ({ ...p, page: 1 })); }}
-                  className={`${adminChoice(estado === v)} min-h-11 px-3 text-sm`}>{l}</button>
-              ))}
+              {/* C-245: en píldoras con ícono y lo que juntan (PLAN.md §1.7) */}
+              <Filtros
+                etiqueta="Filtrar firmas"
+                valor={estado}
+                onCambiar={(v) => { if (v === estado) return; setCargando(true); setEstado(v); setPagina((p) => ({ ...p, page: 1 })); }}
+                filtros={[
+                  { valor: '', etiqueta: 'Todas', ayuda: 'Desde la primera', Icono: IconoLista },
+                  { valor: 'vigentes', etiqueta: 'Vigentes', ayuda: 'Siguen valiendo', Icono: IconoConfirmado },
+                  { valor: 'revocadas', etiqueta: 'Pedidas de nuevo', ayuda: 'Hay que firmar otra vez', Icono: IconoRepetir },
+                ]}
+              />
               <button type="button" onClick={exportarCSV} className={adminSecondaryButton}><IconoDescargar className="h-4 w-4" aria-hidden="true" /> CSV</button>
               <button type="button" onClick={() => { setCargando(true); setRecargas((n) => n + 1); }} className={`${adminIconButton} h-11 w-11 border border-line bg-white`} aria-label="Actualizar">
                 <IconoActualizar className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />

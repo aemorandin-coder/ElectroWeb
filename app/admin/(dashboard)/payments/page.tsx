@@ -9,9 +9,8 @@ import { SiBinance, SiZelle, SiPaypal } from 'react-icons/si';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
-import PageHeader from '@/components/ui/PageHeader';
 import {
-    adminCard, adminPrimaryButton, adminSecondaryButton,
+    adminCard, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton,
     adminInput, adminModalOverlay, adminModalPanel,
     adminModalHeader, adminModalTitle, adminModalFooter, adminSpinner
 } from '@/lib/admin-ui';
@@ -78,7 +77,7 @@ const PAYMENT_TYPE_METADATA: Record<string, { label: string; icon: React.ReactNo
     },
     MERCANTIL_PANAMA: {
         label: 'Mercantil Panamá',
-        icon: <IconoWeb className="w-5 h-5 text-brand-700" />,
+        icon: <IconoWeb className="w-5 h-5 text-brand-600" />,
         badgeClass: 'bg-brand-50 text-brand-800 border-brand-200',
     },
     CRYPTO: {
@@ -88,7 +87,7 @@ const PAYMENT_TYPE_METADATA: Record<string, { label: string; icon: React.ReactNo
     },
     CASH: {
         label: 'Efectivo',
-        icon: <IconoBillete className="w-5 h-5 text-success-strong" />,
+        icon: <IconoBillete className="w-5 h-5 text-brand-600" />,
         badgeClass: 'bg-success/10 text-success-strong border-success/30',
     },
     OTHER: {
@@ -364,20 +363,20 @@ export default function PaymentsPage() {
 
     return (
         <div className="space-y-6">
-            <PageHeader
-                title="Métodos de Pago"
-                description="Administra las cuentas y métodos para recargas de Puntos ES y pagos directos."
-                actions={
-                    <button
-                        type="button"
-                        onClick={() => handleOpenModal()}
-                        className={`inline-flex items-center gap-2 ${adminPrimaryButton}`}
-                    >
-                        <IconoMas className="w-4 h-4" />
-                        Nuevo método
-                    </button>
-                }
-            />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <h1 className={adminPageTitle}>Métodos de Pago</h1>
+                    <p className={adminPageSubtitle}>Administra las cuentas y métodos para recargas de Puntos ES y pagos directos.</p>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => handleOpenModal()}
+                    className={adminPrimaryButton}
+                >
+                    <IconoMas className="w-4 h-4" aria-hidden="true" />
+                    Nuevo método
+                </button>
+            </div>
 
             {/* Stats row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -708,7 +707,7 @@ export default function PaymentsPage() {
                                     {/* MOBILE_PAYMENT */}
                                     {formData.type === 'MOBILE_PAYMENT' && (
                                         <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
-                                            <h4 className="text-xs font-bold text-brand-700 uppercase tracking-wider">
+                                            <h4 className="text-xs font-bold text-ink-soft uppercase tracking-wider">
                                                 Datos de Pago Móvil
                                             </h4>
                                             <div>
@@ -764,7 +763,7 @@ export default function PaymentsPage() {
                                     {/* BANK_TRANSFER */}
                                     {formData.type === 'BANK_TRANSFER' && (
                                         <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
-                                            <h4 className="text-xs font-bold text-brand-700 uppercase tracking-wider">
+                                            <h4 className="text-xs font-bold text-ink-soft uppercase tracking-wider">
                                                 Datos de Cuenta Bancaria
                                             </h4>
                                             <div>
@@ -837,7 +836,7 @@ export default function PaymentsPage() {
                                     {/* BINANCE_PAY */}
                                     {formData.type === 'BINANCE_PAY' && (
                                         <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
-                                            <h4 className="text-xs font-bold text-warning-strong uppercase tracking-wider">
+                                            <h4 className="text-xs font-bold text-ink-soft uppercase tracking-wider">
                                                 Datos de Binance Pay
                                             </h4>
                                             <div>
@@ -876,7 +875,7 @@ export default function PaymentsPage() {
                                     {/* ZELLE */}
                                     {formData.type === 'ZELLE' && (
                                         <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
-                                            <h4 className="text-xs font-bold text-brand-700 uppercase tracking-wider">
+                                            <h4 className="text-xs font-bold text-ink-soft uppercase tracking-wider">
                                                 Datos de Zelle
                                             </h4>
                                             <div>
@@ -905,7 +904,7 @@ export default function PaymentsPage() {
                                     {/* ZINLI */}
                                     {formData.type === 'ZINLI' && (
                                         <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
-                                            <h4 className="text-xs font-bold text-warning-strong uppercase tracking-wider">
+                                            <h4 className="text-xs font-bold text-ink-soft uppercase tracking-wider">
                                                 Datos de Zinli
                                             </h4>
                                             <div>
@@ -934,7 +933,7 @@ export default function PaymentsPage() {
                                     {/* PAYPAL */}
                                     {formData.type === 'PAYPAL' && (
                                         <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
-                                            <h4 className="text-xs font-bold text-brand-700 uppercase tracking-wider">
+                                            <h4 className="text-xs font-bold text-ink-soft uppercase tracking-wider">
                                                 Datos de PayPal
                                             </h4>
                                             <div>
@@ -963,7 +962,7 @@ export default function PaymentsPage() {
                                     {/* MERCANTIL_PANAMA */}
                                     {formData.type === 'MERCANTIL_PANAMA' && (
                                         <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
-                                            <h4 className="text-xs font-bold text-brand-800 uppercase tracking-wider">
+                                            <h4 className="text-xs font-bold text-ink-soft uppercase tracking-wider">
                                                 Datos de Mercantil Panamá
                                             </h4>
                                             <div>
@@ -1004,7 +1003,7 @@ export default function PaymentsPage() {
                                     {/* CRYPTO */}
                                     {formData.type === 'CRYPTO' && (
                                         <div className="p-3.5 bg-surface rounded-xl border border-line space-y-3">
-                                            <h4 className="text-xs font-bold text-warning-strong uppercase tracking-wider">
+                                            <h4 className="text-xs font-bold text-ink-soft uppercase tracking-wider">
                                                 Datos cripto
                                             </h4>
                                             <div>

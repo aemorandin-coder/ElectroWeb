@@ -6,6 +6,8 @@ import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { createNotification } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { sendEmail } from '@/lib/email-service';
+import { correoSolicitudLista, correoSolicitudRecibida } from '@/lib/email-templates/servicio';
 import { revisarAlLlegar } from '@/lib/ia/urgencia';
 import { formatUSD } from '@/lib/currency';
 import { verifyCaptcha } from '@/lib/captcha';
@@ -157,6 +159,11 @@ export async function POST(request: NextRequest) {
       link: '/admin/inquiries',
     });
 
+    // C-219: el acuse al cliente
+    void correoSolicitudRecibida({ nombre: data.customerName, producto: data.productName })
+      .then(({ asunto, html }) => sendEmail({ to: data.customerEmail, subject: asunto, html }))
+      .catch((error) => console.error('Error enviando el acuse de la solicitud:', error));
+
     return NextResponse.json(productRequest, { status: 201 });
   } catch (error) {
     console.error('Error creating product request:', error);
@@ -216,6 +223,23 @@ export async function PATCH(request: NextRequest) {
           icon: 'FiPackage',
         },
       }).catch(() => null);
+    }
+    // C-219: "¡Ya llegó lo que pediste!" también por correo, con el producto si Claude lo encontró en la tienda (C-215)
+    if (body?.status === 'FULFILLED' && antes.status !== 'FULFILLED' && productRequest.customerEmail) {
+      const producto = productRequest.iaProductoId
+        ? await prisma.product.findFirst({
+          where: { id: productRequest.iaProductoId, status: 'PUBLISHED', deletedAt: null },
+          select: { name: true, slug: true, mainImage: true, priceUSD: true },
+        })
+        : null;
+      const destino = productRequest.customerEmail;
+      void correoSolicitudLista({
+        nombre: productRequest.customerName,
+        pedido: productRequest.productName,
+        producto: producto ? { nombre: producto.name, slug: producto.slug, imagen: producto.mainImage, precioUSD: Number(producto.priceUSD) } : null,
+      })
+        .then(({ asunto, html }) => sendEmail({ to: destino, subject: asunto, html }))
+        .catch((error) => console.error('Error enviando el aviso de solicitud cumplida:', error));
     }
 
     return NextResponse.json(productRequest);

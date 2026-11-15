@@ -2326,6 +2326,8 @@ model Sorteo {
   /// Se ve en la tienda
   activo           Boolean   @default(false)
   sorteadoAt       DateTime?
+  /// C-219: cuándo salió el correo de "últimos días" (una sola vez, lo reclama el cron antes de enviar)
+  recordatorioAt   DateTime?
   ganadorUserId    String?
   ganadorEmail     String?
   /// "Compra ORD-2026-0041 ($24,50)" o "Invitó a 2 amigos"

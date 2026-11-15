@@ -8,6 +8,8 @@ import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { notifyRechargeApproved, notifyRechargeRejected } from '@/lib/notifications';
+import { sendEmail } from '@/lib/email-service';
+import { correoRecargaAprobada, correoRecargaRechazada } from '@/lib/email-templates/puntos';
 
 // GET - Get all transactions
 export async function GET(request: NextRequest) {
@@ -118,7 +120,7 @@ export async function PATCH(request: NextRequest) {
                 balance: {
                     include: {
                         user: {
-                            select: { id: true }
+                            select: { id: true, name: true, email: true }
                         }
                     }
                 }
@@ -187,11 +189,19 @@ export async function PATCH(request: NextRequest) {
         // Send notification to customer
         try {
             const customerId = transaction.balance.user.id;
+            const cliente = transaction.balance.user;
             if (status === 'COMPLETED') {
                 await notifyRechargeApproved(customerId, Number(transaction.amount));
                 // Las recargas ya no generan comisión de promotor: se comisiona la compra pagada (C-75)
             } else if (status === 'CANCELLED') {
                 await notifyRechargeRejected(customerId, Number(transaction.amount), rejectionReason);
+            }
+            // C-219: también por correo (antes solo la campanita; la que aprueba sola el BDV ya tenía el suyo)
+            if (cliente.email && (status === 'COMPLETED' || status === 'CANCELLED')) {
+                const { asunto, html } = status === 'COMPLETED'
+                    ? await correoRecargaAprobada({ nombre: cliente.name, monto: Number(transaction.amount), automatica: false, referencia: transaction.reference })
+                    : await correoRecargaRechazada({ nombre: cliente.name, monto: Number(transaction.amount), motivo: typeof rejectionReason === 'string' ? rejectionReason.slice(0, 300) : null });
+                await sendEmail({ to: cliente.email, subject: asunto, html });
             }
         } catch (notifError) {
             console.error('Error sending notification:', notifError);

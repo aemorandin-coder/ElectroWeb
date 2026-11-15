@@ -8,7 +8,12 @@ import nodemailer, { type SMTPTransportOptions } from 'nodemailer';
 import { Resend } from 'resend';
 import { escapeHtml } from './html';
 import { formatUSD } from './currency';
-import { CORREO, COLOR, FUENTE, botonCorreo, placaCorreo, placaInteriorCorreo, selloCorreo } from './email-templates/estilo';
+import {
+  CORREO, COLOR, FUENTE, avisoCorreo, botonCorreo, datosCorreo, notaCorreo, placaCorreo, placaInteriorCorreo, rotuloCorreo,
+  seguimientoCorreo, urlTienda, ventajasCorreo,
+} from './email-templates/estilo';
+import { marcoCorreo, type OpcionesCorreo } from './email-templates/marco';
+import { htmlATexto } from './email-templates/texto';
 import { cifrarClaveSmtp, claveSmtpCifrada, leerClaveSmtp, opcionesTlsSmtp } from './smtp-seguro';
 
 // TYPES
@@ -28,7 +33,7 @@ export interface SendEmailOptions {
   }>;
 }
 
-import type { EmailSettings, CompanySettings } from '@prisma/client';
+import type { EmailSettings } from '@prisma/client';
 
 // Cache for email settings from database
 let cachedEmailSettings: EmailSettings | null = null;
@@ -195,7 +200,7 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
         to: toArray,
         subject,
         html,
-        text: text || html.replace(/<[^>]*>/g, ''),
+        text: text || htmlATexto(html),
         headers,
       });
 
@@ -230,7 +235,7 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
       to: Array.isArray(to) ? to.join(', ') : to,
       subject,
       html,
-      text: text || html.replace(/<[^>]*>/g, ''),
+      text: text || htmlATexto(html),
       replyTo: (replyToEmail || undefined) as string | undefined,
       headers,
     };
@@ -245,306 +250,110 @@ export const sendEmail = async (options: SendEmailOptions): Promise<{ success: b
   }
 };
 
-// EMAIL TEMPLATES
-
-import { prisma } from './prisma';
-
-// Cache for company settings to avoid too many DB calls
-let cachedSettings: CompanySettings | null = null;
-let cacheTime = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-const getCompanySettings = async () => {
-  const now = Date.now();
-  if (cachedSettings && (now - cacheTime) < CACHE_DURATION) {
-    return cachedSettings;
-  }
-
-  try {
-    cachedSettings = await prisma.companySettings.findFirst();
-    cacheTime = now;
-    return cachedSettings;
-  } catch (error) {
-    console.error('[EMAIL] Error loading company settings:', error);
-    return null;
-  }
-};
-
-/** URL pública de la tienda, sin barra final: los correos no resuelven rutas relativas. */
-const urlDeLaTienda = () => (process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/+$/, '');
+// EMAIL TEMPLATES (C-219: el marco y las piezas viven en lib/email-templates; aquí, los correos de siempre con su texto)
 
 /**
- * Marco de todos los correos (C-175): logo largo sobre blanco, contenido y pie con contacto y redes.
- * El logo lleva el fondo blanco dentro de la imagen para que se lea igual si el cliente de correo
- * oscurece la página. `content` es HTML ya armado por quien llama (con sus datos escapados).
+ * El marco de todos los correos con un contenido ya armado (las campañas, los avisos sin encabezado propio).
+ * C-219: es `marcoCorreo` (ELECTRO SHOP arriba, el cierre "sin miedo" abajo). `content` llega escapado.
  */
-export const getBaseTemplate = async (content: string, preheader?: string) => {
-  const settings = await getCompanySettings();
-  const appUrl = urlDeLaTienda();
+export const getBaseTemplate = async (
+  content: string,
+  preheader?: string,
+  opciones: Omit<OpcionesCorreo, 'cuerpo' | 'preheader'> = {}
+) => marcoCorreo({ ...opciones, cuerpo: content, preheader });
 
-  const companyName = escapeHtml(settings?.companyName || 'Electro Shop');
-  const tagline = escapeHtml(settings?.tagline || 'Tu tienda de tecnología de confianza');
-  const phone = settings?.phone ? escapeHtml(settings.phone) : '';
-  const email = settings?.email ? escapeHtml(settings.email) : '';
-  const whatsapp = (settings?.whatsapp || '').replace(/\D/g, '');
+const e = escapeHtml;
 
-  const redes: Array<[string, string, string | null | undefined]> = [
-    ['Instagram', 'instagram', settings?.instagram],
-    ['WhatsApp', 'whatsapp', whatsapp ? `https://wa.me/${whatsapp}` : ''],
-    ['Facebook', 'facebook', settings?.facebook],
-    ['Telegram', 'telegram', settings?.telegram],
-    ['TikTok', 'tiktok', settings?.tiktok],
-    ['X', 'twitter', settings?.twitter],
-    ['YouTube', 'youtube', settings?.youtube],
-  ];
-  const iconosDeRedes = redes
-    .filter(([, , url]) => url && /^https?:\/\//i.test(url))
-    .map(([nombre, archivo, url]) => `<a href="${escapeHtml(url as string)}" target="_blank" rel="noopener noreferrer" title="${nombre}" style="display:inline-block;margin:0 5px;text-decoration:none;"><img src="${appUrl}/images/social/${archivo}.png" alt="${nombre}" width="28" height="28" style="display:block;width:28px;height:28px;border:0;outline:none;border-radius:6px;" /></a>`)
-    .join('');
-  const enlacePie = `color:${COLOR.marca};font-size:12px;text-decoration:none;font-weight:600;`;
+/** El primer nombre, para saludar ("María José Pérez" → "María"). Sin escapar. */
+export function primerNombre(nombre: string | null | undefined, siNo = ''): string {
+  return (nombre || '').trim().split(/\s+/)[0] || siNo;
+}
 
-  return `
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light only">
-  <meta name="supported-color-schemes" content="light only">
-  <title>${companyName}</title>
-</head>
-<body style="margin:0;padding:0;background-color:${COLOR.fondo};font-family:${FUENTE};">
-  ${preheader ? `<div style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:${COLOR.fondo};">${escapeHtml(preheader)}</div>` : ''}
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLOR.fondo};">
-    <tr>
-      <td align="center" style="padding:32px 12px;">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-
-          <!-- Cabecera: franja de marca y logo largo -->
-          <tr>
-            <td bgcolor="${COLOR.marca}" style="background-color:${COLOR.marca};height:6px;line-height:6px;font-size:0;border-radius:16px 16px 0 0;">&nbsp;</td>
-          </tr>
-          <tr>
-            <td bgcolor="#ffffff" align="center" style="background-color:#ffffff;padding:22px 24px 18px;border-left:1px solid ${COLOR.linea};border-right:1px solid ${COLOR.linea};border-bottom:1px solid ${COLOR.linea};">
-              <a href="${appUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
-                <img src="${appUrl}/images/brand/logo-correo.png" alt="${companyName}" width="300" style="display:block;margin:0 auto;width:300px;max-width:100%;height:auto;border:0;outline:none;color:${COLOR.marcaOscura};font-size:22px;font-weight:700;" />
-              </a>
-              <p style="margin:6px 0 0;color:${COLOR.suave};font-size:13px;line-height:1.4;">${tagline}</p>
-            </td>
-          </tr>
-
-          <!-- Contenido -->
-          <tr>
-            <td bgcolor="#ffffff" style="background-color:#ffffff;padding:36px 32px;border-left:1px solid ${COLOR.linea};border-right:1px solid ${COLOR.linea};color:${COLOR.texto};font-size:16px;line-height:1.6;">
-              ${content}
-            </td>
-          </tr>
-
-          <!-- Pie: redes, contacto y enlaces -->
-          <tr>
-            <td bgcolor="${COLOR.superficie}" align="center" style="background-color:${COLOR.superficie};padding:26px 32px 28px;border:1px solid ${COLOR.linea};border-radius:0 0 16px 16px;text-align:center;">
-              ${iconosDeRedes ? `<div style="margin:0 0 16px;">${iconosDeRedes}</div>` : ''}
-              ${phone ? `<p style="margin:3px 0;color:${COLOR.suave};font-size:13px;">Teléfono: ${phone}</p>` : ''}
-              ${email ? `<p style="margin:3px 0;color:${COLOR.suave};font-size:13px;">Correo: ${email}</p>` : ''}
-              <p style="margin:14px 0 0;">
-                <a href="${appUrl}" style="${enlacePie}">Visitar la tienda</a>
-                <span style="color:#adb5bd;margin:0 8px;">|</span>
-                <a href="${appUrl}/contacto" style="${enlacePie}">Contacto</a>
-                <span style="color:#adb5bd;margin:0 8px;">|</span>
-                <a href="${appUrl}/terminos" style="${enlacePie}">Términos</a>
-              </p>
-              <p style="margin:14px 0 0;color:${COLOR.suave};font-size:11px;line-height:1.5;">
-                © ${new Date().getFullYear()} ${companyName}. Todos los derechos reservados.
-              </p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-};
+/** Los pasos de un pedido físico, para la barra de seguimiento. */
+export const PASOS_PEDIDO = ['Recibido', 'Pagado', 'Preparando', 'En camino', '¡Es tuyo!'];
 
 // PASSWORD RESET EMAIL
 export const sendPasswordResetEmail = async (email: string, token: string, userName?: string) => {
   const resetUrl = `${process.env.NEXTAUTH_URL}/recuperar-contrasena/${token}`;
-
-  const content = `
-    <h2 style="${CORREO.titulo}">Recupera tu contraseña</h2>
-    <p style="${CORREO.texto}">${userName ? `Hola <strong style="${CORREO.fuerte}">${escapeHtml(userName)}</strong>,` : 'Hola,'}</p>
-    <p style="${CORREO.texto}">Recibimos una solicitud para restablecer tu contraseña. Toca el botón para crear una nueva.</p>
-    ${botonCorreo(resetUrl, 'Restablecer contraseña')}
-    <div style="${CORREO.caja}">
-      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Si no pediste este cambio, ignora este mensaje: tu contraseña sigue siendo la misma.</p>
-    </div>
-    <p style="${CORREO.nota}">Este enlace vence en 1 hora.</p>`;
-
-  return sendEmail({
-    to: email,
-    subject: 'Recupera tu contraseña - Electro Shop',
-    html: await getBaseTemplate(content, 'Restablece tu contraseña'),
+  const nombre = e(primerNombre(userName));
+  const html = await marcoCorreo({
+    preheader: 'Tu enlace para entrar de nuevo vence en 1 hora.',
+    encabezado: {
+      sello: 'TU CUENTA',
+      titulo: nombre ? `${nombre}, volvamos<br>a entrar` : 'Volvamos a entrar',
+      texto: 'Pediste cambiar tu contraseña. Toca el botón y crea una nueva en un minuto.',
+    },
+    cuerpo: `
+      ${botonCorreo(resetUrl, 'Crear mi nueva contraseña')}
+      ${notaCorreo(`<strong style="${CORREO.fuerte}">¿No fuiste tú?</strong> Ignora este correo: tu contraseña sigue igual y nadie entra sin este enlace.`)}
+      <p style="${CORREO.nota}">El enlace vence en 1 hora y sirve una sola vez.</p>`,
+    chispa: { pose: 'explica', texto: 'No te preocupes: este enlace es solo tuyo y vence pronto. Si no lo pediste, tu cuenta sigue protegida.' },
+    motivo: 'Recibes este correo porque alguien pidió cambiar la contraseña de esta cuenta.',
   });
+  return sendEmail({ to: email, subject: 'Crea tu nueva contraseña de Electro Shop', html });
 };
 
-// WELCOME EMAIL
+// WELCOME EMAIL (C-219: sale al verificar el correo; antes existía y nadie la enviaba)
 export const sendWelcomeEmail = async (email: string, userName: string) => {
-  const appUrl = urlDeLaTienda();
-
-  const content = `
-    <h2 style="${CORREO.titulo}">Bienvenido a Electro Shop</h2>
-    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(userName)}</strong>,</p>
-    <p style="${CORREO.texto}">Gracias por unirte. Tu cuenta está lista para comprar.</p>
-    ${botonCorreo(`${appUrl}/productos`, 'Explorar productos')}`;
-
-  return sendEmail({
-    to: email,
-    subject: 'Bienvenido a Electro Shop',
-    html: await getBaseTemplate(content, `Hola ${userName}, tu cuenta está lista`),
+  const nombre = primerNombre(userName);
+  const html = await marcoCorreo({
+    preheader: 'Tu cuenta está activa. Esto es lo que tienes desde hoy.',
+    encabezado: {
+      sello: 'CUENTA ACTIVA',
+      titulo: nombre ? `¡Te damos la bienvenida, ${e(nombre)}!` : '¡Te damos la bienvenida!',
+      texto: 'Tu cuenta está lista. Desde hoy compras tecnología sin miedo, con 14 años de respaldo en Guanare y envíos a toda Venezuela.',
+    },
+    cuerpo: `
+      ${rotuloCorreo('Lo que tienes desde hoy', 0)}
+      ${ventajasCorreo([
+        { icono: 'envio', titulo: 'Tu pedido, paso a paso', texto: 'Te avisamos cuando se paga, cuando sale y cuando llega a tus manos.' },
+        { icono: 'puntos', titulo: 'Puntos ES', texto: 'Recarga una vez y paga tus compras con un toque, sin esperar verificaciones.' },
+        { icono: 'garantia', titulo: 'La garantía de la tienda', texto: 'Si algo falla, la pides desde Mi panel y te acompañamos hasta resolverlo.' },
+        { icono: 'chat', titulo: 'Gente real del otro lado', texto: 'Escríbenos por WhatsApp: te atiende el equipo de Electro Shop.' },
+      ])}
+      ${botonCorreo(`${urlTienda()}/productos`, 'Ver la tienda')}`,
+    chispa: { pose: 'saluda', texto: '¿Buscas algo y no lo ves en la tienda? Pídelo y te lo conseguimos. ¡Todo lo encuentras con nosotros!' },
   });
+  return sendEmail({ to: email, subject: nombre ? `¡Te damos la bienvenida a Electro Shop, ${nombre}!` : '¡Te damos la bienvenida a Electro Shop!', html });
 };
 
 // EMAIL VERIFICATION
 export const sendVerificationEmail = async (email: string, token: string, userName?: string) => {
   const verifyUrl = `${process.env.NEXTAUTH_URL}/verificar-email/${token}`;
-  const appUrl = urlDeLaTienda();
-
-  const content = `
-    <h2 style="${CORREO.titulo}">Verifica tu cuenta</h2>
-    <p style="${CORREO.texto}">${userName ? `Hola <strong style="${CORREO.fuerte}">${escapeHtml(userName)}</strong>,` : 'Hola,'}</p>
-    <p style="${CORREO.texto}">Gracias por registrarte en Electro Shop. Para activar tu cuenta y comenzar a comprar, verifica tu correo electrónico con el botón de abajo.</p>
-    ${botonCorreo(verifyUrl, 'Verificar mi cuenta')}
-    <div style="${CORREO.caja}">
-      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Si no creaste esta cuenta, puedes ignorar este mensaje de forma segura.</p>
-    </div>
-    <p style="${CORREO.nota}">
-      Este enlace vence en 24 horas. Si tienes problemas, escríbenos a
-      <a href="${appUrl}/contacto" style="${CORREO.enlace}">soporte</a>.
-    </p>`;
-
-  return sendEmail({
-    to: email,
-    subject: 'Verifica tu cuenta - Electro Shop',
-    html: await getBaseTemplate(content, 'Activa tu cuenta de Electro Shop'),
+  const nombre = e(primerNombre(userName));
+  const html = await marcoCorreo({
+    preheader: 'Un toque y tu cuenta queda lista para comprar sin miedo.',
+    encabezado: {
+      sello: 'UN PASO MÁS',
+      titulo: nombre ? `¡Ya casi, ${nombre}!<br>Activa tu cuenta` : '¡Ya casi!<br>Activa tu cuenta',
+      texto: 'Confirma que este correo es tuyo y tu cuenta queda lista: tus pedidos con seguimiento, tus favoritos y tus Puntos ES.',
+    },
+    cuerpo: `
+      ${botonCorreo(verifyUrl, 'Activar mi cuenta')}
+      <p style="${CORREO.nota}">El enlace vence en 24 horas. Si no creaste esta cuenta, ignora este correo: no pasa nada.</p>`,
+    chispa: { pose: 'saluda', texto: '¡Qué bueno que llegaste! Apenas actives tu cuenta tienes todo el catálogo: tecnología, gaming, gift cards y ferretería, con envíos a toda Venezuela.' },
+    motivo: 'Recibes este correo porque alguien creó una cuenta con esta dirección.',
   });
-};
-
-// ORDER NOTIFICATION EMAIL
-export const sendOrderNotificationEmail = async (
-  email: string,
-  orderData: {
-    orderNumber: string;
-    status: string;
-    total: number;
-    items: Array<{ name: string; quantity: number; price: number }>;
-    trackingNumber?: string;
-    trackingUrl?: string;
-  }
-) => {
-  const appUrl = urlDeLaTienda();
-  const statusLabels: Record<string, string> = {
-    PENDING: 'Pendiente', CONFIRMED: 'Confirmado', PAID: 'Pagado',
-    PROCESSING: 'Procesando', SHIPPED: 'Enviado', DELIVERED: 'Entregado',
-  };
-
-  const statusLabel = statusLabels[orderData.status] || orderData.status;
-
-  const content = `
-    <h2 style="${CORREO.titulo}">Pedido ${escapeHtml(statusLabel)}</h2>
-    <p style="${CORREO.subtitulo}">Orden #${escapeHtml(orderData.orderNumber)}</p>
-    <div style="${CORREO.caja}text-align:center;">
-      <p style="${CORREO.rotulo}">Total</p>
-      <p style="${CORREO.dato}letter-spacing:0;">${formatUSD(orderData.total)}</p>
-    </div>
-    ${orderData.trackingNumber ? `<p style="${CORREO.texto}">Guía: <strong style="${CORREO.fuerte}">${escapeHtml(orderData.trackingNumber)}</strong></p>` : ''}
-    ${botonCorreo(`${appUrl}/customer/orders`, 'Ver pedido')}`;
-
-  return sendEmail({
-    to: email,
-    subject: `Pedido #${orderData.orderNumber} - ${statusLabel}`,
-    html: await getBaseTemplate(content, `Tu pedido está ${statusLabel.toLowerCase()}`),
-  });
-};
-
-// LEGAL DOCUMENT EMAIL
-export const sendLegalDocumentEmail = async (
-  email: string,
-  documentType: 'terms_acceptance' | 'privacy_update' | 'contract',
-  documentUrl?: string,
-  pdfAttachment?: Buffer
-) => {
-  void pdfAttachment;
-  const titles = {
-    terms_acceptance: 'Constancia de aceptación de términos',
-    privacy_update: 'Actualización de la política de privacidad',
-    contract: 'Contrato de servicios',
-  };
-
-  const content = `
-    <h2 style="${CORREO.titulo}">${titles[documentType]}</h2>
-    <p style="${CORREO.texto}">Te enviamos tu documento legal para que lo guardes.</p>
-    ${documentUrl ? botonCorreo(escapeHtml(documentUrl), 'Ver documento') : ''}`;
-
-  return sendEmail({
-    to: email,
-    subject: `${titles[documentType]} - Electro Shop`,
-    html: await getBaseTemplate(content),
-  });
+  return sendEmail({ to: email, subject: 'Activa tu cuenta de Electro Shop', html });
 };
 
 // TEST EMAIL
 export const sendTestEmail = async (email: string) => {
-  const content = `
-    <div style="text-align:center;">
-      ${selloCorreo('exito')}
-      <h2 style="${CORREO.titulo}">Correo de prueba recibido</h2>
-      <p style="${CORREO.texto}">La configuración de correo está funcionando.</p>
-    </div>
-    <div style="${CORREO.caja}">
-      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">
-        Proveedor: ${process.env.RESEND_API_KEY ? 'Resend API' : escapeHtml(process.env.EMAIL_PROVIDER || 'SMTP')}<br>
-        Hora: ${new Date().toLocaleString('es-VE')}
-      </p>
-    </div>`;
-
-  return sendEmail({
-    to: email,
-    subject: 'Test de Email - Electro Shop',
-    html: await getBaseTemplate(content),
+  const html = await marcoCorreo({
+    preheader: 'La configuración de correo está funcionando.',
+    encabezado: { sello: 'CORREO DE PRUEBA', titulo: '¡El correo funciona!', texto: 'Si lees esto, la tienda ya puede escribirles a tus clientes.' },
+    cuerpo: datosCorreo([
+      ['Proveedor', e(process.env.RESEND_API_KEY ? 'Resend API' : process.env.EMAIL_PROVIDER || 'SMTP')],
+      ['Hora', e(new Date().toLocaleString('es-VE', { timeZone: 'America/Caracas' }))],
+    ]),
+    chispa: { pose: 'pulgar', texto: 'Todo en orden por aquí. Ábrelo también en el teléfono para ver cómo les llega a los clientes.' },
+    pie: 'equipo',
+    motivo: 'Lo pidió alguien del equipo desde Configuración → Correo.',
   });
+  return sendEmail({ to: email, subject: 'Correo de prueba de Electro Shop', html });
 };
 
-// ORDER PENDING PAYMENT EMAIL
-export const sendOrderPendingPaymentEmail = async (
-  email: string,
-  orderData: { orderNumber: string; total: number; customerName: string; }
-) => {
-  const appUrl = urlDeLaTienda();
-
-  const content = `
-    <h2 style="${CORREO.titulo}">Pedido en revisión</h2>
-    <p style="${CORREO.subtitulo}">Orden #${escapeHtml(orderData.orderNumber)}</p>
-    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(orderData.customerName)}</strong>,</p>
-    <p style="${CORREO.texto}">Gracias por tu compra. Recibimos tu pedido y está pendiente de la confirmación del pago.</p>
-    <div style="${CORREO.caja}">
-      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Estamos revisando tu pago</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">Nuestro equipo está verificando tu transacción. Puede tomar hasta 24 horas hábiles: no tienes que hacer nada más.</p>
-    </div>
-    <div style="text-align:center;margin:24px 0 0;">
-      <p style="${CORREO.rotulo}">Total a pagar</p>
-      <p style="${CORREO.dato}letter-spacing:0;">${formatUSD(orderData.total)}</p>
-    </div>
-    ${botonCorreo(`${appUrl}/customer/orders`, 'Ver estado del pedido')}`;
-
-  return sendEmail({
-    to: email,
-    subject: `Pedido Pendiente de Pago - ${orderData.orderNumber}`,
-    html: await getBaseTemplate(content, 'Tu pedido está siendo revisado'),
-  });
-};
-
-// ORDER SHIPPED EMAIL
+// ORDER SHIPPED EMAIL (C-219: el delivery en Guanare tiene su propio texto)
 export const sendOrderShippedEmail = async (
   email: string,
   orderData: {
@@ -555,34 +364,50 @@ export const sendOrderShippedEmail = async (
     /** C-100: dónde lo retira o recibe, y si el flete se paga al recibir */
     destination?: string;
     payOnDelivery?: boolean;
+    /** C-219: el delivery en Guanare (sin guía ni empresa de envíos) */
+    local?: boolean;
   }
 ) => {
-  const appUrl = urlDeLaTienda();
+  const nombre = e(primerNombre(orderData.customerName));
+  const empresa = orderData.shippingCarrier ? e(orderData.shippingCarrier) : '';
+  const destino = orderData.destination ? e(orderData.destination) : '';
+  const dato = `Orden ${e(orderData.orderNumber)}`;
+  const seguir = botonCorreo(`${urlTienda()}/customer/orders`, 'Seguir mi pedido');
 
-  const content = `
-    <h2 style="${CORREO.titulo}">Tu pedido está en camino</h2>
-    <p style="${CORREO.subtitulo}">Orden #${escapeHtml(orderData.orderNumber)}</p>
-    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(orderData.customerName)}</strong>,</p>
-    <p style="${CORREO.texto}">Buenas noticias: tu pedido fue enviado y va en camino.</p>
-    ${orderData.trackingNumber ? `
-    <div style="${CORREO.caja}text-align:center;">
-      <p style="${CORREO.rotulo}">Número de guía</p>
-      <p style="${CORREO.dato}">${escapeHtml(orderData.trackingNumber)}</p>
-      ${orderData.shippingCarrier ? `<p style="${CORREO.textoMenor}margin:10px 0 0;">Transportista: ${escapeHtml(orderData.shippingCarrier)}</p>` : ''}
-    </div>
-    ` : ''}
-    ${orderData.destination ? `<p style="${CORREO.texto}"><strong style="${CORREO.fuerte}">Destino:</strong> ${escapeHtml(orderData.destination)}</p>` : ''}
-    ${orderData.payOnDelivery ? `
-    <div style="${CORREO.cajaAviso}">
-      <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}">El envío es con <strong>cobro a destino</strong>: el flete se lo pagas a ${escapeHtml(orderData.shippingCarrier || 'la empresa de envíos')} cuando retires o recibas el paquete. Lleva tu cédula.</p>
-    </div>
-    ` : ''}
-    ${botonCorreo(`${appUrl}/customer/orders`, 'Seguir mi pedido')}`;
+  const html = orderData.local
+    ? await marcoCorreo({
+      preheader: 'Nuestro delivery ya salió con tu pedido.',
+      encabezado: {
+        sello: 'SALE A TU PUERTA',
+        titulo: `¡Va directo a tu puerta${nombre ? `, ${nombre}` : ''}!`,
+        texto: `Nuestro delivery ya salió con tu pedido${destino ? ` hacia ${destino}` : ''}. Ten tu teléfono a mano por si te llamamos al llegar.`,
+        dato,
+      },
+      cuerpo: `${seguimientoCorreo(PASOS_PEDIDO, 3)}${seguir}`,
+      chispa: { pose: 'pulgar', texto: '¡Ya casi! En un rato lo tienes en tus manos.' },
+    })
+    : await marcoCorreo({
+      preheader: `Tu pedido salió${empresa ? ` por ${orderData.shippingCarrier}` : ''}. Aquí está tu guía.`,
+      encabezado: {
+        sello: 'EN CAMINO',
+        titulo: `¡Tu caja ya va rumbo a ti${nombre ? `, ${nombre}` : ''}!`,
+        texto: `Salió${empresa ? ` por ${empresa}` : ''}${destino ? ` hacia ${destino}` : ''}. Con la guía la sigues en todo momento.`,
+        dato,
+      },
+      cuerpo: `
+        ${seguimientoCorreo(PASOS_PEDIDO, 3)}
+        ${orderData.trackingNumber ? placaCorreo(`
+          <p style="${CORREO.placaRotulo}">Tu guía${empresa ? ` de ${empresa}` : ''}</p>
+          ${placaInteriorCorreo('Número de guía', e(orderData.trackingNumber), '', 22)}`) : ''}
+        ${orderData.payOnDelivery ? avisoCorreo('Al retirar: tu cédula y el flete', `Tu caja viaja con cobro a destino: el flete se lo pagas a ${empresa || 'la empresa de envíos'} en la oficina y, con tu cédula en mano, es tuya.`, 'envio') : ''}
+        ${seguir}`,
+      chispa: { pose: 'pulgar', texto: '¡Ya salió! Guarda tu guía: con ella sigues tu caja hasta que llegue.' },
+    });
 
   return sendEmail({
     to: email,
-    subject: `¡Tu Pedido Ha Sido Enviado! - ${orderData.orderNumber}`,
-    html: await getBaseTemplate(content, 'Tu pedido está en camino'),
+    subject: orderData.local ? `¡Tu pedido ${orderData.orderNumber} va camino a tu puerta!` : `¡Tu pedido ${orderData.orderNumber} va en camino!`,
+    html,
   });
 };
 
@@ -591,19 +416,22 @@ export const sendShipmentUpdateEmail = async (
   email: string,
   data: { orderNumber: string; customerName: string; title: string; detail: string }
 ) => {
-  const appUrl = urlDeLaTienda();
-  const content = `
-    <h2 style="${CORREO.titulo}">${escapeHtml(data.title)}</h2>
-    <p style="${CORREO.subtitulo}">Orden #${escapeHtml(data.orderNumber)}</p>
-    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(data.customerName)}</strong>,</p>
-    <p style="${CORREO.texto}">${escapeHtml(data.detail)}</p>
-    ${botonCorreo(`${appUrl}/customer/orders`, 'Ver mi pedido')}`;
-
-  return sendEmail({
-    to: email,
-    subject: `${data.title} - ${data.orderNumber}`,
-    html: await getBaseTemplate(content, data.title),
+  const nombre = e(primerNombre(data.customerName));
+  const html = await marcoCorreo({
+    preheader: data.title,
+    encabezado: {
+      sello: 'LISTO PARA RETIRAR',
+      titulo: `¡Llegó${nombre ? `, ${nombre}` : ''}!<br>Ya puedes buscarlo`,
+      texto: e(data.detail),
+      dato: `Orden ${e(data.orderNumber)}`,
+    },
+    cuerpo: `
+      ${seguimientoCorreo(PASOS_PEDIDO, 3)}
+      ${avisoCorreo('Lleva tu cédula', 'En la oficina te la piden para entregarte el paquete. Si tu envío es con cobro a destino, ahí mismo pagas el flete.', 'ubicacion')}
+      ${botonCorreo(`${urlTienda()}/customer/orders`, 'Ver mi pedido')}`,
+    chispa: { pose: 'pulgar', texto: '¡Ya casi es tuyo! Búscalo cuando puedas, con tu cédula en mano.' },
   });
+  return sendEmail({ to: email, subject: `¡Tu pedido ${data.orderNumber} llegó a la oficina!`, html });
 };
 
 // ORDER DELIVERED EMAIL
@@ -611,30 +439,23 @@ export const sendOrderDeliveredEmail = async (
   email: string,
   orderData: { orderNumber: string; customerName: string; }
 ) => {
-  const appUrl = urlDeLaTienda();
-
-  const content = `
-    <div style="text-align:center;">
-      ${selloCorreo('exito')}
-      <h2 style="${CORREO.titulo}">Pedido entregado</h2>
-      <p style="${CORREO.subtitulo}">Orden #${escapeHtml(orderData.orderNumber)}</p>
-    </div>
-    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escapeHtml(orderData.customerName)}</strong>,</p>
-    <p style="${CORREO.texto}">Tu pedido fue entregado. Esperamos que disfrutes tu compra.</p>
-    <div style="${CORREO.caja}text-align:center;">
-      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Tu opinión es muy importante</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">¿Qué te pareció tu experiencia de compra? Déjanos tu reseña.</p>
-    </div>
-    ${botonCorreo(`${appUrl}/customer/reviews`, 'Dejar reseña')}
-    <p style="${CORREO.nota}text-align:center;">
-      Si tienes algún problema con tu pedido, <a href="${appUrl}/contacto" style="${CORREO.enlace}">contáctanos</a>.
-    </p>`;
-
-  return sendEmail({
-    to: email,
-    subject: `¡Tu Pedido Ha Sido Entregado! - ${orderData.orderNumber}`,
-    html: await getBaseTemplate(content, 'Tu pedido ha llegado'),
+  const app = urlTienda();
+  const nombre = e(primerNombre(orderData.customerName));
+  const html = await marcoCorreo({
+    preheader: 'Tu pedido llegó a tus manos. ¡Que lo disfrutes!',
+    encabezado: {
+      sello: 'ENTREGADO',
+      titulo: `¡Misión cumplida${nombre ? `, ${nombre}` : ''}!`,
+      texto: 'Tu pedido llegó a tus manos. Que lo disfrutes al máximo.',
+      dato: `Orden ${e(orderData.orderNumber)}`,
+    },
+    cuerpo: `
+      ${seguimientoCorreo(PASOS_PEDIDO, PASOS_PEDIDO.length)}
+      ${notaCorreo(`<strong style="${CORREO.fuerte}">¿Algo no anda bien?</strong> Lo que compraste tiene la garantía de la tienda: pídela desde <a href="${app}/customer/warranty" style="${CORREO.enlace}">Mi panel → Garantía</a> y te acompañamos hasta resolverlo.`)}
+      ${botonCorreo(`${app}/customer/orders`, 'Ver mi pedido')}`,
+    chispa: { pose: 'celebra', texto: '¡Disfrútalo! En unos días te pido tu opinión: ayuda muchísimo a otros clientes.' },
   });
+  return sendEmail({ to: email, subject: `¡Tu pedido ${orderData.orderNumber} ya es tuyo!`, html });
 };
 
 // DIGITAL CODE DELIVERED EMAIL
@@ -649,42 +470,30 @@ export const sendDigitalCodeEmail = async (
     redemptionInstructions?: string;
   }
 ) => {
-  const appUrl = urlDeLaTienda();
   // Todo escapado (C-60b): el nombre del producto lleva la cuenta que escribió el cliente y el código lo pega el equipo
-  const e = {
-    orderNumber: escapeHtml(codeData.orderNumber),
-    customerName: escapeHtml(codeData.customerName),
-    productName: escapeHtml(codeData.productName),
-    code: escapeHtml(codeData.code),
-    platform: codeData.platform ? escapeHtml(codeData.platform) : '',
-    redemptionInstructions: codeData.redemptionInstructions ? escapeHtml(codeData.redemptionInstructions).replace(/\n/g, '<br>') : '',
-  };
-
-  const content = `
-    <h2 style="${CORREO.titulo}">Tu código digital está listo</h2>
-    <p style="${CORREO.subtitulo}">Orden #${e.orderNumber}</p>
-    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${e.customerName}</strong>,</p>
-    <p style="${CORREO.texto}">Aquí tienes tu código digital para <strong style="${CORREO.fuerte}">${e.productName}</strong>:</p>
-    ${placaCorreo(`
-      <p style="${CORREO.placaRotulo}">TU CÓDIGO DIGITAL</p>
-      ${e.platform ? `<p style="${CORREO.placaTexto}margin-top:8px;">Plataforma: <strong style="color:#ffffff;">${e.platform}</strong></p>` : ''}
-      ${placaInteriorCorreo('Código', e.code)}`)}
-    ${e.redemptionInstructions ? `
-    <div style="${CORREO.caja}">
-      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Instrucciones de canje</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">${e.redemptionInstructions}</p>
-    </div>
-    ` : ''}
-    <div style="${CORREO.cajaAviso}">
-      <p style="${CORREO.cajaTexto}${CORREO.tonoAviso}"><strong>Importante:</strong> guarda este código en un lugar seguro y no lo compartas con nadie.</p>
-    </div>
-    ${botonCorreo(`${appUrl}/customer/orders`, 'Ver mis códigos')}`;
-
-  return sendEmail({
-    to: email,
-    subject: `¡Tu Código Digital Está Listo! - ${codeData.productName}`,
-    html: await getBaseTemplate(content, 'Tu código digital ha llegado'),
+  const nombre = e(primerNombre(codeData.customerName));
+  const producto = e(codeData.productName);
+  const plataforma = codeData.platform ? e(codeData.platform) : '';
+  const instrucciones = codeData.redemptionInstructions ? e(codeData.redemptionInstructions).replace(/\n/g, '<br>') : '';
+  const html = await marcoCorreo({
+    preheader: `Tu código de ${codeData.productName} ya está aquí.`,
+    encabezado: {
+      sello: 'CÓDIGO DIGITAL',
+      titulo: `¡Aquí está${nombre ? `, ${nombre}` : ''}!<br>Tu código ya llegó`,
+      texto: `Cópialo y canjéalo${plataforma ? ` en ${plataforma}` : ''}. También queda guardado en Mi pedido.`,
+      dato: `Orden ${e(codeData.orderNumber)}`,
+    },
+    cuerpo: `
+      ${placaCorreo(`
+        <p style="${CORREO.placaRotulo}">Tu código digital</p>
+        <p style="${CORREO.placaTitulo}">${producto}</p>
+        ${placaInteriorCorreo('Código', e(codeData.code))}`, '0 0 6px')}
+      ${instrucciones ? `${rotuloCorreo('Cómo canjearlo')}${notaCorreo(instrucciones)}` : ''}
+      ${avisoCorreo('Este código es solo para ti', 'No lo compartas con nadie: quien lo tenga puede canjearlo.', 'candado')}
+      ${botonCorreo(`${urlTienda()}/customer/orders`, 'Ver mis códigos')}`,
+    chispa: { pose: 'celebra', texto: '¡A disfrutarlo! Si el código te da algún problema al canjearlo, escríbenos por WhatsApp de una vez.' },
   });
+  return sendEmail({ to: email, subject: `¡Tu código de ${codeData.productName} llegó!`, html });
 };
 
 // GIFT CARD EMAIL - Send gift card to recipient
@@ -700,72 +509,40 @@ export const sendGiftCardEmail = async (
     designName?: string;
   }
 ) => {
-  const appUrl = urlDeLaTienda();
-  const redeemUrl = `${appUrl}/canjear-gift-card`;
   // El remitente, el destinatario y el mensaje los escribe quien regala
-  const e = {
-    senderName: escapeHtml(giftCardData.senderName),
-    recipientName: escapeHtml(giftCardData.recipientName),
-    personalMessage: giftCardData.personalMessage ? escapeHtml(giftCardData.personalMessage) : '',
-    code: escapeHtml(giftCardData.code),
-    pin: giftCardData.pin ? escapeHtml(giftCardData.pin) : '',
-  };
-
-  const content = `
-    <div style="text-align:center;">
-      <h2 style="${CORREO.titulo}">Te enviaron una Gift Card</h2>
-      <p style="${CORREO.subtitulo}">De parte de ${e.senderName}</p>
-    </div>
-    <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${e.recipientName}</strong>,</p>
-    <p style="${CORREO.texto}"><strong style="${CORREO.fuerte}">${e.senderName}</strong> te envió una Gift Card de Electro Shop para que la uses en lo que más te guste.</p>
-
-    ${e.personalMessage ? `
-    <div style="border-left:4px solid ${COLOR.marca};padding:6px 0 6px 16px;margin:20px 0;">
-      <p style="${CORREO.rotulo}margin-bottom:4px;">${e.senderName} te escribió</p>
-      <p style="margin:0;color:${COLOR.tinta};font-size:17px;line-height:1.5;font-style:italic;">"${e.personalMessage}"</p>
-    </div>
-    ` : ''}
-
-    <!-- La tarjeta: tabla y colores planos para que se vea igual en todos los clientes de correo -->
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
-      <tr>
-        <td bgcolor="${COLOR.noche}" style="background-color:${COLOR.noche};border-radius:16px;padding:26px 24px;text-align:center;">
-          <p style="${CORREO.placaRotulo}">ELECTRO SHOP · GIFT CARD</p>
-          <p style="margin:14px 0 0;color:#ffffff;font-size:44px;line-height:1.1;font-weight:700;">${formatUSD(giftCardData.amount)}</p>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;">
-            <tr>
-              <td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:12px;padding:14px 12px;text-align:center;">
-                <p style="${CORREO.rotulo}">Código de canje</p>
-                <p style="${CORREO.dato}font-size:20px;font-family:'Courier New',Courier,monospace;">${e.code}</p>
-                ${e.pin ? `<p style="${CORREO.textoMenor}margin:10px 0 0;">PIN: <strong style="${CORREO.fuerte}letter-spacing:2px;">${e.pin}</strong></p>` : ''}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-
-    <p style="margin:0 0 8px;color:${COLOR.tinta};font-size:15px;line-height:1.4;font-weight:700;">Cómo canjearla</p>
-    <ol style="margin:0 0 8px;padding:0 0 0 20px;font-size:14px;line-height:1.8;${CORREO.tonoNeutro}">
-        <li>Entra a Electro Shop y crea una cuenta o inicia sesión</li>
-        <li>Ve a la página de <strong>Canjear Gift Card</strong></li>
-        <li>Escribe el código de arriba${e.pin ? ' y el PIN' : ''}</li>
-        <li>Los Puntos ES se acreditan al instante en tu cuenta</li>
+  const de = e(giftCardData.senderName);
+  const para = e(primerNombre(giftCardData.recipientName));
+  const monto = formatUSD(giftCardData.amount);
+  const html = await marcoCorreo({
+    preheader: `${giftCardData.senderName} te regaló una gift card de ${monto}.`,
+    encabezado: {
+      sello: 'UN REGALO PARA TI',
+      titulo: `¡${de} te regaló ${monto}!`,
+      texto: `${para ? `${para}, es` : 'Es'} una gift card de Electro Shop para lo que tú quieras: tecnología, gaming, recargas y más.`,
+    },
+    cuerpo: `
+      ${giftCardData.personalMessage ? `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 6px;"><tr><td style="border-left:4px solid ${COLOR.marca};padding:6px 0 6px 16px;">
+        <p style="${CORREO.rotulo}margin:0 0 4px;">${de} te escribió</p>
+        <p style="margin:0;color:${COLOR.tinta};font-size:18px;line-height:1.5;font-style:italic;">"${e(giftCardData.personalMessage)}"</p>
+      </td></tr></table>` : ''}
+      ${placaCorreo(`
+        <p style="${CORREO.placaRotulo}">Electro Shop · Gift card</p>
+        <p style="margin:12px 0 0;color:#ffffff;font-family:${FUENTE};font-size:46px;line-height:1.1;font-weight:800;">${monto}</p>
+        ${placaInteriorCorreo('Código de canje', e(giftCardData.code), giftCardData.pin ? `<p style="${CORREO.textoMenor}margin:10px 0 0;">PIN: <strong style="${CORREO.fuerte}letter-spacing:2px;">${e(giftCardData.pin)}</strong></p>` : '')}`)}
+      ${rotuloCorreo('Cómo canjearla', 4)}
+      <ol style="margin:0 0 8px;padding:0 0 0 20px;font-size:15px;line-height:1.8;color:${COLOR.texto};">
+        <li>Entra a Electro Shop y crea tu cuenta o inicia sesión.</li>
+        <li>Ve a <strong style="${CORREO.fuerte}">Canjear gift card</strong>.</li>
+        <li>Escribe el código${giftCardData.pin ? ' y el PIN' : ''}.</li>
+        <li>El monto te queda al instante en tus Puntos ES.</li>
       </ol>
-
-    ${botonCorreo(redeemUrl, 'Canjear mi Gift Card')}
-
-    <p style="${CORREO.textoMenor}text-align:center;">Guarda este correo: el código es único y no tiene fecha de vencimiento.</p>
-
-    <p style="${CORREO.nota}text-align:center;">
-      ¿Tienes problemas? <a href="${appUrl}/contacto" style="${CORREO.enlace}">Contáctanos</a>
-    </p>`;
-
-  return sendEmail({
-    to: email,
-    subject: `¡${giftCardData.senderName} te ha enviado una Gift Card de $${giftCardData.amount}!`,
-    html: await getBaseTemplate(content, `${giftCardData.senderName} te regaló una Gift Card de $${giftCardData.amount}`),
+      ${botonCorreo(`${urlTienda()}/canjear-gift-card`, 'Canjear mi gift card')}
+      <p style="${CORREO.nota}">Guarda este correo: el código es único y no vence.</p>`,
+    chispa: { pose: 'celebra', texto: '¡Qué buen regalo! Canjéala cuando quieras y elige lo que más te guste.' },
+    motivo: `Recibes este correo porque ${de} te envió una gift card de ${e(new URL(urlTienda()).host)}.`,
   });
+  return sendEmail({ to: email, subject: `¡${giftCardData.senderName} te regaló una gift card de ${monto}!`, html });
 };
 
 // C-122: el equipo respondió o cambió el estado de una solicitud de garantía
@@ -773,21 +550,19 @@ export const sendWarrantyUpdateEmail = async (
   email: string,
   data: { customerName: string; code: string; productName: string; status: string; statusHelp: string; message?: string | null },
 ) => {
-  const appUrl = urlDeLaTienda();
-  const content = `
-    <h2 style="${CORREO.titulo}">Tu solicitud de garantía ${escapeHtml(data.code)}</h2>
-    <p style="${CORREO.texto}">
-      Hola <strong style="${CORREO.fuerte}">${escapeHtml(data.customerName)}</strong>, tenemos novedades sobre <strong style="${CORREO.fuerte}">${escapeHtml(data.productName)}</strong>.
-    </p>
-    <div style="${CORREO.caja}">
-      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Estado: ${escapeHtml(data.status)}</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">${escapeHtml(data.statusHelp)}</p>
-    </div>
-    ${data.message ? `<div style="${CORREO.cita}">${escapeHtml(data.message)}</div>` : ''}
-    ${botonCorreo(`${appUrl}/customer/warranty`, 'Ver mi solicitud')}`;
-  return sendEmail({
-    to: email,
-    subject: `Garantía ${data.code}: ${data.status}`,
-    html: await getBaseTemplate(content, `Novedades de tu solicitud de garantía ${data.code}`),
+  const nombre = e(primerNombre(data.customerName));
+  const html = await marcoCorreo({
+    preheader: `Novedades de tu solicitud de garantía ${data.code}`,
+    encabezado: {
+      sello: 'TU GARANTÍA',
+      titulo: `Novedades de tu garantía ${e(data.code)}`,
+      texto: `${nombre ? `${nombre}, tenemos` : 'Tenemos'} noticias sobre <strong style="${CORREO.fuerte}">${e(data.productName)}</strong>.`,
+    },
+    cuerpo: `
+      ${datosCorreo([['Estado', e(data.status)], ['Qué significa', e(data.statusHelp)]])}
+      ${data.message ? `${rotuloCorreo('El equipo te escribió')}<div style="${CORREO.cita}">${e(data.message)}</div>` : ''}
+      ${botonCorreo(`${urlTienda()}/customer/warranty`, 'Ver mi solicitud')}`,
+    chispa: { pose: 'explica', texto: 'Estamos contigo hasta que quede resuelto. Si quieres agregar algo, respóndenos desde tu solicitud.' },
   });
+  return sendEmail({ to: email, subject: `Garantía ${data.code}: ${data.status}`, html });
 };

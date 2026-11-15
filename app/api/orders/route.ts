@@ -13,19 +13,15 @@ import { emitAdminEvent } from '@/lib/admin-events';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { formatOrderPaymentMethod, formatPaymentMethod } from '@/lib/format-helpers';
-import { conditionBadge, warrantyDaysFor } from '@/lib/product-condition';
 import { notifyStockCrossings } from '@/lib/stock-alerts';
 import { OrderStatus, PaymentStatus, PaymentMethodType, Prisma } from '@prisma/client';
 import {
   sendEmail,
   sendOrderShippedEmail,
   sendOrderDeliveredEmail,
-  sendOrderPendingPaymentEmail
 } from '@/lib/email-service';
-import { generateOrderConfirmationEmail } from '@/lib/email-templates/OrderConfirmation';
-import { CORREO, botonCorreo } from '@/lib/email-templates/estilo';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { correoDeCompra } from '@/lib/email-templates/compra';
+import { correoListoParaRetirar, correoOrdenCancelada } from '@/lib/email-templates/pedidos';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { orderBlockers, parseDeliveryMethod, parseOrderItems, quoteOrder, OrderInputError, type QuotedLine } from '@/lib/order-quote';
 import { montoDecimal, roundMoney, type OrderGroupTotals } from '@/lib/pricing';
@@ -40,10 +36,10 @@ import {
   stockYaDescontado,
   devolverStock,
   liberarReservas,
-  escaparHtml,
   MOTIVO_CANCELACION_MINIMO,
 } from '@/lib/order-admin';
 import { recordPaidOrder, rejectOrderConversions } from '@/lib/influencer-commission';
+import { avisarBoletoPorCompra } from '@/lib/sorteo/correos';
 import { recordStudioOrder } from '@/lib/studio/tracking';
 import { acreditarPagoSinOrden, pagoSinOrdenWhere } from '@/lib/pago-movil-sin-orden';
 import { aCentimos, conciliar, montoBs, type Conciliacion } from '@/lib/pago-movil/monto';
@@ -296,51 +292,12 @@ async function sendNewOrderNotifications(order: CreatedOrder, userId: string, pa
     });
   }
 
+  // C-219: un solo correo de la compra. Si el pago queda en revisión dice "¡Pedido recibido!" y que se está revisando
+  // (antes salían dos correos a la vez: la confirmación y "Pedido pendiente de pago").
   try {
-
-    const emailHtml = await generateOrderConfirmationEmail({
-      orderNumber: order.orderNumber,
-      customerName: order.user?.name || 'Cliente',
-      orderDate: format(new Date(order.createdAt), "d 'de' MMMM, yyyy", { locale: es }),
-      items: order.items.map(item => ({
-        name: item.productName || 'Producto',
-        quantity: item.quantity,
-        price: item.priceUSD.toString(),
-        // C-121: lo que guardó el pedido al vender (C-119), igual que "Mis pedidos"
-        condition: conditionBadge(item.productCondition, item.conditionGrade),
-        warrantyDays: warrantyDaysFor(item.productCondition, item.warrantyDays),
-      })),
-      subtotal: order.subtotalUSD.toString(),
-      discount: order.discountUSD.toString(),
-      shipping: order.shippingUSD.toString(),
-      tax: order.taxUSD.toString(),
-      total: order.totalUSD.toString(),
-      currency: 'USD',
-      paymentMethod: formatOrderPaymentMethod(order),
-      paid: order.paymentStatus === 'PAID',
-      // C-199: si la compra llega en varios paquetes, cada correo dice de dónde sale el suyo
-      deliveryMethod: `${DELIVERY_LABELS[order.deliveryMethod || ''] || 'Entrega'}${order.dispatchCityName ? ` · este paquete sale desde ${order.dispatchCityName}, con su propia guía` : ''}`,
-      deliveryAddress: order.shippingAddress || undefined,
-    });
-
-    await sendEmail({
-      to: order.user?.email || '',
-      subject: `Confirmación de Pedido - ${order.orderNumber}`,
-      html: emailHtml,
-    });
-
-    // Pago por verificar: también el correo de pago pendiente. C-132: antes salía en todo pago que no fuera con Puntos ES,
-    // también en un Pago Móvil ya confirmado por el banco (orden pagada)
-    if (order.paymentStatus !== 'PAID' && order.user?.email) {
-      try {
-        await sendOrderPendingPaymentEmail(order.user.email, {
-          orderNumber: order.orderNumber,
-          total: Number(order.totalUSD),
-          customerName: order.user.name || 'Cliente',
-        });
-      } catch (pendingEmailError) {
-        console.error('Error sending pending payment email:', pendingEmailError);
-      }
+    if (order.user?.email) {
+      const { asunto, html } = await correoDeCompra(order);
+      await sendEmail({ to: order.user.email, subject: asunto, html });
     }
   } catch (emailError) {
     console.error('Error sending order confirmation email:', emailError);
@@ -980,6 +937,8 @@ export async function POST(request: NextRequest) {
       const { recordPaidOrder } = await import('@/lib/influencer-commission');
       for (const order of orders) {
         recordPaidOrder(order.id).catch(() => {});
+        // C-219: si con esta compra nace un boleto del sorteo, el correo
+        void avisarBoletoPorCompra(order.id);
       }
     }
 
@@ -1289,6 +1248,7 @@ export async function PATCH(request: NextRequest) {
     // Pago confirmado: si el cliente llegó por un promotor, nace su comisión pendiente (C-75)
     if (confirmandoPago) {
       recordPaidOrder(order.id).catch((error) => console.error('Error registrando comisión de promotor:', error));
+      void avisarBoletoPorCompra(order.id);
       void avisarPedidoDigitalPorEntregar(order.id);
     }
 
@@ -1302,6 +1262,15 @@ export async function PATCH(request: NextRequest) {
         link: `/customer/orders`,
         icon: 'payment'
       });
+      // C-219: "¡Pago confirmado!" también por correo (antes solo la campanita, y el cliente había leído "te avisaremos")
+      if (order.user?.email) {
+        try {
+          const { asunto, html } = await correoDeCompra(order);
+          await sendEmail({ to: order.user.email, subject: asunto, html });
+        } catch (emailError) {
+          console.error('Error sending payment confirmed email:', emailError);
+        }
+      }
     }
 
     if (patch.status && patch.status !== oldOrder.status && oldOrder.userId) {
@@ -1337,6 +1306,15 @@ export async function PATCH(request: NextRequest) {
             link: `/customer/orders`,
             icon: 'store'
           });
+          // C-219: con la dirección, el horario y lo que hay que llevar
+          if (order.user?.email) {
+            try {
+              const { asunto, html } = await correoListoParaRetirar({ numero: oldOrder.orderNumber, nombre: order.user.name });
+              await sendEmail({ to: order.user.email, subject: asunto, html });
+            } catch (emailError) {
+              console.error('Error sending ready for pickup email:', emailError);
+            }
+          }
           break;
 
         case 'SHIPPED': {
@@ -1365,6 +1343,7 @@ export async function PATCH(request: NextRequest) {
                 shippingCarrier: order.shippingCarrier ? NOMBRE_EMPRESA[order.shippingCarrier as EmpresaGuia] ?? order.shippingCarrier : undefined,
                 destination: order.shippingAddress || undefined,
                 payOnDelivery: order.shippingPaidBy === 'CUSTOMER',
+                local,
               });
             } catch (emailError) {
               console.error('Error sending shipped email:', emailError);
@@ -1404,47 +1383,16 @@ export async function PATCH(request: NextRequest) {
           });
 
           try {
-            const bloqueSaldo = reintegro > 0
-              ? `
-              <div style="${CORREO.cajaExito}">
-                <p style="${CORREO.cajaTitulo}${CORREO.tonoExito}">Puntos ES devueltos</p>
-                <p style="${CORREO.cajaTexto}${CORREO.tonoExito}">Te devolvimos ${escaparHtml(formatPuntos(reintegro))} para tu próxima compra.</p>
-              </div>`
-              : '';
-            // Todo lo que escribe el admin o el cliente va escapado: antes entraba crudo en el HTML
-            const cancellationEmailContent = `
-              <h2 style="${CORREO.titulo}">Orden cancelada</h2>
-              <p style="${CORREO.subtitulo}${CORREO.tonoPeligro}">Orden #${escaparHtml(oldOrder.orderNumber)}</p>
-              <p style="${CORREO.texto}">Hola <strong style="${CORREO.fuerte}">${escaparHtml(order.user?.name || 'Cliente')}</strong>,</p>
-              <p style="${CORREO.texto}">Lamentamos informarte que tu orden fue cancelada.</p>
-
-              <div style="${CORREO.caja}">
-                <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">Motivo de la cancelación</p>
-                <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">${escaparHtml(motivo)}</p>
-              </div>
-              ${bloqueSaldo}
-              <div style="${CORREO.caja}">
-                <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">
-                  <strong style="${CORREO.fuerte}">Número de orden:</strong> ${escaparHtml(oldOrder.orderNumber)}<br>
-                  <strong style="${CORREO.fuerte}">Total:</strong> ${escaparHtml(formatUSD(Number(oldOrder.totalUSD)))}<br>
-                  <strong style="${CORREO.fuerte}">Fecha de cancelación:</strong> ${new Date().toLocaleDateString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-
-              <p style="${CORREO.texto}">Si tienes alguna pregunta, escríbenos.</p>
-              ${botonCorreo(`${(process.env.APP_URL || process.env.NEXTAUTH_URL || '').replace(/\/+$/, '')}/contacto`, 'Contactar a soporte')}
-              <p style="${CORREO.nota}">Gracias por tu comprensión. Esperamos poder atenderte en otra oportunidad.</p>
-            `;
-
-            const { getBaseTemplate } = await import('@/lib/email-service');
-            const emailHtml = await getBaseTemplate(cancellationEmailContent, 'Tu orden ha sido cancelada');
-
+            // C-219: la plantilla está en lib/email-templates/pedidos (antes, escrita aquí). Todo lo que escribe el equipo va escapado
             if (order.user?.email) {
-              await sendEmail({
-                to: order.user.email,
-                subject: `Orden Cancelada - ${oldOrder.orderNumber}`,
-                html: emailHtml,
+              const { asunto, html } = await correoOrdenCancelada({
+                numero: oldOrder.orderNumber,
+                nombre: order.user.name,
+                motivo,
+                total: Number(oldOrder.totalUSD),
+                reintegro,
               });
+              await sendEmail({ to: order.user.email, subject: asunto, html });
             }
           } catch (emailError) {
             console.error('Error sending cancellation email:', emailError);

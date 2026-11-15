@@ -6,6 +6,8 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { verifyCaptcha } from '@/lib/captcha';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { sendEmail } from '@/lib/email-service';
+import { correoContactoRecibido } from '@/lib/email-templates/servicio';
 import { revisarAlLlegar } from '@/lib/ia/urgencia';
 
 // POST /api/contact - Submit contact form
@@ -70,6 +72,11 @@ export async function POST(request: NextRequest) {
       fields: [['Asunto', subject], ['Mensaje', message.slice(0, 600)], ['Correo', email], ['Teléfono', phone]],
       link: '/admin/inquiries',
     });
+
+    // C-219: el acuse a quien escribió, con el diseño de la tienda
+    void correoContactoRecibido({ nombre: name, asunto: subject })
+      .then(({ asunto, html }) => sendEmail({ to: email, subject: asunto, html }))
+      .catch((error) => console.error('Error enviando el acuse de contacto:', error));
 
     return NextResponse.json(
       {

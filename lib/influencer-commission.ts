@@ -2,6 +2,9 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { createNotification } from '@/lib/notifications';
+import { correoVentaPromotor } from '@/lib/email-templates/comunidad';
+import { correoComisionAcreditada } from '@/lib/email-templates/puntos';
+import { enviarAUsuario } from '@/lib/email-templates/enviar';
 import { formatPuntos, formatUSD } from '@/lib/currency';
 import { ivaIncluido, montoDecimal, porcentajeIva, roundMoney } from '@/lib/pricing';
 
@@ -196,6 +199,8 @@ export async function recordPaidOrder(orderId: string) {
     link: '/customer/referrals',
     icon: 'gift',
   });
+  // C-219: "¡Alguien compró con tu código!" también por correo
+  void enviarAUsuario(influencer.userId, (u) => correoVentaPromotor({ nombre: u.name, comision: Number(commission), diasParaAcreditar: DIAS_PARA_ACREDITAR }));
 
   return conversion;
 }
@@ -321,6 +326,9 @@ export async function approveConversion(conversionId: string, influencerId: stri
       link: '/customer/balance',
       icon: 'gift',
     });
+    // C-219: la comisión acreditada, también por correo
+    const monto = resultado.monto;
+    void enviarAUsuario(resultado.promotorUserId, (u) => correoComisionAcreditada({ nombre: u.name, monto }));
   }
   return resultado.id;
 }

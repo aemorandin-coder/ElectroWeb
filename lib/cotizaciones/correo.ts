@@ -2,10 +2,11 @@
 // El correo lleva el resumen y el botón al enlace del presupuesto: el documento, la impresión y la aprobación siguen
 // en esa página. No adjunta nada. Todo lo que escribe el equipo o el cliente va escapado.
 
-import { getBaseTemplate, sendEmail } from '@/lib/email-service';
+import { sendEmail } from '@/lib/email-service';
 import { escaparHtml, urlBase } from '@/lib/email-campaigns';
 import { formatUSD } from '@/lib/currency';
-import { CORREO, COLOR, botonCorreo } from '@/lib/email-templates/estilo';
+import { CORREO, COLOR, botonCorreo, rotuloCorreo } from '@/lib/email-templates/estilo';
+import { marcoCorreo } from '@/lib/email-templates/marco';
 import { getPublicSettings } from '@/lib/site-settings';
 import type { CotizacionAdmin } from '@/lib/cotizaciones';
 
@@ -34,17 +35,27 @@ export async function correoCotizacion(c: CotizacionAdmin, mensaje: string | nul
   ].join('');
 
   const nota = mensaje
-    ? `<div style="${CORREO.cita}">${escaparHtml(mensaje)}</div>`
+    ? `${rotuloCorreo('El equipo te escribió', 4)}<div style="${CORREO.cita}">${escaparHtml(mensaje)}</div>`
     : '';
 
-  const contenido = `
-    <h2 style="${CORREO.titulo}">Presupuesto N.º ${escaparHtml(c.number)}</h2>
-    <p style="${CORREO.texto}">Hola ${escaparHtml(nombre)}, te enviamos el presupuesto${c.subject ? ` para ${escaparHtml(c.subject)}` : ''}. Puedes verlo, imprimirlo o guardarlo en PDF, y aprobarlo ahí mismo con tu nombre y tu cédula o RIF.</p>
-    ${nota}
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border-top:1px solid ${COLOR.linea};border-bottom:1px solid ${COLOR.linea};margin:8px 0;">${filas}</table>
-    ${botonCorreo(escaparHtml(enlace), 'Ver y aprobar el presupuesto')}
-    <p style="${CORREO.nota}">Este presupuesto no es una factura. El enlace es personal: quien lo tenga puede verlo y aprobarlo, así que no lo reenvíes a quien no corresponda.</p>`;
-  return { asunto, html: await getBaseTemplate(contenido, asunto) };
+  // C-219: el marco nuevo, con el presupuesto como encabezado
+  const html = await marcoCorreo({
+    preheader: `Tu presupuesto ${c.number} está listo para ver y aprobar.`,
+    encabezado: {
+      sello: 'PRESUPUESTO',
+      titulo: `Tu presupuesto está listo${nombre ? `, ${escaparHtml(nombre)}` : ''}`,
+      texto: `Te enviamos el presupuesto${c.subject ? ` para <strong style="${CORREO.fuerte}">${escaparHtml(c.subject)}</strong>` : ''}. Míralo, imprímelo o guárdalo en PDF, y apruébalo ahí mismo con tu nombre y tu cédula o RIF.`,
+      dato: `Presupuesto N.º ${escaparHtml(c.number)}`,
+    },
+    cuerpo: `
+      ${nota}
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border-top:1px solid ${COLOR.linea};border-bottom:1px solid ${COLOR.linea};margin:8px 0;">${filas}</table>
+      ${botonCorreo(escaparHtml(enlace), 'Ver y aprobar el presupuesto')}
+      <p style="${CORREO.nota}">Este presupuesto no es una factura. El enlace es personal: quien lo tenga puede verlo y aprobarlo, así que no lo reenvíes a quien no corresponda.</p>`,
+    chispa: { pose: 'pulgar', texto: '¿Necesitas cambiar algo? Respóndenos este correo y lo ajustamos.' },
+    motivo: `Recibes este correo porque pediste un presupuesto a ${escaparHtml(marca)}.`,
+  });
+  return { asunto, html };
 }
 
 /** Envía la cotización a `para`. `success` false si el servicio de correo no la aceptó. */

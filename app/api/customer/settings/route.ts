@@ -8,6 +8,8 @@ import { contrasenaSchema } from '@/lib/validations/registro';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 import { describirDispositivo } from '@/lib/dispositivo';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { sendEmail } from '@/lib/email-service';
+import { correoContrasenaCambiada, correoEliminarCuenta } from '@/lib/email-templates/cuenta';
 import { formatPuntos } from '@/lib/currency';
 import { getToken } from 'next-auth/jwt';
 import { cerrarLasDemas } from '@/lib/sesiones';
@@ -265,6 +267,14 @@ async function pedirEliminacion(userId: string, motivo: string | null, aceptaPer
         link: '/admin/inquiries',
     });
 
+    // C-219: el acuse por correo de que el pedido llegó y que el equipo le escribe
+    if (user.email) {
+        const destino = user.email;
+        void correoEliminarCuenta({ nombre: user.name })
+            .then(({ asunto, html }) => sendEmail({ to: destino, subject: asunto, html }))
+            .catch((error) => console.error('Error enviando el acuse de eliminar la cuenta:', error));
+    }
+
     return NextResponse.json({ message: 'Recibimos tu pedido. Te escribiremos a tu correo para confirmarlo.' });
 }
 
@@ -332,6 +342,13 @@ export async function POST(request: NextRequest) {
             const sid = typeof token?.sid === 'string' ? token.sid : undefined;
             await cerrarLasDemas(userId, sid);
             sesionCerrada = !sid;
+        }
+        // C-219: el aviso de que la contraseña cambió, por si no fue el dueño de la cuenta
+        if (session.user.email) {
+            const destino = session.user.email;
+            void correoContrasenaCambiada({ nombre: session.user.name ?? null, sesionesCerradas: cerrarOtras === true })
+                .then(({ asunto, html }) => sendEmail({ to: destino, subject: asunto, html }))
+                .catch((error) => console.error('Error enviando el aviso de contraseña cambiada:', error));
         }
         await createAuditLog({
             action: 'AUTH_PASSWORD_CHANGED',

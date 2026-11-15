@@ -125,11 +125,12 @@ export async function renderCampana(
   const aviso = destinatario.prueba
     ? `<div style="${CORREO.caja}margin-top:0;"><p style="${CORREO.cajaTexto}${CORREO.fuerte}font-weight:600;">Correo de prueba: así lo verán los clientes.</p></div>`
     : '';
-  const baja = `<p style="${CORREO.nota}text-align:center;">Recibes este correo porque aceptaste recibir promociones.${
-    destinatario.enlaceBaja ? ` <a href="${escaparHtml(destinatario.enlaceBaja)}" style="${CORREO.enlace}">Darme de baja</a>` : ''
-  }</p>`;
-  const cuerpo = aviso + campana.bloques.map((b) => renderBloque(b, nombre)).join('') + baja;
-  return getBaseTemplate(cuerpo, campana.preheader || undefined);
+  // C-219: el por qué y la baja van en el pie del marco, como en todos los correos
+  const motivo = `Recibes este correo porque aceptaste recibir promociones.${
+    destinatario.enlaceBaja ? ` <a href="${escaparHtml(destinatario.enlaceBaja)}" style="color:inherit;text-decoration:underline;">Darme de baja</a>` : ''
+  }`;
+  const cuerpo = aviso + campana.bloques.map((b) => renderBloque(b, nombre)).join('');
+  return getBaseTemplate(cuerpo, campana.preheader || undefined, { motivo });
 }
 
 /* ── Destinatarios y envío ──────────────────────────────────────────────── */

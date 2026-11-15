@@ -5,9 +5,10 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { getBaseTemplate, sendEmail } from '@/lib/email-service';
+import { sendEmail } from '@/lib/email-service';
 import { escapeHtml } from '@/lib/html';
-import { CORREO, COLOR, botonCorreo } from '@/lib/email-templates/estilo';
+import { botonCorreo, datosCorreo } from '@/lib/email-templates/estilo';
+import { marcoCorreo } from '@/lib/email-templates/marco';
 
 async function getAdminAlertEmails(): Promise<string[]> {
   try {
@@ -31,8 +32,9 @@ async function getAdminAlertEmails(): Promise<string[]> {
 }
 
 // Los valores vienen de clientes (nombres, referencias) o del catálogo: se escapan antes de ir al HTML.
-// Mismo marco que los correos de los clientes (C-175): antes era otra plantilla, sin logo.
-async function buildAlertEmailHtml({
+// C-219: el mismo marco de los correos de los clientes, con el pie del equipo (sin el cierre "sin miedo").
+/** El HTML del aviso (también lo usa la vista previa del panel, C-219). */
+export async function buildAlertEmailHtml({
   title,
   lines,
   actionUrl,
@@ -43,25 +45,15 @@ async function buildAlertEmailHtml({
   actionUrl?: string;
   actionLabel?: string;
 }): Promise<string> {
-  const rows = lines
-    .map(
-      ({ label, value }) => `
-      <tr>
-        <td style="padding:10px 12px 10px 0;border-bottom:1px solid ${COLOR.linea};color:${COLOR.suave};font-size:14px;width:38%;vertical-align:top;">${escapeHtml(label)}</td>
-        <td style="padding:10px 0;border-bottom:1px solid ${COLOR.linea};color:${COLOR.tinta};font-size:14px;font-weight:600;">${escapeHtml(value)}</td>
-      </tr>`
-    )
-    .join('');
-
-  const contenido = `
-    <p style="${CORREO.rotulo}color:${COLOR.marca};font-weight:700;">Aviso del panel</p>
-    <h2 style="${CORREO.titulo}">${escapeHtml(title)}</h2>
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border-top:1px solid ${COLOR.linea};margin-top:8px;">
-      ${rows}
-    </table>
-    ${actionUrl ? botonCorreo(escapeHtml(actionUrl), escapeHtml(actionLabel || 'Abrir en el panel')) : ''}
-    <p style="${CORREO.nota}text-align:center;">Mensaje automático para el equipo. Cambia qué avisos llegan por correo en el panel, en Notificaciones.</p>`;
-  return getBaseTemplate(contenido, title);
+  return marcoCorreo({
+    preheader: title,
+    encabezado: { sello: 'AVISO DEL PANEL', titulo: escapeHtml(title) },
+    cuerpo: `
+      ${datosCorreo(lines.map(({ label, value }) => [escapeHtml(label), escapeHtml(value)]))}
+      ${actionUrl ? botonCorreo(escapeHtml(actionUrl), escapeHtml(actionLabel || 'Abrir en el panel')) : ''}`,
+    pie: 'equipo',
+    motivo: 'Recibes este correo porque estás en la lista de avisos del panel (Configuración → Avisos y mantenimiento).',
+  });
 }
 
 /** Envía un aviso a la lista de correos de alerta. Devuelve false si no hay lista o falló el envío. */

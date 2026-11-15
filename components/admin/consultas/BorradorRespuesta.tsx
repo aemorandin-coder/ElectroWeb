@@ -2,6 +2,7 @@
 
 // C-214: el borrador de respuesta a un mensaje de contacto (Andrés, 13/11, la idea D). Claude lo redacta con su orden,
 // los productos que nombra y el flete de ZOOM a su ciudad; se edita aquí y se manda por correo o por WhatsApp.
+// C-219: "Enviar con el diseño de la tienda" lo manda desde la tienda, con la plantilla, y lo marca respondido.
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -24,12 +25,14 @@ function numeroWhatsApp(telefono: string): string | null {
   return d.length >= 11 ? d : null;
 }
 
-export default function BorradorRespuesta({ mensaje }: { mensaje: { id: string; email: string; phone: string; subject: string } }) {
+export default function BorradorRespuesta({ mensaje, onRespondido }: { mensaje: { id: string; email: string; phone: string; subject: string }; onRespondido?: () => void }) {
   const [borrador, setBorrador] = useState<Borrador | null>(null);
   const [texto, setTexto] = useState('');
   const [pensando, setPensando] = useState(false);
   const [error, setError] = useState('');
   const [copiado, setCopiado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState(false);
 
   const redactar = async () => {
     setPensando(true);
@@ -57,6 +60,29 @@ export default function BorradorRespuesta({ mensaje }: { mensaje: { id: string; 
       setTimeout(() => setCopiado(false), 2500);
     } catch {
       // Sin permiso del navegador: el texto está a la vista para copiarlo a mano
+    }
+  };
+
+  const enviarDesdeLaTienda = async () => {
+    setEnviando(true);
+    setError('');
+    try {
+      const r = await fetch(`/api/admin/consultas/${mensaje.id}/enviar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto }),
+      });
+      const datos = (await r.json().catch(() => ({}))) as { error?: string };
+      if (!r.ok) {
+        setError(datos.error || 'No se pudo enviar.');
+        return;
+      }
+      setEnviado(true);
+      onRespondido?.();
+    } catch {
+      setError('Sin conexión con la tienda. Prueba otra vez.');
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -122,9 +148,16 @@ export default function BorradorRespuesta({ mensaje }: { mensaje: { id: string; 
           {!borrador.whatsappSeguro && (
             <p className={adminNotice('neutral')}>Lleva datos de sus órdenes y el teléfono del mensaje no es el de su cuenta: respóndele al correo, que llega al dueño de la compra.</p>
           )}
+          {enviado && (
+            <p className={adminNotice('success')} role="status">Enviado a {mensaje.email} con el diseño de la tienda. El mensaje quedó como respondido.</p>
+          )}
           <div className="flex flex-wrap gap-2">
-            <a href={`mailto:${mensaje.email}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(texto)}`} className={`${adminPrimaryButton} min-h-11`}>
-              <IconoCorreo className="h-4 w-4" aria-hidden="true" /> Responder por correo
+            <button type="button" onClick={enviarDesdeLaTienda} disabled={enviando || enviado || texto.trim().length < 2} className={`${adminPrimaryButton} min-h-11`}>
+              {enviado ? <IconoCheck className="h-4 w-4" aria-hidden="true" /> : <IconoCorreo className="h-4 w-4" aria-hidden="true" />}
+              {enviando ? 'Enviando…' : enviado ? 'Enviado' : 'Enviar con el diseño de la tienda'}
+            </button>
+            <a href={`mailto:${mensaje.email}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(texto)}`} className={`${adminSecondaryButton} min-h-11`}>
+              <IconoCorreo className="h-4 w-4" aria-hidden="true" /> Abrir en mi correo
             </a>
             {whatsapp && borrador.whatsappSeguro && (
               <a href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(texto)}`} target="_blank" rel="noopener noreferrer" className={`${adminSecondaryButton} min-h-11`}>
@@ -136,7 +169,7 @@ export default function BorradorRespuesta({ mensaje }: { mensaje: { id: string; 
               {copiado ? 'Copiado' : 'Copiar'}
             </button>
           </div>
-          <p className="text-xs text-muted">Redactado por {borrador.firma}. Revísalo antes de enviarlo; después marca el mensaje como «Respondido».</p>
+          <p className="text-xs text-muted">Redactado por {borrador.firma}. Revísalo antes de enviarlo. Si lo mandas por WhatsApp o desde tu correo, marca el mensaje como «Respondido».</p>
         </div>
       )}
       {error && <p className={`${adminNotice('danger')} mt-3`} role="alert">{error}</p>}

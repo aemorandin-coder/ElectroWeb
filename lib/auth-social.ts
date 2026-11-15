@@ -172,6 +172,10 @@ async function bienvenidaCliente(userId: string, nombre: string, email: string, 
     console.error('Error creando notificaciones de bienvenida:', error);
   }
 
+  // C-219: la bienvenida por correo (con Google el correo ya viene verificado)
+  const { sendWelcomeEmail } = await import('@/lib/email-service');
+  void sendWelcomeEmail(email, nombre).catch((error) => console.error('Error enviando la bienvenida:', error));
+
   const origen = NOMBRE_PROVEEDOR[provider] ?? provider;
   emitAdminEvent({
     type: 'CUSTOMER_REGISTERED',

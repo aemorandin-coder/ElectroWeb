@@ -7,9 +7,8 @@ import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { createNotification } from '@/lib/notifications';
-import { getBaseTemplate, sendEmail } from '@/lib/email-service';
-import { CORREO, botonCorreo } from '@/lib/email-templates/estilo';
-import { escapeHtml } from '@/lib/html';
+import { sendEmail } from '@/lib/email-service';
+import { correoEmpresaVerificada } from '@/lib/email-templates/comunidad';
 
 export async function GET(request: NextRequest) {
     try {
@@ -132,16 +131,11 @@ export async function PATCH(request: NextRequest) {
                 link: '/customer/profile?tab=empresa',
             });
             if (updatedProfile.user.email) {
-                const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
-                const contenido = `
-    <h2 style="${CORREO.titulo}">${aprobada ? 'Tu empresa está verificada' : 'Revisa los datos de tu empresa'}</h2>
-    <p style="${CORREO.texto}">${escapeHtml(mensaje)}</p>
-    ${botonCorreo(`${appUrl}/customer/profile?tab=empresa`, 'Ver mi cuenta de empresa')}`;
-                void sendEmail({
-                    to: updatedProfile.user.email,
-                    subject: aprobada ? 'Tu empresa está verificada' : 'No pudimos verificar tu empresa',
-                    html: await getBaseTemplate(contenido, mensaje),
-                }).catch((error) => console.error('Error enviando el correo de verificación de empresa:', error));
+                // C-219: la plantilla está en lib/email-templates/comunidad. El motivo lo escribe el equipo: se escapa ahí
+                const destino = updatedProfile.user.email;
+                void correoEmpresaVerificada({ nombre: updatedProfile.user.name ?? null, empresa: updatedProfile.companyName || 'tu empresa', aprobada, motivo })
+                    .then(({ asunto, html }) => sendEmail({ to: destino, subject: asunto, html }))
+                    .catch((error) => console.error('Error enviando el correo de verificación de empresa:', error));
             }
         }
 

@@ -3,71 +3,165 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import {
-    capturarCorreo, sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail, sendOrderPendingPaymentEmail,
-    sendOrderShippedEmail, sendOrderDeliveredEmail, sendDigitalCodeEmail, sendGiftCardEmail, sendTestEmail,
+    capturarCorreo, sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail, sendOrderShippedEmail,
+    sendShipmentUpdateEmail, sendOrderDeliveredEmail, sendDigitalCodeEmail, sendGiftCardEmail, sendTestEmail,
+    sendWarrantyUpdateEmail,
 } from '@/lib/email-service';
-import { generateOrderConfirmationEmail } from '@/lib/email-templates/OrderConfirmation';
+import { asuntoConfirmacion, generateOrderConfirmationEmail } from '@/lib/email-templates/OrderConfirmation';
 import { generateReviewApprovedEmail } from '@/lib/email-templates/ReviewApproved';
-import { correoPedirResenas } from '@/lib/resenas-avisos';
 import { sendCourseEnrollmentEmail, sendCourseCertificateEmail, sendCreatorStatusEmail } from '@/lib/email-templates/CourseCertificate';
+import { correoListoParaRetirar, correoOrdenCancelada } from '@/lib/email-templates/pedidos';
+import { correoComisionAcreditada, correoPagoAPuntos, correoRecargaAprobada, correoRecargaRechazada } from '@/lib/email-templates/puntos';
+import { correoContrasenaCambiada, correoEliminarCuenta, correoInvitacionEquipo, correoSesionNueva } from '@/lib/email-templates/cuenta';
+import {
+    correoContactoRecibido, correoGarantiaRecibida, correoPresupuestoAprobado, correoPresupuestoPedido, correoRespuestaContacto,
+    correoSolicitudLista, correoSolicitudRecibida,
+} from '@/lib/email-templates/servicio';
+import {
+    correoBoletoSorteo, correoCursoAprobado, correoDescuentoAprobado, correoEmpresaVerificada, correoGanadorSorteo,
+    correoGiftCardCanjeada, correoGiftCardEntregada, correoPromotorAprobado, correoPromotorNoAprobado, correoRecordatorioSorteo,
+    correoResultadoSorteo, correoVentaPromotor, type DatosSorteo,
+} from '@/lib/email-templates/comunidad';
+import { correoPedirResenas } from '@/lib/resenas-avisos';
+import { correoFavoritos } from '@/lib/favoritos-avisos';
+import { correoCotizacion } from '@/lib/cotizaciones/correo';
+import { buildAlertEmailHtml } from '@/lib/admin-alerts';
 import { renderCampana } from '@/lib/email-campaigns';
+import type { CotizacionAdmin } from '@/lib/cotizaciones';
 
 /**
- * Vista previa de los correos (C-75). Antes esta ruta tenía su propia copia de las plantillas (471 líneas):
- * lo que se veía aquí podía no parecerse a lo que recibía el cliente. Ahora llama a las funciones reales
- * dentro de capturarCorreo, que no envía nada.
+ * Vista previa de los correos (C-75). Llama a las funciones reales dentro de capturarCorreo, que no envía nada.
+ * C-219: todos los correos que salen (antes 15 de 26), por grupo, con dos productos publicados de la tienda y una clienta
+ * de ejemplo.
  */
 
 const DESTINO = 'cliente@ejemplo.com';
+const ORDEN = 'ORD-2026-0142';
 
-const PLANTILLAS: { id: string; name: string; description: string; render: () => Promise<{ subject?: string; html?: string }> }[] = [
-    { id: 'welcome', name: 'Bienvenida', description: 'Al crear la cuenta', render: () => capturarCorreo(() => sendWelcomeEmail(DESTINO, 'María')) },
-    { id: 'verification', name: 'Verificar correo', description: 'Enlace para activar la cuenta', render: () => capturarCorreo(() => sendVerificationEmail(DESTINO, 'token-de-ejemplo', 'María')) },
-    { id: 'password_reset', name: 'Recuperar contraseña', description: 'Enlace para restablecerla', render: () => capturarCorreo(() => sendPasswordResetEmail(DESTINO, 'token-de-ejemplo', 'María')) },
+/** Dos productos publicados (14/11), con sus fotos de la tienda */
+const PS5 = { nombre: 'Assassins creed mirage PlayStation 5 launch edition', slug: 'assassins-creed-mirage-playstation-5-launch-edition', imagen: '/api/uploads/products/product-1790966781452-r6oql1.webp', precioUSD: 52.78 };
+const PROTECTOR = { nombre: 'Protector de voltaje Protektor PAR-110V', slug: 'protector-de-voltaje-protektor-par-110v', imagen: '/api/uploads/products/product-1794581452490-dvs0t7.webp', precioUSD: 33.55 };
+
+const SORTEO: DatosSorteo = { titulo: 'Sorteo de Navidad', premio: 'una PlayStation 4', imagen: null, resultadoEl: new Date('2026-12-20T16:00:00-04:00') };
+
+type Vista = { subject?: string; html?: string };
+const deCorreo = async (p: Promise<{ asunto: string; html: string }>): Promise<Vista> => {
+    const { asunto, html } = await p;
+    return { subject: asunto, html };
+};
+
+const compra = (pagado: boolean, entrega: 'SHIPPING' | 'LOCAL_DELIVERY' | 'DIGITAL' = 'SHIPPING') => async (): Promise<Vista> => ({
+    subject: asuntoConfirmacion({ orderNumber: ORDEN, paid: pagado }),
+    html: await generateOrderConfirmationEmail({
+        orderNumber: ORDEN, customerName: 'María González', orderDate: '14 de noviembre de 2026',
+        items: entrega === 'DIGITAL'
+            ? [{ name: 'Gift card PlayStation Store $25', quantity: 1, price: '27.50', image: null }]
+            : [
+                { name: PS5.nombre, quantity: 1, price: String(PS5.precioUSD), image: PS5.imagen },
+                { name: PROTECTOR.nombre, quantity: 1, price: String(PROTECTOR.precioUSD), image: PROTECTOR.imagen },
+            ],
+        subtotal: entrega === 'DIGITAL' ? '27.50' : '86.33', discount: '0', shipping: entrega === 'LOCAL_DELIVERY' ? '2.50' : entrega === 'SHIPPING' ? '1.00' : '0',
+        tax: entrega === 'DIGITAL' ? '0' : '12.05', total: entrega === 'DIGITAL' ? '27.50' : entrega === 'LOCAL_DELIVERY' ? '88.83' : '87.33', currency: 'USD',
+        paymentMethod: 'Pago Móvil', paid: pagado, deliveryCode: entrega, deliveryMethod: entrega,
+        deliveryAddress: entrega === 'SHIPPING' ? 'Oficina ZOOM Barquisimeto Centro, Lara' : entrega === 'LOCAL_DELIVERY' ? 'Av. Principal, Guanare' : undefined,
+        totalVES: entrega === 'DIGITAL' ? 25069.67 : 79612.15, exchangeRate: 911.62,
+    }),
+});
+
+const PLANTILLAS: { id: string; grupo: string; name: string; description: string; render: () => Promise<Vista> }[] = [
+    // Cuenta
+    { id: 'verification', grupo: 'Cuenta', name: 'Activar la cuenta', description: 'Al registrarse con correo', render: () => capturarCorreo(() => sendVerificationEmail(DESTINO, 'token-de-ejemplo', 'María')) },
+    { id: 'welcome', grupo: 'Cuenta', name: 'Bienvenida', description: 'Al activar la cuenta o entrar con Google', render: () => capturarCorreo(() => sendWelcomeEmail(DESTINO, 'María')) },
+    { id: 'password_reset', grupo: 'Cuenta', name: 'Recuperar la contraseña', description: 'El enlace para crear una nueva', render: () => capturarCorreo(() => sendPasswordResetEmail(DESTINO, 'token-de-ejemplo', 'María')) },
+    { id: 'password_changed', grupo: 'Cuenta', name: 'Contraseña cambiada', description: 'Por si no fue el dueño', render: () => deCorreo(correoContrasenaCambiada({ nombre: 'María', sesionesCerradas: true })) },
+    { id: 'new_login', grupo: 'Cuenta', name: 'Inicio de sesión nuevo', description: 'Desde un dispositivo que no había usado', render: () => deCorreo(correoSesionNueva({ nombre: 'María', dispositivo: 'Chrome en Android', cuando: '14 de noviembre, 3:20 p. m.', conGoogle: false })) },
+    { id: 'account_deletion', grupo: 'Cuenta', name: 'Eliminar la cuenta', description: 'El acuse del pedido', render: () => deCorreo(correoEliminarCuenta({ nombre: 'María' })) },
+    // Compra
+    { id: 'order_paid', grupo: 'Compra', name: 'Pago confirmado', description: 'Al comprar ya pagado, o al confirmarse el pago', render: compra(true) },
+    { id: 'order_pending', grupo: 'Compra', name: 'Pedido recibido', description: 'Con el pago en revisión', render: compra(false) },
+    { id: 'order_digital', grupo: 'Compra', name: 'Compra digital', description: 'Gift cards, códigos y recargas', render: compra(true, 'DIGITAL') },
+    { id: 'order_shipped', grupo: 'Compra', name: 'En camino', description: 'Por ZOOM o MRW, con la guía', render: () => capturarCorreo(() => sendOrderShippedEmail(DESTINO, { orderNumber: ORDEN, customerName: 'María', trackingNumber: '1234567890', shippingCarrier: 'ZOOM', destination: 'Oficina ZOOM Barquisimeto Centro, Lara', payOnDelivery: true })) },
+    { id: 'order_local', grupo: 'Compra', name: 'Sale a tu puerta', description: 'El delivery en Guanare', render: () => capturarCorreo(() => sendOrderShippedEmail(DESTINO, { orderNumber: ORDEN, customerName: 'María', destination: 'Av. Principal, Guanare', local: true })) },
+    { id: 'order_office', grupo: 'Compra', name: 'Llegó a la oficina', description: 'Lo dice el rastreo de ZOOM', render: () => capturarCorreo(() => sendShipmentUpdateEmail(DESTINO, { orderNumber: ORDEN, customerName: 'María', title: 'Tu pedido llegó a la oficina', detail: 'Tu paquete está en la oficina ZOOM Barquisimeto Centro. Puedes retirarlo de lunes a sábado.' })) },
+    { id: 'order_pickup', grupo: 'Compra', name: 'Listo para retirar', description: 'En la tienda de Guanare', render: () => deCorreo(correoListoParaRetirar({ numero: ORDEN, nombre: 'María' })) },
+    { id: 'order_delivered', grupo: 'Compra', name: 'Entregado', description: 'Al marcarlo entregado', render: () => capturarCorreo(() => sendOrderDeliveredEmail(DESTINO, { orderNumber: ORDEN, customerName: 'María' })) },
+    { id: 'order_cancelled', grupo: 'Compra', name: 'Orden cancelada', description: 'Con el motivo y los Puntos ES devueltos', render: () => deCorreo(correoOrdenCancelada({ numero: ORDEN, nombre: 'María', motivo: 'El pago no llegó a la cuenta de la tienda.', total: 87.33, reintegro: 10 })) },
+    { id: 'digital_code', grupo: 'Compra', name: 'Código digital', description: 'La entrega de un código', render: () => capturarCorreo(() => sendDigitalCodeEmail(DESTINO, { orderNumber: ORDEN, customerName: 'María', productName: 'PlayStation Store $25', code: 'XXXX-XXXX-XXXX', platform: 'PlayStation' })) },
+    // Puntos ES
+    { id: 'recharge_auto', grupo: 'Puntos ES', name: 'Recarga aprobada sola', description: 'Pago Móvil verificado por el BDV', render: () => deCorreo(correoRecargaAprobada({ nombre: 'María', monto: 20, automatica: true, referencia: '000123456789', banco: 'Banco de Venezuela' })) },
+    { id: 'recharge_manual', grupo: 'Puntos ES', name: 'Recarga aprobada', description: 'La aprueba el equipo', render: () => deCorreo(correoRecargaAprobada({ nombre: 'María', monto: 20, automatica: false, referencia: '000123456789' })) },
+    { id: 'recharge_rejected', grupo: 'Puntos ES', name: 'Recarga no aprobada', description: 'Con el motivo', render: () => deCorreo(correoRecargaRechazada({ nombre: 'María', monto: 20, motivo: 'La referencia no aparece en la cuenta de la tienda.' })) },
+    { id: 'payment_to_points', grupo: 'Puntos ES', name: 'Pago que pasó a Puntos ES', description: 'Pagó y la orden no se pudo crear', render: () => deCorreo(correoPagoAPuntos({ nombre: 'María', monto: 87.33, referencia: '000123456789' })) },
+    { id: 'commission_credited', grupo: 'Puntos ES', name: 'Comisión acreditada', description: 'Al promotor, 7 días después de la entrega', render: () => deCorreo(correoComisionAcreditada({ nombre: 'María', monto: 4.32 })) },
+    // Gift cards
+    { id: 'gift_card', grupo: 'Gift cards', name: 'Gift card recibida', description: 'A quien la recibe', render: () => capturarCorreo(() => sendGiftCardEmail(DESTINO, { code: 'GIFT-XXXX-XXXX', amount: 50, senderName: 'José', recipientName: 'María', personalMessage: '¡Feliz cumpleaños!' })) },
+    { id: 'gift_delivered', grupo: 'Gift cards', name: 'Tu regalo llegó', description: 'A quien la compró', render: () => deCorreo(correoGiftCardEntregada({ nombre: 'José', para: 'María', correoPara: DESTINO, monto: 50 })) },
+    { id: 'gift_redeemed', grupo: 'Gift cards', name: 'Ya la canjearon', description: 'A quien la compró', render: () => deCorreo(correoGiftCardCanjeada({ nombre: 'José', para: 'María', monto: 50 })) },
+    // Servicio
+    { id: 'warranty_received', grupo: 'Servicio', name: 'Garantía recibida', description: 'Al pedirla desde Mi panel', render: () => deCorreo(correoGarantiaRecibida({ nombre: 'María', codigo: 'GAR-0012', producto: PROTECTOR.nombre, numeroOrden: ORDEN })) },
+    { id: 'warranty_update', grupo: 'Servicio', name: 'Novedades de la garantía', description: 'Cuando el equipo responde o cambia el estado', render: () => capturarCorreo(() => sendWarrantyUpdateEmail(DESTINO, { customerName: 'María', code: 'GAR-0012', productName: PROTECTOR.nombre, status: 'En revisión', statusHelp: 'El técnico está revisando el producto.', message: 'Recibimos el protector. Te escribimos apenas lo revise el técnico.' })) },
+    { id: 'contact_received', grupo: 'Servicio', name: 'Mensaje recibido', description: 'El acuse del formulario de Contacto', render: () => deCorreo(correoContactoRecibido({ nombre: 'María', asunto: '¿Tienen el control de PS5?' })) },
+    { id: 'contact_reply', grupo: 'Servicio', name: 'Respuesta del equipo', description: 'Enviada desde Mensajes', render: () => deCorreo(correoRespuestaContacto({ nombre: 'María', asunto: '¿Tienen el control de PS5?', respuesta: 'Hola, María. Sí lo tenemos: el DualSense blanco está en $69,90 y sale hoy si lo pagas antes de las 2:00 p. m.', firma: 'Luis' })) },
+    { id: 'quote_requested', grupo: 'Servicio', name: 'Presupuesto pedido', description: 'El acuse de la solicitud', render: () => deCorreo(correoPresupuestoPedido({ nombre: 'María', numero: 'COT-2026-0031' })) },
     {
-        id: 'order_confirmation', name: 'Pedido recibido', description: 'Cuando el cliente hace una compra',
-        render: async () => {
-            return {
-                subject: 'Confirmación de pedido ORD-2026-0001',
-                html: await generateOrderConfirmationEmail({
-                    orderNumber: 'ORD-2026-0001', customerName: 'María', orderDate: new Date().toLocaleDateString('es-VE'),
-                    items: [
-                        { name: 'Audífonos inalámbricos', quantity: 1, price: '49.90' },
-                        { name: 'Control DualSense PS5', quantity: 1, price: '45.00', condition: 'Usado · Muy bueno', warrantyDays: 30 },
-                    ],
-                    subtotal: '94.90', discount: '5.00', shipping: '3.00', tax: '12.81', total: '92.90', currency: 'USD',
-                    paymentMethod: 'Pago Móvil', paid: true, deliveryMethod: 'Delivery en Guanare', deliveryAddress: 'Av. Principal, Guanare',
-                }),
-            };
-        },
+        id: 'quote_sent', grupo: 'Servicio', name: 'Presupuesto', description: 'El que envía el equipo',
+        render: () => deCorreo(correoCotizacion({
+            number: 'COT-2026-0031', contactName: 'María González', clientName: 'Inversiones Portuguesa C.A.', token: 'token-de-ejemplo', subject: '10 protectores de voltaje para la oficina',
+            ivaRetentionPercent: 75, advancePercent: 50, venceEl: '2026-11-29T00:00:00.000Z',
+            totales: { totalUSD: 335.5, retencionUSD: 34.7, netoUSD: 300.8, anticipoUSD: 167.75 },
+        } as unknown as CotizacionAdmin, 'Te dejamos el presupuesto con los precios de hoy.')),
     },
-    { id: 'order_pending_payment', name: 'Pago en revisión', description: 'Mientras se verifica el pago', render: () => capturarCorreo(() => sendOrderPendingPaymentEmail(DESTINO, { orderNumber: 'ORD-2026-0001', total: 69.9, customerName: 'María' })) },
-    { id: 'order_shipped', name: 'Pedido enviado', description: 'Con transportista y guía', render: () => capturarCorreo(() => sendOrderShippedEmail(DESTINO, { orderNumber: 'ORD-2026-0001', customerName: 'María', trackingNumber: '123456789', shippingCarrier: 'MRW' })) },
-    { id: 'order_delivered', name: 'Pedido entregado', description: 'Al marcarlo entregado', render: () => capturarCorreo(() => sendOrderDeliveredEmail(DESTINO, { orderNumber: 'ORD-2026-0001', customerName: 'María' })) },
+    { id: 'quote_approved', grupo: 'Servicio', name: 'Presupuesto aprobado', description: 'Cuando el cliente lo aprueba', render: () => deCorreo(correoPresupuestoAprobado({ nombre: 'María', numero: 'COT-2026-0031', total: 335.5, enlace: `${process.env.NEXTAUTH_URL || ''}/cotizacion/token-de-ejemplo` })) },
+    { id: 'request_received', grupo: 'Servicio', name: 'Lo estamos buscando', description: 'Al pedir un producto que no está', render: () => deCorreo(correoSolicitudRecibida({ nombre: 'María', producto: 'Control DualSense blanco' })) },
+    { id: 'request_fulfilled', grupo: 'Servicio', name: '¡Ya llegó lo que pediste!', description: 'Al marcar la solicitud cumplida', render: () => deCorreo(correoSolicitudLista({ nombre: 'María', pedido: 'Assassins Creed Mirage', producto: { nombre: PS5.nombre, slug: PS5.slug, imagen: PS5.imagen, precioUSD: PS5.precioUSD } })) },
+    // Después de comprar
     {
-        id: 'review_reminder', name: 'Pedir la reseña', description: 'Cinco días después de la entrega (dos si es digital)',
+        id: 'review_reminder', grupo: 'Después de comprar', name: 'Pedir la reseña', description: 'Cinco días después de la entrega (dos si es digital)',
         render: async () => {
             const { asunto, html } = await correoPedirResenas('ejemplo', 'María', [
-                { nombre: 'Audífonos inalámbricos', slug: 'audifonos-inalambricos', imagen: null, precioUSD: 25 },
-                { nombre: 'Teclado mecánico', slug: 'teclado-mecanico', imagen: null, precioUSD: 18 },
+                { nombre: PS5.nombre, slug: PS5.slug, imagen: PS5.imagen, precioUSD: PS5.precioUSD },
+                { nombre: PROTECTOR.nombre, slug: PROTECTOR.slug, imagen: PROTECTOR.imagen, precioUSD: PROTECTOR.precioUSD },
             ]);
             return { subject: asunto, html };
         },
     },
     {
-        id: 'review_approved', name: 'Reseña publicada', description: 'Cuando el equipo aprueba una reseña',
+        id: 'review_approved', grupo: 'Después de comprar', name: 'Reseña publicada', description: 'Cuando el equipo aprueba una reseña',
         render: async () => ({
-            subject: 'Tu reseña ya está publicada - Audífonos inalámbricos',
-            html: await generateReviewApprovedEmail({ customerName: 'María', productName: 'Audífonos inalámbricos', productUrl: `${process.env.NEXTAUTH_URL || ''}/productos/audifonos-inalambricos#resenas`, rating: 5 }),
+            subject: `¡Tu reseña de ${PROTECTOR.nombre} ya está publicada!`,
+            html: await generateReviewApprovedEmail({ customerName: 'María', productName: PROTECTOR.nombre, productUrl: `${process.env.NEXTAUTH_URL || ''}/productos/${PROTECTOR.slug}#resenas`, rating: 5 }),
         }),
     },
-    { id: 'digital_code', name: 'Código digital', description: 'Entrega de un código', render: () => capturarCorreo(() => sendDigitalCodeEmail(DESTINO, { orderNumber: 'ORD-2026-0001', customerName: 'María', productName: 'PlayStation Store $25', code: 'XXXX-XXXX-XXXX', platform: 'PlayStation' })) },
-    { id: 'gift_card', name: 'Gift card', description: 'Regalo por correo', render: () => capturarCorreo(() => sendGiftCardEmail(DESTINO, { code: 'GIFT-XXXX-XXXX', amount: 50, senderName: 'José', recipientName: 'María', personalMessage: '¡Feliz cumpleaños!' })) },
-    { id: 'course_enrollment', name: 'Inscripción a curso', description: 'Al inscribirse', render: () => capturarCorreo(() => sendCourseEnrollmentEmail(DESTINO, { studentName: 'María', courseTitle: 'Redes desde cero', instructorName: 'Ana', courseSlug: 'redes-desde-cero' })) },
-    { id: 'course_certificate', name: 'Certificado de curso', description: 'Al completar un curso', render: () => capturarCorreo(() => sendCourseCertificateEmail(DESTINO, { studentName: 'María', courseTitle: 'Redes desde cero', instructorName: 'Ana', certificateId: 'ejemplo', completedAt: new Date() })) },
-    { id: 'creator_status', name: 'Solicitud de creador', description: 'Aprobada, rechazada o suspendida', render: () => capturarCorreo(() => sendCreatorStatusEmail(DESTINO, { creatorName: 'Ana', status: 'APPROVED' })) },
     {
-        id: 'campaign', name: 'Campaña de marketing', description: 'Ejemplo con imagen y botón',
+        id: 'favorites', grupo: 'Después de comprar', name: 'Favoritos', description: 'Bajó de precio o volvió',
+        render: async () => ({
+            subject: 'Bajó de precio: ' + PS5.nombre,
+            html: await correoFavoritos('ejemplo', 'María', [
+                { tipo: 'precio', nombre: PS5.nombre, slug: PS5.slug, imagen: PS5.imagen, ahoraUSD: 52.78, antesUSD: 65, enOferta: true },
+                { tipo: 'disponible', nombre: PROTECTOR.nombre, slug: PROTECTOR.slug, imagen: PROTECTOR.imagen, ahoraUSD: 33.55, antesUSD: null, enOferta: false },
+            ]),
+        }),
+    },
+    { id: 'discount_approved', grupo: 'Después de comprar', name: 'Descuento aprobado', description: 'El que pidió en su lista de deseos', render: () => deCorreo(correoDescuentoAprobado({ nombre: 'María', producto: { nombre: PS5.nombre, slug: PS5.slug, imagen: PS5.imagen }, precioAntes: 52.78, precioAhora: 47.5, vence: new Date(Date.now() + 24 * 3600 * 1000) })) },
+    // Empresas y promotores
+    { id: 'business_verified', grupo: 'Empresas y promotores', name: 'Empresa verificada', description: 'Al aprobar el acta y el RIF', render: () => deCorreo(correoEmpresaVerificada({ nombre: 'María', empresa: 'Inversiones Portuguesa C.A.', aprobada: true })) },
+    { id: 'business_rejected', grupo: 'Empresas y promotores', name: 'Empresa por corregir', description: 'Con el motivo', render: () => deCorreo(correoEmpresaVerificada({ nombre: 'María', empresa: 'Inversiones Portuguesa C.A.', aprobada: false, motivo: 'El RIF del documento no coincide con el de la cuenta.' })) },
+    { id: 'promoter_approved', grupo: 'Empresas y promotores', name: 'Ya eres promotor', description: 'Con su código', render: () => deCorreo(correoPromotorAprobado({ nombre: 'María', codigo: 'MARIA10', descuento: 5, comision: 5, diasParaAcreditar: 7 })) },
+    { id: 'promoter_rejected', grupo: 'Empresas y promotores', name: 'Promotor no aprobado', description: 'Con la nota del equipo', render: () => deCorreo(correoPromotorNoAprobado({ nombre: 'María', nota: 'Por ahora buscamos cuentas con más de 2.000 seguidores.' })) },
+    { id: 'promoter_sale', grupo: 'Empresas y promotores', name: 'Venta con tu código', description: 'Nace la comisión pendiente', render: () => deCorreo(correoVentaPromotor({ nombre: 'María', comision: 4.32, diasParaAcreditar: 7 })) },
+    // Cursos
+    { id: 'course_enrollment', grupo: 'Cursos', name: 'Inscripción a curso', description: 'Al inscribirse', render: () => capturarCorreo(() => sendCourseEnrollmentEmail(DESTINO, { studentName: 'María', courseTitle: 'Redes desde cero', instructorName: 'Ana', courseSlug: 'redes-desde-cero' })) },
+    { id: 'course_certificate', grupo: 'Cursos', name: 'Certificado', description: 'Al completar un curso', render: () => capturarCorreo(() => sendCourseCertificateEmail(DESTINO, { studentName: 'María', courseTitle: 'Redes desde cero', instructorName: 'Ana', certificateId: 'ejemplo', completedAt: new Date() })) },
+    { id: 'creator_status', grupo: 'Cursos', name: 'Solicitud de creador', description: 'Aprobada, rechazada o suspendida', render: () => capturarCorreo(() => sendCreatorStatusEmail(DESTINO, { creatorName: 'Ana', status: 'APPROVED' })) },
+    { id: 'course_approved', grupo: 'Cursos', name: 'Curso aprobado', description: 'Al creador', render: () => deCorreo(correoCursoAprobado({ nombre: 'Ana', curso: 'Redes desde cero', slug: 'redes-desde-cero' })) },
+    // Sorteo
+    { id: 'raffle_ticket', grupo: 'Sorteo', name: 'Ganaste un boleto', description: 'Por una compra o por 2 amigos', render: () => deCorreo(correoBoletoSorteo({ nombre: 'María', sorteo: SORTEO, porque: 'compra', total: 2 })) },
+    { id: 'raffle_reminder', grupo: 'Sorteo', name: 'Últimos días', description: 'Una vez, 3 días antes del cierre', render: () => deCorreo(correoRecordatorioSorteo({ nombre: 'María', sorteo: SORTEO, boletos: 2, cierre: new Date('2026-12-18T23:59:59-04:00') })) },
+    { id: 'raffle_result', grupo: 'Sorteo', name: 'Resultado', description: 'A todos los que participaron', render: () => deCorreo(correoResultadoSorteo({ nombre: 'María', sorteo: SORTEO, ganadorTapado: 'jo***@gmail.com', boletos: 214 })) },
+    { id: 'raffle_winner', grupo: 'Sorteo', name: '¡Ganaste!', description: 'Al ganador', render: () => deCorreo(correoGanadorSorteo({ nombre: 'María', sorteo: SORTEO, detalle: `Compra ${ORDEN} ($86,33)` })) },
+    // Equipo y marketing
+    {
+        id: 'campaign', grupo: 'Equipo y marketing', name: 'Campaña', description: 'Ejemplo con un botón',
         render: async () => ({
             subject: 'Ofertas de la semana',
             html: await renderCampana(
@@ -80,7 +174,9 @@ const PLANTILLAS: { id: string; name: string; description: string; render: () =>
             ),
         }),
     },
-    { id: 'test', name: 'Correo de prueba', description: 'Verifica la configuración', render: () => capturarCorreo(() => sendTestEmail(DESTINO)) },
+    { id: 'team_alert', grupo: 'Equipo y marketing', name: 'Aviso al equipo', description: 'Ventas, pagos, garantías y más', render: async () => ({ subject: `Nueva venta · ${ORDEN}`, html: await buildAlertEmailHtml({ title: `Nueva venta · ${ORDEN}`, lines: [{ label: 'Total', value: '$87,33' }, { label: 'Pago', value: 'Pago Móvil · confirmado' }, { label: 'Entrega', value: 'Envío nacional' }], actionUrl: `${process.env.NEXTAUTH_URL || ''}/admin/orders` }) }) },
+    { id: 'team_invite', grupo: 'Equipo y marketing', name: 'Invitación al panel', description: 'Al invitar a alguien del equipo', render: () => deCorreo(correoInvitacionEquipo({ nombre: 'Luis', rol: 'Administrador', invitadoPor: 'Andrés', enlace: `${process.env.NEXTAUTH_URL || ''}/recuperar-contrasena/token-de-ejemplo?invitacion=1` })) },
+    { id: 'test', grupo: 'Equipo y marketing', name: 'Correo de prueba', description: 'Configuración → Correo', render: () => capturarCorreo(() => sendTestEmail(DESTINO)) },
 ];
 
 export async function GET(request: NextRequest) {
@@ -91,7 +187,7 @@ export async function GET(request: NextRequest) {
 
     const id = request.nextUrl.searchParams.get('template');
     if (!id) {
-        return NextResponse.json({ templates: PLANTILLAS.map(({ id: pid, name, description }) => ({ id: pid, name, description })) });
+        return NextResponse.json({ templates: PLANTILLAS.map(({ id: pid, grupo, name, description }) => ({ id: pid, grupo, name, description })) });
     }
 
     const plantilla = PLANTILLAS.find((p) => p.id === id);

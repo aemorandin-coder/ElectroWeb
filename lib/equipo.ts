@@ -5,9 +5,8 @@
 import { randomBytes } from 'crypto';
 import type { Prisma, Role } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { getBaseTemplate, sendEmail } from '@/lib/email-service';
-import { CORREO, botonCorreo } from '@/lib/email-templates/estilo';
-import { escapeHtml } from '@/lib/html';
+import { sendEmail } from '@/lib/email-service';
+import { correoInvitacionEquipo } from '@/lib/email-templates/cuenta';
 
 export const ROLES_EQUIPO = ['ADMIN', 'SUPER_ADMIN'] as const;
 export type RolEquipo = (typeof ROLES_EQUIPO)[number];
@@ -94,18 +93,13 @@ export async function crearEnlaceInvitacion(userId: string): Promise<string> {
 export async function enviarInvitacion(datos: { correo: string; nombre: string; rol: RolEquipo; token: string; invitadoPor: string }): Promise<boolean> {
   const appUrl = (process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/+$/, '');
   const enlace = `${appUrl}/recuperar-contrasena/${datos.token}?invitacion=1`;
-  const nombre = datos.nombre.trim().split(/\s+/)[0] || 'hola';
-  const contenido = `
-    <h2 style="${CORREO.titulo}">Te invitaron al panel de Electro Shop</h2>
-    <p style="${CORREO.texto}">Hola ${escapeHtml(nombre)}, ${escapeHtml(datos.invitadoPor)} te dio acceso al panel de administración como <strong style="${CORREO.fuerte}">${nombreRol(datos.rol)}</strong>.</p>
-    <p style="${CORREO.texto}">Para entrar, crea tu contraseña. Después el panel te pedirá configurar la verificación en dos pasos con una app de códigos en tu teléfono (Google Authenticator o Authy).</p>
-    ${botonCorreo(enlace, 'Crear mi contraseña')}
-    <p style="${CORREO.nota}">El enlace sirve 24 horas y una sola vez. Si no esperabas esta invitación, ignora este correo: sin la contraseña nadie puede entrar.</p>`;
+  // C-219: el diseño nuevo, en lib/email-templates/cuenta
+  const { asunto, html } = await correoInvitacionEquipo({ nombre: datos.nombre, rol: nombreRol(datos.rol), invitadoPor: datos.invitadoPor, enlace });
   try {
     const resultado = await sendEmail({
       to: datos.correo,
-      subject: 'Invitación al panel de Electro Shop',
-      html: await getBaseTemplate(contenido, 'Crea tu contraseña para entrar al panel'),
+      subject: asunto,
+      html,
     });
     return resultado.success;
   } catch (error) {

@@ -13,6 +13,8 @@ import {
 } from '@/lib/rate-limit';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { correoGiftCardCanjeada } from '@/lib/email-templates/comunidad';
+import { enviarAUsuario } from '@/lib/email-templates/enviar';
 import { formatPuntos, formatUSD } from '@/lib/currency';
 import {
     hashGiftCardCode,
@@ -339,6 +341,13 @@ export async function POST(request: NextRequest) {
             fields: [['Tarjeta', `termina en ${giftCard.code.slice(-4)}`], ['Puntos ES del cliente ahora', formatUSD(newBalance)]],
             link: '/admin/gift-cards',
         });
+
+        // C-219: a quien la regaló por correo, que ya la canjearon. No si la canjea quien la compró, ni las impresas que
+        // genera el equipo (esas no llevan correo de destino y su "comprador" es un administrador).
+        if (giftCard.recipientEmail && giftCard.purchasedBy && giftCard.purchasedBy !== session.user.id) {
+            const para = (session.user.name || giftCard.recipientName || 'Quien la recibió').trim().split(/\s+/)[0];
+            void enviarAUsuario(giftCard.purchasedBy, (u) => correoGiftCardCanjeada({ nombre: u.name, para, monto: balance }));
+        }
 
         return NextResponse.json({
             success: true,

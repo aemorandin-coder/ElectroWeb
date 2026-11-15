@@ -14,9 +14,8 @@ import { emitAdminEvent } from '@/lib/admin-events';
 import { createAuditLog } from '@/lib/audit-log';
 import { ipParaRegistro } from '@/lib/ip';
 import { describirDispositivo } from '@/lib/dispositivo';
-import { getBaseTemplate, sendEmail, sendPasswordResetEmail } from '@/lib/email-service';
-import { CORREO, botonCorreo } from '@/lib/email-templates/estilo';
-import { escapeHtml } from '@/lib/html';
+import { sendEmail, sendPasswordResetEmail } from '@/lib/email-service';
+import { correoSesionNueva } from '@/lib/email-templates/cuenta';
 
 export const DURACION_ADMIN_MS = 12 * 60 * 60 * 1000;
 export const DURACION_CLIENTE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -152,23 +151,10 @@ export async function cerrarLasDemas(userId: string, sidActual: string | undefin
 async function avisarDispositivoNuevo(userId: string, dispositivo: string, metodo: string, cuando: Date) {
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true, emailVerified: true } });
   if (!u?.email || !u.emailVerified) return;
-  const appUrl = (process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/+$/, '');
   const fecha = cuando.toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' });
-  const nombre = (u.name || '').trim().split(/\s+/)[0] || 'cliente';
-  const contenido = `
-    <h2 style="${CORREO.titulo}">Nuevo inicio de sesión en tu cuenta</h2>
-    <p style="${CORREO.texto}">Hola ${escapeHtml(nombre)}, alguien entró a tu cuenta desde un dispositivo que no habías usado.</p>
-    <div style="${CORREO.caja}">
-      <p style="${CORREO.cajaTitulo}${CORREO.fuerte}">${escapeHtml(dispositivo)}</p>
-      <p style="${CORREO.cajaTexto}${CORREO.tonoNeutro}">${escapeHtml(fecha)} · ${metodo === 'google' ? 'con Google' : 'con tu contraseña'}</p>
-    </div>
-    <p style="${CORREO.texto}">Si fuiste tú, no tienes que hacer nada. Si no, cambia tu contraseña y cierra esa sesión desde Mi perfil.</p>
-    ${botonCorreo(`${appUrl}/customer/profile?tab=seguridad`, 'Revisar mis sesiones')}`;
-  await sendEmail({
-    to: u.email,
-    subject: `Nuevo inicio de sesión: ${dispositivo}`,
-    html: await getBaseTemplate(contenido, `Entraron a tu cuenta desde ${dispositivo}`),
-  });
+  // C-219: el diseño nuevo, en lib/email-templates/cuenta
+  const { asunto, html } = await correoSesionNueva({ nombre: u.name, dispositivo, cuando: fecha, conGoogle: metodo === 'google' });
+  await sendEmail({ to: u.email, subject: asunto, html });
 }
 
 /* ── "No fui yo" (C-140) ─────────────────────────────────────────────────────

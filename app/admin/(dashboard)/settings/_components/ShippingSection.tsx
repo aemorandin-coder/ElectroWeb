@@ -6,6 +6,7 @@ import { formatUSD } from '@/lib/currency';
 import { MAX_EMPAQUES, armarPaquetes, empaquesSugeridos, leerReglasEmbalaje, resumenEmbalaje, type LineaEmbalaje } from '@/lib/embalaje';
 import { empaqueAForm, type EmpaqueForm, type SectionProps } from './settings-form';
 import { NumberField, SettingsCard, SwitchRow, TextAreaField, TextField } from './fields';
+import DespachosCard from './DespachosCard';
 
 // C-153: pedidos de ejemplo para que el dueño vea, mientras escribe, qué empaque elige la tienda y cuánto cobra
 const EJEMPLOS: Array<{ titulo: string; lineas: LineaEmbalaje[] }> = [
@@ -268,6 +269,9 @@ export default function ShippingSection({ form, set, errors }: SectionProps) {
           )}
         </div>
       </SettingsCard>
+
+      {/* C-234: el corte, los feriados y los días cerrados */}
+      <DespachosCard form={form} set={set} errors={errors} />
     </>
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { IconoCerrar, IconoEnvio, IconoImpresora, IconoPaquete } from '@/components/iconos';
+import { IconoCerrar, IconoEnvio, IconoImpresora, IconoPaquete, IconoReloj } from '@/components/iconos';
 import OrderTracking from '@/components/orders/OrderTracking';
 import { formatUSD, formatVES } from '@/lib/currency';
 import IvaIncluido from '@/components/ui/IvaIncluido';
@@ -15,6 +15,7 @@ import { adminBadge } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useSettings } from '@/contexts/SettingsContext';
 import { paqueteDesde } from '@/lib/origen';
+import { calendarioDe, cuandoSale, enVenezuela, fechaDeSalida } from '@/lib/horarios';
 
 // C-137: detalle de un pedido y su recibo. El seguimiento (C-100 y C-126) arriba y, abajo, lo que se compró y cómo se
 // pagó. "Imprimir recibo" imprime solo el recibo (o lo guarda en PDF desde el mismo diálogo).
@@ -82,6 +83,15 @@ const n = (v: unknown) => Number(v) || 0;
 
 export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoCliente; onCerrar: () => void }) {
   const { settings: ajustes } = useSettings();
+  // C-234: el día que sale, si ya está pagado, es físico y no ha salido. Un día que ya pasó no se promete
+  const hoy = enVenezuela(new Date()).fecha;
+  const fechaSalida = pedido.paymentStatus === 'PAID' && pedido.paidAt && pedido.deliveryMethod !== 'DIGITAL'
+    && ['PENDING', 'CONFIRMED', 'PAID', 'PROCESSING'].includes(pedido.status)
+    ? fechaDeSalida(new Date(pedido.paidAt), calendarioDe(ajustes), pedido.dispatchCityName ? 1 : 0)
+    : null;
+  const salida = fechaSalida && fechaSalida >= hoy
+    ? `${pedido.deliveryMethod === 'PICKUP' ? 'Listo para retirar' : 'Sale'} ${cuandoSale(fechaSalida, new Date(), true)}`
+    : null;
   const tienda = { nombre: ajustes?.companyName || 'Electro Shop Morandin C.A.', address: ajustes?.address, city: ajustes?.city, state: ajustes?.state, phone: ajustes?.phone, email: ajustes?.email };
   const estado = estadoParaCliente(pedido);
   useBodyScrollLock(true);
@@ -117,6 +127,13 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
 
         <div className="flex-1 space-y-4 overflow-y-auto p-4 print:overflow-visible">
           <section className="print:hidden" aria-label="Seguimiento">
+            {/* C-234: pagado y todavía sin salir, el día que sale (con el corte, los feriados y el día de más del proveedor) */}
+            {salida && (
+              <p className="mb-3 flex items-start gap-2 rounded-lg bg-brand-50 p-3 text-sm font-semibold text-brand-900">
+                <IconoReloj className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+                {salida}
+              </p>
+            )}
             {pedido.dispatchCityName && (
               <p className="mb-3 flex items-start gap-2 rounded-lg bg-surface p-3 text-sm text-ink-soft">
                 <IconoEnvio className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />

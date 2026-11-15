@@ -61,6 +61,7 @@ const compra = (pagado: boolean, entrega: 'SHIPPING' | 'LOCAL_DELIVERY' | 'DIGIT
         paymentMethod: 'Pago Móvil', paid: pagado, deliveryCode: entrega, deliveryMethod: entrega,
         deliveryAddress: entrega === 'SHIPPING' ? 'Oficina ZOOM Barquisimeto Centro, Lara' : entrega === 'LOCAL_DELIVERY' ? 'Av. Principal, Guanare' : undefined,
         totalVES: entrega === 'DIGITAL' ? 25069.67 : 79612.15, exchangeRate: 911.62,
+        salida: !pagado ? null : entrega === 'DIGITAL' ? 'Te llega en minutos' : 'Sale el lunes 16 de noviembre',
     }),
 });
 

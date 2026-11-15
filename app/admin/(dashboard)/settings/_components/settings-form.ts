@@ -41,6 +41,7 @@ export interface SettingsForm {
   freePackagingThresholdUSD: string; packagingRules: PackagingRulesForm;
   localDeliveryEnabled: boolean; deliveryFeeUSD: string;
   pickupEnabled: boolean; pickupAddress: string; pickupInstructions: string;
+  horaCorte: string; diasCerrados: string[]; diasAbiertos: string[];
 
   maxFeaturedProducts: string; showCategories: boolean; maxCategoriesDisplay: string;
   heroVideoEnabled: boolean; heroVideoUrl: string; heroVideoTitle: string; heroVideoDescription: string;
@@ -84,7 +85,7 @@ export const SECTIONS: { id: SectionId; label: string; description: string; icon
     id: 'envios', label: 'Envíos y retiro', icon: IconoEnvio,
     description: 'Cómo reciben los clientes sus productos físicos y cuánto cuesta el envío.',
     fields: ['deliveryEnabled', 'packagingFeeUSD', 'freeDeliveryThresholdUSD', 'freePackagingThresholdUSD', 'packagingRules', 'localDeliveryEnabled', 'deliveryFeeUSD',
-      'pickupEnabled', 'pickupAddress', 'pickupInstructions'],
+      'pickupEnabled', 'pickupAddress', 'pickupInstructions', 'horaCorte', 'diasCerrados', 'diasAbiertos'],
   },
   {
     id: 'tienda', label: 'Portada e inventario', icon: IconoBolsa,
@@ -183,6 +184,9 @@ export function toSettingsForm(data: Record<string, unknown>): SettingsForm {
     freePackagingThresholdUSD: num(data.freePackagingThresholdUSD), packagingRules: toPackagingRules(data.packagingRules),
     localDeliveryEnabled: bool(data.localDeliveryEnabled, false), deliveryFeeUSD: num(data.deliveryFeeUSD, '0'),
     pickupEnabled: bool(data.pickupEnabled, true), pickupAddress: text(data.pickupAddress), pickupInstructions: text(data.pickupInstructions),
+    horaCorte: text(data.horaCorte) || '14:00',
+    diasCerrados: Array.isArray(data.diasCerrados) ? data.diasCerrados.filter((d): d is string => typeof d === 'string') : [],
+    diasAbiertos: Array.isArray(data.diasAbiertos) ? data.diasAbiertos.filter((d): d is string => typeof d === 'string') : [],
 
     maxFeaturedProducts: num(data.maxFeaturedProducts, '8'), showCategories: bool(data.showCategories, true),
     maxCategoriesDisplay: num(data.maxCategoriesDisplay, '6'),

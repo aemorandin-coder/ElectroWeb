@@ -15,6 +15,7 @@ import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
 import type { DeliveryMethod, ShippingBreakdown } from '@/lib/pricing';
 import { resumenEmbalaje } from '@/lib/embalaje';
 import { paqueteDesde } from '@/lib/origen';
+import SalidaDelPedido from '@/components/envios/SalidaDelPedido';
 
 /**
  * Entrega del checkout (C-100). ZOOM o MRW con cobro a destino (oficina real de su lista o puerta a puerta),
@@ -578,6 +579,17 @@ export default function EntregaEnvio({
             <label htmlFor="envio-referencia" className={adminLabel}>Punto de referencia <span className="font-normal text-muted">(opcional)</span></label>
             <input id="envio-referencia" value={value.reference} maxLength={150} onChange={(e) => set({ reference: e.target.value })} className={adminInput()} placeholder="Frente a la plaza, casa de rejas blancas" />
           </div>
+        </div>
+      )}
+
+      {/* C-234: cuándo sale si paga ahora; con dos paquetes, cada uno con su día */}
+      {value.deliveryMethod && (
+        <div className="space-y-1">
+          {paquetes.length > 1
+            ? paquetes.map((p) => (
+              <SalidaDelPedido key={p.origen ?? 'tienda'} diasProveedor={p.origen ? 1 : 0} desde={paqueteDesde(p.origenEstado, p.origenNombre)} />
+            ))
+            : <SalidaDelPedido diasProveedor={paquetes[0]?.origen ? 1 : 0} desde={paquetes[0]?.origen ? paqueteDesde(paquetes[0].origenEstado, paquetes[0].origenNombre) : undefined} />}
         </div>
       )}
 

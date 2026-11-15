@@ -631,15 +631,22 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **Las fotos (12/11):** las rehizo un agente aparte, con las mismas reglas del 10/11. 50 de los 85 códigos tienen foto; lo que falta se le pidió a la ferretería (`SIGUIENTE.md`).
   - **El proponedor de nombres** (`lib/nombres/marcas.ts`) tiene que conocer Belt-G (su lista dice "BG"), Protektor y V-Teg para la próxima lista.
 
-- **Contabilidad** (pedido del 14/11; el plan en `CONTABILIDAD.md`, C-228; las cuatro decisiones del 14/11, §7.2). En este orden:
-  - **C-229 · Las facturas de talonario** (pendiente, primero; espera la maqueta, A18).
-    - La sección Contabilidad en el menú, con los permisos `FACTURAR` (administradores) y `VER_CONTABILIDAD` (solo el dueño).
-    - Las tablas `talonarios` y `documentos_fiscales` y la columna `orders.documentoFiscalId` (aditivas).
-    - Cargar el talonario; la nueva factura por pasos (de dónde sale, a nombre de quién, qué se vendió, revisar y emitir) con la réplica; anular con motivo; la orden queda facturada sola.
+- **Contabilidad** (pedido del 14/11, ampliado esa noche; el plan en `CONTABILIDAD.md`, C-228 y C-228b; las decisiones, en §7.2). En este orden:
+  - **C-229 · Las facturas de talonario** (pendiente, primero; la maqueta B, alineada).
+    - La sección Contabilidad en el menú, con los permisos `FACTURAR`, `VER_CONTABILIDAD` y `DECLARAR`.
+    - Las tablas `talonarios` y `documentos_fiscales` y la columna `orders.documentoFiscalId` (aditivas). Avisar a la sesión de C-222, que también suma columnas a `orders`.
+    - Cargar el talonario. La nueva factura va por pasos: de dónde sale, a nombre de quién, qué se vendió, y revisar y emitir con la réplica.
+    - Anular con motivo, y la orden queda facturada sola.
+  - **C-235 · La contadora en el equipo:** el rol `ACCOUNTANT` (enum aditivo), la invitación, quitarla y poner otra, su firma y sello, y "Mi mesa" (`CONTABILIDAD.md` §13.1).
   - **C-230 · El libro de ventas y el resumen del mes** (antes del 15/12, para declarar noviembre).
-  - **C-231 · Los movimientos de la web:** cobros por forma de pago, Puntos ES, gift cards, devoluciones y comisiones; el costo y el margen, solo para el dueño.
-  - **C-232 · El IVA del mes y el paquete para el contador:** la hoja del IVA, el vencimiento con aviso, "Declarada" y "Pagada", y el mes cerrado. La tabla `periodos_iva` (aditiva).
-  - **C-233 · Listos para el 19/04/2027:** el talonario de contingencia, fecha y hora en cada factura, "Preparar para el portal" y la lista del calendario (`CONTABILIDAD.md` §7).
+  - **C-236 · El calendario de obligaciones y los avisos** (campana y Telegram; feriados con C-234), con las obligaciones de §13.2.
+  - **C-237 · Gastos y compras:** la foto y los datos de cada factura; el libro de compras y el crédito fiscal.
+  - **C-232 · El IVA del mes y el cierre firmado:** la hoja del IVA, "Declarada" y "Pagada", el mes cerrado con la firma de la contadora y el Excel con pestañas. La tabla `periodos_iva` (aditiva).
+  - **C-238 · El alquiler del local:** el contrato, el canon, la retención de ISLR (3 % o 5 %) y el aviso del vencimiento del contrato.
+  - **C-239 · Nómina y aportes:** los totales del mes; pensiones (9 %), IVSS, FAOV e INCES; las planillas.
+  - **C-240 · La Alcaldía de Guanare:** actividades económicas, la licencia anual, la publicidad y el aseo.
+  - **C-231 · Los movimientos de la web:** cobros por forma de pago, Puntos ES, gift cards, devoluciones y comisiones. El costo y el margen, solo para el dueño.
+  - **C-233 · Listos para el 19/04/2027:** el talonario de contingencia, la fecha y la hora en cada factura, "Preparar para el portal" y la lista del calendario (`CONTABILIDAD.md` §7).
 
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
@@ -703,8 +710,6 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 | A14 | Promotores: % por defecto de la comisión y del descuento del código (quedó 5 % y 5 %), y los términos del programa para el abogado | `estado/C-167.md`. |
 | A11 | ¿La cinta ES también en los productos que no son nuevos (al menos en "Caja abierta")? | Hoy llevan su etiqueta de condición y no la cinta (decisión del 28/09). Andrés la echó de menos el 01/10 (`estado/C-161.md`). |
 | A16 | ¿Se factura en el talonario **cada venta de la web** desde ya, o solo la que pide factura, hasta el portal del 19/04/2027? La ley pide factura en cada venta (`CONTABILIDAD.md` §4) | Con el contador. Recomendado: esta semana. |
-| A17 | ¿Quién es el contador y cómo recibe el mes? Puede ser un archivo para Excel, uno para imprimir o un acceso de solo lectura al panel (sería un rol nuevo) | C-230 y C-232. |
-| A18 | La maqueta de la factura de talonario: A (en vivo al lado) o B (al final; en el teléfono, casilla por casilla; la recomendada) | C-229. Las capturas, en `~/Escritorio/Electro Shop/Contabilidad - maquetas (C-228)/`. |
 
 ### 7.2 Tomadas (no volver a preguntar)
 **Del plan original (D1 a D5):** `/comparar` se eliminó y redirige a `/productos` (C-06). El popup se cierra al instante y sale como mucho una vez cada 24 h (C-23). El modo mantenimiento se implementó (C-04). El precio se escribe `$1.099,00` (C-12). Las categorías de la franja son las dos con más productos (C-20).
@@ -732,7 +737,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - Facebook y Apple: no por ahora (24/09).
 - **Panel (30/09, C-140 y C-141):**
   - Dos pasos con app de códigos, obligatorios para todo el panel y sin opción de desactivarlos.
-  - Roles: Super admin (el dueño) y Administrador (sin Configuración, Métodos de pago, canales de aviso, publicar documentos legales ni Equipo). Soporte, ventas o contenido: no por ahora.
+  - Roles: Super admin (el dueño) y Administrador (sin Configuración, Métodos de pago, canales de aviso, publicar documentos legales ni Equipo). Soporte, ventas o contenido: no por ahora. **Contadora (14/11, C-228b):** solo Contabilidad; entra por invitación y el dueño la quita o la cambia.
   - Admins nuevos solo por invitación al correo. Una cuenta de cliente no se convierte en admin.
   - Una sola sesión de admin, 12 horas y cierre tras 1 hora sin uso.
   - Menú por secciones; "Dashboard" se llama Dashboard; "Cursos" se queda en el menú (01/10).
@@ -775,6 +780,16 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
     - **SADES no imprime factura fiscal** (el comprobante del paquete es un recibo): las facturas salen del talonario. Contabilidad las registra todas y lleva el libro de ventas de la empresa. La web no emite el documento: guía el llenado y lo anota.
     - **Contabilidad:** los administradores facturan; los libros, el IVA y los márgenes, solo el dueño.
     - **Desde el 19/04/2027 se factura con el portal o la app del SENIAT** (Providencia SNAT/2026/00093). Sigue sin integrarse una imprenta digital.
+  - **La contabilidad completa (14/11 en la noche, C-228b; eligió lo recomendado en las ocho preguntas):**
+    - La factura de talonario es la **maqueta B** ("muy brutal"), con la alineación pareja de `CONTABILIDAD.md` §10.
+    - **La contadora entra al equipo** por invitación. Revisa, declara y firma, y descarga en Excel. No factura ni toca órdenes ni la tienda. El dueño la quita y pone otra cuando quiera.
+    - **Su firma:** dibujada en el panel, con su nombre y su C.P.C., como sello en cada cierre y en cada Excel o PDF.
+    - **Los pagos:** ella calcula y declara, el dueño aprueba y paga, y quien paga sube el comprobante. El panel no guarda claves del SENIAT ni del banco.
+    - **Gastos:** la foto de la factura y sus datos, para armar el libro de compras y el crédito fiscal.
+    - **Alquiler:** el del local de la tienda, que la empresa paga.
+    - **Nómina:** los totales del mes y sus aportes (pensiones, IVSS, FAOV e INCES), sin datos de cada trabajador.
+    - **Alcaldía de Guanare:** actividades económicas, la licencia anual, la publicidad y el aseo.
+    - **Avisos:** por la campana del panel y por Telegram; 3 días antes, el día y si se pasa.
 - **ElectroStudio:** historias en la base, dos pantallas (inicio y editor), trabajo por fases. El plan semanal automático quedó fuera (28/09).
 - **La ferretería aliada (10/11, Andrés, en el chat):**
   - Su lista trabaja a BCV, igual que la tienda, y su "Precio Máximo" trae el IVA y es lo que la tienda le paga, sin descuento. El costo es su precio sin el IVA (C-196b).

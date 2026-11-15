@@ -4,6 +4,7 @@
 > **Esto no es asesoría contable ni legal.** Es una lectura de las normas hecha el 14/11/2026. Cada punto dice qué tan firme es; lo marcado "confirmar" lo decide el contador.
 > Lo de antes sigue valiendo: `estado/C-120.md` (facturación, IVA, IGTF y retenciones, 30/09), `C-146` (IVA a la vista), `C-147` y `C-147b` (datos para la factura, relación de ventas y embalaje), `C-151` (digitales sin IVA) y `C-159` (retención en las cotizaciones).
 > **Repositorio público:** aquí no van montos de la empresa, datos de clientes ni los rangos de control del talonario. Esos datos se cargan en el panel.
+> **Ampliado el 14/11 en la noche (C-228b):** la contadora entra al equipo con su firma; se suman gastos y compras, el alquiler del local, la nómina con pensiones, la Alcaldía de Guanare y el calendario de pagos con avisos (§13).
 
 ## 1. Lo más importante
 1. **El 19/04/2027 cambia la facturación** (Providencia SNAT/2026/00093, Gaceta 43.484 del 21/10/2026).
@@ -20,6 +21,11 @@
 4. **Lo primero que sirve:** la factura de talonario guiada desde una orden (C-229), y el libro de ventas con el IVA del mes (C-230), antes de declarar noviembre (hasta el 15/12).
 5. **El contador decide lo que la norma no cierra:** las preguntas de la sección 9.
    - Una es urgente: la Factura 67 le cobró IVA a un juego digital, y la web no se lo cobra desde el 01/10 (C-151).
+6. **La contadora trabaja dentro del panel** (14/11 en la noche, §13).
+   - Entra invitada al equipo y descarga en Excel.
+   - Calcula, declara y firma cada cierre con su sello.
+   - Ve en "Mi mesa" lo que vence: IVA, pensiones, retenciones, IVSS, FAOV, INCES, alquiler y alcaldía.
+   - El dueño paga y la puede cambiar cuando quiera.
 
 ## 2. Cómo trabaja un contador en Venezuela (empresa ordinaria)
 Lo que pide cada mes y cada año, y qué parte puede dar la web.
@@ -134,8 +140,16 @@ Lo que pide cada mes y cada año, y qué parte puede dar la web.
 
 ### Quién entra (decidido el 14/11)
 - **Los administradores facturan:** llenan, emiten y anulan facturas de talonario, con su motivo en la bitácora.
-- **El dueño (super admin) ve todo:** el resumen, el libro de ventas, el IVA del mes, los movimientos y los márgenes.
-- Dos permisos nuevos: `FACTURAR` (administradores y dueño) y `VER_CONTABILIDAD` (solo el dueño, como `MANAGE_SETTINGS`).
+- **La contadora revisa, declara y firma** (14/11 en la noche, §13.1).
+  - Entra invitada al equipo, con el rol nuevo "Contadora".
+  - Ve todo Contabilidad y lo descarga en Excel.
+  - Carga gastos y compras, marca lo declarado con su planilla y firma el cierre del mes.
+  - No factura, ni toca órdenes, la tienda o la configuración.
+- **El dueño (super admin) ve todo:** el resumen, los libros, el IVA, los movimientos y los márgenes. Aprueba y paga, e invita, quita o cambia a la contadora.
+- **Tres permisos nuevos:**
+  - `FACTURAR`: los administradores y el dueño.
+  - `VER_CONTABILIDAD` y `DECLARAR`: la contadora y el dueño.
+  - Los márgenes y el costo, solo el dueño, como hasta hoy.
 
 ### Las pantallas (una sección nueva del menú, "Contabilidad")
 | Pantalla | Quién | Qué tiene |
@@ -145,6 +159,12 @@ Lo que pide cada mes y cada año, y qué parte puede dar la web.
 | **Libro de ventas** | Dueño | El mes en bolívares, con las columnas del contador; descarga para Excel y versión para imprimir |
 | **IVA del mes** | Dueño | La hoja del cálculo, la fecha límite, "Declarada" (n.º de planilla) y "Pagada"; el paquete del mes para el contador |
 | **Movimientos** | Dueño | Lo que cobró la web por cada forma de pago; los Puntos ES (recargas, consumos y lo que se debe a los clientes); gift cards; devoluciones; comisiones; costo y margen |
+| **Mi mesa** (§13.1) | Contadora | Su inicio: el cierre del mes por pasos, lo que vence en 30 días, su firma y sello, las descargas en Excel y las notas con el dueño |
+| **Calendario y pagos** (§13.2) | Contadora y dueño | Cada obligación con su vencimiento, su monto, su planilla y su comprobante; "Te toca" a quien le toca |
+| **Compras y gastos** (§13.3) | Contadora y dueño | Cada factura de compra con su foto y sus datos: el libro de compras y el crédito fiscal |
+| **Nómina y aportes** (§13.5) | Contadora y dueño | Los totales del mes y lo que sale de ellos: pensiones, IVSS, FAOV e INCES |
+| **Alquiler del local** (§13.4) | Contadora y dueño | El contrato, el canon de cada mes y su retención de ISLR |
+| **Alcaldía** (§13.6) | Contadora y dueño | Actividades económicas, la licencia, la publicidad y el aseo |
 
 ### Los datos (tablas nuevas, aditivas)
 - **`talonarios`:**
@@ -262,6 +282,19 @@ En orden. Cada una sirve sola, sale de `main` actualizado y lleva su estado, su 
   - Los avisos de anular lo que sobre y de los 15 días.
 - **Fuera del plan, a pedido:** las notas de crédito por garantía o cancelación, con su réplica (cuando haga falta la primera), y la retención de ISLR de lo que paga la empresa.
 
+**Desde el 14/11 en la noche (C-228b), el orden es:**
+1. C-229, las facturas de talonario (la maqueta B).
+2. C-235, la contadora en el equipo (§13.1).
+3. C-230, el libro de ventas y el resumen (antes del 15/12).
+4. C-236, el calendario y los avisos (§13.2).
+5. C-237, gastos y compras (§13.3).
+6. C-232, el IVA del mes y el cierre firmado (§13.7).
+7. C-238, el alquiler (§13.4).
+8. C-239, nómina y aportes (§13.5).
+9. C-240, la alcaldía (§13.6).
+10. C-231, los movimientos de la web.
+11. C-233, el 19/04/2027.
+
 **Cómo se prueba:** como el dinero (`CLAUDE.md`).
 - El caso normal y el manipulado: un administrador que intenta ver el libro, montos o números enviados desde el navegador, una factura emitida dos veces a la vez, un número fuera del rango del talonario, y anular sin motivo.
 - Los montos se cuadran contra la Factura 67, rehecha en la pantalla con sus mismos renglones (sin guardarla).
@@ -275,20 +308,28 @@ En orden. Cada una sirve sola, sale de `main` actualizado y lleva su estado, su 
 
 ### Abiertas (para Andrés)
 - **A16.** ¿Se factura en el talonario **cada venta de la web** desde ya, o solo la que pide factura, hasta el portal? La ley pide factura siempre. Recomendado: decidirlo con el contador esta semana.
-- **A17.** ¿Quién es el contador y cómo recibe el mes? Puede ser un archivo para Excel, uno para imprimir, o un acceso propio de solo lectura al panel (sería un rol nuevo, §7.2).
-- **A18.** Elegir la maqueta de la factura de talonario (sección 10).
+- ~~**A17.**~~ Cerrada el 14/11 en la noche: la contadora recibe el mes en Excel y trabaja en el panel, invitada al equipo (§13.1).
+- ~~**A18.**~~ Cerrada el 14/11 en la noche: la variante B, alineada (§10).
 
-### Para el contador
-1. **Los digitales:** la Factura 67 le cobró IVA a un juego digital, y la web no se lo cobra desde el 01/10 (lectura del art. 16, numeral 2, en `estado/C-151.md`). ¿Cuál vale? ¿Y las recargas directas?
-2. **Cada venta con factura:** con el talonario como único medio hasta abril, ¿se factura cada venta de la web? ¿Qué hacer con lo vendido sin factura en los meses anteriores?
-3. **La máquina fiscal:** ¿la empresa cumplía el art. 8 de la 0071 y debía tenerla? Desde el 19/04/2027 es opcional.
-4. **Divisas en el talonario:** los precios de la web están en dólares. ¿La factura debe llevar el monto en dólares y la tasa (0071, art. 13, num. 14; 00093, art. 8, num. 12)? ¿Va en un renglón de texto?
-5. **La tasa y la fecha:** ¿la de la orden (el día del pago) o la del día en que se escribe la factura? ¿Qué pasa si se factura en otro mes?
-6. **Contingencia:** ¿lo que quede de la Serie A puede quedarse como formato de contingencia, o hay que anularlo y pedir formatos nuevos (con la hora y la leyenda de la 00093)?
-7. **El libro de ventas:** ¿qué columnas quiere y en qué formato? ¿Se resumen por día las ventas a consumidores, o una por factura?
-8. **Puntos ES y gift cards de la tienda:** ¿el IVA nace al recargar o al comprar con ellos? (`estado/C-120.md` §2.8; sigue abierta).
-9. **El libro de compras:** ¿lo lleva el contador aparte, o conviene registrar las compras en la web (la ferretería factura con IVA, `estado/C-196b.md`)?
-10. **Cuánto se guardan** los libros y las facturas, y lo anulado (art. 21 de la 00093: mientras no prescriba).
+### Para la contadora (las 17 preguntas del WhatsApp)
+Escritas el 14/11 para mandárselas por WhatsApp, en tres mensajes. El texto está en la PC de Andrés: `~/Escritorio/Electro Shop/Preguntas para la contadora 14-11.txt`. Para la invitación también se le piden el correo, el nombre como quiere que salga en la firma y el número de C.P.C.
+1. **(Urgente) Factura en cada venta:** ¿se factura cada venta de la web desde ya (A16)? ¿Y lo vendido sin factura en los meses anteriores?
+2. **(Urgente) Los digitales:** la Factura 67 cobró IVA a un juego digital, y la web no (art. 16, numeral 2). ¿Cuál vale? ¿Y las recargas directas?
+3. **Dólares en el talonario:** ¿el monto en dólares y la tasa, en un renglón?
+4. **Tasa y fecha:** ¿la del pago o la de la factura? ¿Y si se factura en otro mes?
+5. **Libro de ventas:** columnas, orden y una línea por factura.
+6. **Libro de compras:** la foto y los datos de cada factura, ¿alcanzan?
+7. **Declaración del IVA:** el día exacto. Ella la calcula y presenta; el dueño paga.
+8. **Puntos ES y gift cards de la tienda:** ¿el IVA va al recargar o al comprar?
+9. **La máquina fiscal:** ¿la empresa estaba obligada a tenerla?
+10. **Abril de 2027:** ¿lo que quede del talonario sirve de formato de contingencia, o hay que anularlo y pedir formatos nuevos?
+11. **Pensiones:** la base, el mínimo por trabajador y el día que toca según el RIF.
+12. **IVSS, FAOV e INCES:** porcentajes y fechas.
+13. **El alquiler del local:** quién es el arrendador, si factura con IVA, y la retención de ISLR (3 % o 5 %) y su fecha.
+14. **Otras retenciones de ISLR:** fletes, publicidad y honorarios, también los de ella.
+15. **Alcaldía de Guanare:** si la declaración es mensual, la alícuota, la licencia, la publicidad y el aseo, y si se paga en línea.
+16. **Cuánto se guarda** lo emitido, los libros y lo anulado.
+17. **El Excel:** un archivo por libro, o uno solo con pestañas.
 
 ## 10. Las maquetas (antes de programar)
 Hechas el 14/11, con clientes inventados y una tasa de ejemplo (Bs 905,00).
@@ -305,7 +346,18 @@ Hechas el 14/11, con clientes inventados y una tasa de ejemplo (Bs 905,00).
   - El botón principal es **"Ya la escribí: registrar la 0077"**: la web registra lo que se escribió en el papel.
 - **`3-libro.html`:** el libro de ventas del mes, con una anulada, una exenta y una con retención, y sus totales.
 
-Falta que el equipo elija A o B (A18) antes de programar C-229.
+**Elegida la B** (14/11 en la noche: "muy brutal; ojo, algunos ítems se deben alinear mejor"). Se rehízo la réplica con una regla pareja:
+- cada número, centrado sobre el borde izquierdo de su casilla;
+- los valores, en la letra del panel, centrados en su fila;
+- las cifras, a la derecha y con el mismo ancho de dígitos;
+- todas las filas, de la misma altura.
+- C-229 usa esa regla.
+
+- **`4-mesa.html` (C-235):** "Mi mesa", el inicio de la contadora.
+  - El saludo y el cierre del mes en la única pieza azul noche.
+  - El cierre en 6 pasos y lo que vence en 30 días, con "Te toca" o "Paga Andrés".
+  - Su firma y sello, las descargas en Excel, el calendario del mes y las notas con el dueño.
+  - En el teléfono se apila; los pasos quedan en círculos, con "Paso 4 de 6" debajo.
 
 ## 11. Lo que no verifiqué
 - **El texto de la 00093 contra la Gaceta 43.484:** lo leí en la copia de IVECOFI (completa, con sus disposiciones). Los resúmenes de la prensa no siempre coinciden con ella.
@@ -314,6 +366,12 @@ Falta que el equipo elija A o B (A18) antes de programar C-229.
 - **Si el portal y la app del SENIAT ya facturan,** y si tendrán una API para conectar un sistema propio.
 - **Si la empresa debía tener máquina fiscal** (pregunta 3).
 - **La tasa BCV de hoy** (las maquetas usan una de ejemplo).
+- **Pensiones:**
+  - Las fechas de 2026 para un RIF terminado en 3. Las fuentes dicen que dependen del último dígito, pero no las listan.
+  - El número de la providencia del calendario: SNAT/2025/000093 según unas fuentes, 000092 según otra.
+  - Si hay un mínimo por trabajador: solo una fuente secundaria lo menciona.
+- **Los porcentajes y las fechas del IVSS, el FAOV y el INCES,** y el plazo para enterar las retenciones de ISLR: no los verifiqué en una fuente oficial.
+- **La Alcaldía de Guanare:** no encontré en internet la ordenanza vigente, la alícuota, las fechas ni un portal de pago. Solo hay noticias de años anteriores.
 
 ## 12. Fuentes
 **Providencia SNAT/2026/00093 (facturación desde el 19/04/2027)**
@@ -331,7 +389,140 @@ Falta que el equipo elija A o B (A18) antes de programar C-229.
 - Texto de la 00084 (Cachicamo): https://docs.cachicamo.app/fiscal/providencia00084
 - Finanzas Digital, la derogación: https://finanzasdigital.com/seniat-deroga-norma-sobre-proveedores-de-sistemas-fiscales/
 
+**Pensiones, retenciones de ISLR y alcaldía (14/11 en la noche)**
+- Legis, calendario 2026 de la contribución para las pensiones: https://www.legis.com.ve/BancoConocimiento/N/nota_21-01-2026-n4/nota_21-01-2026-n4.asp?Miga=1&CodSeccion=25
+- LEĜA, calendario de especiales y de pensiones 2026: https://lega.law/lega-informa/calendario-spe-y-pensiones-2026/
+- IVECOFI, manual de la contribución: https://tributos.ivecofi.net/informacion/manual/contribucion-especial-proteccion-pensiones
+- Cámara Ferretera, cumplimiento de la ley de pensiones: https://camaraferretera.org.ve/2026/04/cumplimiento-y-gestion-de-la-ley-de-proteccion-de-pensiones/
+- Gerencia y Tributos, retención de ISLR en arrendamientos: https://gerenciaytributos.blogspot.com/2024/04/retencion-islr-arrendamiento-inmuebles.html
+- Moore, tabla de retenciones de ISLR (U.T. Bs 43): https://www.moore-venezuela.com/wp-content/uploads/sites/15/2025/12/tabla-de-retenciones.pdf
+- Acceso a la Justicia, la LOCAPTEM: https://accesoalajusticia.org/ley-organica-de-coordinacion-y-armonizacion-de-las-potestades-tributarias-de-los-estados-y-municipios-locaptem/
+- PwC, los 20 aspectos de la LOCAPTEM: https://www.pwc.com/ve/es/assets/documentos/stl/STL%20Ley%20Org%C3%A1nica%20de%20Coordinaci%C3%B3n%20y%20Armonizaci%C3%B3n%20de%20las%20Potestades.pdf
+- Diario Última Hora, comerciantes de Guanare y la tasa municipal (2023): https://www.diarioultimahoradigital.com.ve/2023/09/30/comerciantes-de-guanare-exigen-revisar-tasa-impositiva-en-el-municipio-y-ajustarla-a-la-realidad-economica/
+
 **IVA, IGTF y declaración**
 - Guía de terceros sobre la declaración de IVA (el día 15 para ordinarios): https://ivacalculator.com/venezuela/declaracion-iva-seniat/
 - IGTF en 2026 (3 %, solo especiales): https://www.nompli.com/blog/igtf-venezuela-como-calcular-3-porciento-2026
 - Las de `estado/C-120.md` §9 (Ley del IVA, Providencias 0071, 102 y 054, IGTF y RIF), `estado/C-147b.md` y `estado/C-151.md`.
+
+## 13. Contabilidad completa (14/11 en la noche, C-228b)
+El pedido: "Pago de pensiones, alquileres, gastos de empresa, recordatorio de pago, alcaldía y municipalidad… un módulo súper completo, muy bien diseñado, para que ella se sienta atraída de trabajar allí".
+- La contadora entra al equipo, trabaja con Excel y en el panel, y firma.
+- El dueño la puede quitar y poner otra.
+- Lo decidido está en `PLAN.md` §7.2.
+
+### 13.1 La contadora en el equipo (C-235)
+- **El rol nuevo `ACCOUNTANT`,** "Contadora" en pantalla. Es un valor más del enum `Role`: un cambio aditivo (`ALTER TYPE "Role" ADD VALUE`).
+- **Entra por invitación a su correo,** como los administradores (C-141): con clave propia y los dos pasos obligatorios.
+  - El correo de invitación toma el nombre del rol de `nombreRol()` (`lib/equipo.ts`), que usa la sesión de los correos (C-219).
+- **Puede:**
+  - ver todo Contabilidad y descargarlo en Excel;
+  - cargar y revisar gastos y compras;
+  - calcular y marcar lo declarado, con la planilla en PDF;
+  - firmar el cierre del mes;
+  - escribir notas.
+- **No puede:** facturar ni anular en el talonario, ni tocar órdenes, productos, clientes, la tienda o la configuración. El resto del menú no lo ve.
+- **El dueño la invita, la quita y pone otra** desde Equipo.
+  - Al quitarla, su acceso se cierra al instante.
+  - Lo que firmó queda firmado con su nombre: el historial no se borra.
+- **Su firma:** la dibuja una vez en el panel, con la pieza de firma dibujada de C-103.
+  - Con su nombre y su número de C.P.C. forma el sello.
+  - El sello va en cada cierre y en la portada de cada Excel o PDF.
+- **"Mi mesa", su inicio** (la maqueta `4-mesa.html`):
+  - el saludo y el cierre del mes, en la única pieza azul noche;
+  - el cierre en 6 pasos: ventas, compras y gastos, nómina y aportes, alquiler y alcaldía, declarar y firmar;
+  - lo que vence en 30 días, con "Te toca" o "Paga Andrés";
+  - su firma y sello, y "Descargar el mes";
+  - el calendario del mes y las notas con el dueño.
+
+### 13.2 El calendario de obligaciones y los avisos (C-236)
+Es la columna del módulo: cada obligación tiene su regla de vencimiento, y cada mes, su vencimiento con su estado.
+- **Los estados:** por calcular → lista para pagar (con el monto y la planilla) → pagada (con el comprobante). El sello "Te toca" va a quien le toca (§1.8).
+- **Quién hace qué (14/11):**
+  - La contadora calcula y declara.
+  - El dueño aprueba y paga.
+  - Quien paga sube el comprobante.
+  - El panel no guarda claves del SENIAT ni del banco.
+- **Los avisos (14/11):**
+  - Por la campana del panel y por el Telegram del equipo.
+  - Tres días antes, el día del vencimiento y si se pasa.
+  - Lo que vence en feriado o fin de semana pasa al día hábil siguiente (Código Orgánico Tributario, art. 10), con el calendario de feriados de C-234 (`lib/horarios/*`).
+- **Las obligaciones de una C.A. ordinaria en Guanare.** Lo marcado "confirmar" lo dice la contadora, en las preguntas del WhatsApp.
+
+| Obligación | Cada cuánto | Vence | De dónde sale el monto |
+|---|---|---|---|
+| IVA (forma 99030) | Mensual | Hasta el día 15 del mes siguiente (confirmar) | Débito − crédito − excedente − lo retenido (C-232) |
+| Pensiones (9 %) | Mensual | Según el último dígito del RIF (3), en el calendario anual del SENIAT (confirmar las fechas) | Salarios y bonos no salariales del mes (C-239) |
+| Retenciones de ISLR (alquiler y otras) | Mensual | En los primeros días del mes siguiente (confirmar) | El 3 % o el 5 % del alquiler; los demás pagos, según el Decreto 1.808 |
+| IVSS | Mensual | Confirmar | Salarios del mes |
+| FAOV (BANAVIH) | Mensual | Confirmar | Salario integral |
+| INCES | Trimestral | Confirmar | Salarios del trimestre |
+| Alcaldía: actividades económicas | Mensual, y la definitiva del año (confirmar) | Según la ordenanza de Guanare | Ingresos brutos × la alícuota (tope del 3 %, LOCAPTEM) |
+| Licencia de actividades económicas | Anual | Confirmar | Tasa de la alcaldía |
+| Publicidad y aseo | Según la alcaldía | Confirmar | Tasas |
+| Alquiler del local | Mensual | El día del contrato | El canon, con su retención (C-238) |
+| ISLR del año | Anual | 31/03, si el ejercicio cierra el 31/12 | Lo calcula la contadora |
+
+- **Las fechas que dependen del RIF** (pensiones) las carga la contadora una vez al año, o Claude con la providencia del calendario. La de 2027 todavía no salió.
+
+### 13.3 Gastos y compras (C-237)
+- **Cada factura de compra o de gasto lleva:**
+  - la foto o el PDF, como archivo privado, nunca público;
+  - el proveedor y su RIF;
+  - los números de factura y de control, y la fecha;
+  - la categoría;
+  - la base, el IVA, lo exento y el total;
+  - la retención, si la hay.
+- **De ahí salen el libro de compras del mes y el crédito fiscal del IVA** (C-232). Las facturas de la ferretería, que traen el IVA (C-196b), entran aquí.
+- **Las categorías:** mercancía, fletes (ZOOM y MRW del envío gratis), servicios (luz, agua, internet y teléfono), alquiler, honorarios, publicidad, papelería, mantenimiento, comisiones bancarias (el Pago Móvil), impuestos y tasas, y otros.
+- **Propuesta:** carga el dueño o la contadora. Un administrador puede subir la foto para que ella la complete.
+- **La contadora revisa cada una:** "Revisada" la pasa al libro; "Falta algo" la devuelve con una nota.
+
+### 13.4 El alquiler del local (C-238)
+- **El contrato:**
+  - el arrendador, persona o empresa, con su RIF;
+  - el canon, en $ o en Bs, y el día de pago;
+  - cuándo vence el contrato;
+  - si el arrendador factura con IVA.
+- **Cada mes:**
+  - el canon a la tasa del día;
+  - la retención de ISLR: 3 % si el arrendador es una persona residente y 5 % si es una empresa domiciliada (Decreto 1.808, art. 9);
+  - su comprobante de retención, con el número de 14 caracteres AAAAMMSSSSSSSS (00093, art. 18);
+  - el recibo o la factura del arrendador.
+- **El IVA del alquiler,** si el arrendador lo factura, es crédito fiscal: va al libro de compras.
+- **Aviso 60 días antes** de que venza el contrato.
+
+### 13.5 Nómina y aportes (C-239)
+- **Cada mes se cargan los totales:** cuántos trabajadores, los salarios y los bonos no salariales. En su mes, también las utilidades y las vacaciones.
+- **El panel calcula y deja en el calendario:**
+  - pensiones: el 9 % de los salarios y los bonos, con el mínimo por trabajador si existe;
+  - IVSS, FAOV e INCES, con los porcentajes que confirme la contadora.
+- **Se guardan** cada planilla y cada comprobante.
+- **Sin datos de cada trabajador** (14/11: totales del mes): ni nombres ni sueldos sueltos.
+
+### 13.6 La Alcaldía de Guanare (C-240)
+- **Actividades económicas:**
+  - la declaración del mes (o el anticipo), con los ingresos brutos;
+  - la definitiva del año.
+  - Los ingresos brutos salen del libro de ventas (C-230), pero los fija la contadora.
+- **La licencia anual, la publicidad del aviso y el aseo urbano:** vencimientos con su monto.
+- **La ley de armonización** (LOCAPTEM, Gaceta 6.755 Extraordinario del 10/08/2023):
+  - la alícuota general de actividades económicas no pasa del 3 % de los ingresos brutos;
+  - el mínimo tributable del año no pasa de 240 veces la tasa BCV de la moneda de mayor valor.
+- **No encontré en internet la ordenanza vigente de Guanare.** La alícuota, las fechas y si se paga en línea los da la contadora (pregunta 15).
+
+### 13.7 El cierre del mes, firmado (C-232)
+- **Seis pasos:** ventas, compras y gastos, nómina y aportes, alquiler y alcaldía, declarar y firmar.
+- **Al firmar, el mes queda cerrado.** Lo que cambie después va con una nota de crédito o de débito, o con una corrección que la contadora vuelve a firmar (antes → después, §1.9).
+- **La descarga del mes:** un Excel con una pestaña por libro. Las pestañas son ventas, compras, IVA, nómina y aportes, alquiler y alcaldía, y los vencimientos pagados. La portada lleva su firma y sello.
+
+### 13.8 Lo que hace que ella quiera trabajar ahí
+- **Todo en una mesa:** lo que vence, lo que falta y lo que ya está, sin buscar.
+- **Nada se copia a mano:** los libros de ventas y de compras salen de lo que carga el equipo.
+- **Su firma vale:** cada cierre queda con su nombre y su C.P.C.
+- **Ella pone los criterios:** las columnas, las alícuotas y las fechas salen de sus respuestas.
+- **Los avisos llegan a tiempo,** para que no haya multas.
+- **El diseño** (`PLAN.md` §1 y §1.9):
+  - una sola pieza azul noche, el saludo con el cierre, y lo demás claro;
+  - "Te toca" en el sello azul noche, y nada ámbar (C-226);
+  - el Excel, con su firma.

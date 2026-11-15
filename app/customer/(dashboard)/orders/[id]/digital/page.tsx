@@ -14,6 +14,8 @@ import { SiSteam, SiPlaystation, SiRoblox, SiNetflix, SiSpotify, SiApple } from 
 import toast from 'react-hot-toast';
 import PlatformScratchCard from './_components/PlatformScratchCard';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { useSettings } from '@/contexts/SettingsContext';
+import { calendarioDe, entregaDigital } from '@/lib/horarios';
 
 interface DigitalCode {
     id: string;
@@ -68,6 +70,7 @@ export default function DigitalCodesPage() {
     const orderId = params?.id as string;
     const router = useRouter();
     const { status } = useSession();
+    const { settings } = useSettings();
     const [data, setData] = useState<DigitalOrderData | null>(null);
     const [loading, setLoading] = useState(true);
     const [copiedCodes, setCopiedCodes] = useState<Record<string, boolean>>({});
@@ -161,7 +164,7 @@ export default function DigitalCodesPage() {
 
     if (loading) {
         return (
-            <div className="min-h-dvh bg-surface flex items-center justify-center">
+            <div className="flex min-h-[50vh] items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
                     <div className="relative w-12 h-12">
                         <div className="absolute inset-0 border-4 border-line rounded-full"></div>
@@ -175,7 +178,7 @@ export default function DigitalCodesPage() {
 
     if (!data) {
         return (
-            <div className="min-h-dvh bg-surface flex items-center justify-center p-4">
+            <div className="flex min-h-[50vh] items-center justify-center p-4">
                 <div className="text-center">
                     <IconoAdvertencia className="w-10 h-10 text-deal mx-auto mb-3" />
                     <h1 className="text-lg font-bold text-ink mb-2">Orden no encontrada</h1>
@@ -192,13 +195,14 @@ export default function DigitalCodesPage() {
     const progressPercent = totalCodes > 0 ? (revealedCount / totalCodes) * 100 : 0;
 
     return (
-        <div className="min-h-dvh bg-surface relative">
+        // C-251: sin su propio fondo gris de pantalla completa: dentro del marco de Mi panel quedaba una caja gris en la tarjeta blanca
+        <div className="relative">
             {/* Header */}
             <div className="sticky top-0 z-[var(--z-sticky)] border-b border-line bg-white/95">
                 <div className="max-w-4xl mx-auto px-3 py-2">
                     <div className="flex items-center justify-between">
-                        <Link href="/customer/orders" className="p-2 bg-surface rounded-xl text-ink hover:bg-line transition-all border border-line">
-                            <IconoFlechaIzquierda className="w-4 h-4" />
+                        <Link href="/customer/orders" aria-label="Volver a mis pedidos" title="Volver a mis pedidos" className="flex h-11 w-11 items-center justify-center bg-surface rounded-xl text-ink hover:bg-line transition-all border border-line">
+                            <IconoFlechaIzquierda className="w-4 h-4" aria-hidden="true" />
                         </Link>
 
                         <div className="flex-1 mx-3">
@@ -334,6 +338,13 @@ export default function DigitalCodesPage() {
                                                     </div>
                                                 </div>
                                             ))
+                                        ) : item.deliveryMethod === 'MANUAL' && data.orderStatus === 'DELIVERED' ? (
+                                            // C-251: la recarga ya se hizo (antes seguía diciendo "la estamos haciendo en este momento")
+                                            <div className="p-4 rounded-xl border border-line bg-surface text-center space-y-1">
+                                                <IconoCheck className="w-6 h-6 text-success-strong mx-auto" aria-hidden="true" />
+                                                <h4 className="text-sm font-semibold text-ink">Recarga hecha</h4>
+                                                <p className="text-xs text-muted max-w-xs mx-auto">La hicimos directo en la cuenta que nos diste. Si no la ves, escríbenos.</p>
+                                            </div>
                                         ) : item.deliveryMethod === 'MANUAL' ? (
                                             <div className="p-4 rounded-xl border border-brand-200 bg-brand-50 text-center space-y-3">
                                                 <div className="w-10 h-10 bg-white border border-brand-200 rounded-full flex items-center justify-center mx-auto text-brand-600">
@@ -346,8 +357,10 @@ export default function DigitalCodesPage() {
                                                     </p>
                                                 </div>
                                                 <div className="py-1 px-3 bg-white border border-brand-200 rounded-lg inline-block">
+                                                    {/* C-251: lo que dice el checkout (C-234: lo digital llega en el horario de atención). Antes,
+                                                        "5 - 15 minutos" escrito a mano, aunque fuera de noche o domingo */}
                                                     <span className="text-xs font-bold text-brand-700 flex items-center gap-1.5 justify-center">
-                                                        Tiempo estimado: 5 - 15 minutos
+                                                        {entregaDigital(new Date(), settings?.businessHours, calendarioDe(settings)).texto}
                                                     </span>
                                                 </div>
                                             </div>
@@ -358,6 +371,13 @@ export default function DigitalCodesPage() {
                                             </div>
                                         )}
                                     </div>
+                                    {/* C-251: cómo se canjea (lo escribe el equipo en el producto). La API lo mandaba y la página no lo mostraba */}
+                                    {item.redemptionInstructions && (
+                                        <div className="mx-3 mb-4 rounded-xl border border-line bg-surface p-3">
+                                            <h4 className="text-sm font-semibold text-ink">Cómo canjearlo</h4>
+                                            <p className="mt-1 whitespace-pre-line text-sm text-ink-soft">{item.redemptionInstructions}</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );

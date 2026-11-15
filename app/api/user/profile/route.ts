@@ -107,9 +107,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
     // C-201: el menú del panel muestra "Mis cotizaciones" y "Mis cursos" solo a quien tiene alguna
-    const [cotizaciones, cursos] = await Promise.all([
+    // C-251: y "Mis reseñas" a quien dejó alguna (la página no tenía ningún enlace)
+    const [cotizaciones, cursos, resenas] = await Promise.all([
       contarCotizacionesDelCliente(user.id, user.email, Boolean(user.emailVerified)),
       prisma.courseEnrollment.count({ where: { userId: user.id } }),
+      prisma.review.count({ where: { userId: user.id } }),
     ]);
 
     return NextResponse.json({
@@ -123,7 +125,7 @@ export async function GET() {
       },
       profile: user.profile,
       resumen: { pedidosPagados: pagados._count, totalComprado: Number(pagados._sum.totalUSD ?? 0) },
-      menu: { cotizaciones, cursos },
+      menu: { cotizaciones, cursos, resenas },
     });
   } catch (error) {
     console.error('Error fetching profile:', error);

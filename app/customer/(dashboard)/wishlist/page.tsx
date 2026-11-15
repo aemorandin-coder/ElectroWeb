@@ -6,8 +6,9 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import {
   IconoBuscar, IconoCarrito, IconoCuadricula, IconoDesconectado, IconoEliminar, IconoFiltro, IconoFlechaAbajo, IconoLista,
-  IconoNovedad, IconoOferta, IconoPaquete, IconoRegalo,
+  IconoNovedad, IconoOferta, IconoPaquete, IconoRegalo, IconoUbicacion,
 } from '@/components/iconos';
+import { lugarDe } from '@/lib/origen';
 import { useCart } from '@/contexts/CartContext';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -181,9 +182,20 @@ export default function WishlistPage() {
 
     const Disponibilidad = ({ p }: { p: Favorito }) => {
         if (p.productType === 'DIGITAL') return <p className="text-xs font-medium text-success-strong">Entrega digital</p>;
-        return p.stock > 0
-            ? <p className="flex items-center gap-1.5 text-xs font-medium text-success-strong"><span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />En stock</p>
-            : <p className="flex items-center gap-1.5 text-xs font-medium text-deal"><span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />Agotado</p>;
+        return (
+            <>
+                {p.stock > 0
+                    ? <p className="flex items-center gap-1.5 text-xs font-medium text-success-strong"><span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />En stock</p>
+                    : <p className="flex items-center gap-1.5 text-xs font-medium text-deal"><span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />Agotado</p>}
+                {/* C-251 (C-222): desde dónde sale, como en la tarjeta de la tienda */}
+                {p.desde && (
+                    <p className="flex items-center gap-1 text-xs text-ink-soft">
+                        <IconoUbicacion className="h-3.5 w-3.5 shrink-0 text-brand-500" aria-hidden="true" />
+                        <span className="min-w-0 truncate">Desde <span className="font-semibold text-ink">{lugarDe(p.desde)}</span></span>
+                    </p>
+                )}
+            </>
+        );
     };
 
     return (

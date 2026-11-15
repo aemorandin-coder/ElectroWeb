@@ -5,6 +5,8 @@
 // texto, iconiza de forma animada"; "la idea es que compren. Siempre habla claro sobre dos caminos"): Cómo participar en
 // tres pasos con sus íconos (ComoParticipar: la cuenta, los dos caminos con la compra primero y el resultado), tus boletos
 // al lado y las preguntas que la gente hace (PreguntasSorteo). Quien llega con el enlace de un amigo lo ve.
+// C-254 (el equipo eligió la B viendo las maquetas): ya sorteado, el banner cuenta quién ganó (GanadorSorteo). Con la
+// entrega publicada y su permiso, su nombre, su foto y su video; sin eso, el correo tapado, como antes.
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -15,26 +17,30 @@ import { IconoRegalo } from '@/components/iconos';
 import PublicHeader from '@/components/public/PublicHeader';
 import ComoParticipar from '@/components/sorteo/ComoParticipar';
 import PreguntasSorteo from '@/components/sorteo/PreguntasSorteo';
+import GanadorSorteo from '@/components/sorteo/GanadorSorteo';
 import PremioSorteo, { diaLargo } from '@/components/sorteo/PremioSorteo';
 import Container from '@/components/ui/Container';
 import { authOptions } from '@/lib/auth';
 import { formatUSD } from '@/lib/currency';
+import { ganadorPublico } from '@/lib/dto/sorteo';
 import { compartirPagina } from '@/lib/og/datos';
 import { prisma } from '@/lib/prisma';
 import { siteUrl } from '@/lib/seo';
 import { getPublicSettings } from '@/lib/site-settings';
 import { avisoDeMarcas, leerQueTrae } from '@/lib/sorteo/premio';
-import { correoTapado } from '@/lib/sorteo/reglas';
 import { boletosDeCliente, esInvitacionVigente, getSorteoVigente } from '@/lib/sorteo/servidor';
 
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const sorteo = await getSorteoVigente();
+  // C-254: ya sorteado, "¡ya hay ganador!" (sin su nombre: el texto viaja por los chats)
   return {
-    title: sorteo ? `${sorteo.titulo}: ${sorteo.premio}` : 'Sorteo',
+    title: sorteo ? `${sorteo.titulo}: ${sorteo.sorteadoAt ? '¡ya hay ganador!' : sorteo.premio}` : 'Sorteo',
     description: sorteo
-      ? `Participa en el sorteo de Electro Shop: ${sorteo.premio}. Con cada compra de $${Number(sorteo.compraMinimaUSD)} o más, o invitando a 2 amigos.`
+      ? sorteo.sorteadoAt
+        ? `Ya hay ganador del sorteo de Electro Shop: la ${sorteo.premio} se sorteó el ${diaLargo(sorteo.sorteadoAt)}, al azar entre todos los boletos.`
+        : `Participa en el sorteo de Electro Shop: ${sorteo.premio}. Con cada compra de $${Number(sorteo.compraMinimaUSD)} o más, o invitando a 2 amigos.`
       : 'Los sorteos de Electro Shop.',
     alternates: { canonical: '/sorteo' },
     robots: sorteo ? undefined : { index: false },
@@ -77,25 +83,24 @@ export default async function SorteoPage({ searchParams }: { searchParams: Promi
   // la cookie todavía no viene en el pedido y vale el de la dirección
   const codigoInvita = (await cookies()).get('electroshop_sorteo')?.value ?? (typeof params.invita === 'string' ? params.invita : null);
   const invitado = !session?.user?.id && !cerrado && (await esInvitacionVigente(codigoInvita, sorteo.id));
+  const ganador = ganadorPublico(sorteo);
 
   return (
     <div className="min-h-dvh bg-surface">
       <PublicHeader />
       <main>
-        {/* El premio: la pieza fuerte, en el azul oscuro del logo (la misma pieza que revisa el panel antes de publicar, C-221) */}
-        <PremioSorteo
-          titulo={sorteo.titulo} premio={sorteo.premio} imagen={sorteo.imagen} resultadoEl={sorteo.resultadoEl} sorteadoAt={sorteo.sorteadoAt}
-          incluye={leerQueTrae(sorteo.incluye)} lema={sorteo.lema} nombreCorto={sorteo.nombreCorto} participar={!cerrado}
-        />
-
-        {sorteo.sorteadoAt && sorteo.ganadorEmail && (
-          <Container className="pt-8">
-            <div className="rounded-2xl border border-success-strong/30 bg-white p-5 text-center">
-              <p className="text-sm text-ink-soft">Ganó el boleto de</p>
-              <p className="mt-1 text-2xl font-bold text-ink">{correoTapado(sorteo.ganadorEmail)}</p>
-              <p className="mt-1 text-sm text-muted">Entre {sorteo.boletosAlSortear} boletos. Le escribimos al correo de su cuenta para coordinar la entrega.</p>
-            </div>
-          </Container>
+        {/* El premio: la pieza fuerte, en el azul oscuro del logo (la misma pieza que revisa el panel antes de publicar, C-221).
+            C-254: ya sorteado, el mismo banner cuenta quién ganó */}
+        {ganador ? (
+          <GanadorSorteo
+            titulo={sorteo.titulo} premio={sorteo.premio} imagen={sorteo.imagen} nombreCorto={sorteo.nombreCorto}
+            incluye={leerQueTrae(sorteo.incluye)} ganador={ganador}
+          />
+        ) : (
+          <PremioSorteo
+            titulo={sorteo.titulo} premio={sorteo.premio} imagen={sorteo.imagen} resultadoEl={sorteo.resultadoEl} sorteadoAt={sorteo.sorteadoAt}
+            incluye={leerQueTrae(sorteo.incluye)} lema={sorteo.lema} nombreCorto={sorteo.nombreCorto} participar={!cerrado}
+          />
         )}
 
         {!cerrado && (
@@ -124,7 +129,8 @@ export default async function SorteoPage({ searchParams }: { searchParams: Promi
           </Container>
         )}
 
-        <Container className="pb-12">
+        {/* C-254: cerrado, sin "Cómo participar", las bases no quedan pegadas al banner */}
+        <Container className={cerrado ? 'pb-12 pt-8' : 'pb-12'}>
           <details className="rounded-2xl border border-line bg-white p-5 open:pb-6">
             <summary className="flex cursor-pointer items-center gap-2 text-lg font-semibold text-ink">
               <IconoRegalo className="h-5 w-5 text-brand-600" aria-hidden="true" /> Las bases del sorteo
@@ -135,7 +141,7 @@ export default async function SorteoPage({ searchParams }: { searchParams: Promi
               <li>Cada compra pagada de {minimo} o más en productos (sin contar el envío) es 1 boleto. Una compra que llega en dos paquetes cuenta como una. Si una compra se cancela o se devuelve, su boleto se anula.</li>
               <li>Invitando amigos: cada 2 amigos que se registren con tu enlace, con su teléfono, y activen su cuenta desde el correo te dan 1 boleto, hasta {sorteo.topeInvitar}. Cada persona cuenta una sola vez.</li>
               <li>No se vende ningún boleto. Participar no cuesta nada aparte de lo que decidas comprar.</li>
-              <li>El ganador se elige al azar entre todos los boletos: cada boleto es una oportunidad. Se publica en esta página con el correo tapado y se le escribe al correo de su cuenta.</li>
+              <li>El ganador se elige al azar entre todos los boletos: cada boleto es una oportunidad. Se publica en esta página con el correo tapado y se le escribe al correo de su cuenta. Solo si la persona lo acepta, se publican también su nombre, su foto y el video de la entrega.</li>
               <li>El premio es una {sorteo.premio}. Se entrega en la tienda en Guanare o se envía sin costo por ZOOM a cualquier estado. No se cambia por dinero.</li>
               <li>Los correos de los participantes se usan solo para el sorteo y no se publican completos.</li>
               <li>{marcas}</li>

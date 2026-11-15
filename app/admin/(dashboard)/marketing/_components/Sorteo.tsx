@@ -4,16 +4,18 @@
 // C-221 (PLAN.md §1.9, el equipo el 14/11: "básico, sin comprensión, desordenado"): sin sorteo, el asistente de 4 pasos con
 // lo que se propone para el primero; con uno, su tablero. "Cambiar" abre el mismo asistente con todo hecho, y su último paso
 // dice qué cambia y a cuántos clientes les cambian los boletos antes de guardar.
+// C-254: ya sorteado, "Publicar la entrega" abre su propio asistente (la foto, el video, el nombre y el permiso).
 
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { adminSpinner } from '@/lib/admin-ui';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import AsistenteEntrega from './sorteo/AsistenteEntrega';
 import AsistenteSorteo from './sorteo/AsistenteSorteo';
 import TableroSorteo from './sorteo/TableroSorteo';
 import { formularioDe, nuevoDesde, PROPUESTO, type Datos, type Formulario } from './sorteo/tipos';
 
-type Vista = { tipo: 'tablero' } | { tipo: 'editar' } | { tipo: 'nuevo'; base: Formulario };
+type Vista = { tipo: 'tablero' } | { tipo: 'editar' } | { tipo: 'nuevo'; base: Formulario } | { tipo: 'entrega' };
 
 export default function Sorteo() {
   const [datos, setDatos] = useState<Datos | null>(null);
@@ -37,6 +39,9 @@ export default function Sorteo() {
   if (vista.tipo === 'editar' && !s.sorteadoAt) {
     return <AsistenteSorteo key={`editar-${s.id}`} modo="editar" inicial={formularioDe(s)} actual={s} onCancelar={() => setVista({ tipo: 'tablero' })} onListo={listo} />;
   }
+  if (vista.tipo === 'entrega' && s.sorteadoAt) {
+    return <AsistenteEntrega key={`entrega-${s.id}`} sorteo={s} onCancelar={() => setVista({ tipo: 'tablero' })} onListo={listo} />;
+  }
   if (vista.tipo === 'nuevo') {
     return <AsistenteSorteo key="nuevo" modo="nuevo" inicial={vista.base} actual={s} onCancelar={() => setVista({ tipo: 'tablero' })} onListo={listo} />;
   }
@@ -45,6 +50,7 @@ export default function Sorteo() {
       datos={datos}
       onEditar={() => setVista({ tipo: 'editar' })}
       onNuevo={() => setVista({ tipo: 'nuevo', base: nuevoDesde(s) })}
+      onEntrega={() => setVista({ tipo: 'entrega' })}
       onRecargar={cargar}
     />
   );

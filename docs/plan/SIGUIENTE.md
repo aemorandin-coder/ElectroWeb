@@ -1,9 +1,25 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.76; en `main`, rc.78 por subir: §2)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.76; en `main`, rc.79 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-254 · La semana del ganador (rc.79, por subir: §2; `estado/C-254.md`):** el pedido del equipo del 15/11. Eligió lo recomendado en las 7 preguntas, viendo las maquetas (`~/.cache/electroshop-trabajo/c254/index.html`).
+  - **La bandera del inicio, por etapas:**
+    - cerrado: "Resultado el 20 de diciembre", y ese día, "Hoy sale el ganador";
+    - sorteado: "¡Ya hay ganador!" con la foto del premio;
+    - con la entrega publicada: la foto de la persona y "¡Ganó una PS4!", 7 días desde que se publica. La píldora dice "¡María G. ganó una PS4!".
+    - Sin entrega, se va a los 7 días del sorteo; si la entrega llega después, vuelve 7 días.
+  - **`/sorteo`, ya sorteado:** el banner cuenta quién ganó, con su nombre, de dónde es y su foto, que es la portada del video. El video se abre ahí mismo, sin cookies. Sin permiso, el correo tapado, como antes.
+  - **En el panel, "Publicar la entrega"** (Marketing → Sorteo, debajo del ganador), en 3 pasos:
+    - la foto, que se sube o se toma con el teléfono, y el enlace de YouTube;
+    - su nombre;
+    - "Revisar y publicar", con la casilla "La persona aceptó salir en la tienda".
+    - "Quitar de la tienda" si cambia de idea.
+  - **Lo que se cuida:**
+    - el servidor exige el permiso, una foto subida y un enlace de YouTube válido;
+    - la foto se publica sin el GPS que traen las del teléfono;
+    - al compartir `/sorteo` sale "¡Ya hay ganador!", sin la cara ni el nombre.
 - **C-260 · El kit de onboarding en más lugares, y las misiones de Mi panel (rc.78, por subir: §2; `estado/C-260.md`):** lo que midió C-258.
   - **"Agregar":** "¡Listo! Ya está en tu carrito" con "Ver carrito", y el carrito que salta.
   - **Al firmar los términos:** "Baja hasta el final para firmar", y la firma de muestra.
@@ -13,7 +29,7 @@
   - **"Solicitar producto" sin cuenta** pide entrar antes del formulario, y crear la cuenta vuelve a la página.
   - **La garantía** abre en "Nueva" o en Mis solicitudes, con "Pedir garantía" arriba.
   - **La recarga con un método manual** ya no pregunta "¿Estás seguro?": el botón dice el monto y el método.
-  - **Siguen en paralelo:** C-260 (el kit de onboarding en más lugares y las misiones de Mi panel) y C-254 (la semana del ganador, con maquetas para elegir).
+  - **Siguieron en paralelo:** C-260 (el kit de onboarding en más lugares y las misiones de Mi panel) y C-254 (la semana del ganador, rc.79, arriba).
 - **C-257 · El kit de onboarding: Chispa te guía (rc.76, en producción; `estado/C-257.md`):** el equipo pidió el 15/11 un kit para toda la tienda ("los onboarding parecen publicidad"). Eligió la A de las maquetas y aprobó el video del kit andando.
   - **El recorrido de bienvenida, rehecho:**
     - se oscurece en el azul del logo y un anillo blanco se dibuja alrededor de lo que se explica;
@@ -47,7 +63,7 @@
   - **La bandera del inicio:** la pestaña al borde izquierdo con el logo de PS4 o, más angosto, la píldora frente a WhatsApp. Entra una sola vez y se queda quieta.
   - **El panel:** el paso "Lo que trae". **En `/sorteo`:** el aviso de marcas de Sony.
   - **El equipo ya cargó en el panel** el premio, lo que trae y "PS4" (captura del 15/11). Faltan las pruebas (§2, "Por confirmar de rc.72").
-  - **Sigue C-254:** la semana del ganador (`PLAN.md` §5.2).
+  - **Siguió C-254:** la semana del ganador (rc.79, arriba).
 - **C-251b · Mi panel con el kit (rc.71, en producción; `estado/C-251b.md`):** lo que quedó de C-251. Los estados en su sello lleno (Puntos ES, Mis códigos, Direcciones), sin ámbar (Direcciones, Garantía, Reseñas, Seguridad y la ventana de firmar), el aviso de lo que hay que hacer con su placa (también el "IMPORTANTE" de `/terminos` y `/privacidad`, que iba en rojo), los filtros en píldoras (Mis pedidos, Puntos ES, Reseñas y Notificaciones), Direcciones con la tarjeta de opción y Mi perfil del ancho de un formulario. Siguen las tres decisiones de C-251.
 - **C-252 · El curso nuevo y las fotos de Servicios, validados (rc.70, en producción):** el servidor ya no acepta un precio negativo al crear un curso, ni fotos de Servicios que no sean de la tienda o http(s) (`estado/C-252.md`).
 - **C-251 · Mi panel (el panel del cliente), revisado a fondo: las fallas y lo nuevo (rc.69, en producción; `estado/C-251.md`):** el equipo lo pidió el 15/11 ("revisa con calma: no solo el rediseño, sino también las fallas, y que se conecten las actualizaciones"). Lo hizo un agente aparte.
@@ -377,13 +393,26 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.78` (C-261 y C-260; unos 20 minutos)
+### Lo que falta subir: `v1.0.0-rc.79` (C-261, C-260 y C-254; unos 30 minutos)
 Producción está en `v1.0.0-rc.76` (`38cd1f7`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- **C-261 (rc.77):** las tres decisiones de C-258. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo antes.
+- **C-261 (rc.77):** las tres decisiones de C-258. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **C-260 (rc.78):** el kit de onboarding en más lugares y las misiones de Mi panel. Sin cambio de base.
+- **C-254 (rc.79):** la semana del ganador: la bandera por etapas, el ganador en `/sorteo` y "Publicar la entrega" en el panel.
+  - **Cambia la base: seis columnas nuevas en `sorteos`, aditivas.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
+```sql
+ALTER TABLE "sorteos" ADD COLUMN     "entregaCiudad" TEXT,
+ADD COLUMN     "entregaFoto" TEXT,
+ADD COLUMN     "entregaNombre" TEXT,
+ADD COLUMN     "entregaPermiso" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "entregaPublicadaAt" TIMESTAMP(3),
+ADD COLUMN     "entregaVideo" TEXT;
+```
+  - Sin variables nuevas, sin SQL de datos y sin cron.
+- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc79.dump`
 - **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.78`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 10 minutos, en el teléfono y en la computadora):
+  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.79`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 20 minutos, en el teléfono y en la computadora):
   1. **`/solicitar-producto` en una ventana privada, sin entrar:**
       - sale "Entra para pedirlo", con "Crear mi cuenta gratis" y "Ya tengo cuenta: entrar", y no el formulario;
       - "Ya tengo cuenta: entrar" lleva al login y, al entrar, vuelve a la página con el formulario.
@@ -399,7 +428,25 @@ Producción está en `v1.0.0-rc.76` (`38cd1f7`); su bloque está en `HISTORIAL.m
       - en el paso de la firma, el recuadro vacío muestra una firma que se dibuja y "Firma aquí", que se va al tocar.
   6. **Mis códigos** (un pedido con un código digital, si hay uno a mano): "Voltear tarjeta" es el botón azul lleno.
   7. **Mi panel**, con una cuenta que todavía tiene misiones: "¿Cómo funciona la tienda?" abre la hoja con los tres pasos. "Entendido" la cierra.
-- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.76 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de base que deshacer.
+  8. **C-254, hoy (el sorteo sigue abierto):**
+      - el inicio sigue igual: "¡Gánate una PS4!";
+      - `/sorteo` sigue con "Gana una" y "Quiero mi boleto";
+      - en el panel, Marketing → Sorteo se ve como antes ("Publicar la entrega" sale recién después de sortear).
+  9. **C-254, el 19 de diciembre** (ya cerró la última compra, en la computadora ancha y en el teléfono): la bandera dice "Resultado 20 de dic." y la píldora, "Resultado el 20 de diciembre". El 20, antes de sortear, "Hoy sale el ganador".
+  10. **C-254, después de sortear** (en el teléfono, sin entrar):
+      - la bandera dice "¡Ya hay ganador!" con la foto del premio;
+      - `/sorteo` arriba dice "¡Ya hay ganador!" con el correo tapado;
+      - compartir `/sorteo` por WhatsApp muestra "¡Ya hay ganador!".
+  11. **C-254, la entrega,** cuando la persona acepte y esté su video en YouTube (como Oculto o Short). En la computadora, Marketing → Sorteo → "Publicar la entrega":
+      1. **La foto y el video:** "Subir foto" (o "Tomar foto" en el teléfono) y pegar el enlace de YouTube. Debe decir "Short de YouTube: sale vertical" o "Video de YouTube: sale horizontal".
+      2. **Su nombre:** el nombre y la inicial del apellido ("María G.") y de dónde es.
+      3. **Revisar y publicar:** marcar "La persona aceptó salir en la tienda" → "Publicar la entrega".
+      - **Después, en el teléfono:**
+        - el inicio muestra su foto y "¡María G. ganó una PS4!";
+        - `/sorteo` muestra su nombre y su foto;
+        - el play abre el video ahí mismo.
+      - **Si la persona cambia de idea:** "Quitar de la tienda", y vuelve el correo tapado.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.76 && npm install && bash scripts/deploy.sh --sin-pull`. Las seis columnas de C-254 pueden quedarse: la versión anterior no las lee. Si se publicó una entrega, deja de verse.
 
 ### Por confirmar de rc.76 (C-258 y C-257; unos 25 minutos)
 Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera:
@@ -909,7 +956,7 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
-**Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61), C-249 (los filtros en píldoras, rc.63), C-249b (la oferta o el cupón y las gift cards impresas por pasos, rc.64) C-249c (el método de pago y la categoría, rc.65) C-249d (la campaña y el promotor, rc.67), C-249e (el curso y Servicios, rc.68: los 8 formularios van por pasos) y C-251 (Mi panel: las fallas y lo nuevo, rc.69) y C-251b (Mi panel con el kit, rc.71); quedan sus tres decisiones (`estado/C-251.md`). También C-253 (el sorteo más atractivo, rc.72) y C-255 ("Cómo participar" con íconos y el camino de registro, rc.73) y C-258 (el estrés de los caminos del cliente y sus arreglos, rc.75). **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
+**Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61), C-249 (los filtros en píldoras, rc.63), C-249b (la oferta o el cupón y las gift cards impresas por pasos, rc.64) C-249c (el método de pago y la categoría, rc.65) C-249d (la campaña y el promotor, rc.67), C-249e (el curso y Servicios, rc.68: los 8 formularios van por pasos) y C-251 (Mi panel: las fallas y lo nuevo, rc.69) y C-251b (Mi panel con el kit, rc.71); quedan sus tres decisiones (`estado/C-251.md`). También C-253 (el sorteo más atractivo, rc.72) y C-255 ("Cómo participar" con íconos y el camino de registro, rc.73) y C-258 (el estrés de los caminos del cliente y sus arreglos, rc.75), y C-254 (la semana del ganador del sorteo, rc.79). **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
 
 **Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) C-224 (los tres únicos, rc.51) y C-241 (el checkout por pasos, rc.53), C-242 (Facturas, ordenada, rc.56). También C-226 (sin ámbar, rc.44), C-219 (los correos, rc.47) y C-234 (cuándo sale cada pedido, rc.52), y C-227 (los correos al aliado comercial, rc.55).
 

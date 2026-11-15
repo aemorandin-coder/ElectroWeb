@@ -2371,6 +2371,18 @@ model Sorteo {
   /// Cuántos boletos había al sortear y la huella (sha256) de esa lista
   boletosAlSortear Int?
   huellaLista      String?
+  /// C-254: la entrega, que sale en /sorteo y en la bandera del inicio solo con el permiso de la persona.
+  /// El nombre como quiere salir ("María G.") y de dónde es ("Barquisimeto")
+  entregaNombre      String?
+  entregaCiudad      String?
+  /// Su foto con el premio: una subida de la tienda (/api/uploads/sorteo-…)
+  entregaFoto        String?
+  /// El video en YouTube, validado y escrito de una sola forma (https://youtu.be/… o https://www.youtube.com/shorts/…)
+  entregaVideo       String?
+  /// "La persona aceptó salir en la tienda"
+  entregaPermiso     Boolean   @default(false)
+  /// Cuándo se publicó: la bandera del inicio la muestra 7 días desde aquí. Sin fecha, no está publicada
+  entregaPublicadaAt DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

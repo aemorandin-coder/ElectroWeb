@@ -24,7 +24,7 @@ import LogoCorto from '@/components/sorteo/LogoCorto';
 import { logoEnElPremio, partesDelPremio, type CosaQueTrae } from '@/lib/sorteo/premio';
 
 /** El nombre del premio con el logo corto en el lugar de "Sony" (la palabra queda para los lectores de pantalla) */
-function nombreConLogo(nombre: string, nombreCorto: string | null): ReactNode {
+export function nombreConLogo(nombre: string, nombreCorto: string | null): ReactNode {
   const conLogo = logoEnElPremio(nombre, nombreCorto);
   if (!conLogo) return nombre;
   // "PlayStation 4" no se corta entre la palabra y la cifra
@@ -51,7 +51,7 @@ export const diaLargo = (fecha: Date) => new Intl.DateTimeFormat('es-VE', { day:
 export const fotoDelSorteo = (imagen: string | null | undefined) => (imagen && imagen.startsWith('/') && !imagen.startsWith('//') ? imagen : null);
 
 /** Los bordes de la foto se funden con la franja: una foto hecha sobre su azul no deja ver el cuadro */
-const FUNDIDO = '[mask-image:linear-gradient(to_right,transparent,black_9%,black_91%,transparent),linear-gradient(to_bottom,transparent,black_9%,black_91%,transparent)] [mask-composite:intersect]';
+export const FUNDIDO = '[mask-image:linear-gradient(to_right,transparent,black_9%,black_91%,transparent),linear-gradient(to_bottom,transparent,black_9%,black_91%,transparent)] [mask-composite:intersect]';
 
 export default function PremioSorteo({ titulo, premio, imagen, resultadoEl, sorteadoAt = null, incluye = [], lema = null, nombreCorto = null, participar = false, compacto = false }: {
   titulo: string;
@@ -196,27 +196,33 @@ export default function PremioSorteo({ titulo, premio, imagen, resultadoEl, sort
         </div>
       </Container>
 
-      {incluye.length > 0 && (
-        <div className="border-t border-white/10 bg-white/5">
-          <Container className="py-4 lg:flex lg:items-center lg:py-5">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-300 lg:w-28 lg:shrink-0">Lo que trae</h2>
-            <ul className="mt-2 divide-y divide-white/10 lg:mt-0 lg:flex lg:flex-1 lg:divide-x lg:divide-y-0">
-              {incluye.map((c, i) => {
-                const Icono = iconoDeCosa(c.texto);
-                return (
-                  <li key={`${i}-${c.texto}`} className="flex min-w-0 items-center gap-3 py-2.5 lg:flex-1 lg:px-5 lg:py-1">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500"><Icono className="h-5 w-5" aria-hidden="true" /></span>
-                    <span className="min-w-0 text-sm font-semibold leading-snug lg:text-base">
-                      {c.texto}
-                      {c.detalle && <span className="block text-sm font-normal text-brand-200">{c.detalle}</span>}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </Container>
-        </div>
-      )}
+      <FranjaQueTrae incluye={incluye} />
     </section>
+  );
+}
+
+/** "Lo que trae", la franja de abajo del banner, de lado a lado. C-254: también debajo del ganador */
+export function FranjaQueTrae({ incluye }: { incluye: CosaQueTrae[] }) {
+  if (incluye.length === 0) return null;
+  return (
+    <div className="border-t border-white/10 bg-white/5">
+      <Container className="py-4 lg:flex lg:items-center lg:py-5">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-300 lg:w-28 lg:shrink-0">Lo que trae</h2>
+        <ul className="mt-2 divide-y divide-white/10 lg:mt-0 lg:flex lg:flex-1 lg:divide-x lg:divide-y-0">
+          {incluye.map((c, i) => {
+            const Icono = iconoDeCosa(c.texto);
+            return (
+              <li key={`${i}-${c.texto}`} className="flex min-w-0 items-center gap-3 py-2.5 lg:flex-1 lg:px-5 lg:py-1">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500"><Icono className="h-5 w-5" aria-hidden="true" /></span>
+                <span className="min-w-0 text-sm font-semibold leading-snug lg:text-base">
+                  {c.texto}
+                  {c.detalle && <span className="block text-sm font-normal text-brand-200">{c.detalle}</span>}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </Container>
+    </div>
   );
 }

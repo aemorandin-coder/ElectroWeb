@@ -13,7 +13,12 @@ export interface Formulario {
 export interface SorteoPanel extends Omit<Formulario, 'costoPremioUSD' | 'compraMinimaUSD' | 'topeInvitar'> {
   id: string; costoPremioUSD: number; compraMinimaUSD: number; topeInvitar: number; cerrado: boolean;
   sorteadoAt: string | null; ganadorEmail: string | null; ganadorDetalle: string | null; boletosAlSortear: number | null; huellaLista: string | null;
+  /** C-254: la entrega que sale en la tienda con el permiso de la persona (vacía hasta publicarla) */
+  entrega: EntregaPanel;
 }
+
+/** C-254: la entrega, como la guarda el servidor. Sin `publicadaAt`, no está en la tienda */
+export interface EntregaPanel { nombre: string; ciudad: string; foto: string; video: string; permiso: boolean; publicadaAt: string | null }
 
 export interface Participante { userId: string; email: string; nombre: string; porCompra: number; porInvitar: number; invitados: number; aviso: string }
 

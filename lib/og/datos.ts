@@ -110,8 +110,11 @@ export const contenidoDePagina = cache(async (pagina: PaginaCompartida): Promise
   if (pagina === 'sorteo') {
     const sorteo = await getSorteoVigente();
     if (!sorteo) return { titulo: 'Sorteo', bajada: null, fotos: null };
-    const dia = new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'long', timeZone: 'America/Caracas' }).format(sorteo.resultadoEl);
-    return { titulo: sorteo.titulo, bajada: `Gana: ${sorteo.premio}. Resultado el ${dia}.`, fotos: null };
+    const dia = (fecha: Date) => new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'long', timeZone: 'America/Caracas' }).format(fecha);
+    // C-254: ya sorteado, "¡Ya hay ganador!" (la misma tarjeta, sin la cara ni el nombre de la persona: viaja por los chats).
+    // Al cambiar el texto cambia la versión, y las redes piden la imagen nueva
+    if (sorteo.sorteadoAt) return { titulo: '¡Ya hay ganador!', bajada: `${sorteo.titulo}: la ${sorteo.premio} se sorteó el ${dia(sorteo.sorteadoAt)}.`, fotos: null };
+    return { titulo: sorteo.titulo, bajada: `Gana: ${sorteo.premio}. Resultado el ${dia(sorteo.resultadoEl)}.`, fotos: null };
   }
   const [ajustes, publicos, rubros] = await Promise.all([
     prisma.companySettings.findFirst({

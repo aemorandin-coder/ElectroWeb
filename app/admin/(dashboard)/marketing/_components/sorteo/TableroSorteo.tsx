@@ -4,28 +4,38 @@
 // (con sus íconos), las acciones a la vista y, cuando cierra, sortear en 3 pasos. Todo lo que mostraba la pantalla de C-212
 // sigue aquí: los cuatro números, el % del premio pagado, quiénes participan con sus avisos, "Sortear ahora" con su
 // confirmación, el ganador con la huella y "Sorteo nuevo con estos datos".
+// C-254: debajo del ganador, la entrega. Antes de publicarla, en el azul de "lo que alguien tiene que hacer", con lo que
+// hace falta y "Publicar la entrega"; publicada, su foto, su nombre, hasta cuándo sale en la bandera, "Cambiar" y "Quitar
+// de la tienda" (por si la persona cambia de idea).
 
 import { useState, type ReactNode } from 'react';
 import { toast } from 'react-hot-toast';
+import Image from 'next/image';
 import Ayuda from '@/components/admin/Ayuda';
 import {
-  IconoBillete, IconoCheck, IconoClientes, IconoCopiar, IconoCorreo, IconoCupon, IconoEditar, IconoInterruptorApagado,
-  IconoInterruptorEncendido, IconoLista, IconoPremio, IconoRegalo, IconoReloj, IconoVentas, IconoVer, type IconType,
+  IconoBillete, IconoCalendario, IconoCamaraFotos, IconoCheck, IconoClientes, IconoCopiar, IconoCorreo, IconoCupon, IconoEditar,
+  IconoInterruptorApagado, IconoInterruptorEncendido, IconoLista, IconoOcultar, IconoPremio, IconoRegalo, IconoReloj, IconoVentas,
+  IconoVer, IconoVerificado, IconoVideo, type IconType,
 } from '@/components/iconos';
+import { diaLargo } from '@/components/sorteo/PremioSorteo';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import {
-  adminBadge, adminCard, adminDato, adminPrimaryButton, adminSecondaryButton, adminStatCard, adminStatLabel, adminStatValue,
-  adminTable, adminTableWrap, adminTd, adminTh,
+  adminBadge, adminCard, adminDato, adminNotice, adminPrimaryButton, adminSecondaryButton, adminStatCard, adminStatLabel, adminStatValue,
+  adminTable, adminTableWrap, adminTd, adminTh, placaAccion,
 } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
-import { diaMes, estadoDe, type Datos } from './tipos';
+import { banderaHasta, nombreConCiudad } from '@/lib/sorteo/entrega';
+import { leerYoutube } from '@/lib/youtube';
+import { diaMes, estadoDe, type Datos, type EntregaPanel } from './tipos';
 
 const instante = (dia: string, fin = false) => new Date(`${dia}T${fin ? '23:59:59' : '00:00:00'}-04:00`).getTime();
 
-export default function TableroSorteo({ datos, onEditar, onNuevo, onRecargar }: {
+export default function TableroSorteo({ datos, onEditar, onNuevo, onEntrega, onRecargar }: {
   datos: Datos;
   onEditar: () => void;
   onNuevo: () => void;
+  /** C-254: abre "Publicar la entrega" (o "Cambiar") */
+  onEntrega: () => void;
   onRecargar: () => Promise<void>;
 }) {
   const { confirm } = useConfirm();
@@ -78,6 +88,28 @@ export default function TableroSorteo({ datos, onEditar, onNuevo, onRecargar }: 
       const d = await r.json().catch(() => null);
       if (!r.ok) { toast.error(d?.error || 'No se pudo cambiar'); return; }
       toast.success(activo ? 'Sorteo publicado' : 'Sorteo apagado');
+      await onRecargar();
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  // C-254: la persona cambió de idea: se borra lo suyo y la tienda vuelve al correo tapado
+  const quitarEntrega = async () => {
+    const ok = await confirm({
+      title: 'Quitar la entrega de la tienda',
+      message: 'Dejan de salir su foto, su video y su nombre en /sorteo y en la bandera del inicio. La tienda vuelve a mostrar solo su correo tapado.',
+      confirmText: 'Quitar',
+      cancelText: 'Cancelar',
+      type: 'warning',
+    });
+    if (!ok) return;
+    setOcupado(true);
+    try {
+      const r = await fetch('/api/admin/sorteo/entrega', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sorteoId: s.id }) });
+      const d = await r.json().catch(() => null);
+      if (!r.ok) { toast.error(d?.error || 'No se pudo quitar'); return; }
+      toast.success('Entrega quitada de la tienda');
       await onRecargar();
     } finally {
       setOcupado(false);
@@ -203,7 +235,7 @@ export default function TableroSorteo({ datos, onEditar, onNuevo, onRecargar }: 
                 Huella de la lista: <span className={`${adminDato} break-all`}>{s.huellaLista}</span>
                 <Ayuda>La huella resume la lista exacta de boletos con que se sorteó. Si alguien la pide, se puede comprobar que nadie la cambió después.</Ayuda>
               </p>
-              <p className="mt-1 text-xs text-muted">En la tienda sale con el correo tapado.</p>
+              <p className="mt-1 text-xs text-muted">{s.entrega.publicadaAt ? 'En la tienda sale la entrega (abajo), con su permiso.' : 'En la tienda sale con el correo tapado.'}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {s.ganadorEmail && (
                   <a href={`mailto:${s.ganadorEmail}?subject=${encodeURIComponent(`Ganaste el ${s.titulo}`)}`} className={`${adminPrimaryButton} h-9 px-3`}>
@@ -216,6 +248,8 @@ export default function TableroSorteo({ datos, onEditar, onNuevo, onRecargar }: 
           </div>
         </section>
       )}
+
+      {sorteado && <EntregaDelSorteo entrega={s.entrega} ahora={ahora} ocupado={ocupado} onEntrega={onEntrega} onQuitar={() => void quitarEntrega()} />}
 
       {participantes.length > 0 && (
         <section id="sorteo-participantes" aria-labelledby="sorteo-participan" className="space-y-2">
@@ -268,5 +302,66 @@ function PasoSortear({ icono: Icono, titulo, detalle, fuerte = false, children }
         {children}
       </div>
     </li>
+  );
+}
+
+/** C-254: la entrega en la tienda, debajo del ganador: lo que falta, o lo publicado con sus acciones */
+function EntregaDelSorteo({ entrega, ahora, ocupado, onEntrega, onQuitar }: { entrega: EntregaPanel; ahora: number; ocupado: boolean; onEntrega: () => void; onQuitar: () => void }) {
+  if (!entrega.publicadaAt) {
+    return (
+      <section aria-labelledby="sorteo-entrega" className={adminNotice('warning')}>
+        <div className="flex flex-wrap items-start gap-4">
+          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${placaAccion}`}><IconoCamaraFotos className="h-5 w-5" aria-hidden="true" /></span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 id="sorteo-entrega" className="text-base font-semibold text-brand-900">La entrega, en la tienda</h3>
+              <span className={adminBadge('warning')}>Falta publicarla</span>
+            </div>
+            <p className="mt-1 text-sm">Su foto, su video y su nombre salen en /sorteo y 7 días en la bandera del inicio. Sin publicarla, sale solo su correo tapado.</p>
+            <ul className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-brand-900">
+              {([[IconoCamaraFotos, 'Su foto con el premio'], [IconoVideo, 'El video en YouTube (si hay)'], [IconoVerificado, 'Su permiso']] as const).map(([Icono, texto]) => (
+                <li key={texto} className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 ring-1 ring-brand-200"><Icono className="h-4 w-4 text-brand-500" aria-hidden="true" /> {texto}</li>
+              ))}
+            </ul>
+            <button type="button" onClick={onEntrega} disabled={ocupado} className={`${adminPrimaryButton} mt-4`}>
+              <IconoPremio className="h-4 w-4" aria-hidden="true" /> Publicar la entrega
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  const video = leerYoutube(entrega.video);
+  const publicada = new Date(entrega.publicadaAt);
+  const hasta = banderaHasta(publicada);
+  return (
+    <section aria-labelledby="sorteo-entrega" className={adminCard}>
+      <div className="flex flex-wrap items-start gap-4">
+        {entrega.foto && (
+          <span className="relative h-20 w-16 shrink-0 overflow-hidden rounded-xl border border-line">
+            <Image src={entrega.foto} alt="" fill sizes="64px" className="object-cover" />
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 id="sorteo-entrega" className="text-base font-semibold text-ink">La entrega: {nombreConCiudad(entrega.nombre, entrega.ciudad)}</h3>
+            <span className={adminBadge('success')}><IconoCheck className="h-3.5 w-3.5" aria-hidden="true" /> Publicada</span>
+          </div>
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            <span className={adminDato}><IconoVideo className="h-3.5 w-3.5" aria-hidden="true" /> {video ? (video.vertical ? 'Short de YouTube' : 'Video de YouTube') : 'Sin video'}</span>
+            {entrega.permiso && <span className={adminDato}><IconoVerificado className="h-3.5 w-3.5" aria-hidden="true" /> Aceptó salir en la tienda</span>}
+          </div>
+          <p className="mt-2 flex items-center gap-2 text-sm text-ink-soft">
+            <IconoCalendario className="h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />
+            {ahora < hasta.getTime() ? `En la bandera del inicio hasta el ${diaLargo(hasta)}.` : `Salió en la bandera del inicio hasta el ${diaLargo(hasta)}.`} En /sorteo, mientras siga este sorteo.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a href="/sorteo" target="_blank" rel="noopener noreferrer" className={`${adminSecondaryButton} h-9 px-3`}><IconoVer className="h-4 w-4" aria-hidden="true" /> Ver en la tienda</a>
+            <button type="button" onClick={onEntrega} disabled={ocupado} className={`${adminSecondaryButton} h-9 px-3`}><IconoEditar className="h-4 w-4" aria-hidden="true" /> Cambiar</button>
+            <button type="button" onClick={onQuitar} disabled={ocupado} className={`${adminSecondaryButton} h-9 px-3 text-deal!`}><IconoOcultar className="h-4 w-4" aria-hidden="true" /> Quitar de la tienda</button>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

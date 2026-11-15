@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
-import { IconoBuscar, IconoCarrito, IconoCheck, IconoCuadricula, IconoCuenta, IconoFlechaDerecha, IconoNovedad } from '@/components/iconos';
+import { IconoBuscar, IconoCarrito, IconoCheck, IconoCorreo, IconoCuadricula, IconoCuenta, IconoFlechaDerecha, IconoNovedad } from '@/components/iconos';
 import type { IconType } from '@/components/iconos';
 import ChispaGuia, { PROPORCION_CHISPA, type PoseGuia } from '@/components/onboarding/ChispaGuia';
 import IconoDibujado, { type AccionIcono } from '@/components/onboarding/IconoDibujado';
@@ -127,11 +127,22 @@ export function GuidedTour() {
       // Sin el header de la tienda (menos de 3 elementos) no tiene sentido: se intenta en otra página
       if (guiados < 3) return;
       const nombre = session.user?.name?.trim().split(/\s+/)[0];
+      // C-258 midió que la pantalla más difícil es la de recién registrado: cae en el inicio y nada le dice lo único que
+      // tiene que hacer. Con la cuenta sin activar, la bienvenida lo dice primero (con el sobre) y después sigue el recorrido
+      const sinActivar = session.user?.emailVerified === false;
       focoPrevio.current = document.activeElement;
       setSaliendo(false);
       setPasos(
         disponibles.map((p) =>
-          p.id === 'bienvenida' ? { ...p, titulo: nombre ? `¡Hola, ${nombre}!` : p.titulo, texto: `Te enseño la tienda en ${guiados} toques.` } : p
+          p.id === 'bienvenida'
+            ? {
+                ...p,
+                titulo: nombre ? `¡Hola, ${nombre}!` : p.titulo,
+                ...(sinActivar
+                  ? { texto: 'Activa tu cuenta con el enlace de tu correo y ya puedes comprar.', Icono: IconoCorreo, accion: 'salta' as const }
+                  : { texto: `Te enseño la tienda en ${guiados} toques.` }),
+              }
+            : p
         )
       );
       setPoseVisible(disponibles[0].pose);

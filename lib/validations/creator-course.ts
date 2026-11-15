@@ -40,6 +40,20 @@ export const adminCoursePatchSchema = creatorCourseSchema
   })
   .strict();
 
+/**
+ * C-252: lo que el admin manda al crear un curso. Antes el POST no validaba nada: aceptaba un precio negativo. Las
+ * mismas reglas que el cambio (`adminCoursePatchSchema`), más el creador y las etiquetas. Lo que no está aquí se ignora.
+ */
+export const adminCourseCreateSchema = creatorCourseSchema.extend({
+  instructor: optionalText(120),
+  creatorId: z.string().trim().max(40).nullable().optional().transform((value) => value || null),
+  tags: z.array(z.string().trim().max(40)).max(20).nullable().optional(),
+  isFeatured: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  metaTitle: optionalText(200),
+  metaDescription: optionalText(500),
+});
+
 const lessonSchema = z.object({
   id: z.string().max(40).optional(),
   title: z.string().trim().min(1).max(200),

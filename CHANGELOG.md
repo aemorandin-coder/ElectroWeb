@@ -10,6 +10,24 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.54] - 2026-11-14
+La contadora en el equipo (el dueño, 14/11: "con invitación a ella como parte del equipo de trabajo, dame la opción a mí también de kickear a la contadora y colocar una nueva, su firma"; eligió que revise, declare y firme, sin facturar).
+### Contabilidad 1.1.0 (C-235)
+- **La mesa de la contadora,** su inicio en el panel:
+  - el saludo con su nombre, la empresa, el RIF y la fecha; lo facturado en el mes y cuántas quedan del talonario;
+  - el mes en números: facturas emitidas, base imponible, IVA (débito fiscal) y exento;
+  - las últimas facturas del mes y lo que viene en Contabilidad;
+  - las notas del mes, entre ella y el dueño.
+- **Su firma y su sello:** la dibuja una vez con el dedo, el lápiz o el mouse, con su nombre, su título y su C.P.C. Va en los cierres y en el Excel (C-230 y C-232). El dueño la ve en su mesa.
+- **La contadora ve las facturas y lo cobrado sin factura, pero no factura ni anula.** Cargar un talonario queda solo para el dueño.
+- **Cambio de base (aditivo):** el rol `ACCOUNTANT` y las tablas `firmas_contables` y `notas_contables`.
+### Marco del panel 1.9.0 y Configuración 1.3.0 (C-235)
+- **Un rol nuevo, Contadora.** Se invita desde Equipo, entra con su contraseña y los dos pasos, y ve solo Contabilidad, Mi seguridad y Versiones. Lo demás del panel la lleva a su mesa; las órdenes, los clientes y Configuración no le llegan.
+- **Quitarla y poner otra:** Equipo → "Quitar el acceso", e invitar a la nueva. Su firma queda guardada.
+### Carrito, checkout y cuenta del cliente 1.7.1, Reportes y seguridad 1.1.7 y Dashboard 1.1.4 (C-235)
+- La contadora acepta su invitación y recupera su contraseña como el resto del equipo, y no entra con Google.
+- La bitácora nombra su firma. El Dashboard y los reportes no la cuentan como clienta.
+
 ## [1.0.0-rc.53] - 2026-11-14
 El checkout por pasos (el equipo, 14/11: "en el checkout necesitamos, como te comenté, las reglas: crear un breadcrumb"; eligió la A viendo las maquetas, y pagar al final).
 ### Carrito, checkout y cuenta del cliente 1.7.0 (C-241)

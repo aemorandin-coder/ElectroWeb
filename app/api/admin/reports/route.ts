@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
         const enPeriodo = { gte: startDate };
 
         if (type === 'overview') {
-            const clientes = { role: { notIn: ['ADMIN', 'SUPER_ADMIN', 'SUPPORT'] as ('ADMIN' | 'SUPER_ADMIN' | 'SUPPORT')[] } };
+            const clientes = { role: { notIn: ['ADMIN', 'SUPER_ADMIN', 'SUPPORT', 'ACCOUNTANT'] as ('ADMIN' | 'SUPER_ADMIN' | 'SUPPORT' | 'ACCOUNTANT')[] } };
             const [
                 totalUsers, newUsers, ordersCreated, ordersPending, paidAgg, totalProducts, publishedProducts,
                 pendingProductRequests, pageViews, clicks, visitantes, eventos, alertas, criticas, loginsFallidos,

@@ -1,13 +1,13 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import {
   IconoActualizar, IconoAdvertencia, IconoBillete, IconoBolsa, IconoBuscar, IconoCerrar, IconoCheck, IconoCopiar,
-  IconoGiftCard, IconoImpresora, IconoMas, IconoNumero, IconoVer,
+  IconoGiftCard, IconoMas, IconoNumero, IconoVer,
 } from '@/components/iconos';
 import GiftCard3D from '@/components/gift-card/GiftCard3D';
-import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { formatUSD } from '@/lib/currency';
 import { formatGiftCardCode } from '@/lib/gift-card-designs';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -34,8 +34,6 @@ interface GiftCard {
   design: { slug?: string | null; name: string } | null;
 }
 
-interface PrintedCard { code: string; pin: string; amountUSD: number }
-
 const STATUS: Record<string, { label: string; tone: AdminTone }> = {
   INACTIVE: { label: 'Por activar', tone: 'warning' },
   ACTIVE: { label: 'Activa', tone: 'success' },
@@ -55,88 +53,19 @@ const PAYMENT_METHODS = [
   { value: 'OTHER', label: 'Otro' },
 ];
 
-const AMOUNT_PRESETS = [10, 25, 50, 100];
-
 /** Impresa si no va a un correo (las digitales siempre llevan destinatario). */
 const isPrinted = (card: GiftCard) => !card.recipientEmail;
-
-const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
-
-/** Hoja para imprenta: tarjetas de 85,6 × 54 mm con frente y reverso (código + PIN en la zona del raspadito). */
-function printBatch(cards: PrintedCard[]) {
-  const win = window.open('', '_blank');
-  if (!win) {
-    toast.error('Permite las ventanas emergentes para imprimir la hoja');
-    return false;
-  }
-  const rows = cards.map((card) => {
-    const code = escapeHtml(formatGiftCardCode(card.code));
-    const pin = escapeHtml(card.pin.replace(/(\d{3})(?=\d)/g, '$1 '));
-    return `
-      <div class="pair">
-        <div class="card front">
-          <div class="brand">ELECTRO<span>SHOP</span></div>
-          <div class="tag">GIFT CARD</div>
-          <div class="amount">${escapeHtml(formatUSD(card.amountUSD))}<small>USD</small></div>
-        </div>
-        <div class="card back">
-          <div class="label">Código de canje</div>
-          <div class="code">${code}</div>
-          <div class="pinrow"><div class="pin"><em>PIN · colocar raspadito</em>${pin}</div><div class="state">Se activa al pagar en caja</div></div>
-          <div class="foot">Canjea en electroshopve.com/canjear-gift-card · Sin vencimiento</div>
-        </div>
-      </div>`;
-  }).join('');
-  win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Gift Cards impresas · Electro Shop</title>
-    <style>
-      @page { size: A4; margin: 10mm; }
-      * { box-sizing: border-box; }
-      body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; color: #10182b; }
-      .note { font-size: 12px; margin: 0 0 6mm; padding: 3mm 4mm; border: 1px solid #b45309; color: #b45309; border-radius: 2mm; }
-      .pair { display: flex; gap: 6mm; margin-bottom: 6mm; page-break-inside: avoid; }
-      .card { width: 85.6mm; height: 54mm; border-radius: 3.2mm; padding: 4.5mm 5mm; position: relative; overflow: hidden;
-        -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .front { background: linear-gradient(135deg, #0f347f, #1e4ba3 40%, #2a63cd 72%, #4f86ea); color: #fff; }
-      .brand { font-weight: 700; letter-spacing: .08em; font-size: 4.2mm; line-height: 1; }
-      .brand span { display: block; font-size: 2.4mm; letter-spacing: .42em; color: #cfe0ff; margin-top: .6mm; }
-      .tag { position: absolute; top: 4.5mm; right: 5mm; font-size: 2.2mm; font-weight: 700; letter-spacing: .24em; border: .25mm solid rgba(255,255,255,.4); border-radius: 9mm; padding: .9mm 2mm; color: #cfe0ff; }
-      .amount { position: absolute; left: 5mm; bottom: 4.5mm; font-size: 10mm; font-weight: 700; line-height: 1; }
-      .amount small { font-size: 3.2mm; margin-left: 1.2mm; color: #cfe0ff; }
-      .back { background: #f3f5fa; border: .25mm solid #cfd6e4; }
-      .label { font-size: 2.2mm; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #5d6677; }
-      .code { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; font-size: 4.4mm; letter-spacing: .08em; margin-top: 1mm; }
-      .pinrow { display: flex; align-items: center; justify-content: space-between; gap: 3mm; margin-top: 4mm; }
-      .pin { width: 40mm; height: 12mm; border-radius: 2mm; border: .3mm dashed #5d6677; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; font-size: 5mm; letter-spacing: .16em; }
-      .pin em { font-family: system-ui, sans-serif; font-style: normal; font-size: 1.8mm; letter-spacing: .06em; font-weight: 600; color: #5d6677; }
-      .state { font-size: 2.2mm; font-weight: 700; color: #b45309; text-align: right; max-width: 28mm; }
-      .foot { position: absolute; left: 5mm; right: 5mm; bottom: 4mm; font-size: 2.1mm; color: #5d6677; }
-      @media print { .note { display: none; } }
-    </style></head><body>
-    <p class="note">Esta hoja es la única vez que se ven los PIN. Imprímela, cubre cada PIN con un raspadito y guarda las tarjetas: están inactivas hasta que se cobren en caja.</p>
-    ${rows}
-    <script>window.onload = () => window.print();</script>
-    </body></html>`);
-  win.document.close();
-  return true;
-}
 
 /**
  * Gift cards del admin (C-71): tarjetas impresas que nacen inactivas con PIN, venta en caja que las activa,
  * y detalle con la tarjeta 3D. Los PIN solo existen en claro en la respuesta de creación: se imprimen en ese momento.
+ * C-249b: generar el lote va por pasos en su propia página (/admin/gift-cards/nuevo, PLAN.md §1.9).
  */
 export default function GiftCardsAdminPage() {
-  const { confirm } = useConfirm();
   const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-
-  const [showCreate, setShowCreate] = useState(false);
-  const [createForm, setCreateForm] = useState({ amount: 25, quantity: 1 });
-  const [creating, setCreating] = useState(false);
-  const [batch, setBatch] = useState<PrintedCard[] | null>(null);
-  const [batchPrinted, setBatchPrinted] = useState(false);
 
   const [showSell, setShowSell] = useState(false);
   const [sellForm, setSellForm] = useState({ code: '', paymentMethod: 'CASH', reference: '' });
@@ -145,8 +74,6 @@ export default function GiftCardsAdminPage() {
 
   const [details, setDetails] = useState<GiftCard | null>(null);
 
-  useBodyScrollLock(showCreate);
-  useBodyScrollLock(Boolean(batch));
   useBodyScrollLock(showSell);
   useBodyScrollLock(Boolean(details));
 
@@ -171,51 +98,6 @@ export default function GiftCardsAdminPage() {
     active: giftCards.filter((c) => c.status === 'ACTIVE' || c.status === 'PARTIALLY_USED').length,
     activeBalance: giftCards.filter((c) => c.status === 'ACTIVE' || c.status === 'PARTIALLY_USED').reduce((sum, c) => sum + Number(c.balanceUSD), 0),
     redeemed: giftCards.filter((c) => c.status === 'DEPLETED').reduce((sum, c) => sum + Number(c.amountUSD), 0),
-  };
-
-  const handleCreate = async () => {
-    const { amount, quantity } = createForm;
-    if (!(amount >= 5 && amount <= 500)) { toast.error('El monto debe estar entre $5 y $500'); return; }
-    if (!(quantity >= 1 && quantity <= 50)) { toast.error('La cantidad debe estar entre 1 y 50'); return; }
-    setCreating(true);
-    const created: PrintedCard[] = [];
-    try {
-      for (let i = 0; i < quantity; i++) {
-        const res = await fetch('/api/gift-cards', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amountUSD: amount, forPrint: true, isGift: false }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.giftCard?.code || !data.giftCard?.pin) throw new Error(data.error || 'No se pudo generar la tarjeta');
-        created.push({ code: data.giftCard.code, pin: data.giftCard.pin, amountUSD: Number(data.giftCard.amountUSD) });
-      }
-      toast.success(`${created.length} ${created.length === 1 ? 'tarjeta generada' : 'tarjetas generadas'}`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudieron generar las tarjetas');
-    } finally {
-      setCreating(false);
-      if (created.length > 0) {
-        setShowCreate(false);
-        setBatch(created);
-        setBatchPrinted(false);
-        void fetchGiftCards();
-      }
-    }
-  };
-
-  const closeBatch = async () => {
-    if (!batchPrinted) {
-      const ok = await confirm({
-        title: 'Cerrar sin imprimir',
-        message: 'No imprimiste la hoja. Los PIN no se vuelven a mostrar y esas tarjetas no se podrán canjear. ¿Cerrar de todos modos?',
-        confirmText: 'Cerrar de todos modos',
-        cancelText: 'Volver',
-        type: 'danger',
-      });
-      if (!ok) return;
-    }
-    setBatch(null);
   };
 
   const handleSell = async () => {
@@ -279,9 +161,9 @@ export default function GiftCardsAdminPage() {
           <button type="button" onClick={() => openSell()} className={adminSecondaryButton}>
             <IconoBolsa className="h-4 w-4" aria-hidden="true" /> Vender en caja
           </button>
-          <button type="button" onClick={() => setShowCreate(true)} className={`${adminPrimaryButton} order-first`}>
+          <Link href="/admin/gift-cards/nuevo" className={`${adminPrimaryButton} order-first`}>
             <IconoMas className="h-4 w-4" aria-hidden="true" /> Generar impresas
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -405,88 +287,6 @@ export default function GiftCardsAdminPage() {
           </table>
         </div>
         </>
-      )}
-
-      {/* Generar tarjetas impresas */}
-      {showCreate && (
-        <div className={adminModalOverlay} role="dialog" aria-modal="true" aria-labelledby="create-title">
-          <div className={`${adminModalPanel} sm:max-w-md`}>
-            <div className={adminModalHeader}>
-              <h2 id="create-title" className={adminModalTitle}>Generar tarjetas impresas</h2>
-              <button type="button" onClick={() => setShowCreate(false)} className={adminIconButton} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
-            </div>
-            <div className={`${adminModalBody} flex flex-col gap-4`}>
-              <div>
-                <span className={adminLabel}>Monto por tarjeta</span>
-                <div className="mb-2 grid grid-cols-4 gap-2">
-                  {AMOUNT_PRESETS.map((amount) => (
-                    <button key={amount} type="button" onClick={() => setCreateForm((f) => ({ ...f, amount }))} aria-pressed={createForm.amount === amount}
-                      className={`h-10 rounded-lg border text-sm font-semibold ${createForm.amount === amount ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-line text-ink hover:bg-surface'}`}>
-                      ${amount}
-                    </button>
-                  ))}
-                </div>
-                <label htmlFor="create-amount" className="sr-only">Otro monto</label>
-                <input id="create-amount" type="number" min={5} max={500} value={createForm.amount} onChange={(e) => setCreateForm((f) => ({ ...f, amount: Number(e.target.value) }))} className={adminInput()} />
-              </div>
-              <div>
-                <label htmlFor="create-quantity" className={adminLabel}>Cantidad</label>
-                <input id="create-quantity" type="number" min={1} max={50} value={createForm.quantity} onChange={(e) => setCreateForm((f) => ({ ...f, quantity: Number(e.target.value) }))} className={adminInput()} />
-                <p className={adminHint}>Hasta 50 por lote.</p>
-              </div>
-              <div className={adminNotice('warning')}>
-                Se crean <strong>inactivas</strong>, con un PIN de 6 dígitos que se muestra <strong>solo en la hoja de impresión</strong> de este lote. Actívalas desde &quot;Vender en caja&quot; cuando el cliente pague.
-              </div>
-              <p className="text-sm text-ink-soft">Total del lote: <strong className="text-ink">{formatUSD(createForm.amount * createForm.quantity)}</strong> en {createForm.quantity} {createForm.quantity === 1 ? 'tarjeta' : 'tarjetas'}.</p>
-            </div>
-            <div className={adminModalFooter}>
-              <button type="button" onClick={() => setShowCreate(false)} className={adminSecondaryButton}>Cancelar</button>
-              <button type="button" onClick={() => void handleCreate()} disabled={creating} className={adminPrimaryButton}>
-                {creating ? 'Generando…' : 'Generar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Lote generado: única vez que se ven los PIN */}
-      {batch && (
-        <div className={adminModalOverlay} role="dialog" aria-modal="true" aria-labelledby="batch-title">
-          <div className={`${adminModalPanel} sm:max-w-2xl`}>
-            <div className={adminModalHeader}>
-              <h2 id="batch-title" className={adminModalTitle}>Lote listo para imprimir</h2>
-              <button type="button" onClick={closeBatch} className={adminIconButton} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
-            </div>
-            <div className={`${adminModalBody} flex flex-col gap-4`}>
-              <div className={adminNotice('danger')}>
-                Esta es la <strong>única vez</strong> que se ven los PIN: en la base de datos quedan cifrados. Imprime la hoja ahora y cubre cada PIN con un raspadito.
-              </div>
-              <div className="mx-auto w-full max-w-sm">
-                <GiftCard3D amountUSD={batch[0].amountUSD} kind="print" code={batch[0].code} pin={batch[0].pin} status="INACTIVE" face="front" />
-              </div>
-              <div className={adminTableWrap}>
-                <table className={adminTable}>
-                  <thead><tr><th className={adminTh}>Código</th><th className={adminTh}>PIN</th><th className={adminTh}>Monto</th></tr></thead>
-                  <tbody>
-                    {batch.map((card) => (
-                      <tr key={card.code}>
-                        <td className={`${adminTd} font-mono text-xs`}>{formatGiftCardCode(card.code)}</td>
-                        <td className={`${adminTd} font-mono text-xs`}>{card.pin}</td>
-                        <td className={adminTd}>{formatUSD(card.amountUSD)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div className={adminModalFooter}>
-              <button type="button" onClick={closeBatch} className={adminSecondaryButton}>Cerrar</button>
-              <button type="button" onClick={() => { if (printBatch(batch)) setBatchPrinted(true); }} className={adminPrimaryButton}>
-                <IconoImpresora className="h-4 w-4" aria-hidden="true" /> Imprimir hoja
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Venta en caja */}

@@ -10,6 +10,18 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.64] - 2026-11-15
+Lo que eligió el equipo de C-245, la parte b: crear por pasos en su propia página, con lo que verá el cliente al lado y "Revisar y publicar" al final (la A). Esta entrega trae la oferta o el cupón y las gift cards impresas; los otros seis formularios siguen en C-249c, C-249d y C-249e. Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Las APIs que guardan no cambian.
+### Marco del panel 1.13.0 (C-249b)
+- **El marco de los asistentes** (`components/admin/Asistente`): la vuelta a la lista, los pasos con su ícono, un paso a la vez con su pie y, al lado, la vista previa. En el teléfono, "Ver cómo queda". Al cambiar algo, antes → después y a cuántos afecta.
+### Ofertas y cupones 1.3.0 (C-249b)
+- **Crear o cambiar una oferta o un cupón va por pasos** en `/admin/discount-requests/nuevo` y `/admin/discount-requests/<id>`: qué es, el descuento, el código (solo el cupón), las fechas y "Revisar y publicar".
+- **La vista previa, con las piezas de la tienda:** la tarjeta del producto con el precio rebajado, o el "Aplicar cupón" de la ficha y el descuento al pagar.
+- **Una nueva se puede guardar en pausa.** Al cambiar una, "Lo que cambia" (antes → después) y a cuántos productos y compras toca, contado por el servidor sin guardar (`POST /api/admin/promotions/vista-previa`).
+- La edición entre dos personas sigue igual. Un cupón usado deja el código de solo lectura, y el de un promotor dice dónde se cambia.
+### Clientes 1.6.0 (C-249b)
+- **Generar gift cards impresas va por pasos** en `/admin/gift-cards/nuevo`: el monto, cuántas y "Revisar y generar", con la tarjeta impresa al lado. El pedido, las reglas, el lote con los PIN y la hoja para imprimir son los de siempre.
+
 ## [1.0.0-rc.63] - 2026-11-15
 Lo que eligió el equipo de C-245, la parte a: los filtros en las píldoras de estado, en todos los tamaños (la A). Solo el panel: sin cambio de base, sin SQL, sin variables nuevas y sin cron. La parte b (crear por pasos) sigue en C-249b.
 ### Órdenes y pagos 1.6.4 (C-249)

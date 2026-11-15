@@ -20,7 +20,7 @@ export default function DescuentosPage() {
                     </div>
                 </div>
             </div>
-            <div className="flex gap-1 border-b border-line pb-2" role="tablist" aria-label="Secciones de descuentos">
+            <div className="-mx-4 flex gap-1 overflow-x-auto border-b border-line px-4 pb-2 sm:mx-0 sm:px-0" role="tablist" aria-label="Secciones de descuentos">
                 <button type="button" role="tab" aria-selected={tab === 'promos'} onClick={() => setTab('promos')} className={adminTab(tab === 'promos')}>
                     <IconoCupon className="h-4 w-4" aria-hidden="true" /> Ofertas y cupones
                 </button>

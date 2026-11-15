@@ -218,6 +218,7 @@ Lo pidió el equipo el 14/11 mirando Marketing → Sorteo ("es básico, sin comp
 - **Campos del tamaño de su dato** (§1.5).
 - **Lo creado tiene su tablero:** el estado en su sello (§1.8), los números que importan con su ícono y las acciones a la vista (Editar, Apagar, Ver en la tienda, Copiar enlace).
 - El primero hecho así es el sorteo (C-221).
+- **El marco es `components/admin/Asistente`** (C-249b): la página propia (`/admin/…/nuevo` y `/admin/…/<id>`), los pasos, el pie, la vista previa al lado (en el teléfono, "Ver cómo queda") y las piezas de "Revisar y publicar" (`FilaResumen`, `ListaCambios`, `Afecta`, `ElegirPublicar`). Un formulario nuevo lo usa en lugar de copiar el del sorteo.
 
 ### 1.10 Elegir entre opciones (C-242)
 El equipo, el 14/11, mirando el asistente de factura: "los grids se ven perdidos, íconos amontonados".
@@ -595,7 +596,12 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - **C-245 · El panel entero con el kit** (**hecha** la parte mecánica, rc.61, 15/11; `estado/C-245.md`; lo hizo un agente aparte). El inventario de las 43 pantallas y los arreglos de 14 módulos, incluida Marketing a lo ancho (lo marcó C-244). Queda:
       - **Las dos decisiones, tomadas** (el equipo, 15/11: la A y la A, §7.2): las hace **C-249** (`estado/C-249.md`).
         - **Hecha la parte a** (rc.63): los filtros en píldoras de Órdenes, Transacciones, Mensajes, Cursos, Trabajos realizados, Creadores y ElectroStudio.
-        - **Sigue C-249b:** los ocho formularios por pasos en su propia página, con su vista previa y "Revisar y publicar", empezando por el cupón. También las fotos de Servicios, que se suben en lugar de pegar la dirección. El plan está en `estado/C-249.md`.
+        - **Hecha C-249b** (rc.64; `estado/C-249b.md`): la oferta o el cupón y las gift cards impresas, por pasos en su propia página, con el marco `components/admin/Asistente`.
+        - **Siguen, de a dos por entrega** (el plan en `estado/C-249b.md`):
+          - **C-249c:** el método de pago y la categoría;
+          - **C-249d:** la campaña de correo (la vista previa con `renderCampana`, avisando antes a la sesión de los correos) y el promotor;
+          - **C-249e:** el curso y el trabajo de Servicios, con las fotos que se suben en lugar de pegar la dirección.
+        - **La hoja impresa de las gift cards** dice "Se activa al pagar en caja" en ámbar, como texto suelto sobre la tarjeta física: si el equipo lo quiere en azul, es una línea de `gift-cards/_components/hoja.ts`.
       - **Los botones compartidos con tamaño cambiado** (`h-9 px-3 text-xs`) se quedan de 44 px, que es el toque del teléfono (`estado/C-249.md`).
   - **C-248 · Dos botones de Contabilidad con la regla del "!"** (**hecha**, rc.62, 15/11; `estado/C-248.md`): el tacho de "Quitar el renglón" y el verde de "¡Copiado!" en la orden. Lo demás de Contabilidad ya cumplía.
   - **C-244 · La vista previa de los correos, fija mientras se recorre la lista** (**hecha**, rc.58, 15/11; `estado/C-244.md`; el equipo lo vio en producción: el marco salía bajo, con su propio scroll, y quedaba un espacio en blanco).

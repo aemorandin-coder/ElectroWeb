@@ -49,7 +49,9 @@ export interface DespachoCorreo {
   oficina: { nombre: string; codigo: string | null; direccion: string | null } | null;
   ciudad: string | null;
   estado: string | null;
-  /** Solo puerta a puerta */
+  /** C-246: el código de la ciudad de destino en ZOOM (lo pide su guía) */
+  codigoCiudad: string | null;
+  /** Solo puerta a puerta: la dirección como la escribió el cliente, con su referencia */
   direccion: string | null;
   destinatario: { nombre: string; cedula: string; telefono: string };
   cobroADestino: boolean;
@@ -76,38 +78,53 @@ const LOGOS: Record<string, { archivo: string; ancho: number }> = {
   MRW: { archivo: 'mrw.png', ancho: 245 },
 };
 
-/** La empresa en grande, con su logo, y a dónde va (la decisión del equipo: "por cuál empresa de encomienda debe irse") */
+/**
+ * La empresa en grande, con su logo, y a dónde va (la decisión del equipo: "por cuál empresa de encomienda debe irse").
+ * C-246 (el equipo, 15/11: "tienes que insertar claramente dónde el cliente necesita el envío, eso va a la guía de ZOOM"):
+ * debajo, "Envíelo a" con la ciudad en grande, la oficina con su código o la dirección de la casa, y a nombre de quién.
+ */
 function bloqueEmpresa(d: DespachoCorreo): string {
   const logo = LOGOS[d.empresa];
   const nombre = nombreEmpresa(d.empresa);
   const marca = logo
     ? `<img src="${imagenCorreo(logo.archivo)}" width="${logo.ancho}" height="40" alt="${e(nombre)}" style="display:block;margin:10px auto 0;width:${logo.ancho}px;max-width:100%;height:auto;border:0;font-family:${FUENTE_TITULO};font-size:30px;line-height:40px;font-weight:800;color:${COLOR.marca};">`
     : `<p style="margin:10px 0 0;font-family:${FUENTE_TITULO};font-size:30px;line-height:1.2;font-weight:800;color:${COLOR.tinta};">${e(nombre)}</p>`;
-  const linea = (texto: string, fuerte = false) =>
-    `<p style="margin:${fuerte ? '16px' : '4px'} 0 0;font-size:${fuerte ? 16 : 14}px;line-height:1.45;font-weight:${fuerte ? 700 : 400};color:${fuerte ? COLOR.tinta : COLOR.texto};">${texto}</p>`;
+  const linea = (texto: string, estilo: string) => `<p style="margin:4px 0 0;line-height:1.45;${estilo}">${texto}</p>`;
+  const fuerte = `font-size:17px;font-weight:700;color:${COLOR.tinta};`;
+  const normal = `font-size:14px;color:${COLOR.texto};`;
   const destino = d.modo === 'DOOR'
-    ? `${linea('Puerta a puerta', true)}${d.direccion ? linea(e(d.direccion)) : ''}${lugar(d) ? linea(e(lugar(d))) : ''}`
-    : `${linea(`${d.empresa === 'MRW' ? 'Agencia' : 'Oficina'} ${e(d.oficina?.nombre ?? '')}${d.oficina?.codigo ? ` · código ${e(d.oficina.codigo)}` : ''}`, true)}${d.oficina?.direccion ? linea(e(d.oficina.direccion)) : ''}${lugar(d) ? linea(e(lugar(d))) : ''}`;
+    ? `${linea('Puerta a puerta, a la casa del cliente:', normal)}${d.direccion ? linea(e(d.direccion), fuerte) : ''}`
+    : `${linea(`${d.empresa === 'MRW' ? 'Agencia' : 'Oficina'} ${e(nombre)} ${e(d.oficina?.nombre ?? '')}${d.oficina?.codigo ? ` · código ${e(d.oficina.codigo)}` : ''}`, fuerte)}${d.oficina?.direccion ? linea(e(d.oficina.direccion), normal) : ''}`;
   const flete = d.cobroADestino
     ? 'Cobro a destino: el flete lo paga el cliente al retirar.'
     : 'El flete no va a cobro a destino: confírmelo con el equipo antes de enviarlo.';
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 0;"><tr><td bgcolor="#ffffff" align="center" style="background-color:#ffffff;border:2px solid ${COLOR.marca200};border-radius:18px;padding:22px 18px;text-align:center;">
     <p style="${CORREO.rotulo}margin:0;">Va por</p>
     ${marca}
-    ${destino}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0 0;"><tr><td bgcolor="${COLOR.marca50}" align="center" style="background-color:${COLOR.marca50};border-radius:14px;padding:16px 14px;text-align:center;">
+      <p style="${CORREO.rotulo}margin:0;">Envíelo a</p>
+      <p style="margin:6px 0 0;font-family:${FUENTE_TITULO};font-size:26px;line-height:1.2;font-weight:800;color:${COLOR.marcaOscura};">${e(lugar(d) || 'Destino sin ciudad')}</p>
+      ${d.codigoCiudad ? linea(`Ciudad de destino en ${e(nombre)}: código ${e(d.codigoCiudad)}`, `font-size:13px;color:${COLOR.suave};`) : ''}
+      ${destino}
+      ${linea(`A nombre de <strong style="color:${COLOR.tinta};">${e(d.destinatario.nombre)}</strong> · ${e(d.destinatario.cedula)} · ${e(d.destinatario.telefono)}`, `${normal}margin-top:10px;`)}
+    </td></tr></table>
     <p style="margin:14px 0 0;font-size:13px;line-height:1.5;font-weight:600;color:${COLOR.marcaOscura};">${flete}</p>
   </td></tr></table>`;
 }
 
-/** Lo que pide la guía: nunca el correo del cliente ni lo que pagó (decisión 2 del 14/11) */
+/** Lo que pide la guía, en el orden de su formulario. Nunca el correo del cliente ni lo que pagó (decisión 2 del 14/11) */
 function datosGuia(d: DespachoCorreo): string {
   const filas: [string, string][] = [
     ['Destinatario', e(d.destinatario.nombre)],
     ['Cédula', e(d.destinatario.cedula)],
     ['Teléfono', e(d.destinatario.telefono)],
-    d.modo === 'DOOR'
-      ? ['Dirección', e([d.direccion, lugar(d)].filter(Boolean).join(', '))]
-      : [d.empresa === 'MRW' ? 'Agencia de destino' : 'Oficina de destino', e(`${d.oficina?.nombre ?? ''}${d.oficina?.codigo ? ` (código ${d.oficina.codigo})` : ''}${lugar(d) ? `, ${lugar(d)}` : ''}`)],
+    ['Ciudad de destino', e(`${lugar(d)}${d.codigoCiudad ? ` (código ${d.codigoCiudad})` : ''}`)],
+    ...(d.modo === 'DOOR'
+      ? [['Dirección de entrega', e(d.direccion ?? '')] as [string, string]]
+      : [
+        [d.empresa === 'MRW' ? 'Agencia de destino' : 'Oficina de destino', e(`${d.oficina?.nombre ?? ''}${d.oficina?.codigo ? ` (código ${d.oficina.codigo})` : ''}`)] as [string, string],
+        ...(d.oficina?.direccion ? [['Dirección de la oficina', e(d.oficina.direccion)] as [string, string]] : []),
+      ]),
     ['Contenido', e(d.productos.map((p) => `${p.cantidad} × ${p.nombre}`).join(', '))],
   ];
   if (d.empaque) {
@@ -158,6 +175,9 @@ export interface DatosBienvenida {
   enlaceCatalogo: string | null;
   /** "Aragua": de dónde salen sus paquetes */
   estado: string | null;
+  /** C-246: como en su RIF ("Ferreconstrulacer, Ferrecla, C.A." y "J-30838235-3"), si se cargaron */
+  razonSocial: string | null;
+  rif: string | null;
 }
 
 export async function correoBienvenidaProveedor(d: DatosBienvenida): Promise<{ asunto: string; html: string }> {
@@ -170,7 +190,8 @@ export async function correoBienvenidaProveedor(d: DatosBienvenida): Promise<{ a
     ${placaCorreo(`
       <p style="${CORREO.placaRotulo}">Credencial</p>
       <p style="${CORREO.placaTitulo}">${e(d.proveedor)}</p>
-      <p style="${CORREO.placaTexto}">Aliado comercial de Electro Shop · desde el ${e(fecha)}</p>`)}
+      <p style="${CORREO.placaTexto}">Aliado comercial de Electro Shop · desde el ${e(fecha)}</p>
+      ${d.razonSocial || d.rif ? `<p style="${CORREO.placaTexto}margin-top:6px;">${[d.razonSocial ? e(d.razonSocial) : null, d.rif ? `RIF ${e(d.rif)}` : null].filter(Boolean).join(' · ')}</p>` : ''}`)}
     ${rotuloCorreo('Sus productos en la tienda', 6)}
     ${parrafoCorreo(`Ya hay <strong style="${CORREO.fuerte}">${productos}</strong>, con su foto, su ficha y el envío calculado para cada cliente${d.estado ? `. En la tienda aparecen "Desde ${e(d.estado)}", para que el cliente sepa de dónde sale su paquete` : ''}.`)}
     ${d.enlaceCatalogo ? botonSecundarioCorreo(e(d.enlaceCatalogo), 'Verlos en la tienda') : ''}

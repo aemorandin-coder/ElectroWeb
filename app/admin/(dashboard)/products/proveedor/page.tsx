@@ -57,6 +57,8 @@ interface Proveedor {
   dispatchCityCode: string | null; dispatchCityName: string | null;
   /** C-227: su contacto de despacho y la bienvenida de aliado comercial */
   contactName: string | null; contactEmail: string | null; contactWhatsapp: string | null; bienvenidaAt: string | null;
+  /** C-246: sus datos fiscales, como en su RIF */
+  legalName: string | null; taxId: string | null; fiscalAddress: string | null;
   productos: number;
 }
 interface EnTienda { id: string; name: string; sku: string; status: string; stock: number; priceUSD: number; costo: number | null; enPapelera: boolean; fotos: number }
@@ -683,7 +685,7 @@ export default function ListaDelProveedorPage() {
                 proveedorId={proveedor.id}
                 nombreProveedor={proveedor.name}
                 despachaElMismo={Boolean(proveedor.dispatchCityCode)}
-                contacto={{ contactName: proveedor.contactName, contactEmail: proveedor.contactEmail, contactWhatsapp: proveedor.contactWhatsapp, bienvenidaAt: proveedor.bienvenidaAt }}
+                contacto={{ contactName: proveedor.contactName, contactEmail: proveedor.contactEmail, contactWhatsapp: proveedor.contactWhatsapp, bienvenidaAt: proveedor.bienvenidaAt, legalName: proveedor.legalName, taxId: proveedor.taxId, fiscalAddress: proveedor.fiscalAddress }}
                 onGuardado={(c) => setProveedores((l) => l?.map((p) => (p.id === proveedor.id ? { ...p, ...c } : p)) ?? l)}
               />
             )}

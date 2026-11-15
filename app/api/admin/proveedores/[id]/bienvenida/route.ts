@@ -7,6 +7,7 @@ import { registrarAccionAdmin } from '@/lib/audit-log';
 import { sendEmail } from '@/lib/email-service';
 import { correoBienvenidaProveedor } from '@/lib/email-templates/proveedores';
 import { datosBienvenida } from '@/lib/proveedores/despacho';
+import { correosDe } from '@/lib/proveedores/contacto';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
   if (b.datos.publicados === 0) return NextResponse.json({ error: 'Todavía no tiene productos publicados: publícalos primero' }, { status: 409 });
 
   const { asunto, html } = await correoBienvenidaProveedor(b.datos);
-  const envio = await sendEmail({ to: b.para, subject: asunto, html });
+  const envio = await sendEmail({ to: correosDe(b.para), subject: asunto, html });
   if (!envio.success) return NextResponse.json({ error: 'No se pudo enviar el correo. Revisa Configuración → Correo.' }, { status: 502 });
 
   const enviadaEl = b.enviadaEl ?? new Date();

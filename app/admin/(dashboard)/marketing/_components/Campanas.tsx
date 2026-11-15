@@ -1,31 +1,19 @@
 'use client';
 
-import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { toast } from 'react-hot-toast';
-import {
-  IconoBuscar, IconoCerrar, IconoClientes, IconoCorreo, IconoEditar, IconoEliminar, IconoEnlace, IconoEnviar,
-  IconoFlechaAbajo, IconoFlechaArriba, IconoFlechaIzquierda, IconoGuardar, IconoImagen, IconoMas, IconoPausa, IconoPlay,
-  IconoSubir, IconoTexto,
-} from '@/components/iconos';
-import {
-  adminBadge, adminCard, adminCardFlush, adminEmpty, adminHint, adminIconButton, adminInput, adminLabel,
-  adminModalBody, adminModalFooter, adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle,
-  adminNotice, adminPrimaryButton, adminSecondaryButton, adminSpinner, adminSuccessButton, type AdminTone,
-} from '@/lib/admin-ui';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
-import { useConfirm } from '@/contexts/ConfirmDialogContext';
-import { useSession } from 'next-auth/react';
-import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
-import { enviarConVersion } from '@/lib/edicion/guardado';
-import { useConflictoDeFormulario } from '@/lib/edicion/useConflictoDeFormulario';
-import ArmarConClaude from '@/components/admin/campanas/ArmarConClaude';
+// La lista de campañas de Marketing (C-75). C-249d: crear o cambiar una va por pasos en su propia página
+// (/admin/marketing/campanas/nueva y /admin/marketing/campanas/<id>, PLAN.md §1.9); "Nueva campaña" y "Editar" llevan ahí.
 
-type Bloque =
-  | { tipo: 'titulo'; texto: string }
-  | { tipo: 'texto'; texto: string }
-  | { tipo: 'imagen'; url: string; alt: string; enlace?: string }
-  | { tipo: 'boton'; texto: string; url: string };
+import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
+import { IconoClientes, IconoCorreo, IconoEditar, IconoEliminar, IconoEnviar, IconoMas, IconoPausa, IconoPlay } from '@/components/iconos';
+import {
+  adminBadge, adminCard, adminCardFlush, adminEmpty, adminIconButton, adminNotice, adminPrimaryButton, adminSecondaryButton,
+  adminSpinner, adminSuccessButton, type AdminTone,
+} from '@/lib/admin-ui';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import ModalDestinatarios from '../campanas/_components/ModalDestinatarios';
+import { clientes, type Audiencia } from '../campanas/_components/campana';
 
 interface Resumen {
   id: string;
@@ -47,26 +35,10 @@ const ESTADOS: Record<Resumen['status'], { label: string; tone: AdminTone }> = {
   SENT: { label: 'Enviada', tone: 'success' },
 };
 
-const NUEVO: { subject: string; preheader: string; bloques: Bloque[] } = {
-  subject: '',
-  preheader: '',
-  bloques: [
-    { tipo: 'titulo', texto: 'Hola {nombre}' },
-    { tipo: 'texto', texto: '' },
-    { tipo: 'boton', texto: 'Ver ofertas', url: '/productos' },
-  ],
-};
-
-// C-191: por qué cada cliente recibe o no las campañas (lib/email-campaigns.ts, resumenAudiencia)
-interface Audiencia { clientes: number; aceptan: number; sinDecidir: number; dijeronQueNo: number; sinVerificar: number }
-
-const clientes = (n: number) => `${n} ${n === 1 ? 'cliente' : 'clientes'}`;
-
 const fecha = (valor: string | null) => (valor ? new Date(valor).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
 
 export default function Campanas() {
   const [datos, setDatos] = useState<{ campanas: Resumen[]; destinatarios: number; audiencia?: Audiencia; marketingActivo: boolean; limiteDiario: number } | null>(null);
-  const [editando, setEditando] = useState<{ id: string | null } | null>(null);
 
   const cargar = useCallback(async () => {
     try {
@@ -90,31 +62,18 @@ export default function Campanas() {
   // Mientras una campaña se envía, el avance se refresca solo
   const hayEnvio = datos?.campanas.some((c) => c.status === 'SENDING');
   useEffect(() => {
-    if (!hayEnvio || editando) return;
+    if (!hayEnvio) return;
     const t = setInterval(cargar, 5000);
     return () => clearInterval(t);
-  }, [hayEnvio, editando, cargar]);
+  }, [hayEnvio, cargar]);
 
-  if (editando) {
-    return <Editor id={editando.id} destinatarios={datos?.destinatarios ?? 0} alSalir={() => { setEditando(null); cargar(); }} />;
-  }
-
-  return (
-    <Lista
-      datos={datos}
-      alCrear={() => setEditando({ id: null })}
-      alEditar={(id) => setEditando({ id })}
-      recargar={cargar}
-    />
-  );
+  return <Lista datos={datos} recargar={cargar} />;
 }
 
 /* ── Lista ──────────────────────────────────────────────────────────────── */
 
-function Lista({ datos, alCrear, alEditar, recargar }: {
+function Lista({ datos, recargar }: {
   datos: { campanas: Resumen[]; destinatarios: number; audiencia?: Audiencia; marketingActivo: boolean; limiteDiario: number } | null;
-  alCrear: () => void;
-  alEditar: (id: string) => void;
   recargar: () => void;
 }) {
   const { confirm } = useConfirm();
@@ -224,9 +183,9 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
       <div className={adminCardFlush}>
         <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
           <h2 className="text-base font-semibold text-ink">Campañas</h2>
-          <button type="button" onClick={alCrear} className={`${adminPrimaryButton} h-9 px-3 text-xs`}>
+          <Link href="/admin/marketing/campanas/nueva" className={`${adminPrimaryButton} h-9 px-3 text-xs`}>
             <IconoMas className="h-4 w-4" aria-hidden="true" /> Nueva campaña
-          </button>
+          </Link>
         </div>
 
         {datos.campanas.length === 0 ? (
@@ -259,7 +218,7 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
                   <div className="flex flex-wrap items-center gap-2">
                     {c.status === 'DRAFT' && (
                       <>
-                        <button type="button" onClick={() => alEditar(c.id)} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><IconoEditar className="h-4 w-4" aria-hidden="true" /> Editar</button>
+                        <Link href={`/admin/marketing/campanas/${c.id}`} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><IconoEditar className="h-4 w-4" aria-hidden="true" /> Editar</Link>
                         <button type="button" onClick={() => accion(c, 'enviar')} disabled={ocupada === c.id || !datos.marketingActivo || datos.destinatarios === 0} className={`${adminSuccessButton} h-9 px-3 text-xs`}><IconoEnviar className="h-4 w-4" aria-hidden="true" /> Enviar</button>
                         <button type="button" onClick={() => borrar(c)} className={`${adminIconButton} hover:text-deal`} aria-label={`Borrar ${c.subject}`}><IconoEliminar className="h-4 w-4" /></button>
                       </>
@@ -280,470 +239,6 @@ function Lista({ datos, alCrear, alEditar, recargar }: {
 
       {/* Montado solo mientras está abierto: al cerrar se reinician búsqueda y páginas (C-109) */}
       {verDestinatarios && <ModalDestinatarios abierto alCerrar={() => setVerDestinatarios(false)} />}
-    </div>
-  );
-}
-
-/* ── Editor ─────────────────────────────────────────────────────────────── */
-
-function Editor({ id, destinatarios, alSalir }: { id: string | null; destinatarios: number; alSalir: () => void }) {
-  const { data: session } = useSession();
-  const [campana, setCampana] = useState(NUEVO);
-  const [campanaId, setCampanaId] = useState<string | null>(id);
-  const [cargando, setCargando] = useState(Boolean(id));
-  const [guardando, setGuardando] = useState(false);
-  const [html, setHtml] = useState('');
-  const [errorVista, setErrorVista] = useState<string | null>(null);
-  const [verDestinatarios, setVerDestinatarios] = useState(false);
-  // Por defecto, el correo de quien está en el panel (derivado, sin efecto)
-  const [correoElegido, setCorreoPrueba] = useState<string | null>(null);
-  const correoPrueba = correoElegido ?? session?.user?.email ?? '';
-  const [probando, setProbando] = useState(false);
-  const [subiendo, setSubiendo] = useState<number | null>(null);
-  // C-170: la campaña como se abrió (o como quedó al guardar) y su versión: la base para combinar si otra persona guardó antes
-  const base = useRef<{ datos: typeof NUEVO; version: string } | null>(null);
-  const { resolver: resolverConflicto, dialogo: dialogoConflicto } = useConflictoDeFormulario(
-    { subject: 'Asunto', preheader: 'Texto de vista previa', bloques: 'Contenido del correo' },
-    (campo, valor) => (campo === 'bloques' ? `${(valor as Bloque[]).length} ${(valor as Bloque[]).length === 1 ? 'bloque' : 'bloques'}` : String(valor || '(vacío)')),
-  );
-  const archivo = useRef<HTMLInputElement>(null);
-  const indiceSubida = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!id) return;
-    fetch(`/api/admin/campaigns/${id}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d) => {
-        const abierta = { subject: d.subject, preheader: d.preheader || '', bloques: d.bloques };
-        setCampana(abierta);
-        base.current = { datos: abierta, version: d.updatedAt };
-      })
-      .catch(() => toast.error('No se pudo abrir la campaña'))
-      .finally(() => setCargando(false));
-  }, [id]);
-
-  // Vista previa con la misma función del envío real, con una pequeña espera mientras se escribe
-  useEffect(() => {
-    if (cargando) return;
-    const t = setTimeout(async () => {
-      // Mientras se escribe, los bloques vacíos no cuentan: la validación completa es al guardar o probar
-      const bloques = campana.bloques.filter((b) =>
-        b.tipo === 'imagen' ? b.url.trim() !== '' : b.tipo === 'boton' ? b.texto.trim() !== '' && b.url.trim() !== '' : b.texto.trim() !== ''
-      );
-      if (bloques.length === 0) {
-        setHtml('');
-        setErrorVista('Escribe o agrega un bloque para ver la vista previa.');
-        return;
-      }
-      const res = await fetch('/api/admin/campaigns/preview', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...campana, bloques, subject: campana.subject || 'Sin asunto' }),
-      });
-      const data = await res.json().catch(() => null);
-      if (res.ok) {
-        setHtml(data.html);
-        setErrorVista(null);
-      } else {
-        setErrorVista(data?.error || 'Revisa el contenido');
-      }
-    }, 500);
-    return () => clearTimeout(t);
-  }, [campana, cargando]);
-
-  const cambiarBloque = (indice: number, cambios: Partial<Bloque>) =>
-    setCampana((c) => ({ ...c, bloques: c.bloques.map((b, i) => (i === indice ? ({ ...b, ...cambios } as Bloque) : b)) }));
-  const mover = (indice: number, delta: number) =>
-    setCampana((c) => {
-      const bloques = [...c.bloques];
-      const destino = indice + delta;
-      if (destino < 0 || destino >= bloques.length) return c;
-      [bloques[indice], bloques[destino]] = [bloques[destino], bloques[indice]];
-      return { ...c, bloques };
-    });
-  const quitar = (indice: number) => setCampana((c) => ({ ...c, bloques: c.bloques.filter((_, i) => i !== indice) }));
-  const agregar = (bloque: Bloque) => setCampana((c) => ({ ...c, bloques: [...c.bloques, bloque] }));
-
-  const subirImagen = async (file: File) => {
-    const indice = indiceSubida.current;
-    if (indice === null) return;
-    if (file.size > 5 * 1024 * 1024) return toast.error('La imagen pesa más de 5 MB');
-    const fd = new FormData();
-    fd.append('file', file);
-    fd.append('type', 'campaign');
-    setSubiendo(indice);
-    try {
-      const res = await fetch('/api/upload/settings', { method: 'POST', body: fd });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) return toast.error(data?.error || 'No se pudo subir la imagen');
-      cambiarBloque(indice, { url: data.url });
-    } finally {
-      setSubiendo(null);
-      if (archivo.current) archivo.current.value = '';
-    }
-  };
-
-  /** Guarda el borrador. Al editar lleva la versión con que se abrió (C-170): si otra persona guardó antes, se combina. */
-  const guardar = async (datos: typeof NUEVO = campana, intento = 0): Promise<string | null> => {
-    setGuardando(true);
-    try {
-      if (!campanaId) {
-        const res = await fetch('/api/admin/campaigns', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
-        const data = await res.json().catch(() => null);
-        if (!res.ok) {
-          toast.error(data?.error || 'No se pudo guardar');
-          return null;
-        }
-        setCampanaId(data.id);
-        base.current = { datos, version: data.updatedAt };
-        toast.success('Borrador guardado');
-        return data.id as string;
-      }
-      const r = await enviarConVersion<{ updatedAt: string }>(`/api/admin/campaigns/${campanaId}`, 'PATCH', datos, base.current?.version);
-      if (r.ok) {
-        base.current = { datos, version: r.datos.updatedAt };
-        toast.success('Borrador guardado');
-        return campanaId;
-      }
-      if (r.conflicto?.tipo === 'cambiado' && base.current && intento < 3) {
-        const actual = r.conflicto.actual as typeof NUEVO & { updatedAt: string };
-        const suyo = { subject: actual.subject, preheader: actual.preheader, bloques: actual.bloques };
-        const abierta = base.current.datos;
-        base.current = { datos: suyo, version: actual.updatedAt };
-        resolverConflicto({
-          base: abierta, mio: datos, suyo, quien: r.conflicto.por?.nombre ?? 'Otra persona',
-          continuar: async (final) => { setCampana(final); await guardar(final, intento + 1); },
-        });
-        return null;
-      }
-      toast.error(r.error);
-      return null;
-    } finally {
-      setGuardando(false);
-    }
-  };
-
-  const enviarPrueba = async () => {
-    setProbando(true);
-    try {
-      const res = await fetch('/api/admin/campaigns/test', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...campana, email: correoPrueba }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) return toast.error(data?.error || 'No se pudo enviar la prueba');
-      toast.success(`Prueba enviada a ${correoPrueba}`);
-    } finally {
-      setProbando(false);
-    }
-  };
-
-  if (cargando) return <div className="flex justify-center py-16"><span className={adminSpinner} aria-label="Cargando" /></div>;
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <button type="button" onClick={alSalir} className={`${adminSecondaryButton} h-9 px-3 text-xs`}>
-          <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Volver a campañas
-        </button>
-        <button type="button" onClick={() => void guardar()} disabled={guardando} className={`${adminPrimaryButton} h-9 px-4 text-xs`}>
-          <IconoGuardar className="h-4 w-4" aria-hidden="true" /> {guardando ? 'Guardando…' : 'Guardar borrador'}
-        </button>
-      </div>
-
-      {/* C-170: quién más tiene abierta esta campaña, y el cuadro para elegir si las dos cambiaron lo mismo */}
-      {campanaId && <PresenciaEnEditor recurso={`campaign:${campanaId}`} etiqueta="una campaña de correo" nombreRecurso="campaña" femenino />}
-      {dialogoConflicto}
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="space-y-4">
-          {/* C-217: el borrador desde un objetivo, con productos reales; llena el editor y se guarda como siempre */}
-          <ArmarConClaude
-            // Hay algo que perder si tiene asunto, un texto escrito o una imagen (el título y el botón de una campaña nueva no cuentan)
-            hayContenido={Boolean(campana.subject.trim()) || campana.bloques.some((b) => (b.tipo === 'texto' ? b.texto.trim() !== '' : b.tipo === 'imagen' && b.url.trim() !== ''))}
-            alArmar={(c) => setCampana(c)}
-          />
-          <section className={`${adminCard} space-y-4`}>
-            <div>
-              <label htmlFor="campana-asunto" className={adminLabel}>Asunto *</label>
-              <input id="campana-asunto" value={campana.subject} maxLength={150} onChange={(e) => setCampana((c) => ({ ...c, subject: e.target.value }))} placeholder="Ofertas de la semana en audio" className={adminInput()} />
-            </div>
-            <div>
-              <label htmlFor="campana-preheader" className={adminLabel}>Texto de vista previa</label>
-              <input id="campana-preheader" value={campana.preheader} maxLength={200} onChange={(e) => setCampana((c) => ({ ...c, preheader: e.target.value }))} placeholder="Lo que se lee junto al asunto en la bandeja" className={adminInput()} />
-              <p className={adminHint}>Escribe <span className="font-mono">{'{nombre}'}</span> en títulos o textos para saludar a cada cliente por su nombre.</p>
-            </div>
-          </section>
-
-          {campana.bloques.map((bloque, indice) => (
-            <section key={indice} className={`${adminCard} space-y-3`}>
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                  {bloque.tipo === 'titulo' ? 'Título' : bloque.tipo === 'texto' ? 'Texto' : bloque.tipo === 'imagen' ? 'Imagen' : 'Botón'}
-                </p>
-                <div className="flex items-center gap-1">
-                  <button type="button" onClick={() => mover(indice, -1)} disabled={indice === 0} className={adminIconButton} aria-label="Subir bloque"><IconoFlechaArriba className="h-4 w-4" /></button>
-                  <button type="button" onClick={() => mover(indice, 1)} disabled={indice === campana.bloques.length - 1} className={adminIconButton} aria-label="Bajar bloque"><IconoFlechaAbajo className="h-4 w-4" /></button>
-                  <button type="button" onClick={() => quitar(indice)} className={`${adminIconButton} hover:text-deal`} aria-label="Quitar bloque"><IconoEliminar className="h-4 w-4" /></button>
-                </div>
-              </div>
-
-              {bloque.tipo === 'titulo' && (
-                <input value={bloque.texto} maxLength={150} onChange={(e) => cambiarBloque(indice, { texto: e.target.value })} aria-label="Título" className={adminInput()} />
-              )}
-              {bloque.tipo === 'texto' && (
-                <textarea value={bloque.texto} rows={5} maxLength={4000} onChange={(e) => cambiarBloque(indice, { texto: e.target.value })} aria-label="Texto" placeholder="Deja una línea en blanco para separar párrafos." className={`${adminInput()} h-auto py-2.5`} />
-              )}
-              {bloque.tipo === 'imagen' && (
-                <div className="grid gap-3 sm:grid-cols-[9rem_minmax(0,1fr)]">
-                  <button
-                    type="button"
-                    onClick={() => { indiceSubida.current = indice; archivo.current?.click(); }}
-                    className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-line bg-surface text-muted hover:border-brand-200"
-                  >
-                    {subiendo === indice ? <span className={adminSpinner} aria-label="Subiendo" /> : bloque.url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={bloque.url} alt="" className="h-full w-full object-contain" />
-                    ) : (
-                      <span className="text-center text-xs"><IconoSubir className="mx-auto mb-1 h-5 w-5" aria-hidden="true" />Subir JPG o PNG</span>
-                    )}
-                  </button>
-                  <div className="space-y-3">
-                    <div>
-                      <label htmlFor={`bloque-${indice}-alt`} className={adminLabel}>Descripción de la imagen</label>
-                      <input id={`bloque-${indice}-alt`} value={bloque.alt} maxLength={150} onChange={(e) => cambiarBloque(indice, { alt: e.target.value })} placeholder="Audífonos en oferta" className={adminInput()} />
-                      <p className={adminHint}>La leen quienes tienen las imágenes bloqueadas.</p>
-                    </div>
-                    <div>
-                      <label htmlFor={`bloque-${indice}-enlace`} className={adminLabel}>Enlace al tocarla</label>
-                      <input id={`bloque-${indice}-enlace`} value={bloque.enlace ?? ''} onChange={(e) => cambiarBloque(indice, { enlace: e.target.value })} placeholder="/productos/audifonos" className={adminInput()} />
-                    </div>
-                  </div>
-                </div>
-              )}
-              {bloque.tipo === 'boton' && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <label htmlFor={`bloque-${indice}-texto`} className={adminLabel}>Texto del botón</label>
-                    <input id={`bloque-${indice}-texto`} value={bloque.texto} maxLength={40} onChange={(e) => cambiarBloque(indice, { texto: e.target.value })} className={adminInput()} />
-                  </div>
-                  <div>
-                    <label htmlFor={`bloque-${indice}-url`} className={adminLabel}>Enlace</label>
-                    <input id={`bloque-${indice}-url`} value={bloque.url} onChange={(e) => cambiarBloque(indice, { url: e.target.value })} placeholder="/productos" className={adminInput()} />
-                  </div>
-                </div>
-              )}
-            </section>
-          ))}
-
-          <input ref={archivo} type="file" accept="image/png,image/jpeg,image/gif" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) subirImagen(f); }} />
-
-          <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => agregar({ tipo: 'titulo', texto: '' })} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><IconoTexto className="h-4 w-4" aria-hidden="true" /> Título</button>
-            <button type="button" onClick={() => agregar({ tipo: 'texto', texto: '' })} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><IconoEditar className="h-4 w-4" aria-hidden="true" /> Texto</button>
-            <button type="button" onClick={() => agregar({ tipo: 'imagen', url: '', alt: '', enlace: '' })} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><IconoImagen className="h-4 w-4" aria-hidden="true" /> Imagen</button>
-            <button type="button" onClick={() => agregar({ tipo: 'boton', texto: 'Ver más', url: '/productos' })} className={`${adminSecondaryButton} h-9 px-3 text-xs`}><IconoEnlace className="h-4 w-4" aria-hidden="true" /> Botón</button>
-          </div>
-        </div>
-
-        <div className="space-y-4 xl:sticky xl:top-24 xl:self-start">
-          <section className={adminCardFlush}>
-            <div className="flex items-center justify-between border-b border-line px-4 py-3">
-              <div>
-                <h3 className="text-sm font-semibold text-ink">Vista previa</h3>
-                <p className="text-xs text-muted">Así llegará a {clientes(destinatarios)}, con su nombre y el enlace de baja.</p>
-              </div>
-              {destinatarios > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setVerDestinatarios(true)}
-                  className="text-xs font-semibold text-brand-600 hover:underline"
-                >
-                  Ver destinatarios
-                </button>
-              )}
-            </div>
-            {errorVista ? (
-              <p className={`${adminNotice('warning')} m-4`}>{errorVista}</p>
-            ) : (
-              <iframe title="Vista previa de la campaña" srcDoc={html} sandbox="" className="h-[34rem] w-full bg-surface" />
-            )}
-          </section>
-
-          <section className={`${adminCard} space-y-3`}>
-            <label htmlFor="campana-prueba" className={adminLabel}>Enviar una prueba</label>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <input id="campana-prueba" type="email" value={correoPrueba} onChange={(e) => setCorreoPrueba(e.target.value)} placeholder="tu@correo.com" className={adminInput()} />
-              <button type="button" onClick={enviarPrueba} disabled={probando || !correoPrueba || Boolean(errorVista)} className={`${adminSecondaryButton} shrink-0`}>
-                <IconoEnviar className="h-4 w-4" aria-hidden="true" /> {probando ? 'Enviando…' : 'Enviar prueba'}
-              </button>
-            </div>
-            <p className={adminHint}>Llega solo a esa dirección, marcada como prueba. Revísala en el teléfono antes de enviar la campaña.</p>
-          </section>
-        </div>
-      </div>
-
-      {/* Montado solo mientras está abierto: al cerrar se reinician búsqueda y páginas (C-109) */}
-      {verDestinatarios && <ModalDestinatarios abierto alCerrar={() => setVerDestinatarios(false)} />}
-    </div>
-  );
-}
-
-/* ── Modal Destinatarios ─────────────────────────────────────────────────── */
-
-interface DestinatarioInfo {
-  id: string;
-  name: string | null;
-  email: string | null;
-  createdAt: string;
-}
-
-function ModalDestinatarios({ abierto, alCerrar }: { abierto: boolean; alCerrar: () => void }) {
-  const [destinatarios, setDestinatarios] = useState<DestinatarioInfo[]>([]);
-  const [total, setTotal] = useState(0);
-  const [coincidencias, setCoincidencias] = useState(0);
-  const [pagina, setPagina] = useState(1);
-  const [hayMas, setHayMas] = useState(false);
-  const [cargando, setCargando] = useState(true);
-  const [busqueda, setBusqueda] = useState('');
-  const [consulta, setConsulta] = useState('');
-
-  useBodyScrollLock(abierto);
-
-  useEffect(() => {
-    if (!abierto) return;
-    const alPresionar = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') alCerrar();
-    };
-    window.addEventListener('keydown', alPresionar);
-    return () => window.removeEventListener('keydown', alPresionar);
-  }, [abierto, alCerrar]);
-
-  // C-109: la búsqueda va al servidor, 300 ms después de dejar de escribir
-  useEffect(() => {
-    const t = setTimeout(() => setConsulta(busqueda.trim()), 300);
-    return () => clearTimeout(t);
-  }, [busqueda]);
-
-  // De a 50 por página: antes llegaban todos los correos de una vez
-  useEffect(() => {
-    if (!abierto) return;
-    const control = new AbortController();
-    const params = new URLSearchParams({ pagina: String(pagina) });
-    if (consulta) params.set('q', consulta);
-    fetch(`/api/admin/campaigns/recipients?${params}`, { signal: control.signal })
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((d: { destinatarios?: DestinatarioInfo[]; total?: number; coincidencias?: number; hayMas?: boolean }) => {
-        const nuevos = d.destinatarios || [];
-        setDestinatarios((prev) => (pagina === 1 ? nuevos : [...prev, ...nuevos]));
-        setTotal(d.total ?? 0);
-        setCoincidencias(d.coincidencias ?? 0);
-        setHayMas(Boolean(d.hayMas));
-      })
-      .catch((e: unknown) => {
-        if (control.signal.aborted) return;
-        toast.error(e instanceof Error && e.message === '403'
-          ? 'Necesitas el permiso de Clientes para ver los destinatarios'
-          : 'No se pudo cargar la lista de destinatarios');
-      })
-      .finally(() => { if (!control.signal.aborted) setCargando(false); });
-    return () => control.abort();
-  }, [abierto, pagina, consulta]);
-
-  function buscar(texto: string) {
-    setBusqueda(texto);
-    setPagina(1);
-    setCargando(true);
-  }
-
-  function verMas() {
-    setCargando(true);
-    setPagina((p) => p + 1);
-  }
-
-  if (!abierto) return null;
-
-  const filtrados = destinatarios;
-
-  return (
-    <div className={adminModalOverlay} onClick={alCerrar} role="dialog" aria-modal="true" aria-labelledby="modal-destinatarios-titulo">
-      <div className={`${adminModalPanel} sm:max-w-xl`} onClick={(e) => e.stopPropagation()}>
-        <div className={adminModalHeader}>
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-              <IconoClientes className="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div>
-              <h2 id="modal-destinatarios-titulo" className={adminModalTitle}>Destinatarios de promociones</h2>
-              <p className="text-xs text-muted">{total} {total === 1 ? 'cliente acepta' : 'clientes aceptan'} promociones por correo</p>
-            </div>
-          </div>
-          <button type="button" onClick={alCerrar} className={adminIconButton} aria-label="Cerrar modal">
-            <IconoCerrar className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="border-b border-line bg-surface/50 p-4">
-          <div className="relative">
-            <IconoBuscar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
-            <input
-              type="text"
-              value={busqueda}
-              onChange={(e) => buscar(e.target.value)}
-              placeholder="Buscar por nombre o correo..."
-              className={`${adminInput()} pl-9`}
-            />
-          </div>
-          <p className="mt-2 text-[11px] text-muted">
-            Solo incluye clientes con correo verificado que tienen activa la opción de recibir promociones en sus preferencias de notificación.
-          </p>
-        </div>
-
-        <div className={adminModalBody}>
-          {cargando && filtrados.length === 0 ? (
-            <div className="flex justify-center py-12"><span className={adminSpinner} aria-label="Cargando destinatarios" /></div>
-          ) : filtrados.length === 0 ? (
-            <div className="py-12 text-center">
-              <IconoCorreo className="mx-auto mb-2 h-8 w-8 text-subtle" aria-hidden="true" />
-              <p className="font-semibold text-ink">{consulta ? 'Sin resultados' : 'Sin destinatarios'}</p>
-              <p className="mt-1 text-xs text-muted">
-                {consulta
-                  ? `No se encontraron coincidencias para "${consulta}".`
-                  : 'Ningún cliente ha aceptado promociones aún.'}
-              </p>
-            </div>
-          ) : (
-            <>
-            {consulta && <p className="mb-2 px-2 text-xs text-muted">{coincidencias} {coincidencias === 1 ? 'coincidencia' : 'coincidencias'}</p>}
-            <ul className="divide-y divide-line">
-              {filtrados.map((item) => (
-                <li key={item.id} className="flex items-center justify-between rounded-lg px-2 py-2.5 hover:bg-surface">
-                  <div className="min-w-0 pr-3">
-                    <p className="truncate text-sm font-semibold text-ink">{item.name || 'Sin nombre'}</p>
-                    <p className="truncate font-mono text-xs text-brand-600">{item.email}</p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <span className={adminBadge('success')}>Verificado</span>
-                    <p className="mt-0.5 text-[11px] text-muted">Desde {new Date(item.createdAt).toLocaleDateString('es-VE')}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            {hayMas && (
-              <div className="pt-3 text-center">
-                <button type="button" onClick={verMas} disabled={cargando} className={`${adminSecondaryButton} h-9 px-4 text-xs`}>
-                  {cargando ? 'Cargando…' : `Ver más (${filtrados.length} de ${coincidencias})`}
-                </button>
-              </div>
-            )}
-            </>
-          )}
-        </div>
-
-        <div className={adminModalFooter}>
-          <button type="button" onClick={alCerrar} className={`${adminSecondaryButton} h-9 px-4 text-xs`}>
-            Cerrar
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

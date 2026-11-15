@@ -1,5 +1,10 @@
 'use client';
 
+// Marketing → Promotores (C-75, C-167). C-249d: crear o cambiar un promotor va por pasos en su propia página
+// (/admin/marketing/promotores/nuevo y /admin/marketing/promotores/<id>, PLAN.md §1.9); "Nuevo promotor" y "Editar" llevan ahí.
+// Aquí quedan la lista, las solicitudes, las comisiones, pausar, activar y eliminar.
+
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
@@ -10,14 +15,11 @@ import {
 import {
   adminBadge, adminCardFlush, adminDangerButton, adminEmpty, adminHint, adminIconButton, adminIconChip, adminInput, adminLabel,
   adminModalBody, adminModalFooter, adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice,
-  adminPrimaryButton, adminSecondaryButton, adminSpinner, adminStatCard, adminStatLabel, adminStatValue, adminSuccessButton,
+  adminPrimaryButton, adminSpinner, adminStatCard, adminStatLabel, adminStatValue, adminSuccessButton,
 } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { formatUSD } from '@/lib/currency';
-import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
-import { enviarConVersion } from '@/lib/edicion/guardado';
-import { useConflictoDeFormulario } from '@/lib/edicion/useConflictoDeFormulario';
 
 interface Promotor {
   id: string;
@@ -27,8 +29,6 @@ interface Promotor {
   customerDiscountPercent: number;
   hasCoupon: boolean;
   status: 'ACTIVE' | 'PAUSED';
-  /** C-170: la versión con que se abre el editor */
-  updatedAt: string;
   user: { id: string; name: string | null; email: string | null };
   stats: { totalConversions: number; pendingConversions: number; toReview: number; pendingCommission: number; approvedCommission: number; totalGross: number };
 }
@@ -61,8 +61,6 @@ interface Comision {
   order: { orderNumber: string; status: string; paymentStatus: string } | null;
 }
 
-interface Usuario { id: string; name: string | null; email: string | null }
-
 const TIPO: Record<Comision['type'], string> = { REGISTRATION: 'Registro', PURCHASE: 'Compra', RECHARGE: 'Recarga (antes de C-75)' };
 const ESTADO: Record<Comision['status'], { label: string; tone: 'brand' | 'success' | 'danger' }> = {
   PENDING: { label: 'Por acreditar', tone: 'brand' },
@@ -83,24 +81,13 @@ export default function Promotores() {
   const [seleccion, setSeleccion] = useState<string[]>([]);
   const [procesando, setProcesando] = useState(false);
 
-  const [creando, setCreando] = useState(false);
-  const [form, setForm] = useState({ userId: '', code: '', name: '', commissionRate: '5', customerDiscountPercent: '5', notes: '' });
-  // C-167: solicitudes de clientes y edición de un promotor
+  // C-167: solicitudes de clientes
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [revisando, setRevisando] = useState<Solicitud | null>(null);
   const [revision, setRevision] = useState({ code: '', name: '', commissionRate: '5', customerDiscountPercent: '5', note: '' });
-  const [editando, setEditando] = useState<Promotor | null>(null);
-  const [edicion, setEdicion] = useState({ name: '', commissionRate: '5', customerDiscountPercent: '5' });
-  // C-170: lo que había al abrir el editor (para combinar si otra persona guardó antes)
-  const [edicionBase, setEdicionBase] = useState({ name: '', commissionRate: '5', customerDiscountPercent: '5' });
-  const { resolver: resolverConflicto, dialogo: dialogoConflicto } = useConflictoDeFormulario({
-    name: 'Nombre para mostrar', commissionRate: 'Comisión %', customerDiscountPercent: 'Descuento al cliente %',
-  });
-  const [busqueda, setBusqueda] = useState('');
-  const [resultados, setResultados] = useState<Usuario[]>([]);
   const [guardando, setGuardando] = useState(false);
 
-  useBodyScrollLock(Boolean(detalle) || creando || Boolean(revisando) || Boolean(editando));
+  useBodyScrollLock(Boolean(detalle) || Boolean(revisando));
 
   const cargarSolicitudes = useCallback(async () => {
     const res = await fetch('/api/influencers/solicitudes').catch(() => null);
@@ -133,21 +120,6 @@ export default function Promotores() {
       .catch(() => undefined);
     return () => { cancelado = true; };
   }, []);
-
-  // Búsqueda de usuarios con espera: antes se pedía al servidor en cada tecla
-  const buscar = busqueda.trim().length >= 2 && !form.userId;
-  const resultadosVisibles = buscar ? resultados : [];
-  useEffect(() => {
-    if (!buscar) return;
-    const t = setTimeout(async () => {
-      const res = await fetch(`/api/admin/users?search=${encodeURIComponent(busqueda.trim())}&limit=8`);
-      if (res.ok) {
-        const data = await res.json();
-        setResultados(data.users || []);
-      }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [busqueda, buscar]);
 
   const abrirDetalle = async (promotor: Promotor) => {
     setDetalle(promotor);
@@ -203,26 +175,6 @@ export default function Promotores() {
     cargar();
   };
 
-  const crear = async () => {
-    setGuardando(true);
-    try {
-      const res = await fetch('/api/influencers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) return toast.error(data?.error || 'No se pudo crear el promotor');
-      toast.success('Promotor creado');
-      setCreando(false);
-      setForm({ userId: '', code: '', name: '', commissionRate: '5', customerDiscountPercent: '5', notes: '' });
-      setBusqueda('');
-      cargar();
-    } finally {
-      setGuardando(false);
-    }
-  };
-
   const abrirSolicitud = (sol: Solicitud) => {
     setRevisando(sol);
     setRevision({ code: sol.suggestedCode ?? '', name: sol.user.name ?? '', commissionRate: '5', customerDiscountPercent: '5', note: '' });
@@ -242,42 +194,6 @@ export default function Promotores() {
       setRevisando(null);
       cargarSolicitudes();
       cargar();
-    } finally {
-      setGuardando(false);
-    }
-  };
-
-  const abrirEdicion = (promotor: Promotor) => {
-    const formulario = { name: promotor.name, commissionRate: String(promotor.commissionRate), customerDiscountPercent: String(promotor.customerDiscountPercent) };
-    setEditando(promotor);
-    setEdicion(formulario);
-    setEdicionBase(formulario);
-  };
-
-  /** Guarda con la versión con que se abrió. Si otra persona guardó antes, se combina lo de cada una y solo se pregunta por lo que las dos tocaron (C-170). */
-  const guardarEdicion = async (formulario = edicion, version = editando?.updatedAt) => {
-    if (!editando) return;
-    setGuardando(true);
-    try {
-      const r = await enviarConVersion(`/api/influencers/${editando.id}`, 'PATCH', formulario, version);
-      if (r.ok) {
-        toast.success('Promotor actualizado. Las comisiones ya creadas no cambian.');
-        setEditando(null);
-        cargar();
-        return;
-      }
-      if (r.conflicto?.tipo === 'cambiado') {
-        const actual = r.conflicto.actual as { name: string; commissionRate: number | string; customerDiscountPercent: number; updatedAt: string };
-        const suyo = { name: actual.name, commissionRate: String(actual.commissionRate), customerDiscountPercent: String(actual.customerDiscountPercent) };
-        resolverConflicto({
-          base: edicionBase, mio: formulario, suyo, quien: r.conflicto.por?.nombre ?? 'Otra persona',
-          continuar: (final) => { setEdicion(final); setEdicionBase(suyo); return guardarEdicion(final, actual.updatedAt); },
-        });
-        return;
-      }
-      toast.error(r.error);
-      // Ya no existe: se cierra y se vuelve a pedir la lista
-      if (r.conflicto?.tipo === 'no_existe') { setEditando(null); cargar(); }
     } finally {
       setGuardando(false);
     }
@@ -380,9 +296,9 @@ export default function Promotores() {
       <div className={adminCardFlush}>
         <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
           <h2 className="text-base font-semibold text-ink">Promotores</h2>
-          <button type="button" onClick={() => setCreando(true)} className={`${adminPrimaryButton} h-9 px-3 text-xs`}>
+          <Link href="/admin/marketing/promotores/nuevo" className={`${adminPrimaryButton} h-9 px-3 text-xs`}>
             <IconoMas className="h-4 w-4" aria-hidden="true" /> Nuevo promotor
-          </button>
+          </Link>
         </div>
 
         {cargando ? (
@@ -421,7 +337,7 @@ export default function Promotores() {
                   <div className="flex items-center gap-1">
                     <button type="button" onClick={() => copiar(p.code)} className={adminIconButton} aria-label={`Copiar enlace de ${p.name}`} title="Copiar enlace de referido"><IconoEnlace className="h-4 w-4" /></button>
                     <button type="button" onClick={() => abrirDetalle(p)} className={adminIconButton} aria-label={`Ver comisiones de ${p.name}`} title="Ver comisiones"><IconoVer className="h-4 w-4" /></button>
-                    <button type="button" onClick={() => abrirEdicion(p)} className={adminIconButton} aria-label={`Editar a ${p.name}`} title="Editar comisión y descuento"><IconoEditar className="h-4 w-4" /></button>
+                    <Link href={`/admin/marketing/promotores/${p.id}`} className={adminIconButton} aria-label={`Editar a ${p.name}`} title="Editar comisión y descuento"><IconoEditar className="h-4 w-4" /></Link>
                     <button type="button" onClick={() => cambiarEstado(p)} className={adminIconButton} aria-label={p.status === 'ACTIVE' ? `Pausar a ${p.name}` : `Activar a ${p.name}`} title={p.status === 'ACTIVE' ? 'Pausar' : 'Activar'}>
                       {p.status === 'ACTIVE' ? <IconoPausa className="h-4 w-4" /> : <IconoPlay className="h-4 w-4" />}
                     </button>
@@ -536,89 +452,6 @@ export default function Promotores() {
         document.body
       )}
 
-      {/* Nuevo promotor */}
-      {creando && createPortal(
-        <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setCreando(false); }}>
-          <div className={`${adminModalPanel} sm:max-w-md`} role="dialog" aria-modal="true" aria-labelledby="titulo-nuevo-promotor">
-            <div className={adminModalHeader}>
-              <h3 id="titulo-nuevo-promotor" className={adminModalTitle}>Nuevo promotor</h3>
-              <button type="button" onClick={() => setCreando(false)} className={adminIconButton} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" /></button>
-            </div>
-            <div className={`${adminModalBody} space-y-4`}>
-              <div>
-                <label htmlFor="promotor-usuario" className={adminLabel}>Usuario *</label>
-                <input
-                  id="promotor-usuario"
-                  value={busqueda}
-                  onChange={(e) => { setBusqueda(e.target.value); setForm((f) => ({ ...f, userId: '' })); }}
-                  placeholder="Buscar por nombre o correo"
-                  className={adminInput()}
-                  autoComplete="off"
-                />
-                {resultadosVisibles.length > 0 && (
-                  <ul className="mt-1 overflow-hidden rounded-lg border border-line">
-                    {resultadosVisibles.map((u) => (
-                      <li key={u.id}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setForm((f) => ({ ...f, userId: u.id, name: f.name || u.name || '' }));
-                            setBusqueda(u.email || u.name || '');
-                            setResultados([]);
-                          }}
-                          className="w-full border-b border-line px-3 py-2 text-left text-sm last:border-0 hover:bg-surface"
-                        >
-                          <span className="block font-medium text-ink">{u.name || 'Sin nombre'}</span>
-                          <span className="block text-xs text-muted">{u.email}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {form.userId && <p className={adminHint}>Usuario elegido.</p>}
-              </div>
-              <div>
-                <label htmlFor="promotor-codigo" className={adminLabel}>Código *</label>
-                <input id="promotor-codigo" value={form.code} maxLength={20} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="GAMER10" className={`${adminInput()} font-mono uppercase`} />
-                <p className={adminHint}>Es también el cupón que el cliente escribe en el carrito.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="promotor-porcentaje" className={adminLabel}>Comisión %</label>
-                  <input id="promotor-porcentaje" type="number" min="0" max="50" step="0.5" value={form.commissionRate} onChange={(e) => setForm((f) => ({ ...f, commissionRate: e.target.value }))} className={adminInput()} />
-                  <p className={adminHint}>Lo que gana, en Puntos ES.</p>
-                </div>
-                <div>
-                  <label htmlFor="promotor-descuento" className={adminLabel}>Descuento al cliente %</label>
-                  <input id="promotor-descuento" type="number" min="1" max="30" step="1" value={form.customerDiscountPercent} onChange={(e) => setForm((f) => ({ ...f, customerDiscountPercent: e.target.value }))} className={adminInput()} />
-                  <p className={adminHint}>Lo que descuenta su código.</p>
-                </div>
-              </div>
-              <div>
-                <label htmlFor="promotor-nombre" className={adminLabel}>Nombre para mostrar *</label>
-                <input id="promotor-nombre" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="GamerPro VE" className={adminInput()} />
-              </div>
-              <div>
-                <label htmlFor="promotor-notas" className={adminLabel}>Notas internas</label>
-                <textarea id="promotor-notas" rows={2} value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} placeholder="Canal, acuerdo…" className={`${adminInput()} h-auto resize-none py-2.5`} />
-              </div>
-              {form.code && (
-                <p className={adminNotice('neutral')}>
-                  Enlace: <span className="break-all font-mono text-xs text-brand-700">{enlaceReferido(form.code)}</span>
-                </p>
-              )}
-            </div>
-            <div className={adminModalFooter}>
-              <button type="button" onClick={() => setCreando(false)} className={adminSecondaryButton}>Cancelar</button>
-              <button type="button" onClick={crear} disabled={guardando || !form.userId || !form.code || !form.name} className={adminPrimaryButton}>
-                <IconoMas className="h-4 w-4" aria-hidden="true" /> {guardando ? 'Creando…' : 'Crear promotor'}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
       {/* Revisar una solicitud (C-167) */}
       {revisando && createPortal(
         <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setRevisando(null); }}>
@@ -670,41 +503,6 @@ export default function Promotores() {
         document.body
       )}
 
-      {/* Editar un promotor (C-167): antes solo se podía pausar */}
-      {editando && createPortal(
-        <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setEditando(null); }}>
-          <div className={`${adminModalPanel} sm:max-w-md`} role="dialog" aria-modal="true" aria-labelledby="titulo-editar-promotor">
-            <div className={adminModalHeader}>
-              <h3 id="titulo-editar-promotor" className={adminModalTitle}>Editar a {editando.name}</h3>
-              <button type="button" onClick={() => setEditando(null)} className={adminIconButton} aria-label="Cerrar"><IconoCerrar className="h-5 w-5" /></button>
-            </div>
-            <div className={`${adminModalBody} space-y-4`}>
-              <PresenciaEnEditor recurso={`influencer:${editando.id}`} etiqueta={editando.name} nombreRecurso="promotor" />
-              <div>
-                <label htmlFor="editar-nombre" className={adminLabel}>Nombre para mostrar</label>
-                <input id="editar-nombre" value={edicion.name} onChange={(e) => setEdicion((d) => ({ ...d, name: e.target.value }))} className={adminInput()} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="editar-comision" className={adminLabel}>Comisión %</label>
-                  <input id="editar-comision" type="number" min="0" max="50" step="0.5" value={edicion.commissionRate} onChange={(e) => setEdicion((d) => ({ ...d, commissionRate: e.target.value }))} className={adminInput()} />
-                </div>
-                <div>
-                  <label htmlFor="editar-descuento" className={adminLabel}>Descuento al cliente %</label>
-                  <input id="editar-descuento" type="number" min="1" max="30" step="1" value={edicion.customerDiscountPercent} onChange={(e) => setEdicion((d) => ({ ...d, customerDiscountPercent: e.target.value }))} className={adminInput()} />
-                </div>
-              </div>
-              <p className={adminHint}>El código ({editando.code}) no se cambia: ya puede estar publicado. Los cambios valen para las compras nuevas.</p>
-            </div>
-            <div className={adminModalFooter}>
-              <button type="button" onClick={() => setEditando(null)} className={adminSecondaryButton}>Cancelar</button>
-              <button type="button" onClick={() => void guardarEdicion()} disabled={guardando || !edicion.name} className={adminPrimaryButton}>{guardando ? 'Guardando…' : 'Guardar'}</button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-      {dialogoConflicto}
     </div>
   );
 }

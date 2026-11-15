@@ -10,6 +10,20 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.71] - 2026-11-15
+Mi panel con el kit de marca, la segunda parte (C-251b): los arreglos que quedaron de C-251. Solo pantallas: sin cambio de base, sin SQL, sin variables nuevas y sin cron. Nada desaparece y el dinero no cambia.
+### Carrito, checkout y cuenta del cliente 1.8.1 (C-251b)
+- **Los estados en su sello lleno:** "Por confirmar", "Rechazada" y "No completada" en Puntos ES; "Recibido" en Mis códigos; "Predeterminada" en Direcciones, en azul (lo que se destaca; el verde es lo hecho). La plataforma de un código y "Necesario para" van como datos en gris.
+- **Sin ámbar:** "Escrita a mano" en Direcciones, el ícono de "Importante" en Garantía, el reloj de las reseñas en revisión y el ícono de "Recuperó la contraseña". Las estrellas se quedan.
+- **"Tienes un documento por firmar"** lleva su ícono en la placa azul, como todo lo que hay que hacer.
+- **Los filtros en píldoras** con su ícono, su cuenta y lo que juntan: Mis pedidos ("Por pagar o por validar"), Puntos ES, Mis reseñas y Notificaciones.
+- **Direcciones:** "¿Cómo recibes tus pedidos?", ZOOM o MRW y Casa o Trabajo, con la tarjeta de opción.
+- **Puntos ES:** la franja de arriba en el azul oscuro del logo. **El inicio:** "Recargado" y "Este mes" en neutro.
+- **Garantía:** el punto de "te toca responder" en azul (iba en rojo) y los títulos en minúscula. **Promotores:** los botones de compartir de 44 px, y Telegram y X como botones del panel.
+- **Mi perfil:** cada pestaña del ancho de un formulario, a la izquierda.
+### Configuración 1.4.2 (C-251b)
+- **Los documentos legales:** "IMPORTANTE…" va en el azul claro con su placa (antes, en el rojo de los errores), en la ventana de firmar y en `/terminos` y `/privacidad`. "Desplázate hasta el final" en gris.
+
 ## [1.0.0-rc.70] - 2026-11-15
 Dos fallas del servidor que dejó anotadas C-249e (C-252).
 ### Cursos 1.2.1 (C-252)

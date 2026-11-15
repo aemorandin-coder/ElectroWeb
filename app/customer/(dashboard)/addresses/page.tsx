@@ -318,7 +318,7 @@ export default function AddressesPage() {
                     <div className="grid grid-cols-2 gap-2">
                       {(['ZOOM', 'MRW'] as const).map((e) => (
                         <OpcionRadio key={e} name="empresa" tamano="chica" elegida={form.empresa === e} onElegir={() => set({ empresa: e, oficina: OFICINA_VACIA })}
-                          titulo={<LogoEmpresa empresa={e} className={e === 'MRW' ? 'h-5' : 'h-6'} />} />
+                          titulo={<LogoEmpresa empresa={e} className={e === 'MRW' ? 'h-3.5' : 'h-4'} />} />
                       ))}
                     </div>
                   </fieldset>

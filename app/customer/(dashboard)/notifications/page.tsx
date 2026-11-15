@@ -34,8 +34,8 @@ export default function NotificationsPage() {
 
     return (
         <div className="space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between">
+            {/* Header (C-251b: en el teléfono el botón baja a su línea en vez de apretar el título) */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-xl font-bold text-ink">Notificaciones</h1>
                     <p className="text-sm text-muted">

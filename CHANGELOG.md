@@ -10,6 +10,32 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.73] - 2026-11-15
+"Cómo participar" en `/sorteo`, explicado con íconos (C-255): la gente le preguntaba al equipo "¿cómo participo?, ¿a juro tengo que comprar?, ¿cómo creo mi cuenta?". El equipo eligió la B de las maquetas, con los dos caminos y la compra primero. Y dos arreglos del camino de registro. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Marketing 1.19.0 (C-255)
+- **Cómo participar, en tres pasos unidos por un camino:**
+  1. **"Crea tu cuenta gratis"**, con "Crear mi cuenta gratis" y "¿Ya tienes cuenta? Entra", que vuelven a `/sorteo`. Con la cuenta, el paso queda hecho en verde y, si falta, pide activar el correo para poder comprar.
+  2. **"Gana boletos por dos caminos":**
+     - Camino 1, "Compra $5 o más": 1 boleto por compra, sin límite, "Mientras más compras, más oportunidades" y "Ver productos";
+     - Camino 2, "Invita a tus amigos": 2 amigos = 1 boleto, hasta 3, con tu enlace para compartir.
+  3. **"Espera el 20 de diciembre".**
+  - Al lado (en el teléfono, debajo), **tus boletos** con cada compra, o "Cada boleto es una oportunidad".
+  - **Quien llega con el enlace de un amigo** lo ve: "Te invitó un amigo. Crea tu cuenta y actívala desde tu correo: así sumas para su boleto".
+- **Los íconos entran una vez al llegar a la vista:** el camino se dibuja, la placa hace un pop, el visto se dibuja y el "+1" salta. Con "reducir movimiento", quietos.
+- **"Lo que más nos preguntan":** siete preguntas con su ícono y respuestas cortas sacadas de las bases. La primera, abierta: "¿Hay más de una forma de ganar boletos? Sí, dos…".
+- **En el banner:** "PlayStation 4" escrito y el logo corto de PS4 donde decía "Sony" (para Google y los lectores sigue diciendo "Sony"), y el logo de ZOOM en una píldora blanca. En la vista previa del panel, igual.
+- **En las bases,** el punto de invitar empieza con "Invitando amigos" (decía "Sin comprar"); la regla es la misma.
+- **La tarjeta de Mi panel,** con boletos: "suma más comprando o invitando".
+### Carrito, checkout y cuenta del cliente 1.8.2 (C-255)
+- **Al activar la cuenta desde el correo, vuelve a donde estaba** ("Volver al sorteo"). Antes iba al login, el login al inicio, y el sorteo se perdía. Sin la sesión abierta, el login lo lleva ahí.
+### Configuración 1.4.3 (C-255)
+- **El correo para activar la cuenta** lleva el regreso y, a quien llegó con el enlace de un amigo, "Te invitó un amigo al sorteo. Al activar tu cuenta sumas para su boleto".
+### Marco del panel 1.14.1 (C-255)
+- **La sesión se entera cuando el cliente activa su correo,** aunque lo active en otro navegador (el del correo, en el teléfono). Antes el checkout lo frenaba ("Debes verificar tu correo") hasta salir y volver a entrar.
+- **Con Google:** quien entra por primera vez desde el enlace de un amigo del sorteo queda como su invitado, como con el registro por correo.
+### Tienda 1.16.1 (C-255)
+- Las animaciones de entrada del sorteo en `app/globals.css` (`.sorteo-*`): una sola vez, y con "reducir movimiento" no se mueven.
+
 ## [1.0.0-rc.72] - 2026-11-15
 El sorteo, más atractivo (C-253): el banner nuevo de `/sorteo`, la bandera del inicio y el paso "Lo que trae" del panel. El equipo eligió cada pieza viendo las maquetas. **Cambia la base: tres columnas nuevas en `sorteos`, aditivas** (`incluye`, `lema` y `nombreCorto`). Sin variables nuevas, sin SQL de datos y sin cron.
 ### Marketing 1.18.0 (C-253)

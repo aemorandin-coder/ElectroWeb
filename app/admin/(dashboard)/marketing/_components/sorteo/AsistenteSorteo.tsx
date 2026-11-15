@@ -451,7 +451,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
             </p>
             <div className="mx-auto w-full max-w-[17rem] rounded-[2rem] border-8 border-ink bg-white p-2.5">
               <div className="mx-auto mb-2 h-1.5 w-16 rounded-full bg-line-strong" aria-hidden="true" />
-              <PremioSorteo titulo={form.titulo.trim()} premio={form.premio.trim()} imagen={form.imagen || null} resultadoEl={fechaResultado} incluye={form.incluye.filter((c) => c.texto.trim())} lema={form.lema} compacto />
+              <PremioSorteo titulo={form.titulo.trim()} premio={form.premio.trim()} imagen={form.imagen || null} resultadoEl={fechaResultado} incluye={form.incluye.filter((c) => c.texto.trim())} lema={form.lema} nombreCorto={form.nombreCorto} compacto />
               <div className="mt-2 rounded-xl border border-line p-3">
                 <p className="text-xs font-semibold text-ink">Cómo participar</p>
                 <ul className="mt-1.5 grid gap-1 text-xs text-ink-soft">

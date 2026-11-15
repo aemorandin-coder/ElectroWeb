@@ -37,13 +37,22 @@ export async function participanteDe(sorteoId: string, userId: string, invitadoP
  * Un cliente nuevo que llegó por el enlace de otro (la cookie del enlace, proxy.ts): queda como su invitado. Si el código
  * no es de este sorteo, si se invita a sí mismo o el sorteo ya cerró, no pasa nada.
  */
-export async function registrarInvitacion(codigo: string | null | undefined, nuevoUserId: string): Promise<void> {
-  if (!esCodigoSorteo(codigo)) return;
+export async function registrarInvitacion(codigo: string | null | undefined, nuevoUserId: string): Promise<boolean> {
+  if (!esCodigoSorteo(codigo)) return false;
   const sorteo = await getSorteoVigente();
-  if (!sorteo || new Date() > sorteo.hasta) return;
+  if (!sorteo || new Date() > sorteo.hasta) return false;
   const invita = await prisma.participanteSorteo.findUnique({ where: { codigo } });
-  if (!invita || invita.sorteoId !== sorteo.id || invita.userId === nuevoUserId) return;
-  await participanteDe(sorteo.id, nuevoUserId, invita.id);
+  if (!invita || invita.sorteoId !== sorteo.id || invita.userId === nuevoUserId) return false;
+  const participante = await participanteDe(sorteo.id, nuevoUserId, invita.id);
+  // C-255: true solo si quedó como su invitado (el correo de activación se lo dice)
+  return participante.invitadoPorId === invita.id;
+}
+
+/** C-255: si un código para invitar es de un participante del sorteo vigente (para decirle al que llega "te invitó un amigo") */
+export async function esInvitacionVigente(codigo: string | null | undefined, sorteoId: string): Promise<boolean> {
+  if (!esCodigoSorteo(codigo)) return false;
+  const invita = await prisma.participanteSorteo.findUnique({ where: { codigo }, select: { sorteoId: true } });
+  return invita?.sorteoId === sorteoId;
 }
 
 const ESTADOS_QUE_NO_CUENTAN = ['CANCELLED', 'REFUNDED'] as const;

@@ -25,8 +25,9 @@ export function TarjetaSorteoVista({ sorteo, total = 0, enlace = true }: { sorte
   const dia = new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'long', timeZone: 'America/Caracas' }).format(new Date(sorteo.resultadoEl));
   const minimo = montoCorto(sorteo.compraMinimaUSD ?? 10);
   const invitar = (sorteo.topeInvitar ?? 1) > 0;
+  // C-255 (el equipo, 15/11: "siempre habla claro sobre dos caminos"): la compra primero, y con boletos, cómo sumar más
   const linea = sorteo.sorteado ? 'Ya se sorteó: mira quién ganó.'
-    : total > 0 ? `Tienes ${total} ${total === 1 ? 'boleto' : 'boletos'}. Resultado el ${dia}.`
+    : total > 0 ? `Tienes ${total} ${total === 1 ? 'boleto' : 'boletos'}: suma más comprando${invitar ? ' o invitando' : ''}. Resultado el ${dia}.`
       : `Compra ${minimo} o más${invitar ? ', o invita a 2 amigos,' : ''} y participa. Resultado el ${dia}.`;
   const cuerpo = (
     <>

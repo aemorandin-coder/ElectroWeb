@@ -210,8 +210,11 @@ export const authOptions: NextAuthOptions = {
 
       // Google (C-85): crea, vincula o rechaza. `user` es el mismo objeto que recibe jwt(): se completa con la cuenta de la tienda.
       let referido: string | null = null;
+      let codigoSorteo: string | null = null;
       try {
-        referido = (await cookies()).get('electroshop_ref')?.value ?? null;
+        const galletas = await cookies();
+        referido = galletas.get('electroshop_ref')?.value ?? null;
+        codigoSorteo = galletas.get('electroshop_sorteo')?.value ?? null;
       } catch {
         // Fuera de una petición (pruebas): sin código de promotor
       }
@@ -226,6 +229,12 @@ export const authOptions: NextAuthOptions = {
         tipoCuenta: account.type,
       });
       if (!resultado.ok) return `/login?error=${account.provider}-${resultado.motivo}`;
+      // C-255: un cliente nuevo que llegó con el enlace de un amigo del sorteo queda como su invitado, igual que con el
+      // registro por correo (app/api/auth/register). Si falla, entra igual
+      if (resultado.nuevo && codigoSorteo) {
+        const { registrarInvitacion } = await import('@/lib/sorteo/servidor');
+        await registrarInvitacion(codigoSorteo, resultado.userId).catch(() => false);
+      }
 
       const dbUser = await prisma.user.findUnique({
         where: { id: resultado.userId },
@@ -272,6 +281,12 @@ export const authOptions: NextAuthOptions = {
         // Cerrada, vencida, versión vieja, admin sin uso o cuenta suspendida (lib/sesiones.ts).
         // Token vacío = sesión inválida: NextAuth la cierra en el próximo pedido
         if (!(await sesionValida(token))) return {} as unknown as JWT;
+        // C-255: la cuenta se activa desde el correo, muchas veces en otro navegador (el del teléfono): la sesión abierta
+        // desde el registro se entera en el próximo pedido y el checkout ya no la frena. Solo clientes, y mientras no esté activado
+        if (token.emailVerified === false && token.userType === 'customer') {
+          const fila = await prisma.user.findUnique({ where: { id: token.id as string }, select: { emailVerified: true } });
+          if (fila?.emailVerified) token.emailVerified = true;
+        }
       }
 
       // Refresh token on each request to keep session alive

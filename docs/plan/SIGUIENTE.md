@@ -1,14 +1,20 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.72, igual que `main`; subida por el equipo y comprobada desde fuera)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.72; en `main`, rc.73 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-255 · "Cómo participar" en /sorteo, con íconos (rc.73, por subir: §2; `estado/C-255.md`):** la gente le preguntaba al equipo "¿cómo participo?, ¿a juro tengo que comprar?, ¿cómo creo mi cuenta?". El equipo eligió la B de las maquetas, con los dos caminos y la compra primero.
+  - **Los tres pasos, unidos por un camino:** "Crea tu cuenta gratis"; "Gana boletos por dos caminos" (Camino 1, comprar $5 o más, sin límite; Camino 2, invitar amigos, hasta 3); "Espera el 20 de diciembre". Al lado, tus boletos.
+  - **Pocos textos y los íconos animados:** entran una sola vez al llegar a la vista. Y "Lo que más nos preguntan", siete preguntas.
+  - **El banner:** el logo corto de PS4 donde dice "Sony" y el de ZOOM en su píldora blanca.
+  - **El camino de registro:** el correo de activación vuelve a `/sorteo` (antes se perdía en el login y el inicio), y la sesión se entera de la activación (el checkout la frenaba hasta volver a entrar). El invitado sabe que tiene que activar su correo.
+  - **Las maquetas,** en la PC de Andrés: `~/.cache/electroshop-trabajo/c255/comparar.html`.
 - **C-253 · El sorteo, más atractivo (rc.72, en producción; `estado/C-253.md`):** el equipo eligió cada pieza viendo las maquetas.
   - **El banner de `/sorteo`:** el nombre en grande con el sello y la etiqueta, los días con el envío gratis, "Quiero mi boleto", la foto limpia y "Lo que trae" en una franja abajo.
   - **La bandera del inicio:** la pestaña al borde izquierdo con el logo de PS4 o, más angosto, la píldora frente a WhatsApp. Entra una sola vez y se queda quieta.
   - **El panel:** el paso "Lo que trae". **En `/sorteo`:** el aviso de marcas de Sony.
-  - **Falta que el equipo cargue en el panel** el premio, lo que trae, el sello y "PS4" (§2, "Por confirmar de rc.72").
+  - **El equipo ya cargó en el panel** el premio, lo que trae y "PS4" (captura del 15/11). Faltan las pruebas (§2, "Por confirmar de rc.72").
   - **Sigue C-254:** la semana del ganador (`PLAN.md` §5.2).
 - **C-251b · Mi panel con el kit (rc.71, en producción; `estado/C-251b.md`):** lo que quedó de C-251. Los estados en su sello lleno (Puntos ES, Mis códigos, Direcciones), sin ámbar (Direcciones, Garantía, Reseñas, Seguridad y la ventana de firmar), el aviso de lo que hay que hacer con su placa (también el "IMPORTANTE" de `/terminos` y `/privacidad`, que iba en rojo), los filtros en píldoras (Mis pedidos, Puntos ES, Reseñas y Notificaciones), Direcciones con la tarjeta de opción y Mi perfil del ancho de un formulario. Siguen las tres decisiones de C-251.
 - **C-252 · El curso nuevo y las fotos de Servicios, validados (rc.70, en producción):** el servidor ya no acepta un precio negativo al crear un curso, ni fotos de Servicios que no sean de la tienda o http(s) (`estado/C-252.md`).
@@ -339,8 +345,31 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Nada por subir
-**Producción está en `v1.0.0-rc.72`** (`e9fa074`), igual que `main`. Su bloque está en `HISTORIAL.md`.
+### Lo que falta subir: `v1.0.0-rc.73` (C-255; unos 20 minutos)
+**Producción está en `v1.0.0-rc.72`** (`e9fa074`); su bloque está en `HISTORIAL.md`.
+- **C-255 (rc.73):** "Cómo participar" en `/sorteo` con íconos (los tres pasos, los dos caminos con la compra primero y las preguntas), el logo corto de PS4 y el de ZOOM en el banner, y el camino de registro que vuelve al sorteo.
+  - **Sin cambio de base,** sin SQL, sin variables nuevas y sin cron. No hace falta respaldo antes.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.73`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 15 minutos, en la computadora y en el teléfono):
+  1. **`/sorteo` en la computadora, en una ventana privada (sin entrar):**
+      - arriba, "Gana una" y "PlayStation 4" con el logo de PS4 donde decía "Sony", del alto de las letras;
+      - en "Envío gratis", el logo de ZOOM en una píldora blanca.
+  2. **"Quiero mi boleto"** baja a "Cómo participar":
+      - tres pasos con su número, unidos por una línea que se dibuja, y los íconos que entran una vez y se quedan quietos;
+      - el paso 2, "Gana boletos por dos caminos": primero "Camino 1 · Compra $5 o más" (con "Ver productos"), después "Camino 2 · Invita a tus amigos";
+      - al lado, "Cada boleto es una oportunidad";
+      - en ningún lado dice "No tienes que comprar".
+  3. **"Lo que más nos preguntan":** siete preguntas, la primera abierta ("¿Hay más de una forma de ganar boletos? Sí, dos…"). "¿Cuánto me cuesta si gano?" lleva el logo de ZOOM.
+  4. **En el teléfono:** lo mismo, uno debajo del otro, sin moverse de lado.
+  5. **El camino entero, en el teléfono** (con un correo de prueba, por ejemplo `tucorreo+sorteo@gmail.com`, que llega a tu bandeja):
+      1. En una ventana privada, `/sorteo` → "Crear mi cuenta gratis". Llena el registro.
+      2. Vuelve solo a `/sorteo`: el paso 1 dice "Ya tienes tu cuenta" y pide activarla; en el paso 2 sale su enlace para invitar.
+      3. Copia ese enlace. Ábrelo en otra ventana privada: arriba del paso 1 dice "Te invitó un amigo". No hace falta registrarse.
+      4. En tu correo, "Activa tu cuenta de Electro Shop" → "Activar mi cuenta". Si se abre en el mismo navegador, dice "Volver al sorteo" y vuelve solo; si se abre en otro, va al login y después al sorteo.
+      5. En `/sorteo` ya no pide activar la cuenta.
+      - La cuenta de prueba queda como una cuenta normal. No da boletos: hacen falta 2 amigos.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.72 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de base que deshacer.
 
 ### Por confirmar de rc.72 (C-253; unos 15 minutos)
 Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera:
@@ -348,7 +377,7 @@ Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera:
 - la bandera del inicio, que dice "Sorteo" hasta que se cargue el nombre corto.
 
 Falta esto:
-- **En el panel** (en la computadora). Sin esto, el banner sale sin "Lo que trae" y la bandera dice "Sorteo". Marketing → Sorteo → "Cambiar":
+- **En el panel: hecho el 15/11** (la captura del equipo ya muestra el premio, "PS4" y "Lo que trae"). Lo que se cargó, en Marketing → Sorteo → "Cambiar":
   1. **"El premio":** en Premio, `PlayStation 4 Sony (Remanufacturada)`. Lo que va entre paréntesis sale aparte, como etiqueta.
   2. **"Lo que trae":**
       - "Agregar lo que trae": `1000 GB de almacenamiento`, y en el detalle, `para muchos juegos`;
@@ -791,7 +820,7 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
-**Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61), C-249 (los filtros en píldoras, rc.63), C-249b (la oferta o el cupón y las gift cards impresas por pasos, rc.64) C-249c (el método de pago y la categoría, rc.65) C-249d (la campaña y el promotor, rc.67), C-249e (el curso y Servicios, rc.68: los 8 formularios van por pasos) y C-251 (Mi panel: las fallas y lo nuevo, rc.69) y C-251b (Mi panel con el kit, rc.71); quedan sus tres decisiones (`estado/C-251.md`). **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
+**Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61), C-249 (los filtros en píldoras, rc.63), C-249b (la oferta o el cupón y las gift cards impresas por pasos, rc.64) C-249c (el método de pago y la categoría, rc.65) C-249d (la campaña y el promotor, rc.67), C-249e (el curso y Servicios, rc.68: los 8 formularios van por pasos) y C-251 (Mi panel: las fallas y lo nuevo, rc.69) y C-251b (Mi panel con el kit, rc.71); quedan sus tres decisiones (`estado/C-251.md`). También C-253 (el sorteo más atractivo, rc.72) y C-255 ("Cómo participar" con íconos y el camino de registro, rc.73). **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
 
 **Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) C-224 (los tres únicos, rc.51) y C-241 (el checkout por pasos, rc.53), C-242 (Facturas, ordenada, rc.56). También C-226 (sin ámbar, rc.44), C-219 (los correos, rc.47) y C-234 (cuándo sale cada pedido, rc.52), y C-227 (los correos al aliado comercial, rc.55).
 

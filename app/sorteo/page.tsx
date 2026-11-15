@@ -1,23 +1,30 @@
 // C-212: la página del sorteo (Andrés, 13/11: la PlayStation 4, con el resultado el 20/12). El premio, cómo participar,
 // los boletos de quien entró con su cuenta y su enlace para invitar, las bases y, cuando ya se sorteó, quién ganó (con el
 // correo tapado). Sin sorteo activo, lo dice y lleva al catálogo.
+// C-255 (el equipo, 15/11: "explica mejor los pasos… ¿A juro tengo que comprar? ¿Cómo creo mi cuenta?"; "no uses tanto
+// texto, iconiza de forma animada"; "la idea es que compren. Siempre habla claro sobre dos caminos"): Cómo participar en
+// tres pasos con sus íconos (ComoParticipar: la cuenta, los dos caminos con la compra primero y el resultado), tus boletos
+// al lado y las preguntas que la gente hace (PreguntasSorteo). Quien llega con el enlace de un amigo lo ve.
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { getServerSession } from 'next-auth';
 import Footer from '@/components/Footer';
-import { IconoCarrito, IconoClientes, IconoRegalo } from '@/components/iconos';
+import { IconoRegalo } from '@/components/iconos';
 import PublicHeader from '@/components/public/PublicHeader';
-import CompartirEnlace from '@/components/sorteo/CompartirEnlace';
+import ComoParticipar from '@/components/sorteo/ComoParticipar';
+import PreguntasSorteo from '@/components/sorteo/PreguntasSorteo';
 import PremioSorteo, { diaLargo } from '@/components/sorteo/PremioSorteo';
 import Container from '@/components/ui/Container';
 import { authOptions } from '@/lib/auth';
 import { formatUSD } from '@/lib/currency';
 import { compartirPagina } from '@/lib/og/datos';
+import { prisma } from '@/lib/prisma';
 import { siteUrl } from '@/lib/seo';
 import { getPublicSettings } from '@/lib/site-settings';
 import { avisoDeMarcas, leerQueTrae } from '@/lib/sorteo/premio';
 import { correoTapado } from '@/lib/sorteo/reglas';
-import { boletosDeCliente, getSorteoVigente } from '@/lib/sorteo/servidor';
+import { boletosDeCliente, esInvitacionVigente, getSorteoVigente } from '@/lib/sorteo/servidor';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,8 +41,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function SorteoPage() {
-  const [sorteo, session, settings] = await Promise.all([getSorteoVigente(), getServerSession(authOptions), getPublicSettings()]);
+export default async function SorteoPage({ searchParams }: { searchParams: Promise<{ invita?: string | string[] }> }) {
+  const [sorteo, session, settings, params] = await Promise.all([getSorteoVigente(), getServerSession(authOptions), getPublicSettings(), searchParams]);
 
   if (!sorteo) {
     return (
@@ -60,6 +67,15 @@ export default async function SorteoPage() {
   const boletos = session?.user?.id && !cerrado ? await boletosDeCliente(sorteo, session.user.id) : null;
   const enlace = boletos ? `${siteUrl()}${boletos.enlace}` : null;
   const marcas = avisoDeMarcas(sorteo.premio, sorteo.nombreCorto);
+  // C-255: si ya activó su correo se lee de la base (la sesión lo guarda desde que entró y no se entera si lo activó en otro
+  // navegador, como el del correo en el teléfono)
+  const usuario = session?.user?.id && !cerrado
+    ? await prisma.user.findUnique({ where: { id: session.user.id }, select: { emailVerified: true } })
+    : null;
+  // C-255: llegó con el enlace de un amigo. Cuenta el primer enlace que abrió (la cookie de proxy.ts); en la primera visita
+  // la cookie todavía no viene en el pedido y vale el de la dirección
+  const codigoInvita = (await cookies()).get('electroshop_sorteo')?.value ?? (typeof params.invita === 'string' ? params.invita : null);
+  const invitado = !session?.user?.id && !cerrado && (await esInvitacionVigente(codigoInvita, sorteo.id));
 
   return (
     <div className="min-h-dvh bg-surface">
@@ -68,7 +84,7 @@ export default async function SorteoPage() {
         {/* El premio: la pieza fuerte, en el azul oscuro del logo (la misma pieza que revisa el panel antes de publicar, C-221) */}
         <PremioSorteo
           titulo={sorteo.titulo} premio={sorteo.premio} imagen={sorteo.imagen} resultadoEl={sorteo.resultadoEl} sorteadoAt={sorteo.sorteadoAt}
-          incluye={leerQueTrae(sorteo.incluye)} lema={sorteo.lema} participar={!cerrado}
+          incluye={leerQueTrae(sorteo.incluye)} lema={sorteo.lema} nombreCorto={sorteo.nombreCorto} participar={!cerrado}
         />
 
         {sorteo.sorteadoAt && sorteo.ganadorEmail && (
@@ -83,51 +99,14 @@ export default async function SorteoPage() {
 
         {!cerrado && (
           <Container className="py-8 lg:py-10">
-            <h2 id="como-participar" className="scroll-mt-40 text-xl font-bold text-ink lg:text-2xl">Cómo participar</h2>
-            <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              <div className="rounded-2xl border border-line bg-white p-5">
-                <span className="iconos-marca flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><IconoCarrito className="h-6 w-6" aria-hidden="true" /></span>
-                <h3 className="mt-3 text-lg font-semibold text-ink">Compra {minimo} o más</h3>
-                <p className="mt-1 text-sm text-ink-soft">Cada compra pagada de {minimo} o más en productos es 1 boleto. Mientras más compras, más oportunidades.</p>
-                <Link href="/productos" className="mt-4 inline-flex min-h-11 items-center rounded-full bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">Ver productos</Link>
-              </div>
-              <div className="rounded-2xl border border-line bg-white p-5">
-                <span className="iconos-marca flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><IconoClientes className="h-6 w-6" aria-hidden="true" /></span>
-                <h3 className="mt-3 text-lg font-semibold text-ink">O invita a 2 amigos, sin comprar</h3>
-                <p className="mt-1 text-sm text-ink-soft">
-                  Comparte tu enlace en tu estado de WhatsApp. Cuando 2 amigos se registran con él y verifican su correo, ganas 1 boleto. Hasta {sorteo.topeInvitar}.
-                </p>
-                <div className="mt-4">
-                  {enlace ? (
-                    <CompartirEnlace enlace={enlace} mensaje={`Participa conmigo en el sorteo de Electro Shop: ${sorteo.premio}. Regístrate con mi enlace:`} />
-                  ) : (
-                    <Link href="/login?callbackUrl=/sorteo" className="inline-flex min-h-11 items-center rounded-full border border-line bg-white px-5 text-sm font-semibold text-ink hover:border-brand-300 hover:text-brand-600">Entra con tu cuenta para tener tu enlace</Link>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {boletos && (
-              <section aria-labelledby="tus-boletos" className="mt-6 rounded-2xl border border-line bg-white p-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 id="tus-boletos" className="text-lg font-semibold text-ink">Tus boletos</h2>
-                  <p className="text-3xl font-bold tabular-nums text-brand-600">{boletos.total}</p>
-                </div>
-                {boletos.compras.length > 0 ? (
-                  <ul className="mt-3 divide-y divide-line text-sm">
-                    {boletos.compras.map((c) => (
-                      <li key={c.ordenes} className="flex justify-between gap-3 py-2"><span className="text-ink-soft">Compra {c.ordenes}</span><span className="tabular-nums text-ink">{formatUSD(c.subtotalUSD)}</span></li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mt-2 text-sm text-ink-soft">Todavía no tienes boletos por compra.</p>
-                )}
-                <p className="mt-3 text-sm text-ink-soft">
-                  Por invitar: {boletos.porInvitar} {boletos.porInvitar === 1 ? 'boleto' : 'boletos'}
-                  {boletos.invitados > 0 ? ` (${boletos.invitadosValidos} de ${boletos.invitados} amigos ya verificaron su correo)` : ''}.
-                </p>
-              </section>
-            )}
+            {/* C-255: los tres pasos con los dos caminos (la compra primero), tus boletos al lado y las preguntas */}
+            <ComoParticipar
+              minimo={minimo} tope={sorteo.topeInvitar} resultadoEl={sorteo.resultadoEl}
+              cuenta={session?.user?.id ? { correoActivo: Boolean(usuario?.emailVerified) } : null}
+              enlace={enlace} mensaje={`Participa conmigo en el sorteo de Electro Shop: ${sorteo.premio}. Regístrate con mi enlace:`}
+              boletos={boletos} invitado={invitado}
+            />
+            <PreguntasSorteo minimo={minimo} tope={sorteo.topeInvitar} hasta={sorteo.hasta} resultadoEl={sorteo.resultadoEl} />
           </Container>
         )}
 
@@ -140,7 +119,7 @@ export default async function SorteoPage() {
               <li>Lo organiza {settings.companyName}. Cuentan las compras pagadas y los registros del {diaLargo(sorteo.desde)} al {diaLargo(sorteo.hasta)}, hora de Venezuela. El resultado se da el {diaLargo(sorteo.resultadoEl)}.</li>
               <li>Participan las personas mayores de 18 años con una cuenta en la tienda y que vivan en Venezuela. No participa el equipo de la tienda.</li>
               <li>Cada compra pagada de {minimo} o más en productos (sin contar el envío) es 1 boleto. Una compra que llega en dos paquetes cuenta como una. Si una compra se cancela o se devuelve, su boleto se anula.</li>
-              <li>Sin comprar: cada 2 amigos que se registren con tu enlace, con su teléfono, y verifiquen su correo te dan 1 boleto, hasta {sorteo.topeInvitar}. Cada persona cuenta una sola vez.</li>
+              <li>Invitando amigos: cada 2 amigos que se registren con tu enlace, con su teléfono, y verifiquen su correo te dan 1 boleto, hasta {sorteo.topeInvitar}. Cada persona cuenta una sola vez.</li>
               <li>No se vende ningún boleto. Participar no cuesta nada aparte de lo que decidas comprar.</li>
               <li>El ganador se elige al azar entre todos los boletos: cada boleto es una oportunidad. Se publica en esta página con el correo tapado y se le escribe al correo de su cuenta.</li>
               <li>El premio es una {sorteo.premio}. Se entrega en la tienda en Guanare o se envía sin costo por ZOOM a cualquier estado. No se cambia por dinero.</li>

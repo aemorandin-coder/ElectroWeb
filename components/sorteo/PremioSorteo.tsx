@@ -8,12 +8,37 @@
 // - los días que faltan junto al envío gratis, y "Quiero mi boleto", que baja a Cómo participar;
 // - la foto a la derecha, limpia: sus bordes se funden con la franja (ya no se ve el cuadro);
 // - abajo, de lado a lado, "Lo que trae" con su ícono, separado por líneas. Nada encima de la foto ("sin ensuciarla").
+// C-255 (el equipo, 15/11, viendo /sorteo con "PlayStation 4 Sony (Remanufacturada)"):
+// - "donde dice 'Sony' me gustaría que apareciera el logo corto de PS4": "PlayStation 4" queda escrito y, en el lugar de
+//   "Sony", el logotipo de PS4 (o PS5) del alto de la letra y en blanco. El h1 sigue diciendo "Gana una PlayStation 4 Sony"
+//   (para Google y los lectores de pantalla) y el aviso de marcas de la página cubre el logo;
+// - "donde dice 'ZOOM', que usen el logo oficial de la marca": en una píldora blanca, que sobre el azul se lee.
 // Sin hooks: sirve en Server y en Client Components.
 import Image from 'next/image';
+import type { ReactNode } from 'react';
+import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
 import { IconoCalendario, IconoEnvio, IconoFlechaAbajo, IconoImagen, IconoPlay, IconoPremio, IconoRegalo } from '@/components/iconos';
 import Container from '@/components/ui/Container';
 import { iconoDeCosa } from '@/components/sorteo/iconosQueTrae';
-import { partesDelPremio, type CosaQueTrae } from '@/lib/sorteo/premio';
+import LogoCorto from '@/components/sorteo/LogoCorto';
+import { logoEnElPremio, partesDelPremio, type CosaQueTrae } from '@/lib/sorteo/premio';
+
+/** El nombre del premio con el logo corto en el lugar de "Sony" (la palabra queda para los lectores de pantalla) */
+function nombreConLogo(nombre: string, nombreCorto: string | null): ReactNode {
+  const conLogo = logoEnElPremio(nombre, nombreCorto);
+  if (!conLogo) return nombre;
+  // "PlayStation 4" no se corta entre la palabra y la cifra
+  return <>{conLogo.antes.replace(/ (?=\d)/g, '\u00a0')}<span className="sr-only">{conLogo.palabra}</span><LogoCorto logo={conLogo.logo} />{conLogo.despues}</>;
+}
+
+/** El logo de ZOOM en su píldora blanca: sobre el azul de la franja, el azul de su logo no se lee */
+export function PildoraZoom({ chica = false }: { chica?: boolean }) {
+  return (
+    <span className={`inline-flex items-center rounded-full bg-white align-middle ${chica ? 'px-1.5 py-0.5' : 'px-2.5 py-1'}`}>
+      <LogoEmpresa empresa="ZOOM" className={chica ? 'h-2.5' : 'h-4'} />
+    </span>
+  );
+}
 
 /** Los días que faltan para una fecha (0 si ya pasó) */
 export function diasHasta(fecha: Date): number {
@@ -28,7 +53,7 @@ export const fotoDelSorteo = (imagen: string | null | undefined) => (imagen && i
 /** Los bordes de la foto se funden con la franja: una foto hecha sobre su azul no deja ver el cuadro */
 const FUNDIDO = '[mask-image:linear-gradient(to_right,transparent,black_9%,black_91%,transparent),linear-gradient(to_bottom,transparent,black_9%,black_91%,transparent)] [mask-composite:intersect]';
 
-export default function PremioSorteo({ titulo, premio, imagen, resultadoEl, sorteadoAt = null, incluye = [], lema = null, participar = false, compacto = false }: {
+export default function PremioSorteo({ titulo, premio, imagen, resultadoEl, sorteadoAt = null, incluye = [], lema = null, nombreCorto = null, participar = false, compacto = false }: {
   titulo: string;
   premio: string;
   imagen: string | null;
@@ -38,6 +63,8 @@ export default function PremioSorteo({ titulo, premio, imagen, resultadoEl, sort
   incluye?: CosaQueTrae[];
   /** El sello ("¡Lista para jugar!") */
   lema?: string | null;
+  /** El nombre de la bandera del inicio (C-253): con PS4 o PS5, el título lleva su logo */
+  nombreCorto?: string | null;
   /** Mientras se puede participar: "Quiero mi boleto" baja a Cómo participar (#como-participar) */
   participar?: boolean;
   /** La vista previa del panel: el tamaño del teléfono y, sin foto, un hueco que avisa que falta */
@@ -57,7 +84,7 @@ export default function PremioSorteo({ titulo, premio, imagen, resultadoEl, sort
         <div className="p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-200">{titulo || 'Título del sorteo'}</p>
           <p className="mt-1.5 text-xs font-semibold text-brand-200">Gana una</p>
-          <p className="text-xl font-bold leading-tight text-balance">{nombre || '…'}</p>
+          <p className="text-xl font-bold leading-tight text-balance">{nombre ? nombreConLogo(nombre, nombreCorto) : '…'}</p>
           {(sello || etiqueta) && (
             <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-brand-100">
               {sello && <span className="inline-flex items-center gap-1 rounded-full bg-brand-500 px-2 py-0.5 font-bold text-white"><IconoPlay className="h-3 w-3" aria-hidden="true" /> {sello}</span>}
@@ -76,7 +103,7 @@ export default function PremioSorteo({ titulo, premio, imagen, resultadoEl, sort
           <p className="mt-2 flex items-center gap-1.5 text-xs text-brand-100">
             <IconoCalendario className="h-4 w-4 shrink-0" aria-hidden="true" /> {cuando}
           </p>
-          <p className="mt-1 text-xs text-brand-200">Envío gratis: si ganas, por ZOOM a cualquier estado.</p>
+          <p className="mt-1 text-xs text-brand-200">Envío gratis: si ganas, por <PildoraZoom chica /> a cualquier estado.</p>
         </div>
         {incluye.length > 0 && (
           <ul className="divide-y divide-white/10 border-t border-white/10 bg-white/5 px-4 py-1">
@@ -103,8 +130,8 @@ export default function PremioSorteo({ titulo, premio, imagen, resultadoEl, sort
             <IconoRegalo className="h-4 w-4 text-white" aria-hidden="true" /> {titulo}
           </p>
           <h1 id="sorteo-titulo" className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight text-balance lg:text-6xl">
-            <span className="mb-1.5 block text-xl font-semibold tracking-normal text-brand-200 lg:text-3xl">Gana una</span>
-            {nombre}
+            <span className="mb-1.5 block text-xl font-semibold tracking-normal text-brand-200 lg:text-3xl">Gana una</span>{' '}
+            {nombreConLogo(nombre, nombreCorto)}
           </h1>
           {(sello || etiqueta) && (
             <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-base text-brand-100">
@@ -155,7 +182,7 @@ export default function PremioSorteo({ titulo, premio, imagen, resultadoEl, sort
             </div>
             <div className="flex flex-col justify-center gap-0.5 px-5 py-4 text-sm text-brand-100">
               <span className="flex items-center gap-2 text-base font-semibold text-white"><IconoEnvio className="h-5 w-5" aria-hidden="true" /> Envío gratis</span>
-              <span>Si ganas, por ZOOM a cualquier estado.</span>
+              <span>Si ganas, por <PildoraZoom /> a cualquier estado.</span>
             </div>
           </div>
           {participar && (

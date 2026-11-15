@@ -39,6 +39,26 @@ export function logoDelNombreCorto(nombreCorto: string | null | undefined): Logo
   return null;
 }
 
+/** La consola que nombra el premio: "PlayStation 4", "Playstation4", "PS 5", "PS4" (sin pegarse a otra cifra o letra) */
+const CONSOLA_EN_EL_NOMBRE = /(?:^|[^a-z0-9])(?:playstation|ps)\s?([45])(?![a-z0-9])/i;
+/** La palabra que el logo reemplaza */
+const SONY = /(^|[^a-z0-9])(sony)(?![a-z0-9])/i;
+
+/**
+ * C-255 (el equipo, 15/11, viendo /sorteo con "PlayStation 4 Sony (Remanufacturada)": "donde dice 'Sony' me gustaría que
+ * apareciera el logo corto de PS4"): el título queda "PlayStation 4" escrito y, en el lugar de "Sony", el logotipo de PS4
+ * (o de PS5) del alto de la letra. La consola sale del nombre o, si no la dice, del nombre corto de la bandera.
+ * null: sin "Sony" o sin una consola con logo, el nombre queda escrito.
+ */
+export function logoEnElPremio(nombre: string, nombreCorto: string | null | undefined): { logo: LogoDePremio; antes: string; palabra: string; despues: string } | null {
+  const consola = CONSOLA_EN_EL_NOMBRE.exec(nombre);
+  const logo = consola ? (consola[1] === '4' ? 'ps4' : 'ps5') : logoDelNombreCorto(nombreCorto);
+  const sony = SONY.exec(nombre);
+  if (!logo || !sony) return null;
+  const inicio = sony.index + sony[1].length;
+  return { logo, antes: nombre.slice(0, inicio), palabra: sony[2], despues: nombre.slice(inicio + sony[2].length) };
+}
+
 /**
  * El aviso de marcas de /sorteo: de quién son las marcas que se nombran y que el sorteo no es de ellas. Se arma con lo que
  * dice el premio. Con una marca que no se reconoce, queda el aviso general.

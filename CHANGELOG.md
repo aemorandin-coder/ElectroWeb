@@ -10,6 +10,20 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.80] - 2026-11-15
+Los amigos invitados y los boletos del sorteo, más claros (C-262). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Marketing 1.22.0 (C-262)
+- **"Invitando amigos", en "Tus boletos" de `/sorteo`:**
+  - cuántos boletos se ganaron invitando, y el par que se está llenando con "Te falta 1 amigo para tu próximo boleto";
+  - cada amigo con su nombre corto y su sello (Cuenta, Falta activar, Falta su teléfono o No suma) y, si hace falta, por qué;
+  - "Recordarles por WhatsApp", con el mensaje listo y sin el número del amigo.
+- **La tarjeta del sorteo de Mi panel** dice lo de los amigos: "2 amigos tuyos todavía no cuentan" o "Te falta 1 amigo para tu próximo boleto".
+- **La campana:** cuando un amigo se une con tu enlace, cuando ya cuenta o no suma, y cada boleto ganado. Antes solo llegaba el correo del boleto.
+### Clientes 1.6.3 (C-262)
+- **El amigo que entró con Google** (ya activado, sin teléfono) avisa a quien lo invitó al agregar su teléfono. Antes no avisaba nunca.
+### Marco del panel 1.14.2 y Carrito, checkout y cuenta del cliente 1.10.1 (C-262)
+- **El ícono del boleto en la campana** y los números de los amigos para la tarjeta de Mi panel.
+
 ## [1.0.0-rc.79] - 2026-11-15
 La semana del ganador del sorteo (C-254). **Cambia la base:** seis columnas nuevas en `sorteos`, aditivas (`SIGUIENTE.md` §2). Sin variables nuevas, sin SQL de datos y sin cron.
 ### Marketing 1.21.0 (C-254)

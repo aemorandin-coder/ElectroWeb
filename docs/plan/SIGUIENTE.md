@@ -1,9 +1,13 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.79; nada por subir: §2)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.79; en `main`, rc.80 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-262 · Los amigos invitados y los boletos, más claros (rc.80, por subir: §2; `estado/C-262.md`):** las preguntas del equipo del 15/11 sobre cómo sabe el cliente sus boletos y sus amigos.
+  - **En `/sorteo`:** "Invitando amigos", con "Te falta 1 amigo para tu próximo boleto", cada amigo con su sello y "Recordarles por WhatsApp".
+  - **En Mi panel:** la línea de los amigos en la tarjeta del sorteo. En la campana: los avisos del sorteo.
+  - **Sigue C-263** (un agente): el boleto épico animado y el flyer para compartir, con maquetas primero.
 - **C-254 · La semana del ganador (rc.79, en producción; `estado/C-254.md`):** el pedido del equipo del 15/11. Eligió lo recomendado en las 7 preguntas, viendo las maquetas (`~/.cache/electroshop-trabajo/c254/index.html`).
   - **La bandera del inicio, por etapas:**
     - cerrado: "Resultado el 20 de diciembre", y ese día, "Hoy sale el ganador";
@@ -393,8 +397,19 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Lo que falta subir: nada por ahora
-Producción está en `v1.0.0-rc.79` (`e68d68f`); su bloque está en `HISTORIAL.md`.
+### Lo que falta subir: `v1.0.0-rc.80` (C-262; unos 15 minutos)
+Producción está en `v1.0.0-rc.79` (`e68d68f`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-262 (rc.80):** los amigos invitados y los boletos, más claros. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo antes.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.80`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 10 minutos, en el teléfono):
+  1. **`/sorteo` con una cuenta que invitó amigos** (por ejemplo, la de prueba de rc.74, con un amigo registrado con su enlace):
+      - en "Tus boletos" sale "Invitando amigos", con "0 de 3 boletos" y la frase de lo que falta;
+      - cada amigo con su nombre corto ("Luisa P.") y su sello;
+      - si alguno no activó su cuenta, "Recordarles por WhatsApp" abre WhatsApp con el mensaje listo.
+  2. **Mi panel** con esa cuenta: la tarjeta del sorteo dice lo de los amigos ("1 amigo tuyo todavía no cuenta" o "Te falta 1 amigo…").
+  3. **La campana:** registra un amigo nuevo con tu enlace, en una ventana privada. En tu campana sale "… se unió con tu enlace". Al activar su cuenta desde su correo, sale "… ya cuenta para tu boleto" o "¡Ganaste un boleto!".
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.79 && npm install && bash scripts/deploy.sh --sin-pull`. No hay nada de base que deshacer.
 
 ### Por confirmar de rc.79 (C-261, C-260 y C-254; unos 20 minutos)
 Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera:

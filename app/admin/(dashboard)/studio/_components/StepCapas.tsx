@@ -2,14 +2,15 @@
 
 // C-270: el paso "Textos y stickers" (docs/plan/ELECTROSTUDIO.md, Fase 2): agregar títulos, subtítulos y textos sueltos,
 // la lista de piezas (la de arriba va adelante) y lo de la pieza elegida. Se mueven y se agrandan sobre la vista previa.
-import { useId, type RefObject } from 'react';
+import { useEffect, useId, type RefObject } from 'react';
 import {
   IconoAbrirCandado, IconoCandado, IconoCopiar, IconoEliminar, IconoFlechaAbajo, IconoFlechaArriba, IconoMas, IconoMenos,
   IconoOcultar, IconoTexto, IconoVer,
 } from '@/components/iconos';
 import CampoUnidad from '@/components/admin/CampoUnidad';
 import { adminHint, adminInput, adminLabel } from '@/lib/admin-ui';
-import { nombreCapa, puedeAgregarCapa, tamTexto } from '@/lib/studio/capas';
+import { ESTILOS_LISTOS, estiloListoDe, nombreCapa, puedeAgregarCapa, tamTexto } from '@/lib/studio/capas';
+import { FUENTES, FUENTES_IDS, cargarFuentes, cssFuente, fuenteDe, pesoEn } from '@/lib/studio/fuentes';
 import { formatHeight, W } from '@/lib/studio/engine';
 import {
   ALINEAR_CAPA, CAPAS_MAX, ESTILOS_CAPA, FONDOS_CAPA, TAM_TEXTO, type AlinearCapa, type CapaTexto, type EstiloCapa, type FondoCapa, type StudioCapa,
@@ -40,7 +41,8 @@ function colores(studio: Studio): [string, string][] {
 }
 
 const PESOS: [number, string][] = [
-  [600, 'Normal'],
+  [400, 'Normal'],
+  [600, 'Seminegrita'],
   [800, 'Negrita'],
   [900, 'Extra'],
 ];
@@ -59,6 +61,15 @@ export default function StepCapas({ studio, sel, onSel, acciones, textoRef }: {
   const elegida = capas.find((c) => c.id === sel) ?? null;
   const alto = formatHeight(f.format);
   const lleno = !puedeAgregarCapa(capas);
+  const fuente = elegida ? fuenteDe(elegida.fuente) : null;
+  // Los pesos que de verdad tiene la fuente (Anton y Bebas, uno solo), sin repetidos
+  const pesos: [number, string][] = [];
+  if (fuente) {
+    for (const [p, n] of PESOS) {
+      const v = pesoEn(fuente, p);
+      if (!pesos.some(([q]) => q === v)) pesos.push([v, n]);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -141,8 +152,53 @@ export default function StepCapas({ studio, sel, onSel, acciones, textoRef }: {
               onChange={(e) => acciones.cambiar(elegida.id, { texto: e.target.value })}
               className={`${adminInput()} h-auto py-2`}
             />
-            <p className={adminHint}>Enter baja de línea. Para mover la pieza, arrástrala en la vista previa.</p>
+            <p className={adminHint}>Enter baja de línea. Para resaltar una palabra, ponla entre asteriscos: ¡Feliz *Navidad*!</p>
           </div>
+
+          <CargarFuentes />
+          <fieldset>
+            <legend className={adminLabel}>Estilo listo</legend>
+            <div className="flex flex-wrap gap-2">
+              {ESTILOS_LISTOS.map((e) => {
+                const activo = estiloListoDe(elegida) === e.id;
+                const f = e.cambio;
+                return (
+                  <button
+                    key={e.id}
+                    type="button"
+                    aria-pressed={activo}
+                    onClick={() => acciones.cambiar(elegida.id, e.cambio)}
+                    className={`inline-flex h-10 items-center rounded-lg border px-3 text-ink transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 ${activo ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-100' : 'border-line bg-white hover:bg-surface'}`}
+                    style={{ font: cssFuente(f.fuente ?? 'montserrat', f.peso ?? 700, f.cursiva ?? false, 17), textTransform: f.mayusculas ? 'uppercase' : undefined }}
+                  >
+                    {e.nombre}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend className={adminLabel}>Fuente</legend>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {FUENTES_IDS.map((id) => {
+                const f = FUENTES[id];
+                const activo = elegida.fuente === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={activo}
+                    onClick={() => acciones.cambiar(elegida.id, { fuente: id })}
+                    className={`flex min-w-0 flex-col items-start gap-0.5 rounded-xl border px-3 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 ${activo ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-100' : 'border-line bg-white hover:bg-surface'}`}
+                  >
+                    <span className="max-w-full truncate text-ink" style={{ font: cssFuente(id, 700, false, 21) }}>{f.nombre}</span>
+                    <span className="max-w-full truncate text-xs text-muted">{f.rol}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
 
           <div>
             <span className={adminLabel} id={`${ids}-tam-et`}>Tamaño</span>
@@ -216,17 +272,33 @@ export default function StepCapas({ studio, sel, onSel, acciones, textoRef }: {
                   ['contorno', 'Contorno'],
                   ['sombra', 'Sombra'],
                 ] as const
-              ).map(([campo, nombre]) => (
-                <button key={campo} type="button" aria-pressed={elegida[campo]} onClick={() => acciones.cambiar(elegida.id, { [campo]: !elegida[campo] })} className={toggleButton(elegida[campo])}>
-                  {nombre}
-                </button>
-              ))}
-              <label className="sr-only" htmlFor={`${ids}-peso`}>Grosor</label>
-              <select id={`${ids}-peso`} value={elegida.peso} onChange={(e) => acciones.cambiar(elegida.id, { peso: Number(e.target.value) })} className={`${adminInput()} h-9 w-auto`}>
-                {PESOS.map(([p, n]) => (
-                  <option key={p} value={p}>{n}</option>
-                ))}
-              </select>
+              ).map(([campo, nombre]) => {
+                const sinCursiva = campo === 'cursiva' && !fuente?.cursiva;
+                const activo = elegida[campo] && !sinCursiva;
+                return (
+                  <button
+                    key={campo}
+                    type="button"
+                    aria-pressed={activo}
+                    disabled={sinCursiva}
+                    title={sinCursiva ? `${fuente?.nombre} no tiene cursiva` : undefined}
+                    onClick={() => acciones.cambiar(elegida.id, { [campo]: !elegida[campo] })}
+                    className={`${toggleButton(activo)} disabled:cursor-not-allowed disabled:opacity-50`}
+                  >
+                    {nombre}
+                  </button>
+                );
+              })}
+              {pesos.length > 1 && (
+                <>
+                  <label className="sr-only" htmlFor={`${ids}-peso`}>Grosor</label>
+                  <select id={`${ids}-peso`} value={fuente ? pesoEn(fuente, elegida.peso) : elegida.peso} onChange={(e) => acciones.cambiar(elegida.id, { peso: Number(e.target.value) })} className={`${adminInput()} h-9 w-auto`}>
+                    {pesos.map(([p, n]) => (
+                      <option key={p} value={p}>{n}</option>
+                    ))}
+                  </select>
+                </>
+              )}
             </div>
           </fieldset>
 
@@ -241,7 +313,37 @@ export default function StepCapas({ studio, sel, onSel, acciones, textoRef }: {
             </div>
           </fieldset>
 
-          {elegida.texto.includes('\n') && (
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex h-11 items-center gap-2 text-sm font-semibold text-ink">
+              <input
+                type="checkbox"
+                checked={elegida.anchoMax > 0}
+                onChange={(e) => acciones.cambiar(elegida.id, { anchoMax: e.target.checked ? 860 : 0 })}
+                className="h-4 w-4 accent-brand-500"
+              />
+              Que baje de línea solo
+            </label>
+            {elegida.anchoMax > 0 && (
+              <div>
+                <label htmlFor={`${ids}-ancho`} className={adminLabel}>Ancho máximo</label>
+                <CampoUnidad
+                  id={`${ids}-ancho`}
+                  unidad="px"
+                  type="number"
+                  inputMode="numeric"
+                  min={40}
+                  max={W}
+                  value={elegida.anchoMax}
+                  onChange={(e) => {
+                    const v = Math.round(Number(e.target.value));
+                    if (Number.isFinite(v) && v >= 40) acciones.cambiar(elegida.id, { anchoMax: Math.min(W, v) });
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {(elegida.texto.includes('\n') || elegida.anchoMax > 0) && (
             <fieldset>
               <legend className={adminLabel}>Las líneas, alineadas a la</legend>
               <div className="flex flex-wrap gap-2">
@@ -280,6 +382,14 @@ export default function StepCapas({ studio, sel, onSel, acciones, textoRef }: {
       )}
     </div>
   );
+}
+
+/** Las 8 fuentes, para que el selector muestre cada nombre en su propia letra (se cargan una vez, al abrirlo) */
+function CargarFuentes() {
+  useEffect(() => {
+    void cargarFuentes(FUENTES_IDS);
+  }, []);
+  return null;
 }
 
 const iconito = 'flex h-8 w-8 items-center justify-center rounded-md text-muted hover:bg-surface hover:text-ink disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-brand-500';

@@ -6,6 +6,7 @@ import { formatAmount } from '@/lib/currency';
 import { payIcon, piezasIcono } from './icons';
 import { chispaSrc } from './chispa';
 import { colorClaro } from './capas';
+import { cargarFuentes, cssFuente } from './fuentes';
 import {
   ANIMATIONS,
   BACKGROUNDS,
@@ -40,20 +41,13 @@ export const OFFICIAL_LOGO = { color: '/images/studio/logo-color.png', white: '/
 
 /* ---------- fuentes ---------- */
 const FAMILY = 'StudioMontserrat';
-let fontsReady: Promise<void> | null = null;
 
-/** Montserrat local (OFL, public/fonts). Hasta que cargue, el canvas usa Arial Black. */
-export function loadStudioFonts(): Promise<void> {
-  if (fontsReady) return fontsReady;
-  if (typeof FontFace === 'undefined') return Promise.resolve();
-  const faces = [
-    new FontFace(FAMILY, 'url(/fonts/Montserrat-latin-wght-normal.woff2)', { weight: '100 900', style: 'normal' }),
-    new FontFace(FAMILY, 'url(/fonts/Montserrat-latin-wght-italic.woff2)', { weight: '100 900', style: 'italic' }),
-  ];
-  fontsReady = Promise.all(faces.map((face) => face.load().then((loaded) => void document.fonts.add(loaded))))
-    .then(() => undefined)
-    .catch(() => undefined);
-  return fontsReady;
+/**
+ * Montserrat local (OFL, public/fonts) y, desde C-271, las fuentes que usan las capas de la historia (lib/studio/fuentes).
+ * Hasta que cargan, el canvas usa Arial Black.
+ */
+export function loadStudioFonts(f?: Pick<StudioFlyerData, 'capas'> | null): Promise<void> {
+  return cargarFuentes(['montserrat', ...(f?.capas ?? []).map((c) => c.fuente)]);
 }
 
 const F = (w: number, s: number, it = true) => `${it ? 'italic ' : ''}${w} ${s}px ${FAMILY}, "Arial Black", Arial, sans-serif`;
@@ -2835,7 +2829,42 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     const pts = [[cx, cy], [cx - w / 2, cy - h / 2], [cx + w / 2, cy - h / 2], [cx - w / 2, cy + h / 2], [cx + w / 2, cy + h / 2]];
     return pts.reduce((s, [x, y]) => s + lumLienzo(x, y), 0) / pts.length < 150;
   }
-  const fuenteCapa = (c: CapaTexto, size: number) => `${c.cursiva ? 'italic ' : ''}${c.peso} ${size}px ${FAMILY}, "Arial Black", Arial, sans-serif`;
+  const fuenteCapa = (c: CapaTexto, size: number) => cssFuente(c.fuente, c.peso, c.cursiva, size);
+  /** "Feliz *Navidad*" → [{ t: 'Feliz ', hl: false }, { t: 'Navidad', hl: true }] */
+  function trozos(linea: string): { t: string; hl: boolean }[] {
+    const out: { t: string; hl: boolean }[] = [];
+    linea.split('*').forEach((t, i) => {
+      if (t) out.push({ t, hl: i % 2 === 1 });
+    });
+    return out.length ? out : [{ t: '', hl: false }];
+  }
+  /** Las líneas de la capa: un renglón por cada Enter y, con ancho máximo, las que hagan falta para no pasarse */
+  function lineasCapa(c: CapaTexto, texto: string): string[] {
+    const renglones = texto.split('\n');
+    if (!c.anchoMax) return renglones.slice(0, 8);
+    const sinMarcas = (l: string) => ctx.measureText(l.replace(/\*/g, '')).width;
+    const out: string[] = [];
+    renglones.forEach((r) => {
+      let linea = '';
+      r.split(/(\s+)/).forEach((pedazo) => {
+        if (!pedazo) return;
+        const prueba = linea + pedazo;
+        if (linea.trim() && !/^\s+$/.test(pedazo) && sinMarcas(prueba) > c.anchoMax) {
+          out.push(linea.trimEnd());
+          linea = pedazo;
+        } else linea = prueba;
+      });
+      out.push(linea.trimEnd());
+    });
+    // Un resaltado que cruza de línea sigue en la siguiente
+    let abierto = false;
+    return out.slice(0, 12).map((l) => {
+      const conMarca = abierto ? `*${l}` : l;
+      const n = (l.match(/\*/g) ?? []).length;
+      if (n % 2 === 1) abierto = !abierto;
+      return abierto && conMarca.split('*').length % 2 === 0 ? `${conMarca}*` : conMarca;
+    });
+  }
 
   function drawCapas(f: StudioFlyerData, preview: boolean) {
     cajas = [];
@@ -2845,11 +2874,11 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
 
   function drawCapaTexto(c: CapaTexto, i: number, preview: boolean) {
     const texto = c.mayusculas ? c.texto.toLocaleUpperCase('es') : c.texto;
-    const lineas = texto.split('\n').slice(0, 8);
-    const vacia = !texto.trim();
+    const vacia = !texto.replace(/\*/g, '').trim();
     ctx.save();
     ctx.font = fuenteCapa(c, c.tam);
-    const anchos = lineas.map((l) => ctx.measureText(l).width);
+    const lineas = lineasCapa(c, texto);
+    const anchos = lineas.map((l) => ctx.measureText(l.replace(/\*/g, '')).width);
     const w = Math.max(c.tam * 0.8, ...anchos);
     const lh = c.tam * 1.08;
     const h = lh * lineas.length;
@@ -2862,7 +2891,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     ctx.restore();
     if (c.oculta) return;
     // Los avisos (C-116, con las capas): fuera del lienzo, muy chica, o donde Instagram tapa
-    const nombre = texto.replace(/\s+/g, ' ').trim();
+    const nombre = texto.replace(/\*/g, '').replace(/\s+/g, ' ').trim();
     if (nombre) {
       const rad = (Math.abs(c.giro) * Math.PI) / 180;
       const ax = (bw * Math.cos(rad) + bh * Math.sin(rad)) / 2;
@@ -2918,25 +2947,38 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     }
     const color = c.color || (c.fondo === 'cinta' || c.fondo === 'pildora' ? '#FFFFFF' : c.fondo === 'caja' ? INK : oscuro ? '#FFFFFF' : INK);
     const claro = colorClaro(color);
+    // Lo resaltado con *asteriscos*, como en la plantilla Mensaje: azul claro sobre un texto claro, el secundario sobre uno oscuro
+    const resalte = claro ? LIGHT_ON_DARK : SE();
     ctx.font = fuenteCapa(c, c.tam);
     ctx.textBaseline = 'middle';
-    ctx.textAlign = c.alinear === 'izquierda' ? 'left' : c.alinear === 'derecha' ? 'right' : 'center';
-    const xt = c.alinear === 'izquierda' ? -w / 2 : c.alinear === 'derecha' ? w / 2 : 0;
+    ctx.textAlign = 'left';
     lineas.forEach((l, k) => {
-      const linea = typed(l, t0 + 0.1 + k * 0.25, 0.6);
+      // "Escribir": la línea aparece letra por letra (sin contar los asteriscos)
+      let quedan = typed(l.replace(/\*/g, ''), t0 + 0.1 + k * 0.25, 0.6).length;
+      const partes = trozos(l).map((p) => {
+        const t = p.t.slice(0, Math.max(0, quedan));
+        quedan -= p.t.length;
+        return { ...p, t };
+      });
+      const anchoLinea = anchos[k];
+      let x = c.alinear === 'izquierda' ? -w / 2 : c.alinear === 'derecha' ? w / 2 - anchoLinea : -anchoLinea / 2;
       const y = -h / 2 + lh * (k + 0.5) + c.tam * 0.04;
-      if (c.sombra) {
-        ctx.fillStyle = claro ? alpha(INK, 0.85) : 'rgba(255,255,255,.85)';
-        ctx.fillText(linea, xt, y + c.tam * 0.07);
-      }
-      if (c.contorno) {
-        ctx.lineJoin = 'round';
-        ctx.lineWidth = Math.max(2, c.tam * 0.12);
-        ctx.strokeStyle = claro ? INK : '#FFFFFF';
-        ctx.strokeText(linea, xt, y);
-      }
-      ctx.fillStyle = color;
-      ctx.fillText(linea, xt, y);
+      partes.forEach((p) => {
+        if (!p.t) return;
+        if (c.sombra) {
+          ctx.fillStyle = claro ? alpha(INK, 0.85) : 'rgba(255,255,255,.85)';
+          ctx.fillText(p.t, x, y + c.tam * 0.07);
+        }
+        if (c.contorno) {
+          ctx.lineJoin = 'round';
+          ctx.lineWidth = Math.max(2, c.tam * 0.12);
+          ctx.strokeStyle = claro ? INK : '#FFFFFF';
+          ctx.strokeText(p.t, x, y);
+        }
+        ctx.fillStyle = p.hl ? resalte : color;
+        ctx.fillText(p.t, x, y);
+        x += ctx.measureText(p.t).width;
+      });
     });
     ctx.restore();
   }

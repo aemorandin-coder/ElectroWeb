@@ -57,7 +57,7 @@
 | 0 | **C-268** | El video (hecha) | 1.2.9 (rc.85) |
 | 1 | **C-269** | Este plan y las maquetas | (sin código) |
 | 2 | **C-270** | Las capas, el editor nuevo y la ruta de pasos (hecha, rc.86) | **2.0.0** |
-| 3 | **C-271** | Títulos, subtítulos y fuentes | 2.1.0 |
+| 3 | **C-271** | Títulos, subtítulos y fuentes (hecha, rc.87; soltar un texto de la plantilla, pendiente) | 2.1.0 |
 | 4 | **C-272** | Stickers | 2.2.0 |
 | 5 | **C-273** | Animaciones de entrada y de salida, y la línea de tiempo | 2.3.0 |
 | 6 | **C-274** | Plantillas nuevas | 2.4.0 |
@@ -88,7 +88,7 @@ El 2.0.0 va en C-270 porque cambia la forma de trabajar (los pasos y el editor).
 - que una historia vieja (sin capas) se abra y se descargue igual que antes;
 - a 360, 768, 1024 y 1440 px.
 
-### Fase 3 · C-271 · Títulos, subtítulos y fuentes
+### Fase 3 · C-271 · Títulos, subtítulos y fuentes (hecha el 16/11, `estado/C-271.md`; soltar un texto de la plantilla, pendiente)
 - **"+ Título" y "+ Subtítulo"** (y "+ Texto"), cada uno con un estilo listo:
   - **Título de oferta:** grande, en mayúsculas, con contorno;
   - **Subtítulo:** mediano, en una cinta del color de la marca;

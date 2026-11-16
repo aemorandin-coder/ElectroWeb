@@ -10,6 +10,14 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.87] - 2026-11-16
+Las fuentes y los estilos de los textos de ElectroStudio (C-271). Sin cambio de base, sin SQL, sin variables nuevas y sin cron. Archivos nuevos: las fuentes en `public/fonts/studio/`, cada una con su licencia.
+### ElectroStudio 2.1.0 (C-271)
+- **Ocho fuentes** con licencia libre, guardadas en la tienda (no se piden a otro sitio): Montserrat, Anton, Bebas Neue, Unbounded, Space Grotesk, Rubik, Caveat y Playfair Display. Se cargan solo cuando una historia las usa.
+- **Nueve estilos listos** para los títulos y textos sueltos: cambian la letra, el contorno, la sombra y el fondo en un toque.
+- **Resaltar con asteriscos:** "¡Feliz \*Navidad\*!" pinta la palabra en el azul de la historia.
+- **"Que baje de línea solo"** con el ancho máximo en px.
+
 ## [1.0.0-rc.86] - 2026-11-16
 ElectroStudio 2.0: las capas, el editor A y la ruta de seis pasos (C-270). Sin cambio de base (las capas van dentro de la historia), sin SQL, sin variables nuevas y sin cron.
 ### ElectroStudio 2.0.0 (C-270)

@@ -10,6 +10,16 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.81] - 2026-11-15
+Un amigo, dos cuentas: cuenta para quien lo invitó primero (C-264). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Marketing 1.23.0 (C-264)
+- **La misma persona con dos cuentas** (el mismo teléfono, cada una con el enlace de alguien distinto) cuenta una sola vez, para quien la invitó primero.
+  - Antes, los dos que la invitaban la veían como "Cuenta", y la lista que se sortea se la daba a quien había entrado antes al sorteo.
+  - Ahora la pantalla de cada cliente, la lista y los avisos salen del mismo reparto: lo que se ve es lo que cuenta.
+- **En "Tus boletos",** el amigo repetido dice "Ya cuenta con otra cuenta".
+- **Si un participante pierde un amigo así,** le llega a la campana con sus boletos de ahora.
+- **Las bases** suman: "si se registra con el enlace de dos participantes, cuenta para quien la invitó primero".
+
 ## [1.0.0-rc.80] - 2026-11-15
 Los amigos invitados y los boletos del sorteo, más claros (C-262). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Marketing 1.22.0 (C-262)

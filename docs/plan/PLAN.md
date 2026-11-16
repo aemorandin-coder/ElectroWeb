@@ -808,9 +808,16 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **C-231 · Los movimientos de la web:** cobros por forma de pago, Puntos ES, gift cards, devoluciones y comisiones. El costo y el margen, solo para el dueño.
   - **C-233 · Listos para el 19/04/2027:** el talonario de contingencia, la fecha y la hora en cada factura, "Preparar para el portal" y la lista del calendario (`CONTABILIDAD.md` §7).
 
-- **ElectroStudio** (pedido del 16/11: arreglar el video y mejorar mucho la herramienta; el plan va en C-269):
+- **ElectroStudio 2.0** (pedido del 16/11: arreglar el video y mejorar mucho la herramienta; el plan en `ELECTROSTUDIO.md`, C-269). En este orden:
   - **C-268 · El video** (**hecha**, rc.85, 16/11; `estado/C-268.md`): "(0 , p.recordCanvas) is not a function" no se reprodujo con rc.84 en pestaña nueva; el editor importa la grabación directo, una descarga que falla así dice "El panel se actualizó…" con "Guardar y recargar", y la grabación se detiene con su aviso si la pestaña se oculta.
     - **Si el error vuelve después de recargar,** investigar con la hora y la página. La alternativa de fondo es el `deploymentId` de Next, que C-203 descartó porque después de cada deploy se vuelve a bajar todo, también las fotos.
+  - **C-269 · El plan y las maquetas** (**hecha**, 16/11; `estado/C-269.md`): el equipo eligió lo recomendado en las seis decisiones (`ELECTROSTUDIO.md` §6).
+  - **C-270 · Las capas, el editor A y la ruta de seis pasos** (ElectroStudio 2.0.0).
+  - **C-271 · Títulos, subtítulos y las 8 fuentes** (2.1.0).
+  - **C-272 · Los stickers, en 6 grupos** (2.2.0).
+  - **C-273 · Entradas, énfasis y salidas, la línea de tiempo y la duración del video** (2.3.0).
+  - **C-274 · Las 6 plantillas nuevas** (2.4.0): Lista de precios, Combo, Cuenta regresiva, ¿Cuál prefieres?, Lienzo libre y Antes y después.
+  - **C-275 · La IA: las 5 mejoras** (2.5.0): Armar con Claude, Ideas de título, el texto de Instagram, la Revisión de Claude y Acortar. Para después: "Tres versiones".
 
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).

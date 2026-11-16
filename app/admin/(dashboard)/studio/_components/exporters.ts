@@ -1,18 +1,13 @@
-// Descargas de ElectroStudio (C-112): imagen, video y archivos juntos.
+// Descargas de ElectroStudio (C-112): el nombre del archivo y las fotos que se suben.
 // C-263: bajar, compartir y grabar están en lib/studio/exportar.ts (los usa también el flyer del sorteo de la tienda).
-import { DURATION } from '@/lib/studio/engine';
-import { canvasBlob, recordCanvas as grabarCanvas } from '@/lib/studio/exportar';
+// C-268: el editor los importa de ahí directamente. Antes pasaban por aquí (re-exportados y con un envoltorio de la
+// grabación), y una pestaña con código de dos versiones dio "(0 , p.recordCanvas) is not a function".
+import { canvasBlob } from '@/lib/studio/exportar';
 import { FORMATS, slugify, type StudioFlyerData } from '@/lib/studio/schema';
-
-export { canvasBlob };
-export { downloadBlob, pickVideoType, shareFile } from '@/lib/studio/exportar';
 
 /** Nombre del archivo descargado, sin la extensión: "audifonos-electroshop-historia" */
 export const fileBase = (f: StudioFlyerData) =>
   `${slugify(f.name || f.products[0]?.title || 'historia')}-electroshop-${f.format === 'story' ? 'historia' : `post-${FORMATS[f.format].short.replace(':', 'x')}`}`;
-
-/** Graba el canvas mientras `drawAt(t)` pinta cada instante de la animación (7 s, 30 cuadros por segundo). */
-export const recordCanvas = (canvas: HTMLCanvasElement, type: string, drawAt: (t: number) => void) => grabarCanvas(canvas, type, drawAt, DURATION);
 
 /** Foto lista para subir: las muy grandes se achican a 1600 px (el servidor acepta hasta 5 MB) */
 export async function prepareUpload(file: File): Promise<Blob> {

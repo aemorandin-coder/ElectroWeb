@@ -54,8 +54,29 @@ export function pickVideoType(): string | null {
   );
 }
 
-/** Graba el canvas mientras `drawAt(t)` pinta cada instante de la animación (`duracion` segundos, 30 cuadros por segundo). */
+/**
+ * C-268: la grabación se cortó. Con la pestaña oculta el navegador deja de pintar cuadros (requestAnimationFrame se
+ * detiene), y antes el video quedaba "grabando" para siempre, con los botones de descarga apagados hasta recargar.
+ */
+export class GrabacionInterrumpida extends Error {
+  constructor(public motivo: 'pestana' | 'grabador' | 'tiempo') {
+    super(
+      motivo === 'pestana'
+        ? 'Se detuvo el video porque saliste de la pestaña. Vuelve a descargarlo y quédate aquí hasta que termine.'
+        : motivo === 'tiempo'
+          ? 'El video tardó demasiado en grabarse. Vuelve a intentarlo.'
+          : 'El navegador no pudo grabar el video. Prueba otra vez, o descarga la imagen.',
+    );
+    this.name = 'GrabacionInterrumpida';
+  }
+}
+
+/**
+ * Graba el canvas mientras `drawAt(t)` pinta cada instante de la animación (`duracion` segundos, 30 cuadros por segundo).
+ * Lanza GrabacionInterrumpida si la pestaña se oculta, si el grabador falla o si los cuadros dejan de llegar.
+ */
 export async function recordCanvas(canvas: HTMLCanvasElement, type: string, drawAt: (t: number) => void, duracion: number): Promise<Blob> {
+  if (document.visibilityState === 'hidden') throw new GrabacionInterrumpida('pestana');
   const stream = canvas.captureStream(30);
   const rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 10_000_000 });
   const chunks: Blob[] = [];
@@ -63,20 +84,47 @@ export async function recordCanvas(canvas: HTMLCanvasElement, type: string, draw
     if (e.data && e.data.size) chunks.push(e.data);
   };
   const done = new Promise<void>((resolve) => (rec.onstop = () => resolve()));
-  drawAt(0);
-  rec.start(250);
-  const t0 = performance.now();
-  await new Promise<void>((resolve) => {
+  let terminar: () => void = () => {};
+  const fin = new Promise<void>((resolve) => (terminar = resolve));
+  let corte: unknown = null;
+  const cortar = (motivo: unknown) => {
+    corte ??= motivo;
+    terminar();
+  };
+  rec.onerror = () => cortar(new GrabacionInterrumpida('grabador'));
+  const alOcultar = () => {
+    if (document.visibilityState === 'hidden') cortar(new GrabacionInterrumpida('pestana'));
+  };
+  document.addEventListener('visibilitychange', alOcultar);
+  // Vigía: si los cuadros dejan de llegar (equipo trabado), se corta en vez de quedar grabando para siempre
+  const vigia = setTimeout(() => cortar(new GrabacionInterrumpida('tiempo')), (duracion + 8) * 1000);
+  try {
+    drawAt(0);
+    rec.start(250);
+    const t0 = performance.now();
     const step = (now: number) => {
+      if (corte) return;
       const t = Math.min(duracion, (now - t0) / 1000);
-      drawAt(t);
+      try {
+        drawAt(t);
+      } catch (error) {
+        cortar(error);
+        return;
+      }
       if (t < duracion) requestAnimationFrame(step);
-      else setTimeout(resolve, 200);
+      else setTimeout(terminar, 200);
     };
     requestAnimationFrame(step);
-  });
-  rec.stop();
-  await done;
-  stream.getTracks().forEach((t) => t.stop());
+    await fin;
+  } finally {
+    clearTimeout(vigia);
+    document.removeEventListener('visibilitychange', alOcultar);
+    if (rec.state !== 'inactive') {
+      rec.stop();
+      await done;
+    }
+    stream.getTracks().forEach((t) => t.stop());
+  }
+  if (corte) throw corte;
   return new Blob(chunks, { type: type.split(';')[0] });
 }

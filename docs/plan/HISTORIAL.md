@@ -1,10 +1,27 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.83`, comprobada el 16/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.84`, comprobada el 16/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 16/11 · C-267 (de rc.83 a `v1.0.0-rc.84`)
+La subió el equipo con el bloque de Claude (`git pull --ff-only` y `deploy.sh --sin-pull`; sin base, sin SQL y sin cron). No lo avisó en el chat: Claude lo vio el 16/11 al revisar el error del video (C-268).
+
+**Lo comprobado desde fuera, el 16/11:**
+- **La portada dice `1.0.0-rc.84|7504584`,** compilada el 16/11 a las 7:15 a. m. (11:15 UTC).
+- **Los archivos del navegador del estudio** son idénticos a los de un build local del mismo commit (C-268).
+
+**Falta que el equipo haga las pruebas** (`SIGUIENTE.md`, "Por confirmar de rc.84"): Mis pedidos y Puntos ES en el teléfono.
+
+### El bloque que se subió: `v1.0.0-rc.84` (C-267)
+- **C-267 (rc.84):** Mis pedidos y Puntos ES ya no se salen del teléfono, y el flyer tiene salida cuando el teléfono no comparte. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+- **Pruebas** (5 minutos, en el teléfono, con tu cuenta):
+  1. **Mis pedidos:** la página entra en la pantalla con la letra de siempre. Las píldoras de los filtros se deslizan de lado dentro de su fila, sin mover la página.
+  2. **Puntos ES → Movimientos:** lo mismo con sus filtros.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.83 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ## 16/11 · C-262, C-264, C-263 y C-265 (de rc.79 a `v1.0.0-rc.83`)
 La subió el equipo con el bloque de Claude: el respaldo, `git pull --ff-only`, `deploy.sh --sin-pull`, `npx prisma db push` para la columna `ganadorCodigo` de `sorteos` y `deploy.sh --sin-pull` otra vez. No lo avisó en el chat: Claude lo vio al comprobar la versión.

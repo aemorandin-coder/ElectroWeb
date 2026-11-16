@@ -182,6 +182,9 @@ Build con el `DATABASE_URL` de `rev10_demo` y `NEXT_DIST_DIR=.next-test`, y `nex
   - Admin: `userType: 'admin'` y `dosPasos: true` (sin eso no tiene permisos y el `proxy` lo manda a Mi seguridad). Para el flujo real: login por HTTP y el código TOTP calculado con la clave que devuelve `POST /api/admin/dos-pasos {accion:'iniciar'}`.
   - Cliente: `userType: 'customer'` y `emailVerified`.
 - **Navegador:** Firefox headless con WebDriver BiDi, a 360, 768, 1024 y 1440 px.
+  - **Chrome, cuando el error es de Chrome (C-268):** el de la máquina de Andrés es Flatpak. Una instancia aparte, sin ventana y con perfil propio, no toca el suyo: `flatpak run com.google.Chrome --headless=new --remote-debugging-port=<otro> --user-data-dir=$HOME/.cache/electroshop-trabajo/<tarea>/perfil` y CDP con el `ws` de Next (el perfil va en el home: Flatpak no ve `/tmp`).
+  - **En una pestaña oculta, `requestAnimationFrame` da 0 cuadros** (Chrome sin ventana también): con varias pestañas, solo anima la activa (`Target.activateTarget`). Una grabación o una animación en otra pestaña se queda quieta.
+  - **Para simular un deploy con la pestaña abierta (C-268):** compilar la versión anterior en otra carpeta (`NEXT_DIST_DIR`), abrir las pestañas con ella, apagarla y levantar la nueva en el mismo puerto.
   - Para leer un canvas, `canvas[role=img]`: el primer `<canvas>` puede ser una miniatura.
   - Detener las animaciones antes de capturar.
 - **Sin scroll de lado, la cuenta buena (C-267):** en modo teléfono (`isMobile`), Chrome agranda la ventana para que quepa lo que se sale, y `scrollWidth <= innerWidth` da bien aunque la página se salga.

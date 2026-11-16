@@ -25,7 +25,7 @@ import {
   cargarImagen, cargarPoppins, chispaDelFlyer, dibujarFlyer, FLYER_ANIMA, FLYER_DURA, FLYER_H, FLYER_W, LOGO_BLANCO,
   type DatosFlyer, type RecursosFlyer, type SorteoParaDibujar,
 } from '@/lib/sorteo/dibujo';
-import { canvasBlob, downloadBlob, pickVideoType, puedeCompartirArchivo, recordCanvas } from '@/lib/studio/exportar';
+import { canvasBlob, downloadBlob, GrabacionInterrumpida, pickVideoType, puedeCompartirArchivo, recordCanvas } from '@/lib/studio/exportar';
 import { recursosDelBoleto } from './BoletoEpico';
 
 const ANCHO_CHISPA = 104;
@@ -190,8 +190,9 @@ export default function CompartirFlyer({ datos, sorteo, foto, texto, alCerrar }:
       const blob = await recordCanvas(c, tipo, (t) => dibujarFlyer(ctx, datos, sorteo, recursos, t), FLYER_DURA);
       downloadBlob(blob, `${ARCHIVO}.${tipo.startsWith('video/mp4') ? 'mp4' : 'webm'}`);
       toast.success(tipo.startsWith('video/mp4') ? 'Listo: se descargó tu video.' : 'Listo: se descargó tu video (WEBM: Instagram prefiere MP4, usa Chrome actualizado).');
-    } catch {
-      toast.error('No se pudo grabar el video. Descarga la imagen.');
+    } catch (error) {
+      // C-268: si se salió de la pestaña, decirlo (antes el video quedaba grabando para siempre)
+      toast.error(error instanceof GrabacionInterrumpida ? error.message : 'No se pudo grabar el video. Descarga la imagen.');
     } finally {
       setGrabando(false);
     }

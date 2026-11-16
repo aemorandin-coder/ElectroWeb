@@ -25,8 +25,10 @@ import {
   type ProductSrc,
   type StudioRenderer,
 } from '@/lib/studio/engine';
+import { canvasBlob, downloadBlob, GrabacionInterrumpida, pickVideoType, recordCanvas, shareFile } from '@/lib/studio/exportar';
 import { FORMATS, TEMPLATES, type BackgroundId, type FormatId, type StudioFlyerData } from '@/lib/studio/schema';
-import { canvasBlob, downloadBlob, fileBase, pickVideoType, recordCanvas, shareFile, uploadStudioImage } from './exporters';
+import { esErrorDeVersion } from '@/lib/version-build';
+import { fileBase, uploadStudioImage } from './exporters';
 import StepContent from './StepContent';
 import StepDesign from './StepDesign';
 import StepPhoto from './StepPhoto';
@@ -66,6 +68,32 @@ const PREVIEW_CLASS: Record<FormatId, string> = {
   post45: 'aspect-[4/5] max-w-xs sm:max-w-sm lg:w-[min(100%,calc((100dvh_-_14rem)*4/5))]',
   post11: 'aspect-square max-w-xs sm:max-w-sm lg:w-[min(100%,calc(100dvh_-_14rem))]',
 };
+
+/**
+ * C-268: la pestaña juntó código de dos versiones (quedó abierta durante un deploy) y una descarga falló. En vez del error
+ * crudo ("(0 , p.recordCanvas) is not a function"), qué hacer y el botón: guarda lo pendiente y recarga.
+ */
+function avisarRecargar(guardar: () => Promise<unknown>) {
+  toast.error(
+    (t) => (
+      <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        El panel se actualizó mientras lo tenías abierto. Recarga la página y vuelve a descargar.
+        <button
+          type="button"
+          onClick={async () => {
+            toast.dismiss(t.id);
+            await guardar().catch(() => undefined);
+            window.location.reload();
+          }}
+          className="font-semibold text-brand-600 underline"
+        >
+          Guardar y recargar
+        </button>
+      </span>
+    ),
+    { id: 'studio-version', duration: 20000 },
+  );
+}
 
 const STATUS_TEXT: Record<SaveStatus, string> = {
   idle: '',
@@ -299,7 +327,9 @@ export default function Studio({ id }: { id: string }) {
     try {
       await fn();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'No se pudo exportar');
+      if (esErrorDeVersion(e)) avisarRecargar(saveNow);
+      else if (e instanceof GrabacionInterrumpida) toast.error(e.message, { duration: 8000 });
+      else toast.error(e instanceof Error ? e.message : 'No se pudo exportar');
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -369,8 +399,13 @@ export default function Studio({ id }: { id: string }) {
       const toastId = toast.loading(`Grabando el video (${DURATION} segundos). No cambies de pestaña.`);
       const epoch = Date.now();
       const r = renderer.current;
-      const blob = await recordCanvas(canvasRef.current, type, (t) => r.draw(current, brand, { preview: false, t, epoch, code: currentCode, navidad }));
-      toast.dismiss(toastId);
+      let blob: Blob;
+      try {
+        blob = await recordCanvas(canvasRef.current, type, (t) => r.draw(current, brand, { preview: false, t, epoch, code: currentCode, navidad }), DURATION);
+      } finally {
+        // C-268: antes, si la grabación fallaba, el aviso "Grabando el video…" quedaba en pantalla junto al error
+        toast.dismiss(toastId);
+      }
       const ext = type.startsWith('video/mp4') ? 'mp4' : 'webm';
       downloadBlob(blob, `${fileBase(current)}.${ext}`);
       if (ext === 'webm') toast('Tu navegador grabó en WEBM; Instagram prefiere MP4. Usa Chrome actualizado.');

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { H, StudioImages, W, createRenderer, flyerImageSources, loadStudioFonts, type ProductSrc, type StudioRenderer } from '@/lib/studio/engine';
 import type { StudioBrand, StudioFlyerData, StudioNavidad } from '@/lib/studio/schema';
-import { canvasBlob } from './exporters';
+import { canvasBlob } from '@/lib/studio/exportar';
 
 const storeSrc: ProductSrc = (p) => p.imageUrl;
 /** Ancho de las miniaturas de la lista (el alto sale del formato) */

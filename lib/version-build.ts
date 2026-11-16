@@ -28,6 +28,16 @@ export const VERSION_BUILD: VersionBuild = {
   id: `${version}|${commit}|${construidoEn}`,
 };
 
+/**
+ * C-268: el error típico de una pestaña que juntó código de dos versiones (abierta desde antes de un deploy): una función
+ * que ya no está donde se la busca ("(0 , p.recordCanvas) is not a function", como "getCategoryIconOption" el 11/11) o un
+ * archivo que ya no existe. Se dice "recarga" en lugar del error crudo; si sigue después de recargar, es una falla de verdad.
+ */
+export function esErrorDeVersion(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return error.name === 'ChunkLoadError' || /is not a function|is not a constructor|Loading chunk|dynamically imported module/i.test(error.message);
+}
+
 // C-203: cada pedido del router dice de qué versión es la pestaña, y proxy.ts lo compara con la suya. Una pestaña abierta
 // antes de un deploy recibe una respuesta vacía y Next carga la página entera, en vez de mezclar el código de las dos
 // versiones (el 11/11: "getCategoryIconOption is not a function" en Categorías del panel, y archivos que ya no existían).

@@ -808,6 +808,10 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **C-231 · Los movimientos de la web:** cobros por forma de pago, Puntos ES, gift cards, devoluciones y comisiones. El costo y el margen, solo para el dueño.
   - **C-233 · Listos para el 19/04/2027:** el talonario de contingencia, la fecha y la hora en cada factura, "Preparar para el portal" y la lista del calendario (`CONTABILIDAD.md` §7).
 
+- **ElectroStudio** (pedido del 16/11: arreglar el video y mejorar mucho la herramienta; el plan va en C-269):
+  - **C-268 · El video** (**hecha**, rc.85, 16/11; `estado/C-268.md`): "(0 , p.recordCanvas) is not a function" no se reprodujo con rc.84 en pestaña nueva; el editor importa la grabación directo, una descarga que falla así dice "El panel se actualizó…" con "Guardar y recargar", y la grabación se detiene con su aviso si la pestaña se oculta.
+    - **Si el error vuelve después de recargar,** investigar con la hora y la página. La alternativa de fondo es el `deploymentId` de Next, que C-203 descartó porque después de cada deploy se vuelve a bajar todo, también las fotos.
+
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
 - Hecho en C-185 (06/11): las ramas, el stash y los worktrees viejos de la máquina de Andrés, y los 40 uploads versionados (en el servidor se respaldan antes del próximo `git pull`, `SIGUIENTE.md` §2).

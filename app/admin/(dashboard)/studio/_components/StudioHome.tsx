@@ -15,7 +15,8 @@ import { downloadIssues, flyerChecks, flyerStatus, type CheckKind, type FlyerChe
 import type { ProductSrc } from '@/lib/studio/engine';
 import { FORMATS, TEMPLATES, slugify, type StudioFlyer } from '@/lib/studio/schema';
 import { makeZip } from '@/lib/studio/zip';
-import { downloadBlob, fileBase } from './exporters';
+import { downloadBlob } from '@/lib/studio/exportar';
+import { fileBase } from './exporters';
 import StudioResults from './StudioResults';
 import { useStudioContext } from './StudioContext';
 import { smallButton } from './ui';

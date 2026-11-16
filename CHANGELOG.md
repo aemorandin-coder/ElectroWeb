@@ -10,6 +10,17 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.85] - 2026-11-16
+El video de ElectroStudio (C-268): el error "(0 , p.recordCanvas) is not a function" y la grabación que se quedaba pegada. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### ElectroStudio 1.2.9 (C-268)
+- **Si la pestaña quedó abierta durante un deploy** y una descarga falla, dice "El panel se actualizó mientras lo tenías abierto" con **"Guardar y recargar"**, en lugar del error crudo. El editor ya no busca la grabación a través de otro archivo.
+- **Si sales de la pestaña mientras graba el video,** se detiene y lo dice. Antes quedaba grabando para siempre, con los botones de descarga apagados hasta recargar.
+- **El aviso "Grabando el video…"** se va al terminar, también cuando falla.
+### Marketing 1.24.3 (C-268)
+- **El video del flyer del sorteo,** igual: si el cliente sale de la pestaña, se detiene y le dice que vuelva a descargarlo sin salir.
+### Marco del panel 1.15.2 (C-268)
+- Reconoce el error de una pestaña con código de dos versiones, para decir "recarga".
+
 ## [1.0.0-rc.84] - 2026-11-16
 Lo que encontró la revisión de rc.83 antes de las pruebas del teléfono (C-267). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Marco del panel 1.15.1 (C-267)

@@ -1,10 +1,14 @@
-# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.83; en `main`, rc.84 por subir: §2)
+# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.84; en `main`, rc.85 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-267 · Lo que encontró la revisión de rc.83 (rc.84, por subir: §2; `estado/C-267.md`):** el equipo pidió el 16/11 las pruebas de rc.83 "sin dejar nada al azar". Antes del teléfono, Claude revisó producción sin cuenta y la tienda de prueba con cuenta.
+- **C-268 · El video de ElectroStudio (rc.85, por subir: §2; `estado/C-268.md`):** la captura del equipo del 16/11, "(0 , p.recordCanvas) is not a function" al descargar el video.
+  - **El código de rc.84 graba bien** en una pestaña nueva (Chrome y Firefox, directo y desde la lista). El error es de una pestaña que juntó código de dos versiones (como el 11/11) y no se pudo reproducir. **Mientras tanto: recargar la página (Ctrl+R) y volver a descargar.**
+  - **Arreglado:** el editor ya no busca la grabación a través de otro archivo; si una descarga falla así, dice "El panel se actualizó…" con "Guardar y recargar"; si sales de la pestaña mientras graba, se detiene y lo dice (antes quedaba grabando para siempre, con los botones apagados).
+  - **rc.84 ya estaba en producción** (subido el 16/11 a las 7:15 a. m.): su bloque pasó a `HISTORIAL.md`.
+- **C-267 · Lo que encontró la revisión de rc.83 (rc.84, en producción; `estado/C-267.md`):** el equipo pidió el 16/11 las pruebas de rc.83 "sin dejar nada al azar". Antes del teléfono, Claude revisó producción sin cuenta y la tienda de prueba con cuenta.
   - **Mis pedidos y Puntos ES se salían del teléfono** desde rc.83: con filtros, la página medía el doble y el teléfono la achicaba. Arreglado en los filtros chicos.
   - **El flyer:** si el teléfono no abre la hoja de compartir, se descarga y lo dice; si no se pudo copiar el enlace, el aviso dice que toques «Copiar».
   - **El aviso de cookies no sale en producción:** la tienda no tiene Google Analytics ni el píxel de Meta. Se probó sobre Mi panel en la tienda de prueba.
@@ -419,15 +423,20 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.84` (C-267; unos 10 minutos)
-Producción está en `v1.0.0-rc.83` (`d3d7313`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- **C-267 (rc.84):** Mis pedidos y Puntos ES ya no se salen del teléfono, y el flyer tiene salida cuando el teléfono no comparte. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+### Lo que falta subir: `v1.0.0-rc.85` (C-268; unos 10 minutos)
+Producción está en `v1.0.0-rc.84` (`7504584`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-268 (rc.85):** el video de ElectroStudio. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
 - **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.84`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (5 minutos, en el teléfono, con tu cuenta):
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.85`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (5 minutos, en la computadora, con Chrome):
+  1. **Recarga el panel** (Ctrl+R) y abre ElectroStudio → una historia → Publicar → **"Descargar video"**. Quédate en la pestaña: a los 7 segundos baja el MP4 y el aviso "Grabando el video…" se va.
+  2. **Vuelve a tocar "Descargar video" y cambia de pestaña enseguida.** Al volver: "Se detuvo el video porque saliste de la pestaña…", y los botones se pueden tocar de nuevo.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.84 && npm install && bash scripts/deploy.sh --sin-pull`.
+
+### Por confirmar de rc.84 (C-267; unos 5 minutos)
+Ya en producción desde el 16/11 (`HISTORIAL.md`). Claude comprobó desde fuera la versión. Falta esto (en el teléfono, con tu cuenta):
   1. **Mis pedidos:** la página entra en la pantalla con la letra de siempre. Las píldoras de los filtros se deslizan de lado dentro de su fila, sin mover la página.
   2. **Puntos ES → Movimientos:** lo mismo con sus filtros.
-- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.83 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de rc.83 (C-262, C-264, C-263 y C-265; unos 35 minutos)
 Ya en producción desde el 16/11 (`HISTORIAL.md`). Claude comprobó desde fuera:

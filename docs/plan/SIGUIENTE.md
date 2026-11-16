@@ -4,6 +4,9 @@
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-269 · ElectroStudio 2.0: el plan (16/11; `ELECTROSTUDIO.md` y `estado/C-269.md`):** el pedido de mejorar mucho la herramienta, con "un plan para que no nos perdamos".
+  - **Las fases:** C-270 las capas, el editor A y la ruta de seis pasos; C-271 títulos, subtítulos y fuentes; C-272 stickers; C-273 entradas y salidas; C-274 plantillas; C-275 la IA.
+  - **Las decisiones:** el equipo eligió lo recomendado en las seis, viendo las maquetas y la demo que se toca (`~/.cache/electroshop-trabajo/c269/index.html`).
 - **C-268 · El video de ElectroStudio (rc.85, por subir: §2; `estado/C-268.md`):** la captura del equipo del 16/11, "(0 , p.recordCanvas) is not a function" al descargar el video.
   - **El código de rc.84 graba bien** en una pestaña nueva (Chrome y Firefox, directo y desde la lista). El error es de una pestaña que juntó código de dos versiones (como el 11/11) y no se pudo reproducir. **Mientras tanto: recargar la página (Ctrl+R) y volver a descargar.**
   - **Arreglado:** el editor ya no busca la grabación a través de otro archivo; si una descarga falla así, dice "El panel se actualizó…" con "Guardar y recargar"; si sales de la pestaña mientras graba, se detiene y lo dice (antes quedaba grabando para siempre, con los botones apagados).

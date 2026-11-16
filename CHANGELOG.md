@@ -10,6 +10,15 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.86] - 2026-11-16
+ElectroStudio 2.0: las capas, el editor A y la ruta de seis pasos (C-270). Sin cambio de base (las capas van dentro de la historia), sin SQL, sin variables nuevas y sin cron.
+### ElectroStudio 2.0.0 (C-270)
+- **Seis pasos con la ruta del panel:** Contenido, Fotos, Diseño, Textos y stickers, Animación y Publicar, con su ícono, la línea que se llena y lo elegido en cada uno.
+- **El editor A:** la vista previa grande y fija al lado del paso; en el teléfono, fija arriba debajo de la ruta.
+- **Títulos, subtítulos y textos sueltos** encima de la plantilla: se arrastran sobre la vista previa (se pegan al centro y avisan si Instagram los tapa), se agrandan con las esquinas, con dos dedos o escribiendo los px, se giran, se ordenan, se ocultan, se bloquean y se duplican. Con el teclado, las flechas los mueven. Cada gesto se deshace de una vez.
+- **Su estilo:** el color automático (blanco u oscuro según el fondo) o uno elegido, mayúsculas, cursiva, contorno, sombra, el grosor y un fondo de cinta, píldora o caja.
+- **Salen en la imagen y en el video,** y la revisión avisa si uno sale del borde, queda muy chico o lo tapa Instagram.
+
 ## [1.0.0-rc.85] - 2026-11-16
 El video de ElectroStudio (C-268): el error "(0 , p.recordCanvas) is not a function" y la grabación que se quedaba pegada. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### ElectroStudio 1.2.9 (C-268)

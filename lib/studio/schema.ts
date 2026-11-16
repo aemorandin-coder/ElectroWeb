@@ -189,6 +189,62 @@ export const reviewSchema = z.object({
 });
 export type StudioReviewData = z.infer<typeof reviewSchema>;
 
+/* ---------- C-270: las capas, piezas sueltas encima de la plantilla (docs/plan/ELECTROSTUDIO.md §5) ---------- */
+/** Las fuentes de las capas. C-271 suma las demás */
+export const FUENTES_CAPA = { montserrat: 'Montserrat' } as const;
+export type FuenteCapa = keyof typeof FUENTES_CAPA;
+/** Con qué se creó la capa: decide cómo arranca (tamaño, peso, fondo) */
+export const ESTILOS_CAPA = { titulo: 'Título', subtitulo: 'Subtítulo', texto: 'Texto' } as const;
+export type EstiloCapa = keyof typeof ESTILOS_CAPA;
+export const FONDOS_CAPA = { ninguno: 'Sin fondo', cinta: 'Cinta', pildora: 'Píldora', caja: 'Caja' } as const;
+export type FondoCapa = keyof typeof FONDOS_CAPA;
+export const ALINEAR_CAPA = { izquierda: 'Izquierda', centro: 'Centro', derecha: 'Derecha' } as const;
+export type AlinearCapa = keyof typeof ALINEAR_CAPA;
+export const CAPAS_MAX = 20;
+/** El tamaño de un texto, en px sobre los 1080 de ancho de la imagen */
+export const TAM_TEXTO = { min: 12, max: 400 } as const;
+
+const fraccion = (def: number) => z.coerce.number().min(0).max(1).catch(def).default(def);
+const siNo = (def: boolean) => z.boolean().catch(def).default(def);
+export const capaTextoSchema = z.object({
+  id: z.string().regex(/^[a-z0-9]{4,16}$/),
+  tipo: z.literal('texto'),
+  estilo: z.enum(Object.keys(ESTILOS_CAPA) as [EstiloCapa, ...EstiloCapa[]]).catch('texto').default('texto'),
+  texto: z.string().catch('').transform((v) => v.slice(0, 200)).default(''),
+  fuente: z.enum(Object.keys(FUENTES_CAPA) as [FuenteCapa, ...FuenteCapa[]]).catch('montserrat').default('montserrat'),
+  tam: z.coerce.number().min(TAM_TEXTO.min).max(TAM_TEXTO.max).catch(72).default(72),
+  peso: z.coerce.number().int().min(100).max(900).catch(800).default(800),
+  cursiva: siNo(true),
+  mayusculas: siNo(false),
+  contorno: siNo(false),
+  sombra: siNo(false),
+  fondo: z.enum(Object.keys(FONDOS_CAPA) as [FondoCapa, ...FondoCapa[]]).catch('ninguno').default('ninguno'),
+  alinear: z.enum(Object.keys(ALINEAR_CAPA) as [AlinearCapa, ...AlinearCapa[]]).catch('centro').default('centro'),
+  /** Vacío = automático: blanco u oscuro según el fondo */
+  color: colorOrEmpty,
+  /** El centro de la capa, de 0 a 1 del ancho y del alto: sobrevive al cambio de formato */
+  x: fraccion(0.5),
+  y: fraccion(0.5),
+  giro: z.coerce.number().min(-180).max(180).catch(0).default(0),
+  oculta: siNo(false),
+  bloqueada: siNo(false),
+});
+export type CapaTexto = z.infer<typeof capaTextoSchema>;
+/** C-272 suma los stickers */
+export type StudioCapa = CapaTexto;
+/** Una capa que no se entiende se descarta sola, sin perder las demás */
+const capasSchema = z
+  .array(z.unknown())
+  .catch([])
+  .transform((lista) =>
+    lista
+      .flatMap((c) => {
+        const r = capaTextoSchema.safeParse(c);
+        return r.success ? [r.data] : [];
+      })
+      .slice(0, CAPAS_MAX),
+  );
+
 /** Lo que salió en la última descarga: si la tienda cambia después, la lista avisa */
 export const exportedSchema = z.object({
   at: z.string().max(40).catch('').default(''),
@@ -230,6 +286,8 @@ export const flyerSchema = z.object({
   navidad: z.boolean().catch(false).default(false),
   /** C-193: el tramo de la plantilla Regalos por presupuesto */
   tramo: z.enum(Object.keys(TRAMOS_REGALO) as [TramoRegalo, ...TramoRegalo[]]).catch('de-20-a-50').default('de-20-a-50'),
+  /** C-270: títulos, subtítulos y textos sueltos encima de la plantilla (después, stickers). La última va adelante */
+  capas: capasSchema,
 });
 export type StudioFlyerData = z.infer<typeof flyerSchema>;
 /** code: el de la marca de campaña (?es=código) del enlace y el QR */

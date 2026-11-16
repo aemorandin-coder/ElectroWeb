@@ -812,7 +812,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **C-268 · El video** (**hecha**, rc.85, 16/11; `estado/C-268.md`): "(0 , p.recordCanvas) is not a function" no se reprodujo con rc.84 en pestaña nueva; el editor importa la grabación directo, una descarga que falla así dice "El panel se actualizó…" con "Guardar y recargar", y la grabación se detiene con su aviso si la pestaña se oculta.
     - **Si el error vuelve después de recargar,** investigar con la hora y la página. La alternativa de fondo es el `deploymentId` de Next, que C-203 descartó porque después de cada deploy se vuelve a bajar todo, también las fotos.
   - **C-269 · El plan y las maquetas** (**hecha**, 16/11; `estado/C-269.md`): el equipo eligió lo recomendado en las seis decisiones (`ELECTROSTUDIO.md` §6).
-  - **C-270 · Las capas, el editor A y la ruta de seis pasos** (ElectroStudio 2.0.0).
+  - **C-270 · Las capas, el editor A y la ruta de seis pasos** (**hecha**, ElectroStudio 2.0.0, rc.86, 16/11; `estado/C-270.md`): títulos, subtítulos y textos sueltos que se mueven, se agrandan en px y se giran sobre la vista previa.
   - **C-271 · Títulos, subtítulos y las 8 fuentes** (2.1.0).
   - **C-272 · Los stickers, en 6 grupos** (2.2.0).
   - **C-273 · Entradas, énfasis y salidas, la línea de tiempo y la duración del video** (2.3.0).

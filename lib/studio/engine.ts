@@ -5,6 +5,7 @@ import qrcode from 'qrcode-generator';
 import { formatAmount } from '@/lib/currency';
 import { payIcon, piezasIcono } from './icons';
 import { chispaSrc } from './chispa';
+import { colorClaro } from './capas';
 import {
   ANIMATIONS,
   BACKGROUNDS,
@@ -27,6 +28,7 @@ import {
   type StudioProductSlot,
   type StudioSpec,
   type TemplateId,
+  type CapaTexto,
 } from './schema';
 
 export const W = 1080;
@@ -165,6 +167,19 @@ export interface DrawOptions {
   /** C-193: el tema navideño de la tienda (el gorro elegido y la franja con las fechas del panel) */
   navidad?: StudioNavidad | null;
 }
+
+/** C-270: dónde quedó cada capa en el último dibujo, en px del lienzo (el centro, el ancho, el alto y el giro) */
+export interface CajaCapa {
+  id: string;
+  cx: number;
+  cy: number;
+  w: number;
+  h: number;
+  giro: number;
+}
+
+/** C-270: lo que tapa Instagram en una historia: la barra del perfil arriba y la de responder abajo (las de safeZones) */
+export const ZONA_IG = { arriba: 200, abajo: 190 } as const;
 
 export function missingImages(f: StudioFlyerData | null, productSrc: ProductSrc): string[] {
   if (!f) return [];
@@ -323,6 +338,11 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   // Textos que no cupieron ni con la letra mínima, y los que cupieron pero quedaron diminutos (C-116)
   const overflow = new Set<string>();
   const tiny = new Set<string>();
+  // C-270: capas que salen del borde, que quedan muy chicas o que Instagram tapa
+  const capasFuera = new Set<string>();
+  const capasChicas = new Set<string>();
+  const capasTapadas = new Set<string>();
+  let cajas: CajaCapa[] = [];
   // Historia que se dibuja y su formato: fijados al empezar cada dibujo
   let FL: StudioFlyerData | null = null;
   let FX: StudioEffects = { reflejo: false, particulas: false, confeti: false };
@@ -2802,6 +2822,125 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     });
   }
 
+  /* ---------- C-270: las capas ---------- */
+  /** Luminosidad del fondo en un punto del lienzo (no del contenido: las capas van en px del lienzo) */
+  function lumLienzo(px: number, py: number): number {
+    if (!bgData) return 255;
+    const X = Math.max(0, Math.min(W - 1, Math.round(px)));
+    const Yy = Math.max(0, Math.min(FH - 1, Math.round(py)));
+    const k = (Yy * W + X) * 4;
+    return 0.2126 * bgData[k] + 0.7152 * bgData[k + 1] + 0.0722 * bgData[k + 2];
+  }
+  function oscuroEnLienzo(cx: number, cy: number, w: number, h: number): boolean {
+    const pts = [[cx, cy], [cx - w / 2, cy - h / 2], [cx + w / 2, cy - h / 2], [cx - w / 2, cy + h / 2], [cx + w / 2, cy + h / 2]];
+    return pts.reduce((s, [x, y]) => s + lumLienzo(x, y), 0) / pts.length < 150;
+  }
+  const fuenteCapa = (c: CapaTexto, size: number) => `${c.cursiva ? 'italic ' : ''}${c.peso} ${size}px ${FAMILY}, "Arial Black", Arial, sans-serif`;
+
+  function drawCapas(f: StudioFlyerData, preview: boolean) {
+    cajas = [];
+    // Las capas entran después de la plantilla, una tras otra
+    f.capas.forEach((c, i) => drawCapaTexto(c, i, preview));
+  }
+
+  function drawCapaTexto(c: CapaTexto, i: number, preview: boolean) {
+    const texto = c.mayusculas ? c.texto.toLocaleUpperCase('es') : c.texto;
+    const lineas = texto.split('\n').slice(0, 8);
+    const vacia = !texto.trim();
+    ctx.save();
+    ctx.font = fuenteCapa(c, c.tam);
+    const anchos = lineas.map((l) => ctx.measureText(l).width);
+    const w = Math.max(c.tam * 0.8, ...anchos);
+    const lh = c.tam * 1.08;
+    const h = lh * lineas.length;
+    const [py, px] = c.fondo === 'pildora' ? [c.tam * 0.24, c.tam * 0.62] : c.fondo === 'ninguno' ? [c.tam * 0.04, c.tam * 0.04] : [c.tam * 0.18, c.tam * 0.4];
+    const bw = w + px * 2;
+    const bh = h + py * 2;
+    const cx = c.x * W;
+    const cy = c.y * FH;
+    cajas.push({ id: c.id, cx, cy, w: bw, h: bh, giro: c.giro });
+    ctx.restore();
+    if (c.oculta) return;
+    // Los avisos (C-116, con las capas): fuera del lienzo, muy chica, o donde Instagram tapa
+    const nombre = texto.replace(/\s+/g, ' ').trim();
+    if (nombre) {
+      const rad = (Math.abs(c.giro) * Math.PI) / 180;
+      const ax = (bw * Math.cos(rad) + bh * Math.sin(rad)) / 2;
+      const ay = (bw * Math.sin(rad) + bh * Math.cos(rad)) / 2;
+      if (cx - ax < -4 || cx + ax > W + 4 || cy - ay < -4 || cy + ay > FH + 4) capasFuera.add(nombre);
+      if (c.tam < 26) capasChicas.add(nombre);
+      if (FL?.format === 'story' && (cy - ay < ZONA_IG.arriba || cy + ay > FH - ZONA_IG.abajo)) capasTapadas.add(nombre);
+    }
+    if (vacia && !preview) return;
+    const t0 = 0.95 + i * 0.16;
+    const p = prog(t0, 0.55);
+    if (p <= 0) return;
+    const e = ease(p);
+    const oscuro = oscuroEnLienzo(cx, cy, bw, bh);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate((c.giro * Math.PI) / 180);
+    if (p < 1) {
+      ctx.globalAlpha *= e;
+      if (ANIM === 'zoom') ctx.scale(1 + (1 - e) * 0.35, 1 + (1 - e) * 0.35);
+      else if (ANIM === 'deslizar') ctx.translate((i % 2 ? 1 : -1) * (1 - e) * 240, 0);
+      else ctx.translate(0, (1 - e) * 70);
+    }
+    if (vacia) {
+      // Solo en la vista previa: dónde está la capa sin texto
+      ctx.setLineDash([12, 10]);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = oscuro ? 'rgba(255,255,255,.7)' : 'rgba(10,27,61,.5)';
+      rr(-bw / 2, -bh / 2, bw, bh, 12);
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
+    if (c.fondo === 'cinta') {
+      const d = c.tam * 0.12;
+      ctx.fillStyle = INK;
+      ctx.fillRect(-bw / 2 + d, -bh / 2 + d, bw, bh);
+      ctx.fillStyle = PR();
+      ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
+    } else if (c.fondo === 'pildora') {
+      ctx.fillStyle = SE();
+      rr(-bw / 2, -bh / 2, bw, bh, bh / 2);
+      ctx.fill();
+    } else if (c.fondo === 'caja') {
+      ctx.save();
+      ctx.shadowColor = 'rgba(10,27,61,.28)';
+      ctx.shadowBlur = c.tam * 0.4;
+      ctx.shadowOffsetY = c.tam * 0.12;
+      ctx.fillStyle = '#FFFFFF';
+      rr(-bw / 2, -bh / 2, bw, bh, c.tam * 0.22);
+      ctx.fill();
+      ctx.restore();
+    }
+    const color = c.color || (c.fondo === 'cinta' || c.fondo === 'pildora' ? '#FFFFFF' : c.fondo === 'caja' ? INK : oscuro ? '#FFFFFF' : INK);
+    const claro = colorClaro(color);
+    ctx.font = fuenteCapa(c, c.tam);
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = c.alinear === 'izquierda' ? 'left' : c.alinear === 'derecha' ? 'right' : 'center';
+    const xt = c.alinear === 'izquierda' ? -w / 2 : c.alinear === 'derecha' ? w / 2 : 0;
+    lineas.forEach((l, k) => {
+      const linea = typed(l, t0 + 0.1 + k * 0.25, 0.6);
+      const y = -h / 2 + lh * (k + 0.5) + c.tam * 0.04;
+      if (c.sombra) {
+        ctx.fillStyle = claro ? alpha(INK, 0.85) : 'rgba(255,255,255,.85)';
+        ctx.fillText(linea, xt, y + c.tam * 0.07);
+      }
+      if (c.contorno) {
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = Math.max(2, c.tam * 0.12);
+        ctx.strokeStyle = claro ? INK : '#FFFFFF';
+        ctx.strokeText(linea, xt, y);
+      }
+      ctx.fillStyle = color;
+      ctx.fillText(linea, xt, y);
+    });
+    ctx.restore();
+  }
+
   function safeZones() {
     ctx.save();
     const top = 200;
@@ -2834,6 +2973,10 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     CODE = opts.code ?? null;
     overflow.clear();
     tiny.clear();
+    capasFuera.clear();
+    capasChicas.clear();
+    capasTapadas.clear();
+    cajas = [];
     setFormat(f?.format ?? 'story');
     // Cambiar el alto borra el lienzo: solo cuando cambia el formato
     if (canvas.height !== FH) canvas.height = FH;
@@ -2889,6 +3032,11 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       default:
         drawSolo(f, opts.preview);
     }
+    // C-270: las capas, en px del lienzo (la plantilla dibuja en las coordenadas de su grilla)
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    drawCapas(f, opts.preview);
+    ctx.restore();
     if (FX.confeti) confetti();
     ctx.restore();
     if (opts.preview && opts.safeZones && f.format === 'story') safeZones();
@@ -2917,7 +3065,15 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     draw,
     drawBackgroundThumb,
     /** Textos del último dibujo que no cupieron (cut) o quedaron diminutos (tiny) (C-116) */
-    textIssues: () => ({ cut: [...overflow], tiny: [...tiny].filter((t) => !overflow.has(t)) }),
+    textIssues: () => ({
+      cut: [...overflow],
+      tiny: [...tiny].filter((t) => !overflow.has(t)),
+      fuera: [...capasFuera],
+      chicas: [...capasChicas],
+      tapadas: [...capasTapadas],
+    }),
+    /** C-270: dónde quedó cada capa en el último dibujo (para tocarla en la vista previa) */
+    capasCajas: (): CajaCapa[] => cajas.map((c) => ({ ...c })),
   };
 }
 

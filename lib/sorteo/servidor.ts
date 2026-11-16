@@ -5,8 +5,8 @@ import { cache } from 'react';
 import type { Sorteo } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import {
-  boletosPorInvitar, codigoNuevo, comprasConBoleto, esCodigoSorteo, estadosDeAmigos, faltanParaProximo, huellaDe, invitadosValidos,
-  nombreCorto, sortear, type Boleto, type CompraConBoleto, type EstadoAmigo, type InvitadoParaSorteo, type OrdenParaSorteo,
+  boletosPorInvitar, codigoNuevo, comprasConBoleto, esCodigoSorteo, faltanParaProximo, huellaDe, nombreCorto, repartirInvitaciones, sortear,
+  type Boleto, type CompraConBoleto, type EstadoAmigo, type InvitacionDelSorteo, type OrdenParaSorteo,
 } from './reglas';
 import { avisarAmigoRegistrado } from './avisos';
 
@@ -70,17 +70,43 @@ function ordenesParaSorteo(filas: Array<{ orderNumber: string; subtotalUSD: unkn
   }));
 }
 
-/** Los invitados de un participante, con lo que hace falta para saber si cuentan (registrados dentro de las fechas) */
-async function invitadosDe(sorteo: Sorteo, participanteId: string) {
+/** C-264: una invitación del sorteo con quién invitó (su participante) y el nombre del amigo, para la pantalla y los avisos */
+export type InvitacionCargada = InvitacionDelSorteo & { invitaId: string; nombre: string | null };
+export type InvitacionRepartida = { invitaId: string; amigoId: string; nombre: string | null; estado: EstadoAmigo };
+
+/**
+ * C-264: todas las invitaciones del sorteo (los amigos registrados dentro de las fechas), en el orden en que se
+ * registraron con el enlace. Antes se leían las de cada participante por separado.
+ */
+export async function cargarInvitaciones(sorteo: Sorteo): Promise<InvitacionCargada[]> {
   const filas = await prisma.participanteSorteo.findMany({
-    where: { invitadoPorId: participanteId, user: { createdAt: { gte: sorteo.desde, lte: sorteo.hasta } } },
-    select: { user: { select: { name: true, emailVerified: true, profile: { select: { phone: true, idNumber: true } } } } },
-    orderBy: { createdAt: 'asc' },
+    where: { sorteoId: sorteo.id, invitadoPorId: { not: null }, user: { createdAt: { gte: sorteo.desde, lte: sorteo.hasta } } },
+    select: {
+      userId: true, invitadoPorId: true, createdAt: true,
+      user: { select: { name: true, emailVerified: true, profile: { select: { phone: true, idNumber: true } } } },
+    },
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
   });
-  return filas.map<InvitadoParaSorteo & { nombre: string | null }>((f) => ({
-    correoVerificado: Boolean(f.user.emailVerified), telefono: f.user.profile?.phone ?? null, cedula: f.user.profile?.idNumber ?? null, nombre: f.user.name,
+  return filas.map((f) => ({
+    invitaId: f.invitadoPorId as string, amigoId: f.userId, fecha: f.createdAt, nombre: f.user.name,
+    correoVerificado: Boolean(f.user.emailVerified), telefono: f.user.profile?.phone ?? null, cedula: f.user.profile?.idNumber ?? null,
   }));
 }
+
+/**
+ * C-264: el reparto de todo el sorteo (repartirInvitaciones), en el mismo orden de las invitaciones. `sinContar`: ese amigo
+ * como si todavía no contara, para comparar antes y después de que active su cuenta o agregue su teléfono (los avisos).
+ */
+export function repartir(invitaciones: InvitacionCargada[], sinContar: string | null = null): InvitacionRepartida[] {
+  const estados = repartirInvitaciones(invitaciones.map((i) => (i.amigoId === sinContar ? { ...i, correoVerificado: false } : i)));
+  return invitaciones.map((i) => ({ invitaId: i.invitaId, amigoId: i.amigoId, nombre: i.nombre, estado: estados.get(i.amigoId) ?? 'falta-activar' }));
+}
+
+/** C-264: el reparto de ahora, una vez por pedido */
+export const invitacionesDelSorteo = cache(async (sorteo: Sorteo) => repartir(await cargarInvitaciones(sorteo)));
+
+/** C-264: cuántos amigos de un participante cuentan en un reparto */
+export const cuentanDe = (reparto: InvitacionRepartida[], invitaId: string) => reparto.filter((i) => i.invitaId === invitaId && i.estado === 'cuenta').length;
 
 /** C-262: un amigo invitado como lo ve quien invita: su nombre corto y su estado (nunca su correo ni su teléfono) */
 export interface AmigoInvitado {
@@ -106,21 +132,22 @@ export interface BoletosDeCliente {
 
 /** Los boletos de un cliente y su enlace para invitar (Mi panel y /sorteo) */
 export async function boletosDeCliente(sorteo: Sorteo, userId: string): Promise<BoletosDeCliente> {
-  const [participante, ordenes] = await Promise.all([
+  const [participante, ordenes, reparto] = await Promise.all([
     participanteDe(sorteo.id, userId),
     prisma.order.findMany({
       where: { userId, createdAt: { gte: sorteo.desde, lte: sorteo.hasta } },
       select: { orderNumber: true, subtotalUSD: true, createdAt: true, paymentStatus: true, status: true },
     }),
+    invitacionesDelSorteo(sorteo),
   ]);
   const compras = comprasConBoleto(ordenesParaSorteo(ordenes), sorteo.desde, sorteo.hasta, Number(sorteo.compraMinimaUSD));
-  const invitados = await invitadosDe(sorteo, participante.id);
-  const validos = invitadosValidos(invitados, new Set());
+  // C-264: sus amigos con el estado del reparto de todo el sorteo (el mismo que la lista que se sortea)
+  const mios = reparto.filter((i) => i.invitaId === participante.id);
+  const validos = cuentanDe(reparto, participante.id);
   const porInvitar = boletosPorInvitar(validos, sorteo.topeInvitar);
-  const estados = estadosDeAmigos(invitados);
   return {
-    compras, invitados: invitados.length, invitadosValidos: validos, porInvitar, total: compras.length + porInvitar, enlace: `/sorteo?invita=${participante.codigo}`,
-    amigos: invitados.map((i, k) => ({ nombre: nombreCorto(i.nombre), estado: estados[k] })),
+    compras, invitados: mios.length, invitadosValidos: validos, porInvitar, total: compras.length + porInvitar, enlace: `/sorteo?invita=${participante.codigo}`,
+    amigos: mios.map((i) => ({ nombre: nombreCorto(i.nombre), estado: i.estado })),
     faltanParaProximo: faltanParaProximo(validos, sorteo.topeInvitar),
     tope: sorteo.topeInvitar,
   };
@@ -165,19 +192,21 @@ export async function resumenDelSorteo(sorteo: Sorteo): Promise<ResumenSorteo> {
   }
   boletos.sort((a, b) => a.detalle.localeCompare(b.detalle));
 
-  // Los de invitar: en el orden en que entraron los participantes; un teléfono o una cédula cuentan una sola vez en todo el sorteo
+  // Los de invitar, en el orden en que entraron los participantes. Un teléfono o una cédula cuentan una sola vez en todo el
+  // sorteo, para quien invitó primero (C-264: el mismo reparto que ve cada cliente en "Tus boletos"; antes se lo quedaba
+  // quien había entrado antes al sorteo). Se reparte aquí sin la caché del pedido: es la lista que se sortea
   const participantes = await prisma.participanteSorteo.findMany({
     where: { sorteoId: sorteo.id, user: { role: 'USER' } },
     select: { id: true, userId: true, user: { select: { email: true, name: true } } },
     orderBy: { createdAt: 'asc' },
   });
-  const usados = new Set<string>();
+  const reparto = repartir(await cargarInvitaciones(sorteo));
   for (const p of participantes) {
     if (!p.user.email) continue;
     const email = p.user.email;
-    const invitados = await invitadosDe(sorteo, p.id);
+    const invitados = reparto.filter((i) => i.invitaId === p.id);
     if (invitados.length === 0) continue;
-    const validos = invitadosValidos(invitados, usados);
+    const validos = cuentanDe(reparto, p.id);
     const porInvitar = boletosPorInvitar(validos, sorteo.topeInvitar);
     for (let i = 0; i < porInvitar; i++) boletos.push({ userId: p.userId, email, detalle: `Invitó a 2 amigos (${i + 1} de ${porInvitar})` });
     const fila = filas.get(p.userId) ?? { userId: p.userId, email, nombre: p.user.name ?? '', porCompra: 0, porInvitar: 0, invitados: 0, aviso: '' };

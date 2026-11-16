@@ -3,7 +3,8 @@
 // cada vez, y se congelan en una lista al sortear.
 // - Por compra: 1 boleto por cada compra pagada de la compra mínima o más en productos (el envío no suma). Una compra
 //   que se partió en dos paquetes (C-199) cuenta como una. Cancelada o devuelta, no cuenta.
-// - Invitando amigos: 1 boleto por cada 2 amigos que se registran con tu enlace y activan su cuenta, hasta un tope.
+// - Invitando amigos: 1 boleto por cada 2 amigos que se registran con tu enlace y activan su cuenta, hasta un tope. Cada
+//   persona cuenta una sola vez en todo el sorteo, para quien la invitó primero (C-264).
 // - El equipo no participa. El ganador sale al azar entre todos los boletos.
 
 import { createHash, randomInt } from 'node:crypto';
@@ -55,51 +56,56 @@ export interface InvitadoParaSorteo {
 
 const soloCifras = (texto: string | null) => (texto ?? '').replace(/\D/g, '');
 
-/**
- * Los invitados que cuentan: con el correo verificado y un teléfono, sin repetir un teléfono (ni una cédula, si la tiene)
- * ya contados en este sorteo (`yaUsados`, que se va llenando: así dos cuentas de la misma persona valen una sola vez). La
- * cédula no se exige: el registro no la pide (se pide en la primera compra, C-85).
- */
-export function invitadosValidos(invitados: InvitadoParaSorteo[], yaUsados: Set<string>): number {
-  let validos = 0;
-  for (const i of invitados) {
-    const telefono = soloCifras(i.telefono).slice(-10);
-    const cedula = soloCifras(i.cedula);
-    if (!i.correoVerificado || telefono.length < 10) continue;
-    if (yaUsados.has(`t${telefono}`) || (cedula.length >= 5 && yaUsados.has(`c${cedula}`))) continue;
-    yaUsados.add(`t${telefono}`);
-    if (cedula.length >= 5) yaUsados.add(`c${cedula}`);
-    validos++;
-  }
-  return validos;
-}
-
 /** 1 boleto por cada 2 invitados válidos, hasta el tope */
 export const boletosPorInvitar = (validos: number, tope: number) => Math.min(Math.floor(validos / 2), Math.max(0, tope));
 
-/**
- * C-262: el estado de cada amigo invitado, para que quien invita sepa a quién le falta algo (el equipo, 15/11: "¿cómo sabe
- * si los amigos le aceptaron o le hace falta un amigo de su link?"). Con las mismas reglas y en el mismo orden que
- * `invitadosValidos`, así lo que se ve coincide con lo que cuenta:
- * - `cuenta`: activó su cuenta y su teléfono no estaba contado;
- * - `falta-activar`: no abrió el enlace del correo;
- * - `falta-telefono`: entró con Google (ya activada) o sin teléfono: cuenta cuando lo agregue en Mi perfil;
- * - `repetido`: su teléfono o su cédula ya contaron (dos cuentas de la misma persona valen una).
- */
+/** C-262: el estado de cada amigo invitado, como lo ve quien invita (y como cuenta en el sorteo, C-264) */
 export type EstadoAmigo = 'cuenta' | 'falta-activar' | 'falta-telefono' | 'repetido';
 
-export function estadosDeAmigos(invitados: InvitadoParaSorteo[]): EstadoAmigo[] {
+/** C-264: una invitación del sorteo: el amigo (su usuario) y cuándo se registró con el enlace */
+export interface InvitacionDelSorteo extends InvitadoParaSorteo {
+  amigoId: string;
+  /** Cuándo se registró con el enlace: el orden de "quien lo invitó primero" */
+  fecha: Date;
+}
+
+/**
+ * C-264: todas las invitaciones del sorteo repartidas de una vez. El equipo, 15/11, viendo el caso dibujado (la misma
+ * persona con dos cuentas, cada una con el enlace de alguien distinto): "para quien lo invitó primero". Una persona (un
+ * teléfono, o una cédula si la tiene) cuenta una sola vez en todo el sorteo, para quien la invitó primero entre sus
+ * cuentas que ya cuentan. Antes cada cliente contaba a sus amigos por su lado (los dos la veían como "Cuenta") y la lista
+ * del sorteo se la daba a quien había entrado antes al sorteo: Luis creía tener un boleto y el día del sorteo no lo tenía.
+ * Lo usan la pantalla de cada cliente, la lista que se sortea y los avisos, así que lo que se ve es lo que cuenta:
+ * - `cuenta`: activó su cuenta, tiene teléfono y su teléfono (o su cédula) no contó antes;
+ * - `falta-activar`: no abrió el enlace del correo (mientras tanto no se queda con su teléfono);
+ * - `falta-telefono`: entró con Google o sin teléfono: cuenta cuando lo agrega en su cuenta;
+ * - `repetido`: su teléfono o su cédula ya contaron con una cuenta que se registró antes.
+ * La cédula no se exige: el registro no la pide (se pide en la primera compra, C-85).
+ */
+export function repartirInvitaciones(invitaciones: InvitacionDelSorteo[]): Map<string, EstadoAmigo> {
+  const orden = [...invitaciones].sort((a, b) => a.fecha.getTime() - b.fecha.getTime() || a.amigoId.localeCompare(b.amigoId));
   const usados = new Set<string>();
-  return invitados.map((i) => {
-    if (!i.correoVerificado) return 'falta-activar';
+  const estados = new Map<string, EstadoAmigo>();
+  for (const i of orden) {
+    if (!i.correoVerificado) {
+      estados.set(i.amigoId, 'falta-activar');
+      continue;
+    }
     const telefono = soloCifras(i.telefono).slice(-10);
-    if (telefono.length < 10) return 'falta-telefono';
+    if (telefono.length < 10) {
+      estados.set(i.amigoId, 'falta-telefono');
+      continue;
+    }
     const cedula = soloCifras(i.cedula);
-    if (usados.has(`t${telefono}`) || (cedula.length >= 5 && usados.has(`c${cedula}`))) return 'repetido';
+    if (usados.has(`t${telefono}`) || (cedula.length >= 5 && usados.has(`c${cedula}`))) {
+      estados.set(i.amigoId, 'repetido');
+      continue;
+    }
     usados.add(`t${telefono}`);
     if (cedula.length >= 5) usados.add(`c${cedula}`);
-    return 'cuenta';
-  });
+    estados.set(i.amigoId, 'cuenta');
+  }
+  return estados;
 }
 
 /**

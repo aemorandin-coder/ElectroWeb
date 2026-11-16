@@ -50,10 +50,24 @@ export async function avisarAmigoListo(invitaUserId: string, nombre: string | nu
       userId: invitaUserId,
       type: 'SORTEO',
       title: `${quien} activó su cuenta, pero no suma`,
-      message: 'Su teléfono o su cédula ya contaron en el sorteo: cada persona cuenta una sola vez.',
+      message: 'Esa persona ya cuenta con otra cuenta que se registró antes: cada persona suma una sola vez.',
       link: ENLACE,
     });
   }
+}
+
+/**
+ * C-264: a un participante le deja de sumar un amigo: la misma persona tiene otra cuenta, invitada antes por alguien más,
+ * que ahora cuenta (cada persona suma una sola vez, para quien la invitó primero). Raro, pero sin sorpresas el día del sorteo.
+ */
+export async function avisarAmigoYaNoSuma(invitaUserId: string, nombre: string | null, perdioBoleto: boolean, total: number): Promise<void> {
+  await createNotification({
+    userId: invitaUserId,
+    type: 'SORTEO',
+    title: `${nombreCorto(nombre)} ya no suma para ti`,
+    message: `Esa persona ya cuenta con otra cuenta, que alguien invitó antes: cada persona suma una sola vez.${perdioBoleto ? ` Ahora tienes ${boletos(total)}.` : ''}`,
+    link: ENLACE,
+  });
 }
 
 /** Ganó un boleto, por una compra o por dos amigos que ya cuentan: a la campana, con cuántos lleva */

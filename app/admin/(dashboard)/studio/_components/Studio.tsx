@@ -13,7 +13,8 @@ import { adminEmpty, adminHint, adminIconButton, adminPrimaryButton, adminSecond
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useDelNavegador } from '@/lib/hooks/useMontado';
 import { PASO_PUBLICAR, firstOpenStep, flyerChecks, stepDone, type TextIssues } from '@/lib/studio/checks';
-import { cambiarCapa, duplicarCapa, moverCapa, nuevaCapa, nuevoIdCapa, puedeAgregarCapa } from '@/lib/studio/capas';
+import { cambiarCapa, duplicarCapa, moverCapa, nuevaCapa, nuevoIdCapa, nuevoSticker, puedeAgregarCapa, type CambioCapa } from '@/lib/studio/capas';
+import { STICKERS } from '@/lib/studio/stickers';
 import { cargarFuentes } from '@/lib/studio/fuentes';
 import {
   DURATION,
@@ -32,7 +33,7 @@ import {
 } from '@/lib/studio/engine';
 import { canvasBlob, downloadBlob, GrabacionInterrumpida, pickVideoType, recordCanvas, shareFile } from '@/lib/studio/exportar';
 import {
-  ANIMATIONS, BACKGROUNDS, FORMATS, TEMPLATES, requiredPhotos, type BackgroundId, type CapaTexto, type EstiloCapa, type FormatId, type StudioFlyerData,
+  ANIMATIONS, BACKGROUNDS, FORMATS, TEMPLATES, requiredPhotos, type BackgroundId, type EstiloCapa, type FormatId, type StudioFlyerData,
 } from '@/lib/studio/schema';
 import { esErrorDeVersion } from '@/lib/version-build';
 import { fileBase, uploadStudioImage } from './exporters';
@@ -264,7 +265,7 @@ export default function Studio({ id }: { id: string }) {
   }, [drawStatic, loading]);
 
   // C-271: las fuentes que usan las capas se cargan al elegirlas; cuando llegan, se vuelve a dibujar
-  const fuentesUsadas = current ? [...new Set(current.capas.map((c) => c.fuente))].sort().join(',') : '';
+  const fuentesUsadas = current ? [...new Set(current.capas.map((c) => (c.tipo === 'texto' ? c.fuente : STICKERS[c.sticker]?.texto?.fuente ?? 'montserrat')))].sort().join(',') : '';
   useEffect(() => {
     if (!fuentesUsadas) return;
     let vivo = true;
@@ -391,7 +392,14 @@ export default function Studio({ id }: { id: string }) {
       if (step !== 4) goStep(4);
       setEnfocar((n) => n + 1);
     },
-    cambiar: (cid: string, cambio: Partial<CapaTexto>) => update((f) => ({ ...f, capas: cambiarCapa(f.capas, cid, cambio) })),
+    agregarSticker: (st, extra) => {
+      if (!current || !puedeAgregarCapa(current.capas)) return;
+      const nuevo = nuevoSticker(st, current.capas, extra);
+      update((f) => (f.capas.some((c) => c.id === nuevo.id) ? f : { ...f, capas: [...f.capas, nuevo] }));
+      setCapaSel(nuevo.id);
+      if (step !== 4) goStep(4);
+    },
+    cambiar: (cid: string, cambio: CambioCapa) => update((f) => ({ ...f, capas: cambiarCapa(f.capas, cid, cambio) })),
     borrar: (cid: string) => {
       update((f) => ({ ...f, capas: f.capas.filter((c) => c.id !== cid) }));
       if (capaSel === cid) setCapaSel(null);

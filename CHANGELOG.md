@@ -10,6 +10,13 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.88] - 2026-11-16
+Los stickers de ElectroStudio (C-272). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### ElectroStudio 2.2.0 (C-272)
+- **"+ Sticker"** abre la galería con 6 grupos: Ofertas (con el texto que se cambia), Flechas y trazos a mano, Llamados, los 166 íconos del pack (con buscador), Chispa (5 poses, con o sin gorro) y Navidad.
+- **Cada sticker** se mueve, se agranda (hasta 1080 px de ancho), se gira y se ordena como los textos; cambia sus dos colores, y las flechas, Chispa y los adornos se dan vuelta.
+- **Salen en la imagen y en el video,** con la misma revisión de lo que sale del borde o tapa Instagram.
+
 ## [1.0.0-rc.87] - 2026-11-16
 Las fuentes y los estilos de los textos de ElectroStudio (C-271). Sin cambio de base, sin SQL, sin variables nuevas y sin cron. Archivos nuevos: las fuentes en `public/fonts/studio/`, cada una con su licencia.
 ### ElectroStudio 2.1.0 (C-271)

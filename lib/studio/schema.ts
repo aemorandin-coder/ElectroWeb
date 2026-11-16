@@ -2,6 +2,7 @@
 // llega) y el editor (normalizar lo que se lee). Sale del artefacto "Flyers ElectroShop" de Andrés.
 import { z } from '@/lib/zod';
 import { FUENTES_IDS, type FuenteId } from './fuentes';
+import { STICKER_IDS } from './stickers';
 
 /** photo: la foto del producto es obligatoria, opcional o no se usa */
 export const TEMPLATES = {
@@ -232,16 +233,43 @@ export const capaTextoSchema = z.object({
   bloqueada: siNo(false),
 });
 export type CapaTexto = z.infer<typeof capaTextoSchema>;
-/** C-272 suma los stickers */
-export type StudioCapa = CapaTexto;
+
+/** C-272: un sticker (lib/studio/stickers.ts), en px de ancho sobre los 1080 de la imagen */
+export const TAM_STICKER = { min: 40, max: 1080 } as const;
+export const capaStickerSchema = z.object({
+  id: z.string().regex(/^[a-z0-9]{4,16}$/),
+  tipo: z.literal('sticker'),
+  sticker: z.enum(STICKER_IDS),
+  /** El texto de los que llevan (la estrella, el sello, los llamados…) */
+  texto: z.string().catch('').transform((v) => v.slice(0, 40)).default(''),
+  /** En el sticker "icono": el ícono del pack (el nombre del componente sin "Icono") */
+  icono: z.string().regex(/^[A-Za-z]{0,30}$/).catch('').default(''),
+  /** En el sticker "chispa": la pose y si lleva el gorro */
+  pose: z.enum(Object.keys(CHISPA_POSES) as [ChispaPose, ...ChispaPose[]]).catch('saluda').default('saluda'),
+  gorro: siNo(false),
+  /** Vacíos = los del sticker */
+  color: colorOrEmpty,
+  color2: colorOrEmpty,
+  /** Dado vuelta de izquierda a derecha (una flecha que apunte al otro lado) */
+  espejo: siNo(false),
+  tam: z.coerce.number().min(TAM_STICKER.min).max(TAM_STICKER.max).catch(240).default(240),
+  x: fraccion(0.5),
+  y: fraccion(0.5),
+  giro: z.coerce.number().min(-180).max(180).catch(0).default(0),
+  oculta: siNo(false),
+  bloqueada: siNo(false),
+});
+export type CapaSticker = z.infer<typeof capaStickerSchema>;
+export type StudioCapa = CapaTexto | CapaSticker;
 /** Una capa que no se entiende se descarta sola, sin perder las demás */
 const capasSchema = z
   .array(z.unknown())
   .catch([])
   .transform((lista) =>
     lista
-      .flatMap((c) => {
-        const r = capaTextoSchema.safeParse(c);
+      .flatMap((c): StudioCapa[] => {
+        const tipo = c && typeof c === 'object' ? (c as { tipo?: unknown }).tipo : null;
+        const r = tipo === 'sticker' ? capaStickerSchema.safeParse(c) : capaTextoSchema.safeParse(c);
         return r.success ? [r.data] : [];
       })
       .slice(0, CAPAS_MAX),

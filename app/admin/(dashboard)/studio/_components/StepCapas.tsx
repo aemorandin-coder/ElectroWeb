@@ -2,25 +2,29 @@
 
 // C-270: el paso "Textos y stickers" (docs/plan/ELECTROSTUDIO.md, Fase 2): agregar títulos, subtítulos y textos sueltos,
 // la lista de piezas (la de arriba va adelante) y lo de la pieza elegida. Se mueven y se agrandan sobre la vista previa.
-import { useEffect, useId, type RefObject } from 'react';
+// C-272: también los stickers (PanelSticker.tsx), con su galería.
+import { useEffect, useId, useState, type RefObject } from 'react';
 import {
-  IconoAbrirCandado, IconoCandado, IconoCopiar, IconoEliminar, IconoFlechaAbajo, IconoFlechaArriba, IconoMas, IconoMenos,
-  IconoOcultar, IconoTexto, IconoVer,
+  IconoAbrirCandado, IconoCandado, IconoEstrella, IconoFlechaAbajo, IconoFlechaArriba, IconoMas, IconoOcultar, IconoTexto, IconoVer,
 } from '@/components/iconos';
 import CampoUnidad from '@/components/admin/CampoUnidad';
 import { adminHint, adminInput, adminLabel } from '@/lib/admin-ui';
-import { ESTILOS_LISTOS, estiloListoDe, nombreCapa, puedeAgregarCapa, tamTexto } from '@/lib/studio/capas';
+import { ESTILOS_LISTOS, estiloListoDe, nombreCapa, puedeAgregarCapa, tamTexto, type CambioCapa } from '@/lib/studio/capas';
 import { FUENTES, FUENTES_IDS, cargarFuentes, cssFuente, fuenteDe, pesoEn } from '@/lib/studio/fuentes';
 import { formatHeight, W } from '@/lib/studio/engine';
 import {
   ALINEAR_CAPA, CAPAS_MAX, ESTILOS_CAPA, FONDOS_CAPA, TAM_TEXTO, type AlinearCapa, type CapaTexto, type EstiloCapa, type FondoCapa, type StudioCapa,
 } from '@/lib/studio/schema';
+import type { Sticker } from '@/lib/studio/stickers';
+import { GaleriaStickers, PanelSticker, type ExtraSticker } from './PanelSticker';
+import { CabeceraCapa, CampoTamano, PosicionGiro } from './PiezasCapa';
 import { smallButton, toggleButton } from './ui';
 import type { Studio } from './useStudio';
 
 export interface AccionesCapas {
   agregar: (estilo: EstiloCapa) => void;
-  cambiar: (id: string, cambio: Partial<CapaTexto>) => void;
+  agregarSticker: (st: Sticker, extra?: ExtraSticker) => void;
+  cambiar: (id: string, cambio: CambioCapa) => void;
   borrar: (id: string) => void;
   duplicar: (id: string) => void;
   orden: (id: string, paso: 1 | -1) => void;
@@ -54,22 +58,15 @@ export default function StepCapas({ studio, sel, onSel, acciones, textoRef }: {
   acciones: AccionesCapas;
   textoRef: RefObject<HTMLTextAreaElement | null>;
 }) {
-  const ids = useId();
+  const [galeria, setGaleria] = useState(false);
   const f = studio.current;
   if (!f) return null;
   const capas = f.capas;
   const elegida = capas.find((c) => c.id === sel) ?? null;
   const alto = formatHeight(f.format);
   const lleno = !puedeAgregarCapa(capas);
-  const fuente = elegida ? fuenteDe(elegida.fuente) : null;
-  // Los pesos que de verdad tiene la fuente (Anton y Bebas, uno solo), sin repetidos
-  const pesos: [number, string][] = [];
-  if (fuente) {
-    for (const [p, n] of PESOS) {
-      const v = pesoEn(fuente, p);
-      if (!pesos.some(([q]) => q === v)) pesos.push([v, n]);
-    }
-  }
+  const acento = f.accent || studio.brand.accent;
+  const acento2 = f.accent2 || studio.brand.accent2;
 
   return (
     <div className="flex flex-col gap-4">
@@ -80,8 +77,23 @@ export default function StepCapas({ studio, sel, onSel, acciones, textoRef }: {
             {ESTILOS_CAPA[e]}
           </button>
         ))}
+        <button type="button" disabled={lleno} aria-expanded={galeria} onClick={() => setGaleria((g) => !g)} className={`${smallButton} border-brand-200! bg-brand-50! text-brand-700! hover:bg-brand-100!`}>
+          <IconoEstrella className="h-4 w-4" aria-hidden="true" />
+          Sticker
+        </button>
       </div>
       {lleno && <p className={adminHint}>Llegaste a {CAPAS_MAX} piezas: borra una para agregar otra.</p>}
+      {galeria && !lleno && (
+        <GaleriaStickers
+          acento={acento}
+          acento2={acento2}
+          onCerrar={() => setGaleria(false)}
+          onElegir={(st, extra) => {
+            acciones.agregarSticker(st, extra);
+            setGaleria(false);
+          }}
+        />
+      )}
 
       {capas.length > 0 ? (
         <ul className="flex flex-col gap-1.5" aria-label="Piezas sueltas, la de arriba va adelante">
@@ -92,12 +104,13 @@ export default function StepCapas({ studio, sel, onSel, acciones, textoRef }: {
               <li key={c.id} className={`flex items-center gap-2 rounded-xl border px-2 py-1.5 ${activa ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-100' : 'border-line bg-white'}`}>
                 <button type="button" onClick={() => onSel(activa ? null : c.id)} aria-pressed={activa} className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg py-1 text-left focus-visible:outline-2 focus-visible:outline-brand-500">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface text-brand-600">
-                    <IconoTexto className="h-4 w-4" aria-hidden="true" />
+                    {c.tipo === 'sticker' ? <IconoEstrella className="h-4 w-4" aria-hidden="true" /> : <IconoTexto className="h-4 w-4" aria-hidden="true" />}
                   </span>
                   <span className="min-w-0">
                     <span className={`block truncate text-sm font-semibold ${c.oculta ? 'text-muted line-through' : 'text-ink'}`}>{nombreCapa(c)}</span>
                     <span className="block truncate text-xs text-muted">
-                      {ESTILOS_CAPA[c.estilo]} · {c.tam} px{c.bloqueada ? ' · bloqueada' : ''}
+                      {c.tipo === 'sticker' ? `Sticker · ${c.tam} px de ancho` : `${ESTILOS_CAPA[c.estilo]} · ${c.tam} px`}
+                      {c.bloqueada ? ' · bloqueada' : ''}
                     </span>
                   </span>
                 </button>
@@ -121,25 +134,50 @@ export default function StepCapas({ studio, sel, onSel, acciones, textoRef }: {
         </ul>
       ) : (
         <p className="rounded-xl border border-dashed border-line-strong bg-surface p-4 text-sm text-ink-soft">
-          Todavía no hay piezas sueltas. Agrega un título o un subtítulo: aparece en la vista previa, donde lo mueves con el dedo o el ratón y lo agrandas con las esquinas.
+          Todavía no hay piezas sueltas. Agrega un título, un subtítulo o un sticker: aparece en la vista previa, donde lo mueves con el dedo o el ratón y lo agrandas con las esquinas.
         </p>
       )}
 
-      {elegida && (
-        <div className="flex flex-col gap-4 border-t border-line pt-4">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-semibold text-ink">{ESTILOS_CAPA[elegida.estilo]} elegido</p>
-            <span className="flex gap-1.5">
-              <button type="button" onClick={() => acciones.duplicar(elegida.id)} disabled={lleno} className={smallButton}>
-                <IconoCopiar className="h-4 w-4" aria-hidden="true" />
-                Duplicar
-              </button>
-              <button type="button" onClick={() => acciones.borrar(elegida.id)} className={`${smallButton} text-deal! hover:bg-deal-bg`}>
-                <IconoEliminar className="h-4 w-4" aria-hidden="true" />
-                Borrar
-              </button>
-            </span>
-          </div>
+      {elegida?.tipo === 'texto' && (
+        <PanelTexto studio={studio} elegida={elegida} alto={alto} lleno={lleno} acciones={acciones} textoRef={textoRef} />
+      )}
+      {elegida?.tipo === 'sticker' && (
+        <PanelSticker
+          elegida={elegida}
+          acento={acento}
+          acento2={acento2}
+          alto={alto}
+          lleno={lleno}
+          onCambiar={(cambio) => acciones.cambiar(elegida.id, cambio)}
+          onDuplicar={() => acciones.duplicar(elegida.id)}
+          onBorrar={() => acciones.borrar(elegida.id)}
+        />
+      )}
+    </div>
+  );
+}
+
+/** El panel del texto elegido */
+function PanelTexto({ studio, elegida, alto, lleno, acciones, textoRef }: {
+  studio: Studio;
+  elegida: CapaTexto;
+  alto: number;
+  lleno: boolean;
+  acciones: AccionesCapas;
+  textoRef: RefObject<HTMLTextAreaElement | null>;
+}) {
+  const ids = useId();
+  const fuente = fuenteDe(elegida.fuente);
+  // Los pesos que de verdad tiene la fuente (Anton y Bebas, uno solo), sin repetidos
+  const pesos: [number, string][] = [];
+  for (const [p, n] of PESOS) {
+    const v = pesoEn(fuente, p);
+    if (!pesos.some(([q]) => q === v)) pesos.push([v, n]);
+  }
+
+  return (
+    <div className="flex flex-col gap-4 border-t border-line pt-4">
+      <CabeceraCapa titulo={`${ESTILOS_CAPA[elegida.estilo]} elegido`} lleno={lleno} onDuplicar={() => acciones.duplicar(elegida.id)} onBorrar={() => acciones.borrar(elegida.id)} />
 
           <div>
             <label htmlFor={`${ids}-texto`} className={adminLabel}>Texto</label>
@@ -200,40 +238,15 @@ export default function StepCapas({ studio, sel, onSel, acciones, textoRef }: {
             </div>
           </fieldset>
 
-          <div>
-            <span className={adminLabel} id={`${ids}-tam-et`}>Tamaño</span>
-            <div className="flex flex-wrap items-center gap-2">
-              <button type="button" className={iconoBorde} onClick={() => acciones.cambiar(elegida.id, { tam: tamTexto(elegida.tam - 4) })} disabled={elegida.tam <= TAM_TEXTO.min} aria-label="Más chico (4 px)">
-                <IconoMenos className="h-4 w-4" aria-hidden="true" />
-              </button>
-              <CampoUnidad
-                unidad="px"
-                type="number"
-                inputMode="numeric"
-                min={TAM_TEXTO.min}
-                max={TAM_TEXTO.max}
-                value={elegida.tam}
-                aria-labelledby={`${ids}-tam-et`}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  if (Number.isFinite(v) && v >= TAM_TEXTO.min) acciones.cambiar(elegida.id, { tam: tamTexto(v) });
-                }}
-              />
-              <button type="button" className={iconoBorde} onClick={() => acciones.cambiar(elegida.id, { tam: tamTexto(elegida.tam + 4) })} disabled={elegida.tam >= TAM_TEXTO.max} aria-label="Más grande (4 px)">
-                <IconoMas className="h-4 w-4" aria-hidden="true" />
-              </button>
-              <input
-                type="range"
-                min={TAM_TEXTO.min}
-                max={TAM_TEXTO.max}
-                value={elegida.tam}
-                aria-labelledby={`${ids}-tam-et`}
-                onChange={(e) => acciones.cambiar(elegida.id, { tam: Number(e.target.value) })}
-                className="min-w-32 flex-1 accent-brand-500"
-              />
-            </div>
-            <p className={adminHint}>En px de la imagen (1080 de ancho). También con las esquinas de la pieza.</p>
-          </div>
+          <CampoTamano
+            id={ids}
+            valor={elegida.tam}
+            min={TAM_TEXTO.min}
+            max={TAM_TEXTO.max}
+            paso={4}
+            onCambiar={(v) => acciones.cambiar(elegida.id, { tam: tamTexto(v) })}
+            ayuda="En px de la imagen (1080 de ancho). También con las esquinas de la pieza."
+          />
 
           <fieldset>
             <legend className={adminLabel}>Color</legend>
@@ -356,30 +369,7 @@ export default function StepCapas({ studio, sel, onSel, acciones, textoRef }: {
             </fieldset>
           )}
 
-          <details className="border-t border-line pt-3">
-            <summary className="cursor-pointer text-sm font-semibold text-ink">Posición y giro, con números</summary>
-            <div className="mt-3 flex flex-wrap items-end gap-3">
-              <div>
-                <label htmlFor={`${ids}-x`} className={adminLabel}>De izquierda a derecha</label>
-                <CampoUnidad id={`${ids}-x`} unidad="px" type="number" inputMode="numeric" min={0} max={W} value={Math.round(elegida.x * W)} onChange={(e) => acciones.cambiar(elegida.id, { x: Math.min(1, Math.max(0, Number(e.target.value) / W)) })} />
-              </div>
-              <div>
-                <label htmlFor={`${ids}-y`} className={adminLabel}>De arriba abajo</label>
-                <CampoUnidad id={`${ids}-y`} unidad="px" type="number" inputMode="numeric" min={0} max={alto} value={Math.round(elegida.y * alto)} onChange={(e) => acciones.cambiar(elegida.id, { y: Math.min(1, Math.max(0, Number(e.target.value) / alto)) })} />
-              </div>
-              <div>
-                <label htmlFor={`${ids}-giro`} className={adminLabel}>Giro</label>
-                <CampoUnidad id={`${ids}-giro`} unidad="°" type="number" inputMode="numeric" min={-180} max={180} value={elegida.giro} onChange={(e) => acciones.cambiar(elegida.id, { giro: Math.max(-180, Math.min(180, Math.round(Number(e.target.value) || 0))) })} />
-              </div>
-              <button type="button" className={smallButton} onClick={() => acciones.cambiar(elegida.id, { x: 0.5 })}>Centrar</button>
-              {elegida.giro !== 0 && (
-                <button type="button" className={smallButton} onClick={() => acciones.cambiar(elegida.id, { giro: 0 })}>Sin giro</button>
-              )}
-            </div>
-            <p className={`${adminHint} mt-2`}>En la vista previa, las flechas del teclado mueven la pieza 1 px (con Mayús, 10).</p>
-          </details>
-        </div>
-      )}
+      <PosicionGiro id={ids} capa={elegida} alto={alto} onCambiar={(cambio) => acciones.cambiar(elegida.id, cambio)} />
     </div>
   );
 }
@@ -393,6 +383,5 @@ function CargarFuentes() {
 }
 
 const iconito = 'flex h-8 w-8 items-center justify-center rounded-md text-muted hover:bg-surface hover:text-ink disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-brand-500';
-const iconoBorde = 'flex h-11 w-11 items-center justify-center rounded-lg border border-line bg-white text-ink-soft hover:bg-surface disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-brand-500';
 
 export type { StudioCapa };

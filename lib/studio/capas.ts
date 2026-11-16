@@ -1,6 +1,11 @@
 // C-270: las capas de ElectroStudio, piezas sueltas encima de la plantilla (docs/plan/ELECTROSTUDIO.md §5). Crear,
 // duplicar, ordenar y medir. Módulo puro: lo usan el editor y las pruebas; el dibujo está en engine.ts.
-import { CAPAS_MAX, TAM_TEXTO, type CapaTexto, type EstiloCapa, type StudioCapa } from './schema';
+import { CAPAS_MAX, ESTILOS_CAPA, TAM_STICKER, TAM_TEXTO, type CapaSticker, type CapaTexto, type ChispaPose, type EstiloCapa, type StudioCapa } from './schema';
+import { STICKERS, type Sticker } from './stickers';
+
+/** Lo que se puede cambiar de una capa (de texto o sticker): el id y el tipo no cambian nunca */
+export type CambioCapa = Partial<Omit<CapaTexto, 'id' | 'tipo'>> & Partial<Omit<CapaSticker, 'id' | 'tipo'>>;
+export const esTexto = (c: StudioCapa): c is CapaTexto => c.tipo === 'texto';
 
 /** Un id corto que no se repite en la historia */
 export function nuevoIdCapa(usados: readonly string[]): string {
@@ -62,16 +67,54 @@ export function moverCapa(capas: readonly StudioCapa[], id: string, paso: 1 | -1
   return lista;
 }
 
-export function cambiarCapa(capas: readonly StudioCapa[], id: string, cambio: Partial<CapaTexto>): StudioCapa[] {
-  return capas.map((c) => (c.id === id ? { ...c, ...cambio, id: c.id, tipo: c.tipo } : c));
+export function cambiarCapa(capas: readonly StudioCapa[], id: string, cambio: CambioCapa): StudioCapa[] {
+  return capas.map((c) => (c.id === id ? ({ ...c, ...cambio, id: c.id, tipo: c.tipo } as StudioCapa) : c));
 }
 
 export const tamTexto = (v: number) => Math.min(TAM_TEXTO.max, Math.max(TAM_TEXTO.min, Math.round(v)));
+export const tamSticker = (v: number) => Math.min(TAM_STICKER.max, Math.max(TAM_STICKER.min, Math.round(v)));
+/** El tamaño dentro de lo que admite la capa: un texto en px de letra, un sticker en px de ancho */
+export const tamDe = (c: Pick<StudioCapa, 'tipo'>, v: number) => (c.tipo === 'sticker' ? tamSticker(v) : tamTexto(v));
 
-/** Lo que se lee de una capa en una lista: su texto en una línea, o su estilo si está vacía */
+const POSES: Record<ChispaPose, string> = { saluda: 'saluda', senala: 'señala', pulgar: 'con el pulgar arriba', celebra: 'celebra', explica: 'explica' };
+
+/** Lo que se lee de una capa en una lista: su texto en una línea, o qué es si no lleva */
 export function nombreCapa(c: StudioCapa): string {
+  if (c.tipo === 'sticker') {
+    const st = STICKERS[c.sticker];
+    if (c.sticker === 'chispa') return `Chispa ${POSES[c.pose]}${c.gorro ? ', con gorro' : ''}`;
+    if (c.sticker === 'icono') return `Ícono: ${c.icono || 'sin elegir'}`;
+    const t = c.texto.replace(/\s+/g, ' ').trim();
+    return t ? `${st?.nombre ?? 'Sticker'}: ${t}` : st?.nombre ?? 'Sticker';
+  }
   const t = c.texto.replace(/\*/g, '').replace(/\s+/g, ' ').trim();
   return t || (c.estilo === 'titulo' ? 'Título vacío' : c.estilo === 'subtitulo' ? 'Subtítulo vacío' : 'Texto vacío');
+}
+
+/** "Título: ¡Recarga y juega!" o "Sticker: Estrella: -30 %" (para leerla en la vista previa) */
+export const etiquetaCapa = (c: StudioCapa) => (c.tipo === 'sticker' ? `Sticker: ${nombreCapa(c)}` : `${ESTILOS_CAPA[c.estilo]}: ${nombreCapa(c)}`);
+
+/** Un sticker nuevo en el centro (si ya hay otro ahí, un poco más abajo) */
+export function nuevoSticker(st: Sticker, capas: readonly StudioCapa[], extra: { icono?: string; pose?: ChispaPose; gorro?: boolean; color?: string; color2?: string } = {}): CapaSticker {
+  const encima = capas.filter((c) => Math.abs(c.y - 0.55) < 0.02 && Math.abs(c.x - 0.5) < 0.02).length;
+  return {
+    id: nuevoIdCapa(capas.map((c) => c.id)),
+    tipo: 'sticker',
+    sticker: st.id,
+    texto: st.texto?.def ?? '',
+    icono: extra.icono ?? '',
+    pose: extra.pose ?? 'saluda',
+    gorro: extra.gorro ?? false,
+    color: extra.color ?? '',
+    color2: extra.color2 ?? '',
+    espejo: false,
+    tam: st.tamInicial,
+    x: 0.5,
+    y: Math.min(0.9, 0.55 + encima * 0.05),
+    giro: 0,
+    oculta: false,
+    bloqueada: false,
+  };
 }
 
 /** "#0A1B3D" → si es un color claro (para elegir el contorno y la sombra que contrastan) */

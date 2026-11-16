@@ -17,6 +17,8 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 PACK = RAIZ / 'components' / 'iconos' / 'index.tsx'
 SALIDA = RAIZ / 'lib' / 'studio' / 'iconos-pack.ts'
+# C-272: los 166 del pack, con el nombre del componente sin "Icono" (para los stickers de íconos)
+SALIDA_TODOS = RAIZ / 'lib' / 'studio' / 'iconos-todos.ts'
 
 # Nombre en el estudio (lo que guardan las historias) → componente del pack
 MAPA = {
@@ -130,6 +132,22 @@ def main() -> int:
     )
     SALIDA.write_text(texto, encoding='utf-8')
     print(f'{len(filas)} íconos en {SALIDA.relative_to(RAIZ)}')
+
+    # C-272: todos los del pack, para los stickers. El grupo sale del comentario del pack ("Grupo: Tienda y compra")
+    grupos = {comp: grupo for grupo, comp in re.findall(r'/\*\* [^*]*?Grupo: ([^.]+)\. \*/\nexport function (Icono\w+)', fuente)}
+    todos = []
+    for comp, jsx in sorted(comps.items()):
+        nombre = comp[len('Icono'):]
+        todos.append(f"  {nombre}: {{ grupo: '{grupos.get(comp, 'Otros')}', piezas: [{', '.join(ts(p) for p in piezas(jsx))}] }},")
+    SALIDA_TODOS.write_text(
+        '// GENERADO por scripts/studio-iconos.py (C-272): no editar a mano.\n'
+        '// Los íconos del pack de Electro Shop (components/iconos), todos, para los stickers de ElectroStudio.\n'
+        '// Mismo formato que iconos-pack.ts; la clave es el nombre del componente sin "Icono".\n\n'
+        "import type { PiezaIcono } from './iconos-pack';\n\n"
+        'export const ICONOS_TODOS: Record<string, { grupo: string; piezas: PiezaIcono[] }> = {\n' + '\n'.join(todos) + '\n};\n',
+        encoding='utf-8',
+    )
+    print(f'{len(todos)} íconos en {SALIDA_TODOS.relative_to(RAIZ)}')
     return 0
 
 

@@ -5,9 +5,9 @@
 // imagen. Durante el gesto los cambios no entran al historial; al empezar, `onEmpezar` guarda un solo paso de deshacer.
 import { useEffect, useRef, useState, type KeyboardEvent as KeyEvent, type PointerEvent as PtrEvent, type RefObject } from 'react';
 import { IconoAbrirCandado, IconoCandado, IconoCopiar, IconoEliminar, IconoFlechaAbajo, IconoFlechaArriba } from '@/components/iconos';
-import { nombreCapa, tamTexto } from '@/lib/studio/capas';
+import { etiquetaCapa, tamDe, type CambioCapa } from '@/lib/studio/capas';
 import { W, ZONA_IG, type CajaCapa } from '@/lib/studio/engine';
-import { ESTILOS_CAPA, type CapaTexto, type StudioCapa } from '@/lib/studio/schema';
+import type { StudioCapa } from '@/lib/studio/schema';
 
 interface Props {
   canvasRef: RefObject<HTMLCanvasElement | null>;
@@ -21,7 +21,7 @@ interface Props {
   historia: boolean;
   onSel: (id: string | null) => void;
   onEmpezar: () => void;
-  onCambiar: (id: string, cambio: Partial<CapaTexto>) => void;
+  onCambiar: (id: string, cambio: CambioCapa) => void;
   onBorrar: (id: string) => void;
   onDuplicar: (id: string) => void;
   onOrden: (id: string, paso: 1 | -1) => void;
@@ -30,9 +30,9 @@ interface Props {
 
 type Gesto =
   | { tipo: 'mover'; id: string; x0: number; y0: number; cx0: number; cy0: number }
-  | { tipo: 'tam'; id: string; cx: number; cy: number; d0: number; tam0: number; ancho0: number }
+  | { tipo: 'tam'; id: string; cx: number; cy: number; d0: number; tam0: number; ancho0: number; capa: StudioCapa['tipo'] }
   | { tipo: 'giro'; id: string; cx: number; cy: number; a0: number; giro0: number }
-  | { tipo: 'pinza'; id: string; d0: number; a0: number; tam0: number; ancho0: number; giro0: number };
+  | { tipo: 'pinza'; id: string; d0: number; a0: number; tam0: number; ancho0: number; giro0: number; capa: StudioCapa['tipo'] };
 
 /** A cuántos px de la pantalla se pega al centro */
 const IMAN = 8;
@@ -95,7 +95,7 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
   const empezarPinza = (c: StudioCapa) => {
     const [a, b] = [...punteros.current.values()];
     if (!a || !b) return;
-    gesto.current = { tipo: 'pinza', id: c.id, d0: Math.hypot(b.x - a.x, b.y - a.y), a0: Math.atan2(b.y - a.y, b.x - a.x), tam0: c.tam, ancho0: c.anchoMax, giro0: c.giro };
+    gesto.current = { tipo: 'pinza', id: c.id, d0: Math.hypot(b.x - a.x, b.y - a.y), a0: Math.atan2(b.y - a.y, b.x - a.x), tam0: c.tam, ancho0: c.tipo === 'texto' ? c.anchoMax : 0, giro0: c.giro, capa: c.tipo };
   };
 
   const alTocarFondo = (e: PtrEvent<HTMLDivElement>) => {
@@ -224,7 +224,7 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
               key={c.id}
               role="button"
               tabIndex={-1}
-              aria-label={`${ESTILOS_CAPA[c.estilo]}: ${nombreCapa(c)}`}
+              aria-label={etiquetaCapa(c)}
               aria-pressed={sel === c.id}
               onPointerDown={(e) => alTocarCapa(e, c)}
               onDoubleClick={() => onEditar(c.id)}
@@ -250,7 +250,7 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
           alto={alto}
           onTam={(e) => {
             const c = centro(elegida);
-            empezar(e, { tipo: 'tam', id: elegida.id, cx: c.x, cy: c.y, d0: Math.hypot(e.clientX - c.x, e.clientY - c.y), tam0: elegida.tam, ancho0: elegida.anchoMax });
+            empezar(e, { tipo: 'tam', id: elegida.id, cx: c.x, cy: c.y, d0: Math.hypot(e.clientX - c.x, e.clientY - c.y), tam0: elegida.tam, ancho0: elegida.tipo === 'texto' ? elegida.anchoMax : 0, capa: elegida.tipo });
           }}
           onGiro={(e) => {
             const c = centro(elegida);
@@ -275,8 +275,8 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
  * Agrandar con las esquinas o con dos dedos: el texto y su ancho máximo crecen juntos (C-271), así las líneas cortan en
  * el mismo lugar. Con el campo de px, en cambio, el ancho queda y el texto baja de línea.
  */
-function escalar(g: { tam0: number; ancho0: number }, factor: number): Partial<CapaTexto> {
-  const tam = tamTexto(g.tam0 * factor);
+function escalar(g: { tam0: number; ancho0: number; capa: StudioCapa['tipo'] }, factor: number): CambioCapa {
+  const tam = tamDe({ tipo: g.capa }, g.tam0 * factor);
   const f = tam / g.tam0;
   return g.ancho0 ? { tam, anchoMax: Math.min(1080, Math.max(40, Math.round(g.ancho0 * f))) } : { tam };
 }

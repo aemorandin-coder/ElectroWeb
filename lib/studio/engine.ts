@@ -7,6 +7,9 @@ import { payIcon, piezasIcono } from './icons';
 import { chispaSrc } from './chispa';
 import { colorClaro } from './capas';
 import { cargarFuentes, cssFuente } from './fuentes';
+import { ICONOS_TODOS } from './iconos-todos';
+import type { PiezaIcono } from './iconos-pack';
+import { COLORES_FIJOS, STICKERS, altoSticker, type ColorBase, type ColorSticker, type Sticker } from './stickers';
 import {
   ANIMATIONS,
   BACKGROUNDS,
@@ -29,6 +32,7 @@ import {
   type StudioProductSlot,
   type StudioSpec,
   type TemplateId,
+  type CapaSticker,
   type CapaTexto,
 } from './schema';
 
@@ -47,7 +51,8 @@ const FAMILY = 'StudioMontserrat';
  * Hasta que cargan, el canvas usa Arial Black.
  */
 export function loadStudioFonts(f?: Pick<StudioFlyerData, 'capas'> | null): Promise<void> {
-  return cargarFuentes(['montserrat', ...(f?.capas ?? []).map((c) => c.fuente)]);
+  const usadas = (f?.capas ?? []).map((c) => (c.tipo === 'texto' ? c.fuente : STICKERS[c.sticker]?.texto?.fuente ?? 'montserrat'));
+  return cargarFuentes(['montserrat', ...usadas]);
 }
 
 const F = (w: number, s: number, it = true) => `${it ? 'italic ' : ''}${w} ${s}px ${FAMILY}, "Arial Black", Arial, sans-serif`;
@@ -2869,7 +2874,130 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   function drawCapas(f: StudioFlyerData, preview: boolean) {
     cajas = [];
     // Las capas entran después de la plantilla, una tras otra
-    f.capas.forEach((c, i) => drawCapaTexto(c, i, preview));
+    f.capas.forEach((c, i) => (c.tipo === 'sticker' ? drawCapaSticker(c, i) : drawCapaTexto(c, i, preview)));
+  }
+
+  /* ---------- C-272: los stickers ---------- */
+  const rutas = new Map<string, Path2D>();
+  const ruta = (d: string) => {
+    let p = rutas.get(d);
+    if (!p) {
+      p = new Path2D(d);
+      rutas.set(d, p);
+    }
+    return p;
+  };
+  const colorBase = (b: ColorBase) => (b === 'acento' ? PR() : b === 'acento2' ? SE() : COLORES_FIJOS[b]);
+  function colorDe(c: CapaSticker, st: Sticker, ref: ColorSticker): string {
+    if (ref === 'p') return c.color || colorBase(st.base.p);
+    if (ref === 's') return c.color2 || colorBase(st.base.s);
+    return COLORES_FIJOS[ref];
+  }
+  /** Un ícono del pack (sus piezas) en (x, y) de `s` de lado, como `icon()` */
+  function dibujarPiezas(piezas: PiezaIcono[], x: number, y: number, s: number, color: string) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s / 24, s / 24);
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    piezas.forEach((p) => {
+      const r = ruta(p.d);
+      if (p.relleno) {
+        ctx.save();
+        if (p.relleno === 'sup') ctx.globalAlpha *= 0.25;
+        ctx.fill(r);
+        ctx.restore();
+      }
+      ctx.lineWidth = 2.2 * ((p.grosor ?? 2) / 2);
+      ctx.stroke(r);
+    });
+    ctx.restore();
+  }
+
+  function drawCapaSticker(c: CapaSticker, i: number) {
+    const st = STICKERS[c.sticker];
+    if (!st) return;
+    const w = c.tam;
+    const h = altoSticker(st, w);
+    const cx = c.x * W;
+    const cy = c.y * FH;
+    cajas.push({ id: c.id, cx, cy, w, h, giro: c.giro });
+    if (c.oculta) return;
+    const nombre = (c.texto.trim() || st.nombre).replace(/\s+/g, ' ');
+    const rad = (Math.abs(c.giro) * Math.PI) / 180;
+    const ax = (w * Math.cos(rad) + h * Math.sin(rad)) / 2;
+    const ay = (w * Math.sin(rad) + h * Math.cos(rad)) / 2;
+    if (cx - ax < -4 || cx + ax > W + 4 || cy - ay < -4 || cy + ay > FH + 4) capasFuera.add(nombre);
+    if (FL?.format === 'story' && st.texto && (cy - ay < ZONA_IG.arriba || cy + ay > FH - ZONA_IG.abajo)) capasTapadas.add(nombre);
+    const t0 = 0.95 + i * 0.16;
+    const p = prog(t0, 0.55);
+    if (p <= 0) return;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(((c.giro + (st.giro ?? 0)) * Math.PI) / 180);
+    if (p < 1) {
+      // Los stickers entran "saltando" (con el estilo de la historia, si es Zoom o Deslizar)
+      if (ANIM === 'deslizar') {
+        ctx.globalAlpha *= ease(p);
+        ctx.translate((i % 2 ? 1 : -1) * (1 - ease(p)) * 240, 0);
+      } else {
+        const k = ANIM === 'zoom' ? 1 + (1 - ease(p)) * 0.35 : Math.max(0.01, back(p));
+        ctx.scale(k, k);
+        ctx.globalAlpha *= Math.min(1, p * 3);
+      }
+    }
+    if (c.espejo) ctx.scale(-1, 1);
+    const k = w / st.vb[0];
+    ctx.scale(k, k);
+    ctx.translate(-st.vb[0] / 2, -st.vb[1] / 2);
+    if (c.sticker === 'chispa') {
+      const src = chispaSrc(c.pose, c.gorro);
+      const img = images.get(src);
+      if (img) ctx.drawImage(chispaRecortada(src, img), 0, 0, st.vb[0], st.vb[1]);
+      ctx.restore();
+      return;
+    }
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const f of st.formas) {
+      const r = ruta(f.d);
+      ctx.save();
+      if (f.opacidad) ctx.globalAlpha *= f.opacidad;
+      if (f.relleno) {
+        ctx.fillStyle = colorDe(c, st, f.relleno);
+        ctx.fill(r);
+      }
+      if (f.trazo) {
+        ctx.strokeStyle = colorDe(c, st, f.trazo);
+        ctx.lineWidth = f.ancho ?? 4;
+        if (f.punteado) ctx.setLineDash(f.punteado);
+        ctx.stroke(r);
+      }
+      ctx.restore();
+    }
+    if (st.icono) {
+      const piezas = ICONOS_TODOS[st.icono.nombre ?? c.icono]?.piezas ?? ICONOS_TODOS.Estrella?.piezas;
+      if (piezas) dibujarPiezas(piezas, st.icono.x, st.icono.y, st.icono.s, colorDe(c, st, st.icono.color));
+    }
+    const t = st.texto;
+    if (t && c.texto.trim()) {
+      const lineas = c.texto.split('\n').slice(0, 3);
+      let tam = t.tam;
+      const fuente = (n: number) => cssFuente(t.fuente ?? 'montserrat', t.peso ?? 900, t.cursiva ?? true, n);
+      ctx.font = fuente(tam);
+      while (tam > 8 && Math.max(...lineas.map((l) => ctx.measureText(l).width)) > t.maxAncho) {
+        tam -= 1;
+        ctx.font = fuente(tam);
+      }
+      ctx.fillStyle = colorDe(c, st, t.color);
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = t.ancla === 'izquierda' ? 'left' : 'center';
+      const lh = tam * 1.05;
+      lineas.forEach((l, k) => ctx.fillText(l, t.x, t.y + (k - (lineas.length - 1) / 2) * lh));
+    }
+    ctx.restore();
   }
 
   function drawCapaTexto(c: CapaTexto, i: number, preview: boolean) {
@@ -3124,6 +3252,10 @@ export type StudioRenderer = ReturnType<typeof createRenderer>;
 /** Todas las imágenes que usa un flyer, para esperarlas antes de exportar. */
 export function flyerImageSources(f: StudioFlyerData, brand: StudioBrand, productSrc: ProductSrc): string[] {
   const srcs = f.products.map((p, i) => productSrc(p, i)).filter(Boolean);
+  // C-272: Chispa como sticker
+  f.capas.forEach((c) => {
+    if (c.tipo === 'sticker' && c.sticker === 'chispa') srcs.push(chispaSrc(c.pose, c.gorro));
+  });
   if (f.bg === 'foto') srcs.push(f.bgPhoto.url);
   srcs.push(brand.logoUrl || '', OFFICIAL_LOGO.color, OFFICIAL_LOGO.white, ...Object.values(brand.payLogos));
   if (f.chispa && conChispa(f.template)) srcs.push(chispaSrc(f.chispa, f.navidad));

@@ -4,15 +4,33 @@
 
 import type { Sorteo } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { boletosDeCliente, cargarInvitaciones, cuentanDe, getSorteoVigente, repartir, resumenDelSorteo } from './servidor';
+import { boletosDeCliente, cargarInvitaciones, cuentanDe, getSorteoVigente, repartir, resumenDelSorteo, type BoletosDeCliente } from './servidor';
+import { logoDelNombreCorto, logoEnElPremio, partesDelPremio } from './premio';
 import { boletosPorInvitar, correoTapado, faltanParaProximo } from './reglas';
 import {
-  correoBoletoSorteo, correoGanadorSorteo, correoRecordatorioSorteo, correoResultadoSorteo, type DatosSorteo,
+  correoBoletoSorteo, correoGanadorSorteo, correoRecordatorioSorteo, correoResultadoSorteo, type BoletoDelCorreo, type DatosSorteo,
 } from '@/lib/email-templates/comunidad';
 import { enviarAUsuario } from '@/lib/email-templates/enviar';
 import { avisarAmigoListo, avisarAmigoYaNoSuma, avisarBoletoEnCampana } from './avisos';
 
-const datosDe = (s: Sorteo): DatosSorteo => ({ titulo: s.titulo, premio: s.premio, imagen: s.imagen, resultadoEl: s.resultadoEl });
+function datosDe(s: Sorteo): DatosSorteo {
+  // C-263: lo que necesitan el boleto épico (el logo o el nombre del premio) y Chispa (la compra mínima de verdad)
+  const { nombre } = partesDelPremio(s.premio);
+  const nombreCorto = s.nombreCorto?.trim() || null;
+  return {
+    titulo: s.titulo, premio: s.premio, imagen: s.imagen, resultadoEl: s.resultadoEl, minimoUSD: Number(s.compraMinimaUSD), tope: s.topeInvitar,
+    logo: logoEnElPremio(nombre, nombreCorto)?.logo ?? logoDelNombreCorto(nombreCorto), nombreCorto: nombreCorto ?? nombre,
+  };
+}
+
+/** C-263: el boleto que acaba de nacer, como lo ve el cliente en la tienda: el de esa compra, o el último de amigos */
+function boletoDelCorreo(b: BoletosDeCliente, cual: { compra: string } | 'amigos'): BoletoDelCorreo | null {
+  const i = cual === 'amigos'
+    ? b.boletos.map((x) => x.tipo).lastIndexOf('amigos')
+    : b.boletos.findIndex((x) => x.tipo === 'compra' && x.origen === `Compra ${cual.compra.split(' y ')[0]}`);
+  if (i < 0 || !b.correo) return null;
+  return { codigo: b.boletos[i].codigo, origen: b.boletos[i].origen, n: i + 1, correo: b.correo };
+}
 const esperar = (ms: number) => new Promise((resolver) => setTimeout(resolver, ms));
 /** La misma pausa de las campañas entre correo y correo */
 const PAUSA_MS = Number(process.env.CAMPAIGN_DELAY_MS ?? 1500);
@@ -46,7 +64,7 @@ export async function avisarBoletoPorCompra(orderId: string): Promise<void> {
       const ultima = pagos.sort((a, b) => (a.paidAt?.getTime() ?? 0) - (b.paidAt?.getTime() ?? 0) || a.orderNumber.localeCompare(b.orderNumber)).at(-1);
       if (ultima?.orderNumber !== orden.orderNumber) return;
     }
-    await enviarAUsuario(orden.userId, (u) => correoBoletoSorteo({ nombre: u.name, sorteo: datosDe(sorteo), porque: 'compra', total: boletos.total }));
+    await enviarAUsuario(orden.userId, (u) => correoBoletoSorteo({ nombre: u.name, sorteo: datosDe(sorteo), porque: 'compra', total: boletos.total, boleto: boletoDelCorreo(boletos, { compra: compra.ordenes }) }));
     // C-262: también a la campana de Mi panel
     await avisarBoletoEnCampana(orden.userId, 'compra', boletos.total);
   } catch (error) {
@@ -85,7 +103,7 @@ export async function avisarBoletoPorInvitados(invitadoUserId: string): Promise<
       if (invitaId === suya.invitaId) {
         if (ganoBoleto) {
           const boletos = await boletosDeCliente(sorteo, quien.userId);
-          await enviarAUsuario(quien.userId, (u) => correoBoletoSorteo({ nombre: u.name, sorteo: datosDe(sorteo), porque: 'invitados', total: boletos.total }));
+          await enviarAUsuario(quien.userId, (u) => correoBoletoSorteo({ nombre: u.name, sorteo: datosDe(sorteo), porque: 'invitados', total: boletos.total, boleto: boletoDelCorreo(boletos, 'amigos') }));
           // C-262: también a la campana de Mi panel
           await avisarBoletoEnCampana(quien.userId, 'invitados', boletos.total);
         } else {
@@ -143,13 +161,14 @@ export async function avisarResultadoSorteo(sorteoId: string): Promise<void> {
     const sorteo = await prisma.sorteo.findUnique({ where: { id: sorteoId } });
     if (!sorteo?.sorteadoAt || !sorteo.ganadorUserId || !sorteo.ganadorEmail) return;
     const datos = datosDe(sorteo);
-    await enviarAUsuario(sorteo.ganadorUserId, (u) => correoGanadorSorteo({ nombre: u.name, sorteo: datos, detalle: sorteo.ganadorDetalle || '' }));
+    await enviarAUsuario(sorteo.ganadorUserId, (u) => correoGanadorSorteo({ nombre: u.name, sorteo: datos, detalle: sorteo.ganadorDetalle || '', codigo: sorteo.ganadorCodigo }));
 
     const { participantes } = await resumenDelSorteo(sorteo);
     const tapado = correoTapado(sorteo.ganadorEmail);
     for (const p of participantes) {
       if (p.userId === sorteo.ganadorUserId) continue;
-      await enviarAUsuario(p.userId, (u) => correoResultadoSorteo({ nombre: u.name, sorteo: datos, ganadorTapado: tapado, boletos: sorteo.boletosAlSortear ?? 0 }));
+      // C-263: "Ganó el boleto F3E-XEP de an***@gmail.com": cada uno lo compara con los suyos
+      await enviarAUsuario(p.userId, (u) => correoResultadoSorteo({ nombre: u.name, sorteo: datos, ganadorTapado: tapado, boletos: sorteo.boletosAlSortear ?? 0, codigo: sorteo.ganadorCodigo }));
       await esperar(PAUSA_MS);
     }
   } catch (error) {

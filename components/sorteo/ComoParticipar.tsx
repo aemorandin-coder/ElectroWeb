@@ -9,6 +9,9 @@
 // - Al lado (en el teléfono, debajo): tus boletos con sesión; sin sesión, que cada boleto es una oportunidad.
 // Cada paso se entiende por su ícono y una frase; lo demás va en las preguntas (PreguntasSorteo). Los íconos entran una vez
 // al llegar a la vista (Aparece y `.sorteo-*` en app/globals.css). Sin hooks.
+// C-263 (el equipo eligió el boleto A y el flyer F1, 15/11): en "Tus boletos", los boletos épicos en lugar del número, con
+// el monto chico debajo de cada uno (solo en la pantalla), "Descargar" y "Mi flyer"; "Invitando amigos" sigue debajo. En
+// el camino 2, el enlace corto (/s/<código>) y "Mi flyer para el estado" junto a "Compartir por WhatsApp".
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 import {
@@ -18,9 +21,10 @@ import {
 import AmigosInvitados from '@/components/sorteo/AmigosInvitados';
 import Aparece from '@/components/sorteo/Aparece';
 import CompartirEnlace from '@/components/sorteo/CompartirEnlace';
+import { BoletosDelSorteo, BotonFlyer } from '@/components/sorteo/MisBoletos';
 import { diaLargo } from '@/components/sorteo/PremioSorteo';
 import { avisoAccion } from '@/lib/admin-ui';
-import { formatUSD } from '@/lib/currency';
+import type { MisBoletosPublicos } from '@/lib/dto/sorteo';
 import type { BoletosDeCliente } from '@/lib/sorteo/servidor';
 
 /** El orden de entrada (cascada) y el largo del trazo que se dibuja */
@@ -84,9 +88,13 @@ export interface DatosComoParticipar {
   invitado: boolean;
   /** C-262: el premio, para el recordatorio por WhatsApp a los amigos que todavía no cuentan */
   premio: string;
+  /** C-263: sus boletos épicos (lista blanca de lib/dto/sorteo.ts), con sesión */
+  mis: MisBoletosPublicos | null;
+  /** C-263: /sorteo con el dominio, para el recordatorio a los amigos */
+  urlSorteo: string;
 }
 
-export default function ComoParticipar({ minimo, tope, resultadoEl, cuenta, enlace, mensaje, boletos, invitado, premio }: DatosComoParticipar) {
+export default function ComoParticipar({ minimo, tope, resultadoEl, cuenta, enlace, mensaje, boletos, invitado, premio, mis, urlSorteo }: DatosComoParticipar) {
   const invitar = tope > 0;
   const volver = encodeURIComponent('/sorteo');
   return (
@@ -163,7 +171,10 @@ export default function ComoParticipar({ minimo, tope, resultadoEl, cuenta, enla
                       </div>
                       <p className="mt-3 text-sm text-ink-soft">Cuenta cuando se registran con tu enlace y activan su cuenta.</p>
                       {enlace ? (
-                        <div className="mt-3"><CompartirEnlace enlace={enlace} mensaje={mensaje} /></div>
+                        <div className="mt-3">
+                          <CompartirEnlace enlace={enlace} mensaje={mensaje} />
+                          {mis && <div className="mt-2"><BotonFlyer datos={mis} /></div>}
+                        </div>
                       ) : (
                         <p className="mt-3 flex items-center gap-2 text-sm text-muted"><IconoCompartir className="h-4 w-4 shrink-0" aria-hidden="true" /> Tu enlace sale al crear tu cuenta.</p>
                       )}
@@ -187,30 +198,28 @@ export default function ComoParticipar({ minimo, tope, resultadoEl, cuenta, enla
         </Aparece>
 
         {/* Al lado: tus boletos (con sesión) o que cada boleto es una oportunidad */}
-        <Aparece className="lg:sticky lg:top-40">
+        {/* Con boletos, la columna crece con ellos: deja de quedarse pegada arriba (no cabría en la pantalla) */}
+        <Aparece className={boletos && boletos.total > 0 ? '' : 'lg:sticky lg:top-40'}>
           {boletos ? (
             <section id="tus-boletos" aria-labelledby="tus-boletos-titulo" className="scroll-mt-40 rounded-2xl border border-line bg-white p-5">
               <div className="flex items-center gap-4">
                 <span className="relative"><Placa Icono={IconoCupon} i={0} grande />{boletos.total > 0 && <MasUno i={0} />}</span>
                 <div>
                   <h2 id="tus-boletos-titulo" className="text-lg font-semibold text-ink">Tus boletos</h2>
-                  <p className="text-4xl font-bold leading-none tabular-nums text-brand-600">{boletos.total}</p>
+                  <p className="text-sm text-ink-soft">
+                    {boletos.total > 0
+                      ? `${boletos.total} ${boletos.total === 1 ? 'boleto' : 'boletos'}: cada uno es una oportunidad`
+                      : `Todavía no tienes: compra ${minimo} o más${invitar ? ' o invita a 2 amigos' : ''}.`}
+                  </p>
                 </div>
               </div>
-              {boletos.compras.length > 0 ? (
-                <ul className="mt-4 divide-y divide-line border-t border-line text-sm">
-                  {boletos.compras.map((c) => (
-                    <li key={c.ordenes} className="flex justify-between gap-3 py-2"><span className="text-ink-soft">Compra {c.ordenes}</span><span className="tabular-nums text-ink">{formatUSD(c.subtotalUSD)}</span></li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-4 text-sm text-ink-soft">Todavía no tienes boletos por compra.</p>
-              )}
+              {/* C-263: los boletos épicos, con el monto o los amigos debajo de cada uno */}
+              {mis && <BoletosDelSorteo datos={mis} flyer />}
               {/* C-262: cuánto falta para el próximo boleto, cada amigo con su estado y el recordatorio por WhatsApp */}
               {invitar && (
                 <AmigosInvitados
                   amigos={boletos.amigos} porInvitar={boletos.porInvitar} tope={boletos.tope} faltanParaProximo={boletos.faltanParaProximo}
-                  premio={premio} urlSorteo={enlace ? enlace.split('?')[0] : '/sorteo'}
+                  premio={premio} urlSorteo={urlSorteo}
                 />
               )}
             </section>

@@ -361,7 +361,7 @@ export default function AsistenteEntrega({ sorteo, onCancelar, onListo }: {
               {conFoto ? (
                 <GanadorSorteo
                   compacto titulo={sorteo.titulo} premio={sorteo.premio} imagen={sorteo.imagen} nombreCorto={corto} incluye={leerQueTrae(sorteo.incluye)}
-                  ganador={{ correo: null, boletos: sorteo.boletosAlSortear, sorteadoAt: new Date(sorteo.sorteadoAt ?? ahora), entrega: { nombre: nombre || '…', ciudad: ciudad || null, foto: form.foto, video } }}
+                  ganador={{ correo: null, codigo: sorteo.ganadorCodigo, boletos: sorteo.boletosAlSortear, sorteadoAt: new Date(sorteo.sorteadoAt ?? ahora), entrega: { nombre: nombre || '…', ciudad: ciudad || null, foto: form.foto, video } }}
                 />
               ) : (
                 <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-brand-300 bg-brand-50 text-xs text-ink-soft">

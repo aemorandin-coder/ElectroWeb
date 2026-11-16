@@ -6,8 +6,10 @@
 //   su cuenta para coordinar la entrega", como antes. Nada personal.
 // - "Lo que trae" sigue abajo. Ya no dice "Gana una" ni "Si ganas…".
 // Sin hooks: lo usan la página y la vista previa del panel (`compacto`).
+// C-263 (el equipo, 15/11): "Ganó el boleto F3E-XEP de an***@gmail.com": el código del boleto que ganó, el mismo de los
+// boletos épicos, para que cada participante lo compare con los suyos. Con la entrega publicada, sin el correo.
 import Image from 'next/image';
-import { IconoCalendario, IconoPremio, IconoRegalo } from '@/components/iconos';
+import { IconoCalendario, IconoCupon, IconoPremio, IconoRegalo } from '@/components/iconos';
 import { diaLargo, FranjaQueTrae, FUNDIDO, fotoDelSorteo, nombreConLogo } from '@/components/sorteo/PremioSorteo';
 import VideoEntrega from '@/components/sorteo/VideoEntrega';
 import Container from '@/components/ui/Container';
@@ -30,6 +32,9 @@ export default function GanadorSorteo({ titulo, premio, imagen, nombreCorto = nu
   const sorteo = `Se sorteó el ${diaLargo(ganador.sorteadoAt)}`;
   const detalle = `Al azar${ganador.boletos ? `, entre ${ganador.boletos} boletos` : ''}. ${entrega ? 'Ya recibió su premio.' : 'Le escribimos al correo de su cuenta para coordinar la entrega.'}`;
   const llevo = <>{entrega?.ciudad ? `De ${entrega.ciudad}. ` : ''}Se llevó la <span className="font-semibold text-white">{nombreConLogo(nombre, nombreCorto)}</span></>;
+  const boleto = ganador.codigo
+    ? <>Ganó el boleto <span className="tracking-wider text-white">{ganador.codigo}</span>{!entrega && ganador.correo ? ` de ${ganador.correo}` : ''}</>
+    : null;
 
   if (compacto) {
     return (
@@ -38,6 +43,7 @@ export default function GanadorSorteo({ titulo, premio, imagen, nombreCorto = nu
         <p className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-brand-200"><IconoPremio className="h-3.5 w-3.5 text-white" aria-hidden="true" /> ¡Ya hay ganador!</p>
         {quien && <p className={`font-bold leading-tight ${entrega ? 'text-2xl' : 'text-lg [overflow-wrap:anywhere]'}`}>{quien}</p>}
         <p className="mt-0.5 text-xs text-brand-100">{llevo}</p>
+        {boleto && <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-brand-100"><IconoCupon className="h-3.5 w-3.5 shrink-0 text-white" aria-hidden="true" /> <span className="[overflow-wrap:anywhere]">{boleto}</span></p>}
         <div className="mt-3">
           {entrega ? <VideoEntrega foto={entrega.foto} nombre={entrega.nombre} video={entrega.video} compacto />
             : fotoPremio && <div className="relative aspect-square w-full"><Image src={fotoPremio} alt="" fill sizes="240px" className={`object-contain ${FUNDIDO}`} /></div>}
@@ -61,6 +67,11 @@ export default function GanadorSorteo({ titulo, premio, imagen, nombreCorto = nu
             {quien && <span className={`block ${entrega ? 'text-5xl lg:text-7xl' : 'text-4xl [overflow-wrap:anywhere] lg:text-6xl'}`}>{quien}</span>}
           </h1>
           <p className="mt-4 text-lg leading-snug text-brand-100 lg:text-2xl">{llevo}</p>
+          {boleto && (
+            <p className="mt-4 inline-flex max-w-full items-center gap-2 rounded-2xl bg-white/10 py-1.5 pl-3 pr-4 text-sm font-semibold text-brand-100 ring-1 ring-inset ring-white/20 lg:rounded-full lg:text-base">
+              <IconoCupon className="h-5 w-5 shrink-0 text-white" aria-hidden="true" /> <span className="[overflow-wrap:anywhere]">{boleto}</span>
+            </p>
+          )}
         </div>
 
         {entrega ? (

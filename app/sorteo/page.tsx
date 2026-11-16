@@ -22,7 +22,7 @@ import PremioSorteo, { diaLargo } from '@/components/sorteo/PremioSorteo';
 import Container from '@/components/ui/Container';
 import { authOptions } from '@/lib/auth';
 import { formatUSD } from '@/lib/currency';
-import { ganadorPublico } from '@/lib/dto/sorteo';
+import { ganadorPublico, misBoletosPublicos } from '@/lib/dto/sorteo';
 import { compartirPagina } from '@/lib/og/datos';
 import { prisma } from '@/lib/prisma';
 import { siteUrl } from '@/lib/seo';
@@ -72,7 +72,9 @@ export default async function SorteoPage({ searchParams }: { searchParams: Promi
   const minimo = Number.isInteger(monto) ? `$${monto}` : formatUSD(monto);
   const cerrado = new Date() > sorteo.hasta;
   const boletos = session?.user?.id && !cerrado ? await boletosDeCliente(sorteo, session.user.id) : null;
-  const enlace = boletos ? `${siteUrl()}${boletos.enlace}` : null;
+  // C-263 (el equipo eligió el enlace corto, 15/11): /s/<código>, que lleva a /sorteo?invita=<código> (app/s/[codigo])
+  const enlace = boletos ? `${siteUrl()}${boletos.enlaceCorto}` : null;
+  const mis = boletos ? misBoletosPublicos(sorteo, boletos, siteUrl()) : null;
   const marcas = avisoDeMarcas(sorteo.premio, sorteo.nombreCorto);
   // C-255: si ya activó su correo se lee de la base (la sesión lo guarda desde que entró y no se entera si lo activó en otro
   // navegador, como el del correo en el teléfono)
@@ -110,7 +112,7 @@ export default async function SorteoPage({ searchParams }: { searchParams: Promi
               minimo={minimo} tope={sorteo.topeInvitar} resultadoEl={sorteo.resultadoEl}
               cuenta={session?.user?.id ? { correoActivo: Boolean(usuario?.emailVerified) } : null}
               enlace={enlace} mensaje={`Participa conmigo en el sorteo de Electro Shop: ${sorteo.premio}. Regístrate con mi enlace:`}
-              boletos={boletos} invitado={invitado} premio={sorteo.premio}
+              boletos={boletos} invitado={invitado} premio={sorteo.premio} mis={mis} urlSorteo={`${siteUrl()}/sorteo`}
             />
             <PreguntasSorteo minimo={minimo} tope={sorteo.topeInvitar} hasta={sorteo.hasta} resultadoEl={sorteo.resultadoEl} />
             {/* C-257: la primera vez, el camino en tres íconos y un botón que lleva a "Cómo participar". Los dos caminos, la compra primero */}

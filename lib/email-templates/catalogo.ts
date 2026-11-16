@@ -42,7 +42,10 @@ const ORDEN = 'ORD-2026-0142';
 const PS5 = { nombre: 'Assassins creed mirage PlayStation 5 launch edition', slug: 'assassins-creed-mirage-playstation-5-launch-edition', imagen: '/api/uploads/products/product-1790966781452-r6oql1.webp', precioUSD: 52.78 };
 const PROTECTOR = { nombre: 'Protector de voltaje Protektor PAR-110V', slug: 'protector-de-voltaje-protektor-par-110v', imagen: '/api/uploads/products/product-1794581452490-dvs0t7.webp', precioUSD: 33.55 };
 
-const SORTEO: DatosSorteo = { titulo: 'Sorteo de Navidad', premio: 'una PlayStation 4', imagen: null, resultadoEl: new Date('2026-12-20T16:00:00-04:00') };
+const SORTEO: DatosSorteo = {
+  titulo: 'Sorteo de Navidad', premio: 'una PlayStation 4', imagen: null, resultadoEl: new Date('2026-12-20T16:00:00-04:00'),
+  minimoUSD: 5, tope: 3, logo: 'ps4', nombreCorto: 'PS4',
+};
 
 /** C-227: una venta de ejemplo del aliado comercial (la ferretería despacha desde La Victoria) */
 const DESPACHO: DespachoCorreo = {
@@ -168,10 +171,10 @@ export const PLANTILLAS: { id: string; grupo: string; name: string; description:
     { id: 'creator_status', grupo: 'Cursos', name: 'Solicitud de creador', description: 'Aprobada, rechazada o suspendida', render: () => capturarCorreo(() => sendCreatorStatusEmail(DESTINO, { creatorName: 'Ana', status: 'APPROVED' })) },
     { id: 'course_approved', grupo: 'Cursos', name: 'Curso aprobado', description: 'Al creador', render: () => deCorreo(correoCursoAprobado({ nombre: 'Ana', curso: 'Redes desde cero', slug: 'redes-desde-cero' })) },
     // Sorteo
-    { id: 'raffle_ticket', grupo: 'Sorteo', name: 'Ganaste un boleto', description: 'Por una compra o por 2 amigos', render: () => deCorreo(correoBoletoSorteo({ nombre: 'María', sorteo: SORTEO, porque: 'compra', total: 2 })) },
+    { id: 'raffle_ticket', grupo: 'Sorteo', name: 'Ganaste un boleto', description: 'Por una compra o por 2 amigos', render: () => deCorreo(correoBoletoSorteo({ nombre: 'María', sorteo: SORTEO, porque: 'compra', total: 2, boleto: { codigo: 'F3E-XEP', origen: `Compra ${ORDEN}`, n: 2, correo: 'ma***@gmail.com' } })) },
     { id: 'raffle_reminder', grupo: 'Sorteo', name: 'Últimos días', description: 'Una vez, 3 días antes del cierre', render: () => deCorreo(correoRecordatorioSorteo({ nombre: 'María', sorteo: SORTEO, boletos: 2, cierre: new Date('2026-12-18T23:59:59-04:00') })) },
-    { id: 'raffle_result', grupo: 'Sorteo', name: 'Resultado', description: 'A todos los que participaron', render: () => deCorreo(correoResultadoSorteo({ nombre: 'María', sorteo: SORTEO, ganadorTapado: 'jo***@gmail.com', boletos: 214 })) },
-    { id: 'raffle_winner', grupo: 'Sorteo', name: '¡Ganaste!', description: 'Al ganador', render: () => deCorreo(correoGanadorSorteo({ nombre: 'María', sorteo: SORTEO, detalle: `Compra ${ORDEN} ($86,33)` })) },
+    { id: 'raffle_result', grupo: 'Sorteo', name: 'Resultado', description: 'A todos los que participaron', render: () => deCorreo(correoResultadoSorteo({ nombre: 'María', sorteo: SORTEO, ganadorTapado: 'jo***@gmail.com', boletos: 214, codigo: '72N-AQJ' })) },
+    { id: 'raffle_winner', grupo: 'Sorteo', name: '¡Ganaste!', description: 'Al ganador', render: () => deCorreo(correoGanadorSorteo({ nombre: 'María', sorteo: SORTEO, detalle: `Compra ${ORDEN} ($86,33)`, codigo: 'F3E-XEP' })) },
     // Equipo y marketing
     {
         id: 'campaign', grupo: 'Equipo y marketing', name: 'Campaña', description: 'Ejemplo con un botón',

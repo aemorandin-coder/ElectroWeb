@@ -13,6 +13,8 @@ export interface Formulario {
 export interface SorteoPanel extends Omit<Formulario, 'costoPremioUSD' | 'compraMinimaUSD' | 'topeInvitar'> {
   id: string; costoPremioUSD: number; compraMinimaUSD: number; topeInvitar: number; cerrado: boolean;
   sorteadoAt: string | null; ganadorEmail: string | null; ganadorDetalle: string | null; boletosAlSortear: number | null; huellaLista: string | null;
+  /** C-263: el código del boleto que ganó ("F3E-XEP"), el mismo que ve el cliente en su boleto */
+  ganadorCodigo: string | null;
   /** C-254: la entrega que sale en la tienda con el permiso de la persona (vacía hasta publicarla) */
   entrega: EntregaPanel;
 }

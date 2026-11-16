@@ -2368,6 +2368,8 @@ model Sorteo {
   ganadorEmail     String?
   /// "Compra ORD-2026-0041 ($24,50)" o "Invitó a 2 amigos"
   ganadorDetalle   String?
+  /// C-263: el código del boleto que ganó ("F3E-XEP"), el mismo que el cliente ve en su boleto. Se publica con el correo tapado
+  ganadorCodigo    String?
   /// Cuántos boletos había al sortear y la huella (sha256) de esa lista
   boletosAlSortear Int?
   huellaLista      String?

@@ -32,7 +32,9 @@ export default function Filtros<T extends string>({ filtros, valor, onCambiar, e
     const elegida = filtros.find((f) => f.valor === valor);
     return (
       <div className="min-w-0">
-        <div role="group" aria-label={etiqueta} className="-mx-3 flex snap-x gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+        {/* C-267: relative, para que la fila recorte el texto para el lector de pantalla de cada píldora (sr-only es absolute).
+            Sin eso quedaba en su lugar, a la derecha de la pantalla, y en el teléfono la página se agrandaba a lo ancho */}
+        <div role="group" aria-label={etiqueta} className="relative -mx-3 flex snap-x gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
           {filtros.map(({ valor: v, etiqueta: texto, ayuda, Icono, cuenta, tono }) => {
             const activo = v === valor;
             const vacio = cuenta === 0 && !activo;

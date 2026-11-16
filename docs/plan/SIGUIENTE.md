@@ -1,9 +1,13 @@
-# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.83; nada por subir: §2)
+# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.83; en `main`, rc.84 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-267 · Lo que encontró la revisión de rc.83 (rc.84, por subir: §2; `estado/C-267.md`):** el equipo pidió el 16/11 las pruebas de rc.83 "sin dejar nada al azar". Antes del teléfono, Claude revisó producción sin cuenta y la tienda de prueba con cuenta.
+  - **Mis pedidos y Puntos ES se salían del teléfono** desde rc.83: con filtros, la página medía el doble y el teléfono la achicaba. Arreglado en los filtros chicos.
+  - **El flyer:** si el teléfono no abre la hoja de compartir, se descarga y lo dice; si no se pudo copiar el enlace, el aviso dice que toques «Copiar».
+  - **El aviso de cookies no sale en producción:** la tienda no tiene Google Analytics ni el píxel de Meta. Se probó sobre Mi panel en la tienda de prueba.
 - **C-265 · Mi panel rediseñado (rc.83, en producción; `estado/C-265.md`):** el equipo pidió el 15/11 rediseñar Mi panel ("todo está estirado, muy exagerado") y eligió lo recomendado en las 6 preguntas viendo las maquetas (`~/.cache/electroshop-trabajo/c265/index.html`).
   - **El sistema (la A):**
     - sin el marco blanco: las tarjetas van sobre el gris, junto al menú;
@@ -412,11 +416,18 @@
 - **El ciclo C-168 a C-175 está completo.**
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos más abajo). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
-- **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`), sin revisar ni fusionar. No es código de la tienda ni va a producción.
+- **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: nada por ahora
-Producción está en `v1.0.0-rc.83` (`d3d7313`); su bloque está en `HISTORIAL.md`.
+### Lo que falta subir: `v1.0.0-rc.84` (C-267; unos 10 minutos)
+Producción está en `v1.0.0-rc.83` (`d3d7313`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-267 (rc.84):** Mis pedidos y Puntos ES ya no se salen del teléfono, y el flyer tiene salida cuando el teléfono no comparte. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.84`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (5 minutos, en el teléfono, con tu cuenta):
+  1. **Mis pedidos:** la página entra en la pantalla con la letra de siempre. Las píldoras de los filtros se deslizan de lado dentro de su fila, sin mover la página.
+  2. **Puntos ES → Movimientos:** lo mismo con sus filtros.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.83 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de rc.83 (C-262, C-264, C-263 y C-265; unos 35 minutos)
 Ya en producción desde el 16/11 (`HISTORIAL.md`). Claude comprobó desde fuera:
@@ -433,15 +444,17 @@ Falta esto (en el teléfono y en la computadora, con una cuenta que tenga pedido
   3. **WhatsApp:** en Mi panel está en la cabecera, junto a la campana, y no flota; en la tienda sigue flotando. Tocarlo abre el chat.
   4. **Mis pedidos:** en dos columnas en la computadora; "Detalle y recibo" abre el seguimiento y el recibo lado a lado, con "Factura n.º" si la tiene. En el teléfono, una columna sin nada tapado.
   5. **La pestaña del navegador** dice "Mis pedidos | Electro Shop" (y así en cada página).
-  6. **Garantía → Nueva:** un pedido de solo códigos no sale; debajo, "Códigos y recargas…" con WhatsApp.
-  7. **Puntos ES → Recargar,** con una cuenta que no firmó los términos: sale la firma; Esc o la X la cierran y la recarga queda con "Leer y firmar".
-  8. **El aviso de cookies** (en una ventana privada, en el teléfono): con el aviso a la vista, abrir el menú de Mi panel. El menú queda encima del aviso.
+  6. **Garantía → Nueva:** un pedido de solo códigos no sale; debajo, "Códigos y recargas…" con WhatsApp. Si tu cuenta no tiene un pedido de solo códigos, sáltala: Claude la probó (C-265 y C-267).
+  7. **Puntos ES → Recargar,** con una cuenta que no firmó los términos: sale la firma; Esc o la X la cierran y la recarga queda con "Leer y firmar". Si tu cuenta ya los firmó, sáltala: la probó el agente de C-265.
+  8. ~~**El aviso de cookies**~~ **no sale en producción:** la tienda no tiene Google Analytics ni el píxel de Meta, y sin ellos no hay nada que pedir. Claude lo probó sobre Mi panel en la tienda de prueba, con claves falsas (C-267). Si se encienden, vuelve esta prueba.
 - **Pruebas de C-263** (unos 10 minutos, en el teléfono, con una cuenta que tenga boletos):
   1. **Mi panel:** sale "¡Tienes N boletos para la PS4!" con los boletos, que se animan una vez (la segunda visita, quietos), y "Te falta 1 amigo…" si aplica. En el teléfono se deslizan, con "Tu próximo boleto" al final.
-  2. **"Compartir mi flyer" → "Compartir":** se abre la hoja del teléfono con la imagen. Probar las tres:
-      - **WhatsApp → Mi estado:** la imagen con el texto y el enlace, que se toca;
-      - **Instagram → Historia:** agregar el sticker «Enlace» y pegar (el enlace ya está copiado);
-      - **TikTok:** la imagen sola; el QR se lee con la cámara de otro teléfono.
+  2. **"Compartir mi flyer" → "Compartir"** (en el teléfono). Antes de tocarlo, copia una palabra cualquiera: así se sabe si el enlace se copió de verdad. Se abre la hoja del teléfono con la imagen. Probar las tres, sin publicar si no quieres:
+      - **WhatsApp:** "Mi estado" (o un chat contigo mismo, para no publicar). Va la imagen con "¡Ya tengo N boletos…" y el enlace, que se toca;
+      - **Instagram → Historia:** el sticker «Enlace» → pegar. Tiene que salir `electroshopve.com/s/<tu código>`, no la palabra que copiaste. Se puede salir sin publicar;
+      - **TikTok:** la imagen sola (se guarda como borrador). El QR se lee con la cámara de otro teléfono, o desde la pantalla de la computadora con el flyer abierto;
+      - **al volver a la tienda** sale "Tu enlace quedó copiado…". Si sale "Para Instagram, toca «Copiar»…", ese teléfono no deja copiar en el mismo toque: avísale a Claude con la marca y el modelo.
+  2b. **"Descargar video"** (en el teléfono): baja un video de 7 s. En iPhone queda en Archivos (desde ahí, "Guardar video" lo pasa a Fotos); en Android, en Descargas o en la galería.
   3. **`/sorteo` → "Tus boletos":** los boletos con el monto chico debajo, "Descargar" (baja la imagen con todos) y "Mi flyer".
   4. **El enlace corto:** abrir `electroshopve.com/s/<tu código>` en una ventana privada: lleva a `/sorteo` con "Te invitó un amigo". Compartirlo por WhatsApp muestra la vista previa del sorteo.
   5. **El 20/12, al sortear:** el panel y `/sorteo` dicen "Ganó el boleto … de …", y el código es uno de los boletos del ganador.

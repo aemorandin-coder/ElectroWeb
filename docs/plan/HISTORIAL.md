@@ -1,10 +1,79 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.76`, comprobada el 15/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.79`, comprobada el 15/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 15/11 · C-261, C-260 y C-254 (de rc.76 a `v1.0.0-rc.79`)
+La subió el equipo el 15/11, con el bloque de Claude: el respaldo, `git pull --ff-only`, `deploy.sh --sin-pull`, `npx prisma db push` para las seis columnas de `sorteos` y `deploy.sh --sin-pull` otra vez. No lo avisó en el chat: Claude lo vio al comprobar la versión.
+
+**Lo comprobado desde fuera, el 15/11:**
+- **La portada dice `1.0.0-rc.79`.**
+- **C-261:** `/solicitar-producto` sin cuenta muestra "Entra para pedirlo", con "Crear mi cuenta gratis" y "Ya tengo cuenta: entrar", y no el formulario.
+- **C-254, con el sorteo abierto:**
+  - `/sorteo` sigue con "Gana una" y "Quiero mi boleto", sin "¡Ya hay ganador!", y la hoja "Así participas" sigue ahí;
+  - la bandera del inicio sigue diciendo "¡Gánate una…";
+  - la página lee el sorteo con las columnas nuevas y responde, así que el `db push` se aplicó;
+  - la imagen para compartir `/sorteo` responde a WhatsApp y a Facebook.
+
+**Falta que el equipo haga las pruebas** (`SIGUIENTE.md`, "Por confirmar de rc.79"): lo de C-261 y C-260 con una cuenta. Las etapas de C-254 se ven el 19/12, el 20/12 y después de sortear.
+
+### El bloque que se subió: `v1.0.0-rc.79` (C-261, C-260 y C-254)
+Producción está en `v1.0.0-rc.76` (`38cd1f7`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-261 (rc.77):** las tres decisiones de C-258. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **C-260 (rc.78):** el kit de onboarding en más lugares y las misiones de Mi panel. Sin cambio de base.
+- **C-254 (rc.79):** la semana del ganador: la bandera por etapas, el ganador en `/sorteo` y "Publicar la entrega" en el panel.
+  - **Cambia la base: seis columnas nuevas en `sorteos`, aditivas.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
+```sql
+ALTER TABLE "sorteos" ADD COLUMN     "entregaCiudad" TEXT,
+ADD COLUMN     "entregaFoto" TEXT,
+ADD COLUMN     "entregaNombre" TEXT,
+ADD COLUMN     "entregaPermiso" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "entregaPublicadaAt" TIMESTAMP(3),
+ADD COLUMN     "entregaVideo" TEXT;
+```
+  - Sin variables nuevas, sin SQL de datos y sin cron.
+- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc79.dump`
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.79`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 20 minutos, en el teléfono y en la computadora):
+  1. **`/solicitar-producto` en una ventana privada, sin entrar:**
+      - sale "Entra para pedirlo", con "Crear mi cuenta gratis" y "Ya tengo cuenta: entrar", y no el formulario;
+      - "Ya tengo cuenta: entrar" lleva al login y, al entrar, vuelve a la página con el formulario.
+  2. **Mi panel → Garantía:**
+      - con una cuenta sin garantías pedidas, abre en "Nueva";
+      - con una que tiene una en curso, abre en "Mis solicitudes", con "Pedir garantía" arriba.
+  3. **Mi panel → Puntos ES → Recargar,** con un método que no sea Pago Móvil (por ejemplo Binance Pay):
+      1. escribe el monto: el botón dice "Recargar $… con …";
+      2. sal con "Cancelar" sin recargar. Si haces una recarga de verdad, ya no sale "¿Estás seguro?".
+  4. **"Agregar" en una tarjeta del inicio** (en el teléfono y en la computadora): sale "¡Listo! Ya está en tu carrito" con "Ver carrito", y el carrito salta una vez. "Ver carrito" lleva al carrito.
+  5. **Los términos de Puntos ES**, con una cuenta que todavía no los firmó (o en la ventana de firmar de otro documento):
+      - mientras falta leer, abajo sale "Baja hasta el final para firmar", y tocarla baja el texto;
+      - en el paso de la firma, el recuadro vacío muestra una firma que se dibuja y "Firma aquí", que se va al tocar.
+  6. **Mis códigos** (un pedido con un código digital, si hay uno a mano): "Voltear tarjeta" es el botón azul lleno.
+  7. **Mi panel**, con una cuenta que todavía tiene misiones: "¿Cómo funciona la tienda?" abre la hoja con los tres pasos. "Entendido" la cierra.
+  8. **C-254, hoy (el sorteo sigue abierto):**
+      - el inicio sigue igual: "¡Gánate una PS4!";
+      - `/sorteo` sigue con "Gana una" y "Quiero mi boleto";
+      - en el panel, Marketing → Sorteo se ve como antes ("Publicar la entrega" sale recién después de sortear).
+  9. **C-254, el 19 de diciembre** (ya cerró la última compra, en la computadora ancha y en el teléfono): la bandera dice "Resultado 20 de dic." y la píldora, "Resultado el 20 de diciembre". El 20, antes de sortear, "Hoy sale el ganador".
+  10. **C-254, después de sortear** (en el teléfono, sin entrar):
+      - la bandera dice "¡Ya hay ganador!" con la foto del premio;
+      - `/sorteo` arriba dice "¡Ya hay ganador!" con el correo tapado;
+      - compartir `/sorteo` por WhatsApp muestra "¡Ya hay ganador!".
+  11. **C-254, la entrega,** cuando la persona acepte y esté su video en YouTube (como Oculto o Short). En la computadora, Marketing → Sorteo → "Publicar la entrega":
+      1. **La foto y el video:** "Subir foto" (o "Tomar foto" en el teléfono) y pegar el enlace de YouTube. Debe decir "Short de YouTube: sale vertical" o "Video de YouTube: sale horizontal".
+      2. **Su nombre:** el nombre y la inicial del apellido ("María G.") y de dónde es.
+      3. **Revisar y publicar:** marcar "La persona aceptó salir en la tienda" → "Publicar la entrega".
+      - **Después, en el teléfono:**
+        - el inicio muestra su foto y "¡María G. ganó una PS4!";
+        - `/sorteo` muestra su nombre y su foto;
+        - el play abre el video ahí mismo.
+      - **Si la persona cambia de idea:** "Quitar de la tienda", y vuelve el correo tapado.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.76 && npm install && bash scripts/deploy.sh --sin-pull`. Las seis columnas de C-254 pueden quedarse: la versión anterior no las lee. Si se publicó una entrega, deja de verse.
 
 ## 15/11 · C-258 y C-257 (de rc.74 a `v1.0.0-rc.76`)
 La subió el equipo el 15/11, con el bloque de Claude: `git pull --ff-only` y `deploy.sh --sin-pull`. No cambiaba la base.

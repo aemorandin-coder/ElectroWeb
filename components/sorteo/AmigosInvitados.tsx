@@ -78,7 +78,11 @@ export default function AmigosInvitados({
             <li key={k} className="flex items-center justify-between gap-3 text-sm">
               <span className="flex min-w-0 items-center gap-2">
                 <IconoCuenta className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-                <span className="truncate text-ink">{a.nombre}</span>
+                <span className="min-w-0">
+                  <span className="block truncate text-ink">{a.nombre}</span>
+                  {/* C-264: la misma persona, con otra cuenta que se registró antes, ya cuenta (para ti o para alguien más) */}
+                  {a.estado === 'repetido' && <span className="block text-xs text-muted">Ya cuenta con otra cuenta</span>}
+                </span>
               </span>
               <span className={SELLO[a.estado].clase}>
                 {a.estado === 'cuenta' && <IconoCheck className="h-3 w-3" aria-hidden="true" />}
@@ -94,7 +98,7 @@ export default function AmigosInvitados({
           <IconoInfo className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>
             {sinTelefono && 'Quien entró con Google cuenta cuando agrega su teléfono en su cuenta. '}
-            {repetidos && 'Cada persona suma una sola vez: un teléfono o una cédula que ya contaron no suman de nuevo.'}
+            {repetidos && 'Cada persona suma una sola vez, para quien la invitó primero: si ya cuenta con otra cuenta, no suma de nuevo.'}
           </span>
         </p>
       )}

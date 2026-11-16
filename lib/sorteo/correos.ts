@@ -4,13 +4,13 @@
 
 import type { Sorteo } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { boletosDeCliente, getSorteoVigente, resumenDelSorteo } from './servidor';
-import { boletosPorInvitar, correoTapado, estadosDeAmigos, faltanParaProximo, invitadosValidos, type InvitadoParaSorteo } from './reglas';
+import { boletosDeCliente, cargarInvitaciones, cuentanDe, getSorteoVigente, repartir, resumenDelSorteo } from './servidor';
+import { boletosPorInvitar, correoTapado, faltanParaProximo } from './reglas';
 import {
   correoBoletoSorteo, correoGanadorSorteo, correoRecordatorioSorteo, correoResultadoSorteo, type DatosSorteo,
 } from '@/lib/email-templates/comunidad';
 import { enviarAUsuario } from '@/lib/email-templates/enviar';
-import { avisarAmigoListo, avisarBoletoEnCampana } from './avisos';
+import { avisarAmigoListo, avisarAmigoYaNoSuma, avisarBoletoEnCampana } from './avisos';
 
 const datosDe = (s: Sorteo): DatosSorteo => ({ titulo: s.titulo, premio: s.premio, imagen: s.imagen, resultadoEl: s.resultadoEl });
 const esperar = (ms: number) => new Promise((resolver) => setTimeout(resolver, ms));
@@ -63,39 +63,44 @@ export async function avisarBoletoPorInvitados(invitadoUserId: string): Promise<
   try {
     const sorteo = await getSorteoVigente();
     if (!sorteoAbierto(sorteo)) return;
-    const invitado = await prisma.participanteSorteo.findUnique({
-      where: { sorteoId_userId: { sorteoId: sorteo.id, userId: invitadoUserId } },
-      select: { invitadoPorId: true },
-    });
-    if (!invitado?.invitadoPorId) return;
-    const quienInvita = await prisma.participanteSorteo.findUnique({ where: { id: invitado.invitadoPorId }, select: { id: true, userId: true } });
-    if (!quienInvita) return;
+    // C-264: se compara el reparto de todo el sorteo antes y después de este amigo. Así se entera quien lo invitó (el
+    // boleto, "ya cuenta" o "no suma") y también otro participante al que, por esto, un amigo le deja de sumar: la misma
+    // persona con otra cuenta, invitada antes por alguien más, ahora cuenta para ese alguien
+    const invitaciones = await cargarInvitaciones(sorteo);
+    const suya = invitaciones.find((i) => i.amigoId === invitadoUserId);
+    if (!suya) return;
+    const antes = repartir(invitaciones, invitadoUserId);
+    const despues = repartir(invitaciones);
+    const afectados = new Set(despues.filter((d, k) => d.estado !== antes[k].estado).map((d) => d.invitaId));
+    afectados.add(suya.invitaId);
+    const tope = sorteo.topeInvitar;
 
-    const filas = await prisma.participanteSorteo.findMany({
-      where: { invitadoPorId: quienInvita.id, user: { createdAt: { gte: sorteo.desde, lte: sorteo.hasta } } },
-      select: { userId: true, user: { select: { name: true, emailVerified: true, profile: { select: { phone: true, idNumber: true } } } } },
-      orderBy: { createdAt: 'asc' },
-    });
-    const lista = (sinVerificar: string | null): InvitadoParaSorteo[] => filas.map((f) => ({
-      correoVerificado: f.userId === sinVerificar ? false : Boolean(f.user.emailVerified),
-      telefono: f.user.profile?.phone ?? null,
-      cedula: f.user.profile?.idNumber ?? null,
-    }));
-    const antes = boletosPorInvitar(invitadosValidos(lista(invitadoUserId), new Set()), sorteo.topeInvitar);
-    const validos = invitadosValidos(lista(null), new Set());
-    const ahora = boletosPorInvitar(validos, sorteo.topeInvitar);
-    if (ahora <= antes) {
-      // C-262: no completó un par, pero quien invita se entera de que su amigo ya cuenta (y cuántos le faltan), o de por qué no
-      const k = filas.findIndex((f) => f.userId === invitadoUserId);
-      const estado = estadosDeAmigos(lista(null))[k];
-      if (estado) await avisarAmigoListo(quienInvita.userId, filas[k].user.name, estado, faltanParaProximo(validos, sorteo.topeInvitar));
-      return;
+    for (const invitaId of afectados) {
+      const quien = await prisma.participanteSorteo.findUnique({ where: { id: invitaId }, select: { userId: true } });
+      if (!quien) continue;
+      const validosAntes = cuentanDe(antes, invitaId);
+      const validosDespues = cuentanDe(despues, invitaId);
+      const ganoBoleto = boletosPorInvitar(validosDespues, tope) > boletosPorInvitar(validosAntes, tope);
+
+      if (invitaId === suya.invitaId) {
+        if (ganoBoleto) {
+          const boletos = await boletosDeCliente(sorteo, quien.userId);
+          await enviarAUsuario(quien.userId, (u) => correoBoletoSorteo({ nombre: u.name, sorteo: datosDe(sorteo), porque: 'invitados', total: boletos.total }));
+          // C-262: también a la campana de Mi panel
+          await avisarBoletoEnCampana(quien.userId, 'invitados', boletos.total);
+        } else {
+          // C-262: no completó un par, pero quien invita se entera de que su amigo ya cuenta (y cuántos le faltan), o de por qué no
+          const estado = despues.find((d) => d.amigoId === invitadoUserId)?.estado;
+          if (estado) await avisarAmigoListo(quien.userId, suya.nombre, estado, faltanParaProximo(validosDespues, tope));
+        }
+      } else if (validosDespues < validosAntes) {
+        // C-264: otro participante pierde a un amigo (contaba y ahora es repetido): se le dice, con sus boletos de ahora
+        const perdido = despues.find((d, k) => d.invitaId === invitaId && antes[k].estado === 'cuenta' && d.estado === 'repetido');
+        const perdioBoleto = boletosPorInvitar(validosDespues, tope) < boletosPorInvitar(validosAntes, tope);
+        const boletos = await boletosDeCliente(sorteo, quien.userId);
+        await avisarAmigoYaNoSuma(quien.userId, perdido?.nombre ?? null, perdioBoleto, boletos.total);
+      }
     }
-
-    const boletos = await boletosDeCliente(sorteo, quienInvita.userId);
-    await enviarAUsuario(quienInvita.userId, (u) => correoBoletoSorteo({ nombre: u.name, sorteo: datosDe(sorteo), porque: 'invitados', total: boletos.total }));
-    // C-262: también a la campana de Mi panel
-    await avisarBoletoEnCampana(quienInvita.userId, 'invitados', boletos.total);
   } catch (error) {
     console.error('[SORTEO] No se pudo avisar el boleto por invitados:', error);
   }

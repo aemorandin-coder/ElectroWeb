@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.79; en `main`, rc.83 por subir: §2)
+# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.83; nada por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-265 · Mi panel rediseñado (rc.83, por subir: §2; `estado/C-265.md`):** el equipo pidió el 15/11 rediseñar Mi panel ("todo está estirado, muy exagerado") y eligió lo recomendado en las 6 preguntas viendo las maquetas (`~/.cache/electroshop-trabajo/c265/index.html`).
+- **C-265 · Mi panel rediseñado (rc.83, en producción; `estado/C-265.md`):** el equipo pidió el 15/11 rediseñar Mi panel ("todo está estirado, muy exagerado") y eligió lo recomendado en las 6 preguntas viendo las maquetas (`~/.cache/electroshop-trabajo/c265/index.html`).
   - **El sistema (la A):**
     - sin el marco blanco: las tarjetas van sobre el gris, junto al menú;
     - lo que se repite, en dos columnas en la computadora;
@@ -15,14 +15,14 @@
   - **Mis pedidos:** en dos columnas y agrupados, con el producto en cada tarjeta. El detalle lleva el seguimiento y el recibo lado a lado.
   - **Garantía:** solo de lo físico, también en el servidor; los códigos y las recargas van por WhatsApp. En Mis códigos, "Solo tú los ves" y "Si no funciona, te ayudamos".
   - **Las ventanas:** el foco vuelve al cerrarlas, y cerrar la firma ya no cierra la recarga. El aviso de cookies tiene su capa.
-- **C-263 · El boleto épico y el flyer para compartir (rc.82, por subir: §2; `estado/C-263.md`):** el equipo eligió el boleto A ("el talón") y el flyer F1 ("Mis boletos") viendo las maquetas (`~/.cache/electroshop-trabajo/c263/index.html`).
+- **C-263 · El boleto épico y el flyer para compartir (rc.82, en producción; `estado/C-263.md`):** el equipo eligió el boleto A ("el talón") y el flyer F1 ("Mis boletos") viendo las maquetas (`~/.cache/electroshop-trabajo/c263/index.html`).
   - **El boleto:** uno por cada boleto, troquelado, con el premio, el correo tapado, de dónde salió y su código ("F3E-XEP"), que no cambia y es el mismo en el panel. Se anima una vez. Va en `/sorteo`, Mi panel y el correo "¡Ganaste un boleto!", y se descarga.
   - **El flyer de estado:** "¡Ya tengo 3 boletos para la PS4!", con sus boletos, el QR y el enlace corto `electroshopve.com/s/<código>`, para compartir desde el teléfono o descargar (también en video), desde Mi panel y `/sorteo`.
   - **Al sortear:** "Ganó el boleto F3E-XEP de an***@gmail.com" en `/sorteo`, en los correos y en el panel. Chispa del correo del boleto habla de los dos caminos.
-- **C-264 · Un amigo, dos cuentas: cuenta para quien lo invitó primero (rc.81, por subir: §2; `estado/C-264.md`):** el equipo eligió la A viendo el caso dibujado.
+- **C-264 · Un amigo, dos cuentas: cuenta para quien lo invitó primero (rc.81, en producción; `estado/C-264.md`):** el equipo eligió la A viendo el caso dibujado.
   - **El reparto:** uno solo para la pantalla de cada cliente, la lista que se sortea y los avisos. Lo que se ve es lo que cuenta.
   - **En la pantalla:** el amigo repetido dice "Ya cuenta con otra cuenta", y quien lo pierde recibe el aviso.
-- **C-262 · Los amigos invitados y los boletos, más claros (rc.80, por subir: §2; `estado/C-262.md`):** las preguntas del equipo del 15/11 sobre cómo sabe el cliente sus boletos y sus amigos.
+- **C-262 · Los amigos invitados y los boletos, más claros (rc.80, en producción; `estado/C-262.md`):** las preguntas del equipo del 15/11 sobre cómo sabe el cliente sus boletos y sus amigos.
   - **En `/sorteo`:** "Invitando amigos", con "Te falta 1 amigo para tu próximo boleto", cada amigo con su sello y "Recordarles por WhatsApp".
   - **En Mi panel:** la línea de los amigos en la tarjeta del sorteo. En la campana: los avisos del sorteo.
   - **Siguió C-263** (rc.82, arriba): el boleto épico y el flyer para compartir.
@@ -412,24 +412,21 @@
 - **El ciclo C-168 a C-175 está completo.**
 - **Activar "Continuar con Google"** (C-85) es aparte y solo de Andrés: un cliente OAuth nuevo y dos líneas en el `.env` (pasos más abajo). No cambia código.
 - **Sin confirmar con Andrés:** la restauración de prueba del respaldo, el redondeo de C-96 y las pruebas visuales de C-162.
-- **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
+- **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`), sin revisar ni fusionar. No es código de la tienda ni va a producción.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.83` (C-262, C-264, C-263 y C-265; unos 40 minutos)
-Producción está en `v1.0.0-rc.79` (`e68d68f`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- **C-262 (rc.80):** los amigos invitados y los boletos, más claros. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
-- **C-264 (rc.81):** el amigo repetido cuenta para quien lo invitó primero; un solo reparto para la pantalla, la lista y los avisos. Sin cambio de base.
-- **C-265 (rc.83):** Mi panel rediseñado. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
-- **C-263 (rc.82):** el boleto épico y el flyer para compartir.
-  - **Cambia la base: una columna nueva en `sorteos`, aditiva.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
-```sql
-ALTER TABLE "sorteos" ADD COLUMN     "ganadorCodigo" TEXT;
-```
-  - Sin variables nuevas, sin SQL de datos y sin cron. Archivos nuevos que trae el `git pull`: las fuentes Poppins (`public/fonts`), el sello (`public/images/sorteo/sello-es.png`) y los logos de PS4 y PS5 para los correos (`public/images/correo/`).
-- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc83.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.83`, o una mayor si entró otra tarea antes del `git pull`.
+### Lo que falta subir: nada por ahora
+Producción está en `v1.0.0-rc.83` (`d3d7313`); su bloque está en `HISTORIAL.md`.
+
+### Por confirmar de rc.83 (C-262, C-264, C-263 y C-265; unos 35 minutos)
+Ya en producción desde el 16/11 (`HISTORIAL.md`). Claude comprobó desde fuera:
+- la versión, y que `/sorteo` responde leyendo la base con la columna nueva;
+- el enlace corto `/s/<código>` (lleva a `/sorteo` y no se indexa) y los archivos nuevos: las fuentes, el sello y los logos de los correos;
+- la base 4 de `/sorteo`, con la línea de C-264;
+- Mi panel sin sesión, que lleva al login;
+- la imagen para compartir `/sorteo` y la de la portada.
+
+Falta esto (en el teléfono y en la computadora, con una cuenta que tenga pedidos y boletos):
 - **Pruebas de C-265** (unos 15 minutos, en la computadora y en el teléfono, con una cuenta que tenga pedidos):
   1. **El menú:** en la computadora, la columna blanca llega abajo con mucho y con poco contenido, y "Cerrar sesión" queda al pie al bajar. Una captura de página entera ya no lo corta.
   2. **El inicio:** con boletos del sorteo, Puntos ES va en blanco (los boletos son lo fuerte); en una cuenta sin boletos, en el azul oscuro. "Pedidos anteriores" no repite los de "Pedidos en curso".
@@ -456,7 +453,6 @@ ALTER TABLE "sorteos" ADD COLUMN     "ganadorCodigo" TEXT;
   2. **Mi panel** con esa cuenta: la tarjeta del sorteo dice lo de los amigos ("1 amigo tuyo todavía no cuenta" o "Te falta 1 amigo…").
   3. **La campana:** registra un amigo nuevo con tu enlace, en una ventana privada. En tu campana sale "… se unió con tu enlace". Al activar su cuenta desde su correo, sale "… ya cuenta para tu boleto" o "¡Ganaste un boleto!".
   4. **Las bases del sorteo** (abajo, en `/sorteo`, "Las bases del sorteo"): la 4 termina con "…si se registra con el enlace de dos participantes, cuenta para quien la invitó primero".
-- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.79 && npm install && bash scripts/deploy.sh --sin-pull`. La columna `ganadorCodigo` puede quedarse: el código de rc.79 no la lee.
 
 ### Por confirmar de rc.79 (C-261, C-260 y C-254; unos 20 minutos)
 Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera:

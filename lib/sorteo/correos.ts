@@ -5,11 +5,12 @@
 import type { Sorteo } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { boletosDeCliente, getSorteoVigente, resumenDelSorteo } from './servidor';
-import { boletosPorInvitar, correoTapado, invitadosValidos, type InvitadoParaSorteo } from './reglas';
+import { boletosPorInvitar, correoTapado, estadosDeAmigos, faltanParaProximo, invitadosValidos, type InvitadoParaSorteo } from './reglas';
 import {
   correoBoletoSorteo, correoGanadorSorteo, correoRecordatorioSorteo, correoResultadoSorteo, type DatosSorteo,
 } from '@/lib/email-templates/comunidad';
 import { enviarAUsuario } from '@/lib/email-templates/enviar';
+import { avisarAmigoListo, avisarBoletoEnCampana } from './avisos';
 
 const datosDe = (s: Sorteo): DatosSorteo => ({ titulo: s.titulo, premio: s.premio, imagen: s.imagen, resultadoEl: s.resultadoEl });
 const esperar = (ms: number) => new Promise((resolver) => setTimeout(resolver, ms));
@@ -46,14 +47,17 @@ export async function avisarBoletoPorCompra(orderId: string): Promise<void> {
       if (ultima?.orderNumber !== orden.orderNumber) return;
     }
     await enviarAUsuario(orden.userId, (u) => correoBoletoSorteo({ nombre: u.name, sorteo: datosDe(sorteo), porque: 'compra', total: boletos.total }));
+    // C-262: también a la campana de Mi panel
+    await avisarBoletoEnCampana(orden.userId, 'compra', boletos.total);
   } catch (error) {
     console.error('[SORTEO] No se pudo avisar el boleto por compra:', error);
   }
 }
 
 /**
- * Un invitado verificó su correo. Si con eso quien lo invitó completa un par de amigos válidos (1 boleto por cada 2, hasta
- * el tope), se le avisa. Se cuenta igual que en Mi panel, con y sin este invitado verificado.
+ * Un invitado verificó su correo, o (C-262) agregó su teléfono: el que entró con Google ya viene activado pero sin teléfono,
+ * y antes nadie le avisaba a quien lo invitó. Si con eso quien lo invitó completa un par de amigos válidos (1 boleto por
+ * cada 2, hasta el tope), se le avisa. Se cuenta igual que en Mi panel, con y sin este invitado.
  */
 export async function avisarBoletoPorInvitados(invitadoUserId: string): Promise<void> {
   try {
@@ -69,7 +73,7 @@ export async function avisarBoletoPorInvitados(invitadoUserId: string): Promise<
 
     const filas = await prisma.participanteSorteo.findMany({
       where: { invitadoPorId: quienInvita.id, user: { createdAt: { gte: sorteo.desde, lte: sorteo.hasta } } },
-      select: { userId: true, user: { select: { emailVerified: true, profile: { select: { phone: true, idNumber: true } } } } },
+      select: { userId: true, user: { select: { name: true, emailVerified: true, profile: { select: { phone: true, idNumber: true } } } } },
       orderBy: { createdAt: 'asc' },
     });
     const lista = (sinVerificar: string | null): InvitadoParaSorteo[] => filas.map((f) => ({
@@ -78,11 +82,20 @@ export async function avisarBoletoPorInvitados(invitadoUserId: string): Promise<
       cedula: f.user.profile?.idNumber ?? null,
     }));
     const antes = boletosPorInvitar(invitadosValidos(lista(invitadoUserId), new Set()), sorteo.topeInvitar);
-    const ahora = boletosPorInvitar(invitadosValidos(lista(null), new Set()), sorteo.topeInvitar);
-    if (ahora <= antes) return;
+    const validos = invitadosValidos(lista(null), new Set());
+    const ahora = boletosPorInvitar(validos, sorteo.topeInvitar);
+    if (ahora <= antes) {
+      // C-262: no completó un par, pero quien invita se entera de que su amigo ya cuenta (y cuántos le faltan), o de por qué no
+      const k = filas.findIndex((f) => f.userId === invitadoUserId);
+      const estado = estadosDeAmigos(lista(null))[k];
+      if (estado) await avisarAmigoListo(quienInvita.userId, filas[k].user.name, estado, faltanParaProximo(validos, sorteo.topeInvitar));
+      return;
+    }
 
     const boletos = await boletosDeCliente(sorteo, quienInvita.userId);
     await enviarAUsuario(quienInvita.userId, (u) => correoBoletoSorteo({ nombre: u.name, sorteo: datosDe(sorteo), porque: 'invitados', total: boletos.total }));
+    // C-262: también a la campana de Mi panel
+    await avisarBoletoEnCampana(quienInvita.userId, 'invitados', boletos.total);
   } catch (error) {
     console.error('[SORTEO] No se pudo avisar el boleto por invitados:', error);
   }

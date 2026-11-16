@@ -245,6 +245,14 @@ export async function PUT(request: NextRequest) {
       select: PERFIL_PUBLICO,
     });
 
+    // C-262: un amigo invitado al sorteo que entró con Google (ya activado, sin teléfono) recién cuenta cuando agrega su
+    // teléfono. Antes nadie le avisaba a quien lo invitó: ahora le llega el boleto (o "ya cuenta") como al activar la cuenta
+    const cifras = (t: string | null | undefined) => (t ?? '').replace(/\D/g, '').length;
+    if ('phone' in profileUpdateData && cifras(actual.profile?.phone) < 10 && cifras(profile.phone) >= 10) {
+      const { avisarBoletoPorInvitados } = await import('@/lib/sorteo/correos');
+      void avisarBoletoPorInvitados(session.user.id);
+    }
+
     // Update or create default address if provided
     if (body.address) {
       const defaultAddress = await prisma.address.findFirst({

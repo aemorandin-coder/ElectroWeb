@@ -31,7 +31,9 @@ export type NotificationType =
   | 'BUSINESS_VERIFIED'
   // C-167: comisiones y solicitud del programa de promotores
   | 'REFERRAL_COMMISSION'
-  | 'PROMOTER_APPLICATION';
+  | 'PROMOTER_APPLICATION'
+  // C-262: el sorteo: un boleto ganado o un amigo que se unió con tu enlace
+  | 'SORTEO';
 
 interface CreateNotificationParams {
   userId: string;

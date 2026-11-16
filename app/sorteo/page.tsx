@@ -110,7 +110,7 @@ export default async function SorteoPage({ searchParams }: { searchParams: Promi
               minimo={minimo} tope={sorteo.topeInvitar} resultadoEl={sorteo.resultadoEl}
               cuenta={session?.user?.id ? { correoActivo: Boolean(usuario?.emailVerified) } : null}
               enlace={enlace} mensaje={`Participa conmigo en el sorteo de Electro Shop: ${sorteo.premio}. Regístrate con mi enlace:`}
-              boletos={boletos} invitado={invitado}
+              boletos={boletos} invitado={invitado} premio={sorteo.premio}
             />
             <PreguntasSorteo minimo={minimo} tope={sorteo.topeInvitar} hasta={sorteo.hasta} resultadoEl={sorteo.resultadoEl} />
             {/* C-257: la primera vez, el camino en tres íconos y un botón que lleva a "Cómo participar". Los dos caminos, la compra primero */}

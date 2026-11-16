@@ -77,6 +77,49 @@ export function invitadosValidos(invitados: InvitadoParaSorteo[], yaUsados: Set<
 /** 1 boleto por cada 2 invitados válidos, hasta el tope */
 export const boletosPorInvitar = (validos: number, tope: number) => Math.min(Math.floor(validos / 2), Math.max(0, tope));
 
+/**
+ * C-262: el estado de cada amigo invitado, para que quien invita sepa a quién le falta algo (el equipo, 15/11: "¿cómo sabe
+ * si los amigos le aceptaron o le hace falta un amigo de su link?"). Con las mismas reglas y en el mismo orden que
+ * `invitadosValidos`, así lo que se ve coincide con lo que cuenta:
+ * - `cuenta`: activó su cuenta y su teléfono no estaba contado;
+ * - `falta-activar`: no abrió el enlace del correo;
+ * - `falta-telefono`: entró con Google (ya activada) o sin teléfono: cuenta cuando lo agregue en Mi perfil;
+ * - `repetido`: su teléfono o su cédula ya contaron (dos cuentas de la misma persona valen una).
+ */
+export type EstadoAmigo = 'cuenta' | 'falta-activar' | 'falta-telefono' | 'repetido';
+
+export function estadosDeAmigos(invitados: InvitadoParaSorteo[]): EstadoAmigo[] {
+  const usados = new Set<string>();
+  return invitados.map((i) => {
+    if (!i.correoVerificado) return 'falta-activar';
+    const telefono = soloCifras(i.telefono).slice(-10);
+    if (telefono.length < 10) return 'falta-telefono';
+    const cedula = soloCifras(i.cedula);
+    if (usados.has(`t${telefono}`) || (cedula.length >= 5 && usados.has(`c${cedula}`))) return 'repetido';
+    usados.add(`t${telefono}`);
+    if (cedula.length >= 5) usados.add(`c${cedula}`);
+    return 'cuenta';
+  });
+}
+
+/**
+ * C-262: cuántos amigos más hacen falta para el próximo boleto por invitar (1 o 2), o 0 si ya se ganaron todos los del tope.
+ * `validos` son los que cuentan.
+ */
+export function faltanParaProximo(validos: number, tope: number): number {
+  if (tope <= 0 || boletosPorInvitar(validos, tope) >= tope) return 0;
+  return 2 - (validos % 2);
+}
+
+/** C-262: "Luisa Pérez" → "Luisa P.": cómo ve quien invita a cada amigo (sin el correo ni el teléfono) */
+export function nombreCorto(nombre: string | null | undefined): string {
+  const partes = (nombre ?? '').trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return 'Un amigo';
+  const primero = partes[0].charAt(0).toUpperCase() + partes[0].slice(1).toLowerCase();
+  if (partes.length === 1) return primero;
+  return `${primero} ${partes[partes.length - 1].charAt(0).toUpperCase()}.`;
+}
+
 export interface Boleto {
   userId: string;
   email: string;

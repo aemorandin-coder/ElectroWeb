@@ -5,9 +5,10 @@ import { cache } from 'react';
 import type { Sorteo } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import {
-  boletosPorInvitar, codigoNuevo, comprasConBoleto, esCodigoSorteo, huellaDe, invitadosValidos, sortear,
-  type Boleto, type CompraConBoleto, type InvitadoParaSorteo, type OrdenParaSorteo,
+  boletosPorInvitar, codigoNuevo, comprasConBoleto, esCodigoSorteo, estadosDeAmigos, faltanParaProximo, huellaDe, invitadosValidos,
+  nombreCorto, sortear, type Boleto, type CompraConBoleto, type EstadoAmigo, type InvitadoParaSorteo, type OrdenParaSorteo,
 } from './reglas';
+import { avisarAmigoRegistrado } from './avisos';
 
 /** De cada $1 vendido quedan unos 20 centavos (costo + 30 % + IVA): para estimar lo que dejó el sorteo */
 export const MARGEN_ESTIMADO = 0.3 / 1.508;
@@ -45,7 +46,10 @@ export async function registrarInvitacion(codigo: string | null | undefined, nue
   if (!invita || invita.sorteoId !== sorteo.id || invita.userId === nuevoUserId) return false;
   const participante = await participanteDe(sorteo.id, nuevoUserId, invita.id);
   // C-255: true solo si quedó como su invitado (el correo de activación se lo dice)
-  return participante.invitadoPorId === invita.id;
+  const quedo = participante.invitadoPorId === invita.id;
+  // C-262: a quien invitó le llega a la campana que su amigo se unió, y qué le falta para contar
+  if (quedo) await avisarAmigoRegistrado(invita.userId, nuevoUserId);
+  return quedo;
 }
 
 /** C-255: si un código para invitar es de un participante del sorteo vigente (para decirle al que llega "te invitó un amigo") */
@@ -70,10 +74,18 @@ function ordenesParaSorteo(filas: Array<{ orderNumber: string; subtotalUSD: unkn
 async function invitadosDe(sorteo: Sorteo, participanteId: string) {
   const filas = await prisma.participanteSorteo.findMany({
     where: { invitadoPorId: participanteId, user: { createdAt: { gte: sorteo.desde, lte: sorteo.hasta } } },
-    select: { user: { select: { emailVerified: true, profile: { select: { phone: true, idNumber: true } } } } },
+    select: { user: { select: { name: true, emailVerified: true, profile: { select: { phone: true, idNumber: true } } } } },
     orderBy: { createdAt: 'asc' },
   });
-  return filas.map<InvitadoParaSorteo>((f) => ({ correoVerificado: Boolean(f.user.emailVerified), telefono: f.user.profile?.phone ?? null, cedula: f.user.profile?.idNumber ?? null }));
+  return filas.map<InvitadoParaSorteo & { nombre: string | null }>((f) => ({
+    correoVerificado: Boolean(f.user.emailVerified), telefono: f.user.profile?.phone ?? null, cedula: f.user.profile?.idNumber ?? null, nombre: f.user.name,
+  }));
+}
+
+/** C-262: un amigo invitado como lo ve quien invita: su nombre corto y su estado (nunca su correo ni su teléfono) */
+export interface AmigoInvitado {
+  nombre: string;
+  estado: EstadoAmigo;
 }
 
 export interface BoletosDeCliente {
@@ -84,6 +96,12 @@ export interface BoletosDeCliente {
   total: number;
   /** Su enlace para invitar (la ruta, sin el dominio) */
   enlace: string;
+  /** C-262: cada amigo que se registró con su enlace, en orden, con su estado */
+  amigos: AmigoInvitado[];
+  /** C-262: cuántos amigos más hacen falta para el próximo boleto por invitar (0: ya ganó todos los del tope) */
+  faltanParaProximo: number;
+  /** Hasta cuántos boletos se ganan invitando en este sorteo */
+  tope: number;
 }
 
 /** Los boletos de un cliente y su enlace para invitar (Mi panel y /sorteo) */
@@ -99,7 +117,13 @@ export async function boletosDeCliente(sorteo: Sorteo, userId: string): Promise<
   const invitados = await invitadosDe(sorteo, participante.id);
   const validos = invitadosValidos(invitados, new Set());
   const porInvitar = boletosPorInvitar(validos, sorteo.topeInvitar);
-  return { compras, invitados: invitados.length, invitadosValidos: validos, porInvitar, total: compras.length + porInvitar, enlace: `/sorteo?invita=${participante.codigo}` };
+  const estados = estadosDeAmigos(invitados);
+  return {
+    compras, invitados: invitados.length, invitadosValidos: validos, porInvitar, total: compras.length + porInvitar, enlace: `/sorteo?invita=${participante.codigo}`,
+    amigos: invitados.map((i, k) => ({ nombre: nombreCorto(i.nombre), estado: estados[k] })),
+    faltanParaProximo: faltanParaProximo(validos, sorteo.topeInvitar),
+    tope: sorteo.topeInvitar,
+  };
 }
 
 export interface ResumenSorteo {

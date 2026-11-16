@@ -15,6 +15,7 @@ import {
   IconoCalendario, IconoCarrito, IconoCheck, IconoClientes, IconoCompartir, IconoCorreo, IconoCupon, IconoRegalo,
   IconoVerificado, type IconType,
 } from '@/components/iconos';
+import AmigosInvitados from '@/components/sorteo/AmigosInvitados';
 import Aparece from '@/components/sorteo/Aparece';
 import CompartirEnlace from '@/components/sorteo/CompartirEnlace';
 import { diaLargo } from '@/components/sorteo/PremioSorteo';
@@ -81,9 +82,11 @@ export interface DatosComoParticipar {
   boletos: BoletosDeCliente | null;
   /** Llegó con el enlace de un amigo (sin sesión) */
   invitado: boolean;
+  /** C-262: el premio, para el recordatorio por WhatsApp a los amigos que todavía no cuentan */
+  premio: string;
 }
 
-export default function ComoParticipar({ minimo, tope, resultadoEl, cuenta, enlace, mensaje, boletos, invitado }: DatosComoParticipar) {
+export default function ComoParticipar({ minimo, tope, resultadoEl, cuenta, enlace, mensaje, boletos, invitado, premio }: DatosComoParticipar) {
   const invitar = tope > 0;
   const volver = encodeURIComponent('/sorteo');
   return (
@@ -203,11 +206,12 @@ export default function ComoParticipar({ minimo, tope, resultadoEl, cuenta, enla
               ) : (
                 <p className="mt-4 text-sm text-ink-soft">Todavía no tienes boletos por compra.</p>
               )}
+              {/* C-262: cuánto falta para el próximo boleto, cada amigo con su estado y el recordatorio por WhatsApp */}
               {invitar && (
-                <p className="mt-3 text-sm text-ink-soft">
-                  Por invitar: {boletos.porInvitar} {boletos.porInvitar === 1 ? 'boleto' : 'boletos'}
-                  {boletos.invitados > 0 ? ` (${boletos.invitadosValidos} de ${boletos.invitados} amigos ya activaron su cuenta)` : ''}.
-                </p>
+                <AmigosInvitados
+                  amigos={boletos.amigos} porInvitar={boletos.porInvitar} tope={boletos.tope} faltanParaProximo={boletos.faltanParaProximo}
+                  premio={premio} urlSorteo={enlace ? enlace.split('?')[0] : '/sorteo'}
+                />
               )}
             </section>
           ) : (

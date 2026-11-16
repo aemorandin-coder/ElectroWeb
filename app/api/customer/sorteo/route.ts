@@ -17,5 +17,13 @@ export async function GET() {
       compraMinimaUSD: Number(sorteo.compraMinimaUSD), topeInvitar: sorteo.topeInvitar,
     },
     total: boletos.total,
+    // C-262: cuánto falta para el próximo boleto por invitar y cuántos amigos todavía no cuentan (sin sus nombres: la lista
+    // con los nombres está en /sorteo)
+    invitar: {
+      porInvitar: boletos.porInvitar,
+      tope: boletos.tope,
+      faltanParaProximo: boletos.faltanParaProximo,
+      pendientes: boletos.amigos.filter((a) => a.estado === 'falta-activar' || a.estado === 'falta-telefono').length,
+    },
   });
 }

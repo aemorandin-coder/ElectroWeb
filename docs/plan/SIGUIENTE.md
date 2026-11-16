@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.76; en `main`, rc.79 por subir: §2)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.79; nada por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-254 · La semana del ganador (rc.79, por subir: §2; `estado/C-254.md`):** el pedido del equipo del 15/11. Eligió lo recomendado en las 7 preguntas, viendo las maquetas (`~/.cache/electroshop-trabajo/c254/index.html`).
+- **C-254 · La semana del ganador (rc.79, en producción; `estado/C-254.md`):** el pedido del equipo del 15/11. Eligió lo recomendado en las 7 preguntas, viendo las maquetas (`~/.cache/electroshop-trabajo/c254/index.html`).
   - **La bandera del inicio, por etapas:**
     - cerrado: "Resultado el 20 de diciembre", y ese día, "Hoy sale el ganador";
     - sorteado: "¡Ya hay ganador!" con la foto del premio;
@@ -20,12 +20,12 @@
     - el servidor exige el permiso, una foto subida y un enlace de YouTube válido;
     - la foto se publica sin el GPS que traen las del teléfono;
     - al compartir `/sorteo` sale "¡Ya hay ganador!", sin la cara ni el nombre.
-- **C-260 · El kit de onboarding en más lugares, y las misiones de Mi panel (rc.78, por subir: §2; `estado/C-260.md`):** lo que midió C-258.
+- **C-260 · El kit de onboarding en más lugares, y las misiones de Mi panel (rc.78, en producción; `estado/C-260.md`):** lo que midió C-258.
   - **"Agregar":** "¡Listo! Ya está en tu carrito" con "Ver carrito", y el carrito que salta.
   - **Al firmar los términos:** "Baja hasta el final para firmar", y la firma de muestra.
   - **Mis códigos:** "Voltear tarjeta" como el botón principal.
   - **Las misiones de Mi panel:** los íconos que se dibujan, y "¿Cómo funciona la tienda?" como la hoja del kit.
-- **C-261 · Las tres decisiones de C-258 (rc.77, por subir: §2; `estado/C-261.md`):** el equipo eligió lo recomendado en los tres callejones que midió C-258.
+- **C-261 · Las tres decisiones de C-258 (rc.77, en producción; `estado/C-261.md`):** el equipo eligió lo recomendado en los tres callejones que midió C-258.
   - **"Solicitar producto" sin cuenta** pide entrar antes del formulario, y crear la cuenta vuelve a la página.
   - **La garantía** abre en "Nueva" o en Mis solicitudes, con "Pedir garantía" arriba.
   - **La recarga con un método manual** ya no pregunta "¿Estás seguro?": el botón dice el monto y el método.
@@ -393,26 +393,17 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.79` (C-261, C-260 y C-254; unos 30 minutos)
-Producción está en `v1.0.0-rc.76` (`38cd1f7`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- **C-261 (rc.77):** las tres decisiones de C-258. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
-- **C-260 (rc.78):** el kit de onboarding en más lugares y las misiones de Mi panel. Sin cambio de base.
-- **C-254 (rc.79):** la semana del ganador: la bandera por etapas, el ganador en `/sorteo` y "Publicar la entrega" en el panel.
-  - **Cambia la base: seis columnas nuevas en `sorteos`, aditivas.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
-```sql
-ALTER TABLE "sorteos" ADD COLUMN     "entregaCiudad" TEXT,
-ADD COLUMN     "entregaFoto" TEXT,
-ADD COLUMN     "entregaNombre" TEXT,
-ADD COLUMN     "entregaPermiso" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "entregaPublicadaAt" TIMESTAMP(3),
-ADD COLUMN     "entregaVideo" TEXT;
-```
-  - Sin variables nuevas, sin SQL de datos y sin cron.
-- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc79.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.79`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 20 minutos, en el teléfono y en la computadora):
+### Lo que falta subir: nada por ahora
+Producción está en `v1.0.0-rc.79` (`e68d68f`); su bloque está en `HISTORIAL.md`.
+
+### Por confirmar de rc.79 (C-261, C-260 y C-254; unos 20 minutos)
+Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera:
+- la versión;
+- `/solicitar-producto` sin cuenta ("Entra para pedirlo");
+- `/sorteo` y la bandera del inicio, como antes mientras el sorteo está abierto, ya leyendo la base con las columnas nuevas;
+- la imagen para compartir `/sorteo`.
+
+Falta esto (en el teléfono y en la computadora):
   1. **`/solicitar-producto` en una ventana privada, sin entrar:**
       - sale "Entra para pedirlo", con "Crear mi cuenta gratis" y "Ya tengo cuenta: entrar", y no el formulario;
       - "Ya tengo cuenta: entrar" lleva al login y, al entrar, vuelve a la página con el formulario.
@@ -446,7 +437,6 @@ ADD COLUMN     "entregaVideo" TEXT;
         - `/sorteo` muestra su nombre y su foto;
         - el play abre el video ahí mismo.
       - **Si la persona cambia de idea:** "Quitar de la tienda", y vuelve el correo tapado.
-- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.76 && npm install && bash scripts/deploy.sh --sin-pull`. Las seis columnas de C-254 pueden quedarse: la versión anterior no las lee. Si se publicó una entrega, deja de verse.
 
 ### Por confirmar de rc.76 (C-258 y C-257; unos 25 minutos)
 Ya en producción desde el 15/11 (`HISTORIAL.md`). Claude comprobó desde fuera:

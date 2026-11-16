@@ -1,9 +1,13 @@
-# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.84; en `main`, rc.85 por subir: §2)
+# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.84; en `main`, rc.86 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-270 · ElectroStudio 2.0: las capas, el editor A y los seis pasos (rc.86, por subir: §2; `estado/C-270.md`):** la Fase 2 del plan, con lo que eligió el equipo.
+  - **Títulos, subtítulos y textos sueltos** encima de la plantilla: se arrastran sobre la vista previa, se agrandan con las esquinas, con dos dedos o escribiendo los px, y se giran. Con color automático, contorno, sombra, cinta, píldora o caja.
+  - **La ruta de pasos** del panel con seis pasos, y la vista previa grande y fija al lado (en el teléfono, arriba).
+  - **Sigue C-271:** las 8 fuentes, los estilos listos y "soltar" un texto de la plantilla.
 - **C-269 · ElectroStudio 2.0: el plan (16/11; `ELECTROSTUDIO.md` y `estado/C-269.md`):** el pedido de mejorar mucho la herramienta, con "un plan para que no nos perdamos".
   - **Las fases:** C-270 las capas, el editor A y la ruta de seis pasos; C-271 títulos, subtítulos y fuentes; C-272 stickers; C-273 entradas y salidas; C-274 plantillas; C-275 la IA.
   - **Las decisiones:** el equipo eligió lo recomendado en las seis, viendo las maquetas y la demo que se toca (`~/.cache/electroshop-trabajo/c269/index.html`).
@@ -426,15 +430,21 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.85` (C-268; unos 10 minutos)
+### Lo que falta subir: `v1.0.0-rc.86` (C-268 y C-270; unos 20 minutos)
 Producción está en `v1.0.0-rc.84` (`7504584`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- **C-268 (rc.85):** el video de ElectroStudio. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- **C-268 (rc.85):** el video de ElectroStudio. **C-270 (rc.86):** ElectroStudio 2.0, las capas y los seis pasos.
+- Sin cambio de base (las capas van dentro de cada historia), sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
 - **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.85`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (5 minutos, en la computadora, con Chrome):
-  1. **Recarga el panel** (Ctrl+R) y abre ElectroStudio → una historia → Publicar → **"Descargar video"**. Quédate en la pestaña: a los 7 segundos baja el MP4 y el aviso "Grabando el video…" se va.
-  2. **Vuelve a tocar "Descargar video" y cambia de pestaña enseguida.** Al volver: "Se detuvo el video porque saliste de la pestaña…", y los botones se pueden tocar de nuevo.
-- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.84 && npm install && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.86`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 15 minutos, en la computadora con Chrome y en el teléfono). Antes, recarga el panel (Ctrl+R):
+  1. **El video (C-268):** ElectroStudio → una historia → Publicar → "Descargar video". Quédate en la pestaña: a los 7 segundos baja el MP4 y el aviso "Grabando el video…" se va.
+  2. **Salir mientras graba:** vuelve a tocar "Descargar video" y cambia de pestaña enseguida. Al volver: "Se detuvo el video porque saliste de la pestaña…", y los botones se pueden tocar de nuevo.
+  3. **Los seis pasos (C-270):** arriba, la ruta Contenido · Fotos · Diseño · Textos y stickers · Animación · Publicar, cada uno con su ícono; los hechos con el check. En el teléfono, "Paso N de 6" y "Ver pasos".
+  4. **Un título que se mueve:** debajo de la vista previa, "+ Título". Escribe el título; arrástralo en la vista previa (cerca del centro se pega), agrándalo por una esquina y gíralo con el asa de arriba. En el panel, el tamaño en px cambia con él.
+  5. **Un subtítulo:** "+ Subtítulo", escríbelo y prueba "Contorno", "Sombra" y el fondo (Cinta, Píldora, Caja). Ctrl+Z deshace cada arrastre de una vez.
+  6. **En el teléfono:** al bajar por el paso, la vista previa queda arriba. Con dos dedos sobre la pieza elegida, se agranda y se gira.
+  7. **Descargar:** la imagen y el video salen con el título y el subtítulo. Si una pieza queda donde Instagram tapa, Publicar lo avisa.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.84 && npm install && bash scripts/deploy.sh --sin-pull`. **Ojo:** rc.84 no conoce los títulos sueltos. Mientras esté rc.84, no abras para editar una historia que los tenga: al guardarse sola, los pierde. Las que no se toquen los recuperan al volver a subir rc.86.
 
 ### Por confirmar de rc.84 (C-267; unos 5 minutos)
 Ya en producción desde el 16/11 (`HISTORIAL.md`). Claude comprobó desde fuera la versión. Falta esto (en el teléfono, con tu cuenta):

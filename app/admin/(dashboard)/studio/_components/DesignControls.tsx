@@ -270,8 +270,18 @@ export function EffectsPicker({ studio, onAnim }: { studio: Studio; onAnim: () =
           ))}
         </div>
       </fieldset>
+    </>
+  );
+}
+
+/** C-270: el estilo de animación de la plantilla, en el paso Animación (antes iba en Diseño, junto a los efectos) */
+export function AnimationPicker({ studio, onAnim }: { studio: Studio; onAnim: () => void }) {
+  const { current, update } = studio;
+  if (!current) return null;
+  return (
+    <>
       <fieldset>
-        <legend className={adminLabel}>Animación del video</legend>
+        <legend className={adminLabel}>Cómo entra la historia</legend>
         <div className="flex flex-wrap gap-2">
           {(Object.entries(ANIMATIONS) as [AnimationId, string][]).map(([id, label]) => (
             <button
@@ -288,7 +298,7 @@ export function EffectsPicker({ studio, onAnim }: { studio: Studio; onAnim: () =
             </button>
           ))}
         </div>
-        <p className={adminHint}>Al elegir una, se reproduce en la vista previa. &quot;Escribir&quot; hace aparecer los títulos letra por letra.</p>
+        <p className={adminHint}>Al elegir una, se reproduce en la vista previa. &quot;Escribir&quot; hace aparecer los títulos letra por letra. Las piezas sueltas entran después de la plantilla, con el mismo estilo.</p>
       </fieldset>
     </>
   );

@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast';
 import { adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton, avisoAccion } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { buildCaption } from '@/lib/studio/caption';
-import type { FlyerCheck } from '@/lib/studio/checks';
+import { PASO_PUBLICAR, type FlyerCheck } from '@/lib/studio/checks';
 import { qrUrlFor } from '@/lib/studio/engine';
 import { sectionSummary, smallButton } from './ui';
 import type { Studio } from './useStudio';
@@ -74,7 +74,7 @@ export default function StepPublish({ studio, checks, busy, canShare, onPng, onV
               <IconoReloj className="h-4 w-4 shrink-0" aria-hidden="true" />
             )}
             <span className="flex-1">{c.text}</span>
-            {c.level !== 'ok' && c.step && c.step !== 4 && (
+            {c.level !== 'ok' && c.step && c.step !== PASO_PUBLICAR && (
               <button type="button" onClick={() => goStep(c.step as number)} className={smallButton}>
                 Ir
               </button>

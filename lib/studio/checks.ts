@@ -14,8 +14,8 @@ export interface FlyerCheck {
   level: CheckLevel;
   kind: CheckKind;
   text: string;
-  /** Paso del editor donde se arregla (1 Contenido, 2 Foto, 3 Diseño, 4 Publicar) */
-  step?: 1 | 2 | 3 | 4;
+  /** Paso del editor donde se arregla (C-270: 1 Contenido, 2 Fotos, 3 Diseño, 4 Textos y stickers, 5 Animación, 6 Publicar) */
+  step?: 1 | 2 | 3 | 4 | 5 | 6;
   /** Se revisa al descargar. El texto de Instagram, la fecha y "cambió desde la descarga" son para planificar */
   download: boolean;
 }
@@ -23,6 +23,10 @@ export interface FlyerCheck {
 export interface TextIssues {
   cut: string[];
   tiny: string[];
+  /** C-270: capas que salen del borde, que quedan muy chicas o que Instagram tapa (en una historia) */
+  fuera?: string[];
+  chicas?: string[];
+  tapadas?: string[];
 }
 
 export interface CheckEnv {
@@ -82,16 +86,19 @@ const CONTENT_OK: Partial<Record<StudioFlyerData['template'], string>> = {
   resena: 'Reseña escrita',
 };
 
-/** Paso completo (el 3, Diseño, nunca se marca: siempre tiene algo elegido) */
+/** Los pasos del editor (C-270): 1 Contenido, 2 Fotos, 3 Diseño, 4 Textos y stickers, 5 Animación y 6 Publicar */
+export const PASO_PUBLICAR = 6;
+
+/** Paso completo. Diseño, Textos y Animación son opcionales: no se marcan solos (siempre tienen algo elegido) */
 export function stepDone(k: number, f: StudioFlyerData, src: ProductSrc): boolean {
   if (k === 1) return contentProblems(f).length === 0;
   if (k === 2) return missingImages(f, src).length === 0;
-  if (k === 4) return !!f.caption.trim();
+  if (k === PASO_PUBLICAR) return !!f.caption.trim();
   return false;
 }
 
 export function firstOpenStep(f: StudioFlyerData, src: ProductSrc): number {
-  return [1, 2, 4].find((k) => !stepDone(k, f, src)) ?? 4;
+  return [1, 2, PASO_PUBLICAR].find((k) => !stepDone(k, f, src)) ?? PASO_PUBLICAR;
 }
 
 function todayYmd(): string {
@@ -124,6 +131,16 @@ export function flyerChecks(f: StudioFlyerData, env: CheckEnv): FlyerCheck[] {
   (env.text?.tiny ?? []).forEach((t) =>
     out.push({ level: 'warn', kind: 'overflow', text: `Un texto queda muy chico para leerse: "${short(t)}". Acórtalo.`, step: 1, download: true }),
   );
+  // C-270: las capas se arreglan moviéndolas o agrandándolas, en el paso Textos y stickers
+  (env.text?.fuera ?? []).forEach((t) =>
+    out.push({ level: 'warn', kind: 'overflow', text: `"${short(t)}" sale del borde y se corta. Muévelo hacia adentro.`, step: 4, download: true }),
+  );
+  (env.text?.chicas ?? []).forEach((t) =>
+    out.push({ level: 'warn', kind: 'overflow', text: `"${short(t)}" queda muy chico para leerse en el teléfono. Agrándalo.`, step: 4, download: true }),
+  );
+  (env.text?.tapadas ?? []).forEach((t) =>
+    out.push({ level: 'warn', kind: 'overflow', text: `Instagram tapa "${short(t)}" (arriba o abajo de la historia). Muévelo hacia el centro.`, step: 4, download: true }),
+  );
 
   // "Desde la descarga" solo cuenta si ya se descargó: la próxima descarga lo corrige
   staleWarnings(f, env.live, env.coupons, env.store).forEach((w) => {
@@ -132,11 +149,11 @@ export function flyerChecks(f: StudioFlyerData, env: CheckEnv): FlyerCheck[] {
     else out.push({ level: 'warn', kind: 'store', text: w.text, step: 1, download: true });
   });
 
-  if (f.caption.trim()) out.push({ level: 'ok', kind: 'caption', text: 'Texto para Instagram escrito', step: 4, download: false });
-  else out.push({ level: 'warn', kind: 'caption', text: 'Falta el texto para Instagram', step: 4, download: false });
+  if (f.caption.trim()) out.push({ level: 'ok', kind: 'caption', text: 'Texto para Instagram escrito', step: PASO_PUBLICAR, download: false });
+  else out.push({ level: 'warn', kind: 'caption', text: 'Falta el texto para Instagram', step: PASO_PUBLICAR, download: false });
 
   if (f.date && !f.exported.at && f.date < todayYmd()) {
-    out.push({ level: 'warn', kind: 'date', text: 'La fecha de publicación ya pasó', step: 4, download: false });
+    out.push({ level: 'warn', kind: 'date', text: 'La fecha de publicación ya pasó', step: PASO_PUBLICAR, download: false });
   }
   return out;
 }

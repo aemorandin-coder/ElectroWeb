@@ -56,7 +56,7 @@
 |---|---|---|---|
 | 0 | **C-268** | El video (hecha) | 1.2.9 (rc.85) |
 | 1 | **C-269** | Este plan y las maquetas | (sin código) |
-| 2 | **C-270** | Las capas, el editor nuevo y la ruta de pasos | **2.0.0** |
+| 2 | **C-270** | Las capas, el editor nuevo y la ruta de pasos (hecha, rc.86) | **2.0.0** |
 | 3 | **C-271** | Títulos, subtítulos y fuentes | 2.1.0 |
 | 4 | **C-272** | Stickers | 2.2.0 |
 | 5 | **C-273** | Animaciones de entrada y de salida, y la línea de tiempo | 2.3.0 |
@@ -65,7 +65,7 @@
 
 El 2.0.0 va en C-270 porque cambia la forma de trabajar (los pasos y el editor). Lo demás suma sin romper.
 
-### Fase 2 · C-270 · Las capas, el editor nuevo y la ruta de pasos
+### Fase 2 · C-270 · Las capas, el editor nuevo y la ruta de pasos (hecha el 16/11, `estado/C-270.md`)
 **Qué entra:**
 - **Las capas en la historia** (`capas`, hasta 20): cada una es un texto o un sticker, con su lugar, tamaño, giro, color y animación. Se guardan con la historia y se copian al duplicarla.
 - **Tocar y mover sobre la vista previa:**

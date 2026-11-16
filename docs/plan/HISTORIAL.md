@@ -1,10 +1,69 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.79`, comprobada el 15/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.83`, comprobada el 16/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 16/11 · C-262, C-264, C-263 y C-265 (de rc.79 a `v1.0.0-rc.83`)
+La subió el equipo con el bloque de Claude: el respaldo, `git pull --ff-only`, `deploy.sh --sin-pull`, `npx prisma db push` para la columna `ganadorCodigo` de `sorteos` y `deploy.sh --sin-pull` otra vez. No lo avisó en el chat: Claude lo vio al comprobar la versión.
+
+**Lo comprobado desde fuera, el 16/11:**
+- **La portada dice `1.0.0-rc.83`.**
+- **La base:** `/sorteo` responde leyendo el sorteo con la columna nueva, así que el `db push` se aplicó.
+- **C-263:**
+  - el enlace corto `/s/<código>` responde 307 hacia `/sorteo`, con `X-Robots-Tag: noindex`;
+  - los archivos nuevos del `git pull` responden: las fuentes Poppins, el sello (`/images/sorteo/sello-es.png`) y los logos de PS4 y PS5 de los correos.
+- **C-264:** la base 4 de `/sorteo` termina con "…cuenta para quien la invitó primero".
+- **C-265:** Mi panel sin sesión lleva al login y vuelve a la página pedida (`/customer` y `/customer/orders`).
+- **Con el sorteo abierto,** `/sorteo` sigue con "Gana una", "Quiero mi boleto" y la hoja "Así participas", y la bandera del inicio con "¡Gánate una…".
+- **Lo que se comparte:** `/sorteo` y la portada dan su título y su imagen a WhatsApp y a Facebook, y la imagen de `/sorteo` responde (JPEG).
+
+**Falta que el equipo haga las pruebas** (`SIGUIENTE.md`, "Por confirmar de rc.83"): Mi panel con una cuenta, los boletos y el flyer desde el teléfono (WhatsApp, Instagram y TikTok), la garantía de un pedido de códigos y el aviso de cookies sobre Mi panel. Lo del ganador se ve el 20/12, al sortear.
+
+### El bloque que se subió: `v1.0.0-rc.83` (C-262, C-264, C-263 y C-265)
+Producción está en `v1.0.0-rc.79` (`e68d68f`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-262 (rc.80):** los amigos invitados y los boletos, más claros. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **C-264 (rc.81):** el amigo repetido cuenta para quien lo invitó primero; un solo reparto para la pantalla, la lista y los avisos. Sin cambio de base.
+- **C-265 (rc.83):** Mi panel rediseñado. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **C-263 (rc.82):** el boleto épico y el flyer para compartir.
+  - **Cambia la base: una columna nueva en `sorteos`, aditiva.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
+```sql
+ALTER TABLE "sorteos" ADD COLUMN     "ganadorCodigo" TEXT;
+```
+  - Sin variables nuevas, sin SQL de datos y sin cron. Archivos nuevos que trae el `git pull`: las fuentes Poppins (`public/fonts`), el sello (`public/images/sorteo/sello-es.png`) y los logos de PS4 y PS5 para los correos (`public/images/correo/`).
+- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc83.dump`
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.83`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas de C-265** (unos 15 minutos, en la computadora y en el teléfono, con una cuenta que tenga pedidos):
+  1. **El menú:** en la computadora, la columna blanca llega abajo con mucho y con poco contenido, y "Cerrar sesión" queda al pie al bajar. Una captura de página entera ya no lo corta.
+  2. **El inicio:** con boletos del sorteo, Puntos ES va en blanco (los boletos son lo fuerte); en una cuenta sin boletos, en el azul oscuro. "Pedidos anteriores" no repite los de "Pedidos en curso".
+  3. **WhatsApp:** en Mi panel está en la cabecera, junto a la campana, y no flota; en la tienda sigue flotando. Tocarlo abre el chat.
+  4. **Mis pedidos:** en dos columnas en la computadora; "Detalle y recibo" abre el seguimiento y el recibo lado a lado, con "Factura n.º" si la tiene. En el teléfono, una columna sin nada tapado.
+  5. **La pestaña del navegador** dice "Mis pedidos | Electro Shop" (y así en cada página).
+  6. **Garantía → Nueva:** un pedido de solo códigos no sale; debajo, "Códigos y recargas…" con WhatsApp.
+  7. **Puntos ES → Recargar,** con una cuenta que no firmó los términos: sale la firma; Esc o la X la cierran y la recarga queda con "Leer y firmar".
+  8. **El aviso de cookies** (en una ventana privada, en el teléfono): con el aviso a la vista, abrir el menú de Mi panel. El menú queda encima del aviso.
+- **Pruebas de C-263** (unos 10 minutos, en el teléfono, con una cuenta que tenga boletos):
+  1. **Mi panel:** sale "¡Tienes N boletos para la PS4!" con los boletos, que se animan una vez (la segunda visita, quietos), y "Te falta 1 amigo…" si aplica. En el teléfono se deslizan, con "Tu próximo boleto" al final.
+  2. **"Compartir mi flyer" → "Compartir":** se abre la hoja del teléfono con la imagen. Probar las tres:
+      - **WhatsApp → Mi estado:** la imagen con el texto y el enlace, que se toca;
+      - **Instagram → Historia:** agregar el sticker «Enlace» y pegar (el enlace ya está copiado);
+      - **TikTok:** la imagen sola; el QR se lee con la cámara de otro teléfono.
+  3. **`/sorteo` → "Tus boletos":** los boletos con el monto chico debajo, "Descargar" (baja la imagen con todos) y "Mi flyer".
+  4. **El enlace corto:** abrir `electroshopve.com/s/<tu código>` en una ventana privada: lleva a `/sorteo` con "Te invitó un amigo". Compartirlo por WhatsApp muestra la vista previa del sorteo.
+  5. **El 20/12, al sortear:** el panel y `/sorteo` dicen "Ganó el boleto … de …", y el código es uno de los boletos del ganador.
+- **Pruebas de C-262 y C-264** (unos 10 minutos, en el teléfono):
+  1. **`/sorteo` con una cuenta que invitó amigos** (por ejemplo, la de prueba de rc.74, con un amigo registrado con su enlace):
+      - en "Tus boletos" sale "Invitando amigos", con "0 de 3 boletos" y la frase de lo que falta;
+      - cada amigo con su nombre corto ("Luisa P.") y su sello;
+      - si alguno no activó su cuenta, "Recordarles por WhatsApp" abre WhatsApp con el mensaje listo.
+  2. **Mi panel** con esa cuenta: la tarjeta del sorteo dice lo de los amigos ("1 amigo tuyo todavía no cuenta" o "Te falta 1 amigo…").
+  3. **La campana:** registra un amigo nuevo con tu enlace, en una ventana privada. En tu campana sale "… se unió con tu enlace". Al activar su cuenta desde su correo, sale "… ya cuenta para tu boleto" o "¡Ganaste un boleto!".
+  4. **Las bases del sorteo** (abajo, en `/sorteo`, "Las bases del sorteo"): la 4 termina con "…si se registra con el enlace de dos participantes, cuenta para quien la invitó primero".
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.79 && npm install && bash scripts/deploy.sh --sin-pull`. La columna `ganadorCodigo` puede quedarse: el código de rc.79 no la lee.
 
 ## 15/11 · C-261, C-260 y C-254 (de rc.76 a `v1.0.0-rc.79`)
 La subió el equipo el 15/11, con el bloque de Claude: el respaldo, `git pull --ff-only`, `deploy.sh --sin-pull`, `npx prisma db push` para las seis columnas de `sorteos` y `deploy.sh --sin-pull` otra vez. No lo avisó en el chat: Claude lo vio al comprobar la versión.

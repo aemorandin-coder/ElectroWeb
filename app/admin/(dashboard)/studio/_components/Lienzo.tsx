@@ -30,9 +30,9 @@ interface Props {
 
 type Gesto =
   | { tipo: 'mover'; id: string; x0: number; y0: number; cx0: number; cy0: number }
-  | { tipo: 'tam'; id: string; cx: number; cy: number; d0: number; tam0: number }
+  | { tipo: 'tam'; id: string; cx: number; cy: number; d0: number; tam0: number; ancho0: number }
   | { tipo: 'giro'; id: string; cx: number; cy: number; a0: number; giro0: number }
-  | { tipo: 'pinza'; id: string; d0: number; a0: number; tam0: number; giro0: number };
+  | { tipo: 'pinza'; id: string; d0: number; a0: number; tam0: number; ancho0: number; giro0: number };
 
 /** A cuántos px de la pantalla se pega al centro */
 const IMAN = 8;
@@ -95,7 +95,7 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
   const empezarPinza = (c: StudioCapa) => {
     const [a, b] = [...punteros.current.values()];
     if (!a || !b) return;
-    gesto.current = { tipo: 'pinza', id: c.id, d0: Math.hypot(b.x - a.x, b.y - a.y), a0: Math.atan2(b.y - a.y, b.x - a.x), tam0: c.tam, giro0: c.giro };
+    gesto.current = { tipo: 'pinza', id: c.id, d0: Math.hypot(b.x - a.x, b.y - a.y), a0: Math.atan2(b.y - a.y, b.x - a.x), tam0: c.tam, ancho0: c.anchoMax, giro0: c.giro };
   };
 
   const alTocarFondo = (e: PtrEvent<HTMLDivElement>) => {
@@ -133,7 +133,7 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
       onCambiar(g.id, { x: x / W, y: y / alto });
     } else if (g.tipo === 'tam') {
       const d = Math.hypot(e.clientX - g.cx, e.clientY - g.cy);
-      onCambiar(g.id, { tam: tamTexto(g.tam0 * (d / Math.max(6, g.d0))) });
+      onCambiar(g.id, escalar(g, d / Math.max(6, g.d0)));
     } else if (g.tipo === 'giro') {
       onCambiar(g.id, { giro: recto(g.giro0 + ((Math.atan2(e.clientY - g.cy, e.clientX - g.cx) - g.a0) * 180) / Math.PI) });
     } else {
@@ -141,7 +141,7 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
       if (!a || !b) return;
       const d = Math.hypot(b.x - a.x, b.y - a.y);
       const ang = Math.atan2(b.y - a.y, b.x - a.x);
-      onCambiar(g.id, { tam: tamTexto(g.tam0 * (d / Math.max(6, g.d0))), giro: recto(g.giro0 + ((ang - g.a0) * 180) / Math.PI) });
+      onCambiar(g.id, { ...escalar(g, d / Math.max(6, g.d0)), giro: recto(g.giro0 + ((ang - g.a0) * 180) / Math.PI) });
     }
   };
 
@@ -250,7 +250,7 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
           alto={alto}
           onTam={(e) => {
             const c = centro(elegida);
-            empezar(e, { tipo: 'tam', id: elegida.id, cx: c.x, cy: c.y, d0: Math.hypot(e.clientX - c.x, e.clientY - c.y), tam0: elegida.tam });
+            empezar(e, { tipo: 'tam', id: elegida.id, cx: c.x, cy: c.y, d0: Math.hypot(e.clientX - c.x, e.clientY - c.y), tam0: elegida.tam, ancho0: elegida.anchoMax });
           }}
           onGiro={(e) => {
             const c = centro(elegida);
@@ -269,6 +269,16 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
       )}
     </div>
   );
+}
+
+/**
+ * Agrandar con las esquinas o con dos dedos: el texto y su ancho máximo crecen juntos (C-271), así las líneas cortan en
+ * el mismo lugar. Con el campo de px, en cambio, el ancho queda y el texto baja de línea.
+ */
+function escalar(g: { tam0: number; ancho0: number }, factor: number): Partial<CapaTexto> {
+  const tam = tamTexto(g.tam0 * factor);
+  const f = tam / g.tam0;
+  return g.ancho0 ? { tam, anchoMax: Math.min(1080, Math.max(40, Math.round(g.ancho0 * f))) } : { tam };
 }
 
 /** Ángulo entre -180 y 180, que se pega a los rectos a menos de 4 grados */

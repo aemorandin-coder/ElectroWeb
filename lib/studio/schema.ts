@@ -1,6 +1,7 @@
 // ElectroStudio (C-112): forma de un flyer y de los ajustes de marca. Módulo puro: lo usan la API (validar lo que
 // llega) y el editor (normalizar lo que se lee). Sale del artefacto "Flyers ElectroShop" de Andrés.
 import { z } from '@/lib/zod';
+import { FUENTES_IDS, type FuenteId } from './fuentes';
 
 /** photo: la foto del producto es obligatoria, opcional o no se usa */
 export const TEMPLATES = {
@@ -190,9 +191,8 @@ export const reviewSchema = z.object({
 export type StudioReviewData = z.infer<typeof reviewSchema>;
 
 /* ---------- C-270: las capas, piezas sueltas encima de la plantilla (docs/plan/ELECTROSTUDIO.md §5) ---------- */
-/** Las fuentes de las capas. C-271 suma las demás */
-export const FUENTES_CAPA = { montserrat: 'Montserrat' } as const;
-export type FuenteCapa = keyof typeof FUENTES_CAPA;
+/** Las fuentes de las capas (C-271: las 8 de la decisión D3, en lib/studio/fuentes.ts) */
+export type FuenteCapa = FuenteId;
 /** Con qué se creó la capa: decide cómo arranca (tamaño, peso, fondo) */
 export const ESTILOS_CAPA = { titulo: 'Título', subtitulo: 'Subtítulo', texto: 'Texto' } as const;
 export type EstiloCapa = keyof typeof ESTILOS_CAPA;
@@ -211,7 +211,7 @@ export const capaTextoSchema = z.object({
   tipo: z.literal('texto'),
   estilo: z.enum(Object.keys(ESTILOS_CAPA) as [EstiloCapa, ...EstiloCapa[]]).catch('texto').default('texto'),
   texto: z.string().catch('').transform((v) => v.slice(0, 200)).default(''),
-  fuente: z.enum(Object.keys(FUENTES_CAPA) as [FuenteCapa, ...FuenteCapa[]]).catch('montserrat').default('montserrat'),
+  fuente: z.enum(FUENTES_IDS).catch('montserrat').default('montserrat'),
   tam: z.coerce.number().min(TAM_TEXTO.min).max(TAM_TEXTO.max).catch(72).default(72),
   peso: z.coerce.number().int().min(100).max(900).catch(800).default(800),
   cursiva: siNo(true),
@@ -220,6 +220,8 @@ export const capaTextoSchema = z.object({
   sombra: siNo(false),
   fondo: z.enum(Object.keys(FONDOS_CAPA) as [FondoCapa, ...FondoCapa[]]).catch('ninguno').default('ninguno'),
   alinear: z.enum(Object.keys(ALINEAR_CAPA) as [AlinearCapa, ...AlinearCapa[]]).catch('centro').default('centro'),
+  /** C-271: el ancho máximo en px (sobre 1080); el texto baja de línea solo. 0 = una línea por renglón escrito */
+  anchoMax: z.coerce.number().int().min(0).max(1080).catch(0).default(0),
   /** Vacío = automático: blanco u oscuro según el fondo */
   color: colorOrEmpty,
   /** El centro de la capa, de 0 a 1 del ancho y del alto: sobrevive al cambio de formato */

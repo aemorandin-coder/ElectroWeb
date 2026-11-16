@@ -12,9 +12,9 @@ export function nuevoIdCapa(usados: readonly string[]): string {
 
 /** Cómo arranca cada estilo. El texto empieza escrito para que se vea dónde quedó; se cambia en el panel */
 const ARRANQUE: Record<EstiloCapa, Omit<CapaTexto, 'id' | 'tipo' | 'estilo' | 'x' | 'giro' | 'oculta' | 'bloqueada' | 'fuente' | 'alinear' | 'color'>> = {
-  titulo: { texto: 'Tu título', tam: 120, peso: 900, cursiva: true, mayusculas: true, contorno: false, sombra: true, fondo: 'ninguno', y: 0.3 },
-  subtitulo: { texto: 'Tu subtítulo', tam: 56, peso: 800, cursiva: true, mayusculas: false, contorno: false, sombra: false, fondo: 'cinta', y: 0.4 },
-  texto: { texto: 'Escribe aquí', tam: 44, peso: 700, cursiva: false, mayusculas: false, contorno: false, sombra: false, fondo: 'ninguno', y: 0.5 },
+  titulo: { texto: 'Tu título', tam: 120, peso: 900, cursiva: true, mayusculas: true, contorno: false, sombra: true, fondo: 'ninguno', anchoMax: 0, y: 0.3 },
+  subtitulo: { texto: 'Tu subtítulo', tam: 56, peso: 800, cursiva: true, mayusculas: false, contorno: false, sombra: false, fondo: 'cinta', anchoMax: 0, y: 0.4 },
+  texto: { texto: 'Escribe aquí', tam: 44, peso: 700, cursiva: false, mayusculas: false, contorno: false, sombra: false, fondo: 'ninguno', anchoMax: 860, y: 0.5 },
 };
 
 export function nuevaCapa(estilo: EstiloCapa, capas: readonly StudioCapa[]): CapaTexto {
@@ -70,7 +70,7 @@ export const tamTexto = (v: number) => Math.min(TAM_TEXTO.max, Math.max(TAM_TEXT
 
 /** Lo que se lee de una capa en una lista: su texto en una línea, o su estilo si está vacía */
 export function nombreCapa(c: StudioCapa): string {
-  const t = c.texto.replace(/\s+/g, ' ').trim();
+  const t = c.texto.replace(/\*/g, '').replace(/\s+/g, ' ').trim();
   return t || (c.estilo === 'titulo' ? 'Título vacío' : c.estilo === 'subtitulo' ? 'Subtítulo vacío' : 'Texto vacío');
 }
 
@@ -80,4 +80,26 @@ export function colorClaro(hex: string): boolean {
   if (!Number.isFinite(n)) return true;
   const lum = 0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255);
   return lum > 150;
+}
+
+/**
+ * C-271: los estilos listos. Cambian el aspecto de la pieza elegida en un toque, sin tocar su texto, su lugar ni su
+ * tamaño. El color vacío es el automático (blanco u oscuro según el fondo).
+ */
+export const ESTILOS_LISTOS: { id: string; nombre: string; cambio: Partial<CapaTexto> }[] = [
+  { id: 'oferta', nombre: 'Título de oferta', cambio: { fuente: 'anton', peso: 400, cursiva: false, mayusculas: true, contorno: true, sombra: true, fondo: 'ninguno', color: '' } },
+  { id: 'alto', nombre: 'Titular alto', cambio: { fuente: 'bebas', peso: 400, cursiva: false, mayusculas: true, contorno: false, sombra: true, fondo: 'ninguno', color: '' } },
+  { id: 'marca', nombre: 'De la marca', cambio: { fuente: 'montserrat', peso: 900, cursiva: true, mayusculas: true, contorno: false, sombra: true, fondo: 'ninguno', color: '' } },
+  { id: 'cinta', nombre: 'Subtítulo en cinta', cambio: { fuente: 'montserrat', peso: 800, cursiva: true, mayusculas: false, contorno: false, sombra: false, fondo: 'cinta', color: '' } },
+  { id: 'moderno', nombre: 'Moderno', cambio: { fuente: 'unbounded', peso: 800, cursiva: false, mayusculas: false, contorno: false, sombra: false, fondo: 'ninguno', color: '' } },
+  { id: 'ficha', nombre: 'Ficha técnica', cambio: { fuente: 'space', peso: 700, cursiva: false, mayusculas: false, contorno: false, sombra: false, fondo: 'caja', color: '' } },
+  { id: 'aviso', nombre: 'Aviso amable', cambio: { fuente: 'rubik', peso: 800, cursiva: false, mayusculas: false, contorno: false, sombra: false, fondo: 'pildora', color: '' } },
+  { id: 'mano', nombre: 'Nota a mano', cambio: { fuente: 'caveat', peso: 700, cursiva: false, mayusculas: false, contorno: false, sombra: false, fondo: 'ninguno', color: '#FFB400' } },
+  { id: 'elegante', nombre: 'Elegante', cambio: { fuente: 'playfair', peso: 800, cursiva: true, mayusculas: false, contorno: false, sombra: false, fondo: 'ninguno', color: '' } },
+];
+
+/** El estilo listo que coincide con la pieza (para marcarlo), si alguno coincide */
+export function estiloListoDe(c: CapaTexto): string | null {
+  const e = ESTILOS_LISTOS.find(({ cambio }) => (Object.keys(cambio) as (keyof CapaTexto)[]).every((k) => c[k] === cambio[k]));
+  return e?.id ?? null;
 }

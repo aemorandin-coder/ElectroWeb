@@ -14,6 +14,7 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useDelNavegador } from '@/lib/hooks/useMontado';
 import { PASO_PUBLICAR, firstOpenStep, flyerChecks, stepDone, type TextIssues } from '@/lib/studio/checks';
 import { cambiarCapa, duplicarCapa, moverCapa, nuevaCapa, nuevoIdCapa, puedeAgregarCapa } from '@/lib/studio/capas';
+import { cargarFuentes } from '@/lib/studio/fuentes';
 import {
   DURATION,
   H,
@@ -262,6 +263,19 @@ export default function Studio({ id }: { id: string }) {
     return () => cancelAnimationFrame(frame);
   }, [drawStatic, loading]);
 
+  // C-271: las fuentes que usan las capas se cargan al elegirlas; cuando llegan, se vuelve a dibujar
+  const fuentesUsadas = current ? [...new Set(current.capas.map((c) => c.fuente))].sort().join(',') : '';
+  useEffect(() => {
+    if (!fuentesUsadas) return;
+    let vivo = true;
+    void cargarFuentes(fuentesUsadas.split(',')).then(() => {
+      if (vivo) drawStatic();
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [fuentesUsadas, drawStatic]);
+
   // Imagen fija cada vez que cambia algo (si no se está reproduciendo la animación)
   useEffect(() => {
     if (playing) return;
@@ -418,7 +432,7 @@ export default function Studio({ id }: { id: string }) {
     const r = renderer.current;
     const canvas = canvasRef.current;
     if (!r || !canvas || !images.current) return null;
-    await loadStudioFonts();
+    await loadStudioFonts(f);
     await images.current.whenReady(flyerImageSources(f, brand, src));
     const prev = srcRef.current;
     srcRef.current = src;
@@ -471,7 +485,7 @@ export default function Studio({ id }: { id: string }) {
       if (!current || !canvasRef.current || !renderer.current || !images.current) return;
       const type = pickVideoType();
       if (!type || !canvasRef.current.captureStream) throw new Error('Este navegador no puede grabar video. Prueba con Chrome.');
-      await loadStudioFonts();
+      await loadStudioFonts(current);
       await images.current.whenReady(flyerImageSources(current, brand, productSrc));
       const toastId = toast.loading(`Grabando el video (${DURATION} segundos). No cambies de pestaña.`);
       const epoch = Date.now();

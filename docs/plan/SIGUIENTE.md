@@ -1,9 +1,10 @@
-# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.84; en `main`, rc.86 por subir: §2)
+# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.84; en `main`, rc.87 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-271 · ElectroStudio: las 8 fuentes y los estilos listos (rc.87, por subir: §2; `estado/C-271.md`):** Montserrat, Anton, Bebas Neue, Unbounded, Space Grotesk, Rubik, Caveat y Playfair Display, guardadas en la tienda; nueve estilos listos; resaltar con \*asteriscos\*; y el texto que baja de línea solo. Sigue C-272, los stickers.
 - **C-270 · ElectroStudio 2.0: las capas, el editor A y los seis pasos (rc.86, por subir: §2; `estado/C-270.md`):** la Fase 2 del plan, con lo que eligió el equipo.
   - **Títulos, subtítulos y textos sueltos** encima de la plantilla: se arrastran sobre la vista previa, se agrandan con las esquinas, con dos dedos o escribiendo los px, y se giran. Con color automático, contorno, sombra, cinta, píldora o caja.
   - **La ruta de pasos** del panel con seis pasos, y la vista previa grande y fija al lado (en el teléfono, arriba).
@@ -430,12 +431,13 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.86` (C-268 y C-270; unos 20 minutos)
+### Lo que falta subir: `v1.0.0-rc.87` (C-268, C-270 y C-271; unos 25 minutos)
 Producción está en `v1.0.0-rc.84` (`7504584`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- **C-268 (rc.85):** el video de ElectroStudio. **C-270 (rc.86):** ElectroStudio 2.0, las capas y los seis pasos.
+- **C-268 (rc.85):** el video de ElectroStudio. **C-270 (rc.86):** ElectroStudio 2.0, las capas y los seis pasos. **C-271 (rc.87):** las 8 fuentes y los estilos listos.
+- Archivos nuevos que trae el `git pull`: las fuentes en `public/fonts/studio/`, cada una con su licencia.
 - Sin cambio de base (las capas van dentro de cada historia), sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
 - **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.86`, o una mayor si entró otra tarea antes del `git pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.87`, o una mayor si entró otra tarea antes del `git pull`.
 - **Pruebas** (unos 15 minutos, en la computadora con Chrome y en el teléfono). Antes, recarga el panel (Ctrl+R):
   1. **El video (C-268):** ElectroStudio → una historia → Publicar → "Descargar video". Quédate en la pestaña: a los 7 segundos baja el MP4 y el aviso "Grabando el video…" se va.
   2. **Salir mientras graba:** vuelve a tocar "Descargar video" y cambia de pestaña enseguida. Al volver: "Se detuvo el video porque saliste de la pestaña…", y los botones se pueden tocar de nuevo.
@@ -444,7 +446,9 @@ Producción está en `v1.0.0-rc.84` (`7504584`); su bloque está en `HISTORIAL.m
   5. **Un subtítulo:** "+ Subtítulo", escríbelo y prueba "Contorno", "Sombra" y el fondo (Cinta, Píldora, Caja). Ctrl+Z deshace cada arrastre de una vez.
   6. **En el teléfono:** al bajar por el paso, la vista previa queda arriba. Con dos dedos sobre la pieza elegida, se agranda y se gira.
   7. **Descargar:** la imagen y el video salen con el título y el subtítulo. Si una pieza queda donde Instagram tapa, Publicar lo avisa.
-- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.84 && npm install && bash scripts/deploy.sh --sin-pull`. **Ojo:** rc.84 no conoce los títulos sueltos. Mientras esté rc.84, no abras para editar una historia que los tenga: al guardarse sola, los pierde. Las que no se toquen los recuperan al volver a subir rc.86.
+  8. **Las fuentes (C-271):** con el título elegido, toca "Título de oferta" (queda en Anton, con contorno) y después prueba dos o tres fuentes del selector: cada nombre se ve en su letra. Escribe "¡Feliz \*Navidad\*!": la palabra sale resaltada. Descarga la imagen: sale con esa fuente.
+  9. **Un texto largo:** "+ Texto", escribe una frase larga y marca "Que baje de línea solo": se corta en varias líneas.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.84 && npm install && bash scripts/deploy.sh --sin-pull`. **Ojo:** rc.84 no conoce los títulos sueltos ni sus fuentes. Mientras esté rc.84, no abras para editar una historia que los tenga: al guardarse sola, los pierde. Las que no se toquen los recuperan al volver a subir rc.86.
 
 ### Por confirmar de rc.84 (C-267; unos 5 minutos)
 Ya en producción desde el 16/11 (`HISTORIAL.md`). Claude comprobó desde fuera la versión. Falta esto (en el teléfono, con tu cuenta):

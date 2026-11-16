@@ -39,7 +39,7 @@ export function useFlyerRenderer(brand: StudioBrand, navidad: StudioNavidad | nu
       engine.current = { canvas, images, renderer: createRenderer(canvas, images, storeSrc) };
     }
     const { canvas, images, renderer } = engine.current;
-    await loadStudioFonts();
+    await loadStudioFonts(f);
     await images.whenReady(flyerImageSources(f, brandRef.current, storeSrc));
     renderer.draw(f, brandRef.current, { preview, code, navidad: navidadRef.current });
     return { canvas, text: renderer.textIssues() };

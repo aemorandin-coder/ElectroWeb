@@ -813,7 +813,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - **Si el error vuelve después de recargar,** investigar con la hora y la página. La alternativa de fondo es el `deploymentId` de Next, que C-203 descartó porque después de cada deploy se vuelve a bajar todo, también las fotos.
   - **C-269 · El plan y las maquetas** (**hecha**, 16/11; `estado/C-269.md`): el equipo eligió lo recomendado en las seis decisiones (`ELECTROSTUDIO.md` §6).
   - **C-270 · Las capas, el editor A y la ruta de seis pasos** (**hecha**, ElectroStudio 2.0.0, rc.86, 16/11; `estado/C-270.md`): títulos, subtítulos y textos sueltos que se mueven, se agrandan en px y se giran sobre la vista previa.
-  - **C-271 · Títulos, subtítulos y las 8 fuentes** (2.1.0).
+  - **C-271 · Títulos, subtítulos y las 8 fuentes** (**hecha**, 2.1.0, rc.87, 16/11; `estado/C-271.md`): las 8 fuentes, los estilos listos, resaltar con asteriscos y el ancho máximo.
+    - **Pendiente:** soltar un texto de la plantilla (el título o el titular pasa a ser una capa para moverlo).
   - **C-272 · Los stickers, en 6 grupos** (2.2.0).
   - **C-273 · Entradas, énfasis y salidas, la línea de tiempo y la duración del video** (2.3.0).
   - **C-274 · Las 6 plantillas nuevas** (2.4.0): Lista de precios, Combo, Cuenta regresiva, ¿Cuál prefieres?, Lienzo libre y Antes y después.

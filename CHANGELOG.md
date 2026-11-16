@@ -10,6 +10,14 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.84] - 2026-11-16
+Lo que encontró la revisión de rc.83 antes de las pruebas del teléfono (C-267). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Marco del panel 1.15.1 (C-267)
+- **Mis pedidos y Puntos ES ya no se salen del teléfono.** Con filtros, la página medía el doble de la pantalla y el teléfono la achicaba (desde rc.83): el texto para el lector de pantalla de cada píldora quedaba fuera de la fila que se desliza.
+### Marketing 1.24.2 (C-267)
+- **El flyer, si el teléfono no abre la hoja de compartir:** se descarga y lo dice (antes no pasaba nada).
+- **Si no se pudo copiar el enlace,** el aviso dice que toques «Copiar» para pegarlo en el sticker de Instagram.
+
 ## [1.0.0-rc.83] - 2026-11-15
 Mi panel rediseñado (C-265). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Carrito, checkout y cuenta del cliente 1.11.0 (C-265)

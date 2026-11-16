@@ -184,6 +184,10 @@ Build con el `DATABASE_URL` de `rev10_demo` y `NEXT_DIST_DIR=.next-test`, y `nex
 - **Navegador:** Firefox headless con WebDriver BiDi, a 360, 768, 1024 y 1440 px.
   - Para leer un canvas, `canvas[role=img]`: el primer `<canvas>` puede ser una miniatura.
   - Detener las animaciones antes de capturar.
+- **Sin scroll de lado, la cuenta buena (C-267):** en modo teléfono (`isMobile`), Chrome agranda la ventana para que quepa lo que se sale, y `scrollWidth <= innerWidth` da bien aunque la página se salga.
+  - Hay que comprobar que `innerWidth` siga del ancho de la pantalla (360) y que `scrollWidth` no pase de ahí.
+  - Así se escaparon Mis pedidos y Puntos ES en rc.83. El barrido está en `~/.cache/electroshop-trabajo/rc83/barrido.cjs`.
+- **Un guion temporal en la raíz del worktree** entra al chequeo de tipos del build: se corre y se saca antes de `next build` (C-267: `scripts/e2e/lib.ts` arma el JWT de prueba sin `permissions`).
 - **Cambios en órdenes, carrito o Puntos ES:** el caso normal y el caso manipulado.
 - **Búsqueda de productos en la web (C-155):** sale a internet de verdad (buscadores, páginas y Groq con la clave del `.env` local). Groq da 8.000 tokens por minuto: entre una búsqueda con IA y la siguiente, esperar un minuto, o la segunda sale con las reglas. Para probar sin red, simular `globalThis.fetch` (Groq) y usar páginas guardadas.
 - **BiDi devuelve bien los textos y los números, no los objetos:** para leer una lista de la página, `JSON.stringify` dentro y `JSON.parse` fuera.

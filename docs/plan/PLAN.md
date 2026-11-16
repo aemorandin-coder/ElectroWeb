@@ -185,6 +185,7 @@ Los filtros de una lista van con `components/admin/Filtros`:
 - **En el teléfono** se deslizan de lado.
 - Son botones con `aria-pressed`, no pestañas.
 - **El tamaño chico** (`tamano="chica"`, C-265, la decisión del equipo para Mi panel): una línea con el ícono, el nombre y la cuenta, y lo que junta la elegida, debajo. Para listas cortas, donde la píldora de 52 px pesaba más que la lista. Salen solo cuando separan algo (con una sola categoría, no van).
+- **La fila que se desliza lleva `relative`** (C-267): adentro de cada píldora va un texto para el lector de pantalla (`sr-only`, que es `absolute`), y sin `relative` la fila no lo recorta y la página se agranda a lo ancho en el teléfono.
 
 ### 1.8 Píldoras de estado y botones del panel (C-210)
 Andrés eligió la versión A ("como la tienda") el 13/11, para todo el panel.
@@ -616,6 +617,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - ~~**Tres decisiones del equipo**~~: **decididas y hechas en C-265** (rc.83): Mis pedidos en dos columnas, la garantía solo de lo físico (los códigos van por WhatsApp; el servidor lo exige) y "Solo tú los ves" y "Si no funciona, te ayudamos" en Mis códigos.
     - Pagar un pedido "Por pagar" desde Mi panel no existe; solo nace así lo que arma el equipo. Si se quiere, es una tarea aparte.
     - La dirección muy corta: la pantalla pide 10 letras y el servidor acepta menos.
+    - **Mis pedidos sin páginas** (visto en C-267): trae todos los pedidos de una vez. Para un cliente normal no pesa; con cientos de pedidos convendría paginar.
   - **C-253 · El sorteo, más atractivo** (**hecha**, rc.72, 15/11; `estado/C-253.md`; el equipo eligió viendo las maquetas):
     - el banner de `/sorteo` (la C2: la foto limpia y "Lo que trae" en una franja abajo);
     - la bandera del inicio (la A1, con el logo de PS4);

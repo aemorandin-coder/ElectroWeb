@@ -158,12 +158,19 @@ export default function CompartirFlyer({ datos, sorteo, foto, texto, alCerrar }:
   const compartir = () => {
     if (!archivo) return;
     // El enlace se copia sin esperar: el teléfono solo deja compartir justo después del toque
-    void navigator.clipboard?.writeText(datos.enlace).then(
+    void (navigator.clipboard ? navigator.clipboard.writeText(datos.enlace) : Promise.reject(new Error('Sin portapapeles'))).then(
       () => toast.success('Tu enlace quedó copiado. En Instagram, pégalo en el sticker «Enlace».', { id: 'flyer-enlace', duration: 6000 }),
-      () => undefined,
+      // C-267: si el teléfono no dejó copiarlo, se dice cómo llevarlo a Instagram
+      () => toast('Para Instagram, toca «Copiar» y pega tu enlace en el sticker «Enlace».', { id: 'flyer-enlace', duration: 6000 }),
     );
-    navigator.share({ files: [archivo], text: texto }).catch(() => {
-      // Cancelado por la persona: no es un error
+    navigator.share({ files: [archivo], text: texto }).catch((e: unknown) => {
+      // Cancelado por la persona, o ya hay una hoja abierta: no es un error
+      const nombre = typeof e === 'object' && e !== null && 'name' in e ? String(e.name) : '';
+      if (nombre === 'AbortError' || nombre === 'InvalidStateError') return;
+      // C-267: el teléfono no abrió la hoja (o no aceptó la imagen). Antes no pasaba nada; ahora se descarga, para subirla
+      // desde la galería
+      downloadBlob(archivo, archivo.name);
+      toast.success('Tu teléfono no abrió la hoja de compartir: se descargó tu flyer. Súbelo desde tu galería.', { id: 'flyer-enlace', duration: 7000 });
     });
   };
 

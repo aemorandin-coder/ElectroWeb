@@ -127,8 +127,9 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-4 pb-24 lg:pb-6">
-      <header className="flex items-center gap-4 rounded-2xl border border-line bg-white p-4 sm:p-5">
+    <div className="space-y-4">
+      {/* C-265: la cabecera de la página, sin tarjeta (antes era una tarjeta dentro del marco blanco) */}
+      <header className="flex items-center gap-4">
         <div className="relative shrink-0">
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-brand-500 text-2xl font-bold text-white sm:h-20 sm:w-20">
             {foto ? <Image src={foto} alt="" width={80} height={80} className="h-full w-full object-cover" /> : inicial}
@@ -169,8 +170,9 @@ export default function ProfilePage() {
         </ul>
       </nav>
 
-      {/* C-251b: cada contenedor del tamaño de lo que lleva (PLAN.md §1.5): los formularios hasta 48 rem, a la izquierda */}
-      <div className="max-w-3xl">
+      {/* C-251b: cada contenedor del tamaño de lo que lleva (PLAN.md §1.5): los formularios hasta 48 rem, a la izquierda.
+          C-265: los datos personales, en dos grupos lado a lado desde 1280 px */}
+      <div className={pestana === 'datos' ? 'max-w-3xl xl:max-w-6xl' : 'max-w-3xl'}>
         {pestana === 'datos' && <DatosPersonales key={datos.user.id} datos={datos} onGuardado={alGuardar} />}
         {pestana === 'seguridad' && <Seguridad ajustes={ajustes} onCambio={cargar} />}
         {pestana === 'notificaciones' && <Notificaciones inicial={ajustes.notificaciones} />}

@@ -10,6 +10,49 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.83] - 2026-11-15
+Mi panel rediseñado (C-265). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Carrito, checkout y cuenta del cliente 1.11.0 (C-265)
+- **Mi panel, con el kit** (el equipo eligió la A, "tarjetas en rejilla", viendo las maquetas):
+  - sin el marco blanco de cada página: las tarjetas van sobre el gris, en un solo nivel, junto al menú;
+  - el menú es una columna de arriba abajo (antes, en una captura de página entera, quedaba a mitad);
+  - WhatsApp va en la cabecera, junto a la campana (antes flotaba encima de montos y botones);
+  - cada pestaña tiene su título ("Mis pedidos | Electro Shop"), y Mi panel queda fuera de los buscadores.
+- **El inicio:**
+  - **una sola pieza fuerte:** los boletos mientras dura el sorteo (Puntos ES en blanco) y Puntos ES en el azul oscuro sin ellos;
+  - **los pedidos en curso** en dos columnas, con sus fotos;
+  - **"Pedidos anteriores"** en lugar de "Últimos pedidos", que repetía los de arriba;
+  - **las misiones ya cumplidas,** en una línea.
+- **Mis pedidos:**
+  - en dos columnas, agrupados en "En curso" y "Entregados y cancelados";
+  - cada tarjeta dice qué se compró;
+  - los filtros en una línea y solo cuando separan algo, y la búsqueda desde 6 pedidos.
+- **El detalle del pedido:** el seguimiento y el recibo, lado a lado en la computadora.
+- **Puntos ES:** los movimientos en una tarjeta y "Cómo funcionan", al lado.
+- **Garantía:**
+  - **las solicitudes** en dos columnas, con la foto, "Te toca responder" y "Responder";
+  - **la pestaña "Info"** pasa a "Cómo funciona";
+  - **solo lo físico:** los códigos y las recargas van por WhatsApp, y el servidor ya no acepta su garantía.
+- **Mis códigos:** "Solo tú los ves" y "Si no funciona, te ayudamos" (antes "Encriptado" y "Garantizado"), con la ayuda por WhatsApp.
+- **Las demás:**
+  - Mi perfil, con sus datos lado a lado;
+  - Mis documentos, Mis cotizaciones y Mis reseñas (con la foto del producto), en dos columnas;
+  - Direcciones, en tres;
+  - Notificaciones, con "Qué te avisamos" al lado.
+- **Las ventanas:** el foco entra y vuelve a donde estaba al cerrarlas.
+### Tienda 1.20.1 (C-265)
+- **En Mi panel** el botón de WhatsApp no flota.
+- **El aviso de cookies** tiene su capa, debajo de los cajones.
+- **La recarga de Puntos ES:**
+  - cerrar la firma de los términos ya no la cierra: queda con "Leer y firmar";
+  - el total en bolívares va en azul, no en ámbar.
+### Marco del panel 1.15.0, Órdenes y pagos 1.6.7, Productos 1.17.3, Marketing 1.24.1 y Configuración 1.4.5 (C-265)
+- **Los filtros en píldoras** tienen su tamaño chico.
+- **"Te toca responder"** también en la garantía del cliente.
+- **Mis reseñas** recibe la foto del producto.
+- **La tarjeta del sorteo** recibe los datos del inicio.
+- **La ventana de firmar** devuelve el foco.
+
 ## [1.0.0-rc.82] - 2026-11-15
 El boleto épico y el flyer para compartir (C-263). **Cambia la base:** una columna nueva en `sorteos`, aditiva (`ganadorCodigo`, `SIGUIENTE.md` §2). Sin variables nuevas, sin SQL de datos y sin cron.
 ### Marketing 1.24.0 (C-263)

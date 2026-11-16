@@ -94,6 +94,13 @@ Excepciones puntuales (solo cuando la tarea lo dice):
   - **Mi panel (C-251, 15/11):** Claude lo revisó entero (el equipo pidió el rediseño y hay dinero de por medio). Lo que trae el estado de un pedido para el cliente sale de `lib/order-pasos.ts` (`estadoParaCliente`, `pasosPedido` con `paymentReference` y `lineaDeSalida`, "Sale el… desde Aragua"), que es de Claude: no lo copies en una pantalla. Las rutas `/api/customer/payment-methods` y `/api/customer/chat` ya no existen. C-251b (rc.71) pasó Mi panel al kit: los filtros van con `components/admin/Filtros` y las opciones con `components/admin/Opcion`; no vuelvas a las píldoras hechas a mano.
   - **El kit de onboarding (C-257, 15/11):** Claude rehízo `components/onboarding/**` porque el equipo pidió el rediseño (`GuidedTour`, la hoja `AsiFunciona`, `ChispaGuia`, `IconoDibujado` y `compartido.ts`; las reglas, en `PLAN.md` §1.11). Una tarjeta que toque esos archivos usa las piezas del kit y no cambia la física, la colocación de Chispa ni el teclado. `GuidedTourWrapper` sigue siendo la lista de páginas donde no sale el recorrido.
   - **Las decisiones de C-258 (C-261, 15/11), con el sí del equipo:** `app/solicitar-producto/**` sin sesión muestra "Entra para pedirlo" en lugar del formulario (la página recibe `conCuenta` del servidor); la garantía de Mi panel abre en "Nueva" o en Mis solicitudes; `RechargeModalV2` ya no usa `useConfirm` en la recarga manual (el botón dice el monto y el método). No volver a lo de antes.
+  - **Mi panel rediseñado (C-265, 15/11), con la elección del equipo (la A):** Claude tocó casi todo `app/customer/**`, `components/customer/**` y, en `components/modals/RechargeModalV2.tsx`, cómo se cierra la firma de los términos. Lo que cambia para una tarjeta tuya:
+    - **El marco ya no es `app/customer/(dashboard)/layout.tsx`:** ese archivo es de servidor (el título y el noindex) y el marco vive en `components/customer/MarcoMiPanel.tsx`. El menú es una columna de la página (no `fixed`) y no hay tarjeta blanca alrededor de cada página: las tarjetas van sobre el gris, en un solo nivel. No vuelvas a meter la página en una tarjeta ni a centrarla.
+    - **Cada página lleva su `layout.tsx` con el título** ("Mis pedidos"). Una página nueva de Mi panel, igual.
+    - **WhatsApp va en la cabecera de Mi panel**, no flotando: `components/WhatsAppButton.tsx` no sale en `/customer`.
+    - **Las listas van en dos columnas desde 1280 px** (`xl:grid-cols-2`), con tarjetas que llevan sus acciones abajo (`mt-auto`). Los filtros de Mi panel son `Filtros` con `tamano="chica"`.
+    - **Una ventana nueva usa `useFocoDeVuelta`** (`lib/hooks/useFocoDeVuelta.ts`, carril Claude): el foco entra y vuelve al cerrarla.
+    - **La garantía no acepta lo digital** (el servidor lo rechaza): en "Nueva" solo sale lo físico y lo digital va por WhatsApp.
   - **El kit en más lugares (C-260, 15/11), con el pedido del equipo:** la tarjeta de Mis códigos (`PlatformScratchCard`) hace de "Voltear tarjeta" el botón principal hasta ver el código; las misiones (`CustomerOnboarding`) dibujan sus íconos y "¿Cómo funciona la tienda?" abre `AsiFunciona` a mano. Una tarjeta que toque esos archivos conserva las piezas del kit.
 - `app/carrito/**`, `app/checkout/**` y `components/checkout/**` → G-04b, G-05g, G-06g y **R11 (G-40, G-41: solo `className` y los arreglos permitidos)**. El carrito y el checkout mueven dinero: nada de lógica.
 - Borrado de la lista cerrada de G-02.
@@ -499,7 +506,7 @@ Andrés pidió pulir Mi panel, así que Claude entró a tu carril (`estado/C-201
   - "Movimientos" pasó a llamarse "Actividad reciente".
   - Esa sección y "Últimos pedidos" llevan `min-w-0` para no salirse en el teléfono: no se lo quites.
 - **`components/customer/CustomerOnboarding.tsx`:** para quien ya compró, una tarjeta corta con solo las misiones que faltan.
-- **`app/customer/(dashboard)/layout.tsx`:**
+- **`app/customer/(dashboard)/layout.tsx`** (desde C-265, el menú está en `components/customer/MarcoMiPanel.tsx`):
   - "Mis pedidos" y "Mis cursos", con minúscula.
   - "Mis cotizaciones" y "Mis cursos" llevan `soloSi`: salen solo a quien tiene alguno. Los números vienen de `GET /api/user/profile` (`menu`).
   - Si agregas una entrada al menú, escríbela igual.

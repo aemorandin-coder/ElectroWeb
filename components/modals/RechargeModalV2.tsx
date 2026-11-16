@@ -1,16 +1,17 @@
 'use client';
 import { formatUSD, formatVES } from '@/lib/currency';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import {
-  IconoAdvertencia, IconoBillete, IconoCargando, IconoCerrar, IconoCheck, IconoConfirmado, IconoFlechaIzquierda,
+  IconoAdvertencia, IconoBillete, IconoCargando, IconoCerrar, IconoCheck, IconoConfirmado, IconoDocumento, IconoFlechaIzquierda,
   IconoGarantia,
 } from '@/components/iconos';
 import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
 import SignDocumentModal from '@/components/legal/SignDocumentModal';
+import { adminSecondaryButton, avisoAccion } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import VerificarPagoMovilForm from '@/components/pago-movil/VerificarPagoMovilForm';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -39,6 +40,11 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     const exchangeRate = Number(settings?.exchangeRateVES) || 0;
     const [hasAcceptedTerms, setHasAcceptedTerms] = useState<boolean | null>(null);
     const [showTermsModal, setShowTermsModal] = useState(false);
+    // C-265: al cerrar la firma sin firmar, el foco vuelve a "Leer y firmar" de la recarga
+    const botonTerminos = useRef<HTMLButtonElement>(null);
+    useEffect(() => {
+        if (!showTermsModal && hasAcceptedTerms === false) botonTerminos.current?.focus({ preventScroll: true });
+    }, [showTermsModal, hasAcceptedTerms]);
     const [loadingMethods, setLoadingMethods] = useState(true);
 
     // Multi-step state
@@ -639,7 +645,8 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-xs font-semibold text-ink">Total:</span>
-                                                <span className="text-base lg:text-xl font-bold text-warning-strong">
+                                                {/* C-265: el monto a pagar se destaca en azul, no en ámbar (CLAUDE.md: el ámbar nunca destaca un monto) */}
+                                                <span className="text-base lg:text-xl font-bold text-brand-700">
                                                     {formatVES(amountInBs || 0)}
                                                 </span>
                                             </div>
@@ -708,6 +715,15 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
                 {/* Actions */}
                 <div className="p-3 lg:p-6 border-t border-line bg-white flex-shrink-0">
+                    {hasAcceptedTerms === false && !showTermsModal && (
+                        <div className={`mb-3 flex flex-col gap-3 rounded-xl border p-3 text-sm sm:flex-row sm:items-center ${avisoAccion}`}>
+                            <IconoDocumento aria-hidden="true" />
+                            <span className="flex-1">Para recargar, firma los términos de los Puntos ES.</span>
+                            <button ref={botonTerminos} type="button" onClick={() => setShowTermsModal(true)} className={`${adminSecondaryButton} shrink-0`}>
+                                Leer y firmar
+                            </button>
+                        </div>
+                    )}
                     <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
                         <button
                             type="button"
@@ -764,16 +780,12 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                 </div>
             </div>
 
-            {/* Balance Terms Modal */}
+            {/* Balance Terms Modal. C-265: cerrar la firma (Esc, la X o "Ahora no") cierra solo la firma: la recarga queda
+                debajo con "Leer y firmar", y el foco vuelve a ese botón (antes se cerraban las dos) */}
             <SignDocumentModal
                 slug="terminos-saldo"
                 isOpen={showTermsModal}
-                onClose={() => {
-                    setShowTermsModal(false);
-                    if (!hasAcceptedTerms) {
-                        onClose();
-                    }
-                }}
+                onClose={() => setShowTermsModal(false)}
                 onSigned={() => {
                     setHasAcceptedTerms(true);
                     setShowTermsModal(false);

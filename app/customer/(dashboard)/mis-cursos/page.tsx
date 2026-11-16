@@ -90,15 +90,15 @@ export default function MisCursosPage() {
 
       {/* Stats: números en neutro (PLAN.md §1.1: el ámbar no destaca un número) */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-surface rounded-xl p-4 text-center">
+        <div className="rounded-xl border border-line bg-white p-4 text-center">
           <p className="text-2xl font-bold tabular-nums text-ink">{enrollments.length}</p>
           <p className="text-xs text-muted mt-0.5">Total</p>
         </div>
-        <div className="bg-surface rounded-xl p-4 text-center">
+        <div className="rounded-xl border border-line bg-white p-4 text-center">
           <p className="text-2xl font-bold tabular-nums text-ink">{inProgressCount}</p>
           <p className="text-xs text-muted mt-0.5">En progreso</p>
         </div>
-        <div className="bg-surface rounded-xl p-4 text-center">
+        <div className="rounded-xl border border-line bg-white p-4 text-center">
           <p className="text-2xl font-bold tabular-nums text-ink">{completedCount}</p>
           <p className="text-xs text-muted mt-0.5">Completados</p>
         </div>
@@ -141,7 +141,7 @@ export default function MisCursosPage() {
             const isCompleted = !!enrollment.completedAt;
 
             return (
-              <div key={enrollment.id} className="flex gap-3 bg-surface rounded-xl p-3 sm:gap-4 sm:p-4">
+              <div key={enrollment.id} className="flex gap-3 rounded-2xl border border-line bg-white p-3 sm:gap-4 sm:p-4">
                 {/* Thumbnail */}
                 <div className="w-20 h-14 sm:w-24 sm:h-16 lg:w-32 lg:h-20 rounded-lg overflow-hidden bg-brand-500/10 shrink-0">
                   {course.thumbnail ? (

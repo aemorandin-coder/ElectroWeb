@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { IconoCheck, IconoConfirmado, IconoLista, IconoNotificaciones } from '@/components/iconos';
+import { IconoCheck, IconoChevronDerecha, IconoConfirmado, IconoLista, IconoNotificaciones } from '@/components/iconos';
 import Filtros from '@/components/admin/Filtros';
 import { useNotifications } from '@/components/notifications/NotificationProvider';
 import { notificationMeta, timeAgo } from '@/components/notifications/notification-meta';
@@ -56,8 +56,12 @@ export default function NotificationsPage() {
                 </div>
             </div>
 
-            {/* C-251b: los filtros en píldoras (PLAN.md §1.7) */}
+            {/* C-265: la lista y, al lado desde 1280 px, qué avisa la tienda (antes la lista ocupaba todo el ancho) */}
+            <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_21rem]">
+            <div className="min-w-0 space-y-3">
+            {/* C-251b: los filtros en píldoras (PLAN.md §1.7); C-265, en una línea */}
             <Filtros
+                tamano="chica"
                 etiqueta="Filtrar notificaciones"
                 valor={filter}
                 onCambiar={setFilter}
@@ -143,6 +147,17 @@ export default function NotificationsPage() {
                     })}
                 </div>
             )}
+            </div>
+            <aside className="rounded-2xl border border-line bg-white p-4" aria-labelledby="que-avisamos">
+                <h2 id="que-avisamos" className="text-sm font-semibold text-ink">Qué te avisamos</h2>
+                <p className="mt-1 text-sm text-ink-soft">
+                    Tus pedidos, tus Puntos ES y tus garantías te llegan siempre aquí. Los favoritos, las reseñas y las ofertas, si los quieres.
+                </p>
+                <Link href="/customer/profile?tab=notificaciones" className="mt-2 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
+                    Elegir mis avisos <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
+                </Link>
+            </aside>
+            </div>
         </div>
     );
 }

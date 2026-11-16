@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
@@ -17,6 +17,7 @@ import { REGLAS_CONTRASENA } from '@/lib/validations/registro';
 import { formatPuntos } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { useFocoDeVuelta } from '@/lib/hooks/useFocoDeVuelta';
 import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 import { useMontado } from '@/lib/hooks/useMontado';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -409,6 +410,9 @@ function ModalEliminar({ onCerrar, onListo }: { onCerrar: () => void; onListo: (
   const [aceptaPerder, setAceptaPerder] = useState(false);
   useBodyScrollLock(true);
   useCajonAccesible(true, 'modal-eliminar-cuenta', onCerrar);
+  // C-265: al cerrarla con "Volver", la X o tocando afuera, el foco también vuelve a "Eliminar" (con Esc ya volvía)
+  const ventana = useRef<HTMLDivElement>(null);
+  useFocoDeVuelta(true, ventana);
   useCargarAlMontar(async () => {
     const res = await fetch('/api/customer/balance', { cache: 'no-store' }).catch(() => null);
     const datos = res?.ok ? await res.json().catch(() => null) : null;
@@ -446,10 +450,12 @@ function ModalEliminar({ onCerrar, onListo }: { onCerrar: () => void; onListo: (
     <div className={adminModalOverlay} onClick={onCerrar}>
       <div
         id="modal-eliminar-cuenta"
+        ref={ventana}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-eliminar-titulo"
-        className={`${adminModalPanel} sm:max-w-lg`}
+        className={`${adminModalPanel} outline-none sm:max-w-lg`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className={adminModalHeader}>

@@ -45,9 +45,10 @@ export async function GET() {
             prisma.order.count({
                 where: { userId, status: 'PENDING', paymentStatus: { not: 'PAID' }, paymentReference: null },
             }),
+            // C-265: "Pedidos anteriores": los que ya no están en curso (antes, los 5 últimos, que repetían los de "Pedidos en curso")
             prisma.order.findMany({
-                where: { userId },
-                take: 5,
+                where: { userId, status: { notIn: [...ACTIVOS] } },
+                take: 4,
                 orderBy: { createdAt: 'desc' },
                 include: {
                     items: {
@@ -220,7 +221,8 @@ export async function GET() {
                     shippingMode: true, courierOfficeName: true, trackingNumber: true, totalUSD: true, createdAt: true,
                     // C-251: el día que sale (C-234) desde dónde (C-222) y si el pago espera su validación
                     paidAt: true, dispatchCityName: true, dispatchStateName: true, paymentReference: true,
-                    items: { select: { productName: true, quantity: true } },
+                    // C-265: las fotos de la tarjeta, como en Mis pedidos
+                    items: { select: { productName: true, productImage: true, quantity: true, product: { select: { mainImage: true } } } },
                     shipmentEvents: { where: { source: 'ZOOM' }, select: { description: true } },
                 },
             }),
@@ -266,7 +268,7 @@ export async function GET() {
             tieneDireccion: parseSavedAddresses(perfil?.savedAddresses).length > 0,
             datosCompletos: Boolean(perfil?.phone?.trim() && perfil?.idNumber?.trim()),
             totalSpentThisMonth,
-            recentOrders: recentOrders.map(order => ({
+            previousOrders: recentOrders.map(order => ({
                 id: order.id,
                 orderNumber: order.orderNumber,
                 total: Number(order.totalUSD),
@@ -296,6 +298,8 @@ export async function GET() {
                 createdAt: o.createdAt,
                 itemCount: o.items.reduce((n, i) => n + i.quantity, 0),
                 firstItem: o.items[0]?.productName ?? null,
+                fotos: o.items.slice(0, 4).map((i) => ({ nombre: i.productName, foto: i.productImage || i.product?.mainImage || null, cantidad: i.quantity })),
+                productos: o.items.length,
                 enOficina: o.shipmentEvents.some((e) => eventoEsEnOficina(e.description)),
                 paidAt: o.paidAt,
                 dispatchCityName: o.dispatchCityName,

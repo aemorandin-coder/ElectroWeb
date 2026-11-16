@@ -126,8 +126,9 @@ export default function DatosPersonales({ datos, onGuardado }: { datos: DatosPer
   };
 
   return (
-    <form onSubmit={guardar} className="space-y-4 pb-20 lg:pb-0" noValidate>
-      <Seccion titulo="Tus datos" descripcion="Los usamos en tus pedidos, recibos y garantías.">
+    // C-265: "Tus datos" y "Dónde vives" lado a lado desde 1280 px (antes uno debajo del otro, con la mitad derecha vacía)
+    <form onSubmit={guardar} className="grid gap-4 pb-20 lg:pb-0 xl:grid-cols-2 xl:items-start" noValidate>
+      <Seccion titulo="Tus datos" descripcion="Los usamos en tus pedidos, recibos y garantías." className="xl:row-span-2">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <label htmlFor="perfil-nombre" className={adminLabel}>Nombre y apellido</label>

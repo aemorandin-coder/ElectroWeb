@@ -42,13 +42,11 @@ export default function DocumentosPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 lg:p-6">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><IconoDocumento className="h-6 w-6" aria-hidden="true" /></span>
-        <div>
-          <h1 className="text-lg font-bold text-ink lg:text-2xl">Mis documentos</h1>
-          <p className="text-sm text-muted">Los documentos que firmaste, con su constancia en PDF.</p>
-        </div>
-      </div>
+      {/* C-265: la cabecera de la página, sin tarjeta (antes era una tarjeta con su placa dentro del marco blanco) */}
+      <header>
+        <h1 className="text-xl font-bold text-ink lg:text-2xl">Mis documentos</h1>
+        <p className="mt-0.5 text-sm text-ink-soft">Los documentos que firmaste, con su constancia en PDF.</p>
+      </header>
 
       {error ? (
         <div className="rounded-2xl border border-line bg-white p-6 text-center text-sm text-ink">
@@ -66,7 +64,8 @@ export default function DocumentosPage() {
               Tienes {pendientes.length === 1 ? 'un documento' : `${pendientes.length} documentos`} por firmar.
             </p>
           )}
-          <ul className="space-y-3">
+          {/* C-265: en dos columnas desde 1280 px, cada documento del tamaño de lo que lleva */}
+          <ul className="grid gap-3 xl:grid-cols-2">
             {docs.map((d) => (
               <li key={d.slug} className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 sm:flex-row sm:items-center">
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${d.signed ? 'bg-success-strong/10 text-success-strong' : 'bg-brand-500 text-white'}`}>
@@ -98,7 +97,7 @@ export default function DocumentosPage() {
           </ul>
 
           {historial.length > 0 && (
-            <section className="rounded-2xl border border-line bg-white p-4">
+            <section className="max-w-3xl rounded-2xl border border-line bg-white p-4">
               <h2 className="mb-2 text-sm font-semibold text-ink">Versiones anteriores que firmaste</h2>
               <ul className="divide-y divide-line">
                 {historial.map((f) => (

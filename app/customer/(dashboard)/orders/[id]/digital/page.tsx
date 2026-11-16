@@ -6,16 +6,17 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  IconoAdvertencia, IconoCheck, IconoChevronAbajo, IconoControl, IconoCopiar, IconoFlechaIzquierda, IconoGarantia,
+  IconoAdvertencia, IconoAyuda, IconoCandado, IconoCheck, IconoChevronAbajo, IconoControl, IconoCopiar, IconoFlechaIzquierda,
   IconoReloj,
 } from '@/components/iconos';
 import { BsNintendoSwitch } from 'react-icons/bs';
+import { FaWhatsapp } from 'react-icons/fa6';
 import { SiSteam, SiPlaystation, SiRoblox, SiNetflix, SiSpotify, SiApple } from 'react-icons/si';
 import toast from 'react-hot-toast';
 import PlatformScratchCard from './_components/PlatformScratchCard';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useSettings } from '@/contexts/SettingsContext';
-import { adminBadge, adminDato } from '@/lib/admin-ui';
+import { adminBadge, adminDato, adminSecondaryButton } from '@/lib/admin-ui';
 import { calendarioDe, entregaDigital } from '@/lib/horarios';
 
 interface DigitalCode {
@@ -72,6 +73,7 @@ export default function DigitalCodesPage() {
     const router = useRouter();
     const { status } = useSession();
     const { settings } = useSettings();
+    const whatsapp = settings?.whatsapp?.replace(/\D/g, '') || '';
     const [data, setData] = useState<DigitalOrderData | null>(null);
     const [loading, setLoading] = useState(true);
     const [copiedCodes, setCopiedCodes] = useState<Record<string, boolean>>({});
@@ -199,8 +201,10 @@ export default function DigitalCodesPage() {
         // C-251: sin su propio fondo gris de pantalla completa: dentro del marco de Mi panel quedaba una caja gris en la tarjeta blanca
         <div className="relative">
             {/* Header */}
-            <div className="sticky top-0 z-[var(--z-sticky)] border-b border-line bg-white/95">
-                <div className="max-w-4xl mx-auto px-3 py-2">
+            {/* C-265: debajo de la cabecera de Mi panel (top-16); con top-0 se le ponía encima al bajar */}
+            <div className="sticky top-16 z-[var(--z-sticky)] max-w-4xl rounded-2xl border border-line bg-white/95">
+                {/* C-265: junto al menú, como las demás páginas (antes centrado con mx-auto) */}
+                <div className="px-3 py-2">
                     <div className="flex items-center justify-between">
                         <Link href="/customer/orders" aria-label="Volver a mis pedidos" title="Volver a mis pedidos" className="flex h-11 w-11 items-center justify-center bg-surface rounded-xl text-ink hover:bg-line transition-all border border-line">
                             <IconoFlechaIzquierda className="w-4 h-4" aria-hidden="true" />
@@ -228,7 +232,7 @@ export default function DigitalCodesPage() {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-4xl mx-auto px-3 py-3">
+            <div className="max-w-4xl py-3">
                 <div className="space-y-2">
                     {data.digitalItems.map((item) => {
                         const isExpanded = expandedItems[item.orderItemId] !== false;
@@ -387,23 +391,33 @@ export default function DigitalCodesPage() {
                     })}
                 </div>
 
-                {/* Compact Footer Badges */}
-                <div className="mt-6 flex justify-center gap-2">
-                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white rounded-full border border-line shadow-sm">
-                        <IconoGarantia className="w-3 h-3 text-brand-600" />
-                        <span className="text-xs text-ink font-bold uppercase tracking-wider">Encriptado</span>
-                    </div>
-                    <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white rounded-full border border-line shadow-sm">
-                        <IconoCheck className="w-3 h-3 text-success-strong" />
-                        <span className="text-xs text-ink font-bold uppercase tracking-wider">Garantizado</span>
-                    </div>
+                {/* C-265 (decisión 3 de C-251): lo que sí es verdad. Antes "ENCRIPTADO" (la tienda guarda el código sin cifrar) y
+                    "GARANTIZADO" (no decía qué); ahora, en datos grises (PLAN.md §1.8) y la ayuda a la mano */}
+                <div className="mt-6 flex flex-wrap justify-center gap-2">
+                    <span className={adminDato}>
+                        <IconoCandado className="h-3.5 w-3.5" aria-hidden="true" />
+                        Solo tú los ves
+                    </span>
+                    <span className={adminDato}>
+                        <IconoAyuda className="h-3.5 w-3.5" aria-hidden="true" />
+                        Si no funciona, te ayudamos
+                    </span>
                 </div>
 
-                {/* Compact Support CTA */}
-                <div className="mt-8 text-center pb-20">
-                    <Link href="/contacto" className="inline-flex items-center gap-2 px-5 py-2.5 bg-white rounded-full border border-line hover:bg-surface transition-all shadow-sm">
-                        <span className="text-brand-600 text-xs font-bold uppercase tracking-wider">¿Necesitas ayuda?</span>
-                    </Link>
+                <div className="mt-4 text-center">
+                    {whatsapp ? (
+                        <a
+                            href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hola! Tengo un problema con un código del pedido #${data.orderNumber}`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={adminSecondaryButton}
+                        >
+                            <FaWhatsapp className="h-4 w-4 text-success-strong" aria-hidden="true" />
+                            ¿Necesitas ayuda? Escríbenos
+                        </a>
+                    ) : (
+                        <Link href="/contacto" className={adminSecondaryButton}>¿Necesitas ayuda?</Link>
+                    )}
                 </div>
             </div>
         </div>

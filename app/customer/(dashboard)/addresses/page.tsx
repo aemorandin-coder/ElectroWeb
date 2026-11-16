@@ -213,7 +213,7 @@ export default function AddressesPage() {
   };
 
   return (
-    <div className="space-y-4 pb-24 lg:pb-6">
+    <div className="space-y-4">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-xl font-bold text-ink lg:text-2xl">Direcciones de envío</h1>
@@ -238,7 +238,8 @@ export default function AddressesPage() {
           </button>
         </div>
       ) : (
-        <ul className="grid gap-3 lg:grid-cols-2">
+        // C-265: tres columnas desde 1280 px (una dirección es corta)
+        <ul className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
           {direcciones.map((d) => {
             const agencia = esAgencia(d.type);
             const receptor = [[d.firstName, d.lastName].filter(Boolean).join(' '), d.recipientIdNumber, d.phone].filter(Boolean).join(' · ');

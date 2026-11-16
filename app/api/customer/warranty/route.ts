@@ -35,10 +35,14 @@ export async function GET() {
     select: {
       id: true, number: true, productName: true, productCondition: true, status: true, resolution: true, reason: true,
       warrantyDays: true, createdAt: true, updatedAt: true, order: { select: { orderNumber: true } },
+      // C-265: la foto del producto en la tarjeta de la solicitud
+      orderItem: { select: { productImage: true, product: { select: { mainImage: true } } } },
     },
   });
   return NextResponse.json({
-    claims: claims.map(({ order, ...c }) => ({ ...c, code: claimCode(c.number), orderNumber: order.orderNumber })),
+    claims: claims.map(({ order, orderItem, ...c }) => ({
+      ...c, code: claimCode(c.number), orderNumber: order.orderNumber, foto: orderItem?.productImage || orderItem?.product?.mainImage || null,
+    })),
   });
 }
 
@@ -67,11 +71,17 @@ export async function POST(request: NextRequest) {
       status: true,
       deliveredAt: true,
       user: { select: { name: true, email: true } },
-      items: { where: { id: itemId }, select: { id: true, productName: true, productCondition: true, warrantyDays: true } },
+      deliveryMethod: true,
+      items: { where: { id: itemId }, select: { id: true, productName: true, productCondition: true, warrantyDays: true, product: { select: { productType: true } } } },
     },
   });
   const item = order?.items[0];
   if (!order || !item) return NextResponse.json({ error: 'No encontramos ese producto en tus pedidos' }, { status: 404 });
+  // C-265 (decisión 2 de C-251, el equipo el 15/11): los códigos y las recargas no van por garantía al taller. Si uno no
+  // funciona, se resuelve por WhatsApp. Un producto sin ficha en un pedido digital también cuenta como digital.
+  if (item.product?.productType === 'DIGITAL' || (!item.product && order.deliveryMethod === 'DIGITAL')) {
+    return NextResponse.json({ error: 'Los códigos y las recargas no van por garantía: si uno no funciona, escríbenos por WhatsApp y lo resolvemos.', code: 'DIGITAL' }, { status: 400 });
+  }
   if (order.status !== 'DELIVERED' || !order.deliveredAt) {
     return NextResponse.json({ error: 'La garantía empieza cuando el pedido se entrega' }, { status: 400 });
   }

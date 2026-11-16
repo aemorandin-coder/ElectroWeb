@@ -55,7 +55,8 @@ export async function GET(request: NextRequest) {
             where: canModerate ? {} : { userId: session.user.id },
             orderBy: { createdAt: 'desc' },
             include: {
-                product: { select: { name: true, slug: true } },
+                // C-265: la foto del producto, para Mis reseñas
+                product: { select: { name: true, slug: true, mainImage: true } },
                 user: { select: { name: true, ...(canModerate ? { email: true } : {}) } },
             },
         });

@@ -22,7 +22,8 @@ export default function WhatsAppButton() {
   const { settings } = useSettings();
 
   // En contacto ya hay una tarjeta de WhatsApp; el admin no lo necesita
-  if (!pathname || pathname.startsWith('/admin') || pathname.toLowerCase().includes('contacto')) return null;
+  // C-265: en Mi panel va en la cabecera, junto a la campana (el flotante tapaba montos y botones de las tarjetas)
+  if (!pathname || pathname.startsWith('/admin') || pathname.startsWith('/customer') || pathname.toLowerCase().includes('contacto')) return null;
 
   // Sin barra inferior en las páginas de acceso: el botón baja a la esquina
   const sinBarra = esRutaDeAcceso(pathname);

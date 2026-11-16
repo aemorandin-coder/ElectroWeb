@@ -58,7 +58,7 @@ export default function AvisoCookies() {
   return (
     <section
       aria-label="Aviso de cookies"
-      className="fixed inset-x-3 bottom-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom)+0.75rem)] z-[var(--z-drawer)] rounded-2xl border border-line bg-white p-4 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] transition-[opacity,transform] duration-300 starting:translate-y-3 starting:opacity-0 motion-reduce:transition-none lg:inset-x-auto lg:bottom-6 lg:left-1/2 lg:w-[min(56rem,calc(100%-3rem))] lg:-translate-x-1/2"
+      className="fixed inset-x-3 bottom-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom)+0.75rem)] z-[var(--z-aviso)] rounded-2xl border border-line bg-white p-4 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] transition-[opacity,transform] duration-300 starting:translate-y-3 starting:opacity-0 motion-reduce:transition-none lg:inset-x-auto lg:bottom-6 lg:left-1/2 lg:w-[min(56rem,calc(100%-3rem))] lg:-translate-x-1/2"
     >
       {!eligiendo ? (
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-5">

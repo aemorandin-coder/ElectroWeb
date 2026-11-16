@@ -4,9 +4,9 @@ import { useId, type ReactNode } from 'react';
 
 // Piezas de Mi perfil (C-138): tarjeta de sección e interruptor accesible.
 
-export function Seccion({ titulo, descripcion, children, accion }: { titulo: string; descripcion?: ReactNode; children: ReactNode; accion?: ReactNode }) {
+export function Seccion({ titulo, descripcion, children, accion, className = '' }: { titulo: string; descripcion?: ReactNode; children: ReactNode; accion?: ReactNode; className?: string }) {
   return (
-    <section className="rounded-2xl border border-line bg-white p-4 sm:p-5">
+    <section className={`rounded-2xl border border-line bg-white p-4 sm:p-5 ${className}`}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-ink">{titulo}</h2>

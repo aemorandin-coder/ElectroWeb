@@ -17,6 +17,9 @@ import DetallePedido, { type PedidoCliente } from '@/components/customer/Detalle
 // pedido: número, fecha, estado en palabras, fotos de los productos, total en USD y Bs., el paso a paso mientras está
 // en curso y las acciones directas (rastrear en ZOOM o MRW, códigos digitales, detalle y recibo).
 // Se conserva todo lo de antes: resumen, búsqueda, filtros, actualizar, ?orden=<id> y el tiempo real (C-127).
+// C-265 (la A que eligió el equipo): en dos columnas desde 1280 px, agrupados en "En curso" y lo que ya terminó; los
+// filtros en una línea y solo cuando separan algo (con 3 entregados, "Todos 3 · Entregados 3" no separaba nada); la
+// búsqueda desde 6 pedidos.
 
 type Crudo = Omit<PedidoCliente, 'totalUSD' | 'items'> & {
   totalUSD?: number | string;
@@ -94,9 +97,26 @@ export default function OrdersPage() {
   const visibles = pedidos.filter((o) => pasaFiltro(o, filtro)
     && (!texto || o.orderNumber.toLowerCase().includes(texto) || o.items.some((i) => i.productName.toLowerCase().includes(texto))));
   const detalle = abierto ? pedidos.find((o) => o.id === abierto) ?? null : null;
+  const opcionesFiltro = FILTROS_PEDIDOS.map((f) => ({
+    valor: f.id,
+    etiqueta: f.label,
+    ayuda: AYUDA_FILTRO[f.id].ayuda,
+    Icono: AYUDA_FILTRO[f.id].Icono,
+    cuenta: f.id === 'TODOS' ? pedidos.length : pedidos.filter((o) => pasaFiltro(o, f.id)).length,
+  })).filter((f) => f.valor === 'TODOS' || f.valor === filtro || (f.cuenta ?? 0) > 0);
+  const conFiltros = opcionesFiltro.length > 2 || filtro !== 'TODOS';
+  const conBusqueda = pedidos.length >= 6 || busqueda !== '';
+  const terminado = (o: PedidoCliente) => ['DELIVERED', 'CANCELLED', 'REFUNDED'].includes(o.status);
+  // Agrupados solo con "Todos" y sin buscar: con un filtro o una búsqueda, la lista va sola
+  const grupos = filtro === 'TODOS' && !texto
+    ? [
+      { titulo: 'En curso', lista: visibles.filter((o) => !terminado(o)) },
+      { titulo: visibles.some((o) => o.status === 'CANCELLED' || o.status === 'REFUNDED') ? (visibles.some((o) => o.status === 'DELIVERED') ? 'Entregados y cancelados' : 'Cancelados') : 'Entregados', lista: visibles.filter(terminado) },
+    ].filter((g) => g.lista.length > 0)
+    : [{ titulo: null, lista: visibles }];
 
   return (
-    <div className="space-y-4 pb-24 lg:pb-6">
+    <div className="space-y-4">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-xl font-bold text-ink lg:text-2xl">Mis pedidos</h1>
@@ -118,9 +138,9 @@ export default function OrdersPage() {
         </button>
       </header>
 
-      {pedidos.length > 0 && (
-        <div className="space-y-2">
-          <label className="relative block">
+      {(conBusqueda || conFiltros) && (
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:gap-3">
+          {conBusqueda && <label className="relative block lg:w-full lg:max-w-sm">
             <span className="sr-only">Buscar por número o producto</span>
             <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
             <input
@@ -130,20 +150,10 @@ export default function OrdersPage() {
               placeholder="Buscar por número o producto"
               className="h-11 w-full rounded-xl border border-line bg-white pl-9 pr-3 text-sm text-ink focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
             />
-          </label>
-          {/* C-251b: en píldoras con su ícono y lo que juntan (PLAN.md §1.7). Las que no tienen pedidos no salen, como antes */}
-          <Filtros
-            etiqueta="Filtrar pedidos"
-            valor={filtro}
-            onCambiar={setFiltro}
-            filtros={FILTROS_PEDIDOS.map((f) => ({
-              valor: f.id,
-              etiqueta: f.label,
-              ayuda: AYUDA_FILTRO[f.id].ayuda,
-              Icono: AYUDA_FILTRO[f.id].Icono,
-              cuenta: f.id === 'TODOS' ? pedidos.length : pedidos.filter((o) => pasaFiltro(o, f.id)).length,
-            })).filter((f) => f.valor === 'TODOS' || f.valor === filtro || (f.cuenta ?? 0) > 0)}
-          />
+          </label>}
+          {/* C-251b: en píldoras con su ícono y lo que juntan (PLAN.md §1.7). Las que no tienen pedidos no salen, como antes.
+              C-265: en una línea (lo que junta la elegida, debajo) */}
+          {conFiltros && <div className="min-w-0 lg:pt-1"><Filtros etiqueta="Filtrar pedidos" valor={filtro} onCambiar={setFiltro} filtros={opcionesFiltro} tamano="chica" /></div>}
         </div>
       )}
 
@@ -174,13 +184,24 @@ export default function OrdersPage() {
           )}
         </div>
       ) : (
-        <ul className="space-y-3">
-          {visibles.map((p) => (
-            <li key={p.id}>
-              <PedidoCard pedido={p} onDetalle={() => setAbierto(p.id)} />
-            </li>
+        <div className="space-y-6">
+          {grupos.map((g) => (
+            <section key={g.titulo ?? 'todos'} aria-label={g.titulo ?? undefined}>
+              {g.titulo && (
+                <h2 className="mb-2 text-base font-semibold text-ink">
+                  {g.titulo}<span className="ml-1.5 font-medium text-muted">{g.lista.length}</span>
+                </h2>
+              )}
+              <ul className="grid gap-3 xl:grid-cols-2">
+                {g.lista.map((p) => (
+                  <li key={p.id}>
+                    <PedidoCard pedido={p} onDetalle={() => setAbierto(p.id)} />
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
       )}
 
       {montado && detalle && <DetallePedido pedido={detalle} onCerrar={() => setAbierto(null)} />}

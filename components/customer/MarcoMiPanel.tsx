@@ -1,0 +1,279 @@
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+import { useSettings } from '@/contexts/SettingsContext';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import {
+  IconoAbrirAparte, IconoBolsa, IconoCerrar, IconoCuenta, IconoCursos, IconoDocumento, IconoEstrella, IconoFavoritos, IconoGarantia,
+  IconoInicio, IconoMenu, IconoOrdenes, IconoPuntosEs, IconoRegalo, IconoSalir, IconoUbicacion,
+} from '@/components/iconos';
+import { FaWhatsapp } from 'react-icons/fa6';
+import NotificationBell from '@/components/notifications/NotificationBell';
+import CustomerMobileNavBar from '@/components/customer/CustomerMobileNavBar';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
+
+const MENU = [
+  { href: '/customer', icon: IconoInicio, label: 'Inicio' },
+  { href: '/customer/balance', icon: IconoPuntosEs, label: 'Puntos ES' },
+  { href: '/customer/orders', icon: IconoBolsa, label: 'Mis pedidos' },
+  // C-201: "Mis cotizaciones" y "Mis cursos" solo para quien tiene alguna (o si está en esa página)
+  { href: '/customer/cotizaciones', icon: IconoOrdenes, label: 'Mis cotizaciones', soloSi: 'cotizaciones' as const },
+  { href: '/customer/wishlist', icon: IconoFavoritos, label: 'Favoritos' },
+  { href: '/customer/addresses', icon: IconoUbicacion, label: 'Direcciones' },
+  { href: '/customer/warranty', icon: IconoGarantia, label: 'Garantía' },
+  // C-251: la página existía sin ningún enlace; sale a quien dejó alguna reseña (como cotizaciones y cursos, C-201)
+  { href: '/customer/reviews', icon: IconoEstrella, label: 'Mis reseñas', soloSi: 'resenas' as const },
+  { href: '/customer/documentos', icon: IconoDocumento, label: 'Mis documentos' },
+  { href: '/customer/mis-cursos', icon: IconoCursos, label: 'Mis cursos', soloSi: 'cursos' as const },
+  { href: '/customer/referrals', icon: IconoRegalo, label: 'Promotores' },
+  { href: '/customer/profile', icon: IconoCuenta, label: 'Mi perfil' },
+];
+
+/**
+ * El marco de Mi panel (antes era el layout; C-265 lo pasó a componente para que el layout de servidor lleve el título y el
+ * noindex). El menú es una columna de la página: llega siempre abajo, también en una captura de página entera (antes era
+ * `fixed` con el alto de la ventana y en esas capturas quedaba a mitad). Sin el marco blanco de cada página (C-265, la A que
+ * eligió el equipo): las tarjetas van sobre el gris, en un solo nivel, junto al menú.
+ */
+export default function MarcoMiPanel({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const pathname = usePathname();
+  const { settings: companySettings } = useSettings();
+  const [userImage, setUserImage] = useState<string | null>(null);
+  const [usa, setUsa] = useState<{ cotizaciones: number; cursos: number; resenas: number } | null>(null);
+
+  // Escritorio: menú fijo que se puede ocultar. Móvil: cajón cerrado que se cierra al navegar
+  // (se guarda la ruta en la que se abrió, así no hace falta un efecto para cerrarlo). Igual que el admin (C-52).
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [drawerPath, setDrawerPath] = useState<string | null>(null);
+  const isDrawerOpen = drawerPath === pathname;
+  useBodyScrollLock(isDrawerOpen);
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login?callbackUrl=/customer');
+    }
+  }, [status, router]);
+
+  const cerrarCajon = useCallback(() => setDrawerPath(null), []);
+  useCajonAccesible(isDrawerOpen, 'customer-sidebar', cerrarCajon);
+
+  // C-128: "Más" de la barra inferior abre este mismo menú
+  useEffect(() => {
+    const abrir = () => setDrawerPath(window.location.pathname);
+    window.addEventListener('abrir-menu-cliente', abrir);
+    return () => window.removeEventListener('abrir-menu-cliente', abrir);
+  }, []);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    let cancelado = false;
+    fetch('/api/user/profile')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        // La foto que sube el cliente queda en user.image; profile.avatar es de cuentas viejas (C-80: antes leía profile.image, que no existe)
+        const imagen = data?.user?.image || data?.profile?.avatar;
+        if (!cancelado && imagen) setUserImage(imagen);
+        if (!cancelado && data?.menu) setUsa({ cotizaciones: Number(data.menu.cotizaciones) || 0, cursos: Number(data.menu.cursos) || 0, resenas: Number(data.menu.resenas) || 0 });
+      })
+      .catch(() => { /* la foto es opcional */ });
+    return () => { cancelado = true; };
+  }, [session]);
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-dvh bg-surface flex items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
+
+  const userName = session.user?.name || 'Usuario';
+  // C-265 (decisión del equipo): en Mi panel, WhatsApp va en la cabecera, junto a la campana; el flotante tapaba montos
+  const whatsapp = companySettings?.whatsapp?.replace(/\D/g, '') || '';
+  const userInitials = userName.split(' ').map((n) => n.charAt(0).toUpperCase()).slice(0, 2).join('');
+
+  const handleSignOut = async () => {
+    try {
+      await signOut({ callbackUrl: '/login', redirect: true });
+      router.refresh();
+    } catch (error) {
+      console.error('Error signing out:', error);
+      router.push('/login');
+      router.refresh();
+    }
+  };
+
+  const avatar = (size: string) => (
+    <span className={`relative flex ${size} shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-surface text-sm font-semibold text-brand-600`}>
+      {userImage ? (
+        <Image src={userImage} alt={userName} fill sizes="48px" className="object-cover" />
+      ) : (
+        userInitials
+      )}
+    </span>
+  );
+
+  return (
+    <div className={`min-h-dvh bg-surface lg:grid ${isCollapsed ? 'lg:grid-cols-1' : 'lg:grid-cols-[16rem_minmax(0,1fr)]'}`}>
+      {isDrawerOpen && (
+        <div
+          className="fixed inset-0 z-[var(--z-drawer)] bg-ink/50 lg:hidden"
+          onClick={() => setDrawerPath(null)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Menú lateral: cajón en móvil; en escritorio, la primera columna de la página (de arriba abajo), con lo de adentro pegado
+          a la ventana (sticky) */}
+      <aside
+        id="customer-sidebar"
+        aria-label="Menú de mi panel"
+        className={`fixed inset-y-0 left-0 z-[var(--z-drawer)] w-72 border-r border-line bg-white transition-[transform,visibility] duration-200 lg:static lg:z-auto lg:w-auto lg:transition-none ${
+          // Cerrado queda invisible: el foco con Tab ya no entra a un menú que no se ve (C-111)
+          isDrawerOpen ? 'visible translate-x-0' : '-translate-x-full max-lg:invisible'
+        } ${isCollapsed ? 'lg:hidden' : 'lg:visible lg:translate-x-0'}`}
+      >
+        <div className="flex h-full flex-col lg:sticky lg:top-0 lg:h-dvh">
+        <div className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-5">
+          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-brand-500 text-white">
+            {companySettings?.logo ? (
+              <span className="relative h-full w-full">
+                <Image src={companySettings.logo} alt={companySettings.companyName || 'Electro Shop'} fill sizes="36px" className="object-contain p-1" />
+              </span>
+            ) : (
+              <IconoCuenta className="h-5 w-5" aria-hidden="true" />
+            )}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-bold text-ink">{companySettings?.companyName || 'Electro Shop'}</span>
+            <span className="block text-xs text-muted">Mi panel</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setDrawerPath(null)}
+            aria-label="Cerrar menú"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink lg:hidden"
+          >
+            <IconoCerrar className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <ul className="space-y-0.5">
+            {MENU.map((item) => {
+              const isActive = pathname === item.href || (item.href !== '/customer' && pathname.startsWith(item.href));
+              if ('soloSi' in item && item.soloSi && !isActive && !(usa && usa[item.soloSi] > 0)) return null;
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`relative flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
+                      isActive ? 'bg-brand-50 font-semibold text-brand-700' : 'text-ink-soft hover:bg-surface hover:text-ink'
+                    }`}
+                  >
+                    {isActive && <span className="absolute inset-y-2 left-0 w-1 rounded-r bg-brand-500" aria-hidden="true" />}
+                    <item.icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-brand-600' : 'text-muted'}`} aria-hidden="true" />
+                    <span className="flex-1 truncate">{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        <div className="shrink-0 border-t border-line p-4">
+          <div className="mb-3 flex items-center gap-3">
+            {avatar('h-9 w-9')}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-ink">{userName}</span>
+              <span className="block truncate text-xs text-muted">{session.user?.email}</span>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-line text-sm font-medium text-ink-soft transition-colors hover:border-deal/30 hover:bg-deal-bg hover:text-deal"
+          >
+            <IconoSalir className="h-4 w-4" aria-hidden="true" />
+            Cerrar sesión
+          </button>
+        </div>
+        </div>
+      </aside>
+
+      <div className="min-w-0">
+        <header className="sticky top-0 z-[var(--z-sticky)] flex h-16 items-center gap-2 border-b border-line bg-white px-4 lg:px-6">
+          <button
+            type="button"
+            onClick={() => setDrawerPath(pathname)}
+            aria-label="Abrir menú"
+            aria-controls="customer-sidebar"
+            aria-expanded={isDrawerOpen}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-ink-soft hover:bg-surface hover:text-ink lg:hidden"
+          >
+            <IconoMenu className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsCollapsed((value) => !value)}
+            aria-label={isCollapsed ? 'Mostrar menú' : 'Ocultar menú'}
+            aria-controls="customer-sidebar"
+            aria-expanded={!isCollapsed}
+            className="hidden h-10 w-10 items-center justify-center rounded-lg text-ink-soft hover:bg-surface hover:text-ink lg:inline-flex"
+          >
+            <IconoMenu className="h-5 w-5" aria-hidden="true" />
+          </button>
+
+          <span className="truncate text-sm font-bold text-ink lg:hidden">Mi panel</span>
+
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <Link href="/" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-surface">
+              <IconoAbrirAparte className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Ir a la tienda</span>
+            </Link>
+            {whatsapp && (
+              <a
+                href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hola! Tengo una consulta sobre mi cuenta en ${companySettings?.companyName || 'Electro Shop'}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Escríbenos por WhatsApp"
+                title="¿Necesitas ayuda? Escríbenos"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-success-strong hover:bg-surface"
+              >
+                <FaWhatsapp className="h-5 w-5" aria-hidden="true" />
+              </a>
+            )}
+            <NotificationBell />
+            <Link href="/customer/profile" aria-label="Mi perfil" className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500">
+              {avatar('h-10 w-10')}
+            </Link>
+          </div>
+        </header>
+
+        {/* Sin transform ni backdrop-filter en los contenedores: si no, los modales `fixed` de las páginas quedan encerrados aquí */}
+        <main className="p-3 pb-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom)+1rem)] sm:p-4 sm:pb-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom)+1rem)] lg:p-6">
+          {/* C-265: cada página empieza junto al menú, hasta 1.600 px, sin centrarse ni ir en una tarjeta blanca (PLAN.md §1.5).
+              Antes iba en un marco con borde y 24 px de relleno y cada tarjeta adentro traía el suyo (relleno doble), y el
+              inicio se centraba en 1.152 px */}
+          <div className="max-w-[1600px]">
+            {children}
+          </div>
+        </main>
+      </div>
+
+      {/* Barra inferior del cliente: se pinta en un portal y ya se oculta sola desde lg */}
+      <CustomerMobileNavBar />
+    </div>
+  );
+}

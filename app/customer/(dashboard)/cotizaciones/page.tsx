@@ -33,16 +33,16 @@ export default async function MisCotizacionesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 sm:flex-row sm:items-center lg:p-6">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><IconoOrdenes className="h-6 w-6" aria-hidden="true" /></span>
-          <div className="min-w-0">
-            <h1 className="text-lg font-bold text-ink lg:text-2xl">Mis cotizaciones</h1>
-            <p className="text-sm text-muted">Los presupuestos que pediste o que te enviamos, para revisarlos y aprobarlos.</p>
-          </div>
+      {/* C-265: la cabecera de la página, sin tarjeta (antes era una tarjeta con su placa dentro del marco blanco) */}
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-start">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl font-bold text-ink lg:text-2xl">Mis cotizaciones</h1>
+          <p className="mt-0.5 text-sm text-ink-soft">Los presupuestos que pediste o que te enviamos, para revisarlos y aprobarlos.</p>
         </div>
-        <Link href="/cotizacion" className={adminSecondaryButton}>Pedir una cotización</Link>
-      </div>
+        <Link href="/cotizacion" className={`${adminSecondaryButton} shrink-0`}>
+          <IconoOrdenes className="h-4 w-4" aria-hidden="true" /> Pedir una cotización
+        </Link>
+      </header>
 
       {cotizaciones.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-12 text-center">
@@ -51,7 +51,7 @@ export default async function MisCotizacionesPage() {
           <Link href="/cotizacion" className={`${adminPrimaryButton} mt-5`}>Pedir una cotización</Link>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid gap-3 xl:grid-cols-2">
           {cotizaciones.map((c) => {
             const estado = ESTADOS[c.estado];
             return (

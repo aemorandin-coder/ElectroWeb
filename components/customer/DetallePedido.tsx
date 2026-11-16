@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ import { conditionBadge, warrantyDaysFor, type Condition, type Grade } from '@/l
 import { estadoParaCliente, lineaDeSalida } from '@/lib/order-pasos';
 import { adminBadge } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { useFocoDeVuelta } from '@/lib/hooks/useFocoDeVuelta';
 import { useSettings } from '@/contexts/SettingsContext';
 import { paqueteDesde } from '@/lib/origen';
 import { calendarioDe } from '@/lib/horarios';
@@ -21,6 +22,8 @@ import { calendarioDe } from '@/lib/horarios';
 // C-137: detalle de un pedido y su recibo. El seguimiento (C-100 y C-126) arriba y, abajo, lo que se compró y cómo se
 // pagó. "Imprimir recibo" imprime solo el recibo (o lo guarda en PDF desde el mismo diálogo).
 // Es un recibo, no una factura fiscal: la facturación es C-120.
+// C-265: en la computadora, el seguimiento y el recibo lado a lado (antes uno debajo del otro en 576 px: había que bajar para
+// ver el total). El número de la factura de papel sigue saliendo de order.invoiceNumber (lista blanca de lib/dto/order.ts).
 
 export interface PedidoCliente {
   id: string;
@@ -91,6 +94,9 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
   const tienda = { nombre: ajustes?.companyName || 'Electro Shop Morandin C.A.', address: ajustes?.address, city: ajustes?.city, state: ajustes?.state, phone: ajustes?.phone, email: ajustes?.email };
   const estado = estadoParaCliente(pedido);
   useBodyScrollLock(true);
+  // C-265: el foco entra a la ventana y vuelve a "Detalle y recibo" al cerrarla
+  const ventana = useRef<HTMLDivElement>(null);
+  useFocoDeVuelta(true, ventana);
 
   useEffect(() => {
     const alTeclear = (e: KeyboardEvent) => { if (e.key === 'Escape') onCerrar(); };
@@ -107,7 +113,7 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
   return createPortal(
     <div className="recibo-portal fixed inset-0 z-[var(--z-modal)] flex items-end justify-center sm:items-center sm:p-4 print:static print:block" role="dialog" aria-modal="true" aria-labelledby="detalle-titulo">
       <div className="absolute inset-0 bg-ink/50 print:hidden" onClick={onCerrar} aria-hidden="true" />
-      <div className="relative flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-lg sm:rounded-2xl print:max-h-none print:overflow-visible print:rounded-none print:shadow-none">
+      <div ref={ventana} tabIndex={-1} className="relative flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-lg outline-none sm:rounded-2xl lg:max-w-4xl print:max-h-none print:overflow-visible print:rounded-none print:shadow-none">
         <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3 print:hidden">
           <div className="min-w-0">
             <h2 id="detalle-titulo" className="font-mono text-base font-bold text-ink">Pedido #{pedido.orderNumber}</h2>
@@ -121,7 +127,7 @@ export default function DetallePedido({ pedido, onCerrar }: { pedido: PedidoClie
           </div>
         </header>
 
-        <div className="flex-1 space-y-4 overflow-y-auto p-4 print:overflow-visible">
+        <div className="grid flex-1 content-start gap-4 overflow-y-auto p-4 lg:grid-cols-2 lg:gap-6 lg:p-5 print:block print:overflow-visible">
           <section className="print:hidden" aria-label="Seguimiento">
             {/* C-234: pagado y todavía sin salir, el día que sale (con el corte, los feriados y el día de más del proveedor) */}
             {salida && (

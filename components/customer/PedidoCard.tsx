@@ -17,6 +17,9 @@ import type { PedidoCliente } from '@/components/customer/DetallePedido';
 
 // C-137: un pedido en "Mis pedidos". Cabecera (número, fecha, estado), fotos de 48 px, total en USD y Bs., el paso a
 // paso mientras está en curso, y las acciones directas: rastrear, códigos digitales y detalle con el recibo.
+// C-265 (la A que eligió el equipo): del tamaño de lo que lleva, para ir en dos columnas. En la computadora: fotos |
+// número, fecha y producto | estado y monto; en el teléfono, número y estado arriba, fotos y monto abajo. Dice qué se
+// compró (antes solo las fotos) y las acciones quedan abajo, parejas con la tarjeta de al lado.
 
 const MAX_FOTOS = 4;
 
@@ -53,21 +56,21 @@ export default function PedidoCard({ pedido, onDetalle }: { pedido: PedidoClient
     }
   };
 
+  const primero = pedido.items[0]?.productName ?? 'Pedido';
+
   return (
-    <article className="rounded-2xl border border-line bg-white p-4" aria-labelledby={`pedido-${pedido.id}`}>
-      <header className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
+    <article className="flex h-full flex-col rounded-2xl border border-line bg-white p-3 sm:p-4" aria-labelledby={`pedido-${pedido.id}`}>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+        <header className="col-start-1 row-start-1 min-w-0 sm:col-start-2">
           <h3 id={`pedido-${pedido.id}`} className="font-mono text-sm font-bold text-ink">#{pedido.orderNumber}</h3>
           <p className="text-xs text-muted">
             {fechaCorta(pedido.createdAt)} · {unidades} {unidades === 1 ? 'producto' : 'productos'}
           </p>
-        </div>
-        <span className={adminBadge(estado.tono)}>{estado.label}</span>
-      </header>
+          <p className="mt-0.5 truncate text-sm text-ink-soft" title={primero}>{primero}{pedido.items.length > 1 ? ` y ${pedido.items.length - 1} más` : ''}</p>
+        </header>
+        <span className="col-start-2 row-start-1 justify-self-end sm:col-start-3"><span className={adminBadge(estado.tono)}>{estado.label}</span></span>
 
-      {/* flex-wrap: con 4 fotos y "+N" el total baja a su propia línea a 360 px en vez de quedar tapado */}
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <ul className="flex min-w-0 items-center gap-1.5" aria-label="Productos del pedido">
+        <ul className="col-start-1 row-start-2 flex min-w-0 flex-wrap items-center gap-1.5 sm:row-span-2 sm:row-start-1" aria-label="Productos del pedido">
           {pedido.items.slice(0, MAX_FOTOS).map((item) => {
             const foto = fotoDe(item);
             return (
@@ -89,25 +92,30 @@ export default function PedidoCard({ pedido, onDetalle }: { pedido: PedidoClient
             </li>
           )}
         </ul>
-        <div className="ml-auto shrink-0 text-right">
+        <div className="col-start-2 row-start-2 self-end text-right sm:col-start-3 sm:self-start">
           <p className="text-lg font-bold tabular-nums text-ink">{formatUSD(pedido.totalUSD)}</p>
           {Number(pedido.totalVES) > 0 && <p className="text-xs tabular-nums text-muted">{formatVES(Number(pedido.totalVES))}</p>}
         </div>
       </div>
 
       {pasos && !pasos.cancelado && pasos.pasos.length > 0 && (
-        <div className="mt-4 space-y-2">
+        <div className="mb-3 mt-4 space-y-3">
           <OrderStepper pasos={pasos.pasos} />
-          {pasos.nota && <p className="text-center text-xs font-medium text-ink-soft">{pasos.nota}</p>}
-          {salida && (
-            <p className="flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-brand-700">
-              <IconoReloj className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {salida}
+          {/* C-265: lo que pasa ahora y el día que sale, en la nota de la tarjeta del inicio (antes, dos líneas centradas) */}
+          {(pasos.nota || salida) && (
+            <p className="flex items-start gap-2 rounded-xl bg-surface px-3 py-2 text-sm text-ink-soft">
+              <IconoReloj className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+              <span>
+                {pasos.nota}
+                {salida && <span className="block font-semibold text-brand-700">{salida}</span>}
+              </span>
             </p>
           )}
         </div>
       )}
 
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-3">
+      {/* Abajo, parejas con la tarjeta de al lado. Lo que ya terminó, sin la raya: solo lleva "Detalle y recibo" (y los códigos) */}
+      <div className={`mt-auto flex flex-wrap gap-2 pt-3 ${pasos && !pasos.cancelado && pasos.pasos.length > 0 ? 'border-t border-line' : ''}`}>
         {pedido.trackingNumber && (
           pedido.trackingUrl ? (
             <a

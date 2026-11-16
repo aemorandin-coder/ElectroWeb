@@ -63,6 +63,8 @@
   --z-header: 40;
   --z-dropdown: 50;
   --z-bottomnav: 60;
+  /* C-265: el aviso de cookies, encima de la barra y de WhatsApp y debajo de los cajones (antes compartía la capa del cajón) */
+  --z-aviso: 65;
   --z-drawer: 70;
   --z-modal: 80;
   --z-toast: 90;

@@ -76,6 +76,8 @@ export default function CustomerOnboarding({ stats }: { stats: Stats }) {
 
   // Física: el anillo y el número suben con un resorte; cada check rebota con un pequeño retraso
   const anilloRef = useRef<SVGCircleElement>(null);
+  // C-265: con todo cumplido no hay anillo (va en una línea): el confeti sale de la placa del check
+  const placaRef = useRef<HTMLSpanElement>(null);
   const numeroRef = useRef<HTMLSpanElement>(null);
   const checksRef = useRef<Array<HTMLSpanElement | null>>([]);
   const fisica = useRef({ progreso: crearResorte(0), checks: misiones.map(() => ({ r: crearResorte(0), retraso: 0 })) });
@@ -131,7 +133,7 @@ export default function CustomerOnboarding({ stats }: { stats: Stats }) {
   useEffect(() => {
     if (!cargado || !completo || ocultas || leer(KEY_CELEBRADAS)) return;
     const t = setTimeout(() => {
-      const r = anilloRef.current?.getBoundingClientRect();
+      const r = (anilloRef.current ?? placaRef.current)?.getBoundingClientRect();
       if (r) lanzarConfeti({ x: r.left + r.width / 2, y: r.top + r.height / 2 }, 90);
       guardar(KEY_CELEBRADAS);
     }, 900);
@@ -141,14 +143,65 @@ export default function CustomerOnboarding({ stats }: { stats: Stats }) {
   if (ocultas) return null;
 
   if (!cargado) {
-    return <div className="mb-3 h-44 animate-pulse rounded-2xl bg-line" aria-hidden="true" />;
+    return <div className="h-14 animate-pulse rounded-2xl bg-line" aria-hidden="true" />;
   }
+  // C-260: "¿Cómo funciona la tienda?" abre la hoja del kit (C-257), con el camino en tres íconos que se dibujan
+  const guia = verGuia && (
+    <AsiFunciona
+      clave="tienda"
+      aMano={{ alCerrar: () => setVerGuia(false) }}
+      titulo="Así funciona la tienda"
+      nota="Con Puntos ES pagas al instante, a la tasa de la tienda."
+      pasos={[
+        { icono: 'recargar', texto: 'Recarga Puntos ES con Pago Móvil' },
+        { icono: 'bolsa', texto: 'Paga al instante en el checkout', accion: 'salta' },
+        { icono: 'envio', texto: 'Recibe por MRW, ZOOM o retiro' },
+      ]}
+      boton="Entendido"
+    />
+  );
+
+  // C-265 (decisión del equipo): con las 4 misiones cumplidas, una línea (antes eran 320 px de tarjetas ya hechas).
+  // Se conservan "¿Cómo funciona la tienda?" y la X que las oculta.
+  if (completo) {
+    return (
+      <section aria-labelledby="misiones-titulo" className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-line bg-white px-3 py-2.5 lg:px-4">
+        <span ref={placaRef} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success-strong text-white">
+          <IconoCheck className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <p className="min-w-[10rem] flex-1 text-sm">
+          <span id="misiones-titulo" className="font-semibold text-ink">Tu cuenta está lista.</span>{' '}
+          <span className="text-muted">Completaste las {misiones.length} misiones.</span>
+        </p>
+        <span className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setVerGuia(true)}
+            aria-haspopup="dialog"
+            className="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-brand-600 hover:bg-brand-50 hover:text-brand-700"
+          >
+            ¿Cómo funciona la tienda? <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => guardar(KEY_OCULTAS)}
+            aria-label="Ocultar misiones"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink"
+          >
+            <IconoCerrar className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </span>
+        {guia}
+      </section>
+    );
+  }
+
   // C-201 (pedido de Andrés): quien ya compró no necesita el recorrido para "dejar la cuenta lista": solo lo que le falta,
   // en una tarjeta corta y sin el anillo. Quien todavía no compró sigue viendo las misiones completas.
   const pendientes = misiones.filter((m) => !m.hecha);
   if ((stats?.orders ?? 0) > 0 && pendientes.length > 0) {
     return (
-      <section aria-labelledby="misiones-titulo" className={`${adminCard} mb-3 p-3 lg:p-4`}>
+      <section aria-labelledby="misiones-titulo" className={`${adminCard} p-3 lg:p-4`}>
         <h2 id="misiones-titulo" className="px-1 text-sm font-semibold text-ink">
           {pendientes.length === 1 ? 'Te falta un paso' : `Te faltan ${pendientes.length} pasos`}
         </h2>
@@ -173,7 +226,7 @@ export default function CustomerOnboarding({ stats }: { stats: Stats }) {
   }
 
   return (
-    <section aria-labelledby="misiones-titulo" className={`${adminCard} mb-3 p-4 lg:p-5`}>
+    <section aria-labelledby="misiones-titulo" className={`${adminCard} p-4 lg:p-5`}>
       <div className="flex items-center gap-4">
         {/* Anillo de progreso */}
         <div className="relative h-16 w-16 shrink-0" role="img" aria-label={`Progreso ${porcentaje}%`}>
@@ -267,20 +320,7 @@ export default function CustomerOnboarding({ stats }: { stats: Stats }) {
           ¿Cómo funciona la tienda?
           <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
         </button>
-        {verGuia && (
-          <AsiFunciona
-            clave="tienda"
-            aMano={{ alCerrar: () => setVerGuia(false) }}
-            titulo="Así funciona la tienda"
-            nota="Con Puntos ES pagas al instante, a la tasa de la tienda."
-            pasos={[
-              { icono: 'recargar', texto: 'Recarga Puntos ES con Pago Móvil' },
-              { icono: 'bolsa', texto: 'Paga al instante en el checkout', accion: 'salta' },
-              { icono: 'envio', texto: 'Recibe por MRW, ZOOM o retiro' },
-            ]}
-            boton="Entendido"
-          />
-        )}
+        {guia}
       </div>
     </section>
   );

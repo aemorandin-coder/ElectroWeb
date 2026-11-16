@@ -23,6 +23,8 @@ import type { EstadoMovimiento, MovimientoDTO } from '@/lib/dto/movimiento';
 // (con el motivo y sin sumarlas en verde), enlace al pedido en cada compra o devolución y "Cómo funcionan".
 // Se conserva todo lo de antes: Puntos ES disponibles, recargado, usado, los filtros, "Recargar", ?recargar=1 y el
 // tiempo real (C-127).
+// C-265 (la A que eligió el equipo): los movimientos en una tarjeta con sus filtros y lo que está por confirmar, y "Cómo
+// funcionan" al lado desde 1280 px (antes, después de todo el historial). La pieza fuerte, en una fila.
 
 interface Resumen {
   puntos: number;
@@ -167,7 +169,7 @@ export default function BalancePage() {
   const pendientes = resumen?.porConfirmar.cantidad ?? 0;
 
   return (
-    <div className="space-y-4 pb-24 lg:pb-6">
+    <div className="space-y-4">
       {/* C-251b: la pieza fuerte de la pantalla, en el azul oscuro del logo (PLAN.md §1.0) */}
       <header className="rounded-2xl bg-brand-700 p-4 text-white lg:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -200,18 +202,9 @@ export default function BalancePage() {
         </div>
       </header>
 
-      {pendientes > 0 && resumen && (
-        <p className="flex items-start gap-2 rounded-2xl border border-line bg-surface p-4 text-sm text-ink-soft" role="status">
-          <IconoReloj className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>
-            <strong>{pendientes === 1 ? 'Tienes 1 recarga por confirmar' : `Tienes ${pendientes} recargas por confirmar`}</strong> ({formatUSD(resumen.porConfirmar.monto)}).
-            {' '}Todavía no están en tus Puntos ES: la tienda confirma el pago y te avisa.
-          </span>
-        </p>
-      )}
-
-      <section aria-labelledby="titulo-movimientos">
-        <div className="mb-2 flex items-center justify-between gap-3">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_21rem]">
+      <section aria-labelledby="titulo-movimientos" className="min-w-0 overflow-hidden rounded-2xl border border-line bg-white">
+        <div className="flex items-center justify-between gap-3 px-4 pt-3">
           <h2 id="titulo-movimientos" className="text-base font-bold text-ink">Movimientos</h2>
           <button
             type="button"
@@ -224,17 +217,28 @@ export default function BalancePage() {
             <IconoActualizar className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
         </div>
-        <div className="mb-3">
+        <div className="px-4 py-3">
           <Filtros
             filtros={FILTROS.map((f): FiltroPildora<Filtro> => ({ valor: f.id, etiqueta: f.label, ayuda: f.ayuda, Icono: f.Icono }))}
             valor={filtro}
             onCambiar={setFiltro}
             etiqueta="Filtrar movimientos"
+            tamano="chica"
           />
         </div>
 
+      {pendientes > 0 && resumen && (
+        <p className="mx-4 mb-3 flex items-start gap-2 rounded-xl bg-surface p-3 text-sm text-ink-soft" role="status">
+          <IconoReloj className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>
+            <strong>{pendientes === 1 ? 'Tienes 1 recarga por confirmar' : `Tienes ${pendientes} recargas por confirmar`}</strong> ({formatUSD(resumen.porConfirmar.monto)}).
+            {' '}Todavía no están en tus Puntos ES: la tienda confirma el pago y te avisa.
+          </span>
+        </p>
+      )}
+
         {cargando ? (
-          <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white" aria-label="Cargando movimientos">
+          <ul className="divide-y divide-line border-t border-line" aria-label="Cargando movimientos">
             {[1, 2, 3, 4].map((i) => (
               <li key={i} className="flex animate-pulse items-center gap-3 px-4 py-3">
                 <div className="h-9 w-9 rounded-xl bg-surface" />
@@ -244,12 +248,12 @@ export default function BalancePage() {
             ))}
           </ul>
         ) : error && movimientos.length === 0 ? (
-          <div className="rounded-2xl border border-deal/30 bg-deal-bg p-4 text-sm text-deal" role="alert">
+          <div className="mx-4 mb-4 rounded-xl border border-deal/30 bg-deal-bg p-4 text-sm text-deal" role="alert">
             No pudimos cargar tus movimientos.{' '}
             <button type="button" onClick={() => void cargar(filtro)} className="font-semibold underline">Intentar de nuevo</button>
           </div>
         ) : movimientos.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-10 text-center">
+          <div className="border-t border-line px-6 py-10 text-center">
             <IconoBillete className="mx-auto h-10 w-10 text-subtle" aria-hidden="true" />
             <p className="mt-3 text-sm font-semibold text-ink">{actual.vacio}</p>
             {filtro === '' && (
@@ -264,15 +268,17 @@ export default function BalancePage() {
           </div>
         ) : (
           <>
-            <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
+            <ul className="divide-y divide-line border-t border-line">
               {movimientos.map((m) => <Movimiento key={m.id} m={m} />)}
             </ul>
             {siguiente ? (
-              <button type="button" onClick={cargarMas} disabled={cargandoMas} className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-xl border border-line bg-white text-sm font-semibold text-ink hover:bg-surface disabled:opacity-50">
-                {cargandoMas ? 'Cargando…' : 'Cargar más'}
-              </button>
+              <div className="border-t border-line p-3">
+                <button type="button" onClick={cargarMas} disabled={cargandoMas} className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-line bg-white text-sm font-semibold text-ink hover:bg-surface disabled:opacity-50">
+                  {cargandoMas ? 'Cargando…' : 'Cargar más'}
+                </button>
+              </div>
             ) : (
-              movimientos.length > 5 && <p className="mt-3 text-center text-xs text-muted">Ese es todo tu historial.</p>
+              movimientos.length > 5 && <p className="border-t border-line py-3 text-center text-xs text-muted">Ese es todo tu historial.</p>
             )}
           </>
         )}
@@ -295,6 +301,7 @@ export default function BalancePage() {
           <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
         </Link>
       </section>
+      </div>
 
       <AsiFunciona
         clave="puntos"

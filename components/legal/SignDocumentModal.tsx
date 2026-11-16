@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import { IconoAdvertencia, IconoCerrar, IconoCheck, IconoDescargar, IconoDocumento, IconoEditar, IconoFlechaAbajo } from '@/components/iconos';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { useFocoDeVuelta } from '@/lib/hooks/useFocoDeVuelta';
 import {
   adminError, adminHint, adminInput, adminLabel, adminModalOverlay, adminModalPanel, adminPrimaryButton, adminSecondaryButton, avisoAccion,
 } from '@/lib/admin-ui';
@@ -103,6 +104,9 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
   const padRef = useRef<SignaturePadHandle>(null);
 
   useBodyScrollLock(isOpen);
+  // C-265: el foco entra a la firma y, al cerrarla, vuelve a donde estaba (el botón "Leer y firmar" o la recarga de atrás)
+  const ventana = useRef<HTMLDivElement>(null);
+  useFocoDeVuelta(isOpen, ventana);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -176,7 +180,7 @@ export default function SignDocumentModal({ slug, isOpen, onClose, onSigned }: S
 
   return createPortal(
     <div className={adminModalOverlay} role="dialog" aria-modal="true" aria-labelledby={tituloId}>
-      <div className={`${adminModalPanel} max-w-2xl`}>
+      <div ref={ventana} tabIndex={-1} className={`${adminModalPanel} max-w-2xl outline-none`}>
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><IconoDocumento className="h-5 w-5" aria-hidden="true" /></span>

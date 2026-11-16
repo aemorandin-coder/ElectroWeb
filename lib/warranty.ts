@@ -23,7 +23,8 @@ export const CLAIM_STATUS_LABEL: Record<ClaimStatus, string> = {
 export const CLAIM_STATUS_CUSTOMER: Record<ClaimStatus, string> = {
   RECEIVED: 'Recibida',
   IN_REVIEW: 'En revisión',
-  WAITING_CUSTOMER: 'Esperamos tu respuesta',
+  // C-265: igual que en el inicio de Mi panel (antes, "Esperamos tu respuesta" aquí y "Te toca responder" allá)
+  WAITING_CUSTOMER: 'Te toca responder',
   APPROVED: 'Aprobada',
   RESOLVED: 'Resuelta',
   REJECTED: 'No cubierta',
@@ -44,6 +45,19 @@ export const CLAIM_STATUS_TONE: Record<ClaimStatus, ClaimTone> = {
   IN_REVIEW: 'brand',
   WAITING_CUSTOMER: 'warning',
   APPROVED: 'brand',
+  RESOLVED: 'success',
+  REJECTED: 'neutral',
+};
+
+/**
+ * C-265: el color del estado para el cliente. "Recibida" es esperar (azul): en el panel va en el sello de "te toca" porque
+ * le toca al equipo. Al cliente le toca cuando hay que responder o llevar el equipo (PLAN.md §1.8).
+ */
+export const CLAIM_TONE_CUSTOMER: Record<ClaimStatus, ClaimTone> = {
+  RECEIVED: 'brand',
+  IN_REVIEW: 'brand',
+  WAITING_CUSTOMER: 'warning',
+  APPROVED: 'warning',
   RESOLVED: 'success',
   REJECTED: 'neutral',
 };

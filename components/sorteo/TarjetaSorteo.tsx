@@ -117,17 +117,32 @@ function SeccionBoletos({ sorteo, mis, progreso }: { sorteo: DatosTarjetaSorteo;
   );
 }
 
-export default function TarjetaSorteo() {
-  const [datos, setDatos] = useState<{ sorteo: DatosTarjetaSorteo | null; total?: number; invitar?: ProgresoInvitar; mis?: MisBoletosPublicos } | null>(null);
+/** Lo que devuelve /api/customer/sorteo */
+export interface DatosSorteoCliente { sorteo: DatosTarjetaSorteo | null; total?: number; invitar?: ProgresoInvitar; mis?: MisBoletosPublicos }
+
+/** C-265: si Mi panel muestra los boletos épicos (la pieza fuerte del inicio mientras dura el sorteo) */
+export function conBoletos(datos: DatosSorteoCliente | null | undefined): boolean {
+  return Boolean(datos?.sorteo && datos.mis && datos.mis.boletos.length > 0 && !datos.sorteo.sorteado);
+}
+
+/**
+ * La tarjeta del sorteo de Mi panel. C-265: el inicio le pasa los datos que ya pidió (`datos`), así decide en el mismo
+ * momento si Puntos ES va en blanco (con boletos) o en el azul oscuro (sin ellos). Sin `datos`, los pide ella.
+ */
+export default function TarjetaSorteo({ datos: dados }: { datos?: DatosSorteoCliente | null } = {}) {
+  const [pedidos, setDatos] = useState<DatosSorteoCliente | null>(null);
+  const propios = dados === undefined;
   useEffect(() => {
+    if (!propios) return;
     let vivo = true;
     fetch('/api/customer/sorteo')
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { sorteo: DatosTarjetaSorteo | null; total?: number; invitar?: ProgresoInvitar; mis?: MisBoletosPublicos } | null) => { if (vivo) setDatos(d); })
+      .then((d: DatosSorteoCliente | null) => { if (vivo) setDatos(d); })
       .catch(() => undefined);
     return () => { vivo = false; };
-  }, []);
+  }, [propios]);
+  const datos = propios ? pedidos : dados;
   if (!datos?.sorteo) return null;
-  if (datos.mis && datos.mis.boletos.length > 0 && !datos.sorteo.sorteado) return <SeccionBoletos sorteo={datos.sorteo} mis={datos.mis} progreso={datos.invitar} />;
+  if (conBoletos(datos) && datos.mis) return <SeccionBoletos sorteo={datos.sorteo} mis={datos.mis} progreso={datos.invitar} />;
   return <TarjetaSorteoVista sorteo={datos.sorteo} total={datos.total ?? 0} progreso={datos.invitar} />;
 }

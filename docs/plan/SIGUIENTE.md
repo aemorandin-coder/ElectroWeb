@@ -1,9 +1,20 @@
-# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.79; en `main`, rc.82 por subir: §2)
+# Lo de ahora (actualizado 2026-11-15 · producción en 1.0.0-rc.79; en `main`, rc.83 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-265 · Mi panel rediseñado (rc.83, por subir: §2; `estado/C-265.md`):** el equipo pidió el 15/11 rediseñar Mi panel ("todo está estirado, muy exagerado") y eligió lo recomendado en las 6 preguntas viendo las maquetas (`~/.cache/electroshop-trabajo/c265/index.html`).
+  - **El sistema (la A):**
+    - sin el marco blanco: las tarjetas van sobre el gris, junto al menú;
+    - lo que se repite, en dos columnas en la computadora;
+    - el menú, de arriba abajo;
+    - WhatsApp, en la cabecera;
+    - cada pestaña, con su título.
+  - **El inicio:** una sola pieza fuerte (los boletos con sorteo; Puntos ES, en el azul oscuro, sin él), "Pedidos anteriores" sin repetir y las misiones cumplidas en una línea.
+  - **Mis pedidos:** en dos columnas y agrupados, con el producto en cada tarjeta. El detalle lleva el seguimiento y el recibo lado a lado.
+  - **Garantía:** solo de lo físico, también en el servidor; los códigos y las recargas van por WhatsApp. En Mis códigos, "Solo tú los ves" y "Si no funciona, te ayudamos".
+  - **Las ventanas:** el foco vuelve al cerrarlas, y cerrar la firma ya no cierra la recarga. El aviso de cookies tiene su capa.
 - **C-263 · El boleto épico y el flyer para compartir (rc.82, por subir: §2; `estado/C-263.md`):** el equipo eligió el boleto A ("el talón") y el flyer F1 ("Mis boletos") viendo las maquetas (`~/.cache/electroshop-trabajo/c263/index.html`).
   - **El boleto:** uno por cada boleto, troquelado, con el premio, el correo tapado, de dónde salió y su código ("F3E-XEP"), que no cambia y es el mismo en el panel. Se anima una vez. Va en `/sorteo`, Mi panel y el correo "¡Ganaste un boleto!", y se descarga.
   - **El flyer de estado:** "¡Ya tengo 3 boletos para la PS4!", con sus boletos, el QR y el enlace corto `electroshopve.com/s/<código>`, para compartir desde el teléfono o descargar (también en video), desde Mi panel y `/sorteo`.
@@ -404,20 +415,30 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) se quitó el 06/11: para la próxima ronda se crea otra vez (`GEMINI.md` §3).
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.82` (C-262, C-264 y C-263; unos 25 minutos)
+### Lo que falta subir: `v1.0.0-rc.83` (C-262, C-264, C-263 y C-265; unos 40 minutos)
 Producción está en `v1.0.0-rc.79` (`e68d68f`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
 - **C-262 (rc.80):** los amigos invitados y los boletos, más claros. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **C-264 (rc.81):** el amigo repetido cuenta para quien lo invitó primero; un solo reparto para la pantalla, la lista y los avisos. Sin cambio de base.
+- **C-265 (rc.83):** Mi panel rediseñado. Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 - **C-263 (rc.82):** el boleto épico y el flyer para compartir.
   - **Cambia la base: una columna nueva en `sorteos`, aditiva.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
 ```sql
 ALTER TABLE "sorteos" ADD COLUMN     "ganadorCodigo" TEXT;
 ```
   - Sin variables nuevas, sin SQL de datos y sin cron. Archivos nuevos que trae el `git pull`: las fuentes Poppins (`public/fonts`), el sello (`public/images/sorteo/sello-es.png`) y los logos de PS4 y PS5 para los correos (`public/images/correo/`).
-- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc82.dump`
+- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc83.dump`
 - **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
   - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.82`, o una mayor si entró otra tarea antes del `git pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.83`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas de C-265** (unos 15 minutos, en la computadora y en el teléfono, con una cuenta que tenga pedidos):
+  1. **El menú:** en la computadora, la columna blanca llega abajo con mucho y con poco contenido, y "Cerrar sesión" queda al pie al bajar. Una captura de página entera ya no lo corta.
+  2. **El inicio:** con boletos del sorteo, Puntos ES va en blanco (los boletos son lo fuerte); en una cuenta sin boletos, en el azul oscuro. "Pedidos anteriores" no repite los de "Pedidos en curso".
+  3. **WhatsApp:** en Mi panel está en la cabecera, junto a la campana, y no flota; en la tienda sigue flotando. Tocarlo abre el chat.
+  4. **Mis pedidos:** en dos columnas en la computadora; "Detalle y recibo" abre el seguimiento y el recibo lado a lado, con "Factura n.º" si la tiene. En el teléfono, una columna sin nada tapado.
+  5. **La pestaña del navegador** dice "Mis pedidos | Electro Shop" (y así en cada página).
+  6. **Garantía → Nueva:** un pedido de solo códigos no sale; debajo, "Códigos y recargas…" con WhatsApp.
+  7. **Puntos ES → Recargar,** con una cuenta que no firmó los términos: sale la firma; Esc o la X la cierran y la recarga queda con "Leer y firmar".
+  8. **El aviso de cookies** (en una ventana privada, en el teléfono): con el aviso a la vista, abrir el menú de Mi panel. El menú queda encima del aviso.
 - **Pruebas de C-263** (unos 10 minutos, en el teléfono, con una cuenta que tenga boletos):
   1. **Mi panel:** sale "¡Tienes N boletos para la PS4!" con los boletos, que se animan una vez (la segunda visita, quietos), y "Te falta 1 amigo…" si aplica. En el teléfono se deslizan, con "Tu próximo boleto" al final.
   2. **"Compartir mi flyer" → "Compartir":** se abre la hoja del teléfono con la imagen. Probar las tres:

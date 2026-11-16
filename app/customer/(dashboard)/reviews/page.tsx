@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { IconoCerrar, IconoCheck, IconoEstrella, IconoLista, IconoPaquete, IconoReloj } from '@/components/iconos';
 import Filtros from '@/components/admin/Filtros';
 import Link from 'next/link';
@@ -25,6 +26,8 @@ interface Review {
   product: {
     name: string;
     slug: string;
+    /** C-265: la foto, en la tarjeta */
+    mainImage?: string | null;
   };
 }
 
@@ -83,13 +86,14 @@ export default function MyReviewsPage() {
   };
 
   return (
-    <div className="space-y-4 lg:space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl lg:text-2xl font-bold text-ink">Mis reseñas</h1>
       </div>
 
       {/* C-251b: los filtros en píldoras con su ícono, su cuenta y lo que juntan (PLAN.md §1.7) */}
       <Filtros
+        tamano="chica"
         etiqueta="Filtrar reseñas"
         valor={filter}
         onCambiar={setFilter}
@@ -127,17 +131,23 @@ export default function MyReviewsPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
+        // C-265: en dos columnas desde 1280 px, con la foto del producto (antes, tarjetas de 1.086 px para una línea)
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           {filteredReviews.map((review) => (
             <div
               key={review.id}
-              className={`${adminCard} p-5 lg:p-6 transition-colors hover:border-brand-500/40`}
+              className={`${adminCard} p-4 transition-colors hover:border-brand-500/40`}
             >
-              <div className="flex items-start justify-between mb-4 gap-4">
-                <div className="flex-1">
+              <div className="flex items-start justify-between mb-3 gap-3">
+                <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-line bg-white">
+                  {review.product.mainImage
+                    ? <Image src={review.product.mainImage} alt="" fill sizes="56px" className="object-contain" />
+                    : <span className="flex h-full items-center justify-center text-subtle"><IconoPaquete className="h-5 w-5" aria-hidden="true" /></span>}
+                </span>
+                <div className="min-w-0 flex-1">
                   <Link
                     href={`/productos/${review.product.slug}`}
-                    className="text-base lg:text-lg font-bold text-ink hover:text-brand-500 transition-colors"
+                    className="text-base font-bold text-ink hover:text-brand-500 transition-colors"
                   >
                     {review.product.name}
                   </Link>

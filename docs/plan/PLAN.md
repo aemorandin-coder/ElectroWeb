@@ -135,6 +135,7 @@ Variables CSS definidas por Claude en C-10. Uso: `z-[var(--z-modal)]`.
 | `--z-header` | 40 | Header |
 | `--z-dropdown` | 50 | Menús del header, mega menú |
 | `--z-bottomnav` | 60 | Barra inferior móvil, WhatsApp |
+| `--z-aviso` | 65 | El aviso de cookies (C-265): encima de la barra y de WhatsApp, debajo de los cajones |
 | `--z-drawer` | 70 | Filtros móviles, drawer "Más" |
 | `--z-modal` | 80 | Modales |
 | `--z-toast` | 90 | Toasts |
@@ -148,7 +149,7 @@ Un único módulo, `lib/currency.ts` (C-12): `formatUSD(1099)` → `$1.099,00` y
 ### 1.5 Anchos: cada contenedor, del tamaño de lo que lleva (C-205)
 Lo pidió Andrés el 13/11: un campo con un "30" ocupaba 380 px, y los contenedores anchos desordenaban las rejillas. Vale para el panel y para la web.
 
-**La página:** en el panel empieza junto al menú y ocupa el ancho del marco (hasta 1600 px), como las demás. No se centra una página angosta dentro del marco ancho (`mx-auto max-w-…`): deja un hueco junto al menú y despega el título de la cabecera (Andrés lo marcó el 13/11). Lo que se limita es lo de adentro:
+**La página:** en el panel empieza junto al menú y ocupa el ancho del marco (hasta 1600 px), como las demás. **Mi panel, igual desde C-265** (la A que eligió el equipo): sin tarjeta blanca alrededor de la página, las tarjetas sobre el gris en un solo nivel, lo que se repite (pedidos, garantías, documentos, reseñas) en dos columnas desde 1280 px y lo que se lee en orden (movimientos, avisos) en una columna con su ayuda al lado. No se centra una página angosta dentro del marco ancho (`mx-auto max-w-…`): deja un hueco junto al menú y despega el título de la cabecera (Andrés lo marcó el 13/11). Lo que se limita es lo de adentro:
 - un formulario o un ajuste, hasta 48 rem (`max-w-3xl`), a la izquierda de su tarjeta;
 - un texto para leer, hasta 65 caracteres por línea (`max-w-prose`);
 - una tabla o un tablero, todo el ancho.
@@ -183,6 +184,7 @@ Los filtros de una lista van con `components/admin/Filtros`:
 - **Una con cuenta 0** se apaga, pero se puede tocar.
 - **En el teléfono** se deslizan de lado.
 - Son botones con `aria-pressed`, no pestañas.
+- **El tamaño chico** (`tamano="chica"`, C-265, la decisión del equipo para Mi panel): una línea con el ícono, el nombre y la cuenta, y lo que junta la elegida, debajo. Para listas cortas, donde la píldora de 52 px pesaba más que la lista. Salen solo cuando separan algo (con una sola categoría, no van).
 
 ### 1.8 Píldoras de estado y botones del panel (C-210)
 Andrés eligió la versión A ("como la tienda") el 13/11, para todo el panel.
@@ -611,7 +613,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - **Para C-237 (compras):** el proveedor y su RIF pueden leerse de `suppliers` (`legalName`, `taxId`).
   - **C-251 · Mi panel revisado a fondo** (**hecha** la primera parte, rc.69, 15/11; `estado/C-251.md`; lo hizo un agente aparte): las fallas, la seguridad de la API del cliente y lo nuevo que no le había llegado ("Sale el… desde Aragua", "Dejar mi reseña", cómo canjear cada código, el certificado del curso). Queda:
     - **Hecha C-251b** (rc.71; `estado/C-251b.md`): los arreglos del kit que no eran fallas (los sellos llenos, sin ámbar, el aviso con su placa, los filtros en píldoras, `Opcion` en Direcciones y el perfil hasta `max-w-3xl`).
-    - **Tres decisiones del equipo, con maquetas** (`~/.cache/electroshop-trabajo/c251/decisiones.html`): Mis pedidos en la computadora (dos columnas, la recomendada), la garantía de los códigos y las recargas (aparte, la recomendada) y los sellos "Encriptado" y "Garantizado" de Mis códigos (decir lo que sí es verdad, la recomendada).
+    - ~~**Tres decisiones del equipo**~~: **decididas y hechas en C-265** (rc.83): Mis pedidos en dos columnas, la garantía solo de lo físico (los códigos van por WhatsApp; el servidor lo exige) y "Solo tú los ves" y "Si no funciona, te ayudamos" en Mis códigos.
     - Pagar un pedido "Por pagar" desde Mi panel no existe; solo nace así lo que arma el equipo. Si se quiere, es una tarea aparte.
     - La dirección muy corta: la pantalla pide 10 letras y el servidor acepta menos.
   - **C-253 · El sorteo, más atractivo** (**hecha**, rc.72, 15/11; `estado/C-253.md`; el equipo eligió viendo las maquetas):
@@ -650,7 +652,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
       - `/favicon.ico` da 404 en producción para quien lo pide directo: un `favicon.ico` con el ícono de la tienda.
       - La sesión se pide en el navegador antes que todo lo demás (3 o 4 niveles en cada carga con sesión). Pasarla desde el servidor haría dinámicas todas las páginas: decisión técnica para más adelante.
     - **Del carril de Gemini** (con el sí del equipo):
-      - Mi panel y `/canjear-gift-card` no tienen título propio: la pestaña dice el de la portada.
+      - `/canjear-gift-card` no tiene título propio: la pestaña dice el de la portada (Mi panel ya lo tiene desde C-265).
       - `/cursos`, `/cursos/[slug]` y `/servicios` no tienen `<main>`.
       - La recarga (`RechargeModalV2`) y la firma (`SignDocumentModal`) piden dos veces los términos de los Puntos ES.
     - **Menor:**
@@ -661,7 +663,12 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **C-263 · El boleto épico animado y el flyer para compartir** (**hecha**, rc.82, 15/11; `estado/C-263.md`; el equipo eligió el boleto A, "el talón", y el flyer F1, "Mis boletos", viendo las maquetas): un boleto por cada boleto, con el correo tapado y su código estable, en Mi panel, `/sorteo` y el correo; el flyer de 1080 × 1920 con el QR y el enlace corto `/s/<código>`; "Ganó el boleto F3E-XEP de an***" al sortear.
     - **Falta, en un teléfono de verdad** (las pruebas del deploy): "Compartir" hacia WhatsApp Estado, Instagram Historia (el sticker «Enlace» con el enlace copiado) y TikTok.
     - **Falta, el 20/12:** ver en el panel del sorteo el código del ganador.
-    - **C-265** acomoda en Mi panel los boletos y la tarjeta de Puntos ES, que quedan en el mismo azul oscuro.
+    - ~~**C-265** acomoda en Mi panel los boletos y la tarjeta de Puntos ES~~: hecha (rc.83). Mientras se ven los boletos, Puntos ES va en blanco.
+  - **C-265 · Mi panel rediseñado** (**hecha**, rc.83, 15/11; `estado/C-265.md`; el equipo eligió lo recomendado en las 6 preguntas, viendo las maquetas en `~/.cache/electroshop-trabajo/c265/index.html`): la A (tarjetas en rejilla), sin el marco blanco, el menú de arriba abajo, una pieza fuerte en el inicio, WhatsApp en la cabecera, lo compacto y lo agrupado, la garantía solo de lo físico y los sellos de Mis códigos. Queda:
+    - **En un teléfono de verdad** (las pruebas del deploy): el menú, la cabecera con WhatsApp y las ventanas de la recarga y la firma.
+    - **El aviso de cookies sobre Mi panel** se probó con su capa, no visto: la tienda de prueba no tiene Google ni Meta configurados y el aviso no sale. Verlo en producción con el cajón del teléfono abierto.
+    - **Promotores** conserva su presentación centrada (no estaba en las maquetas): si el equipo la quiere como las demás, es otra pasada.
+    - **"Para ti"** (C-201) sigue esperando sus maquetas; con el sistema de C-265 iría después de "Pedidos en curso", en dos columnas.
   - **C-254 · La semana del ganador** (**hecha**, rc.79, 15/11; `estado/C-254.md`; el equipo eligió lo recomendado en las 7 preguntas, viendo las maquetas; el equipo, 15/11: "al terminar el sorteo, que la bandera permanezca una semana más mostrando quién ganó y un video de testimonio o una imagen de la persona"). Lo que se pidió y quedó hecho:
     - **La bandera, por etapas:**
       - abierto: "¡Gánate una PS4!", lo de C-253;
@@ -739,7 +746,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
 
 **Pedido del 10/11 (Andrés), mientras se espera lo de la ferretería:**
 - **C-201** (**hecha**, rc.26): el inicio de Mi panel sin errores y más claro. `estado/C-201.md`. Quedan:
-  - En el teléfono, el botón de WhatsApp tapa el final de las tarjetas del panel.
+  - ~~En el teléfono, el botón de WhatsApp tapa el final de las tarjetas del panel~~: hecha en C-265 (va en la cabecera).
   - "1 a 2 días hábiles" en Garantía, a confirmar con los términos (A3).
   - "Para ti" en el inicio del panel: maquetas con datos de producción para que Andrés elija.
 - **C-202** (**hecha**, rc.27): los nombres de producto bien escritos (la regla de §7.2), la columna "Nombre en la tienda" en la Lista del proveedor, el aviso del asistente, y renombrar ya no rompe el enlace (la dirección vieja responde 308). `estado/C-202.md`. Quedan:

@@ -252,7 +252,7 @@ function NotEnrolledView({ data, onEnviada }: { data: ReferralData | null; onEnv
         ].map((b) => (
           <div
             key={b.title}
-            className="flex items-start gap-3 p-4 bg-surface rounded-xl border border-line"
+            className="flex items-start gap-3 p-4 bg-white rounded-xl border border-line"
           >
             <div
               className={`w-9 h-9 rounded-lg ${b.bg} flex items-center justify-center flex-shrink-0`}
@@ -288,7 +288,7 @@ function NotEnrolledView({ data, onEnviada }: { data: ReferralData | null; onEnv
             },
           ].map((step, idx) => (
             <Fragment key={step.n}>
-              <div className="flex-1 text-center p-4 bg-surface rounded-xl border border-line">
+              <div className="flex-1 text-center p-4 bg-white rounded-xl border border-line">
                 <div className="w-8 h-8 rounded-full bg-brand-500 text-white text-sm font-bold flex items-center justify-center mx-auto mb-2">
                   {step.n}
                 </div>
@@ -635,7 +635,7 @@ export default function ReferralsPage() {
           ].map((item) => (
             <div
               key={item.step}
-              className="flex items-start gap-3 p-4 bg-surface rounded-xl border border-line"
+              className="flex items-start gap-3 p-4 bg-white rounded-xl border border-line"
             >
               <div
                 className={`w-9 h-9 rounded-lg ${item.bg} flex items-center justify-center flex-shrink-0`}
@@ -657,7 +657,7 @@ export default function ReferralsPage() {
       </div>
 
       {/* Tier progression */}
-      <div className="bg-surface rounded-xl border border-line p-5">
+      <div className="bg-white rounded-xl border border-line p-5">
         <h3 className="text-base font-bold text-ink">Tu nivel</h3>
         <p className="mb-4 text-xs text-muted">Un reconocimiento por tus ventas acreditadas. No cambia tu comisión.</p>
         <div className="flex items-center justify-between mb-3">
@@ -730,7 +730,7 @@ export default function ReferralsPage() {
             </span>
           </h3>
           {!conversions || conversions.length === 0 ? (
-            <div className="text-center py-10 text-muted text-sm bg-surface rounded-xl border border-line">
+            <div className="text-center py-10 text-muted text-sm bg-white rounded-xl border border-line">
               <IconoClientes className="w-8 h-8 mx-auto mb-2 opacity-25" />
               <p>Aún no tienes ventas.</p>
               <p className="text-xs mt-1">Comparte tu código para empezar a ganar Puntos ES.</p>
@@ -777,7 +777,7 @@ export default function ReferralsPage() {
             <span className="text-muted font-normal text-sm">· por ventas acreditadas</span>
           </h3>
           {!leaderboard || leaderboard.length === 0 ? (
-            <div className="text-center py-10 text-muted text-sm bg-surface rounded-xl border border-line">
+            <div className="text-center py-10 text-muted text-sm bg-white rounded-xl border border-line">
               <IconoPremio className="w-8 h-8 mx-auto mb-2 opacity-25" />
               <p>Todavía no hay ventas acreditadas.</p>
               <p className="text-xs mt-1">Sé el primero de la clasificación.</p>
@@ -790,7 +790,7 @@ export default function ReferralsPage() {
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors ${
                     entry.isCurrentUser
                       ? 'bg-brand-50 border-brand-200'
-                      : 'bg-surface border-line'
+                      : 'bg-white border-line'
                   }`}
                 >
                   <div

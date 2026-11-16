@@ -17,12 +17,51 @@ export interface Filtro<T extends string> {
   tono?: 'aviso';
 }
 
-export default function Filtros<T extends string>({ filtros, valor, onCambiar, etiqueta }: {
+export default function Filtros<T extends string>({ filtros, valor, onCambiar, etiqueta, tamano = 'normal' }: {
   filtros: ReadonlyArray<Filtro<T>>;
   valor: T;
   onCambiar: (v: T) => void;
   etiqueta: string;
+  /**
+   * C-265: "chica" es una línea (ícono, nombre y cuenta) para las listas del cliente, donde la píldora de 52 px pesaba más
+   * que la lista. Lo que junta la elegida se lee debajo (y el de cada una, en su title y para el lector de pantalla).
+   */
+  tamano?: 'normal' | 'chica';
 }) {
+  if (tamano === 'chica') {
+    const elegida = filtros.find((f) => f.valor === valor);
+    return (
+      <div className="min-w-0">
+        <div role="group" aria-label={etiqueta} className="-mx-3 flex snap-x gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+          {filtros.map(({ valor: v, etiqueta: texto, ayuda, Icono, cuenta, tono }) => {
+            const activo = v === valor;
+            const vacio = cuenta === 0 && !activo;
+            return (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={activo}
+                onClick={() => onCambiar(v)}
+                title={ayuda}
+                className={[
+                  'inline-flex h-9 shrink-0 snap-start items-center gap-1.5 rounded-full border pl-2.5 pr-3 text-sm font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+                  activo ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-[inset_0_0_0_1px_var(--color-brand-500)]'
+                    : tono === 'aviso' ? 'border-brand-200 bg-brand-50 text-brand-900 hover:border-brand-500' : 'border-line-strong bg-white text-ink hover:border-brand-200 hover:bg-brand-50',
+                  vacio ? 'opacity-60' : '',
+                ].join(' ')}
+              >
+                <Icono className={`h-4 w-4 shrink-0 ${activo ? 'text-brand-600' : 'text-ink-soft'}`} aria-hidden="true" />
+                {texto}
+                {cuenta !== undefined && cuenta !== null && <span className={`text-xs font-bold tabular-nums ${activo ? 'text-brand-700' : 'text-ink-soft'}`}>{cuenta.toLocaleString('es-VE')}</span>}
+                <span className="sr-only">: {ayuda}</span>
+              </button>
+            );
+          })}
+        </div>
+        {elegida && elegida.valor !== filtros[0]?.valor && <p className="mt-1.5 text-xs text-muted" aria-live="polite">{elegida.ayuda}</p>}
+      </div>
+    );
+  }
   return (
     <div
       role="group"

@@ -130,7 +130,7 @@ export default function TableroSorteo({ datos, onEditar, onNuevo, onEntrega, onR
       const r = await fetch('/api/admin/sorteo/sortear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sorteoId: s.id }) });
       const d = await r.json().catch(() => null);
       if (!r.ok) { toast.error(d?.error || 'No se pudo sortear'); return; }
-      toast.success(`Ganó ${d.ganadorEmail}`);
+      toast.success(d.ganadorCodigo ? `Ganó el boleto ${d.ganadorCodigo} de ${d.ganadorEmail}` : `Ganó ${d.ganadorEmail}`);
       await onRecargar();
     } finally {
       setOcupado(false);
@@ -229,7 +229,8 @@ export default function TableroSorteo({ datos, onEditar, onNuevo, onEntrega, onR
           <div className="flex flex-wrap items-start gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-success-strong text-white"><IconoCheck className="h-5 w-5" aria-hidden="true" /></span>
             <div className="min-w-0 flex-1">
-              <h3 id="sorteo-ganador" className="text-base font-semibold text-ink">Ganó {s.ganadorEmail}</h3>
+              {/* C-263: con el código del boleto, el mismo que el cliente ve en su boleto y que se publica con el correo tapado */}
+              <h3 id="sorteo-ganador" className="text-base font-semibold text-ink">{s.ganadorCodigo ? <>Ganó el boleto <span className="tracking-wider">{s.ganadorCodigo}</span> de {s.ganadorEmail}</> : <>Ganó {s.ganadorEmail}</>}</h3>
               <p className="mt-0.5 text-sm text-ink-soft">{s.ganadorDetalle}. Sorteado el {new Date(s.sorteadoAt as string).toLocaleString('es-VE', { timeZone: 'America/Caracas' })} entre {s.boletosAlSortear} boletos.</p>
               <p className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-muted">
                 Huella de la lista: <span className={`${adminDato} break-all`}>{s.huellaLista}</span>

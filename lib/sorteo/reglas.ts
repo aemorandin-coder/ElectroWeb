@@ -131,6 +131,29 @@ export interface Boleto {
   email: string;
   /** "Compra ORD-2026-0041 ($24,50)" o "Invitó a 2 amigos" */
   detalle: string;
+  /** C-263: el código del boleto ("F3E-XEP"), el mismo que ve el cliente. No entra en la huella de la lista */
+  codigo: string;
+}
+
+/** C-263: de dónde salió un boleto, para su código: la compra (su primera orden) o el n.º de par de amigos del participante */
+export const origenDeCompra = (ordenes: string) => `compra:${ordenes.split(' y ')[0]}`;
+export const origenDeAmigos = (codigoParticipante: string, par: number) => `amigos:${codigoParticipante}:${par}`;
+
+/**
+ * C-263: el código de un boleto, calculado de lo que lo originó y sin guardarlo: la huella (sha256) del sorteo y del origen,
+ * escrita con las 31 letras y cifras del código para invitar (sin 0/O ni 1/I/L), 6 caracteres: "F3E-XEP". No cambia cuando
+ * entran boletos de otros (no es un número de la lista) y el panel lo calcula igual para cada boleto de la lista que se
+ * sortea. Hay 887 millones: con 2.000 boletos, 2 en 1.000 de que dos se repitan (el panel los muestra igual, con su detalle).
+ */
+export function codigoDeBoleto(sorteoId: string, origen: string): string {
+  const letras = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let n = createHash('sha256').update(`${sorteoId}|${origen}`).digest().readUIntBE(0, 5) % letras.length ** 6;
+  let codigo = '';
+  for (let i = 0; i < 6; i++) {
+    codigo = letras[n % letras.length] + codigo;
+    n = Math.floor(n / letras.length);
+  }
+  return `${codigo.slice(0, 3)}-${codigo.slice(3)}`;
 }
 
 /** La huella de la lista de boletos: se guarda al sortear, para poder mostrar que la lista no cambió después */

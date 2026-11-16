@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
   const r = await sortearAhora(body.sorteoId);
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: 409 });
   await registrarAccionAdmin(session, 'SETTINGS_UPDATED', { type: 'SORTEO', id: r.sorteo.id }, {
-    sorteo: r.sorteo.titulo, ganador: r.sorteo.ganadorEmail, detalle: r.sorteo.ganadorDetalle, boletos: r.sorteo.boletosAlSortear, huella: r.sorteo.huellaLista,
+    sorteo: r.sorteo.titulo, ganador: r.sorteo.ganadorEmail, detalle: r.sorteo.ganadorDetalle, codigo: r.sorteo.ganadorCodigo, boletos: r.sorteo.boletosAlSortear, huella: r.sorteo.huellaLista,
   }, request);
   revalidateStorefront();
   // C-219: el correo al ganador y el resultado a los demás, después de responder (con pausa entre correos)
   after(() => avisarResultadoSorteo(r.sorteo.id));
-  return NextResponse.json({ ganadorEmail: r.sorteo.ganadorEmail, ganadorDetalle: r.sorteo.ganadorDetalle, boletos: r.sorteo.boletosAlSortear, huella: r.sorteo.huellaLista, sorteadoAt: r.sorteo.sorteadoAt });
+  return NextResponse.json({ ganadorEmail: r.sorteo.ganadorEmail, ganadorDetalle: r.sorteo.ganadorDetalle, ganadorCodigo: r.sorteo.ganadorCodigo, boletos: r.sorteo.boletosAlSortear, huella: r.sorteo.huellaLista, sorteadoAt: r.sorteo.sorteadoAt });
 }

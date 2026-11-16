@@ -20,7 +20,7 @@ function paraElPanel(sorteo: Sorteo) {
     costoPremioUSD: Number(sorteo.costoPremioUSD), compraMinimaUSD: Number(sorteo.compraMinimaUSD), topeInvitar: sorteo.topeInvitar,
     desde: diaDe(sorteo.desde), hasta: diaDe(sorteo.hasta), resultadoEl: diaDe(sorteo.resultadoEl),
     cerrado: new Date() > sorteo.hasta,
-    sorteadoAt: sorteo.sorteadoAt?.toISOString() ?? null, ganadorEmail: sorteo.ganadorEmail, ganadorDetalle: sorteo.ganadorDetalle,
+    sorteadoAt: sorteo.sorteadoAt?.toISOString() ?? null, ganadorEmail: sorteo.ganadorEmail, ganadorDetalle: sorteo.ganadorDetalle, ganadorCodigo: sorteo.ganadorCodigo,
     boletosAlSortear: sorteo.boletosAlSortear, huellaLista: sorteo.huellaLista,
     // C-254: la entrega (lo que sale en la tienda con el permiso de la persona)
     entrega: {

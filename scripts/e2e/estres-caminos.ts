@@ -616,7 +616,7 @@ const CAMINOS: Camino[] = [
       await r.tocar(r.page.locator('label[for=acceptTerms], #acceptTerms').filter({ visible: true }));
       await resolverCaptcha(r);
       await r.tocar(r.page.locator('form button[type=submit]').filter({ visible: true }));
-      await r.pantalla('De vuelta en el sorteo', () => r.page.locator('main').getByText(/invita=/).filter({ visible: true }));
+      await r.pantalla('De vuelta en el sorteo', () => r.page.locator('main').getByText(/\/s\/[A-Z2-9]{8}/).filter({ visible: true }));
       await r.guiaSiAparece();
     },
   },

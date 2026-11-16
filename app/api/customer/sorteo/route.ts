@@ -1,7 +1,11 @@
 // C-212: los boletos del cliente en el sorteo vigente, para la tarjeta de Mi panel. Sin sorteo activo: { sorteo: null }.
+// C-263: y sus boletos épicos (`mis`, la lista blanca de lib/dto/sorteo.ts): solo los de la sesión, nunca los de otro
+// cliente (la ruta no recibe a quién: lo dice la sesión). Sin los nombres de los amigos, como C-262.
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { misBoletosPublicos } from '@/lib/dto/sorteo';
+import { siteUrl } from '@/lib/seo';
 import { boletosDeCliente, getSorteoVigente } from '@/lib/sorteo/servidor';
 
 export async function GET() {
@@ -25,5 +29,6 @@ export async function GET() {
       faltanParaProximo: boletos.faltanParaProximo,
       pendientes: boletos.amigos.filter((a) => a.estado === 'falta-activar' || a.estado === 'falta-telefono').length,
     },
+    mis: misBoletosPublicos(sorteo, boletos, siteUrl(), { nombres: false }),
   });
 }

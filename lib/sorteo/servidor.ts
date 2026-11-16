@@ -5,7 +5,8 @@ import { cache } from 'react';
 import type { Sorteo } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import {
-  boletosPorInvitar, codigoNuevo, comprasConBoleto, esCodigoSorteo, faltanParaProximo, huellaDe, nombreCorto, repartirInvitaciones, sortear,
+  boletosPorInvitar, codigoDeBoleto, codigoNuevo, comprasConBoleto, correoTapado, esCodigoSorteo, faltanParaProximo, huellaDe, nombreCorto,
+  origenDeAmigos, origenDeCompra, repartirInvitaciones, sortear,
   type Boleto, type CompraConBoleto, type EstadoAmigo, type InvitacionDelSorteo, type OrdenParaSorteo,
 } from './reglas';
 import { avisarAmigoRegistrado } from './avisos';
@@ -72,7 +73,7 @@ function ordenesParaSorteo(filas: Array<{ orderNumber: string; subtotalUSD: unkn
 
 /** C-264: una invitación del sorteo con quién invitó (su participante) y el nombre del amigo, para la pantalla y los avisos */
 export type InvitacionCargada = InvitacionDelSorteo & { invitaId: string; nombre: string | null };
-export type InvitacionRepartida = { invitaId: string; amigoId: string; nombre: string | null; estado: EstadoAmigo };
+export type InvitacionRepartida = { invitaId: string; amigoId: string; nombre: string | null; estado: EstadoAmigo; fecha: Date };
 
 /**
  * C-264: todas las invitaciones del sorteo (los amigos registrados dentro de las fechas), en el orden en que se
@@ -99,7 +100,7 @@ export async function cargarInvitaciones(sorteo: Sorteo): Promise<InvitacionCarg
  */
 export function repartir(invitaciones: InvitacionCargada[], sinContar: string | null = null): InvitacionRepartida[] {
   const estados = repartirInvitaciones(invitaciones.map((i) => (i.amigoId === sinContar ? { ...i, correoVerificado: false } : i)));
-  return invitaciones.map((i) => ({ invitaId: i.invitaId, amigoId: i.amigoId, nombre: i.nombre, estado: estados.get(i.amigoId) ?? 'falta-activar' }));
+  return invitaciones.map((i) => ({ invitaId: i.invitaId, amigoId: i.amigoId, nombre: i.nombre, estado: estados.get(i.amigoId) ?? 'falta-activar', fecha: i.fecha }));
 }
 
 /** C-264: el reparto de ahora, una vez por pedido */
@@ -112,6 +113,23 @@ export const cuentanDe = (reparto: InvitacionRepartida[], invitaId: string) => r
 export interface AmigoInvitado {
   nombre: string;
   estado: EstadoAmigo;
+}
+
+/**
+ * C-263: un boleto del cliente, como lo dibuja la tienda (el boleto épico). `origen` es lo que dice el boleto; `monto` y
+ * `amigos` solo salen en la pantalla, debajo del boleto (ni la imagen que se descarga ni el flyer los llevan).
+ */
+export interface BoletoDelCliente {
+  codigo: string;
+  tipo: 'compra' | 'amigos';
+  /** "Compra ORD-2026-0041" o "Invitaste a 2 amigos" */
+  origen: string;
+  /** La compra en productos (USD), o null en uno de amigos */
+  monto: number | null;
+  /** Los dos amigos del par ("Luisa P."), o [] en uno de compra */
+  amigos: string[];
+  /** Cuándo nació: la compra, o el registro del segundo amigo del par */
+  fecha: Date;
 }
 
 export interface BoletosDeCliente {
@@ -128,28 +146,53 @@ export interface BoletosDeCliente {
   faltanParaProximo: number;
   /** Hasta cuántos boletos se ganan invitando en este sorteo */
   tope: number;
+  /** C-263: cada boleto, del más viejo al más nuevo, con su código */
+  boletos: BoletoDelCliente[];
+  /** C-263: su correo tapado ("an***@gmail.com"): así participa, y así se anuncia al ganador */
+  correo: string;
+  /** C-263: el enlace corto para invitar (la ruta, sin el dominio): /s/<código> */
+  enlaceCorto: string;
 }
 
 /** Los boletos de un cliente y su enlace para invitar (Mi panel y /sorteo) */
 export async function boletosDeCliente(sorteo: Sorteo, userId: string): Promise<BoletosDeCliente> {
-  const [participante, ordenes, reparto] = await Promise.all([
+  const [participante, ordenes, reparto, usuario] = await Promise.all([
     participanteDe(sorteo.id, userId),
     prisma.order.findMany({
       where: { userId, createdAt: { gte: sorteo.desde, lte: sorteo.hasta } },
       select: { orderNumber: true, subtotalUSD: true, createdAt: true, paymentStatus: true, status: true },
     }),
     invitacionesDelSorteo(sorteo),
+    prisma.user.findUnique({ where: { id: userId }, select: { email: true } }),
   ]);
   const compras = comprasConBoleto(ordenesParaSorteo(ordenes), sorteo.desde, sorteo.hasta, Number(sorteo.compraMinimaUSD));
   // C-264: sus amigos con el estado del reparto de todo el sorteo (el mismo que la lista que se sortea)
   const mios = reparto.filter((i) => i.invitaId === participante.id);
   const validos = cuentanDe(reparto, participante.id);
   const porInvitar = boletosPorInvitar(validos, sorteo.topeInvitar);
+  // C-263: cada boleto con su código. Los de amigos, un par por boleto en el orden en que cuentan (el n.º de par es su origen)
+  const cuentan = mios.filter((i) => i.estado === 'cuenta');
+  const boletos: BoletoDelCliente[] = [
+    ...compras.map<BoletoDelCliente>((c) => ({
+      codigo: codigoDeBoleto(sorteo.id, origenDeCompra(c.ordenes)), tipo: 'compra', origen: `Compra ${c.ordenes.split(' y ')[0]}`,
+      monto: c.subtotalUSD, amigos: [], fecha: c.fecha,
+    })),
+    ...Array.from({ length: porInvitar }, (_, k): BoletoDelCliente => {
+      const par = cuentan.slice(k * 2, k * 2 + 2);
+      return {
+        codigo: codigoDeBoleto(sorteo.id, origenDeAmigos(participante.codigo, k + 1)), tipo: 'amigos', origen: 'Invitaste a 2 amigos',
+        monto: null, amigos: par.map((i) => nombreCorto(i.nombre)), fecha: par[1]?.fecha ?? par[0]?.fecha ?? sorteo.desde,
+      };
+    }),
+  ].sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
   return {
     compras, invitados: mios.length, invitadosValidos: validos, porInvitar, total: compras.length + porInvitar, enlace: `/sorteo?invita=${participante.codigo}`,
     amigos: mios.map((i) => ({ nombre: nombreCorto(i.nombre), estado: i.estado })),
     faltanParaProximo: faltanParaProximo(validos, sorteo.topeInvitar),
     tope: sorteo.topeInvitar,
+    boletos,
+    correo: usuario?.email ? correoTapado(usuario.email) : '',
+    enlaceCorto: `/s/${participante.codigo}`,
   };
 }
 
@@ -185,7 +228,10 @@ export async function resumenDelSorteo(sorteo: Sorteo): Promise<ResumenSorteo> {
   for (const [userId, c] of porCliente) {
     const compras = comprasConBoleto(ordenesParaSorteo(c.ordenes), sorteo.desde, sorteo.hasta, Number(sorteo.compraMinimaUSD));
     for (const compra of compras) {
-      boletos.push({ userId, email: c.email, detalle: `Compra ${compra.ordenes} ($${compra.subtotalUSD.toFixed(2).replace('.', ',')})` });
+      boletos.push({
+        userId, email: c.email, detalle: `Compra ${compra.ordenes} ($${compra.subtotalUSD.toFixed(2).replace('.', ',')})`,
+        codigo: codigoDeBoleto(sorteo.id, origenDeCompra(compra.ordenes)),
+      });
       ventasUSD += compra.subtotalUSD;
     }
     if (compras.length > 0) filas.set(userId, { userId, email: c.email, nombre: c.nombre, porCompra: compras.length, porInvitar: 0, invitados: 0, aviso: '' });
@@ -197,7 +243,7 @@ export async function resumenDelSorteo(sorteo: Sorteo): Promise<ResumenSorteo> {
   // quien había entrado antes al sorteo). Se reparte aquí sin la caché del pedido: es la lista que se sortea
   const participantes = await prisma.participanteSorteo.findMany({
     where: { sorteoId: sorteo.id, user: { role: 'USER' } },
-    select: { id: true, userId: true, user: { select: { email: true, name: true } } },
+    select: { id: true, userId: true, codigo: true, user: { select: { email: true, name: true } } },
     orderBy: { createdAt: 'asc' },
   });
   const reparto = repartir(await cargarInvitaciones(sorteo));
@@ -208,7 +254,9 @@ export async function resumenDelSorteo(sorteo: Sorteo): Promise<ResumenSorteo> {
     if (invitados.length === 0) continue;
     const validos = cuentanDe(reparto, p.id);
     const porInvitar = boletosPorInvitar(validos, sorteo.topeInvitar);
-    for (let i = 0; i < porInvitar; i++) boletos.push({ userId: p.userId, email, detalle: `Invitó a 2 amigos (${i + 1} de ${porInvitar})` });
+    for (let i = 0; i < porInvitar; i++) {
+      boletos.push({ userId: p.userId, email, detalle: `Invitó a 2 amigos (${i + 1} de ${porInvitar})`, codigo: codigoDeBoleto(sorteo.id, origenDeAmigos(p.codigo, i + 1)) });
+    }
     const fila = filas.get(p.userId) ?? { userId: p.userId, email, nombre: p.user.name ?? '', porCompra: 0, porInvitar: 0, invitados: 0, aviso: '' };
     fila.porInvitar = porInvitar;
     fila.invitados = invitados.length;
@@ -268,6 +316,7 @@ export async function sortearAhora(sorteoId: string): Promise<{ ok: true; sorteo
       ganadorUserId: resultado.boleto.userId,
       ganadorEmail: resultado.boleto.email,
       ganadorDetalle: `Boleto ${resultado.indice + 1} de ${boletos.length}: ${resultado.boleto.detalle}`,
+      ganadorCodigo: resultado.boleto.codigo,
       boletosAlSortear: boletos.length,
       huellaLista: huellaDe(boletos),
     },

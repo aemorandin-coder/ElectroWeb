@@ -10,6 +10,27 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.82] - 2026-11-15
+El boleto épico y el flyer para compartir (C-263). **Cambia la base:** una columna nueva en `sorteos`, aditiva (`ganadorCodigo`, `SIGUIENTE.md` §2). Sin variables nuevas, sin SQL de datos y sin cron.
+### Marketing 1.24.0 (C-263)
+- **El boleto épico** (el equipo eligió la A, "el talón", viendo las maquetas):
+  - uno por cada boleto del cliente, troquelado como uno de verdad;
+  - lleva el premio, su correo tapado ("así participa"), de dónde salió ("Compra ORD-2026-0041" o "Invitaste a 2 amigos") y su código ("F3E-XEP");
+  - se anima una sola vez; con "reducir movimiento", quieto;
+  - va en `/sorteo` ("Tus boletos", con el monto chico debajo), en Mi panel ("¡Tienes 3 boletos para la PS4!") y en el correo "¡Ganaste un boleto!", y se descarga como imagen.
+  - Con más de 3, los 3 últimos y "Ver los N".
+- **El código de cada boleto** sale de la compra o del par de amigos que lo originó, sin guardarlo: no cambia cuando entran boletos de otros, y el panel del sorteo lo calcula igual.
+- **El flyer de estado** (la F1, "Mis boletos"):
+  - una historia de 1080 × 1920 con sus boletos, la foto del premio, Chispa, el QR y el enlace corto;
+  - "Compartir" en el teléfono (WhatsApp Estado, Instagram Historia o TikTok, con el enlace copiado para el sticker), "Descargar imagen" en la computadora y "Descargar video" aparte;
+  - desde Mi panel y desde `/sorteo`.
+- **El enlace corto para invitar:** `electroshopve.com/s/<código>` lleva a `/sorteo?invita=<código>`. No se indexa, y la vista previa al compartirlo es la de `/sorteo`.
+- **Al sortear:** "Ganó el boleto F3E-XEP de an***@gmail.com" en `/sorteo`, en el correo del resultado y en el panel. El correo al ganador también lleva su código.
+- **Chispa, en el correo "¡Ganaste un boleto!":** ya no dice "no hace falta comprar". Dice los dos caminos, con la compra mínima de verdad.
+### Tienda 1.20.0, Carrito, checkout y cuenta del cliente 1.10.2 y ElectroStudio 1.2.8 (C-263)
+- **Los boletos de cada cliente salen con lista blanca:** su correo tapado, sus códigos y su enlace corto. Nunca su id ni nada de otro cliente. En Mi panel, sin los nombres de sus amigos.
+- **Bajar, compartir y grabar el video de un canvas** pasaron a `lib/studio/exportar.ts`, que usan ElectroStudio y el flyer.
+
 ## [1.0.0-rc.81] - 2026-11-15
 Un amigo, dos cuentas: cuenta para quien lo invitó primero (C-264). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Marketing 1.23.0 (C-264)

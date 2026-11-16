@@ -3,10 +3,16 @@
 // C-212: el sorteo en Mi panel: cuántos boletos tiene el cliente y el enlace a /sorteo. Sin sorteo activo no sale nada.
 // C-221: la tarjeta en sí (`TarjetaSorteoVista`) también la usa la vista previa del panel, con los datos que se están
 // editando; y dice la compra mínima de verdad (antes decía "$10" fijo).
+// C-263 (el equipo eligió la maqueta A, 15/11): con boletos, en lugar de la tarjeta, "¡Tienes 3 boletos para la PS4!" con
+// sus boletos épicos (BoletosDelPanel), la línea de los amigos, "Compartir mi flyer" y "Descargar mis boletos". Sin
+// boletos, o ya sorteado, la tarjeta de siempre. Los dos azules oscuros (los boletos y Puntos ES) los acomoda C-265.
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { IconoChevronDerecha, IconoClientes, IconoRegalo } from '@/components/iconos';
+import { IconoChevronDerecha, IconoClientes, IconoCupon, IconoRegalo } from '@/components/iconos';
+import LogoCorto from '@/components/sorteo/LogoCorto';
+import { BoletosDelPanel } from '@/components/sorteo/MisBoletos';
 import { formatUSD } from '@/lib/currency';
+import type { MisBoletosPublicos } from '@/lib/dto/sorteo';
 
 export interface DatosTarjetaSorteo {
   titulo: string;
@@ -75,16 +81,53 @@ export function TarjetaSorteoVista({ sorteo, total = 0, enlace = true, progreso 
   );
 }
 
+/** C-263: lo que da el próximo boleto, para "Tu próximo boleto" ("Compra $5 o más, o suma 1 amigo más") */
+function proximoBoleto(sorteo: DatosTarjetaSorteo, p: ProgresoInvitar | undefined): string {
+  const minimo = montoCorto(sorteo.compraMinimaUSD ?? 10);
+  const faltan = p && p.tope > 0 ? p.faltanParaProximo : 0;
+  return `Compra ${minimo} o más${faltan === 1 ? ', o suma 1 amigo más' : faltan === 2 ? ', o invita a 2 amigos' : ''}`;
+}
+
+/** C-263: con boletos, la sección de Mi panel con los boletos épicos */
+function SeccionBoletos({ sorteo, mis, progreso }: { sorteo: DatosTarjetaSorteo; mis: MisBoletosPublicos; progreso?: ProgresoInvitar }) {
+  const total = mis.boletos.length;
+  const dia = new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'long', timeZone: 'America/Caracas' }).format(new Date(sorteo.resultadoEl));
+  const invitar = (sorteo.topeInvitar ?? 1) > 0;
+  const amigos = invitar && progreso && !sorteo.cerrado ? lineaAmigos(progreso) : null;
+  return (
+    <section aria-labelledby="mis-boletos-titulo" className="rounded-2xl border border-line bg-white p-4 lg:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white">
+            <IconoCupon className="h-7 w-7" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm text-muted">{sorteo.titulo}<span className="hidden sm:inline"> · Resultado el {dia}</span></p>
+            <h2 id="mis-boletos-titulo" className="text-lg font-bold leading-tight text-ink lg:text-xl">
+              ¡Tienes {total} {total === 1 ? 'boleto' : 'boletos'} para {mis.sorteo.logo ? <>la{' '}<span className="sr-only">{mis.sorteo.logo === 'ps4' ? 'PS4' : 'PS5'}</span><LogoCorto logo={mis.sorteo.logo} /></> : 'el sorteo'}!
+            </h2>
+          </div>
+        </div>
+        <Link href="/sorteo" className="hidden min-h-11 shrink-0 items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 sm:inline-flex">
+          Ver el sorteo <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </div>
+      <BoletosDelPanel datos={mis} amigos={amigos} flyer={!sorteo.cerrado} proximo={sorteo.cerrado ? null : proximoBoleto(sorteo, progreso)} />
+    </section>
+  );
+}
+
 export default function TarjetaSorteo() {
-  const [datos, setDatos] = useState<{ sorteo: DatosTarjetaSorteo | null; total?: number; invitar?: ProgresoInvitar } | null>(null);
+  const [datos, setDatos] = useState<{ sorteo: DatosTarjetaSorteo | null; total?: number; invitar?: ProgresoInvitar; mis?: MisBoletosPublicos } | null>(null);
   useEffect(() => {
     let vivo = true;
     fetch('/api/customer/sorteo')
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { sorteo: DatosTarjetaSorteo | null; total?: number; invitar?: ProgresoInvitar } | null) => { if (vivo) setDatos(d); })
+      .then((d: { sorteo: DatosTarjetaSorteo | null; total?: number; invitar?: ProgresoInvitar; mis?: MisBoletosPublicos } | null) => { if (vivo) setDatos(d); })
       .catch(() => undefined);
     return () => { vivo = false; };
   }, []);
   if (!datos?.sorteo) return null;
+  if (datos.mis && datos.mis.boletos.length > 0 && !datos.sorteo.sorteado) return <SeccionBoletos sorteo={datos.sorteo} mis={datos.mis} progreso={datos.invitar} />;
   return <TarjetaSorteoVista sorteo={datos.sorteo} total={datos.total ?? 0} progreso={datos.invitar} />;
 }

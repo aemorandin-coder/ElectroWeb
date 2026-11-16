@@ -6,8 +6,8 @@
 import { formatPuntos, formatUSD } from '@/lib/currency';
 import { escapeHtml } from '@/lib/html';
 import {
-  CORREO, avisoCorreo, boletoCorreo, botonCorreo, datosCorreo, enlaceWhatsAppCorreo, exitoCorreo, notaCorreo,
-  placaCorreo, placaInteriorCorreo, productosCorreo, urlTienda, ventajasCorreo,
+  CORREO, FUENTE_TITULO, avisoCorreo, boletoCorreo, boletoEpicoCorreo, botonCorreo, datosCorreo, enlaceWhatsAppCorreo, exitoCorreo, imagenCorreo,
+  notaCorreo, placaCorreo, placaInteriorCorreo, productosCorreo, urlTienda, ventajasCorreo,
 } from './estilo';
 import { ajustesCorreo, fotoCorreo, marcoCorreo } from './marco';
 import type { Correo } from './pedidos';
@@ -109,14 +109,36 @@ export async function correoVentaPromotor(d: { nombre: string | null; comision: 
 
 /* ── El sorteo (C-212) ──────────────────────────────────────────────────── */
 
-export interface DatosSorteo { titulo: string; premio: string; imagen: string | null; resultadoEl: Date }
+export interface DatosSorteo {
+  titulo: string;
+  premio: string;
+  imagen: string | null;
+  resultadoEl: Date;
+  /** C-263: la compra mínima (USD) y el tope de invitar, para lo que dice Chispa; y el logo del premio para el boleto */
+  minimoUSD: number;
+  tope: number;
+  logo: 'ps4' | 'ps5' | null;
+  /** Lo que se escribe en el boleto si el premio no tiene logo */
+  nombreCorto: string;
+}
+
+/** C-263: el boleto que acaba de ganar, como lo ve en la tienda (su código, de dónde salió y su lugar entre los suyos) */
+export interface BoletoDelCorreo { codigo: string; origen: string; n: number; correo: string }
+
+const parrafoCentrado = (html: string) => `<p style="margin:0 0 14px;text-align:center;font-size:16px;line-height:1.55;">${html}</p>`;
+const montoCorto = (usd: number) => (Number.isInteger(usd) ? `$${usd}` : formatUSD(usd));
+const diaCorto = (fecha: Date) => fecha.toLocaleDateString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'short' }).replace('.', '').toUpperCase();
 
 const fotoPremio = (s: DatosSorteo) => s.imagen
   ? `<img src="${fotoCorreo(s.imagen, 600) ?? ''}" width="520" alt="${e(s.premio)}" style="display:block;width:100%;max-width:520px;height:auto;margin:0 auto 6px;border:0;border-radius:16px;">`
   : '';
 
-/** Ganó un boleto: por una compra pagada o por invitar a 2 amigos. `total` es cuántos lleva. */
-export async function correoBoletoSorteo(d: { nombre: string | null; sorteo: DatosSorteo; porque: 'compra' | 'invitados'; total: number }): Promise<Correo> {
+/**
+ * Ganó un boleto: por una compra pagada o por invitar a 2 amigos. `total` es cuántos lleva.
+ * C-263: con el boleto épico que acaba de ganar (el mismo de la tienda, quieto); sin él, el boleto con el número de antes.
+ * Chispa ya no dice "no hace falta comprar" (el equipo, 15/11: "la idea es que compren"): los dos caminos, con el mínimo de verdad.
+ */
+export async function correoBoletoSorteo(d: { nombre: string | null; sorteo: DatosSorteo; porque: 'compra' | 'invitados'; total: number; boleto?: BoletoDelCorreo | null }): Promise<Correo> {
   const nombre = nombreDe(d.nombre);
   const html = await marcoCorreo({
     preheader: `Ya tienes ${d.total} ${d.total === 1 ? 'boleto' : 'boletos'} para ${d.sorteo.premio}.`,
@@ -129,9 +151,19 @@ export async function correoBoletoSorteo(d: { nombre: string | null; sorteo: Dat
     },
     cuerpo: `
       ${fotoPremio(d.sorteo)}
-      ${boletoCorreo({ rotulo: e(d.sorteo.titulo), titulo: d.total === 1 ? '¡Ya estás participando!' : `¡Ya llevas ${d.total} boletos!`, texto: `El resultado sale el ${e(fechaLarga(d.sorteo.resultadoEl))}. Más boletos, más chances.`, numero: String(d.total), unidad: d.total === 1 ? 'BOLETO' : 'BOLETOS' })}
+      ${d.boleto
+        ? `${boletoEpicoCorreo({
+          rotulo: e(d.sorteo.titulo.toUpperCase()), logo: d.sorteo.logo ? imagenCorreo(`logo-${d.sorteo.logo}.png`) : null, nombre: e(d.sorteo.nombreCorto),
+          correo: e(d.boleto.correo), origen: e(d.boleto.origen), codigo: e(d.boleto.codigo), dia: e(diaCorto(d.sorteo.resultadoEl)), lugar: `${d.boleto.n} de ${d.total}`,
+        })}
+          <p style="margin:20px 0 0;text-align:center;font-family:${FUENTE_TITULO};font-size:20px;line-height:1.3;font-weight:800;color:#212529;">${d.total === 1 ? '¡Ya estás participando!' : `¡Ya llevas ${d.total} boletos!`}</p>
+          <p style="margin:6px auto 0;max-width:440px;text-align:center;font-size:15px;line-height:1.55;">Cada uno es una oportunidad. El ganador sale el <strong style="${CORREO.fuerte}">${e(fechaLarga(d.sorteo.resultadoEl))}</strong>, al azar entre todos los boletos.</p>`
+        : boletoCorreo({ rotulo: e(d.sorteo.titulo), titulo: d.total === 1 ? '¡Ya estás participando!' : `¡Ya llevas ${d.total} boletos!`, texto: `El resultado sale el ${e(fechaLarga(d.sorteo.resultadoEl))}. Más boletos, más chances.`, numero: String(d.total), unidad: d.total === 1 ? 'BOLETO' : 'BOLETOS' })}
       ${botonCorreo(`${urlTienda()}/sorteo`, 'Ver mis boletos')}`,
-    chispa: { pose: 'celebra', texto: '¿Quieres otro? Invita a 2 amigos con tu enlace del sorteo: no hace falta comprar.' },
+    chispa: {
+      pose: 'celebra',
+      texto: `¿Vamos por otro? Cada compra de ${e(montoCorto(d.sorteo.minimoUSD))} o más es un boleto${d.sorteo.tope > 0 ? ', y 2 amigos con tu enlace te dan otro' : ''}.`,
+    },
     motivo: 'Recibes este correo porque participas en el sorteo de la tienda.',
   });
   return { asunto: `¡Ganaste un boleto para el sorteo de ${d.sorteo.premio}!`, html };
@@ -158,7 +190,7 @@ export async function correoRecordatorioSorteo(d: { nombre: string | null; sorte
 }
 
 /** Se sorteó: a todos los que participaron. `ganadorTapado` es el correo con asteriscos (correoTapado). */
-export async function correoResultadoSorteo(d: { nombre: string | null; sorteo: DatosSorteo; ganadorTapado: string; boletos: number }): Promise<Correo> {
+export async function correoResultadoSorteo(d: { nombre: string | null; sorteo: DatosSorteo; ganadorTapado: string; boletos: number; codigo?: string | null }): Promise<Correo> {
   const nombre = nombreDe(d.nombre);
   const html = await marcoCorreo({
     preheader: `Ya hay ganador de ${d.sorteo.premio}.`,
@@ -168,7 +200,9 @@ export async function correoResultadoSorteo(d: { nombre: string | null; sorteo: 
       texto: `${nombre ? `${nombre}, gracias` : 'Gracias'} por participar en el sorteo de <strong style="${CORREO.fuerte}">${e(d.sorteo.premio)}</strong>. Se sortearon ${d.boletos} boletos.`,
     },
     cuerpo: `
-      ${datosCorreo([['Ganador', e(d.ganadorTapado)]])}
+      ${d.codigo
+        ? `${parrafoCentrado(`Ganó el boleto <strong style="${CORREO.fuerte}">${e(d.codigo)}</strong> de <strong style="${CORREO.fuerte}">${e(d.ganadorTapado)}</strong>.`)}${datosCorreo([['Boleto ganador', e(d.codigo)], ['Ganador', e(d.ganadorTapado)]])}`
+        : datosCorreo([['Ganador', e(d.ganadorTapado)]])}
       ${notaCorreo('El ganador sale al azar entre todos los boletos, y la lista queda guardada con su huella para que se pueda comprobar. Las bases están en la página del sorteo.')}
       ${botonCorreo(`${urlTienda()}/sorteo`, 'Ver el resultado')}`,
     chispa: { pose: 'saluda', texto: 'Esta vez no fue, pero se vienen más sorteos. ¡Gracias por estar!' },
@@ -178,7 +212,7 @@ export async function correoResultadoSorteo(d: { nombre: string | null; sorteo: 
 }
 
 /** Al ganador. Antes, el equipo le escribía a mano. */
-export async function correoGanadorSorteo(d: { nombre: string | null; sorteo: DatosSorteo; detalle: string }): Promise<Correo> {
+export async function correoGanadorSorteo(d: { nombre: string | null; sorteo: DatosSorteo; detalle: string; codigo?: string | null }): Promise<Correo> {
   const a = await ajustesCorreo();
   const nombre = nombreDe(d.nombre);
   const whatsapp = enlaceWhatsAppCorreo(a.whatsapp, 'Escríbenos por WhatsApp', `Hola, gané el sorteo de ${d.sorteo.premio}`);
@@ -194,7 +228,7 @@ export async function correoGanadorSorteo(d: { nombre: string | null; sorteo: Da
       ${placaCorreo(`
         <p style="${CORREO.placaRotulo}">${e(d.sorteo.titulo)}</p>
         <p style="${CORREO.placaTitulo}">${e(d.sorteo.premio)}</p>
-        <p style="${CORREO.placaTexto}">Boleto ganador: ${e(d.detalle)}</p>`, '0 0 6px')}
+        <p style="${CORREO.placaTexto}">Boleto ganador${d.codigo ? ` <strong style="color:#ffffff;letter-spacing:1px;">${e(d.codigo)}</strong>` : ''}: ${e(d.detalle)}</p>`, '0 0 6px')}
       ${avisoCorreo('Coordinemos la entrega', 'Escríbenos para confirmar tus datos y cómo te llega el premio. Te pediremos tu cédula.', 'premio')}
       ${whatsapp ? `<p style="margin:18px 0 0;text-align:center;font-size:16px;">${whatsapp}</p>` : botonCorreo(`${urlTienda()}/contacto`, 'Escríbenos')}`,
     chispa: { pose: 'celebra', texto: '¡No lo puedo creer! Mándanos una foto cuando lo tengas en tus manos.' },

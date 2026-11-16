@@ -269,6 +269,35 @@ export function boletoCorreo(o: { rotulo: string; titulo: string; texto: string;
     </tr></table></td></tr></table>`;
 }
 
+/**
+ * C-263: el boleto épico (la A, "el talón", que eligió el equipo el 15/11), quieto, como el de la tienda: el sorteo, el logo
+ * del premio (o su nombre), el correo tapado con que participa, de dónde salió y, en el talón, el código, el día y "2 de 3".
+ * En tablas, sin las muescas del troquel (Outlook no las dibuja) y sin la foto adentro: el correo ya la muestra arriba, y
+ * en el teléfono no cabrían tres columnas. Todo llega escapado; `logo` es la URL de una imagen propia (o null).
+ */
+export function boletoEpicoCorreo(o: { rotulo: string; logo: string | null; nombre: string; correo: string; origen: string; codigo: string; dia: string; lugar: string }): string {
+  const [c1, c2] = o.codigo.split('-');
+  const premio = o.logo
+    ? `<img src="${o.logo}" width="108" height="28" alt="${o.nombre}" style="display:block;width:108px;height:28px;margin:10px 0 0;border:0;color:#ffffff;font-size:18px;font-weight:800;">`
+    : `<p style="margin:8px 0 0;font-family:${FUENTE_TITULO};font-size:20px;line-height:1.2;font-weight:800;color:#ffffff;">${o.nombre}</p>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0;"><tr><td bgcolor="${COLOR.marcaOscura}" style="background-color:${COLOR.marcaOscura};border-radius:16px;padding:0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td valign="top" style="padding:18px 14px 18px 20px;">
+        <p style="${CORREO.placaRotulo}">${o.rotulo}</p>
+        ${premio}
+        <p style="margin:14px 0 0;font-size:12px;line-height:1.3;color:${COLOR.marca300};">Participa con</p>
+        <p style="margin:2px 0 0;font-size:17px;line-height:1.3;font-weight:700;color:#ffffff;word-break:break-all;">${o.correo}</p>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:12px 0 0;"><tr><td style="border:1px solid ${COLOR.marca300};border-radius:999px;padding:5px 12px;font-size:12px;line-height:1.3;font-weight:700;color:#ffffff;white-space:nowrap;">${o.origen}</td></tr></table>
+      </td>
+      <td width="96" align="center" valign="middle" style="width:96px;padding:16px 8px;border-left:2px dashed ${COLOR.marca300};">
+        <p style="margin:0;font-size:11px;line-height:1.3;font-weight:800;letter-spacing:2px;color:${COLOR.marca300};">BOLETO</p>
+        <p style="margin:8px 0 0;font-family:${FUENTE_TITULO};font-size:24px;line-height:1.15;font-weight:800;letter-spacing:3px;color:#ffffff;">${c1}<br>${c2 ?? ''}</p>
+        <p style="margin:12px 0 0;font-size:15px;line-height:1.3;font-weight:800;color:#ffffff;">${o.dia}</p>
+        <p style="margin:2px 0 0;font-size:12px;line-height:1.3;color:${COLOR.marca300};">${o.lugar}</p>
+      </td>
+    </tr></table></td></tr></table>`;
+}
+
 /** Las poses de Chispa (las mismas de ElectroStudio, `public/images/studio/chispa-3`). */
 export type PoseChispa = 'celebra' | 'saluda' | 'pulgar' | 'explica' | 'senala';
 

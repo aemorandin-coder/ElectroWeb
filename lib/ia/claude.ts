@@ -213,7 +213,17 @@ export interface RevisionFinal {
   marcadas: string[];
 }
 
-export interface OpcionesPedirJSON {
+/**
+ * Lo que un uso deja pasar para probarse desde Configuración (lib/ia/probar.ts): unas instrucciones que reemplazan las del equipo
+ * sin guardarlas, quién prueba, y quién se entera de lo que hicieron las reglas con la respuesta.
+ */
+export interface OpcionesDeUso {
+  instruccionesPrueba?: string;
+  usuarioId?: string | null;
+  alRevisar?: (revision: RevisionFinal) => void;
+}
+
+export interface OpcionesPedirJSON extends OpcionesDeUso {
   uso: UsoIa;
   /** Nombra la herramienta en el registro del servidor */
   donde: string;
@@ -227,11 +237,8 @@ export interface OpcionesPedirJSON {
   tiempoMs?: number;
   /** Las reglas de la tienda: limpian lo que respondió y dicen si hay que pedirlo otra vez */
   revisar?: (datos: Record<string, unknown>, ctx: { frases: readonly string[] }) => ResultadoReglas;
-  /** Para "Probar" en Configuración: reemplaza las instrucciones del equipo sin guardarlas; el pedido se anota como "prueba" */
-  instruccionesPrueba?: string;
   /** De qué se trata (el producto, "Respuesta a Pedro R."), para anotarlo con lo que atajó una regla */
   referencia?: string;
-  usuarioId?: string | null;
 }
 
 export interface ResultadoJSON {
@@ -301,16 +308,13 @@ export async function pedirJSON(o: OpcionesPedirJSON): Promise<ResultadoJSON> {
   registrarAtajadas(registro, atajadas, o.referencia);
 
   const huella = new Set([...atajadas.map((c) => c.regla), ...marcadas]);
-  return {
-    datos: revision?.datos ?? datos,
-    firma,
-    tokens,
-    revision: {
-      cambios: atajadas,
-      avisos: revision?.avisos ?? [],
-      pasaron: (revision?.revisadas ?? []).filter((id) => !huella.has(id)),
-      pidioOtraVez,
-      marcadas,
-    },
+  const final: RevisionFinal = {
+    cambios: atajadas,
+    avisos: revision?.avisos ?? [],
+    pasaron: (revision?.revisadas ?? []).filter((id) => !huella.has(id)),
+    pidioOtraVez,
+    marcadas,
   };
+  o.alRevisar?.(final);
+  return { datos: revision?.datos ?? datos, firma, tokens, revision: final };
 }

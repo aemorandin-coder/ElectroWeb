@@ -1,6 +1,6 @@
 import { leerAjustesIa } from '@/lib/ia/ajustes';
 import { registrarAtajadas } from '@/lib/ia/atajadas';
-import { marcarFallaDeRegla } from '@/lib/ia/claude';
+import { marcarFallaDeRegla, type OpcionesDeUso } from '@/lib/ia/claude';
 import type { Cambio } from '@/lib/ia/reglas';
 import { mensajeDeCorreccion, revisarFicha } from '@/lib/ia/revisar';
 import { nombresBase, claveNombre } from '@/lib/spec-sugerencias';
@@ -118,12 +118,16 @@ async function conReglas(o: {
   pedidoDeClaude: string | null;
   /** Otra vez, con la corrección en el mensaje: la ficha nueva y el id de su pedido, o null si Claude no respondió */
   reintentar: (correccion: string) => Promise<{ ficha: ResultadoBusquedaWeb; pedidoId: string } | null>;
+  opciones: OpcionesDeUso;
 }): Promise<ResultadoBusquedaWeb> {
   let revision = revisarFicha(o.primera, o.nombre, o.frases);
   const atajadas: Cambio[] = [];
+  const marcadas: string[] = [];
+  let pidioOtraVez = false;
   if (revision.pedirOtraVez.length > 0) {
     const pedidas = revision.pedirOtraVez;
     if (o.pedidoDeClaude) {
+      pidioOtraVez = true;
       atajadas.push(...pedidas.map((p) => ({ regla: p.regla, accion: 'pide' as const, antes: p.antes, despues: null })));
       const segunda = await o.reintentar(mensajeDeCorreccion(pedidas));
       if (segunda) {
@@ -132,16 +136,22 @@ async function conReglas(o: {
       }
     }
     // Sigue rompiéndola (o no se le podía pedir otra vez): se usan los datos limpios y queda anotado
+    marcadas.push(...revision.pedirOtraVez.map((p) => p.regla));
     atajadas.push(...revision.pedirOtraVez.map((p) => ({ regla: p.regla, accion: 'marca' as const, antes: p.antes, despues: null })));
   }
   atajadas.push(...revision.cambios);
-  registrarAtajadas('busqueda', atajadas, o.nombre);
+  const prueba = o.opciones.instruccionesPrueba !== undefined;
+  registrarAtajadas(prueba ? 'prueba' : 'busqueda', atajadas, o.nombre);
   const ficha = revision.datos;
   ficha.avisos = [...new Set([...ficha.avisos, ...revision.avisos])];
+  const huella = new Set([...atajadas.map((c) => c.regla), ...marcadas]);
+  o.opciones.alRevisar?.({ cambios: atajadas, avisos: revision.avisos, pasaron: revision.revisadas.filter((id) => !huella.has(id)), pidioOtraVez, marcadas });
   return ficha;
 }
 
-export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda): Promise<ResultadoBusquedaWeb> {
+export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda, opciones: OpcionesDeUso = {}): Promise<ResultadoBusquedaWeb> {
+  // Lo que viaja a Claude cuando no es una búsqueda de siempre (probar unas instrucciones desde Configuración, C-288)
+  const deClaude = { instruccionesPrueba: opciones.instruccionesPrueba, usuarioId: opciones.usuarioId };
   const nombre = textoPlano(pedido.nombre, 150);
   const modelo = textoPlano(pedido.modelo ?? '', 60);
   const categoria = textoPlano(pedido.categoria ?? '', 80);
@@ -226,15 +236,16 @@ export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda): Promise<Res
       if (!r.medidas || !r.peso) r.avisos.push('No hay un estimado de peso y medidas para este tipo de producto: mide y pesa la caja.');
       return r;
     };
-    const conClaude = await buscarConClaude({ nombre: buscado, categoria }, sugeridos);
+    const conClaude = await buscarConClaude({ nombre: buscado, categoria }, sugeridos, deClaude);
     const ia = conClaude?.busqueda ?? (await buscarConGroq({ nombre: buscado, categoria }, sugeridos));
     return conReglas({
       nombre: buscado,
       frases,
       primera: armarSinPaginas(ia, conClaude?.firma ?? 'Groq'),
       pedidoDeClaude: conClaude?.pedidoId ?? null,
+      opciones,
       reintentar: async (correccion) => {
-        const otra = await buscarConClaude({ nombre: buscado, categoria }, sugeridos, { correccion, reintento: true });
+        const otra = await buscarConClaude({ nombre: buscado, categoria }, sugeridos, { ...deClaude, correccion, reintento: true });
         return otra ? { ficha: armarSinPaginas(otra.busqueda, otra.firma), pedidoId: otra.pedidoId } : null;
       },
     });
@@ -243,7 +254,7 @@ export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda): Promise<Res
   // La IA ordena lo leído: Claude (claude.ts, C-211) y, si no hay clave o falla, Groq (groq.ts). Sin ninguna, sigue la
   // lectura propia
   const paraLeer = paginas.map((p) => ({ dominio: p.fuente.dominio, titulo: p.fuente.titulo, pares: p.datos.pares }));
-  const conClaude = await leerConClaude({ nombre: buscado, categoria }, paraLeer, sugeridos);
+  const conClaude = await leerConClaude({ nombre: buscado, categoria }, paraLeer, sugeridos, deClaude);
   const iaPrimera = conClaude?.lectura ?? (await leerConGroq({ nombre: buscado, categoria }, paraLeer, sugeridos));
 
   // La base pública de códigos de barras se consulta una sola vez, aunque la ficha se arme dos
@@ -368,8 +379,9 @@ export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda): Promise<Res
     frases,
     primera: await armar(iaPrimera, conClaude?.firma ?? 'Groq'),
     pedidoDeClaude: conClaude?.pedidoId ?? null,
+    opciones,
     reintentar: async (correccion) => {
-      const otra = await leerConClaude({ nombre: buscado, categoria }, paraLeer, sugeridos, { correccion, reintento: true });
+      const otra = await leerConClaude({ nombre: buscado, categoria }, paraLeer, sugeridos, { ...deClaude, correccion, reintento: true });
       return otra ? { ficha: await armar(otra.lectura, otra.firma), pedidoId: otra.pedidoId } : null;
     },
   });

@@ -13,7 +13,7 @@ import { prisma } from '@/lib/prisma';
 import { formatUSD } from '@/lib/currency';
 import { campanaSchema, type Bloque } from '@/lib/email-campaigns';
 import { INSTRUCCIONES_DE_FABRICA } from '@/lib/ia/fabrica';
-import { pedirJSON } from '@/lib/ia/claude';
+import { pedirJSON, type OpcionesDeUso } from '@/lib/ia/claude';
 import { normalizar, productosMencionados } from '@/lib/ia/productos-mencionados';
 import { revisarCampanaIa } from '@/lib/ia/revisar';
 import { limpiarTextoIA } from '@/lib/ia/texto';
@@ -87,7 +87,7 @@ const ESQUEMA = {
 };
 
 /** El borrador de una campaña para un objetivo. Lanza FallaIA si Claude no responde; null si no hay productos visibles */
-export async function redactarCampana(objetivo: string): Promise<BorradorCampana | null> {
+export async function redactarCampana(objetivo: string, opciones: OpcionesDeUso = {}): Promise<BorradorCampana | null> {
   const [productos, settings, sorteo] = await Promise.all([candidatos(objetivo), getPublicSettings(), getSorteoVigente()]);
   if (productos.length === 0) return null;
   const porClave = new Map(productos.map((p, i) => [`p${i + 1}`, p]));
@@ -115,7 +115,7 @@ export async function redactarCampana(objetivo: string): Promise<BorradorCampana
   // lista (sin repetir, con existencia y hasta 4)
   const { datos, firma } = await pedirJSON({
     donde: 'campaña de correo', uso: 'campana', deFabrica: INSTRUCCIONES_DE_FABRICA.campana, pedido, esquema: ESQUEMA,
-    referencia: objetivo.slice(0, 60),
+    referencia: objetivo.slice(0, 60), ...opciones,
     revisar: (d, { frases }) => revisarCampanaIa(d, {
       productos: new Map(productos.map((p, i) => [`p${i + 1}`, { disponible: p.productType === 'DIGITAL' || p.stock > 0 }])),
       datos: pedido,

@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma';
 import { formatUSD } from '@/lib/currency';
 import { formatPaymentMethod } from '@/lib/format-helpers';
 import { INSTRUCCIONES_DE_FABRICA } from '@/lib/ia/fabrica';
-import { pedirJSON } from '@/lib/ia/claude';
+import { pedirJSON, type OpcionesDeUso } from '@/lib/ia/claude';
 import { nombreCorto } from '@/lib/ia/atajadas';
 import { revisarResumenIa } from '@/lib/ia/revisar';
 import { limpiarTextoIA } from '@/lib/ia/texto';
@@ -259,7 +259,7 @@ function pedidoPara(leido: Leido, hechos: HechosCliente, productos: Awaited<Retu
 }
 
 /** Los hechos más el resumen de Claude. Lanza FallaIA si Claude no responde; null si no es un cliente */
-export async function resumirCliente(userId: string): Promise<{ hechos: HechosCliente; ia: ResumenIA } | null> {
+export async function resumirCliente(userId: string, opciones: OpcionesDeUso = {}): Promise<{ hechos: HechosCliente; ia: ResumenIA } | null> {
   const leido = await leerCliente(userId);
   if (!leido) return null;
   const hechos = hechosDe(leido);
@@ -272,6 +272,7 @@ export async function resumirCliente(userId: string): Promise<{ hechos: HechosCl
     pedido: pedidoPara(leido, hechos, productos),
     esquema: ESQUEMA,
     referencia: `Resumen de ${nombreCorto(leido.usuario.name ?? '')}`,
+    ...opciones,
     revisar: (d) => revisarResumenIa(d, { productos: new Set(productos.map((p) => p.id)) }),
   });
   const porId = new Map(productos.map((p) => [p.id, p]));

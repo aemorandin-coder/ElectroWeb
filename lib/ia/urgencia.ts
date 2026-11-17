@@ -12,7 +12,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { formatUSD } from '@/lib/currency';
-import { claudeDisponible, pedirJSON } from '@/lib/ia/claude';
+import { claudeDisponible, pedirJSON, type OpcionesDeUso } from '@/lib/ia/claude';
 import { INSTRUCCIONES_DE_FABRICA } from '@/lib/ia/fabrica';
 import { productosMencionados, type ProductoMencionado } from '@/lib/ia/productos-mencionados';
 import { articulosMencionados, type ArticuloMencionado } from '@/lib/proveedores/articulos';
@@ -58,6 +58,17 @@ const ESQUEMA = {
   required: ['mensajes', 'solicitudes'],
   additionalProperties: false,
 };
+
+/** Lo que se le manda a Claude: los mensajes y las solicitudes pendientes, cada uno ya escrito en su línea */
+function armarPedido(mensajes: string[], solicitudes: string[]): string {
+  return [
+    `Mensajes del formulario de contacto (${mensajes.length}):`,
+    ...(mensajes.length ? mensajes : ['- Ninguno.']),
+    '',
+    `Solicitudes de producto (${solicitudes.length}):`,
+    ...(solicitudes.length ? solicitudes : ['- Ninguna.']),
+  ].join('\n');
+}
 
 const dias = (d: Date) => Math.floor((Date.now() - d.getTime()) / DIA);
 const hace = (d: Date) => { const n = dias(d); return n === 0 ? 'hoy' : n === 1 ? 'hace 1 día' : `hace ${n} días`; };
@@ -125,13 +136,10 @@ export async function revisarUrgencia(cuales: { mensajes?: string[]; solicitudes
         : null,
     ].filter(Boolean).join('\n');
   }));
-  const pedido = [
-    `Mensajes del formulario de contacto (${mensajes.length}):`,
-    ...(mensajes.length ? mensajes.map((m, i) => `[m${i + 1}] ${hace(m.createdAt)}, ${m.status === 'PENDING' ? 'sin leer' : 'leído, sin responder'}. Quien escribe: ${contexto.get(m.email.trim().toLowerCase()) ?? 'sin datos'}.\n  Asunto: ${m.subject}\n  """${m.message.slice(0, 700)}"""`) : ['- Ninguno.']),
-    '',
-    `Solicitudes de producto (${solicitudes.length}):`,
-    ...(lineasSolicitudes.length ? lineasSolicitudes : ['- Ninguna.']),
-  ].join('\n');
+  const pedido = armarPedido(
+    mensajes.map((m, i) => `[m${i + 1}] ${hace(m.createdAt)}, ${m.status === 'PENDING' ? 'sin leer' : 'leído, sin responder'}. Quien escribe: ${contexto.get(m.email.trim().toLowerCase()) ?? 'sin datos'}.\n  Asunto: ${m.subject}\n  """${m.message.slice(0, 700)}"""`),
+    lineasSolicitudes,
+  );
 
   const { datos } = await pedirJSON({ donde: 'urgencia', uso: 'urgencia', deFabrica: INSTRUCCIONES_DE_FABRICA.urgencia, pedido, esquema: ESQUEMA, revisar: (d) => revisarUrgenciaIa(d) });
   const ahora = new Date();
@@ -179,4 +187,16 @@ export async function revisarAlLlegar(cual: { mensaje?: string; solicitud?: stri
   } catch {
     // pedirJSON ya lo dejó en el registro; queda sin revisar y entra en la próxima vuelta del botón
   }
+}
+
+/**
+ * Para probar las instrucciones en Configuración: la urgencia de un mensaje que se escribe ahí, sin guardar nada y sin tocar
+ * ningún mensaje real. Lo que cambia respecto a la de siempre es que no hay quién escribe (ni sus órdenes ni sus garantías).
+ */
+export async function probarUrgencia(mensaje: string, opciones: OpcionesDeUso): Promise<{ urgencia: string; tipo: string; motivo: string } | null> {
+  const pedido = armarPedido([`[m1] hoy, sin leer. Quien escribe: sin datos.\n  Asunto: Mensaje de prueba\n  """${mensaje.slice(0, 700)}"""`], []);
+  const { datos } = await pedirJSON({ donde: 'urgencia (prueba)', uso: 'urgencia', deFabrica: INSTRUCCIONES_DE_FABRICA.urgencia, pedido, esquema: ESQUEMA, revisar: (d) => revisarUrgenciaIa(d), ...opciones });
+  const fila = (Array.isArray(datos.mensajes) ? datos.mensajes : [])[0] as Record<string, unknown> | undefined;
+  if (!fila) return null;
+  return { urgencia: String(fila.urgencia ?? 'media'), tipo: enLista(TIPOS, fila.tipo) ?? 'otro', motivo: limpiarTextoIA(fila.motivo, 160) };
 }

@@ -14,7 +14,7 @@ import { estimarEnvio } from '@/lib/envios/estimado';
 import { ciudadesZoom, type CiudadZoom } from '@/lib/envios/zoom';
 import { NOMBRE_EMPRESA, urlRastreo, type EmpresaGuia } from '@/lib/envios/empresas';
 import { INSTRUCCIONES_DE_FABRICA } from '@/lib/ia/fabrica';
-import { pedirJSON } from '@/lib/ia/claude';
+import { pedirJSON, type OpcionesDeUso } from '@/lib/ia/claude';
 import { normalizar, productosMencionados, type ProductoMencionado } from '@/lib/ia/productos-mencionados';
 import { nombreCorto } from '@/lib/ia/atajadas';
 import { revisarRespuestaIa } from '@/lib/ia/revisar';
@@ -105,7 +105,7 @@ const ESQUEMA = {
 };
 
 /** El borrador de respuesta a un mensaje de contacto. null si el mensaje no existe; lanza FallaIA si Claude no responde */
-export async function redactarRespuesta(mensajeId: string): Promise<BorradorRespuesta | null> {
+export async function redactarRespuesta(mensajeId: string, opciones: OpcionesDeUso = {}): Promise<BorradorRespuesta | null> {
   const mensaje = await prisma.contactMessage.findUnique({ where: { id: mensajeId } });
   if (!mensaje) return null;
   const correo = mensaje.email.trim().toLowerCase();
@@ -203,7 +203,7 @@ export async function redactarRespuesta(mensajeId: string): Promise<BorradorResp
   // datos (los demás quedan anotados junto al borrador) y con su saludo y su firma
   const { datos: r, firma } = await pedirJSON({
     donde: 'respuesta a una consulta', uso: 'respuesta', deFabrica: INSTRUCCIONES_DE_FABRICA.respuesta, pedido, esquema: ESQUEMA,
-    referencia: `Respuesta a ${nombreCorto(mensaje.name)}`,
+    referencia: `Respuesta a ${nombreCorto(mensaje.name)}`, ...opciones,
     revisar: (d, { frases }) => revisarRespuestaIa(d, { nombre: primerNombre, datos: pedido, frases }),
   });
   const asunto = limpiarTextoIA(r.asunto, 160) || `Re: ${mensaje.subject}`;

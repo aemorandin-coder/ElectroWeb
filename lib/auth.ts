@@ -156,7 +156,7 @@ export const authOptions: NextAuthOptions = {
               }
               dosPasos = true;
             }
-            registrarAcierto(correo);
+            registrarAcierto(correo, ip);
 
             await registrarAcceso(user.id, isAdmin, user.email, 'contraseña');
 

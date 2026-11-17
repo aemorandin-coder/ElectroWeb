@@ -1,9 +1,81 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.99`, comprobada el 17/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.101`, comprobada el 17/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 17/11 · C-284 y C-285 (de rc.99 a `v1.0.0-rc.101`)
+La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida, cerca de las 2:35 p. m., minutos después de publicar el código:
+- el respaldo (`~/respaldo-antes-rc101.dump`, 1,4 MB, del tamaño de los anteriores);
+- `git pull --ff-only` y `deploy.sh --sin-pull`, que se paró por la base mostrando exactamente el SQL del bloque (la columna `compraId` de `orders` y sus tres índices, sin `DROP` ni cambios de tipo);
+- `npx prisma db push` y `deploy.sh --sin-pull` otra vez. Terminó en "Listo: sirviendo .next-a (b76157f8 Merge branch 'claude/C-285')".
+
+**Antes de publicar,** solo leyendo en el servidor: nginx le pasa a la tienda el dominio que pidió el navegador (`Host`), y `NEXTAUTH_URL` y `NEXT_PUBLIC_BASE_URL` son el dominio de la tienda. De eso depende que la revisión del origen reconozca lo suyo.
+
+**Lo comprobado, el 17/11:**
+- **El origen, lo primero** (desde fuera, con un `POST` a `/api/contact` sin datos): con el `Origin` de la tienda, con `www.`, sin `Origin` y con `null` responde 400 (faltan los datos, o sea que pasó la revisión); con el de otro sitio, y con un dominio que solo empieza igual, 403 "Origen no permitido". Leer desde otro sitio sigue respondiendo 200, y el aviso de presencia de la tienda, 204. Un `PATCH` a las órdenes desde otro sitio, 403.
+- **En el servidor:**
+  - `git describe --tags` dice `v1.0.0-rc.101` y la tienda escucha en `127.0.0.1:3000`, sin reinicios después del cambio;
+  - la columna `compraId` y los tres índices están en la base, y el segundo `deploy.sh` pasó el paso de la base sin pararse;
+  - el registro de errores de PM2 no tiene líneas nuevas (98 antes y 98 después, también después de las pruebas).
+- **Desde fuera, como un visitante:**
+  - la portada dice `1.0.0-rc.101|b76157f8`; la portada, Productos, Categorías, `/sorteo`, entrar, registrarse, contacto, gift cards, servicios, cursos y canjear responden 200;
+  - `/api/public/stats` responde 404;
+  - sin sesión, las API privadas responden 401 (los Puntos ES, las órdenes, el creador, las del panel) y también un `POST` desde la propia tienda a órdenes, a la verificación del Pago Móvil, a la recarga y a las subidas;
+  - un enlace de activación inventado, y uno con la marca de la huella, 400; pedir otro enlace para un correo sin cuenta da la respuesta de siempre;
+  - una pestaña de otra versión recibe 204 al navegar; la imagen para compartir de la portada, el `manifest`, el feed y el sitemap siguen en su lugar.
+- **Con sesión:** se probó en la tienda de prueba, sobre el mismo código (21 de 21 de cada tarea, las regresiones, la prueba de humo 60 de 60 y el registro y la recuperación en el navegador), porque desde fuera no hay una cuenta de cliente ni de administrador.
+
+**Falta que el equipo haga las pruebas** (`SIGUIENTE.md`, "Por confirmar de rc.101"): sobre todo entrar al panel y guardar algo, una compra, y crear una cuenta o recuperar una contraseña con el enlace del correo. **Y el 18/11 después de las 2:35 p. m.** ya se puede quitar el respaldo de los enlaces viejos (`PLAN.md` §5.2).
+
+### El bloque que se subió: `v1.0.0-rc.101` (C-284 y C-285)
+Producción está en `v1.0.0-rc.99` (`4bb9c1c`); su bloque está en `HISTORIAL.md`. Era el único bloque pendiente.
+- **C-284 (rc.100):** dinero, lo que quedó de la auditoría (`estado/C-284.md`).
+  - **Cambia la base: una columna nueva (`compraId` en `orders`) y tres índices, aditivo.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
+```sql
+-- AlterTable
+ALTER TABLE "orders" ADD COLUMN     "compraId" TEXT;
+
+-- CreateIndex
+CREATE INDEX "orders_compraId_idx" ON "orders"("compraId");
+
+-- CreateIndex
+CREATE INDEX "orders_userId_createdAt_idx" ON "orders"("userId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "orders_status_createdAt_idx" ON "orders"("status", "createdAt");
+```
+  - Sin variables nuevas, sin SQL de datos, sin cron y sin dependencias nuevas.
+- **C-285 (rc.101):** acceso y seguridad, lo que quedó de la auditoría (`estado/C-285.md`). Sin cambio de base, sin variables nuevas, sin cron y sin dependencias nuevas.
+- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc101.dump`
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.101`, o una mayor si entró otra tarea antes del `git pull`.
+- **Lo primero después de subir** (desde cualquier terminal; lo hace Claude si sube él): que la tienda acepte lo suyo y rechace lo ajeno.
+  - `curl -s -o /dev/null -w '%{http_code}\n' -X POST https://electroshopve.com/api/contact -H 'Origin: https://electroshopve.com' -H 'Content-Type: application/json' -d '{}'` debe dar **400** (faltan los datos), no 403.
+  - Lo mismo con `-H 'Origin: https://otro.sitio'` debe dar **403**.
+  - Si el primero da 403, la tienda no reconoce su propia dirección: vuelta atrás (abajo) y avisa a Claude.
+- **Pruebas de C-284** (unos 10 minutos). Antes, recarga la tienda y el panel (Ctrl+R):
+  1. **Una compra** (con tu cuenta de cliente, como siempre): llega al final y queda una sola orden en Mi panel → Mis pedidos. Si puedes, toca "Completar pedido" dos veces seguidas: sigue siendo una.
+  2. **Una recarga manual** (Zelle o transferencia, con una cuenta de prueba; después la rechazas desde Transacciones): al equipo le llega "Recarga por aprobar", como siempre.
+  3. **Una recarga por Pago Móvil** (solo si hay una de verdad, no hace falta forzarla): al pedirla ya no llega "Recarga por aprobar"; se aprueba sola al verificar el pago. Si el pago no alcanza, llega "Recarga por revisar".
+  4. **Un código digital** (solo si hay una venta digital de verdad): se entrega desde la orden como siempre.
+  5. **Una garantía** (solo si hay una de verdad por resolver): devolver en Puntos ES funciona como siempre.
+- **Pruebas de C-285** (unos 10 minutos):
+  1. **Entrar y usar el panel** (en la computadora): entra con tu cuenta y tus dos pasos, y guarda cualquier cosa (una nota en una orden, por ejemplo): se guarda como siempre. Si algo que guardas responde "Origen no permitido", avísale a Claude con la pantalla.
+  2. **Comprar o agregar al carrito** (en el teléfono, con tu cuenta de cliente): agregar un producto y abrir el carrito funciona como siempre.
+  3. **Recuperar la contraseña** (con una cuenta de cliente de prueba): "¿Olvidaste tu contraseña?" → llega el correo → el enlace abre la pantalla y la contraseña nueva entra.
+  4. **Crear una cuenta** (con un correo tuyo que no tenga cuenta): llega el correo de activación y el enlace la activa. En el checkout o en Mi perfil, "Reenviar" dice "Te enviamos un nuevo enlace" y, si lo tocas otra vez enseguida, cuántos segundos esperar.
+  5. **La contraseña mala** (en una ventana de incógnito, con la cuenta de prueba): falla la contraseña seis veces: dice cuánto esperar. Desde el teléfono con datos (otra conexión), esa misma cuenta entra con la contraseña buena.
+  6. **Contacto:** manda un mensaje desde `/contacto` con tu correo: llega a Consultas y te llega "recibimos tu mensaje".
+  7. **El panel del creador** (solo si hay un creador activo): su perfil se ve y se guarda como siempre.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.99 && git checkout v1.0.0-rc.101 -- prisma/schema.prisma && npm install && bash scripts/deploy.sh --sin-pull`.
+  - El segundo paso deja el esquema nuevo con el código de rc.99, para que `deploy.sh` no se pare pidiendo quitar la columna: la columna `compraId` y los índices se quedan, y al código anterior no le molestan (compila igual; se comprobó).
+  - Las compras hechas con rc.100 conservan su llave para cuando vuelva.
+  - Los enlaces de activación o de recuperación creados con rc.101 quedan guardados como huella y la versión anterior no los reconoce: quien tenga uno pide otro (duran 24 horas y 1 hora).
+
 
 
 ## 17/11 · C-286, los videos de ElectroStudio (de rc.98 a `v1.0.0-rc.99`)

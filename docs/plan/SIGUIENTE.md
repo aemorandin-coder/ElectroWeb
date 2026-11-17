@@ -1,16 +1,16 @@
-# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.99; falta subir rc.101, con rc.100: §2)
+# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.101; nada por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-285 · Acceso y seguridad: lo que quedó de la auditoría (rc.101, falta subir: §2; `estado/C-285.md`):** la otra mitad del pedido del 17/11, con el mismo método.
+- **C-285 · Acceso y seguridad: lo que quedó de la auditoría (rc.101, en producción desde el 17/11; pruebas por confirmar: §2; `estado/C-285.md`):** la otra mitad del pedido del 17/11, con el mismo método.
   - **Entrar:** la espera por contraseñas fallidas cuenta por correo y conexión juntos. Quien falla se frena a sí mismo; el dueño de la cuenta entra.
   - **Los enlaces de la cuenta** (activar, recuperar la contraseña, la invitación al equipo y "No fui yo") se guardan como huella. Los que ya se enviaron siguen sirviendo hasta que vencen.
   - **Lo que cambia algo** solo se acepta si sale de la propia tienda: un pedido armado desde otra página responde 403.
   - **Además:** pedir otro enlace de activación ya no dice quién tiene cuenta; la ficha del creador entrega solo lo suyo; el contacto y su acuse tienen tope.
   - **Verificado:** 21 de 21 por HTTP con el inicio de sesión real, el registro y la recuperación en el navegador, y todo lo de C-284 otra vez con las dos juntas.
-- **C-284 · Dinero: lo que quedó de la auditoría (rc.100, falta subir: §2; `estado/C-284.md`):** el equipo pidió el 17/11 seguir con agentes supervisados. Con el método de C-280: un agente en el modelo liviano que implementa y Claude que revisa y prueba.
+- **C-284 · Dinero: lo que quedó de la auditoría (rc.100, en producción desde el 17/11, subida con rc.101; pruebas por confirmar: §2; `estado/C-284.md`):** el equipo pidió el 17/11 seguir con agentes supervisados. Con el método de C-280: un agente en el modelo liviano que implementa y Claude que revisa y prueba.
   - **Una compra, una sola vez:** cada compra lleva su llave. Tocar "Completar pedido" dos veces, o reintentar con mala señal, deja una sola compra y un solo cobro.
   - **Los pagos manuales:** la misma referencia no entra dos veces aunque lleguen a la vez, ni en una compra ni en una recarga.
   - **Las garantías:** un pedido cancelado no devuelve otra vez, y varias solicitudes del mismo producto no devuelven, entre todas, más de lo que costó.
@@ -493,40 +493,18 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.101` (C-284 y C-285)
-Producción está en `v1.0.0-rc.99` (`4bb9c1c`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- **C-284 (rc.100):** dinero, lo que quedó de la auditoría (`estado/C-284.md`).
-  - **Cambia la base: una columna nueva (`compraId` en `orders`) y tres índices, aditivo.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
-```sql
--- AlterTable
-ALTER TABLE "orders" ADD COLUMN     "compraId" TEXT;
+### Lo que falta subir: nada por ahora
+Producción está en `v1.0.0-rc.101` (`b76157f`); su bloque está en `HISTORIAL.md`.
 
--- CreateIndex
-CREATE INDEX "orders_compraId_idx" ON "orders"("compraId");
-
--- CreateIndex
-CREATE INDEX "orders_userId_createdAt_idx" ON "orders"("userId", "createdAt");
-
--- CreateIndex
-CREATE INDEX "orders_status_createdAt_idx" ON "orders"("status", "createdAt");
-```
-  - Sin variables nuevas, sin SQL de datos, sin cron y sin dependencias nuevas.
-- **C-285 (rc.101):** acceso y seguridad, lo que quedó de la auditoría (`estado/C-285.md`). Sin cambio de base, sin variables nuevas, sin cron y sin dependencias nuevas.
-- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc101.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.101`, o una mayor si entró otra tarea antes del `git pull`.
-- **Lo primero después de subir** (desde cualquier terminal; lo hace Claude si sube él): que la tienda acepte lo suyo y rechace lo ajeno.
-  - `curl -s -o /dev/null -w '%{http_code}\n' -X POST https://electroshopve.com/api/contact -H 'Origin: https://electroshopve.com' -H 'Content-Type: application/json' -d '{}'` debe dar **400** (faltan los datos), no 403.
-  - Lo mismo con `-H 'Origin: https://otro.sitio'` debe dar **403**.
-  - Si el primero da 403, la tienda no reconoce su propia dirección: vuelta atrás (abajo) y avisa a Claude.
-- **Pruebas de C-284** (unos 10 minutos). Antes, recarga la tienda y el panel (Ctrl+R):
+### Por confirmar de rc.101 (C-284 y C-285; unos 20 minutos)
+Ya en producción desde el 17/11, cerca de las 2:35 p. m. (la subió Claude por SSH con la aprobación del equipo, minutos después de publicar el código; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión, la columna y los índices nuevos, que la tienda acepta sus propios pedidos y rechaza con 403 los de otro sitio, las páginas, las API privadas, la ruta quitada y que el registro de errores no sumó líneas. Falta esto (antes, recarga la tienda y el panel con Ctrl+R). **La primera de C-285 es la más importante:** si algo que guardas responde "Origen no permitido", avísale a Claude.
+- **De C-284** (unos 10 minutos):
   1. **Una compra** (con tu cuenta de cliente, como siempre): llega al final y queda una sola orden en Mi panel → Mis pedidos. Si puedes, toca "Completar pedido" dos veces seguidas: sigue siendo una.
   2. **Una recarga manual** (Zelle o transferencia, con una cuenta de prueba; después la rechazas desde Transacciones): al equipo le llega "Recarga por aprobar", como siempre.
   3. **Una recarga por Pago Móvil** (solo si hay una de verdad, no hace falta forzarla): al pedirla ya no llega "Recarga por aprobar"; se aprueba sola al verificar el pago. Si el pago no alcanza, llega "Recarga por revisar".
   4. **Un código digital** (solo si hay una venta digital de verdad): se entrega desde la orden como siempre.
   5. **Una garantía** (solo si hay una de verdad por resolver): devolver en Puntos ES funciona como siempre.
-- **Pruebas de C-285** (unos 10 minutos):
+- **De C-285** (unos 10 minutos):
   1. **Entrar y usar el panel** (en la computadora): entra con tu cuenta y tus dos pasos, y guarda cualquier cosa (una nota en una orden, por ejemplo): se guarda como siempre. Si algo que guardas responde "Origen no permitido", avísale a Claude con la pantalla.
   2. **Comprar o agregar al carrito** (en el teléfono, con tu cuenta de cliente): agregar un producto y abrir el carrito funciona como siempre.
   3. **Recuperar la contraseña** (con una cuenta de cliente de prueba): "¿Olvidaste tu contraseña?" → llega el correo → el enlace abre la pantalla y la contraseña nueva entra.
@@ -1235,7 +1213,7 @@ En el orden en que más destraban:
 
 **Sigue:** El plan del 14/11 está en producción desde ese día (rc.53). rc.56 está en producción desde el 15/11; falta confirmar sus pruebas (§2) y lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
 
-**Hecho el 17/11:** C-278 (la lista de Clientes sin las cifras repetidas, rc.93, en producción) C-281 (los flujos que venden y el día del panel, rc.94) y C-280 (los arreglos medios de dinero y seguridad de la auditoría, rc.95). Las dos, en producción desde el 17/11. Y C-282 (la guía web y los arreglos sueltos, rc.96) y C-283 (lo más urgente de dinero de la auditoría, rc.97), en producción desde el 17/11. Y C-284 (lo que quedó de dinero de la auditoría, rc.100) y C-285 (lo que quedó de acceso y seguridad, rc.101), que faltan subir.
+**Hecho el 17/11:** C-278 (la lista de Clientes sin las cifras repetidas, rc.93, en producción) C-281 (los flujos que venden y el día del panel, rc.94) y C-280 (los arreglos medios de dinero y seguridad de la auditoría, rc.95). Las dos, en producción desde el 17/11. Y C-282 (la guía web y los arreglos sueltos, rc.96) y C-283 (lo más urgente de dinero de la auditoría, rc.97), en producción desde el 17/11. Y C-284 (lo que quedó de dinero de la auditoría, rc.100) y C-285 (lo que quedó de acceso y seguridad, rc.101), en producción desde el 17/11.
 
 **Hecho el 16/11:** C-276 (Clientes, rc.92) y, de su inventario, C-277 (rc.91), las dos en producción.
 

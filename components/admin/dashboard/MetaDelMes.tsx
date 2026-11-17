@@ -3,14 +3,15 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { adminInput, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import CifraAnimada from './CifraAnimada';
+import s from './tablero.module.css';
 
 // C-171: widget "Meta del mes" (solo el dueño). La meta la escribe aquí mismo y se guarda en la base con su Dashboard:
 // nunca en el repositorio, que es público.
+// C-279: cabe en una fila (Mini): la meta es el monto subrayado, que al tocarlo se vuelve un campo para cambiarla.
 
-export default function MetaDelMes({ mesUSD, metaUSD }: { mesUSD: number; metaUSD: number | null }) {
+export default function MetaDelMes({ mesUSD, metaUSD, diasQueQuedan, ultimoDia }: { mesUSD: number; metaUSD: number | null; diasQueQuedan: number; ultimoDia: number }) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
   const [texto, setTexto] = useState(metaUSD ? String(metaUSD) : '');
@@ -31,34 +32,49 @@ export default function MetaDelMes({ mesUSD, metaUSD }: { mesUSD: number; metaUS
     }
   };
 
-  if (editando || !metaUSD) {
-    return (
+  const campo = (
+    <form className="inline-flex items-center gap-1.5" onSubmit={(e) => { e.preventDefault(); void guardar(); }}>
+      <input
+        autoFocus
+        aria-label="Meta de ventas del mes, en dólares"
+        inputMode="decimal"
+        value={texto}
+        onChange={(e) => setTexto(e.target.value.replace(/[^0-9.,]/g, ''))}
+        onKeyDown={(e) => { if (e.key === 'Escape') { setEditando(false); setTexto(metaUSD ? String(metaUSD) : ''); } }}
+        placeholder="5000"
+        className={s.metaEntrada}
+      />
+      <button type="submit" disabled={guardando} className={`${s.btn} ${s.btnPrimario}`} style={{ height: 28 }}>{guardando ? 'Guardando…' : 'Guardar'}</button>
+    </form>
+  );
+
+  if (!metaUSD) {
+    return editando ? campo : (
       <div>
-        <label htmlFor="meta-mes" className="text-sm text-ink-soft">{metaUSD ? 'Meta de ventas del mes, en dólares' : 'Pon la meta de ventas de este mes, en dólares'}</label>
-        <input id="meta-mes" inputMode="decimal" value={texto} onChange={(e) => setTexto(e.target.value.replace(/[^0-9.,]/g, ''))} placeholder="Por ejemplo 5000" className={`${adminInput()} mt-2`} />
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" onClick={() => void guardar()} disabled={guardando} className={adminPrimaryButton}>{guardando ? 'Guardando…' : 'Guardar'}</button>
-          {metaUSD && <button type="button" onClick={() => { setEditando(false); setTexto(String(metaUSD)); }} className={adminSecondaryButton}>Cancelar</button>}
-        </div>
+        <p className={s.rotulo}>Lo cobrado este mes: <b className="text-ink">{formatUSD(mesUSD)}</b></p>
+        <button type="button" onClick={() => setEditando(true)} className={s.metaEditar} style={{ marginTop: 6 }}>Poner la meta del mes</button>
       </div>
     );
   }
 
-  const pct = Math.min(100, Math.round((mesUSD / metaUSD) * 100));
+  const pct = Math.min(100, (mesUSD / metaUSD) * 100);
   const falta = Math.max(0, metaUSD - mesUSD);
   return (
     <div>
-      <p className="flex items-baseline gap-2">
-        <CifraAnimada valor={pct} className="text-3xl font-bold tabular-nums text-ink" />
-        <span className="text-xl font-bold text-ink">%</span>
-        <span className="text-sm text-muted">de la meta</span>
-      </p>
-      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-line" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Avance de la meta del mes">
-        <div className={`h-full rounded-full transition-[width] duration-700 ${pct >= 100 ? 'bg-success' : 'bg-brand-500'}`} style={{ width: `${pct}%` }} />
+      <div className={s.lineaMini}>
+        <b className={s.cifraChica}><CifraAnimada valor={mesUSD} formato="usd" retraso={300} /></b>
+        {editando ? campo : (
+          <span className={s.rotulo}>de <button type="button" onClick={() => setEditando(true)} className={s.metaEditar} title="Cambiar la meta">{formatUSD(metaUSD)}</button></span>
+        )}
       </div>
-      <p className="mt-2 text-sm text-ink-soft"><span className="font-semibold tabular-nums text-ink">{formatUSD(mesUSD)}</span> de {formatUSD(metaUSD)}</p>
-      <p className="text-xs text-muted">{falta > 0 ? `Faltan ${formatUSD(falta)}` : 'Meta cumplida'}</p>
-      <button type="button" onClick={() => setEditando(true)} className="mt-2 inline-flex min-h-9 items-center text-sm font-semibold text-brand-600 hover:text-brand-700">Cambiar meta</button>
+      <div className={s.metaBarra} role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label="Avance de la meta del mes">
+        <i style={{ width: `${pct}%` }} />
+      </div>
+      <p className={`${s.rotulo} ${s.sinH1}`} style={{ marginTop: 8 }}>
+        {falta > 0
+          ? <>Faltan <b className="text-ink">{formatUSD(falta)}</b>{diasQueQuedan > 0 ? `: unos ${formatUSD(falta / diasQueQuedan)} por día hasta el ${ultimoDia}.` : '.'}</>
+          : 'Meta cumplida.'}
+      </p>
     </div>
   );
 }

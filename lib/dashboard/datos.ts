@@ -3,8 +3,10 @@
 
 import { OrderStatus, PaymentStatus } from '@prisma/client';
 import { ETIQUETA_ACCION } from '@/lib/audit-labels';
+import { formatPaymentMethod } from '@/lib/format-helpers';
 import { hoyCaracas } from '@/lib/pago-movil/monto';
 import { prisma } from '@/lib/prisma';
+import { resumenDelSorteo } from '@/lib/sorteo/servidor';
 import { abreviarNombre } from '@/lib/visitantes';
 
 const DIA_MS = 24 * 60 * 60 * 1000;
@@ -103,4 +105,88 @@ export async function datosCotizaciones(): Promise<{ abiertas: number; lista: Ar
     prisma.quote.findMany({ where, orderBy: { updatedAt: 'desc' }, take: 4, select: { id: true, number: true, clientName: true, status: true, totalUSD: true } }),
   ]);
   return { abiertas, lista: lista.map((q) => ({ id: q.id, numero: q.number, cliente: q.clientName, estado: q.status, totalUSD: Number(q.totalUSD) })) };
+}
+
+/* ── C-279: lo nuevo del Dashboard (la recepción) ── */
+
+export interface PagoPendiente { id: string; numero: string; totalUSD: number; metodo: string; cliente: string }
+export interface MensajePendiente { id: string; cliente: string; texto: string }
+
+/**
+ * Lo que "Por atender" muestra con detalle: los primeros pagos por confirmar (las mismas órdenes que cuenta: pendientes y sin
+ * pagar) y el último mensaje sin responder. Nombres abreviados; nada de correos ni teléfonos.
+ */
+export async function datosPendientes(verPagos: boolean, verMensajes: boolean): Promise<{ pagos: PagoPendiente[]; mensajes: MensajePendiente[] }> {
+  const [pagos, mensajes] = await Promise.all([
+    verPagos
+      ? prisma.order.findMany({
+        where: { status: OrderStatus.PENDING, paymentStatus: PaymentStatus.PENDING },
+        orderBy: { createdAt: 'desc' },
+        take: 3,
+        select: { id: true, orderNumber: true, totalUSD: true, paymentMethod: true, billingName: true, guestName: true, user: { select: { name: true } } },
+      })
+      : Promise.resolve([]),
+    verMensajes
+      ? prisma.contactMessage.findMany({ where: { status: 'PENDING' }, orderBy: { createdAt: 'desc' }, take: 2, select: { id: true, name: true, subject: true, message: true } })
+      : Promise.resolve([]),
+  ]);
+  return {
+    pagos: pagos.map((o) => ({
+      id: o.id, numero: o.orderNumber, totalUSD: Number(o.totalUSD), metodo: formatPaymentMethod(o.paymentMethod),
+      cliente: abreviarNombre(o.billingName || o.user?.name || o.guestName) ?? 'Cliente',
+    })),
+    mensajes: mensajes.map((c) => ({ id: c.id, cliente: abreviarNombre(c.name) ?? 'Un cliente', texto: (c.message || c.subject).replace(/\s+/g, ' ').trim().slice(0, 120) })),
+  };
+}
+
+export interface DatosSorteo {
+  titulo: string;
+  premio: string;
+  imagen: string | null;
+  /** AAAA-MM-DD en Venezuela */
+  desde: string;
+  hasta: string;
+  resultado: string;
+  boletos: number;
+  participantes: number;
+}
+
+/** El sorteo activo que todavía no se sorteó (null si no hay). Los boletos se cuentan solo si los va a mostrar el widget */
+export async function datosSorteo(conBoletos: boolean): Promise<DatosSorteo | null> {
+  const sorteo = await prisma.sorteo.findFirst({ where: { activo: true, sorteadoAt: null }, orderBy: { resultadoEl: 'asc' } });
+  if (!sorteo) return null;
+  const resumen = conBoletos ? await resumenDelSorteo(sorteo).catch(() => null) : null;
+  return {
+    titulo: sorteo.titulo, premio: sorteo.premio, imagen: sorteo.imagen,
+    desde: hoyCaracas(sorteo.desde), hasta: hoyCaracas(sorteo.hasta), resultado: hoyCaracas(sorteo.resultadoEl),
+    boletos: resumen?.boletos.length ?? 0, participantes: resumen?.participantes.length ?? 0,
+  };
+}
+
+export interface DatosStudio {
+  /** Lunes de esta semana (AAAA-MM-DD, Venezuela) */
+  lunes: string;
+  historias: Array<{ id: string; nombre: string; fecha: string }>;
+  sugerida: { id: string; nombre: string; stock: number; precioUSD: number; foto: string | null } | null;
+}
+
+/** Las historias de ElectroStudio con fecha en esta semana y un producto para la próxima ("Última unidad") */
+export async function datosStudio(): Promise<DatosStudio> {
+  const hoy = hoyCaracas();
+  const dia = new Date(`${hoy}T12:00:00-04:00`).getUTCDay();
+  const lunes = hoyCaracas(new Date(new Date(`${hoy}T12:00:00-04:00`).getTime() - ((dia + 6) % 7) * DIA_MS));
+  const domingo = hoyCaracas(new Date(new Date(`${lunes}T12:00:00-04:00`).getTime() + 6 * DIA_MS));
+  const [historias, sugerida] = await Promise.all([
+    prisma.studioFlyer.findMany({ where: { date: { gte: lunes, lte: domingo } }, orderBy: [{ date: 'asc' }, { updatedAt: 'desc' }], take: 21, select: { id: true, name: true, date: true } }),
+    prisma.product.findFirst({
+      where: { status: 'PUBLISHED', productType: 'PHYSICAL', stock: { gt: 0, lte: 2 }, mainImage: { not: null } },
+      orderBy: [{ stock: 'asc' }, { priceUSD: 'desc' }],
+      select: { id: true, name: true, stock: true, priceUSD: true, mainImage: true },
+    }),
+  ]);
+  return {
+    lunes,
+    historias: historias.filter((h): h is typeof h & { date: string } => !!h.date).map((h) => ({ id: h.id, nombre: h.name, fecha: h.date })),
+    sugerida: sugerida ? { id: sugerida.id, nombre: sugerida.name, stock: sugerida.stock, precioUSD: Number(sugerida.priceUSD), foto: sugerida.mainImage } : null,
+  };
 }

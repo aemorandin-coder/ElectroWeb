@@ -242,8 +242,10 @@ export default function MesaContadora({ yo, saludo, hoy, periodo, vence, empresa
       </div>
 
       {/* La primera vez que ella entra: lo que hace (preguntó "¿cuáles van a ser mis funciones?", 16/11) */}
+      {/* C-279: sin Chispa (en el panel no va el personaje de la tienda) */}
       <AsiFunciona
         clave="contabilidad-mesa"
+        sinChispa
         activa={yo.esContadora}
         titulo="Así funciona tu mesa"
         nota="Cada mes, la alcaldía vence el 10 y el IVA el 15. La parte técnica es nuestra."

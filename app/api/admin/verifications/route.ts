@@ -13,16 +13,8 @@ import { correoEmpresaVerificada } from '@/lib/email-templates/comunidad';
 export async function GET(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-
-        // Check for admin permissions (assuming SUPER_ADMIN or similar role check logic exists, 
-        // for now checking if user exists and has admin role if applicable, or just relying on session for this MVP step 
-        // but ideally should check `session.user.role === 'ADMIN'`)
-        // Based on previous files, it seems we check permissions.
-
         if (!isAuthorized(session, 'MANAGE_USERS')) {
-            // Fallback if permissions structure is different, but let's assume standard admin check
-            // If strictly following previous patterns:
-            // return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+            return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
 
         // Fetch profiles with pending verification or all business profiles
@@ -39,7 +31,16 @@ export async function GET(request: NextRequest) {
 
         const profiles = await prisma.profile.findMany({
             where: whereClause,
-            include: {
+            // C-277: solo lo que muestra la pantalla de Verificaciones (lista blanca, no el perfil entero)
+            select: {
+                id: true,
+                companyName: true,
+                taxId: true,
+                businessVerificationStatus: true,
+                businessConstitutiveAct: true,
+                businessRIFDocument: true,
+                businessVerificationNotes: true,
+                updatedAt: true,
                 user: {
                     select: {
                         name: true,

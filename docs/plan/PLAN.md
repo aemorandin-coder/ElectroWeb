@@ -457,6 +457,11 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 ### 5.2 Lista única de pendientes
 Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
+**Del Dashboard nuevo (C-279, rc.98), lo que sigue:**
+- **C-279b:** las novedades de versión con antes y después o un mini video en una esquina, "Probarlo" que marca lo nuevo y el estreno a pantalla completa para las versiones grandes, como en la maqueta (`~/.cache/electroshop-trabajo/c279/`). Pide sumarle los medios a `lib/modulos.ts`.
+- **Confirmar un pago y responder ahí mismo:** hoy "Por atender" abre la orden o Consultas. Hacerlo desde el tablero pide mostrar el comprobante en el Dashboard (es dinero); si el equipo lo quiere, va aparte.
+- **Ctrl K en todo el panel** (hoy, en el Dashboard), y Claude en el buscador cuando el equipo lo pida (el 17/11 dijo "no por ahora").
+
 **De la auditoría del 17/11, lo de la tienda, el panel y la plataforma que queda** (C-281 hizo la Fase 4 y C-282 la 7 y los sueltos; sin tomar):
 - **Los índices de Órdenes** (por cliente, por estado y por fecha; hoy no se nota): una migración aditiva con `CREATE INDEX`, que para el deploy hasta aplicar el SQL. Conviene juntarla con el próximo cambio de base.
 - **Las fases con maquetas antes:** la 5 (los tokens del movimiento, la ventana base común con Escape, el botón Atrás y el foco en todas las ventanas, y el retorno sin migas) y la 6 (las animaciones y los íconos animados).

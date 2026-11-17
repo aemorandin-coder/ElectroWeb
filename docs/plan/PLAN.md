@@ -463,13 +463,13 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 - **Ctrl K en todo el panel** (hoy, en el Dashboard), y Claude en el buscador cuando el equipo lo pida (el 17/11 dijo "no por ahora").
 
 **De la auditoría del 17/11, lo de la tienda, el panel y la plataforma que queda** (C-281 hizo la Fase 4 y C-282 la 7 y los sueltos; sin tomar):
-- **Los índices de Órdenes** (por cliente, por estado y por fecha; hoy no se nota): una migración aditiva con `CREATE INDEX`, que para el deploy hasta aplicar el SQL. Conviene juntarla con el próximo cambio de base.
 - **Las fases con maquetas antes:** la 5 (los tokens del movimiento, la ventana base común con Escape, el botón Atrás y el foco en todas las ventanas, y el retorno sin migas) y la 6 (las animaciones y los íconos animados).
 - **La Fase 3, con fecha:** el candado del mes declarado y el orden número-fecha de las facturas (con el criterio de la contadora, antes del 15/12) y "Antes de sortear" (antes del 20/12).
 
-**De la auditoría del 17/11, lo que dejó C-280** (dinero y seguridad; sin tomar):
-- Una compra que sale en dos paquetes cuenta dos usos del tope total de un cupón. Contarla como una pide una llave de compra en las órdenes (hoy Contabilidad y el sorteo deducen por la hora cuáles salieron del mismo pago).
-- Cada recarga por Pago Móvil avisa "Recarga por aprobar" al equipo aunque se apruebe sola al minuto (`app/api/customer/balance/recharge/route.ts`).
+**De la auditoría del 17/11, lo que dejaron C-280 y C-284** (dinero y seguridad; sin tomar):
+- Una compra que sale en dos paquetes cuenta dos usos del tope total de un cupón. La llave de compra ya existe (`compraId` en las órdenes, C-284): falta contar los usos por compra.
+- Contabilidad y el sorteo todavía deducen por la hora cuáles órdenes salieron del mismo pago. Las órdenes nuevas ya traen `compraId`; las de antes quedan sin él.
+- `components/pago-movil/VerificarPagoMovilForm.tsx` conserva `contexto = 'GENERAL'` por defecto, que la API ya rechaza (C-284). Ninguna pantalla lo usa así: se quita con la próxima tarea que toque ese archivo.
 - Los archivos de `public/uploads` que Next sirve él mismo ya no llevan caché de un año (el navegador pregunta y recibe un 304). Si se quiere de vuelta, va en nginx y solo para las respuestas 200.
 - Lo demás de la auditoría está en su informe, fuera del repositorio.
 

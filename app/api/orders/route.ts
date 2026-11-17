@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse, after } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -50,7 +51,9 @@ import { STUDIO_COOKIE } from '@/lib/studio/code';
 import { avisarPedidoDigitalPorEntregar } from '@/lib/digital-delivery';
 import { DestinoError, leerDestino, type DestinoOrden } from '@/lib/envios/destino';
 import { actualizarRastreoZoom } from '@/lib/envios/seguimiento';
-import { customerOrderSelect } from '@/lib/dto/order';
+import { customerOrderSelect, type CustomerOrder } from '@/lib/dto/order';
+import { leerCompraId } from '@/lib/compra-id';
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { publicarOrdenes, publicarStock } from '@/lib/realtime/bus';
 import { RESERVA_PAGO_MANUAL_HORAS, claveReferencia, esPagoManual, leerReferenciaManual, repartirPuntos } from '@/lib/checkout-pago';
 import { descontarDisponible, hayDisponible } from '@/lib/reservas';
@@ -261,6 +264,40 @@ function isOrderNumberConflict(error: unknown): boolean {
     && String(error.meta?.target ?? '').includes('orderNumber');
 }
 
+/** C-132: lo que se le dice al cliente cuando la referencia de su pago manual ya está en otra orden (antes y dentro de la transacción). */
+function textoReferenciaRepetida(repetida: { orderNumber: string; userId: string | null }, userId: string): string {
+  return repetida.userId === userId
+    ? `Esa referencia ya está en tu pedido ${repetida.orderNumber}. Si es otro pago, revisa el número.`
+    : 'Esa referencia ya se usó en otra compra. Revisa el número o escríbenos por WhatsApp.';
+}
+
+/** C-284: las órdenes de este cliente que salieron del mismo envío del checkout. Siempre por cliente y llave: nunca las de otra cuenta. */
+function ordenesDeLaCompra(db: Prisma.TransactionClient, userId: string, compraId: string) {
+  return db.order.findMany({ where: { userId, compraId }, select: customerOrderSelect, orderBy: { orderNumber: 'asc' } });
+}
+
+/** C-284: otra copia del mismo envío ya creó las órdenes: no se crea, cobra, descuenta ni avisa nada, y se responde con ellas. */
+class CompraRepetida extends Error {
+  ordenes: CustomerOrder[];
+
+  constructor(ordenes: CustomerOrder[]) {
+    super('Esta compra ya se había creado');
+    this.name = 'CompraRepetida';
+    this.ordenes = ordenes;
+  }
+}
+
+/** C-284: la respuesta de un envío repetido, con la forma de la de éxito que lee el checkout (orders, totalUSD y porVerificar). */
+function respuestaCompraRepetida(ordenes: CustomerOrder[]) {
+  const porVerificar = ordenes.some((orden) => esPagoManual(orden.paymentMethod) && orden.paymentStatus === PaymentStatus.PENDING);
+  return NextResponse.json({
+    orders: ordenes,
+    totalUSD: roundMoney(ordenes.reduce((suma, orden) => suma + Number(orden.totalUSD), 0)),
+    repetida: true,
+    ...(porVerificar ? { porVerificar: true } : {}),
+  });
+}
+
 const DELIVERY_LABELS = ETIQUETA_ENTREGA;
 
 /** C-132: "Marcar pagado" sin stock suficiente para la orden (sin contar lo apartado por otras). */
@@ -268,6 +305,21 @@ class StockInsuficiente extends Error {
   constructor(producto: string, pide: number, hay: number) {
     super(`No hay stock de "${producto}" para esta orden: lleva ${pide} y quedan ${hay} (contando lo apartado por otros pedidos). Repón el stock, o cancela la orden y devuelve el pago, antes de marcarla pagada.`);
     this.name = 'StockInsuficiente';
+  }
+}
+
+/**
+ * C-284: si una venta o un pago confirmado dejó un producto físico en 0, la tienda lo sabe al momento. Antes lo seguía
+ * mostrando disponible hasta que vencían los 60 s del caché (el servidor no dejaba comprarlo). Se llama con `after`: fuera
+ * de la transacción y sin frenar la respuesta. Si algo falla, la venta ya está hecha: solo se anota.
+ */
+async function renovarTiendaSiSeAgoto(productIds: string[]): Promise<void> {
+  if (productIds.length === 0) return;
+  try {
+    const agotado = await prisma.product.findFirst({ where: { id: { in: productIds }, stock: { lte: 0 } }, select: { id: true } });
+    if (agotado) revalidateStorefront();
+  } catch (error) {
+    console.error('Error revisando si la venta agotó un producto:', error);
   }
 }
 
@@ -352,6 +404,16 @@ export async function POST(request: NextRequest) {
     if (!body) {
       return NextResponse.json({ error: 'Solicitud inválida' }, { status: 400 });
     }
+
+    // C-284: la llave de la compra. El checkout manda una por intento (lib/compra-id.ts): si ya hay órdenes de este cliente
+    // con ella, el envío es el mismo que ya se procesó (doble toque, reintento por la red) y se responde con esas órdenes,
+    // sin crear, cobrar, descontar ni avisar nada. Si no viene o no tiene la forma esperada, el servidor pone la suya.
+    const compraRecibida = leerCompraId(body.compraId);
+    if (compraRecibida) {
+      const previas = await ordenesDeLaCompra(prisma, userId, compraRecibida);
+      if (previas.length > 0) return respuestaCompraRepetida(previas);
+    }
+    const compraId = compraRecibida ?? randomUUID();
 
     // C-85: teléfono y cédula se piden en la primera compra (el registro ya no pide la cédula y Google no trae ninguno)
     const cuenta = await prisma.user.findUnique({
@@ -531,9 +593,7 @@ export async function POST(request: NextRequest) {
       });
       if (repetida) {
         return NextResponse.json(
-          { error: repetida.userId === userId
-            ? `Esa referencia ya está en tu pedido ${repetida.orderNumber}. Si es otro pago, revisa el número.`
-            : 'Esa referencia ya se usó en otra compra. Revisa el número o escríbenos por WhatsApp.', field: 'referencia-pago' },
+          { error: textoReferenciaRepetida(repetida, userId), field: 'referencia-pago' },
           { status: 409 }
         );
       }
@@ -670,6 +730,25 @@ export async function POST(request: NextRequest) {
     const createOrders = () => prisma.$transaction(async (tx) => {
       const year = new Date().getFullYear();
       let sequence = await getNextOrderSequence(tx, year);
+
+      // C-284: con el candado de las órdenes tomado se vuelve a buscar la compra: si la otra copia del mismo envío ganó,
+      // sus órdenes ya existen y no se crea nada (todavía no se tocaron Puntos ES, stock ni ofertas). Va antes de mirar la
+      // referencia del pago manual: esa referencia es la de esas mismas órdenes. Una llave que puso el servidor no puede existir.
+      if (compraRecibida) {
+        const yaCreadas = await ordenesDeLaCompra(tx, userId, compraRecibida);
+        if (yaCreadas.length > 0) throw new CompraRepetida(yaCreadas);
+      }
+
+      // C-284: con el candado de las órdenes tomado se vuelve a mirar la referencia del pago manual: dos compras a la vez
+      // con la misma referencia no pasan las dos, la segunda ya ve la orden de la primera.
+      if (metodoManual && referenciaManual) {
+        const repetida = await tx.order.findFirst({
+          where: { paymentMethod, paymentReference: referenciaManual, status: { not: OrderStatus.CANCELLED } },
+          select: { orderNumber: true, userId: true },
+        });
+        if (repetida) throw new OrderInputError(textoReferenciaRepetida(repetida, userId), 409);
+      }
+
       const orderNumbers = groups.map(() => `ORD-${year}-${String(sequence++).padStart(4, '0')}`);
 
       // Pago con billetera: se descuenta el total del servidor solo si el saldo alcanza (atómico)
@@ -768,6 +847,8 @@ export async function POST(request: NextRequest) {
             pointsUSD: montoDecimal(puntosDe[index]),
             paymentReference: referenciaManual,
             referralInfluencerId: promotorDelCodigo,
+            // C-284: todas las órdenes de esta compra llevan la misma llave
+            compraId,
             // C-147: copia de los datos de la factura (si después cambia la cuenta, la orden conserva los suyos)
             ...factura.datos,
             // WALLET y MOBILE_PAYMENT verificado (en BD y por monto) se tratan como pagados
@@ -941,6 +1022,8 @@ export async function POST(request: NextRequest) {
         orders = await createOrders();
         break;
       } catch (error) {
+        // C-284: la otra copia del mismo envío ya creó las órdenes (esta no hizo nada): se responde con ellas
+        if (error instanceof CompraRepetida) return respuestaCompraRepetida(error.ordenes);
         // C-114: la orden falló después de un Pago Móvil ya verificado. Si se agotó un producto no hay reintento
         // posible: el pago pasa al saldo. Si cambió una oferta o un descuento, el cliente confirma de nuevo con el mismo pago.
         if (error instanceof OrderInputError && pagoLibre) {
@@ -965,6 +1048,8 @@ export async function POST(request: NextRequest) {
     // C-127: la orden nueva aparece sola en el panel; si ya se descontó stock, la ficha muestra lo que queda
     void publicarOrdenes(orders.map((order) => order.id), { nueva: true });
     if (isPaymentConfirmed) void publicarStock([...physicalQuantities.keys()]);
+    // C-284: si esta compra dejó un producto en 0, la tienda lo sabe ya (antes lo mostraba disponible hasta 60 s)
+    if (isPaymentConfirmed) after(() => renovarTiendaSiSeAgoto([...physicalQuantities.keys()]));
 
     // ElectroStudio (C-113): la persona llegó por una historia de Instagram en los últimos 7 días
     void recordStudioOrder(request.cookies.get(STUDIO_COOKIE)?.value, orders.map((order) => order.id), userId);
@@ -1003,7 +1088,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      orders,
+      // Lo mismo que ve el cliente en Mis pedidos (lista blanca), no la fila entera: la respuesta de un envío repetido
+      // (respuestaCompraRepetida) trae estas mismas órdenes
+      orders: await ordenesDeLaCompra(prisma, userId, compraId),
       totalUSD: calculation.totalUSD,
       ...(sobranteUSD > 0 ? { creditedUSD: sobranteUSD, sobrepago: true } : {}),
       ...(puntosMixto > 0 ? { puntosUSD: puntosMixto } : {}),
@@ -1292,6 +1379,8 @@ export async function PATCH(request: NextRequest) {
 
     if (cambiosStock.length > 0) {
       notifyStockCrossings(cambiosStock).catch((error) => console.error('Error enviando avisos de stock:', error));
+      // C-284: si al confirmar el pago un producto quedó en 0, la tienda lo sabe ya (antes lo mostraba disponible hasta 60 s)
+      after(() => renovarTiendaSiSeAgoto(cambiosStock.map((cambio) => cambio.productId)));
     }
 
     // Pago confirmado: si el cliente llegó por un promotor, nace su comisión pendiente (C-75)

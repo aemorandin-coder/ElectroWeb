@@ -68,11 +68,22 @@ export async function POST(req: NextRequest) {
             cedulaPagador: cedulaRecibida,
             reqCed = true,      // Validar cédula por defecto para mayor seguridad
             // Contexto de la verificación
-            contexto = 'GENERAL', // RECHARGE, ORDER, GENERAL
+            contexto,             // ORDER, o RECHARGE con su transactionId (ver abajo)
             transactionId,        // ID de transacción de recarga (si aplica)
             // orderId del navegador: se ignora desde C-129 (lo pone POST /api/orders)
             cotizacion: cotizacionToken, // C-125: monto y tasa firmados por /api/orders/quote
         } = body;
+
+        // C-284: solo se consulta al banco por un pago que sirva para algo: una compra (ORDER) o una recarga con su
+        // transactionId. Las compras solo toman pagos de contexto ORDER y una recarga se acredita desde su transactionId.
+        const esCompra = contexto === 'ORDER';
+        const esRecarga = contexto === 'RECHARGE' && typeof transactionId === 'string' && transactionId.trim() !== '';
+        if (!esCompra && !esRecarga) {
+            return NextResponse.json(
+                { error: 'Indica si el pago es de una compra o de una recarga.' },
+                { status: 400 }
+            );
+        }
 
         // S-01: la referencia y el banco, en una sola forma desde aquí (lib/pago-movil/referencia.ts). Es la que se busca,
         // se bloquea, se manda al banco y se guarda: lo recibido no se vuelve a usar
@@ -547,7 +558,20 @@ export async function POST(req: NextRequest) {
                         amountUsd: acreditadoUSD,
                     });
                 } else {
-                    // Monto no coincide
+                    // Monto no coincide: la recarga no se aprueba sola y queda por revisar a mano. Es ahora cuando hay
+                    // algo que aprobar (C-284: al pedir una recarga por Pago Móvil no se avisa al equipo)
+                    emitAdminEvent({
+                        type: 'RECHARGE_REQUESTED',
+                        title: `Recarga por revisar · ${formatUSD(montoUsd)}`,
+                        summary: `El banco confirmó el pago de ${session.user.name || session.user.email || 'un cliente'}, pero la recarga no se aprobó sola: hay que revisarla a mano`,
+                        fields: [
+                            ['Pagado', formatVES(montoVerificadoBs)],
+                            ['Esperado', formatVES(montoSolicitadoBs)],
+                            ['Tasa aplicada', formatVES(tasa)],
+                            ['Referencia', String(referencia).slice(0, 30)],
+                        ],
+                        link: '/admin/transactions',
+                    });
                     return NextResponse.json({
                         success: true,
                         verified: true,

@@ -82,9 +82,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   const claim = await prisma.warrantyClaim.findUnique({
     where: { id },
     select: {
-      id: true, number: true, userId: true, productName: true, status: true, resolution: true, refundTransactionId: true,
+      id: true, number: true, userId: true, orderId: true, orderItemId: true, productName: true, status: true, resolution: true, refundTransactionId: true,
       user: { select: { name: true, email: true } },
-      order: { select: { orderNumber: true, totalUSD: true, paymentStatus: true } },
+      order: { select: { orderNumber: true, totalUSD: true, status: true, paymentStatus: true } },
       orderItem: { select: { totalUSD: true } },
     },
   });
@@ -102,6 +102,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   if (refunding) {
     // Tope: lo que costó esa línea del pedido, y nunca más que el total pagado
     const cap = roundMoney(Math.min(Number(claim.orderItem.totalUSD), Number(claim.order.totalUSD)));
+    if (claim.order.status === 'CANCELLED') return NextResponse.json({ error: 'El pedido está cancelado: su dinero ya se devolvió.' }, { status: 400 });
     if (claim.order.paymentStatus !== 'PAID') return NextResponse.json({ error: 'El pedido no figura como pagado: no se puede devolver en Puntos ES.' }, { status: 400 });
     if (!refundUSD) return NextResponse.json({ error: 'Escribe cuánto se devuelve en Puntos ES' }, { status: 400 });
     refundAmount = roundMoney(refundUSD);
@@ -133,6 +134,31 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     };
     if (!refunding) return tx.warrantyClaim.update({ where: { id: claim.id }, data, select: { status: true, resolution: true } });
 
+    // El pedido se toma con candado antes de acreditar y se mira su estado con la fila tomada: al cancelar un pedido la
+    // tienda ya devuelve lo pagado. "Reembolsada" es una marca que pone el equipo y no mueve dinero: no frena la garantía.
+    // Todavía no se escribió nada.
+    await tx.$queryRaw`SELECT id FROM "orders" WHERE id = ${claim.orderId} FOR UPDATE`;
+    const pedido = await tx.order.findUnique({ where: { id: claim.orderId }, select: { status: true, paymentStatus: true } });
+    if (pedido?.status === 'CANCELLED') {
+      return NextResponse.json({ error: 'El pedido está cancelado: su dinero ya se devolvió.' }, { status: 400 });
+    }
+    if (pedido?.paymentStatus !== 'PAID') {
+      return NextResponse.json({ error: 'El pedido no figura como pagado: no se puede devolver en Puntos ES.' }, { status: 400 });
+    }
+    // Con el pedido tomado, lo ya devuelto por otras solicitudes de esta misma línea cuenta contra el tope: entre todas
+    // no se devuelve más de lo que costó ese producto
+    const otras = await tx.warrantyClaim.aggregate({
+      where: { orderItemId: claim.orderItemId, id: { not: claim.id }, refundTransactionId: { not: null } },
+      _sum: { refundUSD: true },
+    });
+    const queda = roundMoney(Math.min(Number(claim.orderItem.totalUSD), Number(claim.order.totalUSD)) - Number(otras._sum.refundUSD ?? 0));
+    if (refundAmount > queda) {
+      return NextResponse.json(
+        { error: queda > 0 ? `De ese producto ya se devolvió una parte en otra solicitud: quedan ${formatUSD(queda)} por devolver.` : 'Lo que costó ese producto ya se devolvió en otra solicitud.' },
+        { status: 400 }
+      );
+    }
+
     // Devolución al saldo, una sola vez: si otro pedido del panel ya la hizo, se deshace todo
     const balance = await tx.userBalance.upsert({ where: { userId: claim.userId }, create: { userId: claim.userId }, update: {}, select: { id: true } });
     const credit = await tx.transaction.create({
@@ -159,6 +185,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (error instanceof Error && error.message === 'YA_DEVUELTO') return null;
     throw error;
   });
+  if (updated instanceof Response) return updated;
   if (!updated) return NextResponse.json({ error: 'Ya se devolvió el dinero de esta solicitud.' }, { status: 409 });
 
   if (refunding) {

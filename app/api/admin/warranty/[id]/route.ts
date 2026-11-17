@@ -84,7 +84,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     select: {
       id: true, number: true, userId: true, orderId: true, orderItemId: true, productName: true, status: true, resolution: true, refundTransactionId: true,
       user: { select: { name: true, email: true } },
-      order: { select: { orderNumber: true, totalUSD: true, paymentStatus: true } },
+      order: { select: { orderNumber: true, totalUSD: true, status: true, paymentStatus: true } },
       orderItem: { select: { totalUSD: true } },
     },
   });
@@ -102,6 +102,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   if (refunding) {
     // Tope: lo que costó esa línea del pedido, y nunca más que el total pagado
     const cap = roundMoney(Math.min(Number(claim.orderItem.totalUSD), Number(claim.order.totalUSD)));
+    if (claim.order.status === 'CANCELLED') return NextResponse.json({ error: 'El pedido está cancelado: su dinero ya se devolvió.' }, { status: 400 });
     if (claim.order.paymentStatus !== 'PAID') return NextResponse.json({ error: 'El pedido no figura como pagado: no se puede devolver en Puntos ES.' }, { status: 400 });
     if (!refundUSD) return NextResponse.json({ error: 'Escribe cuánto se devuelve en Puntos ES' }, { status: 400 });
     refundAmount = roundMoney(refundUSD);

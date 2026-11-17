@@ -106,6 +106,11 @@ Excepciones puntuales (solo cuando la tarea lo dice):
     - `app/canjear-gift-card/page.tsx`: sin sesión ofrece "Crear mi cuenta gratis" y "Ya tengo cuenta", y el código espera en `sessionStorage` (`canje-gift-card:codigo`, nunca el PIN ni en la dirección) hasta que vuelve con sesión. Su título y su imagen para compartir están en `app/canjear-gift-card/layout.tsx` (carril Claude).
     - `app/cursos/[slug]/page.tsx` lleva la imagen para compartir del curso (`imagenDeCurso` de `lib/og/datos.ts`), y `components/cursos/CourseDetailClient.tsx` dice el error si la reseña no se publica.
     - `app/customer/(dashboard)/orders/page.tsx` abre un pedido con `?orden=` por su id **o por su número** (la confirmación de la compra manda el número).
+  - **Dinero y seguridad (C-280, 17/11, de la misma auditoría, pedido del equipo):** Claude tocó tres archivos de tu carril. No vuelvas a lo de antes:
+    - `components/modals/RechargeModalV2.tsx`: en el paso de verificar, el monto en Bs. es el que devuelve el servidor al crear la recarga (`montoBsServidor`), no `monto × tasa` del navegador; y con el pago ya verificado, cerrar la ventana no cancela la recarga.
+    - `app/customer/(dashboard)/profile/_components/Seguridad.tsx`: cambiar la contraseña cierra siempre las otras sesiones. Ya no hay casilla ni se manda `cerrarOtras`: queda la línea "Al cambiarla se cierran tus otras sesiones."
+    - `components/servicios/ServiciosPortfolio.tsx`: si las reseñas no llegan, la lista queda vacía (antes, cargando para siempre). `GET /api/service-reviews` es pública y da el nombre corto de quien reseña.
+  - **Las API sin sesión responden 401 en JSON (C-280):** antes rebotaban a la página de entrada y el `fetch` recibía HTML con 200. Un `fetch` a una API privada mira `res.ok` (o `res.status === 401`) antes de leer el cuerpo.
 - `app/carrito/**`, `app/checkout/**` y `components/checkout/**` → G-04b, G-05g, G-06g y **R11 (G-40, G-41: solo `className` y los arreglos permitidos)**. El carrito y el checkout mueven dinero: nada de lógica.
 - Borrado de la lista cerrada de G-02.
 

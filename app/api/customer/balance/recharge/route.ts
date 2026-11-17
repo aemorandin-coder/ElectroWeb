@@ -4,9 +4,16 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { montoDecimal } from '@/lib/pricing';
+import { montoBs } from '@/lib/pago-movil/monto';
+import { claveReferencia, esPagoManual } from '@/lib/checkout-pago';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 import { notifyRechargeRequested } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD } from '@/lib/currency';
+
+// S-07: cada solicitud avisa al equipo. Hasta 10 por hora por cuenta y 3 por confirmar a la vez
+const LIMITE_RECARGAS = { maxRequests: 10, windowSeconds: 3600 };
+const MAX_RECARGAS_POR_CONFIRMAR = 3;
 
 // Crear solicitud de recarga de saldo (requiere aprobación del admin)
 export async function POST(req: NextRequest) {
@@ -18,6 +25,16 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = (session.user as { id: string }).id;
+
+    // S-07: límite por cuenta antes de tocar la base
+    const limite = checkRateLimit(userId, 'recarga:solicitar', LIMITE_RECARGAS);
+    if (!limite.success) {
+      return NextResponse.json(
+        { error: 'Pediste muchas recargas en poco tiempo (hasta 10 por hora). Espera un rato antes de pedir otra.', retryAfter: limite.resetIn },
+        { status: 429, headers: getRateLimitHeaders(limite, LIMITE_RECARGAS) }
+      );
+    }
+
     const userName = session.user.name || session.user.email || 'Usuario';
     const body = await req.json().catch(() => null);
     const amount = Number(body?.amount);
@@ -84,6 +101,62 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // S-07: una recarga por Pago Móvil que quedó sin terminar (se cerró la pestaña, se recargó la página o se volvió
+    // atrás en la ventana) no se queda por confirmar para siempre: la nueva la reemplaza. Las que ya tienen un pago
+    // verificado no se tocan (esperan la revisión del equipo), ni las de los métodos manuales.
+    if (companyMethod.type === 'MOBILE_PAYMENT') {
+      const sinTerminar = await prisma.transaction.findMany({
+        where: { balanceId: userBalance.id, type: 'RECHARGE', status: 'PENDING', paymentMethod: 'MOBILE_PAYMENT' },
+        select: { id: true },
+      });
+      if (sinTerminar.length > 0) {
+        const ids = sinTerminar.map((t) => t.id);
+        const conPago = new Set(
+          (await prisma.pagoMovilVerificacion.findMany({ where: { transactionId: { in: ids }, verificado: true }, select: { transactionId: true } }))
+            .map((p) => p.transactionId)
+        );
+        const reemplazadas = ids.filter((id) => !conPago.has(id));
+        if (reemplazadas.length > 0) {
+          await prisma.transaction.updateMany({
+            where: { id: { in: reemplazadas }, status: 'PENDING' },
+            data: { status: 'CANCELLED', rejectionReason: 'Reemplazada por una recarga nueva' },
+          });
+        }
+      }
+    }
+
+    // S-07: hasta 3 recargas por confirmar a la vez (las que esperan al equipo: un pago manual o un Pago Móvil por revisar)
+    const porConfirmar = await prisma.transaction.count({
+      where: { balanceId: userBalance.id, type: 'RECHARGE', status: 'PENDING' },
+    });
+    if (porConfirmar >= MAX_RECARGAS_POR_CONFIRMAR) {
+      return NextResponse.json(
+        { error: `Tienes ${MAX_RECARGAS_POR_CONFIRMAR} recargas por confirmar. Las estamos revisando: cuando quede lista una, puedes pedir otra.` },
+        { status: 409 }
+      );
+    }
+    // S-07: la referencia de un pago manual no sirve para dos recargas del mismo método. Mismo criterio que las compras
+    // (checkout-pago: sin espacios y en mayúsculas). El Pago Móvil no entra: su referencia es una provisional única y
+    // la real la revisa la verificación con el banco.
+    if (reference && esPagoManual(companyMethod.type)) {
+      const repetida = await prisma.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM "transactions"
+        WHERE "type" = 'RECHARGE' AND "status" IN ('PENDING', 'COMPLETED')
+          AND "companyPaymentMethodId" = ${companyMethod.id}
+          AND upper(regexp_replace("reference", '[[:space:]]+', '', 'g')) = ${claveReferencia(reference)}
+        LIMIT 1`;
+      if (repetida.length > 0) {
+        return NextResponse.json({ error: 'Esa referencia ya está en otra recarga. Si es otro pago, revisa el número.' }, { status: 409 });
+      }
+    }
+
+    // S-06: la tasa de la tienda al pedir la recarga y el monto en Bs. que se le muestra al cliente quedan con ella.
+    // El Pago Móvil se compara con esa tasa (mientras sea reciente), no con la que haya cuando verifique.
+    const settings = await prisma.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } });
+    const tasa = settings?.exchangeRateVES ? Number(settings.exchangeRateVES) : 0;
+    // Con los mismos céntimos que se guardan en la recarga (montoDecimal), que son los que se comparan al verificar
+    const montoBsSolicitud = tasa > 0 ? montoBs(Number(montoDecimal(amount)), tasa) : 0;
+
     // Create transaction as PENDING (requiere aprobación del admin)
     const transaction = await prisma.transaction.create({
       data: {
@@ -102,6 +175,7 @@ export async function POST(req: NextRequest) {
           companyPaymentMethodName: resolvedMethodName,
           reference,
           requestedAt: new Date().toISOString(),
+          ...(tasa > 0 ? { tasaSolicitud: tasa, montoBsSolicitud } : {}),
         }),
       },
     });
@@ -137,6 +211,9 @@ export async function POST(req: NextRequest) {
         status: transaction.status,
         reference: transaction.reference,
         createdAt: transaction.createdAt,
+        // S-06: lo que se le pide pagar en Bs. y la tasa con la que se calculó (la ventana de verificación los usa)
+        tasa: tasa > 0 ? tasa : null,
+        montoBs: tasa > 0 ? montoBsSolicitud : null,
       },
     });
   } catch (error) {

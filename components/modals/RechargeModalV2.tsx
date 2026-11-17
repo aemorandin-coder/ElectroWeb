@@ -50,6 +50,8 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     // Multi-step state
     const [step, setStep] = useState<Step>('SELECT_METHOD');
     const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
+    // S-06: el monto en Bs. que calculó el servidor al crear la recarga con SU tasa; el pago se compara con ese monto
+    const [montoBsServidor, setMontoBsServidor] = useState<number | null>(null);
 
     interface CompanyPaymentMethod {
         id: string;
@@ -241,6 +243,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
             setReference('');
             setSelectedMethodId(null);
             setPendingTransactionId(null);
+            setMontoBsServidor(null);
         }
     }, [isOpen, pendingTransactionId]);
 
@@ -287,6 +290,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
             if (response.ok) {
                 const data = await response.json();
                 setPendingTransactionId(data.transaction?.id || null);
+                setMontoBsServidor(Number(data.transaction?.montoBs) > 0 ? Number(data.transaction.montoBs) : null);
                 setStep('VERIFY_PAYMENT');
             } else {
                 const data = await response.json();
@@ -353,6 +357,9 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
     // Handle verification success
     const handleVerificationSuccess = (data: { verified: boolean; autoApproved?: boolean; amount?: string }) => {
+        // S-06: con el pago ya verificado, cerrar la ventana no cancela la recarga. Si el pago quedó para revisar a mano,
+        // cancelarla dejaría el dinero recibido sin recarga y fuera de la cola del panel (el efecto de cierre cancela la pendiente).
+        setPendingTransactionId(null);
         if (data.autoApproved) {
             toast.success('Tu recarga se verificó y se aprobó sola. Tus Puntos ES ya están disponibles.', {
                 duration: 5000,
@@ -704,7 +711,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                     {step === 'VERIFY_PAYMENT' && (
                         <VerificarPagoMovilForm
                             montoEsperado={parseFloat(amount)}
-                            montoEnBs={amountInBs || undefined}
+                            montoEnBs={montoBsServidor ?? (amountInBs || undefined)}
                             contexto="RECHARGE"
                             transactionId={pendingTransactionId || undefined}
                             onSuccess={handleVerificationSuccess}

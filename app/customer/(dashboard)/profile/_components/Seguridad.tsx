@@ -312,7 +312,6 @@ function CambiarContrasena({ onOtrasCerradas }: { onOtrasCerradas: () => void })
   const [nueva, setNueva] = useState('');
   const [repetir, setRepetir] = useState('');
   const [ver, setVer] = useState(false);
-  const [cerrarOtras, setCerrarOtras] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -329,7 +328,7 @@ function CambiarContrasena({ onOtrasCerradas }: { onOtrasCerradas: () => void })
       const res = await fetch('/api/customer/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword: actual, newPassword: nueva, cerrarOtras }),
+        body: JSON.stringify({ currentPassword: actual, newPassword: nueva }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -341,8 +340,8 @@ function CambiarContrasena({ onOtrasCerradas }: { onOtrasCerradas: () => void })
         await signOut({ callbackUrl: '/login' });
         return;
       }
-      toast.success(cerrarOtras ? 'Contraseña cambiada. Cerramos tus otras sesiones.' : 'Contraseña cambiada');
-      if (cerrarOtras) onOtrasCerradas();
+      toast.success('Contraseña cambiada. Cerramos tus otras sesiones.');
+      onOtrasCerradas();
       setActual('');
       setNueva('');
       setRepetir('');
@@ -388,10 +387,7 @@ function CambiarContrasena({ onOtrasCerradas }: { onOtrasCerradas: () => void })
           );
         })}
       </ul>
-      <label className="flex cursor-pointer items-start gap-3">
-        <input type="checkbox" checked={cerrarOtras} onChange={(e) => setCerrarOtras(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 rounded border-line text-brand-500 focus:ring-brand-500" />
-        <span className="text-sm text-ink-soft">Cerrar mi sesión en los demás dispositivos (recomendado si alguien más la conocía)</span>
-      </label>
+      <p className="text-sm text-ink-soft">Al cambiarla se cierran tus otras sesiones.</p>
       {error && <p className={adminError} role="alert">{error}</p>}
       <button type="submit" disabled={!listo || enviando} className={`${adminPrimaryButton} w-full sm:w-auto`}>
         {enviando ? 'Guardando…' : 'Cambiar contraseña'}

@@ -16,7 +16,8 @@ export async function PATCH(
 
     const { slug } = await params;
     const userId = (session.user as { id: string }).id;
-    const { lessonId, completed } = await request.json();
+    // Un cuerpo que no sea JSON llega como lessonId vacío y se rechaza con 400 más abajo (antes: error 500)
+    const { lessonId, completed } = (await request.json().catch(() => null)) ?? {};
 
     const course = await prisma.course.findUnique({
       where: { slug },
@@ -37,20 +38,30 @@ export async function PATCH(
 
     if (!enrollment) return NextResponse.json({ error: 'No inscrito' }, { status: 403 });
 
-    // Update completedLessons JSON array
-    const completedLessons: string[] = enrollment.completedLessons
-      ? JSON.parse(enrollment.completedLessons)
-      : [];
-
-    if (completed && !completedLessons.includes(lessonId)) {
-      completedLessons.push(lessonId);
-    } else if (!completed) {
-      const idx = completedLessons.indexOf(lessonId);
-      if (idx > -1) completedLessons.splice(idx, 1);
+    // S-12: solo cuentan las lecciones de este curso. Antes cualquier lessonId se guardaba y el porcentaje llegaba a 100
+    // (y al certificado) sin ver las lecciones.
+    const leccionesDelCurso = new Set(course.modules.flatMap((m) => m.lessons.map((l) => l.id)));
+    if (typeof lessonId !== 'string' || !leccionesDelCurso.has(lessonId)) {
+      return NextResponse.json({ error: 'Esa lección no es de este curso' }, { status: 400 });
     }
 
-    const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
-    const progress = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
+    // Update completedLessons JSON array: sin repetidos y sin lecciones que ya no son del curso
+    let guardadas: unknown = [];
+    try {
+      guardadas = enrollment.completedLessons ? JSON.parse(enrollment.completedLessons) : [];
+    } catch {
+      guardadas = [];
+    }
+    const hechas = new Set(
+      (Array.isArray(guardadas) ? guardadas : []).filter((id): id is string => typeof id === 'string' && leccionesDelCurso.has(id))
+    );
+
+    if (completed) hechas.add(lessonId);
+    else hechas.delete(lessonId);
+    const completedLessons = [...hechas];
+
+    const totalLessons = leccionesDelCurso.size;
+    const progress = totalLessons > 0 ? Math.min(100, Math.round((completedLessons.length / totalLessons) * 100)) : 0;
     const completedAt = progress === 100 ? new Date() : null;
 
     // Generate certificate token on first completion

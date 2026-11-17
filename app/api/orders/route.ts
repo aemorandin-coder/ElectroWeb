@@ -838,28 +838,44 @@ export async function POST(request: NextRequest) {
 
       // Ofertas y cupones usados (C-102): una fila por promoción y orden con lo que ahorró el cliente.
       // Los topes (total y por cliente) se revisan aquí, dentro de la transacción: dos compras a la vez no pasan del tope.
+      // Primera pasada, sin tocar la base: lo que ahorró cada orden de esta compra con cada promoción.
+      const ahorroPorPromocion = new Map<string, Map<number, number>>();
       for (const [index, group] of groups.entries()) {
-        const usos = new Map<string, number>();
         for (const line of group.lines) {
-          if (line.promotionId && line.promotionSavingsUSD > 0) usos.set(line.promotionId, (usos.get(line.promotionId) ?? 0) + line.promotionSavingsUSD);
+          if (!line.promotionId || line.promotionSavingsUSD <= 0) continue;
+          const porOrden = ahorroPorPromocion.get(line.promotionId) ?? new Map<number, number>();
+          porOrden.set(index, (porOrden.get(index) ?? 0) + line.promotionSavingsUSD);
+          ahorroPorPromocion.set(line.promotionId, porOrden);
         }
-        for (const [promotionId, amountUSD] of usos) {
-          const promo = await tx.promotion.findUnique({
-            where: { id: promotionId },
-            select: { isActive: true, endsAt: true, maxUses: true, maxUsesPerUser: true },
-          });
-          if (!promo || !promo.isActive || (promo.endsAt && promo.endsAt <= new Date())) {
-            throw new OrderInputError('Una oferta de tu carrito acaba de terminar. Revisa el resumen y confirma de nuevo.');
-          }
-          if (promo.maxUsesPerUser !== null) {
-            const usados = await tx.promotionRedemption.count({ where: { promotionId, userId } });
-            if (usados >= promo.maxUsesPerUser) throw new OrderInputError('Ya usaste este cupón en otra compra.');
-          }
-          const sumado = await tx.promotion.updateMany({
-            where: { id: promotionId, ...(promo.maxUses !== null ? { usesCount: { lt: promo.maxUses } } : {}) },
-            data: { usesCount: { increment: 1 } },
-          });
-          if (sumado.count === 0) throw new OrderInputError('Una oferta de tu carrito se agotó. Revisa el resumen y confirma de nuevo.');
+      }
+      // Cada promoción, una sola vez por compra y con los ids ordenados (dos compras con las mismas promociones las
+      // toman en el mismo orden y no se traban). Primero se suman los usos: eso toma la fila de la promoción hasta el
+      // commit; recién después se cuentan los canjes anteriores del cliente. Así una compra simultánea espera y ve los
+      // de la primera, y los paquetes de esta misma compra no se cuentan entre sí (todavía no hay filas suyas).
+      const promociones = [...ahorroPorPromocion].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+      for (const [promotionId, porOrden] of promociones) {
+        const promo = await tx.promotion.findUnique({
+          where: { id: promotionId },
+          select: { isActive: true, endsAt: true, maxUses: true, maxUsesPerUser: true },
+        });
+        if (!promo || !promo.isActive || (promo.endsAt && promo.endsAt <= new Date())) {
+          throw new OrderInputError('Una oferta de tu carrito acaba de terminar. Revisa el resumen y confirma de nuevo.');
+        }
+        // Un uso por orden (la cancelación devuelve uno por fila): n órdenes de esta compra usan la promoción
+        const n = porOrden.size;
+        const sumado = await tx.promotion.updateMany({
+          where: { id: promotionId, ...(promo.maxUses !== null ? { usesCount: { lte: promo.maxUses - n } } : {}) },
+          data: { usesCount: { increment: n } },
+        });
+        if (sumado.count === 0) throw new OrderInputError('Una oferta de tu carrito se agotó. Revisa el resumen y confirma de nuevo.');
+        if (promo.maxUsesPerUser !== null) {
+          const usados = await tx.promotionRedemption.count({ where: { promotionId, userId } });
+          if (usados >= promo.maxUsesPerUser) throw new OrderInputError('Ya usaste este cupón en otra compra.');
+        }
+      }
+      // Segunda pasada: las filas (promoción, orden)
+      for (const [promotionId, porOrden] of promociones) {
+        for (const [index, amountUSD] of porOrden) {
           await tx.promotionRedemption.create({
             data: { promotionId, orderId: orders[index].id, userId, amountUSD: montoDecimal(amountUSD) },
           });

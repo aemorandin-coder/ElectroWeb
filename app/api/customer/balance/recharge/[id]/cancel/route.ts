@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { leerMetadata } from '@/lib/pago-movil/recarga';
 
 /**
  * POST /api/customer/balance/recharge/[id]/cancel
@@ -45,11 +46,24 @@ export async function POST(
             );
         }
 
-        // Only allow cancelling PENDING transactions
-        if (transaction.status !== 'PENDING') {
+        // Only allow cancelling PENDING transactions (y solo recargas: antes servía con cualquier transacción pendiente)
+        if (transaction.status !== 'PENDING' || transaction.type !== 'RECHARGE') {
             return NextResponse.json(
                 { error: 'Solo se pueden cancelar transacciones pendientes' },
                 { status: 400 }
+            );
+        }
+
+        // S-06: con un Pago Móvil ya verificado, la recarga espera la revisión del equipo. Cancelarla dejaría el dinero
+        // recibido sin recarga y fuera de la cola del panel
+        const pagoVerificado = await prisma.pagoMovilVerificacion.findFirst({
+            where: { transactionId, verificado: true },
+            select: { id: true },
+        });
+        if (pagoVerificado) {
+            return NextResponse.json(
+                { error: 'Esta recarga ya tiene un pago verificado y la estamos revisando: no se puede cancelar.' },
+                { status: 409 }
             );
         }
 
@@ -60,7 +74,7 @@ export async function POST(
             data: {
                 status: 'CANCELLED',
                 metadata: JSON.stringify({
-                    ...JSON.parse(transaction.metadata || '{}'),
+                    ...leerMetadata(transaction.metadata),
                     cancelledAt: new Date().toISOString(),
                     cancelledBy: 'USER',
                     reason: 'Modal cerrado sin completar verificación',

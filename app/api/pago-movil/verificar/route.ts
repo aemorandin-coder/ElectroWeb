@@ -19,6 +19,7 @@ import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { aCentimos, hoyCaracas, leerMontoBs, montoBs, montoParaCopiar } from '@/lib/pago-movil/monto';
 import { leerCotizacion } from '@/lib/pago-movil/cotizacion';
 import { clavePago, unaALaVez } from '@/lib/pago-movil/candado';
+import { decidirRecarga, leerMetadata, tasaDeLaRecarga } from '@/lib/pago-movil/recarga';
 
 /**
  * POST /api/pago-movil/verificar
@@ -177,6 +178,14 @@ export async function POST(req: NextRequest) {
                     severity: 'CRITICAL',
                 });
                 return NextResponse.json({ success: false, verified: false, error: 'Recarga no encontrada' }, { status: 404 });
+            }
+            // S-07: la recarga ya no espera un pago (se canceló, la reemplazó una nueva o ya se acreditó). Se dice antes de
+            // consultar al banco, para que el pago no quede pegado a una recarga que ya no lo va a acreditar
+            if (recarga.status !== 'PENDING') {
+                return NextResponse.json(
+                    { success: false, verified: false, error: 'Esta recarga ya no está por confirmar. Pide una recarga nueva y verifica tu pago con la misma referencia.' },
+                    { status: 409 }
+                );
             }
         }
 
@@ -384,25 +393,37 @@ export async function POST(req: NextRequest) {
                 // Antes se comparaba con el importe que escribe el cliente: una recarga de $500 se aprobaba
                 // con un Pago Móvil real de Bs. 1 enviando importe=1.
                 const settings = await prisma.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } });
-                const tasa = settings?.exchangeRateVES ? Number(settings.exchangeRateVES) : 0;
+                const tasaMomento = settings?.exchangeRateVES ? Number(settings.exchangeRateVES) : 0;
+                // S-06: se compara con la tasa de la solicitud (la que vio el cliente al pedir la recarga) mientras sea
+                // reciente, y si no con la del momento. Solo se perdona lo del redondeo (TOLERANCIA_BS): antes se aprobaba
+                // hasta 1,5 % menos y se acreditaba el monto completo
+                const metadataRecarga = leerMetadata(transaction.metadata);
+                const tasa = tasaDeLaRecarga(metadataRecarga, tasaMomento);
                 const montoSolicitadoBs = montoBs(montoUsd, tasa);
-                // 1,5 %: redondeo del banco y un cambio pequeño de la tasa entre la solicitud y el pago
-                const tolerancia = montoSolicitadoBs * 0.015;
-                if (tasa > 0 && montoVerificadoBs >= (montoSolicitadoBs - tolerancia)) {
+                const decision = decidirRecarga(montoVerificadoBs, montoUsd, tasa);
+                if (decision.aprobar) {
+                    // Lo que se acredita: lo pedido y, si pagó de más, la diferencia (igual que en las compras)
+                    const acreditadoUSD = decision.acreditarUSD;
+                    const sobrepagoUSD = decision.sobrepagoUSD;
                     // Aprobación condicional: dos verificaciones simultáneas de la misma recarga no acreditan dos veces
                     const aprobada = await prisma.$transaction(async (tx) => {
                         const claimed = await tx.transaction.updateMany({
                             where: { id: transactionId, status: 'PENDING' },
                             data: {
                                 status: 'COMPLETED',
+                                // Pagó de más: la recarga queda por lo acreditado, y lo pedido en la metadata
+                                ...(sobrepagoUSD > 0 ? { amount: montoDecimal(acreditadoUSD) } : {}),
                                 metadata: JSON.stringify({
-                                    ...JSON.parse(transaction.metadata || '{}'),
+                                    ...metadataRecarga,
                                     verificadoPorAPI: true,
                                     fechaVerificacion: new Date().toISOString(),
                                     codigoBDV: resultado.code,
                                     referencia,
                                     tasaAplicada: tasa,
                                     montoVerificadoBs,
+                                    ...(sobrepagoUSD > 0
+                                        ? { montoSolicitadoUSD: montoUsd, sobrepagoBs: decision.conciliacion.diferenciaBs, sobrepagoUSD }
+                                        : {}),
                                 }),
                             },
                         });
@@ -412,8 +433,8 @@ export async function POST(req: NextRequest) {
                             where: { id: transaction.balanceId },
                             // Texto exacto (C-96): con number, una recarga de $9,45 quedaba en 9.449999999999999
                             data: {
-                                balance: { increment: montoDecimal(montoUsd) },
-                                totalRecharges: { increment: montoDecimal(montoUsd) },
+                                balance: { increment: montoDecimal(acreditadoUSD) },
+                                totalRecharges: { increment: montoDecimal(acreditadoUSD) },
                             },
                         });
                         return true;
@@ -435,7 +456,7 @@ export async function POST(req: NextRequest) {
                             userId,
                             type: 'RECHARGE_APPROVED',
                             title: 'Recarga Aprobada Automaticamente',
-                            message: `Tu recarga de ${formatPuntos(montoUsd)} se verificó y se aprobó sola: ya está disponible.`,
+                            message: `Tu recarga de ${formatPuntos(acreditadoUSD)} se verificó y se aprobó sola: ya está disponible.${sobrepagoUSD > 0 ? ` Incluye ${formatPuntos(sobrepagoUSD)} por lo que pagaste de más.` : ''}`,
                             link: '/customer/balance',
                             icon: 'check-circle',
                         },
@@ -448,7 +469,7 @@ export async function POST(req: NextRequest) {
                         const { correoRecargaAprobada } = await import('@/lib/email-templates/puntos');
                         const { asunto, html } = await correoRecargaAprobada({
                             nombre: session.user.name ?? null,
-                            monto: montoUsd,
+                            monto: acreditadoUSD,
                             automatica: true,
                             referencia: String(referencia),
                             banco: String(bancoOrigen),
@@ -462,7 +483,7 @@ export async function POST(req: NextRequest) {
                     publicar({ tipo: 'payment:verified', userId, contexto: 'RECHARGE', referencia, aprobado: true, transactionId }); // C-127
                     emitAdminEvent({
                         type: 'RECHARGE_AUTO_APPROVED',
-                        title: `Recarga aprobada por Pago Móvil · ${formatUSD(montoUsd)}`,
+                        title: `Recarga aprobada por Pago Móvil · ${formatUSD(acreditadoUSD)}`,
                         summary: `El banco confirmó el pago de ${session.user.name || session.user.email || 'un cliente'} y los Puntos ES se acreditaron solos`,
                         fields: [['Pagado', formatVES(montoVerificadoBs)], ['Tasa aplicada', formatVES(tasa)], ['Referencia', String(referencia).slice(0, 30)]],
                         link: '/admin/transactions',
@@ -478,7 +499,8 @@ export async function POST(req: NextRequest) {
                         targetId: transactionId,
                         details: {
                             autoApproved: true,
-                            montoUsd,
+                            montoUsd: acreditadoUSD,
+                            ...(sobrepagoUSD > 0 ? { montoSolicitadoUSD: montoUsd, sobrepagoUSD } : {}),
                             montoVerificadoBs,
                             montoSolicitadoBs,
                             referencia,
@@ -495,7 +517,7 @@ export async function POST(req: NextRequest) {
                         autoApproved: true,
                         message: 'Pago verificado exitosamente. Tu recarga ha sido aprobada automaticamente.',
                         amount: resultado.amount,
-                        amountUsd: montoUsd,
+                        amountUsd: acreditadoUSD,
                     });
                 } else {
                     // Monto no coincide
@@ -503,7 +525,7 @@ export async function POST(req: NextRequest) {
                         success: true,
                         verified: true,
                         autoApproved: false,
-                        message: `El monto verificado (Bs. ${montoVerificadoBs.toFixed(2)}) no coincide con el esperado (Bs. ${montoSolicitadoBs.toFixed(2)}). El pago sera revisado manualmente.`,
+                        message: `El monto verificado (${formatVES(montoVerificadoBs)}) no coincide con el esperado (${formatVES(montoSolicitadoBs)}). El pago será revisado manualmente.`,
                         amount: resultado.amount,
                     });
                 }

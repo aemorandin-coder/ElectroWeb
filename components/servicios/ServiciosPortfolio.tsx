@@ -73,10 +73,16 @@ export default function ServiciosPortfolio({ videos }: { videos: Video[] }) {
     setRatingComment('');
     setSubmitted(false);
     setLoadingReviews(true);
-    const res = await fetch(`/api/service-reviews?videoId=${v.id}`);
-    const data = await res.json();
-    setReviews(Array.isArray(data) ? data : []);
-    setLoadingReviews(false);
+    // Si la lista no llega (sin conexión o un error del servidor) queda vacía: antes el indicador de carga no se apagaba nunca
+    try {
+      const res = await fetch(`/api/service-reviews?videoId=${v.id}`);
+      const data = res.ok ? await res.json() : [];
+      setReviews(Array.isArray(data) ? data : []);
+    } catch {
+      setReviews([]);
+    } finally {
+      setLoadingReviews(false);
+    }
   };
 
   const closeModal = () => setActiveModal(null);

@@ -21,6 +21,14 @@ const MIME_TYPES: Record<string, string> = {
 const PUBLIC_UPLOADS = path.join(process.cwd(), 'public', 'uploads');
 
 /**
+ * S-17: lo que no es el archivo (400, 404, 500) no se guarda en ningún lado. Antes salía sin cabecera propia y
+ * next.config.js le ponía "public, max-age=1 año, immutable": una foto que falló una vez quedaba rota un año en ese navegador.
+ */
+function sinArchivo(error: string, status: number) {
+    return NextResponse.json({ error }, { status, headers: { 'Cache-Control': 'no-store' } });
+}
+
+/**
  * GET /api/uploads/<ruta> — archivos subidos (también llega aquí /uploads/<ruta> por el rewrite).
  * Los documentos de empresa solo los ve un administrador o su dueño.
  */
@@ -32,7 +40,7 @@ export async function GET(
         const { path: pathSegments } = await params;
         const filename = pathSegments.join('/');
         if (filename.includes('..') || filename.includes('~') || filename.includes('\0')) {
-            return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
+            return sinArchivo('Invalid path', 400);
         }
 
         const isDocument = pathSegments[0] === 'documents';
@@ -44,11 +52,11 @@ export async function GET(
             const session = await getServerSession(authOptions);
             const owner = warrantyPhotoOwner(name);
             if (!session?.user || pathSegments.length !== 2 || !owner || (owner !== session.user.id && !isAuthorized(session, 'MANAGE_ORDERS'))) {
-                return NextResponse.json({ error: 'File not found' }, { status: 404 });
+                return sinArchivo('File not found', 404);
             }
             filePath = path.join(WARRANTY_PHOTOS_DIR, name);
             if (!isInside(WARRANTY_PHOTOS_DIR, filePath)) {
-                return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
+                return sinArchivo('Invalid path', 400);
             }
         } else if (isDocument) {
             const name = pathSegments.slice(1).join('/');
@@ -56,25 +64,25 @@ export async function GET(
             const isAdmin = esAdminVerificado(session);
             // Mismo 404 para "no existe" y "no es tuyo": no se revela qué documentos hay
             if (!session?.user || pathSegments.length !== 2 || (!isAdmin && documentOwner(name) !== session.user.id)) {
-                return NextResponse.json({ error: 'File not found' }, { status: 404 });
+                return sinArchivo('File not found', 404);
             }
             const privatePath = path.join(PRIVATE_DOCUMENTS_DIR, name);
             // Documentos anteriores a C-72 que aún no se movieron de public/uploads/documents
             const legacyPath = path.join(PUBLIC_UPLOADS, 'documents', name);
             if (!isInside(PRIVATE_DOCUMENTS_DIR, privatePath) || !isInside(PUBLIC_UPLOADS, legacyPath)) {
-                return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
+                return sinArchivo('Invalid path', 400);
             }
             filePath = existsSync(privatePath) ? privatePath : legacyPath;
         } else {
             filePath = path.join(PUBLIC_UPLOADS, filename);
             if (!isInside(PUBLIC_UPLOADS, filePath)) {
-                return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
+                return sinArchivo('Invalid path', 400);
             }
         }
 
         // turbopackIgnore: la ruta ya quedó dentro de su carpeta (isInside). Sin esto el build rastrea todo el proyecto (C-141)
         if (!existsSync(/*turbopackIgnore: true*/ filePath)) {
-            return NextResponse.json({ error: 'File not found' }, { status: 404 });
+            return sinArchivo('File not found', 404);
         }
 
         const buffer = await readFile(/*turbopackIgnore: true*/ filePath);
@@ -86,6 +94,7 @@ export async function GET(
             'Content-Length': buffer.length.toString(),
             // Sin esto el navegador podía "adivinar" HTML dentro de un archivo con otra extensión
             'X-Content-Type-Options': 'nosniff',
+            // La única cabecera de caché de /uploads (S-17: next.config.js ya no pone otra encima)
             'Cache-Control': isDocument || isWarranty ? 'private, no-store' : 'public, max-age=31536000, immutable',
         };
         // Un SVG abierto directo puede ejecutar scripts: se sirve aislado (en <img> se sigue viendo igual)
@@ -95,6 +104,6 @@ export async function GET(
         return new NextResponse(new Uint8Array(buffer), { status: 200, headers });
     } catch (error) {
         console.error('[UPLOADS API] Error serving file:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return sinArchivo('Internal server error', 500);
     }
 }

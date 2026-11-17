@@ -154,6 +154,7 @@ export async function recordPaidOrder(orderId: string) {
   if (!encontrado) return null;
   const { influencer, source } = encontrado;
 
+  // Atajo: la mayoría de las veces ya existe y no hace falta calcular nada. La comprobación que vale está más abajo, con candado
   const existente = await prisma.referralConversion.findFirst({ where: { orderId: order.id }, select: { id: true } });
   if (existente) return null;
 
@@ -163,20 +164,30 @@ export async function recordPaidOrder(orderId: string) {
   if (!(commission > 0)) return null;
   const heldReason = await motivoDeRevision(prisma, influencer.userId, order.userId, order, commission, order.id, base);
 
-  const conversion = await prisma.referralConversion.create({
-    data: {
-      influencerId: influencer.id,
-      referredUserId: order.userId,
-      type: 'PURCHASE',
-      grossAmount: montoDecimal(grossAmount),
-      baseAmount: montoDecimal(base),
-      commission: montoDecimal(commission),
-      orderId: order.id,
-      status: 'PENDING',
-      source,
-      heldReason,
-    },
+  // S-11: la consulta y el alta van juntas, tras un candado de transacción propio de esta orden (consultivo: no bloquea
+  // la fila de la orden, así que no se traba con otra transacción que la tenga, y se suelta solo al terminar). Antes dos
+  // llamadas a la vez por la misma orden no se veían entre sí y creaban dos comisiones.
+  const compradorId = order.userId;
+  const conversion = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${`comision:${order.id}`}))::text AS locked`;
+    const yaRegistrada = await tx.referralConversion.findFirst({ where: { orderId: order.id }, select: { id: true } });
+    if (yaRegistrada) return null;
+    return tx.referralConversion.create({
+      data: {
+        influencerId: influencer.id,
+        referredUserId: compradorId,
+        type: 'PURCHASE',
+        grossAmount: montoDecimal(grossAmount),
+        baseAmount: montoDecimal(base),
+        commission: montoDecimal(commission),
+        orderId: order.id,
+        status: 'PENDING',
+        source,
+        heldReason,
+      },
+    });
   });
+  if (!conversion) return null;
 
   emitAdminEvent({
     type: 'REFERRAL_CONVERSION',

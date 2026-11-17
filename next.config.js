@@ -137,13 +137,9 @@ const nextConfig = {
           { key: 'Cache-Control', value: 'no-store, max-age=0' },
         ],
       },
-      {
-        // Menos los documentos de empresa: privados, sin caché compartida (C-72)
-        source: '/uploads/:path((?!documents/).*)',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
-        ],
-      },
+      // S-17: aquí ya no hay regla para /uploads. La caché de los archivos subidos la pone la ruta (app/api/uploads) solo en los
+      // 200, y los 400/404/500 salen con no-store. Una cabecera de este archivo gana a la de la ruta: la regla de antes ponía
+      // "public, immutable" también a los 404 (una foto que falló una vez quedaba rota un año) y a las fotos privadas de garantía.
     ];
   },
 };

@@ -10,6 +10,34 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.95] - 2026-11-17
+Dinero y seguridad: los arreglos medios de la auditoría del 17/11 (C-280). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Carrito, checkout y cuenta del cliente 1.12.1 (C-280)
+- **Recargas de Puntos ES:** hasta 10 pedidos por hora y 3 por confirmar a la vez. Una recarga por Pago Móvil que quedó sin terminar la reemplaza la siguiente, y una referencia de pago manual no sirve para dos recargas.
+- **Una recarga con un pago ya verificado no se cancela:** espera la revisión del equipo.
+- **Cambiar la contraseña** cierra siempre las otras sesiones y tiene límite de intentos.
+- **Si la sesión venció al pagar,** el checkout lo dice ("no se cobró nada") y lleva a entrar; sin una orden en la respuesta ya no vacía el carrito ni muestra la confirmación.
+### Órdenes y pagos 1.7.1 (C-280)
+- **La recarga por Pago Móvil que se aprueba sola** se compara con la tasa que vio el cliente al pedirla (vale 3 horas) y solo perdona el redondeo de Bs. 14. Lo pagado de más también va a Puntos ES.
+- **Un cupón de un uso por cliente** ya no hace fallar la compra que sale en dos paquetes.
+- Verificar un pago contra una recarga que ya no está por confirmar se rechaza antes de consultar al banco.
+### Configuración 1.4.6 (C-280)
+- **La tasa escrita a mano:** si cambia más de 50 % (un cero de más o de menos), el panel muestra antes → después y pide confirmar antes de guardarla.
+### Promotores 1.3.1 (C-280)
+- Aprobar o rechazar comisiones deja en la bitácora quién lo hizo, cuántas y por cuánto. Una orden deja una sola comisión aunque su pago se confirme dos veces a la vez.
+### Clientes 1.7.3 (C-280)
+- Una gift card con fecha de vencimiento no se canjea después de vencer, y lo dice. Al cambiar la foto de perfil se borra la anterior, con un límite de cambios por hora.
+### Cursos 1.3.1 (C-280)
+- El progreso solo cuenta las lecciones de ese curso: el certificado sale al completarlas. Las subidas de un creador tienen un límite por hora y el WebP se comprueba completo.
+### Trabajos realizados 1.1.2 (C-280)
+- Las reseñas de un trabajo se ven sin entrar a la cuenta (antes quedaban cargando para siempre), con el nombre corto de quien reseña.
+### Tienda 1.21.1 (C-280)
+- La ventana de recarga muestra el monto en bolívares que calculó el servidor, y no cancela una recarga cuyo pago ya se verificó.
+### Marco del panel 1.15.5 (C-280)
+- **Las API sin sesión responden "No autorizado" (401)** en vez de rebotar a la página de entrada: una pantalla con la sesión vencida ya no recibe una página donde esperaba datos.
+- **El tiempo real** guarda cupos para el panel y tiene un tope por conexión de internet.
+- **Los archivos subidos:** un archivo que no existe ya no queda guardado un año en el navegador como roto.
+
 ## [1.0.0-rc.94] - 2026-11-17
 Los flujos que venden y el día del panel (C-281, la Fase 4 de la auditoría del 17/11). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Carrito, checkout y cuenta del cliente 1.12.0 (C-281)

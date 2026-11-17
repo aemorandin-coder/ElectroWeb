@@ -5,9 +5,12 @@ import { prisma } from '@/lib/prisma';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+// S-14: cada subida guarda un archivo de hasta 5 MB: 30 por hora por cuenta
+const LIMITE_SUBIDAS = { maxRequests: 30, windowSeconds: 3600 };
 
 // Magic bytes validation
 const IMAGE_SIGNATURES: Record<string, number[][]> = {
@@ -20,7 +23,10 @@ const IMAGE_SIGNATURES: Record<string, number[][]> = {
 function validateMagicBytes(buffer: Buffer, mimeType: string): boolean {
   const sigs = IMAGE_SIGNATURES[mimeType];
   if (!sigs) return false;
-  return sigs.some((sig) => sig.every((byte, i) => buffer[i] === byte));
+  if (!sigs.some((sig) => sig.every((byte, i) => buffer[i] === byte))) return false;
+  // S-14: WebP es RIFF....WEBP: "RIFF" solo también lo llevan el WAV y el AVI
+  if (mimeType === 'image/webp') return [0x57, 0x45, 0x42, 0x50].every((byte, i) => buffer[8 + i] === byte);
+  return true;
 }
 
 export async function POST(request: NextRequest) {
@@ -31,6 +37,15 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = (session.user as { id: string }).id;
+
+    // S-14: límite por cuenta, antes de consultar nada ni leer el archivo
+    const limite = checkRateLimit(userId, 'creador:subir', LIMITE_SUBIDAS);
+    if (!limite.success) {
+      return NextResponse.json(
+        { error: 'Subiste muchos archivos seguidos (hasta 30 por hora). Espera un rato y vuelve a probar.', retryAfter: limite.resetIn },
+        { status: 429, headers: getRateLimitHeaders(limite, LIMITE_SUBIDAS) }
+      );
+    }
 
     // Must be an approved creator
     const creator = await prisma.courseCreator.findUnique({

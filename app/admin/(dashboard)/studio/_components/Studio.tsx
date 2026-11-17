@@ -31,7 +31,7 @@ import {
   type ProductSrc,
   type StudioRenderer,
 } from '@/lib/studio/engine';
-import { canvasBlob, downloadBlob, GrabacionInterrumpida, pickVideoType, recordCanvas, shareFile } from '@/lib/studio/exportar';
+import { canvasBlob, downloadBlob, GrabacionInterrumpida, grabarVideo, shareFile, type VideoGrabado } from '@/lib/studio/exportar';
 import {
   ANIMATIONS, BACKGROUNDS, FORMATS, TEMPLATES, requiredPhotos, type BackgroundId, type EstiloCapa, type FormatId, type StudioFlyerData,
 } from '@/lib/studio/schema';
@@ -118,6 +118,35 @@ const STATUS_TEXT: Record<SaveStatus, string> = {
   saved: 'Guardado',
   error: 'No se pudo guardar',
 };
+
+/**
+ * C-286: el video recién descargado, también a Telegram (los chats del bot de Notificaciones), tal como salió: Full HD a 60
+ * cuadros y con su texto. Si el bot no está o el equipo lo apagó ("Video de ElectroStudio"), no dice nada.
+ */
+async function enviarATelegram(video: VideoGrabado, nombre: string, texto: string) {
+  if (video.blob.size > 40 * 1024 * 1024) {
+    toast('El video pesa más de 40 MB: se descargó, pero no se mandó a Telegram.');
+    return;
+  }
+  const datos = new FormData();
+  datos.append('video', new File([video.blob], nombre, { type: video.blob.type }));
+  datos.append('texto', texto.slice(0, 1000));
+  datos.append('segundos', String(Math.round(video.segundos)));
+  datos.append('ancho', String(video.ancho));
+  datos.append('alto', String(video.alto));
+  const id = toast.loading('Mandándolo también a Telegram…');
+  try {
+    const res = await fetch('/api/admin/studio/telegram', { method: 'POST', body: datos });
+    const r = (await res.json().catch(() => ({}))) as { apagado?: boolean; enviados?: number; total?: number; error?: string };
+    if (!res.ok) { toast.error(r.error || 'No se pudo mandar el video a Telegram', { id }); return; }
+    if (r.apagado || !r.total) { toast.dismiss(id); return; }
+    const enviados = r.enviados ?? 0;
+    if (enviados === r.total) toast.success(`Listo en Telegram (${enviados === 1 ? '1 chat' : `${enviados} chats`}), en Full HD`, { id });
+    else toast.error(`Telegram: llegó a ${enviados} de ${r.total} chats. ${r.error ?? ''}`, { id, duration: 8000 });
+  } catch {
+    toast.error('No se pudo mandar el video a Telegram (sin conexión). Ya está descargado.', { id });
+  }
+}
 
 export default function Studio({ id }: { id: string }) {
   const studio = useStudioContext();
@@ -512,25 +541,30 @@ export default function Studio({ id }: { id: string }) {
     if (!(await ready())) return;
     await exclusive(async () => {
       if (!current || !canvasRef.current || !renderer.current || !images.current) return;
-      const type = pickVideoType();
-      if (!type || !canvasRef.current.captureStream) throw new Error('Este navegador no puede grabar video. Prueba con Chrome.');
       await loadStudioFonts(current);
       await images.current.whenReady(flyerImageSources(current, brand, productSrc));
       const dur = duracionDe(current);
-      const toastId = toast.loading(`Grabando el video (${dur} segundos). No cambies de pestaña.`);
+      // C-286: cuadro por cuadro, en Full HD a 60 cuadros (antes, en tiempo real: el MP4 salía en trozos y el teléfono
+      // lo cortaba en 3 s). Tarda unos segundos más, y se ve cuánto falta
+      const toastId = toast.loading(`Armando el video (${dur} segundos, Full HD a 60 cuadros)…`);
       const epoch = Date.now();
       const r = renderer.current;
-      let blob: Blob;
+      let video: VideoGrabado;
       try {
-        blob = await recordCanvas(canvasRef.current, type, (t) => r.draw(current, brand, { preview: false, t, epoch, code: currentCode, navidad }), dur);
+        video = await grabarVideo(canvasRef.current, (t) => r.draw(current, brand, { preview: false, t, epoch, code: currentCode, navidad }), dur, {
+          fps: 60,
+          onProgreso: (f) => toast.loading(`Armando el video: ${Math.round(f * 100)} %`, { id: toastId }),
+        });
       } finally {
         // C-268: antes, si la grabación fallaba, el aviso "Grabando el video…" quedaba en pantalla junto al error
         toast.dismiss(toastId);
       }
-      const ext = type.startsWith('video/mp4') ? 'mp4' : 'webm';
-      downloadBlob(blob, `${fileBase(current)}.${ext}`);
-      if (ext === 'webm') toast('Tu navegador grabó en WEBM; Instagram prefiere MP4. Usa Chrome actualizado.');
+      const nombre = `${fileBase(current)}.${video.extension}`;
+      downloadBlob(video.blob, nombre);
+      if (video.extension === 'webm') toast('Tu navegador grabó en WEBM; Instagram prefiere MP4. Usa Chrome actualizado.');
+      else if (!video.cuadroPorCuadro) toast('Este navegador grabó el video en tiempo real: si en el teléfono se ve cortado, descárgalo desde Chrome actualizado.', { duration: 8000 });
       await markCurrentExported();
+      void enviarATelegram(video, nombre, current.caption ?? '');
     });
   };
 

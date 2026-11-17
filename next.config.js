@@ -59,6 +59,9 @@ const nextConfig = {
     // El build de producción es siempre desde cero en otra carpeta: la caché en disco de Turbopack no ahorra nada,
     // escribe ~550 MB y sube la memoria del build. El 28/09 el servidor (7,8 GB, sin swap) lo mató por falta de memoria.
     turbopackFileSystemCacheForBuild: false,
+    // C-286: con proxy, Next guarda en memoria el cuerpo de cada pedido y lo corta en 10 MB. Un video de ElectroStudio en
+    // Full HD a 60 cuadros pesa de 10 a 25 MB y llegaba cortado a la ruta que lo manda a Telegram. 40 MB, el tope de nginx
+    proxyClientMaxBodySize: '40mb',
   },
   images: {
     // C-33: optimización activada. Antes (unoptimized) cada foto bajaba en su PNG original de 0,3-1,8 MB aunque se viera a 200 px;

@@ -10,6 +10,16 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.99] - 2026-11-17
+Los videos de ElectroStudio enteros y también por Telegram (C-286). Sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una dependencia nueva, `mp4-muxer` 5.2.2, y en `next.config.js` el tope del cuerpo de un pedido pasa a 40 MB.
+### ElectroStudio 2.3.1 (C-286)
+- **El video ya no se corta a los 3 s en el teléfono:** se arma cuadro por cuadro y sale un MP4 normal, con su duración completa, en Full HD y a 60 cuadros. Antes, Chrome lo grababa en trozos de 3 s y la cabecera decía 0 s.
+- **También por Telegram:** al descargarlo, llega a los chats del bot de Notificaciones tal como salió, con el texto de la historia. Se apaga en Notificaciones, "Video de ElectroStudio".
+### Marketing 1.24.5 (C-286)
+- El video del flyer del sorteo que descarga cada cliente tampoco se corta a los 3 s.
+### Marco del panel 1.15.6 (C-286)
+- Notificaciones: la fila "Video de ElectroStudio" (solo por Telegram), y la categoría Marketing, que se llamaba "Campañas de correo".
+
 ## [1.0.0-rc.98] - 2026-11-17
 El Dashboard nuevo, "la recepción" (C-279), que el equipo eligió viendo la maqueta el 17/11. Sin cambio de base, sin SQL, sin variables nuevas y sin cron: los tableros guardados de antes se leen solos.
 ### Dashboard 2.0.0 (C-279)

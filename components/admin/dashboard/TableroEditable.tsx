@@ -404,7 +404,7 @@ export default function TableroEditable({ recepcion, items, fichas, accesos, acc
         {lista.map((w) => {
           const ficha = fichaDe.get(w.id);
           if (!ficha) return null;
-          const { md, sm } = anchoEn(w.ancho);
+          const { md, sm } = anchoEn(w.ancho, w.alto);
           const nodo = nodoDe.get(w.id);
           const contenido = nodo ?? (
             <section className={s.tarjeta}>

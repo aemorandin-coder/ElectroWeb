@@ -93,12 +93,22 @@ export function WidgetPorAtender({ pendientes, pagos, mensajes }: {
   const pago = primero.clave === 'pagosPorConfirmar' ? pagos[0] : undefined;
   const mensaje = primero.clave === 'mensajes' ? mensajes[0] : undefined;
   const hrefPrimero = pago ? `/admin/orders?orden=${encodeURIComponent(pago.numero)}` : primero.href;
-  // Las tarjetas con detalle (pagos y mensajes) y después el resto de lo pendiente, en una fila cada uno
-  const otros = pendientes.filter((p) => !(p.clave === 'pagosPorConfirmar' && pagos.length > 0) && !(p.clave === 'mensajes' && mensajes.length > 0));
-  // Las que no caben en el alto de la tarjeta se esconden enteras: la segunda hasta tres filas, la tercera hasta cuatro
-  const clase = (i: number) => porAlto(i, [9, 1, 2]);
-  const despuesDePagos = pagos.length;
-  const despuesDeMensajes = pagos.length + mensajes.length;
+  // Arriba, el primer pago y el último mensaje con su botón; después cada pendiente en una fila (los que no quedaron dichos
+  // del todo por esas tarjetas). Lo que no cabe en el alto de la tarjeta se esconde entero: se suma la altura de cada pieza
+  // (con las filas de 72 px del teléfono, las más bajas) y cada una se ve desde el alto en que entra
+  const tarjetaPago = pagos[0];
+  const tarjetaMensaje = mensajes[0];
+  const filas = pendientes.filter((p) => !(p.clave === 'pagosPorConfirmar' && tarjetaPago && p.cantidad === 1) && !(p.clave === 'mensajes' && tarjetaMensaje && p.cantidad === 1));
+  const PRESUPUESTO = [0, 0, 96, 180, 264, 348];
+  const alturas = [...(tarjetaPago ? [100] : []), ...(tarjetaMensaje ? [108] : []), ...filas.map(() => 43)];
+  const clases = alturas.map((_, i) => {
+    const usado = alturas.slice(0, i + 1).reduce((a, b) => a + b, 0);
+    const k = [2, 3, 4, 5].find((a) => usado <= PRESUPUESTO[a]) ?? 6;
+    return k === 2 ? '' : k === 3 ? s.sinH2 : k === 4 ? s.sinH3 : k === 5 ? s.sinH4 : s.oculto;
+  });
+  const clasePago = tarjetaPago ? clases[0] : '';
+  const claseMensaje = tarjetaMensaje ? clases[tarjetaPago ? 1 : 0] : '';
+  const clasesFilas = clases.slice((tarjetaPago ? 1 : 0) + (tarjetaMensaje ? 1 : 0));
   return (
     <Tarjeta id="por-atender" titulo="Por atender" icono="Bandeja" extra={<span className={cx(adminBadge('warning'), s.sinH1)}><IconoReloj aria-hidden="true" />{total} te {total === 1 ? 'toca' : 'tocan'}</span>}>
       {/* En una fila: lo primero, con su botón */}
@@ -111,30 +121,30 @@ export function WidgetPorAtender({ pendientes, pagos, mensajes }: {
         <Link href={hrefPrimero} className={s.btnRedondo} aria-label={pago ? `Revisar el pago de ${pago.cliente}` : `Abrir: ${primero.varios}`} title="Abrir"><IconoFlechaDerecha aria-hidden="true" /></Link>
       </div>
       <ul className={cx(s.filas, s.sinH1)}>
-        {pagos.map((x, i) => (
-          <li key={`pago-${x.id}`} className={cx(s.pendiente, clase(i))}>
+        {tarjetaPago && (
+          <li className={cx(s.pendiente, clasePago)}>
             <div className={s.pendFila}>
               <span className={cx(s.placa, s.placaAccion)} aria-hidden="true"><IconoBillete /></span>
-              <div className={s.filaTexto}><b>{x.metodo} · {formatUSD(x.totalUSD)}</b><small>{x.cliente} · orden {x.numero}</small></div>
+              <div className={s.filaTexto}><b>{tarjetaPago.metodo} · {formatUSD(tarjetaPago.totalUSD)}</b><small>{tarjetaPago.cliente} · orden {tarjetaPago.numero}</small></div>
             </div>
             <div className={s.pendAcciones}>
-              <Link href={`/admin/orders?orden=${encodeURIComponent(x.numero)}`} className={cx(s.btn, s.btnPrimario)}><IconoCheck aria-hidden="true" />Revisar el pago</Link>
+              <Link href={`/admin/orders?orden=${encodeURIComponent(tarjetaPago.numero)}`} className={cx(s.btn, s.btnPrimario)}><IconoCheck aria-hidden="true" />Revisar el pago</Link>
             </div>
           </li>
-        ))}
-        {mensajes.map((x, i) => (
-          <li key={`msj-${x.id}`} className={cx(s.pendiente, clase(despuesDePagos + i))}>
+        )}
+        {tarjetaMensaje && (
+          <li className={cx(s.pendiente, claseMensaje)}>
             <div className={s.pendFila}>
               <span className={cx(s.placa, s.placaAccion)} aria-hidden="true"><IconoChat /></span>
-              <div className={s.filaTexto}><b>{x.cliente} escribió</b><small className={s.dosLineas}>{x.texto}</small></div>
+              <div className={s.filaTexto}><b>{tarjetaMensaje.cliente} escribió</b><small className={s.dosLineas}>{tarjetaMensaje.texto}</small></div>
             </div>
             <div className={s.pendAcciones}>
               <Link href="/admin/inquiries" className={cx(s.btn, s.btnPrimario)}><IconoChat aria-hidden="true" />Responder</Link>
             </div>
           </li>
-        ))}
-        {otros.map((p, i) => (
-          <li key={p.clave} className={clase(despuesDeMensajes + i)}>
+        )}
+        {filas.map((p, i) => (
+          <li key={p.clave} className={clasesFilas[i]}>
             <Link href={p.href} className={s.fila}>
               <span className={cx(s.placa, p.urgente ? s.placaAccion : s.placaGris)} aria-hidden="true"><IconoPor nombre={p.icono} /></span>
               <span className={s.filaTexto}><b>{p.cantidad} {p.cantidad === 1 ? p.uno : p.varios}</b></span>
@@ -230,7 +240,7 @@ export function WidgetOrdenes({ ordenes }: { ordenes: DashboardData['ordenesReci
 /* ── Se están acabando ── */
 export function WidgetInventario({ inventario }: { inventario: DashboardData['pocoInventario'] }) {
   return (
-    <Tarjeta id="inventario" titulo="Se están acabando" icono="Paquete" extra={inventario.total > 0 ? <span className={cx(s.dato, s.sinMuyAngosto)}>{inventario.umbral === 1 ? 'con 1' : `${inventario.umbral} o menos`}</span> : undefined}>
+    <Tarjeta id="inventario" titulo="Se están acabando" icono="Paquete" extra={inventario.total > 0 ? <span className={cx(s.dato, s.sinAngosto)}>{inventario.umbral === 1 ? 'con 1' : `${inventario.umbral} o menos`}</span> : undefined}>
       {inventario.total === 0 ? <AlDia titulo="Nada se está acabando" detalle={`Ningún producto publicado tiene ${inventario.umbral} unidades o menos.`} /> : (
         <>
           <StockRapido productos={inventario.productos} />

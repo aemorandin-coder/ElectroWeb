@@ -59,8 +59,11 @@ const NOMBRES: Record<string, string> = {
 };
 export const nombreTamano = (t: Medida) => NOMBRES[`${t.ancho}x${t.alto}`] ?? `${t.ancho} × ${t.alto}`;
 
-/** Las columnas que ocupa en cada pantalla: 12 en la computadora, 6 en la tablet y 4 en el teléfono */
-export const anchoEn = (ancho: number) => ({ md: ancho <= 3 ? 3 : 6, sm: ancho <= 3 ? 2 : 4 });
+/**
+ * Las columnas que ocupa en cada pantalla: 12 en la computadora, 6 en la tablet y 4 en el teléfono. En el teléfono, de a dos
+ * solo los Mini (una fila); los demás van a lo ancho, que a media pantalla no se leen
+ */
+export const anchoEn = (ancho: number, alto: number) => ({ md: ancho <= 3 ? 3 : 6, sm: ancho <= 3 && alto === 1 ? 2 : 4 });
 
 export interface AccesoDef { id: string; titulo: string; href: string; permiso: string }
 

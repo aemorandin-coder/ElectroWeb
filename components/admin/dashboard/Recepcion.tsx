@@ -52,14 +52,16 @@ export default function Recepcion({ datos, editando, onBuscar, onPersonalizar, o
       <div className={s.heroTrama} aria-hidden="true" />
       <div className={s.heroDestello} aria-hidden="true" />
       <div className={s.heroMarca} aria-hidden="true">ELECTRO SHOP</div>
-      <button type="button" onClick={onPersonalizar} className={s.personalizar} aria-label={editando ? 'Listo: guardar el tablero' : 'Personalizar el tablero'}>
-        {editando ? <IconoCheck aria-hidden="true" /> : <IconoAjustes aria-hidden="true" />}
-        <span>{editando ? 'Listo' : 'Personalizar'}</span>
-      </button>
 
       <div className={s.heroRejilla}>
         <div className={s.heroTexto}>
-          <p className={s.heroSobre}><span>Recepción</span><span className={s.punto} aria-hidden="true" /><span>{datos.fecha}</span></p>
+          <div className={s.heroSobre}>
+            <span>Recepción</span><span className={s.punto} aria-hidden="true" /><span>{datos.fecha}</span>
+            <button type="button" onClick={onPersonalizar} className={s.personalizar} aria-label={editando ? 'Listo: guardar el tablero' : 'Personalizar el tablero'}>
+              {editando ? <IconoCheck aria-hidden="true" /> : <IconoAjustes aria-hidden="true" />}
+              <span>{editando ? 'Listo' : 'Personalizar'}</span>
+            </button>
+          </div>
           <h1 id="saludo">
             {datos.saludo.split(' ').map((palabra, i) => <span key={i} className={s.palabra}>{palabra} </span>)}
           </h1>

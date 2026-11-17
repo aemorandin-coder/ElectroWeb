@@ -150,3 +150,26 @@ export function nombreMes(periodo: string): string {
   const [anio, mes] = periodo.split('-').map(Number);
   return `${MESES[(mes || 1) - 1]} de ${anio}`;
 }
+
+/** Los últimos 12 meses ("2026-11", "2026-10"…), del más nuevo al más viejo: los que se eligen en Facturas y en el libro */
+export function ultimosMeses(actual: string): string[] {
+  const [anio, mes] = actual.split('-').map(Number);
+  return Array.from({ length: 12 }, (_, i) => {
+    const total = anio * 12 + (mes - 1) - i;
+    return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, '0')}`;
+  });
+}
+
+/**
+ * C-230: hasta cuándo se declara el IVA de un mes: el día 15 del mes siguiente (la contadora, 16/11; contribuyente
+ * ordinario). Si cae sábado o domingo, el lunes (Código Orgánico Tributario, art. 10). Los feriados los suma el
+ * calendario de obligaciones (C-236). "2026-11" → "2026-12-15".
+ */
+export function venceIva(periodo: string): string {
+  const [anio, mes] = periodo.split('-').map(Number);
+  const fecha = new Date(Date.UTC(anio, mes, 15));
+  const dia = fecha.getUTCDay();
+  if (dia === 6) fecha.setUTCDate(17);
+  if (dia === 0) fecha.setUTCDate(16);
+  return fecha.toISOString().slice(0, 10);
+}

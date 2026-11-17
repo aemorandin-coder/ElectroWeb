@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import Ayuda from '@/components/admin/Ayuda';
+import CampoUnidad from '@/components/admin/CampoUnidad';
 import Opcion, { OpcionRadio } from '@/components/admin/Opcion';
 import Pasos, { type Paso } from '@/components/admin/Pasos';
 import CasillaPorCasilla from '@/components/admin/contabilidad/CasillaPorCasilla';
@@ -40,6 +41,8 @@ const PASOS = [
 ];
 
 const fechaCorta = (iso: string | null) => (iso ? new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: '2-digit', month: '2-digit' }).format(new Date(iso)) : '');
+/** "914,02": la tasa como se escribe */
+const textoTasa = (n: number) => new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(n);
 const vacio: Comprador = { nombre: '', documento: '', domicilio: '', telefono: '' };
 const renglonVacio: Manual = { cantidad: '1', descripcion: '', exento: false, precio: '' };
 
@@ -62,6 +65,7 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
   const [fecha, setFecha] = useState(hoy);
   const [comprador, setComprador] = useState<Comprador>(vacio);
   const [manuales, setManuales] = useState<Manual[]>([{ ...renglonVacio }]);
+  // C-230: la tasa BCV del día de la factura (la contadora, 16/11). Si la fecha es hoy, viene la de Configuración
   const [tasa, setTasa] = useState(tasaHoy ? String(tasaHoy).replace('.', ',') : '');
   const [descripciones, setDescripciones] = useState<string[] | null>(null);
   const [borrador, setBorrador] = useState<Borrador | null>(null);
@@ -88,18 +92,20 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
   const empresa = documento ? tipoComprador(documento) === 'EMPRESA' : false;
 
   const problemas = [
-    origen === 'ORDEN' && !ordenIds.length ? 'Elige la compra que vas a facturar.' : !/^\d{4}-\d{2}-\d{2}$/.test(fecha) || fecha > hoy ? 'La fecha de emisión no puede ser de un día que no ha llegado.' : null,
+    origen === 'ORDEN' && !ordenIds.length ? 'Elige la compra que vas a facturar.'
+      : !/^\d{4}-\d{2}-\d{2}$/.test(fecha) || fecha > hoy ? 'La fecha de emisión no puede ser de un día que no ha llegado.'
+        : !(tasaNumero && tasaNumero > 0) ? 'Escribe la tasa BCV del día de la factura.' : null,
     comprador.nombre.trim().length < 2 ? 'Escribe el nombre o la razón social.' : !documento ? 'Escribe el RIF o la cédula: una letra (V, E, J, G o P) y sus números.' : empresa && comprador.domicilio.trim().length < 10 ? 'Una empresa lleva su domicilio fiscal.' : null,
-    origen === 'TIENDA' && (!manualesBien || !(tasaNumero && tasaNumero > 0)) ? 'Completa cada renglón (cantidad, descripción y precio) y la tasa BCV.' : null,
+    origen === 'TIENDA' && !manualesBien ? 'Completa cada renglón: cantidad, descripción y precio.' : null,
   ];
   const listoHasta = (i: number) => problemas.slice(0, i).every((p) => p === null);
 
   const pedido = (conNumero?: number) => {
-    const base = { condicionPago: condicion, fecha, ...(conNumero ? { numeroEsperado: conNumero } : {}) };
+    const base = { condicionPago: condicion, fecha, tasa: tasaNumero ?? 0, ...(conNumero ? { numeroEsperado: conNumero } : {}) };
     const c = { nombre: comprador.nombre.trim(), documento: comprador.documento.trim(), domicilio: comprador.domicilio.trim(), telefono: comprador.telefono.trim() };
     return origen === 'ORDEN'
       ? { origen, ordenIds, ...(descripciones ? { descripciones } : {}), ...(comprador.nombre || comprador.documento ? { comprador: c } : {}), ...base }
-      : { origen, renglones: filas.map((f) => ({ ...f, precioUSD: f.precioUSD ?? 0 })), tasa: tasaNumero ?? 0, comprador: c, ...base };
+      : { origen, renglones: filas.map((f) => ({ ...f, precioUSD: f.precioUSD ?? 0 })), comprador: c, ...base };
   };
 
   /** Lo pide al servidor: los renglones, los totales, el número que toca y lo que falta */
@@ -126,7 +132,7 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
   const ir = async (i: number) => {
     // Al dejar el paso 1 con una compra de la web: sus datos llenan el comprador y los renglones
     if (paso === 0 && i > 0 && origen === 'ORDEN') {
-      const b = await preparar({ origen, ordenIds, condicionPago: condicion, fecha });
+      const b = await preparar({ origen, ordenIds, condicionPago: condicion, fecha, tasa: tasaNumero ?? 0 });
       if (!b) return;
       if (!comprador.nombre && !comprador.documento && b.compradorDeLaOrden) {
         const o = b.compradorDeLaOrden;
@@ -260,10 +266,29 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="factura-fecha" className={adminLabel}>Fecha de emisión</label>
-              <input id="factura-fecha" type="date" value={fecha} max={hoy} onChange={(e) => setFecha(e.target.value)} className={`${adminInput()} sm:max-w-48`} />
-              <p className={adminHint}>La que escribes en la factura. Hoy, salvo que la escribas otro día.</p>
+              <input
+                id="factura-fecha"
+                type="date"
+                value={fecha}
+                max={hoy}
+                onChange={(e) => {
+                  setFecha(e.target.value);
+                  // Otro día, otra tasa: la de hoy solo vale para hoy
+                  setTasa(e.target.value === hoy && tasaHoy ? String(tasaHoy).replace('.', ',') : '');
+                }}
+                className={`${adminInput()} sm:max-w-48`}
+              />
+              <p className={adminHint}>La que escribes en la factura.</p>
             </div>
             <div>
+              <label htmlFor="factura-tasa" className={`${adminLabel} inline-flex items-center gap-1`}>
+                Tasa BCV del día de la factura
+                <Ayuda etiqueta="Qué tasa va">La del BCV del día en que escribes la factura, como pidió la contadora el 16/11. Si la fecha es hoy, viene la de Configuración.</Ayuda>
+              </label>
+              <CampoUnidad id="factura-tasa" unidad="Bs por $" value={tasa} inputMode="decimal" onChange={(e) => setTasa(e.target.value)} invalido={Boolean(tasa) && !tasaNumero} className="w-48" />
+              <p className={adminHint}>{fecha === hoy && tasaHoy ? 'La de hoy, del BCV.' : `Escribe la del ${fecha.split('-').reverse().join('/')}.`}</p>
+            </div>
+            <div className="sm:col-span-2">
               <span className={adminLabel}>Condiciones de pago</span>
               <div className="flex gap-2" role="radiogroup" aria-label="Condiciones de pago">
                 {(['CONTADO', 'CREDITO'] as const).map((c) => (
@@ -315,7 +340,8 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
           {origen === 'ORDEN' && borrador ? (
             <>
               <p className="mt-1 text-sm text-muted">
-                Los montos salen de la orden, a su tasa ({formatVES(borrador.tasa).replace('Bs. ', 'Bs ')}). Puedes acortar una descripción o agregarle el serial.
+                Los montos salen de la orden, a la tasa del día de la factura ({textoTasa(borrador.tasa)})
+                {borrador.tasaOrden ? `; la orden se cobró a ${textoTasa(borrador.tasaOrden)}` : ''}. Puedes acortar una descripción o agregarle el serial.
               </p>
               <ul className="mt-4 divide-y divide-line">
                 {borrador.renglones.map((r, i) => (
@@ -362,13 +388,7 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
               <button type="button" onClick={() => setManuales([...manuales, { ...renglonVacio }])} disabled={manuales.length >= 12} className={`${adminSecondaryButton} mt-3`}>
                 <IconoMas className="h-4 w-4" aria-hidden="true" /> Agregar renglón
               </button>
-              <div className="mt-5">
-                <label htmlFor="factura-tasa" className={`${adminLabel} inline-flex items-center gap-1`}>
-                  Tasa BCV del día
-                  <Ayuda etiqueta="Qué tasa va">La del día de la venta (Ley del IVA, art. 25). Viene la de Configuración: cámbiala si la venta fue otro día.</Ayuda>
-                </label>
-                <input id="factura-tasa" value={tasa} inputMode="decimal" onChange={(e) => setTasa(e.target.value)} className={`${adminInput(Boolean(tasa) && !tasaNumero)} text-right tabular-nums sm:max-w-40`} />
-              </div>
+              {tasaNumero && <p className={`${adminHint} mt-3`}>En bolívares, a la tasa del día de la factura ({textoTasa(tasaNumero)}).</p>}
             </>
           )}
           {problemas[2] && <p className={`${adminHint} mt-3`}>{problemas[2]}</p>}
@@ -386,7 +406,7 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
               </p>
               <ul className="mt-3 divide-y divide-line text-sm">
                 {[
-                  { i: 0, icono: IconoOrdenes, titulo: origen === 'TIENDA' ? 'Venta en la tienda' : `Órdenes ${borrador.ordenes.map((o) => o.orderNumber).join(' y ')}`, detalle: `${borrador.condicionPago === 'CREDITO' ? 'Crédito' : 'Contado'} · fecha ${borrador.fecha.split('-').reverse().join('/')}` },
+                  { i: 0, icono: IconoOrdenes, titulo: origen === 'TIENDA' ? 'Venta en la tienda' : `Órdenes ${borrador.ordenes.map((o) => o.orderNumber).join(' y ')}`, detalle: `${borrador.condicionPago === 'CREDITO' ? 'Crédito' : 'Contado'} · fecha ${borrador.fecha.split('-').reverse().join('/')} · tasa ${textoTasa(borrador.tasa)}` },
                   { i: 1, icono: IconoClientes, titulo: `${borrador.comprador.nombre} · ${borrador.comprador.documento}`, detalle: [borrador.comprador.domicilio, borrador.comprador.telefono].filter(Boolean).join(' · ') || 'Sin domicilio ni teléfono' },
                   { i: 2, icono: IconoLista, titulo: `${borrador.renglones.length} ${borrador.renglones.length === 1 ? 'renglón' : 'renglones'} · ${formatVES(borrador.totales.totalBs)}`, detalle: `Base ${formatVES(borrador.totales.baseBs)} · IVA ${formatVES(borrador.totales.ivaBs)}${borrador.totales.exentoBs ? ` · exento ${formatVES(borrador.totales.exentoBs)}` : ''}` },
                 ].map((r) => (

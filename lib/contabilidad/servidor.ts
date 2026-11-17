@@ -20,6 +20,7 @@ import {
   totales as totalesDe, type Renglon, type TotalesFactura,
 } from './montos';
 import type { DatosTalonario, PedidoFactura } from './esquemas';
+import { armarLibro, type LibroVentas } from './libro';
 import { etiquetaFactura, numeroControl, numeroFactura, problemasTalonario } from './talonario';
 
 type Db = PrismaClient | Prisma.TransactionClient;
@@ -106,7 +107,10 @@ export interface Borrador {
   renglones: Renglon[];
   totales: TotalesFactura;
   alicuota: number;
+  /** C-230: la tasa BCV del día de la factura (la contadora, 16/11) */
   tasa: number;
+  /** La tasa con la que se cobró la orden, si es otra: solo para que se vea */
+  tasaOrden: number | null;
   totalUSD: number;
   /** Lo que pagó el cliente en bolívares (solo con órdenes) y la diferencia con el total de la factura */
   cobradoBs: number | null;
@@ -158,6 +162,29 @@ async function alicuotaGeneral(db: Db): Promise<number> {
   return Number.isFinite(p) && p > 0 ? p : 16;
 }
 
+const numeroTasa = (n: number) => new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(n);
+
+/**
+ * C-230: la factura va a la tasa BCV del día en que se escribe (la contadora, 16/11), no a la de la orden. La de hoy sale
+ * de Configuración (la automática del BCV); la de otro día la escribe quien factura. Una tasa a más del triple o a menos
+ * de un tercio de la de hoy es casi siempre una coma corrida: se rechaza.
+ */
+async function tasaDeLaFactura(fecha: string, enviada: number | undefined, db: Db): Promise<Resultado<number>> {
+  const s = await db.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } });
+  const n = Number(s?.exchangeRateVES);
+  const deHoy = Number.isFinite(n) && n > 0 ? n : null;
+  if (enviada === undefined) {
+    if (fecha === hoyVe() && deHoy) return { ok: true, datos: deHoy };
+    return falla(400, fecha === hoyVe()
+      ? 'No hay una tasa BCV en Configuración: escribe la de hoy.'
+      : `Escribe la tasa BCV del ${fecha.split('-').reverse().join('/')}: la factura va a la tasa del día en que se escribe.`, 'tasa');
+  }
+  if (deHoy && (enviada > deHoy * 3 || enviada < deHoy / 3)) {
+    return falla(400, `La tasa ${numeroTasa(enviada)} está muy lejos de la de hoy (${numeroTasa(deHoy)}). Revisa la coma.`, 'tasa');
+  }
+  return { ok: true, datos: enviada };
+}
+
 /** Los datos de la factura, calculados desde la base. No guarda nada. */
 export async function prepararFactura(pedido: PedidoFactura, db: Db = prisma): Promise<Resultado<Borrador>> {
   const fecha = fechaDesdeTexto(pedido.fecha);
@@ -168,9 +195,12 @@ export async function prepararFactura(pedido: PedidoFactura, db: Db = prisma): P
   const t = await talonarioActivo(db);
   const avisos: string[] = [];
 
+  const laTasa = await tasaDeLaFactura(pedido.fecha, pedido.tasa, db);
+  if (!laTasa.ok) return laTasa;
+  const tasa = laTasa.datos;
+  let tasaOrden: number | null = null;
   let renglones: Renglon[];
   let totales: TotalesFactura;
-  let tasa: number;
   let totalUSD: number;
   let cobradoBs: number | null = null;
   let comprador: CompradorDTO;
@@ -193,10 +223,9 @@ export async function prepararFactura(pedido: PedidoFactura, db: Db = prisma): P
       if (o.invoiceNumber) avisos.push(`La orden ${o.orderNumber} tenía anotada la factura "${o.invoiceNumber}" a mano: queda la de este talonario.`);
     }
 
-    const tasas = leidas.map((o) => Number(o.exchangeRateVES ?? o.exchangeRate) || 0);
-    tasa = tasas[0];
-    if (!(tasa > 0)) return falla(400, 'La orden no guardó la tasa del día: factúrala como venta sin orden.', 'ordenIds');
-    if (tasas.some((x) => Math.abs(x - tasa) > 0.0001)) avisos.push(`Las órdenes tienen tasas distintas: se usa la de la primera (${tasa}).`);
+    // La tasa de la orden ya no pone los montos (C-230): queda a la vista si es otra
+    const cobrada = Number(leidas[0].exchangeRateVES ?? leidas[0].exchangeRate) || 0;
+    if (cobrada > 0 && Math.abs(cobrada - tasa) >= 0.005) tasaOrden = cobrada;
 
     const montos = montosDeOrdenes(
       leidas.map((o) => ({
@@ -246,7 +275,6 @@ export async function prepararFactura(pedido: PedidoFactura, db: Db = prisma): P
       metodo: describirPago(o.paymentMethod, [], { puntosUSD: Number(o.pointsUSD) || 0 }).titulo,
     }));
   } else {
-    tasa = pedido.tasa;
     renglones = pedido.renglones.map((r) => renglonDesdeUSD(r.cantidad, r.descripcion, r.exento, r.precioUSD, tasa, alicuota));
     totales = totalesDe(renglones, alicuota);
     totalUSD = r2(pedido.renglones.reduce((s, r) => s + r.precioUSD * r.cantidad, 0));
@@ -278,6 +306,7 @@ export async function prepararFactura(pedido: PedidoFactura, db: Db = prisma): P
       totales,
       alicuota,
       tasa,
+      tasaOrden,
       totalUSD,
       cobradoBs,
       diferenciaBs,
@@ -526,6 +555,64 @@ export async function comprasSinFactura(periodo: string): Promise<CompraSinFactu
     compras.push(nueva);
   }
   return compras.reverse();
+}
+
+// ── El libro de ventas (C-230) ───────────────────────────────────────────────────────────
+
+/** El libro del mes: una línea por factura, emitidas y anuladas (lib/contabilidad/libro.ts). Solo montos y datos del libro. */
+export async function libroDeVentas(periodo: string): Promise<LibroVentas> {
+  const docs = await prisma.documentoFiscal.findMany({
+    where: { periodo },
+    select: {
+      id: true, tipo: true, estado: true, origen: true, serie: true, numero: true, numeroControl: true, emitidaEl: true,
+      compradorDocumento: true, compradorNombre: true, totalBs: true, exentoBs: true, baseBs: true, alicuota: true, ivaBs: true,
+      ivaRetenidoBs: true, comprobanteRetencion: true, talonario: { select: { numeroHasta: true } },
+    },
+  });
+  return armarLibro(periodo, docs.map((d) => ({
+    id: d.id,
+    tipo: d.tipo,
+    estado: d.estado,
+    origen: d.origen,
+    etiqueta: etiquetaFactura(d.serie, d.talonario ? numeroFactura(d.talonario, d.numero) : String(d.numero).padStart(4, '0')),
+    numeroControl: d.numeroControl,
+    emitidaEl: d.emitidaEl,
+    compradorDocumento: d.compradorDocumento,
+    compradorNombre: d.compradorNombre,
+    totalBs: Number(d.totalBs),
+    exentoBs: Number(d.exentoBs),
+    baseBs: Number(d.baseBs),
+    alicuota: Number(d.alicuota),
+    ivaBs: Number(d.ivaBs),
+    ivaRetenidoBs: d.ivaRetenidoBs === null ? null : Number(d.ivaRetenidoBs),
+    comprobanteRetencion: d.comprobanteRetencion,
+  })));
+}
+
+/**
+ * Cuántas facturas pide un mes, para saber hasta cuándo alcanza el talonario: las registradas en los últimos 30 días
+ * (las de la web y las de la tienda) más las compras de la web cobradas en esos días que todavía no tienen factura.
+ * Desde el 16/11 se factura cada venta (la contadora), así que cada venta es un papel.
+ */
+export async function ventasDe30Dias(ahora: Date = new Date()): Promise<number> {
+  const desde = new Date(ahora.getTime() - 30 * 86_400_000);
+  const [facturas, sinFactura] = await Promise.all([
+    prisma.documentoFiscal.count({ where: { tipo: 'FACTURA', origen: { not: 'EN_BLANCO' }, emitidaEl: { gte: desde } } }),
+    prisma.order.findMany({
+      where: {
+        paymentStatus: 'PAID',
+        status: { notIn: ESTADOS_SIN_FACTURA as Prisma.EnumOrderStatusFilter['notIn'] },
+        documentoFiscalId: null,
+        invoiceNumber: null,
+        OR: [{ paidAt: { gte: desde } }, { paidAt: null, createdAt: { gte: desde } }],
+      },
+      select: { userId: true, guestEmail: true, id: true, createdAt: true },
+      take: 2000,
+    }),
+  ]);
+  // Las órdenes de una misma compra (del mismo cliente, en el mismo minuto) llevan una sola factura
+  const compras = new Set(sinFactura.map((o) => `${o.userId ?? o.guestEmail ?? o.id}·${Math.floor(o.createdAt.getTime() / 60_000)}`));
+  return facturas + compras.size;
 }
 
 /** La tasa de hoy (Configuración) y la alícuota general, para una venta sin orden */

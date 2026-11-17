@@ -3,13 +3,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { hasPermission } from '@/lib/auth-helpers';
 import { contadoraConFirma, firmaDe, notasDelMes, resumenDelMes } from '@/lib/contabilidad/mesa';
-import { periodoDe } from '@/lib/contabilidad/montos';
+import { periodoDe, venceIva } from '@/lib/contabilidad/montos';
 import { datosEmpresa, talonarioActivo } from '@/lib/contabilidad/servidor';
 import { talonarioDTO } from '@/lib/dto/contabilidad';
 import MesaContadora from './_components/MesaContadora';
 
 // C-235: la mesa de la contadora (la maqueta 4 del 14/11, docs/plan/CONTABILIDAD.md §13.1). La ven ella y el dueño
-// (VER_CONTABILIDAD). Lo que todavía no existe (el libro, el calendario, el cierre) va en "Lo que viene", sin inventar datos.
+// (VER_CONTABILIDAD). Lo que todavía no existe (el calendario, las compras, el cierre) va en "Lo que viene", sin inventar
+// datos. C-230: el libro de ventas ya está, con su Excel, y el IVA del mes dice hasta cuándo se declara.
 export const dynamic = 'force-dynamic';
 
 const ZONA = 'America/Caracas';
@@ -40,6 +41,7 @@ export default async function PaginaMesa() {
       saludo={saludo}
       hoy={hoy}
       periodo={periodo}
+      vence={venceIva(periodo)}
       empresa={{ nombre: empresa.nombre, rif: empresa.rif }}
       resumen={resumen}
       firma={esContadora ? mia : contadora?.firma ?? null}

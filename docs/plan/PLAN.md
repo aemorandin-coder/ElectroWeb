@@ -797,9 +797,13 @@ Quedan para después de C-177 (`estado/C-177.md`):
     - El rol `ACCOUNTANT` (enum aditivo) con `VER_CONTABILIDAD` y `DECLARAR`, solo con los dos pasos; `CARGAR_TALONARIO`, nuevo, solo del dueño. `proxy.ts` le abre solo Contabilidad, Mi seguridad y Versiones.
     - La invitación desde Equipo, y quitarla y poner otra (su firma queda guardada).
     - La mesa de la contadora: el mes en números, las últimas facturas, lo que viene, su firma y sello (`firmas_contables`) y las notas del mes (`notas_contables`).
-    - Para después: el aviso de una nota nueva (con C-236) y "Descargar" el mes (con C-230).
-  - **C-230 · El libro de ventas y el resumen del mes** (antes del 15/12, para declarar noviembre).
-  - **C-236 · El calendario de obligaciones y los avisos** (campana y Telegram; feriados con C-234), con las obligaciones de §13.2.
+    - Para después: el aviso de una nota nueva (con C-236). "Descargar" el mes: hecho con C-230 (el libro de ventas en Excel); el Excel con una pestaña por libro, con C-232.
+  - **C-230 · El libro de ventas, con las respuestas de la contadora** (**hecha**, rc.90, 16/11; la A que eligió el equipo viendo las maquetas; `estado/C-230.md`).
+    - Contabilidad → Libro de ventas: una línea por factura con las columnas que pidió ella, el IVA del mes con su fecha, lo de la declaración, el Excel (`lib/excel/`, sin librerías nuevas) y la hoja impresa apaisada.
+    - La factura va a la tasa BCV del día en que se escribe (antes, la de la orden). Facturas dice hasta cuándo alcanza el talonario y cuántas pedir. La mesa trae el Excel y, la primera vez de la contadora, "Así funciona".
+    - El "Resumen del mes" del plan quedó en la mesa (el inicio de Contabilidad del dueño y de ella) y en el libro.
+    - Pendiente: las preguntas que quedaron abiertas con ella (§7.2, "Lo que respondió la contadora").
+  - **C-236 · El calendario de obligaciones y los avisos** (campana y Telegram; feriados con C-234), con las obligaciones de §13.2 y las fechas que dio la contadora el 16/11: la alcaldía hasta el 10 y el IVA hasta el 15. Va antes que el resto: la alcaldía vence primero.
   - **C-237 · Gastos y compras:** la foto y los datos de cada factura; el libro de compras y el crédito fiscal.
   - **C-232 · El IVA del mes y el cierre firmado:** la hoja del IVA, "Declarada" y "Pagada", el mes cerrado con la firma de la contadora y el Excel con pestañas. La tabla `periodos_iva` (aditiva).
   - **C-238 · El alquiler del local:** el contrato, el canon, la retención de ISLR (3 % o 5 %) y el aviso del vencimiento del contrato.
@@ -881,7 +885,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 | A13 | Promotores: ¿los productos digitales (códigos y recargas) pagan comisión? Hoy sí, pero no se acredita sola si supera la ganancia de la venta | `estado/C-167.md`. Opciones: no pagar en digitales, un % menor, o dejarlo. |
 | A14 | Promotores: % por defecto de la comisión y del descuento del código (quedó 5 % y 5 %), y los términos del programa para el abogado | `estado/C-167.md`. |
 | A11 | ¿La cinta ES también en los productos que no son nuevos (al menos en "Caja abierta")? | Hoy llevan su etiqueta de condición y no la cinta (decisión del 28/09). Andrés la echó de menos el 01/10 (`estado/C-161.md`). |
-| A16 | ¿Se factura en el talonario **cada venta de la web** desde ya, o solo la que pide factura, hasta el portal del 19/04/2027? La ley pide factura en cada venta (`CONTABILIDAD.md` §4) | Con el contador. Recomendado: esta semana. |
+| ~~A16~~ | ~~¿Se factura en el talonario cada venta de la web desde ya?~~ | **Cerrada el 16/11:** la contadora dijo que se factura cada venta, y el equipo lo aprobó con el plan de C-230 (§7.2). |
 
 ### 7.2 Tomadas (no volver a preguntar)
 **Del plan original (D1 a D5):** `/comparar` se eliminó y redirige a `/productos` (C-06). El popup se cierra al instante y sale como mucho una vez cada 24 h (C-23). El modo mantenimiento se implementó (C-04). El precio se escribe `$1.099,00` (C-12). Las categorías de la franja son las dos con más productos (C-20).
@@ -965,6 +969,21 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
     - **Nómina:** los totales del mes y sus aportes (pensiones, IVSS, FAOV e INCES), sin datos de cada trabajador.
     - **Alcaldía de Guanare:** actividades económicas, la licencia anual, la publicidad y el aseo.
     - **Avisos:** por la campana del panel y por Telegram; 3 días antes, el día y si se pasa.
+  - **Lo que respondió la contadora (16/11, por notas de voz; el equipo aprobó el plan de C-230 con "Play"):**
+    - **Se factura cada venta,** desde ya (cierra A16).
+    - **La tasa es la del BCV del día en que se escribe la factura,** no la de la orden. Si se factura el mismo día del cobro, coinciden.
+    - **El libro de ventas lleva** la fecha, el número de factura y el de control, el RIF, el nombre, la base imponible, el total, el IVA y el comprobante de retención. El de compras, igual, con el proveedor.
+    - **El IVA se declara en los primeros 15 días del mes** (contribuyente ordinario).
+    - **La alcaldía, en los primeros 10 días del mes,** para que no multen. La alícuota es el 1 o el 1,5 % de los ingresos (a confirmar con el último recibo) o el mínimo, que es lo que se suele pagar.
+    - **Lo que le retienen a la empresa** es poco y es el 75 % del IVA.
+    - **La máquina fiscal no es obligatoria hoy.** Hay que tener un talonario de contingencia para eventualidades. Las apps del SENIAT todavía no las conoce.
+    - **Las pensiones:** el 9 % del salario integral. Falta confirmar si los $240 que nombró son el mínimo por trabajador, y el día que toca.
+    - **Quedaron abiertas** (se le preguntan en el WhatsApp del 16/11):
+      - si los digitales llevan IVA (siguen sin IVA, C-151);
+      - con un ejemplo, si la factura de Puntos ES va al recargar (ella lo dijo con duda) o al comprar (como hoy);
+      - qué hacer con lo vendido antes sin factura;
+      - las retenciones de ISLR;
+      - qué tasa va si la factura se escribe otro día que el del cobro (la Ley del IVA, art. 13 y 25, apunta a la del cobro).
 - **ElectroStudio:** historias en la base, dos pantallas (inicio y editor), trabajo por fases. El plan semanal automático quedó fuera (28/09).
 - **La ferretería aliada (10/11, Andrés, en el chat):**
   - Su lista trabaja a BCV, igual que la tienda, y su "Precio Máximo" trae el IVA y es lo que la tienda le paga, sin descuento. El costo es su precio sin el IVA (C-196b).

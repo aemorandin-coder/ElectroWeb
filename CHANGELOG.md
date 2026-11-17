@@ -10,6 +10,23 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.90] - 2026-11-16
+El libro de ventas, con las respuestas de la contadora del 16/11 (C-230). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Contabilidad 1.3.0 (C-230)
+- **El libro de ventas del mes** (Contabilidad → Libro de ventas), para el dueño y la contadora:
+  - una línea por factura, con las columnas que pidió ella: fecha, número de factura y de control, RIF, nombre, total, exento, base imponible, IVA y lo retenido con su comprobante;
+  - la anulada sale marcada y en cero;
+  - arriba, el IVA del mes con su fecha (hasta el 15 del mes siguiente); abajo, lo que va en la declaración;
+  - desde 1280 px, una tabla; más angosto, una tarjeta por factura.
+- **En Excel** (un .xlsx de verdad, sin librerías nuevas): fechas y montos que se ordenan y se suman, los totales con su fórmula, la fila de títulos fija y apaisado en carta. **"Imprimir"** saca solo la hoja del libro, apaisada.
+- **La tasa de la factura es la del BCV del día en que se escribe** (antes, la de la orden). Si la fecha es hoy, viene la de Configuración; si es otro día, se escribe. Una tasa con la coma corrida (más del triple o menos de un tercio de la de hoy) se rechaza.
+- **Facturas dice hasta cuándo alcanza el talonario,** al ritmo de las ventas de los últimos 30 días, y al dueño, cuántas facturas pedir a la imprenta para llegar al 19/04/2027.
+- **La mesa de la contadora:** el IVA dice hasta cuándo se declara, "Descargar" trae el Excel del libro y "Lo que viene" sigue el orden de sus respuestas. La primera vez que ella entra, la hoja "Así funciona" le cuenta lo que hace: revisa los libros, declara el IVA y la alcaldía y firma el cierre.
+### Marco del panel 1.15.3 (C-230)
+- El menú de Contabilidad suma el Libro de ventas.
+### Tienda 1.20.2 (C-230)
+- La regla de impresión del libro en `app/globals.css`.
+
 ## [1.0.0-rc.89] - 2026-11-16
 Las entradas y salidas de ElectroStudio (C-273). Sin cambio de base (la animación va dentro de cada historia), sin SQL, sin variables nuevas y sin cron.
 ### ElectroStudio 2.3.0 (C-273)

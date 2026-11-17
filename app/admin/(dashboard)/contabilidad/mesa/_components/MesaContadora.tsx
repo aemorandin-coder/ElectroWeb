@@ -3,16 +3,20 @@
 // C-235: la mesa de la contadora (la maqueta 4 del 14/11). Arriba, la única pieza azul noche: el saludo y el mes. Abajo, lo
 // del mes con datos reales (las facturas de C-229), lo que viene en Contabilidad, su firma y su sello, y las notas con el
 // dueño. Nada inventado: lo que todavía no existe va en "Lo que viene", sin montos ni fechas que no se conocen.
+// C-230 (con sus respuestas del 16/11): el libro de ventas y su Excel, el IVA del mes con su fecha, y la primera vez que
+// ella entra, la hoja "Así funciona" con lo que hace (preguntó "¿cuáles van a ser mis funciones?").
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AsiFunciona from '@/components/onboarding/AsiFunciona';
 import {
   IconoBolsa, IconoCalendario, IconoChat, IconoCheck, IconoClientes, IconoDescargar, IconoDocumento, IconoEditar, IconoEnviar,
-  IconoFlechaDerecha, IconoInfo, IconoPorcentaje, IconoReportes, IconoTienda, type IconType,
+  IconoFlechaDerecha, IconoInfo, IconoPorcentaje, IconoReportes, IconoTienda, IconoVer, type IconType,
 } from '@/components/iconos';
 import { adminBadge, adminCard, adminError, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import type { FirmaDTO, NotaDTO, ResumenMes } from '@/lib/contabilidad/mesa';
+import { fechaCorta } from '@/lib/contabilidad/libro';
 import { nombreMes } from '@/lib/contabilidad/montos';
 import { formatVES } from '@/lib/currency';
 import FirmaModal from './FirmaModal';
@@ -20,20 +24,22 @@ import FirmaModal from './FirmaModal';
 const fecha = (iso: string) => new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: '2-digit', month: '2-digit' }).format(new Date(iso));
 const cuando = (iso: string) => new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
 
-const LO_QUE_VIENE: Array<{ icono: IconType; titulo: string; detalle: string; cuando?: string }> = [
-  { icono: IconoReportes, titulo: 'El libro de ventas en Excel', detalle: 'Las facturas del mes en bolívares, con las columnas que pidas.', cuando: 'Antes del 15/12' },
-  { icono: IconoCalendario, titulo: 'El calendario de pagos', detalle: 'IVA, pensiones, retenciones, IVSS, FAOV, INCES, alquiler y alcaldía, con avisos antes de que venzan.' },
-  { icono: IconoBolsa, titulo: 'Compras y gastos', detalle: 'Cada factura con su foto: el libro de compras y el crédito fiscal.' },
+// En el orden de sus respuestas del 16/11 (docs/plan/CONTABILIDAD.md §8)
+const LO_QUE_VIENE: Array<{ icono: IconType; titulo: string; detalle: string }> = [
+  { icono: IconoCalendario, titulo: 'El calendario y los avisos', detalle: 'El IVA hasta el 15, la alcaldía hasta el 10, las pensiones, el alquiler y las retenciones, con avisos antes de que venzan.' },
+  { icono: IconoBolsa, titulo: 'Compras y gastos', detalle: 'Cada factura con su foto: el libro de compras, con las mismas columnas, y el crédito fiscal.' },
   { icono: IconoPorcentaje, titulo: 'El IVA del mes y el cierre firmado', detalle: 'La hoja del IVA, "Declarada" y "Pagada", y tu firma en el cierre y en el Excel.' },
-  { icono: IconoTienda, titulo: 'El alquiler y la alcaldía', detalle: 'El canon con su retención de ISLR, y actividades económicas, la licencia, la publicidad y el aseo.' },
-  { icono: IconoClientes, titulo: 'Nómina y aportes', detalle: 'Los totales del mes; pensiones, IVSS, FAOV e INCES calculados.' },
+  { icono: IconoTienda, titulo: 'La alcaldía y el alquiler', detalle: 'Actividades económicas (la alícuota o el mínimo), la licencia, la publicidad y el aseo, y el canon con su retención.' },
+  { icono: IconoClientes, titulo: 'Nómina y aportes', detalle: 'Los totales del mes y las pensiones (9 %).' },
 ];
 
-export default function MesaContadora({ yo, saludo, hoy, periodo, empresa, resumen, firma: firmaInicial, contadora, notas: notasIniciales, talonario }: {
+export default function MesaContadora({ yo, saludo, hoy, periodo, vence, empresa, resumen, firma: firmaInicial, contadora, notas: notasIniciales, talonario }: {
   yo: { nombre: string; esContadora: boolean; puedeDeclarar: boolean };
   saludo: string;
   hoy: string;
   periodo: string;
+  /** C-230: hasta cuándo se declara el IVA del mes ("2026-12-15") */
+  vence: string;
   empresa: { nombre: string; rif: string };
   resumen: ResumenMes;
   /** La de ella, si es la contadora; la de la contadora, si es el dueño */
@@ -75,9 +81,10 @@ export default function MesaContadora({ yo, saludo, hoy, periodo, empresa, resum
   const cifras = [
     { titulo: 'Facturas emitidas', valor: String(resumen.emitidas), detalle: resumen.anuladas ? `${resumen.anuladas} anulada${resumen.anuladas === 1 ? '' : 's'}` : 'Ninguna anulada' },
     { titulo: 'Base imponible', valor: formatVES(resumen.baseBs), detalle: 'Sin el IVA' },
-    { titulo: 'IVA (débito fiscal)', valor: formatVES(resumen.ivaBs), detalle: 'De las facturas del mes' },
+    { titulo: 'IVA (débito fiscal)', valor: formatVES(resumen.ivaBs), detalle: `Se declara hasta el ${fechaCorta(vence).slice(0, 5)}`, fecha: true },
     { titulo: 'Exento o no sujeto', valor: formatVES(resumen.exentoBs), detalle: 'Los renglones con (E)' },
   ];
+  const libro = `/admin/contabilidad/libro?mes=${periodo}`;
 
   return (
     <div className="space-y-4">
@@ -99,8 +106,8 @@ export default function MesaContadora({ yo, saludo, hoy, periodo, empresa, resum
           <p className="text-sm text-white/80">Facturado en {mes}</p>
           <p className="mt-1 text-2xl font-bold tabular-nums">{formatVES(resumen.totalBs)}</p>
           <p className="text-xs text-white/80">{talonario ? `Talonario Serie ${talonario.serie} · quedan ${talonario.quedan}` : 'Sin talonario cargado'}</p>
-          <Link href="/admin/contabilidad/facturas" className="mt-3 flex h-11 items-center justify-center gap-2 rounded-lg bg-white text-sm font-semibold text-brand-700 transition hover:bg-brand-50">
-            Ver las facturas <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
+          <Link href={libro} className="mt-3 flex h-11 items-center justify-center gap-2 rounded-lg bg-white text-sm font-semibold text-brand-700 transition hover:bg-brand-50">
+            Ver el libro de ventas <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
       </section>
@@ -108,13 +115,16 @@ export default function MesaContadora({ yo, saludo, hoy, periodo, empresa, resum
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
         <div className="space-y-4">
           <section className={adminCard} aria-labelledby="mes-numeros">
-            <h2 id="mes-numeros" className="flex items-center gap-2 text-base font-semibold text-ink"><IconoReportes className="h-5 w-5" aria-hidden="true" /> {Mes} en números</h2>
-            <dl className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 id="mes-numeros" className="flex items-center gap-2 text-base font-semibold text-ink"><IconoReportes className="h-5 w-5" aria-hidden="true" /> {Mes} en números</h2>
+              <Link href={libro} className="text-sm font-semibold text-brand-600 hover:text-brand-700">Ver el libro</Link>
+            </div>
+            <dl className="mt-3 grid grid-cols-2 gap-3 xl:grid-cols-4">
               {cifras.map((c) => (
-                <div key={c.titulo} className="rounded-xl border border-line bg-surface p-3">
+                <div key={c.titulo} className={`rounded-xl border p-3 ${c.fecha ? 'border-brand-200 bg-brand-50' : 'border-line bg-surface'}`}>
                   <dt className="text-xs text-muted">{c.titulo}</dt>
                   <dd className="mt-1 text-base font-bold tabular-nums text-ink [overflow-wrap:anywhere]">{c.valor}</dd>
-                  <dd className="text-xs text-muted">{c.detalle}</dd>
+                  <dd className={`text-xs ${c.fecha ? 'font-semibold text-brand-700' : 'text-muted'}`}>{c.detalle}</dd>
                 </div>
               ))}
             </dl>
@@ -148,17 +158,14 @@ export default function MesaContadora({ yo, saludo, hoy, periodo, empresa, resum
           <section className={adminCard} aria-labelledby="lo-que-viene">
             <h2 id="lo-que-viene" className="flex items-center gap-2 text-base font-semibold text-ink"><IconoCalendario className="h-5 w-5" aria-hidden="true" /> Lo que viene en Contabilidad</h2>
             <p className="mt-1 text-sm text-muted">
-              {yo.esContadora ? 'Tus respuestas a las preguntas por WhatsApp' : 'Las respuestas de la contadora a las 17 preguntas'} deciden las columnas, las alícuotas y las fechas.
+              En el orden de {yo.esContadora ? 'tus respuestas' : 'las respuestas de la contadora'} del 16/11.
             </p>
             <ol className="mt-3 space-y-3">
               {LO_QUE_VIENE.map((p) => (
                 <li key={p.titulo} className="flex gap-3">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><p.icono className="h-4 w-4" aria-hidden="true" /></span>
                   <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink">
-                      {p.titulo}
-                      {p.cuando && <span className={adminBadge('brand')}>{p.cuando}</span>}
-                    </span>
+                    <span className="block text-sm font-semibold text-ink">{p.titulo}</span>
                     <span className="block text-xs text-muted">{p.detalle}</span>
                   </span>
                 </li>
@@ -198,8 +205,17 @@ export default function MesaContadora({ yo, saludo, hoy, periodo, empresa, resum
           </section>
 
           <section className={adminCard} aria-labelledby="descargas">
-            <h2 id="descargas" className="flex items-center gap-2 text-base font-semibold text-ink"><IconoDescargar className="h-5 w-5" aria-hidden="true" /> Descargar {mes}</h2>
-            <p className="mt-1 text-sm text-muted">El Excel del mes llega con el libro de ventas, antes del 15/12. Mientras tanto, cada factura se ve y se imprime en Facturas.</p>
+            <h2 id="descargas" className="flex items-center gap-2 text-base font-semibold text-ink"><IconoDescargar className="h-5 w-5" aria-hidden="true" /> Descargar {mes.split(' de ')[0]}</h2>
+            <p className="mt-1 text-sm text-muted">El libro de ventas en Excel, con {yo.esContadora ? 'tus columnas' : 'las columnas de la contadora'}. Las compras y el IVA se suman a este Excel cuando lleguen.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {/* Lo primero de ella es la firma: mientras no la dibuja, el botón fuerte es ese */}
+              <a href={`/api/admin/contabilidad/libro?mes=${periodo}`} download className={yo.esContadora && !firma ? adminSecondaryButton : adminPrimaryButton}>
+                <IconoDescargar className="h-4 w-4" aria-hidden="true" /> Libro de ventas en Excel
+              </a>
+              <Link href={libro} className={adminSecondaryButton}>
+                <IconoVer className="h-4 w-4" aria-hidden="true" /> Verlo en el panel
+              </Link>
+            </div>
           </section>
 
           <section className={adminCard} aria-labelledby="notas">
@@ -224,6 +240,21 @@ export default function MesaContadora({ yo, saludo, hoy, periodo, empresa, resum
           </section>
         </div>
       </div>
+
+      {/* La primera vez que ella entra: lo que hace (preguntó "¿cuáles van a ser mis funciones?", 16/11) */}
+      <AsiFunciona
+        clave="contabilidad-mesa"
+        activa={yo.esContadora}
+        titulo="Así funciona tu mesa"
+        nota="Cada mes, la alcaldía vence el 10 y el IVA el 15. La parte técnica es nuestra."
+        pasos={[
+          { icono: 'ver', texto: 'Revisas los libros, que se arman solos' },
+          { icono: 'calendario', texto: 'Declaras el IVA y la alcaldía' },
+          { icono: 'verificado', texto: 'Firmas el cierre con tu C.P.C.' },
+        ]}
+        boton={firma || !yo.puedeDeclarar ? 'Entendido' : 'Empezar: dibujar mi firma'}
+        alAceptar={firma || !yo.puedeDeclarar ? undefined : () => setFirmando(true)}
+      />
 
       {firmando && (
         <FirmaModal

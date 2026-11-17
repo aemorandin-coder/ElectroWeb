@@ -9,7 +9,8 @@ import { prisma } from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 // C-171: el Dashboard de cada administrador. Uno por persona (su id sale de la sesión, nunca del cuerpo).
-//   PUT    { widgets?: [{ id, tamano }], accesos?: [ids], metaMesUSD?: número | null }   guarda lo que venga
+//   PUT    { widgets?: [{ id, ancho, alto }], accesos?: [ids], metaMesUSD?: número | null }   guarda lo que venga
+//          (C-279: ancho × alto en la grilla de 12; lo de antes, { id, tamano }, se sigue leyendo)
 //   DELETE vuelve al diseño de fábrica (la meta del mes se conserva)
 // Lo que manda el navegador pasa por `normalizarDiseno`: sin widgets desconocidos ni sin permiso, y con los obligatorios siempre.
 

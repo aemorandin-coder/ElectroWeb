@@ -16,7 +16,7 @@ import { prefiereMenosMovimiento } from '@/lib/motion/resorte';
 /**
  * "Así funciona" (C-257, el kit de onboarding): la primera vez que alguien entra a una página con un camino nuevo (el
  * sorteo, el checkout, Puntos ES) sube una hoja con el camino en tres íconos que se dibujan uno tras otro, unidos por una
- * línea, y un solo botón. Chispa se asoma por detrás del borde de arriba (la hoja le tapa la cintura).
+ * línea, y un solo botón. Chispa se asoma por detrás del borde de arriba (la hoja le tapa la cintura); en el panel, sin ella.
  * - Sale una sola vez por página en este navegador (se marca al abrirse) y espera a que no haya otro diálogo abierto.
  * - En el teléfono sube desde abajo; en la PC es una tarjeta en el centro.
  * - Se cierra con el botón, la ×, Esc o tocando afuera. El botón puede llevar a una parte de la página (`destino`) o
@@ -61,6 +61,7 @@ export default function AsiFunciona({
   pose = 'explica',
   activa = true,
   aMano,
+  sinChispa = false,
 }: {
   /** Una por página: 'sorteo', 'checkout', 'puntos' */
   clave: string;
@@ -80,6 +81,8 @@ export default function AsiFunciona({
    * para que quien la abrió la desmonte.
    */
   aMano?: { alCerrar: () => void };
+  /** C-279: en el panel no va Chispa (decisión del equipo del 17/11): la hoja sale sola, sin el hueco de arriba */
+  sinChispa?: boolean;
 }) {
   const manual = Boolean(aMano);
   const [abierta, setAbierta] = useState(manual);
@@ -176,9 +179,9 @@ export default function AsiFunciona({
       <div className="onb-velo absolute inset-0 bg-brand-700/60" aria-hidden="true" onClick={() => cerrar(false)} />
 
       {/* En la tablet, del ancho de un teléfono grande y centrada abajo: a lo ancho, los tres pasos quedaban muy separados */}
-      <div className="onb-lamina relative w-full sm:w-[32rem]" style={{ marginTop: asoma + CABECERA }}>
+      <div className="onb-lamina relative w-full sm:w-[32rem]" style={{ marginTop: sinChispa ? 0 : asoma + CABECERA }}>
         {/* Chispa, detrás del borde de arriba de la hoja: la ventana termina 2 px por debajo del borde (la hoja lo tapa) */}
-        <div
+        {!sinChispa && <div
           aria-hidden="true"
           className="pointer-events-none absolute right-7 overflow-hidden"
           style={{ bottom: 'calc(100% - 2px)', width: ANCHO_CHISPA, height: asoma + 2 + CABECERA }}
@@ -186,7 +189,7 @@ export default function AsiFunciona({
           <div className="onb-asoma absolute left-0" style={{ top: CABECERA }}>
             <ChispaGuia pose={pose} ancho={ANCHO_CHISPA} />
           </div>
-        </div>
+        </div>}
 
         <div className="onb-tarjeta relative rounded-t-[1.75rem] bg-white px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-5 lg:rounded-[1.75rem] lg:px-7 lg:pb-7 lg:pt-6">
           <button

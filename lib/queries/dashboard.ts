@@ -49,7 +49,8 @@ export interface DashboardData {
     sinStock: number;
   };
   ordenesRecientes: Array<{ id: string; orderNumber: string; cliente: string; totalUSD: number; status: OrderStatus; paymentStatus: PaymentStatus; createdAt: string }>;
-  pocoInventario: { total: number; umbral: number; productos: Array<{ id: string; name: string; stock: number }> };
+  /** C-279: `version` es el `updatedAt` con que se abrió, para guardar la existencia sin pisar el cambio de otro */
+  pocoInventario: { total: number; umbral: number; productos: Array<{ id: string; name: string; stock: number; foto: string | null; precioUSD: number; version: string }> };
   /** Lo que le falta a la tienda por configurar; vacío si está todo */
   tienda: Array<{ clave: string; texto: string; href: string; soloDueno: boolean }>;
 }
@@ -129,7 +130,8 @@ export async function getDashboard(): Promise<DashboardData> {
       take: 6,
       select: { id: true, orderNumber: true, status: true, paymentStatus: true, totalUSD: true, createdAt: true, billingName: true, guestName: true, user: { select: { name: true } } },
     }),
-    prisma.product.findMany({ where: pocoStock, orderBy: [{ stock: 'asc' }, { name: 'asc' }], take: 5, select: { id: true, name: true, stock: true } }),
+    // C-279: con la foto, el precio y la versión (`updatedAt`), para subir la existencia ahí mismo sin pisar a otro
+    prisma.product.findMany({ where: pocoStock, orderBy: [{ stock: 'asc' }, { name: 'asc' }], take: 6, select: { id: true, name: true, stock: true, mainImage: true, priceUSD: true, updatedAt: true } }),
     prisma.product.count({ where: pocoStock }),
     prisma.companyPaymentMethod.count({ where: { isActive: true } }),
     prisma.product.count({ where: { ...FISICO_PUBLICADO, brandId: null } }),
@@ -201,7 +203,11 @@ export async function getDashboard(): Promise<DashboardData> {
       paymentStatus: o.paymentStatus,
       createdAt: o.createdAt.toISOString(),
     })),
-    pocoInventario: { total: pocosTotal, umbral, productos: pocos },
+    pocoInventario: {
+      total: pocosTotal,
+      umbral,
+      productos: pocos.map((p) => ({ id: p.id, name: p.name, stock: p.stock, foto: p.mainImage, precioUSD: Number(p.priceUSD), version: p.updatedAt.toISOString() })),
+    },
     tienda,
   };
 }

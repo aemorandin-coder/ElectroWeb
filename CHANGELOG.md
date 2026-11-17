@@ -10,6 +10,21 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.98] - 2026-11-17
+El Dashboard nuevo, "la recepción" (C-279), que el equipo eligió viendo la maqueta el 17/11. Sin cambio de base, sin SQL, sin variables nuevas y sin cron: los tableros guardados de antes se leen solos.
+### Dashboard 2.0.0 (C-279)
+- **La recepción en lugar del título "Dashboard":** el saludo, la frase del día con lo que toca (o la venta de hoy), el buscador, los pasos del día con su número y el pulso de la tienda (la tasa, el corte de despachos con lo que falta y quién está en la tienda, en vivo).
+- **Cada tarjeta del tamaño que quieras:** una grilla de 12 columnas, con tamaños de Mini (3 × 1) a Ancho (12 × 2) en el menú, o arrastrando la esquina para uno a la medida. El contenido se acomoda solo al tamaño. En el teléfono, los Mini van de a dos y los demás a lo ancho.
+- **Personalizar:** mover arrastrando o con las flechas, el menú de tamaño, cuatro plantillas (Dueño, Ventas, Lo justo y Marketing), el cajón "Agregar" y "De fábrica". Sin tablero guardado se ve la plantilla Dueño.
+- **Tres tarjetas nuevas:** el sorteo activo con su cuenta atrás, ElectroStudio de la semana con la historia sugerida, y lo que viene (el corte de hoy, la alcaldía el 10, el IVA el 15 y las fechas del sorteo).
+- **Actuar desde el tablero:** "Por atender" muestra el primer pago por confirmar y el último mensaje con su botón; "Se están acabando" sube la existencia ahí mismo ("Guardar 1 → 3"); la meta del mes se cambia tocando su monto.
+- **Ctrl K:** busca acciones, pantallas, productos y órdenes (por número, cliente, teléfono, cédula, referencia o guía), cada cosa con su permiso.
+- **El movimiento de ElectroStudio, una sola vez:** el destello de la recepción, el saludo palabra por palabra, la corriente que enciende los pasos, las tarjetas en cascada, los íconos que se dibujan y el confeti en los azules de la marca cuando llega un pago confirmado. Quieto con "reducir movimiento".
+### Contabilidad 1.3.1 (C-279)
+- La hoja "Así funciona" de la mesa de la contadora sale sin Chispa: en el panel no va el personaje de la tienda.
+### Carrito, checkout y cuenta del cliente 1.12.4 (C-279)
+- Interno: la hoja "Así funciona" puede salir sin Chispa. En la tienda sale igual.
+
 ## [1.0.0-rc.97] - 2026-11-17
 Dinero: lo más urgente de la auditoría del 17/11 (C-283). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Órdenes y pagos 1.7.3 (C-283)

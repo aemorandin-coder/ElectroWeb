@@ -17,6 +17,9 @@
 /.next/
 /.next-a/
 /.next-b/
+# Los builds de prueba de las sesiones de Claude (NEXT_DIST_DIR)
+/.next-test/
+/.next-prueba/
 /out/
 
 # production

@@ -1,198 +1,232 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import {
-  IconoAdvertencia, IconoBillete, IconoChat, IconoChevronDerecha, IconoClaqueta, IconoClientes, IconoCompartir,
-  IconoConfiguracion, IconoConfirmado, IconoCorreo, IconoDocumento, IconoEnvio, IconoEstrella, IconoGarantia, IconoMas,
-  IconoOrdenes, IconoPaquete, IconoPorcentaje, IconoReloj, IconoReportes, IconoSalvavidas, IconoServicioTecnico,
-  IconoSubir, IconoVariantes,
+  IconoAdvertencia, IconoBillete, IconoChat, IconoCheck, IconoChevronDerecha, IconoClaqueta, IconoConfirmado, IconoEstrella,
+  IconoFlechaDerecha, IconoMas, IconoPremio, IconoReloj,
 } from '@/components/iconos';
 import { adminBadge } from '@/lib/admin-ui';
-import { formatUSD, formatVES } from '@/lib/currency';
-import type { DatosEmbudo, FilaActividad } from '@/lib/dashboard/datos';
+import { formatUSD } from '@/lib/currency';
+import type { DatosEmbudo, DatosSorteo, DatosStudio, FilaActividad, MensajePendiente, PagoPendiente } from '@/lib/dashboard/datos';
+import type { Pendiente } from '@/lib/dashboard/pendientes';
+import { diasEntre, fechaConMes, fechaCorta, periodoDelSorteo, type FechaQueViene } from '@/lib/dashboard/recepcion';
 import type { AccesoDef } from '@/lib/dashboard/widgets';
 import { ETIQUETA_ESTADO } from '@/lib/order-admin';
 import { estadoPago, tonoEstadoOrden } from '@/lib/order-pago';
 import type { DashboardData } from '@/lib/queries/dashboard';
 import CifraAnimada from './CifraAnimada';
+import { ICONO_ACCESO, IconoPor } from './iconos';
+import StockRapido from './StockRapido';
+import s from './tablero.module.css';
 
 // C-171: el contenido de cada widget del Dashboard. Son piezas de servidor (salvo las que cuentan o se piden en vivo): la página
-// las arma con los datos y el tablero editable las recibe ya hechas. La tarjeta (marco, título) es la misma para todos.
+// las arma con los datos y el tablero editable las recibe ya hechas.
+// C-279: cada widget se acomoda al tamaño de su tarjeta con consultas de contenedor (tablero.module.css): en Mini (una fila)
+// muestra lo esencial en una línea; con más filas, más contenido; las listas muestran las filas que caben, nunca cortadas.
+// `sinH1` se esconde en una fila, `sinH2` hasta dos, `sinH3` hasta tres, `sinH4` hasta cuatro; `soloH1` solo se ve en una fila.
 
-const fechaCorta = new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+const fechaHora = new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+const cx = (...clases: Array<string | false | null | undefined>) => clases.filter(Boolean).join(' ');
+/** La clase de la fila `i` de una lista: las que no caben se esconden enteras */
+const porAlto = (i: number, desde: [number, number, number]) => cx(i >= desde[0] && s.sinH2, i >= desde[1] && s.sinH3, i >= desde[2] && s.sinH4);
+const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
 
-/** El marco de un widget: tarjeta redondeada con su título y, si tiene, un enlace arriba a la derecha */
-export function Tarjeta({ id, titulo, detalle, enlace, pegado, children }: {
-  id: string;
-  titulo: string;
-  detalle?: string;
-  enlace?: { href: string; texto: string };
-  /** El contenido llega hasta los bordes (listas) */
-  pegado?: boolean;
-  children: ReactNode;
-}) {
+/** El marco de un widget: la tarjeta con su ícono, su título y, si tiene, algo a la derecha (un enlace o un sello) */
+export function Tarjeta({ id, titulo, icono, extra, children }: { id: string; titulo: string; icono: string; extra?: ReactNode; children: ReactNode }) {
   return (
-    <section aria-labelledby={`w-${id}`} className="flex h-full flex-col overflow-hidden rounded-3xl border border-line bg-white">
-      <div className="flex items-center justify-between gap-2 px-4 pb-2 pt-4">
-        <div className="min-w-0">
-          <h2 id={`w-${id}`} className="text-base font-semibold text-ink">{titulo}</h2>
-          {detalle && <p className="text-xs text-muted">{detalle}</p>}
-        </div>
-        {enlace && <Link href={enlace.href} className="inline-flex h-9 shrink-0 items-center rounded-full px-3 text-sm font-semibold text-brand-600 hover:bg-brand-50">{enlace.texto}</Link>}
+    <section aria-labelledby={`w-${id}`} className={s.tarjeta}>
+      <div className={s.tCabeza}>
+        <IconoPor nombre={icono} aria-hidden="true" />
+        <h2 id={`w-${id}`}>{titulo}</h2>
+        {extra}
       </div>
-      <div className={pegado ? 'flex-1' : 'flex-1 px-4 pb-4'}>{children}</div>
+      <div className={s.tCuerpo}>{children}</div>
     </section>
   );
 }
 
-const Vacio = ({ children }: { children: ReactNode }) => <p className="px-4 pb-4 text-sm text-muted">{children}</p>;
+const Enlace = ({ href, children, clase }: { href: string; children: ReactNode; clase?: string }) => <Link href={href} className={cx(s.enlace, clase)}>{children}</Link>;
+const Vacio = ({ children }: { children: ReactNode }) => <p className={s.rotulo}>{children}</p>;
 
-/* ── Accesos rápidos ── */
-const ICONO_ACCESO: Record<string, ReactNode> = {
-  'nuevo-producto': <IconoMas />, ordenes: <IconoOrdenes />, 'nueva-cotizacion': <IconoDocumento />, 'consultar-pago': <IconoBillete />, oferta: <IconoPorcentaje />,
-  'nueva-historia': <IconoClaqueta />, importar: <IconoSubir />, categorias: <IconoVariantes />, 'relacion-ventas': <IconoReportes />, configuracion: <IconoConfiguracion />,
-  productos: <IconoPaquete />, clientes: <IconoClientes />, mensajes: <IconoChat />, promotores: <IconoCompartir />, resenas: <IconoEstrella />, garantias: <IconoSalvavidas />,
-};
-
-export function WidgetAccesos({ accesos }: { accesos: AccesoDef[] }) {
+function AlDia({ titulo, detalle, icono = 'hecho' }: { titulo: string; detalle?: string; icono?: 'hecho' | 'premio' }) {
   return (
-    <section aria-labelledby="w-accesos" className="h-full">
+    <div className={s.alDia}>
+      <span className={cx(s.placa, icono === 'hecho' ? s.placaHecho : s.placaClara)} aria-hidden="true">{icono === 'hecho' ? <IconoCheck /> : <IconoPremio />}</span>
+      <div className="min-w-0"><b>{titulo}</b>{detalle && <small className={s.sinH1}>{detalle}</small>}</div>
+    </div>
+  );
+}
+
+/* ── Accesos rápidos: una fila de botones (o la grilla, con dos filas) ── */
+export function WidgetAccesos({ accesos }: { accesos: AccesoDef[] }) {
+  const boton = (a: AccesoDef) => (
+    <Link key={a.id} href={a.href}><span className={cx(s.placa, s.placaClara)} aria-hidden="true"><IconoPor nombre={ICONO_ACCESO[a.id] ?? 'Cuadricula'} /></span>{a.titulo}</Link>
+  );
+  return (
+    <section aria-labelledby="w-accesos" className={s.tarjeta} style={{ justifyContent: 'center' }}>
       <h2 id="w-accesos" className="sr-only">Accesos rápidos</h2>
-      {accesos.length === 0 ? <p className="rounded-3xl border border-dashed border-line p-4 text-sm text-muted">Sin accesos rápidos. Toca Editar para elegir tus botones.</p> : (
-        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-          {accesos.map((a) => (
-            <li key={a.id}>
-              <Link href={a.href} className="flex min-h-12 items-center gap-2.5 rounded-2xl border border-line bg-white px-3 py-2 text-sm font-semibold text-ink transition-colors hover:border-brand-500 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 [&_svg]:h-4 [&_svg]:w-4" aria-hidden="true">{ICONO_ACCESO[a.id] ?? <IconoChevronDerecha />}</span>
-                <span className="min-w-0 leading-tight">{a.titulo}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+      {accesos.length === 0 ? <p className={s.rotulo} style={{ padding: 14 }}>Sin accesos rápidos. Toca Personalizar para elegir tus botones.</p> : (
+        <>
+          <nav className={s.dock} aria-label="Accesos rápidos">{accesos.map(boton)}</nav>
+          <nav className={s.dockRejilla} aria-label="Accesos rápidos">{accesos.map(boton)}</nav>
+        </>
       )}
     </section>
   );
 }
 
 /* ── Por atender ── */
-type Permiso = 'MANAGE_PRODUCTS' | 'MANAGE_ORDERS' | 'MANAGE_CONTENT' | 'MANAGE_USERS';
-type Pendiente = { clave: keyof DashboardData['porAtender']; uno: string; varios: string; href: string; icono: ReactNode; permiso: Permiso; urgente?: boolean };
-
-// En el orden en que conviene atenderlos: primero el dinero y lo que espera un cliente
-const PENDIENTES: Pendiente[] = [
-  { clave: 'pagosPorConfirmar', uno: 'pago por confirmar', varios: 'pagos por confirmar', href: '/admin/orders', icono: <IconoReloj />, permiso: 'MANAGE_ORDERS', urgente: true },
-  { clave: 'porPreparar', uno: 'pedido pagado por preparar o entregar', varios: 'pedidos pagados por preparar o entregar', href: '/admin/orders', icono: <IconoEnvio />, permiso: 'MANAGE_ORDERS', urgente: true },
-  { clave: 'recargas', uno: 'recarga de Puntos ES por confirmar', varios: 'recargas de Puntos ES por confirmar', href: '/admin/transactions', icono: <IconoBillete />, permiso: 'MANAGE_ORDERS', urgente: true },
-  { clave: 'pagosSinOrden', uno: 'Pago Móvil sin orden', varios: 'Pagos Móvil sin orden', href: '/admin/transactions', icono: <IconoAdvertencia />, permiso: 'MANAGE_ORDERS', urgente: true },
-  { clave: 'cotizaciones', uno: 'cotización por armar', varios: 'cotizaciones por armar', href: '/admin/cotizaciones', icono: <IconoDocumento />, permiso: 'MANAGE_ORDERS' },
-  { clave: 'garantias', uno: 'garantía por atender', varios: 'garantías por atender', href: '/admin/garantias', icono: <IconoSalvavidas />, permiso: 'MANAGE_ORDERS' },
-  { clave: 'facturasEmpresa', uno: 'compra de empresa sin número de factura', varios: 'compras de empresa sin número de factura', href: '/admin/orders', icono: <IconoDocumento />, permiso: 'MANAGE_ORDERS' },
-  { clave: 'mensajes', uno: 'mensaje de cliente', varios: 'mensajes de clientes', href: '/admin/inquiries', icono: <IconoCorreo />, permiso: 'MANAGE_CONTENT' },
-  { clave: 'solicitudes', uno: 'solicitud de producto', varios: 'solicitudes de producto', href: '/admin/inquiries?tab=requests', icono: <IconoVariantes />, permiso: 'MANAGE_CONTENT' },
-  { clave: 'sinStock', uno: 'producto publicado sin existencias', varios: 'productos publicados sin existencias', href: '/admin/products', icono: <IconoPaquete />, permiso: 'MANAGE_PRODUCTS' },
-  { clave: 'resenas', uno: 'reseña por moderar', varios: 'reseñas por moderar', href: '/admin/reviews', icono: <IconoEstrella />, permiso: 'MANAGE_CONTENT' },
-  { clave: 'descuentos', uno: 'descuento por aprobar', varios: 'descuentos por aprobar', href: '/admin/discount-requests', icono: <IconoPorcentaje />, permiso: 'MANAGE_CONTENT' },
-  { clave: 'verificaciones', uno: 'empresa por verificar', varios: 'empresas por verificar', href: '/admin/verifications', icono: <IconoGarantia />, permiso: 'MANAGE_USERS' },
-  { clave: 'referidos', uno: 'comisión de promotor por aprobar', varios: 'comisiones de promotores por aprobar', href: '/admin/marketing', icono: <IconoCompartir />, permiso: 'MANAGE_CONTENT' },
-  { clave: 'creadores', uno: 'solicitud de creador de cursos', varios: 'solicitudes de creadores de cursos', href: '/admin/creators', icono: <IconoClientes />, permiso: 'MANAGE_USERS' },
-  { clave: 'cursos', uno: 'curso por aprobar', varios: 'cursos por aprobar', href: '/admin/cursos', icono: <IconoServicioTecnico />, permiso: 'MANAGE_CONTENT' },
-];
-
-export function WidgetPorAtender({ porAtender, puede }: { porAtender: DashboardData['porAtender']; puede: (permiso: string) => boolean }) {
-  const pendientes = PENDIENTES.filter((p) => puede(p.permiso) && porAtender[p.clave] > 0);
-  const total = pendientes.reduce((suma, p) => suma + porAtender[p.clave], 0);
+export function WidgetPorAtender({ pendientes, pagos, mensajes }: {
+  pendientes: Array<Pendiente & { cantidad: number }>;
+  pagos: PagoPendiente[];
+  mensajes: MensajePendiente[];
+}) {
+  const total = pendientes.reduce((suma, p) => suma + p.cantidad, 0);
+  if (total === 0) {
+    return (
+      <Tarjeta id="por-atender" titulo="Por atender" icono="Bandeja">
+        <AlDia titulo="Todo al día" detalle="Nada espera: ni pagos, ni pedidos, ni mensajes. Si entra algo, lo ves aquí al instante." />
+      </Tarjeta>
+    );
+  }
+  const primero = pendientes[0];
+  const pago = primero.clave === 'pagosPorConfirmar' ? pagos[0] : undefined;
+  const mensaje = primero.clave === 'mensajes' ? mensajes[0] : undefined;
+  const hrefPrimero = pago ? `/admin/orders?orden=${encodeURIComponent(pago.numero)}` : primero.href;
+  // Arriba, el primer pago y el último mensaje con su botón; después cada pendiente en una fila (los que no quedaron dichos
+  // del todo por esas tarjetas). Lo que no cabe en el alto de la tarjeta se esconde entero: se suma la altura de cada pieza
+  // (con las filas de 72 px del teléfono, las más bajas) y cada una se ve desde el alto en que entra
+  const tarjetaPago = pagos[0];
+  const tarjetaMensaje = mensajes[0];
+  const filas = pendientes.filter((p) => !(p.clave === 'pagosPorConfirmar' && tarjetaPago && p.cantidad === 1) && !(p.clave === 'mensajes' && tarjetaMensaje && p.cantidad === 1));
+  const PRESUPUESTO = [0, 0, 96, 180, 264, 348];
+  const alturas = [...(tarjetaPago ? [100] : []), ...(tarjetaMensaje ? [108] : []), ...filas.map(() => 43)];
+  const clases = alturas.map((_, i) => {
+    const usado = alturas.slice(0, i + 1).reduce((a, b) => a + b, 0);
+    const k = [2, 3, 4, 5].find((a) => usado <= PRESUPUESTO[a]) ?? 6;
+    return k === 2 ? '' : k === 3 ? s.sinH2 : k === 4 ? s.sinH3 : k === 5 ? s.sinH4 : s.oculto;
+  });
+  const clasePago = tarjetaPago ? clases[0] : '';
+  const claseMensaje = tarjetaMensaje ? clases[tarjetaPago ? 1 : 0] : '';
+  const clasesFilas = clases.slice((tarjetaPago ? 1 : 0) + (tarjetaMensaje ? 1 : 0));
   return (
-    <Tarjeta id="por-atender" titulo="Por atender" detalle={total > 0 ? `${total} ${total === 1 ? 'pendiente' : 'pendientes'}` : undefined} pegado>
-      {pendientes.length === 0 ? (
-        <p className="flex items-center gap-2 px-4 pb-4 text-sm text-ink-soft"><IconoConfirmado className="h-4 w-4 text-success-strong" aria-hidden="true" /> Todo al día</p>
-      ) : (
-        <ul className="divide-y divide-line border-t border-line">
-          {pendientes.map((p) => {
-            const cantidad = porAtender[p.clave];
-            return (
-              <li key={p.clave}>
-                <Link href={p.href} className="flex min-h-12 items-center gap-3 px-4 py-2.5 text-sm text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
-                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full [&_svg]:h-4 [&_svg]:w-4 ${p.urgente ? 'bg-brand-500 text-white' : 'bg-surface text-muted'}`} aria-hidden="true">{p.icono}</span>
-                  <span className="min-w-0 flex-1 font-medium"><span className="tabular-nums">{cantidad}</span> {cantidad === 1 ? p.uno : p.varios}</span>
-                  <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+    <Tarjeta id="por-atender" titulo="Por atender" icono="Bandeja" extra={<span className={cx(adminBadge('warning'), s.sinH1)}><IconoReloj aria-hidden="true" />{total} te {total === 1 ? 'toca' : 'tocan'}</span>}>
+      {/* En una fila: lo primero, con su botón */}
+      <div className={cx(s.pendLinea, s.soloH1)}>
+        <span className={cx(s.placa, s.placaAccion)} aria-hidden="true"><IconoPor nombre={primero.icono} /></span>
+        <div className={s.filaTexto}>
+          <b>{total > 1 ? `${total} por atender` : primero.cantidad === 1 ? primero.cortoUno : `${primero.cantidad} ${primero.cortoVarios}`}</b>
+          <small>{pago ? `${formatUSD(pago.totalUSD)} · ${pago.cliente}` : mensaje ? `${mensaje.cliente}: ${mensaje.texto}` : `${primero.cantidad} ${primero.cantidad === 1 ? primero.uno : primero.varios}`}</small>
+        </div>
+        <Link href={hrefPrimero} className={s.btnRedondo} aria-label={pago ? `Revisar el pago de ${pago.cliente}` : `Abrir: ${primero.varios}`} title="Abrir"><IconoFlechaDerecha aria-hidden="true" /></Link>
+      </div>
+      <ul className={cx(s.filas, s.sinH1)}>
+        {tarjetaPago && (
+          <li className={cx(s.pendiente, clasePago)}>
+            <div className={s.pendFila}>
+              <span className={cx(s.placa, s.placaAccion)} aria-hidden="true"><IconoBillete /></span>
+              <div className={s.filaTexto}><b>{tarjetaPago.metodo} · {formatUSD(tarjetaPago.totalUSD)}</b><small>{tarjetaPago.cliente} · orden {tarjetaPago.numero}</small></div>
+            </div>
+            <div className={s.pendAcciones}>
+              <Link href={`/admin/orders?orden=${encodeURIComponent(tarjetaPago.numero)}`} className={cx(s.btn, s.btnPrimario)}><IconoCheck aria-hidden="true" />Revisar el pago</Link>
+            </div>
+          </li>
+        )}
+        {tarjetaMensaje && (
+          <li className={cx(s.pendiente, claseMensaje)}>
+            <div className={s.pendFila}>
+              <span className={cx(s.placa, s.placaAccion)} aria-hidden="true"><IconoChat /></span>
+              <div className={s.filaTexto}><b>{tarjetaMensaje.cliente} escribió</b><small className={s.dosLineas}>{tarjetaMensaje.texto}</small></div>
+            </div>
+            <div className={s.pendAcciones}>
+              <Link href="/admin/inquiries" className={cx(s.btn, s.btnPrimario)}><IconoChat aria-hidden="true" />Responder</Link>
+            </div>
+          </li>
+        )}
+        {filas.map((p, i) => (
+          <li key={p.clave} className={clasesFilas[i]}>
+            <Link href={p.href} className={s.fila}>
+              <span className={cx(s.placa, p.urgente ? s.placaAccion : s.placaGris)} aria-hidden="true"><IconoPor nombre={p.icono} /></span>
+              <span className={s.filaTexto}><b>{p.cantidad} {p.cantidad === 1 ? p.uno : p.varios}</b></span>
+              <IconoChevronDerecha className="shrink-0 text-muted" aria-hidden="true" />
+            </Link>
+          </li>
+        ))}
+      </ul>
     </Tarjeta>
   );
 }
 
 /* ── Ventas cobradas ── */
-/** La semana en siete barras: lo justo para ver el ritmo. Los montos van también escritos (no dependen del puntero). */
-function Semana({ dias }: { dias: DashboardData['ventas']['semana'] }) {
-  const maximo = Math.max(...dias.map((d) => d.totalUSD), 0);
-  const total = dias.reduce((suma, d) => suma + Math.round(d.totalUSD * 100), 0) / 100;
+export function WidgetVentas({ ventas, totales, verReportes }: { ventas: DashboardData['ventas']; totales: DashboardData['totales']; verReportes: boolean }) {
+  const maximo = Math.max(...ventas.semana.map((d) => d.totalUSD), 0);
+  const semana = ventas.semana.reduce((suma, d) => suma + Math.round(d.totalUSD * 100), 0) / 100;
+  const mejor = ventas.semana.reduce<(typeof ventas.semana)[number] | null>((m, d) => (d.totalUSD > (m?.totalUSD ?? 0) ? d : m), null);
+  const diaDe = (etiqueta: string) => etiqueta.split(' ')[0].replace('.', '');
   return (
-    <div>
-      <div className="flex items-baseline justify-between gap-2">
-        <p className="text-xs text-muted">Últimos 7 días</p>
-        <p className="text-sm font-semibold tabular-nums text-ink">{formatUSD(total)}</p>
+    <Tarjeta id="ventas" titulo="Ventas cobradas" icono="Ventas" extra={verReportes ? <Enlace href="/admin/reports" clase={s.sinH1}>Reportes</Enlace> : undefined}>
+      <div className={cx(s.lineaMini, s.soloH1)}>
+        <span className={s.rotulo}>Este mes</span>
+        <b className={s.cifraChica}><CifraAnimada valor={ventas.mesUSD} formato="usd" retraso={300} /></b>
+        <span className={cx(s.rotulo, s.sinMuyAngosto)}>· hoy {formatUSD(ventas.hoyUSD)}</span>
       </div>
-      <ol className="mt-2 flex h-20 items-end gap-1.5" aria-label="Ventas cobradas por día">
-        {dias.map((dia) => (
-          <li key={dia.fecha} className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1" title={`${dia.etiqueta}: ${formatUSD(dia.totalUSD)}`}>
-            <span
-              className={`block w-full rounded-t-md ${dia.totalUSD > 0 ? 'bg-brand-500' : 'bg-line'}`}
-              style={{ height: dia.totalUSD > 0 && maximo > 0 ? `${Math.max(8, (dia.totalUSD / maximo) * 100)}%` : '2px' }}
-              aria-hidden="true"
-            />
-            <span className="block whitespace-nowrap text-center text-xs text-muted" aria-hidden="true">{dia.etiqueta.split(' ')[0].replace('.', '')}</span>
-            <span className="sr-only">{dia.etiqueta}: {formatUSD(dia.totalUSD)}</span>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
-export function WidgetVentas({ ventas, verReportes }: { ventas: DashboardData['ventas']; verReportes: boolean }) {
-  return (
-    <Tarjeta id="ventas" titulo="Ventas cobradas" enlace={verReportes ? { href: '/admin/reports', texto: 'Reportes' } : undefined}>
-      <dl className="grid grid-cols-2 gap-3">
+      <dl className={cx(s.dosCol, s.sinH1)}>
         <div>
-          <dt className="text-xs text-muted">Hoy</dt>
-          <dd className="text-xl font-bold tabular-nums text-ink [overflow-wrap:anywhere]"><CifraAnimada valor={ventas.hoyUSD} formato="usd" /></dd>
-          <dd className="text-xs text-muted">{ventas.hoyOrdenes} {ventas.hoyOrdenes === 1 ? 'orden' : 'órdenes'}</dd>
+          <dt className={s.rotulo}>Hoy</dt>
+          <dd className={s.cifra}><CifraAnimada valor={ventas.hoyUSD} formato="usd" retraso={300} /></dd>
+          <dd className={s.rotulo}>{plural(ventas.hoyOrdenes, 'orden', 'órdenes')}</dd>
         </div>
         <div>
-          <dt className="text-xs text-muted">Este mes</dt>
-          <dd className="text-xl font-bold tabular-nums text-ink [overflow-wrap:anywhere]"><CifraAnimada valor={ventas.mesUSD} formato="usd" /></dd>
-          <dd className="text-xs text-muted">{ventas.mesOrdenes} {ventas.mesOrdenes === 1 ? 'orden' : 'órdenes'}</dd>
+          <dt className={s.rotulo}>Este mes</dt>
+          <dd className={s.cifra}><CifraAnimada valor={ventas.mesUSD} formato="usd" retraso={300} /></dd>
+          <dd className={s.rotulo}>{plural(ventas.mesOrdenes, 'orden', 'órdenes')}</dd>
         </div>
       </dl>
-      <div className="mt-4 border-t border-line pt-3"><Semana dias={ventas.semana} /></div>
-      <p className="mt-3 text-xs text-muted">Solo órdenes pagadas, sin las canceladas ni las reembolsadas.</p>
+      <div className={cx(s.semana, s.sinH2)}>
+        <div className={s.semanaCabeza}><span>Últimos 7 días</span><b>{formatUSD(semana)}</b></div>
+        <ol className={s.barras} aria-label="Ventas cobradas por día">
+          {ventas.semana.map((dia, i) => {
+            const hoy = i === ventas.semana.length - 1;
+            const alto = dia.totalUSD > 0 && maximo > 0 ? Math.max(8, (dia.totalUSD / maximo) * 100) : 4;
+            return (
+              <li key={dia.fecha} title={`${dia.etiqueta}: ${formatUSD(dia.totalUSD)}`}>
+                <span className={s.pista}><span className={cx(s.barra, s.crece, dia.totalUSD > 0 && s.barraLlena, hoy && dia.totalUSD === 0 && s.barraHoy)} style={{ height: `${alto}%`, animationDelay: `${420 + i * 60}ms` }} /></span>
+                <small className={hoy ? s.hoy : undefined} aria-hidden="true">{hoy ? 'hoy' : diaDe(dia.etiqueta)}</small>
+                <span className="sr-only">{dia.etiqueta}: {formatUSD(dia.totalUSD)}</span>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+      <p className={cx(s.notaVenta, s.sinH3)}>
+        <span className={cx(s.placa, s.placaClara)} aria-hidden="true"><IconoEstrella /></span>
+        <span>
+          {mejor ? <>La venta de la semana: <b>{mejor.etiqueta.replace('.', '')}</b>, {formatUSD(mejor.totalUSD)}. </> : 'Sin ventas esta semana. '}
+          Desde que abrió: <b>{formatUSD(totales.ventasUSD)}</b> en {plural(totales.ordenes, 'orden', 'órdenes')}.
+        </span>
+      </p>
+      <p className={cx(s.rotulo, s.sinH4)} style={{ marginTop: 8 }}>Solo órdenes pagadas, sin las canceladas ni las reembolsadas.</p>
     </Tarjeta>
   );
 }
 
-/* ── Los que ya existían ── */
+/* ── Órdenes recientes ── */
 export function WidgetOrdenes({ ordenes }: { ordenes: DashboardData['ordenesRecientes'] }) {
   return (
-    <Tarjeta id="ordenes" titulo="Órdenes recientes" enlace={{ href: '/admin/orders', texto: 'Ver todas' }} pegado>
+    <Tarjeta id="ordenes" titulo="Órdenes recientes" icono="Ordenes" extra={<Enlace href="/admin/orders" clase={s.sinMuyAngosto}>Ver todas</Enlace>}>
       {ordenes.length === 0 ? <Vacio>Todavía no hay órdenes.</Vacio> : (
-        <ul className="divide-y divide-line border-t border-line">
-          {ordenes.map((orden) => {
+        <ul className={s.filas}>
+          {ordenes.map((orden, i) => {
             const pago = estadoPago(orden.paymentStatus);
             return (
-              <li key={orden.id}>
-                <Link href="/admin/orders" className="flex min-h-12 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
-                  <span className="min-w-0 flex-1 basis-40">
-                    <span className="block truncate font-medium text-ink">{orden.cliente}</span>
-                    <span className="block text-xs tabular-nums text-muted">{orden.orderNumber} · {fechaCorta.format(new Date(orden.createdAt))}</span>
-                  </span>
-                  <span className="flex flex-wrap items-center gap-1.5">
+              <li key={orden.id} className={porAlto(i, [2, 4, 5])}>
+                <Link href={`/admin/orders?orden=${encodeURIComponent(orden.orderNumber)}`} className={s.fila}>
+                  <span className={s.filaTexto}><b>{orden.cliente}</b><small>{orden.orderNumber} · {fechaHora.format(new Date(orden.createdAt))}</small></span>
+                  <span className={cx('flex shrink-0 flex-wrap items-center gap-1', s.sinAngosto)}>
                     <span className={adminBadge(tonoEstadoOrden(orden.status))}>{ETIQUETA_ESTADO[orden.status]}</span>
                     {orden.paymentStatus !== 'PAID' && <span className={adminBadge(pago.tono)}>{pago.label}</span>}
                   </span>
-                  <span className="w-20 shrink-0 text-right font-semibold tabular-nums text-ink">{formatUSD(orden.totalUSD)}</span>
+                  <span className={s.derecha}>{formatUSD(orden.totalUSD)}</span>
                 </Link>
               </li>
             );
@@ -203,23 +237,15 @@ export function WidgetOrdenes({ ordenes }: { ordenes: DashboardData['ordenesReci
   );
 }
 
+/* ── Se están acabando ── */
 export function WidgetInventario({ inventario }: { inventario: DashboardData['pocoInventario'] }) {
   return (
-    <Tarjeta id="inventario" titulo="Poco inventario" detalle={`Publicados con ${inventario.umbral} unidades o menos`} pegado>
-      {inventario.total === 0 ? <Vacio>Nada se está acabando.</Vacio> : (
+    <Tarjeta id="inventario" titulo="Se están acabando" icono="Paquete" extra={inventario.total > 0 ? <span className={cx(s.dato, s.sinAngosto)}>{inventario.umbral === 1 ? 'con 1' : `${inventario.umbral} o menos`}</span> : undefined}>
+      {inventario.total === 0 ? <AlDia titulo="Nada se está acabando" detalle={`Ningún producto publicado tiene ${inventario.umbral} unidades o menos.`} /> : (
         <>
-          <ul className="divide-y divide-line border-t border-line">
-            {inventario.productos.map((producto) => (
-              <li key={producto.id}>
-                <Link href={`/admin/products/${producto.id}`} className="flex min-h-11 items-center gap-3 px-4 py-2 text-sm hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
-                  <span className="min-w-0 flex-1 truncate text-ink">{producto.name}</span>
-                  <span className={adminBadge(producto.stock <= 2 ? 'danger' : 'warning')}>{producto.stock === 1 ? 'Queda 1' : `Quedan ${producto.stock}`}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <StockRapido productos={inventario.productos} />
           {inventario.total > inventario.productos.length && (
-            <p className="border-t border-line px-4 py-2 text-xs text-muted">Y {inventario.total - inventario.productos.length} más en <Link href="/admin/products" className="font-semibold text-brand-600 hover:text-brand-700">Productos</Link>.</p>
+            <p className={cx(s.rotulo, s.sinH4)} style={{ marginTop: 'auto', paddingTop: 6 }}>Y {inventario.total - inventario.productos.length} más en <Link href="/admin/products" className="font-semibold text-brand-600 hover:text-brand-700">Productos</Link>.</p>
           )}
         </>
       )}
@@ -227,40 +253,46 @@ export function WidgetInventario({ inventario }: { inventario: DashboardData['po
   );
 }
 
+/* ── Tu tienda: por completar ── */
 export function WidgetTienda({ tienda }: { tienda: DashboardData['tienda'] }) {
   return (
-    <Tarjeta id="tienda" titulo="Tu tienda: por completar" pegado>
-      {tienda.length === 0 ? <p className="flex items-center gap-2 px-4 pb-4 text-sm text-ink-soft"><IconoConfirmado className="h-4 w-4 text-success-strong" aria-hidden="true" /> Todo configurado</p> : (
-        <ul className="divide-y divide-line border-t border-line">
-          {tienda.map((item) => (
-            <li key={item.clave}>
-              <Link href={item.href} className="flex min-h-11 items-start gap-3 px-4 py-2.5 text-sm text-ink-soft hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
-                <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />
-                <span className="min-w-0 flex-1">{item.texto}</span>
-                <IconoChevronDerecha className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-              </Link>
-            </li>
-          ))}
-        </ul>
+    <Tarjeta id="tienda" titulo="Tu tienda: por completar" icono="Tienda" extra={tienda.length > 0 ? <span className={adminBadge('warning')}>{tienda.length}</span> : undefined}>
+      {tienda.length === 0 ? <AlDia titulo="Todo configurado" detalle="A la tienda no le falta nada por configurar." /> : (
+        <>
+          <p className={cx(s.rotulo, s.soloH1, 'truncate')}>{tienda[0].texto}</p>
+          <ul className={cx(s.filas, s.sinH1)}>
+            {tienda.map((item, i) => (
+              <li key={item.clave} className={porAlto(i, [2, 3, 4])}>
+                <Link href={item.href} className={s.filaBoton}>
+                  <span className={cx(s.placa, s.placaAccion)} aria-hidden="true"><IconoAdvertencia /></span>
+                  <span className={s.filaTexto}><b>{item.texto}</b></span>
+                  <IconoChevronDerecha aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </Tarjeta>
   );
 }
 
+/* ── Desde que abrió ── */
 export function WidgetTotales({ totales }: { totales: DashboardData['totales'] }) {
   return (
-    <Tarjeta id="totales" titulo="En total">
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-        <div><dt className="text-xs text-muted">Ventas cobradas</dt><dd className="font-semibold tabular-nums text-ink [overflow-wrap:anywhere]">{formatUSD(totales.ventasUSD)}</dd></div>
-        <div><dt className="text-xs text-muted">Órdenes</dt><dd className="font-semibold tabular-nums text-ink">{totales.ordenes}</dd></div>
-        <div><dt className="text-xs text-muted">Productos</dt><dd className="font-semibold tabular-nums text-ink">{totales.productos} <span className="font-normal text-muted">· {totales.publicados} {totales.publicados === 1 ? 'publicado' : 'publicados'}</span></dd></div>
-        <div><dt className="text-xs text-muted">Clientes</dt><dd className="font-semibold tabular-nums text-ink">{totales.clientes}</dd></div>
+    <Tarjeta id="totales" titulo="Desde que abrió" icono="Reportes">
+      <p className={cx(s.lineaMini, s.soloH1)}><b className={s.cifraChica}><CifraAnimada valor={totales.ventasUSD} formato="usd" retraso={300} /></b><span className={s.rotulo}>en {plural(totales.ordenes, 'orden', 'órdenes')}</span></p>
+      <dl className={cx(s.totales, s.sinH1)}>
+        <div><dd><b><CifraAnimada valor={totales.ventasUSD} formato="usd" retraso={300} /></b></dd><dt><small>cobrado</small></dt></div>
+        <div><dd><b><CifraAnimada valor={totales.ordenes} retraso={300} /></b></dd><dt><small>órdenes</small></dt></div>
+        <div><dd><b><CifraAnimada valor={totales.publicados} retraso={300} /></b></dd><dt><small>en la tienda<span className={s.sinMuyAngosto}> de {totales.productos}</span></small></dt></div>
+        <div><dd><b><CifraAnimada valor={totales.clientes} retraso={300} /></b></dd><dt><small>clientes</small></dt></div>
       </dl>
     </Tarjeta>
   );
 }
 
-/* ── Los nuevos ── */
+/* ── Embudo de hoy ── */
 export function WidgetEmbudo({ embudo }: { embudo: DatosEmbudo }) {
   const pasos = [
     { nombre: 'Visitaron la tienda', valor: embudo.visitas },
@@ -270,15 +302,12 @@ export function WidgetEmbudo({ embudo }: { embudo: DatosEmbudo }) {
   ];
   const maximo = Math.max(1, embudo.visitas);
   return (
-    <Tarjeta id="embudo" titulo="Embudo de hoy" detalle="Personas distintas en cada paso">
-      <ol className="space-y-2">
+    <Tarjeta id="embudo" titulo="Embudo de hoy" icono="Filtro">
+      <ol className={s.embudo}>
         {pasos.map((p) => (
-          <li key={p.nombre} className="text-sm">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="text-ink-soft">{p.nombre}</span>
-              <CifraAnimada valor={p.valor} className="font-semibold tabular-nums text-ink" />
-            </div>
-            <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-line" aria-hidden="true">
+          <li key={p.nombre}>
+            <div className={s.embudoFila}><span className="truncate">{p.nombre}</span><b><CifraAnimada valor={p.valor} retraso={300} /></b></div>
+            <div className={cx('mt-0.5 h-1.5 overflow-hidden rounded-full bg-line', s.sinH2)} aria-hidden="true">
               <div className="h-full rounded-full bg-brand-500" style={{ width: `${Math.min(100, (p.valor / maximo) * 100)}%` }} />
             </div>
           </li>
@@ -288,31 +317,34 @@ export function WidgetEmbudo({ embudo }: { embudo: DatosEmbudo }) {
   );
 }
 
+/* ── Tasa del día ── */
 export function WidgetTasa({ tasa, actualizada, automatica, puedeCambiar }: { tasa: number | null; actualizada: string | null; automatica: boolean; puedeCambiar: boolean }) {
   return (
-    <Tarjeta id="tasa" titulo="Tasa del día" enlace={puedeCambiar ? { href: '/admin/settings', texto: 'Cambiar' } : undefined}>
+    <Tarjeta id="tasa" titulo="Tasa del día" icono="Billete" extra={puedeCambiar ? <Enlace href="/admin/settings" clase={s.sinMuyAngosto}>Cambiar</Enlace> : undefined}>
       {tasa ? (
         <>
-          <p className="text-3xl font-bold tabular-nums text-ink">{formatVES(tasa)}</p>
-          <p className="text-sm text-muted">por cada dólar</p>
-          <p className="mt-2 text-xs text-muted">{actualizada ? `Actualizada el ${fechaCorta.format(new Date(actualizada))}` : 'Sin fecha de actualización'}{automatica ? ' · se actualiza sola' : ''}</p>
+          <div className={s.lineaMini}><b className={s.cifraChica}><CifraAnimada valor={tasa} formato="ves" desde={tasa * 0.985} retraso={300} /></b><span className={s.rotulo}>por dólar</span></div>
+          <p className={cx(s.rotulo, s.sinH1)} style={{ marginTop: 6 }}>
+            {actualizada ? `Actualizada el ${fechaHora.format(new Date(actualizada))}` : 'Sin fecha de actualización'}{automatica ? ' · se actualiza sola' : ''}. La usan los precios en bolívares de toda la tienda.
+          </p>
         </>
-      ) : <p className="text-sm text-muted">La tienda no tiene tasa en bolívares.</p>}
+      ) : <Vacio>La tienda no tiene tasa en bolívares.</Vacio>}
     </Tarjeta>
   );
 }
 
+/* ── Más vendidos de la semana ── */
 export function WidgetMasVendidos({ productos }: { productos: Array<{ id: string; nombre: string; unidades: number }> }) {
   return (
-    <Tarjeta id="mas-vendidos" titulo="Más vendidos" detalle="Órdenes cobradas en 7 días" pegado>
+    <Tarjeta id="mas-vendidos" titulo="Más vendidos de la semana" icono="Estrella">
       {productos.length === 0 ? <Vacio>Sin ventas esta semana.</Vacio> : (
-        <ol className="divide-y divide-line border-t border-line">
+        <ol className={s.filas}>
           {productos.map((p, i) => (
-            <li key={p.id}>
-              <Link href={`/admin/products/${p.id}`} className="flex min-h-11 items-center gap-3 px-4 py-2 text-sm hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold tabular-nums text-brand-700" aria-hidden="true">{i + 1}</span>
-                <span className="min-w-0 flex-1 truncate text-ink">{p.nombre}</span>
-                <span className="shrink-0 font-semibold tabular-nums text-ink">{p.unidades} u.</span>
+            <li key={p.id} className={porAlto(i, [2, 4, 5])}>
+              <Link href={`/admin/products/${p.id}`} className={s.fila}>
+                <span className={s.inicial} aria-hidden="true">{i + 1}</span>
+                <span className={s.filaTexto}><b>{p.nombre}</b></span>
+                <span className={s.derecha}>{p.unidades} u.</span>
               </Link>
             </li>
           ))}
@@ -322,18 +354,16 @@ export function WidgetMasVendidos({ productos }: { productos: Array<{ id: string
   );
 }
 
+/* ── El equipo ── */
 export function WidgetActividad({ filas }: { filas: FilaActividad[] }) {
   return (
-    <Tarjeta id="actividad" titulo="Actividad del equipo" enlace={{ href: '/admin/reports', texto: 'Bitácora' }} pegado>
+    <Tarjeta id="actividad" titulo="El equipo" icono="Clientes" extra={<Enlace href="/admin/reports" clase={s.sinMuyAngosto}>Todo</Enlace>}>
       {filas.length === 0 ? <Vacio>Todavía no hay actividad.</Vacio> : (
-        <ol className="divide-y divide-line border-t border-line">
-          {filas.map((f) => (
-            <li key={f.id} className="flex items-start gap-3 px-4 py-2 text-sm">
-              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-500 text-xs font-semibold text-white" aria-hidden="true">{f.quien.trim()[0]?.toUpperCase() ?? '?'}</span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-ink"><span className="font-semibold">{f.quien}</span> · {f.accion}{f.detalle ? <span className="text-ink-soft">: {f.detalle}</span> : null}</span>
-                <span className="block text-xs text-muted">{fechaCorta.format(new Date(f.en))}</span>
-              </span>
+        <ol className={s.filas}>
+          {filas.map((f, i) => (
+            <li key={f.id} className={cx(s.fila, porAlto(i, [2, 4, 6]))}>
+              <span className={s.inicial} aria-hidden="true">{f.quien.trim()[0]?.toUpperCase() ?? '?'}</span>
+              <span className={s.filaTexto}><b>{f.quien} · {f.accion}{f.detalle ? `: ${f.detalle}` : ''}</b><small>{fechaHora.format(new Date(f.en))}</small></span>
             </li>
           ))}
         </ol>
@@ -342,30 +372,30 @@ export function WidgetActividad({ filas }: { filas: FilaActividad[] }) {
   );
 }
 
+/* ── Promotores ── */
 export function WidgetPromotores({ datos }: { datos: { porAcreditar: number; montoUSD: number; porRevisar: number } }) {
   return (
-    <Tarjeta id="promotores" titulo="Promotores" enlace={{ href: '/admin/marketing', texto: 'Ver' }}>
-      <p className="flex items-baseline gap-2"><CifraAnimada valor={datos.porAcreditar} className="text-3xl font-bold tabular-nums text-ink" /><span className="text-sm text-muted">{datos.porAcreditar === 1 ? 'comisión por acreditar' : 'comisiones por acreditar'}</span></p>
-      <p className="mt-1 text-sm text-ink-soft">{formatUSD(datos.montoUSD)} en Puntos ES</p>
-      {datos.porRevisar > 0
-        ? <p className={`${adminBadge('warning')} mt-2`}>{datos.porRevisar} {datos.porRevisar === 1 ? 'espera' : 'esperan'} tu revisión</p>
-        : <p className="mt-2 text-xs text-muted">Ninguna espera tu revisión.</p>}
+    <Tarjeta id="promotores" titulo="Promotores" icono="Compartir" extra={<Enlace href="/admin/marketing" clase={s.sinMuyAngosto}>Ver</Enlace>}>
+      <div className={s.lineaMini}><b className={s.cifraChica}><CifraAnimada valor={datos.porAcreditar} retraso={300} /></b><span className={s.rotulo}>{datos.porAcreditar === 1 ? 'comisión por acreditar' : 'comisiones por acreditar'}</span></div>
+      <p className={cx(s.rotulo, s.sinH1)} style={{ marginTop: 6 }}>{formatUSD(datos.montoUSD)} en Puntos ES</p>
+      {datos.porRevisar > 0 && <p className={cx(adminBadge('warning'), s.sinH1)} style={{ marginTop: 8, alignSelf: 'flex-start' }}>{datos.porRevisar} {datos.porRevisar === 1 ? 'espera' : 'esperan'} tu revisión</p>}
     </Tarjeta>
   );
 }
 
 const ESTADO_COTIZACION: Record<string, string> = { REQUESTED: 'Por armar', DRAFT: 'Borrador', SENT: 'Enviada' };
 
+/* ── Cotizaciones abiertas ── */
 export function WidgetCotizaciones({ datos }: { datos: { abiertas: number; lista: Array<{ id: string; numero: string; cliente: string; estado: string; totalUSD: number }> } }) {
   return (
-    <Tarjeta id="cotizaciones" titulo="Cotizaciones abiertas" detalle={`${datos.abiertas} ${datos.abiertas === 1 ? 'abierta' : 'abiertas'}`} enlace={{ href: '/admin/cotizaciones', texto: 'Ver' }} pegado>
+    <Tarjeta id="cotizaciones" titulo="Cotizaciones abiertas" icono="Documento" extra={<Enlace href="/admin/cotizaciones" clase={s.sinMuyAngosto}>Ver</Enlace>}>
       {datos.lista.length === 0 ? <Vacio>No hay cotizaciones abiertas.</Vacio> : (
-        <ul className="divide-y divide-line border-t border-line">
-          {datos.lista.map((c) => (
-            <li key={c.id}>
-              <Link href={`/admin/cotizaciones/${c.id}`} className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-0.5 px-4 py-2 text-sm hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-500">
-                <span className="min-w-0 flex-1 basis-32"><span className="block truncate font-medium text-ink">{c.cliente}</span><span className="block text-xs tabular-nums text-muted">{c.numero} · {ESTADO_COTIZACION[c.estado] ?? c.estado}</span></span>
-                <span className="shrink-0 font-semibold tabular-nums text-ink">{formatUSD(c.totalUSD)}</span>
+        <ul className={s.filas}>
+          {datos.lista.map((c, i) => (
+            <li key={c.id} className={porAlto(i, [2, 3, 4])}>
+              <Link href={`/admin/cotizaciones/${c.id}`} className={s.fila}>
+                <span className={s.filaTexto}><b>{c.cliente}</b><small>{c.numero} · {ESTADO_COTIZACION[c.estado] ?? c.estado}</small></span>
+                <span className={s.derecha}>{formatUSD(c.totalUSD)}</span>
               </Link>
             </li>
           ))}
@@ -375,19 +405,22 @@ export function WidgetCotizaciones({ datos }: { datos: { abiertas: number; lista
   );
 }
 
+/* ── Reseñas recientes ── */
 export function WidgetResenas({ resenas }: { resenas: Array<{ id: string; estrellas: number; comentario: string | null; producto: string; autor: string; pendiente: boolean }> }) {
   return (
-    <Tarjeta id="resenas" titulo="Reseñas recientes" enlace={{ href: '/admin/reviews', texto: 'Ver' }} pegado>
+    <Tarjeta id="resenas" titulo="Reseñas recientes" icono="Estrella" extra={<Enlace href="/admin/reviews" clase={s.sinMuyAngosto}>Ver</Enlace>}>
       {resenas.length === 0 ? <Vacio>Todavía no hay reseñas.</Vacio> : (
-        <ul className="divide-y divide-line border-t border-line">
-          {resenas.map((r) => (
-            <li key={r.id} className="px-4 py-2 text-sm">
-              <p className="flex flex-wrap items-center gap-x-2">
-                <span className="inline-flex items-center gap-0.5 font-semibold tabular-nums text-ink"><IconoEstrella className="h-3.5 w-3.5 text-tag" aria-hidden="true" />{r.estrellas}<span className="sr-only"> de 5</span></span>
-                <span className="min-w-0 flex-1 truncate text-ink-soft">{r.producto}</span>
-                {r.pendiente && <span className={adminBadge('warning')}>Por moderar</span>}
-              </p>
-              {r.comentario && <p className="line-clamp-2 text-xs text-muted">{r.autor}: {r.comentario}</p>}
+        <ul className={s.filas}>
+          {resenas.map((r, i) => (
+            <li key={r.id} className={cx(s.fila, porAlto(i, [1, 2, 3]))}>
+              <span className={s.filaTexto}>
+                <b>
+                  <span className="inline-flex items-center gap-0.5 align-[-2px] tabular-nums"><IconoEstrella lleno className="text-tag" aria-hidden="true" />{r.estrellas}<span className="sr-only"> de 5</span></span>{' '}
+                  {r.producto}
+                </b>
+                {r.comentario && <small>{r.autor}: {r.comentario}</small>}
+              </span>
+              {r.pendiente && <span className={cx(adminBadge('warning'), s.sinMuyAngosto)}>Por moderar</span>}
             </li>
           ))}
         </ul>
@@ -396,22 +429,123 @@ export function WidgetResenas({ resenas }: { resenas: Array<{ id: string; estrel
   );
 }
 
+/* ── Respaldo ── */
 export function WidgetRespaldo({ datos }: { datos: { encendido: boolean; ultimo: { ok: boolean; en: string } | null } }) {
   return (
-    <Tarjeta id="respaldo" titulo="Respaldo" enlace={{ href: '/admin/settings#respaldos', texto: 'Abrir' }}>
+    <Tarjeta id="respaldo" titulo="Respaldo" icono="BaseDeDatos" extra={<Enlace href="/admin/settings#respaldos" clase={s.sinMuyAngosto}>Abrir</Enlace>}>
       {!datos.encendido ? (
-        <p className="flex items-start gap-2 text-sm text-warning-strong"><IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />Los respaldos automáticos están apagados.</p>
+        <p className="flex items-start gap-2 text-sm font-semibold text-deal"><IconoAdvertencia className="mt-0.5 shrink-0" aria-hidden="true" />Los respaldos automáticos están apagados.</p>
       ) : !datos.ultimo ? (
-        <p className="text-sm text-muted">Encendido. Todavía no corrió ninguno.</p>
+        <Vacio>Encendido. Todavía no corrió ninguno.</Vacio>
       ) : (
         <>
           <p className={`flex items-center gap-2 text-sm font-semibold ${datos.ultimo.ok ? 'text-success-strong' : 'text-deal'}`}>
-            {datos.ultimo.ok ? <IconoConfirmado className="h-4 w-4" aria-hidden="true" /> : <IconoAdvertencia className="h-4 w-4" aria-hidden="true" />}
+            {datos.ultimo.ok ? <IconoConfirmado aria-hidden="true" /> : <IconoAdvertencia aria-hidden="true" />}
             {datos.ultimo.ok ? 'El último salió bien' : 'El último falló'}
           </p>
-          <p className="mt-1 text-xs text-muted">{fechaCorta.format(new Date(datos.ultimo.en))}</p>
+          <p className={cx(s.rotulo, s.sinH1)}>{fechaHora.format(new Date(datos.ultimo.en))}</p>
         </>
       )}
     </Tarjeta>
   );
 }
+
+/* ── Sorteo ── */
+export function WidgetSorteo({ sorteo, ahora }: { sorteo: DatosSorteo | null; ahora: Date }) {
+  if (!sorteo) {
+    return (
+      <Tarjeta id="sorteo" titulo="Sorteo" icono="Premio">
+        <AlDia icono="premio" titulo="No hay un sorteo abierto" detalle="Cuando lo abras, aquí ves la cuenta atrás y los boletos." />
+        <div className={cx(s.tPie, s.sinH2)}><Link href="/admin/marketing#sorteo" className={cx(s.btn, s.btnSecundario)}><IconoMas aria-hidden="true" />Crear un sorteo</Link></div>
+      </Tarjeta>
+    );
+  }
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Caracas' }).format(ahora);
+  const dias = diasEntre(hoy, sorteo.resultado);
+  const periodo = periodoDelSorteo(ahora, sorteo);
+  return (
+    <Tarjeta id="sorteo" titulo={sorteo.titulo} icono="Premio" extra={<span className={cx(s.sello, s.selloAvanza, s.sinMuyAngosto)}>Abierto</span>}>
+      <div className={s.sorteoArriba}>
+        <span className={cx(s.sorteoFoto, 'relative overflow-hidden')}>
+          {sorteo.imagen && <Image src={sorteo.imagen} alt={sorteo.premio} fill sizes="120px" className="object-cover" unoptimized={!sorteo.imagen.startsWith('/')} />}
+        </span>
+        <div className={s.sorteoInfo}>
+          <p className={cx(s.rotulo, s.sinMuyAngosto, 'truncate')}>{sorteo.premio}</p>
+          {dias > 0 ? (
+            <div className={s.sorteoDias}><b className={s.cifra}><CifraAnimada valor={dias} retraso={400} /></b><span>{dias === 1 ? 'día' : 'días'}</span></div>
+          ) : <b className={s.cifraChica}>{dias === 0 ? 'Hoy es el sorteo' : 'Toca sortear'}</b>}
+          <p className={s.rotulo}>Sale el {fechaConMes(sorteo.resultado)}</p>
+        </div>
+      </div>
+      <p className={cx(s.linea, s.sinH2)}>{plural(sorteo.boletos, 'boleto', 'boletos')}<span className={s.sinMuyAngosto}> · {plural(sorteo.participantes, 'participante', 'participantes')}</span></p>
+      <div className={cx(s.periodo, s.sinH2)}>
+        <div className={s.periodoBarra}><i style={{ width: `${periodo.pct}%` }} /></div>
+        <div className={s.periodoFechas}><span>{fechaCorta(sorteo.desde)}</span><span>Día {periodo.dia} de {periodo.total}</span><span>{fechaCorta(sorteo.hasta)}</span></div>
+      </div>
+      <div className={cx(s.tPie, s.sinH3)}>
+        <Link href="/admin/studio/nueva" className={cx(s.btn, s.btnPrimario)}><IconoClaqueta aria-hidden="true" />Crear la historia</Link>
+        <Enlace href="/admin/marketing#sorteo" clase={s.sinMuyAngosto}>Ver</Enlace>
+      </div>
+    </Tarjeta>
+  );
+}
+
+/* ── ElectroStudio · esta semana ── */
+export function WidgetStudio({ studio, ahora }: { studio: DatosStudio; ahora: Date }) {
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Caracas' }).format(ahora);
+  const corto = new Intl.DateTimeFormat('es-VE', { timeZone: 'UTC', weekday: 'short' });
+  const dias = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(new Date(`${studio.lunes}T12:00:00Z`).getTime() + i * 86_400_000);
+    const fecha = d.toISOString().slice(0, 10);
+    return { fecha, nombre: corto.format(d).replace('.', ''), numero: d.getUTCDate(), hoy: fecha === hoy, historias: studio.historias.filter((h) => h.fecha === fecha) };
+  });
+  const s1 = studio.sugerida;
+  return (
+    <Tarjeta id="studio" titulo="ElectroStudio · esta semana" icono="Claqueta" extra={<Enlace href="/admin/studio" clase={s.sinMuyAngosto}>Abrir ElectroStudio</Enlace>}>
+      <div className={s.semanaStudio}>
+        {dias.map((d) => (
+          <div key={d.fecha} className={cx(s.dia, d.hoy && s.diaHoy)}>
+            <small>{d.hoy ? 'hoy' : d.nombre} {d.numero}</small>
+            {d.historias[0] ? (
+              <Link href={`/admin/studio/${d.historias[0].id}`} className={s.historia} title={d.historias[0].nombre}>
+                <span>{d.historias[0].nombre}{d.historias.length > 1 ? ` y ${d.historias.length - 1} más` : ''}</span>
+              </Link>
+            ) : (
+              <Link href="/admin/studio/nueva" className={s.historiaVacia} aria-label={`Crear una historia para el ${d.nombre} ${d.numero}`}><IconoMas aria-hidden="true" /></Link>
+            )}
+          </div>
+        ))}
+      </div>
+      {s1 && (
+        <div className={cx(s.sugerida, s.sinH2)}>
+          <span className={cx(s.foto, 'relative overflow-hidden')}>{s1.foto && <Image src={s1.foto} alt="" fill sizes="36px" className="object-contain" unoptimized={!s1.foto.startsWith('/')} />}</span>
+          <div className={s.filaTexto}><b>Sugerida: {s1.nombre}</b><small>{s1.stock === 1 ? 'Queda 1' : `Quedan ${s1.stock}`} · {formatUSD(s1.precioUSD)} · ideal para «Última unidad»</small></div>
+          <Link href="/admin/studio/nueva" className={cx(s.btn, s.btnPrimario)}><IconoClaqueta aria-hidden="true" /><span className={s.sinMuyAngosto}>Crear historia</span></Link>
+        </div>
+      )}
+    </Tarjeta>
+  );
+}
+
+/* ── Lo que viene ── */
+export function WidgetViene({ fechas }: { fechas: FechaQueViene[] }) {
+  return (
+    <Tarjeta id="viene" titulo="Lo que viene" icono="Calendario">
+      <ul className={s.viene}>
+        {fechas.map((f, i) => {
+          const dia = Number(f.fecha.slice(8, 10));
+          return (
+            <li key={f.id} className={porAlto(i, [2, 4, 5])}>
+              {f.hoy
+                ? <span className={cx(s.fechaChica, s.fechaHoy)}><b>Hoy</b><small>{f.hora?.replace(':00', '') ?? ''}</small></span>
+                : <span className={s.fechaChica}><b>{dia}</b><small>{fechaCorta(f.fecha).split(' ')[1]}</small></span>}
+              <div className={s.filaTexto}><b>{f.titulo}</b><small>{f.detalle}</small></div>
+              {!f.hoy && <span className={cx(s.en, s.sinMuyAngosto)}>{f.dias === 1 ? 'mañana' : `en ${f.dias} días`}</span>}
+            </li>
+          );
+        })}
+      </ul>
+    </Tarjeta>
+  );
+}
+

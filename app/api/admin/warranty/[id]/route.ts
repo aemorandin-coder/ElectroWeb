@@ -82,7 +82,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   const claim = await prisma.warrantyClaim.findUnique({
     where: { id },
     select: {
-      id: true, number: true, userId: true, productName: true, status: true, resolution: true, refundTransactionId: true,
+      id: true, number: true, userId: true, orderId: true, productName: true, status: true, resolution: true, refundTransactionId: true,
       user: { select: { name: true, email: true } },
       order: { select: { orderNumber: true, totalUSD: true, paymentStatus: true } },
       orderItem: { select: { totalUSD: true } },
@@ -133,6 +133,17 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     };
     if (!refunding) return tx.warrantyClaim.update({ where: { id: claim.id }, data, select: { status: true, resolution: true } });
 
+    // El pedido se toma antes de acreditar y se vuelve a mirar con la fila tomada: una orden cancelada conserva su pago
+    // como PAID (al cancelarla ya se devolvió lo pagado), y lo leído arriba pudo cambiar. Todavía no se escribió nada.
+    await tx.$queryRaw`SELECT id FROM "orders" WHERE id = ${claim.orderId} FOR UPDATE`;
+    const pedido = await tx.order.findUnique({ where: { id: claim.orderId }, select: { status: true, paymentStatus: true } });
+    if (pedido?.status === 'CANCELLED' || pedido?.status === 'REFUNDED') {
+      return NextResponse.json({ error: 'El pedido está cancelado: su dinero ya se devolvió.' }, { status: 400 });
+    }
+    if (pedido?.paymentStatus !== 'PAID') {
+      return NextResponse.json({ error: 'El pedido no figura como pagado: no se puede devolver en Puntos ES.' }, { status: 400 });
+    }
+
     // Devolución al saldo, una sola vez: si otro pedido del panel ya la hizo, se deshace todo
     const balance = await tx.userBalance.upsert({ where: { userId: claim.userId }, create: { userId: claim.userId }, update: {}, select: { id: true } });
     const credit = await tx.transaction.create({
@@ -159,6 +170,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (error instanceof Error && error.message === 'YA_DEVUELTO') return null;
     throw error;
   });
+  if (updated instanceof Response) return updated;
   if (!updated) return NextResponse.json({ error: 'Ya se devolvió el dinero de esta solicitud.' }, { status: 409 });
 
   if (refunding) {

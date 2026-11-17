@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.89; en `main`, rc.91 por subir: §2)
+# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.91; nada por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-277 · El permiso de la lista de Verificaciones (rc.91, por subir: §2; `estado/C-277.md`):** la lista pide el permiso de clientes y entrega solo lo que muestra la pantalla. Conviene subirla cuanto antes.
+- **C-277 · El permiso de la lista de Verificaciones (rc.91, en producción; `estado/C-277.md`):** cualquier cuenta con sesión podía bajar los perfiles completos de las empresas; cerrado y comprobado.
 - **C-230 · El libro de ventas, con las respuestas de la contadora (rc.90, por subir: §2; `estado/C-230.md`):** la contadora respondió el 16/11 por notas de voz (sus criterios, en `CONTABILIDAD.md` §9). El equipo eligió lo recomendado viendo las maquetas (`~/.cache/electroshop-trabajo/c230/index.html`).
   - **Contabilidad → Libro de ventas:** una línea por factura con sus columnas, el IVA del mes con su fecha, lo de la declaración, el Excel y la hoja impresa apaisada.
   - **La factura va a la tasa BCV del día en que se escribe** (antes, la de la orden). Desde el 16/11 se factura cada venta.
@@ -440,21 +440,19 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.91` (C-230 y C-277; unos 20 minutos)
-Producción está en `v1.0.0-rc.89` (`a724c8a`), subida el 16/11 a las 8:51 p. m. desde la laptop. Este es el único bloque pendiente.
-- **C-230 (rc.90):** el libro de ventas con su Excel, la tasa del día de la factura, el pronóstico del talonario y la mesa de la contadora con "Así funciona".
-- **C-277 (rc.91):** el permiso de la lista de Verificaciones. Conviene subirla cuanto antes.
-- Sin cambio de base (el libro sale de las facturas que ya están), sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.91` (o `v1.0.0-rc.91-…`, con los commits de documentos que entraron después), o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 15 minutos, en la computadora con Chrome; la 4, también en el teléfono). Antes, recarga el panel (Ctrl+R):
+### Lo que falta subir: nada por ahora
+Producción está en `v1.0.0-rc.91` (`25729ac`); su bloque está en `HISTORIAL.md`.
+
+### Por confirmar de rc.91 (C-230 y C-277; unos 15 minutos)
+Ya en producción desde el 16/11 (la subió Claude por SSH con la aprobación del equipo; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión, las páginas y que la lista de Verificaciones ya no entrega nada sin permiso. Falta esto:
+- **De C-230** (unos 15 minutos, en la computadora con Chrome; la 4, también en el teléfono). Antes, recarga el panel (Ctrl+R):
   1. **La tasa del día:** Contabilidad → Facturas → "Nueva factura". En el primer paso, junto a la fecha, "Tasa BCV del día de la factura" viene con la de hoy. Cambia la fecha a ayer: la tasa se vacía y pide la de ese día. Vuelve a hoy y sal sin registrar.
   2. **El libro:** Contabilidad → Libro de ventas. Arriba, el IVA del mes con "Se declara hasta el 15/12"; debajo, las facturas de noviembre (la anulada, en cero) y lo de la declaración.
      - "Descargar en Excel" y ábrelo: una fila por factura, los totales y lo de la declaración.
      - "Imprimir": sale solo el libro, apaisado.
   3. **El talonario:** en Facturas, la tarjeta del talonario dice hasta cuándo alcanza. Si no llega a abril, debajo dice cuántas pedir a la imprenta.
   4. **La mesa:** con la cuenta de la contadora (o pídele que entre), la primera vez sale "Así funciona tu mesa" con "Empezar: dibujar mi firma". En la mesa, "Libro de ventas en Excel". En el teléfono, el libro va en tarjetas.
-- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.89 && npm install && bash scripts/deploy.sh --sin-pull`. C-230 no cambia la base: volver no pierde nada. Las facturas registradas con la tasa del día quedan como están.
+- **De C-277:** Clientes → Verificaciones (con tu cuenta de administrador): la lista sigue mostrando las empresas con su RIF, sus documentos y "Aprobar".
 
 ### Por confirmar de rc.89 (C-272 y C-273; unos 15 minutos)
 Ya en producción desde el 16/11 a las 8:51 p. m. (subida desde la laptop; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión: la portada dice `1.0.0-rc.89|a724c8a`. Falta esto (en la computadora con Chrome; la 5, también en el teléfono). Antes, recarga el panel (Ctrl+R):

@@ -1,10 +1,38 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.89`, comprobada el 16/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.91`, comprobada el 16/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 16/11 · C-230 y C-277 (de rc.89 a `v1.0.0-rc.91`)
+La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida (`git pull --ff-only` y `deploy.sh --sin-pull`; sin base, sin SQL y sin cron). La rc.90 (C-230) ya estaba en el servidor desde unos minutos antes (`v1.0.0-rc.90-4-g95406de3`), subida sin anotar aquí: esta subida la completa con C-277.
+
+**La falla que cierra C-277:** `GET /api/admin/verifications` tenía el control de permiso vacío (el `if` sin `return`), y el proxy deja pasar a `/api/admin/*` a cualquier cuenta con sesión. Así, un cliente cualquiera podía pedir la lista y recibir el perfil completo de cada cuenta de empresa (cédula, teléfonos, RIF, direcciones, el carrito y la última IP), con su nombre y su correo. Ahora pide `MANAGE_USERS`, como el `PATCH` del mismo archivo, y entrega solo los campos de la pantalla. No había otra ruta con el mismo error (se revisaron todas las de `app/api`). Salió del inventario de Clientes para C-276.
+
+**Lo comprobado, el 16/11:**
+- **En el servidor:** `git describe --tags` dice `v1.0.0-rc.91`; la tienda escucha en `127.0.0.1:3000`; el registro de errores de PM2 no trae nada de esta subida (solo el ruido de siempre: un bot que prueba "server actions" y ZOOM que tarda).
+- **Desde fuera:** la portada dice `1.0.0-rc.91|25729ace`; la portada, `/sorteo`, `/productos`, `/login` y las API públicas responden 200; la imagen para compartir llega a WhatsApp y a Facebook.
+- **La ruta:** sin sesión manda al login y no entrega nada. Con sesión de cliente responde 403: se probó en la tienda de prueba (8 de 8, el caso normal y el manipulado), porque desde fuera no hay una cuenta de cliente.
+
+**Falta que el equipo haga las pruebas** (`SIGUIENTE.md`, "Por confirmar de rc.91"): las de C-230 y ver que Verificaciones sigue mostrando las empresas.
+
+### El bloque que se subió: `v1.0.0-rc.91` (C-230 y C-277)
+Producción está en `v1.0.0-rc.89` (`a724c8a`), subida el 16/11 a las 8:51 p. m. desde la laptop. Este es el único bloque pendiente.
+- **C-230 (rc.90):** el libro de ventas con su Excel, la tasa del día de la factura, el pronóstico del talonario y la mesa de la contadora con "Así funciona".
+- **C-277 (rc.91):** el permiso de la lista de Verificaciones. Conviene subirla cuanto antes.
+- Sin cambio de base (el libro sale de las facturas que ya están), sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.91` (o `v1.0.0-rc.91-…`, con los commits de documentos que entraron después), o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 15 minutos, en la computadora con Chrome; la 4, también en el teléfono). Antes, recarga el panel (Ctrl+R):
+  1. **La tasa del día:** Contabilidad → Facturas → "Nueva factura". En el primer paso, junto a la fecha, "Tasa BCV del día de la factura" viene con la de hoy. Cambia la fecha a ayer: la tasa se vacía y pide la de ese día. Vuelve a hoy y sal sin registrar.
+  2. **El libro:** Contabilidad → Libro de ventas. Arriba, el IVA del mes con "Se declara hasta el 15/12"; debajo, las facturas de noviembre (la anulada, en cero) y lo de la declaración.
+     - "Descargar en Excel" y ábrelo: una fila por factura, los totales y lo de la declaración.
+     - "Imprimir": sale solo el libro, apaisado.
+  3. **El talonario:** en Facturas, la tarjeta del talonario dice hasta cuándo alcanza. Si no llega a abril, debajo dice cuántas pedir a la imprenta.
+  4. **La mesa:** con la cuenta de la contadora (o pídele que entre), la primera vez sale "Así funciona tu mesa" con "Empezar: dibujar mi firma". En la mesa, "Libro de ventas en Excel". En el teléfono, el libro va en tarjetas.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.89 && npm install && bash scripts/deploy.sh --sin-pull`. C-230 no cambia la base: volver no pierde nada. Las facturas registradas con la tasa del día quedan como están.
 
 ## 16/11 · C-272 y C-273 (de rc.87 a `v1.0.0-rc.89`)
 La subió el equipo desde la laptop, unos minutos después del merge de C-273, con el bloque de abajo (`git pull --ff-only` y `deploy.sh --sin-pull`; sin base, sin SQL y sin cron). No quedó anotada: Claude la vio desde la PC de Andrés al leer la versión de la portada, y el equipo confirmó que la laptop había terminado.

@@ -1,9 +1,33 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.101`, comprobada el 17/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.102`, comprobada el 17/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 17/11 · C-287, ElectroStudio y Claude en Productos (de rc.101 a `v1.0.0-rc.102`)
+La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida, cerca de las 3:05 p. m.: `git pull --ff-only` y `deploy.sh --sin-pull`, sin base, sin SQL y sin cron. Terminó en "Listo: sirviendo .next-b (417f2769 Merge branch 'claude/C-287')".
+
+**Lo comprobado, el 17/11:**
+- **En el servidor:** `git describe --tags` dice `v1.0.0-rc.102` y la tienda escucha en `127.0.0.1:3000`. El registro de errores de PM2 no tiene líneas nuevas (98 antes y 98 después).
+- **Desde fuera, como un visitante:** la portada dice `1.0.0-rc.102|417f2769`; la portada, Productos, `/sorteo` y `/api/settings/public` responden 200; `/admin/studio` sin sesión lleva al login (307) y `/api/admin/studio/telegram` responde 401.
+- **Antes de subir,** en la tienda de prueba: lo de `estado/C-287.md` (arrastrar el título y guardarlo, el diálogo y la imagen a Telegram con el bot simulado).
+
+**Falta que el equipo lo mire** (`SIGUIENTE.md`, "Por confirmar de rc.102"): las 5 pruebas.
+
+### El bloque que se subió: `v1.0.0-rc.102` (C-287)
+Producción está en `v1.0.0-rc.101` (`b76157f`); su bloque está en `HISTORIAL.md`. Era el único bloque pendiente.
+- Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.102`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 10 minutos; antes, recarga el panel con Ctrl+R):
+  1. **ElectroStudio, imagen** (en la computadora): en una historia, el botón "Imagen". Sale "¿Qué hago con la imagen?" con tres opciones. "Mandarlo por Telegram": llega al chat del bot como archivo, con el texto de la historia.
+  2. **ElectroStudio, video** (en el teléfono de marketing): Publicar → "Video" → "Las dos cosas". Se descarga y llega a Telegram; dura entero.
+  3. **Arrastrar un título:** en una historia de 1 producto, toma el título de la plantilla con el mouse y suéltalo más abajo. Queda ahí al recargar, y "A su lugar" lo devuelve.
+  4. **Una historia nueva al toque:** entra a ElectroStudio, elige una plantilla enseguida y cámbiale algo. Arriba dice "Guardado", no "No se pudo guardar".
+  5. **Importar productos:** descarga la plantilla y pásasela a claude.ai con la foto de un producto con su etiqueta. Devuelve un solo modelo, confirmado, con sus medidas y, en "notas", de dónde salió cada dato.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.101 && npm install && bash scripts/deploy.sh --sin-pull`. Las historias con títulos corridos se ven con el título en su lugar de siempre con rc.101.
 
 
 ## 17/11 · C-284 y C-285 (de rc.99 a `v1.0.0-rc.101`)

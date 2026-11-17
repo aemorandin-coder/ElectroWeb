@@ -2,11 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, unlink } from 'fs/promises';
 import path from 'path';
 import { detectFileType } from '@/lib/file-signature';
+import { isInside } from '@/lib/private-uploads';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+// S-14: cada cambio de foto guarda un archivo nuevo: 10 por hora por cuenta
+const LIMITE_AVATAR = { maxRequests: 10, windowSeconds: 3600 };
+
+/**
+ * El nombre del archivo de un avatar anterior de ESTA cuenta (avatar-<userId>-<marca de tiempo>.<ext>) a partir de lo
+ * guardado en la base ("/api/uploads/avatars/<archivo>" o la ruta vieja "/uploads/avatars/<archivo>"). Null si es la foto de
+ * Google, una dirección de otro sitio o cualquier cosa que no sea un avatar propio: de esas no se borra nada.
+ */
+function avatarPropio(guardado: string | null | undefined, userId: string): string | null {
+  const nombre = /^\/(?:api\/)?uploads\/avatars\/([^/?#]+)$/.exec(guardado ?? '')?.[1];
+  const prefijo = `avatar-${userId}-`;
+  if (!nombre || !nombre.startsWith(prefijo)) return null;
+  return /^\d+\.(?:png|jpg|webp)$/.test(nombre.slice(prefijo.length)) ? nombre : null;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +32,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'No autenticado' },
         { status: 401 }
+      );
+    }
+
+    // S-14: límite por cuenta, antes de leer el cuerpo
+    const limite = checkRateLimit(session.user.id, 'avatar:subir', LIMITE_AVATAR);
+    if (!limite.success) {
+      return NextResponse.json(
+        { error: 'Cambiaste tu foto muchas veces seguidas. Espera un rato y vuelve a probar.', retryAfter: limite.resetIn },
+        { status: 429, headers: getRateLimitHeaders(limite, LIMITE_AVATAR) }
       );
     }
 
@@ -90,6 +115,16 @@ export async function POST(request: NextRequest) {
           avatar: publicPath
         }
       });
+    }
+
+    // S-14: el avatar anterior de esta cuenta se borra (antes cada cambio dejaba un archivo más en el disco y en el
+    // respaldo). Solo uno que sea suyo y esté dentro de la carpeta de avatares; si falla, la subida no falla.
+    const anteriores = new Set([avatarPropio(user.profile?.avatar, user.id), avatarPropio(user.image, user.id)]);
+    for (const anterior of anteriores) {
+      if (!anterior || anterior === fileName) continue;
+      const rutaAnterior = path.join(uploadsDir, anterior);
+      if (!isInside(uploadsDir, rutaAnterior)) continue;
+      await unlink(rutaAnterior).catch(() => undefined);
     }
 
     return NextResponse.json({

@@ -1,9 +1,35 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.97`, comprobada el 17/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.98`, comprobada el 17/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 17/11 · C-279, el Dashboard nuevo (de rc.97 a `v1.0.0-rc.98`)
+La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida, cerca de la 1:05 p. m.: `git pull --ff-only` y `deploy.sh --sin-pull`, sin base, sin SQL y sin cron. Terminó en "Listo: sirviendo .next-a (342c56f0 Merge branch 'claude/C-279')".
+
+**Lo comprobado, el 17/11:**
+- **En el servidor:** `git describe --tags` dice `v1.0.0-rc.98` y la tienda escucha en `127.0.0.1:3000`. El registro de errores de PM2 no tiene líneas nuevas (53 antes y 53 después).
+- **Desde fuera, como un visitante:** la portada dice `1.0.0-rc.98|342c56f0`; la portada, Productos, `/sorteo` y `/api/settings/public` responden 200; `/admin` sin sesión lleva al login (307) y el buscador nuevo, `/api/admin/buscar`, responde 401.
+- **Antes de subir,** en la tienda de prueba: lo de `estado/C-279.md` (el Dashboard a cinco anchos, Personalizar con la esquina, las plantillas y Listo, Ctrl K y guardar la existencia desde el tablero).
+
+**Falta que el equipo lo mire** (`SIGUIENTE.md`, "Por confirmar de rc.98"): las 7 pruebas, unos 10 minutos.
+
+### El bloque que se subió: `v1.0.0-rc.98` (C-279)
+Producción está en `v1.0.0-rc.97` (`552a434`); su bloque está en `HISTORIAL.md`. Era el único bloque pendiente.
+- Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo: los tableros guardados de antes (chico, mediano y ancho) se leen solos.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.98`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 10 minutos, en la computadora con Chrome; la 6, también en el teléfono). Antes, recarga el panel (Ctrl+R):
+  1. **La recepción:** el Dashboard abre con el saludo y tu nombre, la frase de lo que toca hoy, los pasos del día al costado y, a la derecha, la tasa, el corte de las 2:00 p. m. y quién está en la tienda. Ya no dice "Dashboard" en grande.
+  2. **Un paso del día:** toca el primero (por ejemplo "Confirmar los pagos"): baja hasta "Por atender" y la marca; "Revisar el pago" abre esa orden en Órdenes.
+  3. **Ctrl K:** escribe el nombre de un producto, y después el número de una orden: aparecen y Enter los abre. Escape lo cierra.
+  4. **Personalizar** (al lado de la fecha): arrastra la esquina de abajo a la derecha de una tarjeta para agrandarla; elige otro tamaño en su menú (el ícono de las flechas); toca la plantilla "Lo justo" y después "Cancelar": vuelve a como estaba. Repite y toca "Listo": recarga la página y queda guardado. "De fábrica" vuelve a la plantilla Dueño.
+  5. **La existencia** (solo si hay un producto que se está acabando): en "Se están acabando", el + de uno y "Guardar 1 → 2": el producto queda con 2 (míralo en Productos y déjalo como estaba).
+  6. **En el teléfono:** el Dashboard se ve entero, sin salirse a los costados; los pasos del día se deslizan de lado.
+  7. **La mesa de la contadora:** con su cuenta (o pídele que entre), la hoja "Así funciona" ya no muestra a Chispa (solo sale la primera vez: si ya la vio, no hace falta).
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.97 && npm install && bash scripts/deploy.sh --sin-pull`. Los tableros guardados con rc.98 (ancho × alto) los lee rc.97 como el tamaño de cada tarjeta por defecto: no se rompe nada.
 
 
 ## 17/11 · C-282 y C-283 (de rc.95 a `v1.0.0-rc.97`)

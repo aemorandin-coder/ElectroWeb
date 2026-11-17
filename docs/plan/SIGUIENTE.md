@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.97; por subir: rc.98, el Dashboard nuevo, §2)
+# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.98; nada por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-279 · El Dashboard nuevo, la recepción (rc.98, por subir: §2; `estado/C-279.md`):** el pedido del equipo del 17/11 con las capturas del Dashboard ("Dashboard" en grande sobraba, tamaños pésimos, sin animaciones, "una recepción épica" donde también se pueda actuar). El equipo eligió viendo la maqueta (`~/.cache/electroshop-trabajo/c279/index.html`): la recepción A más baja, la grilla a la medida con plantillas, Claude fuera del buscador por ahora y Chispa fuera del panel.
+- **C-279 · El Dashboard nuevo, la recepción (rc.98, en producción desde el 17/11; pruebas por confirmar: §2; `estado/C-279.md`):** el pedido del equipo del 17/11 con las capturas del Dashboard ("Dashboard" en grande sobraba, tamaños pésimos, sin animaciones, "una recepción épica" donde también se pueda actuar). El equipo eligió viendo la maqueta (`~/.cache/electroshop-trabajo/c279/index.html`): la recepción A más baja, la grilla a la medida con plantillas, Claude fuera del buscador por ahora y Chispa fuera del panel.
   - **La recepción** en lugar del título: el saludo, lo que toca hoy, Ctrl K, los pasos del día y el pulso (tasa, corte y quién está en la tienda).
   - **Las tarjetas del tamaño que quieras** (menú o esquina), cuatro plantillas y tres tarjetas nuevas (sorteo, ElectroStudio de la semana y lo que viene). La existencia se sube ahí mismo.
   - **Sigue C-279b:** las novedades de versión con antes y después o un mini video en la esquina, y el estreno para las versiones grandes.
@@ -479,12 +479,11 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.98` (C-279, el Dashboard nuevo)
-Producción está en `v1.0.0-rc.97` (`552a434`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo: los tableros guardados de antes (chico, mediano y ancho) se leen solos.
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.98`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 10 minutos, en la computadora con Chrome; la 6, también en el teléfono). Antes, recarga el panel (Ctrl+R):
+### Lo que falta subir: nada por ahora
+Producción está en `v1.0.0-rc.98` (`342c56f`); su bloque está en `HISTORIAL.md`.
+
+### Por confirmar de rc.98 (C-279, el Dashboard nuevo; unos 10 minutos)
+Ya en producción desde el 17/11, cerca de la 1:05 p. m. (la subió Claude por SSH con la aprobación del equipo; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión, las páginas, que el buscador nuevo no entrega nada sin sesión y que el registro de errores no sumó líneas. Falta esto (en la computadora con Chrome; la 6, también en el teléfono). Antes, recarga el panel (Ctrl+R):
   1. **La recepción:** el Dashboard abre con el saludo y tu nombre, la frase de lo que toca hoy, los pasos del día al costado y, a la derecha, la tasa, el corte de las 2:00 p. m. y quién está en la tienda. Ya no dice "Dashboard" en grande.
   2. **Un paso del día:** toca el primero (por ejemplo "Confirmar los pagos"): baja hasta "Por atender" y la marca; "Revisar el pago" abre esa orden en Órdenes.
   3. **Ctrl K:** escribe el nombre de un producto, y después el número de una orden: aparecen y Enter los abre. Escape lo cierra.

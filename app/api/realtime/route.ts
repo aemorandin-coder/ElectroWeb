@@ -24,8 +24,9 @@ const LATIDO_MS = 25_000; // nginx corta a los 60 s sin datos
 const DURACION_MAX_MS = 30 * 60_000; // se reconecta y vuelve a leer la sesión (un permiso quitado deja de valer)
 const MAX_CONEXIONES = 2_000;
 // S-15: una sola IP no puede llenar el total y dejar sin tiempo real a todos (y al panel). Quien no es del panel tiene un
-// tope por IP, y los últimos CUPOS_DEL_PANEL del total son solo del panel (con sus dos pasos).
-const MAX_POR_IP = 40;
+// tope por IP, y los últimos CUPOS_DEL_PANEL del total son solo del panel (con sus dos pasos). El tope por IP es holgado:
+// con el CGNAT de las operadoras, muchos clientes de teléfono comparten una misma IP.
+const MAX_POR_IP = 100;
 const CUPOS_DEL_PANEL = 100;
 // C-140: con sesión, se revisa cada 2 min que siga abierta (cerrada, otra sesión de admin, 1 h sin uso)
 const REVISAR_SESION_MS = 2 * 60_000;

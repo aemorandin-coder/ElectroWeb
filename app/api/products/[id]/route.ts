@@ -97,7 +97,7 @@ export async function GET(
     }
 
     return NextResponse.json(
-      { error: 'Error al obtener el producto', details: error.message },
+      { error: 'Error al obtener el producto' },
       { status: 500 }
     );
   }
@@ -406,8 +406,7 @@ export async function PATCH(
     }
 
     return NextResponse.json({
-      error: 'Error al actualizar producto',
-      details: error.message
+      error: 'Error al actualizar producto'
     }, { status: 500 });
   }
 }
@@ -496,8 +495,7 @@ export async function DELETE(
     }
 
     return NextResponse.json({
-      error: 'Error al eliminar el producto',
-      details: error.message
+      error: 'Error al eliminar el producto'
     }, { status: 500 });
   }
 }

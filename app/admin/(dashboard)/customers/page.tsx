@@ -14,13 +14,13 @@ import { toast } from 'react-hot-toast';
 import Filtros, { type Filtro } from '@/components/admin/Filtros';
 import { SellosMini } from '@/components/admin/clientes/Sellos';
 import {
-  IconoActualizar, IconoBuscar, IconoCalendario, IconoCarrito, IconoChevronDerecha, IconoChevronIzquierda, IconoClientes, IconoCorreo,
-  IconoCuenta, IconoEnviar, IconoError, IconoGarantia, IconoMaletin, IconoNovedad, IconoOrdenes, IconoPausa, IconoPuntosEs, IconoReloj,
+  IconoActualizar, IconoBuscar, IconoCarrito, IconoChevronDerecha, IconoChevronIzquierda, IconoClientes, IconoCorreo,
+  IconoCuenta, IconoEnviar, IconoError, IconoGarantia, IconoMaletin, IconoNovedad, IconoPausa, IconoPuntosEs, IconoReloj,
 } from '@/components/iconos';
 import { EmptyState } from '@/components/ui/EmptyState';
 import {
   adminBadge, adminCardFlush, adminDato, adminIconButton, adminIconChip, adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminTableWrap,
-  adminSecondaryButton, adminStatCard, adminStatLabel, adminStatValue, adminTh,
+  adminSecondaryButton, adminTh,
 } from '@/lib/admin-ui';
 import { fechaCorta, haceCuanto } from '@/lib/clientes/fechas';
 import type { FiltroClientes } from '@/lib/clientes/lista';
@@ -33,7 +33,6 @@ interface Respuesta {
   pagina: number;
   paginas: number;
   cuentas: Record<FiltroClientes, number>;
-  cifras: { clientes: number; nuevosMes: number; sinActivar: number; conActivas: number };
 }
 
 const POR_PAGINA = 25;
@@ -114,13 +113,6 @@ export default function ClientesPage() {
   const desde = datos && datos.total > 0 ? (datos.pagina - 1) * POR_PAGINA + 1 : 0;
   const hasta = datos ? Math.min(datos.total, datos.pagina * POR_PAGINA) : 0;
 
-  const cifras = [
-    { Icono: IconoCuenta, valor: datos?.cifras.clientes, texto: 'Clientes', tono: 'brand' as const },
-    { Icono: IconoCalendario, valor: datos?.cifras.nuevosMes, texto: 'Nuevos este mes', tono: 'success' as const },
-    { Icono: IconoCorreo, valor: datos?.cifras.sinActivar, texto: 'Sin activar el correo', tono: 'brand' as const },
-    { Icono: IconoOrdenes, valor: datos?.cifras.conActivas, texto: 'Con órdenes activas', tono: 'brand' as const },
-  ];
-
   return (
     <div className="min-w-0">
       <div className={adminPageHeader}>
@@ -158,18 +150,6 @@ export default function ClientesPage() {
       )}
 
       <div className="grid gap-4">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {cifras.map(({ Icono, valor, texto: t, tono }) => (
-            <div key={t} className={`${adminStatCard} p-3`}>
-              <span className={`${adminIconChip(tono)} hidden sm:flex`}><Icono className="h-5 w-5" aria-hidden="true" /></span>
-              <div className="min-w-0">
-                <p className={`${adminStatValue} text-lg tabular-nums`}>{valor ?? '…'}</p>
-                <p className={adminStatLabel}>{t}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
         <label className="relative block">
           <span className="sr-only">Buscar clientes</span>
           <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />

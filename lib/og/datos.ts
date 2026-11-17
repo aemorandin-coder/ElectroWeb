@@ -30,10 +30,11 @@ const DISENO = '2';
 const LADO_MOSAICO = 273;
 const LADO_PRODUCTO = ALTO;
 
-export type TipoTarjeta = 'producto' | 'categoria' | 'pagina';
+// C-281 (F-08): 'curso', la portada del curso con su precio (antes /cursos/<slug> compartía la imagen de la portada)
+export type TipoTarjeta = 'producto' | 'categoria' | 'pagina' | 'curso';
 
 /** Las páginas que tienen imagen propia. Solo estas: nadie puede pedir una imagen con un texto inventado */
-export const PAGINAS = ['inicio', 'productos', 'categorias', 'servicios', 'cursos', 'gift-cards', 'ideas-para-regalar', 'contacto', 'cotizacion', 'solicitar-producto', 'terminos', 'privacidad', 'sorteo'] as const;
+export const PAGINAS = ['inicio', 'productos', 'categorias', 'servicios', 'cursos', 'gift-cards', 'ideas-para-regalar', 'contacto', 'cotizacion', 'solicitar-producto', 'terminos', 'privacidad', 'sorteo', 'canjear-gift-card'] as const;
 export type PaginaCompartida = (typeof PAGINAS)[number];
 export const esPagina = (valor: string): valor is PaginaCompartida => (PAGINAS as readonly string[]).includes(valor);
 
@@ -101,6 +102,8 @@ const FIJAS: Record<Exclude<PaginaCompartida, 'inicio' | 'productos' | 'categori
   'solicitar-producto': { titulo: 'Solicitar un producto', bajada: '¿No encuentras lo que buscas? Cuéntanos qué necesitas.', fotos: null },
   terminos: { titulo: 'Términos y condiciones', bajada: null, fotos: null },
   privacidad: { titulo: 'Política de privacidad', bajada: null, fotos: null },
+  // C-281 (F-08): el enlace que se manda con el regalo
+  'canjear-gift-card': { titulo: 'Canjea tu gift card', bajada: 'Escribe el código y su valor pasa a tus Puntos ES para comprar en la tienda.', fotos: null },
 };
 
 /** Lo que dice la tarjeta de una página: lo de Configuración → SEO si está, o un texto armado con datos de la tienda */
@@ -153,6 +156,28 @@ export const contenidoDePagina = cache(async (pagina: PaginaCompartida): Promise
 });
 
 export const versionDePagina = (pagina: PaginaCompartida, c: ContenidoPagina, fotos: string[]) => version('pagina', pagina, c.titulo, c.lema, c.bajada, ...fotos);
+
+// ---------- Curso (C-281, F-08)
+
+const NIVELES: Record<string, string> = { PRINCIPIANTE: 'Principiante', INTERMEDIO: 'Intermedio', AVANZADO: 'Avanzado' };
+
+/** Solo los cursos a la vista: uno apagado no tiene imagen */
+const cursoParaCompartir = cache(async (slug: string) => {
+  const curso = await prisma.course.findFirst({ where: { slug, isActive: true }, select: { slug: true, title: true, priceUSD: true, level: true, thumbnail: true } });
+  return curso ? { ...curso, priceUSD: Number(curso.priceUSD) } : null;
+});
+type CursoCompartido = NonNullable<Awaited<ReturnType<typeof cursoParaCompartir>>>;
+
+function datosDeCurso(c: CursoCompartido): Omit<DatosProducto, 'foto'> {
+  return {
+    nombre: c.title,
+    precio: c.priceUSD > 0 ? formatUSD(c.priceUSD) : 'Gratis',
+    condicion: 'Curso',
+    detalle: (c.level && NIVELES[c.level]) || 'Cursos',
+  };
+}
+
+const versionDeCurso = (c: CursoCompartido) => version('curso', c.slug, c.title, c.priceUSD, c.level, c.thumbnail);
 
 // ---------- Fotos
 
@@ -232,6 +257,18 @@ export async function tarjetaPara(tipo: TipoTarjeta, clave: string): Promise<Tar
     };
   }
 
+  if (tipo === 'curso') {
+    const curso = await cursoParaCompartir(clave);
+    if (!curso) return null;
+    return {
+      version: versionDeCurso(curso),
+      dibujar: async () => {
+        const [marca, foto] = await Promise.all([marcaCompleta(), fotoOIcono(curso.thumbnail, LADO_PRODUCTO)]);
+        return TarjetaProducto({ estilo: 'claro', marca, datos: { ...datosDeCurso(curso), foto } });
+      },
+    };
+  }
+
   if (!esPagina(clave)) return null;
   const contenido = await contenidoDePagina(clave);
   const urls = await fotosDePagina(contenido);
@@ -266,6 +303,13 @@ export async function imagenDePagina(pagina: PaginaCompartida, subidaAMano?: str
   if (propia) return { url: propia, alt: contenido.titulo };
   const urls = await fotosDePagina(contenido);
   return imagenGenerada('pagina', pagina, versionDePagina(pagina, contenido, urls), contenido.titulo);
+}
+
+/** C-281 (F-08): la imagen de un curso; sin el curso a la vista, la de la página de Cursos */
+export async function imagenDeCurso(slug: string): Promise<ImagenCompartida | { url: string; alt: string }> {
+  const curso = await cursoParaCompartir(slug);
+  if (!curso) return imagenDePagina('cursos');
+  return imagenGenerada('curso', curso.slug, versionDeCurso(curso), curso.title);
 }
 
 /** La imagen de una categoría, con la versión de sus productos de hoy */

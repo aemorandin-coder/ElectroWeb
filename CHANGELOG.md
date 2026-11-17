@@ -10,6 +10,27 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.94] - 2026-11-17
+Los flujos que venden y el día del panel (C-281, la Fase 4 de la auditoría del 17/11). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Carrito, checkout y cuenta del cliente 1.12.0 (C-281)
+- **El Pago Móvil verificado ya no se pierde:** si el cliente recargó la página o se le cerró la pestaña después de verificarlo, el pago le dice "Ya tienes un Pago Móvil verificado de Bs. …" con "Usar en esta compra", y no paga dos veces.
+- **Con la cuenta sin activar,** "Completar pedido" se apaga y dice por qué; la capa del pago trae "Reenviar el correo", y al volver a la pestaña después de activarla se puede pagar sin recargar.
+- **El carrito sin cuenta** muestra el precio y el stock de hoy (antes, los del día en que se agregó) y dice lo que ya no se puede comprar.
+- **La confirmación de la compra** abre ese pedido ("Ver mi pedido") cuando es uno solo.
+### Tienda 1.21.0 (C-281)
+- **"Comprar ahora" sin cuenta** deja el producto en el carrito y, al entrar o crear la cuenta, sigue al pago (antes había que volver a tocarlo).
+- **Canjear gift card** y **cada curso** tienen su imagen para compartir (el curso, con su portada, su precio y su nivel).
+### Clientes 1.7.2 (C-281)
+- **Canjear gift card siendo nuevo:** "Crear mi cuenta gratis" ahí mismo, y el código lo espera hasta que vuelve con la cuenta, ya verificado.
+- **Consultas, Solicitudes y Verificaciones** dicen el error cuando algo falla (antes no decían nada), y sus listas tienen tope: los mensajes pendientes salen todos.
+### Órdenes y pagos 1.7.0 (C-281)
+- **Órdenes y Transacciones buscan entre todo,** no solo entre lo cargado: por número, cliente, teléfono, cédula, referencia del Pago Móvil o guía.
+- **Órdenes** suma las píldoras Listas para recoger, Canceladas y Reembolsadas: "Todas" ya es la suma.
+### Cursos 1.3.0 (C-281)
+- Cada curso con su imagen para compartir; si la reseña de un estudiante no se publica, se lo dice.
+### Productos 1.17.4 (C-281)
+- La tienda pregunta el precio y el stock de hoy de lo que hay en un carrito. Reseñas usa la pieza común del panel para los errores.
+
 ## [1.0.0-rc.93] - 2026-11-17
 La lista de Clientes, sin las cifras repetidas (C-278). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Clientes 1.7.1 (C-278)

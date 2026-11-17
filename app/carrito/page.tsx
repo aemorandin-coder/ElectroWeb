@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useCart } from '@/contexts/CartContext';
+import { useCart, type PrecioDeHoy } from '@/contexts/CartContext';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import PublicHeader from '@/components/public/PublicHeader';
 import CalculaTuEnvio from '@/components/envios/CalculaTuEnvio';
@@ -25,7 +25,7 @@ import { getGiftCardDesign } from '@/lib/gift-card-designs';
 import { useSettings } from '@/contexts/SettingsContext';
 import CouponBox from '@/components/cart/CouponBox';
 import FechaLimiteNavidad from '@/components/navidad/FechaLimiteNavidad';
-import { parseCartItemId, toOrderItem } from '@/lib/cart-items';
+import { esLaLinea, parseCartItemId, toOrderItem } from '@/lib/cart-items';
 import { paqueteDesde } from '@/lib/origen';
 import SalidaDelPedido from '@/components/envios/SalidaDelPedido';
 
@@ -37,8 +37,40 @@ function disenoDeGiftCard(itemId: string) {
 
 export default function CarritoPage() {
   const router = useRouter();
-  const { items, removeItem, updateQuantity, clearCart, getTotalPrice, couponCode, setCouponCode } = useCart();
+  const { items, removeItem, updateQuantity, clearCart, getTotalPrice, couponCode, setCouponCode, actualizarPrecios } = useCart();
   const { status } = useSession();
+
+  // C-281 (F-05): el precio y el stock de hoy de lo que hay en el carrito, con o sin sesión. Antes, sin sesión se veía el
+  // del día en que se agregó. Se pide al abrir el carrito y cuando cambia qué productos hay (no al cambiar cantidades)
+  const clavePrecios = useMemo(
+    () => JSON.stringify(items.filter((item) => !item.id.startsWith('gift-card-')).map((item) => parseCartItemId(item))),
+    [items]
+  );
+  const [preciosHoy, setPreciosHoy] = useState<{ clave: string; precios: PrecioDeHoy[] } | null>(null);
+  useEffect(() => {
+    const lineas = JSON.parse(clavePrecios) as unknown[];
+    if (lineas.length === 0) return;
+    const controller = new AbortController();
+    fetch('/api/products/precios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: lineas }), signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!Array.isArray(data?.precios)) return;
+        setPreciosHoy({ clave: clavePrecios, precios: data.precios });
+        actualizarPrecios(data.precios);
+      })
+      .catch(() => { });
+    return () => controller.abort();
+  }, [clavePrecios, actualizarPrecios]);
+  // Sin sesión no hay cotización del servidor: lo que ya no se puede comprar se dice con los datos de hoy
+  const problemasSinSesion = status !== 'unauthenticated' || preciosHoy?.clave !== clavePrecios ? [] : items.flatMap((item) => {
+    const hoy = preciosHoy.precios.find((p) => esLaLinea(p, parseCartItemId(item)));
+    if (!hoy) return [];
+    if (!hoy.disponible) return [`"${item.name}" ya no está disponible. Elimínalo para continuar.`];
+    if (typeof hoy.stock === 'number' && hoy.stock < item.quantity) {
+      return [hoy.stock === 0 ? `"${item.name}" se agotó. Elimínalo para continuar.` : `De "${item.name}" quedan ${hoy.stock}: baja la cantidad para continuar.`];
+    }
+    return [];
+  });
   const { confirm } = useConfirm();
   const [removing, setRemoving] = useState<string | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -181,6 +213,7 @@ export default function CarritoPage() {
   // Aún no hay entrega elegida: para el máximo, el total de productos es lo mínimo que se cobrará.
   const cartProblems = [
     ...(server?.errors ?? []),
+    ...problemasSinSesion,
     ...orderAmountProblems({ productsUSD: total, totalUSD: total }, settings?.minOrderAmountUSD ?? null, settings?.maxOrderAmountUSD ?? null),
   ];
 

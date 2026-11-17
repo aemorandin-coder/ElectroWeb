@@ -53,6 +53,7 @@ import { publicarOrdenes, publicarStock } from '@/lib/realtime/bus';
 import { RESERVA_PAGO_MANUAL_HORAS, claveReferencia, esPagoManual, leerReferenciaManual, repartirPuntos } from '@/lib/checkout-pago';
 import { descontarDisponible, hayDisponible } from '@/lib/reservas';
 import { ETIQUETA_ENTREGA, NOMBRE_EMPRESA, urlRastreo, usaEmpresa, type EmpresaGuia } from '@/lib/envios/empresas';
+import { ordenesQueCoinciden } from '@/lib/admin/buscar';
 
 
 // GET - Get all orders
@@ -92,6 +93,10 @@ export async function GET(request: NextRequest) {
     if (status && status !== 'all') {
       where.status = status as Prisma.OrderWhereInput['status'];
     }
+
+    // C-281 (A-07): el panel busca entre todas las órdenes (antes, el navegador solo entre las 50 cargadas)
+    const busqueda = esEquipo ? (searchParams.get('q') ?? '').trim().slice(0, 80) : '';
+    if (busqueda.length >= 2) where.OR = await ordenesQueCoinciden(busqueda);
 
     // Count total for pagination
     const total = await prisma.order.count({ where });

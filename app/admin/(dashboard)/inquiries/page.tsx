@@ -19,6 +19,7 @@ import Filtros from '@/components/admin/Filtros';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { mensajeError } from '@/lib/admin/respuesta';
 import BorradorRespuesta from '@/components/admin/consultas/BorradorRespuesta';
 import { BotonUrgencia, EnLaTienda, EnProveedor, PildoraUrgencia, porUrgencia } from '@/components/admin/consultas/Urgencia';
 
@@ -113,9 +114,12 @@ export default function InquiriesPage() {
             if (response.ok) {
                 const data = await response.json();
                 setMessages(data);
+            } else {
+                toast.error(await mensajeError(response, 'No se pudieron cargar los mensajes'));
             }
         } catch (error) {
             console.error('Error fetching messages:', error);
+            toast.error('No se pudieron cargar los mensajes');
         } finally {
             setMessagesLoading(false);
         }
@@ -138,6 +142,8 @@ export default function InquiriesPage() {
                 }
                 toast.success('Estado actualizado');
                 window.dispatchEvent(new Event('refresh-sidebar-counts'));
+            } else {
+                toast.error(await mensajeError(response, 'No se pudo actualizar el estado del mensaje'));
             }
         } catch (error) {
             console.error('Error updating status:', error);
@@ -161,6 +167,8 @@ export default function InquiriesPage() {
                 }
                 toast.success('Mensaje eliminado');
                 window.dispatchEvent(new Event('refresh-sidebar-counts'));
+            } else {
+                toast.error(await mensajeError(response, 'No se pudo eliminar el mensaje'));
             }
         } catch (error) {
             console.error('Error deleting message:', error);
@@ -215,6 +223,8 @@ export default function InquiriesPage() {
             if (response.ok) {
                 const data = await response.json();
                 setRequests(data);
+            } else {
+                toast.error(await mensajeError(response, 'No se pudieron cargar las solicitudes'));
             }
         } catch (error) {
             console.error('Error fetching requests:', error);
@@ -249,6 +259,8 @@ export default function InquiriesPage() {
                 setNewStatus('');
                 toast.success('Solicitud actualizada');
                 window.dispatchEvent(new Event('refresh-sidebar-counts'));
+            } else {
+                toast.error(await mensajeError(response, 'No se pudo actualizar la solicitud'));
             }
         } catch (error) {
             console.error('Error updating request:', error);
@@ -269,6 +281,8 @@ export default function InquiriesPage() {
                 fetchRequests();
                 toast.success('Solicitud eliminada');
                 window.dispatchEvent(new Event('refresh-sidebar-counts'));
+            } else {
+                toast.error(await mensajeError(response, 'No se pudo eliminar la solicitud'));
             }
         } catch (error) {
             console.error('Error deleting request:', error);

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
+import { mensajeError } from '@/lib/admin/respuesta';
 import { IconoAbrirAparte, IconoActualizar, IconoCerrar, IconoCheck, IconoConfirmado, IconoEliminar, IconoEstrella, IconoLista, IconoRechazado, IconoReloj } from '@/components/iconos';
 import Filtros from '@/components/admin/Filtros';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
@@ -65,13 +66,6 @@ const FILTROS = [
 const TONO: Record<ReviewStatus, AdminTone> = { PENDING: 'warning', APPROVED: 'success', REJECTED: 'danger' };
 
 const fecha = new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Caracas' });
-
-/** Mensaje del servidor, con el detalle técnico si lo trae (solo lo reciben los admins). */
-async function mensajeError(response: Response, fallback: string): Promise<string> {
-    const data = (await response.json().catch(() => null)) as { error?: string; detail?: string } | null;
-    const base = data?.error || fallback;
-    return data?.detail ? `${base}: ${data.detail}` : base;
-}
 
 function Estrellas({ rating }: { rating: number }) {
     return (

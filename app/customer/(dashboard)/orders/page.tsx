@@ -63,9 +63,11 @@ export default function OrdersPage() {
       const lista = (Array.isArray(datos) ? datos : datos.orders || []).map(normalizar);
       setPedidos(lista);
       setError(false);
-      // C-128: desde el inicio del panel se llega con ?orden=<id> y se abre ese pedido
+      // C-128: desde el inicio del panel se llega con ?orden=<id> y se abre ese pedido. C-281 (F-09): también con su número,
+      // que es lo que tiene la confirmación de la compra
       const pedida = silencioso ? null : new URLSearchParams(window.location.search).get('orden');
-      if (pedida && lista.some((p: PedidoCliente) => p.id === pedida)) setAbierto(pedida);
+      const elegido = pedida ? lista.find((p: PedidoCliente) => p.id === pedida || p.orderNumber === pedida) : undefined;
+      if (elegido) setAbierto(elegido.id);
     } catch {
       setError(true);
       if (!silencioso) toast.error('No se pudieron cargar tus pedidos');

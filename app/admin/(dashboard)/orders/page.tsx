@@ -1,14 +1,14 @@
 'use client';
 
 import { conditionBadge, warrantyDaysFor, type Condition, type Grade } from '@/lib/product-condition';
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/EmptyState';
 import {
   IconoActualizar, IconoBillete, IconoBuscar, IconoCargando, IconoCerrar, IconoCheck, IconoConfirmado, IconoCuenta,
   IconoCuentaBorrada, IconoDigital, IconoEntregado, IconoEnviar, IconoEnvio, IconoFlechaDerecha, IconoImpresora, IconoLista, IconoMonitor,
-  IconoPaquete, IconoReloj, IconoVer,
+  IconoPaquete, IconoReloj, IconoRestablecer, IconoTienda, IconoVer,
 } from '@/components/iconos';
 import Filtros, { type Filtro } from '@/components/admin/Filtros';
 
@@ -20,8 +20,12 @@ const FILTROS_ESTADO: Omit<Filtro<string>, 'cuenta'>[] = [
   { valor: 'CONFIRMED', etiqueta: 'Confirmadas', ayuda: 'Falta marcarlas pagadas', Icono: IconoCheck, tono: 'aviso' },
   { valor: 'PAID', etiqueta: 'Pagadas', ayuda: 'Por preparar', Icono: IconoBillete, tono: 'aviso' },
   { valor: 'PROCESSING', etiqueta: 'En preparación', ayuda: 'Se están armando', Icono: IconoPaquete },
+  // C-281 (A-06): faltaban tres estados, y "Todas" no coincidía con la suma de las píldoras
+  { valor: 'READY_FOR_PICKUP', etiqueta: 'Listas para recoger', ayuda: 'Esperan al cliente', Icono: IconoTienda, tono: 'aviso' },
   { valor: 'SHIPPED', etiqueta: 'Enviadas', ayuda: 'Van en camino', Icono: IconoEnvio },
   { valor: 'DELIVERED', etiqueta: 'Entregadas', ayuda: 'Ya las tiene el cliente', Icono: IconoEntregado },
+  { valor: 'CANCELLED', etiqueta: 'Canceladas', ayuda: 'No siguieron', Icono: IconoCerrar },
+  { valor: 'REFUNDED', etiqueta: 'Reembolsadas', ayuda: 'Se devolvió el pago', Icono: IconoRestablecer },
 ];
 import PildoraEstadoOrden from '@/components/admin/PildoraEstadoOrden';
 import { createPortal } from 'react-dom';
@@ -205,6 +209,15 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  // C-281 (A-07): se busca en el servidor, entre todas las órdenes. Antes solo entre las 50 cargadas: una orden de hace dos
+  // semanas "no existía". Espera a que se deje de escribir; `pedidoLista` descarta una respuesta que llegó tarde
+  const [busqueda, setBusqueda] = useState('');
+  const [encontradas, setEncontradas] = useState<number | null>(null);
+  const pedidoLista = useRef(0);
+  useEffect(() => {
+    const t = setTimeout(() => setBusqueda(searchQuery.trim()), 350);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showShippingModal, setShowShippingModal] = useState(false);
@@ -254,27 +267,33 @@ export default function OrdersPage() {
   };
 
   const fetchOrders = async (nextPage = 1) => {
+    const pedido = ++pedidoLista.current;
     try {
       if (nextPage === 1) setLoading(true); else setLoadingMore(true);
       const params = new URLSearchParams({ page: String(nextPage), limit: String(PAGE_SIZE) });
       if (filterStatus !== 'all') params.set('status', filterStatus);
+      if (busqueda) params.set('q', busqueda);
       const response = await fetch(`/api/orders?${params}`);
       if (!response.ok) throw new Error();
       const result = await response.json();
+      if (pedido !== pedidoLista.current) return;
       const data: Order[] = (result.orders || []).map(normalizar);
       setOrders((prev) => (nextPage === 1 ? data : [...prev, ...data.filter((o) => !prev.some((p) => p.id === o.id))]));
       setPage(nextPage);
       setHasMore(Boolean(result.pagination?.hasMore));
+      setEncontradas(busqueda ? Number(result.pagination?.total ?? data.length) : null);
       if (result.summary) setSummary(result.summary);
     } catch {
-      toast.error('No se pudieron cargar las órdenes');
+      if (pedido === pedidoLista.current) toast.error('No se pudieron cargar las órdenes');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (pedido === pedidoLista.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
-  useCargarAlMontar(() => fetchOrders(1), [filterStatus]);
+  useCargarAlMontar(() => fetchOrders(1), [filterStatus, busqueda]);
 
   // C-276: /admin/orders?orden=<id> abre esa orden (la ficha del cliente, Garantías y los resúmenes de la IA llevan aquí;
   // antes apuntaban a /admin/orders/<id>, que no existe)
@@ -307,6 +326,7 @@ export default function OrdersPage() {
     try {
       const params = new URLSearchParams({ page: '1', limit: String(PAGE_SIZE) });
       if (filterStatus !== 'all') params.set('status', filterStatus);
+      if (busqueda) params.set('q', busqueda);
       const response = await fetch(`/api/orders?${params}`);
       if (!response.ok) return;
       const result = await response.json();
@@ -460,12 +480,8 @@ export default function OrdersPage() {
     handleStatusUpdate(order.id, paso.estado);
   };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.user?.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  // C-281 (A-07): la lista ya llega buscada del servidor
+  const filteredOrders = orders;
 
   const pasoDetalle = selectedOrder
     ? siguientePaso(selectedOrder.status, selectedOrder.deliveryMethod ?? (selectedOrder.isOnlyDigital ? 'DIGITAL' : null))
@@ -510,14 +526,19 @@ export default function OrdersPage() {
           <div className="relative min-w-0 flex-1 sm:max-w-xs">
             <IconoBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
             <input
-              type="text"
-              aria-label="Buscar orden o cliente"
-              placeholder="Buscar orden o cliente"
+              type="search"
+              aria-label="Buscar por número, cliente, teléfono, cédula, referencia o guía"
+              placeholder="Número, cliente, teléfono, referencia o guía"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`${adminInput()} pl-9`}
             />
           </div>
+          {encontradas !== null && !loading && (
+            <p className="shrink-0 text-sm text-muted" role="status">
+              {encontradas === 1 ? '1 orden' : `${encontradas.toLocaleString('es-VE')} órdenes`}
+            </p>
+          )}
         </div>
         <button
           onClick={() => fetchOrders(1)}
@@ -589,7 +610,7 @@ export default function OrdersPage() {
         <EmptyState
           icon={<IconoPaquete className="w-8 h-8" />}
           title="No hay órdenes"
-          description={filterStatus !== 'all' ? 'No hay órdenes con este estado' : 'Aún no se han realizado pedidos'}
+          description={busqueda ? `Ninguna orden coincide con "${busqueda}"${filterStatus !== 'all' ? ' en este estado' : ''}` : filterStatus !== 'all' ? 'No hay órdenes con este estado' : 'Aún no se han realizado pedidos'}
         />
       ) : (
         <div className="space-y-3">

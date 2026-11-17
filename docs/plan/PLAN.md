@@ -457,12 +457,17 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 ### 5.2 Lista única de pendientes
 Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
+**De la auditoría del 17/11, lo de la tienda y el panel que no entró en C-281** (la Fase 4; sin tomar):
+- Un pedido de retiro en tienda o digital en "Enviada" diría "Va en camino" (`lib/order-pasos.ts`).
+- "Completar pedido" puede quedar en "Procesando" si la sesión se cerró justo al tocarlo (`app/checkout/page.tsx`, el arranque de `handleSubmit`).
+- El lote de gift cards impresas se pierde, con sus PIN, si se navega por el menú antes de imprimirlo (`gift-cards/_components/AsistenteLote.tsx`): guardarlo en la pestaña hasta "impreso".
+
 **En curso (aprobado por Andrés el 02/10, `archivo/PROPUESTA_C168-C172.md`), en este orden:** C-168 versiones por módulo (**hecha**); C-169 productos sin pérdidas (borrador, papelera, conflicto, presencia) (**hecha**); C-174 marquesina del equipo (quién está conectado y en qué sector) (**hecha**); C-170 lo mismo en el resto del panel (**hecha**); C-173 Reportes en vivo con visitantes conectados, con y sin cuenta (**hecha**); C-172 Destacados que rotan (**hecha**); C-171 Dashboard a tu gusto (**hecha**, adelantada el 03/10 a pedido de Andrés). Lotes de deploy: rc.4 (C-168 y C-169, **etiquetada**), rc.5 (C-174, **etiquetada**), rc.6 (C-173, **etiquetada**), rc.7 (C-171, **etiquetada**); rc.8 (C-170, **etiquetada**); rc.9 (C-175, rediseño de todos los correos con el logo largo, pedido el 03/10; **hecha y etiquetada**; rc.10 corrige el logo para que sea el del encabezado); rc.11 (C-172, **hecha y etiquetada**). **El ciclo de `PROPUESTA_C168-C172.md` está completo.** Ideas opcionales que quedaron sin pedir: orden y fechas de los destacados desde el panel, estrella fija y cuenta regresiva de oferta en la estrella.
 
 **En curso (pedido del 16/10: salud del servidor e imágenes para compartir; primero el plan y después el código), en este orden:**
 - **C-176** mantenimiento del servidor (**hecha**).
 - **C-177** dependencias seguras: Next, sharp y nodemailer sin las fallas conocidas, y la tienda escuchando solo en `127.0.0.1` (**hecha y en producción** el 16/10, versión `rc.12`).
-- **C-178** imágenes para compartir los enlaces (Open Graph) (**hecha**, versión `rc.13`). Las decisiones de Andrés están en §7.2. Ideas que no se pidieron: la imagen generada en el paso SEO del editor de productos y una por curso cuando haya cursos publicados.
+- **C-178** imágenes para compartir los enlaces (Open Graph) (**hecha**, versión `rc.13`). Las decisiones de Andrés están en §7.2. Ideas que no se pidieron: la imagen generada en el paso SEO del editor de productos (la de cada curso la hizo C-281).
 
 Quedan para después de C-177 (`estado/C-177.md`):
 - **Prisma 7.** La falla que le queda a Prisma 6 está en su configuración de línea de comandos y no en la tienda, y pasar a Prisma 7 es un cambio grande.

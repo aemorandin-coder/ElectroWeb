@@ -51,7 +51,9 @@ export async function GET(request: NextRequest) {
             },
             orderBy: {
                 updatedAt: 'desc'
-            }
+            },
+            // C-281 (A-08): con tope (antes, todas). El panel filtra por estado en el servidor
+            take: 300,
         });
 
         return NextResponse.json(profiles);

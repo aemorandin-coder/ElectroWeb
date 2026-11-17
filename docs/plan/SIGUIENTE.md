@@ -1,9 +1,19 @@
-# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.93; nada por subir: §2)
+# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.93; por subir: rc.94, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-281 · Los flujos que venden y el día del panel (rc.94, por subir: §2; `estado/C-281.md`):** la Fase 4 de la auditoría del 17/11, que el equipo repartió entre las sesiones (la de dinero y seguridad es C-280).
+  - **En la tienda:**
+    - el Pago Móvil ya verificado se recupera si el cliente recargó el pago ("Usar en esta compra": no paga dos veces);
+    - quien recibe una gift card crea su cuenta ahí mismo y su código lo espera;
+    - el carrito sin cuenta muestra el precio y el stock de hoy;
+    - "Comprar ahora" sin cuenta sigue al pago después de entrar;
+    - con la cuenta sin activar, el botón de pagar se apaga, dice por qué y reenvía el correo;
+    - canjear y cada curso tienen su imagen para compartir;
+    - la confirmación abre el pedido.
+  - **En el panel:** Órdenes y Transacciones buscan entre todo (número, cliente, teléfono, cédula, referencia o guía), Órdenes tiene las píldoras Listas para recoger, Canceladas y Reembolsadas, y Consultas y Verificaciones dicen cuando algo falla.
 - **C-278 · La lista de Clientes, sin las cifras repetidas (rc.93, en producción desde el 17/11; `estado/C-278.md`):** el equipo, viendo rc.92: "esto ya está sobrando". Se quitaron las cuatro cifras de arriba de la lista, que repetían los filtros. Las órdenes en curso siguen en cada fila.
 - **C-276 · Clientes, de una lista pobre a saber quién es cada cliente (rc.92, en producción desde el 16/11; pruebas por confirmar: §2; `estado/C-276.md`):** el pedido del equipo del 16/11 con las capturas ("muy pobre, no se puede enviar notificaciones, no se sabe si está verificado, no se muestra el historial de sus documentos"). Eligió lo recomendado viendo las maquetas (`~/.cache/electroshop-trabajo/c276/maquetas/index.html`): la ficha A, escribirle por campana, correo y WhatsApp, y las notas del equipo con quién y cuándo.
   - **La ficha de cada cliente en su página:** sus sellos de confianza, lo gastado, sus Puntos ES, sus boletos, sus documentos y firmas con el PDF, los avisos que recibió, todo lo que pasó en su cuenta, lo que le interesa y las notas del equipo.
@@ -449,8 +459,19 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: nada por ahora
-Producción está en `v1.0.0-rc.93` (`e99ad13`); su bloque está en `HISTORIAL.md`.
+### Lo que falta subir: `v1.0.0-rc.94` (C-281)
+Producción está en `v1.0.0-rc.93` (`e99ad13`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-281 (rc.94):** los flujos que venden y el día del panel. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.94`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 15 minutos; antes, recarga la tienda y el panel con Ctrl+R):
+  1. **Órdenes** (en la computadora): busca una orden vieja por su número, después por el teléfono del cliente (como sea: con guiones o con +58) y por la guía de ZOOM: aparece aunque no esté entre las 50 de la lista, con "1 orden" al lado. Toca "Listas para recoger", "Canceladas" y "Reembolsadas": la cuenta de "Todas" es la suma de todas las píldoras.
+  2. **Transacciones:** busca una recarga vieja por su referencia o por el teléfono del cliente.
+  3. **"Comprar ahora" sin cuenta** (en el teléfono, en una ventana de incógnito): en un producto, "Comprar ahora" → lleva a entrar; entra con tu cuenta de cliente y llegas al pago con el producto. Vacía ese carrito al terminar.
+  4. **Canjear sin cuenta** (en incógnito): en `/canjear-gift-card`, escribe el código de una gift card de prueba y "Verificar": salen "Crear mi cuenta gratis" y "Ya tengo cuenta". Toca "Ya tengo cuenta", entra, y al volver el código ya está escrito y verificado, con su valor (no la canjees si no quieres).
+  5. **Lo que se comparte** (desde el teléfono): manda por WhatsApp el enlace de un curso y el de `/canjear-gift-card`: cada uno con su imagen (el curso, con su portada, su precio y su nivel).
+  6. **El Pago Móvil que se recupera** (solo si hay una compra real con Pago Móvil en curso, no hace falta forzarla): si un cliente verificó su pago y recargó la página, el pago le muestra "Ya tienes un Pago Móvil verificado" arriba.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.93 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de rc.93 (C-278; un minuto)
 Ya en producción desde el 17/11 (la subió Claude por SSH con la aprobación del equipo; `HISTORIAL.md`). En la computadora, recarga el panel (Ctrl+R): Clientes empieza en la búsqueda, sin las cuatro cifras; las píldoras siguen con su cuenta y cada fila con sus pedidos "en curso".
@@ -1103,7 +1124,7 @@ En el orden en que más destraban:
 
 **Sigue:** El plan del 14/11 está en producción desde ese día (rc.53). rc.56 está en producción desde el 15/11; falta confirmar sus pruebas (§2) y lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
 
-**Hecho el 17/11:** C-278 (la lista de Clientes sin las cifras repetidas, rc.93, en producción).
+**Hecho el 17/11:** C-278 (la lista de Clientes sin las cifras repetidas, rc.93, en producción) y C-281 (los flujos que venden y el día del panel, rc.94, por subir: §2).
 
 **Hecho el 16/11:** C-276 (Clientes, rc.92) y, de su inventario, C-277 (rc.91), las dos en producción.
 

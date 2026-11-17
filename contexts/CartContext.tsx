@@ -1,9 +1,10 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { trackAddToCart } from '@/components/AnalyticsTracker';
+import { esLaLinea, parseCartItemId } from '@/lib/cart-items';
 
 const CART_KEY = 'cart';
 // Dueño del carrito guardado en localStorage: el userId que lo sincronizó, o 'guest'
@@ -88,6 +89,19 @@ interface CartContextType {
   /** C-102: código de cupón guardado (null sin cupón) */
   couponCode: string | null;
   setCouponCode: (code: string | null) => void;
+  /** C-281 (F-05): repone el precio y el stock de hoy (POST /api/products/precios); no cambia cantidades */
+  actualizarPrecios: (precios: PrecioDeHoy[]) => void;
+}
+
+/** Lo que devuelve POST /api/products/precios por cada línea del carrito */
+export interface PrecioDeHoy {
+  productId: string;
+  digitalVariantId?: string;
+  digitalAmount?: number;
+  disponible: boolean;
+  priceUSD?: number;
+  listPriceUSD?: number | null;
+  stock?: number | null;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -291,6 +305,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCouponCode(null);
   };
 
+  // C-281 (F-05): el carrito guardaba el precio y el stock del día en que se agregó. No cuenta como cambio del cliente
+  // (no vuelve "de invitado" un carrito de cuenta) y no toca cantidades: lo que ya no alcanza lo dice el carrito
+  // Estable entre renders: el carrito la usa dentro de un efecto
+  const actualizarPrecios = useCallback((precios: PrecioDeHoy[]) => {
+    setItems((actuales) => {
+      let cambio = false;
+      const nuevos = actuales.map((item) => {
+        const ref = parseCartItemId(item);
+        const hoy = precios.find((p) => esLaLinea(p, ref));
+        if (!hoy?.disponible || typeof hoy.priceUSD !== 'number') return item;
+        const stock = typeof hoy.stock === 'number' ? hoy.stock : item.stock;
+        const listPrice = hoy.listPriceUSD ?? undefined;
+        if (item.price === hoy.priceUSD && item.stock === stock && item.listPrice === listPrice) return item;
+        cambio = true;
+        return { ...item, price: hoy.priceUSD, listPrice, stock };
+      });
+      return cambio ? nuevos : actuales;
+    });
+  }, []);
+
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
 
   const getTotalItems = () => totalItems;
@@ -312,6 +346,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         getTotalPrice,
         couponCode,
         setCouponCode,
+        actualizarPrecios,
       }}
     >
       {children}
@@ -343,6 +378,7 @@ export function useCartSafe(): CartContextType {
       getTotalPrice: () => 0,
       couponCode: null,
       setCouponCode: () => { },
+      actualizarPrecios: () => { },
     };
   }
   return context;

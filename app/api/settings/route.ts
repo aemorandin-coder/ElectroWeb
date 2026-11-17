@@ -7,7 +7,8 @@ import { hasPermission } from '@/lib/auth-helpers';
 import { crossFieldErrors, fieldErrors, MARKETING_FIELDS, settingsPatchSchema } from '@/lib/validations/settings';
 import { clearSettingsCache } from '@/lib/site-settings';
 import { leerReglasEmbalaje } from '@/lib/embalaje';
-import { refreshExchangeRate } from '@/lib/exchange-rate';
+import { isPlausibleRate, refreshExchangeRate } from '@/lib/exchange-rate';
+import { formatVES } from '@/lib/currency';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { revalidatePath } from 'next/cache';
@@ -138,6 +139,22 @@ export async function PUT(request: NextRequest) {
     const data: Record<string, unknown> = { ...patch };
     // Tasa escrita a mano: queda registrada la hora del cambio
     if (patch.exchangeRateVES !== undefined && Number(patch.exchangeRateVES) !== decimal(current?.exchangeRateVES)) {
+      // S-08: un cero de más o de menos (3650 en vez de 365) cambia todos los precios en bolívares y deja verificar Pagos
+      // Móvil con otra tasa. Pasando de 50 % (el mismo tope de la tasa automática) hace falta la confirmación del panel;
+      // sin ella no se guarda nada de este pedido. `confirmarSaltoTasa` no está en el esquema: zod la quita y no va a la base.
+      const antes = decimal(current?.exchangeRateVES);
+      const despues = Number(patch.exchangeRateVES);
+      if (antes !== null && antes > 0 && !isPlausibleRate(despues, antes) && (body as { confirmarSaltoTasa?: unknown }).confirmarSaltoTasa !== true) {
+        return NextResponse.json(
+          {
+            error: `La tasa cambia más de 50 %: de ${formatVES(antes)} a ${formatVES(despues)}. Confirma que está bien escrita.`,
+            code: 'TASA_SALTO',
+            antes,
+            despues,
+          },
+          { status: 409 }
+        );
+      }
       data.lastRateUpdate = new Date();
     }
 

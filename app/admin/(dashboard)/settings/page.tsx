@@ -6,6 +6,8 @@ import { IconoAdvertencia, IconoCheck, IconoGuardar, IconoRestablecer } from '@/
 import {
   adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminSpinner, adminTab,
 } from '@/lib/admin-ui';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import { formatVES } from '@/lib/currency';
 import {
   buildPatch, isDirty, SECTIONS, sectionOf, toSettingsForm,
   type FieldErrors, type SectionId, type SetField, type SettingsForm,
@@ -29,6 +31,7 @@ function sectionFromHash(): SectionId {
 }
 
 export default function SettingsPage() {
+  const { confirm } = useConfirm();
   const [form, setForm] = useState<SettingsForm | null>(null);
   const [initial, setInitial] = useState<SettingsForm | null>(null);
   const [meta, setMeta] = useState<{ updatedAt: string | null; lastRateUpdate: string | null }>({ updatedAt: null, lastRateUpdate: null });
@@ -100,7 +103,8 @@ export default function SettingsPage() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [hasChanges]);
 
-  const save = async () => {
+  // `confirmarSaltoTasa` solo va al reenviar, después de que quien guarda confirmó el salto de la tasa (S-08)
+  const guardar = async (confirmarSaltoTasa: boolean) => {
     if (!form || !initial || !hasChanges) return;
     setSaving(true);
     setErrors({});
@@ -108,13 +112,25 @@ export default function SettingsPage() {
       const response = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPatch(form, initial)),
+        body: JSON.stringify({ ...buildPatch(form, initial), ...(confirmarSaltoTasa ? { confirmarSaltoTasa: true } : {}) }),
       });
       const data = await response.json().catch(() => ({}));
       if (response.ok) {
         applyServerData(data);
         setJustSaved(true);
         toast.success('Configuración guardada');
+        return;
+      }
+      // S-08: la tasa cambia más de 50 %: se muestra antes → después y, si lo confirma, se reenvía
+      if (response.status === 409 && data.code === 'TASA_SALTO') {
+        const seguir = await confirm({
+          title: 'La tasa cambia más de 50 %',
+          message: `De ${formatVES(Number(data.antes))} a ${formatVES(Number(data.despues))} por dólar. Todos los precios en bolívares y los Pagos Móvil usarían la nueva tasa. ¿Está bien escrita?`,
+          confirmText: 'Sí, guardar esa tasa',
+          cancelText: 'Revisar',
+          type: 'warning',
+        });
+        if (seguir) await guardar(true);
         return;
       }
       if (data.fields && typeof data.fields === 'object') {
@@ -135,6 +151,7 @@ export default function SettingsPage() {
       setSaving(false);
     }
   };
+  const save = () => guardar(false);
 
   const discard = () => {
     if (!initial) return;

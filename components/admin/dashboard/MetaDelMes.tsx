@@ -51,8 +51,8 @@ export default function MetaDelMes({ mesUSD, metaUSD, diasQueQuedan, ultimoDia }
   if (!metaUSD) {
     return editando ? campo : (
       <div>
-        <p className={s.rotulo}>Lo cobrado este mes: <b className="text-ink">{formatUSD(mesUSD)}</b></p>
-        <button type="button" onClick={() => setEditando(true)} className={s.metaEditar} style={{ marginTop: 6 }}>Poner la meta del mes</button>
+        <p className={`${s.rotulo} ${s.sinH1}`} style={{ marginBottom: 6 }}>Lo cobrado este mes: <b className="text-ink">{formatUSD(mesUSD)}</b></p>
+        <button type="button" onClick={() => setEditando(true)} className={s.metaEditar} style={{ whiteSpace: 'nowrap' }}>Poner la meta</button>
       </div>
     );
   }

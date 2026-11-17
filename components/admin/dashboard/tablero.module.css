@@ -191,7 +191,7 @@ a.fila:hover .filaTexto b { color: var(--color-brand-700); }
 .pendFila { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .pendAcciones { display: flex; gap: 6px; flex-wrap: wrap; }
 .pendLinea { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.otros { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+@container w (max-width: 229px) { .pendLinea > .placa { display: none; } }
 
 /* Se están acabando */
 .filaStock { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--color-line); }

@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.91; por subir: rc.92, Clientes, §2)
+# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.92; nada por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-276 · Clientes, de una lista pobre a saber quién es cada cliente (rc.92, por subir: §2; `estado/C-276.md`):** el pedido del equipo del 16/11 con las capturas ("muy pobre, no se puede enviar notificaciones, no se sabe si está verificado, no se muestra el historial de sus documentos"). Eligió lo recomendado viendo las maquetas (`~/.cache/electroshop-trabajo/c276/maquetas/index.html`): la ficha A, escribirle por campana, correo y WhatsApp, y las notas del equipo con quién y cuándo.
+- **C-276 · Clientes, de una lista pobre a saber quién es cada cliente (rc.92, en producción desde el 16/11; pruebas por confirmar: §2; `estado/C-276.md`):** el pedido del equipo del 16/11 con las capturas ("muy pobre, no se puede enviar notificaciones, no se sabe si está verificado, no se muestra el historial de sus documentos"). Eligió lo recomendado viendo las maquetas (`~/.cache/electroshop-trabajo/c276/maquetas/index.html`): la ficha A, escribirle por campana, correo y WhatsApp, y las notas del equipo con quién y cuándo.
   - **La ficha de cada cliente en su página:** sus sellos de confianza, lo gastado, sus Puntos ES, sus boletos, sus documentos y firmas con el PDF, los avisos que recibió, todo lo que pasó en su cuenta, lo que le interesa y las notas del equipo.
   - **Escribirle** por pasos, con cinco mensajes listos o uno propio. **La lista** busca por teléfono, cédula y RIF, con filtros y páginas. **Suspender o reactivar** y reenviar la activación. **Editar** por pasos, con antes → después.
   - **Arreglado de paso:**
@@ -448,35 +448,11 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.92` (C-276, Clientes)
-Producción está en `v1.0.0-rc.91` (`25729ac`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- **C-276 (rc.92):** Clientes rediseñado (`estado/C-276.md`).
-  - **Cambia la base: una tabla nueva, `notas_cliente` (las notas del equipo), aditiva.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
-```sql
--- CreateTable
-CREATE TABLE "notas_cliente" (
-    "id" TEXT NOT NULL,
-    "clienteId" TEXT NOT NULL,
-    "autorId" TEXT,
-    "autorNombre" TEXT NOT NULL,
-    "texto" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+### Lo que falta subir: nada por ahora
+Producción está en `v1.0.0-rc.92` (`d026d04`); su bloque está en `HISTORIAL.md`.
 
-    CONSTRAINT "notas_cliente_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE INDEX "notas_cliente_clienteId_createdAt_idx" ON "notas_cliente"("clienteId", "createdAt");
-
--- AddForeignKey
-ALTER TABLE "notas_cliente" ADD CONSTRAINT "notas_cliente_clienteId_fkey" FOREIGN KEY ("clienteId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-```
-  - Sin variables nuevas, sin SQL de datos, sin cron y sin dependencias nuevas.
-- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc92.dump`
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.92`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas de C-276** (unos 15 minutos, en la computadora con Chrome; la 7, también en el teléfono). Antes, recarga el panel (Ctrl+R):
+### Por confirmar de rc.92 (C-276, Clientes; unos 15 minutos)
+Ya en producción desde el 16/11, cerca de las 11:50 p. m. (la subió Claude por SSH con la aprobación del equipo; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión, la tabla nueva, las páginas y que las rutas nuevas no entregan nada sin sesión. Falta esto (en la computadora con Chrome; la 7, también en el teléfono). Antes, recarga el panel (Ctrl+R):
   1. **La lista:** Clientes. Arriba, cuántos hay, los nuevos del mes, los sin activar y los que tienen órdenes activas. Busca un cliente por su teléfono (solo los últimos números) y después por su cédula. Toca "Sin activar" y "Con pedidos": la cuenta de cada píldora coincide con la lista. Ninguna cuenta del equipo sale en la lista.
   2. **La ficha:** abre un cliente que tenga pedidos. Arriba, sus sellos (correo, teléfono, cédula, términos, empresa) y lo gastado; en Documentos y firmas, "PDF" abre lo que firmó. "Ver los N" de Actividad muestra todo lo que pasó en su cuenta. Mira si algo de los datos reales se ve raro (un teléfono, una fecha) y avísale a Claude.
   3. **Una orden:** en Pedidos, toca una: se abre esa orden en Órdenes (antes, una página que no existía). Ciérrala: la dirección vuelve a la de la lista. Lo mismo desde una garantía, en "Pedido".
@@ -1123,7 +1099,7 @@ En el orden en que más destraban:
 
 **Sigue:** El plan del 14/11 está en producción desde ese día (rc.53). rc.56 está en producción desde el 15/11; falta confirmar sus pruebas (§2) y lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
 
-**Hecho el 16/11:** C-276 (Clientes, rc.92, por subir: §2) y, de su inventario, C-277 (rc.91, en producción).
+**Hecho el 16/11:** C-276 (Clientes, rc.92) y, de su inventario, C-277 (rc.91), las dos en producción.
 
 **Contabilidad (C-228 y C-228b, `CONTABILIDAD.md`):** hechas C-229 (rc.50, las facturas de talonario), C-235 (rc.54, la contadora en el equipo) y C-230 (rc.90, el libro de ventas con sus respuestas del 16/11). Sigue C-236, el calendario y los avisos (la alcaldía el 10, el IVA el 15). El resto en el orden de `PLAN.md` §5.2, todo antes del 19/04/2027.
 

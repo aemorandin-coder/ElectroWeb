@@ -1,10 +1,68 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.91`, comprobada el 16/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.92`, comprobada el 16/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 16/11 · C-276 (de rc.91 a `v1.0.0-rc.92`)
+La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida, cerca de las 11:50 p. m.:
+- el respaldo (`~/respaldo-antes-rc92.dump`, 1,3 MB, del tamaño de los anteriores);
+- `git pull --ff-only` y `deploy.sh --sin-pull`, que se paró por la base mostrando exactamente el SQL del bloque (la tabla `notas_cliente`, su índice y su enlace a `users`, sin `DROP` ni cambios de tipo);
+- `npx prisma db push` y `deploy.sh --sin-pull` otra vez. Terminó en "Listo: sirviendo .next-a (d026d046 Merge branch 'claude/C-276')".
+
+**Lo comprobado, el 16/11:**
+- **En el servidor:**
+  - `git describe --tags` dice `v1.0.0-rc.92` y la tienda escucha en `127.0.0.1:3000`;
+  - el segundo `deploy.sh` pasó el paso de la base sin pararse, así que la tabla quedó aplicada;
+  - el registro de errores de PM2 no cambió desde antes de la subida (sus últimas líneas son de las 11:28 p. m.).
+- **Desde fuera:**
+  - la portada dice `1.0.0-rc.92|d026d046`, y la portada, `/sorteo` y `/categorias` responden 200;
+  - la imagen para compartir de la portada sigue en su lugar;
+  - sin sesión, `/admin/customers`, `/api/customers`, las API nuevas de `/api/admin/clientes/…` (también un `POST` a `avisos`) y `/admin/orders?orden=…` mandan al login y no entregan nada.
+- **Con sesión:** la de un cliente da 403 en las ocho rutas, y la de un administrador hace todo lo del bloque. Se probó en la tienda de prueba (116 de 116, el caso normal y el manipulado), porque desde fuera no hay una cuenta de cliente ni de administrador.
+
+**Falta que el equipo haga las pruebas** (`SIGUIENTE.md`, "Por confirmar de rc.92"): la lista y la ficha con los clientes reales, una orden desde la ficha, una nota, escribirle por la campana, el correo y WhatsApp, editar y suspender con una cuenta de prueba.
+
+### El bloque que se subió: `v1.0.0-rc.92` (C-276, Clientes)
+Producción está en `v1.0.0-rc.91` (`25729ac`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-276 (rc.92):** Clientes rediseñado (`estado/C-276.md`).
+  - **Cambia la base: una tabla nueva, `notas_cliente` (las notas del equipo), aditiva.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
+```sql
+-- CreateTable
+CREATE TABLE "notas_cliente" (
+    "id" TEXT NOT NULL,
+    "clienteId" TEXT NOT NULL,
+    "autorId" TEXT,
+    "autorNombre" TEXT NOT NULL,
+    "texto" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "notas_cliente_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "notas_cliente_clienteId_createdAt_idx" ON "notas_cliente"("clienteId", "createdAt");
+
+-- AddForeignKey
+ALTER TABLE "notas_cliente" ADD CONSTRAINT "notas_cliente_clienteId_fkey" FOREIGN KEY ("clienteId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+```
+  - Sin variables nuevas, sin SQL de datos, sin cron y sin dependencias nuevas.
+- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc92.dump`
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.92`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas de C-276** (unos 15 minutos, en la computadora con Chrome; la 7, también en el teléfono). Antes, recarga el panel (Ctrl+R):
+  1. **La lista:** Clientes. Arriba, cuántos hay, los nuevos del mes, los sin activar y los que tienen órdenes activas. Busca un cliente por su teléfono (solo los últimos números) y después por su cédula. Toca "Sin activar" y "Con pedidos": la cuenta de cada píldora coincide con la lista. Ninguna cuenta del equipo sale en la lista.
+  2. **La ficha:** abre un cliente que tenga pedidos. Arriba, sus sellos (correo, teléfono, cédula, términos, empresa) y lo gastado; en Documentos y firmas, "PDF" abre lo que firmó. "Ver los N" de Actividad muestra todo lo que pasó en su cuenta. Mira si algo de los datos reales se ve raro (un teléfono, una fecha) y avísale a Claude.
+  3. **Una orden:** en Pedidos, toca una: se abre esa orden en Órdenes (antes, una página que no existía). Ciérrala: la dirección vuelve a la de la lista. Lo mismo desde una garantía, en "Pedido".
+  4. **Una nota:** en Notas del equipo, escribe "Prueba de notas" y guárdala: sale con tu nombre y la fecha. Bórrala.
+  5. **Escribirle** (con tu propia cuenta de cliente, o una de prueba: le llega de verdad): "Escribirle" → "Un mensaje tuyo", título "Prueba", un mensaje corto → Siguiente → marca la campana y el correo → "Revisar y enviar": ves lo que llega en cada uno → Enviar. En la tienda, con esa cuenta, la campana tiene el mensaje con el ícono del chat, y llega el correo con el marco de la tienda. En la ficha, "Avisos que recibió" dice que se lo mandaste tú.
+  6. **WhatsApp:** repite la 5 marcando también "Su WhatsApp": al enviar, "Abrir WhatsApp con el mensaje" abre el chat de ese número con el texto escrito (no lo envíes si no quieres).
+  7. **Editar:** "Editar" → cambia solo el teléfono de esa cuenta de prueba → "Revisar y guardar" muestra antes → después → Guardar. Vuelve a la ficha con el teléfono nuevo, y en Actividad, "cambió sus datos · Cambió: Teléfono". En el teléfono, los pasos se ven enteros.
+  8. **Suspender** (solo con la cuenta de prueba): "Más" → Suspender, con un motivo. Esa cuenta ya no entra a la tienda; "Más" → Reactivar la devuelve. Los dos quedan en Actividad, con el motivo.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.91 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla `notas_cliente` no molesta a rc.91: no se quita (las notas quedan guardadas para cuando vuelva rc.92). Los avisos que ya se mandaron se ven en la campana del cliente con rc.91 también.
 
 ## 16/11 · C-230 y C-277 (de rc.89 a `v1.0.0-rc.91`)
 La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida (`git pull --ff-only` y `deploy.sh --sin-pull`; sin base, sin SQL y sin cron). La rc.90 (C-230) ya estaba en el servidor desde unos minutos antes (`v1.0.0-rc.90-4-g95406de3`), subida sin anotar aquí: esta subida la completa con C-277.

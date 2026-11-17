@@ -13,6 +13,7 @@ import { correoContrasenaCambiada, correoEliminarCuenta } from '@/lib/email-temp
 import { formatPuntos } from '@/lib/currency';
 import { getToken } from 'next-auth/jwt';
 import { cerrarLasDemas } from '@/lib/sesiones';
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 
 // Seguridad, notificaciones y estado de la cuenta del cliente (Mi perfil, C-138).
 // C-138 quitó lo que se guardaba sin efecto: encuestas, datos anónimos, sonidos, avisos de pedidos en la tienda y
@@ -288,8 +289,18 @@ export async function POST(request: NextRequest) {
         }
 
         const userId = session.user.id;
+
+        // S-13: probar la contraseña actual tiene límite por cuenta (antes del bcrypt.compare)
+        const limite = checkRateLimit(userId, 'cambiar-clave', RATE_LIMITS.AUTH);
+        if (!limite.success) {
+            return NextResponse.json(
+                { error: 'Demasiados intentos. Espera un minuto y vuelve a probar.', retryAfter: limite.resetIn },
+                { status: 429, headers: getRateLimitHeaders(limite, RATE_LIMITS.AUTH) }
+            );
+        }
+
         const body = await request.json().catch(() => ({}));
-        const { currentPassword, newPassword, cerrarOtras } = body as { currentPassword?: unknown; newPassword?: unknown; cerrarOtras?: unknown };
+        const { currentPassword, newPassword } = body as { currentPassword?: unknown; newPassword?: unknown };
 
         if (typeof currentPassword !== 'string' || typeof newPassword !== 'string' || !currentPassword || !newPassword) {
             return NextResponse.json(
@@ -335,18 +346,16 @@ export async function POST(request: NextRequest) {
 
         const hashedPassword = await bcrypt.hash(newPassword, 12);
         await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
-        // C-140: si el cliente lo pide, cierra las demás sesiones y conserva esta (antes, C-138, cerraba también esta)
-        let sesionCerrada = false;
-        if (cerrarOtras === true) {
-            const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-            const sid = typeof token?.sid === 'string' ? token.sid : undefined;
-            await cerrarLasDemas(userId, sid);
-            sesionCerrada = !sid;
-        }
+        // C-140: cierra las demás sesiones y conserva esta (antes, C-138, cerraba también esta). S-13: siempre, ya no solo
+        // si el cliente lo pedía: quien tuviera la contraseña vieja no debe seguir dentro
+        const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+        const sid = typeof token?.sid === 'string' ? token.sid : undefined;
+        await cerrarLasDemas(userId, sid);
+        const sesionCerrada = !sid;
         // C-219: el aviso de que la contraseña cambió, por si no fue el dueño de la cuenta
         if (session.user.email) {
             const destino = session.user.email;
-            void correoContrasenaCambiada({ nombre: session.user.name ?? null, sesionesCerradas: cerrarOtras === true })
+            void correoContrasenaCambiada({ nombre: session.user.name ?? null, sesionesCerradas: true })
                 .then(({ asunto, html }) => sendEmail({ to: destino, subject: asunto, html }))
                 .catch((error) => console.error('Error enviando el aviso de contraseña cambiada:', error));
         }

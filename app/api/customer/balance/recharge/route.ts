@@ -101,13 +101,37 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // S-07: hasta 3 recargas por confirmar a la vez
+    // S-07: una recarga por Pago Móvil que quedó sin terminar (se cerró la pestaña, se recargó la página o se volvió
+    // atrás en la ventana) no se queda por confirmar para siempre: la nueva la reemplaza. Las que ya tienen un pago
+    // verificado no se tocan (esperan la revisión del equipo), ni las de los métodos manuales.
+    if (companyMethod.type === 'MOBILE_PAYMENT') {
+      const sinTerminar = await prisma.transaction.findMany({
+        where: { balanceId: userBalance.id, type: 'RECHARGE', status: 'PENDING', paymentMethod: 'MOBILE_PAYMENT' },
+        select: { id: true },
+      });
+      if (sinTerminar.length > 0) {
+        const ids = sinTerminar.map((t) => t.id);
+        const conPago = new Set(
+          (await prisma.pagoMovilVerificacion.findMany({ where: { transactionId: { in: ids }, verificado: true }, select: { transactionId: true } }))
+            .map((p) => p.transactionId)
+        );
+        const reemplazadas = ids.filter((id) => !conPago.has(id));
+        if (reemplazadas.length > 0) {
+          await prisma.transaction.updateMany({
+            where: { id: { in: reemplazadas }, status: 'PENDING' },
+            data: { status: 'CANCELLED', rejectionReason: 'Reemplazada por una recarga nueva' },
+          });
+        }
+      }
+    }
+
+    // S-07: hasta 3 recargas por confirmar a la vez (las que esperan al equipo: un pago manual o un Pago Móvil por revisar)
     const porConfirmar = await prisma.transaction.count({
       where: { balanceId: userBalance.id, type: 'RECHARGE', status: 'PENDING' },
     });
     if (porConfirmar >= MAX_RECARGAS_POR_CONFIRMAR) {
       return NextResponse.json(
-        { error: `Tienes ${MAX_RECARGAS_POR_CONFIRMAR} recargas por confirmar. Termina o cancela una en Puntos ES antes de pedir otra.` },
+        { error: `Tienes ${MAX_RECARGAS_POR_CONFIRMAR} recargas por confirmar. Las estamos revisando: cuando quede lista una, puedes pedir otra.` },
         { status: 409 }
       );
     }

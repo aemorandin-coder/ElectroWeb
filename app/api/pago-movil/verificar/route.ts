@@ -179,6 +179,14 @@ export async function POST(req: NextRequest) {
                 });
                 return NextResponse.json({ success: false, verified: false, error: 'Recarga no encontrada' }, { status: 404 });
             }
+            // S-07: la recarga ya no espera un pago (se canceló, la reemplazó una nueva o ya se acreditó). Se dice antes de
+            // consultar al banco, para que el pago no quede pegado a una recarga que ya no lo va a acreditar
+            if (recarga.status !== 'PENDING') {
+                return NextResponse.json(
+                    { success: false, verified: false, error: 'Esta recarga ya no está por confirmar. Pide una recarga nueva y verifica tu pago con la misma referencia.' },
+                    { status: 409 }
+                );
+            }
         }
 
         const bancoLimpio = String(bancoOrigen).trim();

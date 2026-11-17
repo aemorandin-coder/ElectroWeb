@@ -462,6 +462,12 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 - "Completar pedido" puede quedar en "Procesando" si la sesión se cerró justo al tocarlo (`app/checkout/page.tsx`, el arranque de `handleSubmit`).
 - El lote de gift cards impresas se pierde, con sus PIN, si se navega por el menú antes de imprimirlo (`gift-cards/_components/AsistenteLote.tsx`): guardarlo en la pestaña hasta "impreso".
 
+**De la auditoría del 17/11, lo que dejó C-280** (dinero y seguridad; sin tomar):
+- Una compra que sale en dos paquetes cuenta dos usos del tope total de un cupón. Contarla como una pide una llave de compra en las órdenes (hoy Contabilidad y el sorteo deducen por la hora cuáles salieron del mismo pago).
+- Cada recarga por Pago Móvil avisa "Recarga por aprobar" al equipo aunque se apruebe sola al minuto (`app/api/customer/balance/recharge/route.ts`).
+- Los archivos de `public/uploads` que Next sirve él mismo ya no llevan caché de un año (el navegador pregunta y recibe un 304). Si se quiere de vuelta, va en nginx y solo para las respuestas 200.
+- Lo demás de la auditoría está en su informe, fuera del repositorio.
+
 **En curso (aprobado por Andrés el 02/10, `archivo/PROPUESTA_C168-C172.md`), en este orden:** C-168 versiones por módulo (**hecha**); C-169 productos sin pérdidas (borrador, papelera, conflicto, presencia) (**hecha**); C-174 marquesina del equipo (quién está conectado y en qué sector) (**hecha**); C-170 lo mismo en el resto del panel (**hecha**); C-173 Reportes en vivo con visitantes conectados, con y sin cuenta (**hecha**); C-172 Destacados que rotan (**hecha**); C-171 Dashboard a tu gusto (**hecha**, adelantada el 03/10 a pedido de Andrés). Lotes de deploy: rc.4 (C-168 y C-169, **etiquetada**), rc.5 (C-174, **etiquetada**), rc.6 (C-173, **etiquetada**), rc.7 (C-171, **etiquetada**); rc.8 (C-170, **etiquetada**); rc.9 (C-175, rediseño de todos los correos con el logo largo, pedido el 03/10; **hecha y etiquetada**; rc.10 corrige el logo para que sea el del encabezado); rc.11 (C-172, **hecha y etiquetada**). **El ciclo de `PROPUESTA_C168-C172.md` está completo.** Ideas opcionales que quedaron sin pedir: orden y fechas de los destacados desde el panel, estrella fija y cuenta regresiva de oferta en la estrella.
 
 **En curso (pedido del 16/10: salud del servidor e imágenes para compartir; primero el plan y después el código), en este orden:**

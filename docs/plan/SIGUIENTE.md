@@ -1,9 +1,16 @@
-# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.93; por subir: rc.94, §2)
+# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.93; por subir: rc.94 y rc.95, en un solo bloque, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-280 · Dinero y seguridad: los arreglos medios de la auditoría (rc.95, por subir: §2; `estado/C-280.md`):** lo que pidió el equipo el 17/11 después de leer el informe, con un agente en el modelo liviano que implementó y Claude que revisó.
+  - **Puntos ES:** la recarga por Pago Móvil que se aprueba sola se compara con la tasa que vio el cliente y solo perdona el redondeo; lo pagado de más también se acredita. Pedir recargas tiene tope (10 por hora y 3 por confirmar), y una que quedó a medias la reemplaza la siguiente.
+  - **Compras:** un cupón de un uso por cliente ya no hace fallar la compra de dos paquetes, y el checkout con la sesión vencida lo dice sin vaciar el carrito.
+  - **El panel:** la tasa escrita a mano pide confirmación si cambia más de 50 %, y aprobar o rechazar comisiones queda en la bitácora.
+  - **La cuenta:** cambiar la contraseña cierra siempre las otras sesiones, una gift card vencida no se canjea y el progreso de un curso solo cuenta sus lecciones.
+  - **La plataforma:** las API sin sesión responden 401 en JSON, las reseñas de un trabajo se ven sin cuenta y un archivo que no existe ya no queda guardado un año como roto.
+  - **Verificado:** 50 de 50 por HTTP con el caso normal y el manipulado, la prueba de humo 60 de 60 y las dos pantallas que cambiaron, a cuatro anchos.
 - **C-281 · Los flujos que venden y el día del panel (rc.94, por subir: §2; `estado/C-281.md`):** la Fase 4 de la auditoría del 17/11, que el equipo repartió entre las sesiones (la de dinero y seguridad es C-280).
   - **En la tienda:**
     - el Pago Móvil ya verificado se recupera si el cliente recargó el pago ("Usar en esta compra": no paga dos veces);
@@ -459,18 +466,25 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.94` (C-281)
-Producción está en `v1.0.0-rc.93` (`e99ad13`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- **C-281 (rc.94):** los flujos que venden y el día del panel. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+### Lo que falta subir: `v1.0.0-rc.95` (C-281 y C-280)
+Producción está en `v1.0.0-rc.93` (`e99ad13`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente y trae dos versiones.
+- **C-281 (rc.94):** los flujos que venden y el día del panel.
+- **C-280 (rc.95):** los arreglos medios de dinero y seguridad de la auditoría.
+- Las dos, sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
 - **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.94`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 15 minutos; antes, recarga la tienda y el panel con Ctrl+R):
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.95`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 20 minutos; antes, recarga la tienda y el panel con Ctrl+R). De la 1 a la 6 son de C-281; de la 7 a la 10, de C-280:
   1. **Órdenes** (en la computadora): busca una orden vieja por su número, después por el teléfono del cliente (como sea: con guiones o con +58) y por la guía de ZOOM: aparece aunque no esté entre las 50 de la lista, con "1 orden" al lado. Toca "Listas para recoger", "Canceladas" y "Reembolsadas": la cuenta de "Todas" es la suma de todas las píldoras.
   2. **Transacciones:** busca una recarga vieja por su referencia o por el teléfono del cliente.
   3. **"Comprar ahora" sin cuenta** (en el teléfono, en una ventana de incógnito): en un producto, "Comprar ahora" → lleva a entrar; entra con tu cuenta de cliente y llegas al pago con el producto. Vacía ese carrito al terminar.
   4. **Canjear sin cuenta** (en incógnito): en `/canjear-gift-card`, escribe el código de una gift card de prueba y "Verificar": salen "Crear mi cuenta gratis" y "Ya tengo cuenta". Toca "Ya tengo cuenta", entra, y al volver el código ya está escrito y verificado, con su valor (no la canjees si no quieres).
   5. **Lo que se comparte** (desde el teléfono): manda por WhatsApp el enlace de un curso y el de `/canjear-gift-card`: cada uno con su imagen (el curso, con su portada, su precio y su nivel).
   6. **El Pago Móvil que se recupera** (solo si hay una compra real con Pago Móvil en curso, no hace falta forzarla): si un cliente verificó su pago y recargó la página, el pago le muestra "Ya tienes un Pago Móvil verificado" arriba.
+  7. **La tasa** (con la cuenta del dueño, en la computadora): Configuración → Precios y pagos. En "Manual", agrégale un cero a la tasa y toca Guardar: sale "La tasa cambia más de 50 %", con el antes y el después. Toca **"Revisar"** (no se guarda nada) y después "Descartar".
+  8. **La contraseña** (con una cuenta de cliente de prueba): Mi panel → Mi perfil → Seguridad. Ya no hay casilla: dice "Al cambiarla se cierran tus otras sesiones". Si la cambias, esa cuenta queda fuera en los demás dispositivos.
+  9. **Las reseñas de un trabajo** (en una ventana de incógnito): en `/servicios`, abre un trabajo. Las reseñas cargan, o dice que no hay: ya no se queda cargando.
+  10. **Una recarga por Pago Móvil** (solo si vas a hacer una de verdad, no hace falta forzarla): el monto en bolívares del paso de verificar es el que hay que pagar, y se aprueba sola.
+- **Lo que comprueba Claude desde fuera al subir:** una API privada sin sesión responde 401, las reseñas de servicios responden 200, y un archivo de `/uploads` que no existe sale con `no-store`.
 - **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.93 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de rc.93 (C-278; un minuto)
@@ -1124,7 +1138,7 @@ En el orden en que más destraban:
 
 **Sigue:** El plan del 14/11 está en producción desde ese día (rc.53). rc.56 está en producción desde el 15/11; falta confirmar sus pruebas (§2) y lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
 
-**Hecho el 17/11:** C-278 (la lista de Clientes sin las cifras repetidas, rc.93, en producción) y C-281 (los flujos que venden y el día del panel, rc.94, por subir: §2).
+**Hecho el 17/11:** C-278 (la lista de Clientes sin las cifras repetidas, rc.93, en producción) C-281 (los flujos que venden y el día del panel, rc.94) y C-280 (los arreglos medios de dinero y seguridad de la auditoría, rc.95). Las dos, por subir en un solo bloque: §2.
 
 **Hecho el 16/11:** C-276 (Clientes, rc.92) y, de su inventario, C-277 (rc.91), las dos en producción.
 

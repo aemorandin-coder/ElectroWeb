@@ -29,6 +29,7 @@ import { montoDecimal, roundMoney, type OrderGroupTotals } from '@/lib/pricing';
 import type { EmbalajeGuardado } from '@/lib/embalaje';
 import {
   orderPatchSchema,
+  problemaOrdenCerrada,
   problemaTransicion,
   transicionPermitida,
   estadosSiguientes,
@@ -44,6 +45,7 @@ import { avisarBoletoPorCompra } from '@/lib/sorteo/correos';
 import { recordStudioOrder } from '@/lib/studio/tracking';
 import { acreditarPagoSinOrden, pagoSinOrdenWhere } from '@/lib/pago-movil-sin-orden';
 import { aCentimos, conciliar, montoBs, type Conciliacion } from '@/lib/pago-movil/monto';
+import { mismaReferencia, referenciaCanonica } from '@/lib/pago-movil/referencia';
 import { STUDIO_COOKIE } from '@/lib/studio/code';
 import { avisarPedidoDigitalPorEntregar } from '@/lib/digital-delivery';
 import { DestinoError, leerDestino, type DestinoOrden } from '@/lib/envios/destino';
@@ -416,18 +418,29 @@ export async function POST(request: NextRequest) {
       ? body.mobilePaymentData
       : {}) as Record<string, unknown>;
     // C-125: `referencias` trae todos los Pagos Móvil de esta compra (el primero y lo que faltó); `referencia` sigue
-    // valiendo para un solo pago
+    // valiendo para un solo pago. S-01: cada una en su forma canónica (sin espacios, de 4 a 8 dígitos): las que no sirven
+    // se descartan
     const referencias = [...new Set(
       [mobilePaymentData.referencia, ...(Array.isArray(mobilePaymentData.referencias) ? mobilePaymentData.referencias : [])]
-        .filter((r): r is string => typeof r === 'string' && r.trim() !== '')
-        .map((r) => r.trim())
+        .map((r) => referenciaCanonica(r))
+        .filter((r): r is string => r !== null)
     )].slice(0, MAX_PAGOS_MOVIL_POR_COMPRA);
     const referencia = referencias[0] ?? '';
+    // S-01: los pagos libres del cliente cuya referencia guardada es la misma que alguna de las escritas, o termina en
+    // ella o al revés (la verificación le devuelve como "reutilizado" un pago guardado con 8 dígitos aunque haya escrito
+    // solo los últimos 4). Solo se miran los del propio cliente que siguen libres
     const pagosLibres = paymentMethod === 'MOBILE_PAYMENT' && referencias.length > 0
       ? (await prisma.pagoMovilVerificacion.findMany({
-          where: { userId, referencia: { in: referencias }, ...pagoSinOrdenWhere },
+          where: { userId, ...pagoSinOrdenWhere },
           orderBy: { createdAt: 'desc' },
-        })).filter((v, i, todos) => todos.findIndex((w) => w.referencia === v.referencia) === i)
+          take: 20,
+        }))
+          .filter((v) => {
+            const guardada = referenciaCanonica(v.referencia);
+            return guardada !== null && referencias.some((escrita) => mismaReferencia(guardada, escrita));
+          })
+          .filter((v, i, todos) => todos.findIndex((w) => w.referencia === v.referencia) === i)
+          .slice(0, MAX_PAGOS_MOVIL_POR_COMPRA)
       : [];
     const pagoLibre = pagosLibres[0] ?? null;
     const refsTexto = pagosLibres.map((v) => v.referencia).join(', ');
@@ -1060,11 +1073,18 @@ export async function PATCH(request: NextRequest) {
     const patch = parseado.data;
 
     const resultado = await prisma.$transaction(async (tx) => {
+      // S-03: una a la vez por orden. La fila queda tomada hasta que termine la transacción: un segundo cambio de la
+      // misma orden espera y lee lo que dejó el primero, no la orden como estaba antes
+      await tx.$queryRaw`SELECT id FROM "orders" WHERE id = ${id} FOR UPDATE`;
       const orden = await tx.order.findUnique({
         where: { id },
         include: { items: true, user: { select: { name: true, email: true } } },
       });
       if (!orden) return { tipo: 'no-encontrada' as const };
+
+      // S-04: una orden cancelada o reembolsada ya no cambia de estado ni de pago (venga o no un estado nuevo)
+      const cerrada = problemaOrdenCerrada(orden, patch);
+      if (cerrada) return { tipo: 'regla' as const, error: cerrada };
 
       // Máquina de estados: ni saltos hacia atrás ni cancelar dos veces
       const esTerminal = orden.status === OrderStatus.CANCELLED || orden.status === OrderStatus.REFUNDED;

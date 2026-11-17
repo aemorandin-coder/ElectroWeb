@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { publicar } from '@/lib/realtime/bus';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -10,7 +11,6 @@ import {
     normalizarTelefonoVE,
     validarCedulaVenezolana,
     validarTelefonoVenezolano,
-    validarReferencia,
 } from '@/lib/pago-movil/bancos-venezuela';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
@@ -18,7 +18,9 @@ import { emitAdminEvent } from '@/lib/admin-events';
 import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { aCentimos, hoyCaracas, leerMontoBs, montoBs, montoParaCopiar } from '@/lib/pago-movil/monto';
 import { leerCotizacion } from '@/lib/pago-movil/cotizacion';
-import { clavePago, unaALaVez } from '@/lib/pago-movil/candado';
+import { unaALaVez } from '@/lib/pago-movil/candado';
+import { bancoCanonico, claveDeCandado, referenciaCanonica } from '@/lib/pago-movil/referencia';
+import { buscarMismoPago } from '@/lib/pago-movil/mismo-pago';
 import { decidirRecarga, leerMetadata, tasaDeLaRecarga } from '@/lib/pago-movil/recarga';
 
 /**
@@ -59,8 +61,8 @@ export async function POST(req: NextRequest) {
 
         const {
             telefonoPagador: telefonoRecibido,
-            bancoOrigen,
-            referencia,
+            bancoOrigen: bancoRecibido,
+            referencia: referenciaRecibida,
             fechaPago,
             importe,           // Monto en Bs para verificar con BDV
             cedulaPagador: cedulaRecibida,
@@ -72,6 +74,23 @@ export async function POST(req: NextRequest) {
             cotizacion: cotizacionToken, // C-125: monto y tasa firmados por /api/orders/quote
         } = body;
 
+        // S-01: la referencia y el banco, en una sola forma desde aquí (lib/pago-movil/referencia.ts). Es la que se busca,
+        // se bloquea, se manda al banco y se guarda: lo recibido no se vuelve a usar
+        const referencia = referenciaCanonica(referenciaRecibida);
+        const bancoOrigen = bancoCanonico(bancoRecibido);
+        if (!referencia) {
+            return NextResponse.json(
+                { error: 'La referencia debe tener entre 4 y 8 dígitos' },
+                { status: 400 }
+            );
+        }
+        if (!bancoOrigen) {
+            return NextResponse.json(
+                { error: 'Banco inválido' },
+                { status: 400 }
+            );
+        }
+
         // C-130: teléfono y cédula en el formato del BDV, vengan como vengan ("+58 0412…", "v-19.855.597").
         // Antes el checkout mandaba el teléfono del perfil como "584121234567" y el banco lo rechazaba.
         const telefonoPagador = typeof telefonoRecibido === 'string' ? normalizarTelefonoVE(telefonoRecibido) : '';
@@ -81,7 +100,7 @@ export async function POST(req: NextRequest) {
         const cotizacion = contexto === 'ORDER' ? leerCotizacion(cotizacionToken, userId) : null;
 
         // Validaciones básicas (el importe de una compra puede venir de la cotización: es el monto exacto que se mostró)
-        if (!telefonoPagador || !bancoOrigen || !referencia || !fechaPago || !(importe || cotizacion)) {
+        if (!telefonoPagador || !fechaPago || !(importe || cotizacion)) {
             return NextResponse.json(
                 { error: 'Faltan campos obligatorios: teléfono, banco, referencia, fecha e importe son requeridos' },
                 { status: 400 }
@@ -99,14 +118,6 @@ export async function POST(req: NextRequest) {
         if (!validarTelefonoVenezolano(telefonoPagador)) {
             return NextResponse.json(
                 { error: 'Revisa el teléfono que pagó: un celular venezolano de 11 dígitos, por ejemplo 04121234567.' },
-                { status: 400 }
-            );
-        }
-
-        // Validar formato de referencia
-        if (!validarReferencia(referencia)) {
-            return NextResponse.json(
-                { error: 'La referencia debe tener entre 4 y 8 dígitos' },
                 { status: 400 }
             );
         }
@@ -189,19 +200,15 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        const bancoLimpio = String(bancoOrigen).trim();
-        // C-129: una verificación a la vez por referencia y banco (ver lib/pago-movil/candado.ts)
-        const tramo = await unaALaVez(clavePago(referencia, bancoLimpio), async () => {
-            // Verificar que la referencia no haya sido usada anteriormente (VERIFICADA con éxito)
-            const referenciaExistente = await prisma.pagoMovilVerificacion.findFirst({
-                // C-129: referencia y banco. La referencia la pone el banco que envía: dos bancos pueden repetirla, y
-                // antes el segundo cliente recibía "referencia ya utilizada" y una alerta de seguridad sin haber hecho nada
-                where: {
-                    referencia: referencia.trim(),
-                    bancoOrigen: bancoLimpio,
-                    verificado: true,
-                },
-            });
+        // C-129: una verificación a la vez por pago: el banco y los últimos dígitos (ver lib/pago-movil/candado.ts)
+        const tramo = await unaALaVez(claveDeCandado(bancoOrigen, referencia), async () => {
+            // Verificar que el pago no haya sido usado anteriormente (VERIFICADO con éxito).
+            // C-129: referencia y banco. La referencia la pone el banco que envía: dos bancos pueden repetirla, y antes el
+            // segundo cliente recibía "referencia ya utilizada" y una alerta de seguridad sin haber hecho nada.
+            // S-01: el mismo pago escrito de otra forma ("5678" y "12345678", con o sin espacios) también cuenta
+            // (lib/pago-movil/mismo-pago.ts)
+            // En una compra, si uno de los que coinciden es un pago suyo que sigue libre, ese va primero (es el caso de abajo)
+            const referenciaExistente = await buscarMismoPago(prisma, { banco: bancoOrigen, referencia, importeBs: montoNumerico }, contexto === 'ORDER' ? userId : undefined);
 
             // C-125: el mismo cliente vuelve a escribir la referencia de un pago de compra suyo que sigue libre (recargó
             // la página o volvió al checkout): se le devuelve ese pago como verificado. Antes era "referencia ya utilizada",
@@ -215,6 +222,8 @@ export async function POST(req: NextRequest) {
                     verified: true,
                     reutilizado: true,
                     message: 'Este pago ya estaba verificado y sigue disponible para tu compra.',
+                    // S-01: la referencia con la que quedó guardado (puede ser más larga que la que escribió ahora)
+                    referencia: referenciaExistente.referencia,
                     amount: referenciaExistente.importeVerificado?.toString(),
                     pagadoBs: Number(referenciaExistente.importeVerificado ?? 0),
                     tasa: Number(referenciaExistente.tasaVES ?? 0) || null,
@@ -284,7 +293,7 @@ export async function POST(req: NextRequest) {
                 importe: montoNumerico,
                 cedulaPagador,
                 // C-129: el BDV solo valida la cédula en pagos BDV a BDV; se decide aquí y no en el navegador
-                reqCed: bancoLimpio === '0102' && reqCed !== false,
+                reqCed: bancoOrigen === '0102' && reqCed !== false,
             });
 
             // Lo que confirmó el banco. Como busca por monto exacto, si no devuelve el importe es el que se pidió.
@@ -293,45 +302,63 @@ export async function POST(req: NextRequest) {
             // Tasa congelada del pago: la de la cotización que vio el cliente o, sin ella, la del momento
             const tasaPago = cotizacion?.tasa ?? Number((await prisma.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } }))?.exchangeRateVES ?? 0);
 
-            // Registrar la verificación en la base de datos
+            // Registrar la verificación en la base de datos (con `prisma` o con el cliente de una transacción)
+            const guardar = (db: Prisma.TransactionClient) => db.pagoMovilVerificacion.create({
+                data: {
+                    userId,
+                    telefonoPagador,
+                    bancoOrigen,
+                    referencia,
+                    fechaPago: fechaPagoDate,
+                    importeSolicitado: montoNumerico,
+                    importeVerificado: montoBanco,
+                    tasaVES: tasaPago > 0 ? tasaPago : null,
+                    codigoRespuesta: resultado.code,
+                    mensajeRespuesta: resultado.message,
+                    verificado: resultado.verified,
+                    contexto,
+                    transactionId: contexto === 'RECHARGE' ? transactionId : null,
+                    // C-129: el orderId nunca viene del navegador (antes se guardaba cualquiera y el pago quedaba
+                    // pegado a una orden ajena). Lo pone POST /api/orders al crear la orden con este pago
+                    orderId: null,
+                    rawResponse: resultado.rawResponse ? JSON.stringify(resultado.rawResponse) : null,
+                },
+            });
+            // Otra solicitud (otra pestaña u otro proceso) ya registró este pago
+            const yaProcesado = () => {
+                console.error('[SECURITY] Race condition detectada - referencia duplicada:', referencia);
+                return NextResponse.json({
+                    success: false,
+                    verified: false,
+                    code: 4001,
+                    errorType: 'DUPLICATE_REFERENCE',
+                    message: 'Esta referencia ya fue procesada. Por favor, intenta nuevamente o contacta a soporte.',
+                    duplicateReference: true,
+                    requiresContact: true,
+                }, { status: 400 });
+            };
             // SEGURIDAD: Try-catch para manejar constraint único (race condition protection)
             try {
-                await prisma.pagoMovilVerificacion.create({
-                    data: {
-                        userId,
-                        telefonoPagador,
-                        bancoOrigen,
-                        referencia,
-                        fechaPago: fechaPagoDate,
-                        importeSolicitado: montoNumerico,
-                        importeVerificado: montoBanco,
-                        tasaVES: tasaPago > 0 ? tasaPago : null,
-                        codigoRespuesta: resultado.code,
-                        mensajeRespuesta: resultado.message,
-                        verificado: resultado.verified,
-                        contexto,
-                        transactionId: contexto === 'RECHARGE' ? transactionId : null,
-                        // C-129: el orderId nunca viene del navegador (antes se guardaba cualquiera y el pago quedaba
-                        // pegado a una orden ajena). Lo pone POST /api/orders al crear la orden con este pago
-                        orderId: null,
-                        rawResponse: resultado.rawResponse ? JSON.stringify(resultado.rawResponse) : null,
-                    },
-                });
+                if (!resultado.verified) {
+                    // El banco no lo confirmó: el intento se guarda como siempre, sin candado
+                    await guardar(prisma);
+                } else {
+                    // S-01: un pago aprobado se guarda dentro de una transacción que empieza con un candado de la base
+                    // (consultivo, por banco y últimos dígitos, y se suelta solo al terminar). Con el candado tomado se
+                    // vuelve a buscar con el monto que confirmó el banco: si otro proceso lo guardó mientras tanto, no
+                    // se crea otra fila con el mismo dinero
+                    const yaRegistrado = await prisma.$transaction(async (tx) => {
+                        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${`pago-movil:${claveDeCandado(bancoOrigen, referencia)}`}))::text AS locked`;
+                        if (await buscarMismoPago(tx, { banco: bancoOrigen, referencia, importeBs: montoBanco ?? montoNumerico })) return true;
+                        await guardar(tx);
+                        return false;
+                    });
+                    if (yaRegistrado) return yaProcesado();
+                }
             } catch (dbError: unknown) {
                 const dbErr = dbError as { code?: string };
                 // Si es error de constraint único, significa que otra solicitud procesó esta referencia
-                if (dbErr?.code === 'P2002') {
-                    console.error('[SECURITY] Race condition detectada - referencia duplicada:', referencia);
-                    return NextResponse.json({
-                        success: false,
-                        verified: false,
-                        code: 4001,
-                        errorType: 'DUPLICATE_REFERENCE',
-                        message: 'Esta referencia ya fue procesada. Por favor, intenta nuevamente o contacta a soporte.',
-                        duplicateReference: true,
-                        requiresContact: true,
-                    }, { status: 400 });
-                }
+                if (dbErr?.code === 'P2002') return yaProcesado();
                 throw dbError; // Re-lanzar otros errores
             }
 

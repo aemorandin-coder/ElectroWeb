@@ -29,6 +29,7 @@ import { montoDecimal, roundMoney, type OrderGroupTotals } from '@/lib/pricing';
 import type { EmbalajeGuardado } from '@/lib/embalaje';
 import {
   orderPatchSchema,
+  problemaOrdenCerrada,
   problemaTransicion,
   transicionPermitida,
   estadosSiguientes,
@@ -1072,11 +1073,18 @@ export async function PATCH(request: NextRequest) {
     const patch = parseado.data;
 
     const resultado = await prisma.$transaction(async (tx) => {
+      // S-03: una a la vez por orden. La fila queda tomada hasta que termine la transacción: un segundo cambio de la
+      // misma orden espera y lee lo que dejó el primero, no la orden como estaba antes
+      await tx.$queryRaw`SELECT id FROM "orders" WHERE id = ${id} FOR UPDATE`;
       const orden = await tx.order.findUnique({
         where: { id },
         include: { items: true, user: { select: { name: true, email: true } } },
       });
       if (!orden) return { tipo: 'no-encontrada' as const };
+
+      // S-04: una orden cancelada o reembolsada ya no cambia de estado ni de pago (venga o no un estado nuevo)
+      const cerrada = problemaOrdenCerrada(orden, patch);
+      if (cerrada) return { tipo: 'regla' as const, error: cerrada };
 
       // Máquina de estados: ni saltos hacia atrás ni cancelar dos veces
       const esTerminal = orden.status === OrderStatus.CANCELLED || orden.status === OrderStatus.REFUNDED;

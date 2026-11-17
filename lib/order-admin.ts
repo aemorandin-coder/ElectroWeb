@@ -99,6 +99,22 @@ export const ETIQUETA_ESTADO: Record<OrderStatus, string> = {
 };
 
 /**
+ * S-04: una orden cancelada o reembolsada ya no cambia de estado ni de pago; las notas, la guía y lo demás siguen igual.
+ * Devuelve el motivo para el panel, o `null` si el pedido puede seguir. Pedir el mismo estado o el mismo pago que ya tiene
+ * no es un cambio: el aviso de "ya está cancelada" lo da la máquina de estados.
+ */
+export function problemaOrdenCerrada(
+  orden: { status: OrderStatus; paymentStatus: PaymentStatus },
+  patch: { status?: OrderStatus; paymentStatus?: PaymentStatus }
+): string | null {
+  if (orden.status !== OrderStatus.CANCELLED && orden.status !== OrderStatus.REFUNDED) return null;
+  const cambiaEstado = patch.status !== undefined && patch.status !== orden.status;
+  const cambiaPago = patch.paymentStatus !== undefined && patch.paymentStatus !== orden.paymentStatus;
+  if (!cambiaEstado && !cambiaPago) return null;
+  return `Esta orden está ${ETIQUETA_ESTADO[orden.status].toLowerCase()}: ya no se puede cambiar su estado ni su pago.`;
+}
+
+/**
  * Marcar la orden como pagada equivale a confirmar el pago, venga del botón "Marcar pagado"
  * (que manda `status: 'PAID'`) o del selector de estado de pago. Antes solo contaba el segundo,
  * así que el botón del panel no descontaba stock, no llenaba `paidAt` y dejaba los pedidos

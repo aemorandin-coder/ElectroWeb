@@ -30,12 +30,16 @@ function validateMagicBytes(buffer: Buffer, expectedType: string): boolean {
   const signatures = IMAGE_SIGNATURES[expectedType];
   if (!signatures) return false;
 
-  return signatures.some(signature => {
+  const coincide = signatures.some(signature => {
     for (let i = 0; i < signature.length; i++) {
       if (buffer[i] !== signature[i]) return false;
     }
     return true;
   });
+  if (!coincide) return false;
+  // C-285: WebP es RIFF....WEBP; "RIFF" solo también lo llevan el WAV y el AVI
+  if (expectedType === 'image/webp') return [0x57, 0x45, 0x42, 0x50].every((byte, i) => buffer[8 + i] === byte);
+  return true;
 }
 
 

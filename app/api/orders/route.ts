@@ -1088,7 +1088,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      orders,
+      // Lo mismo que ve el cliente en Mis pedidos (lista blanca), no la fila entera: la respuesta de un envío repetido
+      // (respuestaCompraRepetida) trae estas mismas órdenes
+      orders: await ordenesDeLaCompra(prisma, userId, compraId),
       totalUSD: calculation.totalUSD,
       ...(sobranteUSD > 0 ? { creditedUSD: sobranteUSD, sobrepago: true } : {}),
       ...(puntosMixto > 0 ? { puntosUSD: puntosMixto } : {}),

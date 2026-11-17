@@ -1,10 +1,31 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.87`, comprobada el 16/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.89`, comprobada el 16/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 16/11 · C-272 y C-273 (de rc.87 a `v1.0.0-rc.89`)
+La subió el equipo desde la laptop, unos minutos después del merge de C-273, con el bloque de abajo (`git pull --ff-only` y `deploy.sh --sin-pull`; sin base, sin SQL y sin cron). No quedó anotada: Claude la vio desde la PC de Andrés al leer la versión de la portada, y el equipo confirmó que la laptop había terminado.
+
+**Lo comprobado en el servidor, el 16/11:**
+- **El deploy:** el `git pull --ff-only` llegó a `a724c8a` a las 8:51 p. m., y la tienda reinició a las 8:54 p. m. (00:54 UTC del 17/11) sirviendo `.next-b`.
+- **Después:** `git describe --tags` dice `v1.0.0-rc.89`, sin cambios locales; escucha en `127.0.0.1:3000`; PM2 en línea, y el registro de errores sin líneas nuevas desde rc.87.
+
+**Lo comprobado desde fuera, el 16/11:**
+- **La portada dice `1.0.0-rc.89|a724c8a`.**
+- **Las páginas responden `200`:** la portada, `/categorias`, `/sorteo`, `/productos`, `/login`, `/api/settings/public` y las fuentes del estudio de rc.87. `/admin/studio` sin sesión lleva al login (307) y una pestaña sin versión recibe el `204`.
+- C-272 y C-273 no traen archivos nuevos en `public/`.
+
+**Falta que el equipo haga las pruebas** (`SIGUIENTE.md`, "Por confirmar de rc.89"): los stickers, los números del editor, las entradas y salidas, la línea de tiempo y el video con el cierre, dentro del panel.
+
+### El bloque que se subió: `v1.0.0-rc.89` (C-272 y C-273)
+- **C-272 (rc.88):** los stickers de ElectroStudio. **C-273 (rc.89):** las entradas, el énfasis y las salidas, la línea de tiempo, la duración del video y el cierre con el logo; y los números del editor que se escriben tecla por tecla.
+- Sin cambio de base (los stickers y las animaciones van dentro de cada historia), sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+- **Pruebas:** las 5 de `SIGUIENTE.md`, "Por confirmar de rc.89".
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.87 && npm install && bash scripts/deploy.sh --sin-pull`. **Ojo:** rc.87 no conoce los stickers ni las animaciones de las piezas. Mientras esté rc.87, no abras para editar una historia que los tenga: al guardarse sola, pierde los stickers, las animaciones de las piezas, la duración del video y el cierre con el logo (los títulos quedan, con su estilo). Las que no se toquen los recuperan al volver a subir rc.89.
 
 ## 16/11 · C-268, C-270 y C-271 (de rc.84 a `v1.0.0-rc.87`)
 La subió Claude por SSH desde la PC de Andrés, con su aprobación para este deploy: el primero con la llave de esa PC, que el equipo autorizó ese mismo día (`OPERACION.md` §3). Las otras sesiones de Claude de la PC no empujaron nada mientras tanto.

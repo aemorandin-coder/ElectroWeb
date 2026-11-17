@@ -6,6 +6,7 @@ import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@
 import { verifyCaptcha } from '@/lib/captcha';
 import { buscarUsuarioPorCorreo, normalizarCorreo } from '@/lib/correo';
 import { esRolDelPanel } from '@/lib/auth-helpers';
+import { tokenParaGuardar } from '@/lib/token-huella';
 
 export async function POST(request: NextRequest) {
     try {
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
         await prisma.passwordResetToken.create({
             data: {
                 userId: user.id,
-                token: resetToken,
+                token: tokenParaGuardar(resetToken),
                 expiresAt,
             },
         });

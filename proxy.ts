@@ -6,6 +6,7 @@ import { isFlyerCode, STUDIO_COOKIE, STUDIO_COOKIE_DAYS } from '@/lib/studio/cod
 import { APIS_CONTADORA, INICIO_CONTADORA, PAGINAS_CONTADORA, PAGINAS_SOLO_DUENO } from '@/lib/auth-helpers';
 import { direccionActual } from '@/lib/direcciones-anteriores';
 import { CABECERA_VERSION, VERSION_PESTANA } from '@/lib/version-build';
+import { origenPermitido } from '@/lib/origen-peticion';
 
 const REF_COOKIE = 'electroshop_ref';
 const REF_TTL_DAYS = 30;
@@ -61,8 +62,38 @@ function esApiPublica(pathname: string): boolean {
   );
 }
 
+/** Los métodos que cambian algo: el Origin de sus pedidos a /api se revisa (C-285, más abajo). */
+const METODOS_QUE_CAMBIAN = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/**
+ * Las rutas de /api a las que no se les revisa el Origin (C-285): NextAuth tiene su propia protección y algún proveedor vuelve
+ * con un POST; los webhooks, Numen y el cron son de servidor a servidor; y los avisos de la CSP los manda el navegador.
+ */
+function esApiSinRevisarOrigen(pathname: string): boolean {
+  return (
+    pathname.startsWith('/api/auth/') ||
+    pathname.startsWith('/api/webhooks') ||
+    pathname.startsWith('/api/numen/') ||
+    pathname.startsWith('/api/cron/') ||
+    pathname === '/api/csp-report'
+  );
+}
+
 export default withAuth(
   async function proxy(req) {
+    // ── ORIGEN DE LAS ESCRITURAS A /api (C-285) ──────────────────────
+    // Segunda capa sobre la cookie SameSite=Lax de la sesión: un POST, PUT, PATCH o DELETE a /api que trae un Origin de otro
+    // sitio se rechaza con 403 antes de mirar nada más. Sin Origin (servidor a servidor) o con "null" pasa. El host del pedido
+    // es el que mandó nginx (x-forwarded-host o host); además se aceptan los de las direcciones de la tienda (lib/origen-peticion.ts).
+    if (req.nextUrl.pathname.startsWith('/api/') && METODOS_QUE_CAMBIAN.has(req.method) && !esApiSinRevisarOrigen(req.nextUrl.pathname)) {
+      const origenValido = origenPermitido({
+        origin: req.headers.get('origin'),
+        host: req.headers.get('x-forwarded-host') || req.headers.get('host'),
+        permitidos: [process.env.NEXTAUTH_URL, process.env.NEXT_PUBLIC_BASE_URL, process.env.NEXT_PUBLIC_APP_URL, process.env.APP_URL],
+      });
+      if (!origenValido) return NextResponse.json({ error: 'Origen no permitido' }, { status: 403 });
+    }
+
     // ── PESTAÑAS DE OTRA VERSIÓN (C-203) ─────────────────────────────
     // Una pestaña abierta antes de un deploy tiene el código de la versión anterior. Si al navegar recibe el contenido de
     // la nueva, Next carga los archivos nuevos encima de los viejos y la página se rompe (el 11/11, Categorías del panel:

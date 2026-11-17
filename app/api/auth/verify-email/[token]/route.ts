@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendWelcomeEmail } from '@/lib/email-service';
 import { avisarBoletoPorInvitados } from '@/lib/sorteo/correos';
+import { valoresDeToken } from '@/lib/token-huella';
 
 export async function GET(
     request: NextRequest,
@@ -17,9 +18,9 @@ export async function GET(
             );
         }
 
-        // Find verification token
-        const verificationToken = await prisma.emailVerificationToken.findUnique({
-            where: { token },
+        // Find verification token: se busca por su huella; los enlaces anteriores a C-285 se guardaron tal cual (lib/token-huella.ts)
+        const verificationToken = await prisma.emailVerificationToken.findFirst({
+            where: { token: { in: valoresDeToken(token) } },
             include: { user: true },
         });
 

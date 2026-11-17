@@ -16,6 +16,7 @@ import { ipParaRegistro } from '@/lib/ip';
 import { describirDispositivo } from '@/lib/dispositivo';
 import { sendEmail, sendPasswordResetEmail } from '@/lib/email-service';
 import { correoSesionNueva } from '@/lib/email-templates/cuenta';
+import { tokenParaGuardar } from '@/lib/token-huella';
 
 export const DURACION_ADMIN_MS = 12 * 60 * 60 * 1000;
 export const DURACION_CLIENTE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -200,7 +201,7 @@ export async function bloquearPorNoFuiYo(sid: string, firma: string, ipReporte: 
     prisma.user.update({ where: { id: sesion.userId }, data: { password: bloqueo, sessionVersion: { increment: 1 } } }),
     prisma.userSession.updateMany({ where: { userId: sesion.userId, revokedAt: null }, data: { revokedAt: new Date(), motivoCierre: 'CERRADA' } }),
     prisma.passwordResetToken.deleteMany({ where: { userId: sesion.userId } }),
-    prisma.passwordResetToken.create({ data: { userId: sesion.userId, token, expiresAt: new Date(Date.now() + 60 * 60 * 1000) } }),
+    prisma.passwordResetToken.create({ data: { userId: sesion.userId, token: tokenParaGuardar(token), expiresAt: new Date(Date.now() + 60 * 60 * 1000) } }),
   ]);
   await createAuditLog({
     action: 'SECURITY_SUSPICIOUS_ACTIVITY',

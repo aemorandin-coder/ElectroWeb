@@ -3,6 +3,7 @@
 import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { sendVerificationEmail } from '@/lib/email-service';
+import { tokenParaGuardar } from '@/lib/token-huella';
 
 const MAXIMO_POR_HORA = 3;
 const MINIMO_ENTRE_ENVIOS_S = 60;
@@ -20,7 +21,7 @@ export async function reenviarActivacion(userId: string): Promise<{ ok: true; co
   if (recientes >= MAXIMO_POR_HORA) return { ok: false, error: 'Ya se le enviaron 3 enlaces en la última hora. Prueba más tarde.', status: 429 };
   if (ultimo && (Date.now() - ultimo.createdAt.getTime()) / 1000 < MINIMO_ENTRE_ENVIOS_S) return { ok: false, error: 'Se le envió uno hace menos de un minuto.', status: 429 };
   const token = crypto.randomBytes(32).toString('hex');
-  await prisma.emailVerificationToken.create({ data: { userId: u.id, token, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) } });
+  await prisma.emailVerificationToken.create({ data: { userId: u.id, token: tokenParaGuardar(token), expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) } });
   await sendVerificationEmail(u.email, token, u.name || undefined);
   return { ok: true, correo: u.email };
 }

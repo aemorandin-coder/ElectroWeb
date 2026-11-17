@@ -10,6 +10,28 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.101] - 2026-11-17
+Acceso y seguridad: lo que quedó de la auditoría del 17/11 (C-285). Sin cambio de base, sin SQL, sin variables nuevas y sin cron. Sube junto con rc.100.
+### Marco del panel 1.15.7 (C-285)
+- **Lo que cambia algo solo se acepta si sale de la propia tienda:** un `POST`, `PUT`, `PATCH` o `DELETE` a `/api` que llega con el `Origin` de otro sitio responde 403. Los avisos de otros servidores (webhooks, Numen, el cron) y el inicio de sesión no se revisan.
+- El enlace de "No fui yo" de una sesión se guarda como huella.
+### Reportes y seguridad 1.1.13 (C-285)
+- **La espera por contraseñas fallidas cuenta por correo y conexión juntos:** quien falla cinco veces se frena a sí mismo, y el dueño de la cuenta entra desde su conexión sin esperar. El captcha sigue saliendo desde el segundo fallo del correo, desde cualquier conexión.
+### Carrito, checkout y cuenta del cliente 1.12.6 (C-285)
+- **Los enlaces de activar la cuenta y de recuperar la contraseña se guardan como huella:** en la base ya no queda el valor que abre el enlace. Los enlaces que ya se enviaron siguen sirviendo hasta que vencen.
+- **Pedir otro enlace de activación** responde lo mismo exista o no la cuenta, con un tope de 5 pedidos cada 15 minutos por conexión. Desde tu propia cuenta te dice lo que pasó ("Te enviamos un nuevo enlace", "Espera 40 segundos").
+### Clientes 1.7.5 (C-285)
+- **El formulario de contacto** acepta 10 mensajes cada 10 minutos por conexión, y el correo de "recibimos tu mensaje" sale 5 veces cada 10 minutos por conexión y 3 por hora a una misma dirección. Los mensajes se guardan igual.
+- El enlace de activación que el equipo le manda a un cliente se guarda como huella.
+### Cursos 1.3.2 (C-285)
+- **La ficha de un creador** entrega solo lo que usa su pantalla (sin las notas del equipo), y su perfil se valida al guardarlo: los largos y la foto.
+### Productos 1.17.5 (C-285)
+- Un error al guardar un producto ya no devuelve el detalle interno. Las fotos que se suben desde el panel comprueban el WebP completo.
+### Configuración 1.4.8 (C-285)
+- El enlace de invitación al equipo se guarda como huella.
+### Fuera
+- `/api/public/stats`, una ruta pública que nadie usaba.
+
 ## [1.0.0-rc.100] - 2026-11-17
 Dinero: lo que quedó de la auditoría del 17/11 (C-284). **Cambia la base, aditivo:** una columna (`compraId` en `orders`) y tres índices; `deploy.sh` se para y muestra el SQL. Sin SQL de datos, sin variables nuevas y sin cron.
 ### Órdenes y pagos 1.8.0 (C-284)

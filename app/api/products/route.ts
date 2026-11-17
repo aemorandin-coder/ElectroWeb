@@ -330,8 +330,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      error: 'Error al crear producto',
-      details: error.message
+      error: 'Error al crear producto'
     }, { status: 500 });
   }
 }

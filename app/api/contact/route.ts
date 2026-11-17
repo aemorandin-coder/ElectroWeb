@@ -3,26 +3,34 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
-import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
+import { checkRateLimit, getClientIP, getRateLimitHeaders } from '@/lib/rate-limit';
 import { verifyCaptcha } from '@/lib/captcha';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { sendEmail } from '@/lib/email-service';
 import { correoContactoRecibido } from '@/lib/email-templates/servicio';
 import { revisarAlLlegar } from '@/lib/ia/urgencia';
+import { normalizarCorreo } from '@/lib/correo';
+
+// C-285: el formulario de contacto, 10 mensajes cada 10 minutos por IP. El acuse al correo que escribe el visitante sale como
+// mucho 5 veces cada 10 minutos por IP y 3 veces por hora a una misma dirección; pasado el tope, el mensaje se guarda igual y
+// el acuse no sale.
+const LIMITE_CONTACTO = { maxRequests: 10, windowSeconds: 10 * 60 };
+const LIMITE_ACUSE_POR_IP = { maxRequests: 5, windowSeconds: 10 * 60 };
+const LIMITE_ACUSE_POR_CORREO = { maxRequests: 3, windowSeconds: 60 * 60 };
 
 // POST /api/contact - Submit contact form
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting - standard for contact form (prevents spam)
+    // Rate limiting for contact form (prevents spam)
     const clientIP = getClientIP(request);
-    const rateLimit = checkRateLimit(clientIP, 'contact:submit', RATE_LIMITS.STANDARD);
+    const rateLimit = checkRateLimit(clientIP, 'contact:submit', LIMITE_CONTACTO);
 
     if (!rateLimit.success) {
       return NextResponse.json(
         { error: 'Has enviado demasiados mensajes. Intenta más tarde.' },
         {
           status: 429,
-          headers: getRateLimitHeaders(rateLimit, RATE_LIMITS.STANDARD)
+          headers: getRateLimitHeaders(rateLimit, LIMITE_CONTACTO)
         }
       );
     }
@@ -73,10 +81,15 @@ export async function POST(request: NextRequest) {
       link: '/admin/inquiries',
     });
 
-    // C-219: el acuse a quien escribió, con el diseño de la tienda
-    void correoContactoRecibido({ nombre: name, asunto: subject })
-      .then(({ asunto, html }) => sendEmail({ to: email, subject: asunto, html }))
-      .catch((error) => console.error('Error enviando el acuse de contacto:', error));
+    // C-219: el acuse a quien escribió, con el diseño de la tienda. C-285: con tope por IP y por dirección (el de la dirección
+    // solo cuenta cuando la IP pasó, es decir, cuando de verdad saldría un correo)
+    const hayAcuse = checkRateLimit(clientIP, 'contact:acuse-ip', LIMITE_ACUSE_POR_IP).success
+      && checkRateLimit(normalizarCorreo(email), 'contact:acuse-correo', LIMITE_ACUSE_POR_CORREO).success;
+    if (hayAcuse) {
+      void correoContactoRecibido({ nombre: name, asunto: subject })
+        .then(({ asunto, html }) => sendEmail({ to: email, subject: asunto, html }))
+        .catch((error) => console.error('Error enviando el acuse de contacto:', error));
+    }
 
     return NextResponse.json(
       {

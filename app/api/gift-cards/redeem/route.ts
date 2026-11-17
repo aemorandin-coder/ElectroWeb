@@ -34,6 +34,11 @@ const GIFT_CARD_CHECK_RATE_LIMIT = {
     windowSeconds: 60, // 10 checks per minute
 };
 
+/** "Esta gift card venció el 5 de enero de 2027." (el día, en hora de Venezuela) */
+function mensajeVencida(venceEl: Date): string {
+    return `Esta gift card venció el ${venceEl.toLocaleDateString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', year: 'numeric' })}.`;
+}
+
 // POST - Redeem a gift card (add balance to user's wallet)
 export async function POST(request: NextRequest) {
     const operationId = generateIdempotencyKey(); // For tracking this specific request
@@ -193,6 +198,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: statusErrors[giftCard.status] }, { status: 400 });
         }
 
+        // S-09: la fecha de vencimiento se aplica al canjear (la misma condición va en el reclamo atómico de más abajo)
+        if (giftCard.expiresAt && giftCard.expiresAt <= new Date()) {
+            return NextResponse.json({ error: mensajeVencida(giftCard.expiresAt) }, { status: 400 });
+        }
+
         // Check PIN if required (tarjetas impresas). Las digitales desde C-71 no llevan PIN.
         if (giftCard.pin) {
             // Bloqueo por tarjeta, persistente (C-71): no se esquiva con otra cuenta ni con un reinicio
@@ -256,7 +266,13 @@ export async function POST(request: NextRequest) {
         // dos canjes simultáneos acreditaban dos veces, y una recarga al mismo tiempo se perdía.
         const result = await prisma.$transaction(async (tx) => {
             const claimed = await tx.giftCard.updateMany({
-                where: { id: giftCard.id, status: giftCard.status, balanceUSD: { gt: 0 } },
+                where: {
+                    id: giftCard.id,
+                    status: giftCard.status,
+                    balanceUSD: { gt: 0 },
+                    // S-09: también vence a su hora si pasó entre la lectura de arriba y este reclamo
+                    OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+                },
                 data: {
                     balanceUSD: 0,
                     status: 'DEPLETED',
@@ -267,7 +283,7 @@ export async function POST(request: NextRequest) {
                 }
             });
             if (claimed.count !== 1) {
-                throw new Error('ALREADY_REDEEMED');
+                throw new Error(giftCard.expiresAt && giftCard.expiresAt <= new Date() ? 'EXPIRED' : 'ALREADY_REDEEMED');
             }
 
             const updatedUserBalance = await tx.userBalance.upsert({
@@ -362,6 +378,10 @@ export async function POST(request: NextRequest) {
         console.error('Error redeeming gift card:', error);
 
         // Handle specific errors
+        if (error.message === 'EXPIRED') {
+            return NextResponse.json({ error: 'Esta Gift Card ha expirado' }, { status: 400 });
+        }
+
         if (error.message === 'ALREADY_REDEEMED') {
             return NextResponse.json({
                 error: 'Esta Gift Card ya fue canjeada por otro proceso'
@@ -440,7 +460,10 @@ export async function GET(request: NextRequest) {
             }, { status: 404 });
         }
 
-        const hasBalance = giftCard.status === 'ACTIVE' && Number(giftCard.balanceUSD) > 0;
+        const activa = giftCard.status === 'ACTIVE' && Number(giftCard.balanceUSD) > 0;
+        // S-09: una tarjeta vencida ya no se canjea: se dice que venció y no es válida
+        const vencida = activa && Boolean(giftCard.expiresAt && giftCard.expiresAt <= new Date());
+        const hasBalance = activa && !vencida;
 
         // Build response - only show balance to authenticated users
         const responseData: Record<string, unknown> = {
@@ -453,9 +476,11 @@ export async function GET(request: NextRequest) {
             design: giftCard.design,
             message: hasBalance
                 ? (session?.user ? 'Gift Card válida. Lista para canjear.' : 'Gift Card válida. Inicia sesión para canjearla.')
-                : giftCard.status === 'INACTIVE'
-                    ? 'Esta Gift Card aún no está activa. Las tarjetas impresas se activan al pagarlas en la tienda.'
-                    : 'Esta Gift Card no está disponible para canje.'
+                : vencida && giftCard.expiresAt
+                    ? mensajeVencida(giftCard.expiresAt)
+                    : giftCard.status === 'INACTIVE'
+                        ? 'Esta Gift Card aún no está activa. Las tarjetas impresas se activan al pagarlas en la tienda.'
+                        : 'Esta Gift Card no está disponible para canje.'
         };
 
         // Only reveal balance to authenticated users

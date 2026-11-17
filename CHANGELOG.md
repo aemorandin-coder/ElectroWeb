@@ -10,6 +10,17 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.97] - 2026-11-17
+Dinero: lo más urgente de la auditoría del 17/11 (C-283). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Órdenes y pagos 1.7.3 (C-283)
+- **Un Pago Móvil se reconoce escrito de cualquier forma:** con espacios, o con menos dígitos de su referencia ("5678" y "12345678"). El mismo pago no se registra dos veces, ni en una recarga ni en una compra, aunque llegue dos veces a la vez.
+- **Quien vuelve a escribir su pago con menos dígitos** recupera el suyo y cierra su compra con él.
+- **Cambiar el estado de una orden** va de uno en uno: dos personas (o dos clics) a la vez sobre la misma orden ya no la cancelan ni la confirman dos veces.
+- **Una orden cancelada o reembolsada** ya no cambia de estado ni de pago; las notas y la guía, sí.
+- La consulta del panel "¿este pago ya pasó por la tienda?" lo encuentra aunque esté guardado con otra cantidad de dígitos.
+### Carrito, checkout y cuenta del cliente 1.12.3 (C-283)
+- Se quitaron dos rutas que nadie usaba: la de apartar stock del carrito y una de fotos que nunca se ejecutaba.
+
 ## [1.0.0-rc.96] - 2026-11-17
 La guía web y los arreglos sueltos de la auditoría del 17/11 (C-282). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Tienda 1.22.0 (C-282)

@@ -8,6 +8,7 @@ import { registrarAccionAdmin } from '@/lib/audit-log';
 import { verificarPagoMovil, interpretarErrorBDV } from '@/lib/pago-movil/verificar-pago';
 import { getBancoPorCodigo, normalizarCedulaVE, normalizarTelefonoVE, validarReferencia, validarTelefonoVenezolano } from '@/lib/pago-movil/bancos-venezuela';
 import { hoyCaracas, leerMontoBs, montoParaAPI } from '@/lib/pago-movil/monto';
+import { idsDelMismoPago } from '@/lib/pago-movil/mismo-pago';
 
 // POST /api/admin/pago-movil/consultar (C-129): el equipo le pregunta al BDV por un Pago Móvil que un cliente dice
 // haber hecho ("pagué y no me aparece"). Solo consulta: no crea verificaciones, no acredita saldo, no toca órdenes.
@@ -47,9 +48,11 @@ export async function POST(request: NextRequest) {
     reqCed: bancoOrigen === '0102' && Boolean(cedulaPagador),
   });
 
-  // ¿Esa referencia ya pasó por la tienda? (mismo banco: la referencia la pone el banco que envía)
+  // ¿Ese pago ya pasó por la tienda? (mismo banco: la referencia la pone el banco que envía). S-01: también si se guardó con
+  // otra cantidad de dígitos ("5678" y "12345678") o con espacios (lib/pago-movil/mismo-pago.ts)
+  const idsUsos = await idsDelMismoPago(prisma, { banco: bancoOrigen, referencia, importeBs: importe }, 50);
   const usos = await prisma.pagoMovilVerificacion.findMany({
-    where: { referencia, bancoOrigen, verificado: true },
+    where: { id: { in: idsUsos } },
     orderBy: { createdAt: 'desc' },
     take: 5,
     select: {

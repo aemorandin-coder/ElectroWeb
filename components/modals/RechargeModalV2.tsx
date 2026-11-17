@@ -357,6 +357,9 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
     // Handle verification success
     const handleVerificationSuccess = (data: { verified: boolean; autoApproved?: boolean; amount?: string }) => {
+        // S-06: con el pago ya verificado, cerrar la ventana no cancela la recarga. Si el pago quedó para revisar a mano,
+        // cancelarla dejaría el dinero recibido sin recarga y fuera de la cola del panel (el efecto de cierre cancela la pendiente).
+        setPendingTransactionId(null);
         if (data.autoApproved) {
             toast.success('Tu recarga se verificó y se aprobó sola. Tus Puntos ES ya están disponibles.', {
                 duration: 5000,

@@ -5,14 +5,29 @@ import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 import { sendVerificationEmail } from '@/lib/email-service';
 import { buscarUsuarioPorCorreo, normalizarCorreo } from '@/lib/correo';
+import { checkRateLimit, getClientIP, getRateLimitHeaders } from '@/lib/rate-limit';
 
 // Rate limiting configuration
 const MAX_RESEND_ATTEMPTS = 3; // Maximum resends per time window
 const RESEND_WINDOW_MINUTES = 60; // Time window in minutes
 const MIN_RESEND_INTERVAL_SECONDS = 60; // Minimum seconds between resends
+// C-285: por IP, antes de mirar el correo
+const LIMITE_POR_IP = { maxRequests: 5, windowSeconds: 15 * 60 };
+
+// C-285: la misma respuesta (y el mismo estado) para cualquier correo: con cuenta o sin ella, activada o no, con el tope
+// de envíos o sin él. La ruta no dice si un correo tiene cuenta.
+const RESPUESTA = { message: 'Si ese correo tiene una cuenta sin activar, te enviamos el enlace de nuevo.' };
 
 export async function POST(request: NextRequest) {
     try {
+        const rateLimit = checkRateLimit(getClientIP(request), 'auth:resend-verification', LIMITE_POR_IP);
+        if (!rateLimit.success) {
+            return NextResponse.json(
+                { error: 'Demasiados intentos. Espera unos minutos antes de intentar nuevamente.' },
+                { status: 429, headers: getRateLimitHeaders(rateLimit, LIMITE_POR_IP) }
+            );
+        }
+
         // Try to get email from request body first, then from session
         let email: string | null = null;
 
@@ -41,18 +56,9 @@ export async function POST(request: NextRequest) {
         // Find user
         const user = await buscarUsuarioPorCorreo(email);
 
-        if (!user) {
-            // Don't reveal if user exists
-            return NextResponse.json({
-                message: 'Si el email existe, recibirás un enlace de verificación',
-            });
-        }
-
-        // Check if already verified
-        if (user.emailVerified) {
-            return NextResponse.json({
-                message: 'Tu cuenta ya está verificada. Puedes iniciar sesión.',
-            });
+        // Sin cuenta o ya activada: la misma respuesta de siempre, sin enviar nada
+        if (!user || user.emailVerified) {
+            return NextResponse.json(RESPUESTA);
         }
 
         // Rate limiting: Check how many tokens were created in the last hour
@@ -65,15 +71,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (recentTokens >= MAX_RESEND_ATTEMPTS) {
-            const waitMinutes = RESEND_WINDOW_MINUTES;
-            return NextResponse.json(
-                {
-                    error: `Has excedido el límite de reenvíos. Puedes solicitar un nuevo correo en ${waitMinutes} minutos.`,
-                    rateLimited: true,
-                    waitMinutes
-                },
-                { status: 429 }
-            );
+            return NextResponse.json(RESPUESTA);
         }
 
         // Check minimum interval between resends
@@ -85,15 +83,7 @@ export async function POST(request: NextRequest) {
         if (lastToken) {
             const secondsSinceLastToken = (Date.now() - lastToken.createdAt.getTime()) / 1000;
             if (secondsSinceLastToken < MIN_RESEND_INTERVAL_SECONDS) {
-                const waitSeconds = Math.ceil(MIN_RESEND_INTERVAL_SECONDS - secondsSinceLastToken);
-                return NextResponse.json(
-                    {
-                        error: `Por favor espera ${waitSeconds} segundos antes de solicitar otro correo.`,
-                        rateLimited: true,
-                        waitSeconds
-                    },
-                    { status: 429 }
-                );
+                return NextResponse.json(RESPUESTA);
             }
         }
 
@@ -110,14 +100,12 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        // Send verification email
-        await sendVerificationEmail(email, token, user.name || undefined);
+        // Send verification email. Sale sin esperarlo, para que la respuesta no tarde distinto con cuenta que sin ella; un
+        // fallo solo se anota
+        void sendVerificationEmail(email, token, user.name || undefined)
+            .catch((emailError) => console.error('Error enviando el enlace de activación:', emailError));
 
-        const remainingAttempts = MAX_RESEND_ATTEMPTS - recentTokens - 1;
-        return NextResponse.json({
-            message: 'Se ha enviado un nuevo enlace de verificación a tu correo',
-            remainingAttempts: remainingAttempts >= 0 ? remainingAttempts : 0,
-        });
+        return NextResponse.json(RESPUESTA);
     } catch (error) {
         console.error('Error resending verification:', error);
         return NextResponse.json(

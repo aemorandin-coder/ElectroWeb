@@ -10,6 +10,15 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.89] - 2026-11-16
+Las entradas y salidas de ElectroStudio (C-273). Sin cambio de base (la animación va dentro de cada historia), sin SQL, sin variables nuevas y sin cron.
+### ElectroStudio 2.3.0 (C-273)
+- **Cada pieza elige cómo entra** (12 entradas: aparecer, subir, bajar, desde un lado, zoom, rebote, sello, girar, máquina de escribir, de borroso a nítido y barrido, o "como la historia"), **qué hace mientras está** (latido, flotar, brillo o temblor corto) **y cómo sale** (9 salidas), con el segundo en que empieza y lo que tarda.
+- **La línea de tiempo:** una fila por pieza; la barra se arrastra para cambiar cuándo entra y sus bordes, cuándo empieza y cuándo termina de salir. La regla muestra cualquier segundo en la vista previa, y "Reproducir" arranca desde ahí.
+- **El video dura 5, 7, 10 o 15 segundos,** termina quieto, con fundido al azul, barrido o cortina, y puede cerrar con el logo, el Instagram y la web (para los Reels).
+- **Publicar avisa** si una pieza entra cuando el video ya terminó o sale antes de terminar de entrar.
+- **Arreglado:** los números del paso Textos y stickers (tamaño, ancho máximo, posición y giro) se escriben tecla por tecla. Escribir "80" en el tamaño dejaba 400, y el "-" de un giro negativo saltaba a 0.
+
 ## [1.0.0-rc.88] - 2026-11-16
 Los stickers de ElectroStudio (C-272). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### ElectroStudio 2.2.0 (C-272)

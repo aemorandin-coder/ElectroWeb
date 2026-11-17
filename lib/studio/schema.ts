@@ -3,6 +3,7 @@
 import { z } from '@/lib/zod';
 import { FUENTES_IDS, type FuenteId } from './fuentes';
 import { STICKER_IDS } from './stickers';
+import { DURACION_DEF, ENFASIS, ENTRADAS, FINALES, SALIDAS, type EnfasisId, type EntradaId, type FinalId, type SalidaId } from './animaciones';
 
 /** photo: la foto del producto es obligatoria, opcional o no se usa */
 export const TEMPLATES = {
@@ -206,6 +207,18 @@ export const CAPAS_MAX = 20;
 export const TAM_TEXTO = { min: 12, max: 400 } as const;
 
 const fraccion = (def: number) => z.coerce.number().min(0).max(1).catch(def).default(def);
+/** C-273: cuándo entra o sale una pieza (`inicio` vacío = el de siempre: después de la plantilla, o "al final") y lo que tarda */
+const segundo = z.number().min(0).max(15).nullable().catch(null).default(null);
+const tarda = z.coerce.number().min(0.2).max(3).catch(0.6).default(0.6);
+const entradaSchema = z.object({ tipo: z.enum(Object.keys(ENTRADAS) as [EntradaId, ...EntradaId[]]).catch('auto').default('auto'), inicio: segundo, dura: tarda });
+const salidaSchema = z.object({ tipo: z.enum(Object.keys(SALIDAS) as [SalidaId, ...SalidaId[]]).catch('ninguna').default('ninguna'), inicio: segundo, dura: tarda });
+const animacionCapa = {
+  entrada: entradaSchema.catch(() => entradaSchema.parse({})).default(() => entradaSchema.parse({})),
+  enfasis: z.enum(Object.keys(ENFASIS) as [EnfasisId, ...EnfasisId[]]).catch('ninguno').default('ninguno'),
+  salida: salidaSchema.catch(() => salidaSchema.parse({})).default(() => salidaSchema.parse({})),
+};
+export type EntradaCapa = z.infer<typeof entradaSchema>;
+export type SalidaCapa = z.infer<typeof salidaSchema>;
 const siNo = (def: boolean) => z.boolean().catch(def).default(def);
 export const capaTextoSchema = z.object({
   id: z.string().regex(/^[a-z0-9]{4,16}$/),
@@ -231,6 +244,7 @@ export const capaTextoSchema = z.object({
   giro: z.coerce.number().min(-180).max(180).catch(0).default(0),
   oculta: siNo(false),
   bloqueada: siNo(false),
+  ...animacionCapa,
 });
 export type CapaTexto = z.infer<typeof capaTextoSchema>;
 
@@ -258,6 +272,7 @@ export const capaStickerSchema = z.object({
   giro: z.coerce.number().min(-180).max(180).catch(0).default(0),
   oculta: siNo(false),
   bloqueada: siNo(false),
+  ...animacionCapa,
 });
 export type CapaSticker = z.infer<typeof capaStickerSchema>;
 export type StudioCapa = CapaTexto | CapaSticker;
@@ -318,6 +333,10 @@ export const flyerSchema = z.object({
   tramo: z.enum(Object.keys(TRAMOS_REGALO) as [TramoRegalo, ...TramoRegalo[]]).catch('de-20-a-50').default('de-20-a-50'),
   /** C-270: títulos, subtítulos y textos sueltos encima de la plantilla (después, stickers). La última va adelante */
   capas: capasSchema,
+  /** C-273: cuánto dura el video, cómo termina toda la historia y si cierra con el logo */
+  duracion: z.union([z.literal(5), z.literal(7), z.literal(10), z.literal(15)]).catch(DURACION_DEF).default(DURACION_DEF),
+  final: z.enum(Object.keys(FINALES) as [FinalId, ...FinalId[]]).catch('ninguno').default('ninguno'),
+  cierreLogo: z.boolean().catch(false).default(false),
 });
 export type StudioFlyerData = z.infer<typeof flyerSchema>;
 /** code: el de la marca de campaña (?es=código) del enlace y el QR */

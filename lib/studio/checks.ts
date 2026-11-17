@@ -2,6 +2,8 @@
 // lista de historias y cada descarga. Lo que "impide" no deja descargar; lo que "avisa" deja seguir si se confirma.
 
 import { missingImages, type ProductSrc } from '@/lib/studio/engine';
+import { CIERRE_LOGO, duracionDe, inicioEntrada, inicioSalida } from '@/lib/studio/animaciones';
+import { nombreCapa } from '@/lib/studio/capas';
 import { enTramo, staleWarnings } from '@/lib/studio/live';
 import { TEMPLATES, TRAMOS_REGALO, type StudioCoupon, type StudioFlyerData, type StudioProductSlot, type StudioStoreInfo, type StudioStoreProduct } from '@/lib/studio/schema';
 
@@ -131,6 +133,18 @@ export function flyerChecks(f: StudioFlyerData, env: CheckEnv): FlyerCheck[] {
   (env.text?.tiny ?? []).forEach((t) =>
     out.push({ level: 'warn', kind: 'overflow', text: `Un texto queda muy chico para leerse: "${short(t)}". Acórtalo.`, step: 1, download: true }),
   );
+  // C-273: una pieza que entra cuando el video ya terminó, o que sale antes de terminar de entrar, en el paso Animación
+  const dur = duracionDe(f);
+  const finVisible = dur - (f.cierreLogo ? CIERRE_LOGO : 0);
+  f.capas.forEach((c, i) => {
+    if (c.oculta) return;
+    const entra = inicioEntrada(c.entrada.inicio, i);
+    if (entra >= finVisible - 0.2) {
+      out.push({ level: 'warn', kind: 'overflow', text: `"${short(nombreCapa(c))}" entra cuando el video ya terminó (dura ${dur} s). Que entre antes.`, step: 5, download: true });
+    } else if (c.salida.tipo !== 'ninguna' && inicioSalida(c.salida.inicio, dur, f.cierreLogo) < entra + c.entrada.dura) {
+      out.push({ level: 'warn', kind: 'overflow', text: `"${short(nombreCapa(c))}" sale antes de terminar de entrar. Que salga más tarde.`, step: 5, download: true });
+    }
+  });
   // C-270: las capas se arreglan moviéndolas o agrandándolas, en el paso Textos y stickers
   (env.text?.fuera ?? []).forEach((t) =>
     out.push({ level: 'warn', kind: 'overflow', text: `"${short(t)}" sale del borde y se corta. Muévelo hacia adentro.`, step: 4, download: true }),

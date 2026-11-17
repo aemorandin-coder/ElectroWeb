@@ -67,6 +67,8 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
   const empezar = (e: PtrEvent<HTMLElement>, g: Gesto) => {
     e.stopPropagation();
     e.preventDefault();
+    // C-273: suelta el campo de números que se estaba escribiendo (si no, seguiría mostrando lo escrito)
+    if (document.activeElement instanceof HTMLInputElement) document.activeElement.blur();
     raiz.current?.setPointerCapture(e.pointerId);
     punteros.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     onEmpezar();

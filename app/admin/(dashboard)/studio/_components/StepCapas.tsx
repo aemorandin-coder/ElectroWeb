@@ -7,7 +7,6 @@ import { useEffect, useId, useState, type RefObject } from 'react';
 import {
   IconoAbrirCandado, IconoCandado, IconoEstrella, IconoFlechaAbajo, IconoFlechaArriba, IconoMas, IconoOcultar, IconoTexto, IconoVer,
 } from '@/components/iconos';
-import CampoUnidad from '@/components/admin/CampoUnidad';
 import { adminHint, adminInput, adminLabel } from '@/lib/admin-ui';
 import { ESTILOS_LISTOS, estiloListoDe, nombreCapa, puedeAgregarCapa, tamTexto, type CambioCapa } from '@/lib/studio/capas';
 import { FUENTES, FUENTES_IDS, cargarFuentes, cssFuente, fuenteDe, pesoEn } from '@/lib/studio/fuentes';
@@ -17,7 +16,7 @@ import {
 } from '@/lib/studio/schema';
 import type { Sticker } from '@/lib/studio/stickers';
 import { GaleriaStickers, PanelSticker, type ExtraSticker } from './PanelSticker';
-import { CabeceraCapa, CampoTamano, PosicionGiro } from './PiezasCapa';
+import { CabeceraCapa, CampoNumero, CampoTamano, PosicionGiro } from './PiezasCapa';
 import { smallButton, toggleButton } from './ui';
 import type { Studio } from './useStudio';
 
@@ -339,19 +338,7 @@ function PanelTexto({ studio, elegida, alto, lleno, acciones, textoRef }: {
             {elegida.anchoMax > 0 && (
               <div>
                 <label htmlFor={`${ids}-ancho`} className={adminLabel}>Ancho máximo</label>
-                <CampoUnidad
-                  id={`${ids}-ancho`}
-                  unidad="px"
-                  type="number"
-                  inputMode="numeric"
-                  min={40}
-                  max={W}
-                  value={elegida.anchoMax}
-                  onChange={(e) => {
-                    const v = Math.round(Number(e.target.value));
-                    if (Number.isFinite(v) && v >= 40) acciones.cambiar(elegida.id, { anchoMax: Math.min(W, v) });
-                  }}
-                />
+                <CampoNumero id={`${ids}-ancho`} unidad="px" min={40} max={W} valor={elegida.anchoMax} onCambiar={(v) => acciones.cambiar(elegida.id, { anchoMax: v })} />
               </div>
             )}
           </div>

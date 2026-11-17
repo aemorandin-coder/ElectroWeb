@@ -37,6 +37,7 @@ const TECLAS: Record<string, { code: string; keyCode: number }> = {
   ArrowLeft: { code: 'ArrowLeft', keyCode: 37 }, ArrowRight: { code: 'ArrowRight', keyCode: 39 }, ArrowUp: { code: 'ArrowUp', keyCode: 38 },
   ArrowDown: { code: 'ArrowDown', keyCode: 40 }, Delete: { code: 'Delete', keyCode: 46 }, Escape: { code: 'Escape', keyCode: 27 },
   Enter: { code: 'Enter', keyCode: 13 }, d: { code: 'KeyD', keyCode: 68 }, z: { code: 'KeyZ', keyCode: 90 },
+  Backspace: { code: 'Backspace', keyCode: 8 }, Tab: { code: 'Tab', keyCode: 9 },
 };
 
 export async function abrirChrome(perfil: string, puerto = 9460): Promise<Chrome> {

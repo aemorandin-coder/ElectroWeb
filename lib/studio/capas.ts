@@ -16,7 +16,14 @@ export function nuevoIdCapa(usados: readonly string[]): string {
 }
 
 /** Cómo arranca cada estilo. El texto empieza escrito para que se vea dónde quedó; se cambia en el panel */
-const ARRANQUE: Record<EstiloCapa, Omit<CapaTexto, 'id' | 'tipo' | 'estilo' | 'x' | 'giro' | 'oculta' | 'bloqueada' | 'fuente' | 'alinear' | 'color'>> = {
+/** C-273: la animación con que nace una pieza: entra como la historia y se queda hasta el final */
+export const ANIMACION_INICIAL = (): Pick<CapaTexto, 'entrada' | 'enfasis' | 'salida'> => ({
+  entrada: { tipo: 'auto', inicio: null, dura: 0.6 },
+  enfasis: 'ninguno',
+  salida: { tipo: 'ninguna', inicio: null, dura: 0.6 },
+});
+
+const ARRANQUE: Record<EstiloCapa, Omit<CapaTexto, 'id' | 'tipo' | 'estilo' | 'x' | 'giro' | 'oculta' | 'bloqueada' | 'fuente' | 'alinear' | 'color' | 'entrada' | 'enfasis' | 'salida'>> = {
   titulo: { texto: 'Tu título', tam: 120, peso: 900, cursiva: true, mayusculas: true, contorno: false, sombra: true, fondo: 'ninguno', anchoMax: 0, y: 0.3 },
   subtitulo: { texto: 'Tu subtítulo', tam: 56, peso: 800, cursiva: true, mayusculas: false, contorno: false, sombra: false, fondo: 'cinta', anchoMax: 0, y: 0.4 },
   texto: { texto: 'Escribe aquí', tam: 44, peso: 700, cursiva: false, mayusculas: false, contorno: false, sombra: false, fondo: 'ninguno', anchoMax: 860, y: 0.5 },
@@ -37,6 +44,7 @@ export function nuevaCapa(estilo: EstiloCapa, capas: readonly StudioCapa[]): Cap
     giro: 0,
     oculta: false,
     bloqueada: false,
+    ...ANIMACION_INICIAL(),
     ...a,
     y: Math.min(0.9, a.y + encima * 0.05),
   };
@@ -114,6 +122,7 @@ export function nuevoSticker(st: Sticker, capas: readonly StudioCapa[], extra: {
     giro: 0,
     oculta: false,
     bloqueada: false,
+    ...ANIMACION_INICIAL(),
   };
 }
 

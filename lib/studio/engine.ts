@@ -10,6 +10,7 @@ import { cargarFuentes, cssFuente } from './fuentes';
 import { ICONOS_TODOS } from './iconos-todos';
 import type { PiezaIcono } from './iconos-pack';
 import { COLORES_FIJOS, STICKERS, altoSticker, type ColorBase, type ColorSticker, type Sticker } from './stickers';
+import { CIERRE_LOGO, FINAL_DURA, duracionDe, inicioEntrada, inicioSalida } from './animaciones';
 import {
   ANIMATIONS,
   BACKGROUNDS,
@@ -34,6 +35,7 @@ import {
   type TemplateId,
   type CapaSticker,
   type CapaTexto,
+  type StudioCapa,
 } from './schema';
 
 export const W = 1080;
@@ -331,6 +333,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   let T: number | null = null;
   let animEpoch = 0;
   let ANIM: AnimationId = 'entrada';
+  /** C-273: lo que dura el video de la historia que se dibuja (5, 7, 10 o 15 s) */
+  let DUR = DURATION;
   let bgData: Uint8ClampedArray | null = null;
   let slideFlip = 0;
   const bgCache = new Map<string, { canvas: HTMLCanvasElement; data: Uint8ClampedArray }>();
@@ -1361,7 +1365,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     ctx.scale(SC, SC);
     if (FX.particulas) particles();
     if (ANIM === 'zoom' && T !== null) {
-      const s = 1 + 0.05 * (T / DURATION);
+      const s = 1 + 0.05 * (T / DUR);
       ctx.translate(W / 2, Y(CH) / 2);
       ctx.scale(s, s);
       ctx.translate(-W / 2, -Y(CH) / 2);
@@ -2871,6 +2875,214 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     });
   }
 
+  /**
+   * C-273: la entrada, el énfasis y la salida de una pieza en el instante T, sobre el lienzo ya llevado a su centro y
+   * girado. Devuelve null si no se ve (todavía no entró o ya salió) y, en "Máquina de escribir", cuánto del texto va.
+   */
+  function animarCapa(c: StudioCapa, i: number, w: number, h: number): { escribir: number | null } | null {
+    if (T === null) return { escribir: null };
+    const ent = c.entrada;
+    const t0 = inicioEntrada(ent.inicio, i);
+    const p = prog(t0, ent.dura);
+    if (p <= 0) return null;
+    let q = 0;
+    if (c.salida.tipo !== 'ninguna') {
+      q = prog(inicioSalida(c.salida.inicio, DUR, !!FL?.cierreLogo), c.salida.dura);
+      if (q >= 1) return null;
+    }
+    let escribir: number | null = null;
+    const e = ease(p);
+    if (p < 1) {
+      switch (ent.tipo) {
+        case 'auto':
+          // Como la historia: el estilo de la plantilla (los stickers entran saltando)
+          ctx.globalAlpha *= c.tipo === 'sticker' ? Math.min(1, p * 3) : e;
+          if (ANIM === 'zoom') ctx.scale(1 + (1 - e) * 0.35, 1 + (1 - e) * 0.35);
+          else if (ANIM === 'deslizar') ctx.translate((i % 2 ? 1 : -1) * (1 - e) * 240, 0);
+          else if (c.tipo === 'sticker') {
+            const k = Math.max(0.01, back(p));
+            ctx.scale(k, k);
+          } else ctx.translate(0, (1 - e) * 70);
+          break;
+        case 'aparecer':
+          ctx.globalAlpha *= e;
+          break;
+        case 'subir':
+        case 'bajar':
+          ctx.globalAlpha *= e;
+          ctx.translate(0, (ent.tipo === 'subir' ? 1 : -1) * (1 - e) * 90);
+          break;
+        case 'izquierda':
+        case 'derecha':
+          ctx.globalAlpha *= e;
+          ctx.translate((ent.tipo === 'izquierda' ? -1 : 1) * (1 - e) * 300, 0);
+          break;
+        case 'zoom': {
+          const k = 0.3 + 0.7 * e;
+          ctx.scale(k, k);
+          ctx.globalAlpha *= e;
+          break;
+        }
+        case 'rebote': {
+          const k = Math.max(0.01, back(p));
+          ctx.scale(k, k);
+          ctx.globalAlpha *= Math.min(1, p * 3);
+          break;
+        }
+        case 'sello': {
+          // Cae grande y se asienta con un golpe
+          const k = p < 0.55 ? 2.4 - 1.5 * (p / 0.55) : 0.9 + 0.1 * ease((p - 0.55) / 0.45);
+          ctx.scale(k, k);
+          ctx.globalAlpha *= Math.min(1, p * 2.5);
+          break;
+        }
+        case 'girar': {
+          ctx.rotate(-(1 - e) * Math.PI);
+          const k = 0.3 + 0.7 * e;
+          ctx.scale(k, k);
+          ctx.globalAlpha *= e;
+          break;
+        }
+        case 'escribir':
+          if (c.tipo === 'texto') escribir = p;
+          else ctx.globalAlpha *= e;
+          break;
+        case 'borroso':
+          ctx.globalAlpha *= e;
+          if (typeof ctx.filter === 'string') ctx.filter = `blur(${((1 - e) * 16).toFixed(1)}px)`;
+          break;
+        case 'barrido':
+          ctx.beginPath();
+          ctx.rect(-w / 2 - 6, -h / 2 - 14, (w + 12) * e, h + 28);
+          ctx.clip();
+          break;
+      }
+    }
+    // El énfasis, mientras está (después de entrar)
+    if (p >= 1 && c.enfasis !== 'ninguno') {
+      const tt = T - (t0 + ent.dura);
+      if (c.enfasis === 'latido') {
+        const k = 1 + 0.06 * Math.max(0, Math.sin(tt * 4));
+        ctx.scale(k, k);
+      } else if (c.enfasis === 'flotar') ctx.translate(0, Math.sin(tt * 2.4) * 10);
+      else if (c.enfasis === 'brillo' && typeof ctx.filter === 'string') ctx.filter = `brightness(${(1 + 0.35 * Math.max(0, Math.sin(tt * 3))).toFixed(2)})`;
+      else if (c.enfasis === 'temblor') {
+        const fase = tt % 2.2;
+        if (fase < 0.35) ctx.translate(Math.sin(fase * 60) * 7 * (1 - fase / 0.35), 0);
+      }
+    }
+    // La salida
+    if (q > 0) {
+      const qe = q * q;
+      switch (c.salida.tipo) {
+        case 'desvanecer':
+          ctx.globalAlpha *= 1 - q;
+          break;
+        case 'subir':
+        case 'bajar':
+          ctx.globalAlpha *= 1 - q;
+          ctx.translate(0, (c.salida.tipo === 'subir' ? -1 : 1) * qe * 110);
+          break;
+        case 'izquierda':
+        case 'derecha':
+          ctx.globalAlpha *= 1 - q;
+          ctx.translate((c.salida.tipo === 'izquierda' ? -1 : 1) * qe * 320, 0);
+          break;
+        case 'encoger': {
+          const k = Math.max(0.01, 1 - qe);
+          ctx.scale(k, k);
+          break;
+        }
+        case 'zoomfuera': {
+          const k = 1 + 0.9 * q;
+          ctx.scale(k, k);
+          ctx.globalAlpha *= 1 - q;
+          break;
+        }
+        case 'barrido':
+          ctx.beginPath();
+          ctx.rect(-w / 2 - 6 + (w + 12) * q, -h / 2 - 14, (w + 12) * (1 - q), h + 28);
+          ctx.clip();
+          break;
+        case 'caer':
+          ctx.translate(0, qe * 160);
+          ctx.rotate(0.3 * q);
+          ctx.globalAlpha *= 1 - q;
+          break;
+      }
+    }
+    return { escribir };
+  }
+
+  /** C-273: cómo termina toda la historia en el video, y el cierre con el logo (encima de todo) */
+  function drawFinal(f: StudioFlyerData) {
+    if (T === null) return;
+    const fin = DUR - (f.cierreLogo ? CIERRE_LOGO : 0);
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (f.final !== 'ninguno') {
+      const q = prog(fin - FINAL_DURA, FINAL_DURA);
+      if (q > 0) {
+        const e = ease(q);
+        ctx.fillStyle = PR();
+        if (f.final === 'fundido') {
+          ctx.globalAlpha = e;
+          ctx.fillRect(0, 0, W, FH);
+          ctx.globalAlpha = 1;
+        } else if (f.final === 'barrido') {
+          // Una franja en diagonal que cruza de izquierda a derecha
+          const x = (W + 420) * e;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(x, 0);
+          ctx.lineTo(x - 420, FH);
+          ctx.lineTo(0, FH);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.fillRect(0, FH * (1 - e), W, FH * e);
+        }
+      }
+    }
+    if (f.cierreLogo) {
+      const p = prog(DUR - CIERRE_LOGO, 0.45);
+      if (p > 0) {
+        ctx.globalAlpha = f.final === 'ninguno' ? ease(p) : 1;
+        ctx.fillStyle = PR();
+        ctx.fillRect(0, 0, W, FH);
+        const g = ctx.createRadialGradient(W / 2, FH * 0.42, 40, W / 2, FH * 0.42, W * 0.9);
+        g.addColorStop(0, alpha(SE(), 0.9));
+        g.addColorStop(1, alpha(SE(), 0));
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, FH);
+        ctx.globalAlpha = 1;
+        const lg = brand.logoUrl ? images.get(brand.logoUrl) : images.get(OFFICIAL_LOGO.white);
+        const k = Math.max(0.01, back(prog(DUR - CIERRE_LOGO + 0.1, 0.55)));
+        if (lg) {
+          const lw = W * 0.66;
+          const lh = (lg.naturalHeight / lg.naturalWidth) * lw;
+          ctx.save();
+          ctx.translate(W / 2, FH * 0.44);
+          ctx.scale(k, k);
+          ctx.drawImage(lg, -lw / 2, -lh / 2, lw, lh);
+          ctx.restore();
+        }
+        const pt = prog(DUR - CIERRE_LOGO + 0.45, 0.4);
+        if (pt > 0) {
+          ctx.globalAlpha = ease(pt);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.font = F(800, 44);
+          ctx.fillText(brand.handle || '@electroshopgre', W / 2, FH * 0.44 + 150 + (1 - ease(pt)) * 30);
+          ctx.font = F(600, 34, false);
+          ctx.fillText(brand.website || 'electroshopve.com', W / 2, FH * 0.44 + 214 + (1 - ease(pt)) * 30);
+        }
+      }
+    }
+    ctx.restore();
+  }
+
   function drawCapas(f: StudioFlyerData, preview: boolean) {
     cajas = [];
     // Las capas entran después de la plantilla, una tras otra
@@ -2931,22 +3143,12 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     const ay = (w * Math.sin(rad) + h * Math.cos(rad)) / 2;
     if (cx - ax < -4 || cx + ax > W + 4 || cy - ay < -4 || cy + ay > FH + 4) capasFuera.add(nombre);
     if (FL?.format === 'story' && st.texto && (cy - ay < ZONA_IG.arriba || cy + ay > FH - ZONA_IG.abajo)) capasTapadas.add(nombre);
-    const t0 = 0.95 + i * 0.16;
-    const p = prog(t0, 0.55);
-    if (p <= 0) return;
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(((c.giro + (st.giro ?? 0)) * Math.PI) / 180);
-    if (p < 1) {
-      // Los stickers entran "saltando" (con el estilo de la historia, si es Zoom o Deslizar)
-      if (ANIM === 'deslizar') {
-        ctx.globalAlpha *= ease(p);
-        ctx.translate((i % 2 ? 1 : -1) * (1 - ease(p)) * 240, 0);
-      } else {
-        const k = ANIM === 'zoom' ? 1 + (1 - ease(p)) * 0.35 : Math.max(0.01, back(p));
-        ctx.scale(k, k);
-        ctx.globalAlpha *= Math.min(1, p * 3);
-      }
+    if (!animarCapa(c, i, w, h)) {
+      ctx.restore();
+      return;
     }
     if (c.espejo) ctx.scale(-1, 1);
     const k = w / st.vb[0];
@@ -3029,19 +3231,15 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       if (FL?.format === 'story' && (cy - ay < ZONA_IG.arriba || cy + ay > FH - ZONA_IG.abajo)) capasTapadas.add(nombre);
     }
     if (vacia && !preview) return;
-    const t0 = 0.95 + i * 0.16;
-    const p = prog(t0, 0.55);
-    if (p <= 0) return;
-    const e = ease(p);
+    const t0 = inicioEntrada(c.entrada.inicio, i);
     const oscuro = oscuroEnLienzo(cx, cy, bw, bh);
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate((c.giro * Math.PI) / 180);
-    if (p < 1) {
-      ctx.globalAlpha *= e;
-      if (ANIM === 'zoom') ctx.scale(1 + (1 - e) * 0.35, 1 + (1 - e) * 0.35);
-      else if (ANIM === 'deslizar') ctx.translate((i % 2 ? 1 : -1) * (1 - e) * 240, 0);
-      else ctx.translate(0, (1 - e) * 70);
+    const anim = animarCapa(c, i, bw, bh);
+    if (!anim) {
+      ctx.restore();
+      return;
     }
     if (vacia) {
       // Solo en la vista previa: dónde está la capa sin texto
@@ -3080,9 +3278,13 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     ctx.font = fuenteCapa(c, c.tam);
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
+    // C-273: con la entrada "Máquina de escribir" de la pieza, las letras aparecen de a una entre todas las líneas
+    let porEscribir = anim.escribir === null ? Infinity : Math.floor(anim.escribir * lineas.reduce((n, l) => n + l.replace(/\*/g, '').length, 0));
     lineas.forEach((l, k) => {
-      // "Escribir": la línea aparece letra por letra (sin contar los asteriscos)
-      let quedan = typed(l.replace(/\*/g, ''), t0 + 0.1 + k * 0.25, 0.6).length;
+      // "Escribir" de la historia: cada línea aparece letra por letra (sin contar los asteriscos)
+      const enLinea = l.replace(/\*/g, '');
+      let quedan = c.entrada.tipo === 'auto' ? typed(enLinea, t0 + 0.1 + k * 0.25, 0.6).length : Math.min(enLinea.length, porEscribir);
+      porEscribir -= Math.min(enLinea.length, porEscribir === Infinity ? 0 : porEscribir);
       const partes = trozos(l).map((p) => {
         const t = p.t.slice(0, Math.max(0, quedan));
         quedan -= p.t.length;
@@ -3156,6 +3358,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     bgData = null;
     slideFlip = 0;
     ANIM = f && ANIMATIONS[f.anim] ? f.anim : 'entrada';
+    DUR = duracionDe(f);
     ctx.save();
     ctx.clearRect(0, 0, W, FH);
     if (!f) {
@@ -3208,6 +3411,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     drawCapas(f, opts.preview);
     ctx.restore();
     if (FX.confeti) confetti();
+    drawFinal(f);
     ctx.restore();
     if (opts.preview && opts.safeZones && f.format === 'story') safeZones();
   }

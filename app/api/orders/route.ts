@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse, after } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -50,7 +51,8 @@ import { STUDIO_COOKIE } from '@/lib/studio/code';
 import { avisarPedidoDigitalPorEntregar } from '@/lib/digital-delivery';
 import { DestinoError, leerDestino, type DestinoOrden } from '@/lib/envios/destino';
 import { actualizarRastreoZoom } from '@/lib/envios/seguimiento';
-import { customerOrderSelect } from '@/lib/dto/order';
+import { customerOrderSelect, type CustomerOrder } from '@/lib/dto/order';
+import { leerCompraId } from '@/lib/compra-id';
 import { publicarOrdenes, publicarStock } from '@/lib/realtime/bus';
 import { RESERVA_PAGO_MANUAL_HORAS, claveReferencia, esPagoManual, leerReferenciaManual, repartirPuntos } from '@/lib/checkout-pago';
 import { descontarDisponible, hayDisponible } from '@/lib/reservas';
@@ -268,6 +270,33 @@ function textoReferenciaRepetida(repetida: { orderNumber: string; userId: string
     : 'Esa referencia ya se usó en otra compra. Revisa el número o escríbenos por WhatsApp.';
 }
 
+/** C-284: las órdenes de este cliente que salieron del mismo envío del checkout. Siempre por cliente y llave: nunca las de otra cuenta. */
+function ordenesDeLaCompra(db: Prisma.TransactionClient, userId: string, compraId: string) {
+  return db.order.findMany({ where: { userId, compraId }, select: customerOrderSelect, orderBy: { orderNumber: 'asc' } });
+}
+
+/** C-284: otra copia del mismo envío ya creó las órdenes: no se crea, cobra, descuenta ni avisa nada, y se responde con ellas. */
+class CompraRepetida extends Error {
+  ordenes: CustomerOrder[];
+
+  constructor(ordenes: CustomerOrder[]) {
+    super('Esta compra ya se había creado');
+    this.name = 'CompraRepetida';
+    this.ordenes = ordenes;
+  }
+}
+
+/** C-284: la respuesta de un envío repetido, con la forma de la de éxito que lee el checkout (orders, totalUSD y porVerificar). */
+function respuestaCompraRepetida(ordenes: CustomerOrder[]) {
+  const porVerificar = ordenes.some((orden) => esPagoManual(orden.paymentMethod) && orden.paymentStatus === PaymentStatus.PENDING);
+  return NextResponse.json({
+    orders: ordenes,
+    totalUSD: roundMoney(ordenes.reduce((suma, orden) => suma + Number(orden.totalUSD), 0)),
+    repetida: true,
+    ...(porVerificar ? { porVerificar: true } : {}),
+  });
+}
+
 const DELIVERY_LABELS = ETIQUETA_ENTREGA;
 
 /** C-132: "Marcar pagado" sin stock suficiente para la orden (sin contar lo apartado por otras). */
@@ -359,6 +388,16 @@ export async function POST(request: NextRequest) {
     if (!body) {
       return NextResponse.json({ error: 'Solicitud inválida' }, { status: 400 });
     }
+
+    // C-284: la llave de la compra. El checkout manda una por intento (lib/compra-id.ts): si ya hay órdenes de este cliente
+    // con ella, el envío es el mismo que ya se procesó (doble toque, reintento por la red) y se responde con esas órdenes,
+    // sin crear, cobrar, descontar ni avisar nada. Si no viene o no tiene la forma esperada, el servidor pone la suya.
+    const compraRecibida = leerCompraId(body.compraId);
+    if (compraRecibida) {
+      const previas = await ordenesDeLaCompra(prisma, userId, compraRecibida);
+      if (previas.length > 0) return respuestaCompraRepetida(previas);
+    }
+    const compraId = compraRecibida ?? randomUUID();
 
     // C-85: teléfono y cédula se piden en la primera compra (el registro ya no pide la cédula y Google no trae ninguno)
     const cuenta = await prisma.user.findUnique({
@@ -676,6 +715,14 @@ export async function POST(request: NextRequest) {
       const year = new Date().getFullYear();
       let sequence = await getNextOrderSequence(tx, year);
 
+      // C-284: con el candado de las órdenes tomado se vuelve a buscar la compra: si la otra copia del mismo envío ganó,
+      // sus órdenes ya existen y no se crea nada (todavía no se tocó saldo, stock ni ofertas). Va antes de mirar la
+      // referencia del pago manual: esa referencia es la de esas mismas órdenes. Una llave que puso el servidor no puede existir.
+      if (compraRecibida) {
+        const yaCreadas = await ordenesDeLaCompra(tx, userId, compraRecibida);
+        if (yaCreadas.length > 0) throw new CompraRepetida(yaCreadas);
+      }
+
       // C-284: con el candado de las órdenes tomado se vuelve a mirar la referencia del pago manual: la comprobación de
       // arriba la pasan dos compras que llegan a la vez con la misma referencia. Aquí la segunda ya ve la orden de la primera.
       if (metodoManual && referenciaManual) {
@@ -784,6 +831,8 @@ export async function POST(request: NextRequest) {
             pointsUSD: montoDecimal(puntosDe[index]),
             paymentReference: referenciaManual,
             referralInfluencerId: promotorDelCodigo,
+            // C-284: todas las órdenes de esta compra llevan la misma llave
+            compraId,
             // C-147: copia de los datos de la factura (si después cambia la cuenta, la orden conserva los suyos)
             ...factura.datos,
             // WALLET y MOBILE_PAYMENT verificado (en BD y por monto) se tratan como pagados
@@ -957,6 +1006,8 @@ export async function POST(request: NextRequest) {
         orders = await createOrders();
         break;
       } catch (error) {
+        // C-284: la otra copia del mismo envío ya creó las órdenes (esta no hizo nada): se responde con ellas
+        if (error instanceof CompraRepetida) return respuestaCompraRepetida(error.ordenes);
         // C-114: la orden falló después de un Pago Móvil ya verificado. Si se agotó un producto no hay reintento
         // posible: el pago pasa al saldo. Si cambió una oferta o un descuento, el cliente confirma de nuevo con el mismo pago.
         if (error instanceof OrderInputError && pagoLibre) {

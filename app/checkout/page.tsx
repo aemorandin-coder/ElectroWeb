@@ -26,6 +26,7 @@ import PaymentMethodSelector, { opcionesDePago, type MetodoCheckout, type Metodo
 import PagoManualPanel from '@/components/checkout/PagoManualPanel';
 import PagoPuntosPanel from '@/components/checkout/PagoPuntosPanel';
 import { esPagoManual, leerReferenciaManual, repartirPuntos, type TipoPagoManual } from '@/lib/checkout-pago';
+import { nuevaCompraId } from '@/lib/compra-id';
 import { formatPuntos, formatUSD, formatVES } from '@/lib/currency';
 import { adminBadge, adminCard, adminNotice, adminPrimaryButton, adminSecondaryButton, adminModalOverlay, adminModalPanel, adminModalHeader, adminModalTitle, adminModalBody, adminModalFooter, adminSpinner } from '@/lib/admin-ui';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -61,6 +62,10 @@ export default function CheckoutPage() {
   }, [status, items]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // C-284: la llave de esta compra, una por intento y creada una sola vez. Si el mismo envío llega dos veces (doble
+  // toque, reintento por la red) el servidor devuelve las órdenes ya creadas en vez de crear y cobrar otra compra. Si el
+  // servidor lo rechaza y el cliente corrige y reintenta, va la misma llave: no se creó nada.
+  const compraId = useRef<string | null>(null);
   // C-85: el formulario de teléfono y cédula espera al perfil para no aparecer y desaparecer
   const [perfilCargado, setPerfilCargado] = useState(false);
   // C-147: a nombre de quién va la factura. La empresa solo aparece si está verificada
@@ -608,6 +613,7 @@ export default function CheckoutPage() {
           billing: facturaEmpresa ? { type: 'COMPANY', fiscalAddress: empresaFactura.domicilio ? undefined : factura.domicilio } : { type: 'PERSON' },
           couponCode,
           expectedTotalUSD: finalTotal,
+          compraId: (compraId.current ??= nuevaCompraId()),
         }),
       });
 

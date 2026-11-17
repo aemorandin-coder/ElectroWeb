@@ -751,6 +751,9 @@ model Order {
   paymentReference String?
   // C-167: promotor cuyo código se escribió en esta compra (manda sobre el enlace con que se registró el cliente)
   referralInfluencerId String?
+  /// C-284: la llave de la compra: la comparten las órdenes que salieron del mismo envío del checkout. Con ella, un envío
+  /// repetido (doble toque, reintento por la red) devuelve las mismas órdenes y no crea otras. Null en las órdenes de antes.
+  compraId      String?
 
   exchangeRate  Decimal
   totalVES      Decimal
@@ -832,6 +835,11 @@ model Order {
 
   /// C-227: la página del proveedor busca su orden por el hash del enlace (índice normal: el hash sale de un id único)
   @@index([proveedorTokenHash])
+  /// C-284: las órdenes de una misma compra, y las listas que filtran por cliente o por estado y ordenan por fecha
+  /// (Mis pedidos y la lista del panel)
+  @@index([compraId])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
   @@map("orders")
 }
 

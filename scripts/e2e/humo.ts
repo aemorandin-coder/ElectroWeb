@@ -92,8 +92,9 @@ correr(async () => {
     await nav.tamano(1440, 900);
     await nav.ir('/admin');
     await nav.hasta(`() => Boolean(document.getElementById('w-totales'))`);
-    t('C-150 Dashboard carga con acciones, pendientes y ventas', await nav.js(`() => document.querySelector('main h1').innerText === 'Dashboard' && ['Por atender', 'Órdenes recientes', 'Ventas cobradas', 'En total'].every(x => document.querySelector('main').innerText.includes(x))`));
-    t('C-150 la compra de hoy está en el Dashboard', await nav.js(`() => document.querySelector('[aria-labelledby=w-ordenes]').innerText.includes('Clienta Bloque')`));
+    // C-279: la recepción en lugar del título, y la plantilla Dueño cuando no hay un tablero guardado
+    t('C-279 el Dashboard abre con la recepción, las acciones, los pendientes y las ventas', await nav.js(`() => Boolean(document.querySelector('main h1#saludo')?.innerText.trim()) && ['Accesos rápidos', 'Por atender', 'Ventas cobradas', 'Desde que abrió'].every(x => document.querySelector('main').innerText.includes(x))`));
+    t('C-279 la compra de hoy cuenta en las ventas del Dashboard', await nav.js(`() => /Hoy[\\s\\S]*?[1-9]\\d* (orden|órdenes)/.test(document.querySelector('[aria-labelledby=w-ventas]')?.innerText ?? '')`));
     // Siete desde que entró Contabilidad (C-229): Ventas, Contabilidad, Catálogo, Clientes, Marketing, Cursos y Administración
     t('C-150 menú: Dashboard y siete secciones', await nav.js(`() => document.querySelectorAll('#admin-sidebar nav button[aria-expanded]').length === 7 && document.querySelector('#admin-sidebar nav a').innerText.trim() === 'Dashboard'`));
     await nav.foto('bloque-dashboard-1440');

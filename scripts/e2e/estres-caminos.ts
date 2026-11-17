@@ -276,7 +276,8 @@ class Recorrido {
       if (await guia.first().isVisible().catch(() => false)) {
         const titulo = (await this.page.locator('#tour-titulo').first().textContent().catch(() => null))?.trim() ?? 'guía';
         if (this.actual) this.actual.guia = titulo;
-        await this.tocar(this.page.getByRole('button', { name: 'Cerrar el recorrido' }));
+        // El recorrido se cierra con "Saltar" (en su último paso ya no está: ahí se termina con el botón principal)
+        await this.tocar(this.page.locator('[data-tour-dialogo]').getByRole('button', { name: 'Saltar' }));
         await guia.first().waitFor({ state: 'hidden', timeout: 5000 }).catch(() => undefined);
         return;
       }

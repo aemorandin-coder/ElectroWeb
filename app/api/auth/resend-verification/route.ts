@@ -15,8 +15,8 @@ const MIN_RESEND_INTERVAL_SECONDS = 60; // Minimum seconds between resends
 // C-285: por IP, antes de mirar el correo
 const LIMITE_POR_IP = { maxRequests: 5, windowSeconds: 15 * 60 };
 
-// C-285: la misma respuesta (y el mismo estado) para cualquier correo: con cuenta o sin ella, activada o no, con el tope
-// de envíos o sin él. La ruta no dice si un correo tiene cuenta.
+// C-285: la misma respuesta (y el mismo estado) para cualquier correo que no sea el de la sesión: con cuenta o sin ella,
+// activada o no, con el tope de envíos o sin él. La ruta no dice si un correo ajeno tiene cuenta.
 const RESPUESTA = { message: 'Si ese correo tiene una cuenta sin activar, te enviamos el enlace de nuevo.' };
 
 export async function POST(request: NextRequest) {
@@ -40,12 +40,14 @@ export async function POST(request: NextRequest) {
         }
 
         // If no email in body, try to get from session
-        if (!email) {
-            const session = await getServerSession(authOptions);
-            if (session?.user?.email) {
-                email = session.user.email;
-            }
-        }
+        const session = await getServerSession(authOptions);
+        const correoDeLaSesion = normalizarCorreo(session?.user?.email ?? '') || null;
+        if (!email) email = correoDeLaSesion;
+        // Quien pide el reenvío de SU cuenta (con sesión) recibe la respuesta exacta: no dice nada de la cuenta de otro.
+        // Sin sesión, o con el correo de otra cuenta, la respuesta es siempre la misma (RESPUESTA)
+        const esSuCuenta = correoDeLaSesion !== null && correoDeLaSesion === email;
+        const responder = (exacta: { message: string } | { error: string }) =>
+            esSuCuenta ? NextResponse.json(exacta, { status: 'error' in exacta ? 429 : 200 }) : NextResponse.json(RESPUESTA);
 
         if (!email) {
             return NextResponse.json(
@@ -57,10 +59,9 @@ export async function POST(request: NextRequest) {
         // Find user
         const user = await buscarUsuarioPorCorreo(email);
 
-        // Sin cuenta o ya activada: la misma respuesta de siempre, sin enviar nada
-        if (!user || user.emailVerified) {
-            return NextResponse.json(RESPUESTA);
-        }
+        // Sin cuenta o ya activada: no se envía nada
+        if (!user) return NextResponse.json(RESPUESTA);
+        if (user.emailVerified) return responder({ message: 'Tu cuenta ya está activada.' });
 
         // Rate limiting: Check how many tokens were created in the last hour
         const oneHourAgo = new Date(Date.now() - RESEND_WINDOW_MINUTES * 60 * 1000);
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (recentTokens >= MAX_RESEND_ATTEMPTS) {
-            return NextResponse.json(RESPUESTA);
+            return responder({ error: `Ya te enviamos ${MAX_RESEND_ATTEMPTS} enlaces en la última hora. Revisa tu correo (también el spam) o espera un rato.` });
         }
 
         // Check minimum interval between resends
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
         if (lastToken) {
             const secondsSinceLastToken = (Date.now() - lastToken.createdAt.getTime()) / 1000;
             if (secondsSinceLastToken < MIN_RESEND_INTERVAL_SECONDS) {
-                return NextResponse.json(RESPUESTA);
+                return responder({ error: `Espera ${Math.ceil(MIN_RESEND_INTERVAL_SECONDS - secondsSinceLastToken)} segundos antes de pedir otro enlace.` });
             }
         }
 
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
         void sendVerificationEmail(email, token, user.name || undefined)
             .catch((emailError) => console.error('Error enviando el enlace de activación:', emailError));
 
-        return NextResponse.json(RESPUESTA);
+        return responder({ message: 'Te enviamos un nuevo enlace de activación a tu correo.' });
     } catch (error) {
         console.error('Error resending verification:', error);
         return NextResponse.json(

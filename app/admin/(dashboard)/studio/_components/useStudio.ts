@@ -113,7 +113,13 @@ export function useStudio() {
         // lo mío (es un guardado automático: no se interrumpe con una pregunta, se avisa). Hasta 3 intentos.
         let datos = f;
         for (let intento = 0; intento < 3; intento++) {
-          const conocida = latest.current.flyers.find((x) => x.id === id);
+          let conocida = latest.current.flyers.find((x) => x.id === id);
+          // C-287: al abrir el editor la lista de historias tarda en llegar (antes trae los cupones y los productos de todas), y
+          // lo que se cambiaba en esos segundos salía sin versión (428 "Falta la versión"): se espera a la lista, hasta 10 s
+          for (let espera = 0; !conocida && espera < 40; espera++) {
+            await new Promise((r) => setTimeout(r, 250));
+            conocida = latest.current.flyers.find((x) => x.id === id);
+          }
           const res = await fetch(`/api/admin/studio/flyers/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -280,7 +286,12 @@ export function useStudio() {
       // Cupones y productos de todas las historias: para avisar en la lista cuáles quedaron viejas
       const [cp, allLive] = await Promise.all([fetchCoupons(), fetchLive(linkedIds(list.map((f) => normalizeFlyer(f))))]);
       latestStore.current = { coupons: cp, store: s };
-      setFlyers(list);
+      // C-287: una historia creada mientras la lista cargaba (elegir la plantilla enseguida) no se pierde: antes la lista la
+      // borraba al llegar y desde ahí ningún guardado llevaba su versión ("Falta la versión", 428)
+      setFlyers((prev) => {
+        const traidas = new Set(list.map((f) => f.id));
+        return [...prev.filter((f) => !traidas.has(f.id)), ...list];
+      });
       setBrandState(normalizeBrand(b));
       setStore(s);
       setCoupons(cp);

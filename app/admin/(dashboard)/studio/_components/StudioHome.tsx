@@ -16,6 +16,7 @@ import type { ProductSrc } from '@/lib/studio/engine';
 import { FORMATS, TEMPLATES, slugify, type StudioFlyer } from '@/lib/studio/schema';
 import { makeZip } from '@/lib/studio/zip';
 import { downloadBlob } from '@/lib/studio/exportar';
+import ElegirSalida, { enviarATelegram, type Destino } from './ElegirSalida';
 import { fileBase } from './exporters';
 import StudioResults from './StudioResults';
 import { useStudioContext } from './StudioContext';
@@ -84,6 +85,8 @@ export default function StudioHome() {
   const [attention, setAttention] = useState<CheckKind | null>(null);
   const [weekOffset, setWeekOffset] = useState(0);
   const [busy, setBusy] = useState(false);
+  // C-287: la historia cuya imagen se va a sacar: antes se pregunta qué hacer con ella
+  const [salida, setSalida] = useState<StudioFlyer | null>(null);
   const [, setThumbTick] = useState(0);
 
   // Dibuja las miniaturas que faltan, de a una (la cola del dibujante las ordena)
@@ -121,9 +124,14 @@ export default function StudioHome() {
     if (ok) await studio.remove(f.id);
   };
 
-  const download = async (f: StudioFlyer) => {
+  const pedirSalida = async (f: StudioFlyer) => {
     if (busy) return;
     if (!(await gate(checksFor(f), (step) => router.push(editHref(f.id, step))))) return;
+    setSalida(f);
+  };
+
+  const download = async (f: StudioFlyer, destino: Destino) => {
+    if (busy) return;
     setBusy(true);
     try {
       await studio.saveNow();
@@ -131,8 +139,10 @@ export default function StudioHome() {
       const [fresh] = await studio.freshFlyers([f]);
       const { blob } = await still(fresh, fresh.code);
       if (!blob) throw new Error('No se pudo generar la imagen');
-      downloadBlob(blob, `${fileBase(fresh)}.png`);
+      const nombre = `${fileBase(fresh)}.png`;
+      if (destino !== 'telegram') downloadBlob(blob, nombre);
       await studio.markExported([fresh]);
+      if (destino !== 'descargar') void enviarATelegram({ blob, nombre, texto: fresh.caption ?? '', tipo: 'imagen' });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'No se pudo descargar');
     } finally {
@@ -244,7 +254,7 @@ export default function StudioHome() {
             <IconoEditar className="h-4 w-4" aria-hidden="true" />
             Editar
           </Link>
-          <button type="button" onClick={() => void download(f)} disabled={busy} className={`${adminIconButton} h-11 w-11 sm:h-9 sm:w-9`} aria-label={`Descargar ${name}`} title="Descargar imagen">
+          <button type="button" onClick={() => void pedirSalida(f)} disabled={busy} className={`${adminIconButton} h-11 w-11 sm:h-9 sm:w-9`} aria-label={`Sacar la imagen de ${name}`} title="Imagen: descargar o mandar por Telegram">
             <IconoDescargar className="h-4 w-4" aria-hidden="true" />
           </button>
           <button type="button" onClick={() => void studio.duplicate(f.id, { open: false })} className={`${adminIconButton} h-11 w-11 sm:h-9 sm:w-9`} aria-label={`Duplicar ${name}`} title="Duplicar">
@@ -380,6 +390,17 @@ export default function StudioHome() {
             </>
           )}
         </>
+      )}
+      {salida && (
+        <ElegirSalida
+          tipo="imagen"
+          onCerrar={() => setSalida(null)}
+          onElegir={(destino) => {
+            const f = salida;
+            setSalida(null);
+            void download(f, destino);
+          }}
+        />
       )}
     </div>
   );

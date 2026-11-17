@@ -295,11 +295,12 @@ export async function buscarConGroq(producto: { nombre: string; categoria: strin
 export function pedidoDeBusqueda(producto: { nombre: string }, nombresSugeridos: string[]): string {
   return [
     `Busca en la web la ficha técnica de este producto: ${producto.nombre}.`,
+    'Encuentra la página del modelo exacto, primero la del fabricante, y usa solo los datos de ese modelo: no mezcles datos de otros modelos ni de otras versiones o capacidades. Si el nombre trae marca y modelo, ese es el producto: no propongas otros.',
     'Responde solo con un objeto JSON, sin texto antes ni después, con estas claves:',
     '"marca" (texto), "codigo_barras" (UPC o EAN, solo cifras, o ""), "peso_paquete_g" (número o null), "largo_cm", "ancho_cm", "alto_cm" (medidas de la caja, números o null),',
     `"especificaciones" (lista de hasta 10 objetos {"nombre","valor"} en español; usa estos nombres cuando correspondan: ${nombresSugeridos.join(', ')}),`,
     '"descripcion" (2 a 4 frases en español, con tus palabras, sin precios ni promesas) y "fuentes" (lista de dominios consultados).',
-    'Usa solo lo que encuentres en las páginas: lo que no aparezca va como "" o null.',
+    'Usa solo lo que encuentres en las páginas: lo que no aparezca va como "" o null. Las medidas y el peso son los del paquete de ese modelo (la ficha del fabricante o la de Amazon los traen).',
   ].join('\n');
 }
 

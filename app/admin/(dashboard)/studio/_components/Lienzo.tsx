@@ -4,7 +4,7 @@
 // Va encima del canvas: las cajas salen del último dibujo del motor (capasCajas) y las asas son HTML, así no salen en la
 // imagen. Durante el gesto los cambios no entran al historial; al empezar, `onEmpezar` guarda un solo paso de deshacer.
 import { useEffect, useRef, useState, type KeyboardEvent as KeyEvent, type PointerEvent as PtrEvent, type RefObject } from 'react';
-import { IconoAbrirCandado, IconoCandado, IconoCopiar, IconoEliminar, IconoFlechaAbajo, IconoFlechaArriba } from '@/components/iconos';
+import { IconoAbrirCandado, IconoCandado, IconoCopiar, IconoEliminar, IconoFlechaAbajo, IconoFlechaArriba, IconoRestablecer } from '@/components/iconos';
 import { etiquetaCapa, tamDe, type CambioCapa } from '@/lib/studio/capas';
 import { W, ZONA_IG, type CajaCapa } from '@/lib/studio/engine';
 import type { StudioCapa } from '@/lib/studio/schema';
@@ -26,19 +26,30 @@ interface Props {
   onDuplicar: (id: string) => void;
   onOrden: (id: string, paso: 1 | -1) => void;
   onEditar: (id: string) => void;
+  /** C-287: los títulos de la plantilla que se arrastran (sus cajas, del último dibujo) y cuánto se corrió cada uno */
+  piezas: CajaCapa[];
+  corrimientos: Record<string, { dx: number; dy: number }>;
+  onMoverPieza: (id: string, dx: number, dy: number) => void;
+  onVolverPieza: (id: string) => void;
 }
+
+/** C-287: cómo se llama cada título de la plantilla, para el lector de pantalla y la barra */
+const NOMBRE_PIEZA: Record<string, string> = { titulo: 'El título', 'titulo-1': 'El título del primer producto', 'titulo-2': 'El título del segundo producto', etiqueta: 'La etiqueta de arriba' };
 
 type Gesto =
   | { tipo: 'mover'; id: string; x0: number; y0: number; cx0: number; cy0: number }
   | { tipo: 'tam'; id: string; cx: number; cy: number; d0: number; tam0: number; ancho0: number; capa: StudioCapa['tipo'] }
   | { tipo: 'giro'; id: string; cx: number; cy: number; a0: number; giro0: number }
-  | { tipo: 'pinza'; id: string; d0: number; a0: number; tam0: number; ancho0: number; giro0: number; capa: StudioCapa['tipo'] };
+  | { tipo: 'pinza'; id: string; d0: number; a0: number; tam0: number; ancho0: number; giro0: number; capa: StudioCapa['tipo'] }
+  | { tipo: 'pieza'; id: string; x0: number; y0: number; dx0: number; dy0: number };
 
 /** A cuántos px de la pantalla se pega al centro */
 const IMAN = 8;
 const RECTOS = [-180, -90, 0, 90, 180];
 
-export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, historia, onSel, onEmpezar, onCambiar, onBorrar, onDuplicar, onOrden, onEditar }: Props) {
+export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, historia, onSel, onEmpezar, onCambiar, onBorrar, onDuplicar, onOrden, onEditar, piezas, corrimientos, onMoverPieza, onVolverPieza }: Props) {
+  // C-287: el título de la plantilla elegido (las capas tienen su propia elección, `sel`)
+  const [piezaSel, setPiezaSel] = useState<string | null>(null);
   const raiz = useRef<HTMLDivElement | null>(null);
   const [k, setK] = useState(0);
   const gesto = useRef<Gesto | null>(null);
@@ -94,6 +105,15 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
     empezar(e, { tipo: 'mover', id: c.id, x0: e.clientX, y0: e.clientY, cx0: c.x * W, cy0: c.y * alto });
   };
 
+  const alTocarPieza = (e: PtrEvent<HTMLElement>, id: string) => {
+    if (e.button !== 0) return;
+    if (sel) onSel(null);
+    setPiezaSel(id);
+    raiz.current?.focus({ preventScroll: true });
+    const o = corrimientos[id] ?? { dx: 0, dy: 0 };
+    empezar(e, { tipo: 'pieza', id, x0: e.clientX, y0: e.clientY, dx0: o.dx, dy0: o.dy });
+  };
+
   const empezarPinza = (c: StudioCapa) => {
     const [a, b] = [...punteros.current.values()];
     if (!a || !b) return;
@@ -111,13 +131,34 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
         return;
       }
     }
-    if (e.target === raiz.current) onSel(null);
+    if (e.target === raiz.current) {
+      onSel(null);
+      setPiezaSel(null);
+    }
   };
 
   const alMover = (e: PtrEvent<HTMLDivElement>) => {
     const g = gesto.current;
     if (!g || !punteros.current.has(e.pointerId)) return;
     punteros.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (g.tipo === 'pieza') {
+      if (!k) return;
+      const caja = piezas.find((p) => p.id === g.id);
+      let dx = g.dx0 + (e.clientX - g.x0) / k;
+      let dy = g.dy0 + (e.clientY - g.y0) / k;
+      // Se pega al centro de la imagen, como las capas
+      if (caja) {
+        const cx = caja.cx - (corrimientos[g.id]?.dx ?? 0) + dx;
+        const cy = caja.cy - (corrimientos[g.id]?.dy ?? 0) + dy;
+        const v = Math.abs(cx - W / 2) * k < IMAN;
+        const h = Math.abs(cy - alto / 2) * k < IMAN;
+        if (v) dx += W / 2 - cx;
+        if (h) dy += alto / 2 - cy;
+        setGuias({ v, h, zona: historia && (cy - caja.h / 2 < ZONA_IG.arriba || cy + caja.h / 2 > alto - ZONA_IG.abajo) });
+      }
+      onMoverPieza(g.id, Math.round(Math.max(-W, Math.min(W, dx))), Math.round(Math.max(-alto, Math.min(alto, dy))));
+      return;
+    }
     const c = capaDe(g.id);
     if (!c || !k) return;
     if (g.tipo === 'mover') {
@@ -161,6 +202,18 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
   };
 
   const alTeclear = (e: KeyEvent<HTMLDivElement>) => {
+    // C-287: un título de la plantilla elegido se mueve con las flechas (1 px; con Mayús, 10) y Escape lo suelta
+    if (piezaSel && !sel) {
+      if (e.key === 'Escape') { setPiezaSel(null); return; }
+      const paso = e.shiftKey ? 10 : 1;
+      const d = { ArrowLeft: [-paso, 0], ArrowRight: [paso, 0], ArrowUp: [0, -paso], ArrowDown: [0, paso] }[e.key];
+      if (!d) return;
+      e.preventDefault();
+      onEmpezar();
+      const o = corrimientos[piezaSel] ?? { dx: 0, dy: 0 };
+      onMoverPieza(piezaSel, o.dx + d[0], o.dy + d[1]);
+      return;
+    }
     const c = sel ? capaDe(sel) : undefined;
     if (!c) return;
     if (e.key === 'Escape') {
@@ -217,6 +270,20 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
       {guias.v && <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-brand-300" />}
       {guias.h && <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-brand-300" />}
 
+      {/* C-287: los títulos de la plantilla, debajo de las capas (que van encima en la imagen) */}
+      {activo &&
+        piezas.map((p) => (
+          <div
+            key={p.id}
+            role="button"
+            tabIndex={-1}
+            aria-label={`${NOMBRE_PIEZA[p.id] ?? 'Un título'} de la plantilla: arrástralo para moverlo`}
+            aria-pressed={piezaSel === p.id}
+            onPointerDown={(e) => alTocarPieza(e, p.id)}
+            className="absolute cursor-move"
+            style={{ left: p.cx * k, top: p.cy * k, width: Math.max(16, p.w * k), height: Math.max(16, p.h * k), transform: 'translate(-50%, -50%)', touchAction: 'none' }}
+          />
+        ))}
       {activo &&
         capas.map((c) => {
           const caja = cajaDe(c.id);
@@ -243,6 +310,31 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
           );
         })}
       </div>
+
+      {activo && piezaSel && !elegida && (() => {
+        const p = piezas.find((x) => x.id === piezaSel);
+        if (!p) return null;
+        const corrido = Boolean(corrimientos[p.id]?.dx || corrimientos[p.id]?.dy);
+        const arriba = p.cy * k - (p.h * k) / 2 - 52 > 0;
+        return (
+          <>
+            <div aria-hidden="true" className="pointer-events-none absolute rounded-[3px] border-[1.5px] border-white outline outline-[1.5px] outline-brand-500" style={{ left: p.cx * k, top: p.cy * k, width: p.w * k + 8, height: p.h * k + 8, transform: 'translate(-50%, -50%)' }} />
+            <div
+              role="toolbar"
+              aria-label={NOMBRE_PIEZA[p.id] ?? 'El título'}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="absolute z-10 flex items-center gap-1 rounded-lg bg-white p-1 pl-2 text-xs font-semibold text-ink-soft shadow-lg ring-1 ring-line"
+              style={{ left: Math.max(4, p.cx * k - 90), top: arriba ? p.cy * k - (p.h * k) / 2 - 48 : p.cy * k + (p.h * k) / 2 + 10 }}
+            >
+              <span className="whitespace-nowrap">{NOMBRE_PIEZA[p.id] ?? 'El título'}</span>
+              <button type="button" disabled={!corrido} onClick={() => onVolverPieza(p.id)} className="flex h-8 items-center gap-1 rounded-md px-2 text-ink-soft hover:bg-brand-50 hover:text-brand-600 disabled:opacity-40" title="Volver a su lugar">
+                <IconoRestablecer className="h-4 w-4" aria-hidden="true" />
+                <span>A su lugar</span>
+              </button>
+            </div>
+          </>
+        );
+      })()}
 
       {activo && elegida && cajaSel && !elegida.oculta && (
         <Seleccion

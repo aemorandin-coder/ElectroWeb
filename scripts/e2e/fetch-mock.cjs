@@ -30,11 +30,13 @@ globalThis.fetch = async function mockedFetch(input, init = {}) {
         const offset = body && body.offset;
         return json({ ok: true, result: offset ? updates.filter((u) => u.update_id >= offset) : updates });
       }
-      case 'sendVideo': {
-        // C-286: el video llega en multipart (la primera vez) o por su id; se anota cuánto pesó para comprobar que llegó entero
-        const archivo = init.body instanceof FormData ? init.body.get('video') : null;
-        append('telegram-videos.jsonl', { chat: init.body instanceof FormData ? init.body.get('chat_id') : body && body.chat_id, bytes: archivo && typeof archivo !== 'string' ? archivo.size : null, porId: !archivo, duracion: init.body instanceof FormData ? init.body.get('duration') : body && body.duration });
-        return json({ ok: true, result: { message_id: Date.now(), video: { file_id: 'video-demo' } } });
+      case 'sendVideo':
+      case 'sendDocument': {
+        // C-286 y C-287: el archivo llega en multipart (la primera vez) o por su id; se anota cuánto pesó, para comprobar que llegó entero
+        const campo = method === 'sendVideo' ? 'video' : 'document';
+        const archivo = init.body instanceof FormData ? init.body.get(campo) : null;
+        append('telegram-videos.jsonl', { metodo: method, chat: init.body instanceof FormData ? init.body.get('chat_id') : body && body.chat_id, bytes: archivo && typeof archivo !== 'string' ? archivo.size : null, porId: !archivo, duracion: init.body instanceof FormData ? init.body.get('duration') : body && body.duration });
+        return json({ ok: true, result: { message_id: Date.now(), [campo]: { file_id: campo + '-demo' } } });
       }
       case 'getWebhookInfo': return json({ ok: true, result: { url: '', pending_update_count: 0 } });
       default: return json({ ok: true, result: true });

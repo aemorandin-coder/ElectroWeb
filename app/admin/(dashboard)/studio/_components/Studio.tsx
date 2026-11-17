@@ -37,6 +37,7 @@ import {
 } from '@/lib/studio/schema';
 import { esErrorDeVersion } from '@/lib/version-build';
 import { fileBase, uploadStudioImage } from './exporters';
+import ElegirSalida, { enviarATelegram, type Destino } from './ElegirSalida';
 import Lienzo from './Lienzo';
 import StepAnimacion from './StepAnimacion';
 import StepCapas, { type AccionesCapas } from './StepCapas';
@@ -119,34 +120,6 @@ const STATUS_TEXT: Record<SaveStatus, string> = {
   error: 'No se pudo guardar',
 };
 
-/**
- * C-286: el video recién descargado, también a Telegram (los chats del bot de Notificaciones), tal como salió: Full HD a 60
- * cuadros y con su texto. Si el bot no está o el equipo lo apagó ("Video de ElectroStudio"), no dice nada.
- */
-async function enviarATelegram(video: VideoGrabado, nombre: string, texto: string) {
-  if (video.blob.size > 40 * 1024 * 1024) {
-    toast('El video pesa más de 40 MB: se descargó, pero no se mandó a Telegram.');
-    return;
-  }
-  const datos = new FormData();
-  datos.append('video', new File([video.blob], nombre, { type: video.blob.type }));
-  datos.append('texto', texto.slice(0, 1000));
-  datos.append('segundos', String(Math.round(video.segundos)));
-  datos.append('ancho', String(video.ancho));
-  datos.append('alto', String(video.alto));
-  const id = toast.loading('Mandándolo también a Telegram…');
-  try {
-    const res = await fetch('/api/admin/studio/telegram', { method: 'POST', body: datos });
-    const r = (await res.json().catch(() => ({}))) as { apagado?: boolean; enviados?: number; total?: number; error?: string };
-    if (!res.ok) { toast.error(r.error || 'No se pudo mandar el video a Telegram', { id }); return; }
-    if (r.apagado || !r.total) { toast.dismiss(id); return; }
-    const enviados = r.enviados ?? 0;
-    if (enviados === r.total) toast.success(`Listo en Telegram (${enviados === 1 ? '1 chat' : `${enviados} chats`}), en Full HD`, { id });
-    else toast.error(`Telegram: llegó a ${enviados} de ${r.total} chats. ${r.error ?? ''}`, { id, duration: 8000 });
-  } catch {
-    toast.error('No se pudo mandar el video a Telegram (sin conexión). Ya está descargado.', { id });
-  }
-}
 
 export default function Studio({ id }: { id: string }) {
   const studio = useStudioContext();
@@ -239,6 +212,8 @@ export default function Studio({ id }: { id: string }) {
   const [textIssues, setTextIssues] = useState<TextIssues>({ cut: [], tiny: [] });
   // C-270: dónde quedó cada capa en el último dibujo, para tocarla en la vista previa
   const [cajas, setCajas] = useState<CajaCapa[]>([]);
+  // C-287: los títulos de la plantilla que se arrastran
+  const [cajasPiezas, setCajasPiezas] = useState<CajaCapa[]>([]);
   const drawStatic = useCallback(() => {
     if (!renderer.current || busyRef.current) return;
     const s = scene.current;
@@ -249,6 +224,8 @@ export default function Studio({ id }: { id: string }) {
     setTextIssues((prev) => (JSON.stringify(prev) === JSON.stringify(now) ? prev : now));
     const ahora = renderer.current.capasCajas();
     setCajas((prev) => (JSON.stringify(prev) === JSON.stringify(ahora) ? prev : ahora));
+    const piezasAhora = renderer.current.piezasCajas();
+    setCajasPiezas((prev) => (JSON.stringify(prev) === JSON.stringify(piezasAhora) ? prev : piezasAhora));
   }, []);
 
   // C-270: la capa elegida (de esta historia) y lo que se hace con las capas
@@ -511,15 +488,23 @@ export default function Studio({ id }: { id: string }) {
   /** Revisa antes de descargar: lo incompleto lleva a su paso, los avisos se confirman */
   const ready = async () => !!current && (await gate(checks, goStep));
 
-  const exportPng = async () => {
+  // C-287: antes de sacar la imagen o el video, se pregunta qué hacer con él (ElegirSalida)
+  const [salida, setSalida] = useState<'imagen' | 'video' | null>(null);
+  const pedirSalida = async (tipo: 'imagen' | 'video') => {
     if (!(await ready())) return;
+    setSalida(tipo);
+  };
+
+  const exportPng = async (destino: Destino) => {
     await exclusive(async () => {
       if (!current) return;
       await studio.saveNow();
       const blob = await renderStill(current, productSrc, currentCode);
       if (!blob) throw new Error('No se pudo generar la imagen');
-      downloadBlob(blob, `${fileBase(current)}.png`);
+      const nombre = `${fileBase(current)}.png`;
+      if (destino !== 'telegram') downloadBlob(blob, nombre);
       await markCurrentExported();
+      if (destino !== 'descargar') void enviarATelegram({ blob, nombre, texto: current.caption ?? '', tipo: 'imagen' });
     });
   };
 
@@ -537,8 +522,7 @@ export default function Studio({ id }: { id: string }) {
     });
   };
 
-  const exportVideo = async () => {
-    if (!(await ready())) return;
+  const exportVideo = async (destino: Destino) => {
     await exclusive(async () => {
       if (!current || !canvasRef.current || !renderer.current || !images.current) return;
       await loadStudioFonts(current);
@@ -560,11 +544,11 @@ export default function Studio({ id }: { id: string }) {
         toast.dismiss(toastId);
       }
       const nombre = `${fileBase(current)}.${video.extension}`;
-      downloadBlob(video.blob, nombre);
+      if (destino !== 'telegram') downloadBlob(video.blob, nombre);
       if (video.extension === 'webm') toast('Tu navegador grabó en WEBM; Instagram prefiere MP4. Usa Chrome actualizado.');
       else if (!video.cuadroPorCuadro) toast('Este navegador grabó el video en tiempo real: si en el teléfono se ve cortado, descárgalo desde Chrome actualizado.', { duration: 8000 });
       await markCurrentExported();
-      void enviarATelegram(video, nombre, current.caption ?? '');
+      if (destino !== 'descargar') void enviarATelegram({ blob: video.blob, nombre, texto: current.caption ?? '', tipo: 'video', segundos: video.segundos, ancho: video.ancho, alto: video.alto });
     });
   };
 
@@ -653,6 +637,19 @@ export default function Studio({ id }: { id: string }) {
               elegirCapa(cid);
               setEnfocar((n) => n + 1);
             }}
+            piezas={cajasPiezas}
+            corrimientos={current.piezas ?? {}}
+            onMoverPieza={(pid, dx, dy) => {
+              update((f) => ({ ...f, piezas: { ...(f.piezas ?? {}), [pid]: { dx, dy } } }), { history: gestoNuevo.current });
+              gestoNuevo.current = false;
+            }}
+            onVolverPieza={(pid) => {
+              update((f) => {
+                const resto = { ...(f.piezas ?? {}) };
+                delete resto[pid];
+                return { ...f, piezas: resto };
+              });
+            }}
           />
         )}
       </div>
@@ -682,7 +679,7 @@ export default function Studio({ id }: { id: string }) {
         <button type="button" aria-pressed={bigPreview} onClick={() => setBigPreview((b) => !b)} className={`${toggleButton(bigPreview)} lg:hidden`}>
           {bigPreview ? 'Achicar la vista previa' : 'Agrandar la vista previa'}
         </button>
-        <button type="button" onClick={() => void exportPng()} disabled={busy} className={`${adminSecondaryButton} h-9 px-3`}>
+        <button type="button" onClick={() => void pedirSalida('imagen')} disabled={busy} className={`${adminSecondaryButton} h-9 px-3`}>
           <IconoDescargar className="h-4 w-4" aria-hidden="true" />
           Imagen
         </button>
@@ -798,8 +795,8 @@ export default function Studio({ id }: { id: string }) {
                       checks={checks}
                       busy={busy}
                       canShare={canShare}
-                      onPng={() => void exportPng()}
-                      onVideo={() => void exportVideo()}
+                      onPng={() => void pedirSalida('imagen')}
+                      onVideo={() => void pedirSalida('video')}
                       onShare={() => void share()}
                       goStep={goStep}
                     />
@@ -838,6 +835,17 @@ export default function Studio({ id }: { id: string }) {
           </div>
         </div>
       </section>
+      {salida && (
+        <ElegirSalida
+          tipo={salida}
+          onCerrar={() => setSalida(null)}
+          onElegir={(destino) => {
+            const tipo = salida;
+            setSalida(null);
+            void (tipo === 'video' ? exportVideo(destino) : exportPng(destino));
+          }}
+        />
+      )}
     </div>
   );
 }

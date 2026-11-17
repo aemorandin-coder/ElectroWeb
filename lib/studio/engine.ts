@@ -346,6 +346,12 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   const capasChicas = new Set<string>();
   const capasTapadas = new Set<string>();
   let cajas: CajaCapa[] = [];
+  // C-287: dónde quedó cada título de la plantilla (las "piezas" que se arrastran) y el corrimiento que se está dibujando
+  let piezaCajas: CajaCapa[] = [];
+  let DESP = { x: 0, y: 0 };
+  // Un título corrido se dibuja al final de la plantilla, encima de todo lo de ella (si no, quedaba debajo de una tarjeta)
+  let piezasArriba: Array<() => void> = [];
+  let enPlantilla = false;
   // Historia que se dibuja y su formato: fijados al empezar cada dibujo
   let FL: StudioFlyerData | null = null;
   let FX: StudioEffects = { reflejo: false, particulas: false, confeti: false };
@@ -575,8 +581,9 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   function lumAt(px: number, py: number): number {
     if (!bgData) return 255;
     // Del contenido al lienzo: el contenido está desplazado (TX, OY) y escalado (SC)
-    const X = Math.max(0, Math.min(W - 1, Math.round(TX + px * SC)));
-    const Yy = Math.max(0, Math.min(FH - 1, Math.round(OY + py * SC)));
+    // C-287: un título corrido mira el fondo de donde quedó, no el de su lugar original
+    const X = Math.max(0, Math.min(W - 1, Math.round(TX + (px + DESP.x) * SC)));
+    const Yy = Math.max(0, Math.min(FH - 1, Math.round(OY + (py + DESP.y) * SC)));
     const k = (Yy * W + X) * 4;
     return 0.2126 * bgData[k] + 0.7152 * bgData[k + 1] + 0.0722 * bgData[k + 2];
   }
@@ -587,6 +594,33 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     return s / pts.length < 150;
   }
   const textOn = (x: number, y: number, w = 0, h = 0) => (isDark(x, y, w, h) ? '#FFFFFF' : INK);
+
+  /**
+   * C-287: un título de la plantilla que se arrastra (el equipo, 17/11: "que lo agarre con el mouse y lo arrastre
+   * libremente"). Lo dibuja corrido lo que diga la historia (`piezas`, en px del lienzo) y anota su caja, en px del lienzo,
+   * para que la vista previa lo pueda tomar. `dibujar` devuelve la caja del título en las coordenadas de la grilla.
+   */
+  function pieza(id: string, dibujar: () => Box | null) {
+    const o = FL?.piezas?.[id];
+    const dx = (o?.dx ?? 0) / SC;
+    const dy = (o?.dy ?? 0) / SC;
+    const ejecutar = () => {
+      const antes = DESP;
+      ctx.save();
+      ctx.translate(dx, dy);
+      DESP = { x: antes.x + dx, y: antes.y + dy };
+      let caja: Box | null = null;
+      try {
+        caja = dibujar();
+      } finally {
+        ctx.restore();
+        DESP = antes;
+      }
+      if (caja) piezaCajas.push({ id, cx: TX + (caja[0] + caja[2] / 2 + dx) * SC, cy: OY + (caja[1] + caja[3] / 2 + dy) * SC, w: caja[2] * SC, h: caja[3] * SC, giro: 0 });
+    };
+    if ((dx || dy) && enPlantilla) piezasArriba.push(ejecutar);
+    else ejecutar();
+  }
 
   /* ---------- línea de tiempo ---------- */
   function prog(start: number, dur: number): number {
@@ -1860,16 +1894,19 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     layerBg(bgFor(f), SPLIT.solo);
     fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 440, 84));
     countdown(f, W - 56, Y(30));
-    const tb = titleBox(60, Y(170), (p.title || 'PRODUCTO').toUpperCase(), 108, 660);
-    const mt = (p.model || '').toUpperCase();
-    fx('up', 0.6, 0.5, null, () => {
-      ctx.save();
-      ctx.textAlign = 'center';
-      const ms = fit(mt, 620, 62, 900);
-      ctx.font = F(900, ms);
-      ctx.fillStyle = textOn(tb.bx, Y(170) + tb.bh + 20, tb.bw, 60);
-      ctx.fillText(mt, tb.bx + tb.bw / 2, Y(170) + tb.bh + 80);
-      ctx.restore();
+    pieza('titulo', () => {
+      const tb = titleBox(60, Y(170), (p.title || 'PRODUCTO').toUpperCase(), 108, 660);
+      const mt = (p.model || '').toUpperCase();
+      fx('up', 0.6, 0.5, null, () => {
+        ctx.save();
+        ctx.textAlign = 'center';
+        const ms = fit(mt, 620, 62, 900);
+        ctx.font = F(900, ms);
+        ctx.fillStyle = textOn(tb.bx, Y(170) + tb.bh + 20, tb.bw, 60);
+        ctx.fillText(mt, tb.bx + tb.bw / 2, Y(170) + tb.bh + 80);
+        ctx.restore();
+      });
+      return [tb.bx, Y(170), tb.bw, tb.bh + (mt ? 100 : 0)];
     });
 
     const img = productImage(p, 0, [460, Y(250), 600, Y(650)]);
@@ -1894,15 +1931,18 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     layerBg(bgFor(f), SPLIT.duo);
     fx('up', 0.2, 0.5, null, () => drawLogo(52, Y(30), 380, 70));
     countdown(f, W - 40, Y(18));
-    const t1 = titleBox(64, Y(124), (a.title || 'PRODUCTO').toUpperCase(), 88, 540);
-    fx('up', 0.55, 0.5, null, () => {
-      ctx.save();
-      const m1t = (a.model || '').toUpperCase();
-      const m1 = fit(m1t, 340, 48, 900);
-      ctx.font = F(900, m1);
-      ctx.fillStyle = textOn(t1.bx, Y(124) + t1.bh + 14, 340, 50);
-      ctx.fillText(m1t, t1.bx + 6, Y(124) + t1.bh + 60);
-      ctx.restore();
+    pieza('titulo-1', () => {
+      const t1 = titleBox(64, Y(124), (a.title || 'PRODUCTO').toUpperCase(), 88, 540);
+      fx('up', 0.55, 0.5, null, () => {
+        ctx.save();
+        const m1t = (a.model || '').toUpperCase();
+        const m1 = fit(m1t, 340, 48, 900);
+        ctx.font = F(900, m1);
+        ctx.fillStyle = textOn(t1.bx, Y(124) + t1.bh + 14, 340, 50);
+        ctx.fillText(m1t, t1.bx + 6, Y(124) + t1.bh + 60);
+        ctx.restore();
+      });
+      return [t1.bx, Y(124), t1.bw, t1.bh + (a.model ? 76 : 0)];
     });
     if (!productImage(a, 0, [650, Y(120), 410, Y(500)], 'center', 0.6) && preview) placeholder(680, Y(140), 360, Y(450), '', isDark(860, Y(350)));
     specsBlock(a.specs, 64, Y(330), 250, Y(84), 58, 0.8);
@@ -1910,16 +1950,19 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     tagText(a.tag, 870, Y(672), 340, 'center', 1.5);
 
     if (!productImage(b, 1, [30, Y(720), 460, Y(490)], 'center', 1.0, 1.5) && preview) placeholder(60, Y(740), 400, Y(450), '', isDark(260, Y(960)));
-    const t2 = titleBox(1016, Y(735), (b.title || 'PRODUCTO').toUpperCase(), 88, 520, 'right', 1.1);
-    fx('up', 1.35, 0.5, null, () => {
-      ctx.save();
-      ctx.textAlign = 'right';
-      const m2t = (b.model || '').toUpperCase();
-      const m2 = fit(m2t, 310, 48, 900);
-      ctx.font = F(900, m2);
-      ctx.fillStyle = textOn(720, Y(735) + t2.bh + 14, 310, 50);
-      ctx.fillText(m2t, 1030, Y(735) + t2.bh + 60);
-      ctx.restore();
+    pieza('titulo-2', () => {
+      const t2 = titleBox(1016, Y(735), (b.title || 'PRODUCTO').toUpperCase(), 88, 520, 'right', 1.1);
+      fx('up', 1.35, 0.5, null, () => {
+        ctx.save();
+        ctx.textAlign = 'right';
+        const m2t = (b.model || '').toUpperCase();
+        const m2 = fit(m2t, 310, 48, 900);
+        ctx.font = F(900, m2);
+        ctx.fillStyle = textOn(720, Y(735) + t2.bh + 14, 310, 50);
+        ctx.fillText(m2t, 1030, Y(735) + t2.bh + 60);
+        ctx.restore();
+      });
+      return [t2.bx, Y(735), t2.bw, t2.bh + (b.model ? 76 : 0)];
     });
     specsBlock(b.specs, 740, Y(905), 320, Y(84), 58, 1.5);
     priceBurst(565, Y(1015), 195, b, bsText(b), 1.8);
@@ -1982,21 +2025,24 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     const by = Y(150);
     const bw = tw + 70;
     const bh = ts * 1.1;
-    fx('pop', 0.35, 0.6, [bx, by, bw, bh], () => {
-      ctx.save();
-      ctx.shadowColor = 'rgba(10,27,61,.35)';
-      ctx.shadowBlur = 18;
-      ctx.shadowOffsetX = 10;
-      ctx.shadowOffsetY = 12;
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(bx, by, bw, bh);
-      ctx.restore();
-      ctx.font = F(900, ts);
-      ctx.fillStyle = INK;
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText(typed(title, 0.5, 0.9), bx + 32, by + bh * 0.8);
+    pieza('titulo', () => {
+      fx('pop', 0.35, 0.6, [bx, by, bw, bh], () => {
+        ctx.save();
+        ctx.shadowColor = 'rgba(10,27,61,.35)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetX = 10;
+        ctx.shadowOffsetY = 12;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.restore();
+        ctx.font = F(900, ts);
+        ctx.fillStyle = INK;
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(typed(title, 0.5, 0.9), bx + 32, by + bh * 0.8);
+      });
+      shine([bx, by, bw, bh], 2.4);
+      return [bx, by, bw, bh];
     });
-    shine([bx, by, bw, bh], 2.4);
     const boxes: Box[] = [
       [100, Y(600), 490, Y(440)],
       [530, Y(640), 460, Y(330)],
@@ -2118,6 +2164,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       if (!fits || wide) overflow.add(m.headline.replace(/\*/g, '').trim());
     }
     if (bodyLines.length < allBody.length) overflow.add(m.body.trim());
+    pieza('titulo', () => {
     const baseCol = textOn(X, y, maxW, lines.length * size);
     const hlCol = isDark(X, y, maxW, lines.length * size) ? LIGHT_ON_DARK : SE();
     lines.forEach((ln, i) => {
@@ -2142,6 +2189,13 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       });
     });
     shine([X - 10, y, maxW + 20, lines.length * size * 1.02 + 10], 2.4);
+    ctx.save();
+    ctx.font = F(900, size);
+    const sp = ctx.measureText(' ').width;
+    const ancho = Math.min(maxW, Math.max(...lines.map((ln) => ln.reduce((suma, w) => suma + ctx.measureText(w.t).width, 0) + sp * (ln.length - 1))));
+    ctx.restore();
+    return [X, y, ancho, lines.length * size * 1.02 + 10];
+    });
     y += lines.length * size * 1.02 + 50;
     const y0side = y;
     const tb = 0.8 + lines.length * 0.18;
@@ -2205,7 +2259,12 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   /** Precio con el símbolo de la marca: "$60,00", "Ref: 60,00" o "60,00" */
   const money = (n: number) => `${brand.pricePrefix === '$' ? '$' : brand.pricePrefix ? `${brand.pricePrefix} ` : ''}${formatAmount(n)}`;
   /** Etiqueta en píldora ("RECIÉN LLEGADO", "TASA OFICIAL BCV") */
-  function pill(text: string, x: number, y: number, t0: number, align: 'left' | 'center' = 'left') {
+  function pill(text: string, x: number, y: number, t0: number, align: 'left' | 'center' = 'left'): Box {
+    ctx.save();
+    ctx.font = F(800, 32, false);
+    spacing('3px');
+    const ancho = ctx.measureText(text.toUpperCase()).width + 52;
+    ctx.restore();
     fx('left', t0, 0.5, null, () => {
       ctx.save();
       const t = text.toUpperCase();
@@ -2223,6 +2282,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       ctx.fillText(t, px + 26, y + 31);
       ctx.restore();
     });
+    return [align === 'center' ? x - ancho / 2 : x, y, ancho, 60];
   }
   function star(x: number, y: number, s: number, filled: boolean, onDark: boolean) {
     ctx.save();
@@ -2250,24 +2310,32 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     layerBg(bgFor(f), SPLIT.nuevo);
     fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 440, 84));
     countdown(f, W - 56, Y(30));
-    pill(f.heading || 'Recién llegado', W / 2, Y(140), 0.3, 'center');
+    pieza('etiqueta', () => pill(f.heading || 'Recién llegado', W / 2, Y(140), 0.3, 'center'));
     const title = (p.title || 'PRODUCTO').toUpperCase();
     const mt = (p.model || '').toUpperCase();
-    fx('up', 0.5, 0.5, null, () => {
+    pieza('titulo', () => {
+      fx('up', 0.5, 0.5, null, () => {
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        const s = fit(title, 960, 116, 900);
+        ctx.font = F(900, s);
+        ctx.fillStyle = textOn(60, Y(215), 960, s);
+        ctx.fillText(typed(title, 0.5, 0.8), W / 2, Y(215) + s * 0.9);
+        if (mt) {
+          const ms = fit(mt, 900, 48, 800);
+          ctx.font = F(800, ms);
+          ctx.globalAlpha *= 0.85;
+          ctx.fillText(mt, W / 2, Y(215) + s * 0.9 + ms + 16);
+        }
+        ctx.restore();
+      });
       ctx.save();
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'alphabetic';
       const s = fit(title, 960, 116, 900);
       ctx.font = F(900, s);
-      ctx.fillStyle = textOn(60, Y(215), 960, s);
-      ctx.fillText(typed(title, 0.5, 0.8), W / 2, Y(215) + s * 0.9);
-      if (mt) {
-        const ms = fit(mt, 900, 48, 800);
-        ctx.font = F(800, ms);
-        ctx.globalAlpha *= 0.85;
-        ctx.fillText(mt, W / 2, Y(215) + s * 0.9 + ms + 16);
-      }
+      const ancho = Math.min(960, ctx.measureText(title).width + 40);
       ctx.restore();
+      return [W / 2 - ancho / 2, Y(215), ancho, s * 1.1 + (mt ? 64 : 0)];
     });
     const img = productImage(p, 0, [40, Y(370), 720, Y(520)], 'bottom', 0.8);
     if (!img && preview) placeholder(90, Y(400), 620, Y(460), 'Ctrl+V o arrastra la foto', isDark(400, Y(620)));
@@ -2283,16 +2351,19 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     layerBg(bgFor(f), SPLIT.giftcard);
     fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 440, 84));
     countdown(f, W - 56, Y(30));
-    const tb = titleBox(60, Y(170), (p.title || 'GIFT CARD').toUpperCase(), 100, 600);
-    const sub = p.model || 'Código digital · Entrega rápida';
-    fx('up', 0.6, 0.5, null, () => {
-      ctx.save();
-      const ss = fit(sub, 520, 40, 800);
-      ctx.font = F(800, ss);
-      ctx.fillStyle = textOn(60, Y(170) + tb.bh + 20, 520, 50);
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText(sub, 64, Y(170) + tb.bh + 64);
-      ctx.restore();
+    pieza('titulo', () => {
+      const tb = titleBox(60, Y(170), (p.title || 'GIFT CARD').toUpperCase(), 100, 600);
+      const sub = p.model || 'Código digital · Entrega rápida';
+      fx('up', 0.6, 0.5, null, () => {
+        ctx.save();
+        const ss = fit(sub, 520, 40, 800);
+        ctx.font = F(800, ss);
+        ctx.fillStyle = textOn(60, Y(170) + tb.bh + 20, 520, 50);
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(sub, 64, Y(170) + tb.bh + 64);
+        ctx.restore();
+      });
+      return [tb.bx, Y(170), Math.max(tb.bw, 524), tb.bh + 80];
     });
     const img = productImage(p, 0, [620, Y(120), 440, Y(420)], 'center', 0.6);
     if (!img && preview) placeholder(650, Y(150), 380, Y(360), '', isDark(840, Y(330)));
@@ -2342,7 +2413,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     layerBg(bgFor(f), SPLIT.cupon);
     fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 440, 84));
     countdown(f, W - 56, Y(30));
-    pill(f.heading || 'Cupón de descuento', W / 2, Y(165), 0.3, 'center');
+    pieza('titulo', () => pill(f.heading || 'Cupón de descuento', W / 2, Y(165), 0.3, 'center'));
     const tx = 90;
     const ty = Y(260);
     const tw = 900;
@@ -2467,7 +2538,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     const p = f.products[0] || blankProduct();
     layerBg(bgFor(f), SPLIT.resena);
     fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 440, 84));
-    pill(f.heading || 'Lo que dicen nuestros clientes', 70, Y(165), 0.3);
+    pieza('titulo', () => pill(f.heading || 'Lo que dicen nuestros clientes', 70, Y(165), 0.3));
     const onDark = isDark(70, Y(260), 420, 70);
     for (let i = 0; i < 5; i++) fx('pop', 0.5 + i * 0.1, 0.4, [70 + i * 84, Y(255), 70, 70], () => star(70 + i * 84, Y(255), 70, i < rv.rating, onDark));
     fx('fade', 0.6, 0.6, null, () => {
@@ -2564,16 +2635,24 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     const rate = Number(f.rate) || 0;
     layerBg(bgFor(f), SPLIT.tasa);
     fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 440, 84));
-    pill('Tasa oficial BCV', 70, Y(165), 0.3);
+    pieza('etiqueta', () => pill('Tasa oficial BCV', 70, Y(165), 0.3));
     const date = longDate(f.rateDate);
-    fx('up', 0.45, 0.5, null, () => {
+    pieza('titulo', () => {
+      fx('up', 0.45, 0.5, null, () => {
+        ctx.save();
+        const ds = fit(date, 940, 66, 900);
+        ctx.font = F(900, ds);
+        ctx.fillStyle = textOn(70, Y(250), 940, ds);
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(typed(date, 0.45, 0.7), 72, Y(250) + ds);
+        ctx.restore();
+      });
       ctx.save();
       const ds = fit(date, 940, 66, 900);
       ctx.font = F(900, ds);
-      ctx.fillStyle = textOn(70, Y(250), 940, ds);
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText(typed(date, 0.45, 0.7), 72, Y(250) + ds);
+      const ancho = Math.min(940, ctx.measureText(date).width + 8);
       ctx.restore();
+      return [70, Y(250), ancho, ds * 1.25];
     });
     const cx = 70;
     const cy = Y(370);
@@ -2714,16 +2793,21 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     layerBg(bgFor(f), SPLIT.regalos);
     fx('up', 0.2, 0.5, null, () => drawLogo(56, Y(40), 400, 80));
     countdown(f, W - 56, Y(30));
-    pill('Ideas para regalar', 60, Y(160), 0.3);
-    const tb = titleBox(60, Y(250), 'REGALOS', 118, 620, 'left', 0.45);
-    fx('up', 0.6, 0.5, null, () => {
+    pieza('etiqueta', () => pill('Ideas para regalar', 60, Y(160), 0.3));
+    pieza('titulo', () => {
+      const tb = titleBox(60, Y(250), 'REGALOS', 118, 620, 'left', 0.45);
       ctx.save();
       const ts = fit(tramo, W - 120, 112, 900);
-      ctx.font = F(900, ts);
-      ctx.fillStyle = textOn(60, Y(250) + tb.bh + 10, W - 120, ts);
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText(tramo, 62, Y(250) + tb.bh + ts * 0.98);
       ctx.restore();
+      fx('up', 0.6, 0.5, null, () => {
+        ctx.save();
+        ctx.font = F(900, ts);
+        ctx.fillStyle = textOn(60, Y(250) + tb.bh + 10, W - 120, ts);
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(tramo, 62, Y(250) + tb.bh + ts * 0.98);
+        ctx.restore();
+      });
+      return [tb.bx, Y(250), W - 120, tb.bh + ts * 1.1];
     });
     const gap = 20;
     const cw = (W - 100 - gap * 2) / 3;
@@ -2782,21 +2866,29 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       lines = richLines(titular, cw - 112, size);
       if (lines.length <= 3 && lines.length * size * 1.02 <= chh * 0.55) break;
     }
-    lines.forEach((ln, i) => {
-      const by = cy + 120 + size * 0.86 + i * size * 1.02;
-      fx('up', 0.6 + i * 0.18, 0.55, null, () => {
-        ctx.save();
-        ctx.textBaseline = 'alphabetic';
-        ctx.font = F(900, size);
-        const sp = ctx.measureText(' ').width;
-        let x = cx + 56;
-        ln.forEach((w) => {
-          ctx.fillStyle = w.hl ? NAVIDAD : INK;
-          ctx.fillText(w.t, x, by);
-          x += ctx.measureText(w.t).width + sp;
+    pieza('titulo', () => {
+      lines.forEach((ln, i) => {
+        const by = cy + 120 + size * 0.86 + i * size * 1.02;
+        fx('up', 0.6 + i * 0.18, 0.55, null, () => {
+          ctx.save();
+          ctx.textBaseline = 'alphabetic';
+          ctx.font = F(900, size);
+          const sp = ctx.measureText(' ').width;
+          let x = cx + 56;
+          ln.forEach((w) => {
+            ctx.fillStyle = w.hl ? NAVIDAD : INK;
+            ctx.fillText(w.t, x, by);
+            x += ctx.measureText(w.t).width + sp;
+          });
+          ctx.restore();
         });
-        ctx.restore();
       });
+      ctx.save();
+      ctx.font = F(900, size);
+      const sp = ctx.measureText(' ').width;
+      const ancho = Math.min(cw - 112, Math.max(...lines.map((ln) => ln.reduce((suma, w) => suma + ctx.measureText(w.t).width, 0) + sp * (ln.length - 1))));
+      ctx.restore();
+      return [cx + 56, cy + 120, ancho, lines.length * size * 1.02 + 10];
     });
     if (m.body) {
       const yb = cy + 120 + lines.length * size * 1.02 + 40;
@@ -3349,6 +3441,9 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     capasChicas.clear();
     capasTapadas.clear();
     cajas = [];
+    piezaCajas = [];
+    DESP = { x: 0, y: 0 };
+    piezasArriba = [];
     setFormat(f?.format ?? 'story');
     // Cambiar el alto borra el lienzo: solo cuando cambia el formato
     if (canvas.height !== FH) canvas.height = FH;
@@ -3371,6 +3466,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       ctx.restore();
       return;
     }
+    enPlantilla = true;
     switch (f.template) {
       case 'duo':
         drawDuo(f, opts.preview);
@@ -3405,6 +3501,10 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       default:
         drawSolo(f, opts.preview);
     }
+    // C-287: los títulos que se corrieron, encima de la plantilla (todavía con su grilla) y debajo de las capas
+    enPlantilla = false;
+    for (const dibujarArriba of piezasArriba) dibujarArriba();
+    piezasArriba = [];
     // C-270: las capas, en px del lienzo (la plantilla dibuja en las coordenadas de su grilla)
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -3448,6 +3548,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     }),
     /** C-270: dónde quedó cada capa en el último dibujo (para tocarla en la vista previa) */
     capasCajas: (): CajaCapa[] => cajas.map((c) => ({ ...c })),
+    /** C-287: los títulos de la plantilla que se arrastran (id: titulo, titulo-1, etiqueta…), en px del lienzo */
+    piezasCajas: (): CajaCapa[] => piezaCajas.map((c) => ({ ...c })),
   };
 }
 

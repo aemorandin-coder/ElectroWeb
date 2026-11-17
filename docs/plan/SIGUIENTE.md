@@ -1,9 +1,14 @@
-# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.101; nada por subir: §2)
+# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.101; por subir: rc.102, ElectroStudio y Claude en Productos, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-287 · ElectroStudio pregunta a dónde va, los títulos se arrastran y Claude investiga el modelo exacto (rc.102, por subir: §2; `estado/C-287.md`):**
+  - Al sacar una imagen o un video, ElectroStudio pregunta: descargarlo, mandarlo por Telegram o las dos cosas.
+  - Los títulos de la plantilla se toman con el mouse.
+  - La plantilla de Importar productos le pide a Claude el modelo exacto, confirmado en la web, sin "posibles modelos".
+  - **Sigue C-288,** "Claude en el panel": los ajustes de IA (el motor, la clave, las instrucciones de cada uso, el consumo y lo que falla) y la guía. Primero las maquetas.
 - **C-285 · Acceso y seguridad: lo que quedó de la auditoría (rc.101, en producción desde el 17/11; pruebas por confirmar: §2; `estado/C-285.md`):** la otra mitad del pedido del 17/11, con el mismo método.
   - **Entrar:** la espera por contraseñas fallidas cuenta por correo y conexión juntos. Quien falla se frena a sí mismo; el dueño de la cuenta entra.
   - **Los enlaces de la cuenta** (activar, recuperar la contraseña, la invitación al equipo y "No fui yo") se guardan como huella. Los que ya se enviaron siguen sirviendo hasta que vencen.
@@ -493,8 +498,18 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: nada por ahora
-Producción está en `v1.0.0-rc.101` (`b76157f`); su bloque está en `HISTORIAL.md`.
+### Lo que falta subir: `v1.0.0-rc.102` (C-287, ElectroStudio y Claude en Productos)
+Producción está en `v1.0.0-rc.101` (`b76157f`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.102`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 10 minutos; antes, recarga el panel con Ctrl+R):
+  1. **ElectroStudio, imagen** (en la computadora): en una historia, el botón "Imagen". Sale "¿Qué hago con la imagen?" con tres opciones. "Mandarlo por Telegram": llega al chat del bot como archivo, con el texto de la historia.
+  2. **ElectroStudio, video** (en el teléfono de marketing): Publicar → "Video" → "Las dos cosas". Se descarga y llega a Telegram; dura entero.
+  3. **Arrastrar un título:** en una historia de 1 producto, toma el título de la plantilla con el mouse y suéltalo más abajo. Queda ahí al recargar, y "A su lugar" lo devuelve.
+  4. **Una historia nueva al toque:** entra a ElectroStudio, elige una plantilla enseguida y cámbiale algo. Arriba dice "Guardado", no "No se pudo guardar".
+  5. **Importar productos:** descarga la plantilla y pásasela a claude.ai con la foto de un producto con su etiqueta. Devuelve un solo modelo, confirmado, con sus medidas y, en "notas", de dónde salió cada dato.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.101 && npm install && bash scripts/deploy.sh --sin-pull`. Las historias con títulos corridos se ven con el título en su lugar de siempre con rc.101.
 
 ### Por confirmar de rc.101 (C-284 y C-285; unos 20 minutos)
 Ya en producción desde el 17/11, cerca de las 2:35 p. m. (la subió Claude por SSH con la aprobación del equipo, minutos después de publicar el código; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión, la columna y los índices nuevos, que la tienda acepta sus propios pedidos y rechaza con 403 los de otro sitio, las páginas, las API privadas, la ruta quitada y que el registro de errores no sumó líneas. Falta esto (antes, recarga la tienda y el panel con Ctrl+R). **La primera de C-285 es la más importante:** si algo que guardas responde "Origen no permitido", avísale a Claude.

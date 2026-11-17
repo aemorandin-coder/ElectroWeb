@@ -86,11 +86,11 @@ export default function StepPublish({ studio, checks, busy, canShare, onPng, onV
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={onPng} disabled={busy} className={adminPrimaryButton}>
           <IconoDescargar className="h-4 w-4" aria-hidden="true" />
-          Descargar imagen
+          Imagen
         </button>
         <button type="button" onClick={onVideo} disabled={busy} className={adminSecondaryButton}>
           <IconoClaqueta className="h-4 w-4" aria-hidden="true" />
-          Descargar video
+          Video
         </button>
         {canShare && (
           <button type="button" onClick={onShare} disabled={busy} className={adminSecondaryButton}>

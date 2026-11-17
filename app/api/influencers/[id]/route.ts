@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession, type Session } from 'next-auth';
 import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { registrarAccionAdmin } from '@/lib/audit-log';
+import { roundMoney } from '@/lib/pricing';
 import { prisma } from '@/lib/prisma';
 import { approveConversion, fechaDeAcreditacion, motivoEfectivo } from '@/lib/influencer-commission';
 import { edicionPromotorSchema } from '@/lib/influencer-admin';
@@ -18,6 +20,29 @@ const RESUMEN_PROMOTOR = { user: { select: { id: true, name: true, email: true }
 type Params = { params: Promise<{ id: string }> };
 
 const idsSchema = z.array(z.string().min(1).max(40)).min(1, 'Selecciona al menos una comisión').max(200);
+
+/**
+ * Bitácora (S-11): quién aprobó o rechazó comisiones de un promotor, cuáles y por cuánto. Aprobar acredita Puntos ES al
+ * promotor y antes no quedaba quién lo hizo. No lanza: la bitácora nunca rompe la acción que registra.
+ */
+async function dejarConstancia(session: Session | null, req: NextRequest, influencerId: string, accion: 'aprobar' | 'rechazar', ids: string[]) {
+  try {
+    const [promotor, montos] = await Promise.all([
+      prisma.influencer.findUnique({ where: { id: influencerId }, select: { name: true, code: true } }),
+      prisma.referralConversion.findMany({ where: { id: { in: ids }, influencerId }, select: { commission: true } }),
+    ]);
+    await registrarAccionAdmin(session, 'PANEL_RECORD_RESOLVED', { type: 'INFLUENCER', id: influencerId }, {
+      accion: accion === 'aprobar' ? 'Comisiones aprobadas' : 'Comisiones rechazadas',
+      promotor: promotor ? `${promotor.name} (${promotor.code})` : influencerId,
+      cantidad: ids.length,
+      totalUSD: roundMoney(montos.reduce((suma, c) => suma + Number(c.commission), 0)),
+      // La bitácora guarda 4.000 caracteres: con muchas comisiones, solo los primeros ids
+      ids: ids.slice(0, 100),
+    }, req);
+  } catch (error) {
+    console.error('[PROMOTORES] Bitácora de comisiones:', error);
+  }
+}
 
 const accionSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('approve_conversions'), conversionIds: idsSchema }),
@@ -103,23 +128,31 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (accion.data.action === 'approve_conversions') {
       // Una por una y en serie: cada una es su propia transacción y un fallo no frena a las demás
       let approved = 0;
+      const aprobadas: string[] = [];
       const errores: string[] = [];
       for (const conversionId of accion.data.conversionIds) {
         try {
           await approveConversion(conversionId, id);
           approved++;
+          aprobadas.push(conversionId);
         } catch (error) {
           errores.push(error instanceof Error ? error.message : 'Error al aprobar');
         }
       }
+      if (aprobadas.length > 0) await dejarConstancia(session, req, id, 'aprobar', aprobadas);
       return NextResponse.json({ approved, failed: errores.length, errores: [...new Set(errores)] });
     }
 
     // Rechazar: solo las pendientes de este promotor
+    const porRechazar = await prisma.referralConversion.findMany({
+      where: { id: { in: accion.data.conversionIds }, influencerId: id, status: 'PENDING' },
+      select: { id: true },
+    });
     const rechazadas = await prisma.referralConversion.updateMany({
       where: { id: { in: accion.data.conversionIds }, influencerId: id, status: 'PENDING' },
       data: { status: 'REJECTED' },
     });
+    if (rechazadas.count > 0) await dejarConstancia(session, req, id, 'rechazar', porRechazar.map((c) => c.id));
     return NextResponse.json({ rejected: rechazadas.count });
   }
 

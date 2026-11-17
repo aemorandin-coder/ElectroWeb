@@ -261,6 +261,13 @@ function isOrderNumberConflict(error: unknown): boolean {
     && String(error.meta?.target ?? '').includes('orderNumber');
 }
 
+/** C-132: lo que se le dice al cliente cuando la referencia de su pago manual ya está en otra orden (antes y dentro de la transacción). */
+function textoReferenciaRepetida(repetida: { orderNumber: string; userId: string | null }, userId: string): string {
+  return repetida.userId === userId
+    ? `Esa referencia ya está en tu pedido ${repetida.orderNumber}. Si es otro pago, revisa el número.`
+    : 'Esa referencia ya se usó en otra compra. Revisa el número o escríbenos por WhatsApp.';
+}
+
 const DELIVERY_LABELS = ETIQUETA_ENTREGA;
 
 /** C-132: "Marcar pagado" sin stock suficiente para la orden (sin contar lo apartado por otras). */
@@ -531,9 +538,7 @@ export async function POST(request: NextRequest) {
       });
       if (repetida) {
         return NextResponse.json(
-          { error: repetida.userId === userId
-            ? `Esa referencia ya está en tu pedido ${repetida.orderNumber}. Si es otro pago, revisa el número.`
-            : 'Esa referencia ya se usó en otra compra. Revisa el número o escríbenos por WhatsApp.', field: 'referencia-pago' },
+          { error: textoReferenciaRepetida(repetida, userId), field: 'referencia-pago' },
           { status: 409 }
         );
       }
@@ -670,6 +675,17 @@ export async function POST(request: NextRequest) {
     const createOrders = () => prisma.$transaction(async (tx) => {
       const year = new Date().getFullYear();
       let sequence = await getNextOrderSequence(tx, year);
+
+      // C-284: con el candado de las órdenes tomado se vuelve a mirar la referencia del pago manual: la comprobación de
+      // arriba la pasan dos compras que llegan a la vez con la misma referencia. Aquí la segunda ya ve la orden de la primera.
+      if (metodoManual && referenciaManual) {
+        const repetida = await tx.order.findFirst({
+          where: { paymentMethod, paymentReference: referenciaManual, status: { not: OrderStatus.CANCELLED } },
+          select: { orderNumber: true, userId: true },
+        });
+        if (repetida) throw new OrderInputError(textoReferenciaRepetida(repetida, userId), 409);
+      }
+
       const orderNumbers = groups.map(() => `ORD-${year}-${String(sequence++).padStart(4, '0')}`);
 
       // Pago con billetera: se descuenta el total del servidor solo si el saldo alcanza (atómico)

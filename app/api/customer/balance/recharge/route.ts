@@ -135,21 +135,6 @@ export async function POST(req: NextRequest) {
         { status: 409 }
       );
     }
-    // S-07: la referencia de un pago manual no sirve para dos recargas del mismo método. Mismo criterio que las compras
-    // (checkout-pago: sin espacios y en mayúsculas). El Pago Móvil no entra: su referencia es una provisional única y
-    // la real la revisa la verificación con el banco.
-    if (reference && esPagoManual(companyMethod.type)) {
-      const repetida = await prisma.$queryRaw<Array<{ id: string }>>`
-        SELECT id FROM "transactions"
-        WHERE "type" = 'RECHARGE' AND "status" IN ('PENDING', 'COMPLETED')
-          AND "companyPaymentMethodId" = ${companyMethod.id}
-          AND upper(regexp_replace("reference", '[[:space:]]+', '', 'g')) = ${claveReferencia(reference)}
-        LIMIT 1`;
-      if (repetida.length > 0) {
-        return NextResponse.json({ error: 'Esa referencia ya está en otra recarga. Si es otro pago, revisa el número.' }, { status: 409 });
-      }
-    }
-
     // S-06: la tasa de la tienda al pedir la recarga y el monto en Bs. que se le muestra al cliente quedan con ella.
     // El Pago Móvil se compara con esa tasa (mientras sea reciente), no con la que haya cuando verifique.
     const settings = await prisma.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } });
@@ -158,27 +143,47 @@ export async function POST(req: NextRequest) {
     const montoBsSolicitud = tasa > 0 ? montoBs(Number(montoDecimal(amount)), tasa) : 0;
 
     // Create transaction as PENDING (requiere aprobación del admin)
-    const transaction = await prisma.transaction.create({
-      data: {
-        balanceId: userBalance.id,
-        type: 'RECHARGE',
-        status: 'PENDING',
-        amount: montoDecimal(amount), // texto exacto (C-96)
-        currency: 'USD',
-        description: description || `Recarga de Puntos ES - ${resolvedMethodName}`,
-        reference: reference || null,
-        paymentMethod: companyMethod.type,
-        companyPaymentMethodId: companyMethod.id,
-        metadata: JSON.stringify({
+    // S-07: la referencia de un pago manual no sirve para dos recargas del mismo método. Mismo criterio que las compras
+    // (checkout-pago: sin espacios y en mayúsculas). El Pago Móvil no entra: su referencia es una provisional única y
+    // la real la revisa la verificación con el banco.
+    // C-284: la consulta y el alta van en una transacción que empieza con un candado por método y referencia: dos
+    // solicitudes a la vez con la misma referencia pasaban las dos la consulta antes de que la otra guardara.
+    const transaction = await prisma.$transaction(async (tx) => {
+      if (reference && esPagoManual(companyMethod.type)) {
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${`recarga-ref:${companyMethod.id}:${claveReferencia(reference)}`}))::text AS locked`;
+        const repetida = await tx.$queryRaw<Array<{ id: string }>>`
+          SELECT id FROM "transactions"
+          WHERE "type" = 'RECHARGE' AND "status" IN ('PENDING', 'COMPLETED')
+            AND "companyPaymentMethodId" = ${companyMethod.id}
+            AND upper(regexp_replace("reference", '[[:space:]]+', '', 'g')) = ${claveReferencia(reference)}
+          LIMIT 1`;
+        if (repetida.length > 0) return null;
+      }
+      return tx.transaction.create({
+        data: {
+          balanceId: userBalance.id,
+          type: 'RECHARGE',
+          status: 'PENDING',
+          amount: montoDecimal(amount), // texto exacto (C-96)
+          currency: 'USD',
+          description: description || `Recarga de Puntos ES - ${resolvedMethodName}`,
+          reference: reference || null,
           paymentMethod: companyMethod.type,
           companyPaymentMethodId: companyMethod.id,
-          companyPaymentMethodName: resolvedMethodName,
-          reference,
-          requestedAt: new Date().toISOString(),
-          ...(tasa > 0 ? { tasaSolicitud: tasa, montoBsSolicitud } : {}),
-        }),
-      },
+          metadata: JSON.stringify({
+            paymentMethod: companyMethod.type,
+            companyPaymentMethodId: companyMethod.id,
+            companyPaymentMethodName: resolvedMethodName,
+            reference,
+            requestedAt: new Date().toISOString(),
+            ...(tasa > 0 ? { tasaSolicitud: tasa, montoBsSolicitud } : {}),
+          }),
+        },
+      });
     });
+    if (!transaction) {
+      return NextResponse.json({ error: 'Esa referencia ya está en otra recarga. Si es otro pago, revisa el número.' }, { status: 409 });
+    }
 
     // Send notifications
     try {

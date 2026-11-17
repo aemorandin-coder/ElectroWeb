@@ -1,10 +1,28 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.92`, comprobada el 16/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.93`, comprobada el 17/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 17/11 · C-278 (de rc.92 a `v1.0.0-rc.93`)
+La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida, pasada la medianoche: `git pull --ff-only` y `deploy.sh --sin-pull`, sin base, sin SQL y sin cron. Terminó en "Listo: sirviendo .next-b (e99ad137 Merge branch 'claude/C-278')".
+
+**Lo comprobado, el 17/11:**
+- **En el servidor:** `git describe --tags` dice `v1.0.0-rc.93` y la tienda escucha en `127.0.0.1:3000`. El registro de errores de PM2 tiene una sola línea nueva, de las 00:11, escrita por rc.92 mientras rc.93 compilaba (el build terminó a las 00:13): es el bot de siempre que prueba "server actions" con un ID inventado, no esta subida.
+- **Desde fuera:** la portada dice `1.0.0-rc.93|e99ad137`; la portada y `/sorteo` responden 200; Clientes y su API, sin sesión, mandan al login.
+- **La lista sin las cifras** se vio en la tienda de prueba a 4 anchos (8 de 8), con las pruebas de C-276 otra vez (116 de 116).
+
+**Falta que el equipo la mire** (`SIGUIENTE.md`, "Por confirmar de rc.93"): un minuto.
+
+### El bloque que se subió: `v1.0.0-rc.93` (C-278)
+Producción está en `v1.0.0-rc.92` (`d026d04`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-278 (rc.93):** la lista de Clientes sin las cuatro cifras de arriba. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.93`, o una mayor si entró otra tarea antes del `git pull`.
+- **Prueba** (un minuto, en la computadora; antes, recarga el panel con Ctrl+R): Clientes empieza en la búsqueda, sin las cuatro cifras; las píldoras siguen con su cuenta (Todos, Nuevos, Sin activar…) y cada fila con sus pedidos "en curso".
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.92 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ## 16/11 · C-276 (de rc.91 a `v1.0.0-rc.92`)
 La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida, cerca de las 11:50 p. m.:

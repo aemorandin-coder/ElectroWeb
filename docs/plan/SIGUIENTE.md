@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.92; por subir: rc.93, §2)
+# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.93; nada por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-278 · La lista de Clientes, sin las cifras repetidas (rc.93, por subir: §2; `estado/C-278.md`):** el equipo, viendo rc.92: "esto ya está sobrando". Se quitaron las cuatro cifras de arriba de la lista, que repetían los filtros. Las órdenes en curso siguen en cada fila.
+- **C-278 · La lista de Clientes, sin las cifras repetidas (rc.93, en producción desde el 17/11; `estado/C-278.md`):** el equipo, viendo rc.92: "esto ya está sobrando". Se quitaron las cuatro cifras de arriba de la lista, que repetían los filtros. Las órdenes en curso siguen en cada fila.
 - **C-276 · Clientes, de una lista pobre a saber quién es cada cliente (rc.92, en producción desde el 16/11; pruebas por confirmar: §2; `estado/C-276.md`):** el pedido del equipo del 16/11 con las capturas ("muy pobre, no se puede enviar notificaciones, no se sabe si está verificado, no se muestra el historial de sus documentos"). Eligió lo recomendado viendo las maquetas (`~/.cache/electroshop-trabajo/c276/maquetas/index.html`): la ficha A, escribirle por campana, correo y WhatsApp, y las notas del equipo con quién y cuándo.
   - **La ficha de cada cliente en su página:** sus sellos de confianza, lo gastado, sus Puntos ES, sus boletos, sus documentos y firmas con el PDF, los avisos que recibió, todo lo que pasó en su cuenta, lo que le interesa y las notas del equipo.
   - **Escribirle** por pasos, con cinco mensajes listos o uno propio. **La lista** busca por teléfono, cédula y RIF, con filtros y páginas. **Suspender o reactivar** y reenviar la activación. **Editar** por pasos, con antes → después.
@@ -449,13 +449,11 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.93` (C-278)
-Producción está en `v1.0.0-rc.92` (`d026d04`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- **C-278 (rc.93):** la lista de Clientes sin las cuatro cifras de arriba. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.93`, o una mayor si entró otra tarea antes del `git pull`.
-- **Prueba** (un minuto, en la computadora; antes, recarga el panel con Ctrl+R): Clientes empieza en la búsqueda, sin las cuatro cifras; las píldoras siguen con su cuenta (Todos, Nuevos, Sin activar…) y cada fila con sus pedidos "en curso".
-- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.92 && npm install && bash scripts/deploy.sh --sin-pull`.
+### Lo que falta subir: nada por ahora
+Producción está en `v1.0.0-rc.93` (`e99ad13`); su bloque está en `HISTORIAL.md`.
+
+### Por confirmar de rc.93 (C-278; un minuto)
+Ya en producción desde el 17/11 (la subió Claude por SSH con la aprobación del equipo; `HISTORIAL.md`). En la computadora, recarga el panel (Ctrl+R): Clientes empieza en la búsqueda, sin las cuatro cifras; las píldoras siguen con su cuenta y cada fila con sus pedidos "en curso".
 
 ### Por confirmar de rc.92 (C-276, Clientes; unos 15 minutos)
 Ya en producción desde el 16/11, cerca de las 11:50 p. m. (la subió Claude por SSH con la aprobación del equipo; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión, la tabla nueva, las páginas y que las rutas nuevas no entregan nada sin sesión. Falta esto (en la computadora con Chrome; la 7, también en el teléfono). Antes, recarga el panel (Ctrl+R):
@@ -1105,7 +1103,7 @@ En el orden en que más destraban:
 
 **Sigue:** El plan del 14/11 está en producción desde ese día (rc.53). rc.56 está en producción desde el 15/11; falta confirmar sus pruebas (§2) y lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
 
-**Hecho el 17/11:** C-278 (la lista de Clientes sin las cifras repetidas, rc.93, por subir: §2).
+**Hecho el 17/11:** C-278 (la lista de Clientes sin las cifras repetidas, rc.93, en producción).
 
 **Hecho el 16/11:** C-276 (Clientes, rc.92) y, de su inventario, C-277 (rc.91), las dos en producción.
 

@@ -5,9 +5,15 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { montoDecimal } from '@/lib/pricing';
 import { montoBs } from '@/lib/pago-movil/monto';
+import { claveReferencia, esPagoManual } from '@/lib/checkout-pago';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 import { notifyRechargeRequested } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD } from '@/lib/currency';
+
+// S-07: cada solicitud avisa al equipo. Hasta 10 por hora por cuenta y 3 por confirmar a la vez
+const LIMITE_RECARGAS = { maxRequests: 10, windowSeconds: 3600 };
+const MAX_RECARGAS_POR_CONFIRMAR = 3;
 
 // Crear solicitud de recarga de saldo (requiere aprobación del admin)
 export async function POST(req: NextRequest) {
@@ -19,6 +25,16 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = (session.user as { id: string }).id;
+
+    // S-07: límite por cuenta antes de tocar la base
+    const limite = checkRateLimit(userId, 'recarga:solicitar', LIMITE_RECARGAS);
+    if (!limite.success) {
+      return NextResponse.json(
+        { error: 'Pediste muchas recargas en poco tiempo (hasta 10 por hora). Espera un rato antes de pedir otra.', retryAfter: limite.resetIn },
+        { status: 429, headers: getRateLimitHeaders(limite, LIMITE_RECARGAS) }
+      );
+    }
+
     const userName = session.user.name || session.user.email || 'Usuario';
     const body = await req.json().catch(() => null);
     const amount = Number(body?.amount);
@@ -83,6 +99,31 @@ export async function POST(req: NextRequest) {
           totalSpent: 0,
         },
       });
+    }
+
+    // S-07: hasta 3 recargas por confirmar a la vez
+    const porConfirmar = await prisma.transaction.count({
+      where: { balanceId: userBalance.id, type: 'RECHARGE', status: 'PENDING' },
+    });
+    if (porConfirmar >= MAX_RECARGAS_POR_CONFIRMAR) {
+      return NextResponse.json(
+        { error: `Tienes ${MAX_RECARGAS_POR_CONFIRMAR} recargas por confirmar. Termina o cancela una en Puntos ES antes de pedir otra.` },
+        { status: 409 }
+      );
+    }
+    // S-07: la referencia de un pago manual no sirve para dos recargas del mismo método. Mismo criterio que las compras
+    // (checkout-pago: sin espacios y en mayúsculas). El Pago Móvil no entra: su referencia es una provisional única y
+    // la real la revisa la verificación con el banco.
+    if (reference && esPagoManual(companyMethod.type)) {
+      const repetida = await prisma.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM "transactions"
+        WHERE "type" = 'RECHARGE' AND "status" IN ('PENDING', 'COMPLETED')
+          AND "companyPaymentMethodId" = ${companyMethod.id}
+          AND upper(regexp_replace("reference", '[[:space:]]+', '', 'g')) = ${claveReferencia(reference)}
+        LIMIT 1`;
+      if (repetida.length > 0) {
+        return NextResponse.json({ error: 'Esa referencia ya está en otra recarga. Si es otro pago, revisa el número.' }, { status: 409 });
+      }
     }
 
     // S-06: la tasa de la tienda al pedir la recarga y el monto en Bs. que se le muestra al cliente quedan con ella.

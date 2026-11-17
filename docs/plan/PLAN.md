@@ -828,6 +828,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **Ver los clientes reales** en las pruebas del equipo (la base de producción no se leyó): por ejemplo, teléfonos escritos de otra forma para el enlace de WhatsApp.
 - **El `PATCH` de Verificaciones devuelve el perfil entero** al administrador que aprueba (es del panel, no público): pasarlo a lista blanca, como el `GET` de C-277.
 - **`/favicon.ico` responde 404** en el panel (Chrome lo pide en cada sesión nueva). Es de antes de C-276.
+- **C-278 (17/11, rc.93):** la lista sin las cuatro cifras de arriba, que repetían los filtros (**hecha**). En la copia principal de la PC de Andrés, `.next/dev/types` (del 06/11) rompe el chequeo de tipos: se borra `.next/dev` cuando nadie use `next dev` ahí.
 
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).

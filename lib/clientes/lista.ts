@@ -70,7 +70,7 @@ export async function listaDeClientes({ filtro, busqueda, pagina }: { filtro: Fi
   const base: Prisma.UserWhereInput = { role: 'USER', ...(ids ? { id: { in: ids } } : {}) };
   const where: Prisma.UserWhereInput = { AND: [base, whereDeFiltro(filtro)] };
 
-  const [total, usuarios, cuentas, stats] = await Promise.all([
+  const [total, usuarios, cuentas] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
@@ -86,13 +86,6 @@ export async function listaDeClientes({ filtro, busqueda, pagina }: { filtro: Fi
     }),
     // La cuenta de cada filtro, con la misma búsqueda
     Promise.all(FILTROS_CLIENTES.map((f) => prisma.user.count({ where: { AND: [base, whereDeFiltro(f)] } }))),
-    // Las cifras de arriba no dependen de la búsqueda
-    Promise.all([
-      prisma.user.count({ where: { role: 'USER' } }),
-      prisma.user.count({ where: { role: 'USER', createdAt: { gte: inicioDelMes() } } }),
-      prisma.user.count({ where: { role: 'USER', emailVerified: null } }),
-      prisma.user.count({ where: { role: 'USER', orders: { some: { status: { in: ABIERTAS } } } } }),
-    ]),
   ]);
 
   const idsPagina = usuarios.map((u) => u.id);
@@ -149,6 +142,5 @@ export async function listaDeClientes({ filtro, busqueda, pagina }: { filtro: Fi
     pagina,
     paginas: Math.max(1, Math.ceil(total / POR_PAGINA)),
     cuentas: Object.fromEntries(FILTROS_CLIENTES.map((f, i) => [f, cuentas[i]])) as Record<FiltroClientes, number>,
-    cifras: { clientes: stats[0], nuevosMes: stats[1], sinActivar: stats[2], conActivas: stats[3] },
   };
 }

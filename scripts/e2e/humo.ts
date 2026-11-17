@@ -94,7 +94,8 @@ correr(async () => {
     await nav.hasta(`() => Boolean(document.getElementById('w-totales'))`);
     t('C-150 Dashboard carga con acciones, pendientes y ventas', await nav.js(`() => document.querySelector('main h1').innerText === 'Dashboard' && ['Por atender', 'Órdenes recientes', 'Ventas cobradas', 'En total'].every(x => document.querySelector('main').innerText.includes(x))`));
     t('C-150 la compra de hoy está en el Dashboard', await nav.js(`() => document.querySelector('[aria-labelledby=w-ordenes]').innerText.includes('Clienta Bloque')`));
-    t('C-150 menú: Dashboard y seis secciones', await nav.js(`() => document.querySelectorAll('#admin-sidebar nav button[aria-expanded]').length === 6 && document.querySelector('#admin-sidebar nav a').innerText.trim() === 'Dashboard'`));
+    // Siete desde que entró Contabilidad (C-229): Ventas, Contabilidad, Catálogo, Clientes, Marketing, Cursos y Administración
+    t('C-150 menú: Dashboard y siete secciones', await nav.js(`() => document.querySelectorAll('#admin-sidebar nav button[aria-expanded]').length === 7 && document.querySelector('#admin-sidebar nav a').innerText.trim() === 'Dashboard'`));
     await nav.foto('bloque-dashboard-1440');
     // C-203: con la versión al día, navegar por dentro no recarga la página. Si falla, la cabecera x-es-version no llega a
     // proxy.ts (lib/version-build.ts) y cada clic recarga todo: pasaría si Next cambia cómo pide las páginas

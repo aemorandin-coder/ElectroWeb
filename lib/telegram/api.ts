@@ -51,6 +51,30 @@ export async function callTelegram<T>(token: string, method: string, payload: Re
   return data.result as T;
 }
 
+/**
+ * C-286: un método con un archivo (sendVideo, sendDocument), en multipart. Más tiempo que `callTelegram`: un video Full HD
+ * de 15 s pesa 10 a 25 MB y Telegram tarda en recibirlo.
+ */
+export async function callTelegramArchivo<T>(token: string, method: string, form: FormData, timeoutMs = 120_000): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}/bot${token}/${method}`, { method: 'POST', body: form, cache: 'no-store', signal: AbortSignal.timeout(timeoutMs) });
+  } catch (error) {
+    // El mensaje de fetch nunca incluye la URL (que lleva el token)
+    throw new TelegramApiError(error instanceof Error && error.name === 'TimeoutError' ? 'Telegram no terminó de recibir el archivo a tiempo' : 'No hay conexión con Telegram', 0);
+  }
+  const data = (await response.json().catch(() => null)) as TelegramResponse<T> | null;
+  if (!data?.ok) {
+    throw new TelegramApiError(
+      data?.description || `Telegram respondió ${response.status}`,
+      data?.error_code || response.status,
+      data?.parameters?.retry_after,
+      data?.parameters?.migrate_to_chat_id
+    );
+  }
+  return data.result as T;
+}
+
 export interface TelegramBotInfo {
   id: number;
   is_bot: boolean;

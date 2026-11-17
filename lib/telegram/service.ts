@@ -1,7 +1,7 @@
 // Envío de mensajes a los chats conectados (C-73). Solo servidor.
 import { prisma } from '@/lib/prisma';
 import { getNotificationSettings } from '@/lib/admin-events/settings';
-import { callTelegram, TelegramApiError } from './api';
+import { callTelegram, callTelegramArchivo, TelegramApiError } from './api';
 
 export const TELEGRAM_MESSAGE_LIMIT = 4096;
 
@@ -81,4 +81,50 @@ export async function sendToTelegramChats(html: string, options: SendOptions = {
       }
     })
   );
+}
+
+export interface VideoParaTelegram {
+  archivo: Blob;
+  nombre: string;
+  /** El texto de la historia (el de Instagram), para copiarlo desde Telegram */
+  texto: string;
+  segundos: number;
+  ancho: number;
+  alto: number;
+}
+
+/**
+ * C-286: un video de ElectroStudio a los chats activos, tal como salió (Full HD a 60 cuadros). Se sube una vez y a los demás
+ * chats va por su id de Telegram, sin volver a subirlo. Registra la entrega o el error de cada chat, como los avisos.
+ */
+export async function sendVideoToTelegramChats(video: VideoParaTelegram): Promise<ChatDelivery[]> {
+  const { botToken } = await getNotificationSettings();
+  if (!botToken) return [];
+  const chats = await prisma.telegramChat.findMany({ where: { isActive: true }, orderBy: { createdAt: 'asc' }, select: { id: true, chatId: true, title: true } });
+  const caption = video.texto.length > 1000 ? `${video.texto.slice(0, 999)}…` : video.texto;
+  let idEnTelegram: string | null = null;
+  const entregas: ChatDelivery[] = [];
+  // Uno tras otro: el primero sube el archivo y los demás usan su id
+  for (const chat of chats) {
+    try {
+      const base = { chat_id: chat.chatId, caption, duration: video.segundos, width: video.ancho, height: video.alto, supports_streaming: true };
+      if (idEnTelegram) {
+        await callTelegram(botToken, 'sendVideo', { ...base, video: idEnTelegram });
+      } else {
+        const form = new FormData();
+        for (const [clave, valor] of Object.entries(base)) form.append(clave, String(valor));
+        form.append('video', video.archivo, video.nombre);
+        const mensaje = await callTelegramArchivo<{ video?: { file_id: string }; document?: { file_id: string } }>(botToken, 'sendVideo', form);
+        idEnTelegram = mensaje.video?.file_id ?? mensaje.document?.file_id ?? null;
+      }
+      await prisma.telegramChat.update({ where: { id: chat.id }, data: { lastSentAt: new Date(), lastError: null } });
+      entregas.push({ chatId: chat.chatId, title: chat.title, ok: true });
+    } catch (error) {
+      const message = describeTelegramError(error);
+      const blocked = error instanceof TelegramApiError && error.status === 403;
+      await prisma.telegramChat.update({ where: { id: chat.id }, data: { lastError: message, ...(blocked ? { isActive: false } : {}) } }).catch(() => {});
+      entregas.push({ chatId: chat.chatId, title: chat.title, ok: false, error: message });
+    }
+  }
+  return entregas;
 }

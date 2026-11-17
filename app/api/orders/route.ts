@@ -53,6 +53,7 @@ import { DestinoError, leerDestino, type DestinoOrden } from '@/lib/envios/desti
 import { actualizarRastreoZoom } from '@/lib/envios/seguimiento';
 import { customerOrderSelect, type CustomerOrder } from '@/lib/dto/order';
 import { leerCompraId } from '@/lib/compra-id';
+import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { publicarOrdenes, publicarStock } from '@/lib/realtime/bus';
 import { RESERVA_PAGO_MANUAL_HORAS, claveReferencia, esPagoManual, leerReferenciaManual, repartirPuntos } from '@/lib/checkout-pago';
 import { descontarDisponible, hayDisponible } from '@/lib/reservas';
@@ -304,6 +305,21 @@ class StockInsuficiente extends Error {
   constructor(producto: string, pide: number, hay: number) {
     super(`No hay stock de "${producto}" para esta orden: lleva ${pide} y quedan ${hay} (contando lo apartado por otros pedidos). Repón el stock, o cancela la orden y devuelve el pago, antes de marcarla pagada.`);
     this.name = 'StockInsuficiente';
+  }
+}
+
+/**
+ * C-284: si una venta o un pago confirmado dejó un producto físico en 0, la tienda lo sabe al momento. Antes lo seguía
+ * mostrando disponible hasta que vencían los 60 s del caché (el servidor no dejaba comprarlo). Se llama con `after`: fuera
+ * de la transacción y sin frenar la respuesta. Si algo falla, la venta ya está hecha: solo se anota.
+ */
+async function renovarTiendaSiSeAgoto(productIds: string[]): Promise<void> {
+  if (productIds.length === 0) return;
+  try {
+    const agotado = await prisma.product.findFirst({ where: { id: { in: productIds }, stock: { lte: 0 } }, select: { id: true } });
+    if (agotado) revalidateStorefront();
+  } catch (error) {
+    console.error('Error revisando si la venta agotó un producto:', error);
   }
 }
 
@@ -1032,6 +1048,8 @@ export async function POST(request: NextRequest) {
     // C-127: la orden nueva aparece sola en el panel; si ya se descontó stock, la ficha muestra lo que queda
     void publicarOrdenes(orders.map((order) => order.id), { nueva: true });
     if (isPaymentConfirmed) void publicarStock([...physicalQuantities.keys()]);
+    // C-284: si esta compra dejó un producto en 0, la tienda lo sabe ya (antes lo mostraba disponible hasta 60 s)
+    if (isPaymentConfirmed) after(() => renovarTiendaSiSeAgoto([...physicalQuantities.keys()]));
 
     // ElectroStudio (C-113): la persona llegó por una historia de Instagram en los últimos 7 días
     void recordStudioOrder(request.cookies.get(STUDIO_COOKIE)?.value, orders.map((order) => order.id), userId);
@@ -1359,6 +1377,8 @@ export async function PATCH(request: NextRequest) {
 
     if (cambiosStock.length > 0) {
       notifyStockCrossings(cambiosStock).catch((error) => console.error('Error enviando avisos de stock:', error));
+      // C-284: si al confirmar el pago un producto quedó en 0, la tienda lo sabe ya (antes lo mostraba disponible hasta 60 s)
+      after(() => renovarTiendaSiSeAgoto(cambiosStock.map((cambio) => cambio.productId)));
     }
 
     // Pago confirmado: si el cliente llegó por un promotor, nace su comisión pendiente (C-75)

@@ -1,10 +1,48 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.93`, comprobada el 17/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.95`, comprobada el 17/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 17/11 · C-281 y C-280 (de rc.93 a `v1.0.0-rc.95`)
+La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida, cerca de las 9:05 a. m.: `git pull --ff-only` y `deploy.sh --sin-pull`, sin base, sin SQL y sin cron. Las dos versiones (rc.94 y rc.95) entraron en un solo bloque. Terminó en "Listo: sirviendo .next-a (96f25731 Merge branch 'claude/C-280')".
+
+**Lo comprobado, el 17/11:**
+- **En el servidor:** `git describe --tags` dice `v1.0.0-rc.95` y la tienda escucha en `127.0.0.1:3000`. El registro de errores de PM2 no tiene líneas nuevas (35 antes y 35 después).
+- **Desde fuera, como un visitante:**
+  - la portada dice `1.0.0-rc.95|96f2573`; la portada, Productos, Categorías, `/sorteo`, `/servicios`, el carrito, entrar, `/canjear-gift-card` y `/cursos` responden 200;
+  - una API privada sin sesión responde 401 en JSON (`{"error":"No autorizado"}`; antes de subir, 307 a la página de entrada), también una del panel y la de los Pagos Móvil sin orden (C-281). Abierta como navegación, va a `/login` con su retorno;
+  - las reseñas de servicios responden 200 sin sesión (antes de subir, 307);
+  - un archivo de `/uploads` que no existe sale 404 con `Cache-Control: no-store` (antes de subir, `public, max-age=31536000, immutable`);
+  - los precios del carrito sin cuenta (`POST /api/products/precios`, C-281) responden 200;
+  - `/canjear-gift-card` lleva su imagen para compartir (pedida como Facebook) y la imagen baja como WhatsApp (200, JPEG, 41 KB). No había ningún curso publicado para probar la suya;
+  - una pestaña de otra versión recibe 204 y una carga normal, 200.
+- **Antes de subir,** en las tiendas de prueba: lo de `estado/C-280.md` (50 de 50 por HTTP y la prueba de humo, 60 de 60, con C-281 adentro) y lo de `estado/C-281.md`.
+
+**Falta que el equipo la mire** (`SIGUIENTE.md`, "Por confirmar de rc.95"): las 10 pruebas, unos 20 minutos.
+
+### El bloque que se subió: `v1.0.0-rc.95` (C-281 y C-280)
+Producción está en `v1.0.0-rc.93` (`e99ad13`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente y trae dos versiones.
+- **C-281 (rc.94):** los flujos que venden y el día del panel.
+- **C-280 (rc.95):** los arreglos medios de dinero y seguridad de la auditoría.
+- Las dos, sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.95`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 20 minutos; antes, recarga la tienda y el panel con Ctrl+R). De la 1 a la 6 son de C-281; de la 7 a la 10, de C-280:
+  1. **Órdenes** (en la computadora): busca una orden vieja por su número, después por el teléfono del cliente (como sea: con guiones o con +58) y por la guía de ZOOM: aparece aunque no esté entre las 50 de la lista, con "1 orden" al lado. Toca "Listas para recoger", "Canceladas" y "Reembolsadas": la cuenta de "Todas" es la suma de todas las píldoras.
+  2. **Transacciones:** busca una recarga vieja por su referencia o por el teléfono del cliente.
+  3. **"Comprar ahora" sin cuenta** (en el teléfono, en una ventana de incógnito): en un producto, "Comprar ahora" → lleva a entrar; entra con tu cuenta de cliente y llegas al pago con el producto. Vacía ese carrito al terminar.
+  4. **Canjear sin cuenta** (en incógnito): en `/canjear-gift-card`, escribe el código de una gift card de prueba y "Verificar": salen "Crear mi cuenta gratis" y "Ya tengo cuenta". Toca "Ya tengo cuenta", entra, y al volver el código ya está escrito y verificado, con su valor (no la canjees si no quieres).
+  5. **Lo que se comparte** (desde el teléfono): manda por WhatsApp el enlace de un curso y el de `/canjear-gift-card`: cada uno con su imagen (el curso, con su portada, su precio y su nivel).
+  6. **El Pago Móvil que se recupera** (solo si hay una compra real con Pago Móvil en curso, no hace falta forzarla): si un cliente verificó su pago y recargó la página, el pago le muestra "Ya tienes un Pago Móvil verificado" arriba.
+  7. **La tasa** (con la cuenta del dueño, en la computadora): Configuración → Precios y pagos. En "Manual", agrégale un cero a la tasa y toca Guardar: sale "La tasa cambia más de 50 %", con el antes y el después. Toca **"Revisar"** (no se guarda nada) y después "Descartar".
+  8. **La contraseña** (con una cuenta de cliente de prueba): Mi panel → Mi perfil → Seguridad. Ya no hay casilla: dice "Al cambiarla se cierran tus otras sesiones". Si la cambias, esa cuenta queda fuera en los demás dispositivos.
+  9. **Las reseñas de un trabajo** (en una ventana de incógnito): en `/servicios`, abre un trabajo. Las reseñas cargan, o dice que no hay: ya no se queda cargando.
+  10. **Una recarga por Pago Móvil** (solo si vas a hacer una de verdad, no hace falta forzarla): el monto en bolívares del paso de verificar es el que hay que pagar, y se aprueba sola.
+- **Lo que comprueba Claude desde fuera al subir:** una API privada sin sesión responde 401, las reseñas de servicios responden 200, y un archivo de `/uploads` que no existe sale con `no-store`.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.93 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ## 17/11 · C-278 (de rc.92 a `v1.0.0-rc.93`)
 La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida, pasada la medianoche: `git pull --ff-only` y `deploy.sh --sin-pull`, sin base, sin SQL y sin cron. Terminó en "Listo: sirviendo .next-b (e99ad137 Merge branch 'claude/C-278')".

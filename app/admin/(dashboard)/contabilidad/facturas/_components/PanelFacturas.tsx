@@ -16,7 +16,7 @@ import {
 } from '@/components/iconos';
 import {
   adminBadge, adminCard, adminDangerButton, adminDato, adminError, adminHint, adminIconChip, adminLabel, adminModalBody, adminModalFooter,
-  adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminPageHeader, adminPageSubtitle, adminPageTitle,
+  adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle,
   adminPrimaryButton, adminSecondaryButton, adminTable, adminTableWrap, adminTd, adminTh,
 } from '@/lib/admin-ui';
 import type { CompraSinFactura } from '@/lib/contabilidad/servidor';
@@ -36,13 +36,42 @@ const tres = (n: number) => String(n).padStart(3, '0');
 
 const fecha = (iso: string) => new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(iso));
 
-export default function PanelFacturas({ mes, meses, talonario, facturas, compras, esDueno, puedeFacturar }: {
+// C-230: desde el 19/04/2027 se factura con el portal del SENIAT y lo que sobre del talonario se anula (Providencia 00093)
+const PORTAL = '2027-04-19';
+const DIA = 86_400_000;
+const enDias = (iso: string) => Date.UTC(Number(iso.slice(0, 4)), Number(iso.slice(5, 7)) - 1, Number(iso.slice(8, 10))) / DIA;
+/** "7 de diciembre" (o "7 de enero de 2027" si es de otro año) */
+const fechaLarga = (dias: number, hoy: string) => {
+  const d = new Date(dias * DIA);
+  const otroAnio = d.getUTCFullYear() !== Number(hoy.slice(0, 4));
+  return new Intl.DateTimeFormat('es-VE', { timeZone: 'UTC', day: 'numeric', month: 'long', ...(otroAnio ? { year: 'numeric' } : {}) }).format(d);
+};
+
+/**
+ * Hasta cuándo alcanza el talonario al ritmo de las ventas de los últimos 30 días (cada venta, su factura), y cuántas
+ * facturas faltan para llegar al 19/04/2027, redondeadas a 50 (la imprenta las hace por talonarios).
+ */
+function pronosticar(quedan: number, ventas30: number, hoy: string): { hasta: number; llegaAlPortal: boolean; faltan: number } | null {
+  if (ventas30 <= 0) return null;
+  const porDia = ventas30 / 30;
+  const hoyDias = enDias(hoy);
+  const hasta = hoyDias + Math.floor(quedan / porDia);
+  const portal = enDias(PORTAL);
+  const faltan = Math.max(0, Math.ceil(porDia * (portal - hoyDias)) - quedan);
+  return { hasta, llegaAlPortal: hasta >= portal, faltan: faltan > 0 ? Math.ceil(faltan / 50) * 50 : 0 };
+}
+
+export default function PanelFacturas({ mes, meses, talonario, facturas, compras, ventas30, hoy, esDueno, puedeFacturar }: {
   mes: string;
   /** Los meses para elegir, del más nuevo al más viejo */
   meses: string[];
   talonario: TalonarioDTO | null;
   facturas: FacturaDTO[];
   compras: CompraSinFactura[];
+  /** C-230: las ventas de los últimos 30 días (con factura o por facturar), para el pronóstico del talonario */
+  ventas30: number;
+  /** "2026-11-16" en Venezuela */
+  hoy: string;
   esDueno: boolean;
   /** C-235: la contadora ve todo, pero no factura ni anula */
   puedeFacturar: boolean;
@@ -57,6 +86,7 @@ export default function PanelFacturas({ mes, meses, talonario, facturas, compras
   const emitidas = facturas.filter((f) => f.estado === 'EMITIDA');
   const totalBs = emitidas.reduce((s, f) => s + f.totalBs, 0);
   const porcentaje = talonario ? Math.round((talonario.usadas / (talonario.numeroHasta - talonario.numeroDesde + 1)) * 100) : 0;
+  const pronostico = talonario && talonario.quedan > 0 && hoy < PORTAL ? pronosticar(talonario.quedan, ventas30, hoy) : null;
 
   const anularEnBlanco = async () => {
     if (!talonario?.proximo) return;
@@ -150,6 +180,13 @@ export default function PanelFacturas({ mes, meses, talonario, facturas, compras
                 </div>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-brand-100" aria-hidden="true"><div className="h-full rounded-full bg-brand-500" style={{ width: `${porcentaje}%` }} /></div>
+              {pronostico && (
+                <p className="text-sm text-ink-soft">
+                  {pronostico.llegaAlPortal
+                    ? <>Al ritmo de los últimos 30 días ({ventas30} {ventas30 === 1 ? 'venta' : 'ventas'}), alcanzan hasta el <strong className="text-ink">19 de abril de 2027</strong>, cuando se empieza a facturar con el SENIAT.</>
+                    : <>Al ritmo de los últimos 30 días ({ventas30} {ventas30 === 1 ? 'venta' : 'ventas'}), alcanzan hasta el <strong className="text-ink">{fechaLarga(pronostico.hasta, hoy)}</strong>.</>}
+                </p>
+              )}
               {((puedeFacturar && talonario.proximoTexto) || esDueno) && (
                 <div className={pie}>
                   {puedeFacturar && talonario.proximoTexto && (
@@ -196,7 +233,7 @@ export default function PanelFacturas({ mes, meses, talonario, facturas, compras
             <div className="min-w-0">
               <h2 id="sin-factura" className={etiqueta}>
                 Cobradas sin factura
-                <Ayuda etiqueta="Por qué cada venta lleva factura">La ley pide factura en cada venta, aunque el cliente no la pida. Se decide con la contadora (A16).</Ayuda>
+                <Ayuda etiqueta="Por qué cada venta lleva factura">La ley pide factura en cada venta, aunque el cliente no la pida. La contadora lo confirmó el 16/11: se factura todo.</Ayuda>
               </h2>
               {compras.length === 0 ? (
                 <>
@@ -223,6 +260,17 @@ export default function PanelFacturas({ mes, meses, talonario, facturas, compras
           )}
         </section>
       </div>
+
+      {/* C-230: si el talonario no llega al 19/04/2027, el dueño pide otro (solo lo justo: lo que sobre ese día se anula) */}
+      {esDueno && pronostico && !pronostico.llegaAlPortal && pronostico.faltan > 0 && (
+        <div className={`${adminNotice('warning')} flex items-start gap-3`} role="status">
+          <IconoArchivo aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="font-semibold">Pide otro talonario a la imprenta: unas {pronostico.faltan} facturas</p>
+            <p className="mt-0.5">Es lo justo hasta el 19/04/2027, cuando se empieza a facturar con el SENIAT y lo que sobre se anula. Cuando llegue, cárgalo aquí.</p>
+          </div>
+        </div>
+      )}
 
       {/* Lo que falta facturar, solo si hay */}
       {compras.length > 0 && (

@@ -1598,3 +1598,22 @@ html, body { overflow-x: clip; }
     print-color-adjust: exact;
   }
 }
+
+/* C-230: "Imprimir" del libro de ventas. Sale solo la hoja del libro (una columna por dato, como el Excel), apaisada en
+   carta. La hoja va directo en el body, fuera del marco del panel: así lo demás no se imprime ni deja páginas en blanco. */
+@page libro {
+  size: letter landscape;
+  margin: 10mm;
+}
+.libro-imprimible {
+  display: none;
+}
+@media print {
+  body.imprimiendo-libro > :not(.libro-imprimible) {
+    display: none !important;
+  }
+  body.imprimiendo-libro > .libro-imprimible {
+    display: block;
+    page: libro;
+  }
+}

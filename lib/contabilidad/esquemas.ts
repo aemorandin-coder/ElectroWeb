@@ -22,6 +22,8 @@ export const compradorSchema = z
 
 const fecha = z.string().regex(FECHA, 'La fecha de emisión no es válida.');
 const condicion = z.enum(['CONTADO', 'CREDITO']);
+/** C-230: la tasa BCV del día en que se escribe la factura (la contadora, 16/11), no la de la orden */
+const tasa = z.number().positive('La tasa BCV tiene que ser mayor que 0.').max(100_000_000);
 
 const renglonManual = z
   .object({
@@ -45,6 +47,8 @@ export const pedidoFacturaSchema = z.discriminatedUnion('origen', [
       comprador: compradorSchema.optional(),
       condicionPago: condicion.default('CONTADO'),
       fecha,
+      /** Sin ella, la de hoy de Configuración (solo si la fecha es hoy) */
+      tasa: tasa.optional(),
       numeroEsperado: z.number().int().positive().optional(),
     })
     .strict(),
@@ -52,8 +56,7 @@ export const pedidoFacturaSchema = z.discriminatedUnion('origen', [
     .object({
       origen: z.literal('TIENDA'),
       renglones: z.array(renglonManual).min(1, 'Agrega por lo menos un renglón.').max(12, 'El talonario tiene 12 renglones.'),
-      /** La tasa BCV del día de la venta */
-      tasa: z.number().positive('La tasa BCV tiene que ser mayor que 0.').max(100_000_000),
+      tasa,
       comprador: compradorSchema,
       condicionPago: condicion.default('CONTADO'),
       fecha,

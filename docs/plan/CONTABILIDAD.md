@@ -5,6 +5,7 @@
 > Lo de antes sigue valiendo: `estado/C-120.md` (facturación, IVA, IGTF y retenciones, 30/09), `C-146` (IVA a la vista), `C-147` y `C-147b` (datos para la factura, relación de ventas y embalaje), `C-151` (digitales sin IVA) y `C-159` (retención en las cotizaciones).
 > **Repositorio público:** aquí no van montos de la empresa, datos de clientes ni los rangos de control del talonario. Esos datos se cargan en el panel.
 > **Ampliado el 14/11 en la noche (C-228b):** la contadora entra al equipo con su firma; se suman gastos y compras, el alquiler del local, la nómina con pensiones, la Alcaldía de Guanare y el calendario de pagos con avisos (§13).
+> **16/11 (C-230):** la contadora respondió por notas de voz. Sus criterios están en §9; lo que dijo de cada obligación, en §13.2. Lo privado de sus respuestas queda en la PC del equipo, fuera del repositorio.
 
 ## 1. Lo más importante
 1. **El 19/04/2027 cambia la facturación** (Providencia SNAT/2026/00093, Gaceta 43.484 del 21/10/2026).
@@ -13,14 +14,15 @@
    - Los talonarios que sobren ese día se anulan.
 2. **Hoy la empresa factura solo con el talonario.** Es contribuyente ordinaria, y SADES imprime un recibo que no es una factura fiscal (respuestas del 14/11).
    - **La ley pide factura en cada venta, aunque el cliente no la pida** (Ley del IVA, art. 54).
-   - Las ventas de la web sin factura son hoy el mayor riesgo: el Código Orgánico Tributario castiga no emitirla con multa y cierre del local (art. 101; los montos, con el contador).
+   - Las ventas sin factura eran el mayor riesgo: el Código Orgánico Tributario castiga no emitirla con multa y cierre del local (art. 101; los montos, con el contador).
+   - **Desde el 16/11 se factura cada venta** (la contadora; cerró A16).
 3. **Contabilidad lleva el libro de ventas de toda la empresa,** porque la única factura fiscal que hoy existe es la del talonario.
    - Cada factura del talonario queda registrada: de la web, de la tienda o de una cotización.
    - También lleva el IVA de cada mes y lo que mueve la web: cobros, Puntos ES, gift cards y devoluciones.
    - Guía el llenado de cada factura con su número, su número de control y sus montos en bolívares.
-4. **Lo primero que sirve:** la factura de talonario guiada desde una orden (C-229), y el libro de ventas con el IVA del mes (C-230), antes de declarar noviembre (hasta el 15/12).
-5. **El contador decide lo que la norma no cierra:** las preguntas de la sección 9.
-   - Una es urgente: la Factura 67 le cobró IVA a un juego digital, y la web no se lo cobra desde el 01/10 (C-151).
+4. **Lo primero que sirve:** la factura de talonario guiada desde una orden (C-229, hecha), y el libro de ventas con el IVA del mes (C-230, hecho el 16/11), antes de declarar noviembre (hasta el 15/12).
+5. **El contador decide lo que la norma no cierra:** las preguntas de la sección 9. La contadora respondió el 16/11; quedaron abiertas cinco.
+   - Sigue abierta la de los digitales: la Factura 67 le cobró IVA a un juego digital, y la web no se lo cobra desde el 01/10 (C-151).
 6. **La contadora trabaja dentro del panel** (14/11 en la noche, §13).
    - Entra invitada al equipo y descarga en Excel.
    - Calcula, declara y firma cada cierre con su sello.
@@ -190,9 +192,11 @@ Lo que pide cada mes y cada año, y qué parte puede dar la web.
 
 ### Las reglas de los montos
 - **Todo en bolívares,** que es la moneda de los libros y de la declaración. Los dólares, como dato.
-- **La tasa:** la de la orden, que es la que pagó el cliente.
-  - Si la factura se hace otro día, la pantalla avisa y deja poner la tasa BCV de ese día.
-  - Si se cambia de mes, la pantalla avisa más fuerte: el IVA de una venta va en el mes en que se cobró (art. 13).
+- **La tasa:** la del BCV del día en que se escribe la factura (la contadora, 16/11; C-230). Hasta C-230 era la de la orden.
+  - Si la fecha es hoy, viene la de Configuración (la automática del BCV); si es otro día, se escribe la de ese día.
+  - Una tasa a más del triple o a menos de un tercio de la de hoy es una coma corrida: el servidor la rechaza.
+  - La de la orden queda a la vista. Si la factura se escribe el mismo día del cobro, las dos coinciden.
+  - Si se cambia de mes, la pantalla avisa: la factura va en el libro del mes de su fecha. Si no es así, lo dice la contadora.
 - **El precio publicado lleva el IVA adentro** (§7.2).
   - La base de cada renglón es su monto en Bs ÷ 1,16, redondeada a céntimos.
   - El IVA es el 16 % de la suma de las bases; el total, base + IVA.
@@ -285,13 +289,13 @@ En orden. Cada una sirve sola, sale de `main` actualizado y lleva su estado, su 
 **Desde el 14/11 en la noche (C-228b), el orden es:**
 1. C-229, las facturas de talonario (la maqueta B). Hecha, rc.50.
 2. C-235, la contadora en el equipo (§13.1). Hecha, rc.54.
-3. C-230, el libro de ventas y el resumen (antes del 15/12).
-4. C-236, el calendario y los avisos (§13.2).
-5. C-237, gastos y compras (§13.3).
+3. C-230, el libro de ventas, con las respuestas de la contadora. Hecho, rc.90 (16/11). El resumen del mes quedó en la mesa y en el libro.
+4. C-236, el calendario y los avisos (§13.2), con sus fechas: la alcaldía el 10 y el IVA el 15.
+5. C-237, gastos y compras (§13.3), con las mismas columnas que el libro de ventas.
 6. C-232, el IVA del mes y el cierre firmado (§13.7).
-7. C-238, el alquiler (§13.4).
-8. C-239, nómina y aportes (§13.5).
-9. C-240, la alcaldía (§13.6).
+7. C-240, la alcaldía (§13.6): sube, porque vence el 10, antes que el IVA. Con la alícuota y el mínimo del último recibo.
+8. C-239, nómina y aportes (§13.5), cuando ella confirme la base mínima de las pensiones.
+9. C-238, el alquiler (§13.4), con los datos del contrato.
 10. C-231, los movimientos de la web.
 11. C-233, el 19/04/2027.
 
@@ -307,7 +311,7 @@ En orden. Cada una sirve sola, sale de `main` actualizado y lleva su estado, su 
 4. **Desde el 19/04/2027 se factura con el portal o la app del SENIAT.**
 
 ### Abiertas (para Andrés)
-- **A16.** ¿Se factura en el talonario **cada venta de la web** desde ya, o solo la que pide factura, hasta el portal? La ley pide factura siempre. Recomendado: decidirlo con el contador esta semana.
+- ~~**A16.**~~ Cerrada el 16/11: se factura cada venta desde ya (la contadora, y el equipo lo aprobó con el plan de C-230).
 - ~~**A17.**~~ Cerrada el 14/11 en la noche: la contadora recibe el mes en Excel y trabaja en el panel, invitada al equipo (§13.1).
 - ~~**A18.**~~ Cerrada el 14/11 en la noche: la variante B, alineada (§10).
 
@@ -330,6 +334,31 @@ Escritas el 14/11 para mandárselas por WhatsApp, en tres mensajes. El texto est
 15. **Alcaldía de Guanare:** si la declaración es mensual, la alícuota, la licencia, la publicidad y el aseo, y si se paga en línea.
 16. **Cuánto se guarda** lo emitido, los libros y lo anulado.
 17. **El Excel:** un archivo por libro, o uno solo con pestañas.
+
+### Lo que respondió (16/11, por notas de voz)
+El equipo transcribió sus cuatro notas. Esto es lo que vale para el módulo; lo privado queda en la PC del equipo.
+- **1. Factura en cada venta:** sí, "la ley pide facturar cada venta". Cerró A16. Lo vendido antes sin factura: no lo dijo.
+- **4. Tasa y fecha:** la del BCV del día en que se hace la factura. Desde C-230, la factura va a esa tasa (antes, a la de la orden).
+  - Si se factura el mismo día del cobro, las dos coinciden.
+  - Si se escribe otro día, la Ley del IVA (art. 13 y 25) parece apuntar a la del día del cobro: queda preguntado.
+- **5 y 6. Los libros:** el de ventas lleva la fecha, el número de factura y el de control, el RIF, el nombre, la base imponible, el total, el IVA y el comprobante de retención. El de compras, igual, con el proveedor.
+  - C-230 los pone en el orden de siempre del libro: total, exento, base, alícuota, IVA y lo retenido.
+- **7. Declaración del IVA:** en los primeros 15 días del mes (ordinario).
+- **Retenciones que le hacen a la empresa:** pocas, y del 75 % del IVA (como C-159).
+- **9. Máquina fiscal:** "ahorita no es obligado".
+- **10. Abril de 2027:** hay que tener un talonario de contingencia para eventualidades. Las apps del SENIAT todavía no las conoce.
+- **11. Pensiones:** el 9 % del salario integral. Nombró los $240 del ingreso integral del Gobierno: falta confirmar si son el mínimo por trabajador, y el día.
+- **15. Alcaldía:** se declara en los primeros 10 días del mes.
+  - La alícuota es el 1 o el 1,5 % de los ingresos (no lo recordaba: se confirma con el último recibo).
+  - Se suele pagar el mínimo.
+- **8. Puntos ES:** "imagino que" la factura va al recargar. Lo dijo con duda y cambiaría todo el flujo, así que sigue la regla de §5 (la factura va al comprar y Puntos ES es la forma de pago) hasta que lo confirme con un ejemplo.
+- **Quedaron abiertas,** y se le preguntan en el WhatsApp del 16/11:
+  - 2: los digitales (siguen sin IVA, C-151);
+  - 8: Puntos ES, con un ejemplo;
+  - 1: lo vendido antes sin factura;
+  - 11: la base mínima y el día de las pensiones;
+  - 13 y 14: las retenciones de ISLR, del alquiler y de otros pagos.
+  - Quedan para después la 3 (la factura lleva los dólares en un renglón, como pide la 00093), la 12, la licencia, la publicidad y el aseo de la 15, la 16 (el panel no borra nada) y la 17 (se hacen los dos Excel).
 
 ## 10. Las maquetas (antes de programar)
 Hechas el 14/11, con clientes inventados y una tasa de ejemplo (Bs 905,00).
@@ -361,7 +390,7 @@ Hechas el 14/11, con clientes inventados y una tasa de ejemplo (Bs 905,00).
 
 ## 11. Lo que no verifiqué
 - **El texto de la 00093 contra la Gaceta 43.484:** lo leí en la copia de IVECOFI (completa, con sus disposiciones). Los resúmenes de la prensa no siempre coinciden con ella.
-- **El día exacto de la declaración** de un ordinario (fuentes secundarias dicen el 15) y los artículos del Reglamento del IVA sobre los libros.
+- **El día de la declaración** de un ordinario lo confirmó la contadora el 16/11: el 15. Quedan los artículos del Reglamento del IVA sobre los libros.
 - **Los montos de las sanciones** del Código Orgánico Tributario.
 - **Si el portal y la app del SENIAT ya facturan,** y si tendrán una API para conectar un sistema propio.
 - **Si la empresa debía tener máquina fiscal** (pregunta 3).
@@ -451,13 +480,13 @@ Es la columna del módulo: cada obligación tiene su regla de vencimiento, y cad
 
 | Obligación | Cada cuánto | Vence | De dónde sale el monto |
 |---|---|---|---|
-| IVA (forma 99030) | Mensual | Hasta el día 15 del mes siguiente (confirmar) | Débito − crédito − excedente − lo retenido (C-232) |
-| Pensiones (9 %) | Mensual | Según el último dígito del RIF (3), en el calendario anual del SENIAT (confirmar las fechas) | Salarios y bonos no salariales del mes (C-239) |
+| IVA (forma 99030) | Mensual | Hasta el día 15 del mes siguiente (la contadora, 16/11) | Débito − crédito − excedente − lo retenido (C-232) |
+| Pensiones (9 %) | Mensual | Según el último dígito del RIF (3), en el calendario anual del SENIAT (confirmar las fechas) | El 9 % del salario integral (la contadora); el mínimo por trabajador, por confirmar (C-239) |
 | Retenciones de ISLR (alquiler y otras) | Mensual | En los primeros días del mes siguiente (confirmar) | El 3 % o el 5 % del alquiler; los demás pagos, según el Decreto 1.808 |
-| IVSS | Mensual | Confirmar | Salarios del mes |
-| FAOV (BANAVIH) | Mensual | Confirmar | Salario integral |
-| INCES | Trimestral | Confirmar | Salarios del trimestre |
-| Alcaldía: actividades económicas | Mensual, y la definitiva del año (confirmar) | Según la ordenanza de Guanare | Ingresos brutos × la alícuota (tope del 3 %, LOCAPTEM) |
+| IVSS | Mensual | Se activa cuando lo diga la contadora | Salarios del mes |
+| FAOV (BANAVIH) | Mensual | Se activa cuando lo diga la contadora | Salario integral |
+| INCES | Trimestral | Se activa cuando lo diga la contadora | Salarios del trimestre |
+| Alcaldía: actividades económicas | Mensual, y la definitiva del año (confirmar) | En los primeros 10 días del mes (la contadora, 16/11) | Lo mayor entre los ingresos brutos × la alícuota (1 o 1,5 %, a confirmar con el último recibo; tope del 3 %, LOCAPTEM) y el mínimo |
 | Licencia de actividades económicas | Anual | Confirmar | Tasa de la alcaldía |
 | Publicidad y aseo | Según la alcaldía | Confirmar | Tasas |
 | Alquiler del local | Mensual | El día del contrato | El canon, con su retención (C-238) |

@@ -206,6 +206,8 @@ export default function AdminLayout({
       items: [
         { name: 'Mesa de la contadora', href: '/admin/contabilidad/mesa', icon: <IconoCuadricula className={icono} aria-hidden="true" />, permission: 'VER_CONTABILIDAD' },
         { name: 'Facturas', href: '/admin/contabilidad/facturas', icon: <IconoDocumento className={icono} aria-hidden="true" />, permission: ['FACTURAR', 'VER_CONTABILIDAD'] },
+        // C-230: el libro, del dueño y de la contadora
+        { name: 'Libro de ventas', href: '/admin/contabilidad/libro', icon: <IconoReportes className={icono} aria-hidden="true" />, permission: 'VER_CONTABILIDAD' },
       ],
     },
     {

@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { montoDecimal } from '@/lib/pricing';
+import { montoBs } from '@/lib/pago-movil/monto';
 import { notifyRechargeRequested } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { formatUSD } from '@/lib/currency';
@@ -84,6 +85,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // S-06: la tasa de la tienda al pedir la recarga y el monto en Bs. que se le muestra al cliente quedan con ella.
+    // El Pago Móvil se compara con esa tasa (mientras sea reciente), no con la que haya cuando verifique.
+    const settings = await prisma.companySettings.findUnique({ where: { id: 'default' }, select: { exchangeRateVES: true } });
+    const tasa = settings?.exchangeRateVES ? Number(settings.exchangeRateVES) : 0;
+    // Con los mismos céntimos que se guardan en la recarga (montoDecimal), que son los que se comparan al verificar
+    const montoBsSolicitud = tasa > 0 ? montoBs(Number(montoDecimal(amount)), tasa) : 0;
+
     // Create transaction as PENDING (requiere aprobación del admin)
     const transaction = await prisma.transaction.create({
       data: {
@@ -102,6 +110,7 @@ export async function POST(req: NextRequest) {
           companyPaymentMethodName: resolvedMethodName,
           reference,
           requestedAt: new Date().toISOString(),
+          ...(tasa > 0 ? { tasaSolicitud: tasa, montoBsSolicitud } : {}),
         }),
       },
     });
@@ -137,6 +146,9 @@ export async function POST(req: NextRequest) {
         status: transaction.status,
         reference: transaction.reference,
         createdAt: transaction.createdAt,
+        // S-06: lo que se le pide pagar en Bs. y la tasa con la que se calculó (la ventana de verificación los usa)
+        tasa: tasa > 0 ? tasa : null,
+        montoBs: tasa > 0 ? montoBsSolicitud : null,
       },
     });
   } catch (error) {

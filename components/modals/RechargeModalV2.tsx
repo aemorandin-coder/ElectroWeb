@@ -50,6 +50,8 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     // Multi-step state
     const [step, setStep] = useState<Step>('SELECT_METHOD');
     const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
+    // S-06: el monto en Bs. que calculó el servidor al crear la recarga con SU tasa; el pago se compara con ese monto
+    const [montoBsServidor, setMontoBsServidor] = useState<number | null>(null);
 
     interface CompanyPaymentMethod {
         id: string;
@@ -241,6 +243,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
             setReference('');
             setSelectedMethodId(null);
             setPendingTransactionId(null);
+            setMontoBsServidor(null);
         }
     }, [isOpen, pendingTransactionId]);
 
@@ -287,6 +290,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
             if (response.ok) {
                 const data = await response.json();
                 setPendingTransactionId(data.transaction?.id || null);
+                setMontoBsServidor(Number(data.transaction?.montoBs) > 0 ? Number(data.transaction.montoBs) : null);
                 setStep('VERIFY_PAYMENT');
             } else {
                 const data = await response.json();
@@ -704,7 +708,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                     {step === 'VERIFY_PAYMENT' && (
                         <VerificarPagoMovilForm
                             montoEsperado={parseFloat(amount)}
-                            montoEnBs={amountInBs || undefined}
+                            montoEnBs={montoBsServidor ?? (amountInBs || undefined)}
                             contexto="RECHARGE"
                             transactionId={pendingTransactionId || undefined}
                             onSuccess={handleVerificationSuccess}

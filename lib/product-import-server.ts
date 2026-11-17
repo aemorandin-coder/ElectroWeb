@@ -4,6 +4,9 @@
 import { randomInt } from 'crypto';
 import { existsSync } from 'fs';
 import path from 'path';
+import { leerAjustesIa } from '@/lib/ia/ajustes';
+import { registrarAtajadas } from '@/lib/ia/atajadas';
+import { revisarDescripcionImportada } from '@/lib/ia/revisar';
 import { prisma } from '@/lib/prisma';
 import { generateShortCode } from '@/lib/short-code';
 import {
@@ -74,6 +77,8 @@ export interface ImportRowCheck {
 export async function checkImportItems(items: unknown[]): Promise<ImportRowCheck[]> {
   const ctx = await loadImportContext();
   const reviews = items.slice(0, IMPORT_MAX_ITEMS).map(reviewImportItem);
+  // C-288: las mismas reglas que en "Buscar en la web": una nota para el equipo o "posibles modelos" en la descripción avisan aquí
+  const { frases } = await leerAjustesIa();
 
   const skus = reviews.map((r) => r.draft.sku).filter((s): s is string => !!s);
   const names = reviews.map((r) => r.draft.name).filter(Boolean);
@@ -95,7 +100,7 @@ export async function checkImportItems(items: unknown[]): Promise<ImportRowCheck
 
   return reviews.map(({ draft }) => {
     const errs: string[] = [];
-    const warns: string[] = [];
+    const warns: string[] = revisarDescripcionImportada(draft.description, frases).avisos;
     let category: string | null = null;
     if (draft.category) {
       const found = resolveCategory(draft.category, ctx);
@@ -161,6 +166,10 @@ export async function createImportedProduct(raw: unknown, images: unknown): Prom
     return { error: `El SKU ${draft.sku} ya lo tiene otro producto` };
   }
 
+  // C-288: las oraciones con una nota para el equipo o con "posibles modelos" no se publican
+  const descripcion = revisarDescripcionImportada(draft.description, (await leerAjustesIa()).frases);
+  registrarAtajadas('plantilla', descripcion.cambios, draft.name);
+
   const sku = draft.sku ?? (await generateSku(category.path.split(' > ').pop() ?? ''));
   const slug = await uniqueSlug(draft.name);
   const shortCode = await generateShortCode(prisma);
@@ -179,7 +188,7 @@ export async function createImportedProduct(raw: unknown, images: unknown): Prom
         sku,
         slug,
         shortCode,
-        description: draft.description,
+        description: descripcion.texto,
         priceUSD: draft.priceUSD as number,
         compareAtPriceUSD: draft.compareAtPriceUSD,
         costPerItem: draft.costPerItem,

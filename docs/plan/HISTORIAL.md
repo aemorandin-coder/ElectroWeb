@@ -1,9 +1,34 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.98`, comprobada el 17/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.99`, comprobada el 17/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 17/11 · C-286, los videos de ElectroStudio (de rc.98 a `v1.0.0-rc.99`)
+La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida (marketing la esperaba), cerca de las 3:20 p. m.: `git pull --ff-only` y `deploy.sh --sin-pull`, sin base, sin SQL y sin cron. Terminó en "Listo: sirviendo .next-b (4bb9c1c6 Merge branch 'claude/C-286')".
+
+**Lo comprobado, el 17/11:**
+- **En el servidor:** `git describe --tags` dice `v1.0.0-rc.99`, la tienda escucha en `127.0.0.1:3000` y `mp4-muxer` quedó instalada. El registro de errores de PM2 no tiene líneas nuevas (98 antes y 98 después).
+  - Las 45 que sumó desde rc.98 son 15 pedidos de afuera con un identificador falso de acción del servidor ("r2s"), que Next rechaza: un escáner automático. No vienen del Dashboard.
+- **Desde fuera, como un visitante:** la portada dice `1.0.0-rc.99|4bb9c1c6`; la portada, Productos, `/sorteo` y `/api/settings/public` responden 200; `/admin/studio` sin sesión lleva al login (307) y la ruta nueva, `POST /api/admin/studio/telegram`, responde 401.
+- **Antes de subir,** en la tienda de prueba: lo de `estado/C-286.md` (el MP4 de ElectroStudio con `ffprobe`: 15,000 s y 900 cuadros a 60, y la ruta de Telegram 6 de 6 con el bot simulado).
+
+**Falta que el equipo lo mire** (`SIGUIENTE.md`, "Por confirmar de rc.99"): las 5 pruebas, sobre todo la del teléfono de marketing.
+
+### El bloque que se subió: `v1.0.0-rc.99` (C-286)
+Producción está en `v1.0.0-rc.98` (`342c56f`); su bloque está en `HISTORIAL.md`. Era el único bloque pendiente.
+- Sin cambio de base, sin SQL, sin variables nuevas y sin cron. Trae una dependencia nueva (`mp4-muxer`), que instala `deploy.sh`.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.99`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 10 minutos). Antes, recarga el panel (Ctrl+R):
+  1. **En el teléfono de marketing, con Chrome:** ElectroStudio → una historia → Animación: 15 s → Publicar → "Descargar video". Sale "Armando el video: N %" y se descarga. Ábrelo en la galería: dura los 15 s enteros.
+  2. **Telegram:** el mismo video llega al chat del bot con el texto de la historia, en Full HD, y el panel dice "Listo en Telegram". Ábrelo ahí: también dura 15 s.
+  3. **En la computadora:** lo mismo con otra historia; el video se ve entero en el reproductor de la PC.
+  4. **Apagarlo** (solo si no lo quieren en Telegram): Notificaciones → Qué avisar → Marketing → "Video de ElectroStudio", la casilla de Telegram.
+  5. **El flyer del sorteo** (un cliente con boletos, en el teléfono): "Video" → se descarga y dura entero.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.98 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 
 ## 17/11 · C-279, el Dashboard nuevo (de rc.97 a `v1.0.0-rc.98`)

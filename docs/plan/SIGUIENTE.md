@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.98; por subir: rc.99, los videos de ElectroStudio, §2)
+# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.99; nada por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-286 · Los videos de ElectroStudio, enteros y también por Telegram (rc.99, por subir: §2; `estado/C-286.md`):** el equipo: los videos de 15 s quedaban cortados en 3 s en el teléfono, y a veces en la PC. Chrome los grababa en trozos de 3 s y la cabecera decía 0 s. Ahora se arman cuadro por cuadro, en Full HD a 60 cuadros, y al descargarlos llegan también a Telegram.
+- **C-286 · Los videos de ElectroStudio, enteros y también por Telegram (rc.99, en producción desde el 17/11; pruebas por confirmar: §2; `estado/C-286.md`):** el equipo: los videos de 15 s quedaban cortados en 3 s en el teléfono, y a veces en la PC. Chrome los grababa en trozos de 3 s y la cabecera decía 0 s. Ahora se arman cuadro por cuadro, en Full HD a 60 cuadros, y al descargarlos llegan también a Telegram.
 - **C-279 · El Dashboard nuevo, la recepción (rc.98, en producción desde el 17/11; pruebas por confirmar: §2; `estado/C-279.md`):** el pedido del equipo del 17/11 con las capturas del Dashboard ("Dashboard" en grande sobraba, tamaños pésimos, sin animaciones, "una recepción épica" donde también se pueda actuar). El equipo eligió viendo la maqueta (`~/.cache/electroshop-trabajo/c279/index.html`): la recepción A más baja, la grilla a la medida con plantillas, Claude fuera del buscador por ahora y Chispa fuera del panel.
   - **La recepción** en lugar del título: el saludo, lo que toca hoy, Ctrl K, los pasos del día y el pulso (tasa, corte y quién está en la tienda).
   - **Las tarjetas del tamaño que quieras** (menú o esquina), cuatro plantillas y tres tarjetas nuevas (sorteo, ElectroStudio de la semana y lo que viene). La existencia se sube ahí mismo.
@@ -480,12 +480,11 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.99` (C-286, los videos de ElectroStudio)
-Producción está en `v1.0.0-rc.98` (`342c56f`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- Sin cambio de base, sin SQL, sin variables nuevas y sin cron. Trae una dependencia nueva (`mp4-muxer`), que instala `deploy.sh`.
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.99`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 10 minutos). Antes, recarga el panel (Ctrl+R):
+### Lo que falta subir: nada por ahora
+Producción está en `v1.0.0-rc.99` (`4bb9c1c`); su bloque está en `HISTORIAL.md`.
+
+### Por confirmar de rc.99 (C-286, los videos de ElectroStudio; unos 10 minutos)
+Ya en producción desde el 17/11, cerca de las 3:20 p. m. (la subió Claude por SSH con la aprobación del equipo, porque marketing la esperaba; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión, que `mp4-muxer` quedó instalada, las páginas, que la ruta nueva no recibe nada sin sesión y que el registro de errores no sumó líneas. Falta esto (antes, recarga el panel con Ctrl+R):
   1. **En el teléfono de marketing, con Chrome:** ElectroStudio → una historia → Animación: 15 s → Publicar → "Descargar video". Sale "Armando el video: N %" y se descarga. Ábrelo en la galería: dura los 15 s enteros.
   2. **Telegram:** el mismo video llega al chat del bot con el texto de la historia, en Full HD, y el panel dice "Listo en Telegram". Ábrelo ahí: también dura 15 s.
   3. **En la computadora:** lo mismo con otra historia; el video se ve entero en el reproductor de la PC.

@@ -1,10 +1,33 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.84`, comprobada el 16/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.87`, comprobada el 16/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 16/11 · C-268, C-270 y C-271 (de rc.84 a `v1.0.0-rc.87`)
+La subió Claude por SSH desde la PC de Andrés, con su aprobación para este deploy: el primero con la llave de esa PC, que el equipo autorizó ese mismo día (`OPERACION.md` §3). Las otras sesiones de Claude de la PC no empujaron nada mientras tanto.
+
+**Lo comprobado en el servidor, el 16/11:**
+- **Antes:** `v1.0.0-rc.84`, sin cambios locales, 6,5 GB de memoria libre y ningún deploy corriendo.
+- **El deploy:** `git pull --ff-only` llegó a `v1.0.0-rc.87` y `deploy.sh --sin-pull` terminó bien: la base sin cambios, las dependencias instaladas (cambió el `package-lock.json`), el build de 209 páginas, 558 archivos de las versiones anteriores que se siguen sirviendo y la tienda sirviendo `.next-a` (`2cdc0af`). Reinició a las 8:13 p. m. (00:13 UTC del 17/11).
+- **Después:** `git describe --tags` dice `v1.0.0-rc.87`, sin cambios locales; escucha en `127.0.0.1:3000`; PM2 en línea, y el registro de errores sin líneas nuevas.
+
+**Lo comprobado desde fuera, el 16/11:**
+- **La portada dice `1.0.0-rc.87|2cdc0af`.**
+- **Las páginas responden `200`:** la portada, `/categorias`, `/sorteo`, `/productos`, `/login`, `/api/settings/public`, `/llms.txt` y `/sitemap.xml`. `/admin/studio` sin sesión lleva al login (307), `www` redirige (308) y una pestaña sin versión recibe el `204`.
+- **C-271:** las 8 fuentes nuevas del estudio (`/fonts/studio/`, en woff2, de 14 a 75 KB) y sus licencias responden, y la portada no carga ninguna.
+
+**Falta que el equipo haga las pruebas** (`SIGUIENTE.md`, "Por confirmar de rc.87"): el video, los seis pasos, los títulos que se mueven y las fuentes, dentro del panel.
+
+### El bloque que se subió: `v1.0.0-rc.87` (C-268, C-270 y C-271)
+- **C-268 (rc.85):** el video de ElectroStudio. **C-270 (rc.86):** ElectroStudio 2.0, las capas y los seis pasos. **C-271 (rc.87):** las 8 fuentes y los estilos listos.
+- Archivos nuevos que trae el `git pull`: las fuentes en `public/fonts/studio/`, cada una con su licencia.
+- Sin cambio de base (las capas van dentro de cada historia), sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+- **Pruebas:** las 9 de `SIGUIENTE.md`, "Por confirmar de rc.87".
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.84 && npm install && bash scripts/deploy.sh --sin-pull`. **Ojo:** rc.84 no conoce los títulos sueltos ni sus fuentes. Mientras esté rc.84, no abras para editar una historia que los tenga: al guardarse sola, los pierde. Las que no se toquen los recuperan al volver a subir rc.86.
 
 ## 16/11 · C-267 (de rc.83 a `v1.0.0-rc.84`)
 La subió el equipo con el bloque de Claude (`git pull --ff-only` y `deploy.sh --sin-pull`; sin base, sin SQL y sin cron). No lo avisó en el chat: Claude lo vio el 16/11 al revisar el error del video (C-268).

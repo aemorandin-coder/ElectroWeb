@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { IconoBuscar, IconoCandado, IconoCheck, IconoError, IconoFlechaDerecha, IconoGiftCard, IconoTarjeta } from '@/components/iconos';
+import { IconoBuscar, IconoCandado, IconoCheck, IconoCuenta, IconoError, IconoFlechaDerecha, IconoGiftCard, IconoTarjeta } from '@/components/iconos';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import PublicHeader from '@/components/public/PublicHeader';
 import Footer from '@/components/Footer';
 import Container from '@/components/ui/Container';
@@ -38,12 +40,36 @@ function formatCodeInput(value: string): string {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16).replace(/(.{4})(?=.)/g, '$1-');
 }
 
+// C-281 (F-04): el código espera en esta pestaña mientras el cliente entra o crea su cuenta, y se borra al leerlo.
+// En sessionStorage y no en la dirección: un código en la URL queda en el historial y en los registros. El PIN nunca se guarda
+const CODIGO_PENDIENTE = 'canje-gift-card:codigo';
+const DESTINO = encodeURIComponent('/canjear-gift-card');
+
+function guardarCodigoPendiente(codigo: string) {
+  try {
+    sessionStorage.setItem(CODIGO_PENDIENTE, codigo);
+  } catch {
+    // Sin almacenamiento (modo privado): al volver se escribe otra vez
+  }
+}
+
+function tomarCodigoPendiente(): string | null {
+  try {
+    const codigo = sessionStorage.getItem(CODIGO_PENDIENTE);
+    sessionStorage.removeItem(CODIGO_PENDIENTE);
+    return codigo;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Canje de gift card (C-71): se verifica el código, se pide el PIN solo si la tarjeta lo tiene (impresas),
  * y al acreditar la tarjeta gira al frente y el saldo cuenta hasta el monto.
  */
 export default function RedeemGiftCardPage() {
   const { data: session, status: sessionStatus } = useSession();
+  const router = useRouter();
 
   const [code, setCode] = useState('');
   const [pin, setPin] = useState('');
@@ -65,15 +91,15 @@ export default function RedeemGiftCardPage() {
     setFace('back');
   };
 
-  const handleCheck = async () => {
-    if (!codeComplete) {
+  const handleCheck = async (codigo: string = code) => {
+    if (codigo.length !== 19) {
       setError('Escribe los 16 caracteres del código');
       return;
     }
     setIsChecking(true);
     setError('');
     try {
-      const response = await fetch(`/api/gift-cards/redeem?code=${encodeURIComponent(code)}`);
+      const response = await fetch(`/api/gift-cards/redeem?code=${encodeURIComponent(codigo)}`);
       const data = await response.json();
       if (!response.ok) {
         setCardInfo(null);
@@ -116,6 +142,20 @@ export default function RedeemGiftCardPage() {
     } finally {
       setIsRedeeming(false);
     }
+  };
+
+  // C-281 (F-04): volvió de entrar o de crear su cuenta: el código que había escrito ya está, verificado y con su valor
+  useCargarAlMontar(() => {
+    if (sessionStatus !== 'authenticated') return;
+    const guardado = tomarCodigoPendiente();
+    const codigo = guardado ? formatCodeInput(guardado) : '';
+    if (codigo.length !== 19) return;
+    setCode(codigo);
+    void handleCheck(codigo);
+  }, [sessionStatus]);
+  const irACuenta = (ruta: '/login' | '/registro') => {
+    guardarCodigoPendiente(code);
+    router.push(`${ruta}?callbackUrl=${DESTINO}`);
   };
 
   // Antes de canjear el monto solo se ve con sesión; al canjear, cuenta desde 0 hasta lo acreditado
@@ -176,10 +216,10 @@ export default function RedeemGiftCardPage() {
                     </div>
                   </dl>
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    <Link href="/productos" className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">
+                    <Link href="/productos" className="inline-flex h-12 shrink-0 items-center sm:flex-1 justify-center gap-2 rounded-lg bg-brand-500 px-5 text-sm font-semibold text-white hover:bg-brand-600">
                       Ir a comprar <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
                     </Link>
-                    <Link href="/customer/balance" className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-line px-5 text-sm font-semibold text-ink hover:bg-surface">
+                    <Link href="/customer/balance" className="inline-flex h-12 shrink-0 items-center sm:flex-1 justify-center gap-2 rounded-lg border border-line px-5 text-sm font-semibold text-ink hover:bg-surface">
                       <IconoTarjeta className="h-4 w-4" aria-hidden="true" /> Ver mis Puntos ES
                     </Link>
                   </div>
@@ -222,7 +262,8 @@ export default function RedeemGiftCardPage() {
                           {cardInfo.balanceUSD !== undefined ? formatUSD(cardInfo.balanceUSD) : session ? '—' : 'Inicia sesión para ver su valor'}
                         </p>
                       </div>
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${cardInfo.isValid ? 'bg-success-strong/10 text-success-strong' : 'bg-deal-bg text-deal'}`}>
+                      {/* C-281: el estado lleno y con letra blanca, como los sellos de la tienda (PLAN.md §1.8; antes, verde claro con letra verde) */}
+                      <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold text-white ${cardInfo.isValid ? 'bg-success-strong' : 'bg-deal'}`}>
                         {STATUS_LABELS[cardInfo.status] || cardInfo.status}
                       </span>
                     </div>
@@ -264,12 +305,26 @@ export default function RedeemGiftCardPage() {
                         {isRedeeming ? 'Canjeando…' : `Canjear ${cardInfo?.balanceUSD !== undefined ? formatUSD(cardInfo.balanceUSD) : ''}`}
                       </button>
                     ) : sessionStatus !== 'loading' && (
-                      <Link
-                        href="/login?redirect=/canjear-gift-card"
-                        className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 text-base font-semibold text-white hover:bg-brand-600"
-                      >
-                        Inicia sesión para canjear
-                      </Link>
+                      // C-281 (F-04): quien recibe el regalo casi siempre es nuevo: crear la cuenta aquí, y el código lo espera
+                      <div className="flex flex-col gap-2">
+                        <p className="text-sm text-ink-soft">Para canjearla necesitas una cuenta. Tu código te espera aquí.</p>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <button
+                            type="button"
+                            onClick={() => irACuenta('/registro')}
+                            className="inline-flex h-12 shrink-0 items-center sm:flex-1 justify-center gap-2 rounded-lg bg-brand-500 px-5 text-base font-semibold text-white hover:bg-brand-600"
+                          >
+                            <IconoCuenta className="h-5 w-5" aria-hidden="true" /> Crear mi cuenta gratis
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => irACuenta('/login')}
+                            className="inline-flex h-12 shrink-0 items-center sm:flex-1 justify-center gap-2 rounded-lg border border-line px-5 text-base font-semibold text-ink hover:bg-surface"
+                          >
+                            Ya tengo cuenta
+                          </button>
+                        </div>
+                      </div>
                     )
                   )}
 

@@ -52,9 +52,11 @@ export async function GET(request: NextRequest) {
       where.status = status;
     }
 
+    // C-281 (A-08): con tope (antes, la tabla entera). El panel filtra por estado en el servidor
     const requests = await prisma.productRequest.findMany({
       where,
       orderBy: { createdAt: 'desc' },
+      take: 300,
     });
 
     // C-215: el producto de la tienda que Claude dijo que es lo pedido o se le parece (si sigue publicado)

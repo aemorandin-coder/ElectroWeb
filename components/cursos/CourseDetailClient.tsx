@@ -4,7 +4,7 @@ import { formatPuntos, formatUSD } from '@/lib/currency';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { IconoCandado, IconoCerrar, IconoCheck, IconoChevronDerecha, IconoEstrellaLlena, IconoPlay } from '@/components/iconos';
+import { IconoCandado, IconoCerrar, IconoCheck, IconoChevronDerecha, IconoError, IconoEstrellaLlena, IconoPlay } from '@/components/iconos';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { formatRating } from '@/lib/currency';
 
@@ -106,6 +106,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
   const [myComment, setMyComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewError, setReviewError] = useState('');
 
   const price = Number(course.priceUSD);
   const rating = course.rating ? Number(course.rating) : null;
@@ -136,6 +137,7 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
   async function handleReview() {
     if (!myRating) return;
     setSubmittingReview(true);
+    setReviewError('');
     try {
       const res = await fetch(`/api/courses/${course.slug}/reviews`, {
         method: 'POST',
@@ -145,7 +147,13 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
       if (res.ok) {
         setReviewSubmitted(true);
         setTimeout(() => window.location.reload(), 1000);
+      } else {
+        // C-281 (F-09): antes un error no decía nada y el botón volvía como si nada
+        const data = await res.json().catch(() => ({}));
+        setReviewError(data.error || 'No se pudo publicar tu reseña. Intenta de nuevo.');
       }
+    } catch {
+      setReviewError('Sin conexión. Revisa tu internet e intenta de nuevo.');
     } finally {
       setSubmittingReview(false);
     }
@@ -324,6 +332,11 @@ export default function CourseDetailClient({ course, isEnrolled, enrollment, use
                   className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:border-brand-500 resize-none mb-2"
                   placeholder="Comparte tu experiencia con este curso..."
                 />
+                {reviewError && (
+                  <p role="alert" className="mb-2 flex items-start gap-2 text-sm font-medium text-deal">
+                    <IconoError className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> {reviewError}
+                  </p>
+                )}
                 <button
                   onClick={handleReview}
                   disabled={!myRating || submittingReview}

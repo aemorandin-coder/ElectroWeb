@@ -15,6 +15,7 @@ import { IconoCerrar, IconoConfirmado, IconoDescargar, IconoDocumento, IconoFlec
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { mensajeError } from '@/lib/admin/respuesta';
 
 interface VerificationRequest {
     id: string;
@@ -50,6 +51,9 @@ export default function VerificationsPage() {
             if (response.ok) {
                 const data = await response.json();
                 setRequests(data);
+            } else {
+                // C-281 (A-08): antes un error dejaba la lista vacía sin decir nada
+                toast.error(await mensajeError(response, 'No se pudieron cargar las solicitudes de verificación'));
             }
         } catch (error) {
             console.error('Error fetching requests:', error);
@@ -85,7 +89,7 @@ export default function VerificationsPage() {
                 setActionNote('');
                 fetchRequests();
             } else {
-                toast.error('Error al procesar la solicitud');
+                toast.error(await mensajeError(response, 'No se pudo procesar la solicitud'));
             }
         } catch (error) {
             console.error('Error processing request:', error);

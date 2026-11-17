@@ -3,12 +3,13 @@ import { tarjetaPara, type TipoTarjeta } from '@/lib/og/datos';
 import { renderizarTarjeta } from '@/lib/og/imagen';
 import { siteUrl } from '@/lib/seo';
 
-// Imágenes para compartir un enlace (C-178): /og/producto/<slug>, /og/categoria/<slug> y /og/pagina/<página>.
+// Imágenes para compartir un enlace (C-178): /og/producto/<slug>, /og/categoria/<slug>, /og/pagina/<página> y, desde C-281,
+// /og/curso/<slug>.
 // Fuera de /api/ a propósito: robots.txt cierra /api/ y los lectores de WhatsApp y Facebook lo respetan.
 // Con la versión vigente en ?v= la respuesta se guarda un año (la dirección cambia cuando cambia la imagen);
 // sin ella, o con una vieja, una hora.
 
-const TIPOS: readonly TipoTarjeta[] = ['producto', 'categoria', 'pagina'];
+const TIPOS: readonly TipoTarjeta[] = ['producto', 'categoria', 'pagina', 'curso'];
 const CLAVE = /^[a-z0-9][a-z0-9-]{0,199}$/i;
 
 // Cada imagen se dibuja una vez por versión. Un proceso de PM2 (OPERACION.md): basta la memoria

@@ -46,7 +46,7 @@ import { trackInitiateCheckout, trackPurchase } from '@/components/AnalyticsTrac
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status, update: actualizarSesion } = useSession();
   const { items, clearCart, couponCode, setCouponCode } = useCart();
 
   // C-145: "empezó a pagar", una vez por visita al pago y solo con sesión y productos
@@ -120,6 +120,20 @@ export default function CheckoutPage() {
 
   // C-125: Pagos Móvil verificados de esta compra (el primero y, si faltó algo, el de la diferencia)
   const [pagosMovil, setPagosMovil] = useState<PagoMovilVerificado[]>([]);
+  // C-281 (F-02): los Pagos Móvil que el banco ya confirmó y siguen sin orden (recargó la página o se le cerró la pestaña
+  // después de verificar). Se ofrecen arriba para que no pague dos veces; la orden los vuelve a buscar en el servidor
+  const [pagosLibres, setPagosLibres] = useState<Array<Omit<PagoMovilVerificado, 'cedulaPagador'>>>([]);
+  // Se pregunta al entrar y otra vez después de un intento fallido (`processingError`): si la orden no se pudo crear y el
+  // pago pasó a sus Puntos ES, ya no está libre y no se vuelve a ofrecer
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    let vigente = true;
+    fetch('/api/pago-movil/libres')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (vigente && Array.isArray(data?.pagos)) setPagosLibres(data.pagos); })
+      .catch(() => { });
+    return () => { vigente = false; };
+  }, [status, processingError]);
 
   // Gift Card Redemption State
   const [giftCardCode, setGiftCardCode] = useState('');
@@ -410,6 +424,37 @@ export default function CheckoutPage() {
   };
   // Se puede combinar si los Puntos ES alcanzan para una parte y no para todo
   const puedeMixto = pagoMovilDirecto && repartirPuntos(userBalance, finalTotal).mixto;
+  // C-281 (F-02): se ofrecen mientras no estén ya sumados a esta compra
+  const pagosPorUsar = pagoMovilDirecto ? pagosLibres.filter((l) => !pagosMovil.some((p) => p.referencia === l.referencia)) : [];
+  const usarPagosLibres = () => {
+    setPagosMovil((prev) => [...prev, ...pagosPorUsar.map((p) => ({ ...p, cedulaPagador: formData.customerIdNumber }))]);
+    setPaymentMode('PAGO_MOVIL');
+    setError('');
+  };
+  // C-281 (F-07): sin la cuenta activada el servidor no deja comprar: el botón final se apaga y dice por qué
+  const correoSinActivar = Boolean(session?.user) && !(session?.user as { emailVerified?: unknown } | undefined)?.emailVerified;
+  const [reenviandoActivacion, setReenviandoActivacion] = useState(false);
+  const reenviarActivacion = async () => {
+    setReenviandoActivacion(true);
+    try {
+      const res = await fetch('/api/auth/resend-verification', { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) toast.success(data.message || 'Te enviamos el correo de activación.');
+      else toast.error(data.error || 'No se pudo enviar el correo.');
+    } catch {
+      toast.error('Sin conexión. Revisa tu internet e intenta de nuevo.');
+    } finally {
+      setReenviandoActivacion(false);
+    }
+  };
+  // La cuenta casi siempre se activa en otra pestaña o en el teléfono: al volver aquí se pregunta de nuevo (la sesión no se
+  // refresca sola al volver a la pestaña, ver app/providers.tsx) y el botón se enciende sin recargar
+  useEffect(() => {
+    if (!correoSinActivar) return;
+    const alVolver = () => { if (document.visibilityState === 'visible') void actualizarSesion(); };
+    document.addEventListener('visibilitychange', alVolver);
+    return () => document.removeEventListener('visibilitychange', alVolver);
+  }, [correoSinActivar, actualizarSesion]);
   const orderItemsBody = useMemo(() => items.map(toOrderItem), [items]);
   const clienteEnvio = useMemo(
     () => ({ nombre: formData.customerName, cedula: formData.customerIdNumber, telefono: formData.customerPhone }),
@@ -919,6 +964,25 @@ export default function CheckoutPage() {
                 </div>
               )}
 
+              {/* C-281 (F-02): un Pago Móvil ya confirmado por el banco y sin pedido, en cualquier paso: antes se perdía al recargar */}
+              {pagosPorUsar.length > 0 && (
+                <div role="status" className={`${adminNotice('warning')} flex flex-col gap-3 sm:flex-row sm:items-center`}>
+                  <IconoConfirmado aria-hidden="true" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold">
+                      Ya tienes {pagosPorUsar.length === 1 ? 'un Pago Móvil verificado' : `${pagosPorUsar.length} Pagos Móvil verificados`} de{' '}
+                      <span className="whitespace-nowrap">{formatVES(pagosPorUsar.reduce((suma, p) => suma + p.pagadoBs, 0))}</span>
+                    </p>
+                    <p className="text-xs">
+                      Ref. {pagosPorUsar.map((p) => p.referencia).join(', ')}. Úsalo en esta compra y no pagues dos veces.
+                    </p>
+                  </div>
+                  <button type="button" onClick={usarPagosLibres} className={`${adminPrimaryButton} shrink-0`}>
+                    <IconoCheck className="h-4 w-4" aria-hidden="true" /> Usar en esta compra
+                  </button>
+                </div>
+              )}
+
               {/* C-241 · Paso 1: Entrega */}
               <div className={pasoActual === 0 ? 'space-y-6' : 'hidden'}>
               {session?.user && perfilCargado && (
@@ -980,26 +1044,32 @@ export default function CheckoutPage() {
                 </h2>
 
                 {/* Email Verification Backdrop */}
-                {session?.user && !(session.user as { emailVerified?: unknown }).emailVerified && (
+                {correoSinActivar && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/95 rounded-lg overflow-auto p-4">
                     <div className="text-center w-full max-w-sm mx-auto">
                       <div className="w-12 h-12 bg-brand-500 rounded-full flex items-center justify-center mx-auto mb-3 text-white shadow-sm">
                         <IconoCorreo className="w-6 h-6" />
                       </div>
-                      <h3 className="text-base font-bold text-ink mb-1">Verificación requerida</h3>
+                      <h3 className="text-base font-bold text-ink mb-1">Activa tu cuenta para pagar</h3>
                       <p className="text-xs text-muted mb-3">
-                        Debes verificar tu correo electrónico antes de continuar.
+                        Toca el enlace del correo que te enviamos a {session?.user?.email}. Al volver aquí, ya puedes pagar.
                       </p>
-                      <p className="text-xs text-brand-900 font-medium mb-4 bg-brand-50 p-2 rounded-lg border border-brand-200">
-                        Revisa tu bandeja de entrada
-                      </p>
-                      <Link
-                        href="/customer/profile?tab=datos"
-                        className={`inline-flex items-center justify-center gap-2 ${adminPrimaryButton} px-5 py-2 text-xs font-bold`}
-                      >
-                        <IconoCuenta className="w-4 h-4" />
-                        Ir a Mi Cuenta
-                      </Link>
+                      {/* C-281 (F-07): reenviar el correo desde aquí, sin salir del pago */}
+                      <div className="flex flex-col items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={reenviarActivacion}
+                          disabled={reenviandoActivacion}
+                          className={`inline-flex items-center justify-center gap-2 ${adminPrimaryButton} px-5 py-2 text-xs font-bold`}
+                        >
+                          {reenviandoActivacion ? <IconoCargando className="w-4 h-4 animate-spin" aria-hidden="true" /> : <IconoCorreo className="w-4 h-4" aria-hidden="true" />}
+                          Reenviar el correo
+                        </button>
+                        <Link href="/customer/profile?tab=datos" className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-500 hover:underline">
+                          <IconoCuenta className="w-4 h-4" aria-hidden="true" />
+                          Ir a Mi Cuenta
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1405,6 +1475,7 @@ export default function CheckoutPage() {
                 type="submit"
                 disabled={
                   loading ||
+                  correoSinActivar ||
                   !acceptedTerms ||
                   !paymentMode ||
                   (!canPay && !(paymentMode === 'PAGO_MOVIL' && mobilePaymentVerified)) ||
@@ -1428,6 +1499,12 @@ export default function CheckoutPage() {
                 )}
               </button>
 
+              {correoSinActivar && (
+                <p className="text-center text-xs text-muted -mt-2 flex items-center justify-center gap-1">
+                  <IconoCorreo className="w-3 h-3 text-brand-500" aria-hidden="true" />
+                  Activa tu cuenta desde el correo para completar el pedido
+                </p>
+              )}
               {!acceptedTerms && (
                 <p className="text-center text-xs text-deal -mt-2">
                   Debes aceptar los términos y condiciones para continuar

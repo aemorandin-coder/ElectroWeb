@@ -10,6 +10,7 @@ import { registrarAccionAdmin } from '@/lib/audit-log';
 import { notifyRechargeApproved, notifyRechargeRejected } from '@/lib/notifications';
 import { sendEmail } from '@/lib/email-service';
 import { correoRecargaAprobada, correoRecargaRechazada } from '@/lib/email-templates/puntos';
+import { transaccionesQueCoinciden } from '@/lib/admin/buscar';
 
 // GET - Get all transactions
 export async function GET(request: NextRequest) {
@@ -32,6 +33,10 @@ export async function GET(request: NextRequest) {
         if (type && type !== 'all') {
             where.type = type;
         }
+
+        // C-281 (A-07): se busca entre todos los movimientos, no entre los 200 que se cargan
+        const busqueda = (searchParams.get('q') ?? '').trim().slice(0, 80);
+        if (busqueda.length >= 2) where.OR = transaccionesQueCoinciden(busqueda);
 
         // Stats-only mode — returns aggregate numbers, no list
         if (searchParams.get('summary') === '1') {

@@ -103,9 +103,13 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const messages = await prisma.contactMessage.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+    // C-281 (A-08): con tope (antes, la tabla entera en cada carga). Los pendientes van todos, por viejos que sean: el
+    // panel los filtra en la pantalla y no se pueden perder; del resto, los más nuevos
+    const [pendientes, otros] = await Promise.all([
+      prisma.contactMessage.findMany({ where: { status: 'PENDING' }, orderBy: { createdAt: 'desc' }, take: 500 }),
+      prisma.contactMessage.findMany({ where: { status: { not: 'PENDING' } }, orderBy: { createdAt: 'desc' }, take: 200 }),
+    ]);
+    const messages = [...pendientes, ...otros].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
     return NextResponse.json(messages);
   } catch (error) {

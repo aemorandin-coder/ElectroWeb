@@ -5,7 +5,7 @@ import { useStockEnVivo } from '@/lib/realtime/hooks';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
-import { IconoCarrito, IconoMas, IconoMenos } from '@/components/iconos';
+import { IconoCarrito, IconoCuenta, IconoMas, IconoMenos } from '@/components/iconos';
 import Price from '@/components/ui/Price';
 import { getStockLabel } from '@/components/ui/productCardData';
 import { avisarAgregado } from '@/components/onboarding/AvisoAgregado';
@@ -32,7 +32,7 @@ const MAX_DIGITAL_QUANTITY = 10;
  * Precio, disponibilidad y compra del detalle (C-31).
  * - Físico: cantidad con tope de stock (contando lo que ya está en el carrito).
  * - Digital: monto a elegir ("800 Robux", "$25") y, en recargas directas, el dato de la cuenta (C-60).
- * - "Comprar ahora" exige sesión y solo va al checkout si se pudo agregar (antes iba aunque faltara el monto).
+ * - "Comprar ahora" solo sigue si se pudo agregar (antes iba aunque faltara el monto); sin sesión, entra y vuelve al pago.
  * - En móvil, mientras los botones no están a la vista aparece una barra fija encima de la barra inferior.
  * El precio real lo vuelve a calcular el servidor al crear la orden (C-01).
  */
@@ -145,12 +145,15 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
   };
 
   const buyNow = () => {
+    // C-281 (F-06): sin sesión el producto queda en el carrito (el de invitado se suma a la cuenta al entrar) y se vuelve
+    // directo al pago. Antes volvía a la ficha con ?action=buy, que nadie leía, y había que tocar "Comprar ahora" otra vez
+    if (!addToCart(false)) return;
     if (!session) {
-      toast.error('Inicia sesión para continuar con la compra');
-      router.push(`/login?callbackUrl=${encodeURIComponent(`/productos/${product.slug}`)}&action=buy`);
+      toast('Entra o crea tu cuenta y sigues con el pago.', { icon: <IconoCuenta className="h-5 w-5 text-brand-500" aria-hidden="true" /> });
+      router.push(`/login?callbackUrl=${encodeURIComponent('/checkout')}`);
       return;
     }
-    if (addToCart(false)) router.push('/checkout');
+    router.push('/checkout');
   };
 
   const stepperButton =

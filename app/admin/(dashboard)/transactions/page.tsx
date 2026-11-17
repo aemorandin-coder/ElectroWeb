@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -158,6 +158,14 @@ export default function TransactionsPage() {
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterType, setFilterType] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+    // C-281 (A-07): se busca en el servidor entre todos los movimientos (antes, solo entre los 200 cargados). Espera a que
+    // se deje de escribir; `pedidoLista` descarta una respuesta que llegó tarde
+    const [busqueda, setBusqueda] = useState('');
+    const pedidoLista = useRef(0);
+    useEffect(() => {
+        const t = setTimeout(() => setBusqueda(searchQuery.trim()), 350);
+        return () => clearTimeout(t);
+    }, [searchQuery]);
     const [processingId, setProcessingId] = useState<string | null>(null);
     const [successAnimations, setSuccessAnimations] = useState<{ [key: string]: 'approve' | 'reject' | null }>({});
 
@@ -179,16 +187,21 @@ export default function TransactionsPage() {
     }, []);
 
     const fetchTransactions = useCallback(async () => {
+        const pedido = ++pedidoLista.current;
         try {
             setLoading(true);
-            const res = await fetch(`/api/admin/transactions?status=${filterStatus}&type=${filterType}`);
-            if (res.ok) setTransactions(await res.json());
+            const params = new URLSearchParams({ status: filterStatus, type: filterType });
+            if (busqueda) params.set('q', busqueda);
+            const res = await fetch(`/api/admin/transactions?${params}`);
+            if (!res.ok) throw new Error(String(res.status));
+            const lista = await res.json();
+            if (pedido === pedidoLista.current) setTransactions(lista);
         } catch {
-            toast.error('Error al cargar transacciones');
+            if (pedido === pedidoLista.current) toast.error('Error al cargar transacciones');
         } finally {
-            setLoading(false);
+            if (pedido === pedidoLista.current) setLoading(false);
         }
-    }, [filterStatus, filterType]);
+    }, [filterStatus, filterType, busqueda]);
 
     useCargarAlMontar(() => {
         void fetchTransactions();
@@ -217,16 +230,8 @@ export default function TransactionsPage() {
         }
     }, { onReconectar: recargar, respaldoMs: 60_000 });
 
-    const displayed = useMemo(() => {
-        if (!searchQuery.trim()) return transactions;
-        const q = searchQuery.toLowerCase();
-        return transactions.filter(t =>
-            (t.balance.user.name || '').toLowerCase().includes(q) ||
-            t.balance.user.email.toLowerCase().includes(q) ||
-            (t.reference || '').toLowerCase().includes(q) ||
-            (t.description || '').toLowerCase().includes(q)
-        );
-    }, [transactions, searchQuery]);
+    // C-281 (A-07): la lista ya llega buscada del servidor (y el CSV exporta lo encontrado)
+    const displayed = transactions;
 
     const openApproveModal = (t: Transaction) => { setApprovingTransaction(t); setShowApproveModal(true); };
 
@@ -383,9 +388,9 @@ export default function TransactionsPage() {
                 <div className="relative flex-1 min-w-[200px]">
                     <IconoBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-subtle" />
                     <input
-                        type="text"
-                        aria-label="Buscar por nombre, correo o referencia"
-                        placeholder="Nombre, correo o referencia"
+                        type="search"
+                        aria-label="Buscar por nombre, correo, teléfono, cédula o referencia"
+                        placeholder="Nombre, correo, teléfono o referencia"
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
                         className={`${adminInput()} pl-9 pr-11`}
@@ -416,9 +421,9 @@ export default function TransactionsPage() {
                 </div>
 
 
-                {searchQuery && (
-                    <div className="px-3 py-2 bg-surface border border-line rounded-lg text-xs text-muted font-medium">
-                        {displayed.length} / {transactions.length}
+                {busqueda && !loading && (
+                    <div role="status" className="px-3 py-2 bg-surface border border-line rounded-lg text-xs text-muted font-medium">
+                        {displayed.length >= 200 ? 'Las 200 más nuevas' : displayed.length === 1 ? '1 encontrada' : `${displayed.length} encontradas`}
                     </div>
                 )}
             </div>

@@ -191,12 +191,13 @@ function CheckoutSuccessContent() {
 
               {/* ── CTA Buttons ── */}
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                {/* C-281 (F-09): con un solo pedido se abre ese pedido (antes, la lista); con dos (lo físico y lo digital), la lista */}
                 <Link
-                  href="/customer/orders"
+                  href={orderNumbers.length === 1 ? `/customer/orders?orden=${encodeURIComponent(orderNumbers[0])}` : '/customer/orders'}
                   className={`flex-1 ${adminPrimaryButton} py-3 text-sm font-bold justify-center`}
                 >
                   <IconoOrdenes className="w-5 h-5 mr-1" />
-                  Ver mis pedidos
+                  {orderNumbers.length === 1 ? 'Ver mi pedido' : 'Ver mis pedidos'}
                 </Link>
                 <Link
                   href="/productos"

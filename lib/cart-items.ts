@@ -27,3 +27,13 @@ export function toOrderItem(item: CartItemRef) {
     digitalUsername: item.digitalUsername,
   };
 }
+
+// C-281 (F-05): la respuesta de POST /api/products/precios que corresponde a esta línea del carrito
+export function esLaLinea(
+  precio: { productId: string; digitalVariantId?: string; digitalAmount?: number },
+  linea: ReturnType<typeof parseCartItemId>,
+): boolean {
+  return precio.productId === linea.productId
+    && (precio.digitalVariantId ?? null) === (linea.digitalVariantId ?? null)
+    && (precio.digitalAmount ?? null) === (linea.digitalAmount ?? null);
+}

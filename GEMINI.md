@@ -102,6 +102,10 @@ Excepciones puntuales (solo cuando la tarea lo dice):
     - **Una ventana nueva usa `useFocoDeVuelta`** (`lib/hooks/useFocoDeVuelta.ts`, carril Claude): el foco entra y vuelve al cerrarla.
     - **La garantía no acepta lo digital** (el servidor lo rechaza): en "Nueva" solo sale lo físico y lo digital va por WhatsApp.
   - **El kit en más lugares (C-260, 15/11), con el pedido del equipo:** la tarjeta de Mis códigos (`PlatformScratchCard`) hace de "Voltear tarjeta" el botón principal hasta ver el código; las misiones (`CustomerOnboarding`) dibujan sus íconos y "¿Cómo funciona la tienda?" abre `AsiFunciona` a mano. Una tarjeta que toque esos archivos conserva las piezas del kit.
+  - **Los flujos que venden (C-281, 17/11, la Fase 4 de la auditoría que pidió el equipo):** Claude tocó tres archivos de tu carril. No vuelvas a lo de antes:
+    - `app/canjear-gift-card/page.tsx`: sin sesión ofrece "Crear mi cuenta gratis" y "Ya tengo cuenta", y el código espera en `sessionStorage` (`canje-gift-card:codigo`, nunca el PIN ni en la dirección) hasta que vuelve con sesión. Su título y su imagen para compartir están en `app/canjear-gift-card/layout.tsx` (carril Claude).
+    - `app/cursos/[slug]/page.tsx` lleva la imagen para compartir del curso (`imagenDeCurso` de `lib/og/datos.ts`), y `components/cursos/CourseDetailClient.tsx` dice el error si la reseña no se publica.
+    - `app/customer/(dashboard)/orders/page.tsx` abre un pedido con `?orden=` por su id **o por su número** (la confirmación de la compra manda el número).
 - `app/carrito/**`, `app/checkout/**` y `components/checkout/**` → G-04b, G-05g, G-06g y **R11 (G-40, G-41: solo `className` y los arreglos permitidos)**. El carrito y el checkout mueven dinero: nada de lógica.
 - Borrado de la lista cerrada de G-02.
 

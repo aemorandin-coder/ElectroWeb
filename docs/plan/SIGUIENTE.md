@@ -1,17 +1,17 @@
-# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.87; en `main`, rc.90 por subir: §2)
+# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.89; en `main`, rc.90 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-230 · El libro de ventas, con las respuestas de la contadora (rc.90, por subir junto con C-272 y C-273: §2; `estado/C-230.md`):** la contadora respondió el 16/11 por notas de voz (sus criterios, en `CONTABILIDAD.md` §9). El equipo eligió lo recomendado viendo las maquetas (`~/.cache/electroshop-trabajo/c230/index.html`).
+- **C-230 · El libro de ventas, con las respuestas de la contadora (rc.90, por subir: §2; `estado/C-230.md`):** la contadora respondió el 16/11 por notas de voz (sus criterios, en `CONTABILIDAD.md` §9). El equipo eligió lo recomendado viendo las maquetas (`~/.cache/electroshop-trabajo/c230/index.html`).
   - **Contabilidad → Libro de ventas:** una línea por factura con sus columnas, el IVA del mes con su fecha, lo de la declaración, el Excel y la hoja impresa apaisada.
   - **La factura va a la tasa BCV del día en que se escribe** (antes, la de la orden). Desde el 16/11 se factura cada venta.
   - **Facturas** dice hasta cuándo alcanza el talonario y cuántas pedir. **La mesa** trae el Excel y, la primera vez de la contadora, "Así funciona".
   - **Sigue** C-236, el calendario y los avisos, con sus fechas: la alcaldía el 10 y el IVA el 15.
-- **C-273 · ElectroStudio: entradas, énfasis y salidas (rc.89, por subir: §2; `estado/C-273.md`):** cada título, subtítulo y sticker elige cómo entra (12 entradas), qué hace mientras está (latido, flotar, brillo o temblor) y cómo sale (9 salidas), con su segundo y lo que tarda. El paso Animación trae la línea de tiempo (barras que se arrastran y la regla para mirar cualquier segundo), la duración del video (5, 7, 10 o 15 s), cómo termina (fundido, barrido o cortina) y el cierre con el logo para los Reels. **Siguen** C-274 (plantillas) y C-275 (la IA).
-  - **Arreglado de paso (C-270, ya en producción):** los números del editor no se podían escribir tecla por tecla. Escribir "80" en el tamaño dejaba 400, y el "-" de un giro negativo saltaba a 0. Mientras no se suba, se cambian con los botones − y +, la barra o las flechas del teclado.
-- **C-272 · ElectroStudio: los stickers (rc.88, por subir junto con C-273: §2; `estado/C-272.md`):** "+ Sticker" con 6 grupos (ofertas con texto, flechas y trazos, llamados, los 166 íconos del pack con buscador, Chispa en 5 poses con o sin gorro, y Navidad). Se mueven, se agrandan y se giran como los textos. **Siguen** C-273 (entradas y salidas), C-274 (plantillas) y C-275 (la IA).
+- **C-273 · ElectroStudio: entradas, énfasis y salidas (rc.89, en producción desde el 16/11; pruebas por confirmar: §2; `estado/C-273.md`):** cada título, subtítulo y sticker elige cómo entra (12 entradas), qué hace mientras está (latido, flotar, brillo o temblor) y cómo sale (9 salidas), con su segundo y lo que tarda. El paso Animación trae la línea de tiempo (barras que se arrastran y la regla para mirar cualquier segundo), la duración del video (5, 7, 10 o 15 s), cómo termina (fundido, barrido o cortina) y el cierre con el logo para los Reels. **Siguen** C-274 (plantillas) y C-275 (la IA).
+  - **Arreglado de paso (de C-270):** los números del editor no se podían escribir tecla por tecla. Escribir "80" en el tamaño dejaba 400, y el "-" de un giro negativo saltaba a 0. Con rc.89 en producción, ya se escriben.
+- **C-272 · ElectroStudio: los stickers (rc.88, en producción desde el 16/11 con C-273; pruebas por confirmar: §2; `estado/C-272.md`):** "+ Sticker" con 6 grupos (ofertas con texto, flechas y trazos, llamados, los 166 íconos del pack con buscador, Chispa en 5 poses con o sin gorro, y Navidad). Se mueven, se agrandan y se giran como los textos. **Siguen** C-273 (entradas y salidas), C-274 (plantillas) y C-275 (la IA).
 - **C-271 · ElectroStudio: las 8 fuentes y los estilos listos (rc.87, en producción desde el 16/11; pruebas por confirmar: §2; `estado/C-271.md`):** Montserrat, Anton, Bebas Neue, Unbounded, Space Grotesk, Rubik, Caveat y Playfair Display, guardadas en la tienda; nueve estilos listos; resaltar con \*asteriscos\*; y el texto que baja de línea solo. Sigue C-272, los stickers.
 - **C-270 · ElectroStudio 2.0: las capas, el editor A y los seis pasos (rc.86, en producción; `estado/C-270.md`):** la Fase 2 del plan, con lo que eligió el equipo.
   - **Títulos, subtítulos y textos sueltos** encima de la plantilla: se arrastran sobre la vista previa, se agrandan con las esquinas, con dos dedos o escribiendo los px, y se giran. Con color automático, contorno, sombra, cinta, píldora o caja.
@@ -439,26 +439,29 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.90` (C-272, C-273 y C-230; unos 35 minutos)
-Producción está en `v1.0.0-rc.87` (`2cdc0af`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- **C-272 (rc.88):** los stickers de ElectroStudio. **C-273 (rc.89):** las entradas, el énfasis y las salidas, la línea de tiempo, la duración del video y el cierre con el logo; y los números del editor que se escriben tecla por tecla.
+### Lo que falta subir: `v1.0.0-rc.90` (C-230; unos 20 minutos)
+Producción está en `v1.0.0-rc.89` (`a724c8a`), subida el 16/11 a las 8:51 p. m. desde la laptop. Este es el único bloque pendiente.
 - **C-230 (rc.90):** el libro de ventas con su Excel, la tasa del día de la factura, el pronóstico del talonario y la mesa de la contadora con "Así funciona".
-- Sin cambio de base (los stickers y las animaciones van dentro de cada historia; el libro sale de las facturas que ya están), sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- Sin cambio de base (el libro sale de las facturas que ya están), sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
 - **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.90`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 25 minutos, en la computadora con Chrome; la 5 y la 9, también en el teléfono). Antes, recarga el panel (Ctrl+R):
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.90` (o `v1.0.0-rc.90-…`, con los commits de documentos que entraron después), o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 15 minutos, en la computadora con Chrome; la 4, también en el teléfono). Antes, recarga el panel (Ctrl+R):
+  1. **La tasa del día:** Contabilidad → Facturas → "Nueva factura". En el primer paso, junto a la fecha, "Tasa BCV del día de la factura" viene con la de hoy. Cambia la fecha a ayer: la tasa se vacía y pide la de ese día. Vuelve a hoy y sal sin registrar.
+  2. **El libro:** Contabilidad → Libro de ventas. Arriba, el IVA del mes con "Se declara hasta el 15/12"; debajo, las facturas de noviembre (la anulada, en cero) y lo de la declaración.
+     - "Descargar en Excel" y ábrelo: una fila por factura, los totales y lo de la declaración.
+     - "Imprimir": sale solo el libro, apaisado.
+  3. **El talonario:** en Facturas, la tarjeta del talonario dice hasta cuándo alcanza. Si no llega a abril, debajo dice cuántas pedir a la imprenta.
+  4. **La mesa:** con la cuenta de la contadora (o pídele que entre), la primera vez sale "Así funciona tu mesa" con "Empezar: dibujar mi firma". En la mesa, "Libro de ventas en Excel". En el teléfono, el libro va en tarjetas.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.89 && npm install && bash scripts/deploy.sh --sin-pull`. C-230 no cambia la base: volver no pierde nada. Las facturas registradas con la tasa del día quedan como están.
+
+### Por confirmar de rc.89 (C-272 y C-273; unos 15 minutos)
+Ya en producción desde el 16/11 a las 8:51 p. m. (subida desde la laptop; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión: la portada dice `1.0.0-rc.89|a724c8a`. Falta esto (en la computadora con Chrome; la 5, también en el teléfono). Antes, recarga el panel (Ctrl+R):
   1. **Los stickers (C-272):** "+ Sticker" → Ofertas → Estrella; cambia su texto a "-15 %" y su color. Después → Íconos → busca "taladro"; → Chispa → "Con el gorro" → Señala. Muévelos y agrándalos en la vista previa, y descarga la imagen y el video.
   2. **Los números (C-273):** en Textos y stickers, con un título elegido, borra el tamaño y escribe 80: queda en 80 px (antes saltaba a 400). En "Posición y giro, con números", escribe -15 en el giro.
   3. **Las entradas y salidas (C-273):** paso Animación → toca el título en la línea de tiempo → "Cómo entra": Sello; "Mientras está": Latido; "Cómo sale": Desvanecer. Cada cambio se reproduce solo en la vista previa.
   4. **La línea de tiempo:** arrastra la barra del título hacia la derecha (entra más tarde) y Ctrl+Z la devuelve. Toca la regla en el segundo 3: la vista previa se queda en ese segundo; "Ver la imagen" vuelve.
   5. **El video:** elige 10 s, "Fundido al azul" y "Cierre con el logo". Publicar → "Descargar video": baja a los 10 segundos y termina en el azul con el logo, @electroshopgre y la web. En el teléfono, ábrelo en la galería.
-  6. **La tasa del día (C-230):** Contabilidad → Facturas → "Nueva factura". En el primer paso, junto a la fecha, "Tasa BCV del día de la factura" viene con la de hoy. Cambia la fecha a ayer: la tasa se vacía y pide la de ese día. Vuelve a hoy y sal sin registrar.
-  7. **El libro (C-230):** Contabilidad → Libro de ventas. Arriba, el IVA del mes con "Se declara hasta el 15/12"; debajo, las facturas de noviembre (la anulada, en cero) y lo de la declaración.
-     - "Descargar en Excel" y ábrelo: una fila por factura, los totales y lo de la declaración.
-     - "Imprimir": sale solo el libro, apaisado.
-  8. **El talonario (C-230):** en Facturas, la tarjeta del talonario dice hasta cuándo alcanza. Si no llega a abril, debajo dice cuántas pedir a la imprenta.
-  9. **La mesa (C-230):** con la cuenta de la contadora (o pídele que entre), la primera vez sale "Así funciona tu mesa" con "Empezar: dibujar mi firma". En la mesa, "Libro de ventas en Excel". En el teléfono, el libro va en tarjetas.
-- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.87 && npm install && bash scripts/deploy.sh --sin-pull`. **Ojo:** rc.87 no conoce los stickers ni las animaciones de las piezas. Mientras esté rc.87, no abras para editar una historia que los tenga: al guardarse sola, pierde los stickers, las animaciones de las piezas, la duración del video y el cierre con el logo (los títulos quedan, con su estilo). Las que no se toquen los recuperan al volver a subir rc.89.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.87 && npm install && bash scripts/deploy.sh --sin-pull`. **Ojo:** rc.87 no conoce los stickers ni las animaciones de las piezas. Mientras esté rc.87, no abras para editar una historia que los tenga: al guardarse sola, pierde los stickers, las animaciones de las piezas, la duración del video y el cierre con el logo (los títulos quedan, con su estilo). Las que no se toquen los recuperan al volver a subir rc.89.
 
 ### Por confirmar de rc.87 (C-268, C-270 y C-271; unos 15 minutos)
 Ya en producción desde el 16/11 (`HISTORIAL.md`). Claude comprobó desde fuera la versión, las páginas y las 8 fuentes nuevas. Lo que se ve dentro del panel necesita una sesión: falta esto (en la computadora con Chrome y en el teléfono). Antes, recarga el panel (Ctrl+R):

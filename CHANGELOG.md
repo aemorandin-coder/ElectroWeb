@@ -10,6 +10,18 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.102] - 2026-11-17
+ElectroStudio pregunta a dónde va cada imagen y video, sus títulos se arrastran, y Claude investiga el modelo exacto de los productos (C-287). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### ElectroStudio 2.4.0 (C-287)
+- **"¿Qué hago con la imagen / el video?":** al sacarlos se elige descargarlos, mandarlos por Telegram (los chats del bot, en Full HD y con el texto de la historia) o las dos cosas. Antes (rc.99) el video iba siempre a Telegram. Pregunta en la vista previa, en Publicar y en el inicio.
+- **Los títulos de la plantilla se arrastran** con el mouse o con el dedo sobre la vista previa: el título con su modelo, los dos títulos de 2 productos, el título grande y la etiqueta de arriba. Se pegan al centro, avisan si entran en lo que tapa Instagram, se corren con las flechas y vuelven con "A su lugar". Corrido, el título queda encima de la plantilla.
+- **Arreglado:** una historia creada enseguida al entrar a ElectroStudio no se guardaba ("Falta la versión con la que abriste esto").
+### Productos 1.17.6 (C-287)
+- **La plantilla de Importar productos** le pide a Claude investigar cada producto: el modelo exacto (leído en la etiqueta o la caja y confirmado en la web, primero el fabricante), un solo resultado sin "posibles modelos", y el peso y las medidas del paquete de ese modelo. En "notas", de dónde salió cada dato.
+- **"Buscar en la web"** busca la página del modelo exacto y no mezcla datos de otros modelos o versiones.
+### Marco del panel 1.15.8 (C-287)
+- El bot de Telegram manda también imágenes, como archivo para que no las achique. Notificaciones ya no tiene "Video de ElectroStudio".
+
 ## [1.0.0-rc.101] - 2026-11-17
 Acceso y seguridad: lo que quedó de la auditoría del 17/11 (C-285). Sin cambio de base, sin SQL, sin variables nuevas y sin cron. Sube junto con rc.100.
 ### Marco del panel 1.15.7 (C-285)

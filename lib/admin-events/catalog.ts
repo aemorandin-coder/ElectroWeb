@@ -75,8 +75,6 @@ export const ADMIN_EVENTS = {
   PROMOTER_APPLICATION: { category: 'promotores', label: 'Solicitud para ser promotor', description: 'Un cliente pidió entrar al programa de promotores: se aprueba o se rechaza en Marketing → Promotores.', defaults: on(true, true, true) },
   REFERRAL_CONVERSION: { category: 'promotores', label: 'Venta de un promotor', description: 'Alguien compró con el código o el enlace de un promotor. La comisión se acredita sola 7 días después de la entrega, salvo las que piden revisión.', defaults: on(true, false, true), silent: true },
 
-  // C-286: no es un aviso: el video mismo, en Full HD a 60 cuadros. Solo va por Telegram (el panel y el correo no lo llevan)
-  STUDIO_VIDEO: { category: 'marketing', label: 'Video de ElectroStudio', description: 'Solo por Telegram: cada video que se descarga en ElectroStudio llega también al chat, en Full HD a 60 cuadros y con su texto.', defaults: on(false, false, true) },
   EMAIL_CAMPAIGN_STARTED: { category: 'marketing', label: 'Campaña de correo enviándose', description: 'Alguien empezó a enviar una campaña a los clientes que aceptan promociones.', defaults: on(true, false, true), silent: true },
 
   GIFT_CARD_PURCHASED: { category: 'giftcards', label: 'Gift card comprada', description: 'Un cliente compró una gift card digital.', defaults: on(true, false, true) },

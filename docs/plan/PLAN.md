@@ -457,6 +457,8 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 ### 5.2 Lista única de pendientes
 Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
+**Claude en el panel (C-288, pedido del 17/11; primero las maquetas):** una sección de Ajustes con el motor y la clave de la API (hoy Claude Haiku 5.5 en el `.env`), las instrucciones de cada uso de Claude (editables), cuánto consume cada uso (hoy no se registra: pide una tabla nueva, aditiva) y lo que falla; y la guía de cómo pedirle las cosas a Claude, en una página.
+
 **Del Dashboard nuevo (C-279, rc.98), lo que sigue:**
 - **C-279b:** las novedades de versión con antes y después o un mini video en una esquina, "Probarlo" que marca lo nuevo y el estreno a pantalla completa para las versiones grandes, como en la maqueta (`~/.cache/electroshop-trabajo/c279/`). Pide sumarle los medios a `lib/modulos.ts`.
 - **Confirmar un pago y responder ahí mismo:** hoy "Por atender" abre la orden o Consultas. Hacerlo desde el tablero pide mostrar el comprobante en el Dashboard (es dinero); si el equipo lo quiere, va aparte.

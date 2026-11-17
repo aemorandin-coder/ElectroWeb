@@ -333,6 +333,8 @@ export const flyerSchema = z.object({
   tramo: z.enum(Object.keys(TRAMOS_REGALO) as [TramoRegalo, ...TramoRegalo[]]).catch('de-20-a-50').default('de-20-a-50'),
   /** C-270: títulos, subtítulos y textos sueltos encima de la plantilla (después, stickers). La última va adelante */
   capas: capasSchema,
+  /** C-287: cuánto se corrió cada título de la plantilla al arrastrarlo, en px del lienzo ({ titulo: { dx, dy } }) */
+  piezas: z.record(z.string().max(20), z.object({ dx: z.number().min(-1080).max(1080).catch(0), dy: z.number().min(-1920).max(1920).catch(0) })).catch({}).default({}),
   /** C-273: cuánto dura el video, cómo termina toda la historia y si cierra con el logo */
   duracion: z.union([z.literal(5), z.literal(7), z.literal(10), z.literal(15)]).catch(DURACION_DEF).default(DURACION_DEF),
   final: z.enum(Object.keys(FINALES) as [FinalId, ...FinalId[]]).catch('ninguno').default('ninguno'),

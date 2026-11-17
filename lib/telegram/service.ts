@@ -83,7 +83,9 @@ export async function sendToTelegramChats(html: string, options: SendOptions = {
   );
 }
 
-export interface VideoParaTelegram {
+export interface ArchivoParaTelegram {
+  /** El video va con sendVideo (se ve en el chat); la imagen, como archivo (sendDocument), para que no la achique */
+  tipo: 'video' | 'imagen';
   archivo: Blob;
   nombre: string;
   /** El texto de la historia (el de Instagram), para copiarlo desde Telegram */
@@ -94,27 +96,30 @@ export interface VideoParaTelegram {
 }
 
 /**
- * C-286: un video de ElectroStudio a los chats activos, tal como salió (Full HD a 60 cuadros). Se sube una vez y a los demás
- * chats va por su id de Telegram, sin volver a subirlo. Registra la entrega o el error de cada chat, como los avisos.
+ * C-286 y C-287: la imagen o el video de una historia de ElectroStudio a los chats activos, tal como salió. Se sube una
+ * vez y a los demás chats va por su id de Telegram, sin volver a subirlo. Registra la entrega o el error de cada chat.
  */
-export async function sendVideoToTelegramChats(video: VideoParaTelegram): Promise<ChatDelivery[]> {
+export async function sendArchivoToTelegramChats(pieza: ArchivoParaTelegram): Promise<ChatDelivery[]> {
   const { botToken } = await getNotificationSettings();
   if (!botToken) return [];
   const chats = await prisma.telegramChat.findMany({ where: { isActive: true }, orderBy: { createdAt: 'asc' }, select: { id: true, chatId: true, title: true } });
-  const caption = video.texto.length > 1000 ? `${video.texto.slice(0, 999)}…` : video.texto;
+  const caption = pieza.texto.length > 1000 ? `${pieza.texto.slice(0, 999)}…` : pieza.texto;
+  const metodo = pieza.tipo === 'video' ? 'sendVideo' : 'sendDocument';
+  const campo = pieza.tipo === 'video' ? 'video' : 'document';
+  const extra = pieza.tipo === 'video' ? { duration: pieza.segundos, width: pieza.ancho, height: pieza.alto, supports_streaming: true } : {};
   let idEnTelegram: string | null = null;
   const entregas: ChatDelivery[] = [];
   // Uno tras otro: el primero sube el archivo y los demás usan su id
   for (const chat of chats) {
     try {
-      const base = { chat_id: chat.chatId, caption, duration: video.segundos, width: video.ancho, height: video.alto, supports_streaming: true };
+      const base = { chat_id: chat.chatId, caption, ...extra };
       if (idEnTelegram) {
-        await callTelegram(botToken, 'sendVideo', { ...base, video: idEnTelegram });
+        await callTelegram(botToken, metodo, { ...base, [campo]: idEnTelegram });
       } else {
         const form = new FormData();
         for (const [clave, valor] of Object.entries(base)) form.append(clave, String(valor));
-        form.append('video', video.archivo, video.nombre);
-        const mensaje = await callTelegramArchivo<{ video?: { file_id: string }; document?: { file_id: string } }>(botToken, 'sendVideo', form);
+        form.append(campo, pieza.archivo, pieza.nombre);
+        const mensaje = await callTelegramArchivo<{ video?: { file_id: string }; document?: { file_id: string } }>(botToken, metodo, form);
         idEnTelegram = mensaje.video?.file_id ?? mensaje.document?.file_id ?? null;
       }
       await prisma.telegramChat.update({ where: { id: chat.id }, data: { lastSentAt: new Date(), lastError: null } });

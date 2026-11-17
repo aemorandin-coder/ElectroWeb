@@ -559,7 +559,20 @@ export async function POST(req: NextRequest) {
                         amountUsd: acreditadoUSD,
                     });
                 } else {
-                    // Monto no coincide
+                    // Monto no coincide: la recarga no se aprueba sola y queda por revisar a mano. Es ahora cuando hay
+                    // algo que aprobar (C-284: al pedir una recarga por Pago Móvil no se avisa al equipo)
+                    emitAdminEvent({
+                        type: 'RECHARGE_REQUESTED',
+                        title: `Recarga por revisar · ${formatUSD(montoUsd)}`,
+                        summary: `El banco confirmó el pago de ${session.user.name || session.user.email || 'un cliente'}, pero la recarga no se aprobó sola: hay que revisarla a mano`,
+                        fields: [
+                            ['Pagado', formatVES(montoVerificadoBs)],
+                            ['Esperado', formatVES(montoSolicitadoBs)],
+                            ['Tasa aplicada', formatVES(tasa)],
+                            ['Referencia', String(referencia).slice(0, 30)],
+                        ],
+                        link: '/admin/transactions',
+                    });
                     return NextResponse.json({
                         success: true,
                         verified: true,

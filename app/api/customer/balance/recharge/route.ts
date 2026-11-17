@@ -189,19 +189,23 @@ export async function POST(req: NextRequest) {
     try {
       // Notify customer
       await notifyRechargeRequested(userId, amount);
-      // Aviso al equipo (C-73)
-      emitAdminEvent({
-        type: 'RECHARGE_REQUESTED',
-        title: `Recarga por aprobar · ${formatUSD(amount)}`,
-        summary: `${userName} pidió recargar Puntos ES`,
-        fields: [
-          ['Monto', formatUSD(amount)],
-          ['Método', resolvedMethodName],
-          ['Referencia', reference || 'Sin referencia'],
-          ['Correo', session.user.email || ''],
-        ],
-        link: '/admin/transactions',
-      });
+      // Aviso al equipo (C-73). C-284: una recarga por Pago Móvil se aprueba sola al verificar el pago, así que al pedirla
+      // no hay nada que aprobar: al equipo se le avisa en la verificación, si el banco confirma un pago que no alcanza
+      // y la recarga queda por revisar (app/api/pago-movil/verificar). Las de los métodos manuales avisan aquí.
+      if (companyMethod.type !== 'MOBILE_PAYMENT') {
+        emitAdminEvent({
+          type: 'RECHARGE_REQUESTED',
+          title: `Recarga por aprobar · ${formatUSD(amount)}`,
+          summary: `${userName} pidió recargar Puntos ES`,
+          fields: [
+            ['Monto', formatUSD(amount)],
+            ['Método', resolvedMethodName],
+            ['Referencia', reference || 'Sin referencia'],
+            ['Correo', session.user.email || ''],
+          ],
+          link: '/admin/transactions',
+        });
+      }
     } catch (notifError) {
       console.error('Error sending notifications:', notifError);
       // Don't fail the request if notifications fail

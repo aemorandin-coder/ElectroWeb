@@ -7,7 +7,7 @@
 
 
 ## 17/11 · C-286, los videos de ElectroStudio (de rc.98 a `v1.0.0-rc.99`)
-La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida (marketing la esperaba), cerca de las 3:20 p. m.: `git pull --ff-only` y `deploy.sh --sin-pull`, sin base, sin SQL y sin cron. Terminó en "Listo: sirviendo .next-b (4bb9c1c6 Merge branch 'claude/C-286')".
+La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida (marketing la esperaba), cerca de la 1:50 p. m.: `git pull --ff-only` y `deploy.sh --sin-pull`, sin base, sin SQL y sin cron. Terminó en "Listo: sirviendo .next-b (4bb9c1c6 Merge branch 'claude/C-286')".
 
 **Lo comprobado, el 17/11:**
 - **En el servidor:** `git describe --tags` dice `v1.0.0-rc.99`, la tienda escucha en `127.0.0.1:3000` y `mp4-muxer` quedó instalada. El registro de errores de PM2 no tiene líneas nuevas (98 antes y 98 después).

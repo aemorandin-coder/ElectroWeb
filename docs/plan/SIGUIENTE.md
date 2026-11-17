@@ -484,7 +484,7 @@
 Producción está en `v1.0.0-rc.99` (`4bb9c1c`); su bloque está en `HISTORIAL.md`.
 
 ### Por confirmar de rc.99 (C-286, los videos de ElectroStudio; unos 10 minutos)
-Ya en producción desde el 17/11, cerca de las 3:20 p. m. (la subió Claude por SSH con la aprobación del equipo, porque marketing la esperaba; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión, que `mp4-muxer` quedó instalada, las páginas, que la ruta nueva no recibe nada sin sesión y que el registro de errores no sumó líneas. Falta esto (antes, recarga el panel con Ctrl+R):
+Ya en producción desde el 17/11, cerca de la 1:50 p. m. (la subió Claude por SSH con la aprobación del equipo, porque marketing la esperaba; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión, que `mp4-muxer` quedó instalada, las páginas, que la ruta nueva no recibe nada sin sesión y que el registro de errores no sumó líneas. Falta esto (antes, recarga el panel con Ctrl+R):
   1. **En el teléfono de marketing, con Chrome:** ElectroStudio → una historia → Animación: 15 s → Publicar → "Descargar video". Sale "Armando el video: N %" y se descarga. Ábrelo en la galería: dura los 15 s enteros.
   2. **Telegram:** el mismo video llega al chat del bot con el texto de la historia, en Full HD, y el panel dice "Listo en Telegram". Ábrelo ahí: también dura 15 s.
   3. **En la computadora:** lo mismo con otra historia; el video se ve entero en el reproductor de la PC.

@@ -35,7 +35,7 @@ export default function VideoEntrega({ foto, nombre, video, compacto = false }: 
 
   return (
     <div className={`relative aspect-[4/5] w-full overflow-hidden bg-brand-700 ring-1 ring-white/20 ${compacto ? 'rounded-xl' : 'rounded-3xl shadow-2xl'}`}>
-      <Image src={foto} alt={`${nombre} con su premio`} fill sizes={compacto ? '240px' : '(min-width: 1024px) 416px, 100vw'} className="object-cover" priority={!compacto} />
+      <Image src={foto} alt={`${nombre} con su premio`} fill sizes={compacto ? '240px' : '(min-width: 1024px) 416px, 100vw'} className="object-cover" preload={!compacto} />
       {video && compacto && (
         <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center">
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand-700 shadow-xl ring-4 ring-white/25">

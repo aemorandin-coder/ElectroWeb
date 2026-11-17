@@ -38,7 +38,7 @@ export default function AuthShell({
         <div className="mt-1 flex justify-center">
           <Link href="/" aria-label={`Ir al inicio de ${nombre}`} className="relative block h-20 w-20 lg:h-24 lg:w-24">
             {settings?.logo ? (
-              <Image src={settings.logo} alt={nombre} fill sizes="96px" className="object-contain" priority />
+              <Image src={settings.logo} alt={nombre} fill sizes="96px" className="object-contain" loading="eager" />
             ) : (
               <span className="flex h-full w-full items-center justify-center rounded-2xl border border-brand-200 bg-brand-50 text-brand-600">
                 <IconoBolsa className="h-9 w-9" aria-hidden="true" />

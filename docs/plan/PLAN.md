@@ -457,10 +457,10 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 ### 5.2 Lista única de pendientes
 Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
-**De la auditoría del 17/11, lo de la tienda y el panel que no entró en C-281** (la Fase 4; sin tomar):
-- Un pedido de retiro en tienda o digital en "Enviada" diría "Va en camino" (`lib/order-pasos.ts`).
-- "Completar pedido" puede quedar en "Procesando" si la sesión se cerró justo al tocarlo (`app/checkout/page.tsx`, el arranque de `handleSubmit`).
-- El lote de gift cards impresas se pierde, con sus PIN, si se navega por el menú antes de imprimirlo (`gift-cards/_components/AsistenteLote.tsx`): guardarlo en la pestaña hasta "impreso".
+**De la auditoría del 17/11, lo de la tienda, el panel y la plataforma que queda** (C-281 hizo la Fase 4 y C-282 la 7 y los sueltos; sin tomar):
+- **Los índices de Órdenes** (por cliente, por estado y por fecha; hoy no se nota): una migración aditiva con `CREATE INDEX`, que para el deploy hasta aplicar el SQL. Conviene juntarla con el próximo cambio de base.
+- **Las fases con maquetas antes:** la 5 (los tokens del movimiento, la ventana base común con Escape, el botón Atrás y el foco en todas las ventanas, y el retorno sin migas) y la 6 (las animaciones y los íconos animados).
+- **La Fase 3, con fecha:** el candado del mes declarado y el orden número-fecha de las facturas (con el criterio de la contadora, antes del 15/12) y "Antes de sortear" (antes del 20/12).
 
 **De la auditoría del 17/11, lo que dejó C-280** (dinero y seguridad; sin tomar):
 - Una compra que sale en dos paquetes cuenta dos usos del tope total de un cupón. Contarla como una pide una llave de compra en las órdenes (hoy Contabilidad y el sorteo deducen por la hora cuáles salieron del mismo pago).
@@ -902,6 +902,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 | A13 | Promotores: ¿los productos digitales (códigos y recargas) pagan comisión? Hoy sí, pero no se acredita sola si supera la ganancia de la venta | `estado/C-167.md`. Opciones: no pagar en digitales, un % menor, o dejarlo. |
 | A14 | Promotores: % por defecto de la comisión y del descuento del código (quedó 5 % y 5 %), y los términos del programa para el abogado | `estado/C-167.md`. |
 | A11 | ¿La cinta ES también en los productos que no son nuevos (al menos en "Caja abierta")? | Hoy llevan su etiqueta de condición y no la cinta (decisión del 28/09). Andrés la echó de menos el 01/10 (`estado/C-161.md`). |
+| A17 | **La política de navegadores** (propuesta de C-282, de la guía web de Chrome que pidió la auditoría del 17/11): la tienda funciona completa en las dos últimas versiones de Chrome de Android, Safari de iPhone, Chrome y Edge de computadora, Firefox y Samsung Internet. Lo de "uso amplio" entra sin alternativa; lo "nuevo" o "limitado" (transiciones entre pantallas, `@starting-style`), solo si sin soporte no rompe nada. Sin polyfills. | Una regla fija para decidir qué se puede usar; con el sí del equipo pasa a `CLAUDE.md`. |
 | ~~A16~~ | ~~¿Se factura en el talonario cada venta de la web desde ya?~~ | **Cerrada el 16/11:** la contadora dijo que se factura cada venta, y el equipo lo aprobó con el plan de C-230 (§7.2). |
 
 ### 7.2 Tomadas (no volver a preguntar)

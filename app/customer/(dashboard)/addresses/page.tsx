@@ -294,7 +294,8 @@ export default function AddressesPage() {
 
       {montado && abierto && createPortal(
         <div className={adminModalOverlay} role="dialog" aria-modal="true" aria-labelledby="dir-titulo">
-          <div className={`${adminModalPanel} max-w-xl`}>
+          {/* C-282 (G-02): un formulario de verdad (Enter guarda) con el autocompletar de dirección del navegador */}
+          <form noValidate onSubmit={(e) => { e.preventDefault(); void guardar(); }} className={`${adminModalPanel} max-w-xl`}>
             <div className={adminModalHeader}>
               <h2 id="dir-titulo" className={adminModalTitle}>{editando ? 'Editar dirección' : 'Nueva dirección'}</h2>
               <button type="button" onClick={() => setAbierto(false)} aria-label="Cerrar" className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink">
@@ -334,23 +335,23 @@ export default function AddressesPage() {
                   </div>
                   <div>
                     <label htmlFor="dir-linea1" className={adminLabel}>Dirección</label>
-                    <input id="dir-linea1" value={form.addressLine1} maxLength={200} onChange={(e) => set({ addressLine1: e.target.value })} placeholder="Calle, casa o edificio, número" className={adminInput()} />
+                    <input id="dir-linea1" value={form.addressLine1} maxLength={200} autoComplete="shipping address-line1" onChange={(e) => set({ addressLine1: e.target.value })} placeholder="Calle, casa o edificio, número" className={adminInput()} />
                   </div>
                   <div>
                     <label htmlFor="dir-linea2" className={adminLabel}>Punto de referencia <span className="font-normal text-muted">(opcional)</span></label>
-                    <input id="dir-linea2" value={form.addressLine2} maxLength={200} onChange={(e) => set({ addressLine2: e.target.value })} placeholder="Frente a la plaza, portón azul" className={adminInput()} />
+                    <input id="dir-linea2" value={form.addressLine2} maxLength={200} autoComplete="shipping address-line2" onChange={(e) => set({ addressLine2: e.target.value })} placeholder="Frente a la plaza, portón azul" className={adminInput()} />
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <label htmlFor="dir-estado" className={adminLabel}>Estado</label>
-                      <select id="dir-estado" value={form.state} onChange={(e) => set({ state: e.target.value })} className={adminInput()}>
+                      <select id="dir-estado" value={form.state} autoComplete="shipping address-level1" onChange={(e) => set({ state: e.target.value })} className={adminInput()}>
                         <option value="">Elige el estado</option>
                         {ESTADOS_VENEZUELA.map((e) => <option key={e} value={e}>{e}</option>)}
                       </select>
                     </div>
                     <div>
                       <label htmlFor="dir-ciudad" className={adminLabel}>Ciudad</label>
-                      <input id="dir-ciudad" value={form.city} maxLength={80} onChange={(e) => set({ city: e.target.value })} placeholder="Ej: Guanare" className={adminInput()} />
+                      <input id="dir-ciudad" value={form.city} maxLength={80} autoComplete="shipping address-level2" onChange={(e) => set({ city: e.target.value })} placeholder="Ej: Guanare" className={adminInput()} />
                     </div>
                   </div>
                 </div>
@@ -370,7 +371,7 @@ export default function AddressesPage() {
                   </div>
                   <div>
                     <label htmlFor="dir-cedula" className={adminLabel}>Cédula</label>
-                    <input id="dir-cedula" value={form.recipientIdNumber} maxLength={20} onChange={(e) => set({ recipientIdNumber: e.target.value.toUpperCase() })} placeholder="V-12345678" autoCapitalize="characters" className={adminInput()} />
+                    <input id="dir-cedula" value={form.recipientIdNumber} maxLength={20} onChange={(e) => set({ recipientIdNumber: e.target.value.toUpperCase() })} placeholder="V-12345678" autoCapitalize="characters" autoComplete="off" className={adminInput()} />
                   </div>
                   <div>
                     <label htmlFor="dir-telefono" className={adminLabel}>Teléfono</label>
@@ -388,11 +389,11 @@ export default function AddressesPage() {
             </div>
             <div className={adminModalFooter}>
               <button type="button" onClick={() => setAbierto(false)} className={`${adminSecondaryButton} h-11`}>Cancelar</button>
-              <button type="button" onClick={() => void guardar()} disabled={guardando} className={`${adminPrimaryButton} h-11`}>
+              <button type="submit" disabled={guardando} className={`${adminPrimaryButton} h-11`}>
                 {guardando ? 'Guardando…' : editando ? 'Guardar cambios' : 'Guardar dirección'}
               </button>
             </div>
-          </div>
+          </form>
         </div>,
         document.body,
       )}

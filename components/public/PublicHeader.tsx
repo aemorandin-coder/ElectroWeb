@@ -59,7 +59,7 @@ function PublicHeader() {
           <Link href="/" aria-label={`${companyName}, ir al inicio`} className="flex min-w-0 items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-brand-500 lg:shrink-0">
             {settings?.logo && (
               <span className="relative h-9 w-9 shrink-0">
-                <Image src={settings.logo} alt="" fill sizes="36px" className="object-contain" priority />
+                <Image src={settings.logo} alt="" fill sizes="36px" className="object-contain" loading="eager" />
                 {settings.gorroNavidad && <GorroSanta variante={settings.gorroNavidad} />}
               </span>
             )}

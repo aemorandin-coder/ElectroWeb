@@ -5,7 +5,7 @@
 // igual: el mismo pedido a /api/gift-cards por tarjeta ({ amountUSD, forPrint: true, isGift: false }), las mismas reglas
 // ($5 a $500, hasta 50 por lote) y, al terminar, el lote con los PIN, que se ven una sola vez, y "Imprimir hoja".
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import Asistente, { Campo, FilaResumen, VistaPrevia, type PasoAsistente } from '@/components/admin/Asistente';
@@ -21,7 +21,9 @@ import {
 import { formatUSD } from '@/lib/currency';
 import { formatGiftCardCode } from '@/lib/gift-card-designs';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { printBatch, type PrintedCard } from './hoja';
+import { guardarLotePendiente, leerLotePendiente } from './lotePendiente';
 
 const AMOUNT_PRESETS = [10, 25, 50, 100];
 const PASOS: { titulo: string; queHacer: string; icono: IconType }[] = [
@@ -54,6 +56,22 @@ export default function AsistenteLote() {
     const aviso = (e: BeforeUnloadEvent) => { e.preventDefault(); };
     window.addEventListener('beforeunload', aviso);
     return () => window.removeEventListener('beforeunload', aviso);
+  }, [batch, batchPrinted]);
+
+  // C-282 (A-12): el lote abierto espera en la pestaña (lotePendiente.ts): si se sale por el menú sin cerrarlo, al volver a
+  // "Generar impresas" vuelve a abrirse con sus PIN. Se lee una vez al entrar y después se guarda con cada cambio
+  const loteLeido = useRef(false);
+  useCargarAlMontar(() => {
+    const pendiente = leerLotePendiente();
+    loteLeido.current = true;
+    if (!pendiente) return;
+    setBatch(pendiente.cards);
+    setBatchPrinted(pendiente.impreso);
+    toast(pendiente.impreso ? 'Este lote seguía abierto: ciérralo cuando ya tengas la hoja.' : 'Este lote no se imprimió: imprime la hoja antes de salir.', { duration: 6000 });
+  });
+  useEffect(() => {
+    if (!loteLeido.current) return;
+    guardarLotePendiente(batch ? { cards: batch, impreso: batchPrinted } : null);
   }, [batch, batchPrinted]);
 
   const amount = numero(monto) ?? 0;
@@ -110,6 +128,7 @@ export default function AsistenteLote() {
       if (!ok) return;
     }
     setBatch(null);
+    guardarLotePendiente(null);
     router.push('/admin/gift-cards');
     router.refresh();
   };

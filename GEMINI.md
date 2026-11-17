@@ -111,6 +111,10 @@ Excepciones puntuales (solo cuando la tarea lo dice):
     - `app/customer/(dashboard)/profile/_components/Seguridad.tsx`: cambiar la contraseña cierra siempre las otras sesiones. Ya no hay casilla ni se manda `cerrarOtras`: queda la línea "Al cambiarla se cierran tus otras sesiones."
     - `components/servicios/ServiciosPortfolio.tsx`: si las reseñas no llegan, la lista queda vacía (antes, cargando para siempre). `GET /api/service-reviews` es pública y da el nombre corto de quien reseña.
   - **Las API sin sesión responden 401 en JSON (C-280):** antes rebotaban a la página de entrada y el `fetch` recibía HTML con 200. Un `fetch` a una API privada mira `res.ok` (o `res.status === 401`) antes de leer el cuerpo.
+  - **La guía web (C-282, 17/11, de la misma auditoría):** Claude tocó dos archivos de tu carril. No vuelvas a lo de antes:
+    - `components/modals/RechargeModalV2.tsx` es un diálogo (`role="dialog"`, su título, `useFocoDeVuelta` y Escape) y el paso 1 es un `<form id="recarga-formulario">`: los botones del pie lo envían con `form=`. Cada `<button>` adentro lleva `type="button"`, o enviaría el formulario.
+    - `app/customer/(dashboard)/addresses/page.tsx`: la ventana es un `<form>` (Enter guarda) y los campos de la dirección llevan su `autoComplete` (`shipping address-line1`…).
+    - Una imagen nueva no lleva `priority` (en desuso en Next 16): `preload` si es la principal de la página, o `loading="eager"`.
 - `app/carrito/**`, `app/checkout/**` y `components/checkout/**` → G-04b, G-05g, G-06g y **R11 (G-40, G-41: solo `className` y los arreglos permitidos)**. El carrito y el checkout mueven dinero: nada de lógica.
 - Borrado de la lista cerrada de G-02.
 

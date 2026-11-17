@@ -47,7 +47,8 @@ export default function ProductGallery({ images, name, badges, actions }: Produc
                 src={src}
                 alt={list.length > 1 ? `${name}, foto ${index + 1} de ${list.length}` : name}
                 fill
-                priority={index === 0}
+                // C-282: la primera foto es la imagen principal de la ficha (`preload`, que reemplaza a `priority` en Next 16)
+                preload={index === 0}
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 // C-133: de borde a borde. Las fotos de la tienda ya traen su aire blanco y la cinta ES va en la esquina:
                 // con margen y en una caja 4:3, la cinta quedaba cortada en medio de la tarjeta

@@ -55,7 +55,7 @@ function Membrete({ empresa, titulo, numero, filas, estado }: {
             marca. Color liso: un degradado no sale al imprimir. */}
         {empresa.logo && (
           <span className="relative h-12 w-12 shrink-0" data-bn="imagen">
-            <Image src={empresa.logo} alt="" fill sizes="48px" className="object-contain" priority />
+            <Image src={empresa.logo} alt="" fill sizes="48px" className="object-contain" loading="eager" />
           </span>
         )}
         <div className="min-w-0" data-membrete>

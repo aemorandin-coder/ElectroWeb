@@ -39,7 +39,9 @@ export default function ProductCard({ product, exchangeRateVES, lowStockThreshol
           src={image}
           alt={product.name}
           fill
-          priority={priority}
+          // C-282: `priority` está en desuso en Next 16. Las primeras de una grilla cargan de una (son varias: no van con `preload`)
+          loading={priority ? 'eager' : undefined}
+          fetchPriority={priority ? 'high' : undefined}
           sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
           // C-133: de borde a borde, para que la cinta ES caiga en la esquina de la tarjeta
           className="object-contain"

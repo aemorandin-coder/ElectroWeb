@@ -80,7 +80,7 @@ export default function GanadorSorteo({ titulo, premio, imagen, nombreCorto = nu
           </div>
         ) : fotoPremio && (
           <div className="relative mx-auto aspect-square w-full max-w-[30rem] lg:col-start-2 lg:row-span-2 lg:row-start-1">
-            <Image src={fotoPremio} alt={premio} fill sizes="(min-width: 1024px) 480px, 100vw" className={`object-contain ${FUNDIDO}`} priority />
+            <Image src={fotoPremio} alt={premio} fill sizes="(min-width: 1024px) 480px, 100vw" className={`object-contain ${FUNDIDO}`} preload />
           </div>
         )}
 

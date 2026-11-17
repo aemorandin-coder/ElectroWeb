@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
+import { celda } from '@/lib/relacion-ventas';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -123,7 +124,8 @@ const tooltipStyle = { background: 'var(--color-surface)', border: '1px solid va
 
 const formatChartDate = (value: string) => format(new Date(`${value.slice(0, 10)}T12:00:00`), 'd MMM', { locale: es });
 const fechaHora = (iso: string) => new Date(iso).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Caracas' });
-const csv = (v: string | number | null | undefined) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+// C-282: con `celda` (también frena las fórmulas: un texto que empieza por = + - @ lleva un apóstrofo delante)
+const csv = (v: string | number | null | undefined) => celda(v === null || v === undefined ? '' : String(v));
 
 function Stat({ label, value, detail, source, icon: Icon, wide }: {
     label: string; value: ReactNode; detail?: ReactNode; source: string;

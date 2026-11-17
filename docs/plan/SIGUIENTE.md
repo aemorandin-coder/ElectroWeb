@@ -1,10 +1,12 @@
-# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.87; en `main`, rc.88 por subir: §2)
+# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.87; en `main`, rc.89 por subir: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-272 · ElectroStudio: los stickers (rc.88, por subir: §2; `estado/C-272.md`):** "+ Sticker" con 6 grupos (ofertas con texto, flechas y trazos, llamados, los 166 íconos del pack con buscador, Chispa en 5 poses con o sin gorro, y Navidad). Se mueven, se agrandan y se giran como los textos. **Siguen** C-273 (entradas y salidas), C-274 (plantillas) y C-275 (la IA).
+- **C-273 · ElectroStudio: entradas, énfasis y salidas (rc.89, por subir: §2; `estado/C-273.md`):** cada título, subtítulo y sticker elige cómo entra (12 entradas), qué hace mientras está (latido, flotar, brillo o temblor) y cómo sale (9 salidas), con su segundo y lo que tarda. El paso Animación trae la línea de tiempo (barras que se arrastran y la regla para mirar cualquier segundo), la duración del video (5, 7, 10 o 15 s), cómo termina (fundido, barrido o cortina) y el cierre con el logo para los Reels. **Siguen** C-274 (plantillas) y C-275 (la IA).
+  - **Arreglado de paso (C-270, ya en producción):** los números del editor no se podían escribir tecla por tecla. Escribir "80" en el tamaño dejaba 400, y el "-" de un giro negativo saltaba a 0. Mientras no se suba, se cambian con los botones − y +, la barra o las flechas del teclado.
+- **C-272 · ElectroStudio: los stickers (rc.88, por subir junto con C-273: §2; `estado/C-272.md`):** "+ Sticker" con 6 grupos (ofertas con texto, flechas y trazos, llamados, los 166 íconos del pack con buscador, Chispa en 5 poses con o sin gorro, y Navidad). Se mueven, se agrandan y se giran como los textos. **Siguen** C-273 (entradas y salidas), C-274 (plantillas) y C-275 (la IA).
 - **C-271 · ElectroStudio: las 8 fuentes y los estilos listos (rc.87, en producción desde el 16/11; pruebas por confirmar: §2; `estado/C-271.md`):** Montserrat, Anton, Bebas Neue, Unbounded, Space Grotesk, Rubik, Caveat y Playfair Display, guardadas en la tienda; nueve estilos listos; resaltar con \*asteriscos\*; y el texto que baja de línea solo. Sigue C-272, los stickers.
 - **C-270 · ElectroStudio 2.0: las capas, el editor A y los seis pasos (rc.86, en producción; `estado/C-270.md`):** la Fase 2 del plan, con lo que eligió el equipo.
   - **Títulos, subtítulos y textos sueltos** encima de la plantilla: se arrastran sobre la vista previa, se agrandan con las esquinas, con dos dedos o escribiendo los px, y se giran. Con color automático, contorno, sombra, cinta, píldora o caja.
@@ -432,15 +434,19 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.88` (C-272; unos 15 minutos)
+### Lo que falta subir: `v1.0.0-rc.89` (C-272 y C-273; unos 25 minutos)
 Producción está en `v1.0.0-rc.87` (`2cdc0af`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
-- **C-272 (rc.88):** los stickers de ElectroStudio.
-- Sin cambio de base (los stickers van dentro de cada historia), sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- **C-272 (rc.88):** los stickers de ElectroStudio. **C-273 (rc.89):** las entradas, el énfasis y las salidas, la línea de tiempo, la duración del video y el cierre con el logo; y los números del editor que se escriben tecla por tecla.
+- Sin cambio de base (los stickers y las animaciones van dentro de cada historia), sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
 - **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.88`, o una mayor si entró otra tarea antes del `git pull`.
-- **Prueba** (unos 5 minutos, en la computadora con Chrome). Antes, recarga el panel (Ctrl+R):
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.89`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 15 minutos, en la computadora con Chrome; la 5, también en el teléfono). Antes, recarga el panel (Ctrl+R):
   1. **Los stickers (C-272):** "+ Sticker" → Ofertas → Estrella; cambia su texto a "-15 %" y su color. Después → Íconos → busca "taladro"; → Chispa → "Con el gorro" → Señala. Muévelos y agrándalos en la vista previa, y descarga la imagen y el video.
-- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.87 && npm install && bash scripts/deploy.sh --sin-pull`. **Ojo:** rc.87 no conoce los stickers. Mientras esté rc.87, no abras para editar una historia que los tenga: al guardarse sola, los pierde. Las que no se toquen los recuperan al volver a subir rc.88.
+  2. **Los números (C-273):** en Textos y stickers, con un título elegido, borra el tamaño y escribe 80: queda en 80 px (antes saltaba a 400). En "Posición y giro, con números", escribe -15 en el giro.
+  3. **Las entradas y salidas (C-273):** paso Animación → toca el título en la línea de tiempo → "Cómo entra": Sello; "Mientras está": Latido; "Cómo sale": Desvanecer. Cada cambio se reproduce solo en la vista previa.
+  4. **La línea de tiempo:** arrastra la barra del título hacia la derecha (entra más tarde) y Ctrl+Z la devuelve. Toca la regla en el segundo 3: la vista previa se queda en ese segundo; "Ver la imagen" vuelve.
+  5. **El video:** elige 10 s, "Fundido al azul" y "Cierre con el logo". Publicar → "Descargar video": baja a los 10 segundos y termina en el azul con el logo, @electroshopgre y la web. En el teléfono, ábrelo en la galería.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.87 && npm install && bash scripts/deploy.sh --sin-pull`. **Ojo:** rc.87 no conoce los stickers ni las animaciones de las piezas. Mientras esté rc.87, no abras para editar una historia que los tenga: al guardarse sola, pierde los stickers, las animaciones de las piezas, la duración del video y el cierre con el logo (los títulos quedan, con su estilo). Las que no se toquen los recuperan al volver a subir rc.89.
 
 ### Por confirmar de rc.87 (C-268, C-270 y C-271; unos 15 minutos)
 Ya en producción desde el 16/11 (`HISTORIAL.md`). Claude comprobó desde fuera la versión, las páginas y las 8 fuentes nuevas. Lo que se ve dentro del panel necesita una sesión: falta esto (en la computadora con Chrome y en el teléfono). Antes, recarga el panel (Ctrl+R):

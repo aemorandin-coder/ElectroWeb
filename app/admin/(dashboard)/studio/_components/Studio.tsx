@@ -15,9 +15,9 @@ import { useDelNavegador } from '@/lib/hooks/useMontado';
 import { PASO_PUBLICAR, firstOpenStep, flyerChecks, stepDone, type TextIssues } from '@/lib/studio/checks';
 import { cambiarCapa, duplicarCapa, moverCapa, nuevaCapa, nuevoIdCapa, nuevoSticker, puedeAgregarCapa, type CambioCapa } from '@/lib/studio/capas';
 import { STICKERS } from '@/lib/studio/stickers';
+import { duracionDe } from '@/lib/studio/animaciones';
 import { cargarFuentes } from '@/lib/studio/fuentes';
 import {
-  DURATION,
   H,
   StudioImages,
   formatHeight,
@@ -37,8 +37,8 @@ import {
 } from '@/lib/studio/schema';
 import { esErrorDeVersion } from '@/lib/version-build';
 import { fileBase, uploadStudioImage } from './exporters';
-import { AnimationPicker } from './DesignControls';
 import Lienzo from './Lienzo';
+import StepAnimacion from './StepAnimacion';
 import StepCapas, { type AccionesCapas } from './StepCapas';
 import StepContent from './StepContent';
 import StepDesign from './StepDesign';
@@ -167,6 +167,7 @@ export default function Studio({ id }: { id: string }) {
   const vistos = stepFor.id === currentId ? stepFor.vistos : [];
   const editorRef = useRef<HTMLElement | null>(null);
   const goStep = (k: number) => {
+    setTiempo(null);
     setStepFor((s) => ({ id: currentId, step: k, vistos: s.id === currentId && !s.vistos.includes(s.step) ? [...s.vistos, s.step] : s.id === currentId ? s.vistos : [] }));
     // Si el comienzo del editor quedó arriba de la pantalla (teléfono, después de un paso largo), se vuelve a él
     const top = editorRef.current?.getBoundingClientRect().top ?? 0;
@@ -177,6 +178,9 @@ export default function Studio({ id }: { id: string }) {
   const setActiveSlot = useCallback((i: number) => setSlotFor({ id: currentId, slot: i }), [currentId]);
 
   const [playing, setPlaying] = useState(false);
+  // C-273: desde qué segundo arranca la reproducción, y el segundo que va (para la aguja de la línea de tiempo)
+  const desdeRef = useRef(0);
+  const tiempoVivo = useRef(0);
   // Teléfono: vista previa chica por defecto
   const [bigPreview, setBigPreview] = useState(false);
   const playStart = useRef(0);
@@ -192,9 +196,11 @@ export default function Studio({ id }: { id: string }) {
   const canShare = useDelNavegador(() => typeof navigator.share === 'function' && typeof navigator.canShare === 'function', false);
 
   // Lo último que hay que dibujar, para el bucle de animación y las cargas de imágenes
-  const scene = useRef({ current, brand, safe, code: currentCode, navidad });
+  // C-273: un segundo fijo de la animación para mirarlo en la vista previa (desde la línea de tiempo); null = la imagen
+  const [tiempo, setTiempo] = useState<number | null>(null);
+  const scene = useRef({ current, brand, safe, code: currentCode, navidad, tiempo });
   useEffect(() => {
-    scene.current = { current, brand, safe, code: currentCode, navidad };
+    scene.current = { current, brand, safe, code: currentCode, navidad, tiempo };
     srcRef.current = productSrc;
   });
   // Sube cada vez que llega una imagen: las miniaturas de los fondos con foto se vuelven a dibujar
@@ -207,7 +213,9 @@ export default function Studio({ id }: { id: string }) {
   const drawStatic = useCallback(() => {
     if (!renderer.current || busyRef.current) return;
     const s = scene.current;
-    renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, code: s.code, navidad: s.navidad });
+    renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, code: s.code, navidad: s.navidad, t: s.tiempo });
+    // Las cajas y los avisos son los de la imagen (sin animación): con un segundo fijo no se tocan
+    if (s.tiempo !== null) return;
     const now = renderer.current.textIssues();
     setTextIssues((prev) => (JSON.stringify(prev) === JSON.stringify(now) ? prev : now));
     const ahora = renderer.current.capasCajas();
@@ -282,18 +290,21 @@ export default function Studio({ id }: { id: string }) {
     if (playing) return;
     const frame = requestAnimationFrame(drawStatic);
     return () => cancelAnimationFrame(frame);
-  }, [current, brand, safe, tempImages, playing, drawStatic, currentCode]);
+  }, [current, brand, safe, tempImages, playing, drawStatic, currentCode, tiempo]);
 
   // Animación en la vista previa, en bucle
   useEffect(() => {
     if (!playing) return;
     let frame = 0;
-    playStart.current = performance.now();
+    playStart.current = performance.now() - desdeRef.current * 1000;
+    desdeRef.current = 0;
     const epoch = Date.now();
     const loop = (now: number) => {
       if (!busyRef.current && renderer.current) {
-        const t = Math.min(DURATION, ((now - playStart.current) / 1000) % (DURATION + 0.8));
         const s = scene.current;
+        const dur = duracionDe(s.current);
+        const t = Math.min(dur, ((now - playStart.current) / 1000) % (dur + 0.8));
+        tiempoVivo.current = t;
         renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, t, epoch, code: s.code, navidad: s.navidad });
       }
       frame = requestAnimationFrame(loop);
@@ -302,9 +313,19 @@ export default function Studio({ id }: { id: string }) {
     return () => cancelAnimationFrame(frame);
   }, [playing]);
 
-  const replay = () => {
-    if (playing) playStart.current = performance.now();
-    else setPlaying(true);
+  const replay = () => reproducirDesde(0);
+  /** C-273: reproduce desde ese segundo (null = detener). Mientras se reproduce no hay segundo fijo */
+  const reproducirDesde = (desde: number | null) => {
+    if (desde === null) {
+      setPlaying(false);
+      return;
+    }
+    setTiempo(null);
+    if (playing) playStart.current = performance.now() - desde * 1000;
+    else {
+      desdeRef.current = desde;
+      setPlaying(true);
+    }
   };
 
   const currentIdRef = useRef(currentId);
@@ -415,7 +436,7 @@ export default function Studio({ id }: { id: string }) {
   /** Elegir una capa tocándola en la vista previa lleva a su paso, con lo suyo a la vista */
   const elegirCapa = (cid: string | null) => {
     setCapaSel(cid);
-    if (cid && step !== 4) goStep(4);
+    if (cid && step !== 4 && step !== 5) goStep(4);
   };
 
   /** Bloquea la vista previa mientras se exporta y la devuelve al terminar */
@@ -495,12 +516,13 @@ export default function Studio({ id }: { id: string }) {
       if (!type || !canvasRef.current.captureStream) throw new Error('Este navegador no puede grabar video. Prueba con Chrome.');
       await loadStudioFonts(current);
       await images.current.whenReady(flyerImageSources(current, brand, productSrc));
-      const toastId = toast.loading(`Grabando el video (${DURATION} segundos). No cambies de pestaña.`);
+      const dur = duracionDe(current);
+      const toastId = toast.loading(`Grabando el video (${dur} segundos). No cambies de pestaña.`);
       const epoch = Date.now();
       const r = renderer.current;
       let blob: Blob;
       try {
-        blob = await recordCanvas(canvasRef.current, type, (t) => r.draw(current, brand, { preview: false, t, epoch, code: currentCode, navidad }), DURATION);
+        blob = await recordCanvas(canvasRef.current, type, (t) => r.draw(current, brand, { preview: false, t, epoch, code: currentCode, navidad }), dur);
       } finally {
         // C-268: antes, si la grabación fallaba, el aviso "Grabando el video…" quedaba en pantalla junto al error
         toast.dismiss(toastId);
@@ -580,7 +602,7 @@ export default function Studio({ id }: { id: string }) {
             capas={current.capas}
             cajas={cajas}
             sel={capaSel}
-            activo={!playing && !busy}
+            activo={!playing && !busy && tiempo === null}
             historia={format === 'story'}
             onSel={elegirCapa}
             onEmpezar={() => {
@@ -713,10 +735,28 @@ export default function Studio({ id }: { id: string }) {
                   {step === 3 && <StepDesign studio={studio} onAnim={replay} drawThumb={drawThumb} imgTick={imgTick} />}
                   {step === 4 && <StepCapas studio={studio} sel={capaSel} onSel={setCapaSel} acciones={capas} textoRef={textoCapaRef} />}
                   {step === 5 && (
-                    <div className="flex flex-col gap-4">
-                      <AnimationPicker studio={studio} onAnim={replay} />
-                      <p className={adminHint}>El video dura {DURATION} segundos y sale igual que la vista previa.</p>
-                    </div>
+                    <StepAnimacion
+                      studio={studio}
+                      sel={capaSel}
+                      onSel={setCapaSel}
+                      onCambiar={capas.cambiar}
+                      onEmpezarGesto={() => {
+                        gestoNuevo.current = true;
+                      }}
+                      onCambiarGesto={(cid, cambio) => {
+                        update((f) => ({ ...f, capas: cambiarCapa(f.capas, cid, cambio) }), { history: gestoNuevo.current });
+                        gestoNuevo.current = false;
+                      }}
+                      tiempo={tiempo}
+                      onTiempo={(t) => {
+                        if (t !== null) setPlaying(false);
+                        setTiempo(t);
+                      }}
+                      playing={playing}
+                      onReproducir={reproducirDesde}
+                      tiempoVivo={tiempoVivo}
+                      onAnim={replay}
+                    />
                   )}
                   {step === PASO_PUBLICAR && (
                     <StepPublish

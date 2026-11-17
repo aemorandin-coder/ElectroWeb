@@ -59,7 +59,7 @@
 | 2 | **C-270** | Las capas, el editor nuevo y la ruta de pasos (hecha, rc.86) | **2.0.0** |
 | 3 | **C-271** | Títulos, subtítulos y fuentes (hecha, rc.87; soltar un texto de la plantilla, pendiente) | 2.1.0 |
 | 4 | **C-272** | Stickers (hecha, rc.88) | 2.2.0 |
-| 5 | **C-273** | Animaciones de entrada y de salida, y la línea de tiempo | 2.3.0 |
+| 5 | **C-273** | Animaciones de entrada y de salida, y la línea de tiempo (hecha, rc.89) | 2.3.0 |
 | 6 | **C-274** | Plantillas nuevas | 2.4.0 |
 | 7 | **C-275** | La IA en el estudio: las 5 mejoras | 2.5.0 |
 
@@ -118,7 +118,8 @@ Unos 50, dibujados con las reglas del pack (trazo redondo, rellenos planos, un s
 
 **Además:** un buscador, los usados hace poco, y los logos de pago que ya tiene la marca.
 
-### Fase 5 · C-273 · Animaciones de entrada y de salida
+### Fase 5 · C-273 · Animaciones de entrada y de salida (hecha el 16/11, `estado/C-273.md`)
+La línea de tiempo quedó en el panel del paso Animación (no debajo de la vista previa: en el teléfono la vista previa va arriba y fija), y la salida de toda la historia es fundido, barrido o cortina.
 - **Por capa:**
   - **la entrada,** 12 a elegir: aparecer, subir, bajar, desde un lado, zoom, rebote, sello (cae grande y se asienta), girar, máquina de escribir, de borroso a nítido, barrido y letra por letra;
   - **la salida,** 9 a elegir: desvanecer, subir, bajar, hacia un lado, encoger, zoom hacia afuera, barrido y caer;

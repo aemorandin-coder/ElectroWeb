@@ -816,7 +816,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **C-271 · Títulos, subtítulos y las 8 fuentes** (**hecha**, 2.1.0, rc.87, 16/11; `estado/C-271.md`): las 8 fuentes, los estilos listos, resaltar con asteriscos y el ancho máximo.
     - **Pendiente:** soltar un texto de la plantilla (el título o el titular pasa a ser una capa para moverlo).
   - **C-272 · Los stickers, en 6 grupos** (**hecha**, 2.2.0, rc.88, 16/11; `estado/C-272.md`).
-  - **C-273 · Entradas, énfasis y salidas, la línea de tiempo y la duración del video** (2.3.0).
+  - **C-273 · Entradas, énfasis y salidas, la línea de tiempo y la duración del video** (**hecha**, 2.3.0, rc.89, 16/11; `estado/C-273.md`). Con el arreglo de los números del editor, que no se podían escribir tecla por tecla (C-270).
   - **C-274 · Las 6 plantillas nuevas** (2.4.0): Lista de precios, Combo, Cuenta regresiva, ¿Cuál prefieres?, Lienzo libre y Antes y después.
   - **C-275 · La IA: las 5 mejoras** (2.5.0): Armar con Claude, Ideas de título, el texto de Instagram, la Revisión de Claude y Acortar. Para después: "Tres versiones".
 

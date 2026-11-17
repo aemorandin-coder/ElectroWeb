@@ -7,6 +7,7 @@ import type { Prisma, Role } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email-service';
 import { correoInvitacionEquipo } from '@/lib/email-templates/cuenta';
+import { tokenParaGuardar } from '@/lib/token-huella';
 
 // C-235 (Andrés, 14/11): la contadora entra al equipo por invitación, como los admin, y el dueño la quita o la cambia.
 export const ROLES_EQUIPO = ['ADMIN', 'SUPER_ADMIN', 'ACCOUNTANT'] as const;
@@ -85,8 +86,9 @@ export async function crearEnlaceInvitacion(userId: string): Promise<string> {
   const token = randomBytes(32).toString('hex');
   await prisma.$transaction([
     prisma.passwordResetToken.deleteMany({ where: { userId } }),
-    prisma.passwordResetToken.create({ data: { userId, token, expiresAt: new Date(Date.now() + VIGENCIA_INVITACION_MS) } }),
+    prisma.passwordResetToken.create({ data: { userId, token: tokenParaGuardar(token), expiresAt: new Date(Date.now() + VIGENCIA_INVITACION_MS) } }),
   ]);
+  // Lo que se devuelve (y va en el correo) es el valor del enlace; en la base queda su huella (lib/token-huella.ts)
   return token;
 }
 

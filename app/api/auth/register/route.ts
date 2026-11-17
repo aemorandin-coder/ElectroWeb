@@ -9,6 +9,7 @@ import { checkRateLimit, getClientIP, getRateLimitHeaders, RATE_LIMITS } from '@
 import { verifyCaptcha } from '@/lib/captcha';
 import { registroSchema } from '@/lib/validations/registro';
 import { rutaInternaSegura } from '@/lib/rutas';
+import { tokenParaGuardar } from '@/lib/token-huella';
 
 // Las reglas viven en lib/validations/registro.ts y son las mismas que usa la pantalla (C-84)
 
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
     await prisma.emailVerificationToken.create({
       data: {
         userId: user.id,
-        token: verificationToken,
+        token: tokenParaGuardar(verificationToken),
         expiresAt: tokenExpiry,
       },
     });

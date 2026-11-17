@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import { sendVerificationEmail } from '@/lib/email-service';
 import { buscarUsuarioPorCorreo, normalizarCorreo } from '@/lib/correo';
 import { checkRateLimit, getClientIP, getRateLimitHeaders } from '@/lib/rate-limit';
+import { tokenParaGuardar } from '@/lib/token-huella';
 
 // Rate limiting configuration
 const MAX_RESEND_ATTEMPTS = 3; // Maximum resends per time window
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
         await prisma.emailVerificationToken.create({
             data: {
                 userId: user.id,
-                token,
+                token: tokenParaGuardar(token),
                 expiresAt,
             },
         });

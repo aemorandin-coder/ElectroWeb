@@ -47,6 +47,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { BASE, crearUsuario, prisma, type UsuarioPrueba } from './lib';
+import { tokenParaGuardar } from '@/lib/token-huella';
 
 // ---------- Playwright, con los tipos que se usan (no está en el repositorio)
 interface Localizador {
@@ -408,13 +409,23 @@ async function limpiar(datos: Datos | null): Promise<void> {
   await prisma.user.deleteMany({ where: { id: { in: ids } } });
 }
 
+// Los enlaces se guardan como huella (lib/token-huella.ts, C-285): de la base ya no se lee el que va en el correo. Se deja en su
+// lugar uno conocido, y ese es el que abre el camino.
 const tokenDe = async (email: string, tabla: 'verificacion' | 'clave') => {
   const user = await prisma.user.findUnique({ where: { email }, select: { id: true } });
   if (!user) return null;
-  const fila = tabla === 'verificacion'
-    ? await prisma.emailVerificationToken.findFirst({ where: { userId: user.id }, orderBy: { createdAt: 'desc' }, select: { token: true } })
-    : await prisma.passwordResetToken.findFirst({ where: { userId: user.id }, orderBy: { createdAt: 'desc' }, select: { token: true } });
-  return fila?.token ?? null;
+  const conocido = crypto.randomBytes(32).toString('hex');
+  const guardado = tokenParaGuardar(conocido);
+  if (tabla === 'verificacion') {
+    const fila = await prisma.emailVerificationToken.findFirst({ where: { userId: user.id }, orderBy: { createdAt: 'desc' }, select: { id: true } });
+    if (!fila) return null;
+    await prisma.emailVerificationToken.update({ where: { id: fila.id }, data: { token: guardado } });
+  } else {
+    const fila = await prisma.passwordResetToken.findFirst({ where: { userId: user.id }, orderBy: { createdAt: 'desc' }, select: { id: true } });
+    if (!fila) return null;
+    await prisma.passwordResetToken.update({ where: { id: fila.id }, data: { token: guardado } });
+  }
+  return conocido;
 };
 
 // ---------- los caminos

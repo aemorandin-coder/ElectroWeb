@@ -6,6 +6,7 @@ import { correoContrasenaCambiada } from '@/lib/email-templates/cuenta';
 import { contrasenaSchema } from '@/lib/validations/registro';
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log';
 import { esRolDelPanel } from '@/lib/auth-helpers';
+import { valoresDeToken } from '@/lib/token-huella';
 
 export async function POST(request: NextRequest) {
     try {
@@ -27,9 +28,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Find valid token
-        const resetToken = await prisma.passwordResetToken.findUnique({
-            where: { token },
+        // Find valid token: se busca por su huella; los enlaces anteriores a C-285 se guardaron tal cual (lib/token-huella.ts)
+        const resetToken = await prisma.passwordResetToken.findFirst({
+            where: { token: { in: valoresDeToken(token) } },
             include: { user: true },
         });
 

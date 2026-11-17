@@ -46,8 +46,19 @@ export async function idsDelMismoPago(db: Prisma.TransactionClient, { banco, ref
   return filas.map((fila) => fila.id);
 }
 
-/** La verificación aprobada más vieja que es el mismo pago, completa, o `null` si no hay ninguna. */
-export async function buscarMismoPago(db: Prisma.TransactionClient, datos: DatosDePago): Promise<PagoMovilVerificacion | null> {
-  const [id] = await idsDelMismoPago(db, datos, 1);
-  return id ? db.pagoMovilVerificacion.findUnique({ where: { id } }) : null;
+/**
+ * La verificación aprobada más vieja que es el mismo pago, completa, o `null` si no hay ninguna.
+ *
+ * Con `libreDe` (un cliente), si entre las que coinciden hay un pago de compra suyo que sigue libre, se devuelve ese: quien
+ * vuelve a escribir su propio pago con menos dígitos no debe chocar con la referencia corta de otro cliente que es más vieja.
+ */
+export async function buscarMismoPago(db: Prisma.TransactionClient, datos: DatosDePago, libreDe?: string): Promise<PagoMovilVerificacion | null> {
+  const ids = await idsDelMismoPago(db, datos, libreDe ? 20 : 1);
+  if (ids.length === 0) return null;
+  if (!libreDe) return db.pagoMovilVerificacion.findUnique({ where: { id: ids[0] } });
+  const filas = await db.pagoMovilVerificacion.findMany({ where: { id: { in: ids } } });
+  // En el orden de la consulta: de la más vieja a la más nueva
+  const enOrden = ids.map((id) => filas.find((fila) => fila.id === id)).filter((fila): fila is PagoMovilVerificacion => fila !== undefined);
+  const suyaLibre = enOrden.find((fila) => fila.userId === libreDe && fila.contexto === 'ORDER' && !fila.orderId && !fila.transactionId && !fila.archivadoEn);
+  return suyaLibre ?? enOrden[0] ?? null;
 }

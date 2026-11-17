@@ -207,7 +207,8 @@ export async function POST(req: NextRequest) {
             // segundo cliente recibía "referencia ya utilizada" y una alerta de seguridad sin haber hecho nada.
             // S-01: el mismo pago escrito de otra forma ("5678" y "12345678", con o sin espacios) también cuenta
             // (lib/pago-movil/mismo-pago.ts)
-            const referenciaExistente = await buscarMismoPago(prisma, { banco: bancoOrigen, referencia, importeBs: montoNumerico });
+            // En una compra, si uno de los que coinciden es un pago suyo que sigue libre, ese va primero (es el caso de abajo)
+            const referenciaExistente = await buscarMismoPago(prisma, { banco: bancoOrigen, referencia, importeBs: montoNumerico }, contexto === 'ORDER' ? userId : undefined);
 
             // C-125: el mismo cliente vuelve a escribir la referencia de un pago de compra suyo que sigue libre (recargó
             // la página o volvió al checkout): se le devuelve ese pago como verificado. Antes era "referencia ya utilizada",

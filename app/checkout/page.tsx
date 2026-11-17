@@ -612,6 +612,14 @@ export default function CheckoutPage() {
       const orderData = await orderResponse.json().catch(() => ({}));
 
       if (!orderResponse.ok) {
+        // S-16: la sesión venció (sin sesión la API responde 401 en JSON): el servidor no creó nada ni cobró nada.
+        // Se entra de nuevo y se vuelve al checkout con el carrito como estaba.
+        if (orderResponse.status === 401) {
+          setShowProcessingOverlay(false);
+          toast.error('Tu sesión venció. Entra de nuevo: no se cobró nada.', { duration: 6000 });
+          router.push('/login?callbackUrl=%2Fcheckout');
+          return;
+        }
         if (orderResponse.status === 409 && orderData.calculation) {
           setServerQuote({ key: quoteBody, calculation: orderData.calculation, coupon: orderData.coupon ?? null, problems: [], mixto: null });
         }
@@ -639,6 +647,11 @@ export default function CheckoutPage() {
       }
 
       const createdOrders: Array<{ orderNumber: string }> = orderData.orders || [];
+      // S-16: sin al menos una orden en la respuesta no hay pedido confirmado (antes una página de HTML con 200 vaciaba el
+      // carrito y mostraba "pedido confirmado"). Se avisa y el carrito queda como estaba.
+      if (createdOrders.length === 0) {
+        throw new Error('No pudimos confirmar tu pedido. Revisa en Mis pedidos si se creó antes de intentarlo de nuevo.');
+      }
       // C-125: pagó de más con Pago Móvil: la diferencia ya está en su saldo
       if (orderData.sobrepago && typeof orderData.creditedUSD === 'number') {
         toast.success(`Pagaste de más: te acreditamos ${formatPuntos(orderData.creditedUSD)}.`, { duration: 6000 });

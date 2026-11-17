@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { publicReviewerName } from '@/lib/queries/product';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,13 +15,20 @@ export async function GET(request: NextRequest) {
 
     const reviews = await prisma.serviceReview.findMany({
       where: { serviceVideoId: videoId },
-      include: {
-        user: { select: { name: true } },
-      },
+      select: { id: true, rating: true, comment: true, createdAt: true, user: { select: { name: true } } },
       orderBy: { createdAt: 'desc' },
+      take: 100,
     });
 
-    return NextResponse.json(reviews);
+    // S-16: la ruta es pública (la página /servicios la lee sin sesión): solo lo que se muestra, con el nombre corto de quien
+    // reseña y sin ids de usuario (antes salía la fila entera, con su userId, y el nombre completo)
+    return NextResponse.json(reviews.map((review) => ({
+      id: review.id,
+      rating: review.rating,
+      comment: review.comment,
+      createdAt: review.createdAt,
+      user: { name: publicReviewerName(review.user?.name) },
+    })));
   } catch (error) {
     console.error('GET service-reviews error:', error);
     return NextResponse.json({ error: 'Error al obtener reseñas' }, { status: 500 });

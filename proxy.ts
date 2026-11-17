@@ -10,6 +10,57 @@ import { CABECERA_VERSION, VERSION_PESTANA } from '@/lib/version-build';
 const REF_COOKIE = 'electroshop_ref';
 const REF_TTL_DAYS = 30;
 
+/**
+ * Las rutas de /api que responden sin sesión (cada una revisa lo suyo dentro de su handler). Todas las demás de /api exigen
+ * sesión: sin ella el proxy responde 401 en JSON (S-16, más abajo). Antes esta lista estaba dentro de `authorized`.
+ */
+function esApiPublica(pathname: string): boolean {
+  return (
+    pathname.startsWith('/api/public') ||
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/products') ||
+    pathname.startsWith('/api/categories') ||
+    // Consultar una gift card antes de iniciar sesión (sin saldo, con límite). El canje (POST) exige sesión en el handler (C-71)
+    pathname === '/api/gift-cards/redeem' ||
+    // Solo la versión pública: /api/settings (completa) exige sesión de admin (C-50a)
+    pathname === '/api/settings/public' ||
+    pathname.startsWith('/api/exchange-rates') ||
+    pathname.startsWith('/api/contact') ||
+    // Cotizaciones (C-148): pedirla desde la tienda y aprobarla con el enlace, sin cuenta. Captcha y límite en el handler
+    pathname === '/api/cotizaciones' ||
+    /^\/api\/cotizaciones\/[A-Za-z0-9_-]{16,40}$/.test(pathname) ||
+    // C-181: la página del cliente avisa que se abrió (límite en el handler). C-182: el presupuesto en PDF
+    /^\/api\/cotizaciones\/[A-Za-z0-9_-]{16,40}\/(vista|pdf)$/.test(pathname) ||
+    // C-227: el proveedor marca "Lo estoy preparando" y anota la guía con su enlace firmado, sin cuenta. Límite en el handler
+    /^\/api\/proveedor\/despacho\/[A-Za-z0-9_-]{43}$/.test(pathname) ||
+    // C-181: Numen, de servidor a servidor. Se autoriza con NUMEN_API_KEY dentro del handler (lib/numen-auth.ts)
+    pathname.startsWith('/api/numen/') ||
+    // Exige sesión dentro del handler y responde 401 en JSON (sin redirigir al login)
+    pathname.startsWith('/api/product-requests') ||
+    pathname.startsWith('/api/reviews') ||
+    pathname.startsWith('/api/uploads') ||
+    pathname.startsWith('/api/analytics') ||
+    pathname.startsWith('/api/webhooks') ||
+    // El cron del servidor: se autoriza con CRON_SECRET dentro del handler (C-100, C-138, C-157, C-165, C-167, C-169)
+    pathname === '/api/cron/envios' ||
+    pathname === '/api/cron/favoritos' ||
+    pathname === '/api/cron/resenas' ||
+    pathname === '/api/cron/respaldos' ||
+    // C-219 (faltaba: el cron del sorteo rebotaba al login) y C-227 (los despachos de los proveedores)
+    pathname === '/api/cron/sorteo' ||
+    pathname === '/api/cron/despachos' ||
+    pathname === '/api/cron/promotores' ||
+    pathname === '/api/cron/papelera' ||
+    // Avisos de la Content-Security-Policy (C-166): los manda el navegador del visitante, sin sesión. Límite en el handler
+    pathname === '/api/csp-report' ||
+    // Tiempo real (C-127): sin sesión solo recibe el stock; el handler filtra por sesión y permisos
+    pathname === '/api/realtime' ||
+    // S-16: las reseñas de un trabajo de /servicios (página pública). El GET solo devuelve calificación, comentario y nombre
+    // corto; el POST exige sesión dentro del handler y responde 401 en JSON
+    pathname === '/api/service-reviews'
+  );
+}
+
 export default withAuth(
   async function proxy(req) {
     // ── PESTAÑAS DE OTRA VERSIÓN (C-203) ─────────────────────────────
@@ -47,6 +98,23 @@ export default withAuth(
       if (maintenance.active && !(ip && maintenance.allowedIPs.includes(ip))) {
         return maintenanceResponse(maintenance, pathname.startsWith('/api/'));
       }
+    }
+
+    // ── API SIN SESIÓN (S-16) ────────────────────────────────────────
+    // Antes lo decidía `authorized`, que solo sabe rebotar (307) a la página de entrada: el fetch del cliente seguía el rebote
+    // y recibía HTML con 200 (un pedido "confirmado" sin pedido, reseñas cargando para siempre). Ahora, sin sesión y fuera de
+    // la lista pública, una navegación del navegador va al login con su retorno y todo lo demás recibe 401 en JSON.
+    // Va después del modo mantenimiento (un visitante ve el mismo 503 que en cualquier ruta) y antes de todo lo que da por
+    // hecha una sesión. La versión de pestaña (más arriba) solo mira páginas, no /api.
+    if (pathname.startsWith('/api/') && !token && !esApiPublica(pathname)) {
+      const navegando = req.method === 'GET'
+        && (req.headers.get('sec-fetch-mode') === 'navigate' || (req.headers.get('accept') ?? '').includes('text/html'));
+      if (navegando) {
+        const loginUrl = new URL('/login', req.url);
+        loginUrl.searchParams.set('callbackUrl', `${pathname}${req.nextUrl.search}`);
+        return NextResponse.redirect(loginUrl);
+      }
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     // Tasa BCV automática (C-50b): sin await y como mucho una revisión cada 5 minutos por proceso
@@ -182,58 +250,9 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token, req }) => {
-        const { pathname } = req.nextUrl;
-        // Páginas: la protección de /admin, /customer y /checkout está en la función de arriba
-        // (el matcher cubre toda la tienda por el modo mantenimiento)
-        if (!pathname.startsWith('/api/')) return true;
-
-        const isLoginPage = pathname === '/login' || pathname === '/admin/login';
-        const isPublicApiRoute =
-          pathname.startsWith('/api/public') ||
-          pathname.startsWith('/api/auth') ||
-          pathname.startsWith('/api/products') ||
-          pathname.startsWith('/api/categories') ||
-          // Consultar una gift card antes de iniciar sesión (sin saldo, con límite). El canje (POST) exige sesión en el handler (C-71)
-          pathname === '/api/gift-cards/redeem' ||
-          // Solo la versión pública: /api/settings (completa) exige sesión de admin (C-50a)
-          pathname === '/api/settings/public' ||
-          pathname.startsWith('/api/exchange-rates') ||
-          pathname.startsWith('/api/contact') ||
-          // Cotizaciones (C-148): pedirla desde la tienda y aprobarla con el enlace, sin cuenta. Captcha y límite en el handler
-          pathname === '/api/cotizaciones' ||
-          /^\/api\/cotizaciones\/[A-Za-z0-9_-]{16,40}$/.test(pathname) ||
-          // C-181: la página del cliente avisa que se abrió (límite en el handler). C-182: el presupuesto en PDF
-          /^\/api\/cotizaciones\/[A-Za-z0-9_-]{16,40}\/(vista|pdf)$/.test(pathname) ||
-          // C-227: el proveedor marca "Lo estoy preparando" y anota la guía con su enlace firmado, sin cuenta. Límite en el handler
-          /^\/api\/proveedor\/despacho\/[A-Za-z0-9_-]{43}$/.test(pathname) ||
-          // C-181: Numen, de servidor a servidor. Se autoriza con NUMEN_API_KEY dentro del handler (lib/numen-auth.ts)
-          pathname.startsWith('/api/numen/') ||
-          // Exige sesión dentro del handler y responde 401 en JSON (sin redirigir al login)
-          pathname.startsWith('/api/product-requests') ||
-          pathname.startsWith('/api/reviews') ||
-          pathname.startsWith('/api/uploads') ||
-          pathname.startsWith('/api/analytics') ||
-          pathname.startsWith('/api/webhooks') ||
-          // El cron del servidor: se autoriza con CRON_SECRET dentro del handler (C-100, C-138, C-157, C-165, C-167, C-169)
-          pathname === '/api/cron/envios' ||
-          pathname === '/api/cron/favoritos' ||
-          pathname === '/api/cron/resenas' ||
-          pathname === '/api/cron/respaldos' ||
-          // C-219 (faltaba: el cron del sorteo rebotaba al login) y C-227 (los despachos de los proveedores)
-          pathname === '/api/cron/sorteo' ||
-          pathname === '/api/cron/despachos' ||
-          pathname === '/api/cron/promotores' ||
-          pathname === '/api/cron/papelera' ||
-          // Avisos de la Content-Security-Policy (C-166): los manda el navegador del visitante, sin sesión. Límite en el handler
-          pathname === '/api/csp-report' ||
-          // Tiempo real (C-127): sin sesión solo recibe el stock; el handler filtra por sesión y permisos
-          pathname === '/api/realtime';
-
-        if (isLoginPage || isPublicApiRoute) return true;
-
-        return !!token;
-      },
+      // S-16: siempre deja pasar. Lo que hacía antes (rebotar con 307 a la página de entrada las APIs sin sesión) rompía los fetch del
+      // cliente; ahora esa decisión está en el cuerpo del proxy ("API SIN SESIÓN") y las páginas siguen protegidas allí mismo.
+      authorized: () => true,
     },
   }
 );

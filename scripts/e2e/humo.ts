@@ -82,7 +82,7 @@ correr(async () => {
   // ---------- C-150: contadores y permisos
   const contadores = await api('/api/admin/sidebar-counts', admin.cookie);
   t('C-150 contadores del menú con verificaciones', contadores.status === 200 && typeof contadores.json?.pendingVerifications === 'number');
-  t('C-150 la API vieja de estadísticas ya no existe', [404, 307].includes((await api('/api/stats', admin.cookie)).status), (await api('/api/stats', admin.cookie)).status);
+  t('C-150 la API vieja de estadísticas ya no existe', [404, 401].includes((await api('/api/stats', admin.cookie)).status), (await api('/api/stats', admin.cookie)).status);
   t('el Administrador no cambia Configuración', (await api('/api/settings', admin.cookie, { method: 'PUT', body: { taxDigitalProducts: true } })).status === 403);
 
   // ---------- navegador

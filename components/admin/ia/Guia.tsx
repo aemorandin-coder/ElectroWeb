@@ -28,7 +28,7 @@ function Regla({ icono: Icono, titulo, children }: { icono: IconType; titulo: st
 function Pedido({ texto }: { texto: string }) {
   const copiar = () => { void navigator.clipboard.writeText(texto).then(() => toast.success('Copiado'), () => toast.error('No se pudo copiar')); };
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-brand-200 bg-brand-50 p-3 sm:flex-row sm:items-start sm:gap-3">
+    <div className="flex flex-col gap-2 rounded-xl border border-brand-200 bg-brand-50 p-3 @md:flex-row @md:items-start @md:gap-3">
       <p className="min-w-0 flex-1 text-sm text-brand-700">{texto}</p>
       <button type="button" onClick={copiar} className={`${adminSecondaryButton} h-9! shrink-0 px-3! text-[13px]`}>
         <IconoCopiar className="h-4 w-4" aria-hidden="true" />Copiar
@@ -39,7 +39,7 @@ function Pedido({ texto }: { texto: string }) {
 
 function AsiSiAsiNo({ si, no }: { si: string; no: string }) {
   return (
-    <div className="grid gap-2.5 sm:grid-cols-2">
+    <div className="grid gap-2.5 @md:grid-cols-2">
       <div className="rounded-xl border border-line p-3 text-sm text-ink-soft">
         <p className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-success-strong"><IconoCheck className="h-3.5 w-3.5" aria-hidden="true" />Así sí</p>
         {si}
@@ -63,7 +63,7 @@ function Lugar({ icono: Icono, titulo, sub, abierto, children }: { icono: IconTy
         </span>
         <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" />
       </summary>
-      <div className="grid gap-3 px-4 pb-4 text-sm text-ink-soft sm:pl-16">{children}</div>
+      <div className="grid gap-3 px-4 pb-4 text-sm text-ink-soft @md:pl-16">{children}</div>
     </details>
   );
 }
@@ -74,7 +74,7 @@ export default function Guia() {
       <section className={adminCard}>
         <h4 className="text-base font-semibold text-ink">Claude trabaja con lo que le das</h4>
         <p className="mt-0.5 text-sm text-muted">Cuanto más exacto el pedido, mejor el resultado. Cuatro reglas para todo el panel:</p>
-        <div className="mt-3 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-3 grid gap-2.5 @lg:grid-cols-2 @3xl:grid-cols-4">
           <Regla icono={IconoLista} titulo="El nombre completo">Marca y modelo exactos, como en la caja: &quot;Emtop ETID65&quot;, no &quot;taladro Emtop&quot;.</Regla>
           <Regla icono={IconoCamaraFotos} titulo="La foto de la etiqueta">La de abajo del producto o la caja: ahí está el modelo. Con ella no adivina.</Regla>
           <Regla icono={IconoObjetivo} titulo="Un pedido, un resultado">Pide que confirme el modelo en la web y entregue uno solo, con de dónde sacó cada dato.</Regla>

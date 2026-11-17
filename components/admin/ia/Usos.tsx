@@ -14,7 +14,7 @@ const botonChico = 'h-9! px-3! text-[13px]';
 export default function Usos({ datos, onEditar }: { datos: DatosIa; onEditar: (uso: UsoIa, paso: 0 | 2) => void }) {
   const modelo = infoModelo(datos.motor.modelo)?.corto ?? datos.motor.modelo;
   return (
-    <div className="grid gap-3.5 sm:grid-cols-2 2xl:grid-cols-3">
+    <div className="grid gap-3.5 @xl:grid-cols-2">
       {USOS_IA.map((uso) => {
         const Icono = ICONOS_DE_USO[uso.icono];
         const delServidor = datos.usos.find((u) => u.id === uso.id);

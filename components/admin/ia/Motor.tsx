@@ -47,7 +47,7 @@ export default function Motor({ datos, alGuardar }: { datos: DatosIa; alGuardar:
   );
 
   return (
-    <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
+    <div className="grid gap-4 @3xl:grid-cols-2 @3xl:items-start">
       <div className="min-w-0 space-y-4">
         <section className={adminCard}>
           <h4 className="text-base font-semibold text-ink">Modelo</h4>
@@ -62,8 +62,8 @@ export default function Motor({ datos, alGuardar }: { datos: DatosIa; alGuardar:
                 elegida={modelo === m.id}
                 icono={IconoNovedad}
                 titulo={<>{m.nombre}{datos.motor.modelo === m.id ? ' · el de ahora' : ''}</>}
-                detalle={`${m.para} ${usd(m.entrada)} / ${usd(m.salida)} el millón de tokens.`}
-                extra={<span className="shrink-0 text-right text-xs text-ink-soft"><b className="block text-[15px] tabular-nums text-ink">{usd(costoCon(m.id))}</b>al mes</span>}
+                detalle={<>{m.para} {usd(m.entrada)} / {usd(m.salida)} el millón de tokens.<span className="@md:hidden"> Este mes: <b className="text-ink">{usd(costoCon(m.id))}</b>.</span></>}
+                extra={<span className="hidden shrink-0 text-right text-xs text-ink-soft @md:block"><b className="block text-[15px] tabular-nums text-ink">{usd(costoCon(m.id))}</b>al mes</span>}
                 aria-pressed={modelo === m.id}
                 onClick={() => setModelo(m.id)}
               />
@@ -75,7 +75,7 @@ export default function Motor({ datos, alGuardar }: { datos: DatosIa; alGuardar:
         <section className={adminCard}>
           <h4 className="text-base font-semibold text-ink">Esfuerzo</h4>
           <p className="mt-0.5 text-sm text-muted">Cuánto piensa antes de responder. Más esfuerzo: mejores respuestas, más lentas y más caras.</p>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5" role="group" aria-label="Esfuerzo de Claude">
+          <div className="mt-3 grid grid-cols-2 gap-2 @lg:grid-cols-5" role="group" aria-label="Esfuerzo de Claude">
             {ESFUERZOS.map((e) => (
               <Opcion key={e.id} tamano="chica" elegida={esfuerzo === e.id} titulo={e.nombre[0].toUpperCase() + e.nombre.slice(1)} aria-pressed={esfuerzo === e.id} onClick={() => setEsfuerzo(e.id)} />
             ))}
@@ -99,7 +99,7 @@ export default function Motor({ datos, alGuardar }: { datos: DatosIa; alGuardar:
 
         <section className={adminCard}>
           <h4 className="text-base font-semibold text-ink">Revisar y publicar</h4>
-          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+          <div className="mt-3 grid gap-2.5 @md:grid-cols-2">
             <div className="rounded-xl border border-line p-3">
               <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">Antes</p>
               {resumen(datos.motor.modelo, datos.motor.esfuerzo)}

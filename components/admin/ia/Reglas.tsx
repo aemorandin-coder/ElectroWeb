@@ -21,7 +21,7 @@ export default function Reglas({ datos, alGuardar }: { datos: DatosIa; alGuardar
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-2.5 sm:grid-cols-2">
+      <div className="grid gap-2.5 @xl:grid-cols-2">
         <div className="flex items-start gap-3 rounded-2xl border border-line bg-white p-3.5">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-white"><IconoCandado className="h-4 w-4" aria-hidden="true" /></span>
           <div>
@@ -38,7 +38,7 @@ export default function Reglas({ datos, alGuardar }: { datos: DatosIa; alGuardar
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] xl:items-start">
+      <div className="grid gap-4 @3xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] @3xl:items-start">
         <div className="min-w-0 space-y-4">
           <section className={adminCard}>
             <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -46,7 +46,7 @@ export default function Reglas({ datos, alGuardar }: { datos: DatosIa; alGuardar
               <span className="text-xs text-muted">{generales.length} reglas</span>
             </div>
             <ul className="mt-1">
-              {generales.map((r) => <FilaRegla key={r.id} regla={r} vecesEnElMes={consumo.atajadas.porRegla[r.id] ?? 0} mes={mes} />)}
+              {generales.map((r) => <FilaRegla key={r.id} regla={r} vecesEnElMes={consumo.atajadas.porRegla[r.id] ?? 0} />)}
             </ul>
           </section>
 
@@ -68,20 +68,23 @@ export default function Reglas({ datos, alGuardar }: { datos: DatosIa; alGuardar
                   <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" />
                 </summary>
                 <ul className="mt-2">
-                  {propias.map((r) => <FilaRegla key={r.id} regla={r} vecesEnElMes={consumo.atajadas.porRegla[r.id] ?? 0} mes={mes} />)}
+                  {propias.map((r) => <FilaRegla key={r.id} regla={r} vecesEnElMes={consumo.atajadas.porRegla[r.id] ?? 0} />)}
                 </ul>
               </details>
             );
           })}
         </div>
 
-        <section className={adminCard}>
+        {/* Al lado de una lista larga, se queda a la vista mientras se baja por ella */}
+        <section className={`${adminCard} @3xl:sticky @3xl:top-22`}>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h4 className="text-base font-semibold text-ink">Lo que atajaron</h4>
             <span className="text-xs text-muted">{consumo.atajadas.totalMes} en {mes.split(' de ')[0]}</span>
           </div>
           <p className="mb-2 mt-0.5 text-xs text-muted">Cada vez que una regla cambia o frena una respuesta, queda aquí con lo que traía.</p>
-          <Atajadas atajadas={consumo.atajadas.ultimas} />
+          <div className="max-h-[32rem] overflow-y-auto">
+            <Atajadas atajadas={consumo.atajadas.ultimas} />
+          </div>
         </section>
       </div>
     </div>

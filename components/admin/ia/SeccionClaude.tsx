@@ -44,7 +44,9 @@ export default function SeccionClaude() {
   }
 
   return (
-    <div className="space-y-8">
+    <>
+      {/* El ancho de la sección decide las columnas (@container). El cajón va fuera: un contenedor con layout encierra a lo que es fixed */}
+      <div className="@container space-y-8">
       <Estado datos={datos} />
 
       {datos.clave.claveRota && (
@@ -75,6 +77,7 @@ export default function SeccionClaude() {
       <Bloque id="ia-guia" icono={IconoAyuda} titulo="Guía">
         <Guia />
       </Bloque>
+      </div>
 
       {editando && (
         <EditarInstrucciones
@@ -86,6 +89,6 @@ export default function SeccionClaude() {
           alPublicar={recargar}
         />
       )}
-    </div>
+    </>
   );
 }

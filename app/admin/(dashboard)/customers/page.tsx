@@ -1,995 +1,300 @@
 'use client';
-import { toast } from 'react-hot-toast';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
-import { formatUSD } from '@/lib/currency';
-import {
-  adminPageHeader,
-  adminModalBody,
-  adminModalFooter,
-  adminIconButton,
-  adminTab,
-  adminPageTitle,
-  adminPageSubtitle,
-  adminStatCard,
-  adminStatLabel,
-  adminStatValue,
-  adminIconChip,
-  adminPrimaryButton,
-  adminSecondaryButton,
-  adminDangerButton,
-  adminModalOverlay,
-  adminModalPanel,
-  adminTableWrap,
-  adminTh,
-  adminTd,
-  adminRowHover,
-  adminInput,
-  adminBadge,
-  adminCardFlush,
-  adminNotice,
-} from '@/lib/admin-ui';
-import {
-  IconoActualizar, IconoAdvertencia, IconoBuscar, IconoCalendario, IconoCargando, IconoCerrar, IconoCheck, IconoClientes,
-  IconoCuenta, IconoDescargar, IconoDocumento, IconoError, IconoGarantia, IconoMaletin, IconoOrdenes, IconoReportes,
-} from '@/components/iconos';
 
-import { useState, useEffect, useRef } from 'react';
-import { EmptyState } from '@/components/ui/EmptyState';
+// C-276 (rediseño de Clientes, la lista que eligió el equipo el 16/11): quién es cada cliente, qué compra y qué le falta.
+// - Filtros con su cuenta (components/admin/Filtros): nuevos, sin activar, con pedidos, con Puntos ES, empresas por verificar,
+//   dormidos (sin entrar en 30 días) y suspendidos.
+// - La búsqueda espera a que se deje de escribir y busca por nombre, correo, teléfono, cédula, RIF o empresa.
+// - Cada fila con sus sellos de confianza, el registro, el último ingreso, los pedidos, lo gastado y sus Puntos ES; de 25 en 25.
+// - La ficha de cada cliente es su página (/admin/customers/[id]). Lo que hacía el cuadro de antes (sus datos, la empresa,
+//   el resumen, editar y eliminar) vive ahí. Siguen aquí Verificaciones (con su cuenta) y Actualizar.
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
-import PildoraEstadoOrden from '@/components/admin/PildoraEstadoOrden';
-import ResumenCliente from '@/components/admin/clientes/ResumenCliente';
+import { toast } from 'react-hot-toast';
+import Filtros, { type Filtro } from '@/components/admin/Filtros';
+import { SellosMini } from '@/components/admin/clientes/Sellos';
+import {
+  IconoActualizar, IconoBuscar, IconoCalendario, IconoCarrito, IconoChevronDerecha, IconoChevronIzquierda, IconoClientes, IconoCorreo,
+  IconoCuenta, IconoEnviar, IconoError, IconoGarantia, IconoMaletin, IconoNovedad, IconoOrdenes, IconoPausa, IconoPuntosEs, IconoReloj,
+} from '@/components/iconos';
+import { EmptyState } from '@/components/ui/EmptyState';
+import {
+  adminBadge, adminCardFlush, adminDato, adminIconButton, adminIconChip, adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminTableWrap,
+  adminSecondaryButton, adminStatCard, adminStatLabel, adminStatValue, adminTh,
+} from '@/lib/admin-ui';
+import { fechaCorta, haceCuanto } from '@/lib/clientes/fechas';
+import type { FiltroClientes } from '@/lib/clientes/lista';
+import { formatUSD } from '@/lib/currency';
+import type { FilaCliente } from '@/lib/dto/cliente';
 
-interface CustomerOrder {
-  id: string;
-  orderNumber: string;
-  createdAt: string;
-  status: string;
-  totalUSD: number | string;
-}
-
-interface Customer {
-  id: string;
-  name: string | null;
-  email: string;
-  image: string | null;
-  createdAt: string;
-  orderCount: number;
-  totalSpent: number;
-  activeOrders: number;
-  profile?: {
-    customerType?: string | null;
-    companyName?: string | null;
-    taxId?: string | null;
-    phone?: string | null;
-    whatsapp?: string | null;
-    isBusinessAccount?: boolean;
-    businessVerified?: boolean;
-  };
-}
-
-interface CustomerDetails extends Customer {
-  profile?: {
-    phone: string | null;
-    whatsapp: string | null;
-    customerType: string | null;
-    companyName: string | null;
-    taxId: string | null;
-    addresses?: unknown[];
-    // Business Verification
-    isBusinessAccount: boolean;
-    businessVerified: boolean;
-    businessVerificationStatus: string; // NONE, PENDING, APPROVED, REJECTED
-    businessRIF: string | null;
-    businessConstitutiveAct: string | null;
-    businessRIFDocument: string | null;
-    businessVerificationNotes: string | null;
-  };
-  orders: CustomerOrder[];
-  stats: {
-    totalSpent: number;
-    orderCount: number;
-    activeOrders: number;
-  };
-}
-
-interface Stats {
+interface Respuesta {
+  filas: FilaCliente[];
   total: number;
-  thisMonth: number;
-  active: number;
+  pagina: number;
+  paginas: number;
+  cuentas: Record<FiltroClientes, number>;
+  cifras: { clientes: number; nuevosMes: number; sinActivar: number; conActivas: number };
 }
 
-export default function CustomersPage() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [stats, setStats] = useState<Stats>({ total: 0, thisMonth: 0, active: 0 });
-  const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+const POR_PAGINA = 25;
+
+function Avatar({ fila }: { fila: Pick<FilaCliente, 'nombre' | 'correo' | 'foto'> }) {
+  const inicial = (fila.nombre || fila.correo || '?').trim().charAt(0).toUpperCase();
+  return (
+    <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-500 text-sm font-bold text-white">
+      {fila.foto ? <Image src={fila.foto} alt="" fill sizes="40px" className="object-cover" /> : inicial}
+    </span>
+  );
+}
+
+function UltimoIngreso({ fila }: { fila: FilaCliente }) {
+  if (!fila.ultimoIngreso) return <span className="text-muted">Nunca entró</span>;
+  return (
+    <span className="text-ink-soft">
+      {haceCuanto(fila.ultimoIngreso.en)}
+      {fila.ultimoIngreso.dispositivo && <span className="block text-xs text-muted">{fila.ultimoIngreso.dispositivo}</span>}
+    </span>
+  );
+}
+
+export default function ClientesPage() {
+  const [filtro, setFiltro] = useState<FiltroClientes>('todos');
+  const [texto, setTexto] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [pagina, setPagina] = useState(1);
+  const [datos, setDatos] = useState<Respuesta | null>(null);
+  // La consulta que ya respondió: mientras no sea la que se pide, está cargando (sin setState dentro del efecto)
+  const [respondida, setRespondida] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetails | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  useBodyScrollLock(showModal);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [activeTab, setActiveTab] = useState<'PERSONAL' | 'COMPANY' | 'STATS'>('PERSONAL');
-  const [pendingVerifications, setPendingVerifications] = useState(0);
+  const [vuelta, setVuelta] = useState(0);
+  const [pendientes, setPendientes] = useState(0);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    whatsapp: '',
-    customerType: 'PERSON' as 'PERSON' | 'COMPANY',
-    companyName: '',
-    taxId: '',
-    businessVerificationStatus: 'NONE',
-    businessVerificationNotes: '',
-  });
-  const [saveLoading, setSaveLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const modalRef = useRef<HTMLDivElement>(null);
+  // La búsqueda va al servidor cuando se deja de escribir (antes pedía en cada tecla)
+  useEffect(() => {
+    const t = setTimeout(() => { setBusqueda(texto.trim()); setPagina(1); }, 350);
+    return () => clearTimeout(t);
+  }, [texto]);
 
-  useCargarAlMontar(fetchCustomers, [search]);
+  const consulta = `${filtro}|${busqueda}|${pagina}|${vuelta}`;
+  const cargando = respondida !== consulta;
+  useEffect(() => {
+    const control = new AbortController();
+    const params = new URLSearchParams({ filtro, pagina: String(pagina) });
+    if (busqueda) params.set('buscar', busqueda);
+    fetch(`/api/customers?${params}`, { signal: control.signal })
+      .then(async (r) => {
+        if (!r.ok) throw new Error((await r.json().catch(() => null))?.error || 'No se pudieron cargar los clientes');
+        setDatos(await r.json());
+        setError('');
+      })
+      .catch((e: unknown) => { if (!control.signal.aborted) setError(e instanceof Error ? e.message : 'No se pudieron cargar los clientes'); })
+      .finally(() => { if (!control.signal.aborted) setRespondida(consulta); });
+    return () => control.abort();
+  }, [filtro, busqueda, pagina, vuelta, consulta]);
 
   useEffect(() => {
-    // Fetch pending verifications count
-    const fetchPendingCount = async () => {
-      try {
-        const res = await fetch('/api/admin/verifications/pending-count');
-        if (res.ok) {
-          const data = await res.json();
-          setPendingVerifications(data.count || 0);
-        }
-      } catch (e) {
-        console.error('Error fetching pending count:', e);
-        toast.error('No se pudo cargar el conteo de verificaciones');
-      }
-    };
-    fetchPendingCount();
+    fetch('/api/admin/verifications/pending-count')
+      .then(async (r) => { if (r.ok) setPendientes((await r.json()).count || 0); })
+      .catch(() => toast.error('No se pudo cargar el conteo de verificaciones'));
   }, []);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        setShowModal(false);
-        setIsEditing(false);
-      }
-    }
+  const c = datos?.cuentas;
+  const filtros: Filtro<FiltroClientes>[] = [
+    { valor: 'todos', etiqueta: 'Todos', ayuda: 'Toda la clientela', Icono: IconoClientes, cuenta: c?.todos },
+    { valor: 'nuevos', etiqueta: 'Nuevos', ayuda: 'Este mes', Icono: IconoNovedad, cuenta: c?.nuevos },
+    { valor: 'sin-activar', etiqueta: 'Sin activar', ayuda: 'No abrieron el correo', Icono: IconoCorreo, cuenta: c?.['sin-activar'], tono: c?.['sin-activar'] ? 'aviso' : undefined },
+    { valor: 'con-pedidos', etiqueta: 'Con pedidos', ayuda: 'Compraron alguna vez', Icono: IconoCarrito, cuenta: c?.['con-pedidos'] },
+    { valor: 'con-puntos', etiqueta: 'Con Puntos ES', ayuda: 'Tienen saldo', Icono: IconoPuntosEs, cuenta: c?.['con-puntos'] },
+    { valor: 'empresas', etiqueta: 'Empresas', ayuda: 'Por verificar', Icono: IconoMaletin, cuenta: c?.empresas, tono: c?.empresas ? 'aviso' : undefined },
+    { valor: 'dormidos', etiqueta: 'Dormidos', ayuda: 'Sin entrar en 30 días', Icono: IconoReloj, cuenta: c?.dormidos },
+    ...(c?.suspendidos || filtro === 'suspendidos' ? [{ valor: 'suspendidos' as const, etiqueta: 'Suspendidos', ayuda: 'No pueden entrar', Icono: IconoPausa, cuenta: c?.suspendidos }] : []),
+  ];
+  const cambiarFiltro = (f: FiltroClientes) => { setFiltro(f); setPagina(1); };
+  const filas = datos?.filas ?? [];
+  const desde = datos && datos.total > 0 ? (datos.pagina - 1) * POR_PAGINA + 1 : 0;
+  const hasta = datos ? Math.min(datos.total, datos.pagina * POR_PAGINA) : 0;
 
-    if (showModal) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showModal]);
-
-  async function fetchCustomers() {
-    try {
-      setLoading(true);
-      setError('');
-      const params = new URLSearchParams();
-      if (search) params.append('search', search);
-
-      const response = await fetch(`/api/customers?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error('Error al cargar clientes');
-      }
-
-      const data = await response.json();
-      setCustomers(data.customers || []);
-      setStats(data.stats || { total: 0, thisMonth: 0, active: 0 });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
-      console.error('Error fetching customers:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const fetchCustomerDetails = async (id: string) => {
-    try {
-      const response = await fetch(`/api/customers/${id}`);
-      if (!response.ok) {
-        throw new Error('Error al cargar detalles del cliente');
-      }
-      const data = await response.json();
-      setSelectedCustomer(data);
-      setFormData({
-        name: data.name || '',
-        email: data.email || '',
-        phone: data.profile?.phone || '',
-        whatsapp: data.profile?.whatsapp || '',
-        customerType: (data.profile?.customerType as 'PERSON' | 'COMPANY') || 'PERSON',
-        companyName: data.profile?.companyName || '',
-        taxId: data.profile?.taxId || '',
-        businessVerificationStatus: data.profile?.businessVerificationStatus || 'NONE',
-        businessVerificationNotes: data.profile?.businessVerificationNotes || '',
-      });
-      setShowModal(true);
-      setIsEditing(false);
-      setActiveTab('PERSONAL');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
-    }
-  };
-
-  const handleSave = async () => {
-    if (!selectedCustomer) return;
-
-    setSaveLoading(true);
-    try {
-      const response = await fetch(`/api/customers/${selectedCustomer.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Error al guardar');
-      }
-
-      setIsEditing(false);
-      await fetchCustomerDetails(selectedCustomer.id);
-      await fetchCustomers();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
-    } finally {
-      setSaveLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!selectedCustomer || !isDeleting) return;
-
-    setDeleteLoading(true);
-    try {
-      const response = await fetch(`/api/customers/${selectedCustomer.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Error al eliminar');
-      }
-
-      setShowModal(false);
-      setIsDeleting(false);
-      await fetchCustomers();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
-      setIsDeleting(false);
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-VE', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const getVerificationStatusBadge = (status: string) => {
-    switch (status) {
-      case 'APPROVED':
-        return <span className={adminBadge('success')}><IconoCheck className="w-3 h-3" /> Verificado</span>;
-      case 'PENDING':
-        return <span className={adminBadge('warning')}>Pendiente</span>;
-      case 'REJECTED':
-        return <span className={adminBadge('danger')}><IconoCerrar className="w-3 h-3" /> Rechazado</span>;
-      default:
-        return <span className={adminBadge('neutral')}>No verificado</span>;
-    }
-  };
+  const cifras = [
+    { Icono: IconoCuenta, valor: datos?.cifras.clientes, texto: 'Clientes', tono: 'brand' as const },
+    { Icono: IconoCalendario, valor: datos?.cifras.nuevosMes, texto: 'Nuevos este mes', tono: 'success' as const },
+    { Icono: IconoCorreo, valor: datos?.cifras.sinActivar, texto: 'Sin activar el correo', tono: 'brand' as const },
+    { Icono: IconoOrdenes, valor: datos?.cifras.conActivas, texto: 'Con órdenes activas', tono: 'brand' as const },
+  ];
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Epic Header Section */}
-      <div className="flex-shrink-0 space-y-4">
-        <div className={adminPageHeader}>
-          <div className="flex items-center gap-3">
-            <div className={`${adminIconChip('brand')} hidden sm:flex`}>
-              <IconoCuenta className="w-6 h-6 text-brand-600" />
-            </div>
-            <div>
-              <h1 className={adminPageTitle}>Clientes</h1>
-              <p className={adminPageSubtitle}>Busca un cliente para consultar su cuenta y sus pedidos.</p>
-            </div>
+    <div className="min-w-0">
+      <div className={adminPageHeader}>
+        <div className="flex items-center gap-3">
+          <div className={`${adminIconChip('brand')} hidden sm:flex`}>
+            <IconoCuenta className="h-6 w-6 text-brand-600" aria-hidden="true" />
           </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/admin/verifications"
-              className={adminSecondaryButton}
-              title="Verificaciones Empresariales"
-            >
-              <IconoGarantia className="w-4 h-4" />
-              <span>Verificaciones</span>
-              {pendingVerifications > 0 && (
-                <span className={adminBadge('warning')}>
-                  {pendingVerifications > 99 ? '99+' : pendingVerifications}
-                  <span className="sr-only"> por verificar</span>
-                </span>
-              )}
-            </Link>
-            <button
-              onClick={() => fetchCustomers()}
-              className={`${adminSecondaryButton} w-11 px-0!`}
-              aria-label="Actualizar clientes"
-              title="Actualizar"
-            >
-              <IconoActualizar className={`w-5 h-5 text-muted ${loading ? 'animate-spin' : ''}`} />
-            </button>
+          <div>
+            <h1 className={adminPageTitle}>Clientes</h1>
+            <p className={adminPageSubtitle}>Quién es cada uno, qué compra y qué le falta.</p>
           </div>
         </div>
-
-        {error && (
-          <div className={`${adminNotice('danger')} flex items-center gap-2`} role="alert">
-            <IconoError className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-            {error}
-          </div>
-        )}
-
-          <div className="rounded-xl border border-line bg-white p-2">
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1">
-                <IconoBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  aria-label="Buscar clientes por nombre o correo"
-                  placeholder="Nombre o correo del cliente"
-                  className={`${adminInput()} pl-10`}
-                />
-              </div>
-            </div>
-          </div>
-
-        {/* Stats Cards */}
-        <div className="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-3">
-          <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
-            <span className={`${adminIconChip('brand')} hidden sm:flex`}>
-              <IconoCuenta className="w-5 h-5" />
-            </span>
-            <div>
-              <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.total}</p>
-              <p className={adminStatLabel}>Clientes</p>
-            </div>
-          </div>
-
-          <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
-            <span className={`${adminIconChip('success')} hidden sm:flex`}>
-              <IconoCalendario className="w-5 h-5" />
-            </span>
-            <div>
-              <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.thisMonth}</p>
-              <p className={adminStatLabel}>Nuevos este mes</p>
-            </div>
-          </div>
-
-          <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
-            <span className={`${adminIconChip('brand')} hidden sm:flex`}>
-              <IconoOrdenes className="w-5 h-5" />
-            </span>
-            <div>
-              <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.active}</p>
-              <p className={adminStatLabel}>Con órdenes activas</p>
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/verifications" className={adminSecondaryButton} title="Verificaciones de empresas">
+            <IconoGarantia className="h-4 w-4" aria-hidden="true" />
+            <span>Verificaciones</span>
+            {pendientes > 0 && (
+              <span className={adminBadge('warning')}>
+                {pendientes > 99 ? '99+' : pendientes}
+                <span className="sr-only"> por verificar</span>
+              </span>
+            )}
+          </Link>
+          <button type="button" onClick={() => setVuelta((v) => v + 1)} className={`${adminSecondaryButton} w-11 px-0!`} aria-label="Actualizar clientes" title="Actualizar">
+            <IconoActualizar className={`h-5 w-5 text-muted ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
+          </button>
         </div>
       </div>
 
-      {/* Scrollable Table Section */}
-      <div className="mt-4 min-w-0 flex-1">
-        <div className={adminCardFlush}>
-          {loading ? (
-            <div className="p-8 text-center">
-              <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface mb-2">
-                <IconoCargando className="animate-spin h-5 w-5 text-brand-600" />
+      {error && (
+        <div className={`${adminNotice('danger')} mb-4 flex items-center gap-2`} role="alert">
+          <IconoError className="h-5 w-5 shrink-0" aria-hidden="true" />
+          {error}
+        </div>
+      )}
+
+      <div className="grid gap-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {cifras.map(({ Icono, valor, texto: t, tono }) => (
+            <div key={t} className={`${adminStatCard} p-3`}>
+              <span className={`${adminIconChip(tono)} hidden sm:flex`}><Icono className="h-5 w-5" aria-hidden="true" /></span>
+              <div className="min-w-0">
+                <p className={`${adminStatValue} text-lg tabular-nums`}>{valor ?? '…'}</p>
+                <p className={adminStatLabel}>{t}</p>
               </div>
-              <p className="text-xs text-muted">Cargando clientes...</p>
             </div>
-          ) : customers.length === 0 ? (
+          ))}
+        </div>
+
+        <label className="relative block">
+          <span className="sr-only">Buscar clientes</span>
+          <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+          <input type="search" value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Nombre, correo, teléfono, cédula o RIF" className={`${adminInput()} pl-10`} />
+        </label>
+
+        <Filtros etiqueta="Filtrar clientes" valor={filtro} onCambiar={cambiarFiltro} filtros={filtros} />
+
+        {cargando && !datos ? (
+          <div className={`${adminCardFlush} p-8 text-center text-sm text-muted`}>Cargando clientes…</div>
+        ) : filas.length === 0 ? (
+          <div className={adminCardFlush}>
             <EmptyState
-              icon={
-                <IconoClientes className="w-8 h-8" />
-              }
-              title="No hay clientes"
-              description={search ? 'No se encontraron clientes con ese criterio de búsqueda' : 'Aún no hay clientes registrados'}
+              icon={<IconoClientes className="h-8 w-8" />}
+              title={busqueda ? 'Nadie coincide con la búsqueda' : 'No hay clientes aquí'}
+              description={busqueda ? 'Prueba con el teléfono, la cédula o una parte del correo.' : 'Cambia el filtro para ver a los demás.'}
             />
-          ) : (
-            <>
-              {/* Mobile Card View */}
-              <div className="grid grid-cols-1 divide-y divide-line xl:hidden">
-                {customers.map((customer: Customer) => (
-                  <div key={customer.id} className="relative bg-white p-4">
-                    <div className="flex items-start gap-3 mb-3">
-                      {customer.image ? (
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-line-strong flex-shrink-0">
-                          <Image src={customer.image} alt={customer.name || ''} fill className="object-cover" />
-                        </div>
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                          {(customer.name || customer.email).charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-semibold text-ink truncate">{customer.name || 'Sin nombre'}</h3>
-                        <p className="text-xs text-muted truncate">{customer.email}</p>
-                      </div>
-                      {customer.profile?.customerType === 'COMPANY' ? (
-                        <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 bg-brand-50 text-brand-700 rounded-full">
-                          <IconoMaletin className="w-3.5 h-3.5" />
-                        </span>
-                      ) : (
-                        <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 bg-surface text-ink-soft rounded-full">
-                          <IconoCuenta className="w-3.5 h-3.5" />
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="bg-surface p-2 rounded-lg">
-                        <p className="text-xs text-muted font-semibold">Órdenes</p>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-lg font-bold text-ink">{customer.orderCount}</span>
-                          {customer.activeOrders > 0 && (
-                            <span className="text-xs font-semibold text-brand-600">({customer.activeOrders} {customer.activeOrders === 1 ? 'activa' : 'activas'})</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="bg-surface p-2 rounded-lg">
-                        <p className="text-xs text-muted font-semibold">Total Gastado</p>
-                        <p className="whitespace-nowrap text-base font-bold tabular-nums text-brand-600 sm:text-lg">
-                          {formatUSD(customer.totalSpent)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-line">
-                      <span className="text-xs text-muted">
-                        Registrado: {formatDate(customer.createdAt)}
-                      </span>
-                      <button
-                        onClick={() => fetchCustomerDetails(customer.id)}
-                        className={`${adminSecondaryButton} after:absolute after:inset-0`}
-                      >
-                        Ver Detalles
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Desktop Table View */}
-              <div className={`${adminTableWrap} hidden xl:block`}>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr>
-                      <th className={adminTh}>Cliente</th>
-                      <th className={adminTh}>Correo</th>
-                      <th className={adminTh}>Tipo</th>
-                      <th className={adminTh}>Registro</th>
-                      <th className={adminTh}>Órdenes</th>
-                      <th className={adminTh}>Total</th>
-                      <th className={`${adminTh} text-right`}>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {customers.map((customer: Customer) => (
-                      <tr key={customer.id} className={adminRowHover}>
-                        <td className={adminTd}>
-                          <div className="flex items-center gap-2">
-                            {customer.image ? (
-                              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-line-strong">
-                                <Image src={customer.image} alt={customer.name || ''} fill className="object-cover" />
-                              </div>
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold">
-                                {(customer.name || customer.email).charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                            <span className="font-medium text-ink">{customer.name || 'Sin nombre'}</span>
+          </div>
+        ) : (
+          <>
+            {/* En la computadora: la tabla. Toda la fila abre la ficha (enlace estirado); los botones van encima */}
+            <div className={`${adminTableWrap} hidden lg:block`}>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr>
+                    <th className={adminTh}>Cliente</th>
+                    <th className={adminTh}>Sellos</th>
+                    <th className={`${adminTh} hidden xl:table-cell`}>Registro</th>
+                    <th className={`${adminTh} hidden xl:table-cell`}>Último ingreso</th>
+                    <th className={`${adminTh} text-right`}>Pedidos</th>
+                    <th className={`${adminTh} text-right`}>Gastado</th>
+                    <th className={`${adminTh} hidden text-right xl:table-cell`}>Puntos ES</th>
+                    <th className={adminTh}><span className="sr-only">Acciones</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filas.map((f) => (
+                    <tr key={f.id} className="relative border-t border-line hover:bg-surface">
+                      <td className="px-4 py-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <Avatar fila={f} />
+                          <div className="min-w-0">
+                            <Link href={`/admin/customers/${f.id}`} className="font-semibold text-ink after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-brand-500">
+                              {f.nombre || 'Sin nombre'}
+                            </Link>
+                            {f.empresa && <span className={`${adminDato} ml-2 align-middle`}><IconoMaletin className="h-3.5 w-3.5" aria-hidden="true" />Empresa</span>}
+                            {f.cuenta === 'SUSPENDED' && <span className={`${adminBadge('danger')} ml-2 align-middle`}>Suspendida</span>}
+                            <p className="truncate text-xs text-muted">{f.correo}</p>
+                            {/* Entre 1024 y 1280 px, el registro y el último ingreso van aquí (sus columnas no caben) */}
+                            <p className="text-xs text-muted xl:hidden">Desde {fechaCorta(f.registro, new Date(f.registro).getFullYear() !== new Date().getFullYear())} · <UltimoIngreso fila={f} /></p>
                           </div>
-                        </td>
-                        <td className={`${adminTd} text-muted`}>{customer.email}</td>
-                        <td className={adminTd}>
-                          {customer.profile?.customerType === 'COMPANY' ? (
-                            <span className={adminBadge('brand')}>
-                              <IconoMaletin className="w-3 h-3" /> Empresa
-                            </span>
-                          ) : (
-                            <span className={adminBadge('neutral')}>
-                              <IconoCuenta className="w-3 h-3" /> Persona
-                            </span>
-                          )}
-                        </td>
-                        <td className={`${adminTd} text-muted text-xs`}>{formatDate(customer.createdAt)}</td>
-                        <td className={adminTd}>
-                          <span className="inline-flex items-center gap-1">
-                            <span className="font-medium text-ink">{customer.orderCount}</span>
-                            {customer.activeOrders > 0 && (
-                              <span className={adminBadge('brand')}>
-                                {customer.activeOrders} {customer.activeOrders === 1 ? 'activa' : 'activas'}
-                              </span>
-                            )}
-                          </span>
-                        </td>
-                        <td className={adminTd}>
-                          <span className="font-semibold text-brand-600">
-                            {formatUSD(customer.totalSpent)}
-                          </span>
-                        </td>
-                        <td className={`${adminTd} text-right`}>
-                          <button
-                            onClick={() => fetchCustomerDetails(customer.id)}
-                            className={adminSecondaryButton}
-                          >
-                            Ver detalles
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3"><SellosMini sellos={f.sellos} /></td>
+                      <td className="hidden whitespace-nowrap px-4 py-3 text-ink-soft xl:table-cell">{fechaCorta(f.registro, new Date(f.registro).getFullYear() !== new Date().getFullYear())}</td>
+                      <td className="hidden whitespace-nowrap px-4 py-3 xl:table-cell"><UltimoIngreso fila={f} /></td>
+                      <td className="px-4 py-3 text-right tabular-nums">
+                        {f.pedidos}
+                        {f.activos > 0 && <span className="block text-xs text-brand-600">{f.activos} en curso</span>}
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold tabular-nums text-brand-700">
+                        {formatUSD(f.gastado)}
+                        {f.puntos > 0 && <span className="block text-xs font-normal text-ink-soft xl:hidden">{formatUSD(f.puntos)} en Puntos ES</span>}
+                      </td>
+                      <td className="hidden px-4 py-3 text-right tabular-nums xl:table-cell">{f.puntos > 0 ? formatUSD(f.puntos) : <span className="text-muted">—</span>}</td>
+                      <td className="px-4 py-3">
+                        <div className="relative z-[1] flex justify-end gap-1.5">
+                          <Link href={`/admin/customers/${f.id}/escribir`} className={adminIconButton} aria-label={`Escribirle a ${f.nombre || 'este cliente'}`} title="Escribirle">
+                            <IconoEnviar className="h-4 w-4" aria-hidden="true" />
+                          </Link>
+                          <Link href={`/admin/customers/${f.id}`} aria-label={`Ver la ficha de ${f.nombre || 'este cliente'}`} className={`${adminSecondaryButton} h-9! whitespace-nowrap px-2.5! text-xs! xl:px-3!`}>
+                            <span className="hidden xl:inline">Ver ficha</span> <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-      {/* Customer Details Modal */}
-      {showModal && selectedCustomer && (
-        <div
-          className={adminModalOverlay}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowModal(false);
-              setIsEditing(false);
-              setIsDeleting(false);
-            }
-          }}
-        >
-          <div
-            ref={modalRef}
-            className={`${adminModalPanel} sm:max-w-3xl`}
-            role="dialog" aria-modal="true" aria-label="Detalle del cliente"
-          >
-            {/* Header */}
-            <div className="border-b border-line px-5 py-4 text-ink">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-3">
-                  {selectedCustomer.image ? (
-                    <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white">
-                      <Image src={selectedCustomer.image} alt={selectedCustomer.name || ''} fill className="object-cover" />
+            {/* En el teléfono: tarjetas */}
+            <ul className="grid gap-2.5 lg:hidden" aria-label="Clientes">
+              {filas.map((f) => (
+                <li key={f.id} className="relative rounded-2xl border border-line bg-white p-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar fila={f} />
+                    <div className="min-w-0 flex-1">
+                      <Link href={`/admin/customers/${f.id}`} className="font-semibold text-ink after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-2 focus-visible:outline-brand-500">
+                        {f.nombre || 'Sin nombre'}
+                      </Link>
+                      <p className="truncate text-xs text-muted">{f.correo}</p>
                     </div>
-                  ) : (
-                    <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface text-lg font-bold text-ink sm:flex">
-                      {(selectedCustomer.name || selectedCustomer.email).charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="text-lg font-semibold text-ink">
-                      {isEditing ? 'Editar Cliente' : 'Detalles del Cliente'}
-                    </h3>
-                    <p className="text-sm text-muted [overflow-wrap:anywhere]">{selectedCustomer.email}</p>
+                    <IconoChevronDerecha className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
                   </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setIsEditing(false);
-                    setIsDeleting(false);
-                  }}
-                  aria-label="Cerrar"
-                  title="Cerrar" className={`${adminIconButton} h-11 w-11 shrink-0`}
-                >
-                  <IconoCerrar className="w-5 h-5" />
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <SellosMini sellos={f.sellos} />
+                    <span className="text-xs text-muted">{f.ultimoIngreso ? haceCuanto(f.ultimoIngreso.en) : 'Nunca entró'}</span>
+                  </div>
+                  <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-soft">
+                    <span>{f.pedidos} {f.pedidos === 1 ? 'pedido' : 'pedidos'}{f.activos > 0 ? ` · ${f.activos} en curso` : ''}</span>
+                    <span>Gastado {formatUSD(f.gastado)}</span>
+                    {f.puntos > 0 && <span>Puntos ES {formatUSD(f.puntos)}</span>}
+                    <span>Desde {fechaCorta(f.registro)}</span>
+                    {f.empresa && <span className="font-semibold text-brand-700">Empresa</span>}
+                    {f.cuenta === 'SUSPENDED' && <span className="font-semibold text-deal">Suspendida</span>}
+                  </p>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-ink-soft">
+              <span className="tabular-nums">{desde} a {hasta} de {datos?.total ?? 0}</span>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setPagina((p) => Math.max(1, p - 1))} disabled={!datos || datos.pagina <= 1} className={`${adminSecondaryButton} h-10! disabled:opacity-50`}>
+                  <IconoChevronIzquierda className="h-4 w-4" aria-hidden="true" /> Anteriores
+                </button>
+                <button type="button" onClick={() => setPagina((p) => p + 1)} disabled={!datos || datos.pagina >= datos.paginas} className={`${adminSecondaryButton} h-10! disabled:opacity-50`}>
+                  Siguientes <IconoChevronDerecha className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
-
-              {/* Tabs */}
-              {!isEditing && !isDeleting && (
-                <div className="mt-3 flex gap-1 overflow-x-auto">
-                  <button
-                    onClick={() => setActiveTab('PERSONAL')}
-                    aria-pressed={activeTab === 'PERSONAL'} className={`${adminTab(activeTab === 'PERSONAL')} h-11 shrink-0`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <IconoCuenta className="w-4 h-4" />
-                      Personal
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('COMPANY')}
-                    aria-pressed={activeTab === 'COMPANY'} className={`${adminTab(activeTab === 'COMPANY')} h-11 shrink-0`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <IconoMaletin className="w-4 h-4" />
-                      Empresa
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('STATS')}
-                    aria-pressed={activeTab === 'STATS'} className={`${adminTab(activeTab === 'STATS')} h-11 shrink-0`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <IconoReportes className="w-4 h-4" />
-                      Resumen
-                    </div>
-                  </button>
-                </div>
-              )}
             </div>
-
-              {/* Body */}
-              <div className={`${adminModalBody} [overflow-wrap:anywhere]`}>
-                {isDeleting ? (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-deal-bg rounded-full flex items-center justify-center">
-                      <IconoAdvertencia className="w-8 h-8 text-deal" />
-                    </div>
-                    <h4 className="text-lg font-semibold text-ink mb-2">¿Eliminar cliente?</h4>
-                    <p className="text-sm text-muted mb-6">
-                      Esta acción no se puede deshacer. ¿Estás seguro de que deseas eliminar a {selectedCustomer.name || selectedCustomer.email}?
-                    </p>
-                    <div className="flex gap-3 justify-center">
-                      <button
-                        onClick={() => setIsDeleting(false)}
-                        className={adminSecondaryButton}
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        onClick={handleDelete}
-                        disabled={deleteLoading}
-                        className={adminDangerButton}
-                      >
-                        {deleteLoading ? 'Eliminando...' : 'Eliminar'}
-                      </button>
-                    </div>
-                  </div>
-                ) : isEditing ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="block text-xs font-semibold text-ink mb-1.5">Nombre</label>
-                        <input
-                          type="text"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className={adminInput()}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-ink mb-1.5">Correo electrónico</label>
-                        <input
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className={adminInput()}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="block text-xs font-semibold text-ink mb-1.5">Teléfono</label>
-                        <input
-                          type="tel"
-                          value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className={adminInput()}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-ink mb-1.5">WhatsApp</label>
-                        <input
-                          type="tel"
-                          value={formData.whatsapp}
-                          onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                          className={adminInput()}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-ink mb-1.5">Tipo de Cliente</label>
-                      <select
-                        value={formData.customerType}
-                        onChange={(e) => setFormData({ ...formData, customerType: e.target.value as 'PERSON' | 'COMPANY' })}
-                        className={adminInput()}
-                      >
-                        <option value="PERSON">Persona Natural</option>
-                        <option value="COMPANY">Empresa</option>
-                      </select>
-                    </div>
-                    {formData.customerType === 'COMPANY' && (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                          <label className="block text-xs font-semibold text-ink mb-1.5">Nombre Empresa</label>
-                          <input
-                            type="text"
-                            value={formData.companyName}
-                            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                            className={adminInput()}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-ink mb-1.5">RIF/NIT</label>
-                          <input
-                            type="text"
-                            value={formData.taxId}
-                            onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
-                            className={adminInput()}
-                          />
-                        </div>
-                        <div className="sm:col-span-2">
-                          <label className="block text-xs font-semibold text-ink mb-1.5">Estado de Verificación</label>
-                          <select
-                            value={formData.businessVerificationStatus}
-                            onChange={(e) => setFormData({ ...formData, businessVerificationStatus: e.target.value })}
-                            className={adminInput()}
-                          >
-                            <option value="NONE">No solicitado</option>
-                            <option value="PENDING">Pendiente</option>
-                            <option value="APPROVED">Aprobado</option>
-                            <option value="REJECTED">Rechazado</option>
-                          </select>
-                        </div>
-                        <div className="sm:col-span-2">
-                          <label className="block text-xs font-semibold text-ink mb-1.5">Notas de Verificación</label>
-                          <textarea
-                            value={formData.businessVerificationNotes}
-                            onChange={(e) => setFormData({ ...formData, businessVerificationNotes: e.target.value })}
-                            className={adminInput()}
-                            rows={3}
-                            placeholder="Notas internas sobre la verificación..."
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {/* PERSONAL TAB */}
-                    {activeTab === 'PERSONAL' && (
-                      <div className="space-y-4 animate-fadeIn">
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                          <div>
-                            <label className="text-xs font-semibold text-muted mb-1 block">Nombre</label>
-                            <p className="text-sm text-ink font-medium">{selectedCustomer.name || 'Sin nombre'}</p>
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-muted mb-1 block">Correo electrónico</label>
-                            <p className="text-sm text-ink font-medium">{selectedCustomer.email}</p>
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-muted mb-1 block">Teléfono</label>
-                            <p className="text-sm text-ink">{selectedCustomer.profile?.phone || 'No registrado'}</p>
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-muted mb-1 block">WhatsApp</label>
-                            <p className="text-sm text-ink">{selectedCustomer.profile?.whatsapp || 'No registrado'}</p>
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-muted mb-1 block">Fecha de Registro</label>
-                            <p className="text-sm text-ink">{formatDate(selectedCustomer.createdAt)}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* COMPANY TAB */}
-                    {activeTab === 'COMPANY' && (
-                      <div className="space-y-6 animate-fadeIn">
-                        <div className="flex items-center justify-between p-4 bg-surface rounded-xl border border-line">
-                          <div>
-                            <p className="text-xs font-semibold text-muted mb-1">Tipo de Cliente</p>
-                            <div className="flex items-center gap-2">
-                              {selectedCustomer.profile?.customerType === 'COMPANY' ? (
-                                <>
-                                  <IconoMaletin className="w-5 h-5 text-brand-600" />
-                                  <span className="font-bold text-ink">Empresa</span>
-                                </>
-                              ) : (
-                                <>
-                                  <IconoCuenta className="w-5 h-5 text-muted" />
-                                  <span className="font-bold text-ink">Persona Natural</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          {selectedCustomer.profile?.customerType === 'COMPANY' && (
-                            <div>
-                              <p className="text-xs font-semibold text-muted mb-1">Estado de Verificación</p>
-                              {getVerificationStatusBadge(selectedCustomer.profile?.businessVerificationStatus || 'NONE')}
-                            </div>
-                          )}
-                        </div>
-
-                        {selectedCustomer.profile?.customerType === 'COMPANY' ? (
-                          <>
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                              <div>
-                                <label className="text-xs font-semibold text-muted mb-1 block">Nombre de la Empresa</label>
-                                <p className="text-sm text-ink font-medium">{selectedCustomer.profile?.companyName || 'No registrado'}</p>
-                              </div>
-                              <div>
-                                <label className="text-xs font-semibold text-muted mb-1 block">RIF / NIT</label>
-                                <p className="text-sm text-ink font-medium">{selectedCustomer.profile?.taxId || 'No registrado'}</p>
-                              </div>
-                            </div>
-
-                            <div>
-                              <h4 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
-                                <IconoDocumento className="w-4 h-4" /> Documentos
-                              </h4>
-                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div className="p-3 border border-line rounded-lg hover:bg-surface transition-colors">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-medium text-muted">Acta Constitutiva</span>
-                                    {selectedCustomer.profile?.businessConstitutiveAct ? (
-                                      <span className="text-xs text-success-strong font-bold">Subido</span>
-                                    ) : (
-                                      <span className="text-xs text-muted">No disponible</span>
-                                    )}
-                                  </div>
-                                  {selectedCustomer.profile?.businessConstitutiveAct && (
-                                    <a
-                                      href={selectedCustomer.profile.businessConstitutiveAct}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-brand-600 text-xs font-bold hover:underline flex items-center gap-1"
-                                    >
-                                      <IconoDescargar className="w-3 h-3" /> Descargar
-                                    </a>
-                                  )}
-                                </div>
-                                <div className="p-3 border border-line rounded-lg hover:bg-surface transition-colors">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-medium text-muted">RIF Digital</span>
-                                    {selectedCustomer.profile?.businessRIFDocument ? (
-                                      <span className="text-xs text-success-strong font-bold">Subido</span>
-                                    ) : (
-                                      <span className="text-xs text-muted">No disponible</span>
-                                    )}
-                                  </div>
-                                  {selectedCustomer.profile?.businessRIFDocument && (
-                                    <a
-                                      href={selectedCustomer.profile.businessRIFDocument}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-brand-600 text-xs font-bold hover:underline flex items-center gap-1"
-                                    >
-                                      <IconoDescargar className="w-3 h-3" /> Descargar
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {selectedCustomer.profile?.businessVerificationNotes && (
-                              <div className="bg-surface p-3 rounded-lg border border-line">
-                                <p className="text-xs font-bold text-ink-soft mb-1">Notas de Verificación</p>
-                                <p className="text-sm text-ink">{selectedCustomer.profile.businessVerificationNotes}</p>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <div className="text-center py-8 text-muted">
-                            <p>Este cliente está registrado como Persona Natural.</p>
-                            <button
-                              onClick={() => setIsEditing(true)}
-                              className="mt-2 text-brand-600 text-sm font-medium hover:underline"
-                            >
-                              Cambiar a Empresa
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* STATS TAB */}
-                    {activeTab === 'STATS' && (
-                      <div className="space-y-6 animate-fadeIn">
-                        <div className="flex gap-3 overflow-x-auto">
-                          <div className="min-w-max border-r border-line pr-4 last:border-0">
-                            <p className="text-xs text-muted mb-1">Total gastado</p>
-                            <p className="text-xl font-bold text-ink">
-                              {formatUSD(Number(selectedCustomer.stats?.totalSpent) || 0)}
-                            </p>
-                          </div>
-                          <div className="min-w-max border-r border-line pr-4 last:border-0">
-                            <p className="text-xs text-muted mb-1">Órdenes totales</p>
-                            <p className="text-xl font-bold text-ink">{selectedCustomer.stats?.orderCount || 0}</p>
-                          </div>
-                          <div className="min-w-max border-r border-line pr-4 last:border-0">
-                            <p className="text-xs text-muted mb-1">Órdenes abiertas</p>
-                            <p className="text-xl font-bold text-ink">{selectedCustomer.stats?.activeOrders || 0}</p>
-                          </div>
-                        </div>
-
-                        <ResumenCliente clienteId={selectedCustomer.id} />
-
-                        <div>
-                          <h4 className="text-sm font-bold text-ink mb-3">Últimas órdenes</h4>
-                          {selectedCustomer.orders && selectedCustomer.orders.length > 0 ? (
-                            <div className={adminTableWrap}>
-                              <table className="w-full text-sm">
-                                <thead>
-                                  <tr>
-                                    <th className={adminTh}>Orden</th>
-                                    <th className={adminTh}>Fecha</th>
-                                    <th className={adminTh}>Estado</th>
-                                    <th className={`${adminTh} text-right`}>Total</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {selectedCustomer.orders.map((order: CustomerOrder) => (
-                                    <tr key={order.id} className={adminRowHover}>
-                                      <td className={`${adminTd} font-medium`}><Link href={`/admin/orders/${order.id}`} className="text-brand-600 hover:underline">{order.orderNumber}</Link></td>
-                                      <td className={`${adminTd} text-muted`}>{formatDate(order.createdAt)}</td>
-                                      <td className={adminTd}>
-                                        <PildoraEstadoOrden status={order.status} />
-                                      </td>
-                                      <td className={`${adminTd} text-right font-medium text-ink`}>
-                                        {formatUSD(Number(order.totalUSD) || 0)}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          ) : (
-                            <p className="text-sm text-muted text-center py-4">No hay órdenes registradas.</p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className={adminModalFooter}>
-                {isEditing ? (
-                  <>
-                    <button
-                      onClick={() => setIsEditing(false)}
-                      className={adminSecondaryButton}
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saveLoading}
-                      className={adminPrimaryButton}
-                    >
-                      {saveLoading ? 'Guardando...' : 'Guardar Cambios'}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setIsDeleting(true)}
-                      className={adminDangerButton}
-                    >
-                      Eliminar
-                    </button>
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className={adminPrimaryButton}
-                    >
-                      Editar
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

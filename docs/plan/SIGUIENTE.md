@@ -1,11 +1,19 @@
-# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.91; nada por subir: §2)
+# Lo de ahora (actualizado 2026-11-16 · producción en 1.0.0-rc.91; por subir: rc.92, Clientes, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-276 · Clientes, de una lista pobre a saber quién es cada cliente (rc.92, por subir: §2; `estado/C-276.md`):** el pedido del equipo del 16/11 con las capturas ("muy pobre, no se puede enviar notificaciones, no se sabe si está verificado, no se muestra el historial de sus documentos"). Eligió lo recomendado viendo las maquetas (`~/.cache/electroshop-trabajo/c276/maquetas/index.html`): la ficha A, escribirle por campana, correo y WhatsApp, y las notas del equipo con quién y cuándo.
+  - **La ficha de cada cliente en su página:** sus sellos de confianza, lo gastado, sus Puntos ES, sus boletos, sus documentos y firmas con el PDF, los avisos que recibió, todo lo que pasó en su cuenta, lo que le interesa y las notas del equipo.
+  - **Escribirle** por pasos, con cinco mensajes listos o uno propio. **La lista** busca por teléfono, cédula y RIF, con filtros y páginas. **Suspender o reactivar** y reenviar la activación. **Editar** por pasos, con antes → después.
+  - **Arreglado de paso:**
+    - los enlaces a una orden (desde la ficha, Garantías y los resúmenes de Claude) abrían una página que no existe;
+    - la ficha entregaba la fila entera de la base;
+    - cambiar el correo lo dejaba verificado;
+    - "Eliminar" borraba a quien tenía Puntos ES.
 - **C-277 · El permiso de la lista de Verificaciones (rc.91, en producción; `estado/C-277.md`):** cualquier cuenta con sesión podía bajar los perfiles completos de las empresas; cerrado y comprobado.
-- **C-230 · El libro de ventas, con las respuestas de la contadora (rc.90, por subir: §2; `estado/C-230.md`):** la contadora respondió el 16/11 por notas de voz (sus criterios, en `CONTABILIDAD.md` §9). El equipo eligió lo recomendado viendo las maquetas (`~/.cache/electroshop-trabajo/c230/index.html`).
+- **C-230 · El libro de ventas, con las respuestas de la contadora (rc.90, en producción desde el 16/11 con rc.91; pruebas por confirmar: §2; `estado/C-230.md`):** la contadora respondió el 16/11 por notas de voz (sus criterios, en `CONTABILIDAD.md` §9). El equipo eligió lo recomendado viendo las maquetas (`~/.cache/electroshop-trabajo/c230/index.html`).
   - **Contabilidad → Libro de ventas:** una línea por factura con sus columnas, el IVA del mes con su fecha, lo de la declaración, el Excel y la hoja impresa apaisada.
   - **La factura va a la tasa BCV del día en que se escribe** (antes, la de la orden). Desde el 16/11 se factura cada venta.
   - **Facturas** dice hasta cuándo alcanza el talonario y cuántas pedir. **La mesa** trae el Excel y, la primera vez de la contadora, "Así funciona".
@@ -440,8 +448,44 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: nada por ahora
-Producción está en `v1.0.0-rc.91` (`25729ac`); su bloque está en `HISTORIAL.md`.
+### Lo que falta subir: `v1.0.0-rc.92` (C-276, Clientes)
+Producción está en `v1.0.0-rc.91` (`25729ac`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-276 (rc.92):** Clientes rediseñado (`estado/C-276.md`).
+  - **Cambia la base: una tabla nueva, `notas_cliente` (las notas del equipo), aditiva.** `deploy.sh` se para y muestra esto, y nada más. Si es igual, `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez:
+```sql
+-- CreateTable
+CREATE TABLE "notas_cliente" (
+    "id" TEXT NOT NULL,
+    "clienteId" TEXT NOT NULL,
+    "autorId" TEXT,
+    "autorNombre" TEXT NOT NULL,
+    "texto" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "notas_cliente_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "notas_cliente_clienteId_createdAt_idx" ON "notas_cliente"("clienteId", "createdAt");
+
+-- AddForeignKey
+ALTER TABLE "notas_cliente" ADD CONSTRAINT "notas_cliente_clienteId_fkey" FOREIGN KEY ("clienteId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+```
+  - Sin variables nuevas, sin SQL de datos, sin cron y sin dependencias nuevas.
+- **Respaldo antes** (en la terminal del servidor): `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc92.dump`
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Se para por la base (arriba): `npx prisma db push` y `bash scripts/deploy.sh --sin-pull` otra vez.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.92`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas de C-276** (unos 15 minutos, en la computadora con Chrome; la 7, también en el teléfono). Antes, recarga el panel (Ctrl+R):
+  1. **La lista:** Clientes. Arriba, cuántos hay, los nuevos del mes, los sin activar y los que tienen órdenes activas. Busca un cliente por su teléfono (solo los últimos números) y después por su cédula. Toca "Sin activar" y "Con pedidos": la cuenta de cada píldora coincide con la lista. Ninguna cuenta del equipo sale en la lista.
+  2. **La ficha:** abre un cliente que tenga pedidos. Arriba, sus sellos (correo, teléfono, cédula, términos, empresa) y lo gastado; en Documentos y firmas, "PDF" abre lo que firmó. "Ver los N" de Actividad muestra todo lo que pasó en su cuenta. Mira si algo de los datos reales se ve raro (un teléfono, una fecha) y avísale a Claude.
+  3. **Una orden:** en Pedidos, toca una: se abre esa orden en Órdenes (antes, una página que no existía). Ciérrala: la dirección vuelve a la de la lista. Lo mismo desde una garantía, en "Pedido".
+  4. **Una nota:** en Notas del equipo, escribe "Prueba de notas" y guárdala: sale con tu nombre y la fecha. Bórrala.
+  5. **Escribirle** (con tu propia cuenta de cliente, o una de prueba: le llega de verdad): "Escribirle" → "Un mensaje tuyo", título "Prueba", un mensaje corto → Siguiente → marca la campana y el correo → "Revisar y enviar": ves lo que llega en cada uno → Enviar. En la tienda, con esa cuenta, la campana tiene el mensaje con el ícono del chat, y llega el correo con el marco de la tienda. En la ficha, "Avisos que recibió" dice que se lo mandaste tú.
+  6. **WhatsApp:** repite la 5 marcando también "Su WhatsApp": al enviar, "Abrir WhatsApp con el mensaje" abre el chat de ese número con el texto escrito (no lo envíes si no quieres).
+  7. **Editar:** "Editar" → cambia solo el teléfono de esa cuenta de prueba → "Revisar y guardar" muestra antes → después → Guardar. Vuelve a la ficha con el teléfono nuevo, y en Actividad, "cambió sus datos · Cambió: Teléfono". En el teléfono, los pasos se ven enteros.
+  8. **Suspender** (solo con la cuenta de prueba): "Más" → Suspender, con un motivo. Esa cuenta ya no entra a la tienda; "Más" → Reactivar la devuelve. Los dos quedan en Actividad, con el motivo.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.91 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla `notas_cliente` no molesta a rc.91: no se quita (las notas quedan guardadas para cuando vuelva rc.92). Los avisos que ya se mandaron se ven en la campana del cliente con rc.91 también.
 
 ### Por confirmar de rc.91 (C-230 y C-277; unos 15 minutos)
 Ya en producción desde el 16/11 (la subió Claude por SSH con la aprobación del equipo; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión, las páginas y que la lista de Verificaciones ya no entrega nada sin permiso. Falta esto:
@@ -1078,6 +1122,8 @@ En el orden en que más destraban:
 **Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) C-224 (los tres únicos, rc.51) y C-241 (el checkout por pasos, rc.53), C-242 (Facturas, ordenada, rc.56). También C-226 (sin ámbar, rc.44), C-219 (los correos, rc.47) y C-234 (cuándo sale cada pedido, rc.52), y C-227 (los correos al aliado comercial, rc.55).
 
 **Sigue:** El plan del 14/11 está en producción desde ese día (rc.53). rc.56 está en producción desde el 15/11; falta confirmar sus pruebas (§2) y lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
+
+**Hecho el 16/11:** C-276 (Clientes, rc.92, por subir: §2) y, de su inventario, C-277 (rc.91, en producción).
 
 **Contabilidad (C-228 y C-228b, `CONTABILIDAD.md`):** hechas C-229 (rc.50, las facturas de talonario), C-235 (rc.54, la contadora en el equipo) y C-230 (rc.90, el libro de ventas con sus respuestas del 16/11). Sigue C-236, el calendario y los avisos (la alcaldía el 10, el IVA el 15). El resto en el orden de `PLAN.md` §5.2, todo antes del 19/04/2027.
 

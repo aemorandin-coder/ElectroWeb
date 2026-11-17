@@ -169,7 +169,7 @@ export async function redactarRespuesta(mensajeId: string): Promise<BorradorResp
     const rastreo = o.trackingUrl || urlRastreo(o.shippingCarrier, o.trackingNumber);
     // A la vista, las que importan: las que nombra y las que no se cancelaron (a Claude le llegan todas)
     if (nombradas.includes(o.orderNumber) || !['CANCELLED', 'REFUNDED'].includes(o.status)) {
-      datos.push({ tipo: 'orden', texto: `${o.orderNumber}: ${ETIQUETA_ESTADO[o.status]}${o.trackingNumber ? ` · guía ${o.trackingNumber}` : ''}`, enlace: `/admin/orders/${o.id}` });
+      datos.push({ tipo: 'orden', texto: `${o.orderNumber}: ${ETIQUETA_ESTADO[o.status]}${o.trackingNumber ? ` · guía ${o.trackingNumber}` : ''}`, enlace: `/admin/orders?orden=${o.id}` });
     }
     return [
       `- ${o.orderNumber}, del ${fecha(o.createdAt)}, por ${formatUSD(Number(o.totalUSD))}: ${ETIQUETA_ESTADO[o.status]}${o.paymentStatus === 'PAID' ? ', pagada' : ', pago sin confirmar'}.`,

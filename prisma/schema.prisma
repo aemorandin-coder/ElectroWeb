@@ -89,7 +89,25 @@ model User {
   // C-212: sus participaciones en los sorteos (su código para invitar)
   participacionesSorteo ParticipanteSorteo[]
 
+  // C-276: las notas internas del equipo sobre este cliente (él nunca las ve)
+  notasDelEquipo NotaCliente[]
+
   @@map("users")
+}
+
+// C-276: una nota interna del equipo sobre un cliente ("prefiere retirar los sábados"). El cliente nunca la ve. Guarda quién
+// la escribió (el nombre, por si esa cuenta deja el equipo) y se borra con el cliente.
+model NotaCliente {
+  id          String   @id @default(cuid())
+  clienteId   String
+  cliente     User     @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  autorId     String?
+  autorNombre String
+  texto       String
+  createdAt   DateTime @default(now())
+
+  @@index([clienteId, createdAt])
+  @@map("notas_cliente")
 }
 
 model Profile {

@@ -147,7 +147,7 @@ function hechosDe({ usuario, ordenes, garantias, cotizaciones, pedidos, descuent
     pendientes.push({
       tipo: 'orden',
       texto: `Orden ${o.orderNumber}: ${ETIQUETA_ESTADO[o.status].toLowerCase()}${sinPagar ? ', sin pago confirmado' : ''}, desde el ${fecha(o.createdAt)}`,
-      enlace: `/admin/orders/${o.id}`,
+      enlace: `/admin/orders?orden=${o.id}`,
       lesToca: o.status !== 'SHIPPED' && !(sinPagar && o.status === 'PENDING'),
     });
   }

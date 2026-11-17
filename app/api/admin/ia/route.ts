@@ -25,6 +25,8 @@ export async function GET() {
         enmascarada: ajustes.clave ? enmascarar(ajustes.clave) : null,
         fuente: ajustes.fuenteClave,
         claveRota: ajustes.claveRota,
+        // Hay una clave en el servidor (.env) a la que volver: solo sí o no
+        hayEnServidor: Boolean(process.env.ANTHROPIC_API_KEY?.trim()),
         cambiadaAt: ajustes.claveCambiadaAt?.toISOString() ?? null,
       },
       // Solo si hay clave de Groq: sí o no, nunca la clave

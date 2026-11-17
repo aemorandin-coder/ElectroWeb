@@ -67,7 +67,8 @@ export interface Consumo {
   /** Lo que habría costado el mes con cada modelo, con los tokens y las búsquedas de verdad */
   comparacion: Array<{ modelo: string; costoUsd: number }>;
   fallas: FallaReciente[];
-  atajadas: { totalMes: number; ultimas: AtajadaReciente[] };
+  /** Cuántas veces atajó cada regla este mes, por el id de la regla */
+  atajadas: { totalMes: number; porRegla: Record<string, number>; ultimas: AtajadaReciente[] };
 }
 
 const vacia = (uso: string): FilaConsumo => ({ uso, pedidos: 0, entrada: 0, salida: 0, busquedas: 0, costoUsd: 0, ms: 0, fallas: 0 });
@@ -75,7 +76,7 @@ const vacia = (uso: string): FilaConsumo => ({ uso, pedidos: 0, entrada: 0, sali
 export async function leerConsumo(ahora = new Date()): Promise<Consumo> {
   const desde = inicioDelMes(ahora);
   const hace30 = new Date(ahora.getTime() - 30 * DIA_MS);
-  const [grupos, conFalla, deClaude, porDiaCrudo, fallasCrudas, atajadasMes, atajadasUltimas] = await Promise.all([
+  const [grupos, conFalla, deClaude, porDiaCrudo, fallasCrudas, atajadasPorRegla, atajadasUltimas] = await Promise.all([
     prisma.iaPedido.groupBy({
       by: ['uso'], where: { createdAt: { gte: desde } },
       _count: { _all: true }, _sum: { entrada: true, salida: true, busquedas: true, costoUsd: true }, _avg: { ms: true },
@@ -87,7 +88,7 @@ export async function leerConsumo(ahora = new Date()): Promise<Consumo> {
       where: { falla: { not: null } }, orderBy: { createdAt: 'desc' }, take: 20,
       select: { id: true, uso: true, proveedor: true, modelo: true, falla: true, detalle: true, reintento: true, createdAt: true },
     }),
-    prisma.iaAtajada.count({ where: { createdAt: { gte: desde } } }),
+    prisma.iaAtajada.groupBy({ by: ['regla'], where: { createdAt: { gte: desde } }, _count: { _all: true } }),
     prisma.iaAtajada.findMany({ orderBy: { createdAt: 'desc' }, take: 20, select: { id: true, uso: true, regla: true, accion: true, antes: true, despues: true, referencia: true, createdAt: true } }),
   ]);
 
@@ -141,7 +142,8 @@ export async function leerConsumo(ahora = new Date()): Promise<Consumo> {
         : null,
     })),
     atajadas: {
-      totalMes: atajadasMes,
+      totalMes: atajadasPorRegla.reduce((t, g) => t + g._count._all, 0),
+      porRegla: Object.fromEntries(atajadasPorRegla.map((g) => [g.regla, g._count._all])),
       ultimas: atajadasUltimas.map((a): AtajadaReciente => ({
         id: a.id, uso: a.uso, regla: a.regla, accion: a.accion, antes: a.antes, despues: a.despues, referencia: a.referencia, cuando: a.createdAt.toISOString(),
       })),

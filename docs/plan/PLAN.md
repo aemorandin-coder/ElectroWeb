@@ -466,7 +466,9 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 - **Las fases con maquetas antes:** la 5 (los tokens del movimiento, la ventana base común con Escape, el botón Atrás y el foco en todas las ventanas, y el retorno sin migas) y la 6 (las animaciones y los íconos animados).
 - **La Fase 3, con fecha:** el candado del mes declarado y el orden número-fecha de las facturas (con el criterio de la contadora, antes del 15/12) y "Antes de sortear" (antes del 20/12).
 
-**De la auditoría del 17/11, lo que dejaron C-280 y C-284** (dinero y seguridad; sin tomar):
+**De la auditoría del 17/11, lo que dejaron C-280, C-284 y C-285** (dinero y seguridad; sin tomar):
+- **Con fecha: quitar el respaldo de los enlaces viejos** (`valoresDeToken`, en `lib/token-huella.ts`), 24 horas después de subir rc.101. Mientras tanto, un enlace enviado antes del cambio sigue sirviendo; después, la base solo se busca por la huella.
+- `app/creator/dashboard/perfil/page.tsx` no dice nada si el perfil no se guarda, y desde C-285 la API puede rechazarlo por un largo o por la foto. Es del carril de Gemini: va en una tarjeta o con la próxima tarea que toque esa pantalla.
 - Una compra que sale en dos paquetes cuenta dos usos del tope total de un cupón. La llave de compra ya existe (`compraId` en las órdenes, C-284): falta contar los usos por compra.
 - Contabilidad y el sorteo todavía deducen por la hora cuáles órdenes salieron del mismo pago. Las órdenes nuevas ya traen `compraId`; las de antes quedan sin él.
 - `components/pago-movil/VerificarPagoMovilForm.tsx` conserva `contexto = 'GENERAL'` por defecto, que la API ya rechaza (C-284). Ninguna pantalla lo usa así: se quita con la próxima tarea que toque ese archivo.

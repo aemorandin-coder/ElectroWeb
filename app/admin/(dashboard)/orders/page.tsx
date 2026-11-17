@@ -276,6 +276,24 @@ export default function OrdersPage() {
 
   useCargarAlMontar(() => fetchOrders(1), [filterStatus]);
 
+  // C-276: /admin/orders?orden=<id> abre esa orden (la ficha del cliente, Garantías y los resúmenes de la IA llevan aquí;
+  // antes apuntaban a /admin/orders/<id>, que no existe)
+  useCargarAlMontar(async () => {
+    const orden = new URLSearchParams(window.location.search).get('orden');
+    if (!orden) return;
+    try {
+      const response = await fetch(`/api/orders?orden=${encodeURIComponent(orden)}&limit=1`);
+      const encontrada = response.ok ? ((await response.json()).orders?.[0] as Order | undefined) : undefined;
+      if (!encontrada) { toast.error('Esa orden ya no existe'); return; }
+      const o = normalizar(encontrada);
+      setSelectedOrder(o);
+      setAdminNotes(o.adminNotes || '');
+      setShowDetailsModal(true);
+    } catch {
+      toast.error('No se pudo abrir la orden');
+    }
+  });
+
   // C-127: los contadores sin recargar la lista (se pierde lo que el equipo ya cargó con "Cargar más")
   const refrescarResumen = async () => {
     try {
@@ -456,6 +474,8 @@ export default function OrdersPage() {
   const closeModal = () => {
     setShowDetailsModal(false);
     setShowShippingModal(false);
+    // Al cerrarla, la dirección vuelve a ser la de la lista (recargar no la abre otra vez)
+    if (new URLSearchParams(window.location.search).has('orden')) window.history.replaceState(null, '', window.location.pathname);
   };
 
   const openShippingModal = (order: Order) => {

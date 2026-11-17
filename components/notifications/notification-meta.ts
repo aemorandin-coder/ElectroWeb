@@ -1,7 +1,7 @@
 // Ícono y tono de cada notificación (C-73). Avisos del equipo por categoría del catálogo; las del cliente por tipo.
 import {
   IconoActualizar, IconoAdvertencia, IconoBillete, IconoBolsa, IconoClientes, IconoConfirmado, IconoCorreo, IconoCursos,
-  IconoCupon, IconoDocumento, IconoEntrar, IconoEntregado, IconoEnviar, IconoEnvio, IconoEstrella, IconoFavoritos, IconoGarantia,
+  IconoChat, IconoCupon, IconoDocumento, IconoEntrar, IconoEntregado, IconoEnviar, IconoEnvio, IconoEstrella, IconoFavoritos, IconoGarantia,
   IconoGiftCard, IconoMaletin, IconoNotificaciones, IconoOferta, IconoPaquete, IconoPorcentaje, IconoRechazado,
   IconoRegistrarse, IconoServicioTecnico, IconoTarjeta,
 } from '@/components/iconos';
@@ -60,6 +60,8 @@ const EVENT_META: Partial<Record<string, Meta>> = {
   BUSINESS_VERIFIED: { Icon: IconoMaletin, tone: 'brand' },
   // C-262: el sorteo (un boleto ganado o un amigo que se unió con tu enlace)
   SORTEO: { Icon: IconoCupon, tone: 'brand' },
+  // C-276: un mensaje del equipo desde la ficha del cliente
+  MENSAJE_EQUIPO: { Icon: IconoChat, tone: 'brand' },
 };
 
 export function notificationMeta(type: string): Meta {

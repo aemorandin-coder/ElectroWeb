@@ -10,6 +10,33 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.92] - 2026-11-16
+Clientes rediseñado (C-276). **Cambia la base: una tabla nueva, `notas_cliente` (aditiva).** Sin SQL de datos, sin variables nuevas y sin cron.
+### Clientes 1.7.0 (C-276)
+- **La ficha de cada cliente en su propia página** (`/admin/customers/<id>`), en dos columnas:
+  - arriba, quién es, sus sellos y cuatro cifras: lo gastado, sus Puntos ES, sus boletos y su último ingreso;
+  - a la izquierda, lo que hay que atender y cómo compra (C-213), sus pedidos y la línea de tiempo de todo lo que pasó en su cuenta;
+  - a la derecha, Confianza con "Recordarle", sus documentos y firmas con el PDF, sus datos, los avisos que recibió y quién se los mandó, lo que le interesa y las notas del equipo.
+- **Los sellos de confianza** en la lista y en la ficha: correo verificado, teléfono, cédula, términos de Puntos ES firmados y empresa verificada.
+- **Escribirle** por la campana, el correo o WhatsApp, por pasos y con lo que verá en cada uno: firmar los términos, activar su cuenta, sobre un pedido, su carrito o un mensaje propio.
+- **La lista:**
+  - busca por nombre, correo, teléfono, cédula, RIF o empresa;
+  - filtra (nuevos, sin activar, con pedidos, con Puntos ES, empresas por verificar, dormidos y suspendidos);
+  - dice desde cuándo es cliente y cuándo entró por última vez;
+  - va de 25 en 25 con páginas.
+- **Cuidar la cuenta:** notas del equipo con quién y cuándo, reenviar la activación y suspender o reactivar (con el motivo en la bitácora).
+- **Editar, por pasos,** con antes → después y a quién afecta. Cambiar el correo lo deja sin verificar y le manda el enlace a la dirección nueva.
+- **Borrar** solo a quien no tiene pedidos, Puntos ES, movimientos, gift cards, reseñas ni garantías (antes borraba con Puntos ES); a los demás se los suspende.
+- **La ficha va en lista blanca:** sin la IP, el carrito crudo, los tokens ni la clave (antes salía la fila entera).
+### Órdenes y pagos 1.6.8 (C-276)
+- Una orden se abre por su dirección (`/admin/orders?orden=…`): el pedido de una garantía, la ficha del cliente y los resúmenes de Claude llevaban a una página que no existía.
+### Marco del panel 1.15.4 (C-276)
+- La campana del cliente muestra los mensajes del equipo con el ícono del chat.
+### Reportes y seguridad 1.1.11 (C-276)
+- La bitácora anota los mensajes al cliente, la suspensión y la reactivación de su cuenta y el reenvío de su activación.
+### Tienda 1.20.3 (C-276)
+- La lista blanca de lo que el panel ve de un cliente (`lib/dto/cliente.ts`).
+
 ## [1.0.0-rc.91] - 2026-11-16
 El permiso de la lista de Verificaciones (C-277). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Clientes 1.6.4 (C-277)

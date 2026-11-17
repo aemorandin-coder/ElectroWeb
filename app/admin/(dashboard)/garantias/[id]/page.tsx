@@ -202,7 +202,7 @@ export default function GarantiaDetallePage({ params }: { params: Promise<{ id: 
           <section className={adminCard} aria-labelledby="producto">
             <h2 id="producto" className="text-base font-semibold text-ink">Producto y pedido</h2>
             <dl className="mt-2 space-y-1.5 text-sm">
-              <div className="flex justify-between gap-3"><dt className="text-muted">Pedido</dt><dd><Link href={`/admin/orders/${claim.order.id}`} className="font-semibold text-brand-700 hover:underline">#{claim.order.orderNumber}</Link></dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-muted">Pedido</dt><dd><Link href={`/admin/orders?orden=${claim.order.id}`} className="font-semibold text-brand-700 hover:underline">#{claim.order.orderNumber}</Link></dd></div>
               <div className="flex justify-between gap-3"><dt className="text-muted">Producto</dt><dd className="text-right text-ink">{claim.productName}</dd></div>
               {claim.orderItem.productSku && <div className="flex justify-between gap-3"><dt className="text-muted">SKU</dt><dd className="font-mono text-ink">{claim.orderItem.productSku}</dd></div>}
               <div className="flex justify-between gap-3"><dt className="text-muted">Condición</dt><dd className="text-ink">{etiqueta ?? 'Nuevo'}</dd></div>

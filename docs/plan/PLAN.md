@@ -824,6 +824,11 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **C-274 · Las 6 plantillas nuevas** (2.4.0): Lista de precios, Combo, Cuenta regresiva, ¿Cuál prefieres?, Lienzo libre y Antes y después.
   - **C-275 · La IA: las 5 mejoras** (2.5.0): Armar con Claude, Ideas de título, el texto de Instagram, la Revisión de Claude y Acortar. Para después: "Tres versiones".
 
+**Pedido del 16/11 (el equipo): Clientes, de una lista pobre a saber quién es cada cliente** (**hecha**, C-276, Clientes 1.7.0, rc.92; `estado/C-276.md`). El equipo eligió la ficha A en dos columnas, escribirle por campana, correo y WhatsApp, y las notas del equipo con quién y cuándo. Del inventario salió C-277 (la lista de Verificaciones sin permiso), en producción con rc.91. Queda:
+- **Ver los clientes reales** al subirlo (la base de producción no se leyó): por ejemplo, teléfonos escritos de otra forma para el enlace de WhatsApp.
+- **El `PATCH` de Verificaciones devuelve el perfil entero** al administrador que aprueba (es del panel, no público): pasarlo a lista blanca, como el `GET` de C-277.
+- **`/favicon.ico` responde 404** en el panel (Chrome lo pide en cada sesión nueva). Es de antes de C-276.
+
 **Limpieza (sin urgencia):**
 - Al cerrar el ciclo de pruebas: borrar el esquema `rev10_demo` y los archivos de prueba de `private-uploads/signatures/` (local).
 - Hecho en C-185 (06/11): las ramas, el stash y los worktrees viejos de la máquina de Andrés, y los 40 uploads versionados (en el servidor se respaldan antes del próximo `git pull`, `SIGUIENTE.md` §2).

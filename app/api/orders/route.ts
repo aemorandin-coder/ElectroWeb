@@ -85,6 +85,9 @@ export async function GET(request: NextRequest) {
       // Admin can filter by userId
       where.userId = userId;
     }
+    // C-276: el panel abre una orden por su dirección (/admin/orders?orden=<id>)
+    const orden = searchParams.get('orden');
+    if (esEquipo && orden) where.id = orden;
 
     if (status && status !== 'all') {
       where.status = status as Prisma.OrderWhereInput['status'];

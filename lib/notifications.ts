@@ -33,7 +33,9 @@ export type NotificationType =
   | 'REFERRAL_COMMISSION'
   | 'PROMOTER_APPLICATION'
   // C-262: el sorteo: un boleto ganado o un amigo que se unió con tu enlace
-  | 'SORTEO';
+  | 'SORTEO'
+  // C-276: un mensaje que el equipo le escribió al cliente desde su ficha
+  | 'MENSAJE_EQUIPO';
 
 interface CreateNotificationParams {
   userId: string;

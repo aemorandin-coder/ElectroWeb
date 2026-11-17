@@ -20,6 +20,11 @@ export type AuditAction =
     | 'USER_DELETED'
     | 'USER_ROLE_CHANGED'
     | 'USER_BALANCE_MODIFIED'
+    // C-276: desde la ficha de un cliente: un aviso del equipo, suspender o reactivar su cuenta y reenviarle la activación
+    | 'CUSTOMER_NOTIFIED'
+    | 'CUSTOMER_SUSPENDED'
+    | 'CUSTOMER_REACTIVATED'
+    | 'CUSTOMER_ACTIVATION_SENT'
     // Product management
     | 'PRODUCT_CREATED'
     | 'PRODUCT_UPDATED'
@@ -215,6 +220,8 @@ export function getSeverityForAction(action: AuditAction): AuditSeverity {
         'AUTH_LOGIN_BLOCKED',
         'AUTH_PASSWORD_RESET',
         'USER_BALANCE_MODIFIED',
+        // C-276: una cuenta suspendida no puede entrar: se revisa
+        'CUSTOMER_SUSPENDED',
         'ORDER_CANCELLED',
         // C-229: una factura anulada se revisa (el papel se guarda)
         'INVOICE_VOIDED',

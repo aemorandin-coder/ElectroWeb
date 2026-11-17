@@ -5,233 +5,152 @@ import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { normalizarCorreo } from '@/lib/correo';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { registrarAccionAdmin } from '@/lib/audit-log';
+import { fichaDelCliente } from '@/lib/clientes/ficha';
+import { CAMPOS_EDITABLES, problemaDe, type CampoEditable, type DatosEditables } from '@/lib/clientes/edicion';
+import { datosEditablesDe } from '@/lib/clientes/datos-editables';
+import { reenviarActivacion } from '@/lib/clientes/activacion';
 
 /**
  * C-141: esta API es solo de clientes. Antes aceptaba cualquier id: un Administrador podía cambiarle el correo
  * al dueño (y pedir después "recuperar contraseña") o borrar una cuenta del equipo. El equipo se maneja en Equipo.
+ * (datosEditablesDe y fichaDelCliente buscan siempre role 'USER'.)
  */
-async function esCliente(id: string): Promise<boolean> {
-  const u = await prisma.user.findUnique({ where: { id }, select: { role: true } });
-  return u?.role === 'USER';
-}
 
-// GET - Get customer details
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// GET - La ficha del cliente (C-276: la misma lista blanca que la página; antes salía la fila de Prisma con el perfil entero)
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!isAuthorized(session, 'MANAGE_USERS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
-
     const { id } = await params;
-    const customerId = id;
-
-    if (!customerId) {
-      return NextResponse.json({ error: 'ID de cliente requerido' }, { status: 400 });
-    }
-
-    const customer = await prisma.user.findFirst({
-      where: { id: customerId, role: 'USER' },
-      // El hash de la contraseña nunca sale del servidor (antes venía en la respuesta)
-      omit: { password: true },
-      include: {
-        profile: true,
-        addresses: true,
-        orders: {
-          select: {
-            id: true,
-            orderNumber: true,
-            status: true,
-            totalUSD: true,
-            createdAt: true,
-            items: {
-              select: {
-                productName: true,
-                quantity: true,
-                priceUSD: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: 10,
-        },
-      },
-    });
-
-    if (!customer) {
-      return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 });
-    }
-
-    // C-213: los números salen de todas sus órdenes, no de las 10 que se muestran. "Total gastado" cuenta solo lo
-    // pagado y no cancelado ni devuelto (antes sumaba todo, pendientes y canceladas incluidas)
-    const [gastado, orderCount, activeOrders] = await Promise.all([
-      prisma.order.aggregate({
-        where: { userId: customer.id, paymentStatus: 'PAID', status: { notIn: ['CANCELLED', 'REFUNDED'] } },
-        _sum: { totalUSD: true },
-      }),
-      prisma.order.count({ where: { userId: customer.id } }),
-      prisma.order.count({
-        where: { userId: customer.id, status: { in: ['PENDING', 'CONFIRMED', 'PAID', 'PROCESSING', 'READY_FOR_PICKUP', 'SHIPPED'] } }, // abiertas, como en la lista
-      }),
-    ]);
-    const totalSpent = Number(gastado._sum.totalUSD ?? 0);
-
-    return NextResponse.json({
-      ...customer,
-      stats: {
-        totalSpent,
-        orderCount,
-        activeOrders,
-      },
-    });
+    const ficha = await fichaDelCliente(id);
+    if (!ficha) return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 });
+    return NextResponse.json(ficha);
   } catch (error) {
     console.error('Error fetching customer:', error);
     return NextResponse.json({ error: 'Error al obtener cliente' }, { status: 500 });
   }
 }
 
-// PUT - Update customer
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// PUT - Cambiar sus datos (C-276: "Editar" de la ficha).
+// Llegan solo los campos que cambiaron, con el valor que tenían cuando se abrió el asistente (`antes`): si otra persona
+// cambió ese mismo campo mientras tanto, no se pisa (409). Cambiar el correo lo deja sin verificar (la dirección nueva no
+// está comprobada), anula los enlaces de activación y de clave que se mandaron a la anterior y le manda uno nuevo a la
+// dirección nueva. Queda en la bitácora qué campos cambiaron (sin los valores).
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!isAuthorized(session, 'MANAGE_USERS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
-
     const { id } = await params;
-    const customerId = id;
+    const actual = await datosEditablesDe(id);
+    if (!actual) return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 });
 
-    if (!customerId) {
-      return NextResponse.json({ error: 'ID de cliente requerido' }, { status: 400 });
+    const body = (await request.json().catch(() => null)) as { cambios?: Record<string, unknown>; antes?: Record<string, unknown> } | null;
+    const cambiosRecibidos = body?.cambios && typeof body.cambios === 'object' ? body.cambios : {};
+    const antes = body?.antes && typeof body.antes === 'object' ? body.antes : {};
+    const campos = Object.keys(cambiosRecibidos).filter((c): c is CampoEditable => (CAMPOS_EDITABLES as readonly string[]).includes(c));
+    if (campos.length === 0) return NextResponse.json({ error: 'No cambiaste nada' }, { status: 400 });
+
+    const nuevos: DatosEditables = { ...actual };
+    for (const c of campos) {
+      const v = cambiosRecibidos[c];
+      if (typeof v !== 'string') return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
+      nuevos[c] = c === 'correo' ? normalizarCorreo(v) : c === 'rif' ? v.trim().toUpperCase() : v.trim();
+    }
+    // Lo que cambió otra persona mientras tanto
+    const pisados = campos.filter((c) => typeof antes[c] === 'string' && (antes[c] as string).trim() !== actual[c].trim());
+    if (pisados.length > 0) {
+      return NextResponse.json({ error: 'Otra persona cambió estos datos mientras los editabas. Recarga para ver cómo quedaron.', conflicto: 'cambiado', campos: pisados }, { status: 409 });
+    }
+    for (const c of campos) {
+      const problema = problemaDe(c, nuevos[c], nuevos);
+      if (problema) return NextResponse.json({ error: problema, campo: c }, { status: 400 });
+    }
+    const cambiados = campos.filter((c) => nuevos[c] !== actual[c]);
+    if (cambiados.length === 0) return NextResponse.json({ ok: true, campos: [] });
+
+    const cambiaCorreo = cambiados.includes('correo');
+    if (cambiaCorreo) {
+      const otro = await prisma.user.findFirst({ where: { email: { equals: nuevos.correo, mode: 'insensitive' }, NOT: { id } }, select: { id: true } });
+      if (otro) return NextResponse.json({ error: 'Ese correo ya lo usa otra cuenta', campo: 'correo' }, { status: 400 });
     }
 
-    if (!(await esCliente(customerId))) {
-      return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 });
-    }
-
-    const body = await request.json();
-    const { name, phone, whatsapp, customerType, companyName, taxId } = body;
-    // Minúsculas y sin espacios, como en el registro: si no, el cliente no podía iniciar sesión con su correo (C-83)
-    const email = body.email === undefined ? undefined : normalizarCorreo(body.email);
-
-    // Validate email format if provided
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: 'Formato de email inválido' }, { status: 400 });
-    }
-
-    // Check if email is already taken by another user
-    if (email) {
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          email: { equals: email, mode: 'insensitive' },
-          NOT: { id: customerId },
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id },
+        data: {
+          ...(cambiados.includes('nombre') && { name: nuevos.nombre }),
+          ...(cambiaCorreo && { email: nuevos.correo, emailVerified: null }),
         },
-      });
-      if (existingUser) {
-        return NextResponse.json({ error: 'Este email ya está en uso' }, { status: 400 });
-      }
-    }
-
-    // Update user
-    const updatedUser = await prisma.user.update({
-      where: { id: customerId },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(email !== undefined && { email }),
-      },
-      select: { id: true, name: true, email: true },
-    });
-
-    // Update or create profile
-    // Update or create profile
-    if (phone !== undefined || whatsapp !== undefined || customerType !== undefined || companyName !== undefined || taxId !== undefined || body.businessVerificationStatus !== undefined) {
-      await prisma.profile.upsert({
-        where: { userId: customerId },
+      }),
+      ...(cambiaCorreo ? [prisma.emailVerificationToken.deleteMany({ where: { userId: id } }), prisma.passwordResetToken.deleteMany({ where: { userId: id } })] : []),
+      prisma.profile.upsert({
+        where: { userId: id },
         update: {
-          ...(phone !== undefined && { phone }),
-          ...(whatsapp !== undefined && { whatsapp }),
-          ...(customerType !== undefined && { customerType }),
-          ...(companyName !== undefined && { companyName }),
-          ...(taxId !== undefined && { taxId }),
-          ...(body.businessVerificationStatus !== undefined && {
-            businessVerificationStatus: body.businessVerificationStatus,
-            businessVerified: body.businessVerificationStatus === 'APPROVED',
-            businessVerifiedAt: body.businessVerificationStatus === 'APPROVED' ? new Date() : null,
-            businessVerificationNotes: body.businessVerificationNotes
-          }),
+          ...(cambiados.includes('telefono') && { phone: nuevos.telefono || null }),
+          ...(cambiados.includes('whatsapp') && { whatsapp: nuevos.whatsapp || null }),
+          ...(cambiados.includes('tipo') && { customerType: nuevos.tipo }),
+          ...(cambiados.includes('empresa') && { companyName: nuevos.empresa || null }),
+          ...(cambiados.includes('rif') && { taxId: nuevos.rif || null }),
         },
         create: {
-          userId: customerId,
-          phone: phone || null,
-          whatsapp: whatsapp || null,
-          customerType: customerType || 'PERSON',
-          companyName: companyName || null,
-          taxId: taxId || null,
+          userId: id, phone: nuevos.telefono || null, whatsapp: nuevos.whatsapp || null, customerType: nuevos.tipo,
+          companyName: nuevos.empresa || null, taxId: nuevos.rif || null,
         },
-      });
-    }
-
-    return NextResponse.json({ message: 'Cliente actualizado exitosamente', user: updatedUser });
+      }),
+    ]);
+    await registrarAccionAdmin(session, 'USER_UPDATED', { type: 'USER', id }, { cliente: cambiaCorreo ? nuevos.correo : actual.correo, campos: cambiados }, request);
+    const activacion = cambiaCorreo ? await reenviarActivacion(id) : null;
+    return NextResponse.json({ ok: true, campos: cambiados, correoSinVerificar: cambiaCorreo, activacionEnviada: activacion?.ok ?? false });
   } catch (error: unknown) {
     console.error('Error updating customer:', error);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      return NextResponse.json({ error: 'El email ya está en uso' }, { status: 400 });
+      return NextResponse.json({ error: 'Ese correo ya lo usa otra cuenta', campo: 'correo' }, { status: 400 });
     }
     return NextResponse.json({ error: 'Error al actualizar cliente' }, { status: 500 });
   }
 }
 
-// DELETE - Delete customer
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// DELETE - Borrar la cuenta. PLAN.md §7 (17/09): se borra solo si no tiene órdenes, Puntos ES, movimientos ni gift cards;
+// si tiene algo, se suspende (C-276: antes solo miraba las órdenes). Las reseñas y las garantías tampoco dejan borrarla
+// (la base no lo permite). Sus firmas de documentos se conservan (no dependen de la cuenta).
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!isAuthorized(session, 'MANAGE_USERS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
-
     const { id } = await params;
-    const customerId = id;
+    const cliente = await prisma.user.findFirst({ where: { id, role: 'USER' }, select: { id: true, email: true, balance: { select: { balance: true, _count: { select: { transactions: true } } } } } });
+    if (!cliente) return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 });
 
-    if (!customerId) {
-      return NextResponse.json({ error: 'ID de cliente requerido' }, { status: 400 });
+    const [pedidos, giftCards, resenas, garantias] = await Promise.all([
+      prisma.order.count({ where: { userId: id } }),
+      prisma.giftCard.count({ where: { OR: [{ purchasedBy: id }, { redeemedBy: id }] } }),
+      prisma.review.count({ where: { userId: id } }),
+      prisma.warrantyClaim.count({ where: { userId: id } }),
+    ]);
+    const motivos = [
+      pedidos > 0 && 'pedidos',
+      Number(cliente.balance?.balance ?? 0) > 0 && 'Puntos ES',
+      (cliente.balance?._count.transactions ?? 0) > 0 && 'movimientos de Puntos ES',
+      giftCards > 0 && 'gift cards',
+      resenas > 0 && 'reseñas',
+      garantias > 0 && 'garantías',
+    ].filter((m): m is string => Boolean(m));
+    if (motivos.length > 0) {
+      return NextResponse.json({ error: `Tiene ${motivos.join(', ')}: se suspende en vez de borrarse.`, suspender: true, motivos }, { status: 409 });
     }
 
-    if (!(await esCliente(customerId))) {
-      return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 });
-    }
-
-    // Check if customer has orders
-    const ordersCount = await prisma.order.count({
-      where: { userId: customerId },
-    });
-
-    if (ordersCount > 0) {
-      return NextResponse.json({
-        error: 'No se puede eliminar un cliente con órdenes asociadas',
-        hasOrders: true,
-      }, { status: 400 });
-    }
-
-    // Delete customer (profile will be deleted via cascade)
-    await prisma.user.delete({
-      where: { id: customerId },
-    });
-
-    return NextResponse.json({ message: 'Cliente eliminado exitosamente' });
+    await prisma.user.delete({ where: { id } });
+    await registrarAccionAdmin(session, 'USER_DELETED', { type: 'USER', id }, { cliente: cliente.email }, request);
+    return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('Error deleting customer:', error);
     return NextResponse.json({ error: 'Error al eliminar cliente' }, { status: 500 });
   }
 }
-

@@ -732,15 +732,15 @@ export async function POST(request: NextRequest) {
       let sequence = await getNextOrderSequence(tx, year);
 
       // C-284: con el candado de las órdenes tomado se vuelve a buscar la compra: si la otra copia del mismo envío ganó,
-      // sus órdenes ya existen y no se crea nada (todavía no se tocó saldo, stock ni ofertas). Va antes de mirar la
+      // sus órdenes ya existen y no se crea nada (todavía no se tocaron Puntos ES, stock ni ofertas). Va antes de mirar la
       // referencia del pago manual: esa referencia es la de esas mismas órdenes. Una llave que puso el servidor no puede existir.
       if (compraRecibida) {
         const yaCreadas = await ordenesDeLaCompra(tx, userId, compraRecibida);
         if (yaCreadas.length > 0) throw new CompraRepetida(yaCreadas);
       }
 
-      // C-284: con el candado de las órdenes tomado se vuelve a mirar la referencia del pago manual: la comprobación de
-      // arriba la pasan dos compras que llegan a la vez con la misma referencia. Aquí la segunda ya ve la orden de la primera.
+      // C-284: con el candado de las órdenes tomado se vuelve a mirar la referencia del pago manual: dos compras a la vez
+      // con la misma referencia no pasan las dos, la segunda ya ve la orden de la primera.
       if (metodoManual && referenciaManual) {
         const repetida = await tx.order.findFirst({
           where: { paymentMethod, paymentReference: referenciaManual, status: { not: OrderStatus.CANCELLED } },

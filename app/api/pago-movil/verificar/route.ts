@@ -74,9 +74,8 @@ export async function POST(req: NextRequest) {
             cotizacion: cotizacionToken, // C-125: monto y tasa firmados por /api/orders/quote
         } = body;
 
-        // C-284: solo se consulta al banco por un pago que sirva para algo: una compra o una recarga con su transactionId.
-        // Con otro contexto (o sin él) el banco confirmaba el pago y quedaba registrado sin recarga y sin poder usarse
-        // en una compra (las compras solo toman los de contexto ORDER).
+        // C-284: solo se consulta al banco por un pago que sirva para algo: una compra (ORDER) o una recarga con su
+        // transactionId. Las compras solo toman pagos de contexto ORDER y una recarga se acredita desde su transactionId.
         const esCompra = contexto === 'ORDER';
         const esRecarga = contexto === 'RECHARGE' && typeof transactionId === 'string' && transactionId.trim() !== '';
         if (!esCompra && !esRecarga) {

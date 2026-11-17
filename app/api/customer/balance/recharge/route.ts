@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
     // (checkout-pago: sin espacios y en mayúsculas). El Pago Móvil no entra: su referencia es una provisional única y
     // la real la revisa la verificación con el banco.
     // C-284: la consulta y el alta van en una transacción que empieza con un candado por método y referencia: dos
-    // solicitudes a la vez con la misma referencia pasaban las dos la consulta antes de que la otra guardara.
+    // solicitudes a la vez con la misma referencia no pasan las dos.
     const transaction = await prisma.$transaction(async (tx) => {
       if (reference && esPagoManual(companyMethod.type)) {
         await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${`recarga-ref:${companyMethod.id}:${claveReferencia(reference)}`}))::text AS locked`;

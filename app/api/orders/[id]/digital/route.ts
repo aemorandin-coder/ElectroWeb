@@ -197,12 +197,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         }
 
         // Un código por unidad comprada (C-60b). La orden y el artículo quedan bloqueados mientras se cuenta y se crea:
-        // un doble clic o dos pestañas no entregan (ni cobran al proveedor) dos veces, y una orden que se cancela en
-        // medio no entrega nada. Primero la orden y después el artículo: el PATCH de órdenes toma solo la orden, así no
-        // hay bloqueo cruzado.
+        // un doble clic o dos pestañas no entregan (ni cobran al proveedor) dos veces, y con la orden tomada se comprueba
+        // otra vez que siga pagada y sin cancelar. Primero la orden y después el artículo: el PATCH de órdenes toma solo
+        // la orden, así no hay bloqueo cruzado.
         const entrega = await prisma.$transaction(async (tx) => {
             await tx.$queryRaw`SELECT id FROM "orders" WHERE id = ${orderId} FOR UPDATE`;
-            // Con la fila tomada se vuelve a mirar: lo leído arriba pudo cambiar (cancelada o reembolsada) hasta aquí
+            // Con la fila tomada se mira de nuevo el estado de la orden (lo leído arriba puede haber cambiado)
             const vigente = await tx.order.findUnique({ where: { id: orderId }, select: { status: true, paymentStatus: true } });
             if (vigente?.paymentStatus !== 'PAID') return { tipo: 'regla' as const, error: 'La orden no está pagada' };
             if (vigente.status === 'CANCELLED' || vigente.status === 'REFUNDED') {

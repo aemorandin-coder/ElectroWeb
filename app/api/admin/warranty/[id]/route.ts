@@ -133,8 +133,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     };
     if (!refunding) return tx.warrantyClaim.update({ where: { id: claim.id }, data, select: { status: true, resolution: true } });
 
-    // El pedido se toma antes de acreditar y se vuelve a mirar con la fila tomada: una orden cancelada conserva su pago
-    // como PAID (al cancelarla ya se devolvió lo pagado), y lo leído arriba pudo cambiar. Todavía no se escribió nada.
+    // El pedido se toma con candado antes de acreditar y se mira su estado con la fila tomada: uno cancelado o
+    // reembolsado ya devolvió su dinero. Todavía no se escribió nada.
     await tx.$queryRaw`SELECT id FROM "orders" WHERE id = ${claim.orderId} FOR UPDATE`;
     const pedido = await tx.order.findUnique({ where: { id: claim.orderId }, select: { status: true, paymentStatus: true } });
     if (pedido?.status === 'CANCELLED' || pedido?.status === 'REFUNDED') {

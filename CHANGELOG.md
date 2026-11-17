@@ -10,6 +10,22 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.100] - 2026-11-17
+Dinero: lo que quedó de la auditoría del 17/11 (C-284). **Cambia la base, aditivo:** una columna (`compraId` en `orders`) y tres índices; `deploy.sh` se para y muestra el SQL. Sin SQL de datos, sin variables nuevas y sin cron.
+### Órdenes y pagos 1.8.0 (C-284)
+- **Una compra, una sola vez:** cada envío del checkout lleva su llave (`compraId`). Si llega dos veces (un doble toque, un reintento por la red), la tienda devuelve la compra que ya se hizo: no crea otra ni cobra otra vez. Los paquetes de una misma compra comparten la llave.
+- **La referencia de un pago manual** (Zelle, transferencia…) no entra dos veces, tampoco si dos compras llegan a la vez.
+- **La devolución de una garantía** toma el pedido antes de acreditar: un pedido cancelado ya devolvió su dinero y no devuelve otra vez, y varias solicitudes del mismo producto no devuelven, entre todas, más de lo que costó.
+- **Un código digital** no se entrega a una orden que se canceló en ese mismo instante.
+- **"Recarga por revisar"** le llega al equipo solo cuando un Pago Móvil verificado no alcanza para aprobarse solo.
+- La verificación del Pago Móvil pide para qué es el pago: una compra, o una recarga con su solicitud.
+- Cuando una compra o un pago confirmado agota un producto, la tienda lo muestra agotado enseguida.
+- Tres índices nuevos en las órdenes (por compra, por cliente y fecha, y por estado y fecha).
+### Carrito, checkout y cuenta del cliente 1.12.5 (C-284)
+- **"Completar pedido" dos veces** (o un reintento con mala señal) deja una sola compra.
+- **Pedir una recarga por Pago Móvil** ya no le avisa "Recarga por aprobar" al equipo: se aprueba sola al verificar el pago. Las recargas manuales siguen avisando.
+- La referencia de una recarga manual no entra dos veces, tampoco si llegan a la vez.
+
 ## [1.0.0-rc.99] - 2026-11-17
 Los videos de ElectroStudio enteros y también por Telegram (C-286). Sin cambio de base, sin SQL, sin variables nuevas y sin cron. Una dependencia nueva, `mp4-muxer` 5.2.2, y en `next.config.js` el tope del cuerpo de un pedido pasa a 40 MB.
 ### ElectroStudio 2.3.1 (C-286)

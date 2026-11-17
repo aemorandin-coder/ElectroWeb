@@ -10,6 +10,11 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.93] - 2026-11-17
+La lista de Clientes, sin las cifras repetidas (C-278). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Clientes 1.7.1 (C-278)
+- La lista ya no lleva las cuatro cifras de arriba: repetían lo que cuentan los filtros (Todos, Nuevos, Sin activar). Las órdenes en curso siguen en cada fila y en la ficha.
+
 ## [1.0.0-rc.92] - 2026-11-16
 Clientes rediseñado (C-276). **Cambia la base: una tabla nueva, `notas_cliente` (aditiva).** Sin SQL de datos, sin variables nuevas y sin cron.
 ### Clientes 1.7.0 (C-276)

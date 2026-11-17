@@ -1,10 +1,42 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.95`, comprobada el 17/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.97`, comprobada el 17/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 17/11 · C-282 y C-283 (de rc.95 a `v1.0.0-rc.97`)
+La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida, cerca de las 10:27 a. m.: `git pull --ff-only` y `deploy.sh --sin-pull`, sin base, sin SQL y sin cron. Las dos versiones (rc.96 y rc.97) entraron en un solo bloque. C-283 se publicó y se subió con minutos de diferencia, porque cerraba fallas de dinero y el repositorio es público. Terminó en "Listo: sirviendo .next-b (552a4347 Merge branch 'claude/C-283')".
+
+**Lo comprobado, el 17/11:**
+- **En el servidor:** `git describe --tags` dice `v1.0.0-rc.97` y la tienda escucha en `127.0.0.1:3000`. El registro de errores de PM2 no tiene líneas nuevas (38 antes y 38 después). En la tabla de rutas del build ya no están `/api/cart/reserve` ni `/uploads/products/[filename]`.
+- **Desde fuera, como un visitante:**
+  - la portada dice `1.0.0-rc.97|552a434`; la portada, Productos, Categorías, `/sorteo`, `/servicios`, el carrito, entrar, `/canjear-gift-card` y `/cursos` responden 200;
+  - `/uploads/products/<archivo que no existe>` responde 404 en JSON desde la ruta protegida, con `Cache-Control: no-store`;
+  - `/manifest.webmanifest` responde 200 y la portada trae "Saltar al contenido" (C-282);
+  - las API privadas siguen en 401 sin sesión, las reseñas de servicios en 200, y una pestaña de otra versión recibe 204.
+- **Una consulta de solo lectura en producción** (aprobada por el equipo): ningún Pago Móvil quedó registrado dos veces. Las referencias aprobadas que hay guardadas tienen 4 y 6 dígitos: el banco compara por los últimos dígitos, como supone el arreglo.
+- **Antes de subir,** en la tienda de prueba: lo de `estado/C-283.md` (23 de 23 por HTTP, las 50 de C-280 otra vez y la prueba de humo, 60 de 60, con C-282 adentro) y lo de `estado/C-282.md`.
+
+**Falta que el equipo la mire** (`SIGUIENTE.md`, "Por confirmar de rc.97"): las 7 pruebas, unos 15 minutos.
+
+### El bloque que se subió: `v1.0.0-rc.97` (C-282 y C-283)
+Producción está en `v1.0.0-rc.95` (`96f2573`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente y trae dos versiones.
+- **C-282 (rc.96):** la guía web y los arreglos sueltos de la auditoría.
+- **C-283 (rc.97):** lo más urgente de dinero de la auditoría.
+- Las dos, sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.97`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 15 minutos; antes, recarga la tienda y el panel con Ctrl+R). De la 1 a la 5 son de C-282; la 6 y la 7, de C-283:
+  1. **Transacciones** (en la computadora): "Exportar CSV" y ábrelo en Excel: se ve igual que antes, con los montos como números.
+  2. **El lote de impresas:** Gift Cards → "Generar impresas" → una de $5 → genera. Sin cerrar la ventana, toca "Gift Cards" en el menú: arriba dice "Tienes un lote de 1 tarjeta sin cerrar"; "Ver el lote" la vuelve a abrir con su PIN. Imprime la hoja y ciérralo: el aviso se va. La tarjeta queda "Por activar": no vale nada hasta venderla en caja.
+  3. **Instalar la tienda** (en el teléfono, con Chrome): abre electroshopve.com → menú ⋮ → "Instalar aplicación" o "Agregar a la pantalla de inicio": queda el ícono azul de Electro Shop y abre a pantalla completa. Si no te sirve, la quitas como cualquier ícono.
+  4. **Saltar al contenido** (en la computadora): en cualquier página, la primera vez que tocas Tab aparece "Saltar al contenido" arriba a la izquierda; Enter lleva al título de la página.
+  5. **La recarga** (en el teléfono, con tu cuenta de cliente): Mi panel → Puntos ES → Recargar: al tocar el monto sale el teclado de números; Escape (o "Cerrar") la cierra.
+  6. **Órdenes** (en la computadora): cambia el estado de una orden como siempre (por ejemplo, de Pagada a En preparación): funciona igual. Abre una orden cancelada: se le puede escribir una nota, pero su estado ya no cambia.
+  7. **Un Pago Móvil** (solo si hay una compra o una recarga de verdad, no hace falta forzarla): se verifica como siempre. Si alguien vuelve a escribir la misma referencia, con espacios o con menos dígitos, dice que ya fue utilizada.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.95 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ## 17/11 · C-281 y C-280 (de rc.93 a `v1.0.0-rc.95`)
 La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida, cerca de las 9:05 a. m.: `git pull --ff-only` y `deploy.sh --sin-pull`, sin base, sin SQL y sin cron. Las dos versiones (rc.94 y rc.95) entraron en un solo bloque. Terminó en "Listo: sirviendo .next-a (96f25731 Merge branch 'claude/C-280')".

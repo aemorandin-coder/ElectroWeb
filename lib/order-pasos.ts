@@ -112,6 +112,9 @@ export function pasosPedido(o: PedidoParaPasos): PasosPedido {
   else if (actual === 1) nota = o.deliveryMethod === 'DIGITAL' ? 'Estamos preparando tus códigos' : 'Estamos preparando tu pedido';
   else if (o.status === 'READY_FOR_PICKUP') nota = 'Ya puedes retirarlo en la tienda';
   else if (ENVIADA.includes(o.status) && o.enOficina) nota = `Llegó a ${o.courierOfficeName ?? 'la oficina'}: retíralo con tu cédula`;
+  // C-282 (F-10): un retiro o un pedido digital marcado "Enviada" no viaja: la nota dice lo mismo que su paso (antes, "Va en camino")
+  else if (o.status === 'SHIPPED' && esRetiro(o.deliveryMethod)) nota = 'Ya puedes retirarlo en la tienda';
+  else if (o.status === 'SHIPPED' && o.deliveryMethod === 'DIGITAL') nota = 'Tus códigos ya salieron: míralos en Mis códigos';
   else if (o.status === 'SHIPPED') nota = o.deliveryMethod === 'LOCAL_DELIVERY' ? 'Va en camino a tu dirección' : empresa ? `Va en camino con ${empresa}` : 'Va en camino';
 
   return { pasos, nota, cancelado: false };
@@ -123,12 +126,16 @@ export type TonoEstado = 'warning' | 'brand' | 'success' | 'danger' | 'neutral';
  * C-137: el estado del pedido en palabras del cliente, con su color. "Verificando pago" si pagó por un método manual
  * y dejó la referencia (C-132); "Por pagar" si todavía no hay pago.
  */
-export function estadoParaCliente(o: { status: string; paymentStatus?: string | null; paymentReference?: string | null }): { label: string; tono: TonoEstado } {
+export function estadoParaCliente(o: { status: string; paymentStatus?: string | null; paymentReference?: string | null; deliveryMethod?: string | null }): { label: string; tono: TonoEstado } {
   switch (o.status) {
     case 'CANCELLED': return { label: 'Cancelado', tono: 'danger' };
     case 'REFUNDED': return { label: 'Reembolsado', tono: 'neutral' };
     case 'DELIVERED': return { label: 'Entregado', tono: 'success' };
-    case 'SHIPPED': return { label: 'Despachado', tono: 'brand' };
+    // C-282 (F-10): un retiro o un pedido digital no se despacha: el sello dice lo mismo que su paso
+    case 'SHIPPED':
+      if (esRetiro(o.deliveryMethod)) return { label: 'Listo para retirar', tono: 'brand' };
+      if (o.deliveryMethod === 'DIGITAL') return { label: 'Enviado', tono: 'brand' };
+      return { label: 'Despachado', tono: 'brand' };
     case 'READY_FOR_PICKUP': return { label: 'Listo para retirar', tono: 'brand' };
     case 'PENDING':
       // C-251: verificar es de la tienda (esperar va en azul, PLAN.md §1.1); pagar es del cliente (el sello de te toca)

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import {
   IconoActualizar, IconoAdvertencia, IconoBillete, IconoBolsa, IconoBuscar, IconoCerrar, IconoCheck, IconoCopiar,
-  IconoGiftCard, IconoMas, IconoNumero, IconoVer,
+  IconoGiftCard, IconoImpresora, IconoMas, IconoNumero, IconoVer,
 } from '@/components/iconos';
 import GiftCard3D from '@/components/gift-card/GiftCard3D';
 import { formatUSD } from '@/lib/currency';
@@ -18,6 +18,7 @@ import {
   adminStatLabel, adminStatValue, adminSuccessButton, adminTable, adminTableWrap, adminTd, adminTh, type AdminTone,
 } from '@/lib/admin-ui';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { leerLotePendiente } from './_components/lotePendiente';
 
 interface GiftCard {
   id: string;
@@ -91,6 +92,13 @@ export default function GiftCardsAdminPage() {
   }, []);
 
   useCargarAlMontar(fetchGiftCards, [fetchGiftCards]);
+
+  // C-282 (A-12): un lote de impresas que se dejó abierto en esta pestaña (sus PIN no se vuelven a ver)
+  const [lotePendiente, setLotePendiente] = useState<number | null>(null);
+  useCargarAlMontar(() => {
+    const lote = leerLotePendiente();
+    setLotePendiente(lote ? lote.cards.length : null);
+  });
 
   const stats = {
     total: giftCards.length,
@@ -166,6 +174,17 @@ export default function GiftCardsAdminPage() {
           </Link>
         </div>
       </div>
+
+      {lotePendiente !== null && (
+        <div role="status" className={`${adminNotice('warning')} mb-4 flex flex-col gap-3 sm:flex-row sm:items-center`}>
+          <IconoImpresora aria-hidden="true" />
+          <p className="min-w-0 flex-1">
+            <strong className="font-semibold">Tienes un lote de {lotePendiente === 1 ? '1 tarjeta' : `${lotePendiente} tarjetas`} sin cerrar.</strong>{' '}
+            Sus PIN no se vuelven a ver: imprime la hoja antes de cerrarlo.
+          </p>
+          <Link href="/admin/gift-cards/nuevo" className={`${adminPrimaryButton} shrink-0`}>Ver el lote</Link>
+        </div>
+      )}
 
       <div className="mb-4 flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-5">
         {[

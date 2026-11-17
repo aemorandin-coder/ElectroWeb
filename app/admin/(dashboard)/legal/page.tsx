@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { celda } from '@/lib/relacion-ventas';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import {
@@ -55,7 +56,8 @@ interface Documento {
 }
 
 const fechaHora = (iso: string) => new Date(iso).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Caracas' });
-const csv = (v: string | number | null | undefined) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+// C-282: con `celda` (también frena las fórmulas: un texto que empieza por = + - @ lleva un apóstrofo delante)
+const csv = (v: string | number | null | undefined) => celda(v === null || v === undefined ? '' : String(v));
 
 export default function LegalPage() {
   const [tab, setTab] = useState<'firmas' | 'documentos'>('firmas');

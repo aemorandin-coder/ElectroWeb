@@ -501,6 +501,8 @@ export default function CheckoutPage() {
     setError('');
 
     if (!session?.user) {
+      // C-282 (F-11): el botón vuelve a estar listo (antes quedaba en "Procesando" si la sesión se había cerrado)
+      setLoading(false);
       setError('Debes iniciar sesión para realizar un pedido');
       router.push('/login?callbackUrl=%2Fcheckout');
       return;

@@ -31,7 +31,7 @@ export default function FeaturedHeroCard({ product, exchangeRateVES, lowStockThr
       {/* C-133: la foto cuadrada y de borde a borde, pegada a la esquina de abajo: la cinta ES cae en la esquina de la foto.
           C-162: tope de ancho para cuando la estrella está sola y ocupa toda la fila */}
       <div className="relative aspect-square w-1/2 max-w-[26rem] shrink-0 self-end bg-white">
-        <Image src={image} alt={product.name} fill priority={priority} {...(priority ? {} : { fetchPriority: 'low' as const })} sizes="420px" className="object-contain" />
+        <Image src={image} alt={product.name} fill preload={priority} {...(priority ? {} : { fetchPriority: 'low' as const })} sizes="420px" className="object-contain" />
       </div>
       {/* C-162: las etiquetas van en la esquina de la tarjeta, no de la foto: si la tarjeta es más alta que la foto
           (una tarjeta vecina con oferta), no quedan flotando a media altura */}

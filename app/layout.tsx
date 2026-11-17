@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -14,6 +14,7 @@ import { getNavCategories, getNavDepartamentos } from "@/lib/queries/navigation"
 import { imagenDePagina } from "@/lib/og/datos";
 import { absoluteUrl, siteUrl } from "@/lib/seo";
 import { GUION_VERSION_PESTANA } from "@/lib/version-build";
+import SaltarAlContenido from '@/components/ui/SaltarAlContenido';
 import { getRubros, rubrosEnPalabras } from '@/lib/queries/home';
 import { ORIGEN_TIENDA_CIUDAD, ORIGEN_TIENDA_ESTADO } from '@/lib/origen';
 
@@ -37,6 +38,10 @@ const tektrron = localFont({
   display: "swap",
   preload: false,
 });
+
+// C-282 (Fase 7): el color de la barra del navegador en el teléfono, el blanco del encabezado de la tienda (y el de
+// app/manifest.ts, la tienda instalada)
+export const viewport: Viewport = { themeColor: '#ffffff' };
 
 // Generate dynamic metadata with favicon and Open Graph from database
 export async function generateMetadata(): Promise<Metadata> {
@@ -133,6 +138,8 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: GUION_VERSION_PESTANA }} />
       </head>
       <body className="antialiased" suppressHydrationWarning>
+        {/* C-282 (G-03): lo primero que alcanza el teclado */}
+        <SaltarAlContenido />
         <Providers initialSettings={publicSettings} navCategories={navCategories} navDepartamentos={navDepartamentos}>
           <NotificationProvider>
             <div className="page-transition-wrapper">

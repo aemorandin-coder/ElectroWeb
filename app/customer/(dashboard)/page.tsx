@@ -106,7 +106,7 @@ function Foto({ src, nombre, cantidad, chica = false }: { src: string | null | u
 /** C-265: un pedido en curso, como la tarjeta de Mis pedidos (fotos, número y producto, estado y monto, el paso a paso) */
 function TarjetaEnCurso({ orden, salida }: { orden: ActiveOrder; salida: string | null }) {
   const { pasos, nota } = pasosPedido(orden);
-  const estado = estadoParaCliente({ status: orden.status, paymentStatus: orden.paymentStatus, paymentReference: orden.paymentReference ? 'si' : null });
+  const estado = estadoParaCliente({ status: orden.status, paymentStatus: orden.paymentStatus, paymentReference: orden.paymentReference ? 'si' : null, deliveryMethod: orden.deliveryMethod });
   const fotos = orden.fotos ?? [];
   return (
     <Link href={`/customer/orders?orden=${orden.id}`} className="flex h-full flex-col rounded-2xl border border-line bg-white p-3 transition-colors hover:border-brand-200 sm:p-4">

@@ -44,6 +44,7 @@ import {
 import PagosSinOrden from './_components/PagosSinOrden';
 import ConsultarPagoMovil from './_components/ConsultarPagoMovil';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { celda } from '@/lib/relacion-ventas';
 import { useTiempoReal } from '@/lib/realtime/hooks';
 import { EnVivo } from '@/components/ui/EnVivo';
 
@@ -299,16 +300,18 @@ export default function TransactionsPage() {
 
     const exportToCSV = () => {
         const headers = ['ID', 'Usuario', 'Email', 'Tipo', 'Estado', 'Monto USD', 'Descripción', 'Referencia', 'Método de Pago', 'Motivo Rechazo', 'Fecha'];
+        // C-282 (A-10): cada texto con `celda` (comillas duplicadas y un apóstrofo delante de = + - @: el nombre, la referencia y
+        // la descripción los escribe el cliente, y "=HYPERLINK(…)" se ejecutaba al abrir el archivo). El monto va como número
         const csvData = displayed.map(t => [
-            t.id, t.balance.user.name || 'N/A', t.balance.user.email,
-            TYPE_CONFIG[t.type]?.label || t.type, STATUS_CONFIG[t.status]?.label || t.status,
-            Number(t.amount).toFixed(2), t.description,
-            t.reference || '', formatPaymentMethod(t.paymentMethod),
-            t.rejectionReason || '',
-            format(new Date(t.createdAt), 'yyyy-MM-dd HH:mm:ss'),
+            celda(t.id), celda(t.balance.user.name || 'N/A'), celda(t.balance.user.email),
+            celda(TYPE_CONFIG[t.type]?.label || t.type), celda(STATUS_CONFIG[t.status]?.label || t.status),
+            `"${Number(t.amount).toFixed(2)}"`, celda(t.description),
+            celda(t.reference), celda(formatPaymentMethod(t.paymentMethod)),
+            celda(t.rejectionReason),
+            celda(format(new Date(t.createdAt), 'yyyy-MM-dd HH:mm:ss')),
         ]);
         const BOM = '\uFEFF';
-        const content = [headers, ...csvData].map(row => row.map(c => `"${c}"`).join(',')).join('\n');
+        const content = [headers.map(celda), ...csvData].map(row => row.join(',')).join('\n');
         const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');

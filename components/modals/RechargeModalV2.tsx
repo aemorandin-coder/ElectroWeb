@@ -3,6 +3,7 @@ import { formatUSD, formatVES } from '@/lib/currency';
 
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import { useFocoDeVuelta } from '@/lib/hooks/useFocoDeVuelta';
 import {
   IconoAdvertencia, IconoBillete, IconoCargando, IconoCerrar, IconoCheck, IconoConfirmado, IconoDocumento, IconoFlechaIzquierda,
   IconoGarantia,
@@ -45,6 +46,16 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
     useEffect(() => {
         if (!showTermsModal && hasAcceptedTerms === false) botonTerminos.current?.focus({ preventScroll: true });
     }, [showTermsModal, hasAcceptedTerms]);
+    // C-282 (G-01): una ventana de verdad: el foco entra y vuelve al cerrarla, y Escape la cierra (como tocar afuera).
+    // Con la firma de los términos abierta encima, Escape es de esa
+    const ventana = useRef<HTMLDivElement>(null);
+    useFocoDeVuelta(isOpen, ventana);
+    useEffect(() => {
+        if (!isOpen || showTermsModal) return;
+        const alTeclear = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        document.addEventListener('keydown', alTeclear);
+        return () => document.removeEventListener('keydown', alTeclear);
+    }, [isOpen, showTermsModal, onClose]);
     const [loadingMethods, setLoadingMethods] = useState(true);
 
     // Multi-step state
@@ -377,6 +388,14 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
         toast.error(message);
     };
 
+    // C-282 (G-01): Enter en el monto o la referencia hace lo mismo que el botón de abajo, con las mismas condiciones
+    const enviarFormulario = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (processing || !amount || !selectedMethod || !hasAcceptedTerms) return;
+        if (isMobilePayment) void handleProceedToVerification();
+        else if (reference.trim()) void handleTraditionalSubmit();
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -389,6 +408,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
             {/* FLOATING CLOSE BUTTON - OUTSIDE MODAL (Desktop) */}
             <button
+                type="button"
                 onClick={onClose}
                 className="hidden sm:flex fixed top-3 right-3 lg:top-4 lg:right-4 w-11 h-11 lg:w-12 lg:h-12 bg-white hover:bg-surface rounded-full items-center justify-center shadow-lg transition-all"
                 style={{ zIndex: 'var(--z-modal)' }}
@@ -398,14 +418,16 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
             </button>
 
             {/* Modal */}
-            <div className="relative bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-3xl shadow-lg h-[95vh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden z-10">
+            <div ref={ventana} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="recarga-titulo" className="relative bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-3xl shadow-lg h-[95vh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden z-10 focus:outline-none">
                 {/* Header */}
                 <div className="bg-brand-600 p-4 lg:p-6 rounded-t-2xl flex-shrink-0">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 lg:gap-3">
                             {step !== 'SELECT_METHOD' && (
                                 <button
+                                    type="button"
                                     onClick={() => setStep('SELECT_METHOD')}
+                                    aria-label="Volver a elegir el método"
                                     className="p-1.5 lg:p-2 hover:bg-white/10 rounded-lg transition-colors"
                                 >
                                     <IconoFlechaIzquierda className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
@@ -419,7 +441,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                 )}
                             </div>
                             <div>
-                                <h2 className="text-base lg:text-xl font-bold text-white">
+                                <h2 id="recarga-titulo" className="text-base lg:text-xl font-bold text-white">
                                     {step === 'VERIFY_PAYMENT' ? 'Verificar Pago' : 'Recargar'}
                                 </h2>
                                 <p className="text-xs lg:text-sm text-white/80 hidden sm:block">
@@ -429,7 +451,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                 </p>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 sm:hidden hover:bg-white/20 rounded-lg transition-all">
+                        <button type="button" onClick={onClose} aria-label="Cerrar" className="p-2 sm:hidden hover:bg-white/20 rounded-lg transition-all">
                             <IconoCerrar className="w-6 h-6 text-white" />
                         </button>
                     </div>
@@ -446,12 +468,12 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                 <div className="p-3 lg:p-6 overflow-y-auto flex-1">
                     {/* STEP 1: Select Method and Amount */}
                     {step === 'SELECT_METHOD' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
+                        <form id="recarga-formulario" noValidate onSubmit={enviarFormulario} className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
                             {/* Left Column: Amount & Method */}
                             <div className="space-y-4 lg:space-y-6">
                                 {/* Amount Selection */}
                                 <div>
-                                    <label className="block text-xs lg:text-sm font-bold text-ink mb-2 lg:mb-3 uppercase tracking-wider">
+                                    <label htmlFor="recarga-monto" className="block text-xs lg:text-sm font-bold text-ink mb-2 lg:mb-3 uppercase tracking-wider">
                                         Monto a Recargar (USD)
                                     </label>
 
@@ -460,6 +482,9 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                         {quickAmounts.map((quickAmount) => (
                                             <button
                                                 key={quickAmount}
+                                                type="button"
+                                                aria-pressed={amount === quickAmount.toString()}
+                                                aria-label={`${quickAmount} dólares`}
                                                 onClick={() => setAmount(quickAmount.toString())}
                                                 className={`group relative overflow-hidden rounded-lg lg:rounded-xl font-bold text-xs lg:text-sm transition-all ${amount === quickAmount.toString()
                                                     ? 'bg-brand-600 text-white shadow-sm ring-2 ring-brand-500'
@@ -487,7 +512,12 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                             <IconoBillete className="w-4 h-4 lg:w-5 lg:h-5" />
                                         </div>
                                         <input
+                                            id="recarga-monto"
                                             type="number"
+                                            inputMode="decimal"
+                                            min="1"
+                                            step="0.01"
+                                            autoComplete="off"
                                             value={amount}
                                             onChange={(e) => setAmount(e.target.value)}
                                             placeholder="Otro monto..."
@@ -498,9 +528,9 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
 
                                 {/* Payment Method Selection */}
                                 <div>
-                                    <label className="block text-xs lg:text-sm font-bold text-ink mb-2 lg:mb-3 uppercase tracking-wider">
+                                    <p id="recarga-metodo" className="block text-xs lg:text-sm font-bold text-ink mb-2 lg:mb-3 uppercase tracking-wider">
                                         Método de Pago
-                                    </label>
+                                    </p>
                                     {loadingMethods ? (
                                         <div className="flex items-center justify-center py-6 lg:py-8">
                                             <div className="w-5 h-5 lg:w-6 lg:h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
@@ -510,13 +540,14 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                             <p className="text-xs lg:text-sm">No hay metodos de pago disponibles</p>
                                         </div>
                                     ) : (
-                                        <div className="space-y-1.5 lg:space-y-2">
+                                        <div role="group" aria-labelledby="recarga-metodo" className="space-y-1.5 lg:space-y-2">
                                             {companyPaymentMethods.map((method) => {
                                                 const isSelected = selectedMethodId === method.id;
                                                 return (
                                                     <button
                                                         key={method.id}
                                                         type="button"
+                                                        aria-pressed={isSelected}
                                                         onClick={() => setSelectedMethodId(method.id)}
                                                         className={`w-full p-3 lg:p-4 rounded-lg lg:rounded-xl border transition-all text-left ${isSelected
                                                             ? 'border-brand-500 bg-brand-50 shadow-sm'
@@ -670,18 +701,21 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                 {/* Reference Number */}
                                 {selectedMethod && selectedMethod.type !== 'MOBILE_PAYMENT' && (
                                     <div>
-                                        <label className="block text-xs font-bold text-ink mb-1 lg:mb-1.5 uppercase tracking-wider">
+                                        <label htmlFor="recarga-referencia" className="block text-xs font-bold text-ink mb-1 lg:mb-1.5 uppercase tracking-wider">
                                             Número de Referencia
                                         </label>
                                         <input
+                                            id="recarga-referencia"
                                             type="text"
+                                            autoComplete="off"
+                                            aria-describedby="recarga-referencia-ayuda"
                                             value={reference}
                                             onChange={(e) => setReference(e.target.value)}
                                             placeholder="Ej: 123456789 o ID de pago"
                                             className="w-full px-3 py-2 lg:py-2.5 border border-line rounded-lg lg:rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-xs lg:text-sm bg-white text-ink"
                                         />
-                                        <p className="text-xs text-muted mt-1 flex items-center gap-1">
-                                            <span className="min-w-5 h-5 px-1 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-bold">i</span>
+                                        <p id="recarga-referencia-ayuda" className="text-xs text-muted mt-1 flex items-center gap-1">
+                                            <span aria-hidden="true" className="min-w-5 h-5 px-1 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-bold">i</span>
                                             ID de transacción o número de confirmación
                                         </p>
                                     </div>
@@ -704,7 +738,7 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </form>
                     )}
 
                     {/* STEP 2: Verify Mobile Payment */}
@@ -744,8 +778,8 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                             <>
                                 {isMobilePayment ? (
                                     <button
-                                        type="button"
-                                        onClick={handleProceedToVerification}
+                                        type="submit"
+                                        form="recarga-formulario"
                                         disabled={processing || !amount || !selectedMethod || !hasAcceptedTerms}
                                         className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-success-strong hover:bg-success-strong/90 text-white font-semibold rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base order-1 sm:order-2"
                                     >
@@ -763,8 +797,8 @@ export default function RechargeModalV2({ isOpen, onClose, onSuccess }: Recharge
                                     </button>
                                 ) : (
                                     <button
-                                        type="button"
-                                        onClick={handleTraditionalSubmit}
+                                        type="submit"
+                                        form="recarga-formulario"
                                         disabled={processing || !amount || !selectedMethod || !reference.trim() || !hasAcceptedTerms}
                                         className="sm:flex-1 px-4 lg:px-6 py-2.5 lg:py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 lg:gap-2 text-sm lg:text-base order-1 sm:order-2"
                                     >

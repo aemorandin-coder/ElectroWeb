@@ -1,9 +1,13 @@
-# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.95; nada por subir: §2)
+# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.95; por subir: rc.96, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-282 · La guía web y los arreglos sueltos de la auditoría (rc.96, por subir: §2; `estado/C-282.md`):** la Fase 7 de la auditoría del 17/11 y los cuatro sueltos, lo que recomendó la otra sesión cuando el equipo preguntó qué más se podía tomar.
+  - **En la tienda:** se puede instalar en el teléfono con su ícono; "Saltar al contenido" con el teclado; la ventana de recarga y las direcciones de Mi panel son formularios accesibles (Enter, etiquetas, autocompletar, Escape); "Va en camino" solo para lo que viaja.
+  - **En el panel:** el CSV de Transacciones (y los de Reportes y Legal) ya no ejecuta fórmulas al abrirlo en Excel, y el lote de gift cards impresas ya no se pierde al salir sin cerrarlo.
+  - **Para decidir:** la política de navegadores (`PLAN.md` §7.1, A17).
 - **C-280 · Dinero y seguridad: los arreglos medios de la auditoría (rc.95, en producción desde el 17/11; pruebas por confirmar: §2; `estado/C-280.md`):** lo que pidió el equipo el 17/11 después de leer el informe, con un agente en el modelo liviano que implementó y Claude que revisó.
   - **Puntos ES:** la recarga por Pago Móvil que se aprueba sola se compara con la tasa que vio el cliente y solo perdona el redondeo; lo pagado de más también se acredita. Pedir recargas tiene tope (10 por hora y 3 por confirmar), y una que quedó a medias la reemplaza la siguiente.
   - **Compras:** un cupón de un uso por cliente ya no hace fallar la compra de dos paquetes, y el checkout con la sesión vencida lo dice sin vaciar el carrito.
@@ -466,8 +470,18 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: nada por ahora
-Producción está en `v1.0.0-rc.95` (`96f2573`); su bloque está en `HISTORIAL.md`.
+### Lo que falta subir: `v1.0.0-rc.96` (C-282)
+Producción está en `v1.0.0-rc.95` (`96f2573`); su bloque está en `HISTORIAL.md`. Este es el único bloque pendiente.
+- **C-282 (rc.96):** la guía web y los arreglos sueltos de la auditoría. Sin cambio de base, sin SQL, sin variables nuevas y sin cron. No hace falta respaldo.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.96`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 10 minutos; antes, recarga la tienda y el panel con Ctrl+R):
+  1. **Transacciones** (en la computadora): "Exportar CSV" y ábrelo en Excel: se ve igual que antes, con los montos como números.
+  2. **El lote de impresas:** Gift Cards → "Generar impresas" → una de $5 → genera. Sin cerrar la ventana, toca "Gift Cards" en el menú: arriba dice "Tienes un lote de 1 tarjeta sin cerrar"; "Ver el lote" la vuelve a abrir con su PIN. Imprime la hoja y ciérralo: el aviso se va. La tarjeta queda "Por activar": no vale nada hasta venderla en caja.
+  3. **Instalar la tienda** (en el teléfono, con Chrome): abre electroshopve.com → menú ⋮ → "Instalar aplicación" o "Agregar a la pantalla de inicio": queda el ícono azul de Electro Shop y abre a pantalla completa. Si no te sirve, la quitas como cualquier ícono.
+  4. **Saltar al contenido** (en la computadora): en cualquier página, la primera vez que tocas Tab aparece "Saltar al contenido" arriba a la izquierda; Enter lleva al título de la página.
+  5. **La recarga** (en el teléfono, con tu cuenta de cliente): Mi panel → Puntos ES → Recargar: al tocar el monto sale el teclado de números; Escape (o "Cerrar") la cierra.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.95 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de rc.95 (C-281 y C-280; unos 20 minutos)
 Ya en producción desde el 17/11, cerca de las 9:05 a. m. (la subió Claude por SSH con la aprobación del equipo; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión, las páginas, que las API privadas responden 401 sin sesión, las reseñas de servicios sin cuenta y la caché de los archivos subidos. Falta esto (antes, recarga la tienda y el panel con Ctrl+R). De la 1 a la 6 son de C-281; de la 7 a la 10, de C-280:
@@ -1134,7 +1148,7 @@ En el orden en que más destraban:
 
 **Sigue:** El plan del 14/11 está en producción desde ese día (rc.53). rc.56 está en producción desde el 15/11; falta confirmar sus pruebas (§2) y lo que queda de ámbar y de píldoras claras en el resto de la tienda (`PLAN.md` §5.2). Lo de abajo queda después.
 
-**Hecho el 17/11:** C-278 (la lista de Clientes sin las cifras repetidas, rc.93, en producción) C-281 (los flujos que venden y el día del panel, rc.94) y C-280 (los arreglos medios de dinero y seguridad de la auditoría, rc.95). Las dos, en producción desde el 17/11.
+**Hecho el 17/11:** C-278 (la lista de Clientes sin las cifras repetidas, rc.93, en producción) C-281 (los flujos que venden y el día del panel, rc.94) y C-280 (los arreglos medios de dinero y seguridad de la auditoría, rc.95). Las dos, en producción desde el 17/11. Y C-282 (la guía web y los arreglos sueltos, rc.96, por subir: §2).
 
 **Hecho el 16/11:** C-276 (Clientes, rc.92) y, de su inventario, C-277 (rc.91), las dos en producción.
 

@@ -10,6 +10,28 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.96] - 2026-11-17
+La guía web y los arreglos sueltos de la auditoría del 17/11 (C-282). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
+### Tienda 1.22.0 (C-282)
+- **La tienda se puede instalar en el teléfono** ("Agregar a la pantalla de inicio"), con su ícono y a pantalla completa. La barra del navegador va en blanco, como el encabezado.
+- **"Saltar al contenido"** con el primer Tab de cada página.
+- Las imágenes principales usan `preload` y las demás que se ven al abrir, `loading="eager"` (`priority` está en desuso en Next 16).
+### Carrito, checkout y cuenta del cliente 1.12.2 (C-282)
+- **La ventana de recarga** es un formulario accesible: su nombre, etiquetas en cada campo, teclado decimal en el monto, Enter, Escape y el foco que vuelve al cerrarla.
+- **Las direcciones de Mi panel** se guardan con Enter y se autocompletan con lo que el navegador ya sabe.
+- "Completar pedido" ya no se queda en "Procesando" si la sesión se cerró justo al tocarlo.
+### Órdenes y pagos 1.7.2 (C-282)
+- **El CSV de Transacciones escapa cada texto:** una fórmula que escribe un cliente ya no se ejecuta al abrir el archivo en Excel.
+- Un pedido de retiro o digital marcado "Enviada" ya no le dice al cliente "Va en camino": "Ya puedes retirarlo en la tienda" o "Tus códigos ya salieron".
+### Clientes 1.7.4 (C-282)
+- **El lote de gift cards impresas ya no se pierde** al salir sin cerrarlo: Gift Cards avisa que hay uno abierto y "Ver el lote" lo vuelve a abrir con sus PIN.
+### Reportes y seguridad 1.1.12 (C-282)
+- Los CSV de Reportes frenan las fórmulas, como el de Transacciones.
+### Configuración 1.4.7 (C-282)
+- El CSV de las firmas de Legal frena las fórmulas.
+### Marketing 1.24.4 y Cotizaciones 1.5.4 (C-282)
+- La foto del premio y del ganador de `/sorteo` y el logo del presupuesto cargan con las propiedades nuevas de Next 16.
+
 ## [1.0.0-rc.95] - 2026-11-17
 Dinero y seguridad: los arreglos medios de la auditoría del 17/11 (C-280). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### Carrito, checkout y cuenta del cliente 1.12.1 (C-280)

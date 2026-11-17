@@ -68,11 +68,23 @@ export async function POST(req: NextRequest) {
             cedulaPagador: cedulaRecibida,
             reqCed = true,      // Validar cédula por defecto para mayor seguridad
             // Contexto de la verificación
-            contexto = 'GENERAL', // RECHARGE, ORDER, GENERAL
+            contexto,             // ORDER, o RECHARGE con su transactionId (ver abajo)
             transactionId,        // ID de transacción de recarga (si aplica)
             // orderId del navegador: se ignora desde C-129 (lo pone POST /api/orders)
             cotizacion: cotizacionToken, // C-125: monto y tasa firmados por /api/orders/quote
         } = body;
+
+        // C-284: solo se consulta al banco por un pago que sirva para algo: una compra o una recarga con su transactionId.
+        // Con otro contexto (o sin él) el banco confirmaba el pago y quedaba registrado sin recarga y sin poder usarse
+        // en una compra (las compras solo toman los de contexto ORDER).
+        const esCompra = contexto === 'ORDER';
+        const esRecarga = contexto === 'RECHARGE' && typeof transactionId === 'string' && transactionId.trim() !== '';
+        if (!esCompra && !esRecarga) {
+            return NextResponse.json(
+                { error: 'Indica si el pago es de una compra o de una recarga.' },
+                { status: 400 }
+            );
+        }
 
         // S-01: la referencia y el banco, en una sola forma desde aquí (lib/pago-movil/referencia.ts). Es la que se busca,
         // se bloquea, se manda al banco y se guarda: lo recibido no se vuelve a usar

@@ -8,7 +8,7 @@ import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import AsiFunciona from '@/components/onboarding/AsiFunciona';
 import CodigosRespaldo from '@/components/admin/CodigosRespaldo';
 import Configurar, { type Configuracion } from './_components/Configurar';
-import Activa from './_components/Activa';
+import Activa, { type Dispositivo } from './_components/Activa';
 import Trabado from '@/components/admin/dos-pasos/Trabado';
 
 // Mi seguridad (C-141): cada admin configura aquí su verificación en dos pasos (app de códigos + 10 llaves de repuesto).
@@ -21,6 +21,8 @@ interface Estado {
   activo: boolean;
   activadoAt: string | null;
   codigosRestantes: number;
+  /** C-291: los dispositivos de confianza vigentes; `actual` es este navegador */
+  dispositivos?: Dispositivo[];
 }
 
 async function pedir<T>(cuerpo?: Record<string, string>): Promise<{ ok: true; datos: T } | { ok: false; error: string }> {
@@ -106,6 +108,20 @@ export default function SeguridadPage() {
     return true;
   };
 
+  /** C-291: quitar uno (o todos) de los dispositivos de confianza. La lista vuelve del servidor */
+  const quitar = async (id: string | null): Promise<boolean> => {
+    setOcupado(true);
+    setError('');
+    const r = await pedir<{ dispositivos: Dispositivo[] }>(id ? { accion: 'quitar_dispositivo', id } : { accion: 'quitar_dispositivos' });
+    setOcupado(false);
+    if (!r.ok) {
+      setError(r.error);
+      return false;
+    }
+    setEstado((e) => (e ? { ...e, dispositivos: r.datos.dispositivos } : e));
+    return true;
+  };
+
   if (errorCarga) return <p className={`${adminNotice('danger')} max-w-2xl`} role="alert">{errorCarga}</p>;
   if (!estado || pendienteDeEntrar) {
     return (
@@ -158,6 +174,8 @@ export default function SeguridadPage() {
         <Activa
           activadoAt={estado.activadoAt}
           llavesRestantes={estado.codigosRestantes}
+          dispositivos={estado.dispositivos ?? []}
+          onQuitar={quitar}
           esSuperAdmin={session?.user?.role === 'SUPER_ADMIN'}
           ocupado={ocupado}
           error={error}

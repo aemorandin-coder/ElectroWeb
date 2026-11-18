@@ -1,19 +1,32 @@
 'use client';
 
 import { useState } from 'react';
-import { IconoActualizar, IconoCelular, IconoGarantia, IconoLlave } from '@/components/iconos';
-import { adminCard, adminIconChip, adminLabel, adminPrimaryButton, adminSecondaryButton, adminSectionTitle } from '@/lib/admin-ui';
+import { IconoActualizar, IconoCelular, IconoLaptop, IconoGarantia, IconoLlave } from '@/components/iconos';
+import { adminBadge, adminCard, adminIconChip, adminLabel, adminPrimaryButton, adminSecondaryButton, adminSectionTitle } from '@/lib/admin-ui';
 import Trabado from '@/components/admin/dos-pasos/Trabado';
 import { CaminoDeEntrada, CampoNumero } from './piezas';
 
 // C-290: Mi seguridad con la verificación ya activa: cómo es cada entrada (dibujado), las llaves de repuesto que quedan y
 // qué hacer si cambia de teléfono, con a quién escribir (skill herramientas-claras, reglas 3 y 9).
 
+export interface Dispositivo {
+  id: string;
+  dispositivo: string;
+  createdAt: string;
+  ultimoUsoAt: string | null;
+  venceAt: string;
+  actual: boolean;
+}
+
+const fechaCorta = (iso: string) => new Date(iso).toLocaleDateString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'short' });
 const fecha = (iso: string) => new Date(iso).toLocaleDateString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', year: 'numeric' });
 
-export default function Activa({ activadoAt, llavesRestantes, esSuperAdmin, ocupado, error, onRegenerar, onLimpiarError }: {
+export default function Activa({ activadoAt, llavesRestantes, dispositivos, esSuperAdmin, ocupado, error, onRegenerar, onQuitar, onLimpiarError }: {
   activadoAt: string | null;
   llavesRestantes: number;
+  dispositivos: Dispositivo[];
+  /** null: todos */
+  onQuitar: (id: string | null) => Promise<boolean>;
   esSuperAdmin: boolean;
   ocupado: boolean;
   error: string;
@@ -42,6 +55,45 @@ export default function Activa({ activadoAt, llavesRestantes, esSuperAdmin, ocup
           </div>
         </div>
         <CaminoDeEntrada className="mt-4" />
+      </section>
+
+      <section className={adminCard} aria-labelledby="titulo-dispositivos">
+        <div className="flex items-start gap-4">
+          <span className={adminIconChip('neutral')}><IconoLaptop className="h-5 w-5" aria-hidden="true" /></span>
+          <div className="min-w-0 flex-1">
+            <h2 id="titulo-dispositivos" className={adminSectionTitle}>Dispositivos de confianza</h2>
+            <p className="mt-1 text-sm text-muted">
+              {dispositivos.length === 0
+                ? 'Ninguno. Al entrar, marca «No pedir el número por 30 días» en tu computadora.'
+                : 'En estos no te pedimos el número por 30 días. La contraseña, sí.'}
+            </p>
+            {dispositivos.length > 0 && (
+              <>
+                <ul className="mt-3 divide-y divide-line rounded-xl border border-line">
+                  {dispositivos.map((d) => (
+                    <li key={d.id} className="flex items-center gap-3 px-3 py-2.5">
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink">
+                          {d.dispositivo}
+                          {d.actual && <span className={adminBadge('brand')}>Este</span>}
+                        </span>
+                        <span className="block text-xs text-muted">
+                          Desde el {fechaCorta(d.createdAt)}{d.ultimoUsoAt ? ` · usado el ${fechaCorta(d.ultimoUsoAt)}` : ''} · hasta el {fechaCorta(d.venceAt)}
+                        </span>
+                      </span>
+                      <button type="button" onClick={() => void onQuitar(d.id)} disabled={ocupado} className={`${adminSecondaryButton} shrink-0`}>Quitar</button>
+                    </li>
+                  ))}
+                </ul>
+                {dispositivos.length > 1 && (
+                  <button type="button" onClick={() => void onQuitar(null)} disabled={ocupado} className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-deal hover:underline">
+                    Quitar todos
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className={adminCard} aria-labelledby="titulo-llaves">

@@ -15,6 +15,7 @@ import { rutaInternaSegura } from '@/lib/rutas';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { FilaDeLaApp } from '@/components/admin/dos-pasos/TelefonoDibujado';
 import Trabado from '@/components/admin/dos-pasos/Trabado';
+import { useTelefono } from '@/components/admin/dos-pasos/apps';
 
 // Constants for failed attempts
 const FAILED_ATTEMPTS_KEY = 'login_failed_attempts';
@@ -58,6 +59,9 @@ function LoginPageContent({ google, conCookie }: { google: boolean; conCookie: b
   // C-141: segundo paso del panel (código de la app o uno de respaldo)
   const [pideCodigo, setPideCodigo] = useState(false);
   const [codigo, setCodigo] = useState('');
+  // C-291: no pedir el código en este navegador por 30 días (apagada al abrir: se marca solo en una computadora propia)
+  const [confiar, setConfiar] = useState(false);
+  const enTelefono = useTelefono() !== null;
   const [conRespaldo, setConRespaldo] = useState(false);
   // El envío del formulario ya lleva a su destino con una carga completa: el efecto de "ya tenías sesión" no navega
   // también (eran dos cargas seguidas del panel, y la segunda borraba lo que el admin ya hubiera tocado)
@@ -269,6 +273,10 @@ function LoginPageContent({ google, conCookie }: { google: boolean; conCookie: b
         entro = true;
         // Reset failed attempts on success
         resetFailedAttempts();
+        // C-291: marca este navegador como de confianza (la sesión recién abierta lo permite unos minutos). Si falla, entra igual
+        if (pideCodigo && confiar) {
+          await fetch('/api/admin/dos-pasos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accion: 'confiar' }) }).catch(() => null);
+        }
         // Wait a bit for session to be established
         await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -370,6 +378,13 @@ function LoginPageContent({ google, conCookie }: { google: boolean; conCookie: b
               disabled={isLoading}
             />
             <p className={adminHint}>{email}</p>
+            <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-ink">
+              <input type="checkbox" checked={confiar} onChange={(e) => setConfiar(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-brand-500" disabled={isLoading} />
+              <span>
+                No pedir el número en {enTelefono ? 'este teléfono' : 'esta computadora'} por 30 días
+                <span className="block text-xs text-muted">Solo si es tuyo. La contraseña se sigue pidiendo.</span>
+              </span>
+            </label>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
               <button type="button" onClick={() => { setPideCodigo(false); setCodigo(''); setConRespaldo(false); setError(''); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-soft hover:text-ink">
                 <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" />

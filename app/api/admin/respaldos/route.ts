@@ -4,6 +4,7 @@ import { anotar, esRespuesta, exigirDueno } from '@/lib/respaldos/acceso';
 import { estadoParaPanel } from '@/lib/respaldos/estado';
 import { cifrarSecreto } from '@/lib/respaldos/secreto';
 import { leerAjustes, problemaDeConfiguracion } from '@/lib/respaldos/servicio';
+import { exigirCodigoReciente } from '@/lib/dispositivos-confianza';
 
 // C-165: ajustes de los respaldos a Google Drive. Solo el dueño. Nunca devuelve secretos.
 export const dynamic = 'force-dynamic';
@@ -24,6 +25,9 @@ const CLIENT_ID = /^[A-Za-z0-9._-]{10,200}\.apps\.googleusercontent\.com$/;
 export async function PUT(request: NextRequest) {
   const dueno = await exigirDueno('guardar');
   if (esRespuesta(dueno)) return dueno;
+  // C-291: si la sesión entró por un dispositivo de confianza, esto pide el número de la app otra vez
+  const codigoReciente = await exigirCodigoReciente();
+  if (codigoReciente) return codigoReciente;
   try {
     const body = (await request.json()) as Record<string, unknown>;
     const antes = await leerAjustes();

@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email-service';
 import { correoInvitacionEquipo } from '@/lib/email-templates/cuenta';
 import { tokenParaGuardar } from '@/lib/token-huella';
+import { contarDispositivos } from '@/lib/dispositivos-confianza';
 
 // C-235 (Andrés, 14/11): la contadora entra al equipo por invitación, como los admin, y el dueño la quita o la cambia.
 export const ROLES_EQUIPO = ['ADMIN', 'SUPER_ADMIN', 'ACCOUNTANT'] as const;
@@ -39,6 +40,8 @@ export interface MiembroEquipo {
   dosPasos: boolean;
   ultimaEntrada: string | null;
   sesionAbierta: boolean;
+  /** C-291: cuántos dispositivos de confianza vigentes tiene (30 días sin pedir el código) */
+  dispositivos: number;
   /** Solo en invitaciones: hasta cuándo sirve el enlace (null = vencido) */
   invitacionVence: string | null;
   soyYo: boolean;
@@ -63,6 +66,7 @@ export async function listarEquipo(yoId: string): Promise<MiembroEquipo[]> {
       passwordResetTokens: { where: { expiresAt: { gt: ahora } }, orderBy: { expiresAt: 'desc' }, take: 1, select: { expiresAt: true } },
     },
   });
+  const dispositivos = await contarDispositivos(usuarios.map((u) => u.id));
   return usuarios.map((u) => {
     const ultima = u.sesiones[0];
     const invitado = !u.password;
@@ -75,6 +79,7 @@ export async function listarEquipo(yoId: string): Promise<MiembroEquipo[]> {
       dosPasos: Boolean(u.segundoFactor?.activadoAt),
       ultimaEntrada: ultima?.createdAt.toISOString() ?? null,
       sesionAbierta: Boolean(ultima && !ultima.revokedAt && ultima.expiresAt > ahora && ultima.version === u.sessionVersion),
+      dispositivos: dispositivos.get(u.id) ?? 0,
       invitacionVence: invitado ? u.passwordResetTokens[0]?.expiresAt.toISOString() ?? null : null,
       soyYo: u.id === yoId,
     };

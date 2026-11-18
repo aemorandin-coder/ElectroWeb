@@ -8,6 +8,7 @@ import { cifrarClaveSmtp, leerClaveSmtp, opcionesTlsSmtp } from '@/lib/smtp-segu
 import { getBaseTemplate } from '@/lib/email-service';
 import { escapeHtml } from '@/lib/html';
 import { CORREO, selloCorreo } from '@/lib/email-templates/estilo';
+import { exigirCodigoReciente } from '@/lib/dispositivos-confianza';
 
 // Provider presets for quick configuration
 const PROVIDER_PRESETS: Record<string, { host: string; port: number; secure: boolean }> = {
@@ -95,6 +96,9 @@ export async function PUT(request: NextRequest) {
         if (!isAuthorized(session, 'MANAGE_SETTINGS')) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
+        // C-291: si la sesión entró por un dispositivo de confianza, esto pide el número de la app otra vez
+        const codigoReciente = await exigirCodigoReciente();
+        if (codigoReciente) return codigoReciente;
 
         const body = await request.json();
         const {

@@ -171,9 +171,9 @@ export async function getDashboard(): Promise<DashboardData> {
     if (!respaldoAjustes?.enabled) tienda.push({ clave: 'respaldos', texto: 'Los respaldos automáticos no están encendidos: si el servidor falla, se pierden las órdenes y los Puntos ES.', href: '/admin/settings#respaldos', soloDueno: true });
     else if (respaldoAlDia === null) tienda.push({ clave: 'respaldos', texto: 'El último respaldo bueno tiene más de un día o no hay ninguno: revisa el historial de respaldos.', href: '/admin/settings#respaldos', soloDueno: true });
   }
-  if (metodosActivos === 0) tienda.push({ clave: 'pagos', texto: 'No hay ningún método de pago activo: nadie puede pagar.', href: '/admin/payments', soloDueno: true });
-  if (!ajustes?.taxEnabled || !(Number(ajustes.taxPercent ?? 0) > 0)) tienda.push({ clave: 'iva', texto: 'Falta el porcentaje del IVA: la tienda no dice "IVA incluido".', href: '/admin/settings', soloDueno: true });
-  if (!ajustes?.rif || !ajustes.address) tienda.push({ clave: 'negocio', texto: 'Faltan el RIF o la dirección de la tienda (salen en el pie, los presupuestos y Google).', href: '/admin/settings', soloDueno: true });
+  if (metodosActivos === 0) tienda.push({ clave: 'pagos', texto: 'No hay ningún método de pago activo: nadie puede pagar.', href: '/admin/settings#pagos', soloDueno: true });
+  if (!ajustes?.taxEnabled || !(Number(ajustes.taxPercent ?? 0) > 0)) tienda.push({ clave: 'iva', texto: 'Falta el porcentaje del IVA: la tienda no dice "IVA incluido".', href: '/admin/settings#tasa', soloDueno: true });
+  if (!ajustes?.rif || !ajustes.address) tienda.push({ clave: 'negocio', texto: 'Faltan el RIF o la dirección de la tienda (salen en el pie, los presupuestos y Google).', href: '/admin/settings#datos', soloDueno: true });
   if (sinGanancia.size > 0) tienda.push({ clave: 'ganancia', texto: `${sinGanancia.size} ${sinGanancia.size === 1 ? 'producto publicado se vende' : 'productos publicados se venden'} al costo o por debajo${iva > 0 ? ', quitando el IVA' : ''}.`, href: '/admin/products', soloDueno: true });
   if (sinMarca > 0) tienda.push({ clave: 'marca', texto: `${sinMarca} ${sinMarca === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} marca (Google y el catálogo de Meta la piden).`, href: '/admin/products?filtro=sin-marca', soloDueno: false });
   if (sinFoto > 0) tienda.push({ clave: 'foto', texto: `${sinFoto} ${sinFoto === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} foto.`, href: '/admin/products?filtro=sin-foto', soloDueno: false });

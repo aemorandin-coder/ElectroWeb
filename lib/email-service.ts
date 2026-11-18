@@ -83,7 +83,7 @@ const getTransporterWithSettings = async () => {
   // If we have database settings and they're configured, use them
   const claveSmtp = leerClaveSmtp(dbSettings?.smtpPassword);
   if (dbSettings?.smtpPassword && !claveSmtp) {
-    console.error('[EMAIL] No se pudo leer la contraseña SMTP guardada (¿cambió NEXTAUTH_SECRET?): vuelve a escribirla en Configuración. Se usan las variables del .env.');
+    console.error('[EMAIL] No se pudo leer la contraseña SMTP guardada (¿cambió NEXTAUTH_SECRET?): vuelve a escribirla en Ajustes → Correo. Se usan las variables del .env.');
   }
   if (dbSettings && dbSettings.isConfigured && dbSettings.smtpHost && dbSettings.smtpUser && claveSmtp) {
     return nodemailer.createTransport({
@@ -351,7 +351,7 @@ export const sendTestEmail = async (email: string) => {
     ]),
     chispa: { pose: 'pulgar', texto: 'Todo en orden por aquí. Ábrelo también en el teléfono para ver cómo les llega a los clientes.' },
     pie: 'equipo',
-    motivo: 'Lo pidió alguien del equipo desde Configuración → Correo.',
+    motivo: 'Lo pidió alguien del equipo desde Ajustes → Correo.',
   });
   return sendEmail({ to: email, subject: 'Correo de prueba de Electro Shop', html });
 };

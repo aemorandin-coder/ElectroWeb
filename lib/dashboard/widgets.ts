@@ -77,7 +77,7 @@ export const ACCESOS: AccesoDef[] = [
   { id: 'importar', titulo: 'Importar productos', href: '/admin/products/importar', permiso: 'MANAGE_PRODUCTS' },
   { id: 'categorias', titulo: 'Categorías', href: '/admin/categories', permiso: 'MANAGE_PRODUCTS' },
   { id: 'relacion-ventas', titulo: 'Relación de ventas', href: '/admin/reports', permiso: 'VIEW_REPORTS' },
-  { id: 'configuracion', titulo: 'Configuración', href: '/admin/settings', permiso: 'MANAGE_SETTINGS' },
+  { id: 'configuracion', titulo: 'Ajustes', href: '/admin/settings', permiso: 'MANAGE_SETTINGS' },
   // Nuevos en C-171: se pueden agregar al elegir los botones
   { id: 'productos', titulo: 'Productos', href: '/admin/products', permiso: 'MANAGE_PRODUCTS' },
   { id: 'clientes', titulo: 'Clientes', href: '/admin/customers', permiso: 'MANAGE_USERS' },

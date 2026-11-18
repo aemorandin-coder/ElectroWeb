@@ -516,7 +516,7 @@ export default function AsistenteCampana({ campana, envio }: { campana: CampanaP
                 <IconoPausa className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 <span>
                   {!envio.marketingActivo
-                    ? <>Puedes guardarla y probarla, pero para enviarla a los clientes activa <strong>Correos de marketing</strong> en Configuración → Correo.</>
+                    ? <>Puedes guardarla y probarla, pero para enviarla a los clientes activa <strong>Correos de marketing</strong> en Ajustes → Correo.</>
                     : 'Se guarda como borrador: todavía ningún cliente aceptó promociones.'}
                 </span>
               </p>

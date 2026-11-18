@@ -235,7 +235,7 @@ export default function AsistenteMetodo({ metodo, orden }: { metodo: MetodoPanel
       const response = await fetch('/api/admin/payments', { method: editar ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo()) });
       if (response.ok) {
         toast.success(editar ? 'Método actualizado' : 'Método creado exitosamente');
-        router.push('/admin/payments');
+        router.push('/admin/settings#pagos');
         router.refresh();
       } else {
         const data = await response.json().catch(() => ({}));
@@ -296,7 +296,7 @@ export default function AsistenteMetodo({ metodo, orden }: { metodo: MetodoPanel
       titulo={metodo ? `Cambiar: ${metodo.name}` : 'Nuevo método de pago'}
       subtitulo={metodo ? `${tipoDe(metodo.type).titulo} · ${metodo.isActive ? 'Activo' : 'Inactivo'}` : 'Paso a paso, con lo que verá el cliente.'}
       icono={IconoTarjeta}
-      volver={{ href: '/admin/payments', texto: 'Métodos de pago' }}
+      volver={{ href: '/admin/settings#pagos', texto: 'Métodos de pago' }}
       etiqueta="Pasos del método de pago"
       pasos={pasos}
       paso={paso}

@@ -1,7 +1,8 @@
 'use client';
 
-import { IconoEliminar, IconoMas } from '@/components/iconos';
-import { adminError, adminIconButton, adminInput, adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
+import { IconoBillete, IconoEliminar, IconoMas, IconoPaquete } from '@/components/iconos';
+import Opcion from '@/components/admin/Opcion';
+import { adminError, adminIconButton, adminInput, adminLabel, adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import { MAX_EMPAQUES, armarPaquetes, empaquesSugeridos, leerReglasEmbalaje, resumenEmbalaje, type LineaEmbalaje } from '@/lib/embalaje';
 import { empaqueAForm, type EmpaqueForm, type SectionProps } from './settings-form';
@@ -53,32 +54,40 @@ export default function ShippingSection({ form, set, errors }: SectionProps) {
 
   return (
     <>
-      <SettingsCard title="Envíos nacionales con ZOOM y MRW" description="Para productos físicos. Los digitales se entregan siempre sin envío.">
+      <SettingsCard title="Envíos nacionales con ZOOM y MRW" description="Para los productos físicos: los digitales no se envían.">
         <div className="space-y-5">
           <SwitchRow
             label="Hacer envíos nacionales"
-            description="Apagado, el checkout no ofrece ZOOM ni MRW y la tienda deja de anunciar envíos a toda Venezuela."
+            description="Apagado, el checkout no ofrece ZOOM ni MRW."
+            ayuda="Y la tienda deja de anunciar envíos a toda Venezuela."
             checked={form.deliveryEnabled}
             onChange={(v) => set('deliveryEnabled', v)}
             error={errors.deliveryEnabled}
           />
           {form.deliveryEnabled && (
             <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {reglas.activo ? (
-                  <NumberField
-                    label="Embalaje gratis desde"
-                    prefix="$"
-                    value={form.freePackagingThresholdUSD}
-                    onChange={(v) => set('freePackagingThresholdUSD', v)}
-                    error={errors.freePackagingThresholdUSD}
-                    step={0.01}
-                    placeholder="Siempre se cobra"
-                    hint="Compras físicas desde este monto no pagan embalaje. El flete lo sigue pagando el cliente."
-                  />
-                ) : (
-                  <NumberField label="Embalaje" prefix="$" value={form.packagingFeeUSD} onChange={(v) => set('packagingFeeUSD', v)} error={errors.packagingFeeUSD} step={0.01} hint="Precio único por pedido: lo único que cobra la tienda por el envío" />
+              {/* C-293: una sola elección, en vez de los dos interruptores que mostraban el embalaje de dos formas a la vez */}
+              <div className="max-w-3xl">
+                <p className={adminLabel}>Cómo se cobra el embalaje</p>
+                <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Cómo se cobra el embalaje">
+                  <Opcion role="radio" aria-checked={!reglas.activo} elegida={!reglas.activo} icono={IconoBillete} titulo="Un precio por pedido" detalle="El mismo para todo pedido con envío." onClick={() => activar(false)} />
+                  <Opcion role="radio" aria-checked={reglas.activo} elegida={reglas.activo} icono={IconoPaquete} titulo="Según el paquete" detalle="Un sobre o una caja, con las medidas de cada producto." onClick={() => activar(true)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(3,max-content)] sm:gap-8">
+                {!reglas.activo && (
+                  <NumberField label="Embalaje" prefix="$" value={form.packagingFeeUSD} onChange={(v) => set('packagingFeeUSD', v)} error={errors.packagingFeeUSD} step={0.01} hint="Por pedido." />
                 )}
+                <NumberField
+                  label="Embalaje gratis desde"
+                  prefix="$"
+                  value={form.freePackagingThresholdUSD}
+                  onChange={(v) => set('freePackagingThresholdUSD', v)}
+                  error={errors.freePackagingThresholdUSD}
+                  step={0.01}
+                  placeholder="Siempre"
+                  hint="El flete sigue siendo del cliente."
+                />
                 <NumberField
                   label="Envío gratis desde"
                   prefix="$"
@@ -86,58 +95,30 @@ export default function ShippingSection({ form, set, errors }: SectionProps) {
                   onChange={(v) => set('freeDeliveryThresholdUSD', v)}
                   error={errors.freeDeliveryThresholdUSD}
                   step={0.01}
-                  placeholder="Sin envío gratis"
-                  hint="Compras físicas desde este monto: la tienda paga la guía."
+                  placeholder="Nunca"
+                  hint="La tienda paga la guía."
                 />
-                {!reglas.activo && (
-                  <NumberField
-                    label="Embalaje gratis desde"
-                    prefix="$"
-                    value={form.freePackagingThresholdUSD}
-                    onChange={(v) => set('freePackagingThresholdUSD', v)}
-                    error={errors.freePackagingThresholdUSD}
-                    step={0.01}
-                    placeholder="Siempre se cobra"
-                    hint="Compras físicas desde este monto no pagan embalaje. El flete lo sigue pagando el cliente."
-                  />
-                )}
               </div>
-              <div className={adminNotice('brand')}>
+              <div className={`${adminNotice('brand')} max-w-3xl`}>
                 <p className="font-semibold">Cobro a destino</p>
-                <p className="mt-1">
-                  El cliente le paga el flete a ZOOM o MRW cuando retira o recibe su paquete. En el checkout paga solo el embalaje
-                  ({reglas.activo ? 'según el paquete' : formatUSD(packaging)}) y ve la tarifa de ZOOM como referencia.
-                </p>
-                {freePackagingFrom > 0 && (
-                  <p className="mt-1">
-                    Embalaje gratis: la compra física de {formatUSD(freePackagingFrom)} o más no paga embalaje, pero el flete sigue siendo del cliente.
-                    El carrito le avisa cuánto le falta.
-                  </p>
-                )}
-                <p className="mt-1">
-                  Envío gratis (no paga nada y la tienda paga la guía): si el paquete lleva un producto con &quot;Envío gratis&quot; en su ficha
-                  {freeFrom > 0 ? ` o la compra física es de ${formatUSD(freeFrom)} o más` : ''}.
-                </p>
+                <ul className="mt-1 list-disc space-y-0.5 pl-5">
+                  <li>El cliente le paga el flete a ZOOM o MRW al recibir. En el checkout paga el embalaje ({reglas.activo ? 'según el paquete' : formatUSD(packaging)}).</li>
+                  {freePackagingFrom > 0 && <li>Desde {formatUSD(freePackagingFrom)} no paga embalaje; el carrito le dice cuánto le falta.</li>}
+                  <li>Envío gratis{freeFrom > 0 ? ` desde ${formatUSD(freeFrom)} o` : ''} con un producto marcado «Envío gratis»: no paga nada.</li>
+                </ul>
               </div>
             </>
           )}
         </div>
       </SettingsCard>
 
-      {form.deliveryEnabled && (
-        <SettingsCard title="Embalaje según el paquete" description="La tienda arma el paquete con las medidas de cada producto y cobra el empaque que hace falta.">
+      {form.deliveryEnabled && reglas.activo && (
+        <SettingsCard title="Tus empaques" description="La tienda arma el paquete con las medidas de cada producto y cobra el empaque que hace falta.">
           <div className="space-y-5">
-            <SwitchRow
-              label="Calcular el embalaje con las medidas de los productos"
-              description="Un sobre para unos audífonos, una caja para un teclado, y todo lo que se pueda en un solo paquete. Apagado, se cobra el precio único por pedido."
-              checked={reglas.activo}
-              onChange={activar}
-            />
             {reglas.activo && (
               <>
                 <div>
-                  <p className="text-sm font-semibold text-ink">Tus empaques</p>
-                  <p className="mt-0.5 text-sm text-muted">
+                  <p className="text-sm text-muted">
                     Las medidas de adentro, en centímetros, y lo que cobras por cada uno. La tienda elige el más barato en el que quepa el pedido.
                   </p>
                   <ul className="mt-3 space-y-3">
@@ -263,7 +244,7 @@ export default function ShippingSection({ form, set, errors }: SectionProps) {
           />
           {form.pickupEnabled && (
             <div className="grid grid-cols-1 gap-4">
-              <TextField label="Dirección de retiro" value={form.pickupAddress} onChange={(v) => set('pickupAddress', v)} error={errors.pickupAddress} maxLength={250} placeholder="Carrera 5, frente a la plaza Miranda, Guanare" hint="Se muestra en la ficha del producto y en el checkout." />
+              <TextField ancho="largo" label="Dirección de retiro" value={form.pickupAddress} onChange={(v) => set('pickupAddress', v)} error={errors.pickupAddress} maxLength={250} placeholder="Carrera 5, frente a la plaza Miranda, Guanare" hint="Se muestra en la ficha del producto y en el checkout." />
               <TextAreaField label="Instrucciones" value={form.pickupInstructions} onChange={(v) => set('pickupInstructions', v)} error={errors.pickupInstructions} maxLength={500} rows={2} placeholder="Horario de retiro y qué traer (cédula, número de orden)" />
             </div>
           )}

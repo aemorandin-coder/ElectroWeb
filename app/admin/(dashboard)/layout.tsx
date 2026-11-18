@@ -10,7 +10,7 @@ import {
   IconoCerrar, IconoChat, IconoChevronAbajo, IconoClaqueta, IconoPintura, IconoClientes, IconoConfiguracion, IconoCuadricula,
   IconoCursos, IconoDocumento, IconoEstrella, IconoGarantia, IconoGiftCard, IconoMaletin, IconoMenu, IconoNotificaciones, IconoOrdenes,
   IconoPaquete, IconoPorcentaje, IconoRegistrarse, IconoReportes, IconoSalir, IconoSalvavidas, IconoServicioTecnico,
-  IconoTarjeta, IconoVariantes, IconoVentas, IconoVerificado, IconoVersiones,
+  IconoVariantes, IconoVentas, IconoVerificado, IconoVersiones,
 } from '@/components/iconos';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -265,10 +265,10 @@ export default function AdminLayout({
         { name: 'Reportes', href: '/admin/reports', icon: <IconoReportes className={icono} aria-hidden="true" />, permission: 'VIEW_REPORTS' },
         { name: 'Notificaciones', href: '/admin/notifications', icon: <IconoNotificaciones className={icono} aria-hidden="true" />, countKey: 'unreadNotifications' },
         { name: 'Documentos Legales', href: '/admin/legal', icon: <IconoGarantia className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS' },
-        { name: 'Métodos de Pago', href: '/admin/payments', icon: <IconoTarjeta className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
         // C-141: invitar admins, roles, accesos y dos pasos de cada cuenta. Solo el super admin
         { name: 'Equipo', href: '/admin/equipo', icon: <IconoClientes className={icono} aria-hidden="true" />, permission: 'MANAGE_TEAM' },
-        { name: 'Configuración', href: '/admin/settings', icon: <IconoConfiguracion className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
+        // C-293: "Ajustes", con Métodos de pago adentro (D5 del 18/11)
+        { name: 'Ajustes', href: '/admin/settings', icon: <IconoConfiguracion className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
         { name: 'Mi seguridad', href: '/admin/seguridad', icon: <IconoCandado className={icono} aria-hidden="true" /> },
         // C-168: qué versión corre y qué cambió en cada módulo
         { name: 'Versiones', href: '/admin/versiones', icon: <IconoVersiones className={icono} aria-hidden="true" /> },

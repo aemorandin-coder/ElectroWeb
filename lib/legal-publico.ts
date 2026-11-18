@@ -16,11 +16,11 @@ export { esPaginaLegalPublica, PAGINAS_LEGALES_PUBLICAS, SLUG_PRIVACIDAD, SLUG_T
 
 /** Para el editor del panel: qué `{{variable}}` se puede usar y de dónde sale. */
 export const VARIABLES_LEGALES_AYUDA: { nombre: string; origen: string }[] = [
-  { nombre: 'correo', origen: 'Correo de contacto (Configuración → Negocio)' },
-  { nombre: 'whatsapp', origen: 'WhatsApp (Configuración → Negocio)' },
-  { nombre: 'telefono', origen: 'Teléfono (Configuración → Negocio)' },
-  { nombre: 'direccion', origen: 'Dirección, ciudad y estado (Configuración → Negocio)' },
-  { nombre: 'horario', origen: 'Horario de atención (Configuración → Negocio)' },
+  { nombre: 'correo', origen: 'Correo de contacto (Ajustes → Datos y contacto)' },
+  { nombre: 'whatsapp', origen: 'WhatsApp (Ajustes → Datos y contacto)' },
+  { nombre: 'telefono', origen: 'Teléfono (Ajustes → Datos y contacto)' },
+  { nombre: 'direccion', origen: 'Dirección, ciudad y estado (Ajustes → Datos y contacto)' },
+  { nombre: 'horario', origen: 'Horario de atención (Ajustes → Datos y contacto)' },
   { nombre: 'garantia_nuevo', origen: 'Días de garantía por defecto de un producto nuevo' },
   { nombre: 'garantia_reacondicionado', origen: 'Días de garantía por defecto de un reacondicionado' },
   { nombre: 'garantia_usado', origen: 'Días de garantía por defecto de un usado' },

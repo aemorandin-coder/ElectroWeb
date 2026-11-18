@@ -36,7 +36,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
 
   const { asunto, html } = await correoBienvenidaProveedor(b.datos);
   const envio = await sendEmail({ to: correosDe(b.para), subject: asunto, html });
-  if (!envio.success) return NextResponse.json({ error: 'No se pudo enviar el correo. Revisa Configuración → Correo.' }, { status: 502 });
+  if (!envio.success) return NextResponse.json({ error: 'No se pudo enviar el correo. Revisa Ajustes → Correo.' }, { status: 502 });
 
   const enviadaEl = b.enviadaEl ?? new Date();
   const proveedor = await prisma.supplier.update({ where: { id }, data: { bienvenidaAt: enviadaEl }, select: { name: true } });

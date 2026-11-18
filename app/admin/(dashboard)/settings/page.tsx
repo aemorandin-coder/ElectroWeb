@@ -1,16 +1,18 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { IconoAdvertencia, IconoCheck, IconoGuardar, IconoRestablecer } from '@/components/iconos';
+import { IconoAdvertencia, IconoCheck, IconoChevronDerecha, IconoClientes, IconoFlechaIzquierda, IconoGuardar, IconoRestablecer } from '@/components/iconos';
 import {
-  adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminSpinner, adminTab,
+  adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminSpinner,
 } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { formatVES } from '@/lib/currency';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import {
-  buildPatch, isDirty, SECTIONS, sectionOf, toSettingsForm,
-  type FieldErrors, type SectionId, type SetField, type SettingsForm,
+  buildPatch, CAMPOS_DELICADOS, GRUPOS, isDirty, SECCION_VIEJA, SECTIONS, sectionOf, toSettingsForm,
+  type FieldErrors, type SectionId, type SetField, type SettingsForm, type SettingsKey,
 } from './_components/settings-form';
 import BusinessSection from './_components/BusinessSection';
 import PricesSection from './_components/PricesSection';
@@ -21,14 +23,21 @@ import SystemSection from './_components/SystemSection';
 import BackupsSection from './_components/BackupsSection';
 import SeccionIA from '@/components/admin/ia/SeccionIA';
 import EmailSettingsPanel from '@/components/admin/EmailSettingsPanel';
+import MetodosDePago from '../payments/_components/MetodosDePago';
 
-// Configuración (C-50b): 6 secciones por tarea, un solo guardado con los cambios de todas.
-// Antes: 1.594 líneas en un archivo, 29 campos sin efecto en la tienda y un botón de guardar por pestaña.
+// Configuración (C-50b): secciones por tarea. Antes: 1.594 líneas en un archivo y 29 campos sin efecto en la tienda.
+// C-293 · Ajustes (AJUSTES.md §3; el equipo, 18/11: "inputs anchísimos, muchos textos, semánticas ilógicas, ajustes repetidos"):
+// - el menú por grupos (Tu negocio, Vender, Avisos, Conexiones, La tienda en línea, Equipo y acceso), cada sección con su estado
+//   en una línea (D1). En el teléfono, primero la lista y, al tocar, la sección con "Ajustes" para volver;
+// - cada sección guarda sola: la barra de abajo es de la sección que se ve, y lo que toca dinero se revisa antes → después
+//   con a qué afecta. Las demás secciones con cambios llevan su punto en el menú;
+// - Métodos de pago entra aquí (D5); las direcciones viejas (#negocio, #precios, #tienda) llevan a su sección nueva.
 
-function sectionFromHash(): SectionId {
-  if (typeof window === 'undefined') return 'negocio';
+function sectionFromHash(): SectionId | null {
+  if (typeof window === 'undefined') return null;
   const hash = window.location.hash.slice(1);
-  return SECTIONS.some((section) => section.id === hash) ? (hash as SectionId) : 'negocio';
+  if (SECTIONS.some((section) => section.id === hash)) return hash as SectionId;
+  return SECCION_VIEJA[hash] ?? null;
 }
 
 export default function SettingsPage() {
@@ -37,16 +46,24 @@ export default function SettingsPage() {
   const [initial, setInitial] = useState<SettingsForm | null>(null);
   const [meta, setMeta] = useState<{ updatedAt: string | null; lastRateUpdate: string | null }>({ updatedAt: null, lastRateUpdate: null });
   const [loadError, setLoadError] = useState(false);
-  // La primera pintura es el indicador de carga, así que leer el hash aquí no desajusta la hidratación
-  const [active, setActive] = useState<SectionId>(sectionFromHash);
+  // null: en el teléfono se ve la lista; en la computadora, la primera sección. La primera pintura es el indicador de carga,
+  // así que leer el hash aquí no desajusta la hidratación
+  const [elegida, setElegida] = useState<SectionId | null>(sectionFromHash);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
-  const [justSaved, setJustSaved] = useState(false);
+  const [justSaved, setJustSaved] = useState<SectionId | null>(null);
+  const active: SectionId = elegida ?? SECTIONS[0].id;
 
-  const applyServerData = useCallback((data: Record<string, unknown>) => {
+  const applyServerData = useCallback((data: Record<string, unknown>, campos?: readonly SettingsKey[]) => {
     const loaded = toSettingsForm(data);
-    setForm(loaded);
-    setInitial(loaded);
+    // Al guardar una sección, lo que se estaba cambiando en las demás se conserva
+    if (campos) {
+      setInitial(loaded);
+      setForm((previo) => (previo ? { ...loaded, ...Object.fromEntries(Object.entries(previo).filter(([k]) => !campos.includes(k as SettingsKey))) } as SettingsForm : loaded));
+    } else {
+      setForm(loaded);
+      setInitial(loaded);
+    }
     setMeta({
       updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : null,
       lastRateUpdate: typeof data.lastRateUpdate === 'string' ? data.lastRateUpdate : null,
@@ -66,7 +83,7 @@ export default function SettingsPage() {
       .catch(() => {
         if (!cancelled) setLoadError(true);
       });
-    const onHash = () => setActive(sectionFromHash());
+    const onHash = () => setElegida(sectionFromHash());
     window.addEventListener('hashchange', onHash);
     return () => {
       cancelled = true;
@@ -74,16 +91,23 @@ export default function SettingsPage() {
     };
   }, [applyServerData]);
 
-  const goTo = useCallback((id: SectionId) => {
-    setActive(id);
-    window.history.replaceState(null, '', `#${id}`);
+  // Al llegar desde otra pantalla del panel (un enlace a /admin/settings#pagos), el hash llega a la dirección después del primer
+  // dibujo: se lee otra vez al montar
+  useCargarAlMontar(() => {
+    const desdeLaDireccion = sectionFromHash();
+    if (desdeLaDireccion) setElegida(desdeLaDireccion);
+  });
+
+  const goTo = useCallback((id: SectionId | null) => {
+    setElegida(id);
+    window.history.replaceState(null, '', id ? `#${id}` : window.location.pathname);
     window.scrollTo({ top: 0 });
   }, []);
 
   const set: SetField = useCallback((key, value) => {
     setForm((previous) => (previous ? { ...previous, [key]: value } : previous));
     setErrors((previous) => (previous[key] ? { ...previous, [key]: undefined } : previous));
-    setJustSaved(false);
+    setJustSaved(null);
   }, []);
 
   const dirtySections = useMemo(() => {
@@ -95,6 +119,8 @@ export default function SettingsPage() {
     [errors]
   );
   const hasChanges = dirtySections.size > 0;
+  const section = SECTIONS.find((item) => item.id === active) ?? SECTIONS[0];
+  const cambiosAqui = form && initial ? section.fields.filter((field) => isDirty(form, initial, field)) : [];
 
   // Aviso del navegador al cerrar o recargar con cambios sin guardar
   useEffect(() => {
@@ -106,20 +132,20 @@ export default function SettingsPage() {
 
   // `confirmarSaltoTasa` solo va al reenviar, después de que quien guarda confirmó el salto de la tasa (S-08)
   const guardar = async (confirmarSaltoTasa: boolean) => {
-    if (!form || !initial || !hasChanges) return;
+    if (!form || !initial || cambiosAqui.length === 0) return;
     setSaving(true);
     setErrors({});
     try {
       const response = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...buildPatch(form, initial), ...(confirmarSaltoTasa ? { confirmarSaltoTasa: true } : {}) }),
+        body: JSON.stringify({ ...buildPatch(form, initial, section.fields), ...(confirmarSaltoTasa ? { confirmarSaltoTasa: true } : {}) }),
       });
       const data = await response.json().catch(() => ({}));
       if (response.ok) {
-        applyServerData(data);
-        setJustSaved(true);
-        toast.success('Configuración guardada');
+        applyServerData(data, section.fields);
+        setJustSaved(section.id);
+        toast.success(`${section.label}: guardado`);
         return;
       }
       // S-08: la tasa cambia más de 50 %: se muestra antes → después y, si lo confirma, se reenvía
@@ -136,9 +162,7 @@ export default function SettingsPage() {
       }
       if (data.fields && typeof data.fields === 'object') {
         setErrors(data.fields);
-        const first = sectionOf(Object.keys(data.fields)[0]);
-        if (first && first !== active) goTo(first);
-        // Lleva al primer campo marcado (en móvil puede quedar fuera de la pantalla)
+        // Lleva al primer campo marcado (en el teléfono puede quedar fuera de la pantalla)
         requestAnimationFrame(() => {
           const invalid = document.querySelector<HTMLElement>('main [aria-invalid="true"]');
           invalid?.scrollIntoView({ block: 'center' });
@@ -152,18 +176,17 @@ export default function SettingsPage() {
       setSaving(false);
     }
   };
-  const save = () => guardar(false);
 
   const discard = () => {
     if (!initial) return;
-    setForm(initial);
+    setForm((previo) => (previo ? { ...previo, ...Object.fromEntries(section.fields.map((k) => [k, initial[k]])) } as SettingsForm : previo));
     setErrors({});
   };
 
   if (loadError) {
     return (
-      <div className="mx-auto max-w-xl py-16 text-center">
-        <p className={adminNotice('danger')}>No se pudo cargar la configuración.</p>
+      <div className="max-w-xl py-16">
+        <p className={adminNotice('danger')}>No se pudieron cargar los ajustes.</p>
         <button type="button" onClick={() => window.location.reload()} className={`${adminSecondaryButton} mt-4`}>Reintentar</button>
       </div>
     );
@@ -172,22 +195,22 @@ export default function SettingsPage() {
   if (!form || !initial) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <span className={adminSpinner} aria-label="Cargando configuración" />
+        <span className={adminSpinner} aria-label="Cargando los ajustes" />
       </div>
     );
   }
 
-  const section = SECTIONS.find((item) => item.id === active) ?? SECTIONS[0];
   const sectionProps = { form, set, errors };
-  const dirtyLabels = SECTIONS.filter((item) => dirtySections.has(item.id)).map((item) => item.label);
+  const delicados = cambiosAqui.filter((k) => CAMPOS_DELICADOS[k]);
+  const afecta = [...new Set(delicados.map((k) => CAMPOS_DELICADOS[k]!.afecta))];
 
   return (
     <div className="max-w-6xl">
       <div className={adminPageHeader}>
         <div>
-          <h1 className={adminPageTitle}>Configuración</h1>
+          <h1 className={adminPageTitle}>Ajustes</h1>
           <p className={adminPageSubtitle}>
-            Datos del negocio, precios, envíos y cómo se ve la tienda.
+            Cómo funciona la tienda: lo que se decide una vez y casi no se toca.
             {meta.updatedAt && <span className="block">Último cambio: {new Date(meta.updatedAt).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' })}</span>}
           </p>
         </div>
@@ -201,46 +224,78 @@ export default function SettingsPage() {
         </button>
       )}
 
-      <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">
-        {/* Menú de secciones: lateral fijo en escritorio, deslizable en móvil */}
-        <nav aria-label="Secciones de configuración" className="-mx-3 mb-5 overflow-x-auto px-3 sm:-mx-4 sm:px-4 lg:mx-0 lg:mb-0 lg:overflow-visible lg:px-0">
-          <ul className="flex w-max gap-1 lg:sticky lg:top-22 lg:w-auto lg:flex-col">
-            {SECTIONS.map((item) => {
-              const Icon = item.icon;
-              const selected = item.id === active;
+      <div className="lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-8">
+        {/* El menú por grupos: en la computadora, al lado; en el teléfono, la lista entera mientras no se elija una sección */}
+        <nav aria-label="Secciones de los ajustes" className={elegida ? 'max-lg:hidden' : undefined}>
+          <div className="space-y-5 lg:sticky lg:top-22">
+            {GRUPOS.map((grupo) => {
+              const secciones = SECTIONS.filter((s) => s.grupo === grupo.id);
               return (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => goTo(item.id)}
-                    aria-current={selected ? 'page' : undefined}
-                    className={`${adminTab(selected)} w-full lg:h-11 lg:justify-start`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span className="flex-1 text-left">{item.label}</span>
-                    {errorSections.has(item.id) ? (
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${selected ? 'bg-white' : 'bg-deal'}`} aria-label="con errores" />
-                    ) : dirtySections.has(item.id) ? (
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${selected ? 'bg-white' : 'bg-brand-700'}`} aria-label="con cambios sin guardar" />
-                    ) : null}
-                  </button>
-                </li>
+                <div key={grupo.id}>
+                  <p className="mb-1.5 px-3 text-xs font-semibold uppercase tracking-wider text-muted">{grupo.label}</p>
+                  <ul className="space-y-0.5">
+                    {secciones.map((item) => {
+                      const Icon = item.icon;
+                      // En la computadora se marca la que se ve; en el teléfono la lista sale sola, sin marcar ninguna
+                      const vista = item.id === active;
+                      return (
+                        <li key={item.id}>
+                          <button
+                            type="button"
+                            onClick={() => goTo(item.id)}
+                            aria-current={vista ? 'page' : undefined}
+                            className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-ink transition-colors hover:bg-brand-50 max-lg:border max-lg:border-line max-lg:bg-white ${vista ? 'lg:bg-brand-500 lg:text-white lg:hover:bg-brand-600' : ''}`}
+                          >
+                            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm font-semibold">{item.label}</span>
+                              <span className={`block truncate text-xs text-muted ${vista ? 'lg:text-white/85' : ''}`}>{item.estado(form)}</span>
+                            </span>
+                            {errorSections.has(item.id) ? (
+                              <span className={`h-2 w-2 shrink-0 rounded-full bg-deal ${vista ? 'lg:bg-white' : ''}`} aria-label="con errores" />
+                            ) : dirtySections.has(item.id) ? (
+                              <span className={`h-2 w-2 shrink-0 rounded-full bg-brand-700 ${vista ? 'lg:bg-white' : ''}`} aria-label="con cambios sin guardar" />
+                            ) : null}
+                            <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted lg:hidden" aria-hidden="true" />
+                          </button>
+                        </li>
+                      );
+                    })}
+                    {grupo.id === 'equipo' && (
+                      <li>
+                        <Link href="/admin/equipo" className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-brand-50 max-lg:border max-lg:border-line max-lg:bg-white">
+                          <IconoClientes className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold">Equipo</span>
+                            <span className="block truncate text-xs text-muted">Quién entra al panel y con qué rol</span>
+                          </span>
+                          <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                        </Link>
+                      </li>
+                    )}
+                  </ul>
+                </div>
               );
             })}
-          </ul>
+          </div>
         </nav>
 
-        <div className="min-w-0">
+        <div className={`min-w-0 ${elegida ? '' : 'max-lg:hidden'}`}>
+          <button type="button" onClick={() => goTo(null)} aria-label="Volver a la lista de ajustes" className="mb-3 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand-600 lg:hidden">
+            <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Ajustes
+          </button>
           <header className="mb-4">
-            <h2 className="text-xl font-semibold text-ink">{section.label}</h2>
-            <p className="mt-0.5 text-sm text-muted">{section.description}</p>
+            <h2 id="ajustes-seccion" className="text-xl font-semibold text-ink">{section.label}</h2>
+            <p className="mt-0.5 max-w-prose text-sm text-muted">{section.description}</p>
           </header>
 
           <div className="space-y-5">
-            {active === 'negocio' && <BusinessSection {...sectionProps} />}
-            {active === 'precios' && (
+            {active === 'datos' && <BusinessSection {...sectionProps} parte="datos" />}
+            {active === 'marca' && <BusinessSection {...sectionProps} parte="marca" />}
+            {(active === 'tasa' || active === 'compras') && (
               <PricesSection
                 {...sectionProps}
+                parte={active}
                 savedAutoExchangeRates={initial.autoExchangeRates}
                 lastRateUpdate={meta.lastRateUpdate}
                 onRateRefreshed={(rate, lastRateUpdate) => {
@@ -251,8 +306,10 @@ export default function SettingsPage() {
                 }}
               />
             )}
+            {active === 'pagos' && <MetodosDePago enAjustes />}
+            {active === 'inventario' && <StorefrontSection {...sectionProps} parte="inventario" />}
             {active === 'envios' && <ShippingSection {...sectionProps} />}
-            {active === 'tienda' && <StorefrontSection {...sectionProps} hasAlertEmails={form.adminAlertEmails.length > 0} onGoToAlerts={() => goTo('sistema')} />}
+            {active === 'portada' && <StorefrontSection {...sectionProps} parte="portada" />}
             {active === 'seo' && <SeoSection {...sectionProps} />}
             {active === 'sistema' && <SystemSection {...sectionProps} />}
             {active === 'correo' && <EmailSettingsPanel />}
@@ -260,32 +317,52 @@ export default function SettingsPage() {
             {active === 'ia' && <SeccionIA />}
           </div>
 
-          {/* Barra de guardado: aparece con cambios y queda pegada abajo mientras se edita */}
-          <div className="sticky bottom-0 z-[var(--z-sticky)] -mx-3 mt-6 px-3 pb-3 pt-2 sm:-mx-4 sm:px-4 lg:mx-0 lg:px-0" aria-live="polite">
-            {hasChanges ? (
-              <div className="flex flex-col gap-3 rounded-2xl border border-brand-200 bg-white p-3 shadow-lg sm:flex-row sm:items-center sm:justify-between sm:pl-5">
-                <p className="text-sm text-ink">
-                  <strong>Cambios sin guardar</strong>
-                  <span className="text-muted"> en {dirtyLabels.join(', ')}</span>
-                </p>
-                <div className="grid grid-cols-2 gap-2 sm:flex">
-                  <button type="button" onClick={discard} disabled={saving} className={`${adminSecondaryButton} whitespace-nowrap px-3 sm:px-5`}>
-                    <IconoRestablecer className="hidden h-4 w-4 sm:block" aria-hidden="true" />
-                    Descartar
-                  </button>
-                  <button type="button" onClick={save} disabled={saving} className={`${adminPrimaryButton} whitespace-nowrap px-3 sm:px-5`}>
-                    {saving ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" /> : <IconoGuardar className="hidden h-4 w-4 sm:block" aria-hidden="true" />}
-                    {saving ? 'Guardando…' : <>Guardar<span className="hidden sm:inline"> cambios</span></>}
-                  </button>
+          {/* La barra de la sección: aparece con cambios y queda pegada abajo mientras se edita */}
+          {section.fields.length > 0 && (
+            <div className="sticky bottom-0 z-[var(--z-sticky)] -mx-3 mt-6 px-3 pb-3 pt-2 sm:-mx-4 sm:px-4 lg:mx-0 lg:px-0" aria-live="polite">
+              {cambiosAqui.length > 0 ? (
+                <div className="rounded-2xl border border-brand-200 bg-white p-3 shadow-lg sm:pl-5">
+                  {delicados.length > 0 && (
+                    <div className="mb-3 border-b border-line pb-3">
+                      <p className="text-sm font-semibold text-ink">Revisa antes de guardar</p>
+                      <ul className="mt-1 space-y-0.5 text-sm">
+                        {delicados.map((k) => {
+                          const d = CAMPOS_DELICADOS[k]!;
+                          return (
+                            <li key={k} className="tabular-nums text-ink-soft">
+                              {d.nombre}: <span className="text-muted line-through">{d.formato(initial[k])}</span> → <strong className="text-ink">{d.formato(form[k])}</strong>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                      <p className="mt-1 text-xs text-muted">Afecta: {afecta.join(' ')}</p>
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-ink">
+                      <strong>{cambiosAqui.length === 1 ? '1 cambio sin guardar' : `${cambiosAqui.length} cambios sin guardar`}</strong>
+                      {dirtySections.size > 1 && <span className="text-muted"> · y en otras secciones (con su punto en el menú)</span>}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:flex">
+                      <button type="button" onClick={discard} disabled={saving} className={`${adminSecondaryButton} whitespace-nowrap px-3 sm:px-5`}>
+                        <IconoRestablecer className="hidden h-4 w-4 sm:block" aria-hidden="true" />
+                        Descartar
+                      </button>
+                      <button type="button" onClick={() => void guardar(false)} disabled={saving} className={`${adminPrimaryButton} whitespace-nowrap px-3 sm:px-5`}>
+                        {saving ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" /> : <IconoGuardar className="hidden h-4 w-4 sm:block" aria-hidden="true" />}
+                        {saving ? 'Guardando…' : 'Guardar'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ) : justSaved ? (
-              <p className="flex items-center justify-center gap-2 text-sm font-semibold text-success-strong">
-                <IconoCheck className="h-4 w-4" aria-hidden="true" />
-                Todo guardado
-              </p>
-            ) : null}
-          </div>
+              ) : justSaved === section.id ? (
+                <p className="flex items-center justify-center gap-2 text-sm font-semibold text-success-strong">
+                  <IconoCheck className="h-4 w-4" aria-hidden="true" />
+                  Guardado
+                </p>
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
     </div>

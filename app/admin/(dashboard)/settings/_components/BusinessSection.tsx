@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { IconType } from '@/components/iconos';
 import { FiFacebook, FiInstagram, FiYoutube } from 'react-icons/fi';
 import { FaTelegram, FaTiktok, FaXTwitter } from 'react-icons/fa6';
@@ -16,7 +17,8 @@ const SOCIALS: { key: Extract<SettingsKey, 'instagram' | 'facebook' | 'twitter' 
   { key: 'telegram', label: 'Telegram', icon: FaTelegram, placeholder: 'https://t.me/canal' },
 ];
 
-export default function BusinessSection({ form, set, errors }: SectionProps) {
+// C-293: dos secciones de "Tu negocio": `datos` (datos, contacto, redes y horario) y `marca` (logo, ícono y sello)
+export default function BusinessSection({ form, set, errors, parte }: SectionProps & { parte: 'datos' | 'marca' }) {
   const setDay = (day: WeekDay, patch: Partial<(typeof form.businessHours)[WeekDay]>) =>
     set('businessHours', { ...form.businessHours, [day]: { ...form.businessHours[day], ...patch } });
 
@@ -28,29 +30,32 @@ export default function BusinessSection({ form, set, errors }: SectionProps) {
     });
   };
 
+  if (parte === 'marca') return <>
+      <SettingsCard title="Logo e ícono" description="Van en la tienda, los correos y la pestaña del navegador." action={<Link href="/admin/marca" className="text-sm font-semibold text-brand-600 hover:underline">Ver el kit de marca</Link>}>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <ImageField label="Logo" uploadType="logo" value={form.logo} onChange={(v) => set('logo', v)} error={errors.logo} hint="PNG con fondo transparente, hasta 2 MB." />
+          <ImageField label="Ícono de la pestaña (favicon)" uploadType="favicon" value={form.favicon} onChange={(v) => set('favicon', v)} error={errors.favicon} hint="Cuadrado de 512 × 512 px. Vacío: el logo." />
+        </div>
+      </SettingsCard>
+
+      <SettingsCard title="Sello de los presupuestos" description="Opcional: va sobre la línea de la empresa en cada presupuesto." ayuda="Se ve en pantalla y al imprimir, y lo ve quien recibe el enlace. Sin imagen sale el sello de la tienda (logo, RIF, teléfono y ciudad), sin firma.">
+        <ImageField label="Sello con la firma" uploadType="quoteStamp" value={form.quoteStamp} onChange={(v) => set('quoteStamp', v)} error={errors.quoteStamp} hint="Foto o escaneo del sello firmado, PNG con fondo transparente, hasta 2 MB." />
+      </SettingsCard>
+
+    </>;
+
   return (
     <>
-      <SettingsCard title="Datos de la empresa" description="El nombre y el slogan aparecen en el pie de página, en Google y en los correos.">
+      <SettingsCard title="Datos de la empresa" description="Salen en el pie de página, en Google y en los correos.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField label="Nombre comercial" value={form.companyName} onChange={(v) => set('companyName', v)} error={errors.companyName} maxLength={100} />
           <TextField label="Slogan" value={form.tagline} onChange={(v) => set('tagline', v)} error={errors.tagline} maxLength={120} placeholder="Tu tienda de tecnología en Venezuela" />
-          <TextField label="Razón social" value={form.legalName} onChange={(v) => set('legalName', v)} error={errors.legalName} maxLength={150} hint="Se muestra en el pie de página junto al RIF" />
-          <TextField label="RIF" value={form.rif} onChange={(v) => set('rif', v)} error={errors.rif} maxLength={20} placeholder="J-40590333-3" />
+          <TextField label="Razón social" value={form.legalName} onChange={(v) => set('legalName', v)} error={errors.legalName} maxLength={150} hint="Va en el pie de página junto al RIF." />
+          <TextField ancho="corto" label="RIF" value={form.rif} onChange={(v) => set('rif', v)} error={errors.rif} maxLength={20} placeholder="J-40590333-3" />
         </div>
       </SettingsCard>
 
-      <SettingsCard title="Logo e ícono">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <ImageField label="Logo" uploadType="logo" value={form.logo} onChange={(v) => set('logo', v)} error={errors.logo} hint="Header, pie de página y correos. PNG con fondo transparente, hasta 2 MB." />
-          <ImageField label="Ícono de la pestaña (favicon)" uploadType="favicon" value={form.favicon} onChange={(v) => set('favicon', v)} error={errors.favicon} hint="Cuadrado de 512 × 512 px. Si lo dejas vacío se usa el logo." />
-        </div>
-      </SettingsCard>
-
-      <SettingsCard title="Sello y firma de los presupuestos" description="Opcional. Reemplaza al sello de la tienda sobre la línea de la empresa en cada presupuesto, en pantalla y al imprimirlo. Lo ve quien reciba el enlace de un presupuesto.">
-        <ImageField label="Sello con la firma" uploadType="quoteStamp" value={form.quoteStamp} onChange={(v) => set('quoteStamp', v)} error={errors.quoteStamp} hint="Foto o escaneo del sello húmedo firmado. Mejor en PNG con fondo transparente o sobre papel blanco, hasta 2 MB. Sin imagen, sale el sello de la tienda (logo, RIF, teléfono y ciudad), sin firma." />
-      </SettingsCard>
-
-      <SettingsCard title="Contacto" description="Se muestra en Contacto y en el pie de página. El WhatsApp es el del botón flotante.">
+      <SettingsCard title="Contacto" description="Salen en Contacto y en el pie de página." ayuda="El WhatsApp es el del botón flotante de la tienda y el que usan los avisos para que te escriban.">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField label="Correo" type="email" value={form.email} onChange={(v) => set('email', v)} error={errors.email} placeholder="ventas@electroshopve.com" />
           <TextField label="Teléfono" type="tel" value={form.phone} onChange={(v) => set('phone', v)} error={errors.phone} placeholder="+58 257-2511282" />
@@ -65,7 +70,7 @@ export default function BusinessSection({ form, set, errors }: SectionProps) {
               <a href={`https://wa.me/${form.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-600 hover:underline">Probar el número</a>
             ) : 'Con código de país: +58'}
           />
-          <TextField label="Dirección" value={form.address} onChange={(v) => set('address', v)} error={errors.address} maxLength={250} placeholder="Carrera 5, frente a la plaza Miranda" />
+          <TextField ancho="largo" label="Dirección" value={form.address} onChange={(v) => set('address', v)} error={errors.address} maxLength={250} placeholder="Carrera 5, frente a la plaza Miranda" />
           <TextField label="Ciudad" value={form.city} onChange={(v) => set('city', v)} error={errors.city} placeholder="Guanare" />
           <TextField label="Estado" value={form.state} onChange={(v) => set('state', v)} error={errors.state} placeholder="Portuguesa" />
         </div>

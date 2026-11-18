@@ -5,20 +5,28 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { IconoEliminar, IconoImagen, IconoSubir } from '@/components/iconos';
 import { adminCard, adminError, adminHint, adminInput, adminLabel, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
+import Ayuda from '@/components/admin/Ayuda';
+
+// C-293 (PLAN.md §1.5 y §1.9, el pedido del 18/11: "inputs anchísimos, muchos textos"): cada campo, del tamaño de su dato
+// (`ancho`), y lo que no cabe en una línea, detrás de un (i) (`ayuda`).
+export type Ancho = 'corto' | 'nombre' | 'largo';
+const ANCHO: Record<Ancho, string> = { corto: 'max-w-48', nombre: 'sm:max-w-sm', largo: '' };
 
 /** Tarjeta de un grupo de ajustes, con título y para qué sirve. */
-export function SettingsCard({ title, description, action, children }: {
+export function SettingsCard({ title, description, action, ayuda, children }: {
   title: string;
   description?: ReactNode;
   action?: ReactNode;
+  /** Lo que no cabe en la línea de la descripción */
+  ayuda?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <section className={adminCard}>
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0">
-          <h3 className="text-base font-semibold text-ink">{title}</h3>
-          {description && <p className="mt-0.5 text-sm text-muted">{description}</p>}
+          <h3 className="flex items-center gap-1 text-base font-semibold text-ink">{title}{ayuda && <Ayuda etiqueta={`Más sobre ${title}`}>{ayuda}</Ayuda>}</h3>
+          {description && <p className="mt-0.5 max-w-prose text-sm text-muted">{description}</p>}
         </div>
         {action && <div className="sm:shrink-0">{action}</div>}
       </div>
@@ -27,17 +35,22 @@ export function SettingsCard({ title, description, action, children }: {
   );
 }
 
-export function Field({ label, htmlFor, hint, error, children, className = '' }: {
+export function Field({ label, htmlFor, hint, error, children, className = '', ayuda }: {
   label: string;
   htmlFor?: string;
   hint?: ReactNode;
   error?: string;
   children: ReactNode;
   className?: string;
+  ayuda?: ReactNode;
 }) {
   return (
     <div className={`min-w-0 ${className}`}>
-      <label htmlFor={htmlFor} className={adminLabel}>{label}</label>
+      {ayuda ? (
+        <div className="flex items-center gap-1"><label htmlFor={htmlFor} className={`${adminLabel} mb-0`}>{label}</label><Ayuda etiqueta={`Más sobre ${label}`}>{ayuda}</Ayuda></div>
+      ) : (
+        <label htmlFor={htmlFor} className={adminLabel}>{label}</label>
+      )}
       {children}
       {error ? <p className={adminError} role="alert">{error}</p> : hint ? <p className={adminHint}>{hint}</p> : null}
     </div>
@@ -57,13 +70,15 @@ type TextFieldProps = {
   counter?: boolean;
   className?: string;
   autoComplete?: string;
+  ancho?: Ancho;
+  ayuda?: ReactNode;
 };
 
-export function TextField({ label, value, onChange, hint, error, placeholder, type = 'text', maxLength, counter, className, autoComplete = 'off' }: TextFieldProps) {
+export function TextField({ label, value, onChange, hint, error, placeholder, type = 'text', maxLength, counter, className = '', autoComplete = 'off', ancho = 'nombre', ayuda }: TextFieldProps) {
   const id = useId();
   const counterHint = counter && maxLength ? `${value.length}/${maxLength} caracteres` : null;
   return (
-    <Field label={label} htmlFor={id} hint={counterHint ?? hint} error={error} className={className}>
+    <Field label={label} htmlFor={id} hint={counterHint ?? hint} error={error} className={`${ANCHO[ancho]} ${className}`} ayuda={ayuda}>
       <input
         id={id}
         type={type}
@@ -79,11 +94,11 @@ export function TextField({ label, value, onChange, hint, error, placeholder, ty
   );
 }
 
-export function TextAreaField({ label, value, onChange, hint, error, placeholder, maxLength, counter, rows = 3, className }: Omit<TextFieldProps, 'type'> & { rows?: number }) {
+export function TextAreaField({ label, value, onChange, hint, error, placeholder, maxLength, counter, rows = 3, className = '', ayuda }: Omit<TextFieldProps, 'type'> & { rows?: number }) {
   const id = useId();
   const counterHint = counter && maxLength ? `${value.length}/${maxLength} caracteres` : null;
   return (
-    <Field label={label} htmlFor={id} hint={counterHint ?? hint} error={error} className={className}>
+    <Field label={label} htmlFor={id} hint={counterHint ?? hint} error={error} className={`max-w-3xl ${className}`} ayuda={ayuda}>
       <textarea
         id={id}
         value={value}
@@ -99,7 +114,7 @@ export function TextAreaField({ label, value, onChange, hint, error, placeholder
 }
 
 /** Número con prefijo ("$", "Bs") o sufijo ("%", "kg", "unidades"). */
-export function NumberField({ label, value, onChange, hint, error, prefix, suffix, min = 0, max, step = 'any', placeholder, className }: {
+export function NumberField({ label, value, onChange, hint, error, prefix, suffix, min = 0, max, step = 'any', placeholder, className = '', ancho = 'corto', ayuda }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -112,11 +127,13 @@ export function NumberField({ label, value, onChange, hint, error, prefix, suffi
   step?: number | 'any';
   placeholder?: string;
   className?: string;
+  ancho?: Ancho;
+  ayuda?: ReactNode;
 }) {
   const id = useId();
   return (
-    <Field label={label} htmlFor={id} hint={hint} error={error} className={className}>
-      <div className="relative">
+    <Field label={label} htmlFor={id} hint={hint} error={error} className={className} ayuda={ayuda}>
+      <div className={`relative ${ANCHO[ancho]}`}>
         {prefix && <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-semibold text-muted">{prefix}</span>}
         <input
           id={id}
@@ -138,21 +155,25 @@ export function NumberField({ label, value, onChange, hint, error, prefix, suffi
 }
 
 /** Interruptor con título y explicación. Toda la fila es clicable. */
-export function SwitchRow({ label, description, checked, onChange, error }: {
+export function SwitchRow({ label, description, checked, onChange, error, ayuda }: {
   label: string;
   description?: ReactNode;
   checked: boolean;
   onChange: (checked: boolean) => void;
   error?: string;
+  ayuda?: ReactNode;
 }) {
   const id = useId();
   return (
-    <div>
+    <div className="max-w-3xl">
       <div className="flex items-start justify-between gap-4">
-        <label htmlFor={id} className="min-w-0 cursor-pointer">
-          <span className="block text-sm font-semibold text-ink">{label}</span>
-          {description && <span className="mt-0.5 block text-sm text-muted">{description}</span>}
-        </label>
+        <div className="flex min-w-0 items-start gap-1">
+          <label htmlFor={id} className="min-w-0 cursor-pointer">
+            <span className="block text-sm font-semibold text-ink">{label}</span>
+            {description && <span className="mt-0.5 block text-sm text-muted">{description}</span>}
+          </label>
+          {ayuda && <Ayuda etiqueta={`Más sobre ${label}`}>{ayuda}</Ayuda>}
+        </div>
         <button
           id={id}
           type="button"

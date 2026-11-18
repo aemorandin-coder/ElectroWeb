@@ -171,7 +171,7 @@ function Lista({ datos, recargar }: {
 
       {!datos.marketingActivo && (
         <p className={adminNotice('warning')}>
-          Puedes preparar campañas y enviar pruebas, pero para enviarlas a los clientes activa <strong>Correos de marketing</strong> en Configuración → Correo.
+          Puedes preparar campañas y enviar pruebas, pero para enviarlas a los clientes activa <strong>Correos de marketing</strong> en Ajustes → Correo.
         </p>
       )}
       {datos.destinatarios === 0 && (

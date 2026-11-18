@@ -283,7 +283,7 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
             <div>
               <label htmlFor="factura-tasa" className={`${adminLabel} inline-flex items-center gap-1`}>
                 Tasa BCV del día de la factura
-                <Ayuda etiqueta="Qué tasa va">La del BCV del día en que escribes la factura, como pidió la contadora el 16/11. Si la fecha es hoy, viene la de Configuración.</Ayuda>
+                <Ayuda etiqueta="Qué tasa va">La del BCV del día en que escribes la factura, como pidió la contadora el 16/11. Si la fecha es hoy, viene la de Ajustes.</Ayuda>
               </label>
               <CampoUnidad id="factura-tasa" unidad="Bs por $" value={tasa} inputMode="decimal" onChange={(e) => setTasa(e.target.value)} invalido={Boolean(tasa) && !tasaNumero} className="w-48" />
               <p className={adminHint}>{fecha === hoy && tasaHoy ? 'La de hoy, del BCV.' : `Escribe la del ${fecha.split('-').reverse().join('/')}.`}</p>

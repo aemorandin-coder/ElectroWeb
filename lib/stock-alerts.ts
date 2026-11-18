@@ -52,19 +52,17 @@ export async function notifyStockCrossings(changes: StockChange[]): Promise<Stoc
   const [settings, products] = await Promise.all([
     prisma.companySettings.findUnique({
       where: { id: 'default' },
-      select: { lowStockThreshold: true, notifyLowStock: true, notifyOutOfStock: true },
+      select: { lowStockThreshold: true },
     }),
     prisma.product.findMany({
       where: { id: { in: [...new Set(changes.map((change) => change.productId))] } },
       select: { id: true, name: true, sku: true, stock: true, productType: true },
     }),
   ]);
-  const options = {
-    threshold: settings?.lowStockThreshold ?? 10,
-    notifyLowStock: settings?.notifyLowStock ?? true,
-    notifyOutOfStock: settings?.notifyOutOfStock ?? true,
-  };
-  if (!options.notifyLowStock && !options.notifyOutOfStock) return null;
+  // C-293 (D3 del 18/11): los interruptores "Avisarme con stock bajo / agotado" de Ajustes se quitaron: hacían lo mismo que los
+  // avisos "Stock bajo" y "Producto agotado" de Notificaciones → Qué avisar, que deciden por qué canal llega cada uno (o ninguno).
+  // Las columnas notifyLowStock y notifyOutOfStock quedan en la base, sin uso.
+  const options = { threshold: settings?.lowStockThreshold ?? 10, notifyLowStock: true, notifyOutOfStock: true };
 
   const crossings = detectStockCrossings(products, changes, options);
   if (crossings.outOfStock.length === 0 && crossings.lowStock.length === 0) return crossings;

@@ -10,6 +10,23 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.108] - 2026-11-18
+La IA de la tienda, no de un proveedor (C-292), la fase 3 del plan de Ajustes. El equipo, 18/11: "no es solo Claude: mañana la puedo cambiar por otra IA, Gemini o Grok". **Cambio de base aditivo:** la tabla `ia_proveedores`, tres columnas en `ia_ajustes` (el principal, el respaldo y el motor de cada uso) y tres en `ia_pedidos` ("No sirvió"). Sin variables nuevas y sin cron. Sin nada guardado, todo sigue con Claude como antes.
+### Configuración 1.6.0 (C-292)
+- **Configuración → IA** (antes "IA · Claude"):
+  - **El motor:** quién responde (Claude, Gemini, Grok o Groq, solo los que tienen su clave), el modelo (los de Claude con su precio; los demás, de la lista que da el proveedor con su clave), el esfuerzo de Claude y el respaldo, con "Revisar y publicar".
+  - **Proveedores y claves:** una tarjeta por proveedor con su logo, su clave (se prueba antes de guardarla, queda cifrada y nunca se muestra entera) y, en los que no son Claude, lo que cuesta, copiado de su página oficial.
+  - **Los usos:** cada uno sigue al principal o tiene su propio motor ("Motor" en su tarjeta). "Buscar en la web" sigue con Claude, que es el que busca por su cuenta.
+  - **Consumo y fallas:** el mes por proveedor y lo que el equipo marcó como "No sirvió".
+### Marco del panel 1.19.0 (C-292)
+- **Cada pedido va al motor de su uso**: Claude con su SDK; Gemini, Grok y Groq con el formato de OpenAI. Si el motor no tiene clave o no responde, va al de respaldo. Las instrucciones y las reglas de la tienda son las mismas con cualquiera.
+- **Si un proveedor no acepta la respuesta con esquema,** se le pide otra vez como JSON con el esquema en las instrucciones.
+- **"Buscar en la web" con Groq** usa también la clave del panel.
+### Clientes 1.9.0, Marketing 1.26.0 y Productos 1.18.1 (C-292)
+- **Los botones dicen "IA":** "Resumir con IA", "Redactar con IA", "Armar con IA", "Proponer con IA".
+- **El resultado dice en letra chica quién lo redactó** ("Lo redactó Claude Haiku 5.5 (esfuerzo alto)") y tiene **"No sirvió"**, con el motivo.
+- **Importar** dice que la plantilla sirve con claude.ai, Gemini o ChatGPT.
+
 ## [1.0.0-rc.107] - 2026-11-18
 Chispa 3.1 (C-296), elegida por el equipo en la página de variantes: el logo oficial de la tienda en la camisa, en las historias de ElectroStudio, el popup navideño y los correos. Sin cambio de base, sin variables nuevas y sin cron.
 ### ElectroStudio 2.5.1 (C-296)

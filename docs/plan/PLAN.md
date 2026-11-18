@@ -380,16 +380,16 @@ Todo se renderiza en el servidor (`revalidate = 60`). Solo son componentes clien
 
 ## 4. Carriles (quién puede tocar qué)
 
-**El equipo (desde el 21/09):**
+**El equipo (desde el 18/11):**
 | Quién | Qué hace |
 |---|---|
-| **Claude** | Todo lo que pide criterio: seguridad, dinero, datos, arquitectura, componentes compartidos y el rediseño de las pantallas. Revisa el trabajo de Gemini, hace el merge a `main` y el push. |
-| **Gemini** | Tareas mecánicas y cerradas, solo con una tarjeta `G-*` abierta. |
-| **Andrés** | Decide el negocio (§7), hace el deploy y las pruebas en producción, y trae los datos reales. |
+| **Gemini 4 Neon** | **Líder principal** (decisión de Andrés del 18/11): todo el repositorio — arquitectura, seguridad, dinero, datos, componentes compartidos, panel admin, Mi panel, rediseño de pantallas, revisiones, merges a `main`, versiones y deploys autorizados. Sus reglas viven en `GEMINI.md`. |
+| **Claude** | Apoyo opcional cuando Andrés lo invoque: trabaja en rama/worktree aislado (`claude/<ID>`) coordinándose con Gemini 4 Neon para no pisar archivos compartidos, versiones ni merges. Sus reglas viven en `CLAUDE.md`. |
+| **Andrés** | Decide el negocio (§7), aprueba deploys, hace las pruebas en producción y trae los datos reales. |
 
-ChatGPT salió del equipo el 21/09. Sus pantallas (panel admin, `app/creator/**`, `app/recuperar-contrasena/**`, `app/verificar-email/**`) son de Claude, que las rediseña con el método de `archivo/CHATGPT.md` §4.
+> **Historial previo al 18/11:** Entre el 21/09 y el 17/11 el liderazgo estuvo en Claude y Gemini ejecutaba tarjetas `G-*` cerradas (`archivo/GEMINI_HISTORICO_R1_R23.md`). ChatGPT salió el 21/09 (`archivo/CHATGPT.md` §4 sigue vigente como método de rediseño). La división histórica de carriles abajo queda como referencia de esa etapa.
 
-### Carril CLAUDE
+### Carril CLAUDE (referencia histórica previa al 18/11)
 Todo el repositorio, salvo el carril Gemini de abajo. Lo que más pesa:
 ```
 app/api/**            prisma/**             lib/**               contexts/**          scripts/**
@@ -973,7 +973,8 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 
 - **Equipo y forma de trabajo:**
   - ChatGPT fuera del equipo (21/09).
-  - Claude hace el merge a `main` y el push; el deploy lo hace Andrés, en un solo bloque (30/09 y 01/10).
+  - **Gemini 4 Neon es el líder principal de ElectroShopVe WEB** (18/11); **Claude** queda como apoyo opcional cuando Andrés lo invoque. Las reglas del líder viven en `GEMINI.md`.
+  - El líder (Gemini 4 Neon, antes Claude hasta el 17/11) hace el merge a `main` y el push; el deploy lo hace Andrés en un solo bloque (o el líder por SSH con aprobación explícita de esa sesión).
   - Migraciones autorizadas siempre que sean aditivas y con respaldo (29/09).
   - Sin emojis en la web ni en el código (14/09).
   - Cuidado con los términos: ninguna promesa escrita a mano que la tienda no cumpla; ante la duda, preguntar (30/09).

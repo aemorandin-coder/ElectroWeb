@@ -10,9 +10,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Equipo de ElectroShopVe
 
+- **Gemini 4 Neon** es el líder principal del proyecto desde el 18/11: `GEMINI.md` y `docs/plan/PLAN_GEMINI.md`.
+- **Claude** queda como apoyo opcional cuando Andrés lo invoque: `CLAUDE.md` y `docs/plan/PLAN_CLAUDE.md`.
 - **ChatGPT** salió del equipo el 21/09: `CHATGPT.md` y `PLAN_CHATGPT.md` quedan como historial en `docs/plan/archivo/`.
-- **Gemini:** `GEMINI.md` y `docs/plan/PLAN_GEMINI.md`.
-- **Claude:** `CLAUDE.md` y `docs/plan/PLAN_CLAUDE.md`.
 - Punto de partida de todos: `docs/plan/SIGUIENTE.md`.
 
 ## Pantallas del panel (todas las IA, desde el 14/11)
@@ -26,5 +26,5 @@ Las skills de diseño instaladas (`impeccable`, `design-taste-frontend` y varian
 - Colores: solo los tokens de `app/globals.css` (`brand-*`, `ink`, `muted`, `line`, `surface`, `success`, `deal`…). Nunca un hex nuevo en un `className`, aunque una skill o un DESIGN.md de Refero lo proponga.
 - Tipografía: nada de `text-[7px]`…`text-[10px]`, `font-black` ni `font-extrabold`. No se cambia la fuente del sitio.
 - Sin dependencias nuevas (ni Framer Motion, ni GSAP, ni librerías de íconos): animaciones con CSS/Tailwind e íconos propios de `@/components/iconos` (C-188). De `react-icons` solo los logos de marca.
-- Las skills proponen; la tarjeta de la ronda decide el alcance. Si una mejora visual no está en tu tarjeta, anótala como sugerencia en tu estado, no la apliques.
-- Si una regla de una skill choca con `GEMINI.md`, `CLAUDE.md` o el plan, gana el archivo del repo.
+- Las skills proponen; la tarea aprobada decide el alcance. Si una mejora visual no está en la tarea, anótala como sugerencia en tu estado, no la apliques.
+- Si una regla de una skill choca con `GEMINI.md`, `CLAUDE.md` o `docs/plan/PLAN.md`, gana el archivo del repo.

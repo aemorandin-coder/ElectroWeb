@@ -7,11 +7,12 @@ Stack: Next.js 16 (App Router, `proxy.ts` como middleware), React 19, Tailwind C
 **Next.js 16 tiene cambios incompatibles** con versiones anteriores (ver `AGENTS.md`, generado por `next dev`). Antes de usar una API de Next (caché, `params`, `proxy`, fuentes, imágenes), consulta `node_modules/next/dist/docs/`.
 
 ## Rol en el equipo
-Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en `GEMINI.md`). **Claude** hace todo lo que requiere criterio: seguridad, dinero, datos, arquitectura, componentes compartidos, header, home y catálogo, y desde el 21/09 también el rediseño y la jerarquía de pantallas (`C-*`); revisa y mergea el trabajo de Gemini.
-**ChatGPT salió del equipo el 2026-09-21** (orden de Andrés). No se le asigna nada. Su carril y sus tarjetas pendientes pasaron a Claude (tabla en `docs/plan/archivo/PLAN_CHATGPT.md`, "Salida del 21/09"). `CHATGPT.md` y `PLAN_CHATGPT.md` quedan solo como historial, en `docs/plan/archivo/`.
+Desde el 2026-11-18 (decisión de Andrés), **Gemini 4 Neon** es el líder principal de ElectroShopVe WEB (`GEMINI.md`): lleva todo el repositorio, arquitectura, seguridad, dinero, datos, rediseños, componentes compartidos, revisiones, merges a `main`, versionado y deploys autorizados.
+**Claude** queda como apoyo opcional cuando Andrés lo invoque. Cuando intervenga, trabaja en rama/worktree propio (`claude/<ID>`) y se coordina con Gemini 4 Neon para no pisar archivos compartidos, versiones ni merges.
+**ChatGPT salió del equipo el 2026-09-21** (orden de Andrés). `CHATGPT.md` y `PLAN_CHATGPT.md` quedan solo como historial en `docs/plan/archivo/`.
 
-1. Solo edita archivos del **carril Claude** (`PLAN.md` §4). Los archivos del carril Gemini no se tocan salvo que Andrés lo pida explícitamente.
-2. Una tarea = rama `claude/<ID>` = commits con prefijo `[C-XX]`. **Claude hace el merge a `main` y el push** cuando la tarea está verificada (regla de Andrés del 2026-09-30):
+1. Trabaja solo en las tareas y archivos asignados por Andrés o coordinados con Gemini 4 Neon (`PLAN.md` §4).
+2. Una tarea = rama `claude/<ID>` en worktree aislado = commits con prefijo `[C-XX]`. **El líder (Gemini 4 Neon) o quien Andrés autorice hace el merge a `main` y el push** cuando la tarea está verificada (regla de Andrés del 2026-09-30):
    - `git merge --no-ff --no-edit claude/C-XX` (sin `--no-edit` git abre un editor que no existe y la fusión queda a medias).
    - Antes de subir: `git diff main claude/C-XX` vacío después de la fusión (entra exactamente lo revisado) y sin credenciales en lo que se sube (el repositorio es público).
    - El deploy en el servidor lo hace Andrés con los pasos de `SIGUIENTE.md`, **en un solo bloque** con todo lo que falta subir (commit que debe tener producción, SQL total, cron, pruebas y vuelta atrás). Cuando se sube, el bloque pasa a `HISTORIAL.md`.

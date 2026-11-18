@@ -75,7 +75,7 @@ export default function Motor({ datos, alGuardar }: { datos: DatosIa; alGuardar:
         <section className={adminCard}>
           <h4 className="text-base font-semibold text-ink">Esfuerzo</h4>
           <p className="mt-0.5 text-sm text-muted">Cuánto piensa antes de responder. Más esfuerzo: mejores respuestas, más lentas y más caras.</p>
-          <div className="mt-3 grid grid-cols-2 gap-2 @lg:grid-cols-5" role="group" aria-label="Esfuerzo de Claude">
+          <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-2" role="group" aria-label="Esfuerzo de Claude">
             {ESFUERZOS.map((e) => (
               <Opcion key={e.id} tamano="chica" elegida={esfuerzo === e.id} titulo={e.nombre[0].toUpperCase() + e.nombre.slice(1)} aria-pressed={esfuerzo === e.id} onClick={() => setEsfuerzo(e.id)} />
             ))}

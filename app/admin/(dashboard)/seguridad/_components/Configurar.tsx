@@ -210,6 +210,8 @@ export default function Configurar({ correo, config, ocupado, error, codigos, on
               <div className="mt-6 border-t border-line pt-5">
                 <p className="mb-3 text-sm font-semibold text-ink">Así será cada vez que entres</p>
                 <CaminoDeEntrada />
+                {/* C-291 */}
+                <p className="mt-3 max-w-prose text-sm text-muted">En tu computadora, al entrar, marca «No pedir el número por 30 días» y solo te pide la contraseña.</p>
               </div>
             )}
           />

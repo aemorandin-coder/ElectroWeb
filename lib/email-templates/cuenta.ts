@@ -30,6 +30,31 @@ export async function correoSesionNueva(d: { nombre: string | null; dispositivo:
   return { asunto: `Nuevo inicio de sesión: ${d.dispositivo}`, html };
 }
 
+/**
+ * C-291: un navegador quedó como dispositivo de confianza del panel (30 días sin pedir el código). Si no fue quien
+ * recibe el correo, "No fui yo" (la ruta de C-140, que vale 24 horas) cierra todo y lo anula.
+ */
+export async function correoDispositivoConfianza(d: { nombre: string | null; dispositivo: string; cuando: string; vence: string; rutaNoFuiYo: string }): Promise<Correo> {
+  const nombre = nombreDe(d.nombre);
+  const html = await marcoCorreo({
+    preheader: `${d.dispositivo} no te pedirá el código del panel por 30 días.`,
+    encabezado: {
+      sello: 'SEGURIDAD',
+      titulo: `Marcaste un dispositivo de confianza${nombre ? `, ${nombre}` : ''}`,
+      texto: 'En ese navegador, el panel no te pedirá el número de tu app por 30 días. La contraseña, sí.',
+    },
+    cuerpo: `
+      ${datosCorreo([['Dispositivo', e(d.dispositivo)], ['Cuándo', e(d.cuando)], ['Hasta', e(d.vence)]])}
+      ${avisoCorreo('¿No fuiste tú?', 'Toca «No fui yo»: se cierran tus sesiones, se anula este dispositivo y te mandamos el enlace para una contraseña nueva. Sirve 24 horas.', 'candado')}
+      ${botonCorreo(`${urlTienda()}${d.rutaNoFuiYo}`, 'No fui yo')}
+      <p style="${CORREO.nota}">Si fuiste tú, no tienes que hacer nada. Lo puedes quitar cuando quieras en el panel → Mi seguridad.</p>`,
+    chispa: { pose: 'explica', texto: 'Te aviso cada vez que un dispositivo deja de pedir el código. Si fuiste tú, todo bien.' },
+    pie: 'equipo',
+    motivo: 'Recibes este correo para proteger tu cuenta del panel.',
+  });
+  return { asunto: `Dispositivo de confianza: ${d.dispositivo}`, html };
+}
+
 /** La contraseña cambió (con el enlace de "Olvidé mi contraseña" o desde Mi perfil). */
 export async function correoContrasenaCambiada(d: { nombre: string | null; sesionesCerradas: boolean }): Promise<Correo> {
   const a = await ajustesCorreo();

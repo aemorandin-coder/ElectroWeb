@@ -475,7 +475,7 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
   - la hoja "Así funciona" y cuatro pasos dibujados;
   - las tres apps con su logo y su tienda (Play Store y App Store);
   - el número de la app dibujado al entrar, y el correo de invitación que avisa lo que hará falta.
-- **C-291 · El dispositivo de confianza, 30 días** (pendiente; tabla y columnas aditivas):
+- **C-291 · El dispositivo de confianza, 30 días** (hecha en rc.105, `estado/C-291.md`; tabla y columnas aditivas):
   - para todo el panel, con el código otra vez en lo delicado (la clave de la IA y la del correo, Equipo, Métodos de pago y Respaldos);
   - se ve y se quita en Mi seguridad y en Equipo, llega un correo al marcarlo y se borra al cambiar la contraseña.
 - **C-292 · La IA de la tienda, no de un proveedor** (pendiente; absorbe C-288b):

@@ -10,6 +10,22 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.105] - 2026-11-18
+El dispositivo de confianza (C-291), la fase 2 del plan de Ajustes: en un navegador marcado, el panel no pide el número de la app por 30 días. La contraseña se sigue pidiendo, y la sesión sigue igual (12 horas, se cierra tras 1 hora sin uso). **Cambio de base aditivo:** una tabla nueva (`dispositivos_confianza`) y dos columnas en `user_sessions`. Sin variables nuevas y sin cron.
+### Marco del panel 1.18.0 (C-291)
+- **Al entrar con el número de la app,** la casilla "No pedir el número en esta computadora por 30 días" ("en este teléfono" en uno), apagada al abrir: "Solo si es tuyo".
+- **La galleta** lleva un número al azar (en la base, solo su huella); es HttpOnly, Secure y SameSite Strict, y vence a los 30 días de marcarla. Hasta 5 por persona: el sexto quita el más viejo.
+- **Se anulan solos** al cambiar la contraseña, con "No fui yo", al reiniciar los dos pasos o al cerrar las sesiones. Una galleta de otra cuenta, inventada o vencida no sirve.
+- **Mi seguridad → Dispositivos de confianza:** cada uno con desde cuándo, su último uso y hasta cuándo; el de ahora dice "Este"; "Quitar" y "Quitar todos".
+- **Al marcar uno llega un correo** con "No fui yo".
+- **Lo delicado pide el número otra vez** si la sesión entró por confianza: la clave de la IA y la del correo, Equipo (invitar, cambiar un rol, quitar o devolver el acceso, reiniciar los dos pasos), Métodos de pago y Respaldos. La ventana "Confirma que eres tú" sale en cualquier pantalla, acepta una llave de repuesto y, al confirmar, el cambio sigue solo. Vale 15 minutos.
+### Configuración 1.5.1 (C-291)
+- **Equipo** cuenta los dispositivos de confianza de cada persona, y el dueño los quita.
+### Carrito, checkout y cuenta del cliente 1.13.1 (C-291)
+- La casilla de 30 días en la pantalla del número.
+### Marketing 1.25.2 (C-291)
+- El correo "Marcaste un dispositivo de confianza". Guardar el servidor de correo pide el número si la sesión entró por confianza.
+
 ## [1.0.0-rc.104] - 2026-11-18
 Los dos pasos que se entienden (C-290), el primero del plan de Ajustes (`docs/plan/AJUSTES.md`). La contadora no supo "qué app es doble factor" ni qué hacer después: ahora la guía va dibujada, con las apps y dónde se bajan. Sin cambio de base, sin variables y sin cron.
 ### Marco del panel 1.17.0 (C-290)

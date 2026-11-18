@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { isAuthorized } from '@/lib/auth-helpers';
+import { exigirCodigoReciente } from '@/lib/dispositivos-confianza';
 
 // POST - Seed initial payment methods
 export async function POST() {
@@ -13,6 +14,9 @@ export async function POST() {
         if (!isAuthorized(session, 'MANAGE_SETTINGS')) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }
+        // C-291: si la sesión entró por un dispositivo de confianza, esto pide el número de la app otra vez
+        const codigoReciente = await exigirCodigoReciente();
+        if (codigoReciente) return codigoReciente;
 
         // Check if there are already payment methods
         const existingMethods = await prisma.companyPaymentMethod.count();

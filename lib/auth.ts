@@ -15,6 +15,7 @@ import { createAuditLog, getSeverityForAction, type AuditAction } from '@/lib/au
 import { describirDispositivo } from '@/lib/dispositivo';
 import { abrirSesion, sesionValida } from '@/lib/sesiones';
 import { estadoDosPasos, verificarCodigo } from '@/lib/dos-pasos';
+import { esDispositivoDeConfianza, type SegundoPaso } from '@/lib/dispositivos-confianza';
 import { esRolDelPanel } from '@/lib/auth-helpers';
 
 /** Inicios de sesión en la bitácora (C-104): Reportes → Seguridad cuenta aciertos, fallos y bloqueos por IP. */
@@ -42,8 +43,9 @@ async function registrarEnBitacora(action: AuditAction, datos: { userId?: string
 }
 
 /** Último acceso (dispositivo e IP). Lo usan el login con correo y el de Google. */
-async function registrarAcceso(userId: string, isAdmin: boolean, email: string | null, metodo: 'contraseña' | 'google') {
-  await registrarEnBitacora('AUTH_LOGIN_SUCCESS', { userId, email, details: { metodo, panel: isAdmin } });
+async function registrarAcceso(userId: string, isAdmin: boolean, email: string | null, metodo: 'contraseña' | 'google', segundoPaso?: SegundoPaso) {
+  // C-291: la bitácora dice cómo pasó el segundo paso (con el código, una llave o un dispositivo de confianza)
+  await registrarEnBitacora('AUTH_LOGIN_SUCCESS', { userId, email, details: { metodo, panel: isAdmin, ...(segundoPaso ? { segundoPaso } : {}) } });
   try {
     const reqHeaders = await headers();
     const userAgent = reqHeaders.get('user-agent') || 'Desconocido';
@@ -141,24 +143,32 @@ export const authOptions: NextAuthOptions = {
 
             // C-141: con dos pasos activos, la contraseña sola no alcanza. Un código equivocado cuenta como fallo
             // (mismo límite de intentos que la contraseña). Sin dos pasos, el admin entra solo a configurarlos.
+            // C-291: en un dispositivo de confianza vigente de esta cuenta, el código no se pide (la contraseña sí)
             let dosPasos = false;
+            let segundoPaso: SegundoPaso | undefined;
             if (isAdmin && (await estadoDosPasos(user.id)).activo) {
               const codigo = credentials.codigo?.trim();
-              if (!codigo) throw new Error('CODIGO_REQUERIDO');
-              if (!(await verificarCodigo(user.id, codigo))) {
-                const esperar = registrarFallo(correo, ip);
-                await registrarEnBitacora(esperar > 0 ? 'AUTH_LOGIN_BLOCKED' : 'AUTH_LOGIN_FAILED', {
-                  userId: user.id,
-                  email: correo,
-                  details: { motivo: 'Código de dos pasos equivocado', ...(esperar > 0 ? { esperaSegundos: esperar } : {}) },
-                });
-                throw new Error(esperar > 0 ? `DEMASIADOS_INTENTOS:${esperar}` : 'CODIGO_INVALIDO');
+              if (!codigo && (await esDispositivoDeConfianza(user.id))) {
+                dosPasos = true;
+                segundoPaso = 'confianza';
+              } else if (!codigo) throw new Error('CODIGO_REQUERIDO');
+              else {
+                if (!(await verificarCodigo(user.id, codigo))) {
+                  const esperar = registrarFallo(correo, ip);
+                  await registrarEnBitacora(esperar > 0 ? 'AUTH_LOGIN_BLOCKED' : 'AUTH_LOGIN_FAILED', {
+                    userId: user.id,
+                    email: correo,
+                    details: { motivo: 'Código de dos pasos equivocado', ...(esperar > 0 ? { esperaSegundos: esperar } : {}) },
+                  });
+                  throw new Error(esperar > 0 ? `DEMASIADOS_INTENTOS:${esperar}` : 'CODIGO_INVALIDO');
+                }
+                dosPasos = true;
+                segundoPaso = /^\d{3}\s?\d{3}$/.test(codigo) ? 'codigo' : 'respaldo';
               }
-              dosPasos = true;
             }
             registrarAcierto(correo, ip);
 
-            await registrarAcceso(user.id, isAdmin, user.email, 'contraseña');
+            await registrarAcceso(user.id, isAdmin, user.email, 'contraseña', segundoPaso);
 
             return {
               id: user.id,
@@ -171,6 +181,7 @@ export const authOptions: NextAuthOptions = {
               permissions: [],
               sessionVersion: user.sessionVersion,
               dosPasos,
+              segundoPaso,
             };
           }
         }
@@ -270,12 +281,14 @@ export const authOptions: NextAuthOptions = {
         token.emailVerified = Boolean(user.emailVerified);
         token.sessionVersion = user.sessionVersion;
         token.dosPasos = Boolean(user.dosPasos);
+        token.segundoPaso = user.segundoPaso;
         // C-140: cada inicio de sesión tiene su fila (dispositivo, vencimiento, cierre); el token lleva su id
         token.sid = await abrirSesion({
           userId: user.id,
           esAdmin: user.userType === 'admin',
           metodo: account?.provider === 'google' ? 'google' : 'contraseña',
           version: user.sessionVersion ?? 0,
+          segundoPaso: user.segundoPaso,
         });
       } else if (token.id) {
         // Cerrada, vencida, versión vieja, admin sin uso o cuenta suspendida (lib/sesiones.ts).

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { anotar, esRespuesta, exigirDueno } from '@/lib/respaldos/acceso';
 import { generarParDeClaves } from '@/lib/respaldos/formato';
 import { leerAjustes } from '@/lib/respaldos/servicio';
+import { exigirCodigoReciente } from '@/lib/dispositivos-confianza';
 
 // C-165: crea el par de claves del respaldo. La PRIVADA se devuelve una sola vez y no se guarda en ningún lado:
 // si se pierde, los respaldos cifrados con ella no se pueden abrir. Solo el dueño.
@@ -11,6 +12,9 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   const dueno = await exigirDueno('clave');
   if (esRespuesta(dueno)) return dueno;
+  // C-291: si la sesión entró por un dispositivo de confianza, esto pide el número de la app otra vez
+  const codigoReciente = await exigirCodigoReciente();
+  if (codigoReciente) return codigoReciente;
   try {
     const body = (await request.json().catch(() => ({}))) as { reemplazar?: boolean };
     const actual = await leerAjustes();

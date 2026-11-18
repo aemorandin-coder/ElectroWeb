@@ -1,9 +1,69 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.106`, comprobada el 18/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.111`, comprobada el 18/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 18/11 · C-296, C-292, C-293, C-294 y C-297: Chispa 3.1, la IA con proveedores, Ajustes ordenado y el sorteo que vende (de rc.106 a `v1.0.0-rc.111`)
+La subió el equipo el 18/11, con el bloque de `SIGUIENTE.md`. No quedó anotado quién ni a qué hora. Claude lo vio el 18/11 en la noche, mientras sacaba las capturas para el kit de marca, y pasó el bloque aquí (C-301).
+
+**Lo comprobado, el 18/11 en la noche, desde fuera (como un visitante):**
+- la portada dice `1.0.0-rc.111|6f5f2eaa`. Como el guion no sirve una versión nueva con la base distinta, el SQL quedó aplicado;
+- la portada, `/sorteo`, las fichas, Gift Cards, Ferretería, Ideas para regalar y Categorías se ven bien en la computadora y en el teléfono (capturas en el kit de marca);
+- **la regla nueva del sorteo está aplicada:** la ficha del Nintendo Switch 2 ($1.087,98) dice "Con esta compra ganas 105 boletos" y la del televisor de $499,31, "45 boletos". `/sorteo` muestra "Así se ve tu boleto" y los tres caminos;
+- sin sesión, `/api/admin/ia` responde 401 y `/admin/settings` lleva al login (307).
+- **No se pudo mirar en el servidor:** las tablas nuevas, el registro de PM2 y el respaldo `~/respaldo-antes-rc108.dump`.
+- **Falta el producto estrella:** `/sorteo` todavía no muestra "Descubre el producto estrella" (se elige en Marketing → Sorteo).
+
+**Falta que el equipo lo mire** (`SIGUIENTE.md`, "Por confirmar de rc.111"): las 5 pruebas.
+
+### El bloque que se subió: `v1.0.0-rc.111` (C-296, C-292, C-293, C-294 y C-297)
+- **Commit:** `6f5f2eaa` (etiqueta `v1.0.0-rc.111`; adentro, `v1.0.0-rc.107` a `v1.0.0-rc.110`).
+- **C-292** (rc.108) trae un **cambio de base aditivo:** una tabla nueva y seis columnas, sin `DROP` ni cambios de tipo. Sin variables nuevas y sin cron.
+```sql
+ALTER TABLE "ia_ajustes" ADD COLUMN     "porUso" JSONB,
+ADD COLUMN     "proveedor" TEXT,
+ADD COLUMN     "respaldo" TEXT;
+ALTER TABLE "ia_pedidos" ADD COLUMN     "noSirvioAt" TIMESTAMP(3),
+ADD COLUMN     "noSirvioMotivo" TEXT,
+ADD COLUMN     "noSirvioPorId" TEXT;
+CREATE TABLE "ia_proveedores" (
+    "id" TEXT NOT NULL,
+    "claveCifrada" TEXT,
+    "claveCambiadaAt" TIMESTAMP(3),
+    "modelo" TEXT,
+    "precioEntrada" DECIMAL(10,4),
+    "precioSalida" DECIMAL(10,4),
+    "actualizadoPorId" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "ia_proveedores_pkey" PRIMARY KEY ("id")
+);
+```
+- **C-297** (rc.111, el sorteo que vende) trae otro **cambio de base aditivo:** cuatro columnas en `sorteos`, cuyo valor por defecto mantiene la regla de antes (1 boleto por compra, sin escala ni reseñas), y la tabla `sorteo_estrellas`. Sin variables nuevas y sin cron. `deploy.sh` muestra este SQL junto con el de C-292:
+```sql
+ALTER TABLE "sorteos" ADD COLUMN     "boletosPorCompra" INTEGER NOT NULL DEFAULT 1,
+ADD COLUMN     "boletosPorEscala" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "boletosPorResena" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "escalaUSD" DECIMAL(65,30) NOT NULL DEFAULT 0;
+CREATE TABLE "sorteo_estrellas" (
+    "id" TEXT NOT NULL,
+    "sorteoId" TEXT NOT NULL,
+    "productId" TEXT NOT NULL,
+    "desde" TIMESTAMP(3) NOT NULL,
+    "hasta" TIMESTAMP(3) NOT NULL,
+    "boletos" INTEGER NOT NULL DEFAULT 10,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "sorteo_estrellas_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "sorteo_estrellas_sorteoId_desde_idx" ON "sorteo_estrellas"("sorteoId", "desde");
+ALTER TABLE "sorteo_estrellas" ADD CONSTRAINT "sorteo_estrellas_sorteoId_fkey" FOREIGN KEY ("sorteoId") REFERENCES "sorteos"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "sorteo_estrellas" ADD CONSTRAINT "sorteo_estrellas_productId_fkey" FOREIGN KEY ("productId") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+```
+- **SQL de datos (C-297, la regla nueva del sorteo):** `UPDATE "sorteos" SET "boletosPorCompra" = 2, "escalaUSD" = 50, "boletosPorEscala" = 5, "boletosPorResena" = 1, "updatedAt" = now() WHERE activo AND "sorteadoAt" IS NULL` (debía decir `UPDATE 1`).
+- **Vuelta atrás:** `git reset --hard v1.0.0-rc.106 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas pueden quedarse.
 
 
 ## 18/11 · C-290, C-291 y C-295: los dos pasos, el dispositivo de confianza y ElectroStudio en el teléfono (de rc.103 a `v1.0.0-rc.106`)

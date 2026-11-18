@@ -1,4 +1,4 @@
-# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.106; por subir: rc.107 a rc.110, §2)
+# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.111; por subir: rc.112 y rc.113, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
@@ -9,22 +9,22 @@
   - El guion, el texto para la voz y las capturas están en `chispa/guiones/sorteo-amigos-y-compras.md`.
   - **Se graba y se publica después de subir rc.111**, que trae la regla nueva de las compras. Lo del equipo está en §3.
 - **C-299 · El aviso del dispositivo de confianza (rc.112, en `main`, por subir con el bloque de §2; `estado/C-299.md`):** el correo "Marcaste un dispositivo de confianza" sale solo a un correo comprobado, como el aviso de inicio de sesión. A una dirección sin comprobar rebotaba y el rebote llegaba al buzón de la tienda en cada entrada (18/11, captura del equipo).
-- **C-297 · El sorteo que vende (rc.111, en `main`, por subir con rc.107 a rc.110: §2; `estado/C-297.md`):** la decisión de Andrés del 18/11, vista en desarrollo.
+- **C-297 · El sorteo que vende (rc.111, en producción; por confirmar: §2; `estado/C-297.md`):** la decisión de Andrés del 18/11, vista en desarrollo.
   - **Comprar vale más:** $5 → 2 boletos, cada $50 → 5; cada reseña aprobada → 1; invitar queda igual. Cuenta también lo comprado desde el 14/11.
   - **El producto estrella de la semana:** se elige en Marketing → Sorteo, cualquier producto, +10 por unidad. Sale en /sorteo, con su sello en el catálogo y en su ficha.
   - **/sorteo más corto,** las preguntas en una tarjeta, "Así se ve tu boleto" sin cuenta, y la ficha y el carrito dicen cuántos boletos da la compra.
-- **C-294 · Ajustes ordenado, segunda parte (rc.110, en `main`, por subir con rc.107 a rc.109: §2; `estado/C-294.md`):** la última fase del plan de Ajustes (`AJUSTES.md`, terminado).
+- **C-294 · Ajustes ordenado, segunda parte (rc.110, en producción; `estado/C-294.md`):** la última fase del plan de Ajustes (`AJUSTES.md`, terminado).
   - **Avisos:** "Qué avisar" (los correos de alerta y los canales juntos) y Telegram, en Ajustes. Notificaciones queda con la bandeja.
   - **Marketing:** Portada y "Google y redes" (también para los administradores con permiso de contenido) y el interruptor de los correos de marketing.
   - **Se quitó lo que no servía:** los colores de los correos, las palabras clave y la tarjeta repetida de Equipo. Y un arreglo del servidor de correo.
-- **C-293 · Ajustes ordenado, primera parte (rc.109, en `main`, por subir con rc.107 y rc.108: §2; `estado/C-293.md`):** la fase 4 del plan de Ajustes.
+- **C-293 · Ajustes ordenado, primera parte (rc.109, en producción; `estado/C-293.md`):** la fase 4 del plan de Ajustes.
   - **El mapa nuevo:** "Ajustes" por grupos, con el estado de cada sección; en el teléfono, primero la lista. Métodos de pago adentro.
   - **Cada sección guarda sola,** con antes → después en lo que toca dinero; los campos, del tamaño de su dato.
-- **C-292 · La IA de la tienda, no de un proveedor (rc.108, en `main`, por subir con rc.107: §2; `estado/C-292.md`):** la fase 3 del plan de Ajustes.
+- **C-292 · La IA de la tienda, no de un proveedor (rc.108, en producción; `estado/C-292.md`):** la fase 3 del plan de Ajustes.
   - **Configuración → IA:** quién responde (Claude, Gemini, Grok o Groq), su modelo y el respaldo; una tarjeta por proveedor con su clave y su precio; cada uso sigue al principal o tiene el suyo.
   - **En las pantallas:** "Armar con IA", "Resumir con IA", "Redactar con IA", y en el resultado "Lo redactó …" con "No sirvió".
   - **Sigue siendo de Claude:** "Buscar en la web" cuando busca por su cuenta (Groq de respaldo).
-- **C-296 · Chispa 3.1 (rc.107, en `main`, por subir: §2; `estado/C-296.md`):** el equipo pidió ver sus emociones y mejorarlo, y eligió en la página de variantes.
+- **C-296 · Chispa 3.1 (rc.107, en producción; `estado/C-296.md`):** el equipo pidió ver sus emociones y mejorarlo, y eligió en la página de variantes.
   - **En la web:** el logo oficial en la camisa de Chispa, en ElectroStudio, el popup navideño y los correos.
   - **En los videos** (`chispa.js`, cuando se vuelvan a grabar):
     - ojos de asombro y tristes;
@@ -554,64 +554,24 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.113` (C-296, C-292, C-293, C-294, C-297, C-299 y C-298)
-Producción está en `v1.0.0-rc.106` (`8dae211c`); su bloque está en `HISTORIAL.md`. Es un solo bloque, con rc.107 a rc.112 adentro. Si entran más tareas antes de subir, se suman aquí.
-- **C-296** (rc.107) solo cambia imágenes y dos líneas de código.
-- **C-293** (rc.109) y **C-294** (rc.110), sin cambio de base.
-  - **Antes de subir, mira Configuración → Portada e inventario:** si "Avisarme cuando un producto quede con stock bajo" o "…se agote" están apagados, apaga también "Stock bajo" o "Producto agotado" en Notificaciones → Qué avisar. Desde rc.109 esos avisos se eligen solo ahí (D3).
-- **C-298** (rc.113) reordena Ajustes → IA, sin cambio de base.
-- **C-299** (rc.112) solo cambia una línea del aviso del dispositivo de confianza: sale solo a un correo comprobado (a una dirección sin comprobar rebotaba). Sin cambio de base.
-- **C-292** (rc.108) trae un **cambio de base aditivo:** una tabla nueva y seis columnas, sin `DROP` ni cambios de tipo. Sin variables nuevas y sin cron.
-```sql
-ALTER TABLE "ia_ajustes" ADD COLUMN     "porUso" JSONB,
-ADD COLUMN     "proveedor" TEXT,
-ADD COLUMN     "respaldo" TEXT;
-ALTER TABLE "ia_pedidos" ADD COLUMN     "noSirvioAt" TIMESTAMP(3),
-ADD COLUMN     "noSirvioMotivo" TEXT,
-ADD COLUMN     "noSirvioPorId" TEXT;
-CREATE TABLE "ia_proveedores" (
-    "id" TEXT NOT NULL,
-    "claveCifrada" TEXT,
-    "claveCambiadaAt" TIMESTAMP(3),
-    "modelo" TEXT,
-    "precioEntrada" DECIMAL(10,4),
-    "precioSalida" DECIMAL(10,4),
-    "actualizadoPorId" TEXT,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    CONSTRAINT "ia_proveedores_pkey" PRIMARY KEY ("id")
-);
-```
-- **C-297** (rc.111, el sorteo que vende) trae otro **cambio de base aditivo:** cuatro columnas en `sorteos`, cuyo valor por defecto mantiene la regla de antes (1 boleto por compra, sin escala ni reseñas), y la tabla `sorteo_estrellas`. Sin variables nuevas y sin cron. `deploy.sh` muestra este SQL junto con el de C-292:
-```sql
-ALTER TABLE "sorteos" ADD COLUMN     "boletosPorCompra" INTEGER NOT NULL DEFAULT 1,
-ADD COLUMN     "boletosPorEscala" INTEGER NOT NULL DEFAULT 0,
-ADD COLUMN     "boletosPorResena" INTEGER NOT NULL DEFAULT 0,
-ADD COLUMN     "escalaUSD" DECIMAL(65,30) NOT NULL DEFAULT 0;
-CREATE TABLE "sorteo_estrellas" (
-    "id" TEXT NOT NULL,
-    "sorteoId" TEXT NOT NULL,
-    "productId" TEXT NOT NULL,
-    "desde" TIMESTAMP(3) NOT NULL,
-    "hasta" TIMESTAMP(3) NOT NULL,
-    "boletos" INTEGER NOT NULL DEFAULT 10,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    CONSTRAINT "sorteo_estrellas_pkey" PRIMARY KEY ("id")
-);
-CREATE INDEX "sorteo_estrellas_sorteoId_desde_idx" ON "sorteo_estrellas"("sorteoId", "desde");
-ALTER TABLE "sorteo_estrellas" ADD CONSTRAINT "sorteo_estrellas_sorteoId_fkey" FOREIGN KEY ("sorteoId") REFERENCES "sorteos"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "sorteo_estrellas" ADD CONSTRAINT "sorteo_estrellas_productId_fkey" FOREIGN KEY ("productId") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-```
-- **Subir** (en la terminal del servidor):
-  1. El respaldo: `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc108.dump`
-  2. `git pull --ff-only && bash scripts/deploy.sh --sin-pull`. El guion se detiene por el cambio de base y muestra el SQL de arriba.
-  3. `npx prisma db push`.
-  4. **La regla nueva del sorteo (C-297, decisión de Andrés del 18/11):** $5 → 2 boletos, cada $50 → 5 y cada reseña aprobada → 1. Primero mira cuál es el sorteo abierto: `psql "$DB" -c 'SELECT id, titulo, "compraMinimaUSD", activo, "sorteadoAt" FROM sorteos'` (debe salir el de Navidad, activo y sin sortear, con 5 de compra mínima). Después:
-     `psql "$DB" -c 'UPDATE "sorteos" SET "boletosPorCompra" = 2, "escalaUSD" = 50, "boletosPorEscala" = 5, "boletosPorResena" = 1, "updatedAt" = now() WHERE activo AND "sorteadoAt" IS NULL'` (debe decir `UPDATE 1`).
-  5. Otra vez `bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.113`, o una mayor si entró otra tarea antes del `git pull`.
-  - **Después, en el panel:** Marketing → Sorteo → "Producto estrella de cada semana" → "Elegir producto" en la semana de hoy (cualquier producto publicado, 10 boletos). Sin él, /sorteo no muestra "Descubre el producto estrella".
+### Lo que falta subir: `v1.0.0-rc.113` (C-299 y C-298)
+Producción está en `v1.0.0-rc.111` (`6f5f2eaa`): la subió el equipo y Claude la vio desde fuera el 18/11 en la noche (bloque en `HISTORIAL.md`). Faltan rc.112 y rc.113. Si entran más tareas antes de subir, se suman aquí.
+- **C-299** (rc.112): el aviso "Marcaste un dispositivo de confianza" sale solo a un correo comprobado (a una dirección sin comprobar rebotaba).
+- **C-298** (rc.113): Ajustes → IA por prioridad, con plegables.
+- **Sin cambio de base, sin variables y sin cron.**
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.113`, o una mayor si entró otra tarea antes del `git pull`.
 - **Pruebas** (antes, recarga el panel con Ctrl+R):
+  1. **IA por prioridad** (C-298, unos 3 minutos, en la computadora y en el teléfono, con la cuenta del dueño): Ajustes → IA.
+     - Arriba el estado; debajo El motor y Consumo y fallas, abiertos; Proveedores y claves, Los usos de la IA, Reglas y Guía, plegados, cada uno con su resumen ("1 de 4 con clave" o los que tengan clave, "6 usos"…);
+     - toca "Los usos de la IA" y después "Respuesta a una consulta": salen Instrucciones, Probar y Motor;
+     - en El motor elige otro modelo: "Revisar y publicar" muestra el antes → después y a cuántos usos les cambia ("Cambia 6 de 6 usos", o menos si un uso tiene su propio motor). **No publiques:** vuelve a elegir el de ahora.
+  2. **El aviso del dispositivo de confianza** (C-299, un minuto, con la cuenta del dueño): entra con el número y marca "No pedir el número…". Ya no llega el rebote de `mailer-daemon` («Delivery Status Notification»).
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.111 && npm install && bash scripts/deploy.sh --sin-pull`. Para quitar solo C-298: `v1.0.0-rc.112`.
+
+### Por confirmar de rc.111 (C-296, C-292, C-293, C-294 y C-297; unos 35 minutos)
+Ya en producción (la subió el equipo; Claude lo vio desde fuera el 18/11 en la noche). La regla nueva del sorteo está aplicada: una ficha de $1.087,98 dice "105 boletos".
+- **Falta en el panel:** Marketing → Sorteo → "Producto estrella de cada semana" → "Elegir producto" en la semana de hoy. Sin él, /sorteo no muestra "Descubre el producto estrella" (el 18/11 en la noche no salía).
+- **Antes de las pruebas, en el panel:** si en Configuración → Portada e inventario estaban apagados "Avisarme cuando un producto quede con stock bajo" o "…se agote", apaga también "Stock bajo" o "Producto agotado" en Ajustes → Avisos → Qué avisar (D3).
   1. **Chispa 3.1** (C-296, unos 2 minutos, en la computadora):
      - Marketing → ElectroStudio → una historia con Chispa (Felicitación, por ejemplo): Chispa lleva el logo redondo de la tienda en el pecho, no la placa con «ES»;
      - Marketing → Correos, la vista previa de cualquier correo: Chispa abajo, con el logo en el pecho.
@@ -640,12 +600,6 @@ ALTER TABLE "sorteo_estrellas" ADD CONSTRAINT "sorteo_estrellas_productId_fkey" 
      - agrega el producto estrella al carrito: el resumen dice "Esta compra te da N boletos" y cuánto falta para el próximo salto. Vacía el carrito después;
      - con tu cuenta de cliente (si tienes compras desde el 14/11): "Tus boletos" ya cuenta la regla nueva, los de una compra en una pila con su número;
      - Marketing → Sorteo → Cambiar: los pasos "Comprando" (5 → 2 y la escala 50 → 5) y "Reseñas y amigos" (1 por reseña, 3 por invitar). Sal sin guardar.
-  6. **IA por prioridad** (C-298, unos 3 minutos, en la computadora y en el teléfono, con la cuenta del dueño): Ajustes → IA.
-     - Arriba el estado; debajo El motor y Consumo y fallas, abiertos; Proveedores y claves, Los usos de la IA, Reglas y Guía, plegados, cada uno con su resumen ("1 de 4 con clave" o los que tengan clave, "6 usos"…);
-     - toca "Los usos de la IA" y después "Respuesta a una consulta": salen Instrucciones, Probar y Motor;
-     - en El motor elige otro modelo: "Revisar y publicar" muestra el antes → después y a cuántos usos les cambia ("Cambia 6 de 6 usos", o menos si un uso tiene su propio motor). **No publiques:** vuelve a elegir el de ahora.
-  7. **El aviso del dispositivo de confianza** (C-299, un minuto, con la cuenta del dueño): entra con el número y marca "No pedir el número…". Ya no llega el rebote de `mailer-daemon` («Delivery Status Notification») al buzón de la tienda.
-- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.106 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas se pueden quedar: rc.106 no las usa. Para quitar solo C-297: `git reset --hard v1.0.0-rc.110` (el sorteo vuelve a 1 boleto por compra; las columnas y la tabla nuevas no molestan; C-299 es más nueva, así que también sale); para quitar solo C-298: `git reset --hard v1.0.0-rc.112`; para quitar también C-299: `git reset --hard v1.0.0-rc.111`; para quitar también C-294: `git reset --hard v1.0.0-rc.109`; para quitar también C-293: `v1.0.0-rc.108`; para quitar también C-292 y dejar a Chispa 3.1: `v1.0.0-rc.107`.
 
 ### Por confirmar de rc.106 (C-290, C-291 y C-295; unos 25 minutos)
 Ya en producción desde el 18/11, cerca de las 10:17 a. m. La subió el equipo a mano en la terminal del servidor, con los pasos del bloque (desde la PC de Claude de ese momento no había acceso SSH). Claude lo comprobó desde fuera; el detalle está en `HISTORIAL.md`.

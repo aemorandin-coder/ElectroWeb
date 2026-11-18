@@ -8,6 +8,8 @@
 > - **El login de los administradores,** también con dispositivo de confianza.
 > - **Ajustes:** "inputs anchísimos, muchos textos, semánticas ilógicas, ajustes repetidos: haz un análisis de lo que necesitamos que se mantenga acá".
 >
+> **Estado (18/11): terminado.** Las cinco fases están hechas: C-290 y C-291 en producción (rc.106); C-292, C-293 y C-294 en `main` (rc.108 a rc.110), por subir. Sigue C-292b (`PLAN.md` §5.2).
+>
 > **Este documento es el mapa.** Cada fase es una tarea `C-*` con su rama, sus pruebas, su versión y su deploy. Las decisiones del equipo están en §6: las dos del plan y las seis (D1 a D6) del mismo 18/11. Las maquetas se hacen al empezar cada fase, con datos de producción.
 
 ## 1. Lo más importante

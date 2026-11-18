@@ -487,7 +487,7 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
   - los grupos de `AJUSTES.md` §3;
   - los campos del tamaño de su dato y una línea de ayuda;
   - cada sección guarda sola, con antes → después en lo de dinero.
-- **C-294 · Ajustes: Avisos, Conexiones y La tienda en línea** (pendiente):
+- **C-294 · Ajustes: Avisos, Conexiones y La tienda en línea** (hecha en rc.110, `estado/C-294.md`; con ella termina el plan de `AJUSTES.md`):
   - "Qué avisar", Telegram y los correos de alerta, juntos;
   - fuera los colores de los correos (sin efecto), las palabras clave, la tarjeta Equipo repetida y los interruptores de stock repetidos, si se aprueba D3.
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { IconoGuardar, IconoRestablecer } from '@/components/iconos';
 import { adminCardFlush, adminNotice, adminPrimaryButton, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
@@ -102,7 +101,8 @@ export default function ChannelMatrix({ onGoToTelegram }: { onGoToTelegram: () =
         <p className={adminNotice(emailRecipients > 0 ? 'neutral' : 'warning')}>
           <strong className="text-ink">Correo:</strong>{' '}
           {emailRecipients > 0 ? `${emailRecipients} ${emailRecipients === 1 ? 'destinatario' : 'destinatarios'}. ` : 'no hay correos de alerta. '}
-          <Link href="/admin/settings#sistema" className="font-semibold underline">{emailRecipients > 0 ? 'Cambiar' : 'Agregar correos'}</Link>
+          {/* C-294: este cuadro está en Ajustes → Avisos, debajo de los correos de alerta */}
+          {emailRecipients > 0 ? 'Se cambian arriba, en Correos de alerta.' : 'Agrégalos arriba, en Correos de alerta.'}
         </p>
         <p className={adminNotice(telegramReady ? 'neutral' : 'warning')}>
           <strong className="text-ink">Telegram:</strong>{' '}

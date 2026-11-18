@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { IconoAdvertencia, IconoCheck, IconoChevronDerecha, IconoClientes, IconoFlechaIzquierda, IconoGuardar, IconoRestablecer } from '@/components/iconos';
+import { IconoAdvertencia, IconoCheck, IconoChevronDerecha, IconoFlechaIzquierda, IconoGuardar, IconoRestablecer } from '@/components/iconos';
 import {
   adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminSpinner,
 } from '@/lib/admin-ui';
@@ -11,15 +12,16 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { formatVES } from '@/lib/currency';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import {
-  buildPatch, CAMPOS_DELICADOS, GRUPOS, isDirty, SECCION_VIEJA, SECTIONS, sectionOf, toSettingsForm,
+  buildPatch, CAMPOS_DELICADOS, EN_MARKETING, ENLACES, GRUPOS, isDirty, SECCION_VIEJA, SECTIONS, sectionOf, toSettingsForm,
   type FieldErrors, type SectionId, type SetField, type SettingsForm, type SettingsKey,
 } from './_components/settings-form';
 import BusinessSection from './_components/BusinessSection';
 import PricesSection from './_components/PricesSection';
 import ShippingSection from './_components/ShippingSection';
 import StorefrontSection from './_components/StorefrontSection';
-import SeoSection from './_components/SeoSection';
 import SystemSection from './_components/SystemSection';
+import ChannelMatrix from '../notifications/_components/ChannelMatrix';
+import TelegramPanel from '../notifications/_components/TelegramPanel';
 import BackupsSection from './_components/BackupsSection';
 import SeccionIA from '@/components/admin/ia/SeccionIA';
 import EmailSettingsPanel from '@/components/admin/EmailSettingsPanel';
@@ -32,6 +34,8 @@ import MetodosDePago from '../payments/_components/MetodosDePago';
 // - cada sección guarda sola: la barra de abajo es de la sección que se ve, y lo que toca dinero se revisa antes → después
 //   con a qué afecta. Las demás secciones con cambios llevan su punto en el menú;
 // - Métodos de pago entra aquí (D5); las direcciones viejas (#negocio, #precios, #tienda) llevan a su sección nueva.
+// C-294: "Qué avisar" y Telegram entran a Avisos (D6) y el mantenimiento a La tienda en línea. Portada y "Google y redes" pasaron a
+// Marketing (D2): el menú los lleva allá, y sus direcciones viejas también.
 
 function sectionFromHash(): SectionId | null {
   if (typeof window === 'undefined') return null;
@@ -42,6 +46,7 @@ function sectionFromHash(): SectionId | null {
 
 export default function SettingsPage() {
   const { confirm } = useConfirm();
+  const router = useRouter();
   const [form, setForm] = useState<SettingsForm | null>(null);
   const [initial, setInitial] = useState<SettingsForm | null>(null);
   const [meta, setMeta] = useState<{ updatedAt: string | null; lastRateUpdate: string | null }>({ updatedAt: null, lastRateUpdate: null });
@@ -94,6 +99,11 @@ export default function SettingsPage() {
   // Al llegar desde otra pantalla del panel (un enlace a /admin/settings#pagos), el hash llega a la dirección después del primer
   // dibujo: se lee otra vez al montar
   useCargarAlMontar(() => {
+    const hash = window.location.hash.slice(1);
+    if (EN_MARKETING[hash]) {
+      router.replace(EN_MARKETING[hash]);
+      return;
+    }
     const desdeLaDireccion = sectionFromHash();
     if (desdeLaDireccion) setElegida(desdeLaDireccion);
   });
@@ -216,8 +226,8 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {initial.maintenanceMode && active !== 'sistema' && (
-        <button type="button" onClick={() => goTo('sistema')} className={`${adminNotice('warning')} mb-5 flex w-full items-center gap-2 text-left`}>
+      {initial.maintenanceMode && active !== 'mantenimiento' && (
+        <button type="button" onClick={() => goTo('mantenimiento')} className={`${adminNotice('warning')} mb-5 flex w-full items-center gap-2 text-left`}>
           <IconoAdvertencia className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="flex-1"><strong>La tienda está en mantenimiento.</strong> Los clientes no pueden comprar.</span>
           <span className="font-semibold underline">Ver</span>
@@ -261,18 +271,18 @@ export default function SettingsPage() {
                         </li>
                       );
                     })}
-                    {grupo.id === 'equipo' && (
-                      <li>
-                        <Link href="/admin/equipo" className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-brand-50 max-lg:border max-lg:border-line max-lg:bg-white">
-                          <IconoClientes className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {ENLACES.filter((e) => e.grupo === grupo.id).map(({ href, label, estado, icon: Icon }) => (
+                      <li key={href}>
+                        <Link href={href} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-ink transition-colors hover:bg-brand-50 max-lg:border max-lg:border-line max-lg:bg-white">
+                          <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                           <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-semibold">Equipo</span>
-                            <span className="block truncate text-xs text-muted">Quién entra al panel y con qué rol</span>
+                            <span className="block text-sm font-semibold">{label}</span>
+                            <span className="block truncate text-xs text-muted">{estado}</span>
                           </span>
                           <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
                         </Link>
                       </li>
-                    )}
+                    ))}
                   </ul>
                 </div>
               );
@@ -309,9 +319,14 @@ export default function SettingsPage() {
             {active === 'pagos' && <MetodosDePago enAjustes />}
             {active === 'inventario' && <StorefrontSection {...sectionProps} parte="inventario" />}
             {active === 'envios' && <ShippingSection {...sectionProps} />}
-            {active === 'portada' && <StorefrontSection {...sectionProps} parte="portada" />}
-            {active === 'seo' && <SeoSection {...sectionProps} />}
-            {active === 'sistema' && <SystemSection {...sectionProps} />}
+            {active === 'avisos' && (
+              <>
+                <SystemSection {...sectionProps} parte="avisos" />
+                <ChannelMatrix onGoToTelegram={() => goTo('telegram')} />
+              </>
+            )}
+            {active === 'telegram' && <TelegramPanel />}
+            {active === 'mantenimiento' && <SystemSection {...sectionProps} parte="mantenimiento" />}
             {active === 'correo' && <EmailSettingsPanel />}
             {active === 'respaldos' && <BackupsSection />}
             {active === 'ia' && <SeccionIA />}

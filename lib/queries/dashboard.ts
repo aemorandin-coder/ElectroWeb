@@ -178,7 +178,7 @@ export async function getDashboard(): Promise<DashboardData> {
   if (sinMarca > 0) tienda.push({ clave: 'marca', texto: `${sinMarca} ${sinMarca === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} marca (Google y el catálogo de Meta la piden).`, href: '/admin/products?filtro=sin-marca', soloDueno: false });
   if (sinFoto > 0) tienda.push({ clave: 'foto', texto: `${sinFoto} ${sinFoto === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} foto.`, href: '/admin/products?filtro=sin-foto', soloDueno: false });
   if (sinMedidas > 0) tienda.push({ clave: 'medidas', texto: `${sinMedidas} ${sinMedidas === 1 ? 'producto publicado no tiene' : 'productos publicados no tienen'} peso o medidas: su empaque y su envío se estiman.`, href: '/admin/products?filtro=sin-medidas', soloDueno: false });
-  if (!ajustes?.homeMetaImage) tienda.push({ clave: 'compartir', texto: 'Falta la imagen para compartir (1200 × 630): al pegar el enlace de la tienda sale el logo cuadrado.', href: '/admin/settings', soloDueno: true });
+  if (!ajustes?.homeMetaImage) tienda.push({ clave: 'compartir', texto: 'Falta la imagen para compartir (1200 × 630): al pegar el enlace de la tienda sale el logo cuadrado.', href: '/admin/marketing#google', soloDueno: true });
   if (!process.env.NEXT_PUBLIC_GA_ID && !process.env.NEXT_PUBLIC_FB_PIXEL_ID) tienda.push({ clave: 'medicion', texto: 'Google Analytics y el píxel de Meta no están conectados: los anuncios no pueden medir sus ventas.', href: '/admin/reports', soloDueno: true });
 
   return {

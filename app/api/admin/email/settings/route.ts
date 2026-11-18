@@ -159,10 +159,13 @@ export async function PUT(request: NextRequest) {
         }
 
         // Check if configuration is complete
+        // C-294: con lo que ya está guardado, no solo con lo que llega: un cambio de un solo campo (el interruptor de las campañas,
+        // desde Marketing) dejaba el servidor de correo como "sin configurar" y los correos dejaban de salir por él
+        const actual = await prisma.emailSettings.findUnique({ where: { id: 'default' }, select: { smtpHost: true, smtpUser: true, smtpPassword: true } });
         updateData.isConfigured = !!(
-            (updateData.smtpHost || body.smtpHost) &&
-            (updateData.smtpUser || body.smtpUser) &&
-            (smtpPassword === '••••••••' || smtpPassword) // Either new password or existing
+            (updateData.smtpHost ?? actual?.smtpHost) &&
+            (updateData.smtpUser ?? actual?.smtpUser) &&
+            (updateData.smtpPassword ?? actual?.smtpPassword)
         );
 
         const settings = await prisma.emailSettings.upsert({

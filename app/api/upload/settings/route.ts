@@ -91,7 +91,8 @@ export async function POST(request: NextRequest) {
         if (!type || !allowedAssetTypes.includes(type)) {
             return NextResponse.json({ error: 'Tipo de asset no válido' }, { status: 400 });
         }
-        const marketingTypes = ['hotAd', 'campaign', 'studio', 'sorteo', 'curso', 'servicio'];
+        // C-294: las imágenes para compartir son de Marketing → Google y redes (D2 del 18/11)
+        const marketingTypes = ['hotAd', 'campaign', 'studio', 'sorteo', 'curso', 'servicio', ...seoImageTypes];
         if (!canManageSettings && !marketingTypes.includes(type)) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }

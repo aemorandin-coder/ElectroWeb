@@ -142,7 +142,7 @@ export default function Inbox({ puedeElegir }: { puedeElegir: boolean }) {
           <IconoNotificaciones className="h-10 w-10 text-subtle" aria-hidden="true" />
           <p className="mt-3 font-semibold text-ink">{unreadOnly ? 'Nada sin leer' : 'Sin notificaciones'}</p>
           <p className="mt-1 max-w-sm text-sm text-muted">
-            Aquí llegan las ventas, recargas, solicitudes y alertas de la tienda.{puedeElegir ? ' Elige qué llega en la pestaña Qué avisar.' : ''}
+            Aquí llegan las ventas, recargas, solicitudes y alertas de la tienda.{puedeElegir ? ' Qué llega y por dónde se elige en Ajustes → Avisos.' : ''}
           </p>
         </div>
       ) : (

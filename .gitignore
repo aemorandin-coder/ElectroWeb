@@ -64,7 +64,9 @@ public/uploads/
 # Agent folders
 .agents/
 .agent/
-.claude/
+.claude/*
+# C-289: las skills del equipo sí van al repositorio (las lee cada sesión de Claude, en cada PC)
+!.claude/skills/
 
 # Documentos privados (acta, RIF): nunca en git ni en public/ (C-72)
 private-uploads/

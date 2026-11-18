@@ -48,6 +48,7 @@ Hay dos agentes. **Gemini** hace tareas mecánicas y cerradas (`G-*`, reglas en 
   - al final, "Revisar y publicar" con la vista previa; al cambiar algo publicado, antes → después y a cuántos afecta;
   - las fotos se suben o se eligen, nunca se pega una dirección; los campos, del tamaño de su dato (§1.5).
   - para elegir entre opciones, `components/admin/Opcion` (C-242, §1.10): `adminChoice` sola es solo la piel y deja el ícono encima y el texto pegado al borde.
+- **Herramientas que se entienden solas: la skill `herramientas-claras`** (C-289, `PLAN.md` §1.12; regla del equipo del 18/11, después de que la contadora se trabó en los dos pasos). Cárgala antes de crear o rediseñar cualquier pantalla, asistente, ajuste, guía o mensaje: qué es y para qué en una frase, lo de afuera con su nombre, su logo y dónde se baja, qué viene después, dibujado y con poco texto.
 - **Guías y onboarding: el kit de C-257** (`PLAN.md` §1.11). El recorrido o la hoja "Así funciona" de `components/onboarding`, con poco texto, el ícono que se dibuja y Chispa que se asoma sin taparse ni mostrar el corte. Una sola vez, y quieto con "reducir movimiento".
 - Precios con `lib/currency.ts` (`formatUSD`, `formatVES`).
 - Sin `<style jsx>`, `console.log` ni `any` nuevos. Sin animaciones infinitas en la tienda.

@@ -248,6 +248,17 @@ El equipo, el 15/11: los onboarding eran "genéricos, sin animaciones, sin ícon
   - se recuerda en el navegador (`compartido.ts`);
   - la marca `electroweb_guias = 'todo'` las apaga todas (la usan las pruebas).
 
+### 1.12 Herramientas que se entienden solas (C-289)
+El equipo, el 18/11: la contadora no entendió "qué app es doble factor" ni qué hacer después. De ahí la regla para todo lo que se construya: mensajes claros, íconos, poco texto, muy gráfico, con ejemplos de las herramientas de afuera y dónde se bajan.
+- **La skill `herramientas-claras`** (`.claude/skills/herramientas-claras/SKILL.md`) tiene las diez reglas, las piezas que ya existen y la lista de antes de terminar. Va en el repositorio: la lee cada sesión de Claude, en cada PC.
+- **La prueba de la contadora:** alguien que nunca lo vio lo hace sola, en el teléfono, sin escribirle a nadie.
+- **Lo más olvidado:**
+  - la primera frase dice qué es y para qué;
+  - lo de afuera lleva su nombre, su logo y dónde se baja (Google Authenticator, Microsoft Authenticator, Authy; Play Store y App Store);
+  - cada paso dice qué viene después;
+  - cada error dice qué hacer, y siempre hay alguien a quien escribir.
+- El plan que la aplica primero es `AJUSTES.md` (C-290 a C-294).
+
 ---
 
 ## 2. Rediseño del header
@@ -457,7 +468,27 @@ Una fila por tarea en `PLAN_CLAUDE.md` y `PLAN_GEMINI.md`; el detalle, en `estad
 ### 5.2 Lista única de pendientes
 Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configuración, abogado y contador) van en `SIGUIENTE.md`, que cambia cada día. Aquí va el trabajo de código.
 
-**Claude en el panel (C-288, hecho en rc.103; `estado/C-288.md`):** la sección IA · Claude de Configuración (motor, clave, instrucciones por uso, reglas, consumo, fallas y guía) y las reglas que la tienda comprueba en cada respuesta. **Sigue C-288b:** "No sirvió" en cada resultado de Claude con el motivo; un modelo propio por uso; otro proveedor como principal. Si `ia_pedidos` o `ia_atajadas` llegan a pesar, borrar lo de más de un año.
+**Claude en el panel (C-288, hecho en rc.103; `estado/C-288.md`):** la sección IA · Claude de Configuración (motor, clave, instrucciones por uso, reglas, consumo, fallas y guía) y las reglas que la tienda comprueba en cada respuesta. **C-288b pasó a C-292** (el plan `AJUSTES.md`). Si `ia_pedidos` o `ia_atajadas` llegan a pesar, borrar lo de más de un año.
+
+**Ajustes, acceso y herramientas claras (el plan de C-289, 18/11; `AJUSTES.md`):** el pedido del equipo después de que la contadora se trabó en los dos pasos. La regla ya está hecha: la skill `herramientas-claras` (§1.12). Las decisiones abiertas son D1 a D6 de `AJUSTES.md` §6.2, y cada fase empieza con sus maquetas.
+- **C-290 · Los dos pasos que se entienden** (pendiente):
+  - la hoja "Así funciona" y cuatro pasos dibujados;
+  - las tres apps con su logo y su tienda (Play Store y App Store);
+  - el número de la app dibujado al entrar, y el correo de invitación que avisa lo que hará falta.
+- **C-291 · El dispositivo de confianza, 30 días** (pendiente; tabla y columnas aditivas):
+  - para todo el panel, con el código otra vez en lo delicado (la clave de la IA y la del correo, Equipo, Métodos de pago y Respaldos);
+  - se ve y se quita en Mi seguridad y en Equipo, llega un correo al marcarlo y se borra al cambiar la contraseña.
+- **C-292 · La IA de la tienda, no de un proveedor** (pendiente; absorbe C-288b):
+  - conectores para Anthropic y para los que hablan como OpenAI (Groq, Grok y Gemini);
+  - el principal, el de respaldo y uno por uso;
+  - "IA" en los botones y "Lo redactó …" en el resultado, y "No sirvió".
+- **C-293 · Ajustes: el mapa nuevo, Tu negocio y Vender** (pendiente; absorbe la parte de Configuración de C-206):
+  - los grupos de `AJUSTES.md` §3;
+  - los campos del tamaño de su dato y una línea de ayuda;
+  - cada sección guarda sola, con antes → después en lo de dinero.
+- **C-294 · Ajustes: Avisos, Conexiones y La tienda en línea** (pendiente):
+  - "Qué avisar", Telegram y los correos de alerta, juntos;
+  - fuera los colores de los correos (sin efecto), las palabras clave, la tarjeta Equipo repetida y los interruptores de stock repetidos, si se aprueba D3.
 
 **Del Dashboard nuevo (C-279, rc.98), lo que sigue:**
 - **C-279b:** las novedades de versión con antes y después o un mini video en una esquina, "Probarlo" que marca lo nuevo y el estreno a pantalla completa para las versiones grandes, como en la maqueta (`~/.cache/electroshop-trabajo/c279/`). Pide sumarle los medios a `lib/modulos.ts`.
@@ -602,7 +633,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **F · El catálogo de la ferretería** (**hecha**, C-218, rc.43; Andrés eligió guardar su lista en la base): la lista completa de cada proveedor queda guardada al subirla, y "Proponer con Claude" propone la categoría y el nombre de todo lo nuevo, guardado y sin repetir. `estado/C-218.md`.
     - **Pendiente:** probarla con la clave nueva en unos 40 códigos antes de correr los 3.114, y volver a subir la lista de la ferretería después del deploy.
 - **C-208 · Videos de creadores, fase 1** (pendiente; plan maestro de Andrés del 13/11): el equipo carga videos de TikTok y YouTube (Instagram como enlace) y salen en la ficha y en el inicio, con el código del promotor. Una tabla nueva (aditiva), una pantalla en Marketing y la revisión semanal de los enlaces. Las fases 2 y 3 esperan sus decisiones.
-- **C-206 · La regla de anchos en todo el panel y en la web** (pendiente, sigue a C-205): las páginas que se centran angostas dentro del marco y dejan un hueco junto al menú (Configuración, Equipo, Seguridad, Notificaciones, Cotizaciones y Marketing), los campos cortos estirados y las píldoras de filtro sin ícono. Una por una, con capturas a 360, 768, 1024 y 1440 px. El asistente de productos puede pasar a `Pasos`. Desde el 14/11 también pasa cada pantalla a las reglas de §1.9 (C-220).
+- **C-206 · La regla de anchos en todo el panel y en la web** (pendiente, sigue a C-205): las páginas que se centran angostas dentro del marco y dejan un hueco junto al menú (Configuración, Equipo, Seguridad, Notificaciones, Cotizaciones y Marketing), los campos cortos estirados y las píldoras de filtro sin ícono. Una por una, con capturas a 360, 768, 1024 y 1440 px. El asistente de productos puede pasar a `Pasos`. Desde el 14/11 también pasa cada pantalla a las reglas de §1.9 (C-220). **Configuración, Equipo y Seguridad pasaron al plan de `AJUSTES.md`** (18/11: C-290, C-291, C-293 y C-294); aquí quedan Notificaciones (la bandeja), Cotizaciones, Marketing y la web.
 - **El plan de crecimiento del 14/11** (C-220, `estado/C-220.md`; el equipo eligió lo recomendado viendo las maquetas, §7.2). En este orden:
   - **C-221 · El sorteo por pasos** (**hecha**, rc.45, 14/11; `estado/C-221.md`). Sin cambio de base. Los textos para Google, el lema y el sorteo de Navidad van en el SQL de datos de su bloque.
     - Crearlo en 4 pasos: el premio, cómo se gana, las fechas y "Revisar y publicar", con la vista previa de /sorteo y de Mi panel.
@@ -946,6 +977,8 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - Roles: Super admin (el dueño) y Administrador (sin Configuración, Métodos de pago, canales de aviso, publicar documentos legales ni Equipo). Soporte, ventas o contenido: no por ahora. **Contadora (14/11, C-228b):** solo Contabilidad; entra por invitación y el dueño la quita o la cambia.
   - Admins nuevos solo por invitación al correo. Una cuenta de cliente no se convierte en admin.
   - Una sola sesión de admin, 12 horas y cierre tras 1 hora sin uso.
+  - **Dispositivo de confianza (18/11, C-289 → C-291):** para todo el panel (la contadora, los administradores y el dueño), 30 días sin pedir el código en ese dispositivo; la contraseña se sigue pidiendo. Lo delicado pide el código otra vez. Se ve y se quita en Mi seguridad y en Equipo, llega un correo al marcarlo y se borran todos al cambiar la contraseña o reiniciar los dos pasos. Los dos pasos siguen siendo obligatorios.
+  - **La IA en los textos (18/11, C-289 → C-292):** "IA" en los botones ("Armar con IA") y el motor en letra chica en el resultado ("Lo redactó Claude Haiku 5.5"). La sección se llama "IA". Cambiar de motor no toca ningún texto.
   - Menú por secciones; "Dashboard" se llama Dashboard; "Cursos" se queda en el menú (01/10).
 - **Clientes:** se borran solo si no tienen órdenes, Puntos ES, transacciones ni gift cards; si tienen algo, se desactivan (17/09).
 - **Dinero:**

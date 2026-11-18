@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { IconoAjustes, IconoAyuda, IconoCandado, IconoChevronDerecha, IconoEditar, IconoPlay } from '@/components/iconos';
+import Plegable, { abrirPlegable } from '@/components/admin/Plegable';
 import { adminBadge, adminDato, adminInput, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { MODELOS_IA } from '@/lib/ia/precios';
 import { nombreDelMotor, PROVEEDORES, type IdProveedor } from '@/lib/ia/proveedores/catalogo';
@@ -15,6 +16,8 @@ import { claveDe, llamar, modeloDe, usd, type DatosIa } from './tipos';
 // clave del panel, así que solo se ven sus reglas al importar.
 // C-292: cada uso sigue al motor principal o tiene el suyo (lo que era C-288b: "Sonnet solo para Buscar en la web"). "Buscar en la
 // web" solo con Claude: es el que busca por su cuenta.
+// C-298: cada uso, un plegable: cerrado dice con qué motor responde, lo que gastó en el mes y si falla; abierto, dónde está,
+// qué hace y sus botones.
 
 /** El motor propio de un uso: el proveedor (con su clave) y el modelo, o seguir al principal */
 function MotorDelUso({ datos, uso, alCerrar, alGuardar }: { datos: DatosIa; uso: UsoIa; alCerrar: () => void; alGuardar: () => Promise<void> }) {
@@ -77,74 +80,74 @@ export default function Usos({ datos, onEditar, alGuardar }: { datos: DatosIa; o
     return `${principal} · el principal`;
   };
   return (
-    <div className="grid gap-3.5 @xl:grid-cols-2">
+    <div className="grid gap-2.5 @4xl:grid-cols-2 @4xl:items-start">
       {USOS_IA.map((uso) => {
-        const Icono = ICONOS_DE_USO[uso.icono];
         const delServidor = datos.usos.find((u) => u.id === uso.id);
         const fila = datos.consumo.porUso.find((f) => f.uso === uso.id);
         const fallas = fila?.fallas ?? 0;
         return (
-          <article key={uso.id} className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 transition-colors hover:border-brand-200">
-            <div className="flex items-start gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white">
-                <Icono className="h-[18px] w-[18px]" aria-hidden="true" />
-              </span>
-              <div className="min-w-0">
-                <h4 className="text-[15px] font-semibold text-ink">{uso.nombre}</h4>
-                <p className="mt-0.5 flex items-start gap-1 text-xs text-muted">
-                  <IconoChevronDerecha className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
-                  <span>{uso.donde}</span>
-                </p>
+          <Plegable
+            key={uso.id}
+            id={`ia-uso-${uso.id}`}
+            icono={ICONOS_DE_USO[uso.icono]}
+            placa="fuerte"
+            titulo={uso.nombre}
+            resumen={motorDe(uso.id)}
+            extra={(
+              <>
+                <span className={adminDato}>{fila ? `${fila.pedidos} ${fila.pedidos === 1 ? 'pedido' : 'pedidos'} · ${usd(fila.costoUsd)}` : 'Sin pedidos este mes'}</span>
+                {fallas > 0 && <span className={adminBadge('warning')}>{fallas} {fallas === 1 ? 'falla' : 'fallas'}</span>}
+              </>
+            )}
+          >
+            <div className="flex flex-col gap-3">
+              <p className="flex items-start gap-1 text-xs text-muted">
+                <IconoChevronDerecha className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                <span>{uso.donde}</span>
+              </p>
+              <p className="text-sm text-ink-soft">{uso.hace}</p>
+              <div className="flex flex-wrap gap-1.5">
+                <span className={adminDato}><IconoCandado className="h-3 w-3" aria-hidden="true" />{reglasDe(uso.id).length} reglas</span>
+                {fallas === 0 && <span className={adminDato}>Sin fallas</span>}
+                {delServidor?.delEquipo ? <span className={adminBadge('brand')}>Instrucciones del equipo</span> : <span className={adminDato}>Instrucciones de fábrica</span>}
               </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => onEditar(uso.id, 0)} className={`${adminPrimaryButton} ${botonChico}`}>
+                  <IconoEditar className="h-4 w-4" aria-hidden="true" />Instrucciones
+                </button>
+                <button type="button" onClick={() => onEditar(uso.id, 2)} className={`${adminSecondaryButton} ${botonChico}`}>
+                  <IconoPlay className="h-4 w-4" aria-hidden="true" />Probar
+                </button>
+                <button type="button" onClick={() => setCambiandoMotor(cambiandoMotor === uso.id ? null : uso.id)} aria-expanded={cambiandoMotor === uso.id} className={`${adminSecondaryButton} ${botonChico}`}>
+                  <IconoAjustes className="h-4 w-4" aria-hidden="true" />Motor
+                </button>
+              </div>
+              {cambiandoMotor === uso.id && <MotorDelUso datos={datos} uso={uso.id} alCerrar={() => setCambiandoMotor(null)} alGuardar={alGuardar} />}
             </div>
-            <p className="text-sm text-ink-soft">{uso.hace}</p>
-            <div className="flex flex-wrap gap-1.5">
-              <span className={adminDato}>{motorDe(uso.id)}</span>
-              <span className={adminDato}>{fila ? `${fila.pedidos} ${fila.pedidos === 1 ? 'pedido' : 'pedidos'} · ${usd(fila.costoUsd)}` : 'Sin pedidos este mes'}</span>
-              <span className={adminDato}><IconoCandado className="h-3 w-3" aria-hidden="true" />{reglasDe(uso.id).length} reglas</span>
-              {fallas > 0 ? <span className={adminBadge('warning')}>{fallas} {fallas === 1 ? 'falla' : 'fallas'}</span> : <span className={adminDato}>Sin fallas</span>}
-              {delServidor?.delEquipo ? <span className={adminBadge('brand')}>Instrucciones del equipo</span> : <span className={adminDato}>Instrucciones de fábrica</span>}
-            </div>
-            <div className="mt-auto flex flex-wrap gap-2 pt-1">
-              <button type="button" onClick={() => onEditar(uso.id, 0)} className={`${adminPrimaryButton} ${botonChico}`}>
-                <IconoEditar className="h-4 w-4" aria-hidden="true" />Instrucciones
-              </button>
-              <button type="button" onClick={() => onEditar(uso.id, 2)} className={`${adminSecondaryButton} ${botonChico}`}>
-                <IconoPlay className="h-4 w-4" aria-hidden="true" />Probar
-              </button>
-              <button type="button" onClick={() => setCambiandoMotor(cambiandoMotor === uso.id ? null : uso.id)} aria-expanded={cambiandoMotor === uso.id} className={`${adminSecondaryButton} ${botonChico}`}>
-                <IconoAjustes className="h-4 w-4" aria-hidden="true" />Motor
-              </button>
-            </div>
-            {cambiandoMotor === uso.id && <MotorDelUso datos={datos} uso={uso.id} alCerrar={() => setCambiandoMotor(null)} alGuardar={alGuardar} />}
-          </article>
+          </Plegable>
         );
       })}
 
-      <article className="flex flex-col gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-4">
-        <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-brand-600">
-            <ICONOS_DE_USO.IconoSubir className="h-[18px] w-[18px]" aria-hidden="true" />
-          </span>
-          <div className="min-w-0">
-            <h4 className="text-[15px] font-semibold text-ink">{PLANTILLA_IMPORTAR.nombre}</h4>
-            <p className="mt-0.5 flex items-start gap-1 text-xs text-muted">
-              <IconoChevronDerecha className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
-              <span>{PLANTILLA_IMPORTAR.donde}</span>
-            </p>
+      <Plegable
+        id="ia-uso-plantilla"
+        icono={ICONOS_DE_USO.IconoSubir}
+        titulo={PLANTILLA_IMPORTAR.nombre}
+        resumen="Con claude.ai, Gemini o ChatGPT, desde tu cuenta."
+        extra={<span className={adminDato}><IconoCandado className="h-3 w-3" aria-hidden="true" />{reglasDe('plantilla').length} reglas al importar</span>}
+      >
+        <div className="flex flex-col gap-3">
+          <p className="flex items-start gap-1 text-xs text-muted">
+            <IconoChevronDerecha className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+            <span>{PLANTILLA_IMPORTAR.donde}</span>
+          </p>
+          <p className="text-sm text-ink-soft">{PLANTILLA_IMPORTAR.hace}</p>
+          <div>
+            <a href="#ia-guia" onClick={(e) => { e.preventDefault(); abrirPlegable('ia-guia'); }} className={`${adminSecondaryButton} ${botonChico}`}>
+              <IconoAyuda className="h-4 w-4" aria-hidden="true" />Cómo usarla
+            </a>
           </div>
         </div>
-        <p className="text-sm text-ink-soft">{PLANTILLA_IMPORTAR.hace}</p>
-        <div className="flex flex-wrap gap-1.5">
-          <span className={adminDato}>claude.ai, Gemini o ChatGPT · tu cuenta</span>
-          <span className={adminDato}><IconoCandado className="h-3 w-3" aria-hidden="true" />{reglasDe('plantilla').length} reglas al importar</span>
-        </div>
-        <div className="mt-auto pt-1">
-          <a href="#ia-guia" className={`${adminSecondaryButton} ${botonChico}`}>
-            <IconoAyuda className="h-4 w-4" aria-hidden="true" />Cómo usarla
-          </a>
-        </div>
-      </article>
+      </Plegable>
     </div>
   );
 }

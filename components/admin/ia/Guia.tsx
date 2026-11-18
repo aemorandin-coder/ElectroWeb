@@ -3,9 +3,10 @@
 import type { ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import {
-  IconoCamaraFotos, IconoCheck, IconoChevronDerecha, IconoCerrar, IconoChat, IconoClientes, IconoCopiar, IconoCorreo, IconoLista,
+  IconoCamaraFotos, IconoCheck, IconoCerrar, IconoChat, IconoClientes, IconoCopiar, IconoCorreo, IconoLista,
   IconoObjetivo, IconoPaquete, IconoVer, type IconType,
 } from '@/components/iconos';
+import Plegable from '@/components/admin/Plegable';
 import { adminCard, adminSecondaryButton } from '@/lib/admin-ui';
 
 // C-288 · La guía: cómo pedirle las cosas a la IA para que acierte. Cuatro reglas de oro y, por cada lugar donde se usa, un pedido
@@ -52,19 +53,12 @@ function AsiSiAsiNo({ si, no }: { si: string; no: string }) {
   );
 }
 
-function Lugar({ icono: Icono, titulo, sub, abierto, children }: { icono: IconType; titulo: string; sub: string; abierto?: boolean; children: ReactNode }) {
+// C-298: cada lugar, el plegable compartido (components/admin/Plegable)
+function Lugar({ icono, titulo, sub, abierto, children }: { icono: IconType; titulo: string; sub: string; abierto?: boolean; children: ReactNode }) {
   return (
-    <details open={abierto} className={`${adminCard} group p-0!`}>
-      <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white"><Icono className="h-[18px] w-[18px]" aria-hidden="true" /></span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-[15px] font-semibold text-ink">{titulo}</span>
-          <span className="block text-xs text-muted">{sub}</span>
-        </span>
-        <IconoChevronDerecha className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true" />
-      </summary>
-      <div className="grid gap-3 px-4 pb-4 text-sm text-ink-soft @md:pl-16">{children}</div>
-    </details>
+    <Plegable icono={icono} placa="fuerte" titulo={titulo} resumen={sub} abierto={abierto}>
+      <div className="grid gap-3 text-sm text-ink-soft">{children}</div>
+    </Plegable>
   );
 }
 

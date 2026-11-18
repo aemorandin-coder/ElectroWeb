@@ -124,7 +124,7 @@ async function enviar(cuerpo: Record<string, string>): Promise<{ ok: true; corre
 }
 
 const avisoCorreo = (enviado: boolean | undefined, exito: string) => {
-  if (enviado === false) toast.error('Quedó guardado, pero el correo no salió. Revisa el correo de la tienda en Configuración y usa "Reenviar la invitación".', { duration: 8000 });
+  if (enviado === false) toast.error('Quedó guardado, pero el correo no salió. Revisa el correo de la tienda en Ajustes → Correo y usa "Reenviar la invitación".', { duration: 8000 });
   else toast.success(exito);
 };
 

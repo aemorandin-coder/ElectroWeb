@@ -483,7 +483,7 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
   - el principal, el de respaldo y uno por uso;
   - "IA" en los botones y "Lo redactó …" en el resultado, y "No sirvió".
   - **Sigue C-292b** (pendiente): "Buscar en la web" con otro motor (hoy busca por su cuenta con la herramienta de Anthropic; con otro, la tienda le pasaría las páginas que encontró) y "No sirvió" en Buscar en la web, el catálogo del proveedor y la urgencia.
-- **C-293 · Ajustes: el mapa nuevo, Tu negocio y Vender** (pendiente; absorbe la parte de Configuración de C-206):
+- **C-293 · Ajustes: el mapa nuevo, Tu negocio y Vender** (hecha en rc.109, `estado/C-293.md`; absorbe la parte de Configuración de C-206):
   - los grupos de `AJUSTES.md` §3;
   - los campos del tamaño de su dato y una línea de ayuda;
   - cada sección guarda sola, con antes → después en lo de dinero.

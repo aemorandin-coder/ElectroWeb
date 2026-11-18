@@ -1,9 +1,13 @@
-# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.106; por subir: rc.107 y rc.108, §2)
+# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.106; por subir: rc.107 a rc.109, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-293 · Ajustes ordenado, primera parte (rc.109, en `main`, por subir con rc.107 y rc.108: §2; `estado/C-293.md`):** la fase 4 del plan de Ajustes.
+  - **El mapa nuevo:** "Ajustes" por grupos, con el estado de cada sección; en el teléfono, primero la lista. Métodos de pago adentro.
+  - **Cada sección guarda sola,** con antes → después en lo que toca dinero; los campos, del tamaño de su dato.
+  - **Sigue C-294:** Avisos (Qué avisar y Telegram adentro), Conexiones y La tienda en línea (Portada y Google y redes a Marketing), y quitar lo que no sirve.
 - **C-292 · La IA de la tienda, no de un proveedor (rc.108, en `main`, por subir con rc.107: §2; `estado/C-292.md`):** la fase 3 del plan de Ajustes.
   - **Configuración → IA:** quién responde (Claude, Gemini, Grok o Groq), su modelo y el respaldo; una tarjeta por proveedor con su clave y su precio; cada uso sigue al principal o tiene el suyo.
   - **En las pantallas:** "Armar con IA", "Resumir con IA", "Redactar con IA", y en el resultado "Lo redactó …" con "No sirvió".
@@ -538,9 +542,11 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.108` (C-296 y C-292)
-Producción está en `v1.0.0-rc.106` (`8dae211c`); su bloque está en `HISTORIAL.md`. Es un solo bloque, con rc.107 adentro. Si entran más tareas antes de subir, se suman aquí.
+### Lo que falta subir: `v1.0.0-rc.109` (C-296, C-292 y C-293)
+Producción está en `v1.0.0-rc.106` (`8dae211c`); su bloque está en `HISTORIAL.md`. Es un solo bloque, con rc.107 y rc.108 adentro. Si entran más tareas antes de subir, se suman aquí.
 - **C-296** (rc.107) solo cambia imágenes y dos líneas de código.
+- **C-293** (rc.109), sin cambio de base.
+  - **Antes de subir, mira Configuración → Portada e inventario:** si "Avisarme cuando un producto quede con stock bajo" o "…se agote" están apagados, apaga también "Stock bajo" o "Producto agotado" en Notificaciones → Qué avisar. Desde rc.109 esos avisos se eligen solo ahí (D3).
 - **C-292** (rc.108) trae un **cambio de base aditivo:** una tabla nueva y seis columnas, sin `DROP` ni cambios de tipo. Sin variables nuevas y sin cron.
 ```sql
 ALTER TABLE "ia_ajustes" ADD COLUMN     "porUso" JSONB,
@@ -565,7 +571,7 @@ CREATE TABLE "ia_proveedores" (
   1. El respaldo: `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc108.dump`
   2. `git pull --ff-only && bash scripts/deploy.sh --sin-pull`. El guion se detiene por el cambio de base y muestra el SQL de arriba.
   3. `npx prisma db push`, y otra vez `bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.108`, o una mayor si entró otra tarea antes del `git pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.109`, o una mayor si entró otra tarea antes del `git pull`.
 - **Pruebas** (antes, recarga el panel con Ctrl+R):
   1. **Chispa 3.1** (C-296, unos 2 minutos, en la computadora):
      - Marketing → ElectroStudio → una historia con Chispa (Felicitación, por ejemplo): Chispa lleva el logo redondo de la tienda en el pecho, no la placa con «ES»;
@@ -576,7 +582,13 @@ CREATE TABLE "ia_proveedores" (
      - toca "No sirvió", elige un motivo y "Anotar": en Configuración → IA → "Lo que no sirvió" aparece;
      - en "Los usos de la IA", "Motor" de "Resumen del cliente": elige Claude Sonnet 5.5 y "Guardar". La tarjeta dice "· el suyo"; "Seguir al principal" lo devuelve;
      - **solo si el equipo tiene una clave de Gemini o Grok:** pégala en su tarjeta ("Conectar la clave"), elige ese motor en "El motor" con "Claude" de respaldo y "Publicar el cambio". Un "Resumir con IA" dice "Lo redactó Gemini · …". Para volver, elige Claude y publica.
-- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.106 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas se pueden quedar: rc.106 no las usa. Para quitar solo C-292 y dejar a Chispa 3.1: `git reset --hard v1.0.0-rc.107`.
+  3. **Ajustes ordenado** (C-293, unos 8 minutos, en la computadora y en el teléfono, con la cuenta del dueño):
+     - el menú dice "Ajustes" y ya no hay "Métodos de Pago" en Administración;
+     - Ajustes muestra los grupos (Tu negocio, Vender, Avisos, Conexiones, La tienda en línea, Equipo y acceso), cada sección con su estado ("… Bs · IVA 16 %");
+     - Vender → Métodos de pago muestra los métodos de siempre, con "Nuevo método"; el enlace viejo `/admin/payments` lleva ahí;
+     - en Tasa e IVA cambia el porcentaje: abajo sale "Revisa antes de guardar" con antes → después. Descarta;
+     - en el teléfono, Ajustes abre con la lista; al tocar una sección, "Ajustes" vuelve.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.106 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas se pueden quedar: rc.106 no las usa. Para quitar solo C-293: `git reset --hard v1.0.0-rc.108`; para quitar también C-292 y dejar a Chispa 3.1: `v1.0.0-rc.107`.
 
 ### Por confirmar de rc.106 (C-290, C-291 y C-295; unos 25 minutos)
 Ya en producción desde el 18/11, cerca de las 10:17 a. m. La subió el equipo a mano en la terminal del servidor, con los pasos del bloque (desde la PC de Claude de ese momento no había acceso SSH). Claude lo comprobó desde fuera; el detalle está en `HISTORIAL.md`.

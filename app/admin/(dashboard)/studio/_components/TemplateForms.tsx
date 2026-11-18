@@ -205,7 +205,7 @@ export function RateInfo({ studio }: { studio: Studio }) {
       <div className={adminNotice('brand')}>
         <p className="font-semibold">Tasa de hoy: {rate ? formatVES(rate) : 'sin tasa'} por dólar</p>
         <p className="mt-1">
-          Sale de Configuración (la tasa BCV que usa la tienda) y se pone al día sola cada vez que abres esta historia. Duplícala cada día o
+          Sale de Ajustes (la tasa BCV que usa la tienda) y se pone al día sola cada vez que abres esta historia. Duplícala cada día o
           ábrela y descárgala de nuevo.
         </p>
         {store?.rateUpdatedAt && <p className="mt-1 text-xs">Publicada por el BCV: {new Date(store.rateUpdatedAt).toLocaleString('es-VE')}</p>}

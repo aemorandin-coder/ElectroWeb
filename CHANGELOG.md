@@ -10,6 +10,18 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.109] - 2026-11-18
+Ajustes ordenado, primera parte (C-293, la fase 4 del plan de Ajustes). El equipo, 18/11: "inputs anchísimos, muchos textos, semánticas ilógicas, ajustes repetidos". Sin cambio de base, sin variables y sin cron.
+### Configuración 1.7.0 (C-293)
+- **Configuración pasa a llamarse Ajustes**, con el menú por grupos: Tu negocio, Vender, Avisos, Conexiones, La tienda en línea y Equipo y acceso. Cada sección dice su estado en una línea ("36,50 Bs · IVA 16 %"). En el teléfono, primero la lista y, al tocar, la sección con "Ajustes" para volver.
+- **Las secciones nuevas:** Datos y contacto, Logo y sello (con el enlace al kit de marca), Tasa e IVA, **Métodos de pago** (antes en Administración), Límites de compra, Inventario y Portada. Las direcciones viejas (`#negocio`, `#precios`, `#tienda`, `/admin/payments`) llevan a su sección.
+- **Cada sección guarda sola.** Lo que toca dinero o lo que ve el cliente al comprar (la tasa, el IVA, los montos, el envío, el embalaje y el mantenimiento) se revisa antes → después, con a qué afecta. Lo que se cambió en otra sección espera, con su punto en el menú.
+- **Los campos, del tamaño de su dato** (el IVA ya no mide lo mismo que la dirección), y lo largo detrás de un (i).
+- **El embalaje es una sola elección:** "Un precio por pedido" o "Según el paquete". Antes, los dos interruptores lo mostraban de dos formas a la vez.
+- **Sin los interruptores de stock repetidos** (D3): los avisos de poco stock y de agotado se eligen solo en Notificaciones → Qué avisar, por canal.
+### Marco del panel 1.19.1 y los demás (C-293)
+- El menú dice "Ajustes". Los textos del panel que decían "Configuración →" dicen "Ajustes →".
+
 ## [1.0.0-rc.108] - 2026-11-18
 La IA de la tienda, no de un proveedor (C-292), la fase 3 del plan de Ajustes. El equipo, 18/11: "no es solo Claude: mañana la puedo cambiar por otra IA, Gemini o Grok". **Cambio de base aditivo:** la tabla `ia_proveedores`, tres columnas en `ia_ajustes` (el principal, el respaldo y el motor de cada uso) y tres en `ia_pedidos` ("No sirvió"). Sin variables nuevas y sin cron. Sin nada guardado, todo sigue con Claude como antes.
 ### Configuración 1.6.0 (C-292)

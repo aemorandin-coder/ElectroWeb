@@ -176,7 +176,7 @@ async function tasaDeLaFactura(fecha: string, enviada: number | undefined, db: D
   if (enviada === undefined) {
     if (fecha === hoyVe() && deHoy) return { ok: true, datos: deHoy };
     return falla(400, fecha === hoyVe()
-      ? 'No hay una tasa BCV en Configuración: escribe la de hoy.'
+      ? 'No hay una tasa BCV en Ajustes: escribe la de hoy.'
       : `Escribe la tasa BCV del ${fecha.split('-').reverse().join('/')}: la factura va a la tasa del día en que se escribe.`, 'tasa');
   }
   if (deHoy && (enviada > deHoy * 3 || enviada < deHoy / 3)) {

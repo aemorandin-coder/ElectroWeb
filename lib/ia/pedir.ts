@@ -12,11 +12,20 @@
 //   tienda comprueba cada respuesta en código (lib/ia/revisar.ts): si rompe una regla de tipo "pide", se la pide a Claude una vez
 //   más, diciéndole qué regla rompió; si vuelve a romperla, deja vacío lo que la rompió y lo anota.
 // - Lo que se le manda (compras, consultas, páginas) va como datos: cada instrucción dice que no son órdenes.
+//
+// C-292 (el equipo, 18/11: "no es solo Claude: mañana la puedo cambiar por Gemini o Grok"): este archivo era lib/ia/claude.ts.
+// - `pedirJSON` le pide a su motor: el que se eligió para ese uso o, si no, el principal (Ajustes → IA). Anthropic va con su
+//   SDK; Google (Gemini), xAI (Grok) y Groq con el formato de OpenAI (lib/ia/proveedores/compatible.ts).
+// - Si el motor no tiene clave o no responde y hay uno de respaldo, se le pide a ese, una vez. La regla que se rompió se pide
+//   otra vez igual, con cualquier motor: las reglas son de la tienda.
+// - `pedirMensaje` sigue siendo solo de Anthropic: la búsqueda por su cuenta de "Buscar en la web" usa su herramienta.
 
 import Anthropic from '@anthropic-ai/sdk';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
-import { leerAjustesIa, type AjustesIa } from './ajustes';
+import { leerAjustesIa, motorDeProveedor, motorDelUso, type AjustesIa, type MotorListo } from './ajustes';
+import { infoProveedor, nombreDelMotor, type IdProveedor } from './proveedores/catalogo';
+import { baseDe, ErrorCompatible, pedirJSONCompatible } from './proveedores/compatible';
 import { registrarAtajadas } from './atajadas';
 import { costoDe, nombreDeEsfuerzo, nombreDeModelo, type Esfuerzo } from './precios';
 import { instruccionesDe, type Cambio, type ResultadoReglas, type UsoIa, type UsoRegistro } from './reglas';
@@ -39,9 +48,16 @@ export function clienteDe(clave: string): Anthropic {
   return cliente;
 }
 
-/** Hay una clave (la del panel o la del servidor) con la que pedirle a Claude */
+/** Hay una clave de Anthropic (la del panel o la del servidor): la búsqueda por su cuenta de "Buscar en la web" */
 export async function claudeDisponible(): Promise<boolean> {
   return (await leerAjustesIa()).clave !== null;
+}
+
+/** C-292: el motor de este uso (o el de respaldo) tiene clave: se le puede pedir */
+export async function iaDisponible(uso: UsoIa): Promise<boolean> {
+  const a = await leerAjustesIa();
+  const motor = motorDelUso(a, uso);
+  return Boolean(motor.clave && motor.modelo) || Boolean(a.respaldo && motorDeProveedor(a, a.respaldo).clave);
 }
 
 /** "claude-haiku-5-5" → "Claude Haiku 5.5 (esfuerzo alto)": el panel dice quién lo redactó */
@@ -49,8 +65,14 @@ export function firmaDe(modelo: string, esfuerzo: Esfuerzo): string {
   return `${nombreDeModelo(modelo)} (esfuerzo ${nombreDeEsfuerzo(esfuerzo)})`;
 }
 
+/** C-292: la firma con cualquier motor: "Claude Haiku 5.5 (esfuerzo alto)", "Gemini · gemini-x-flash" */
+export function firmaDelMotor(proveedor: IdProveedor, modelo: string, esfuerzo: Esfuerzo | null): string {
+  return proveedor === 'anthropic' && esfuerzo ? firmaDe(modelo, esfuerzo) : nombreDelMotor(proveedor, modelo);
+}
+
 /** Qué falló, sin la clave ni los datos que se mandaron: el estado HTTP o el nombre del error */
 export function detalleDe(error: unknown): string {
+  if (error instanceof ErrorCompatible) return `${error.estado ?? 'sin estado'} ${error.nombre}`;
   return error instanceof Anthropic.APIError ? `${error.status ?? 'sin estado'} ${error.name}` : error instanceof Error ? error.name : 'desconocido';
 }
 
@@ -63,9 +85,9 @@ export function avisarError(donde: string, error: unknown) {
 export class FallaIA extends Error {
   constructor(public motivo: 'sin-clave' | 'no-termino' | 'servicio') {
     super(
-      motivo === 'sin-clave' ? 'Falta la clave de Claude: se pega en Configuración → IA · Claude (o en el servidor, ANTHROPIC_API_KEY).'
-        : motivo === 'no-termino' ? 'Claude no terminó la respuesta. Prueba otra vez.'
-          : 'Claude no respondió. Prueba otra vez en un momento.',
+      motivo === 'sin-clave' ? 'Falta la clave de la IA: se pega en Ajustes → IA, en la tarjeta de su proveedor.'
+        : motivo === 'no-termino' ? 'La IA no terminó la respuesta. Prueba otra vez.'
+          : 'La IA no respondió. Prueba otra vez en un momento.',
     );
   }
 }
@@ -74,7 +96,7 @@ export class FallaIA extends Error {
 
 export interface DatosPedido {
   uso: UsoRegistro;
-  proveedor?: 'anthropic' | 'groq';
+  proveedor?: IdProveedor;
   modelo: string;
   esfuerzo?: string | null;
   entrada?: number;
@@ -145,6 +167,8 @@ export interface OpcionesDeMensaje<T> {
   crear: (cliente: Anthropic, motor: Motor) => Promise<Anthropic.Message>;
   /** Lo que se saca de la respuesta; null si no terminó bien (cortada, rechazada) */
   leer: (mensaje: Anthropic.Message) => T | null;
+  /** C-292: otro modelo de Anthropic que el de los ajustes (el que se eligió para un uso) */
+  modelo?: string;
 }
 
 /**
@@ -153,7 +177,7 @@ export interface OpcionesDeMensaje<T> {
  */
 export async function pedirMensaje<T>(o: OpcionesDeMensaje<T>): Promise<{ valor: T; mensaje: Anthropic.Message; motor: Motor; firma: string; pedidoId: string }> {
   const ajustes = o.ajustes ?? (await leerAjustesIa());
-  const motor: Motor = { modelo: ajustes.modelo, esfuerzo: o.esfuerzo ?? ajustes.esfuerzo };
+  const motor: Motor = { modelo: o.modelo || ajustes.modelo, esfuerzo: o.esfuerzo ?? ajustes.esfuerzo };
   const base = { uso: o.uso, modelo: motor.modelo, esfuerzo: motor.esfuerzo, reintento: o.reintento, usuarioId: o.usuarioId };
   if (!ajustes.clave) {
     registrarPedido({ ...base, ms: 0, falla: 'sin-clave' });
@@ -246,6 +270,78 @@ export interface ResultadoJSON {
   firma: string;
   tokens: { entrada: number; salida: number };
   revision: RevisionFinal;
+  /** C-292: el pedido con que se armó lo que se devuelve (para "No sirvió") y quién respondió */
+  pedidoId: string;
+  proveedor: IdProveedor;
+}
+
+/** C-292: lo que devuelve un pedido en JSON a un motor, sea cual sea */
+interface RespuestaDeMotor {
+  valor: Record<string, unknown>;
+  firma: string;
+  entrada: number;
+  salida: number;
+  pedidoId: string;
+  proveedor: IdProveedor;
+}
+
+/** Lo que cuesta un pedido a un proveedor que no es Anthropic: con los precios que escribió el equipo, o 0 */
+function costoDeOtro(a: AjustesIa, motor: MotorListo, entrada: number, salida: number): number {
+  if (motor.proveedor === 'anthropic') return 0;
+  const p = a.otros[motor.proveedor];
+  return p.precioEntrada === null || p.precioSalida === null ? 0 : (entrada / 1_000_000) * p.precioEntrada + (salida / 1_000_000) * p.precioSalida;
+}
+
+/**
+ * Un pedido en JSON a un motor: Anthropic con su SDK (salida estructurada y esfuerzo), los demás con el formato de OpenAI.
+ * Lo anota (también si falla) con su proveedor y lanza FallaIA si no hubo respuesta.
+ */
+async function pedirJSONAlMotor(
+  motor: MotorListo,
+  o: { uso: UsoRegistro; donde: string; sistema: string; pedido: string; esquema: Record<string, unknown>; tiempoMs?: number; esfuerzo?: Esfuerzo; reintento: boolean; usuarioId?: string | null },
+  a: AjustesIa,
+): Promise<RespuestaDeMotor> {
+  if (motor.proveedor === 'anthropic') {
+    const r = await pedirMensaje<Record<string, unknown>>({
+      uso: o.uso, donde: o.donde, esfuerzo: o.esfuerzo, reintento: o.reintento, usuarioId: o.usuarioId, ajustes: a,
+      crear: (cliente, m) => cliente.messages.stream({
+        model: m.modelo,
+        max_tokens: MAX_TOKENS,
+        system: o.sistema,
+        messages: [{ role: 'user', content: o.pedido }],
+        output_config: { effort: m.esfuerzo, format: { type: 'json_schema', schema: o.esquema } },
+      }, { timeout: o.tiempoMs ?? 55_000 }).finalMessage(),
+      leer: objetoDe,
+      modelo: motor.modelo,
+    });
+    return { valor: r.valor, firma: r.firma, entrada: r.mensaje.usage.input_tokens, salida: r.mensaje.usage.output_tokens, pedidoId: r.pedidoId, proveedor: 'anthropic' };
+  }
+
+  const base = { uso: o.uso, proveedor: motor.proveedor, modelo: motor.modelo || 'sin modelo', reintento: o.reintento, usuarioId: o.usuarioId };
+  const info = infoProveedor(motor.proveedor);
+  const direccion = baseDe(info);
+  if (!motor.clave || !motor.modelo || !direccion) {
+    registrarPedido({ ...base, ms: 0, falla: 'sin-clave' });
+    throw new FallaIA('sin-clave');
+  }
+  const inicio = Date.now();
+  let r;
+  try {
+    r = await pedirJSONCompatible({ base: direccion, clave: motor.clave, modelo: motor.modelo, sistema: o.sistema, pedido: o.pedido, esquema: o.esquema, tiempoMs: o.tiempoMs ?? 55_000 });
+  } catch (error) {
+    avisarError(o.donde, error);
+    registrarPedido({ ...base, ms: Date.now() - inicio, falla: 'servicio', detalle: detalleDe(error) });
+    throw new FallaIA('servicio');
+  }
+  const ms = Date.now() - inicio;
+  const anotar = (falla: DatosPedido['falla'], detalle?: string) =>
+    registrarPedido({ ...base, modelo: r.modelo, entrada: r.entrada, salida: r.salida, costoUsd: costoDeOtro(a, motor, r.entrada, r.salida), ms, falla, detalle });
+  if (!r.objeto) {
+    console.error(`[ia] ${o.donde}: ${info.motor} terminó con ${r.motivoFin ?? 'sin motivo'}`);
+    anotar('no-termino', r.motivoFin ?? undefined);
+    throw new FallaIA('no-termino');
+  }
+  return { valor: r.objeto, firma: firmaDelMotor(motor.proveedor, r.modelo, null), entrada: r.entrada, salida: r.salida, pedidoId: anotar(null), proveedor: motor.proveedor };
 }
 
 /**
@@ -258,22 +354,30 @@ export async function pedirJSON(o: OpcionesPedirJSON): Promise<ResultadoJSON> {
   const registro: UsoRegistro = o.instruccionesPrueba !== undefined ? 'prueba' : o.uso;
   const ctx = { frases: ajustes.frases };
 
-  const intentar = (pedido: string, reintento: boolean) => pedirMensaje<Record<string, unknown>>({
-    uso: registro, donde: o.donde, esfuerzo: o.esfuerzo, reintento, usuarioId: o.usuarioId, ajustes,
-    crear: (cliente, motor) => cliente.messages.stream({
-      model: motor.modelo,
-      max_tokens: MAX_TOKENS,
-      system: sistema,
-      messages: [{ role: 'user', content: pedido }],
-      output_config: { effort: motor.esfuerzo, format: { type: 'json_schema', schema: o.esquema } },
-    }, { timeout: o.tiempoMs ?? 55_000 }).finalMessage(),
-    leer: objetoDe,
-  });
+  // C-292: el motor del uso y, si no tiene clave o no responde, el de respaldo (una vez)
+  const principal = motorDelUso(ajustes, o.uso);
+  const motores = [principal];
+  if (ajustes.respaldo && ajustes.respaldo !== principal.proveedor) motores.push(motorDeProveedor(ajustes, ajustes.respaldo));
+  const intentar = async (pedido: string, reintento: boolean): Promise<RespuestaDeMotor> => {
+    let falla: FallaIA | null = null;
+    for (const motor of motores) {
+      try {
+        return await pedirJSONAlMotor(motor, { uso: registro, donde: o.donde, sistema, pedido, esquema: o.esquema, tiempoMs: o.tiempoMs, esfuerzo: o.esfuerzo, reintento, usuarioId: o.usuarioId }, ajustes);
+      } catch (error) {
+        // Una respuesta cortada no se le pide al respaldo: el motor respondió
+        if (!(error instanceof FallaIA) || error.motivo === 'no-termino') throw error;
+        falla = error;
+      }
+    }
+    throw falla ?? new FallaIA('servicio');
+  };
 
   const primera = await intentar(o.pedido, false);
   let datos = primera.valor;
   let firma = primera.firma;
-  const tokens = { entrada: primera.mensaje.usage.input_tokens, salida: primera.mensaje.usage.output_tokens };
+  let pedidoFinal = primera.pedidoId;
+  let proveedorFinal = primera.proveedor;
+  const tokens = { entrada: primera.entrada, salida: primera.salida };
   let revision: ResultadoReglas | null = o.revisar ? o.revisar(datos, ctx) : null;
   const atajadas: Cambio[] = [];
   let pidioOtraVez = false;
@@ -287,8 +391,10 @@ export async function pedirJSON(o: OpcionesPedirJSON): Promise<ResultadoJSON> {
       const segunda = await intentar(`${o.pedido}\n\n${mensajeDeCorreccion(pedidas)}`, true);
       datos = segunda.valor;
       firma = segunda.firma;
-      tokens.entrada += segunda.mensaje.usage.input_tokens;
-      tokens.salida += segunda.mensaje.usage.output_tokens;
+      pedidoFinal = segunda.pedidoId;
+      proveedorFinal = segunda.proveedor;
+      tokens.entrada += segunda.entrada;
+      tokens.salida += segunda.salida;
       revision = o.revisar ? o.revisar(datos, ctx) : null;
       // La primera que rompe una regla no es una falla, es lo que se corrige; la segunda sí
       if (revision && revision.pedirOtraVez.length > 0) marcarFallaDeRegla(segunda.pedidoId, revision.pedirOtraVez[0].regla);
@@ -316,5 +422,5 @@ export async function pedirJSON(o: OpcionesPedirJSON): Promise<ResultadoJSON> {
     marcadas,
   };
   o.alRevisar?.(final);
-  return { datos: revision?.datos ?? datos, firma, tokens, revision: final };
+  return { datos: revision?.datos ?? datos, firma, tokens, revision: final, pedidoId: pedidoFinal, proveedor: proveedorFinal };
 }

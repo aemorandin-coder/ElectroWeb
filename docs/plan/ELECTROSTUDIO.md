@@ -60,10 +60,13 @@
 | 3 | **C-271** | Títulos, subtítulos y fuentes (hecha, rc.87; soltar un texto de la plantilla, pendiente) | 2.1.0 |
 | 4 | **C-272** | Stickers (hecha, rc.88) | 2.2.0 |
 | 5 | **C-273** | Animaciones de entrada y de salida, y la línea de tiempo (hecha, rc.89) | 2.3.0 |
-| 6 | **C-274** | Plantillas nuevas | 2.4.0 |
-| 7 | **C-275** | La IA en el estudio: las 5 mejoras | 2.5.0 |
+| 6 | **C-274** | Plantillas nuevas | 2.6.0 |
+| 7 | **C-275** | La IA en el estudio: las 5 mejoras | 2.7.0 |
+| — | **C-295** | En el teléfono: pantalla completa, gestos para el dedo, 60 cuadros y el final (hecha, rc.106, 18/11; `estado/C-295.md`) | **2.5.0** |
 
-El 2.0.0 va en C-270 porque cambia la forma de trabajar (los pasos y el editor). Lo demás suma sin romper.
+El 2.0.0 va en C-270 porque cambia la forma de trabajar (los pasos y el editor). Lo demás suma sin romper. C-287 tomó la 2.4.0 y C-295 la 2.5.0: las plantillas y la IA pasan a 2.6.0 y 2.7.0.
+
+**El 18/11 (C-295):** el equipo pidió ElectroStudio "espectacular en el teléfono, nativa y a 60 fps", los ajustes "touch friendly" y un final que diga qué hacer. Eligió seguir dentro del panel, sin app aparte. Lo que sigue de esas ideas (los gestos que faltaron, "Para hoy", el fondo de Claude, "Programar" y las seis opciones nuevas) está en `PLAN.md` §5.2, bajo C-295.
 
 ### Fase 2 · C-270 · Las capas, el editor nuevo y la ruta de pasos (hecha el 16/11, `estado/C-270.md`)
 **Qué entra:**

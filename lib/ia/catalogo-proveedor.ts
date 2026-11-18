@@ -9,7 +9,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { INSTRUCCIONES_DE_FABRICA } from '@/lib/ia/fabrica';
-import { pedirJSON, type OpcionesDeUso } from '@/lib/ia/claude';
+import { pedirJSON, type OpcionesDeUso } from '@/lib/ia/pedir';
 import { limpiarTextoIA } from '@/lib/ia/texto';
 import { revisarCatalogoIa } from '@/lib/ia/revisar';
 import { proponedorDeNombres } from '@/lib/nombres/producto';

@@ -360,7 +360,7 @@ export default function Navidad() {
               label="Último día por ZOOM o MRW"
               htmlFor="navidad-corte-envio"
               error={errores.christmasCutoffShipping}
-              hint={formas.envio ? 'Envío nacional.' : 'El envío nacional está apagado en Configuración: esta fecha no sale.'}
+              hint={formas.envio ? 'Envío nacional.' : 'El envío nacional está apagado en Ajustes: esta fecha no sale.'}
             >
               <input
                 id="navidad-corte-envio"
@@ -379,7 +379,7 @@ export default function Navidad() {
                 formas.delivery && formas.retiro ? 'Delivery o retiro en la tienda.'
                   : formas.delivery ? 'Delivery en Guanare.'
                     : formas.retiro ? 'Retiro en la tienda.'
-                      : 'El delivery y el retiro están apagados en Configuración: esta fecha no sale.'
+                      : 'El delivery y el retiro están apagados en Ajustes: esta fecha no sale.'
               }
             >
               <input

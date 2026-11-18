@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
-import { FallaIA } from '@/lib/ia/claude';
+import { FallaIA } from '@/lib/ia/pedir';
 import { revisarUrgencia } from '@/lib/ia/urgencia';
 import { checkRateLimit } from '@/lib/rate-limit';
 

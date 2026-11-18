@@ -92,6 +92,27 @@ Las fechas son de 2026. Los MP4 los tiene Andrés; aquí quedan las fuentes.
   - un dibujo nuevo va en otra carpeta, porque el optimizador de imágenes de la tienda guarda 30 días y no se puede vaciar.
 - Los stickers y los reels ya grabados no cambian: toman las manos nuevas cuando se vuelven a grabar. Los seis stickers se probaron con la versión nueva y la lupa y la llave siguen agarradas.
 
+## Chispa 3.1 (18/11, C-296)
+- El equipo pidió ver sus emociones «para ver cómo está su estructura» y mejorarlo. Hubo una página con 5 emociones y su anatomía, y otra con las variantes de cada mejora.
+- **Lo elegido** (Claude recomendó; el equipo pidió la 2B en sorpresa):
+  - tristes: el párpado caído y el brillo de lágrima (1B);
+  - sorpresa: el ojo blanco con la pupila chica (2B);
+  - la mirada: el doble y la cabeza que acompaña (3B);
+  - la cabeza y los hombros de la emoción (4B);
+  - «piensa»: el puño en la barbilla (5A);
+  - la cara «serio», para avisos;
+  - el logo oficial en la camisa, a color y más grande (8B; resuelve que la manga tapaba la placa).
+- **La mano del OK:** «el pómulo del pulgar abajo es muy exagerado», «son los dedos del pulgar y el índice».
+  - Se investigó cómo lo resuelven los animadores (Blair, Kricfalusi, Williams, animadores japoneses) y quedó la skill `.claude/skills/manos-de-caricatura`.
+  - El aro ahora son dos dedos curvos que se tocan.
+- **Los brazos cruzados:** «esas manos están mal», eran dos puños de perfil que salían por los costados. Con la skill, la mano de arriba agarra el brazo del otro lado y de la otra asoman las puntas (10B, la elegida).
+- **Con la skill, las manos quietas se mecen apenas** en los videos (`vida()`): Williams dice que una mano quieta pierde la vida.
+- **En la web:**
+  - las 10 imágenes de ElectroStudio y del popup salieron de nuevo en `public/images/studio/chispa-31/`;
+  - las de los correos, en `public/images/correo/`, con `?v=3`;
+  - el guion que las hace quedó en `herramientas/poses-web.mjs`: el de C-193 no se había guardado y se rearmó midiendo las de chispa-3.
+- Los reels y los stickers ya grabados no cambian: toman a Chispa 3.1 cuando se vuelven a grabar.
+
 ## Ideas pendientes (Andrés no las ha pedido todavía)
 - Plantilla de historias "Domingo de web".
 - Calendario de contenido de dos semanas.

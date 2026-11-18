@@ -15,7 +15,7 @@
 
 import type Anthropic from '@anthropic-ai/sdk';
 import { leerAjustesIa } from '@/lib/ia/ajustes';
-import { claudeDisponible, FallaIA, firmaDe, pedirMensaje } from '@/lib/ia/claude';
+import { claudeDisponible, FallaIA, firmaDe, pedirMensaje } from '@/lib/ia/pedir';
 import { instruccionesDe, type UsoRegistro } from '@/lib/ia/reglas';
 import {
   anexoDeNombres, comprobarLectura, ESQUEMA, evidenciaDe, INSTRUCCIONES_BUSQUEDA, normalizarBusqueda, pedidoDeBusqueda,

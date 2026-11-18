@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 import Asistente, { Afecta, Campo, ElegirPublicar, FilaResumen, ListaCambios, type CambioCampo, type PasoAsistente } from '@/components/admin/Asistente';
-import ArmarConClaude from '@/components/admin/campanas/ArmarConClaude';
+import ArmarConIA from '@/components/admin/campanas/ArmarConIA';
 import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import {
@@ -383,7 +383,7 @@ export default function AsistenteCampana({ campana, envio }: { campana: CampanaP
         {paso === 0 && (
           <div className="space-y-5">
             {/* C-217: el borrador desde un objetivo, con productos reales; llena el asunto, la vista previa y los bloques */}
-            <ArmarConClaude
+            <ArmarConIA
               enTarjeta={false}
               // Hay algo que perder si tiene asunto, un texto escrito o una imagen (el título y el botón de una campaña nueva no cuentan)
               hayContenido={Boolean(form.subject.trim()) || form.bloques.some((b) => (b.tipo === 'texto' ? b.texto.trim() !== '' : b.tipo === 'imagen' && b.url.trim() !== ''))}
@@ -516,7 +516,7 @@ export default function AsistenteCampana({ campana, envio }: { campana: CampanaP
                 <IconoPausa className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 <span>
                   {!envio.marketingActivo
-                    ? <>Puedes guardarla y probarla, pero para enviarla a los clientes activa <strong>Correos de marketing</strong> en Configuración → Correo.</>
+                    ? <>Puedes guardarla y probarla, pero para enviarla a los clientes activa <strong>Correos de marketing</strong> en Ajustes → Correo.</>
                     : 'Se guarda como borrador: todavía ningún cliente aceptó promociones.'}
                 </span>
               </p>

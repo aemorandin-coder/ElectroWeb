@@ -167,6 +167,11 @@ export interface DrawOptions {
   code?: string | null;
   /** C-193: el tema navideño de la tienda (el gorro elegido y la franja con las fechas del panel) */
   navidad?: StudioNavidad | null;
+  /**
+   * C-295: de 0,1 a 1, cuánto mide el lienzo real frente a los 1080 px del dibujo. La vista previa se dibuja del tamaño en
+   * que se ve (en el teléfono, 3 a 14 veces menos puntos por cuadro); la descarga y el video, siempre a 1 (1080 de ancho).
+   */
+  escala?: number;
 }
 
 /** C-270: dónde quedó cada capa en el último dibujo, en px del lienzo (el centro, el ancho, el alto y el giro) */
@@ -335,6 +340,9 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
   let ANIM: AnimationId = 'entrada';
   /** C-273: lo que dura el video de la historia que se dibuja (5, 7, 10 o 15 s) */
   let DUR = DURATION;
+  /** C-295: px del lienzo real por px del dibujo. Las sombras y los desenfoques del canvas no siguen su transformación:
+   *  se multiplican por esto, así la vista previa chica se ve igual que la descarga */
+  let ESC = 1;
   let bgData: Uint8ClampedArray | null = null;
   let slideFlip = 0;
   const bgCache = new Map<string, { canvas: HTMLCanvasElement; data: Uint8ClampedArray }>();
@@ -411,8 +419,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     ctx.save();
     if (shadow) {
       ctx.shadowColor = 'rgba(0,0,0,.28)';
-      ctx.shadowBlur = 36;
-      ctx.shadowOffsetY = 22;
+      ctx.shadowBlur = 36 * ESC;
+      ctx.shadowOffsetY = 22 * ESC;
     }
     ctx.drawImage(img, dx, dy, dw, dh);
     ctx.restore();
@@ -1108,7 +1116,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
         const vx = W / 2;
         ctx.save();
         ctx.shadowColor = S;
-        ctx.shadowBlur = 16;
+        ctx.shadowBlur = 16 * ESC;
         ctx.strokeStyle = alpha(LIGHT_ON_DARK, 0.45);
         ctx.lineWidth = 3;
         for (let i = 1; i < 14; i++) {
@@ -1125,7 +1133,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
           ctx.stroke();
         }
         ctx.shadowColor = P;
-        ctx.shadowBlur = 34;
+        ctx.shadowBlur = 34 * ESC;
         ctx.strokeStyle = S;
         ctx.lineWidth = 7;
         ctx.beginPath();
@@ -1323,7 +1331,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     const dy = TOP - ((dh - h) * bp.y) / 100;
     ctx.save();
     if (blur > 0 && typeof ctx.filter === 'string') {
-      ctx.filter = `blur(${blur}px)`;
+      ctx.filter = `blur(${blur * ESC}px)`;
       ctx.drawImage(img, dx, dy, dw, dh);
       ctx.filter = 'none';
     } else if (blur > 0) {
@@ -1366,13 +1374,16 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     const cx2 = c.getContext('2d', { willReadFrequently: true });
     if (!cx2) throw new Error('Canvas 2D no disponible');
     const saved = ctx;
+    const esc = ESC;
     ctx = cx2;
+    ESC = 1;
     ctx.save();
     ctx.translate(0, OY);
     ctx.scale(1, SC);
     drawBg(style, Y(split));
     ctx.restore();
     ctx = saved;
+    ESC = esc;
     const entry = { canvas: c, data: cx2.getImageData(0, 0, W, FH).data };
     if (bgCache.size > 16) bgCache.clear();
     bgCache.set(key, entry);
@@ -1588,8 +1599,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       ctx.save();
       const pad = size * 0.08;
       ctx.shadowColor = 'rgba(10,27,61,.3)';
-      ctx.shadowBlur = 16;
-      ctx.shadowOffsetY = 8;
+      ctx.shadowBlur = 16 * ESC;
+      ctx.shadowOffsetY = 8 * ESC;
       ctx.fillStyle = '#fff';
       rr(x, y, size, size + (caption ? 34 : 0), 16);
       ctx.fill();
@@ -2029,9 +2040,9 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       fx('pop', 0.35, 0.6, [bx, by, bw, bh], () => {
         ctx.save();
         ctx.shadowColor = 'rgba(10,27,61,.35)';
-        ctx.shadowBlur = 18;
-        ctx.shadowOffsetX = 10;
-        ctx.shadowOffsetY = 12;
+        ctx.shadowBlur = 18 * ESC;
+        ctx.shadowOffsetX = 10 * ESC;
+        ctx.shadowOffsetY = 12 * ESC;
         ctx.fillStyle = '#fff';
         ctx.fillRect(bx, by, bw, bh);
         ctx.restore();
@@ -2424,8 +2435,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     fx('pop', 0.4, 0.6, [tx, ty, tw, th], () => {
       ctx.save();
       ctx.shadowColor = 'rgba(10,27,61,.35)';
-      ctx.shadowBlur = 30;
-      ctx.shadowOffsetY = 16;
+      ctx.shadowBlur = 30 * ESC;
+      ctx.shadowOffsetY = 16 * ESC;
       ctx.fillStyle = '#FFFFFF';
       // Ticket con muescas a los lados
       ctx.beginPath();
@@ -2601,8 +2612,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
       fx('up', 1.5, 0.6, [cx, cy, cw, ch], () => {
         ctx.save();
         ctx.shadowColor = 'rgba(10,27,61,.25)';
-        ctx.shadowBlur = 24;
-        ctx.shadowOffsetY = 10;
+        ctx.shadowBlur = 24 * ESC;
+        ctx.shadowOffsetY = 10 * ESC;
         ctx.fillStyle = '#FFFFFF';
         rr(cx, cy, cw, ch, 28);
         ctx.fill();
@@ -2661,8 +2672,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     fx('pop', 0.7, 0.6, [cx, cy, cw, chh], () => {
       ctx.save();
       ctx.shadowColor = 'rgba(10,27,61,.3)';
-      ctx.shadowBlur = 30;
-      ctx.shadowOffsetY = 14;
+      ctx.shadowBlur = 30 * ESC;
+      ctx.shadowOffsetY = 14 * ESC;
       ctx.fillStyle = '#FFFFFF';
       rr(cx, cy, cw, chh, 36);
       ctx.fill();
@@ -2737,8 +2748,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     fx('up', t0, 0.55, [x, y, w, h], () => {
       ctx.save();
       ctx.shadowColor = 'rgba(10,27,61,.22)';
-      ctx.shadowBlur = 26;
-      ctx.shadowOffsetY = 12;
+      ctx.shadowBlur = 26 * ESC;
+      ctx.shadowOffsetY = 12 * ESC;
       ctx.fillStyle = '#FFFFFF';
       rr(x, y, w, h, 28);
       ctx.fill();
@@ -2842,8 +2853,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     fx('pop', 0.35, 0.6, [cx, cy, cw, chh], () => {
       ctx.save();
       ctx.shadowColor = 'rgba(10,27,61,.3)';
-      ctx.shadowBlur = 30;
-      ctx.shadowOffsetY = 14;
+      ctx.shadowBlur = 30 * ESC;
+      ctx.shadowOffsetY = 14 * ESC;
       ctx.fillStyle = '#FFFFFF';
       rr(cx, cy, cw, chh, 36);
       ctx.fill();
@@ -3041,7 +3052,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
           break;
         case 'borroso':
           ctx.globalAlpha *= e;
-          if (typeof ctx.filter === 'string') ctx.filter = `blur(${((1 - e) * 16).toFixed(1)}px)`;
+          if (typeof ctx.filter === 'string') ctx.filter = `blur(${((1 - e) * 16 * ESC).toFixed(1)}px)`;
           break;
         case 'barrido':
           ctx.beginPath();
@@ -3111,7 +3122,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     if (T === null) return;
     const fin = DUR - (f.cierreLogo ? CIERRE_LOGO : 0);
     ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.setTransform(ESC, 0, 0, ESC, 0, 0);
     if (f.final !== 'ninguno') {
       const q = prog(fin - FINAL_DURA, FINAL_DURA);
       if (q > 0) {
@@ -3356,8 +3367,8 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     } else if (c.fondo === 'caja') {
       ctx.save();
       ctx.shadowColor = 'rgba(10,27,61,.28)';
-      ctx.shadowBlur = c.tam * 0.4;
-      ctx.shadowOffsetY = c.tam * 0.12;
+      ctx.shadowBlur = c.tam * 0.4 * ESC;
+      ctx.shadowOffsetY = c.tam * 0.12 * ESC;
       ctx.fillStyle = '#FFFFFF';
       rr(-bw / 2, -bh / 2, bw, bh, c.tam * 0.22);
       ctx.fill();
@@ -3445,8 +3456,13 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     DESP = { x: 0, y: 0 };
     piezasArriba = [];
     setFormat(f?.format ?? 'story');
-    // Cambiar el alto borra el lienzo: solo cuando cambia el formato
-    if (canvas.height !== FH) canvas.height = FH;
+    // Cambiar el tamaño borra el lienzo: solo cuando cambia el formato o la escala (C-295: la vista previa, del tamaño en que
+    // se ve; la descarga, a 1080)
+    const cw = Math.max(1, Math.round(W * Math.min(1, Math.max(0.1, opts.escala ?? 1))));
+    ESC = cw / W;
+    const ch = Math.round(FH * ESC);
+    if (canvas.width !== cw) canvas.width = cw;
+    if (canvas.height !== ch) canvas.height = ch;
     T = opts.t ?? null;
     NAV = opts.navidad ?? null;
     animEpoch = opts.epoch ?? Date.now();
@@ -3454,6 +3470,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     slideFlip = 0;
     ANIM = f && ANIMATIONS[f.anim] ? f.anim : 'entrada';
     DUR = duracionDe(f);
+    ctx.setTransform(ESC, 0, 0, ESC, 0, 0);
     ctx.save();
     ctx.clearRect(0, 0, W, FH);
     if (!f) {
@@ -3507,7 +3524,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     piezasArriba = [];
     // C-270: las capas, en px del lienzo (la plantilla dibuja en las coordenadas de su grilla)
     ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.setTransform(ESC, 0, 0, ESC, 0, 0);
     drawCapas(f, opts.preview);
     ctx.restore();
     if (FX.confeti) confetti();
@@ -3524,7 +3541,9 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     FL = f;
     setFormat(f.format);
     const saved = ctx;
+    const esc = ESC;
     ctx = x;
+    ESC = target.width / W;
     ctx.save();
     ctx.clearRect(0, 0, target.width, target.height);
     ctx.scale(target.width / W, target.height / FH);
@@ -3533,6 +3552,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     drawBg(style, Y(SPLIT[f.template]));
     ctx.restore();
     ctx = saved;
+    ESC = esc;
   }
 
   return {

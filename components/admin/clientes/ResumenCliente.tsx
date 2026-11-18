@@ -12,6 +12,7 @@ import { formatUSD } from '@/lib/currency';
 import { adminBadge, adminDato, adminNotice, adminPrimaryButton, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import type { HechosCliente, Pendiente, ResumenIA } from '@/lib/ia/resumen-cliente';
+import FirmaIA from '@/components/admin/ia/FirmaIA';
 
 const ICONO_PENDIENTE: Record<Pendiente['tipo'], typeof IconoOrdenes> = {
   orden: IconoOrdenes,
@@ -112,14 +113,14 @@ export default function ResumenCliente({ clienteId }: { clienteId: string }) {
         </div>
 
         {!iaDisponible ? (
-          <p className={`${adminNotice('neutral')} mt-3`}>Falta la clave de Claude en el servidor (ANTHROPIC_API_KEY): sin ella, solo se ven los datos de arriba.</p>
+          <p className={`${adminNotice('neutral')} mt-3`}>Falta la clave de la IA: el dueño la conecta en Ajustes → IA. Mientras, solo se ven los datos de arriba.</p>
         ) : pensando ? (
           <p className="mt-3 flex items-center gap-2 text-sm text-ink-soft" role="status"><span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" aria-hidden="true" /> Leyendo sus compras… tarda unos 15 segundos.</p>
         ) : !ia ? (
           <div className="mt-3 space-y-3">
-            <p className="text-sm text-ink-soft">Claude lee lo que compró, cómo paga y lo que tiene pendiente, y te propone qué ofrecerle de la tienda. Solo le llega su primer nombre y su ciudad.</p>
+            <p className="text-sm text-ink-soft">La IA lee lo que compró, cómo paga y lo que tiene pendiente, y te propone qué ofrecerle de la tienda. Solo le llega su primer nombre y su ciudad.</p>
             <button type="button" onClick={resumir} className={`${adminPrimaryButton} min-h-11`}>
-              <IconoNovedad className="h-4 w-4" aria-hidden="true" /> Resumir con Claude
+              <IconoNovedad className="h-4 w-4" aria-hidden="true" /> Resumir con IA
             </button>
           </div>
         ) : (
@@ -147,7 +148,7 @@ export default function ResumenCliente({ clienteId }: { clienteId: string }) {
                 </ul>
               )}
             </div>
-            <p className="text-xs text-muted">Redactado por {ia.firma}. Revísalo antes de usarlo con el cliente.</p>
+            <FirmaIA firma={ia.firma} pedidoId={ia.pedidoId} nota="Revísalo antes de usarlo con el cliente." />
           </div>
         )}
         {error && <p className={`${adminNotice('danger')} mt-3`} role="alert">{error}</p>}

@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { IconoActualizar, IconoDescargar, IconoEditar, IconoFlechaDerecha, IconoTarjeta } from '@/components/iconos';
+import { IconoActualizar, IconoDescargar, IconoEditar } from '@/components/iconos';
 import Opcion from '@/components/admin/Opcion';
-import { adminIconChip, adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
+import { adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { roundMoney } from '@/lib/pricing';
 import type { SectionProps } from './settings-form';
@@ -28,7 +27,8 @@ function timeAgo(iso: string | null): string {
   return new Date(iso).toLocaleString('es-VE', { dateStyle: 'medium', timeStyle: 'short' });
 }
 
-export default function PricesSection({ form, set, errors, savedAutoExchangeRates, lastRateUpdate, onRateRefreshed }: PricesSectionProps) {
+// C-293: dos secciones de "Vender": `tasa` (la tasa y el IVA) y `compras` (los límites). Métodos de pago ya está en Ajustes
+export default function PricesSection({ form, set, errors, savedAutoExchangeRates, lastRateUpdate, onRateRefreshed, parte }: PricesSectionProps & { parte: 'tasa' | 'compras' }) {
   const [loadingRate, setLoadingRate] = useState(false);
   const rate = Number(form.exchangeRateVES) || 0;
   const minOrder = Number(form.minOrderAmountUSD) || 0;
@@ -71,9 +71,30 @@ export default function PricesSection({ form, set, errors, savedAutoExchangeRate
     }
   };
 
+  if (parte === 'compras') return <>
+      <SettingsCard title="Montos por compra" description="Vacío: sin límite." ayuda="El carrito avisa al cliente antes de pagar, y el checkout no deja comprar fuera de estos montos.">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(2,max-content)] sm:gap-8">
+          <NumberField label="Mínimo" prefix="$" value={form.minOrderAmountUSD} onChange={(v) => set('minOrderAmountUSD', v)} error={errors.minOrderAmountUSD} step={0.01} placeholder="Sin mínimo" hint="Cuenta solo los productos. El embalaje y el envío van aparte." />
+          <NumberField label="Máximo" prefix="$" value={form.maxOrderAmountUSD} onChange={(v) => set('maxOrderAmountUSD', v)} error={errors.maxOrderAmountUSD} step={0.01} placeholder="Sin máximo" hint="Cuenta todo lo que paga el cliente, con envío." />
+        </div>
+
+        {/* C-115: el mínimo se explica con un caso real, como la tasa de arriba */}
+        {minOrder > 0 && (
+          <p className={`${adminNotice('neutral')} mt-4 tabular-nums`}>
+            Un carrito con <strong className="text-ink">{formatUSD(sampleProducts)}</strong> en productos ve «Te faltan {formatUSD(roundMoney(minOrder - sampleProducts))}» y no puede pagar.
+            Con <strong className="text-ink">{formatUSD(minOrder)}</strong> en productos ya compra
+            {form.packagingRules.activo
+              ? <>; si pide envío por ZOOM o MRW paga además el embalaje de su paquete, y el flete al retirar.</>
+              : packagingFee > 0 ? <>; si pide envío por ZOOM o MRW paga además {formatUSD(packagingFee)} de embalaje, y el flete al retirar.</> : '.'}
+          </p>
+        )}
+      </SettingsCard>
+
+    </>;
+
   return (
     <>
-      <SettingsCard title="Tasa BCV" description="Con esta tasa se calculan todos los precios en bolívares de la tienda y de las órdenes.">
+      <SettingsCard title="Tasa BCV" description="Con ella salen todos los precios en bolívares.">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Cómo se actualiza la tasa">
           {[
             { auto: true, title: 'Automática', text: 'Se trae sola del BCV cada hora.', icono: IconoActualizar },
@@ -141,18 +162,20 @@ export default function PricesSection({ form, set, errors, savedAutoExchangeRate
         <div className="space-y-4">
           <SwitchRow
             label="Los precios incluyen IVA"
-            description="No se suma nada al total. El carrito, el pago, el recibo y el correo dicen cuánto del total es IVA y cuál es la base imponible."
+            description="No se suma al total: se dice cuánto del total es IVA."
+            ayuda="El carrito, el pago, el recibo y el correo muestran el IVA y la base imponible."
             checked={form.taxEnabled}
             onChange={(v) => set('taxEnabled', v)}
           />
           {form.taxEnabled && (
-            <NumberField label="Porcentaje" suffix="%" value={form.taxPercent} onChange={(v) => set('taxPercent', v)} error={errors.taxPercent} min={0} max={100} step={0.01} className="max-w-xs" hint="La alícuota general hoy es 16. Con 0 la tienda no muestra el IVA." />
+            <NumberField label="Porcentaje" suffix="%" value={form.taxPercent} onChange={(v) => set('taxPercent', v)} error={errors.taxPercent} min={0} max={100} step={0.01} hint="La general hoy es 16. Con 0 no se muestra." />
           )}
           {form.taxEnabled && (
             // C-151: decisión de Andrés del 01/10: los digitales no llevan IVA. Apagado, sus pedidos guardan IVA 0
             <SwitchRow
               label="Los productos digitales también llevan IVA"
-              description="Códigos, gift cards y recargas. Apagado: en ellos la tienda no dice «IVA incluido», sus pedidos salen con IVA en cero y su margen se calcula sin IVA. Confírmalo con tu contador."
+              description="Códigos, gift cards y recargas."
+              ayuda="Apagado: en ellos no se dice «IVA incluido», sus pedidos salen con IVA en cero y su margen se calcula sin IVA. Confírmalo con tu contadora."
               checked={form.taxDigitalProducts}
               onChange={(v) => set('taxDigitalProducts', v)}
             />
@@ -160,34 +183,6 @@ export default function PricesSection({ form, set, errors, savedAutoExchangeRate
         </div>
       </SettingsCard>
 
-      <SettingsCard title="Montos por compra" description="Vacío significa sin límite. El carrito avisa al cliente antes de pagar y el checkout no deja comprar fuera de estos montos.">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <NumberField label="Mínimo" prefix="$" value={form.minOrderAmountUSD} onChange={(v) => set('minOrderAmountUSD', v)} error={errors.minOrderAmountUSD} step={0.01} placeholder="Sin mínimo" hint="Cuenta solo los productos. El embalaje y el envío van aparte." />
-          <NumberField label="Máximo" prefix="$" value={form.maxOrderAmountUSD} onChange={(v) => set('maxOrderAmountUSD', v)} error={errors.maxOrderAmountUSD} step={0.01} placeholder="Sin máximo" hint="Cuenta todo lo que paga el cliente, con envío." />
-        </div>
-
-        {/* C-115: el mínimo se explica con un caso real, como la tasa de arriba */}
-        {minOrder > 0 && (
-          <p className={`${adminNotice('neutral')} mt-4 tabular-nums`}>
-            Un carrito con <strong className="text-ink">{formatUSD(sampleProducts)}</strong> en productos ve «Te faltan {formatUSD(roundMoney(minOrder - sampleProducts))}» y no puede pagar.
-            Con <strong className="text-ink">{formatUSD(minOrder)}</strong> en productos ya compra
-            {form.packagingRules.activo
-              ? <>; si pide envío por ZOOM o MRW paga además el embalaje de su paquete, y el flete al retirar.</>
-              : packagingFee > 0 ? <>; si pide envío por ZOOM o MRW paga además {formatUSD(packagingFee)} de embalaje, y el flete al retirar.</> : '.'}
-          </p>
-        )}
-      </SettingsCard>
-
-      <Link href="/admin/payments" className="flex items-center gap-4 rounded-2xl border border-line bg-white p-5 transition-colors hover:border-brand-200 hover:bg-brand-50">
-        <span className={adminIconChip('brand')}>
-          <IconoTarjeta className="h-5 w-5" aria-hidden="true" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-ink">Métodos de pago</span>
-          <span className="block text-sm text-muted">Pago Móvil, Zelle, Binance, transferencias y efectivo se configuran en su propia página.</span>
-        </span>
-        <IconoFlechaDerecha className="h-5 w-5 shrink-0 text-muted" aria-hidden="true" />
-      </Link>
     </>
   );
 }

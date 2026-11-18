@@ -4,6 +4,7 @@
 import type { Consumo } from '@/lib/ia/consumo';
 import type { Esfuerzo } from '@/lib/ia/precios';
 import type { UsoIa } from '@/lib/ia/reglas';
+import type { IdProveedor } from '@/lib/ia/proveedores/catalogo';
 
 export interface UsoDelServidor {
   id: UsoIa;
@@ -14,11 +15,40 @@ export interface UsoDelServidor {
   at: string | null;
 }
 
+export interface ProveedorDelServidor {
+  id: Exclude<IdProveedor, 'anthropic'>;
+  hay: boolean;
+  enmascarada: string | null;
+  fuente: 'panel' | 'env' | null;
+  claveRota: boolean;
+  cambiadaAt: string | null;
+  modelo: string | null;
+  precioEntrada: number | null;
+  precioSalida: number | null;
+}
+
+/** C-292: la clave de un proveedor, como la ve la pantalla (Anthropic sale de `clave`; los demás, de `proveedores`) */
+export function claveDe(datos: DatosIa, id: IdProveedor) {
+  if (id === 'anthropic') return { hay: datos.clave.hay, enmascarada: datos.clave.enmascarada, fuente: datos.clave.fuente, claveRota: datos.clave.claveRota, hayEnServidor: datos.clave.hayEnServidor };
+  const p = datos.proveedores.find((x) => x.id === id);
+  return { hay: Boolean(p?.hay), enmascarada: p?.enmascarada ?? null, fuente: p?.fuente ?? null, claveRota: Boolean(p?.claveRota), hayEnServidor: id === 'groq' && p?.fuente === 'env' };
+}
+
+/** C-292: el modelo de un proveedor: Anthropic el del motor; los demás, el suyo */
+export function modeloDe(datos: DatosIa, id: IdProveedor): string | null {
+  return id === 'anthropic' ? datos.motor.modelo : datos.proveedores.find((x) => x.id === id)?.modelo ?? null;
+}
+
 export interface DatosIa {
   updatedAt: string | null;
   motor: { modelo: string; esfuerzo: Esfuerzo; fuente: 'panel' | 'env' };
   clave: { hay: boolean; enmascarada: string | null; fuente: 'panel' | 'env' | null; claveRota: boolean; hayEnServidor: boolean; cambiadaAt: string | null };
   groq: boolean;
+  /** C-292: quién responde, el respaldo, el motor propio de cada uso y los otros proveedores */
+  proveedor: IdProveedor;
+  respaldo: IdProveedor | null;
+  porUso: Partial<Record<UsoIa, { proveedor: IdProveedor; modelo: string }>>;
+  proveedores: ProveedorDelServidor[];
   usos: UsoDelServidor[];
   frases: { lista: string[]; delPanel: boolean };
   consumo: Consumo;

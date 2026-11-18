@@ -1,22 +1,51 @@
 'use client';
 
 import Link from 'next/link';
-import { adminNotice } from '@/lib/admin-ui';
 import type { SectionProps } from './settings-form';
 import { NumberField, SettingsCard, SwitchRow, TextField } from './fields';
 
 interface StorefrontSectionProps extends SectionProps {
   /** Para avisar que las alertas de stock necesitan correos configurados */
-  hasAlertEmails: boolean;
-  onGoToAlerts: () => void;
+  parte: 'portada' | 'inventario';
 }
 
-export default function StorefrontSection({ form, set, errors, hasAlertEmails, onGoToAlerts }: StorefrontSectionProps) {
+// C-293: dos secciones: `portada` (La tienda en línea) e `inventario` (Vender)
+export default function StorefrontSection({ form, set, errors, parte }: StorefrontSectionProps) {
   const threshold = Number(form.lowStockThreshold) || 0;
+
+  if (parte === 'inventario') return <>
+      <SettingsCard title="Inventario">
+        <div className="space-y-5">
+          <NumberField
+            label="Poco stock desde"
+            suffix="unidades"
+            value={form.lowStockThreshold}
+            onChange={(v) => set('lowStockThreshold', v)}
+            error={errors.lowStockThreshold}
+            min={0}
+            max={1000}
+            step={1}
+            hint={threshold > 0 ? `Con ${threshold} o menos, la ficha dice cuántas quedan.` : 'En 0 no se dice cuántas quedan.'}
+          />
+          <SwitchRow
+            label="Ocultar los productos agotados"
+            description="Los físicos sin stock desaparecen de la tienda."
+            ayuda="Salen de la portada, el catálogo y los relacionados. Los digitales siempre se ven."
+            checked={form.autoHideOutOfStock}
+            onChange={(v) => set('autoHideOutOfStock', v)}
+          />
+          {/* C-293 (D3): los interruptores "Avisarme con stock bajo / agotado" hacían lo mismo que estos avisos, que tienen sus canales */}
+          <p className="text-sm text-muted">
+            Los avisos de poco stock y de producto agotado se eligen en{' '}
+            <Link href="/admin/notifications#avisos" className="font-semibold text-brand-600 hover:underline">Notificaciones → Qué avisar</Link>.
+          </p>
+        </div>
+      </SettingsCard>
+    </>;
 
   return (
     <>
-      <SettingsCard title="Portada" description="Productos y categorías que se ven en la página de inicio.">
+      <SettingsCard title="Portada" description="Lo que se ve en la página de inicio.">
         <div className="space-y-5">
           <NumberField
             label="Productos destacados"
@@ -37,12 +66,12 @@ export default function StorefrontSection({ form, set, errors, hasAlertEmails, o
         </div>
       </SettingsCard>
 
-      <SettingsCard title="Video de la portada" description="Una sección con un video de YouTube (reseñas, novedades o un short).">
+      <SettingsCard title="Video de la portada" description="Un video de YouTube: una reseña, una novedad o un short.">
         <div className="space-y-5">
           <SwitchRow label="Mostrar video" checked={form.heroVideoEnabled} onChange={(v) => set('heroVideoEnabled', v)} />
           {form.heroVideoEnabled && (
             <div className="grid grid-cols-1 gap-4">
-              <TextField label="Enlace de YouTube" type="url" value={form.heroVideoUrl} onChange={(v) => set('heroVideoUrl', v)} error={errors.heroVideoUrl} placeholder="https://www.youtube.com/watch?v=…" />
+              <TextField ancho="largo" label="Enlace de YouTube" type="url" value={form.heroVideoUrl} onChange={(v) => set('heroVideoUrl', v)} error={errors.heroVideoUrl} placeholder="https://www.youtube.com/watch?v=…" />
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <TextField label="Título de la sección" value={form.heroVideoTitle} onChange={(v) => set('heroVideoTitle', v)} error={errors.heroVideoTitle} maxLength={80} placeholder="Reviews y novedades" />
                 <TextField label="Subtítulo" value={form.heroVideoDescription} onChange={(v) => set('heroVideoDescription', v)} error={errors.heroVideoDescription} maxLength={200} placeholder="Opcional" />
@@ -52,50 +81,6 @@ export default function StorefrontSection({ form, set, errors, hasAlertEmails, o
         </div>
       </SettingsCard>
 
-      <SettingsCard title="Inventario">
-        <div className="space-y-5">
-          <NumberField
-            label="Stock bajo desde"
-            suffix="unidades"
-            value={form.lowStockThreshold}
-            onChange={(v) => set('lowStockThreshold', v)}
-            error={errors.lowStockThreshold}
-            min={0}
-            max={1000}
-            step={1}
-            hint={threshold > 0 ? `Con ${threshold} unidades o menos, la ficha muestra cuántas quedan.` : 'En 0 no se avisa de pocas unidades.'}
-            className="max-w-xs"
-          />
-          <SwitchRow
-            label="Ocultar productos agotados"
-            description="Los físicos sin stock desaparecen de la portada, el catálogo y los relacionados. Los digitales siempre se ven."
-            checked={form.autoHideOutOfStock}
-            onChange={(v) => set('autoHideOutOfStock', v)}
-          />
-          <div className="space-y-5 border-t border-line pt-5">
-            <SwitchRow
-              label="Avisarme cuando un producto quede con stock bajo"
-              description="Cuando una venta lo deja en el umbral de arriba."
-              checked={form.notifyLowStock}
-              onChange={(v) => set('notifyLowStock', v)}
-            />
-            <SwitchRow
-              label="Avisarme cuando un producto se agote"
-              checked={form.notifyOutOfStock}
-              onChange={(v) => set('notifyOutOfStock', v)}
-            />
-            {(form.notifyLowStock || form.notifyOutOfStock) && (
-              <p className={adminNotice(hasAlertEmails ? 'neutral' : 'warning')}>
-                Por dónde llega (panel, correo o Telegram) se elige en{' '}
-                <Link href="/admin/notifications#avisos" className="font-semibold underline">Notificaciones → Qué avisar</Link>.
-                {!hasAlertEmails && (
-                  <> Para recibirlo por correo, <button type="button" onClick={onGoToAlerts} className="font-semibold underline">agrega un correo de alertas</button>.</>
-                )}
-              </p>
-            )}
-          </div>
-        </div>
-      </SettingsCard>
     </>
   );
 }

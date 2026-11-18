@@ -9,9 +9,10 @@
 // Se leen con caché de 15 s (cada pedido a Claude los necesita) y quien guarda la invalida: el cambio rige desde el próximo
 // pedido. El caché va en globalThis, como el cliente de Prisma, para que lo compartan todas las rutas del proceso.
 
-import { Prisma, type IaAjustes } from '@prisma/client';
+import { Prisma, type IaAjustes, type IaProveedor } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { descifrarClave } from './clave';
+import { esProveedor, type IdProveedor } from './proveedores/catalogo';
 import { ESFUERZO_DE_FABRICA, esEsfuerzo, MODELO_DE_FABRICA, type Esfuerzo } from './precios';
 import {
   esUsoIa, FRASE_MAX_LARGO, FRASE_MIN_LARGO, FRASES_DE_FABRICA, FRASES_MAX, INSTRUCCIONES_MAX, INSTRUCCIONES_MIN, type UsoIa,
@@ -42,6 +43,35 @@ export interface AjustesIa {
   frasesDelPanel: boolean;
   instrucciones: Partial<Record<UsoIa, InstruccionGuardada>>;
   /** Para guardar con versión: null si todavía no hay fila */
+  updatedAt: Date | null;
+  /** C-292: el proveedor que responde (sin nada guardado, Anthropic, como antes) */
+  proveedor: IdProveedor;
+  /** C-292: el que responde si el principal falla o no tiene clave; null: ninguno */
+  respaldo: IdProveedor | null;
+  /** C-292: el motor propio de un uso; sin el uso, el principal */
+  porUso: Partial<Record<UsoIa, MotorElegido>>;
+  /** C-292: la clave, el modelo y el precio de los otros proveedores (Anthropic va arriba, como desde C-288) */
+  otros: Record<OtroProveedor, AjustesProveedor>;
+}
+
+export type OtroProveedor = Exclude<IdProveedor, 'anthropic'>;
+export const OTROS_PROVEEDORES: readonly OtroProveedor[] = ['google', 'xai', 'groq'];
+
+export interface MotorElegido {
+  proveedor: IdProveedor;
+  modelo: string;
+}
+
+export interface AjustesProveedor {
+  /** En claro: nunca sale del servidor */
+  clave: string | null;
+  fuenteClave: 'panel' | 'env' | null;
+  claveRota: boolean;
+  claveCambiadaAt: Date | null;
+  modelo: string | null;
+  /** Dólares por millón de tokens, los que escribió el equipo; null: sin precio */
+  precioEntrada: number | null;
+  precioSalida: number | null;
   updatedAt: Date | null;
 }
 
@@ -84,7 +114,40 @@ export function instruccionesValidas(valor: unknown): Partial<Record<UsoIa, Inst
   return salida;
 }
 
-function armar(fila: IaAjustes | null): AjustesIa {
+/** El motor de cada uso guardado: solo usos y proveedores que existen, con un modelo escrito */
+export function porUsoValido(valor: unknown): Partial<Record<UsoIa, MotorElegido>> {
+  const salida: Partial<Record<UsoIa, MotorElegido>> = {};
+  if (!valor || typeof valor !== 'object' || Array.isArray(valor)) return salida;
+  for (const [uso, dato] of Object.entries(valor)) {
+    if (!esUsoIa(uso) || !dato || typeof dato !== 'object') continue;
+    const d = dato as Record<string, unknown>;
+    const modelo = typeof d.modelo === 'string' ? d.modelo.trim() : '';
+    if (esProveedor(d.proveedor) && modelo) salida[uso] = { proveedor: d.proveedor, modelo: modelo.slice(0, 120) };
+  }
+  return salida;
+}
+
+/** Las variables del servidor que sirven de respaldo para la clave de cada proveedor (solo Groq tiene, desde C-211) */
+const ENV_DE: Record<OtroProveedor, string | null> = { google: null, xai: null, groq: 'GROQ_API_KEY' };
+
+function armarOtro(id: OtroProveedor, fila: IaProveedor | undefined): AjustesProveedor {
+  const delPanel = fila?.claveCifrada ? descifrarClave(fila.claveCifrada) : null;
+  const variable = ENV_DE[id];
+  const delEnv = variable ? process.env[variable]?.trim() || null : null;
+  const modeloEnv = id === 'groq' ? process.env.GROQ_MODEL?.trim() || 'openai/gpt-oss-120b' : null;
+  return {
+    clave: delPanel ?? delEnv,
+    fuenteClave: delPanel ? 'panel' : delEnv ? 'env' : null,
+    claveRota: Boolean(fila?.claveCifrada) && !delPanel,
+    claveCambiadaAt: fila?.claveCambiadaAt ?? null,
+    modelo: fila?.modelo?.trim() || modeloEnv,
+    precioEntrada: fila?.precioEntrada != null ? Number(fila.precioEntrada) : null,
+    precioSalida: fila?.precioSalida != null ? Number(fila.precioSalida) : null,
+    updatedAt: fila?.updatedAt ?? null,
+  };
+}
+
+function armar(fila: IaAjustes | null, otros: IaProveedor[] = []): AjustesIa {
   const modeloEnv = process.env.ANTHROPIC_MODEL?.trim() || null;
   const esfuerzoDelEnv = process.env.ANTHROPIC_EFFORT;
   const esfuerzoEnv = esEsfuerzo(esfuerzoDelEnv) ? esfuerzoDelEnv : null;
@@ -108,7 +171,31 @@ function armar(fila: IaAjustes | null): AjustesIa {
     frasesDelPanel: frases !== null,
     instrucciones: instruccionesValidas(fila?.instrucciones),
     updatedAt: fila?.updatedAt ?? null,
+    proveedor: esProveedor(fila?.proveedor) ? fila.proveedor : 'anthropic',
+    respaldo: esProveedor(fila?.respaldo) ? fila.respaldo : null,
+    porUso: porUsoValido(fila?.porUso),
+    otros: Object.fromEntries(OTROS_PROVEEDORES.map((id) => [id, armarOtro(id, otros.find((o) => o.id === id))])) as Record<OtroProveedor, AjustesProveedor>,
   };
+}
+
+/** C-292: el motor con que responde cada proveedor: su clave, su modelo y (solo Anthropic) el esfuerzo */
+export interface MotorListo {
+  proveedor: IdProveedor;
+  modelo: string;
+  esfuerzo: Esfuerzo | null;
+  clave: string | null;
+}
+
+export function motorDeProveedor(a: AjustesIa, proveedor: IdProveedor, modelo?: string | null): MotorListo {
+  if (proveedor === 'anthropic') return { proveedor, modelo: modelo || a.modelo, esfuerzo: a.esfuerzo, clave: a.clave };
+  const otro = a.otros[proveedor];
+  return { proveedor, modelo: modelo || otro.modelo || '', esfuerzo: null, clave: otro.clave };
+}
+
+/** El motor de un uso: el suyo si se eligió uno, si no el principal */
+export function motorDelUso(a: AjustesIa, uso: UsoIa): MotorListo {
+  const propio = a.porUso[uso];
+  return propio ? motorDeProveedor(a, propio.proveedor, propio.modelo) : motorDeProveedor(a, a.proveedor);
 }
 
 /** Los ajustes vigentes (con caché de 15 s). Si la tabla no está o la base no responde, los de siempre (.env y fábrica) */
@@ -116,13 +203,19 @@ export async function leerAjustesIa(): Promise<AjustesIa> {
   const guardado = globalParaAjustes.iaAjustes;
   if (guardado && guardado.hasta > Date.now()) return guardado.valor;
   let fila: IaAjustes | null = null;
+  let otros: IaProveedor[] = [];
   try {
     fila = await prisma.iaAjustes.findUnique({ where: { id: 'default' } });
   } catch {
     // Sin la tabla (antes del deploy) o sin base: Claude sigue con el .env, como antes
-    console.error('[ia] no se pudieron leer los ajustes de Claude: se usan los del servidor');
+    console.error('[ia] no se pudieron leer los ajustes de la IA: se usan los del servidor');
   }
-  const valor = armar(fila);
+  try {
+    otros = await prisma.iaProveedor.findMany();
+  } catch {
+    // C-292: sin la tabla nueva (antes de su SQL), los otros proveedores quedan sin clave del panel
+  }
+  const valor = armar(fila, otros);
   globalParaAjustes.iaAjustes = { hasta: Date.now() + VIGENCIA_MS, valor };
   return valor;
 }
@@ -169,4 +262,18 @@ export async function guardarAjustes(
   invalidarAjustesIa();
   const nueva = await filaDeAjustes();
   return { ok: true, updatedAt: nueva?.updatedAt ?? new Date() };
+}
+
+/**
+ * C-292: guarda lo de un proveedor que no es Anthropic (la clave cifrada, el modelo, los precios). Sin versión: cada campo es de
+ * su propio botón. Devuelve la fecha nueva.
+ */
+export async function guardarProveedor(id: OtroProveedor, usuarioId: string | null, datos: Prisma.IaProveedorUncheckedUpdateInput): Promise<Date> {
+  const fila = await prisma.iaProveedor.upsert({
+    where: { id },
+    create: { ...(datos as Prisma.IaProveedorUncheckedCreateInput), id, actualizadoPorId: usuarioId },
+    update: { ...datos, actualizadoPorId: usuarioId },
+  });
+  invalidarAjustesIa();
+  return fila.updatedAt;
 }

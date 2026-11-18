@@ -3,6 +3,7 @@ import { adminCard } from '@/lib/admin-ui';
 import { ETIQUETA_FALLA, PLANTILLA_IMPORTAR, USOS_IA, infoDeUso, reglaPorId } from '@/lib/ia/reglas';
 import { ICONOS_DE_USO } from './iconos';
 import { cuando, miles, segundos, usd, type DatosIa } from './tipos';
+import { esProveedor, infoProveedor, MOTIVOS_NO_SIRVIO } from '@/lib/ia/proveedores/catalogo';
 
 // C-288 · Lo que gasta cada uso de Claude este mes, los pedidos por día y lo que falló. Todo sale de lo que anota cada pedido
 // (modelo, tokens, búsquedas, costo, tiempo y fallas): ni lo que se mandó ni lo que respondió Claude.
@@ -86,7 +87,7 @@ export default function Consumo({ datos }: { datos: DatosIa }) {
       <div className="grid gap-4 @2xl:grid-cols-2 @2xl:items-start">
         <section className={adminCard}>
           <h4 className="text-base font-semibold text-ink">Pedidos por día</h4>
-          <div className="mt-3 flex h-24 items-end gap-1" role="img" aria-label={`Pedidos a Claude por día, los últimos 30 días: ${en30} en total`}>
+          <div className="mt-3 flex h-24 items-end gap-1" role="img" aria-label={`Pedidos a la IA por día, los últimos 30 días: ${en30} en total`}>
             {consumo.porDia.map((d) => (
               <span
                 key={d.dia}
@@ -132,6 +133,44 @@ export default function Consumo({ datos }: { datos: DatosIa }) {
                         {f.siguioGroq === false && '. Groq no tomó el relevo.'}
                       </p>
                     </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </div>
+      {/* C-292: el mes por proveedor y lo que el equipo marcó como "No sirvió" */}
+      <div className="grid gap-4 @3xl:grid-cols-2 @3xl:items-start">
+        <section className={adminCard}>
+          <h4 className="text-base font-semibold text-ink">Por proveedor</h4>
+          {datos.consumo.porProveedor.length === 0 ? (
+            <p className="mt-1 text-sm text-muted">Todavía no hay pedidos este mes.</p>
+          ) : (
+            <ul className="mt-2 divide-y divide-line">
+              {datos.consumo.porProveedor.map((p) => (
+                <li key={p.proveedor} className="flex items-center justify-between gap-3 py-2 text-sm">
+                  <span className="font-semibold text-ink">{esProveedor(p.proveedor) ? `${infoProveedor(p.proveedor).motor} · ${infoProveedor(p.proveedor).empresa}` : p.proveedor}</span>
+                  <span className="text-right text-xs text-ink-soft tabular-nums">
+                    {miles(p.pedidos)} {p.pedidos === 1 ? 'pedido' : 'pedidos'} · {usd(p.costoUsd)}{p.fallas > 0 ? ` · ${p.fallas} ${p.fallas === 1 ? 'falla' : 'fallas'}` : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <section className={adminCard}>
+          <h4 className="text-base font-semibold text-ink">Lo que no sirvió</h4>
+          <p className="mt-0.5 text-sm text-muted">Lo que el equipo marcó en cada resultado. Este mes: {datos.consumo.noSirvio.totalMes}.</p>
+          {datos.consumo.noSirvio.ultimos.length > 0 && (
+            <ul className="mt-2 divide-y divide-line">
+              {datos.consumo.noSirvio.ultimos.map((n) => {
+                const [motivo, ...detalle] = n.motivo.split(': ');
+                return (
+                  <li key={n.id} className="py-2 text-sm">
+                    <span className="font-semibold text-ink">{infoDeUso(n.uso)?.nombre ?? n.uso}</span>
+                    <span className="text-ink-soft"> · {MOTIVOS_NO_SIRVIO.find((m) => m.id === motivo)?.texto ?? motivo}{detalle.length ? `: ${detalle.join(': ')}` : ''}</span>
+                    <span className="block text-xs text-muted">{esProveedor(n.proveedor) ? infoProveedor(n.proveedor).motor : n.proveedor} · {n.modelo} · {cuando(n.cuando)}</span>
                   </li>
                 );
               })}

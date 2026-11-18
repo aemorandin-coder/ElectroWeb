@@ -3,6 +3,7 @@
 
 import {
   IconoBaseDeDatos, IconoBillete, IconoBolsa, IconoBuscar, IconoCorreo, IconoEnvio, IconoGarantia, IconoMaletin, IconoNovedad,
+  IconoInicio, IconoPaquete, IconoPintura, IconoTarjeta,
 } from '@/components/iconos';
 import type { IconType } from '@/components/iconos';
 import { leerReglasEmbalaje, type Empaque } from '@/lib/embalaje';
@@ -67,64 +68,148 @@ export interface SectionProps {
   errors: FieldErrors;
 }
 
-export type SectionId = 'negocio' | 'precios' | 'envios' | 'tienda' | 'seo' | 'sistema' | 'correo' | 'respaldos' | 'ia';
+// C-293 (AJUSTES.md §3, D1 del 18/11): el mapa nuevo. Los grupos van en el menú de la izquierda, cada sección con su estado en
+// una línea; en el teléfono, primero la lista. Cada sección guarda sola. Las direcciones viejas (#negocio, #precios, #tienda)
+// llevan a su sección nueva.
+export type SectionId =
+  | 'datos' | 'marca' | 'tasa' | 'pagos' | 'compras' | 'inventario' | 'envios'
+  | 'sistema' | 'correo' | 'ia' | 'respaldos' | 'portada' | 'seo';
 
-export const SECTIONS: { id: SectionId; label: string; description: string; icon: IconType; fields: SettingsKey[] }[] = [
+export type GrupoId = 'negocio' | 'vender' | 'avisos' | 'conexiones' | 'tienda' | 'equipo';
+
+export interface Seccion {
+  id: SectionId;
+  grupo: GrupoId;
+  label: string;
+  description: string;
+  icon: IconType;
+  fields: SettingsKey[];
+  /** El estado en una línea, para el menú ("36,50 Bs · IVA 16 %") */
+  estado: (form: SettingsForm) => string;
+}
+
+export const GRUPOS: { id: GrupoId; label: string }[] = [
+  { id: 'negocio', label: 'Tu negocio' },
+  { id: 'vender', label: 'Vender' },
+  { id: 'avisos', label: 'Avisos' },
+  { id: 'conexiones', label: 'Conexiones' },
+  { id: 'tienda', label: 'La tienda en línea' },
+  { id: 'equipo', label: 'Equipo y acceso' },
+];
+
+/** Las direcciones de antes de C-293 */
+export const SECCION_VIEJA: Record<string, SectionId> = { negocio: 'datos', precios: 'tasa', tienda: 'portada' };
+
+const bs = (v: string) => (Number(v) > 0 ? `${Number(v).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs` : 'Sin tasa');
+const usd = (v: string) => `$${Number(v).toLocaleString('es-VE', { maximumFractionDigits: 2 })}`;
+
+export const SECTIONS: Seccion[] = [
   {
-    id: 'negocio', label: 'Negocio', icon: IconoMaletin,
-    description: 'Nombre, logo, contacto, redes y horario. Se ven en el pie de página, Contacto y los correos.',
-    fields: ['companyName', 'tagline', 'legalName', 'rif', 'logo', 'favicon', 'quoteStamp', 'email', 'phone', 'whatsapp', 'address', 'city', 'state',
+    id: 'datos', grupo: 'negocio', label: 'Datos y contacto', icon: IconoMaletin,
+    description: 'Se ven en el pie de página, en Contacto y en los correos.',
+    fields: ['companyName', 'tagline', 'legalName', 'rif', 'email', 'phone', 'whatsapp', 'address', 'city', 'state',
       'instagram', 'facebook', 'twitter', 'youtube', 'telegram', 'tiktok', 'businessHours'],
+    estado: (f) => [f.companyName || 'Sin nombre', f.city].filter(Boolean).join(' · '),
   },
   {
-    id: 'precios', label: 'Precios y pagos', icon: IconoBillete,
-    description: 'Tasa BCV para los precios en bolívares, IVA y montos mínimo y máximo por compra.',
-    fields: ['autoExchangeRates', 'exchangeRateVES', 'taxEnabled', 'taxPercent', 'taxDigitalProducts', 'minOrderAmountUSD', 'maxOrderAmountUSD'],
+    id: 'marca', grupo: 'negocio', label: 'Logo y sello', icon: IconoPintura,
+    description: 'El logo, el ícono de la pestaña y el sello de los presupuestos.',
+    fields: ['logo', 'favicon', 'quoteStamp'],
+    estado: (f) => `${f.logo ? 'Con logo' : 'Sin logo'}${f.quoteStamp ? ' · con sello' : ''}`,
   },
   {
-    id: 'envios', label: 'Envíos y retiro', icon: IconoEnvio,
-    description: 'Cómo reciben los clientes sus productos físicos y cuánto cuesta el envío.',
+    id: 'tasa', grupo: 'vender', label: 'Tasa e IVA', icon: IconoBillete,
+    description: 'La tasa BCV de los precios en bolívares y el IVA.',
+    fields: ['autoExchangeRates', 'exchangeRateVES', 'taxEnabled', 'taxPercent', 'taxDigitalProducts'],
+    estado: (f) => `${bs(f.exchangeRateVES)} · ${f.taxEnabled ? `IVA ${Number(f.taxPercent)} %` : 'sin IVA'}`,
+  },
+  // C-293 (D5): Métodos de pago entra a Ajustes. Tiene sus propios guardados (su asistente)
+  {
+    id: 'pagos', grupo: 'vender', label: 'Métodos de pago', icon: IconoTarjeta,
+    description: 'Pago Móvil, transferencias, Zelle, Binance y efectivo: los datos que ve el cliente al pagar.',
+    fields: [],
+    estado: () => 'Las cuentas de cobro',
+  },
+  {
+    id: 'compras', grupo: 'vender', label: 'Límites de compra', icon: IconoBolsa,
+    description: 'El mínimo y el máximo de una compra.',
+    fields: ['minOrderAmountUSD', 'maxOrderAmountUSD'],
+    estado: (f) => (!Number(f.minOrderAmountUSD) && !Number(f.maxOrderAmountUSD) ? 'Sin límites'
+      : [Number(f.minOrderAmountUSD) ? `desde ${usd(f.minOrderAmountUSD)}` : '', Number(f.maxOrderAmountUSD) ? `hasta ${usd(f.maxOrderAmountUSD)}` : ''].filter(Boolean).join(' · ').replace(/^./, (x) => x.toUpperCase())),
+  },
+  {
+    id: 'inventario', grupo: 'vender', label: 'Inventario', icon: IconoPaquete,
+    description: 'Cuándo un producto tiene poco stock y qué pasa cuando se agota.',
+    fields: ['lowStockThreshold', 'autoHideOutOfStock'],
+    estado: (f) => `Poco stock: ${Number(f.lowStockThreshold) || 0} und. · ${f.autoHideOutOfStock ? 'oculta agotados' : 'muestra agotados'}`,
+  },
+  {
+    id: 'envios', grupo: 'vender', label: 'Envíos y retiro', icon: IconoEnvio,
+    description: 'Cómo reciben los clientes sus productos físicos y cuánto cuesta.',
     fields: ['deliveryEnabled', 'packagingFeeUSD', 'freeDeliveryThresholdUSD', 'freePackagingThresholdUSD', 'packagingRules', 'localDeliveryEnabled', 'deliveryFeeUSD',
       'pickupEnabled', 'pickupAddress', 'pickupInstructions', 'horaCorte', 'diasCerrados', 'diasAbiertos'],
+    estado: (f) => [f.deliveryEnabled ? 'ZOOM y MRW' : 'Sin envíos', f.localDeliveryEnabled ? 'delivery' : '', f.pickupEnabled ? 'retiro' : ''].filter(Boolean).join(' · '),
   },
   {
-    id: 'tienda', label: 'Portada e inventario', icon: IconoBolsa,
-    description: 'Qué muestra la portada y qué pasa cuando un producto se queda sin stock.',
-    fields: ['maxFeaturedProducts', 'showCategories', 'maxCategoriesDisplay', 'heroVideoEnabled', 'heroVideoUrl', 'heroVideoTitle',
-      'heroVideoDescription', 'lowStockThreshold', 'autoHideOutOfStock', 'notifyLowStock', 'notifyOutOfStock'],
-  },
-  {
-    id: 'seo', label: 'Google y redes', icon: IconoBuscar,
-    description: 'Título, descripción e imagen con que aparecen las páginas en Google, WhatsApp y Facebook.',
-    fields: ['metaTitle', 'metaDescription', 'metaKeywords', 'homeMetaImage', 'productsMetaTitle', 'productsMetaDescription',
-      'productsMetaKeywords', 'productsMetaImage', 'servicesMetaTitle', 'servicesMetaDescription', 'servicesMetaKeywords',
-      'servicesMetaImage', 'coursesMetaTitle', 'coursesMetaDescription', 'coursesMetaKeywords', 'coursesMetaImage'],
-  },
-  {
-    id: 'sistema', label: 'Avisos y mantenimiento', icon: IconoGarantia,
-    description: 'Correos que reciben las alertas, colores de los correos y modo mantenimiento.',
+    id: 'sistema', grupo: 'avisos', label: 'Avisos y mantenimiento', icon: IconoGarantia,
+    description: 'Los correos que reciben las alertas y el modo mantenimiento.',
     fields: ['adminAlertEmails', 'primaryColor', 'secondaryColor', 'maintenanceMode', 'maintenanceMessage', 'maintenanceStartTime',
       'maintenanceEndTime', 'maintenanceAllowedIPs'],
+    estado: (f) => (f.maintenanceMode ? 'En mantenimiento' : `${f.adminAlertEmails.length} ${f.adminAlertEmails.length === 1 ? 'correo de alerta' : 'correos de alerta'}`),
   },
   // C-75: el servidor de correo estaba en Marketing. Tiene su propio guardado (no usa la barra común)
   {
-    id: 'correo', label: 'Correo', icon: IconoCorreo,
-    description: 'Servidor con el que salen todos los correos de la tienda, remitente y campañas de marketing.',
+    id: 'correo', grupo: 'conexiones', label: 'Correo', icon: IconoCorreo,
+    description: 'El servidor con el que salen los correos de la tienda y el remitente.',
     fields: [],
+    estado: () => 'El servidor y el remitente',
   },
-  // C-165: respaldos a Google Drive. Tiene su propio guardado y sus propias acciones (no usa la barra común)
+  // C-288 y C-292: la IA. Tiene sus propios guardados
   {
-    id: 'respaldos', label: 'Respaldos', icon: IconoBaseDeDatos,
+    id: 'ia', grupo: 'conexiones', label: 'IA', icon: IconoNovedad,
+    description: 'Quién responde, las claves de cada proveedor, las reglas y las instrucciones de cada uso, lo que gasta y lo que falla.',
+    fields: [],
+    estado: () => 'Quién responde y las claves',
+  },
+  // C-165: respaldos a Google Drive. Tiene su propio guardado y sus propias acciones
+  {
+    id: 'respaldos', grupo: 'conexiones', label: 'Respaldos', icon: IconoBaseDeDatos,
     description: 'Copia cifrada de la base de datos y de los archivos en tu Google Drive, cada día y sola.',
     fields: [],
+    estado: () => 'Copia diaria a Google Drive',
   },
-  // C-288: el motor de Claude, sus reglas y las instrucciones de cada uso. Tiene sus propios guardados (no usa la barra común)
   {
-    id: 'ia', label: 'IA · Claude', icon: IconoNovedad,
-    description: 'El motor de Claude, las reglas y las instrucciones de cada uso, lo que gasta y lo que falla.',
-    fields: [],
+    id: 'portada', grupo: 'tienda', label: 'Portada', icon: IconoInicio,
+    description: 'Los destacados, las categorías y el video de la página de inicio.',
+    fields: ['maxFeaturedProducts', 'showCategories', 'maxCategoriesDisplay', 'heroVideoEnabled', 'heroVideoUrl', 'heroVideoTitle', 'heroVideoDescription'],
+    estado: (f) => `${Number(f.maxFeaturedProducts) || 0} destacados${f.heroVideoEnabled ? ' · con video' : ''}`,
+  },
+  {
+    id: 'seo', grupo: 'tienda', label: 'Google y redes', icon: IconoBuscar,
+    description: 'El título, la descripción y la imagen con que aparecen las páginas en Google, WhatsApp y Facebook.',
+    fields: ['metaTitle', 'metaDescription', 'metaKeywords', 'homeMetaImage', 'productsMetaTitle', 'productsMetaDescription',
+      'productsMetaKeywords', 'productsMetaImage', 'servicesMetaTitle', 'servicesMetaDescription', 'servicesMetaKeywords',
+      'servicesMetaImage', 'coursesMetaTitle', 'coursesMetaDescription', 'coursesMetaKeywords', 'coursesMetaImage'],
+    estado: () => 'Inicio, productos, servicios y cursos',
   },
 ];
+
+/** C-293: lo que toca dinero o lo que ve el cliente al comprar: se revisa antes → después antes de guardar, con a qué afecta */
+export const CAMPOS_DELICADOS: Partial<Record<SettingsKey, { nombre: string; formato: (v: SettingsForm[SettingsKey]) => string; afecta: string }>> = {
+  autoExchangeRates: { nombre: 'Cómo se actualiza la tasa', formato: (v) => (v ? 'Automática' : 'A mano'), afecta: 'Todos los precios en bolívares.' },
+  exchangeRateVES: { nombre: 'La tasa', formato: (v) => bs(String(v)), afecta: 'Todos los precios en bolívares y los Pagos Móvil nuevos.' },
+  taxEnabled: { nombre: 'Los precios incluyen IVA', formato: (v) => (v ? 'Sí' : 'No'), afecta: 'Lo que dicen el carrito, el pago, el recibo y la factura.' },
+  taxPercent: { nombre: 'El IVA', formato: (v) => `${Number(v)} %`, afecta: 'Lo que dicen el carrito, el pago, el recibo y la factura.' },
+  taxDigitalProducts: { nombre: 'IVA en los digitales', formato: (v) => (v ? 'Sí' : 'No'), afecta: 'Los pedidos nuevos de códigos, gift cards y recargas.' },
+  minOrderAmountUSD: { nombre: 'Compra mínima', formato: (v) => (Number(v) > 0 ? usd(String(v)) : 'Sin mínimo'), afecta: 'Los carritos que se pagan desde ahora.' },
+  maxOrderAmountUSD: { nombre: 'Compra máxima', formato: (v) => (Number(v) > 0 ? usd(String(v)) : 'Sin máximo'), afecta: 'Los carritos que se pagan desde ahora.' },
+  deliveryEnabled: { nombre: 'Envíos nacionales', formato: (v) => (v ? 'Sí' : 'No'), afecta: 'Lo que ofrece el checkout desde ahora.' },
+  packagingFeeUSD: { nombre: 'Embalaje', formato: (v) => usd(String(v || 0)), afecta: 'Los pedidos con envío desde ahora.' },
+  freeDeliveryThresholdUSD: { nombre: 'Envío gratis desde', formato: (v) => (Number(v) > 0 ? usd(String(v)) : 'Sin envío gratis'), afecta: 'Los pedidos con envío desde ahora.' },
+  freePackagingThresholdUSD: { nombre: 'Embalaje gratis desde', formato: (v) => (Number(v) > 0 ? usd(String(v)) : 'Siempre se cobra'), afecta: 'Los pedidos con envío desde ahora.' },
+  deliveryFeeUSD: { nombre: 'Tarifa del delivery', formato: (v) => usd(String(v || 0)), afecta: 'Los pedidos con delivery desde ahora.' },
+  maintenanceMode: { nombre: 'Modo mantenimiento', formato: (v) => (v ? 'Encendido' : 'Apagado'), afecta: 'Encendido, los clientes no pueden comprar.' },
+};
 
 export function sectionOf(field: string): SectionId | null {
   return SECTIONS.find((section) => (section.fields as string[]).includes(field))?.id ?? null;
@@ -222,10 +307,10 @@ export function isDirty(form: SettingsForm, initial: SettingsForm, field: Settin
   return JSON.stringify(form[field]) !== JSON.stringify(initial[field]);
 }
 
-/** Solo los campos cambiados, listos para PUT /api/settings. */
-export function buildPatch(form: SettingsForm, initial: SettingsForm): Record<string, unknown> {
+/** Solo los campos cambiados, listos para PUT /api/settings. C-293: con `campos`, solo los de esa sección (cada sección guarda sola) */
+export function buildPatch(form: SettingsForm, initial: SettingsForm, campos?: readonly SettingsKey[]): Record<string, unknown> {
   const patch: Record<string, unknown> = {};
-  for (const field of Object.keys(form) as SettingsKey[]) {
+  for (const field of (campos ?? Object.keys(form)) as SettingsKey[]) {
     if (!isDirty(form, initial, field)) continue;
     const value = form[field];
     if ((field === 'maintenanceStartTime' || field === 'maintenanceEndTime') && typeof value === 'string') {

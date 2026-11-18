@@ -10,6 +10,95 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.109] - 2026-11-18
+Ajustes ordenado, primera parte (C-293, la fase 4 del plan de Ajustes). El equipo, 18/11: "inputs anchísimos, muchos textos, semánticas ilógicas, ajustes repetidos". Sin cambio de base, sin variables y sin cron.
+### Configuración 1.7.0 (C-293)
+- **Configuración pasa a llamarse Ajustes**, con el menú por grupos: Tu negocio, Vender, Avisos, Conexiones, La tienda en línea y Equipo y acceso. Cada sección dice su estado en una línea ("36,50 Bs · IVA 16 %"). En el teléfono, primero la lista y, al tocar, la sección con "Ajustes" para volver.
+- **Las secciones nuevas:** Datos y contacto, Logo y sello (con el enlace al kit de marca), Tasa e IVA, **Métodos de pago** (antes en Administración), Límites de compra, Inventario y Portada. Las direcciones viejas (`#negocio`, `#precios`, `#tienda`, `/admin/payments`) llevan a su sección.
+- **Cada sección guarda sola.** Lo que toca dinero o lo que ve el cliente al comprar (la tasa, el IVA, los montos, el envío, el embalaje y el mantenimiento) se revisa antes → después, con a qué afecta. Lo que se cambió en otra sección espera, con su punto en el menú.
+- **Los campos, del tamaño de su dato** (el IVA ya no mide lo mismo que la dirección), y lo largo detrás de un (i).
+- **El embalaje es una sola elección:** "Un precio por pedido" o "Según el paquete". Antes, los dos interruptores lo mostraban de dos formas a la vez.
+- **Sin los interruptores de stock repetidos** (D3): los avisos de poco stock y de agotado se eligen solo en Notificaciones → Qué avisar, por canal.
+### Marco del panel 1.19.1 y los demás (C-293)
+- El menú dice "Ajustes". Los textos del panel que decían "Configuración →" dicen "Ajustes →".
+
+## [1.0.0-rc.108] - 2026-11-18
+La IA de la tienda, no de un proveedor (C-292), la fase 3 del plan de Ajustes. El equipo, 18/11: "no es solo Claude: mañana la puedo cambiar por otra IA, Gemini o Grok". **Cambio de base aditivo:** la tabla `ia_proveedores`, tres columnas en `ia_ajustes` (el principal, el respaldo y el motor de cada uso) y tres en `ia_pedidos` ("No sirvió"). Sin variables nuevas y sin cron. Sin nada guardado, todo sigue con Claude como antes.
+### Configuración 1.6.0 (C-292)
+- **Configuración → IA** (antes "IA · Claude"):
+  - **El motor:** quién responde (Claude, Gemini, Grok o Groq, solo los que tienen su clave), el modelo (los de Claude con su precio; los demás, de la lista que da el proveedor con su clave), el esfuerzo de Claude y el respaldo, con "Revisar y publicar".
+  - **Proveedores y claves:** una tarjeta por proveedor con su logo, su clave (se prueba antes de guardarla, queda cifrada y nunca se muestra entera) y, en los que no son Claude, lo que cuesta, copiado de su página oficial.
+  - **Los usos:** cada uno sigue al principal o tiene su propio motor ("Motor" en su tarjeta). "Buscar en la web" sigue con Claude, que es el que busca por su cuenta.
+  - **Consumo y fallas:** el mes por proveedor y lo que el equipo marcó como "No sirvió".
+### Marco del panel 1.19.0 (C-292)
+- **Cada pedido va al motor de su uso**: Claude con su SDK; Gemini, Grok y Groq con el formato de OpenAI. Si el motor no tiene clave o no responde, va al de respaldo. Las instrucciones y las reglas de la tienda son las mismas con cualquiera.
+- **Si un proveedor no acepta la respuesta con esquema,** se le pide otra vez como JSON con el esquema en las instrucciones.
+- **"Buscar en la web" con Groq** usa también la clave del panel.
+### Clientes 1.9.0, Marketing 1.26.0 y Productos 1.18.1 (C-292)
+- **Los botones dicen "IA":** "Resumir con IA", "Redactar con IA", "Armar con IA", "Proponer con IA".
+- **El resultado dice en letra chica quién lo redactó** ("Lo redactó Claude Haiku 5.5 (esfuerzo alto)") y tiene **"No sirvió"**, con el motivo.
+- **Importar** dice que la plantilla sirve con claude.ai, Gemini o ChatGPT.
+
+## [1.0.0-rc.107] - 2026-11-18
+Chispa 3.1 (C-296), elegida por el equipo en la página de variantes: el logo oficial de la tienda en la camisa, en las historias de ElectroStudio, el popup navideño y los correos. Sin cambio de base, sin variables nuevas y sin cron.
+### ElectroStudio 2.5.1 (C-296)
+- Las 10 imágenes de Chispa (5 poses, con y sin gorro) salen con Chispa 3.1: el logo oficial en el pecho, en lugar de la placa blanca con «ES». Van en `public/images/studio/chispa-31`, porque el optimizador guarda las de antes 30 días.
+### Marketing 1.25.3 (C-296)
+- Las mismas poses en los correos, y las imágenes de los correos con `?v=3`, para que Gmail no muestre las guardadas.
+### Chispa (estudio de video, fuera de la web)
+- `chispa.js` 3.1:
+  - ojos de asombro en la sorpresa, y párpado caído con brillo en la tristeza;
+  - la mirada que se nota, con la cabeza que la acompaña;
+  - la cabeza y los hombros de cada emoción;
+  - el puño de «piensa» en la barbilla y la cara «serio»;
+  - el OK rehecho como dos dedos;
+  - los brazos cruzados con una mano que agarra el brazo;
+  - las manos quietas se mecen apenas.
+- La skill `manos-de-caricatura` y el guion `poses-web.mjs`.
+
+## [1.0.0-rc.106] - 2026-11-18
+ElectroStudio en el teléfono (C-295): el pedido del equipo del 18/11 ("que se vea espectacular en el teléfono, intuitiva, nativa y a 60 fps", "los ajustes de stickers, imágenes y títulos, touch friendly" y "al final uno queda así: ¿cómo que y ahora?"). Sigue dentro del panel, sin app aparte. Sin cambio de base, sin variables y sin cron.
+### ElectroStudio 2.5.0 (C-295)
+- **"Editar en grande"** (en el teléfono, o el botón de la esquina de la vista previa): la historia del alto de la pantalla, sobre fondo oscuro.
+  - Arriba: Listo, deshacer, rehacer y ver la animación.
+  - Abajo, una hoja: el paso con sus flechas, y **+ Título, + Subtítulo, + Sticker y Terminar**. Al subirla, todo lo del paso.
+  - Con el teclado del teléfono abierto, la hoja queda encima de él.
+  - La primera vez, la hoja "Edita con los dedos": un dedo mueve, dos dedos agrandan y giran, tocar afuera suelta.
+- **Para el dedo:**
+  - las asas y los botones de la pieza se toman en 44 px aunque se vean finos;
+  - con una pieza elegida, dos dedos en cualquier parte del lienzo la agrandan y la giran (antes, el primer dedo tenía que caer sobre ella);
+  - un toque afuera la suelta (antes no la soltaba, tampoco con el ratón);
+  - el teléfono vibra corto al pegarse a una guía (Android).
+- **60 cuadros:** la vista previa se dibuja del tamaño en que se ve, no a 1080 (en el teléfono, de 3 a 14 veces menos trabajo por cuadro), y el arrastre manda un cambio por cuadro. Las sombras y los desenfoques se ajustan a la escala: la vista previa sale igual que la descarga, que sigue en 1080 × 1920.
+- **El final:** al sacar la imagen o el video, la pantalla entera en el azul oscuro del logo.
+  - Mientras se arma, la vista previa con el anillo de lo que falta.
+  - Lista: la historia en grande llega con un rebote, un destello y chispas (una sola vez; con "reducir movimiento", quieta), y "Lista en 2:14" y cuántas van esta semana.
+  - Lo que se hace con ella: **compartir** (Instagram, WhatsApp… en el teléfono) o descargar, **Telegram**, copiar el texto y el enlace. Y ahora: otra igual (para cambiarle el producto), una nueva, también el video (o la imagen) y seguir editando.
+  - Reemplaza la ventana "¿Qué hago con…?" del editor (C-287): las mismas salidas, después de verla. La lista de historias sigue preguntando como antes.
+- **Publicar:** "Sacar la imagen" y "Sacar el video", con su formato y su duración.
+- **El título nuevo** baja de línea antes del borde (960 px de ancho máximo).
+- **Arreglado:** si el navegador decía que arma MP4 y no podía (Firefox sin el códec de Cisco), salía "no se pudo grabar el video"; ahora lo graba como antes, en tiempo real. La pantalla queda encendida mientras se arma el video.
+### Tienda 1.22.1 (C-295)
+- Las animaciones del final de ElectroStudio en la hoja de estilos.
+### Carrito, checkout y cuenta del cliente 1.13.2 (C-295)
+- La hoja "Así funciona" suma tres íconos de gestos.
+
+## [1.0.0-rc.105] - 2026-11-18
+El dispositivo de confianza (C-291), la fase 2 del plan de Ajustes: en un navegador marcado, el panel no pide el número de la app por 30 días. La contraseña se sigue pidiendo, y la sesión sigue igual (12 horas, se cierra tras 1 hora sin uso). **Cambio de base aditivo:** una tabla nueva (`dispositivos_confianza`) y dos columnas en `user_sessions`. Sin variables nuevas y sin cron.
+### Marco del panel 1.18.0 (C-291)
+- **Al entrar con el número de la app,** la casilla "No pedir el número en esta computadora por 30 días" ("en este teléfono" en uno), apagada al abrir: "Solo si es tuyo".
+- **La galleta** lleva un número al azar (en la base, solo su huella); es HttpOnly, Secure y SameSite Strict, y vence a los 30 días de marcarla. Hasta 5 por persona: el sexto quita el más viejo.
+- **Se anulan solos** al cambiar la contraseña, con "No fui yo", al reiniciar los dos pasos o al cerrar las sesiones. Una galleta de otra cuenta, inventada o vencida no sirve.
+- **Mi seguridad → Dispositivos de confianza:** cada uno con desde cuándo, su último uso y hasta cuándo; el de ahora dice "Este"; "Quitar" y "Quitar todos".
+- **Al marcar uno llega un correo** con "No fui yo".
+- **Lo delicado pide el número otra vez** si la sesión entró por confianza: la clave de la IA y la del correo, Equipo (invitar, cambiar un rol, quitar o devolver el acceso, reiniciar los dos pasos), Métodos de pago y Respaldos. La ventana "Confirma que eres tú" sale en cualquier pantalla, acepta una llave de repuesto y, al confirmar, el cambio sigue solo. Vale 15 minutos.
+### Configuración 1.5.1 (C-291)
+- **Equipo** cuenta los dispositivos de confianza de cada persona, y el dueño los quita.
+### Carrito, checkout y cuenta del cliente 1.13.1 (C-291)
+- La casilla de 30 días en la pantalla del número.
+### Marketing 1.25.2 (C-291)
+- El correo "Marcaste un dispositivo de confianza". Guardar el servidor de correo pide el número si la sesión entró por confianza.
+
 ## [1.0.0-rc.104] - 2026-11-18
 Los dos pasos que se entienden (C-290), el primero del plan de Ajustes (`docs/plan/AJUSTES.md`). La contadora no supo "qué app es doble factor" ni qué hacer después: ahora la guía va dibujada, con las apps y dónde se bajan. Sin cambio de base, sin variables y sin cron.
 ### Marco del panel 1.17.0 (C-290)

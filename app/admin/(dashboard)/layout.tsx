@@ -10,13 +10,14 @@ import {
   IconoCerrar, IconoChat, IconoChevronAbajo, IconoClaqueta, IconoPintura, IconoClientes, IconoConfiguracion, IconoCuadricula,
   IconoCursos, IconoDocumento, IconoEstrella, IconoGarantia, IconoGiftCard, IconoMaletin, IconoMenu, IconoNotificaciones, IconoOrdenes,
   IconoPaquete, IconoPorcentaje, IconoRegistrarse, IconoReportes, IconoSalir, IconoSalvavidas, IconoServicioTecnico,
-  IconoTarjeta, IconoVariantes, IconoVentas, IconoVerificado, IconoVersiones,
+  IconoVariantes, IconoVentas, IconoVerificado, IconoVersiones,
 } from '@/components/iconos';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 import ControlSesionAdmin, { cerrarSesionAdmin } from '@/components/admin/ControlSesionAdmin';
+import ConfirmarConCodigo from '@/components/admin/dos-pasos/ConfirmarConCodigo';
 import AvisosDeVersion from '@/components/admin/version/AvisosDeVersion';
 import MarquesinaEquipo from '@/components/admin/edicion/MarquesinaEquipo';
 import { moduloDeRuta, versionDe } from '@/lib/modulos';
@@ -264,10 +265,10 @@ export default function AdminLayout({
         { name: 'Reportes', href: '/admin/reports', icon: <IconoReportes className={icono} aria-hidden="true" />, permission: 'VIEW_REPORTS' },
         { name: 'Notificaciones', href: '/admin/notifications', icon: <IconoNotificaciones className={icono} aria-hidden="true" />, countKey: 'unreadNotifications' },
         { name: 'Documentos Legales', href: '/admin/legal', icon: <IconoGarantia className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS' },
-        { name: 'Métodos de Pago', href: '/admin/payments', icon: <IconoTarjeta className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
         // C-141: invitar admins, roles, accesos y dos pasos de cada cuenta. Solo el super admin
         { name: 'Equipo', href: '/admin/equipo', icon: <IconoClientes className={icono} aria-hidden="true" />, permission: 'MANAGE_TEAM' },
-        { name: 'Configuración', href: '/admin/settings', icon: <IconoConfiguracion className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
+        // C-293: "Ajustes", con Métodos de pago adentro (D5 del 18/11)
+        { name: 'Ajustes', href: '/admin/settings', icon: <IconoConfiguracion className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
         { name: 'Mi seguridad', href: '/admin/seguridad', icon: <IconoCandado className={icono} aria-hidden="true" /> },
         // C-168: qué versión corre y qué cambió en cada módulo
         { name: 'Versiones', href: '/admin/versiones', icon: <IconoVersiones className={icono} aria-hidden="true" /> },
@@ -361,6 +362,8 @@ export default function AdminLayout({
     <div className="min-h-dvh bg-surface">
       {/* C-140: se cierra tras 1 hora sin uso, con aviso 5 minutos antes */}
       <ControlSesionAdmin />
+      {/* C-291: lo delicado pide el número de la app si la sesión entró por un dispositivo de confianza */}
+      <ConfirmarConCodigo />
       {isDrawerOpen && (
         <div className="fixed inset-0 z-[var(--z-drawer)] bg-ink/50 lg:hidden" onClick={() => setDrawerPath(null)} aria-hidden="true" />
       )}

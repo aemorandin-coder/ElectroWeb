@@ -50,14 +50,23 @@ const PESOS: [number, string][] = [
   [900, 'Extra'],
 ];
 
-export default function StepCapas({ studio, sel, onSel, acciones, textoRef }: {
+export default function StepCapas({ studio, sel, onSel, acciones, textoRef, pedirGaleria = false, onGaleriaVista }: {
   studio: Studio;
   sel: string | null;
   onSel: (id: string | null) => void;
   acciones: AccionesCapas;
   textoRef: RefObject<HTMLTextAreaElement | null>;
+  /** C-295: "+ Sticker" de la pantalla completa: la galería abre sola; al cerrarla o elegir, se avisa */
+  pedirGaleria?: boolean;
+  onGaleriaVista?: () => void;
 }) {
-  const [galeria, setGaleria] = useState(false);
+  const [abierta, setAbierta] = useState(false);
+  const galeria = abierta || pedirGaleria;
+  const setGaleria = (v: boolean | ((g: boolean) => boolean)) => {
+    const siguiente = typeof v === 'function' ? v(galeria) : v;
+    setAbierta(siguiente);
+    if (!siguiente) onGaleriaVista?.();
+  };
   const f = studio.current;
   if (!f) return null;
   const capas = f.capas;

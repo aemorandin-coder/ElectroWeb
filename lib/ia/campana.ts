@@ -13,7 +13,7 @@ import { prisma } from '@/lib/prisma';
 import { formatUSD } from '@/lib/currency';
 import { campanaSchema, type Bloque } from '@/lib/email-campaigns';
 import { INSTRUCCIONES_DE_FABRICA } from '@/lib/ia/fabrica';
-import { pedirJSON, type OpcionesDeUso } from '@/lib/ia/claude';
+import { pedirJSON, type OpcionesDeUso } from '@/lib/ia/pedir';
 import { normalizar, productosMencionados } from '@/lib/ia/productos-mencionados';
 import { revisarCampanaIa } from '@/lib/ia/revisar';
 import { limpiarTextoIA } from '@/lib/ia/texto';
@@ -34,6 +34,8 @@ export interface BorradorCampana {
   /** Los productos que eligió, para decir en el panel qué usó */
   productos: Array<{ nombre: string; precioUSD: number }>;
   firma: string;
+  /** C-292: el pedido de la IA, para "No sirvió" */
+  pedidoId: string;
 }
 
 const seleccion = {
@@ -113,7 +115,7 @@ export async function redactarCampana(objetivo: string, opciones: OpcionesDeUso 
 
   // C-288: la tienda comprueba la respuesta: asunto de 6 a 9 palabras sin gritos, sin precios en el texto, y productos solo de la
   // lista (sin repetir, con existencia y hasta 4)
-  const { datos, firma } = await pedirJSON({
+  const { datos, firma, pedidoId } = await pedirJSON({
     donde: 'campaña de correo', uso: 'campana', deFabrica: INSTRUCCIONES_DE_FABRICA.campana, pedido, esquema: ESQUEMA,
     referencia: objetivo.slice(0, 60), ...opciones,
     revisar: (d, { frases }) => revisarCampanaIa(d, {
@@ -165,5 +167,6 @@ export async function redactarCampana(objetivo: string, opciones: OpcionesDeUso 
     bloques: validos,
     productos: elegidos.map(({ p }) => ({ nombre: p.name, precioUSD: Number(p.priceUSD) })),
     firma,
+    pedidoId,
   };
 }

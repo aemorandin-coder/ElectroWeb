@@ -54,7 +54,7 @@ export function contentProblems(f: StudioFlyerData): string[] {
     case 'felicitacion':
       return f.msg.headline.trim() ? [] : ['Falta el titular'];
     case 'tasa':
-      return f.rate > 0 ? [] : ['Falta la tasa del día: cárgala en Configuración → Precios y pagos'];
+      return f.rate > 0 ? [] : ['Falta la tasa del día: cárgala en Ajustes → Tasa e IVA'];
     case 'cupon':
       return f.coupon.code.trim() ? [] : ['Falta elegir el cupón'];
     case 'resena':

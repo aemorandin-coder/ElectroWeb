@@ -23,6 +23,8 @@ declare module 'next-auth' {
     emailVerified?: boolean;
     sessionVersion?: number;
     dosPasos?: boolean;
+    /** C-291: cómo pasó el segundo paso: el código de la app, una llave de repuesto o un dispositivo de confianza */
+    segundoPaso?: 'codigo' | 'respaldo' | 'confianza';
   }
 }
 
@@ -39,5 +41,7 @@ declare module 'next-auth/jwt' {
     sid?: string;
     /** C-141: el admin tiene los dos pasos activos y entró con ellos */
     dosPasos?: boolean;
+    /** C-291: cómo pasó el segundo paso. Con 'confianza', lo delicado pide el código otra vez */
+    segundoPaso?: 'codigo' | 'respaldo' | 'confianza';
   }
 }

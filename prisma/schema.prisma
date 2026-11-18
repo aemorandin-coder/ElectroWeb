@@ -57,6 +57,7 @@ model User {
   sesiones      UserSession[]
   // C-141: verificación en dos pasos del panel (app de códigos)
   segundoFactor SegundoFactor?
+  dispositivosConfianza DispositivoConfianza[]
   // C-171: cómo armó cada administrador su Dashboard
   dashboardLayout AdminDashboardLayout?
   orders        Order[]
@@ -1300,9 +1301,39 @@ model UserSession {
   expiresAt    DateTime
   revokedAt    DateTime?
   motivoCierre String?   // CERRADA | OTRA_SESION | INACTIVIDAD
+  /// C-291: cómo pasó el admin el segundo paso al entrar: codigo | respaldo | confianza. null: antes de C-291 o cliente
+  segundoPaso  String?
+  /// C-291: cuándo confirmó con el código algo delicado (vale 15 minutos). Solo cuenta si entró por confianza
+  confirmadoAt DateTime?
 
   @@index([userId])
   @@map("user_sessions")
+}
+
+/// C-291: los dispositivos de confianza del panel: 30 días sin pedir el código en ese navegador (la contraseña, sí).
+/// La galleta lleva un número al azar; aquí solo su huella. Vale mientras no venza, no se quite y la versión de sesión del
+/// usuario sea la misma (cambiar la contraseña, "No fui yo" o cerrar sus sesiones los anulan todos).
+model DispositivoConfianza {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 del valor de la galleta (lib/token-huella)
+  huella       String
+  /// "Chrome en Windows" (lib/dispositivo)
+  dispositivo  String
+  ip           String?
+  /// sessionVersion del usuario al marcarlo
+  version      Int
+  createdAt    DateTime  @default(now())
+  venceAt      DateTime
+  ultimoUsoAt  DateTime?
+  quitadoAt    DateTime?
+  /// QUITADO | QUITADOS_TODOS | DUENO | REINICIO | REEMPLAZADO | NO_FUI_YO
+  motivoQuitado String?
+
+  @@index([huella])
+  @@index([userId])
+  @@map("dispositivos_confianza")
 }
 
 // C-148: cotizaciones (presupuestos) para empresas e instituciones. El equipo las arma en el panel o el cliente las
@@ -2610,10 +2641,34 @@ model IaAjustes {
   frases           Json?
   /// Las instrucciones que escribió el equipo, por uso: { [uso]: { texto, porId, porNombre, at } }. Sin el uso: las de fábrica
   instrucciones    Json?
+  /// C-292: el proveedor que responde (anthropic | google | xai | groq). null: anthropic, como antes
+  proveedor        String?
+  /// C-292: el que responde si el principal falla o no tiene clave. null: ninguno
+  respaldo         String?
+  /// C-292: un motor propio por uso: { [uso]: { proveedor, modelo } }. Sin el uso: el principal
+  porUso           Json?
   actualizadoPorId String?
   updatedAt        DateTime  @updatedAt
 
   @@map("ia_ajustes")
+}
+
+/// C-292: la clave y el modelo de cada proveedor que no es Anthropic (Anthropic sigue en ia_ajustes, como desde C-288). Una fila
+/// por proveedor: google | xai | groq. Los modelos los trae el proveedor al conectar la clave; el precio lo escribe el equipo.
+model IaProveedor {
+  id               String    @id
+  /// Cifrada con AES-256-GCM (lib/ia/clave.ts). null: sin clave (Groq: la de GROQ_API_KEY, si hay)
+  claveCifrada     String?
+  claveCambiadaAt  DateTime?
+  /// El modelo por defecto de este proveedor
+  modelo           String?
+  /// Dólares por millón de tokens, de la página oficial del proveedor. null: sin precio (el consumo cuenta solo los tokens)
+  precioEntrada    Decimal?  @db.Decimal(10, 4)
+  precioSalida     Decimal?  @db.Decimal(10, 4)
+  actualizadoPorId String?
+  updatedAt        DateTime  @updatedAt
+
+  @@map("ia_proveedores")
 }
 
 /// C-288: cada pedido a Claude (o a Groq, el respaldo de Buscar en la web) desde el panel: cuánto consume y qué falla.
@@ -2622,7 +2677,7 @@ model IaPedido {
   id        String   @id @default(cuid())
   /// busqueda | proveedor | respuesta | urgencia | cliente | campana | prueba (lib/ia/reglas.ts → USOS_IA)
   uso       String
-  /// anthropic | groq
+  /// anthropic | google | xai | groq (C-292)
   proveedor String   @default("anthropic")
   modelo    String
   esfuerzo  String?
@@ -2641,6 +2696,10 @@ model IaPedido {
   reintento Boolean  @default(false)
   usuarioId String?
   createdAt DateTime @default(now())
+  /// C-292: alguien del equipo marcó el resultado como "No sirvió", con el motivo
+  noSirvioAt     DateTime?
+  noSirvioMotivo String?
+  noSirvioPorId  String?
 
   @@index([createdAt])
   @@index([uso, createdAt])

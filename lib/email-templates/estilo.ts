@@ -43,8 +43,8 @@ export function urlTienda(): string {
 
 /** Las imágenes propias de los correos (public/images/correo). `?v=` cambia si cambia el dibujo: Gmail guarda las imágenes. */
 export function imagenCorreo(archivo: string): string {
-  // C-243: v=2, los íconos de las placas pasaron de cian a blanco
-  return `${urlTienda()}/images/correo/${archivo}?v=2`;
+  // C-243: v=2, los íconos de las placas pasaron de cian a blanco. C-296: v=3, Chispa 3.1 (el logo oficial en la camisa)
+  return `${urlTienda()}/images/correo/${archivo}?v=3`;
 }
 
 const caja = (fondo: string, borde: string) =>
@@ -298,7 +298,7 @@ export function boletoEpicoCorreo(o: { rotulo: string; logo: string | null; nomb
     </tr></table></td></tr></table>`;
 }
 
-/** Las poses de Chispa (las mismas de ElectroStudio, `public/images/studio/chispa-3`). */
+/** Las poses de Chispa (las mismas de ElectroStudio, `public/images/studio/chispa-31`, a la mitad). */
 export type PoseChispa = 'celebra' | 'saluda' | 'pulgar' | 'explica' | 'senala';
 
 /**

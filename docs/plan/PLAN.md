@@ -475,14 +475,15 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
   - la hoja "Así funciona" y cuatro pasos dibujados;
   - las tres apps con su logo y su tienda (Play Store y App Store);
   - el número de la app dibujado al entrar, y el correo de invitación que avisa lo que hará falta.
-- **C-291 · El dispositivo de confianza, 30 días** (pendiente; tabla y columnas aditivas):
+- **C-291 · El dispositivo de confianza, 30 días** (hecha en rc.105, `estado/C-291.md`; tabla y columnas aditivas):
   - para todo el panel, con el código otra vez en lo delicado (la clave de la IA y la del correo, Equipo, Métodos de pago y Respaldos);
   - se ve y se quita en Mi seguridad y en Equipo, llega un correo al marcarlo y se borra al cambiar la contraseña.
-- **C-292 · La IA de la tienda, no de un proveedor** (pendiente; absorbe C-288b):
+- **C-292 · La IA de la tienda, no de un proveedor** (hecha en rc.108, `estado/C-292.md`; absorbe C-288b):
   - conectores para Anthropic y para los que hablan como OpenAI (Groq, Grok y Gemini);
   - el principal, el de respaldo y uno por uso;
   - "IA" en los botones y "Lo redactó …" en el resultado, y "No sirvió".
-- **C-293 · Ajustes: el mapa nuevo, Tu negocio y Vender** (pendiente; absorbe la parte de Configuración de C-206):
+  - **Sigue C-292b** (pendiente): "Buscar en la web" con otro motor (hoy busca por su cuenta con la herramienta de Anthropic; con otro, la tienda le pasaría las páginas que encontró) y "No sirvió" en Buscar en la web, el catálogo del proveedor y la urgencia.
+- **C-293 · Ajustes: el mapa nuevo, Tu negocio y Vender** (hecha en rc.109, `estado/C-293.md`; absorbe la parte de Configuración de C-206):
   - los grupos de `AJUSTES.md` §3;
   - los campos del tamaño de su dato y una línea de ayuda;
   - cada sección guarda sola, con antes → después en lo de dinero.
@@ -593,6 +594,15 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-194** (**hecha**): el popup navideño del inicio con el diseño de la felicitación (Andrés lo pidió al ver la maqueta).
 - **C-195** (**hecha**, rc.23): Chispa 3.0 en `chispa/mascota/chispa.js`: manos y dedos (pulgares cortos, una silueta por mano, el OK chico), movimiento natural, cara y expresiones. Las imágenes de ElectroStudio y del popup salen de nuevo, en `chispa-3/`.
   - Queda para después, como dijo Andrés: el giro de tres cuartos de Chispa.
+- **C-296** (**hecha**, rc.107; `estado/C-296.md`): Chispa 3.1, elegida en la página de variantes.
+  - Los ojos de asombro y los tristes, la mirada que se nota, la cabeza y los hombros de cada emoción, «piensa» en la barbilla y «serio».
+  - El logo oficial en la camisa (vector).
+  - El OK y los brazos cruzados rehechos con la skill `manos-de-caricatura`, que junta lo que enseñan los animadores.
+  - Las imágenes de la web en `chispa-31`.
+- **Sigue: las manos animadas de Chispa** (pendiente; el equipo lo pidió el 18/11, con la skill):
+  - la mano intermedia de cada cambio de forma ("ve a otro lado en el medio");
+  - los dedos con su propio tiempo;
+  - una hoja de expresiones de manos, con variantes para elegir.
   - Sin pedir: volver a grabar los stickers y los reels para que tomen las manos nuevas (salen solos con `herramientas/sticker.mjs` y los `videos/*.src.html`).
 
 **Pedido del 10/11 (Andrés): vender de todo, con la ferretería aliada.** Se mostró en una página de maquetas con datos de producción; las decisiones se preguntaron en el chat. Los productos de la ferretería están en La Victoria (Aragua) y se venden solo con envío.
@@ -874,6 +884,10 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **C-273 · Entradas, énfasis y salidas, la línea de tiempo y la duración del video** (**hecha**, 2.3.0, rc.89, 16/11; `estado/C-273.md`). Con el arreglo de los números del editor, que no se podían escribir tecla por tecla (C-270).
   - **C-274 · Las 6 plantillas nuevas** (2.4.0): Lista de precios, Combo, Cuenta regresiva, ¿Cuál prefieres?, Lienzo libre y Antes y después.
   - **C-275 · La IA: las 5 mejoras** (2.5.0): Armar con Claude, Ideas de título, el texto de Instagram, la Revisión de Claude y Acortar. Para después: "Tres versiones".
+  - **C-295 · En el teléfono** (**hecha**, ElectroStudio 2.5.0, rc.106, 18/11; `estado/C-295.md`): el editor a pantalla completa con su hoja, los gestos para el dedo (44 px, pellizcar en el fondo, tocar afuera suelta), la vista previa del tamaño en que se ve (60 cuadros) y el final con la animación y qué hacer con la historia. **Decisión del equipo (18/11):** sigue dentro del panel, sin app aparte por ahora. Las versiones de C-274 y C-275 serán las siguientes (2.6.0 y 2.7.0).
+    - **Lo que faltó de los gestos:** dos toques sobre un texto para escribirlo ahí mismo, elegir una pieza que está debajo de otra (dejar el dedo quieto), borrar arrastrando a una papelera, la cruz de flechas para mover de a poco, mover la foto del fondo con los dedos (hoy con deslizadores) y que "Atrás" del teléfono cierre la pantalla completa.
+    - **Más velocidad, si un Android de gama baja lo pide:** "la capa en vuelo" (la historia sin la pieza que se mueve, guardada) y el motor en un hilo aparte (OffscreenCanvas).
+    - **Lo que el equipo aprobó del orden de ideas del 18/11** (sin número todavía): "Para hoy" en el inicio (lo publicado esta semana sin historia, lo que queda poco, las ofertas que empiezan) con "Armar historia" de Claude, la "Campaña inmediata" y el fondo de Claude (una receta que el motor dibuja, guardada en la historia y no en la galería; "Sorpréndeme" sin IA), que amplían C-275; "Programar" en el final (que llegue por Telegram a una hora); y las seis opciones: guardar como plantilla, Reel y carrusel de varios productos, tu video de fondo, fotos de estudio en el teléfono, impresos para el local (etiquetas con QR) y las ganadoras de Resultados. Lo que se arme solo, sin pedirlo, toca la decisión del 28/09 (§7: el plan semanal automático quedó fuera).
 
 **Pedido del 16/11 (el equipo): Clientes, de una lista pobre a saber quién es cada cliente** (**hecha y en producción** el 16/11, C-276, Clientes 1.7.0, rc.92; `estado/C-276.md`). El equipo eligió la ficha A en dos columnas, escribirle por campana, correo y WhatsApp, y las notas del equipo con quién y cuándo. Del inventario salió C-277 (la lista de Verificaciones sin permiso), en producción con rc.91. Queda:
 - **Ver los clientes reales** en las pruebas del equipo (la base de producción no se leyó): por ejemplo, teléfonos escritos de otra forma para el enlace de WhatsApp.

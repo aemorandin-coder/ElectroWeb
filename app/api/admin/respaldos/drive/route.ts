@@ -5,6 +5,7 @@ import { revocarPermiso } from '@/lib/respaldos/drive';
 import { estadoParaPanel } from '@/lib/respaldos/estado';
 import { leerSecreto } from '@/lib/respaldos/secreto';
 import { leerAjustes } from '@/lib/respaldos/servicio';
+import { exigirCodigoReciente } from '@/lib/dispositivos-confianza';
 
 // C-165: desconectar Drive. Apaga el respaldo automático. Los respaldos que ya están en Drive no se tocan.
 export const dynamic = 'force-dynamic';
@@ -12,6 +13,9 @@ export const dynamic = 'force-dynamic';
 export async function DELETE(request: NextRequest) {
   const dueno = await exigirDueno('desconectar');
   if (esRespuesta(dueno)) return dueno;
+  // C-291: si la sesión entró por un dispositivo de confianza, esto pide el número de la app otra vez
+  const codigoReciente = await exigirCodigoReciente();
+  if (codigoReciente) return codigoReciente;
   try {
     const actual = await leerAjustes();
     const permiso = leerSecreto(actual.driveRefreshToken);

@@ -32,7 +32,7 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   const ajustes = await prisma.emailSettings.findUnique({ where: { id: 'default' }, select: { marketingEnabled: true } });
   if (!ajustes?.marketingEnabled) {
-    return NextResponse.json({ error: 'Los correos de marketing están desactivados. Actívalos en Configuración → Correo.' }, { status: 409 });
+    return NextResponse.json({ error: 'Los correos de marketing están desactivados. Actívalos en Ajustes → Correo.' }, { status: 409 });
   }
 
   if (accion === 'reanudar') {

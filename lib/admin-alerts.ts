@@ -53,7 +53,7 @@ export async function buildAlertEmailHtml({
       ${datosCorreo(lines.map(({ label, value }) => [escapeHtml(label), escapeHtml(value)]))}
       ${actionUrl ? botonCorreo(escapeHtml(actionUrl), escapeHtml(actionLabel || 'Abrir en el panel')) : ''}`,
     pie: 'equipo',
-    motivo: 'Recibes este correo porque estás en la lista de avisos del panel (Configuración → Avisos y mantenimiento).',
+    motivo: 'Recibes este correo porque estás en la lista de avisos del panel (Ajustes → Avisos y mantenimiento).',
   });
 }
 

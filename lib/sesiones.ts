@@ -38,7 +38,7 @@ async function datosDeLaPeticion(): Promise<{ userAgent: string | null; ip: stri
 }
 
 /** Crea la sesión al iniciar sesión y devuelve su id para el JWT. */
-export async function abrirSesion(datos: { userId: string; esAdmin: boolean; metodo: 'contraseña' | 'google'; version: number }): Promise<string> {
+export async function abrirSesion(datos: { userId: string; esAdmin: boolean; metodo: 'contraseña' | 'google'; version: number; segundoPaso?: 'codigo' | 'respaldo' | 'confianza' }): Promise<string> {
   const { userAgent, ip } = await datosDeLaPeticion();
   const dispositivo = describirDispositivo(userAgent);
   const ahora = new Date();
@@ -65,6 +65,8 @@ export async function abrirSesion(datos: { userId: string; esAdmin: boolean; met
       metodo: datos.metodo,
       esAdmin: datos.esAdmin,
       version: datos.version,
+      // C-291: cómo pasó el segundo paso (con 'confianza', lo delicado pide el código otra vez)
+      segundoPaso: datos.segundoPaso ?? null,
       createdAt: ahora,
       lastSeenAt: ahora,
       expiresAt: new Date(ahora.getTime() + (datos.esAdmin ? DURACION_ADMIN_MS : DURACION_CLIENTE_MS)),
@@ -200,6 +202,8 @@ export async function bloquearPorNoFuiYo(sid: string, firma: string, ipReporte: 
   await prisma.$transaction([
     prisma.user.update({ where: { id: sesion.userId }, data: { password: bloqueo, sessionVersion: { increment: 1 } } }),
     prisma.userSession.updateMany({ where: { userId: sesion.userId, revokedAt: null }, data: { revokedAt: new Date(), motivoCierre: 'CERRADA' } }),
+    // C-291: también los dispositivos de confianza (la versión nueva ya los anula; así se ven quitados)
+    prisma.dispositivoConfianza.updateMany({ where: { userId: sesion.userId, quitadoAt: null }, data: { quitadoAt: new Date(), motivoQuitado: 'NO_FUI_YO' } }),
     prisma.passwordResetToken.deleteMany({ where: { userId: sesion.userId } }),
     prisma.passwordResetToken.create({ data: { userId: sesion.userId, token: tokenParaGuardar(token), expiresAt: new Date(Date.now() + 60 * 60 * 1000) } }),
   ]);

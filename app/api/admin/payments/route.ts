@@ -6,6 +6,7 @@ import { isAuthorized } from '@/lib/auth-helpers';
 import { revalidateStorefront } from '@/lib/revalidate-storefront';
 import { validateAndSanitizePaymentMethod } from '@/lib/validations/payment-methods';
 import { registrarAccionAdmin } from '@/lib/audit-log';
+import { exigirCodigoReciente } from '@/lib/dispositivos-confianza';
 
 export async function GET() {
   try {
@@ -34,6 +35,9 @@ export async function POST(request: NextRequest) {
     if (!isAuthorized(session, 'MANAGE_SETTINGS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
+    // C-291: si la sesión entró por un dispositivo de confianza, esto pide el número de la app otra vez
+    const codigoReciente = await exigirCodigoReciente();
+    if (codigoReciente) return codigoReciente;
 
     const body = await request.json().catch(() => null);
     if (!body) {
@@ -64,6 +68,9 @@ export async function PATCH(request: NextRequest) {
     if (!isAuthorized(session, 'MANAGE_SETTINGS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
+    // C-291: si la sesión entró por un dispositivo de confianza, esto pide el número de la app otra vez
+    const codigoReciente = await exigirCodigoReciente();
+    if (codigoReciente) return codigoReciente;
 
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== 'object' || !body.id) {
@@ -139,6 +146,9 @@ export async function DELETE(request: NextRequest) {
     if (!isAuthorized(session, 'MANAGE_SETTINGS')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
+    // C-291: si la sesión entró por un dispositivo de confianza, esto pide el número de la app otra vez
+    const codigoReciente = await exigirCodigoReciente();
+    if (codigoReciente) return codigoReciente;
 
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');

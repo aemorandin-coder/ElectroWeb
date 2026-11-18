@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { leerAjustesIa } from '@/lib/ia/ajustes';
+import { leerAjustesIa, OTROS_PROVEEDORES } from '@/lib/ia/ajustes';
 import { esRespuesta, exigirPersonaDeIa } from '@/lib/ia/acceso';
 import { enmascarar } from '@/lib/ia/clave';
 import { leerConsumo } from '@/lib/ia/consumo';
@@ -20,6 +20,24 @@ export async function GET() {
     return NextResponse.json({
       updatedAt: ajustes.updatedAt?.toISOString() ?? null,
       motor: { modelo: ajustes.modelo, esfuerzo: ajustes.esfuerzo, fuente: ajustes.fuente },
+      // C-292: quién responde, el respaldo, el motor propio de cada uso y los otros proveedores (la clave, nunca entera)
+      proveedor: ajustes.proveedor,
+      respaldo: ajustes.respaldo,
+      porUso: ajustes.porUso,
+      proveedores: OTROS_PROVEEDORES.map((id) => {
+        const p = ajustes.otros[id];
+        return {
+          id,
+          hay: p.clave !== null,
+          enmascarada: p.clave ? enmascarar(p.clave) : null,
+          fuente: p.fuenteClave,
+          claveRota: p.claveRota,
+          cambiadaAt: p.claveCambiadaAt?.toISOString() ?? null,
+          modelo: p.modelo,
+          precioEntrada: p.precioEntrada,
+          precioSalida: p.precioSalida,
+        };
+      }),
       clave: {
         hay: ajustes.clave !== null,
         enmascarada: ajustes.clave ? enmascarar(ajustes.clave) : null,
@@ -30,7 +48,7 @@ export async function GET() {
         cambiadaAt: ajustes.claveCambiadaAt?.toISOString() ?? null,
       },
       // Solo si hay clave de Groq: sí o no, nunca la clave
-      groq: Boolean(process.env.GROQ_API_KEY),
+      groq: ajustes.otros.groq.clave !== null,
       usos: USOS_IA.map((u) => {
         const propia = ajustes.instrucciones[u.id];
         return {
@@ -48,6 +66,6 @@ export async function GET() {
   } catch (error) {
     console.error('[ia] GET /api/admin/ia:', error instanceof Error ? error.name : 'desconocido');
     // Sin las tablas nuevas (antes de aplicar el SQL del deploy) la pantalla lo dice en vez de quedar en blanco
-    return NextResponse.json({ error: 'No se pudo leer lo de Claude. Si es la primera vez, falta aplicar el SQL de la versión.' }, { status: 500 });
+    return NextResponse.json({ error: 'No se pudieron leer los ajustes de la IA. Si es la primera vez, falta aplicar el SQL de la versión.' }, { status: 500 });
   }
 }

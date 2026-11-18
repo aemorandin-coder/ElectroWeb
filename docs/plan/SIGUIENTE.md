@@ -1,10 +1,36 @@
-# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.103; por subir: rc.104, §2)
+# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.106; por subir: rc.107 a rc.109, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-290 · Los dos pasos que se entienden (rc.104, en `main`, por subir: §2; `estado/C-290.md`):** la primera fase del plan de Ajustes.
+- **C-293 · Ajustes ordenado, primera parte (rc.109, en `main`, por subir con rc.107 y rc.108: §2; `estado/C-293.md`):** la fase 4 del plan de Ajustes.
+  - **El mapa nuevo:** "Ajustes" por grupos, con el estado de cada sección; en el teléfono, primero la lista. Métodos de pago adentro.
+  - **Cada sección guarda sola,** con antes → después en lo que toca dinero; los campos, del tamaño de su dato.
+  - **Sigue C-294:** Avisos (Qué avisar y Telegram adentro), Conexiones y La tienda en línea (Portada y Google y redes a Marketing), y quitar lo que no sirve.
+- **C-292 · La IA de la tienda, no de un proveedor (rc.108, en `main`, por subir con rc.107: §2; `estado/C-292.md`):** la fase 3 del plan de Ajustes.
+  - **Configuración → IA:** quién responde (Claude, Gemini, Grok o Groq), su modelo y el respaldo; una tarjeta por proveedor con su clave y su precio; cada uso sigue al principal o tiene el suyo.
+  - **En las pantallas:** "Armar con IA", "Resumir con IA", "Redactar con IA", y en el resultado "Lo redactó …" con "No sirvió".
+  - **Sigue siendo de Claude:** "Buscar en la web" cuando busca por su cuenta (Groq de respaldo).
+- **C-296 · Chispa 3.1 (rc.107, en `main`, por subir: §2; `estado/C-296.md`):** el equipo pidió ver sus emociones y mejorarlo, y eligió en la página de variantes.
+  - **En la web:** el logo oficial en la camisa de Chispa, en ElectroStudio, el popup navideño y los correos.
+  - **En los videos** (`chispa.js`, cuando se vuelvan a grabar):
+    - ojos de asombro y tristes;
+    - la mirada que se nota;
+    - la cabeza y los hombros de cada emoción;
+    - «piensa» en la barbilla y «serio»;
+    - el OK y los brazos cruzados rehechos.
+  - **La skill `manos-de-caricatura`:** cómo dibujan y animan las manos los animadores (Blair, Kricfalusi de Hanna-Barbera, Williams, animadores japoneses). Lo siguiente son las manos animadas.
+- **C-295 · ElectroStudio en el teléfono (rc.106, en producción desde el 18/11; pruebas por confirmar: §2; `estado/C-295.md`):** el pedido del equipo del 18/11. Sigue dentro del panel, sin app aparte (decisión del equipo).
+  - **"Editar en grande"** en el teléfono: la historia del alto de la pantalla y abajo una hoja con el paso, + Título, + Subtítulo, + Sticker y Terminar.
+  - **Para el dedo:** asas y botones de 44 px, dos dedos en cualquier parte agrandan y giran la pieza elegida, un toque afuera la suelta y vibra al pegarse a una guía.
+  - **60 cuadros:** la vista previa se dibuja del tamaño en que se ve, y sale igual que la descarga.
+  - **El final:** la historia en grande con su animación, cuánto tardaste y qué hacer: compartir, descargar, Telegram, copiar el texto y el enlace, u otra.
+- **C-291 · El dispositivo de confianza, 30 días (rc.105, en producción desde el 18/11, subida con rc.106; pruebas por confirmar: §2; `estado/C-291.md`):** la fase 2 del plan de Ajustes.
+  - **Al entrar con el número,** "No pedir el número en esta computadora por 30 días" (apagada). La contraseña se sigue pidiendo.
+  - **Mi seguridad** los lista y los quita; **Equipo** los cuenta y el dueño los quita. Se anulan al cambiar la contraseña o reiniciar los dos pasos.
+  - **Lo delicado** (la clave de la IA y la del correo, Equipo, Métodos de pago, Respaldos) pide el número otra vez si se entró por confianza.
+- **C-290 · Los dos pasos que se entienden (rc.104, en producción desde el 18/11, subida con rc.106; pruebas por confirmar: §2; `estado/C-290.md`):** la primera fase del plan de Ajustes.
   - **Mi seguridad** guía los dos pasos en cuatro pasos dibujados: baja la app (las tres, con su logo y sus tiendas), agrega Electro Shop (el teléfono dibujado y el QR; en el teléfono, "Abrir en la app"), escribe el número y guarda tus llaves de repuesto.
   - **Al entrar:** el número de la app dibujado, errores que dicen qué hacer y la salida por WhatsApp.
   - **La invitación** avisa antes lo que va a hacer falta.
@@ -516,25 +542,81 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.104` (C-290)
-Producción está en `v1.0.0-rc.103` (`e82052e3`); su bloque está en `HISTORIAL.md`. Es un solo bloque. Si entran más tareas del plan de Ajustes antes de subir, se suman aquí.
-- **Sin cambio de base,** sin SQL, sin variables nuevas y sin cron.
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.104`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 10 minutos; antes, recarga el panel con Ctrl+R):
+### Lo que falta subir: `v1.0.0-rc.109` (C-296, C-292 y C-293)
+Producción está en `v1.0.0-rc.106` (`8dae211c`); su bloque está en `HISTORIAL.md`. Es un solo bloque, con rc.107 y rc.108 adentro. Si entran más tareas antes de subir, se suman aquí.
+- **C-296** (rc.107) solo cambia imágenes y dos líneas de código.
+- **C-293** (rc.109), sin cambio de base.
+  - **Antes de subir, mira Configuración → Portada e inventario:** si "Avisarme cuando un producto quede con stock bajo" o "…se agote" están apagados, apaga también "Stock bajo" o "Producto agotado" en Notificaciones → Qué avisar. Desde rc.109 esos avisos se eligen solo ahí (D3).
+- **C-292** (rc.108) trae un **cambio de base aditivo:** una tabla nueva y seis columnas, sin `DROP` ni cambios de tipo. Sin variables nuevas y sin cron.
+```sql
+ALTER TABLE "ia_ajustes" ADD COLUMN     "porUso" JSONB,
+ADD COLUMN     "proveedor" TEXT,
+ADD COLUMN     "respaldo" TEXT;
+ALTER TABLE "ia_pedidos" ADD COLUMN     "noSirvioAt" TIMESTAMP(3),
+ADD COLUMN     "noSirvioMotivo" TEXT,
+ADD COLUMN     "noSirvioPorId" TEXT;
+CREATE TABLE "ia_proveedores" (
+    "id" TEXT NOT NULL,
+    "claveCifrada" TEXT,
+    "claveCambiadaAt" TIMESTAMP(3),
+    "modelo" TEXT,
+    "precioEntrada" DECIMAL(10,4),
+    "precioSalida" DECIMAL(10,4),
+    "actualizadoPorId" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "ia_proveedores_pkey" PRIMARY KEY ("id")
+);
+```
+- **Subir** (en la terminal del servidor):
+  1. El respaldo: `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc108.dump`
+  2. `git pull --ff-only && bash scripts/deploy.sh --sin-pull`. El guion se detiene por el cambio de base y muestra el SQL de arriba.
+  3. `npx prisma db push`, y otra vez `bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.109`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (antes, recarga el panel con Ctrl+R):
+  1. **Chispa 3.1** (C-296, unos 2 minutos, en la computadora):
+     - Marketing → ElectroStudio → una historia con Chispa (Felicitación, por ejemplo): Chispa lleva el logo redondo de la tienda en el pecho, no la placa con «ES»;
+     - Marketing → Correos, la vista previa de cualquier correo: Chispa abajo, con el logo en el pecho.
+  2. **La IA con proveedores** (C-292, unos 10 minutos, en la computadora con la cuenta del dueño):
+     - Configuración → IA (el menú ya no dice "IA · Claude"): arriba sigue "Claude Haiku 5.5", y "Proveedores y claves" muestra Claude, Gemini, Grok y Groq;
+     - **todo sigue igual mientras no cambies nada:** en una consulta, "Redactar con IA"; el borrador dice "Lo redactó Claude Haiku 5.5 (esfuerzo alto)" y tiene "No sirvió";
+     - toca "No sirvió", elige un motivo y "Anotar": en Configuración → IA → "Lo que no sirvió" aparece;
+     - en "Los usos de la IA", "Motor" de "Resumen del cliente": elige Claude Sonnet 5.5 y "Guardar". La tarjeta dice "· el suyo"; "Seguir al principal" lo devuelve;
+     - **solo si el equipo tiene una clave de Gemini o Grok:** pégala en su tarjeta ("Conectar la clave"), elige ese motor en "El motor" con "Claude" de respaldo y "Publicar el cambio". Un "Resumir con IA" dice "Lo redactó Gemini · …". Para volver, elige Claude y publica.
+  3. **Ajustes ordenado** (C-293, unos 8 minutos, en la computadora y en el teléfono, con la cuenta del dueño):
+     - el menú dice "Ajustes" y ya no hay "Métodos de Pago" en Administración;
+     - Ajustes muestra los grupos (Tu negocio, Vender, Avisos, Conexiones, La tienda en línea, Equipo y acceso), cada sección con su estado ("… Bs · IVA 16 %");
+     - Vender → Métodos de pago muestra los métodos de siempre, con "Nuevo método"; el enlace viejo `/admin/payments` lleva ahí;
+     - en Tasa e IVA cambia el porcentaje: abajo sale "Revisa antes de guardar" con antes → después. Descarta;
+     - en el teléfono, Ajustes abre con la lista; al tocar una sección, "Ajustes" vuelve.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.106 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas se pueden quedar: rc.106 no las usa. Para quitar solo C-293: `git reset --hard v1.0.0-rc.108`; para quitar también C-292 y dejar a Chispa 3.1: `v1.0.0-rc.107`.
+
+### Por confirmar de rc.106 (C-290, C-291 y C-295; unos 25 minutos)
+Ya en producción desde el 18/11, cerca de las 10:17 a. m. La subió el equipo a mano en la terminal del servidor, con los pasos del bloque (desde la PC de Claude de ese momento no había acceso SSH). Claude lo comprobó desde fuera; el detalle está en `HISTORIAL.md`.
+Falta esto (antes, recarga el panel con Ctrl+R):
   1. **La guía, de cero** (en la computadora, con una cuenta de prueba invitada desde Equipo):
-     - abre la invitación: avisa que hace falta el teléfono y una app;
-     - crea la contraseña: Mi seguridad abre con "Así entras al panel";
-     - sigue los cuatro pasos con Google Authenticator de verdad en tu teléfono, escaneando el QR.
-     - Al final, "Entrar al panel".
+     - la invitación avisa que hace falta el teléfono y una app;
+     - Mi seguridad abre con "Así entras al panel";
+     - los cuatro pasos con Google Authenticator de verdad, escaneando el QR, y "Entrar al panel".
   2. **Desde el teléfono** (Android o iPhone), con otra cuenta de prueba: en el paso 2, "Abrir en Google Authenticator" abre la app con Electro Shop puesto.
-  3. **Entrar:** cierra la sesión y entra otra vez con la cuenta de prueba.
-     - Pide "Escribe el número de tu app", con la fila de Electro Shop dibujada.
-     - Un número cualquiera dice "Ese número ya cambió…".
-     - "¿Sin el teléfono? Usa una llave de repuesto" entra con una llave.
-  4. **La contadora:** que entre como siempre. Si ya tenía los dos pasos, no le cambia nada.
+  3. **Entrar:** cierra la sesión y entra otra vez.
+     - Pide "Escribe el número de tu app", con la fila dibujada; un número cualquiera dice "Ese número ya cambió…".
+     - Marca "No pedir el número en esta computadora por 30 días" y entra con el número.
+     - Llega el correo "Marcaste un dispositivo de confianza".
+  4. **El dispositivo de confianza:**
+     - cierra la sesión y entra otra vez: solo pide la contraseña;
+     - Mi seguridad → Dispositivos de confianza lo muestra como "Este".
+  5. **Lo delicado** (con la cuenta del dueño, entrando por confianza): en Configuración → IA, "Probar la conexión" de la clave no pide nada; cambiar la clave sí abre "Confirma que eres tú". Cancela.
+  6. **Quitar:** "Quitar" en Mi seguridad; la vez siguiente pide el número otra vez.
+  7. **La contadora:** que entre como siempre y, si quiere, marque su computadora.
   - Al terminar, quita las cuentas de prueba desde Equipo.
-- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.103 && npm install && bash scripts/deploy.sh --sin-pull`.
+  8. **ElectroStudio en el teléfono** (C-295, unos 10 minutos, en el teléfono de marketing con Chrome; antes, recarga el panel):
+     - abre una historia: debajo de la vista previa, "Editar en grande". La primera vez sale "Edita con los dedos";
+     - toca un título: sus asas se toman fácil con el dedo. Muévelo con un dedo; con dos dedos en el fondo (no sobre el título), agrándalo y gíralo. Un toque afuera lo suelta. Al pegarse al centro, el teléfono vibra corto;
+     - "+ Título": escribe algo largo; el teclado no tapa el campo y el título baja de línea antes del borde;
+     - "Ver la animación" arriba: se mueve fluido, sin saltos;
+     - "Terminar" → "Sacar el video": el anillo avanza, y al terminar la historia llega en grande con su destello. "Compartir" abre el menú del teléfono con Instagram; "Telegram" llega al chat del bot; "Otra igual" abre la copia en el paso 1;
+     - en la computadora, "Sacar la imagen": el final va en dos columnas y "Descargar la imagen" la baja.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.103 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas se pueden quedar: rc.103 no las usa. Para quitar solo ElectroStudio en el teléfono y dejar lo de Ajustes: `git reset --hard v1.0.0-rc.105` en lugar de `v1.0.0-rc.103`.
 
 ### Por confirmar de rc.103 (C-288, Claude en el panel; unos 8 minutos)
 Ya en producción desde el 18/11, cerca de las 8:05 a. m. Lo subió Claude por SSH con la aprobación del equipo; el detalle está en `HISTORIAL.md`. Claude ya comprobó la versión, las tablas, que la API nueva no responde sin sesión, las páginas y que el registro de errores no sumó líneas.
@@ -1273,6 +1355,8 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
+**Hecho el 18/11:** C-288 (Claude en el panel, rc.103, en producción), C-289 (el plan de Ajustes), C-290 y C-291 (rc.104 y rc.105) y C-295 (ElectroStudio en el teléfono, rc.106); las tres, en producción desde el 18/11 (pruebas por confirmar: §2). Sigue el plan de Ajustes (C-292 a C-294) y, en ElectroStudio, lo de `PLAN.md` §5.2 bajo C-295.
+
 **Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61), C-249 (los filtros en píldoras, rc.63), C-249b (la oferta o el cupón y las gift cards impresas por pasos, rc.64) C-249c (el método de pago y la categoría, rc.65) C-249d (la campaña y el promotor, rc.67), C-249e (el curso y Servicios, rc.68: los 8 formularios van por pasos) y C-251 (Mi panel: las fallas y lo nuevo, rc.69) y C-251b (Mi panel con el kit, rc.71); quedan sus tres decisiones (`estado/C-251.md`). También C-253 (el sorteo más atractivo, rc.72) y C-255 ("Cómo participar" con íconos y el camino de registro, rc.73) y C-258 (el estrés de los caminos del cliente y sus arreglos, rc.75), y C-254 (la semana del ganador del sorteo, rc.79). **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
 
 **Hecho el 14/11:** C-220 (el plan), C-221 (el sorteo por pasos, rc.45), C-222 ("Desde Aragua" y el filtro, rc.46) C-225 (los textos para buscadores, rc.48) C-223 (el aviso de cookies, rc.49) C-224 (los tres únicos, rc.51) y C-241 (el checkout por pasos, rc.53), C-242 (Facturas, ordenada, rc.56). También C-226 (sin ámbar, rc.44), C-219 (los correos, rc.47) y C-234 (cuándo sale cada pedido, rc.52), y C-227 (los correos al aliado comercial, rc.55).

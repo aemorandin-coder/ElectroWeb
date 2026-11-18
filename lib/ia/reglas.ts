@@ -71,13 +71,13 @@ export const USOS_IA: readonly InfoUso[] = [
   },
   {
     id: 'proveedor', nombre: 'Catálogo del proveedor', icono: 'IconoLista',
-    donde: 'Productos → Proveedor → Proponer con Claude',
+    donde: 'Productos → Proveedor → Proponer con IA',
     hace: 'Propone la categoría y el nombre de la tienda para cada código de la lista de un proveedor, de a 40. Lo propuesto queda guardado y lo revisa el equipo antes de crear.',
     recibe: 'De cada artículo: su nombre, su categoría y departamento en la lista del proveedor, la marca, el modelo y lo que propuso la regla automática. Y las categorías de la tienda.',
   },
   {
     id: 'respuesta', nombre: 'Respuesta a una consulta', icono: 'IconoChat',
-    donde: 'Consultas → Redactar con Claude',
+    donde: 'Consultas → Redactar con IA',
     hace: 'Redacta el borrador de la respuesta a un cliente con sus órdenes, el precio y la existencia de lo que nombra y el flete de ZOOM a su ciudad. Una persona lo revisa y lo envía.',
     recibe: 'El primer nombre y el mensaje del cliente, sus órdenes de los últimos meses, los productos que nombra y el flete. No el correo ni el teléfono.',
   },
@@ -89,13 +89,13 @@ export const USOS_IA: readonly InfoUso[] = [
   },
   {
     id: 'cliente', nombre: 'Resumen del cliente', icono: 'IconoClientes',
-    donde: 'Clientes → ficha → Resumir con Claude',
+    donde: 'Clientes → ficha → Resumir con IA',
     hace: 'Cuenta qué tipo de cliente es, cómo compra y paga, qué ofrecerle y el siguiente paso. Las cifras las calcula la tienda.',
     recibe: 'El primer nombre, la ciudad y lo que compró, sus pendientes y favoritos, y productos de la tienda para ofrecerle. Ni correo, ni teléfono, ni cédula, ni dirección.',
   },
   {
     id: 'campana', nombre: 'Campaña de correo', icono: 'IconoCorreo',
-    donde: 'Marketing → Campañas → Armar con Claude',
+    donde: 'Marketing → Campañas → Armar con IA',
     hace: 'Con el objetivo que escribe el equipo, escoge hasta 4 productos reales y escribe el asunto, el título, la introducción y el cierre. No se guarda ni se envía hasta que una persona lo revisa.',
     recibe: 'El objetivo, lo que se sabe de la tienda (envío gratis, fechas de Navidad, el sorteo) y hasta 40 productos reales con su precio.',
   },
@@ -103,10 +103,10 @@ export const USOS_IA: readonly InfoUso[] = [
 
 export const PLANTILLA_IMPORTAR = {
   id: 'plantilla' as const,
-  nombre: 'Importar productos con claude.ai',
+  nombre: 'Importar productos con una IA de chat',
   icono: 'IconoSubir' as NombreIcono,
   donde: 'Productos → Importar → Descargar plantilla',
-  hace: 'No usa la clave del panel: es la plantilla que se le pasa a Claude en claude.ai junto con las fotos. Sus instrucciones viven en la plantilla; aquí se muestran las reglas que la tienda comprueba al importar.',
+  hace: 'No usa la clave del panel: es la plantilla que se le pasa a una IA (claude.ai, Gemini o ChatGPT) junto con las fotos. Sus instrucciones viven en la plantilla; aquí se muestran las reglas que la tienda comprueba al importar.',
 };
 
 export const infoDeUso = (id: string): InfoUso | undefined => USOS_IA.find((u) => u.id === id);
@@ -223,7 +223,7 @@ export const REGLAS_IA: readonly ReglaIa[] = [
   },
   {
     id: 'sin-pedir-claves', texto: 'Nunca pide claves, códigos de SMS ni datos de tarjeta', capa: 'tienda', accion: 'pide', usos: ['respuesta'],
-    ejemplo: 'Un borrador que los pide se le devuelve a Claude una vez; si insiste, esa oración no sale.',
+    ejemplo: 'Un borrador que los pide se le devuelve a la IA una vez; si insiste, esa oración no sale.',
     claude: 'Nunca pidas claves, contraseñas, códigos que llegan por SMS o correo, ni datos de tarjeta.',
   },
   {
@@ -255,7 +255,7 @@ export const REGLAS_IA: readonly ReglaIa[] = [
   },
   {
     id: 'sin-datos-personales', texto: 'Sin cédula, teléfono ni correo', capa: 'tienda', accion: 'quita', usos: ['cliente'],
-    ejemplo: 'Claude no los recibe; si aparecen en el resumen, se quitan.',
+    ejemplo: 'La IA no los recibe; si aparecen en el resumen, se quitan.',
     claude: 'Sin cédula, teléfono, correo ni dirección del cliente.',
   },
   // ───── Campaña de correo ─────
@@ -353,6 +353,6 @@ export function instruccionesDe(uso: UsoIa, deFabrica: string, opciones: { delEq
 export const ETIQUETA_FALLA: Record<string, string> = {
   'sin-clave': 'Falta la clave',
   'no-termino': 'No terminó la respuesta',
-  servicio: 'Claude no respondió',
+  servicio: 'La IA no respondió',
   regla: 'Rompió una regla también al repetirla',
 };

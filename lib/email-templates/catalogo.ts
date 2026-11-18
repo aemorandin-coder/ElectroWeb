@@ -197,6 +197,6 @@ export const PLANTILLAS: { id: string; grupo: string; name: string; description:
     { id: 'supplier_sale', grupo: 'Proveedores', name: '¡Se vendió su producto!', description: 'Al confirmarse el pago, con copia al equipo', render: () => deCorreo(correoVentaProveedor(DESPACHO)) },
     { id: 'supplier_reminder', grupo: 'Proveedores', name: 'Recordatorio de la guía', description: 'El día del plazo, si no anotó la guía', render: () => deCorreo(correoRecordatorioProveedor(DESPACHO, DESPACHO.plazo)) },
     { id: 'supplier_cancelled', grupo: 'Proveedores', name: 'Se canceló: no lo despache', description: 'Si la orden se cancela antes de la guía', render: () => deCorreo(correoCancelacionProveedor({ ...DESPACHO, url: null })) },
-    { id: 'test', grupo: 'Equipo y marketing', name: 'Correo de prueba', description: 'Configuración → Correo', render: () => capturarCorreo(() => sendTestEmail(DESTINO)) },
+    { id: 'test', grupo: 'Equipo y marketing', name: 'Correo de prueba', description: 'Ajustes → Correo', render: () => capturarCorreo(() => sendTestEmail(DESTINO)) },
 ];
 

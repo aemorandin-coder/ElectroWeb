@@ -15,7 +15,7 @@ No hay videos guardados aquí (Andrés los tiene respaldados). La única excepci
 | `videos/` | Una página por video. `*.src.html` es la fuente que se edita; `*.html` es la versión armada que se graba. |
 | `piezas/` | Banner de YouTube, miniatura de YouTube, portada de reel, portadas de historias destacadas y el sticker animado de WhatsApp. |
 | `guiones/` | Los guiones con sus textos (`la-ficha.md`) y los prompts de Google Flow (`guion-andres-chispa.md`). |
-| `herramientas/` | `render.mjs` (graba), `armar.py` (arma las páginas), `captura.mjs` (fotos de piezas), `sticker.mjs` (stickers animados de WhatsApp), `capa.mjs` (textos sobre video real), `voz.py` y `puente-voz.py` (voces), `sonido-*.py` (efectos), `quien-habla.py` (dónde habla Chispa en un clip de Flow), `montaje-andres-chispa.sh` (montaje con clips de Flow) y `cuadros.sh` (cuadros de clips). |
+| `herramientas/` | `render.mjs` (graba), `armar.py` (arma las páginas), `captura.mjs` (fotos de piezas), `poses-web.mjs` (las imágenes de Chispa de la web: ElectroStudio, el popup y los correos), `sticker.mjs` (stickers animados de WhatsApp), `capa.mjs` (textos sobre video real), `voz.py` y `puente-voz.py` (voces), `sonido-*.py` (efectos), `quien-habla.py` (dónde habla Chispa en un clip de Flow), `montaje-andres-chispa.sh` (montaje con clips de Flow) y `cuadros.sh` (cuadros de clips). |
 | `assets/` | Fuentes, logos, fotos, voces de Chispa (`voz/`: mp3 + transcripciones) y `cierre.mp4`. |
 | `clips/`, `salida/` | No se suben. `clips/`: los videos reales (Flow, taller, L2) que pone Andrés. `salida/`: lo que se graba. |
 

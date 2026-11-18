@@ -87,7 +87,7 @@ export function BotonUrgencia({ alTerminar }: { alTerminar: () => void | Promise
         toast.error(datos.error || 'No se pudo ordenar por urgencia.');
       } else {
         const n = (datos.mensajes ?? 0) + (datos.solicitudes ?? 0);
-        toast.success(n ? `Claude revisó ${n} ${n === 1 ? 'pendiente' : 'pendientes'}.` : 'Todo lo pendiente ya estaba revisado.');
+        toast.success(n ? `La IA revisó ${n} ${n === 1 ? 'pendiente' : 'pendientes'}.` : 'Todo lo pendiente ya estaba revisado.');
       }
       await alTerminar();
     } finally {

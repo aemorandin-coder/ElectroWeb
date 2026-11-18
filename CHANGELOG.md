@@ -10,6 +10,17 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.113] - 2026-11-18
+Ajustes → IA por prioridad y con plegables (C-298), pedido del equipo después de ver C-292. Sin cambio de base, sin variables y sin cron.
+### Ajustes 1.9.0 (C-298)
+- **Arriba, el motor y lo que gasta:** el estado con las cifras del mes, El motor y Consumo y fallas, abiertos. Proveedores y claves, Los usos, Reglas y Guía, plegados; cerrados dicen lo esencial (cuántos tienen clave, cuántos usos, cuántas reglas y frases).
+- **El motor:** quién responde y el modelo a lo ancho; el esfuerzo al lado del respaldo. "Revisar y publicar" es una línea mientras no cambias nada; al cambiar, el antes → después y a cuántos usos les cambia.
+- **Consumo:** la tabla de cada uso, con los pedidos por día y por proveedor al lado. Lo que falló, lo que no sirvió y lo que atajaron las reglas (antes en Reglas), plegados con su cuenta del mes.
+- **Adentro también se pliega:** cada proveedor (con "Responde ahora", "De respaldo", "Con clave"), cada uso (con su motor, sus pedidos y sus fallas), las reglas de cada uso y cada lugar de la Guía.
+- **Arreglo:** "Ir a Proveedores y claves" y "Cómo usarla" ya no sacan de la sección IA, y `/admin/settings#ia-proveedores` la abre con esa parte abierta.
+### Marco del panel 1.21.0 (C-298)
+- La pieza para lo que se pliega (`components/admin/Plegable`): cerrada dice lo esencial y se abre con un toque o con el teclado.
+
 ## [1.0.0-rc.112] - 2026-11-18
 Un arreglo del dispositivo de confianza (C-299). Sin cambio de base, sin variables y sin cron.
 ### Marco del panel 1.20.1 (C-299)

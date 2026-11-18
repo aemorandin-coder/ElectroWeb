@@ -41,6 +41,8 @@ function sectionFromHash(): SectionId | null {
   if (typeof window === 'undefined') return null;
   const hash = window.location.hash.slice(1);
   if (SECTIONS.some((section) => section.id === hash)) return hash as SectionId;
+  // C-298: una parte de IA (#ia-motor, #ia-proveedores…) abre la sección IA, y esa parte se abre sola (components/admin/Plegable)
+  if (hash.startsWith('ia-')) return 'ia';
   return SECCION_VIEJA[hash] ?? null;
 }
 

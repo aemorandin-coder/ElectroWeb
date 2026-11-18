@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { adminBadge, adminCard, adminHint, adminInput, adminSecondaryButton } from '@/lib/admin-ui';
+import { IconoCheck } from '@/components/iconos';
+import Plegable from '@/components/admin/Plegable';
+import { adminBadge, adminDato, adminHint, adminInput, adminSecondaryButton } from '@/lib/admin-ui';
 import { PROVEEDORES, type IdProveedor } from '@/lib/ia/proveedores/catalogo';
 import ClaveDeApi from './ClaveDeApi';
 import { LOGOS } from './LogoProveedor';
@@ -11,6 +13,7 @@ import { claveDe, llamar, type DatosIa } from './tipos';
 // C-292 · Proveedores y claves: una tarjeta por proveedor (Anthropic, Google, xAI y Groq) con su logo, para qué conviene, su clave
 // (se prueba antes de guardarla y queda cifrada) y, en los que no son Anthropic, lo que cuesta: el equipo lo copia de su página
 // oficial, porque la tienda no lo sabe (sin precio, el consumo cuenta solo los tokens).
+// C-298: cada proveedor, un plegable con su estado en la cabecera (responde ahora, de respaldo, con o sin clave).
 
 function Precio({ datos, id, alGuardar }: { datos: DatosIa; id: Exclude<IdProveedor, 'anthropic'>; alGuardar: () => Promise<void> }) {
   const p = datos.proveedores.find((x) => x.id === id);
@@ -58,29 +61,35 @@ function Precio({ datos, id, alGuardar }: { datos: DatosIa; id: Exclude<IdProvee
 }
 
 export default function Proveedores({ datos, alGuardar }: { datos: DatosIa; alGuardar: () => Promise<void> }) {
+  // C-298: cada proveedor se pliega. Abierto, el que responde ahora y el que tiene la clave rota
   return (
-    <div className="grid gap-4 @3xl:grid-cols-2">
+    <div className="grid gap-2.5 @4xl:grid-cols-2 @4xl:items-start">
       {PROVEEDORES.map((p) => {
-        const Logo = LOGOS[p.id];
         const clave = claveDe(datos, p.id);
         const enUso = datos.proveedor === p.id ? 'Responde ahora' : datos.respaldo === p.id ? 'De respaldo' : null;
         return (
-          <section key={p.id} className={adminCard} aria-labelledby={`ia-prov-${p.id}`}>
-            <div className="mb-3 flex items-start gap-3">
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${clave.hay ? 'bg-brand-500 text-white' : 'bg-brand-50 text-brand-600'}`}>
-                <Logo className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <h4 id={`ia-prov-${p.id}`} className="flex flex-wrap items-center gap-2 text-base font-semibold text-ink">
-                  {p.motor} <span className="font-normal text-muted">· {p.empresa}</span>
-                  {enUso && <span className={adminBadge('warning')}>{enUso}</span>}
-                </h4>
-                <p className="text-sm text-muted">{p.para}</p>
-              </div>
-            </div>
+          <Plegable
+            key={p.id}
+            id={`ia-prov-${p.id}`}
+            icono={LOGOS[p.id]}
+            placa={clave.hay ? 'fuerte' : 'suave'}
+            abierto={datos.proveedor === p.id || clave.claveRota}
+            titulo={<>{p.motor} <span className="font-normal text-muted">· {p.empresa}</span></>}
+            resumen={p.para}
+            extra={(
+              <>
+                {enUso && <span className={enUso === 'Responde ahora' ? adminBadge('brand') : adminDato}>{enUso}</span>}
+                {clave.claveRota
+                  ? <span className={adminBadge('warning')}>Pegar la clave otra vez</span>
+                  : clave.hay
+                    ? <span className={adminBadge('success')}><IconoCheck className="h-3 w-3" aria-hidden="true" />Con clave</span>
+                    : <span className={adminDato}>Sin clave</span>}
+              </>
+            )}
+          >
             <ClaveDeApi datos={datos} alGuardar={alGuardar} proveedor={p.id} />
             {p.id !== 'anthropic' && <Precio datos={datos} id={p.id} alGuardar={alGuardar} />}
-          </section>
+          </Plegable>
         );
       })}
     </div>

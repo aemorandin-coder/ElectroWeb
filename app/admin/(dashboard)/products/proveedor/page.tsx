@@ -231,7 +231,7 @@ export default function ListaDelProveedorPage() {
         if (!vigente) return;
       }
       if (vigente) setPropuestasIA((p) => (p?.para === para ? { para, mapa: { ...mapa, ...p.mapa } } : { para, mapa }));
-    })().catch((e: Error) => { if (vigente) toast.error(`No se pudo guardar su lista para Claude: ${e.message}`); });
+    })().catch((e: Error) => { if (vigente) toast.error(`No se pudo guardar su lista para la IA: ${e.message}`); });
     return () => { vigente = false; };
   }, [claveRevision, proveedorId, filas]);
 
@@ -437,7 +437,7 @@ export default function ListaDelProveedorPage() {
           const d = await post<{ propuestas: Record<string, PropuestaCatalogo> }>(proveedorId, { accion: 'proponer-ia', codigos: parte });
           setPropuestasIA((p) => (p?.para === para ? { para, mapa: { ...p.mapa, ...d.propuestas } } : { para, mapa: d.propuestas }));
         } catch (e) {
-          error = e instanceof Error ? e.message : 'Claude no respondió';
+          error = e instanceof Error ? e.message : 'La IA no respondió';
         }
         hechos += parte.length;
         setProponiendo({ hechos: Math.min(hechos, codigos.length), total: codigos.length });
@@ -447,7 +447,7 @@ export default function ListaDelProveedorPage() {
     setProponiendo(null);
     if (error) toast.error(`${error} Lo hecho quedó guardado: puedes seguir después.`);
     else if (cortarPropuesta.current) toast('Paraste: lo hecho quedó guardado.');
-    else toast.success('Claude propuso la categoría y el nombre de todo lo nuevo. Revisa los marcados en "Nombres para revisar".');
+    else toast.success('La IA propuso la categoría y el nombre de todo lo nuevo. Revisa los marcados en "Nombres para revisar".');
   };
 
   const crear = async () => {
@@ -837,14 +837,14 @@ export default function ListaDelProveedorPage() {
               <IconoNovedad className="h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
               <p className="min-w-0 flex-1 text-sm text-ink-soft">
                 {proponiendo
-                  ? <>Claude va por <strong className="tabular-nums text-ink">{miles(proponiendo.hechos)}</strong> de {miles(proponiendo.total)}. Lo que propone llena el nombre y la categoría de cada fila, y queda guardado.</>
-                  : <>Claude puede proponer la categoría y el nombre de la tienda de los <strong className="tabular-nums text-ink">{miles(sinPropuesta.length)}</strong> nuevos que faltan ({minutosClaude <= 1 ? 'un minuto o menos' : `unos ${miles(minutosClaude)} minutos`}). Lo que escribiste a mano no se toca, y puedes parar y seguir después.</>}
+                  ? <>La IA va por <strong className="tabular-nums text-ink">{miles(proponiendo.hechos)}</strong> de {miles(proponiendo.total)}. Lo que propone llena el nombre y la categoría de cada fila, y queda guardado.</>
+                  : <>La IA puede proponer la categoría y el nombre de la tienda de los <strong className="tabular-nums text-ink">{miles(sinPropuesta.length)}</strong> nuevos que faltan ({minutosClaude <= 1 ? 'un minuto o menos' : `unos ${miles(minutosClaude)} minutos`}). Lo que escribiste a mano no se toca, y puedes parar y seguir después.</>}
               </p>
               {proponiendo
                 ? <button type="button" onClick={() => { cortarPropuesta.current = true; }} className={`${adminSecondaryButton} min-h-11`}>Parar</button>
-                : <button type="button" onClick={() => void proponerConClaude()} className={`${adminPrimaryButton} min-h-11`}><IconoNovedad className="h-4 w-4" aria-hidden="true" /> Proponer con Claude</button>}
+                : <button type="button" onClick={() => void proponerConClaude()} className={`${adminPrimaryButton} min-h-11`}><IconoNovedad className="h-4 w-4" aria-hidden="true" /> Proponer con IA</button>}
               {proponiendo && (
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-line" role="progressbar" aria-valuemin={0} aria-valuemax={proponiendo.total} aria-valuenow={proponiendo.hechos} aria-label="Avance de Claude">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-line" role="progressbar" aria-valuemin={0} aria-valuemax={proponiendo.total} aria-valuenow={proponiendo.hechos} aria-label="Avance de la IA">
                   <div className="h-full rounded-full bg-brand-500 transition-[width]" style={{ width: `${Math.round((proponiendo.hechos / Math.max(1, proponiendo.total)) * 100)}%` }} />
                 </div>
               )}
@@ -1140,7 +1140,7 @@ function NombreEnTienda({ fila, enTienda, propuesta, claude, valor, onCambiar }:
       {claude && (
         <span className="mt-0.5 flex items-start gap-1 text-xs text-ink-soft">
           <IconoNovedad className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden="true" />
-          Claude: {claude.categoria ? <>categoría <strong className="font-semibold">{claude.categoria}</strong></> : 'sin categoría'}
+          IA: {claude.categoria ? <>categoría <strong className="font-semibold">{claude.categoria}</strong></> : 'sin categoría'}
         </span>
       )}
       {claude?.duda && !editado && (

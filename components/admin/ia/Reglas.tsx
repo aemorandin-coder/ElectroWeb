@@ -26,14 +26,14 @@ export default function Reglas({ datos, alGuardar }: { datos: DatosIa; alGuardar
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-white"><IconoCandado className="h-4 w-4" aria-hidden="true" /></span>
           <div>
             <p className="text-sm font-semibold text-ink">La tienda lo comprueba</p>
-            <p className="text-xs text-muted">En cada respuesta, antes de que llegue al producto o al cliente. Claude no puede saltársela, aunque cambien sus instrucciones.</p>
+            <p className="text-xs text-muted">En cada respuesta, antes de que llegue al producto o al cliente. La IA no puede saltársela, aunque cambien sus instrucciones.</p>
           </div>
         </div>
         <div className="flex items-start gap-3 rounded-2xl border border-line bg-white p-3.5">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface text-muted"><IconoDocumento className="h-4 w-4" aria-hidden="true" /></span>
           <div>
             <p className="text-sm font-semibold text-ink">En las instrucciones, fija</p>
-            <p className="text-xs text-muted">Claude la recibe siempre, debajo de lo que escribe el equipo. No se borra desde aquí.</p>
+            <p className="text-xs text-muted">La IA la recibe siempre, debajo de lo que escribe el equipo. No se borra desde aquí.</p>
           </div>
         </div>
       </div>

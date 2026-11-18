@@ -176,7 +176,7 @@ export default function EditarInstrucciones({ uso, datos, pasoInicial, alCerrar,
                 </>
               )}
               <p className="mt-3 max-w-prose text-sm text-ink-soft">
-                Afecta a: <b>cada &quot;{info?.nombre}&quot; desde que publiques</b>. Lo que ya redactó Claude no cambia. Queda anotado con tu nombre y &quot;De fábrica&quot; las devuelve. Las {reglas.length} reglas siguen igual.
+                Afecta a: <b>cada &quot;{info?.nombre}&quot; desde que publiques</b>. Lo que ya redactó la IA no cambia. Queda anotado con tu nombre y &quot;De fábrica&quot; las devuelve. Las {reglas.length} reglas siguen igual.
                 {sinFabrica && hayCambios ? ' Las que escribiste son las de fábrica: se vuelve a ellas.' : ''}
               </p>
               {!probada && hayCambios && <p className={adminHint}>Todavía no las probaste: puedes volver al paso &quot;Probar&quot; antes de publicar.</p>}

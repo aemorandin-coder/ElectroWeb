@@ -212,12 +212,12 @@ export default function ImportarProductosPage() {
       {filas.length === 0 && (
         <div className="grid gap-4 lg:grid-cols-2">
           <section className={adminCard} aria-labelledby="paso-1">
-            <h2 id="paso-1" className="text-base font-semibold text-ink">1. Prepara el archivo con Claude</h2>
+            <h2 id="paso-1" className="text-base font-semibold text-ink">1. Prepara el archivo con una IA</h2>
             <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-ink-soft">
               <li>Quita el fondo de las fotos de los productos nuevos en el teléfono (iPhone: mantén el dedo sobre el producto; Samsung: &quot;Extraer objeto&quot;). La tienda pone el fondo blanco y la cinta ES.</li>
               <li>Los usados van con fotos reales de la unidad, al menos 3, sin quitar el fondo.</li>
               <li>Descarga la plantilla: trae las instrucciones, las categorías y las marcas de hoy.</li>
-              <li>En claude.ai, adjunta la plantilla y las fotos, y pide: &quot;Llena la plantilla con estos productos&quot;. Dale los precios, o ponlos aquí en la vista previa.</li>
+              <li>En claude.ai, Gemini o ChatGPT (con tu cuenta), adjunta la plantilla y las fotos, y pide: &quot;Llena la plantilla con estos productos&quot;. Dale los precios, o ponlos aquí en la vista previa.</li>
               <li>Descarga el .json que te devuelva.</li>
             </ol>
             <button type="button" onClick={async () => setError((await descargarPlantilla()) ?? '')} className={`${adminSecondaryButton} mt-4`}>

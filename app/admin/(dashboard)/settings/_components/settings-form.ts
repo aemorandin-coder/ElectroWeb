@@ -119,9 +119,10 @@ export const SECTIONS: { id: SectionId; label: string; description: string; icon
     fields: [],
   },
   // C-288: el motor de Claude, sus reglas y las instrucciones de cada uso. Tiene sus propios guardados (no usa la barra común)
+  // C-292: "IA", no "IA · Claude": el proveedor se elige adentro (Claude, Gemini, Grok o Groq)
   {
-    id: 'ia', label: 'IA · Claude', icon: IconoNovedad,
-    description: 'El motor de Claude, las reglas y las instrucciones de cada uso, lo que gasta y lo que falla.',
+    id: 'ia', label: 'IA', icon: IconoNovedad,
+    description: 'Quién responde, las claves de cada proveedor, las reglas y las instrucciones de cada uso, lo que gasta y lo que falla.',
     fields: [],
   },
 ];

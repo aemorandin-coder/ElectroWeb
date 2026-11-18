@@ -13,7 +13,7 @@ import {
 import { esLaDeSiempre, leerTerminos, terminosEfectivos } from '@/lib/proveedores/no-se-envia';
 import { cerrarCarga, guardarArticulos, leerArticulosEntrada, propuestasGuardadas } from '@/lib/proveedores/articulos';
 import { proponerCatalogo } from '@/lib/ia/catalogo-proveedor';
-import { FallaIA } from '@/lib/ia/claude';
+import { FallaIA } from '@/lib/ia/pedir';
 import { checkRateLimit } from '@/lib/rate-limit';
 
 type Ctx = { params: Promise<{ id: string }> };

@@ -14,7 +14,7 @@ import { estimarEnvio } from '@/lib/envios/estimado';
 import { ciudadesZoom, type CiudadZoom } from '@/lib/envios/zoom';
 import { NOMBRE_EMPRESA, urlRastreo, type EmpresaGuia } from '@/lib/envios/empresas';
 import { INSTRUCCIONES_DE_FABRICA } from '@/lib/ia/fabrica';
-import { pedirJSON, type OpcionesDeUso } from '@/lib/ia/claude';
+import { pedirJSON, type OpcionesDeUso } from '@/lib/ia/pedir';
 import { normalizar, productosMencionados, type ProductoMencionado } from '@/lib/ia/productos-mencionados';
 import { nombreCorto } from '@/lib/ia/atajadas';
 import { revisarRespuestaIa } from '@/lib/ia/revisar';
@@ -46,6 +46,8 @@ export interface BorradorRespuesta {
    */
   whatsappSeguro: boolean;
   firma: string;
+  /** C-292: el pedido de la IA, para "No sirvió" */
+  pedidoId: string;
 }
 
 /** Los últimos 10 dígitos: "+58 414-111.22.33" y "04141112233" son el mismo teléfono */
@@ -201,7 +203,7 @@ export async function redactarRespuesta(mensajeId: string, opciones: OpcionesDeU
 
   // C-288: la tienda comprueba el borrador: sin notas para el equipo ni enlaces ajenos, sin pedir claves, con los montos de los
   // datos (los demás quedan anotados junto al borrador) y con su saludo y su firma
-  const { datos: r, firma } = await pedirJSON({
+  const { datos: r, firma, pedidoId } = await pedirJSON({
     donde: 'respuesta a una consulta', uso: 'respuesta', deFabrica: INSTRUCCIONES_DE_FABRICA.respuesta, pedido, esquema: ESQUEMA,
     referencia: `Respuesta a ${nombreCorto(mensaje.name)}`, ...opciones,
     revisar: (d, { frases }) => revisarRespuestaIa(d, { nombre: primerNombre, datos: pedido, frases }),
@@ -218,5 +220,6 @@ export async function redactarRespuesta(mensajeId: string, opciones: OpcionesDeU
     datos,
     whatsappSeguro: ordenes.length === 0 || conocidos.has(telefono(mensaje.phone)),
     firma,
+    pedidoId,
   };
 }

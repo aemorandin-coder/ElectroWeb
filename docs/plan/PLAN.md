@@ -478,10 +478,11 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 - **C-291 · El dispositivo de confianza, 30 días** (hecha en rc.105, `estado/C-291.md`; tabla y columnas aditivas):
   - para todo el panel, con el código otra vez en lo delicado (la clave de la IA y la del correo, Equipo, Métodos de pago y Respaldos);
   - se ve y se quita en Mi seguridad y en Equipo, llega un correo al marcarlo y se borra al cambiar la contraseña.
-- **C-292 · La IA de la tienda, no de un proveedor** (pendiente; absorbe C-288b):
+- **C-292 · La IA de la tienda, no de un proveedor** (hecha en rc.108, `estado/C-292.md`; absorbe C-288b):
   - conectores para Anthropic y para los que hablan como OpenAI (Groq, Grok y Gemini);
   - el principal, el de respaldo y uno por uso;
   - "IA" en los botones y "Lo redactó …" en el resultado, y "No sirvió".
+  - **Sigue C-292b** (pendiente): "Buscar en la web" con otro motor (hoy busca por su cuenta con la herramienta de Anthropic; con otro, la tienda le pasaría las páginas que encontró) y "No sirvió" en Buscar en la web, el catálogo del proveedor y la urgencia.
 - **C-293 · Ajustes: el mapa nuevo, Tu negocio y Vender** (pendiente; absorbe la parte de Configuración de C-206):
   - los grupos de `AJUSTES.md` §3;
   - los campos del tamaño de su dato y una línea de ayuda;

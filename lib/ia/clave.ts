@@ -35,9 +35,12 @@ export function descifrarClave(valor: string | null | undefined): string | null 
   }
 }
 
-/** "sk-ant-api03-…x7Qd" → "sk-ant-…x7Qd": lo único de la clave que llega al panel */
+/**
+ * "sk-ant-api03-…x7Qd" → "sk-ant-…x7Qd": lo único de la clave que llega al panel. C-292: las de otros proveedores, con su
+ * comienzo de 4 caracteres ("AIza…x7Qd", "gsk_…x7Qd").
+ */
 export function enmascarar(clave: string): string {
-  return `sk-ant-…${clave.slice(-4)}`;
+  return clave.startsWith('sk-ant-') ? `sk-ant-…${clave.slice(-4)}` : `${clave.slice(0, 4)}…${clave.slice(-4)}`;
 }
 
 /** Las claves de Anthropic empiezan con "sk-ant-" y no llevan espacios ni saltos de línea */

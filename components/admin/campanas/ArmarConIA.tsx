@@ -1,6 +1,6 @@
 'use client';
 
-// C-217: "Armar con Claude" en el editor de campañas (Andrés, 13/11, la idea C). Se escribe el objetivo y Claude arma el
+// C-217: "Armar con IA" en el editor de campañas (Andrés, 13/11, la idea C). Se escribe el objetivo y Claude arma el
 // asunto, la vista previa y el texto con productos reales de la tienda (la foto, el precio y el enlace los pone la tienda).
 // Llena el editor: se revisa, se cambia lo que haga falta y se guarda como siempre.
 
@@ -10,22 +10,23 @@ import { IconoNovedad } from '@/components/iconos';
 import { formatUSD } from '@/lib/currency';
 import { adminCard, adminHint, adminInput, adminLabel, adminNotice, adminPrimaryButton } from '@/lib/admin-ui';
 import type { BorradorCampana } from '@/lib/ia/campana';
+import FirmaIA from '@/components/admin/ia/FirmaIA';
 
 type Contenido = Pick<BorradorCampana, 'subject' | 'preheader' | 'bloques'>;
 
 const EJEMPLOS = ['Gift cards para Navidad, con la fecha límite de envío', 'Herramientas para el taller, con lo nuevo de la ferretería', 'Audífonos y accesorios para regalar'];
 
 /** C-249d: `enTarjeta={false}` dentro del primer paso del asistente de la campaña (una tarjeta no va dentro de otra, PLAN.md §1.5) */
-export default function ArmarConClaude({ hayContenido, alArmar, enTarjeta = true }: { hayContenido: boolean; alArmar: (c: Contenido) => void; enTarjeta?: boolean }) {
+export default function ArmarConIA({ hayContenido, alArmar, enTarjeta = true }: { hayContenido: boolean; alArmar: (c: Contenido) => void; enTarjeta?: boolean }) {
   const { confirm } = useConfirm();
   const [objetivo, setObjetivo] = useState('');
   const [pensando, setPensando] = useState(false);
   const [error, setError] = useState('');
-  const [usado, setUsado] = useState<Pick<BorradorCampana, 'productos' | 'firma'> | null>(null);
+  const [usado, setUsado] = useState<Pick<BorradorCampana, 'productos' | 'firma' | 'pedidoId'> | null>(null);
 
   const armar = async () => {
     if (hayContenido) {
-      const ok = await confirm({ title: 'Reemplazar el contenido', message: 'Claude va a reemplazar el asunto y los bloques que tiene esta campaña. ¿Seguir?', confirmText: 'Reemplazar', cancelText: 'Cancelar', type: 'warning' });
+      const ok = await confirm({ title: 'Reemplazar el contenido', message: 'La IA va a reemplazar el asunto y los bloques que tiene esta campaña. ¿Seguir?', confirmText: 'Reemplazar', cancelText: 'Cancelar', type: 'warning' });
       if (!ok) return;
     }
     setPensando(true);
@@ -38,7 +39,7 @@ export default function ArmarConClaude({ hayContenido, alArmar, enTarjeta = true
         return;
       }
       alArmar({ subject: datos.subject ?? '', preheader: datos.preheader ?? '', bloques: datos.bloques });
-      setUsado({ productos: datos.productos ?? [], firma: datos.firma ?? '' });
+      setUsado({ productos: datos.productos ?? [], firma: datos.firma ?? '', pedidoId: datos.pedidoId ?? '' });
     } catch {
       setError('Sin conexión con la tienda. Prueba otra vez.');
     } finally {
@@ -49,7 +50,7 @@ export default function ArmarConClaude({ hayContenido, alArmar, enTarjeta = true
   return (
     <section className={enTarjeta ? `${adminCard} space-y-3` : 'space-y-3 border-b border-line pb-5'} aria-labelledby="armar-claude">
       <h3 id="armar-claude" className="flex items-center gap-2 text-sm font-bold text-ink">
-        <IconoNovedad className="h-4 w-4 text-brand-600" aria-hidden="true" /> Armar con Claude
+        <IconoNovedad className="h-4 w-4 text-brand-600" aria-hidden="true" /> Armar con IA
       </h3>
       <div>
         <label htmlFor="campana-objetivo" className={adminLabel}>¿De qué es la campaña?</label>
@@ -57,7 +58,7 @@ export default function ArmarConClaude({ hayContenido, alArmar, enTarjeta = true
           id="campana-objetivo" value={objetivo} maxLength={600} rows={2} onChange={(e) => setObjetivo(e.target.value)}
           placeholder={EJEMPLOS[0]} className={adminInput()}
         />
-        <p className={adminHint}>Claude escribe el asunto y el texto y elige hasta 4 productos de la tienda; la foto, el precio y el enlace los pone la tienda. Después lo revisas y lo guardas.</p>
+        <p className={adminHint}>La IA escribe el asunto y el texto y elige hasta 4 productos de la tienda; la foto, el precio y el enlace los pone la tienda. Después lo revisas y lo guardas.</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={armar} disabled={pensando || objetivo.trim().length < 8} className={`${adminPrimaryButton} min-h-11`}>
@@ -71,9 +72,10 @@ export default function ArmarConClaude({ hayContenido, alArmar, enTarjeta = true
         ))}
       </div>
       {usado && (
-        <p className="text-xs text-muted" role="status">
-          Usó {usado.productos.length ? usado.productos.map((p) => `${p.nombre} (${formatUSD(p.precioUSD)})`).join(', ') : 'ningún producto'}. Redactado por {usado.firma}: revísalo antes de guardar.
-        </p>
+        <div role="status" className="space-y-1">
+          <p className="text-xs text-muted">Usó {usado.productos.length ? usado.productos.map((p) => `${p.nombre} (${formatUSD(p.precioUSD)})`).join(', ') : 'ningún producto'}.</p>
+          <FirmaIA firma={usado.firma} pedidoId={usado.pedidoId || undefined} nota="Revísalo antes de guardar." />
+        </div>
       )}
       {error && <p className={adminNotice('danger')} role="alert">{error}</p>}
     </section>

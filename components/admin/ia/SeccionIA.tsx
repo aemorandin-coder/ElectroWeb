@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { IconoAdvertencia, IconoAjustes, IconoAyuda, IconoCandado, IconoLista, IconoReportes, type IconType } from '@/components/iconos';
+import { IconoAdvertencia, IconoAjustes, IconoAyuda, IconoCandado, IconoClave, IconoLista, IconoReportes, type IconType } from '@/components/iconos';
 import { adminNotice, adminPrimaryButton, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
 import type { UsoIa } from '@/lib/ia/reglas';
 import Consumo from './Consumo';
@@ -9,13 +9,16 @@ import EditarInstrucciones from './EditarInstrucciones';
 import Estado from './Estado';
 import Guia from './Guia';
 import Motor from './Motor';
+import Proveedores from './Proveedores';
 import Reglas from './Reglas';
 import Usos from './Usos';
-import { useIaClaude } from './useIaClaude';
+import { useIa } from './useIa';
 
 // C-288 · Configuración → IA · Claude (la variante B que eligió el equipo el 17/11: una sección más del menú de Configuración, con los
 // bloques uno debajo del otro). El estado, los usos de Claude, las reglas, lo que consume y lo que falla, el motor con su clave y la
 // guía. Tiene sus propios guardados (no usa la barra de guardado de Configuración).
+// C-292 · Ajustes → IA: la IA es de la tienda, no de un proveedor. El motor (quién responde, el modelo y el respaldo) y
+// "Proveedores y claves" (Claude, Gemini, Grok y Groq) van aparte; cada uso puede tener el suyo.
 
 function Bloque({ id, icono: Icono, titulo, children }: { id: string; icono: IconType; titulo: string; children: ReactNode }) {
   return (
@@ -28,8 +31,8 @@ function Bloque({ id, icono: Icono, titulo, children }: { id: string; icono: Ico
   );
 }
 
-export default function SeccionClaude() {
-  const { datos, error, recargar } = useIaClaude();
+export default function SeccionIA() {
+  const { datos, error, recargar } = useIa();
   const [editando, setEditando] = useState<{ uso: UsoIa; paso: number } | null>(null);
 
   if (!datos) {
@@ -52,13 +55,13 @@ export default function SeccionClaude() {
       {datos.clave.claveRota && (
         <div className={`${adminNotice('warning')} flex flex-wrap items-center gap-3`} role="alert">
           <IconoAdvertencia aria-hidden="true" />
-          <span className="min-w-0 flex-1"><b>La clave que se guardó en el panel no se pudo leer.</b> {datos.clave.hay ? 'Claude sigue con la del servidor.' : 'Claude está sin clave.'} Pégala otra vez en &quot;Motor y clave&quot;.</span>
-          <a href="#ia-motor" className={`${adminPrimaryButton} h-9! px-3! text-[13px]`}>Ir a Motor y clave</a>
+          <span className="min-w-0 flex-1"><b>La clave de Claude que se guardó en el panel no se pudo leer.</b> {datos.clave.hay ? 'Sigue con la del servidor.' : 'Claude está sin clave.'} Pégala otra vez en &quot;Proveedores y claves&quot;.</span>
+          <a href="#ia-proveedores" className={`${adminPrimaryButton} h-9! px-3! text-[13px]`}>Ir a Proveedores y claves</a>
         </div>
       )}
 
-      <Bloque id="ia-usos" icono={IconoLista} titulo="Los usos de Claude">
-        <Usos datos={datos} onEditar={(uso, paso) => setEditando({ uso, paso })} />
+      <Bloque id="ia-usos" icono={IconoLista} titulo="Los usos de la IA">
+        <Usos datos={datos} onEditar={(uso, paso) => setEditando({ uso, paso })} alGuardar={recargar} />
       </Bloque>
 
       <Bloque id="ia-reglas" icono={IconoCandado} titulo="Reglas">
@@ -69,9 +72,12 @@ export default function SeccionClaude() {
         <Consumo datos={datos} />
       </Bloque>
 
-      <Bloque id="ia-motor" icono={IconoAjustes} titulo="Motor y clave">
+      <Bloque id="ia-motor" icono={IconoAjustes} titulo="El motor">
         {/* Con cada guardado cambia la versión: el formulario vuelve a empezar con lo que quedó publicado */}
-        <Motor key={datos.updatedAt ?? 'sin-guardar'} datos={datos} alGuardar={recargar} />
+        <Motor key={`${datos.updatedAt ?? 'sin-guardar'}-${datos.proveedores.map((p) => `${p.hay}${p.modelo}`).join('')}`} datos={datos} alGuardar={recargar} />
+      </Bloque>
+      <Bloque id="ia-proveedores" icono={IconoClave} titulo="Proveedores y claves">
+        <Proveedores datos={datos} alGuardar={recargar} />
       </Bloque>
 
       <Bloque id="ia-guia" icono={IconoAyuda} titulo="Guía">

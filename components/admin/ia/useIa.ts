@@ -4,8 +4,8 @@ import { useCallback, useState } from 'react';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { llamar, type DatosIa } from './tipos';
 
-/** Los datos de Configuración → IA · Claude: se piden al abrir y otra vez después de cada guardado */
-export function useIaClaude() {
+/** Los datos de Ajustes → IA: se piden al abrir y otra vez después de cada guardado */
+export function useIa() {
   const [datos, setDatos] = useState<DatosIa | null>(null);
   const [error, setError] = useState('');
 
@@ -13,7 +13,7 @@ export function useIaClaude() {
     try {
       const r = await llamar<DatosIa>('/api/admin/ia', 'GET');
       if (!r.ok) {
-        setError(r.datos.error ?? 'No se pudo leer lo de Claude.');
+        setError(r.datos.error ?? 'No se pudieron leer los ajustes de la IA.');
         return;
       }
       setError('');

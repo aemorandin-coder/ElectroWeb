@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
 import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { activarDosPasos, estadoDosPasos, iniciarDosPasos, regenerarRespaldo, reiniciarDosPasos, verificarCodigo } from '@/lib/dos-pasos';
 import { anotarConfirmacion, DIAS_CONFIANZA, listarDispositivos, marcarDispositivo, ponerGalleta, quitarDispositivo, quitarTodos } from '@/lib/dispositivos-confianza';
 import { rutaNoFuiYo } from '@/lib/sesiones';
@@ -68,18 +69,26 @@ export async function POST(request: NextRequest) {
     const r = await marcarDispositivo(yo.userId, yo.sid);
     if ('error' in r) return NextResponse.json({ error: r.error }, { status: 400 });
     await registrarAccionAdmin(yo.session, 'SECURITY_ADMIN_ACTION', { type: 'USER', id: yo.userId }, { accion: 'Marcó un dispositivo de confianza', dispositivo: r.dispositivo }, request);
-    // El aviso, con "No fui yo" (si falla el correo, el dispositivo queda igual: se ve en Mi seguridad)
-    if (yo.correo && yo.sid) {
+    // El aviso, con "No fui yo" (si falla el correo, el dispositivo queda igual: se ve en Mi seguridad).
+    // C-299: solo a un correo comprobado, como el aviso de inicio de sesión (lib/sesiones). Una dirección sin comprobar puede no
+    // existir, y el aviso volvía como rebote al buzón de la tienda.
+    if (yo.sid) {
+      const sid = yo.sid;
       const ahora = new Date();
       const formato = (f: Date) => f.toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' });
-      void correoDispositivoConfianza({
-        nombre: yo.session.user.name ?? null,
-        dispositivo: r.dispositivo,
-        cuando: formato(ahora),
-        vence: formato(new Date(ahora.getTime() + DIAS_CONFIANZA * 86_400_000)),
-        rutaNoFuiYo: rutaNoFuiYo(yo.sid),
-      })
-        .then(({ asunto, html }) => sendEmail({ to: yo.correo, subject: asunto, html }))
+      void prisma.user
+        .findUnique({ where: { id: yo.userId }, select: { email: true, name: true, emailVerified: true } })
+        .then(async (cuenta) => {
+          if (!cuenta?.email || !cuenta.emailVerified) return;
+          const { asunto, html } = await correoDispositivoConfianza({
+            nombre: cuenta.name,
+            dispositivo: r.dispositivo,
+            cuando: formato(ahora),
+            vence: formato(new Date(ahora.getTime() + DIAS_CONFIANZA * 86_400_000)),
+            rutaNoFuiYo: rutaNoFuiYo(sid),
+          });
+          await sendEmail({ to: cuenta.email, subject: asunto, html });
+        })
         .catch((error) => console.error('Error avisando el dispositivo de confianza:', error));
     }
     return ponerGalleta(NextResponse.json({ ok: true, dispositivo: r.dispositivo }, { headers: sinCache }), r.valor);

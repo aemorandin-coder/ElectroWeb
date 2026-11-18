@@ -4,6 +4,7 @@
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-299 · El aviso del dispositivo de confianza (rc.112, en `main`, por subir con el bloque de §2; `estado/C-299.md`):** el correo "Marcaste un dispositivo de confianza" sale solo a un correo comprobado, como el aviso de inicio de sesión. A una dirección sin comprobar rebotaba y el rebote llegaba al buzón de la tienda en cada entrada (18/11, captura del equipo).
 - **C-297 · El sorteo que vende (rc.111, en `main`, por subir con rc.107 a rc.110: §2; `estado/C-297.md`):** la decisión de Andrés del 18/11, vista en desarrollo.
   - **Comprar vale más:** $5 → 2 boletos, cada $50 → 5; cada reseña aprobada → 1; invitar queda igual. Cuenta también lo comprado desde el 14/11.
   - **El producto estrella de la semana:** se elige en Marketing → Sorteo, cualquier producto, +10 por unidad. Sale en /sorteo, con su sello en el catálogo y en su ficha.
@@ -549,11 +550,12 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.111` (C-296, C-292, C-293, C-294 y C-297)
-Producción está en `v1.0.0-rc.106` (`8dae211c`); su bloque está en `HISTORIAL.md`. Es un solo bloque, con rc.107 a rc.110 adentro. Si entran más tareas antes de subir, se suman aquí.
+### Lo que falta subir: `v1.0.0-rc.112` (C-296, C-292, C-293, C-294, C-297 y C-299)
+Producción está en `v1.0.0-rc.106` (`8dae211c`); su bloque está en `HISTORIAL.md`. Es un solo bloque, con rc.107 a rc.111 adentro. Si entran más tareas antes de subir, se suman aquí.
 - **C-296** (rc.107) solo cambia imágenes y dos líneas de código.
 - **C-293** (rc.109) y **C-294** (rc.110), sin cambio de base.
   - **Antes de subir, mira Configuración → Portada e inventario:** si "Avisarme cuando un producto quede con stock bajo" o "…se agote" están apagados, apaga también "Stock bajo" o "Producto agotado" en Notificaciones → Qué avisar. Desde rc.109 esos avisos se eligen solo ahí (D3).
+- **C-299** (rc.112) solo cambia una línea del aviso del dispositivo de confianza: sale solo a un correo comprobado (a una dirección sin comprobar rebotaba). Sin cambio de base.
 - **C-292** (rc.108) trae un **cambio de base aditivo:** una tabla nueva y seis columnas, sin `DROP` ni cambios de tipo. Sin variables nuevas y sin cron.
 ```sql
 ALTER TABLE "ia_ajustes" ADD COLUMN     "porUso" JSONB,
@@ -602,7 +604,7 @@ ALTER TABLE "sorteo_estrellas" ADD CONSTRAINT "sorteo_estrellas_productId_fkey" 
   4. **La regla nueva del sorteo (C-297, decisión de Andrés del 18/11):** $5 → 2 boletos, cada $50 → 5 y cada reseña aprobada → 1. Primero mira cuál es el sorteo abierto: `psql "$DB" -c 'SELECT id, titulo, "compraMinimaUSD", activo, "sorteadoAt" FROM sorteos'` (debe salir el de Navidad, activo y sin sortear, con 5 de compra mínima). Después:
      `psql "$DB" -c 'UPDATE "sorteos" SET "boletosPorCompra" = 2, "escalaUSD" = 50, "boletosPorEscala" = 5, "boletosPorResena" = 1, "updatedAt" = now() WHERE activo AND "sorteadoAt" IS NULL'` (debe decir `UPDATE 1`).
   5. Otra vez `bash scripts/deploy.sh --sin-pull`.
-  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.111`, o una mayor si entró otra tarea antes del `git pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.112`, o una mayor si entró otra tarea antes del `git pull`.
   - **Después, en el panel:** Marketing → Sorteo → "Producto estrella de cada semana" → "Elegir producto" en la semana de hoy (cualquier producto publicado, 10 boletos). Sin él, /sorteo no muestra "Descubre el producto estrella".
 - **Pruebas** (antes, recarga el panel con Ctrl+R):
   1. **Chispa 3.1** (C-296, unos 2 minutos, en la computadora):
@@ -633,7 +635,8 @@ ALTER TABLE "sorteo_estrellas" ADD CONSTRAINT "sorteo_estrellas_productId_fkey" 
      - agrega el producto estrella al carrito: el resumen dice "Esta compra te da N boletos" y cuánto falta para el próximo salto. Vacía el carrito después;
      - con tu cuenta de cliente (si tienes compras desde el 14/11): "Tus boletos" ya cuenta la regla nueva, los de una compra en una pila con su número;
      - Marketing → Sorteo → Cambiar: los pasos "Comprando" (5 → 2 y la escala 50 → 5) y "Reseñas y amigos" (1 por reseña, 3 por invitar). Sal sin guardar.
-- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.106 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas se pueden quedar: rc.106 no las usa. Para quitar solo C-297: `git reset --hard v1.0.0-rc.110` (el sorteo vuelve a 1 boleto por compra; las columnas y la tabla nuevas no molestan); para quitar también C-294: `git reset --hard v1.0.0-rc.109`; para quitar también C-293: `v1.0.0-rc.108`; para quitar también C-292 y dejar a Chispa 3.1: `v1.0.0-rc.107`.
+  6. **El aviso del dispositivo de confianza** (C-299, un minuto, con la cuenta del dueño): entra con el número y marca "No pedir el número…". Ya no llega el rebote de `mailer-daemon` («Delivery Status Notification») al buzón de la tienda.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.106 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas se pueden quedar: rc.106 no las usa. Para quitar solo C-297: `git reset --hard v1.0.0-rc.110` (el sorteo vuelve a 1 boleto por compra; las columnas y la tabla nuevas no molestan; C-299 es más nueva, así que también sale); para quitar solo C-299: `git reset --hard v1.0.0-rc.111`; para quitar también C-294: `git reset --hard v1.0.0-rc.109`; para quitar también C-293: `v1.0.0-rc.108`; para quitar también C-292 y dejar a Chispa 3.1: `v1.0.0-rc.107`.
 
 ### Por confirmar de rc.106 (C-290, C-291 y C-295; unos 25 minutos)
 Ya en producción desde el 18/11, cerca de las 10:17 a. m. La subió el equipo a mano en la terminal del servidor, con los pasos del bloque (desde la PC de Claude de ese momento no había acceso SSH). Claude lo comprobó desde fuera; el detalle está en `HISTORIAL.md`.
@@ -646,7 +649,7 @@ Falta esto (antes, recarga el panel con Ctrl+R):
   3. **Entrar:** cierra la sesión y entra otra vez.
      - Pide "Escribe el número de tu app", con la fila dibujada; un número cualquiera dice "Ese número ya cambió…".
      - Marca "No pedir el número en esta computadora por 30 días" y entra con el número.
-     - Llega el correo "Marcaste un dispositivo de confianza".
+     - Llega el correo "Marcaste un dispositivo de confianza" (desde rc.112, solo a una cuenta con el correo comprobado, como las invitadas desde Equipo).
   4. **El dispositivo de confianza:**
      - cierra la sesión y entra otra vez: solo pide la contraseña;
      - Mi seguridad → Dispositivos de confianza lo muestra como "Este".

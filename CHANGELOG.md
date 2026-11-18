@@ -10,6 +10,11 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.112] - 2026-11-18
+Un arreglo del dispositivo de confianza (C-299). Sin cambio de base, sin variables y sin cron.
+### Marco del panel 1.20.1 (C-299)
+- El correo "Marcaste un dispositivo de confianza" sale solo a un correo comprobado, como el aviso de inicio de sesión. A una dirección sin comprobar rebotaba, y el rebote llegaba al buzón de la tienda en cada entrada.
+
 ## [1.0.0-rc.111] - 2026-11-18
 El sorteo que vende (C-297). Andrés, 18/11: "no importa tanto recuperar la inversión: nos quedan correos para la publicidad, clientes nuevos que conocen la web, y ahora con el plan, hacer que la web venda mucho más". **Cambio de base aditivo:** cuatro columnas en `sorteos` (su valor por defecto mantiene la regla de antes) y la tabla `sorteo_estrellas`. Sin variables nuevas y sin cron. La regla nueva entra con el SQL de datos del bloque.
 ### Tienda 1.23.0 (C-297)

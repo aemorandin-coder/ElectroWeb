@@ -81,7 +81,8 @@ export default function Reglas({ datos, alGuardar }: { datos: DatosIa; alGuardar
             <h4 className="text-base font-semibold text-ink">Lo que atajaron</h4>
             <span className="text-xs text-muted">{consumo.atajadas.totalMes} en {mes.split(' de ')[0]}</span>
           </div>
-          <p className="mb-2 mt-0.5 text-xs text-muted">Cada vez que una regla cambia o frena una respuesta, queda aquí con lo que traía.</p>
+          {consumo.atajadas.ultimas.length > 0 && <p className="mt-0.5 text-xs text-muted">Cada vez que una regla cambia o frena una respuesta, queda aquí con lo que traía.</p>}
+          <div className="mt-2" />
           <div className="max-h-[32rem] overflow-y-auto">
             <Atajadas atajadas={consumo.atajadas.ultimas} />
           </div>

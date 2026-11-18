@@ -152,7 +152,9 @@ export function revisarFicha(entrada: ResultadoBusquedaWeb, nombre: string, fras
   const delNombre = codigosDeModelo(nombre);
   if (delNombre.length > 0) {
     const prefijos = new Set(delNombre.map(prefijoDe));
-    const enLaFicha = codigosDeModelo(`${ficha.descripcion}\n${ficha.especificaciones.map((e) => `${e.nombre}: ${e.valor}`).join('\n')}`);
+    // Lo que la ficha dice de otros aparatos ("compatible con la BL1850") no es el modelo de la ficha: esas oraciones no cuentan
+    const delProducto = [ficha.descripcion, ...ficha.especificaciones.map((e) => `${e.nombre}: ${e.valor}`)].flatMap(oracionesDe).filter((o) => !COMPATIBLE.test(sinAcentos(o.toLowerCase())));
+    const enLaFicha = codigosDeModelo(delProducto.join('\n'));
     const otro = enLaFicha.find((c) => prefijos.has(prefijoDe(c)) && !delNombre.includes(c));
     if (otro) {
       a.cambios.push({ regla: 'modelo-del-nombre', accion: 'marca', antes: `El producto es ${delNombre[0]} y la ficha habla del ${otro}`, despues: null });

@@ -26,6 +26,11 @@ import { comoTexto, ordenadas, redondear } from './unidades';
 
 const PAGINAS_MAXIMAS = 6;
 const ESPECIFICACIONES_MAXIMAS = 12;
+/**
+ * C-288: la segunda vuelta a Claude (por una regla rota) solo se pide si la búsqueda lleva menos de esto: nginx corta a los 60 s y
+ * una lectura con esfuerzo alto tarda de 13 a 17 s. Pasado este tiempo se usan los datos limpios, sin pedirlo otra vez
+ */
+const REINTENTO_ANTES_DE_MS = 30_000;
 /** Con este número de datos reconocidos no hace falta una segunda búsqueda */
 const FICHA_SUFICIENTE = 5;
 
@@ -118,6 +123,8 @@ async function conReglas(o: {
   pedidoDeClaude: string | null;
   /** Otra vez, con la corrección en el mensaje: la ficha nueva y el id de su pedido, o null si Claude no respondió */
   reintentar: (correccion: string) => Promise<{ ficha: ResultadoBusquedaWeb; pedidoId: string } | null>;
+  /** Cuándo empezó la búsqueda: si ya va tarde, no se le pide otra vez a Claude */
+  inicio: number;
   opciones: OpcionesDeUso;
 }): Promise<ResultadoBusquedaWeb> {
   let revision = revisarFicha(o.primera, o.nombre, o.frases);
@@ -126,7 +133,7 @@ async function conReglas(o: {
   let pidioOtraVez = false;
   if (revision.pedirOtraVez.length > 0) {
     const pedidas = revision.pedirOtraVez;
-    if (o.pedidoDeClaude) {
+    if (o.pedidoDeClaude && Date.now() - o.inicio < REINTENTO_ANTES_DE_MS) {
       pidioOtraVez = true;
       atajadas.push(...pedidas.map((p) => ({ regla: p.regla, accion: 'pide' as const, antes: p.antes, despues: null })));
       const segunda = await o.reintentar(mensajeDeCorreccion(pedidas));
@@ -150,6 +157,7 @@ async function conReglas(o: {
 }
 
 export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda, opciones: OpcionesDeUso = {}): Promise<ResultadoBusquedaWeb> {
+  const inicio = Date.now();
   // Lo que viaja a Claude cuando no es una búsqueda de siempre (probar unas instrucciones desde Configuración, C-288)
   const deClaude = { instruccionesPrueba: opciones.instruccionesPrueba, usuarioId: opciones.usuarioId };
   const nombre = textoPlano(pedido.nombre, 150);
@@ -243,6 +251,7 @@ export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda, opciones: Op
       frases,
       primera: armarSinPaginas(ia, conClaude?.firma ?? 'Groq'),
       pedidoDeClaude: conClaude?.pedidoId ?? null,
+      inicio,
       opciones,
       reintentar: async (correccion) => {
         const otra = await buscarConClaude({ nombre: buscado, categoria }, sugeridos, { ...deClaude, correccion, reintento: true });
@@ -379,6 +388,7 @@ export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda, opciones: Op
     frases,
     primera: await armar(iaPrimera, conClaude?.firma ?? 'Groq'),
     pedidoDeClaude: conClaude?.pedidoId ?? null,
+    inicio,
     opciones,
     reintentar: async (correccion) => {
       const otra = await leerConClaude({ nombre: buscado, categoria }, paraLeer, sugeridos, { ...deClaude, correccion, reintento: true });

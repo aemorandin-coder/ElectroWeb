@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import type { SectionProps } from './settings-form';
 import { NumberField, SettingsCard, SwitchRow, TextField } from './fields';
 
@@ -37,7 +36,7 @@ export default function StorefrontSection({ form, set, errors, parte }: Storefro
           {/* C-293 (D3): los interruptores "Avisarme con stock bajo / agotado" hacían lo mismo que estos avisos, que tienen sus canales */}
           <p className="text-sm text-muted">
             Los avisos de poco stock y de producto agotado se eligen en{' '}
-            <Link href="/admin/notifications#avisos" className="font-semibold text-brand-600 hover:underline">Notificaciones → Qué avisar</Link>.
+            <a href="#avisos" className="font-semibold text-brand-600 hover:underline">Avisos → Qué avisar</a>.
           </p>
         </div>
       </SettingsCard>

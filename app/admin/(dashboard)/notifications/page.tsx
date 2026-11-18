@@ -1,80 +1,49 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { IconoAjustes, IconoBandeja } from '@/components/iconos';
-import { FaTelegram } from 'react-icons/fa6';
-import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab } from '@/lib/admin-ui';
+import { IconoAjustes } from '@/components/iconos';
+import { adminPageHeader, adminPageSubtitle, adminPageTitle } from '@/lib/admin-ui';
 import { hasPermission } from '@/lib/auth-helpers';
 import Inbox from './_components/Inbox';
-import ChannelMatrix from './_components/ChannelMatrix';
-import TelegramPanel from './_components/TelegramPanel';
 
-// Notificaciones del equipo (C-73): bandeja, qué se avisa por cada canal y bot de Telegram.
-// Antes esta ruta solo redirigía a una pestaña de Mensajes (F5).
+// Notificaciones del equipo (C-73): la bandeja. Antes esta ruta solo redirigía a una pestaña de Mensajes (F5).
+// C-294 (D6 del 18/11): "Qué avisar" y el bot de Telegram son ajustes de toda la tienda: pasaron a Ajustes → Avisos, con los
+// correos de alerta. Aquí queda la bandeja; las direcciones viejas (#avisos, #telegram) llevan allá.
 
-type TabId = 'bandeja' | 'avisos' | 'telegram';
-
-const TABS: { id: TabId; label: string; Icon: typeof IconoBandeja }[] = [
-  { id: 'bandeja', label: 'Bandeja', Icon: IconoBandeja },
-  { id: 'avisos', label: 'Qué avisar', Icon: IconoAjustes },
-  { id: 'telegram', label: 'Telegram', Icon: FaTelegram },
-];
-
-function tabFromHash(): TabId {
-  if (typeof window === 'undefined') return 'bandeja';
-  const hash = window.location.hash.slice(1);
-  return TABS.some((tab) => tab.id === hash) ? (hash as TabId) : 'bandeja';
-}
+const EN_AJUSTES: Record<string, string> = { avisos: '/admin/settings#avisos', telegram: '/admin/settings#telegram' };
 
 export default function NotificationsPage() {
-  const [elegida, setActive] = useState<TabId>('bandeja');
-  // C-141: los canales de aviso y el bot de Telegram son configuración sensible (solo el super admin)
+  const router = useRouter();
   const { data: session } = useSession();
   const esDueno = hasPermission(session, 'MANAGE_SETTINGS');
-  const tabs = esDueno ? TABS : TABS.filter((tab) => tab.id === 'bandeja');
-  const active = tabs.some((tab) => tab.id === elegida) ? elegida : 'bandeja';
 
   useEffect(() => {
-    const sync = () => setActive(tabFromHash());
-    const first = window.setTimeout(sync, 0);
-    window.addEventListener('hashchange', sync);
-    return () => {
-      window.clearTimeout(first);
-      window.removeEventListener('hashchange', sync);
-    };
-  }, []);
-
-  const goTo = (id: TabId) => {
-    setActive(id);
-    window.history.replaceState(null, '', `#${id}`);
-  };
+    // Después de pintar: al llegar desde otra pantalla del panel, el hash llega a la dirección un momento después
+    const t = window.setTimeout(() => {
+      const destino = EN_AJUSTES[window.location.hash.slice(1)];
+      if (destino) router.replace(destino);
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [router]);
 
   return (
     <div className="max-w-5xl">
       <div className={adminPageHeader}>
         <div>
           <h1 className={adminPageTitle}>Notificaciones</h1>
-          <p className={adminPageSubtitle}>Todo lo que pasa en la tienda, y por dónde te enteras: panel, correo o Telegram.</p>
+          <p className={adminPageSubtitle}>Todo lo que pasa en la tienda.</p>
         </div>
+        {esDueno && (
+          <Link href="/admin/settings#avisos" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-600 hover:underline">
+            <IconoAjustes className="h-4 w-4" aria-hidden="true" />
+            Qué avisar y por dónde
+          </Link>
+        )}
       </div>
-
-      {tabs.length > 1 && (
-        <div className="-mx-1 mb-5 overflow-x-auto px-1 pb-1">
-          <div className="flex w-max gap-1 rounded-xl border border-line bg-white p-1" role="tablist" aria-label="Secciones">
-            {tabs.map(({ id, label, Icon }) => (
-              <button key={id} type="button" role="tab" aria-selected={active === id} onClick={() => goTo(id)} className={adminTab(active === id)}>
-                <Icon className="h-4 w-4" aria-hidden="true" />
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {active === 'bandeja' && <Inbox puedeElegir={esDueno} />}
-      {active === 'avisos' && <ChannelMatrix onGoToTelegram={() => goTo('telegram')} />}
-      {active === 'telegram' && <TelegramPanel />}
+      <Inbox puedeElegir={esDueno} />
     </div>
   );
 }

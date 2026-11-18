@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
-import { IconoEnviar, IconoPopup, IconoRegalo, IconoVer, IconoVerificado } from '@/components/iconos';
+import { IconoBuscar, IconoEnviar, IconoInicio, IconoPopup, IconoRegalo, IconoVer, IconoVerificado } from '@/components/iconos';
 import type { IconType } from '@/components/iconos';
 import { useRouter } from 'next/navigation';
 import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab } from '@/lib/admin-ui';
@@ -12,11 +12,16 @@ import Navidad from './_components/Navidad';
 import Sorteo from './_components/Sorteo';
 import Campanas from './_components/Campanas';
 import Plantillas from './_components/Plantillas';
+import AjustesDeContenido from './_components/AjustesDeContenido';
+import StorefrontSection from '../settings/_components/StorefrontSection';
+import SeoSection from '../settings/_components/SeoSection';
+import type { SettingsKey } from '../settings/_components/settings-form';
+import { PORTADA_FIELDS, SEO_FIELDS } from '@/lib/validations/settings';
 
 // Marketing (C-75): una sección por tarea y un archivo por sección. Antes: 1.118 líneas en un archivo con 6 pestañas,
 // una de ellas la configuración SMTP (ahora en Configuración → Correo).
 
-type SeccionId = 'promotores' | 'campanas' | 'popup' | 'navidad' | 'sorteo' | 'plantillas';
+type SeccionId = 'promotores' | 'campanas' | 'popup' | 'navidad' | 'sorteo' | 'plantillas' | 'portada' | 'google';
 
 const SECCIONES: { id: SeccionId; label: string; descripcion: string; icon: IconType }[] = [
   { id: 'promotores', label: 'Promotores', descripcion: 'Códigos de referido y comisiones por compras pagadas.', icon: IconoVerificado },
@@ -27,6 +32,9 @@ const SECCIONES: { id: SeccionId; label: string; descripcion: string; icon: Icon
   // C-212: el sorteo (la PlayStation 4 del 20/12)
   { id: 'sorteo', label: 'Sorteo', descripcion: 'El sorteo de la tienda: las fechas, el premio, quiénes participan, lo que dejó y el sorteo en sí.', icon: IconoRegalo },
   { id: 'plantillas', label: 'Correos de la tienda', descripcion: 'Cómo se ven los correos automáticos que recibe el cliente.', icon: IconoVer },
+  // C-294 (D2 del 18/11): estaban en Configuración, solo para el dueño. Son contenido: los cambia también quien tiene permiso de contenido
+  { id: 'portada', label: 'Portada', descripcion: 'Los destacados, las categorías y el video de la página de inicio.', icon: IconoInicio },
+  { id: 'google', label: 'Google y redes', descripcion: 'El título, la descripción y la imagen con que aparecen las páginas en Google, WhatsApp y Facebook.', icon: IconoBuscar },
   // C-116: la pestaña "ElectroStudio" (acceso directo desde C-112) se quitó: el estudio tiene su entrada en la barra lateral
 ];
 
@@ -100,6 +108,12 @@ export default function MarketingPage() {
       {activa === 'navidad' && <Navidad />}
       {activa === 'sorteo' && <Sorteo />}
       {activa === 'plantillas' && <Plantillas />}
+      {activa === 'portada' && (
+        <AjustesDeContenido campos={PORTADA_FIELDS as readonly SettingsKey[]}>{(p) => <StorefrontSection {...p} parte="portada" />}</AjustesDeContenido>
+      )}
+      {activa === 'google' && (
+        <AjustesDeContenido campos={SEO_FIELDS as readonly SettingsKey[]}>{(p) => <SeoSection {...p} />}</AjustesDeContenido>
+      )}
     </div>
   );
 }

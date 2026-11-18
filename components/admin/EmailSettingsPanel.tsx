@@ -138,7 +138,8 @@ export default function EmailSettingsPanel() {
             const response = await fetch('/api/admin/email/settings', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                // C-294: el interruptor de las campañas está en Marketing → Campañas: no se manda desde aquí (no se pisa con uno viejo)
+                body: JSON.stringify({ ...formData, marketingEnabled: undefined }),
             });
 
             if (response.ok) {
@@ -418,18 +419,10 @@ export default function EmailSettingsPanel() {
                     <h3 className="font-bold text-sm text-ink">Campañas de marketing</h3>
                 </div>
                 <div className="p-4 grid gap-4 sm:grid-cols-2">
-                    <label className="flex items-start justify-between gap-3 rounded-lg border border-line p-3 cursor-pointer">
-                        <span>
-                            <span className="block text-sm font-semibold text-ink">Correos de marketing</span>
-                            <span className="block text-xs text-muted">Permite enviar campañas desde Marketing a los clientes que aceptaron promociones. Los correos de pedidos y contraseñas salen siempre.</span>
-                        </span>
-                        <input
-                            type="checkbox"
-                            checked={Boolean(formData.marketingEnabled)}
-                            onChange={(e) => handleInputChange('marketingEnabled', e.target.checked)}
-                            className="mt-1 h-5 w-5 shrink-0 accent-brand-500"
-                        />
-                    </label>
+                    <p className="text-sm text-muted sm:col-span-2">
+                        Encender o apagar los correos de marketing está en{' '}
+                        <a href="/admin/marketing#campanas" className="font-semibold text-brand-600 hover:underline">Marketing → Campañas</a>.
+                    </p>
                     <div>
                         <label htmlFor="correo-limite" className="block text-xs font-bold text-muted uppercase tracking-wide mb-1">
                             Límite de correos de campaña por día

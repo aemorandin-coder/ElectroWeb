@@ -179,7 +179,7 @@ export async function PUT(request: NextRequest) {
         title: patch.maintenanceMode ? 'Tienda en mantenimiento' : 'Tienda abierta de nuevo',
         summary: `${session.user.name || session.user.email || 'Un administrador'} ${patch.maintenanceMode ? 'activó' : 'apagó'} el modo mantenimiento`,
         fields: [['Mensaje', patch.maintenanceMode ? settings.maintenanceMessage : null]],
-        link: '/admin/settings#sistema',
+        link: '/admin/settings#mantenimiento',
       });
     }
 

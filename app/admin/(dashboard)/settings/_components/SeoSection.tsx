@@ -65,7 +65,7 @@ export default function SeoSection({ form, set, errors }: SectionProps) {
           <div className="space-y-4">
             <TextField ancho="largo" label="Título" value={value(page.keys.title)} onChange={setText(page.keys.title)} error={errors[page.keys.title]} maxLength={70} counter placeholder="Electro Shop | Tecnología en Guanare con envíos a toda Venezuela" />
             <TextAreaField label="Descripción" value={value(page.keys.description)} onChange={setText(page.keys.description)} error={errors[page.keys.description]} maxLength={170} counter rows={3} placeholder="Laptops, consolas, gift cards y servicio técnico. Precios en dólares y bolívares." />
-            <TextField ancho="largo" label="Palabras clave" value={value(page.keys.keywords)} onChange={setText(page.keys.keywords)} error={errors[page.keys.keywords]} maxLength={300} hint="Separadas por coma. Google casi no las usa; sirven para otros buscadores." />
+            {/* C-294 (D3 del 18/11): sin las palabras clave, que Google casi no usa. Los datos quedan en la base */}
             <ImageField
               label="Imagen al compartir"
               uploadType={page.uploadType}

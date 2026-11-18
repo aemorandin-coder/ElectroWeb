@@ -285,7 +285,18 @@ export const CHRISTMAS_FIELDS: readonly SettingsField[] = [
   'christmasCutoffShipping', 'christmasCutoffLocal',
 ];
 
-export const MARKETING_FIELDS: readonly SettingsField[] = [...HOT_AD_FIELDS, ...CHRISTMAS_FIELDS];
+/** C-294 (D2 del 18/11): la portada y "Google y redes" pasaron a Marketing: también los guardan los administradores con MANAGE_CONTENT */
+export const PORTADA_FIELDS: readonly SettingsField[] = [
+  'maxFeaturedProducts', 'showCategories', 'maxCategoriesDisplay', 'heroVideoEnabled', 'heroVideoUrl', 'heroVideoTitle', 'heroVideoDescription',
+];
+export const SEO_FIELDS: readonly SettingsField[] = [
+  'metaTitle', 'metaDescription', 'metaKeywords', 'homeMetaImage',
+  'productsMetaTitle', 'productsMetaDescription', 'productsMetaKeywords', 'productsMetaImage',
+  'servicesMetaTitle', 'servicesMetaDescription', 'servicesMetaKeywords', 'servicesMetaImage',
+  'coursesMetaTitle', 'coursesMetaDescription', 'coursesMetaKeywords', 'coursesMetaImage',
+];
+
+export const MARKETING_FIELDS: readonly SettingsField[] = [...HOT_AD_FIELDS, ...CHRISTMAS_FIELDS, ...PORTADA_FIELDS, ...SEO_FIELDS];
 
 /** Errores de zod como { campo: mensaje } (el primero de cada campo). */
 export function fieldErrors(error: z.ZodError): Record<string, string> {

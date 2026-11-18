@@ -93,7 +93,7 @@ export async function refreshExchangeRate({ force = false }: { force?: boolean }
         ['Antes', current ? formatVES(current) : null],
         ['Cambio', change !== null ? `${change >= 0 ? '+' : ''}${change.toFixed(2)} %` : null],
       ],
-      link: '/admin/settings#precios',
+      link: '/admin/settings#tasa',
     });
   }
   return { status: 'updated', rate: official.rate, lastRateUpdate: now };
@@ -105,7 +105,7 @@ function reportFailure(reason: string, current: number | null) {
     title: 'Tasa BCV sin actualizar',
     summary: reason,
     fields: [['Tasa en uso', current ? formatVES(current) : 'Sin tasa']],
-    link: '/admin/settings#precios',
+    link: '/admin/settings#tasa',
     // Una vez cada 6 horas: la fuente puede pasar caída un buen rato
     throttleKey: 'source',
     throttleMs: 6 * 60 * 60_000,

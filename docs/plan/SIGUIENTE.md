@@ -4,10 +4,21 @@
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-289 · Ajustes, acceso y herramientas claras: el plan (18/11, sin código; `AJUSTES.md` y `estado/C-289.md`):** el pedido del equipo después de que la contadora se trabó en los dos pasos ("qué app es doble factor y qué tengo que hacer después").
+  - **Hecha, la regla para todo lo que se construya:** la skill `herramientas-claras`, en el repositorio para cada PC. Pide mensajes claros, íconos, poco texto, muy gráfico, las apps de afuera con su logo y dónde se bajan, y qué viene después. Está citada en `CLAUDE.md` y en `PLAN.md` §1.12.
+  - **Las fases:**
+    1. C-290, los dos pasos que se entienden;
+    2. C-291, el dispositivo de confianza por 30 días;
+    3. C-292, la IA de la tienda y no de un proveedor (absorbe C-288b);
+    4. C-293 y C-294, Ajustes ordenado. Hay lo repetido, dos ajustes sin efecto, nombres que no dicen lo que hay, campos anchos y dos formas de guardar.
+  - **Decidido el 18/11:**
+    - el dispositivo de confianza es para todo el panel, con el código otra vez en lo delicado;
+    - los botones dicen "IA", con el motor en el resultado ("Lo redactó Claude Haiku 5.5").
+  - **Por decidir con las maquetas de cada fase:** D1 a D6 (`AJUSTES.md` §6.2).
 - **C-288 · Claude en el panel: sus ajustes y reglas estrictas (rc.103, en producción desde el 18/11; pruebas por confirmar: §2; `estado/C-288.md`):** el pedido del equipo del 17 y 18/11.
   - **Configuración → IA · Claude** (solo el dueño): el motor y la clave de la API, las instrucciones de cada uso por pasos (con "Probar"), las reglas con sus frases, lo que gasta cada uso, lo que falla y la guía.
   - **Reglas que la tienda comprueba en cada respuesta:** "Revisar antes de guardar" y las demás notas para el equipo nunca quedan en lo que se publica; con "posibles modelos" se le pide otra vez a Claude, una sola vez.
-  - **Sigue C-288b:** "No sirvió" en cada resultado, un modelo por uso y otro proveedor.
+  - **C-288b pasó a C-292** (`AJUSTES.md`): "No sirvió" en cada resultado, un modelo por uso y otro proveedor.
 - **C-287 · ElectroStudio pregunta a dónde va, los títulos se arrastran y Claude investiga el modelo exacto (rc.102, en producción desde el 17/11; pruebas por confirmar: §2; `estado/C-287.md`):**
   - Al sacar una imagen o un video, ElectroStudio pregunta: descargarlo, mandarlo por Telegram o las dos cosas.
   - Los títulos de la plantilla se toman con el mouse.

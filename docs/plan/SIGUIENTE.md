@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.103; por subir: rc.104 a rc.107, §2)
+# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.106; por subir: rc.107, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-296 · Chispa 3.1 (rc.107, en `main`, por subir con rc.104 a rc.106: §2; `estado/C-296.md`):** el equipo pidió ver sus emociones y mejorarlo, y eligió en la página de variantes.
+- **C-296 · Chispa 3.1 (rc.107, en `main`, por subir: §2; `estado/C-296.md`):** el equipo pidió ver sus emociones y mejorarlo, y eligió en la página de variantes.
   - **En la web:** el logo oficial en la camisa de Chispa, en ElectroStudio, el popup navideño y los correos.
   - **En los videos** (`chispa.js`, cuando se vuelvan a grabar):
     - ojos de asombro y tristes;
@@ -13,16 +13,16 @@
     - «piensa» en la barbilla y «serio»;
     - el OK y los brazos cruzados rehechos.
   - **La skill `manos-de-caricatura`:** cómo dibujan y animan las manos los animadores (Blair, Kricfalusi de Hanna-Barbera, Williams, animadores japoneses). Lo siguiente son las manos animadas.
-- **C-295 · ElectroStudio en el teléfono (rc.106, en `main`, por subir con rc.104 y rc.105: §2; `estado/C-295.md`):** el pedido del equipo del 18/11. Sigue dentro del panel, sin app aparte (decisión del equipo).
+- **C-295 · ElectroStudio en el teléfono (rc.106, en producción desde el 18/11; pruebas por confirmar: §2; `estado/C-295.md`):** el pedido del equipo del 18/11. Sigue dentro del panel, sin app aparte (decisión del equipo).
   - **"Editar en grande"** en el teléfono: la historia del alto de la pantalla y abajo una hoja con el paso, + Título, + Subtítulo, + Sticker y Terminar.
   - **Para el dedo:** asas y botones de 44 px, dos dedos en cualquier parte agrandan y giran la pieza elegida, un toque afuera la suelta y vibra al pegarse a una guía.
   - **60 cuadros:** la vista previa se dibuja del tamaño en que se ve, y sale igual que la descarga.
   - **El final:** la historia en grande con su animación, cuánto tardaste y qué hacer: compartir, descargar, Telegram, copiar el texto y el enlace, u otra.
-- **C-291 · El dispositivo de confianza, 30 días (rc.105, en `main`, por subir: §2; `estado/C-291.md`):** la fase 2 del plan de Ajustes.
+- **C-291 · El dispositivo de confianza, 30 días (rc.105, en producción desde el 18/11, subida con rc.106; pruebas por confirmar: §2; `estado/C-291.md`):** la fase 2 del plan de Ajustes.
   - **Al entrar con el número,** "No pedir el número en esta computadora por 30 días" (apagada). La contraseña se sigue pidiendo.
   - **Mi seguridad** los lista y los quita; **Equipo** los cuenta y el dueño los quita. Se anulan al cambiar la contraseña o reiniciar los dos pasos.
   - **Lo delicado** (la clave de la IA y la del correo, Equipo, Métodos de pago, Respaldos) pide el número otra vez si se entró por confianza.
-- **C-290 · Los dos pasos que se entienden (rc.104, en `main`, por subir con rc.105: §2; `estado/C-290.md`):** la primera fase del plan de Ajustes.
+- **C-290 · Los dos pasos que se entienden (rc.104, en producción desde el 18/11, subida con rc.106; pruebas por confirmar: §2; `estado/C-290.md`):** la primera fase del plan de Ajustes.
   - **Mi seguridad** guía los dos pasos en cuatro pasos dibujados: baja la app (las tres, con su logo y sus tiendas), agrega Electro Shop (el teléfono dibujado y el QR; en el teléfono, "Abrir en la app"), escribe el número y guarda tus llaves de repuesto.
   - **Al entrar:** el número de la app dibujado, errores que dicen qué hacer y la salida por WhatsApp.
   - **La invitación** avisa antes lo que va a hacer falta.
@@ -534,36 +534,19 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.107` (C-290, C-291, C-295 y C-296)
-Producción está en `v1.0.0-rc.103` (`e82052e3`); su bloque está en `HISTORIAL.md`. Es un solo bloque, con rc.104 a rc.106 adentro (C-296, la rc.107, solo cambia imágenes y dos líneas de código: sin base ni variables). Si entran más tareas antes de subir, se suman aquí.
-- **Cambio de base (aditivo, de C-291):** una tabla nueva y dos columnas en `user_sessions`, sin `DROP` ni cambios de tipo. Sin variables nuevas y sin cron. C-295 no cambia la base.
-```sql
-ALTER TABLE "user_sessions" ADD COLUMN     "confirmadoAt" TIMESTAMP(3),
-ADD COLUMN     "segundoPaso" TEXT;
-CREATE TABLE "dispositivos_confianza" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "huella" TEXT NOT NULL,
-    "dispositivo" TEXT NOT NULL,
-    "ip" TEXT,
-    "version" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "venceAt" TIMESTAMP(3) NOT NULL,
-    "ultimoUsoAt" TIMESTAMP(3),
-    "quitadoAt" TIMESTAMP(3),
-    "motivoQuitado" TEXT,
-    CONSTRAINT "dispositivos_confianza_pkey" PRIMARY KEY ("id")
-);
-CREATE INDEX "dispositivos_confianza_huella_idx" ON "dispositivos_confianza"("huella");
-CREATE INDEX "dispositivos_confianza_userId_idx" ON "dispositivos_confianza"("userId");
-ALTER TABLE "dispositivos_confianza" ADD CONSTRAINT "dispositivos_confianza_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-```
-- **Subir** (en la terminal del servidor):
-  1. El respaldo, como en rc.101: `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc106.dump`
-  2. `git pull --ff-only && bash scripts/deploy.sh --sin-pull`. El guion se detiene por el cambio de base y muestra el SQL de arriba.
-  3. `npx prisma db push`, y otra vez `bash scripts/deploy.sh --sin-pull`.
+### Lo que falta subir: `v1.0.0-rc.107` (C-296)
+Producción está en `v1.0.0-rc.106` (`8dae211c`); su bloque está en `HISTORIAL.md`. C-296 solo cambia imágenes y dos líneas de código: **sin cambio de base, sin variables y sin cron.** Si entran más tareas antes de subir, se suman aquí.
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
   - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.107`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 15 minutos; antes, recarga el panel con Ctrl+R):
+- **Pruebas** (antes, recarga el panel con Ctrl+R):
+  1. **Chispa 3.1** (C-296, unos 2 minutos, en la computadora):
+     - Marketing → ElectroStudio → una historia con Chispa (Felicitación, por ejemplo): Chispa lleva el logo redondo de la tienda en el pecho, no la placa con «ES»;
+     - Marketing → Correos, la vista previa de cualquier correo: Chispa abajo, con el logo en el pecho.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.106 && npm install && bash scripts/deploy.sh --sin-pull`.
+
+### Por confirmar de rc.106 (C-290, C-291 y C-295; unos 25 minutos)
+Ya en producción desde el 18/11, cerca de las 10:17 a. m. La subió el equipo a mano en la terminal del servidor, con los pasos del bloque (desde la PC de Claude de ese momento no había acceso SSH). Claude lo comprobó desde fuera; el detalle está en `HISTORIAL.md`.
+Falta esto (antes, recarga el panel con Ctrl+R):
   1. **La guía, de cero** (en la computadora, con una cuenta de prueba invitada desde Equipo):
      - la invitación avisa que hace falta el teléfono y una app;
      - Mi seguridad abre con "Así entras al panel";
@@ -587,9 +570,6 @@ ALTER TABLE "dispositivos_confianza" ADD CONSTRAINT "dispositivos_confianza_user
      - "Ver la animación" arriba: se mueve fluido, sin saltos;
      - "Terminar" → "Sacar el video": el anillo avanza, y al terminar la historia llega en grande con su destello. "Compartir" abre el menú del teléfono con Instagram; "Telegram" llega al chat del bot; "Otra igual" abre la copia en el paso 1;
      - en la computadora, "Sacar la imagen": el final va en dos columnas y "Descargar la imagen" la baja.
-  9. **Chispa 3.1** (C-296, unos 2 minutos, en la computadora):
-     - Marketing → ElectroStudio → una historia con Chispa (Felicitación, por ejemplo): Chispa lleva el logo redondo de la tienda en el pecho, no la placa con «ES»;
-     - Marketing → Correos, la vista previa de cualquier correo: Chispa abajo, con el logo en el pecho.
 - **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.103 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas se pueden quedar: rc.103 no las usa. Para quitar solo ElectroStudio en el teléfono y dejar lo de Ajustes: `git reset --hard v1.0.0-rc.105` en lugar de `v1.0.0-rc.103`.
 
 ### Por confirmar de rc.103 (C-288, Claude en el panel; unos 8 minutos)
@@ -1329,7 +1309,7 @@ En el orden en que más destraban:
 **Limpieza de tu máquina:** hecha el 06/11 (C-185). Las ramas que se borraron, con su commit, quedaron en `.git/ramas-borradas-2026-11-06.txt` (solo en tu carpeta).
 
 ## 4. Fila de Claude
-**Hecho el 18/11:** C-288 (Claude en el panel, rc.103, en producción), C-289 (el plan de Ajustes), C-290 y C-291 (rc.104 y rc.105) y C-295 (ElectroStudio en el teléfono, rc.106); las tres últimas, en `main` por subir (§2). Sigue el plan de Ajustes (C-292 a C-294) y, en ElectroStudio, lo de `PLAN.md` §5.2 bajo C-295.
+**Hecho el 18/11:** C-288 (Claude en el panel, rc.103, en producción), C-289 (el plan de Ajustes), C-290 y C-291 (rc.104 y rc.105) y C-295 (ElectroStudio en el teléfono, rc.106); las tres, en producción desde el 18/11 (pruebas por confirmar: §2). Sigue el plan de Ajustes (C-292 a C-294) y, en ElectroStudio, lo de `PLAN.md` §5.2 bajo C-295.
 
 **Hecho el 15/11:** C-245 (el panel entero con el kit, rc.61), C-249 (los filtros en píldoras, rc.63), C-249b (la oferta o el cupón y las gift cards impresas por pasos, rc.64) C-249c (el método de pago y la categoría, rc.65) C-249d (la campaña y el promotor, rc.67), C-249e (el curso y Servicios, rc.68: los 8 formularios van por pasos) y C-251 (Mi panel: las fallas y lo nuevo, rc.69) y C-251b (Mi panel con el kit, rc.71); quedan sus tres decisiones (`estado/C-251.md`). También C-253 (el sorteo más atractivo, rc.72) y C-255 ("Cómo participar" con íconos y el camino de registro, rc.73) y C-258 (el estrés de los caminos del cliente y sus arreglos, rc.75), y C-254 (la semana del ganador del sorteo, rc.79). **Sigue de ahí:** lo que el equipo elija en sus dos decisiones (crear por pasos y los filtros de Órdenes), y los arreglos que quedaron en `PLAN.md` §5.2.
 

@@ -10,6 +10,20 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.104] - 2026-11-18
+Los dos pasos que se entienden (C-290), el primero del plan de Ajustes (`docs/plan/AJUSTES.md`). La contadora no supo "qué app es doble factor" ni qué hacer después: ahora la guía va dibujada, con las apps y dónde se bajan. Sin cambio de base, sin variables y sin cron.
+### Marco del panel 1.17.0 (C-290)
+- **Mi seguridad, la primera vez,** abre con la hoja "Así entras al panel": tu contraseña + un número de tu teléfono = entras. Después, cuatro pasos con su ícono:
+  1. **Baja la app:** Google Authenticator (la recomendada), Microsoft Authenticator o Authy, con su logo y sus botones de Play Store y App Store. En la computadora, el QR de cada tienda para abrirla desde el teléfono.
+  2. **Agrega Electro Shop:** el teléfono dibujado con lo que se toca en la app elegida y el QR. En el teléfono, "Abrir en la app", porque la pantalla no se puede escanear a sí misma. La clave escrita, detrás de "¿No puedes escanear?".
+  3. **Escribe el número:** la app dibujada con "Electro Shop · 123 456". El error dice qué hacer ("Escribe el que ves ahora en la app").
+  4. **Guarda tus llaves de repuesto** (los 10 códigos de respaldo, con su nombre nuevo) y cómo será cada entrada.
+- **Ya activa:** "Tu cuenta está protegida" con el camino de cada entrada, las llaves que quedan y qué hacer si cambias de teléfono, con el WhatsApp de la tienda.
+### Carrito, checkout y cuenta del cliente 1.13.0 (C-290)
+- **Entrar al panel:** "Escribe el número de tu app" nombra las tres apps y dibuja cómo se ve Electro Shop en ella; el número equivocado dice qué hacer; "¿Sin el teléfono? Usa una llave de repuesto"; quien cambió de teléfono lo pide por WhatsApp. La verificación de seguridad del inicio de sesión ya no va en ámbar.
+### Marketing 1.25.1 (C-290)
+- La invitación al panel avisa antes lo que va a hacer falta: el teléfono y una app gratis, con los enlaces de Google Authenticator para Android y iPhone.
+
 ## [1.0.0-rc.103] - 2026-11-18
 Claude en el panel: sus ajustes en Configuración y las reglas estrictas que la tienda comprueba en cada respuesta (C-288). **Cambio de base aditivo:** tres tablas nuevas (`ia_ajustes`, `ia_pedidos`, `ia_atajadas`), sin tocar las que hay. Sin variables nuevas y sin cron.
 ### Configuración 1.5.0 (C-288)

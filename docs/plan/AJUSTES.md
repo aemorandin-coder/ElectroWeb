@@ -8,7 +8,7 @@
 > - **El login de los administradores,** también con dispositivo de confianza.
 > - **Ajustes:** "inputs anchísimos, muchos textos, semánticas ilógicas, ajustes repetidos: haz un análisis de lo que necesitamos que se mantenga acá".
 >
-> **Este documento es el mapa.** Cada fase es una tarea `C-*` con su rama, sus pruebas, su versión y su deploy. Lo que pide una decisión del equipo está en §6, con la opción recomendada. Las maquetas se hacen al empezar cada fase, con datos de producción.
+> **Este documento es el mapa.** Cada fase es una tarea `C-*` con su rama, sus pruebas, su versión y su deploy. Las decisiones del equipo están en §6: las dos del plan y las seis (D1 a D6) del mismo 18/11. Las maquetas se hacen al empezar cada fase, con datos de producción.
 
 ## 1. Lo más importante
 - **La regla nueva ya está hecha** (C-289, con este plan): la skill `herramientas-claras` (`.claude/skills/herramientas-claras/SKILL.md`).
@@ -278,24 +278,15 @@ Decisión del 18/11 (§6.1): para todo el panel (la contadora, los administrador
 - **El dispositivo de confianza:** para todo el panel (la contadora, los administradores y el dueño), 30 días. Lo delicado pide el código otra vez. Se ve y se quita en Mi seguridad y en Equipo, llega un correo al marcarlo y se borran todos al cambiar la contraseña o reiniciar los dos pasos.
 - **La IA en los textos:** "IA" en los botones, con el nombre del motor al lado en el resultado ("Lo redactó Claude Haiku 5.5"). La sección se llama "IA". Cambiar de motor no toca ningún texto.
 
-### 6.2 Por decidir, viendo las maquetas de cada fase
-- **D1 · El mapa de Ajustes (C-293):**
-  - **A (recomendada):** en la computadora, el menú de la izquierda por grupos, con el estado de cada sección; en el teléfono, primero la lista y después la sección.
-  - **B:** un índice de tarjetas con su estado, y cada sección en su página, en todos los tamaños.
-- **D2 · Portada y Google y redes (C-294):**
-  - **A (recomendada):** pasan a Marketing, porque son contenido. Las podrán cambiar los administradores con permiso de contenido, no solo el dueño.
-  - **B:** se quedan en Ajustes → La tienda en línea, solo para el dueño.
-- **D3 · Lo que se quita:** los colores de los correos (sin efecto), las palabras clave de las páginas, la tarjeta Equipo repetida y los dos interruptores de stock repetidos.
-  - **Recomendada:** quitar los cuatro. Los datos se quedan en la base.
-- **D4 · La casilla "No pedir el código por 30 días" (C-291):**
-  - **A (recomendada):** apagada al abrir: se marca solo en una computadora propia.
-  - **B:** marcada al abrir.
-- **D5 · Métodos de pago (C-293):**
-  - **A (recomendada):** entra a Ajustes → Vender como sección y sale del menú de Administración.
-  - **B:** se queda como página aparte, con su tarjeta en Ajustes.
-- **D6 · "Qué avisar" y Telegram (C-294):**
-  - **A (recomendada):** pasan a Ajustes → Avisos con los correos de alerta; Notificaciones se queda con la bandeja.
-  - **B:** se quedan en Notificaciones, y los correos de alerta van ahí.
+### 6.2 Tomadas el 18/11, con las preguntas de la sesión (lo recomendado en las seis)
+Al empezar el trabajo ("vamos a arreglar todo"), el equipo eligió con preguntas de opciones, y en D1 con el dibujo de las dos pantallas:
+- **D1 · El mapa de Ajustes (C-293):** el menú agrupado. En la computadora, el menú de la izquierda por grupos con el estado de cada sección; en el teléfono, primero la lista y después la sección.
+- **D2, D5 y D6 · Lo que se mueve:**
+  - Métodos de pago entra a Ajustes → Vender (sale de Administración);
+  - "Qué avisar" y Telegram pasan a Ajustes → Avisos con los correos de alerta, y Notificaciones se queda con la bandeja;
+  - Portada y Google y redes pasan a Marketing: también las cambian los administradores con permiso de contenido.
+- **D3 · Se quitan los cuatro:** los colores de los correos, las palabras clave de las páginas, la tarjeta Equipo repetida y los interruptores de stock repetidos. Los datos se quedan en la base.
+- **D4 · La casilla "No pedir el código por 30 días":** apagada al abrir.
 
 **No se propone cambiar** la regla de la sesión del panel: 12 horas y cierre tras 1 hora sin uso (`PLAN.md` §7.2). Si con el dispositivo de confianza la contadora sigue escribiendo la contraseña muy seguido, esa es otra decisión del equipo.
 

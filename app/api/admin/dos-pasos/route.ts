@@ -45,20 +45,20 @@ export async function POST(request: NextRequest) {
 
   if (datos.data.accion === 'iniciar') {
     const inicio = await iniciarDosPasos(yo.userId, yo.correo);
-    if (!inicio) return NextResponse.json({ error: 'La verificación en dos pasos ya está activa en tu cuenta.' }, { status: 409 });
+    if (!inicio) return NextResponse.json({ error: 'Tu verificación ya está activa. Recarga la página.' }, { status: 409 });
     return NextResponse.json(inicio, { headers: sinCache });
   }
 
   // Los códigos se prueban con límite: 5 por minuto por cuenta
   const limite = checkRateLimit(yo.userId, 'admin:dos-pasos', RATE_LIMITS.AUTH);
   if (!limite.success) {
-    return NextResponse.json({ error: 'Demasiados intentos. Espera un minuto y prueba de nuevo.' }, { status: 429, headers: getRateLimitHeaders(limite, RATE_LIMITS.AUTH) });
+    return NextResponse.json({ error: 'Demasiados intentos. Espera un minuto y escribe el número que veas entonces.' }, { status: 429, headers: getRateLimitHeaders(limite, RATE_LIMITS.AUTH) });
   }
 
   if (datos.data.accion === 'activar') {
     const codigos = await activarDosPasos(yo.userId, datos.data.codigo);
     if (!codigos) {
-      return NextResponse.json({ error: 'El código no es correcto. Revisa que la hora de tu teléfono sea automática y escribe el código que muestra la app ahora.' }, { status: 400 });
+      return NextResponse.json({ error: 'Ese número no sirvió. Escribe el que ves ahora en la app: cambia cada 30 segundos.' }, { status: 400 });
     }
     // Si alguien había entrado solo con la contraseña antes de la activación, queda fuera. Si no se pudieron cerrar
     // las demás sesiones, la activación se deshace: una sesión sin código no puede quedar viva con los dos pasos activos
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
   // Códigos de respaldo nuevos: solo con la sesión ya verificada y un código de la app
   if (yo.session.user.dosPasos !== true) return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   const codigos = await regenerarRespaldo(yo.userId, datos.data.codigo);
-  if (!codigos) return NextResponse.json({ error: 'El código no es correcto. Usa el que muestra la app ahora (los de respaldo no sirven aquí).' }, { status: 400 });
+  if (!codigos) return NextResponse.json({ error: 'Ese número no sirvió. Escribe el que ves ahora en la app (aquí no sirven las llaves de repuesto).' }, { status: 400 });
   await registrarAccionAdmin(yo.session, 'SECURITY_ADMIN_ACTION', { type: 'USER', id: yo.userId }, { accion: 'Generó códigos de respaldo nuevos' }, request);
   return NextResponse.json({ codigos }, { headers: sinCache });
 }

@@ -13,6 +13,8 @@ import HCaptchaWrapper, { type HCaptchaRefMethods } from '@/components/HCaptchaW
 import { adminError, adminHint, adminInput, adminLabel, adminNotice, adminPrimaryButton } from '@/lib/admin-ui';
 import { rutaInternaSegura } from '@/lib/rutas';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import { FilaDeLaApp } from '@/components/admin/dos-pasos/TelefonoDibujado';
+import Trabado from '@/components/admin/dos-pasos/Trabado';
 
 // Constants for failed attempts
 const FAILED_ATTEMPTS_KEY = 'login_failed_attempts';
@@ -210,7 +212,7 @@ function LoginPageContent({ google, conCookie }: { google: boolean; conCookie: b
     setError('');
 
     if (pideCodigo && !codigo.trim()) {
-      setError(conRespaldo ? 'Escribe uno de tus códigos de respaldo.' : 'Escribe el código de 6 dígitos de tu app.');
+      setError(conRespaldo ? 'Escribe una de tus llaves de repuesto.' : 'Escribe las 6 cifras de tu app.');
       return;
     }
 
@@ -243,7 +245,7 @@ function LoginPageContent({ google, conCookie }: { google: boolean; conCookie: b
       } else if (result?.error === 'CODIGO_INVALIDO') {
         incrementFailedAttempts();
         setCodigo('');
-        setError(conRespaldo ? 'Ese código de respaldo no es válido o ya se usó.' : 'El código no es correcto. Escribe el que muestra la app ahora.');
+        setError(conRespaldo ? 'Esa llave no sirve o ya se usó. Prueba con otra.' : 'Ese número ya cambió o no es el de Electro Shop. Escribe el que ves ahora en la app.');
       } else if (result?.error === 'CUENTA_SOCIAL') {
         setError(MENSAJE_CUENTA_SOCIAL);
       } else if (result?.error === 'CUENTA_SUSPENDIDA') {
@@ -334,10 +336,10 @@ function LoginPageContent({ google, conCookie }: { google: boolean; conCookie: b
       }
     >
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-ink">{pideCodigo ? 'Verificación en dos pasos' : 'Iniciar sesión'}</h1>
+        <h1 className="text-2xl font-bold text-ink">{pideCodigo ? (conRespaldo ? 'Usa una llave de repuesto' : 'Escribe el número de tu app') : 'Iniciar sesión'}</h1>
         <p className="mt-1 text-sm text-muted">
           {pideCodigo
-            ? conRespaldo ? 'Escribe uno de los códigos de respaldo que guardaste. Cada uno sirve una sola vez.' : 'Abre tu app de códigos y escribe el código de 6 dígitos de Electro Shop.'
+            ? conRespaldo ? 'Una de las que guardaste al activar tus dos pasos. Cada una sirve una vez.' : 'Abre tu app de códigos (Google Authenticator, Microsoft o Authy) y busca «Electro Shop».'
             : google && userType !== 'admin' ? 'Entra con Google o con tu correo.' : 'Entra con tu correo y tu contraseña.'}
         </p>
       </div>
@@ -348,7 +350,8 @@ function LoginPageContent({ google, conCookie }: { google: boolean; conCookie: b
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
         {pideCodigo && (
           <div>
-            <label htmlFor="codigo" className={adminLabel}>{conRespaldo ? 'Código de respaldo' : 'Código de la app'}</label>
+            {!conRespaldo && <FilaDeLaApp className="mb-4" />}
+            <label htmlFor="codigo" className={adminLabel}>{conRespaldo ? 'Llave de repuesto' : 'El número de 6 cifras'}</label>
             <input
               key={conRespaldo ? 'respaldo' : 'app'}
               id="codigo"
@@ -362,8 +365,8 @@ function LoginPageContent({ google, conCookie }: { google: boolean; conCookie: b
               maxLength={conRespaldo ? 12 : 7}
               value={codigo}
               onChange={(e) => { setCodigo(conRespaldo ? e.target.value.toUpperCase() : e.target.value.replace(/[^\d\s]/g, '')); setError(''); }}
-              placeholder={conRespaldo ? 'XXXX-XXXX' : '000000'}
-              className={`${adminInput()} text-center font-mono text-lg tracking-widest`}
+              placeholder={conRespaldo ? 'XXXX-XXXX' : '000 000'}
+              className={`${adminInput()} h-14 text-center font-mono text-2xl tracking-[0.3em]`}
               disabled={isLoading}
             />
             <p className={adminHint}>{email}</p>
@@ -373,7 +376,7 @@ function LoginPageContent({ google, conCookie }: { google: boolean; conCookie: b
                 Volver
               </button>
               <button type="button" onClick={() => { setConRespaldo((v) => !v); setCodigo(''); setError(''); }} className="text-sm font-medium text-brand-600 hover:text-brand-700">
-                {conRespaldo ? 'Usar el código de la app' : 'Usar un código de respaldo'}
+                {conRespaldo ? 'Usar el número de la app' : '¿Sin el teléfono? Usa una llave de repuesto'}
               </button>
             </div>
           </div>
@@ -451,8 +454,8 @@ function LoginPageContent({ google, conCookie }: { google: boolean; conCookie: b
         {/* Captcha: aparece después de 2 intentos fallidos */}
         {requiresCaptcha && (
           <div>
-            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-warning-strong">
-              <IconoGarantia className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-ink">
+              <IconoGarantia className="h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
               Verificación de seguridad
             </p>
             <div className="flex justify-center">
@@ -488,7 +491,10 @@ function LoginPageContent({ google, conCookie }: { google: boolean; conCookie: b
           )}
         </button>
         {pideCodigo && (
-          <p className="text-center text-xs text-muted">¿Sin teléfono y sin códigos de respaldo? Pide al dueño de la tienda que reinicie tu verificación desde Equipo.</p>
+          <div className="text-center">
+            <p className="text-xs text-muted">¿Cambiaste de teléfono o no tienes tus llaves? El dueño reinicia tus dos pasos desde Equipo.</p>
+            <Trabado mensaje="Hola, no puedo entrar al panel: cambié de teléfono o no tengo mis llaves de repuesto." texto="Pedirlo por WhatsApp" />
+          </div>
         )}
       </form>
     </AuthShell>

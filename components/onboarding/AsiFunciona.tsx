@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  IconoBolsa, IconoCalendario, IconoCarrito, IconoCerrar, IconoCheck, IconoClientes, IconoCupon, IconoEnvio, IconoFlechaDerecha,
-  IconoPagoMovil, IconoRecargarPuntos, IconoVer, IconoVerificado,
+  IconoBolsa, IconoCalendario, IconoCandado, IconoCarrito, IconoCelular, IconoCerrar, IconoCheck, IconoClientes, IconoCupon, IconoEnvio,
+  IconoFlechaDerecha, IconoPagoMovil, IconoRecargarPuntos, IconoVer, IconoVerificado,
 } from '@/components/iconos';
 import ChispaGuia, { PROPORCION_CHISPA, type PoseGuia } from '@/components/onboarding/ChispaGuia';
 import IconoDibujado, { type AccionIcono } from '@/components/onboarding/IconoDibujado';
@@ -28,7 +28,10 @@ import { prefiereMenosMovimiento } from '@/lib/motion/resorte';
 const ICONOS = {
   bolsa: IconoBolsa,
   calendario: IconoCalendario,
+  // C-290: los dos pasos del panel (la contraseña y el número del teléfono)
+  candado: IconoCandado,
   carrito: IconoCarrito,
+  celular: IconoCelular,
   clientes: IconoClientes,
   cupon: IconoCupon,
   envio: IconoEnvio,

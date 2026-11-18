@@ -71,6 +71,10 @@ export async function correoEliminarCuenta(d: { nombre: string | null }): Promis
   return { asunto: 'Recibimos tu pedido de eliminar la cuenta', html };
 }
 
+// C-290: la invitación dice antes lo que va a hacer falta (skill herramientas-claras, regla 2): la app y dónde se baja
+const APP_ANDROID = 'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2';
+const APP_IPHONE = 'https://apps.apple.com/app/google-authenticator/id388497605';
+
 /** Invitación al panel (lib/equipo). `rol` llega legible ("Ventas"). */
 export async function correoInvitacionEquipo(d: { nombre: string; rol: string; invitadoPor: string; enlace: string }): Promise<Correo> {
   const nombre = nombreDe(d.nombre);
@@ -82,7 +86,7 @@ export async function correoInvitacionEquipo(d: { nombre: string; rol: string; i
       texto: `${e(d.invitadoPor)} te dio acceso al panel de Electro Shop como <strong style="${CORREO.fuerte}">${e(d.rol)}</strong>.`,
     },
     cuerpo: `
-      ${avisoCorreo('Dos pasos para entrar', 'Crea tu contraseña y después configura la verificación en dos pasos con una app de códigos en tu teléfono (Google Authenticator o Authy).', 'clave')}
+      ${avisoCorreo('Ten tu teléfono a mano', `Para entrar vas a usar tu contraseña y un número que te da una app gratis del teléfono. Te recomendamos Google Authenticator (<a href="${APP_ANDROID}" style="${CORREO.enlace}">Android</a> · <a href="${APP_IPHONE}" style="${CORREO.enlace}">iPhone</a>); también sirven Microsoft Authenticator o Authy. Primero creas tu contraseña y después el panel te guía paso a paso.`, 'clave')}
       ${botonCorreo(e(d.enlace), 'Crear mi contraseña')}
       <p style="${CORREO.nota}">El enlace sirve 24 horas y una sola vez. Si no esperabas esta invitación, ignora este correo: sin la contraseña nadie puede entrar.</p>`,
     chispa: { pose: 'saluda', texto: '¡Qué bueno tenerte! Desde el panel se mueve toda la tienda: pedidos, productos y clientes.' },

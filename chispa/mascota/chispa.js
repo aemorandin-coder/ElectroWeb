@@ -247,6 +247,20 @@
         trazo(`M${P(167, R + 7.6).map(f).join(' ')} L${P(167, R - 3).map(f).join(' ')}`, 3.2) +
         trazo('M-14 -26 C-10 -19 -10 -12 -12 -4', 2.8, .35) + uña([...P(140), ...P(160), 7, 6.6]) + `</g>`);
     },
+    // Agarra un brazo (C-296, los brazos cruzados; el equipo, 18/11: «esas manos están mal», eran dos puños de perfil que salían
+    // por los costados; eligió la 10B): el dorso de la mano y los cuatro dedos que rodean el brazo del otro lado;
+    // el pulgar queda del otro lado, escondido. Los dedos van casi juntos, el medio más largo y el meñique más corto y bajo.
+    agarraBrazo: (x, y, r) => {
+      const ds = dedos([-15, -24, -16, -38], [-5, -27, -5, -42], [5, -27, 6, -41], [14, -23, 15, -35, MEÑIQUE]);
+      const DORSO = 'M-22 -6 C-24 -22 -14 -30 0 -30 C14 -30 24 -24 22 -8 L20 6 C16 16 -16 16 -20 6 Z';
+      return g(x, y, r, silueta(DORSO, ...ds.map(capsula)) + entre(ds[0], ds[1], 7) + entre(ds[1], ds[2], 7) + entre(ds[2], ds[3], 7) +
+        trazo('M-12 -22 C-8 -25 8 -25 12 -22', 2.6, .3));
+    },
+    // Las puntas de los dedos que asoman por el otro lado del brazo (la mano de abajo, escondida)
+    puntas: (x, y, r) => {
+      const ds = dedos([-13, -22, -14, -32], [-4, -24, -4, -35], [5, -24, 6, -34], [13, -21, 14, -29, MEÑIQUE]);
+      return g(x, y, r, silueta(...ds.map(capsula)));
+    },
     // V: el índice y el medio abiertos; el anular y el meñique doblados por delante, y el pulgar encima de ellos
     v: (x, y, r) => {
       const ds = dedos([-8, -24, -20, -60], [3, -25, 13, -61]), dob = [[12, -26, 12, -16, 6.6, 6.2], [19, -21, 19, -12, 6, 5.6]], pul = pulgar(-15, 4, 9, -9);
@@ -285,6 +299,7 @@
     let mano = b.mano && MANOS[b.mano] ? MANOS[b.mano](m[0], m[1], r, `${id}${lado}`) : '';
     if (mano && b.espejo) mano = `<g transform="translate(${f(m[0])} ${f(m[1])}) rotate(${f(r)}) scale(-1 1) rotate(${f(-r)}) translate(${f(-m[0])} ${f(-m[1])})">${mano}</g>`;
     if (b.objeto) mano = g(m[0], m[1], r, b.objeto) + mano;
+    if (b.soloMano) return mano;
     return `<path d="${d}" fill="none" stroke="${INK}" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="${d}" fill="none" stroke="${SHIRT}" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
             <mask id="manga${id}${lado}"><path d="${d}" fill="none" stroke="#fff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/></mask>
@@ -323,7 +338,8 @@
     señala: { L: REPOSO_L, R: { codo: [318, 330], muñeca: [318, 250], mano: 'indice', giro: 0 } },
     explica: { L: { codo: [104, 384], muñeca: [150, 334], mano: 'palma', giro: -20, espejo: true }, R: { codo: [296, 384], muñeca: [250, 334], mano: 'palma', giro: 20 } },
     pulgar: { L: REPOSO_L, R: { codo: [306, 392], muñeca: [300, 318], mano: 'pulgar', giro: 0 } },
-    brazos: { L: { codo: [108, 404], muñeca: [276, 372], mano: 'puño', giro: 90 }, R: { codo: [292, 396], muñeca: [124, 356], mano: 'puño', giro: -90 }, orden: 'RL' },
+    // C-296 (la 10B): la mano de arriba agarra el brazo del otro lado y de la de abajo asoman las puntas sobre el otro brazo
+    brazos: { L: { codo: [108, 404], muñeca: [250, 352], mano: 'agarraBrazo', giro: -10 }, R: { codo: [292, 396], muñeca: [150, 352], mano: 'puntas', giro: -18, manoEncima: true }, orden: 'RL' },
     hombros: { L: { codo: [94, 372], muñeca: [84, 290], mano: 'palma', giro: -10, espejo: true }, R: { codo: [306, 372], muñeca: [316, 290], mano: 'palma', giro: 10 } },
     saluda: { L: REPOSO_L, R: { codo: [334, 318], muñeca: [330, 232], mano: 'palma', giro: 8 } },
     celebra: { L: { codo: [94, 392], muñeca: [102, 318], mano: 'pulgar', giro: 0, espejo: true }, R: { codo: [306, 392], muñeca: [298, 318], mano: 'pulgar', giro: 0 } },
@@ -401,7 +417,10 @@
     const id = ++uid;
     // entre: un aparato entre los dos brazos (el primero lo sostiene por detrás, el segundo trabaja por delante)
     const h = e.hombros || 0;
-    const brazos = () => e.orden === 'RL' ? brazo('R', e.R, id, h) + (e.entre || '') + brazo('L', e.L, id, h) : brazo('L', e.L, id, h) + (e.entre || '') + brazo('R', e.R, id, h);
+    // C-296: una mano con manoEncima se dibuja después de los dos brazos (las puntas que asoman sobre el otro brazo)
+    const sinMano = (b) => (b.manoEncima ? { ...b, mano: null } : b);
+    const encima = ['L', 'R'].filter((l) => e[l].manoEncima).map((l) => brazo(l, { ...e[l], soloMano: true }, id, h)).join('');
+    const brazos = () => (e.orden === 'RL' ? brazo('R', sinMano(e.R), id, h) + (e.entre || '') + brazo('L', sinMano(e.L), id, h) : brazo('L', sinMano(e.L), id, h) + (e.entre || '') + brazo('R', sinMano(e.R), id, h)) + encima;
     const cab = { ...e.cabeza }, sy = e.cuerpo, sx = 1 + (1 - sy) * .6;
     // C-296: la cabeza acompaña la mirada (de frente)
     const sg = cab.sigue ?? 1;

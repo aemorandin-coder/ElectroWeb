@@ -38,6 +38,12 @@ Es lo más difícil, porque son los dos dedos que se tocan.
 - **La pinza y sostener algo chico** se dibujan igual: primero el objeto, después las puntas que lo tocan. Con un objeto, el arco de los dedos no queda recto (CLIP STUDIO). Al agarrar un envase, el meñique hace la fuerza y el índice solo acompaña (お絵かき図鑑).
 - **En una silueta en negro el OK tiene que leerse:** el hueco a 64 px y, aunque sea un punto, a 32 px.
 
+## Los brazos cruzados (y una mano sobre otra parte del cuerpo)
+- **La mano de arriba agarra el brazo del otro lado:** se ve el dorso y los cuatro dedos rodean el bíceps. Las puntas se esconden detrás, en el borde de afuera del brazo; el pulgar queda del otro lado.
+- **La de abajo se esconde bajo el otro brazo.** A lo sumo asoman las puntas sobre ese brazo: se dibujan después de los dos brazos (`manoEncima`).
+- **Nunca dos puños de perfil saliendo por los costados**, fuera del ancho del cuerpo: se leen como dos bloques. Fue lo que el equipo marcó el 18/11 («esas manos están mal») y eligió la 10B.
+- Es la misma regla de sostener algo: primero el objeto (aquí, el brazo) y después los dedos que lo rodean.
+
 ## Animar las manos
 Lo que resolvieron los animadores, según *The Animator's Survival Kit* de Richard Williams:
 1. **Un cambio de forma tiene su propio tiempo.** El ejemplo de Eric Larson va del puño al índice que señala. O se sale suave del puño, o se sale rápido del puño y se llega suave al índice. Para algo tranquilo, más dibujos en el medio. En Chispa, la mano cambia de forma en el primer tercio del gesto (`linea`) y llega con el rebote.
@@ -53,6 +59,7 @@ Lo que resolvieron los animadores, según *The Animator's Survival Kit* de Richa
 - **Las piezas:**
   - `capsula([x1, y1, x2, y2, radio de la base, radio de la punta])`: una falange recta.
   - `arcoDedo(cx, cy, R, a0, a1, r0, r1)`: un dedo doblado del todo, que sigue una circunferencia (el aro del OK). Las cápsulas rectas dejan el aro cuadrado.
+- **Las manos nuevas de C-296:** `agarraBrazo` (el dorso con los dedos que rodean un brazo) y `puntas` (solo las puntas que asoman). Una mano con `manoEncima: true` se dibuja después de los dos brazos, y `mano: 'ninguna'` la esconde también en movimiento (con `null`, `linea` toma la de la pose anterior).
 - **Adentro, pocas líneas:**
   - `entre(a, b)`, la raya entre dos dedos;
   - `trazo(...)`, una línea fina;
@@ -83,7 +90,9 @@ Están en `chispa/conocimiento/02-chispa-el-personaje.md` («Lo que Andrés corr
 - sin cortes en las uniones;
 - el aro del OK chico y con el hueco sobre el fondo.
 
-Desde el 18/11, también: el aro son dos dedos, no una dona, y la base del pulgar no abulta.
+Desde el 18/11, también:
+- el aro del OK son dos dedos, no una dona, y la base del pulgar no abulta;
+- en los brazos cruzados, una mano agarra el brazo y de la otra asoman las puntas, sin puños saliendo por los costados.
 
 ## Fuentes
 - John Kricfalusi, [Animation School Lesson 5a: Hands](http://johnkstuff.blogspot.com/2006/06/animation-school-lesson-hands.html) (sobre la hoja de manos de Preston Blair).

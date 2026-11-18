@@ -10,6 +10,23 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.107] - 2026-11-18
+Chispa 3.1 (C-296), elegida por el equipo en la página de variantes: el logo oficial de la tienda en la camisa, en las historias de ElectroStudio, el popup navideño y los correos. Sin cambio de base, sin variables nuevas y sin cron.
+### ElectroStudio 2.5.1 (C-296)
+- Las 10 imágenes de Chispa (5 poses, con y sin gorro) salen con Chispa 3.1: el logo oficial en el pecho, en lugar de la placa blanca con «ES». Van en `public/images/studio/chispa-31`, porque el optimizador guarda las de antes 30 días.
+### Marketing 1.25.3 (C-296)
+- Las mismas poses en los correos, y las imágenes de los correos con `?v=3`, para que Gmail no muestre las guardadas.
+### Chispa (estudio de video, fuera de la web)
+- `chispa.js` 3.1:
+  - ojos de asombro en la sorpresa, y párpado caído con brillo en la tristeza;
+  - la mirada que se nota, con la cabeza que la acompaña;
+  - la cabeza y los hombros de cada emoción;
+  - el puño de «piensa» en la barbilla y la cara «serio»;
+  - el OK rehecho como dos dedos;
+  - los brazos cruzados con una mano que agarra el brazo;
+  - las manos quietas se mecen apenas.
+- La skill `manos-de-caricatura` y el guion `poses-web.mjs`.
+
 ## [1.0.0-rc.106] - 2026-11-18
 ElectroStudio en el teléfono (C-295): el pedido del equipo del 18/11 ("que se vea espectacular en el teléfono, intuitiva, nativa y a 60 fps", "los ajustes de stickers, imágenes y títulos, touch friendly" y "al final uno queda así: ¿cómo que y ahora?"). Sigue dentro del panel, sin app aparte. Sin cambio de base, sin variables y sin cron.
 ### ElectroStudio 2.5.0 (C-295)

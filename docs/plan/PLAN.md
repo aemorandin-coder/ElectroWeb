@@ -593,6 +593,15 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-194** (**hecha**): el popup navideño del inicio con el diseño de la felicitación (Andrés lo pidió al ver la maqueta).
 - **C-195** (**hecha**, rc.23): Chispa 3.0 en `chispa/mascota/chispa.js`: manos y dedos (pulgares cortos, una silueta por mano, el OK chico), movimiento natural, cara y expresiones. Las imágenes de ElectroStudio y del popup salen de nuevo, en `chispa-3/`.
   - Queda para después, como dijo Andrés: el giro de tres cuartos de Chispa.
+- **C-296** (**hecha**, rc.107; `estado/C-296.md`): Chispa 3.1, elegida en la página de variantes.
+  - Los ojos de asombro y los tristes, la mirada que se nota, la cabeza y los hombros de cada emoción, «piensa» en la barbilla y «serio».
+  - El logo oficial en la camisa (vector).
+  - El OK y los brazos cruzados rehechos con la skill `manos-de-caricatura`, que junta lo que enseñan los animadores.
+  - Las imágenes de la web en `chispa-31`.
+- **Sigue: las manos animadas de Chispa** (pendiente; el equipo lo pidió el 18/11, con la skill):
+  - la mano intermedia de cada cambio de forma ("ve a otro lado en el medio");
+  - los dedos con su propio tiempo;
+  - una hoja de expresiones de manos, con variantes para elegir.
   - Sin pedir: volver a grabar los stickers y los reels para que tomen las manos nuevas (salen solos con `herramientas/sticker.mjs` y los `videos/*.src.html`).
 
 **Pedido del 10/11 (Andrés): vender de todo, con la ferretería aliada.** Se mostró en una página de maquetas con datos de producción; las decisiones se preguntaron en el chat. Los productos de la ferretería están en La Victoria (Aragua) y se venden solo con envío.

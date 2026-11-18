@@ -105,6 +105,7 @@ Las fechas son de 2026. Los MP4 los tiene Andrés; aquí quedan las fuentes.
 - **La mano del OK:** «el pómulo del pulgar abajo es muy exagerado», «son los dedos del pulgar y el índice».
   - Se investigó cómo lo resuelven los animadores (Blair, Kricfalusi, Williams, animadores japoneses) y quedó la skill `.claude/skills/manos-de-caricatura`.
   - El aro ahora son dos dedos curvos que se tocan.
+- **Los brazos cruzados:** «esas manos están mal», eran dos puños de perfil que salían por los costados. Con la skill, la mano de arriba agarra el brazo del otro lado y de la otra asoman las puntas (10B, la elegida).
 - **Con la skill, las manos quietas se mecen apenas** en los videos (`vida()`): Williams dice que una mano quieta pierde la vida.
 - **En la web:**
   - las 10 imágenes de ElectroStudio y del popup salieron de nuevo en `public/images/studio/chispa-31/`;

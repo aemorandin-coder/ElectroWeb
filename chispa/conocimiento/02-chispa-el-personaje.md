@@ -18,6 +18,7 @@ Todo está en `mascota/chispa.js` (versión 3.1, del 18/11, C-296; la 3.0 fue de
 - **Sin cortes donde un dedo se junta con la palma** (06/11: «revisa bien las manos»). Cada mano es una sola silueta (abajo).
 - **El aro del OK, chico y con el hueco sobre el fondo** (06/11: «el círculo debe ser más pequeño, dale más enfoque»). Sobre la camisa oscura el hueco no se leía.
 - **El aro del OK son dos dedos, no una dona** (18/11: «el pómulo del pulgar abajo es muy exagerado», «son los dedos del pulgar y el índice»). El índice sale de la palma y se curva; el pulgar sube desde su base sin abultar la palma; abajo, el costado baja derecho. Antes de tocar una mano: la skill `.claude/skills/manos-de-caricatura`.
+- **Los brazos cruzados: una mano agarra el brazo del otro lado y de la otra asoman las puntas** (18/11: «esas manos están mal»; eran dos puños de perfil que salían por los costados, como bloques). Eligió la 10B.
 - **En la camisa va el logo oficial**, no una placa con «ES» escrito (18/11). Está redibujado en vector (`logoES`, `chispa.logo()`), corrido al centro para que la manga en reposo no lo tape.
 - **Los ojos de sorpresa son blancos con la pupila chica** (18/11, elegido en la página de variantes: la 2B). Los de antes quedan como `grandes`.
 
@@ -52,7 +53,7 @@ El 06/11 no había ninguna skill que enseñara a dibujar manos. Estas reglas sal
 // en la página: <script src="../mascota/chispa.js"></script>
 el.innerHTML = chispa({ pose: 'saluda', boca: 'sonrisa', ojos: 'feliz', cejas: 'normal', fondo: false });
 ```
-- **Poses (de frente):** `habla`, `señala` (índice arriba a su izquierda), `explica` (dos palmas abiertas), `pulgar`, `brazos` (cruzados), `hombros` ("¿y entonces?"), `saluda`, `celebra` (dos pulgares al pecho), `piensa` (el puño apoyado en la barbilla; C-296), `ok` (junto a la cara), `victoria` (la V), `telefono` (muestra el teléfono con la tienda) y `presenta` (la mano abierta hacia un lado, para presentar algo).
+- **Poses (de frente):** `habla`, `señala` (índice arriba a su izquierda), `explica` (dos palmas abiertas), `pulgar`, `brazos` (cruzados: una mano agarra el brazo y de la otra asoman las puntas; C-296), `hombros` ("¿y entonces?"), `saluda`, `celebra` (dos pulgares al pecho), `piensa` (el puño apoyado en la barbilla; C-296), `ok` (junto a la cara), `victoria` (la V), `telefono` (muestra el teléfono con la tienda) y `presenta` (la mano abierta hacia un lado, para presentar algo).
 - **Poses de espalda:** `espalda`, `espalda-señala`, `espalda-señala-alto`, `espalda-dos` y `espalda-libre` (brazos a mano con `window.CHISPA_L` y `window.CHISPA_R`).
 - **Ojos:** `abiertos`, `cerrados`, `sorpresa` (C-296: blancos con la pupila chica), `guino`, `feliz`, `sonrie`, `entrecerrados`, `grandes` (los de sorpresa de antes, un 15 % más grandes) y `tristes` (el párpado cae hacia el rabillo y brillan).
 - **Cejas:** `normal`, `arriba`, `duda`, `enojo`, `triste` y `serio` (el enojo a medias, para un aviso).

@@ -10,6 +10,15 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.114] - 2026-11-18
+Mi panel anima a ganar boletos (C-302). El equipo, 18/11: "colocar esta información en el panel del cliente para que la gente se anime, de forma discreta", y "el boleto que quedó muy genial; que aún tienes tiempo de conseguir boletos, y las vías". Sin cambio de base, sin variables y sin cron.
+### Carrito, checkout y cuenta del cliente 1.15.0 (C-302)
+- **Sin boletos:** la tarjeta del sorteo pasa a "Aún tienes N días para ganar boletos", con las vías y sus números (compra $5 → 2 · $50 → 5 · $100 → 10, el producto estrella, la reseña y los amigos) y, al lado, el boleto de muestra con el correo tapado del cliente: "Así se verá tu boleto".
+- **Con boletos:** debajo de "¡Tienes N boletos!", "Aún tienes N días para sumar más" y las vías en píldoras chicas.
+- Mientras el sorteo está abierto, la pieza fuerte de Mi panel es el sorteo: Puntos ES va en blanco también sin boletos.
+### Marketing 1.28.1 (C-302)
+- La vista previa de Mi panel en el asistente del sorteo muestra la invitación nueva.
+
 ## [1.0.0-rc.113] - 2026-11-18
 Ajustes → IA por prioridad y con plegables (C-298), pedido del equipo después de ver C-292. Sin cambio de base, sin variables y sin cron.
 ### Ajustes 1.9.0 (C-298)

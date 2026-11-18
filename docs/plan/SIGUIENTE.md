@@ -4,6 +4,9 @@
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-302 · Mi panel anima a ganar boletos (rc.114, en `main`, por subir: §2; `estado/C-302.md`):** el pedido del equipo del 18/11, de forma discreta.
+  - **Sin boletos:** "Aún tienes N días para ganar boletos", las vías con sus números y el boleto de muestra con el correo del cliente.
+  - **Con boletos:** "Aún tienes N días para sumar más" y las vías en píldoras. Puntos ES va en blanco mientras dura el sorteo.
 - **C-298 · Ajustes → IA por prioridad (rc.113, en `main`, por subir con el bloque de §2; `estado/C-298.md`):** el motor y lo que gasta arriba; Proveedores, Usos, Reglas y Guía plegados con lo esencial en la cabecera. La pieza `components/admin/Plegable` sirve para cualquier pantalla larga del panel.
 - **C-300 · El reel "Más boletos para la PS4" (el guion; `estado/C-300.md`):** que los amigos activen su cuenta y que comprando se ganan muchos más boletos.
   - El guion, el texto para la voz y las capturas están en `chispa/guiones/sorteo-amigos-y-compras.md`.
@@ -554,19 +557,26 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.113` (C-299 y C-298)
-Producción está en `v1.0.0-rc.111` (`6f5f2eaa`): la subió el equipo y Claude la vio desde fuera el 18/11 en la noche (bloque en `HISTORIAL.md`). Faltan rc.112 y rc.113. Si entran más tareas antes de subir, se suman aquí.
-- **C-299** (rc.112): el aviso "Marcaste un dispositivo de confianza" sale solo a un correo comprobado (a una dirección sin comprobar rebotaba).
-- **C-298** (rc.113): Ajustes → IA por prioridad, con plegables.
-- **Sin cambio de base, sin variables y sin cron.**
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.113`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (antes, recarga el panel con Ctrl+R):
+### Lo que falta subir: `v1.0.0-rc.114` (C-302)
+Producción está en `v1.0.0-rc.113` (`7f7c6f28`): la subió el equipo el 18/11 a las 3:41 p. m. y Claude la vio desde fuera (bloque en `HISTORIAL.md`). Si entran más tareas antes de subir, se suman aquí.
+- **C-302** (rc.114): Mi panel anima a ganar boletos. **Sin cambio de base, sin variables y sin cron.**
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.114`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 4 minutos, en el teléfono y en la computadora):
+  1. **Con una cuenta de cliente sin boletos** (una nueva, o la de un cliente que no ha comprado desde el 14/11), Mi panel:
+     - arriba, "Aún tienes N días para ganar boletos", con las vías: "Compra $5 → 2 · $50 → 5 · $100 → 10", "Tu reseña +1" y "2 amigos +1, hasta 3"; si ya elegiste el producto estrella, también "Producto estrella (…) +10";
+     - al lado (en el teléfono, debajo), "Así se verá tu boleto": el boleto de la PS4 con su correo tapado y la pila de 2;
+     - la tarjeta de Puntos ES va en blanco (ya no en azul oscuro).
+  2. **Con una cuenta que tiene boletos:** debajo de "¡Tienes N boletos!", "Aún tienes N días para sumar más:" y las vías en píldoras chicas.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.113 && npm install && bash scripts/deploy.sh --sin-pull`.
+- **Sigue pendiente desde rc.111:** elegir el producto estrella de la semana en Marketing → Sorteo. El 18/11 en la noche, /sorteo todavía no lo mostraba.
+
+### Por confirmar de rc.113 (C-299 y C-298; unos 4 minutos)
+Ya en producción desde el 18/11 a las 3:41 p. m. (la portada dice `1.0.0-rc.113|7f7c6f28`). Falta esto (antes, recarga el panel con Ctrl+R):
   1. **IA por prioridad** (C-298, unos 3 minutos, en la computadora y en el teléfono, con la cuenta del dueño): Ajustes → IA.
      - Arriba el estado; debajo El motor y Consumo y fallas, abiertos; Proveedores y claves, Los usos de la IA, Reglas y Guía, plegados, cada uno con su resumen ("1 de 4 con clave" o los que tengan clave, "6 usos"…);
      - toca "Los usos de la IA" y después "Respuesta a una consulta": salen Instrucciones, Probar y Motor;
      - en El motor elige otro modelo: "Revisar y publicar" muestra el antes → después y a cuántos usos les cambia ("Cambia 6 de 6 usos", o menos si un uso tiene su propio motor). **No publiques:** vuelve a elegir el de ahora.
   2. **El aviso del dispositivo de confianza** (C-299, un minuto, con la cuenta del dueño): entra con el número y marca "No pedir el número…". Ya no llega el rebote de `mailer-daemon` («Delivery Status Notification»).
-- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.111 && npm install && bash scripts/deploy.sh --sin-pull`. Para quitar solo C-298: `v1.0.0-rc.112`.
 
 ### Por confirmar de rc.111 (C-296, C-292, C-293, C-294 y C-297; unos 35 minutos)
 Ya en producción (la subió el equipo; Claude lo vio desde fuera el 18/11 en la noche). La regla nueva del sorteo está aplicada: una ficha de $1.087,98 dice "105 boletos".

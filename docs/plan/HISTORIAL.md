@@ -1,9 +1,35 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.111`, comprobada el 18/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.113`, comprobada el 18/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 18/11 · C-299 y C-298: el aviso del dispositivo de confianza y Ajustes → IA por prioridad (de rc.111 a `v1.0.0-rc.113`)
+La subió el equipo el 18/11; la portada la sirve desde las 3:41 p. m. (`2026-11-18T19:41:02Z`). No quedó anotado quién la subió. Claude la vio al empezar C-302 y pasó el bloque aquí.
+
+**Lo comprobado, el 18/11, desde fuera (como un visitante):**
+- la portada dice `1.0.0-rc.113|7f7c6f28` (el commit de `main` con C-301, que solo cambia documentos);
+- sin sesión, `/api/admin/ia` responde 401;
+- `/sorteo` y el catálogo cargan; **el producto estrella sigue sin elegir** (no sale "Descubre el producto estrella" ni el sello "+10 boletos").
+
+**Falta que el equipo lo mire** (`SIGUIENTE.md`, "Por confirmar de rc.113"): las 2 pruebas.
+
+### El bloque que se subió: `v1.0.0-rc.113` (C-299 y C-298)
+- **Commit:** `7f7c6f28` (etiqueta `v1.0.0-rc.113`; adentro, `v1.0.0-rc.112`).
+Producción está en `v1.0.0-rc.111` (`6f5f2eaa`): la subió el equipo y Claude la vio desde fuera el 18/11 en la noche (bloque en `HISTORIAL.md`). Faltan rc.112 y rc.113. Si entran más tareas antes de subir, se suman aquí.
+- **C-299** (rc.112): el aviso "Marcaste un dispositivo de confianza" sale solo a un correo comprobado (a una dirección sin comprobar rebotaba).
+- **C-298** (rc.113): Ajustes → IA por prioridad, con plegables.
+- **Sin cambio de base, sin variables y sin cron.**
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.113`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (antes, recarga el panel con Ctrl+R):
+  1. **IA por prioridad** (C-298, unos 3 minutos, en la computadora y en el teléfono, con la cuenta del dueño): Ajustes → IA.
+     - Arriba el estado; debajo El motor y Consumo y fallas, abiertos; Proveedores y claves, Los usos de la IA, Reglas y Guía, plegados, cada uno con su resumen ("1 de 4 con clave" o los que tengan clave, "6 usos"…);
+     - toca "Los usos de la IA" y después "Respuesta a una consulta": salen Instrucciones, Probar y Motor;
+     - en El motor elige otro modelo: "Revisar y publicar" muestra el antes → después y a cuántos usos les cambia ("Cambia 6 de 6 usos", o menos si un uso tiene su propio motor). **No publiques:** vuelve a elegir el de ahora.
+  2. **El aviso del dispositivo de confianza** (C-299, un minuto, con la cuenta del dueño): entra con el número y marca "No pedir el número…". Ya no llega el rebote de `mailer-daemon` («Delivery Status Notification»).
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.111 && npm install && bash scripts/deploy.sh --sin-pull`. Para quitar solo C-298: `v1.0.0-rc.112`.
 
 
 ## 18/11 · C-296, C-292, C-293, C-294 y C-297: Chispa 3.1, la IA con proveedores, Ajustes ordenado y el sorteo que vende (de rc.106 a `v1.0.0-rc.111`)

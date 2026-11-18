@@ -20,8 +20,8 @@ import {
 import PremioSorteo from '@/components/sorteo/PremioSorteo';
 import { CuerpoPestana } from '@/components/sorteo/BanderaSorteo';
 import { iconoDeCosa } from '@/components/sorteo/iconosQueTrae';
-import { logoDelNombreCorto, MAX_QUE_TRAE, partesDelPremio } from '@/lib/sorteo/premio';
-import { TarjetaSorteoVista, montoCorto } from '@/components/sorteo/TarjetaSorteo';
+import { logoDelNombreCorto, logoEnElPremio, MAX_QUE_TRAE, partesDelPremio } from '@/lib/sorteo/premio';
+import { InvitacionAlSorteo, montoCorto } from '@/components/sorteo/TarjetaSorteo';
 import ProductPicker from '@/app/admin/(dashboard)/studio/_components/ProductPicker';
 import { adminCard, adminError, adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
@@ -560,9 +560,20 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
               <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-soft">
                 <IconoVer className="h-4 w-4 text-brand-500" aria-hidden="true" /> En Mi panel del cliente
               </p>
-              <TarjetaSorteoVista
+              {/* C-302: lo que ve un cliente sin boletos: la invitación con el boleto de muestra */}
+              <InvitacionAlSorteo
                 enlace={false}
-                sorteo={{ titulo: form.titulo.trim(), premio: form.premio.trim(), resultadoEl: fechaResultado.toISOString(), cerrado: false, sorteado: false, compraMinimaUSD: minimo, topeInvitar: tope, boletosPorCompra: porCompra }}
+                sorteo={{
+                  titulo: form.titulo.trim(), premio: form.premio.trim(), resultadoEl: fechaResultado.toISOString(), cerrado: false, sorteado: false,
+                  compraMinimaUSD: minimo, topeInvitar: tope, boletosPorCompra: porCompra, regla, porResena,
+                  hasta: esDia(form.hasta) ? new Date(`${form.hasta}T23:59:59-04:00`).toISOString() : undefined,
+                }}
+                muestra={{
+                  titulo: form.titulo.trim(), premio: partesDelPremio(form.premio).nombre, nombreCorto: form.nombreCorto.trim() || null,
+                  logo: logoDelNombreCorto(form.nombreCorto.trim() || null) ?? logoEnElPremio(partesDelPremio(form.premio).nombre, form.nombreCorto.trim() || null)?.logo ?? null,
+                  imagen: form.imagen && form.imagen.startsWith('/') && !form.imagen.startsWith('//') ? form.imagen : null,
+                  resultadoEl: fechaResultado.toISOString(), minimo, tope, regla, porResena,
+                }}
               />
             </div>
           )}

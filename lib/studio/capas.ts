@@ -24,7 +24,8 @@ export const ANIMACION_INICIAL = (): Pick<CapaTexto, 'entrada' | 'enfasis' | 'sa
 });
 
 const ARRANQUE: Record<EstiloCapa, Omit<CapaTexto, 'id' | 'tipo' | 'estilo' | 'x' | 'giro' | 'oculta' | 'bloqueada' | 'fuente' | 'alinear' | 'color' | 'entrada' | 'enfasis' | 'salida'>> = {
-  titulo: { texto: 'Tu título', tam: 120, peso: 900, cursiva: true, mayusculas: true, contorno: false, sombra: true, fondo: 'ninguno', anchoMax: 0, y: 0.3 },
+  // C-295: el título nuevo baja de línea antes del borde (sin ancho máximo, "LLEGÓ EL TALADRO" a 120 px se salía de la historia)
+  titulo: { texto: 'Tu título', tam: 120, peso: 900, cursiva: true, mayusculas: true, contorno: false, sombra: true, fondo: 'ninguno', anchoMax: 960, y: 0.3 },
   subtitulo: { texto: 'Tu subtítulo', tam: 56, peso: 800, cursiva: true, mayusculas: false, contorno: false, sombra: false, fondo: 'cinta', anchoMax: 0, y: 0.4 },
   texto: { texto: 'Escribe aquí', tam: 44, peso: 700, cursiva: false, mayusculas: false, contorno: false, sombra: false, fondo: 'ninguno', anchoMax: 860, y: 0.5 },
 };

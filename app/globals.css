@@ -641,6 +641,113 @@ body {
   }
 }
 
+/* C-295: el final de ElectroStudio (studio/_components/Terminada.tsx), "una animación épica" que pasa una sola vez:
+   el fondo aparece, el sello del visto salta, la historia llega con un rebote, la cruza un destello y suelta chispas, y
+   los botones suben en cascada (--i). El destello y las chispas están escondidos por defecto: con "reducir movimiento"
+   no se ven, y lo demás aparece quieto y completo. Solo transform y opacity (los mueve la tarjeta gráfica). */
+.studio-lista-destello {
+  opacity: 0;
+  background: linear-gradient(105deg, transparent 36%, rgb(255 255 255 / 0.5) 50%, transparent 64%);
+}
+
+.studio-lista-chispa {
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .studio-lista-fondo {
+    animation: studio-lista-aparece 0.22s ease-out both;
+  }
+
+  .studio-lista-sello {
+    animation: sorteo-pop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) 0.1s both;
+  }
+
+  .studio-lista-tarjeta {
+    animation: studio-lista-llega 0.62s cubic-bezier(0.2, 1.25, 0.35, 1) both;
+  }
+
+  .studio-lista-destello {
+    animation: studio-lista-destello 0.95s cubic-bezier(0.4, 0, 0.2, 1) 0.32s;
+  }
+
+  .studio-lista-chispa {
+    animation: studio-lista-chispa 1.15s cubic-bezier(0.15, 0.7, 0.3, 1) calc(0.14s + var(--retraso, 0s));
+  }
+
+  .studio-lista-sube {
+    animation: studio-lista-sube 0.38s ease-out calc(0.34s + var(--i, 0) * 60ms) both;
+  }
+}
+
+@keyframes studio-lista-aparece {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes studio-lista-llega {
+  0% {
+    opacity: 0.4;
+    transform: translateY(16px) scale(0.84);
+  }
+
+  62% {
+    opacity: 1;
+    transform: scale(1.035);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes studio-lista-destello {
+  from {
+    opacity: 1;
+    transform: translateX(-130%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(130%);
+  }
+}
+
+@keyframes studio-lista-chispa {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--giro)) scale(1);
+  }
+}
+
+@keyframes studio-lista-sube {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* C-257: el kit de onboarding (components/onboarding: el recorrido de bienvenida y la hoja "Así funciona"). El equipo,
    15/11: "muy minucioso con las animaciones, amigable e iconizado, que invite a aprender" y "anima el ícono de acción".
    Todo pasa una sola vez, al aparecer (cada paso del recorrido se vuelve a montar con otra key):

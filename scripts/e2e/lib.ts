@@ -136,6 +136,8 @@ export interface Navegador {
   archivos(selector: string, rutas: string[]): Promise<void>;
   /** C-210: pasa el ratón por encima del primer elemento que coincide (para probar el estado :hover) */
   pasar(selector: string): Promise<void>;
+  /** C-295: acciones de WebDriver tal cual (dedos, ratón, teclado), con coordenadas de la pantalla */
+  acciones(lista: unknown[]): Promise<void>;
   cerrar(): Promise<void>;
 }
 
@@ -145,7 +147,7 @@ const QUIETO = `() => { const s = document.createElement('style'); s.textContent
  * Abre Firefox sin ventana. `carpeta` recibe las capturas (y un perfil temporal que se borra al cerrar).
  * El puerto de BiDi, si no se pasa, es E2E_BIDI_PORT o 9333 (C-190: dos agentes pueden probar a la vez).
  */
-export async function abrirNavegador(carpeta: string, puerto = Number(process.env.E2E_BIDI_PORT) || 9333): Promise<Navegador> {
+export async function abrirNavegador(carpeta: string, puerto = Number(process.env.E2E_BIDI_PORT) || 9333, opciones: { dedo?: boolean; menosMovimiento?: boolean } = {}): Promise<Navegador> {
   const perfil = `${carpeta}/ffprofile-bidi`;
   mkdirSync(perfil, { recursive: true });
   // Poca memoria: un solo proceso de contenido, sin caché en memoria ni restauración de sesión (la prueba corre junto al servidor)
@@ -156,9 +158,13 @@ export async function abrirNavegador(carpeta: string, puerto = Number(process.en
     'user_pref("browser.sessionstore.max_tabs_undo", 0);',
     'user_pref("browser.tabs.unloadOnLowMemory", true);',
     'user_pref("media.memory_cache_max_size", 8192);',
-    // C-210: sin ventana, Firefox dice que no tiene ratón (hover: none) y Tailwind no aplica los hover: uno fino, con hover
-    'user_pref("ui.primaryPointerCapabilities", 6);',
-    'user_pref("ui.allPointerCapabilities", 6);',
+    // C-210: sin ventana, Firefox dice que no tiene ratón (hover: none) y Tailwind no aplica los hover: uno fino, con hover.
+    // C-295: con `dedo`, como un teléfono: el puntero grueso y sin hover (pointer: coarse) y los toques encendidos
+    `user_pref("ui.primaryPointerCapabilities", ${opciones.dedo ? 1 : 6});`,
+    `user_pref("ui.allPointerCapabilities", ${opciones.dedo ? 1 : 6});`,
+    ...(opciones.dedo ? ['user_pref("dom.w3c_touch_events.enabled", 1);'] : []),
+    // C-295: con `menosMovimiento`, como quien pidió "reducir movimiento" en su sistema
+    ...(opciones.menosMovimiento ? ['user_pref("ui.prefersReducedMotion", 1);'] : []),
   ].join('\n'));
   const firefox: ChildProcess = spawn('firefox', ['--headless', '--no-remote', '-profile', perfil, '--remote-debugging-port', String(puerto)], { stdio: 'ignore' });
   // Node 20 no trae WebSocket: se usa el que empaqueta Next
@@ -246,6 +252,10 @@ export async function abrirNavegador(carpeta: string, puerto = Number(process.en
       const sharedId = (r.result as { sharedId?: string } | undefined)?.sharedId;
       if (!sharedId) throw new Error(`No está ${selector}`);
       await cmd('input.performActions', { context, actions: [{ type: 'pointer', id: 'raton', parameters: { pointerType: 'mouse' }, actions: [{ type: 'pointerMove', x: 0, y: 0, origin: { type: 'element', element: { sharedId } } }] }] });
+    },
+    async acciones(lista) {
+      await cmd('input.performActions', { context, actions: lista });
+      await cmd('input.releaseActions', { context }).catch(() => undefined);
     },
     async cerrar() {
       await cmd('browsingContext.close', { context }).catch(() => undefined);

@@ -1,17 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import {
-  IconoAdvertencia, IconoCheck, IconoClaqueta, IconoCompartir, IconoCopiar, IconoDescargar, IconoDeshacer, IconoEditar, IconoEliminar,
-  IconoFlechaIzquierda, IconoImagen, IconoMas, IconoNube, IconoPausa, IconoPintura, IconoPlay, IconoRehacer, IconoTexto, type IconType,
+  IconoAdvertencia, IconoAgrandar, IconoCheck, IconoChevronDerecha, IconoChevronIzquierda, IconoClaqueta, IconoCompartir, IconoCopiar,
+  IconoDescargar, IconoDeshacer, IconoEditar, IconoEliminar, IconoEstrella, IconoFlechaIzquierda, IconoImagen, IconoMas, IconoNube,
+  IconoPausa, IconoPintura, IconoPlay, IconoRehacer, IconoTexto, type IconType,
 } from '@/components/iconos';
+import AsiFunciona from '@/components/onboarding/AsiFunciona';
 import Pasos, { type Paso } from '@/components/admin/Pasos';
 import { adminEmpty, adminHint, adminIconButton, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
-import { useDelNavegador } from '@/lib/hooks/useMontado';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { PASO_PUBLICAR, firstOpenStep, flyerChecks, stepDone, type TextIssues } from '@/lib/studio/checks';
 import { cambiarCapa, duplicarCapa, moverCapa, nuevaCapa, nuevoIdCapa, nuevoSticker, puedeAgregarCapa, type CambioCapa } from '@/lib/studio/capas';
 import { STICKERS } from '@/lib/studio/stickers';
@@ -27,17 +29,17 @@ import {
   flyerImageSources,
   loadStudioFonts,
   missingImages,
+  qrUrlFor,
   type CajaCapa,
   type ProductSrc,
   type StudioRenderer,
 } from '@/lib/studio/engine';
-import { canvasBlob, downloadBlob, GrabacionInterrumpida, grabarVideo, shareFile, type VideoGrabado } from '@/lib/studio/exportar';
+import { canvasBlob, GrabacionInterrumpida, grabarVideo, type VideoGrabado } from '@/lib/studio/exportar';
 import {
   ANIMATIONS, BACKGROUNDS, FORMATS, TEMPLATES, requiredPhotos, type BackgroundId, type EstiloCapa, type FormatId, type StudioFlyerData,
 } from '@/lib/studio/schema';
 import { esErrorDeVersion } from '@/lib/version-build';
 import { fileBase, uploadStudioImage } from './exporters';
-import ElegirSalida, { enviarATelegram, type Destino } from './ElegirSalida';
 import Lienzo from './Lienzo';
 import StepAnimacion from './StepAnimacion';
 import StepCapas, { type AccionesCapas } from './StepCapas';
@@ -46,6 +48,7 @@ import StepDesign from './StepDesign';
 import StepPhoto from './StepPhoto';
 import StepPublish from './StepPublish';
 import { useStudioContext } from './StudioContext';
+import Terminada, { type ArchivoListo, type Final } from './Terminada';
 import PresenciaEnEditor from '@/components/admin/edicion/PresenciaEnEditor';
 import { toggleButton } from './ui';
 import { useDownloadGate } from './useDownloadGate';
@@ -78,6 +81,32 @@ const PREVIEW_SMALL: Record<FormatId, string> = {
   post45: 'max-lg:max-w-[11rem]',
   post11: 'max-lg:max-w-[12rem]',
 };
+
+/**
+ * C-295: en pantalla completa, la vista previa ocupa todo lo que deja libre la hoja de abajo, con su proporción: el
+ * contenedor mide su ancho y su alto (container-type: size) y la vista toma el menor de los dos.
+ */
+const PREVIEW_GRANDE: Record<FormatId, string> = {
+  story: 'aspect-[9/16] w-[min(100cqw,calc(100cqh*9/16))]',
+  post45: 'aspect-[4/5] w-[min(100cqw,calc(100cqh*4/5))]',
+  post11: 'aspect-square w-[min(100cqw,100cqh)]',
+};
+
+/** C-295: el mejor tiempo para sacar una historia en este navegador (para "Tu mejor tiempo" del final) */
+const MEJOR_KEY = 'studio-mejor-tiempo';
+
+/** C-295: lo visible de la pantalla (sin el teclado del teléfono), para que la pantalla completa no quede debajo de él */
+function suscribirVista(cb: () => void) {
+  const vv = window.visualViewport;
+  vv?.addEventListener('resize', cb);
+  vv?.addEventListener('scroll', cb);
+  return () => {
+    vv?.removeEventListener('resize', cb);
+    vv?.removeEventListener('scroll', cb);
+  };
+}
+const altoVisible = () => Math.round(window.visualViewport?.height ?? window.innerHeight);
+const arribaVisible = () => Math.round(window.visualViewport?.offsetTop ?? 0);
 
 /** Proporción de la vista previa y su ancho en escritorio (alto disponible × proporción) */
 const PREVIEW_CLASS: Record<FormatId, string> = {
@@ -171,9 +200,10 @@ export default function Studio({ id }: { id: string }) {
   const goStep = (k: number) => {
     setTiempo(null);
     setStepFor((s) => ({ id: currentId, step: k, vistos: s.id === currentId && !s.vistos.includes(s.step) ? [...s.vistos, s.step] : s.id === currentId ? s.vistos : [] }));
-    // Si el comienzo del editor quedó arriba de la pantalla (teléfono, después de un paso largo), se vuelve a él
+    // Si el comienzo del editor quedó arriba de la pantalla (teléfono, después de un paso largo), se vuelve a él. En
+    // pantalla completa (C-295) la página de atrás no se mueve: el paso está en la hoja
     const top = editorRef.current?.getBoundingClientRect().top ?? 0;
-    if (top < 0) editorRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    if (top < 0 && !grandeRef.current) editorRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
   };
   const [slotFor, setSlotFor] = useState<{ id: string | null; slot: number }>({ id: null, slot: 0 });
   const activeSlot = slotFor.id === currentId ? slotFor.slot : 0;
@@ -195,7 +225,20 @@ export default function Studio({ id }: { id: string }) {
       return false;
     }
   });
-  const canShare = useDelNavegador(() => typeof navigator.share === 'function' && typeof navigator.canShare === 'function', false);
+  // C-295: el editor en pantalla completa (teléfono): la vista previa del alto de la pantalla y el paso en una hoja abajo
+  const [grande, setGrande] = useState(false);
+  const [hojaAbierta, setHojaAbierta] = useState(false);
+  const grandeRef = useRef(grande);
+  useEffect(() => {
+    grandeRef.current = grande;
+  });
+  const [pedirGaleria, setPedirGaleria] = useState(false);
+  useBodyScrollLock(grande);
+  const vistaAlto = useSyncExternalStore(suscribirVista, altoVisible, () => 0);
+  const vistaArriba = useSyncExternalStore(suscribirVista, arribaVisible, () => 0);
+  // C-295: la vista previa se dibuja del tamaño en que se ve (su ancho en pantalla por la densidad, hasta 2×), no a 1080:
+  // en el teléfono son de 3 a 14 veces menos puntos por cuadro. La descarga y el video siguen a 1080 (escala 1)
+  const escalaVista = useRef(1);
 
   // Lo último que hay que dibujar, para el bucle de animación y las cargas de imágenes
   // C-273: un segundo fijo de la animación para mirarlo en la vista previa (desde la línea de tiempo); null = la imagen
@@ -217,7 +260,7 @@ export default function Studio({ id }: { id: string }) {
   const drawStatic = useCallback(() => {
     if (!renderer.current || busyRef.current) return;
     const s = scene.current;
-    renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, code: s.code, navidad: s.navidad, t: s.tiempo });
+    renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, code: s.code, navidad: s.navidad, t: s.tiempo, escala: escalaVista.current });
     // Las cajas y los avisos son los de la imagen (sin animación): con un segundo fijo no se tocan
     if (s.tiempo !== null) return;
     const now = renderer.current.textIssues();
@@ -232,6 +275,10 @@ export default function Studio({ id }: { id: string }) {
   const [selFor, setSelFor] = useState<{ id: string | null; capa: string | null }>({ id: null, capa: null });
   const capaSel = selFor.id === currentId && current?.capas.some((c) => c.id === selFor.capa) ? selFor.capa : null;
   const setCapaSel = useCallback((capa: string | null) => setSelFor({ id: currentId, capa }), [currentId]);
+  const capaSelRef = useRef(capaSel);
+  useEffect(() => {
+    capaSelRef.current = capaSel;
+  });
   const textoCapaRef = useRef<HTMLTextAreaElement | null>(null);
   const [enfocar, setEnfocar] = useState(0);
   useEffect(() => {
@@ -278,6 +325,35 @@ export default function Studio({ id }: { id: string }) {
     return () => cancelAnimationFrame(frame);
   }, [drawStatic, loading]);
 
+  // C-295: la escala de la vista previa sigue a su tamaño (la chica, la grande, la pantalla completa, la PC). Cambiarla
+  // borra el lienzo: se vuelve a dibujar enseguida (si se está reproduciendo, el próximo cuadro ya sale con ella)
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (!c) return;
+    const medir = () => {
+      if (!c.clientWidth) return;
+      const e = Math.min(1, Math.max(0.1, (c.clientWidth * Math.min(2, window.devicePixelRatio || 1)) / W));
+      if (Math.abs(e - escalaVista.current) < 0.02) return;
+      escalaVista.current = e;
+      drawStatic();
+    };
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(c);
+    return () => ro.disconnect();
+  }, [drawStatic]);
+
+  // C-295: Escape sale de la pantalla completa (si hay una pieza elegida, primero la suelta; si hay una ventana, es suyo)
+  useEffect(() => {
+    if (!grande) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || capaSelRef.current || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      setGrande(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [grande]);
+
   // C-271: las fuentes que usan las capas se cargan al elegirlas; cuando llegan, se vuelve a dibujar
   const fuentesUsadas = current ? [...new Set(current.capas.map((c) => (c.tipo === 'texto' ? c.fuente : STICKERS[c.sticker]?.texto?.fuente ?? 'montserrat')))].sort().join(',') : '';
   useEffect(() => {
@@ -311,7 +387,7 @@ export default function Studio({ id }: { id: string }) {
         const dur = duracionDe(s.current);
         const t = Math.min(dur, ((now - playStart.current) / 1000) % (dur + 0.8));
         tiempoVivo.current = t;
-        renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, t, epoch, code: s.code, navidad: s.navidad });
+        renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, t, epoch, code: s.code, navidad: s.navidad, escala: escalaVista.current });
       }
       frame = requestAnimationFrame(loop);
     };
@@ -488,68 +564,126 @@ export default function Studio({ id }: { id: string }) {
   /** Revisa antes de descargar: lo incompleto lleva a su paso, los avisos se confirman */
   const ready = async () => !!current && (await gate(checks, goStep));
 
-  // C-287: antes de sacar la imagen o el video, se pregunta qué hacer con él (ElegirSalida)
-  const [salida, setSalida] = useState<'imagen' | 'video' | null>(null);
-  const pedirSalida = async (tipo: 'imagen' | 'video') => {
-    if (!(await ready())) return;
-    setSalida(tipo);
+  // C-295: el final (Terminada.tsx). Al sacar la imagen o el video se ve la pantalla de "lista", con lo que se hace con
+  // ella: compartir, descargar, Telegram, copiar el texto y el enlace, u otra historia. Antes (C-287) una ventana
+  // preguntaba a dónde iba antes de armarla, y después solo quedaba un aviso
+  const [fin, setFin] = useState<Final | null>(null);
+  // Desde cuándo está abierta esta historia en el editor, para "Lista en 2:14"
+  const abiertaDesde = useRef<{ id: string | null; desde: number }>({ id: null, desde: 0 });
+  useEffect(() => {
+    if (currentId && abiertaDesde.current.id !== currentId) abiertaDesde.current = { id: currentId, desde: Date.now() };
+  }, [currentId]);
+
+  const cerrarFin = () => {
+    if (fin?.archivo) URL.revokeObjectURL(fin.archivo.url);
+    setFin(null);
   };
 
-  const exportPng = async (destino: Destino) => {
-    await exclusive(async () => {
-      if (!current) return;
-      await studio.saveNow();
-      const blob = await renderStill(current, productSrc, currentCode);
-      if (!blob) throw new Error('No se pudo generar la imagen');
-      const nombre = `${fileBase(current)}.png`;
-      if (destino !== 'telegram') downloadBlob(blob, nombre);
-      await markCurrentExported();
-      if (destino !== 'descargar') void enviarATelegram({ blob, nombre, texto: current.caption ?? '', tipo: 'imagen' });
-    });
-  };
-
-  const share = async () => {
-    if (!(await ready())) return;
-    await exclusive(async () => {
-      if (!current) return;
-      const blob = await renderStill(current, productSrc, currentCode);
-      if (!blob) throw new Error('No se pudo generar la imagen');
-      if (!(await shareFile(blob, `${fileBase(current)}.png`, current.caption))) {
-        downloadBlob(blob, `${fileBase(current)}.png`);
-        toast('Este navegador no comparte archivos: se descargó la imagen');
+  /** Cuánto tardó (solo la primera vez que se saca, y si fue en menos de una hora) y si es el mejor tiempo */
+  const medirTiempo = (primera: boolean, id: string | null): { tiempo: number | null; record: boolean } => {
+    if (!primera || !id || abiertaDesde.current.id !== id) return { tiempo: null, record: false };
+    const tiempo = (Date.now() - abiertaDesde.current.desde) / 1000;
+    if (tiempo > 3600) return { tiempo: null, record: false };
+    let record = false;
+    try {
+      const antes = Number(localStorage.getItem(MEJOR_KEY)) || 0;
+      if (!antes || tiempo < antes) {
+        record = antes > 0;
+        localStorage.setItem(MEJOR_KEY, String(Math.round(tiempo)));
       }
-      await markCurrentExported();
-    });
+    } catch {
+      // Sin almacenamiento: no se recuerda el mejor tiempo
+    }
+    return { tiempo, record };
   };
 
-  const exportVideo = async (destino: Destino) => {
-    await exclusive(async () => {
-      if (!current || !canvasRef.current || !renderer.current || !images.current) return;
-      await loadStudioFonts(current);
-      await images.current.whenReady(flyerImageSources(current, brand, productSrc));
-      const dur = duracionDe(current);
+  /** Cuántas historias se sacaron esta semana (desde el lunes), contando la que se acaba de sacar */
+  const deLaSemana = (id: string | null) => {
+    const lunes = new Date();
+    lunes.setHours(0, 0, 0, 0);
+    lunes.setDate(lunes.getDate() - ((lunes.getDay() + 6) % 7));
+    return flyers.filter((f) => f.id === id || (f.exported.at && new Date(f.exported.at) >= lunes)).length;
+  };
+
+  const sacarImagen = async (): Promise<ArchivoListo> => {
+    if (!current) throw new Error('No hay una historia abierta');
+    await studio.saveNow();
+    const blob = await renderStill(current, productSrc, currentCode);
+    if (!blob) throw new Error('No se pudo generar la imagen');
+    await markCurrentExported();
+    return { blob, nombre: `${fileBase(current)}.png`, url: URL.createObjectURL(blob), ancho: W, alto: formatHeight(current.format) };
+  };
+
+  const sacarVideo = async (alAvanzar: (fraccion: number) => void): Promise<ArchivoListo> => {
+    if (!current || !canvasRef.current || !renderer.current || !images.current) throw new Error('No se pudo armar el video');
+    await loadStudioFonts(current);
+    await images.current.whenReady(flyerImageSources(current, brand, productSrc));
+    const dur = duracionDe(current);
+    const epoch = Date.now();
+    const r = renderer.current;
+    let avance = 0;
+    const dibujar = (t: number) => {
+      r.draw(current, brand, { preview: false, t, epoch, code: currentCode, navidad });
+      // C-295: lo que va del video, cada 2 % (también cuando el navegador lo graba en tiempo real, que no avisaba nada)
+      const f = Math.min(1, t / dur);
+      if (f - avance >= 0.02) {
+        avance = f;
+        alAvanzar(f);
+      }
+    };
+    // C-295: la vista previa está dibujada del tamaño en que se ve; el primer cuadro deja el lienzo en Full HD antes de que
+    // el grabador lea su tamaño
+    dibujar(0);
+    // C-295: la pantalla encendida mientras se arma (si se apaga, el navegador frena el dibujo y el video se corta)
+    const llave = await navigator.wakeLock?.request('screen').catch(() => null);
+    let video: VideoGrabado;
+    try {
       // C-286: cuadro por cuadro, en Full HD a 60 cuadros (antes, en tiempo real: el MP4 salía en trozos y el teléfono
-      // lo cortaba en 3 s). Tarda unos segundos más, y se ve cuánto falta
-      const toastId = toast.loading(`Armando el video (${dur} segundos, Full HD a 60 cuadros)…`);
-      const epoch = Date.now();
-      const r = renderer.current;
-      let video: VideoGrabado;
-      try {
-        video = await grabarVideo(canvasRef.current, (t) => r.draw(current, brand, { preview: false, t, epoch, code: currentCode, navidad }), dur, {
-          fps: 60,
-          onProgreso: (f) => toast.loading(`Armando el video: ${Math.round(f * 100)} %`, { id: toastId }),
-        });
-      } finally {
-        // C-268: antes, si la grabación fallaba, el aviso "Grabando el video…" quedaba en pantalla junto al error
-        toast.dismiss(toastId);
-      }
-      const nombre = `${fileBase(current)}.${video.extension}`;
-      if (destino !== 'telegram') downloadBlob(video.blob, nombre);
-      if (video.extension === 'webm') toast('Tu navegador grabó en WEBM; Instagram prefiere MP4. Usa Chrome actualizado.');
-      else if (!video.cuadroPorCuadro) toast('Este navegador grabó el video en tiempo real: si en el teléfono se ve cortado, descárgalo desde Chrome actualizado.', { duration: 8000 });
-      await markCurrentExported();
-      if (destino !== 'descargar') void enviarATelegram({ blob: video.blob, nombre, texto: current.caption ?? '', tipo: 'video', segundos: video.segundos, ancho: video.ancho, alto: video.alto });
+      // lo cortaba en 3 s). Tarda unos segundos más, y el final muestra cuánto falta
+      video = await grabarVideo(canvasRef.current, dibujar, dur, { fps: 60 });
+    } finally {
+      void llave?.release().catch(() => undefined);
+    }
+    await markCurrentExported();
+    const nota = video.extension === 'webm' ? 'Tu navegador lo grabó en WEBM; Instagram prefiere MP4. Usa Chrome actualizado.'
+      : !video.cuadroPorCuadro ? 'Este navegador lo grabó en tiempo real: si en el teléfono se ve cortado, sácalo desde Chrome actualizado.'
+        : undefined;
+    return { blob: video.blob, nombre: `${fileBase(current)}.${video.extension}`, url: URL.createObjectURL(video.blob), segundos: video.segundos, ancho: video.ancho, alto: video.alto, nota };
+  };
+
+  /** Revisa, arma la imagen o el video y muestra el final. Si falla, el final se cierra y el aviso dice qué pasó */
+  const terminar = async (tipo: 'imagen' | 'video') => {
+    if (!current || busyRef.current || !(await ready())) return;
+    const primera = !current.exported.at;
+    const id = currentId;
+    let poster: string | null = null;
+    try {
+      poster = canvasRef.current?.toDataURL('image/jpeg', 0.85) ?? null;
+    } catch {
+      // Sin la vista del momento: el anillo va sobre el fondo
+    }
+    setFin({ tipo, fase: 'armando', progreso: 0, poster, archivo: null, tiempo: null, record: false, semana: 0 });
+    const salida: { archivo: ArchivoListo | null } = { archivo: null };
+    await exclusive(async () => {
+      salida.archivo = tipo === 'video'
+        ? await sacarVideo((p) => setFin((f) => (f && f.fase === 'armando' ? { ...f, progreso: p } : f)))
+        : await sacarImagen();
     });
+    const archivo = salida.archivo;
+    if (!archivo) {
+      setFin(null);
+      return;
+    }
+    const marca = medirTiempo(primera, id);
+    setFin((f) => (f ? { ...f, fase: 'lista', progreso: 1, archivo, ...marca, semana: deLaSemana(id) } : f));
+  };
+
+  /** "Otra igual": una copia de esta historia, en el primer paso, para cambiarle el producto */
+  const otraIgual = async () => {
+    cerrarFin();
+    setGrande(false);
+    const copy = await studio.duplicate();
+    if (copy) router.push(`/admin/studio/${copy.id}?paso=1`);
   };
 
   const onDuplicate = async () => {
@@ -585,6 +719,16 @@ export default function Studio({ id }: { id: string }) {
   const miss = current ? missingImages(current, productSrc) : [];
   const format = current?.format ?? 'story';
   const alto = formatHeight(format);
+  const enlace = current && currentCode ? qrUrlFor(current, brand, currentCode) : '';
+  const abrirGrande = () => {
+    setPlaying(false);
+    setGrande(true);
+  };
+  /** En pantalla completa, agregar algo abre la hoja: el texto se escribe ahí */
+  const agregarEnGrande = (estilo: EstiloCapa) => {
+    setHojaAbierta(true);
+    capas.agregar(estilo);
+  };
 
   // C-270: la ruta de pasos (components/admin/Pasos): hecho, lo elegido en una línea, y todos se pueden tocar
   const pasos: Paso[] = current
@@ -602,16 +746,24 @@ export default function Studio({ id }: { id: string }) {
       })
     : [];
 
+  // C-295: la misma vista previa (el mismo canvas: no se vuelve a crear) va en su lugar o, en pantalla completa, en el
+  // espacio libre entre la barra de arriba y la hoja de abajo. Sobre el lienzo no hay menú del navegador ni selección
   const preview = (
-    <div className="flex flex-col items-center gap-2 bg-white pb-2 max-lg:-mx-3 max-lg:border-b max-lg:border-line max-lg:px-3 max-sm:pt-1 sm:max-lg:-mx-4 sm:max-lg:px-4 lg:gap-3 lg:pb-0">
-      <div className={`relative w-full ${PREVIEW_CLASS[format]} ${bigPreview ? '' : PREVIEW_SMALL[format]} lg:max-w-none`}>
+    <div
+      className={
+        grande
+          ? 'flex min-h-0 flex-1 items-center justify-center px-3 py-2 [container-type:size]'
+          : 'flex flex-col items-center gap-2 bg-white pb-2 max-lg:-mx-3 max-lg:border-b max-lg:border-line max-lg:px-3 max-sm:pt-1 sm:max-lg:-mx-4 sm:max-lg:px-4 lg:gap-3 lg:pb-0'
+      }
+    >
+      <div className={`relative select-none [-webkit-touch-callout:none] ${grande ? PREVIEW_GRANDE[format] : `w-full ${PREVIEW_CLASS[format]} ${bigPreview ? '' : PREVIEW_SMALL[format]} lg:max-w-none`}`}>
         <canvas
           ref={canvasRef}
           width={W}
           height={H}
           role="img"
           aria-label={current ? `Vista previa de ${current.name}` : 'Vista previa'}
-          className="block h-auto w-full rounded-md bg-white shadow-lg"
+          className={`block h-auto w-full bg-white ${grande ? 'rounded-lg' : 'rounded-md shadow-lg'}`}
         />
         {current && (
           <Lienzo
@@ -652,8 +804,19 @@ export default function Studio({ id }: { id: string }) {
             }}
           />
         )}
+        {current && !grande && (
+          <button
+            type="button"
+            onClick={abrirGrande}
+            aria-label="Editar en pantalla completa"
+            title="Pantalla completa"
+            className="absolute bottom-1.5 right-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-ink/65 text-white shadow-md before:absolute before:-inset-1.5 before:content-[''] hover:bg-ink/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 lg:hidden"
+          >
+            <IconoAgrandar className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
       </div>
-      {current && (
+      {current && !grande && (
         <div className="flex flex-wrap justify-center gap-2">
           <button type="button" aria-pressed={playing} onClick={() => setPlaying((p) => !p)} className={toggleButton(playing)} aria-label={playing ? 'Detener la animación' : 'Ver la animación'}>
             {playing ? <IconoPausa className="h-4 w-4 sm:mr-1.5" aria-hidden="true" /> : <IconoPlay className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />}
@@ -676,10 +839,14 @@ export default function Studio({ id }: { id: string }) {
   const previewExtras = current && (
     <div className="flex flex-col items-center gap-2">
       <div className="flex flex-wrap justify-center gap-2">
+        <button type="button" onClick={abrirGrande} className={`${adminPrimaryButton} h-9 px-3 lg:hidden`}>
+          <IconoAgrandar className="h-4 w-4" aria-hidden="true" />
+          Editar en grande
+        </button>
         <button type="button" aria-pressed={bigPreview} onClick={() => setBigPreview((b) => !b)} className={`${toggleButton(bigPreview)} lg:hidden`}>
           {bigPreview ? 'Achicar la vista previa' : 'Agrandar la vista previa'}
         </button>
-        <button type="button" onClick={() => void pedirSalida('imagen')} disabled={busy} className={`${adminSecondaryButton} h-9 px-3`}>
+        <button type="button" onClick={() => void terminar('imagen')} disabled={busy} className={`${adminSecondaryButton} h-9 px-3`}>
           <IconoDescargar className="h-4 w-4" aria-hidden="true" />
           Imagen
         </button>
@@ -705,6 +872,140 @@ export default function Studio({ id }: { id: string }) {
       <p className={`${adminHint} text-center`}>
         {miss.length ? `Falta la foto de: ${miss.join(', ')}` : `${FORMATS[format].label}: 1080 × ${formatHeight(format)}.`}
       </p>
+    </div>
+  );
+
+  // C-295: lo del paso elegido, en su columna o (en pantalla completa) en la hoja de abajo: nunca en los dos a la vez
+  const panelPaso = current && (
+    <>
+      {step === 1 && <StepContent studio={studio} activeSlot={activeSlot} setActiveSlot={setActiveSlot} />}
+      {step === 2 && <StepPhoto studio={studio} productSrc={productSrc} onFile={(i, f) => void onFile(i, f)} activeSlot={activeSlot} setActiveSlot={setActiveSlot} />}
+      {step === 3 && <StepDesign studio={studio} onAnim={replay} drawThumb={drawThumb} imgTick={imgTick} />}
+      {step === 4 && (
+        <StepCapas studio={studio} sel={capaSel} onSel={setCapaSel} acciones={capas} textoRef={textoCapaRef} pedirGaleria={pedirGaleria} onGaleriaVista={() => setPedirGaleria(false)} />
+      )}
+      {step === 5 && (
+        <StepAnimacion
+          studio={studio}
+          sel={capaSel}
+          onSel={setCapaSel}
+          onCambiar={capas.cambiar}
+          onEmpezarGesto={() => {
+            gestoNuevo.current = true;
+          }}
+          onCambiarGesto={(cid, cambio) => {
+            update((f) => ({ ...f, capas: cambiarCapa(f.capas, cid, cambio) }), { history: gestoNuevo.current });
+            gestoNuevo.current = false;
+          }}
+          tiempo={tiempo}
+          onTiempo={(t) => {
+            if (t !== null) setPlaying(false);
+            setTiempo(t);
+          }}
+          playing={playing}
+          onReproducir={reproducirDesde}
+          tiempoVivo={tiempoVivo}
+          onAnim={replay}
+        />
+      )}
+      {step === PASO_PUBLICAR && (
+        <StepPublish studio={studio} checks={checks} busy={busy} onPng={() => void terminar('imagen')} onVideo={() => void terminar('video')} goStep={goStep} />
+      )}
+    </>
+  );
+
+  // C-295: la pantalla completa del teléfono. Arriba: Listo, deshacer, rehacer y ver la animación. Abajo, una hoja con el
+  // paso (Paso N de 6, con sus flechas), lo que se agrega más seguido y, al subirla, todo lo del paso
+  const barraGrande = current && (
+    <div className="flex min-h-14 shrink-0 items-center gap-1 px-2 pt-[env(safe-area-inset-top)] text-white">
+      <button
+        type="button"
+        onClick={() => setGrande(false)}
+        className="inline-flex h-11 items-center gap-1.5 rounded-full bg-white px-4 text-sm font-bold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+      >
+        <IconoCheck className="h-4 w-4" aria-hidden="true" />
+        Listo
+      </button>
+      <span className="min-w-0 flex-1 truncate px-2 text-center text-sm font-semibold text-white/85">{current.name || 'Sin nombre'}</span>
+      {[
+        { onClick: studio.undo, disabled: !studio.canUndo, etiqueta: 'Deshacer', Icono: IconoDeshacer },
+        { onClick: studio.redo, disabled: !studio.canRedo, etiqueta: 'Rehacer', Icono: IconoRehacer },
+      ].map(({ onClick, disabled, etiqueta, Icono }) => (
+        <button key={etiqueta} type="button" onClick={onClick} disabled={disabled} aria-label={etiqueta} title={etiqueta} className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10 disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-white">
+          <Icono className="h-5 w-5" aria-hidden="true" />
+        </button>
+      ))}
+      <button
+        type="button"
+        aria-pressed={playing}
+        onClick={() => setPlaying((v) => !v)}
+        aria-label={playing ? 'Detener la animación' : 'Ver la animación'}
+        title={playing ? 'Detener' : 'Ver la animación'}
+        className={`inline-flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-white ${playing ? 'bg-white text-ink' : 'hover:bg-white/10'}`}
+      >
+        {playing ? <IconoPausa className="h-5 w-5" aria-hidden="true" /> : <IconoPlay className="h-5 w-5" aria-hidden="true" />}
+      </button>
+    </div>
+  );
+  const herramienta = 'flex h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl border border-brand-200 bg-brand-50 px-1 text-xs font-semibold text-brand-700 transition-transform active:scale-95 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500';
+  const hojaGrande = current && (
+    <div className="shrink-0 rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)] text-ink shadow-[0_-10px_30px_rgb(0_0_0/0.3)]">
+      <button type="button" onClick={() => setHojaAbierta((v) => !v)} aria-expanded={hojaAbierta} aria-controls="studio-hoja" className="flex w-full justify-center pb-1 pt-2">
+        <span className="h-1.5 w-10 rounded-full bg-line" aria-hidden="true" />
+        <span className="sr-only">{hojaAbierta ? 'Bajar el panel del paso' : 'Subir el panel del paso'}</span>
+      </button>
+      <div className="flex items-center gap-1 px-2">
+        <button type="button" onClick={() => goStep(step - 1)} disabled={step === 1} aria-label={step > 1 ? `Paso anterior: ${STEPS[step - 2][1]}` : 'Es el primer paso'} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-soft hover:bg-surface disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-brand-500">
+          <IconoChevronIzquierda className="h-5 w-5" aria-hidden="true" />
+        </button>
+        <button type="button" onClick={() => setHojaAbierta((v) => !v)} aria-expanded={hojaAbierta} aria-controls="studio-hoja" className="min-w-0 flex-1 rounded-lg py-1 text-center focus-visible:outline-2 focus-visible:outline-brand-500">
+          <span className="block text-xs text-muted">Paso {step} de {STEPS.length}</span>
+          <span className="block truncate text-sm font-bold text-ink">{STEPS[step - 1][1]}</span>
+        </button>
+        <button type="button" onClick={() => goStep(step + 1)} disabled={step === STEPS.length} aria-label={step < STEPS.length ? `Siguiente paso: ${STEPS[step][1]}` : 'Es el último paso'} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-soft hover:bg-surface disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-brand-500">
+          <IconoChevronDerecha className="h-5 w-5" aria-hidden="true" />
+        </button>
+      </div>
+      <div className="grid grid-cols-4 gap-2 px-3 py-2">
+        <button type="button" onClick={() => agregarEnGrande('titulo')} disabled={!puedeAgregarCapa(current.capas)} className={herramienta}>
+          <IconoTexto className="h-5 w-5" aria-hidden="true" />
+          + Título
+        </button>
+        <button type="button" onClick={() => agregarEnGrande('subtitulo')} disabled={!puedeAgregarCapa(current.capas)} className={herramienta}>
+          <IconoMas className="h-5 w-5" aria-hidden="true" />
+          + Subtítulo
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (step !== 4) goStep(4);
+            setHojaAbierta(true);
+            setPedirGaleria(true);
+          }}
+          disabled={!puedeAgregarCapa(current.capas)}
+          className={herramienta}
+        >
+          <IconoEstrella className="h-5 w-5" aria-hidden="true" />
+          + Sticker
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            goStep(PASO_PUBLICAR);
+            setHojaAbierta(true);
+          }}
+          className={`${herramienta} border-brand-500 bg-brand-500 text-white`}
+        >
+          <IconoCompartir className="h-5 w-5" aria-hidden="true" />
+          Terminar
+        </button>
+      </div>
+      {hojaAbierta && (
+        <div id="studio-hoja" className="max-h-[44dvh] overflow-y-auto overscroll-contain border-t border-line px-3 pb-4 pt-3">
+          <p className="mb-3 text-sm text-ink-soft">{STEP_HELP[step]}</p>
+          {panelPaso}
+        </div>
+      )}
     </div>
   );
 
@@ -758,49 +1059,12 @@ export default function Studio({ id }: { id: string }) {
               {current ? (
                 <>
                   <div className="lg:hidden">{previewExtras}</div>
+                  {!grande && (
+                    <>
                   <p className="text-sm text-ink-soft">
                     <strong className="text-ink">Paso {step} de {STEPS.length}.</strong> {STEP_HELP[step]}
                   </p>
-                  {step === 1 && <StepContent studio={studio} activeSlot={activeSlot} setActiveSlot={setActiveSlot} />}
-                  {step === 2 && <StepPhoto studio={studio} productSrc={productSrc} onFile={(i, f) => void onFile(i, f)} activeSlot={activeSlot} setActiveSlot={setActiveSlot} />}
-                  {step === 3 && <StepDesign studio={studio} onAnim={replay} drawThumb={drawThumb} imgTick={imgTick} />}
-                  {step === 4 && <StepCapas studio={studio} sel={capaSel} onSel={setCapaSel} acciones={capas} textoRef={textoCapaRef} />}
-                  {step === 5 && (
-                    <StepAnimacion
-                      studio={studio}
-                      sel={capaSel}
-                      onSel={setCapaSel}
-                      onCambiar={capas.cambiar}
-                      onEmpezarGesto={() => {
-                        gestoNuevo.current = true;
-                      }}
-                      onCambiarGesto={(cid, cambio) => {
-                        update((f) => ({ ...f, capas: cambiarCapa(f.capas, cid, cambio) }), { history: gestoNuevo.current });
-                        gestoNuevo.current = false;
-                      }}
-                      tiempo={tiempo}
-                      onTiempo={(t) => {
-                        if (t !== null) setPlaying(false);
-                        setTiempo(t);
-                      }}
-                      playing={playing}
-                      onReproducir={reproducirDesde}
-                      tiempoVivo={tiempoVivo}
-                      onAnim={replay}
-                    />
-                  )}
-                  {step === PASO_PUBLICAR && (
-                    <StepPublish
-                      studio={studio}
-                      checks={checks}
-                      busy={busy}
-                      canShare={canShare}
-                      onPng={() => void pedirSalida('imagen')}
-                      onVideo={() => void pedirSalida('video')}
-                      onShare={() => void share()}
-                      goStep={goStep}
-                    />
-                  )}
+                  {panelPaso}
                   <div className="flex items-center justify-between gap-2 border-t border-line pt-3">
                     {step > 1 ? (
                       <button type="button" onClick={() => goStep(step - 1)} className={adminSecondaryButton}>
@@ -815,6 +1079,8 @@ export default function Studio({ id }: { id: string }) {
                       </button>
                     )}
                   </div>
+                    </>
+                  )}
                 </>
               ) : (
                 <p className="py-12 text-center text-sm text-muted" aria-busy="true">
@@ -826,23 +1092,64 @@ export default function Studio({ id }: { id: string }) {
             {/* La vista previa queda fija debajo de la ruta de pasos mientras se recorre el paso: es la celda de la rejilla la
                 que es sticky (así su recorrido es toda la rejilla). En el teléfono, lo que no es la vista previa va en el panel */}
             <div
-              className="order-1 flex flex-col gap-2 max-lg:sticky max-lg:top-[var(--tope-vista)] max-lg:z-[var(--z-sticky)] lg:sticky lg:top-[calc(var(--tope-vista)+0.75rem)] lg:order-2"
-              style={{ '--tope-vista': `calc(4rem + ${altoPasos}px)` } as CSSProperties}
+              role={grande ? 'region' : undefined}
+              aria-label={grande ? 'Editor en pantalla completa' : undefined}
+              className={
+                grande
+                  ? 'fixed inset-x-0 top-0 z-[var(--z-drawer)] flex h-dvh flex-col overscroll-none bg-ink'
+                  : 'order-1 flex flex-col gap-2 max-lg:sticky max-lg:top-[var(--tope-vista)] max-lg:z-[var(--z-sticky)] lg:sticky lg:top-[calc(var(--tope-vista)+0.75rem)] lg:order-2'
+              }
+              style={
+                grande
+                  ? // Lo visible de la pantalla: con el teclado abierto, la hoja queda encima de él y no debajo
+                    { height: vistaAlto ? `${vistaAlto}px` : undefined, top: vistaArriba }
+                  : ({ '--tope-vista': `calc(4rem + ${altoPasos}px)` } as CSSProperties)
+              }
             >
+              {grande && barraGrande}
               {preview}
-              <div className="hidden lg:block">{previewExtras}</div>
+              {grande ? hojaGrande : <div className="hidden lg:block">{previewExtras}</div>}
             </div>
           </div>
         </div>
       </section>
-      {salida && (
-        <ElegirSalida
-          tipo={salida}
-          onCerrar={() => setSalida(null)}
-          onElegir={(destino) => {
-            const tipo = salida;
-            setSalida(null);
-            void (tipo === 'video' ? exportVideo(destino) : exportPng(destino));
+      {grande && (
+        <AsiFunciona
+          clave="studio-grande"
+          titulo="Edita con los dedos"
+          nota="La historia del alto del teléfono. Listo te devuelve a los pasos."
+          pasos={[
+            { icono: 'mover', texto: 'Un dedo mueve la pieza', accion: 'salta' },
+            { icono: 'agrandar', texto: 'Dos dedos la agrandan y la giran', accion: 'gira' },
+            { icono: 'tocar', texto: 'Toca afuera para soltarla' },
+          ]}
+          boton="Entendido: a editar"
+          sinChispa
+        />
+      )}
+      {fin && current && (
+        <Terminada
+          final={fin}
+          formato={format}
+          texto={current.caption}
+          enlace={enlace}
+          onCerrar={() => {
+            if (fin.fase === 'lista') cerrarFin();
+          }}
+          onOtraIgual={() => void otraIgual()}
+          onNueva={() => {
+            cerrarFin();
+            router.push('/admin/studio/nueva');
+          }}
+          onOtroTipo={() => {
+            const otro = fin.tipo === 'video' ? 'imagen' : 'video';
+            cerrarFin();
+            void terminar(otro);
+          }}
+          onEscribirTexto={() => {
+            cerrarFin();
+            setGrande(false);
+            goStep(PASO_PUBLICAR);
           }}
         />
       )}

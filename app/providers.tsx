@@ -7,17 +7,22 @@ import { SettingsProvider } from '@/contexts/SettingsContext';
 import { Toaster } from 'react-hot-toast';
 import type { PublicSettings } from '@/lib/site-settings';
 import { CatalogNavProvider, type NavCategory, type NavDepartamento } from '@/contexts/CatalogNavContext';
+import { SorteoCompraProvider } from '@/contexts/SorteoCompraContext';
+import type { SorteoParaCompra } from '@/lib/sorteo/estrella';
 
 export function Providers({
   children,
   initialSettings,
   navCategories = [],
   navDepartamentos = [],
+  sorteoCompra = null,
 }: {
   children: React.ReactNode;
   initialSettings: PublicSettings;
   navCategories?: NavCategory[];
   navDepartamentos?: NavDepartamento[];
+  /** C-297: la escala de boletos y el producto estrella del sorteo abierto (null sin sorteo) */
+  sorteoCompra?: SorteoParaCompra | null;
 }) {
   return (
     <SessionProvider
@@ -28,6 +33,7 @@ export function Providers({
       <CartProvider>
         <SettingsProvider initialSettings={initialSettings}>
           <CatalogNavProvider categories={navCategories} departamentos={navDepartamentos}>
+          <SorteoCompraProvider valor={sorteoCompra}>
           <ConfirmDialogProvider>
             {children}
             <Toaster
@@ -63,6 +69,7 @@ export function Providers({
               }}
             />
           </ConfirmDialogProvider>
+          </SorteoCompraProvider>
           </CatalogNavProvider>
         </SettingsProvider>
       </CartProvider>

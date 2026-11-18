@@ -5,31 +5,48 @@
 // - lib/sorteo/servidor.ts y app/api/auth/register: el invitado es una cuenta nueva creada desde el enlace (la cookie del
 //   proxy), registrada entre las fechas del sorteo; el registro pide nombre, correo, teléfono y contraseña, y manda el
 //   correo para activarla.
-// Cada pregunta es un <details> (se abre con el teclado y con el lector de pantalla), con su ícono. Sin hooks.
-import type { CSSProperties, ReactNode } from 'react';
+// C-297: la escala por monto, el producto estrella y las reseñas (lib/sorteo/escala.ts y reglas.ts). Y el equipo, 18/11
+// ("diseño animado un poco más discreto", "mucho scroll"): en una sola tarjeta, una abierta a la vez (AcordeonPreguntas).
+import type { ReactNode } from 'react';
 import { LogoEmpresa } from '@/components/envios/LogoEmpresa';
 import {
-  IconoCalendario, IconoCarrito, IconoChevronAbajo, IconoClientes, IconoCompartir, IconoCupon, IconoEnvio, IconoRegistrarse,
-  type IconType,
+  IconoCalendario, IconoCarrito, IconoChat, IconoClientes, IconoCompartir, IconoCupon, IconoEnvio, IconoEstrella,
+  IconoRegistrarse, type IconType,
 } from '@/components/iconos';
-import Aparece from '@/components/sorteo/Aparece';
+import AcordeonPreguntas from '@/components/sorteo/AcordeonPreguntas';
 import { diaLargo } from '@/components/sorteo/PremioSorteo';
+import { boletosTexto, reglaCorta, reglaLarga, type ReglaDeCompra } from '@/lib/sorteo/escala';
 
-export default function PreguntasSorteo({ minimo, tope, hasta, resultadoEl }: { minimo: string; tope: number; hasta: Date; resultadoEl: Date }) {
+/** "Desde $5…" después de dos puntos va en minúscula */
+const minuscula = (texto: string) => texto.charAt(0).toLowerCase() + texto.slice(1);
+
+export default function PreguntasSorteo({ tope, hasta, resultadoEl, regla, porResena, estrella }: {
+  tope: number;
+  hasta: Date;
+  resultadoEl: Date;
+  regla: ReglaDeCompra;
+  /** Boletos por reseña (0: no dan) */
+  porResena: number;
+  /** El producto estrella de esta semana, si hay */
+  estrella: { boletos: number } | null;
+}) {
   const invitar = tope > 0;
+  const resenas = porResena > 0;
+  const caminos = 1 + (resenas ? 1 : 0) + (invitar ? 1 : 0);
+  const extra = estrella ? ` El producto estrella de la semana te da ${estrella.boletos} más por cada uno.` : '';
   const preguntas: Array<{ Icono: IconType; pregunta: string; respuesta: ReactNode }> = [
     // El equipo, 15/11: "la idea es que compren. Siempre habla claro sobre dos caminos": la duda de "¿a juro tengo que
-    // comprar?" se contesta con los dos caminos, en positivo y la compra primero
-    invitar
+    // comprar?" se contesta con los caminos, en positivo y la compra primero
+    caminos > 1
       ? {
         Icono: IconoCarrito,
         pregunta: '¿Hay más de una forma de ganar boletos?',
-        respuesta: `Sí, dos. Comprando: cada compra pagada de ${minimo} o más en productos es 1 boleto, sin límite. E invitando amigos: cada 2 que se registran con tu enlace y activan su cuenta te dan 1 boleto, hasta ${tope}.`,
+        respuesta: `Sí, ${caminos === 3 ? 'tres' : 'dos'}. Comprando, sin límite: ${minuscula(reglaCorta(regla))}${extra}${resenas ? ` Con tus reseñas: ${boletosTexto(porResena)} por cada una.` : ''}${invitar ? ` E invitando amigos: cada 2 que se registran con tu enlace y activan su cuenta te dan 1 boleto, hasta ${tope}.` : ''}`,
       }
       : {
         Icono: IconoCarrito,
         pregunta: '¿Cómo gano boletos?',
-        respuesta: `Comprando: cada compra pagada de ${minimo} o más en productos es 1 boleto, sin límite. Mientras más compras, más oportunidades.`,
+        respuesta: `Comprando, sin límite: ${minuscula(reglaCorta(regla))}${extra} Mientras más compras, más oportunidades.`,
       },
     {
       Icono: IconoRegistrarse,
@@ -39,8 +56,18 @@ export default function PreguntasSorteo({ minimo, tope, hasta, resultadoEl }: { 
     {
       Icono: IconoCupon,
       pregunta: '¿Cuántos boletos puedo tener?',
-      respuesta: `Comprando, sin límite: 1 por cada compra pagada de ${minimo} o más en productos, sin contar el envío.${invitar ? ` Invitando, hasta ${tope}.` : ''} Si una compra se cancela o se devuelve, su boleto se anula.`,
+      respuesta: `Comprando, sin límite. ${reglaLarga(regla)}${extra}${resenas ? ' Con reseñas, también sin límite.' : ''}${invitar ? ` Invitando, hasta ${tope}.` : ''} Si una compra se cancela o se devuelve, sus boletos se anulan.`,
     },
+    {
+      Icono: IconoEstrella,
+      pregunta: '¿Qué es el producto estrella?',
+      respuesta: `Un producto que elegimos cada semana y que sale arriba en esta página. Cada uno que compres en su semana te da ${estrella ? estrella.boletos : 'sus'} boletos más, además de los de tu compra. Si compras dos, el doble.`,
+    },
+    ...(resenas ? [{
+      Icono: IconoChat,
+      pregunta: '¿Cómo cuentan las reseñas?',
+      respuesta: `Cada reseña de un producto que compraste y te llegó te da ${boletosTexto(porResena)}, sin límite. La escribes desde Mis pedidos, en lo entregado. Cuenta cuando la aprobamos, sea de 1 o de 5 estrellas.`,
+    }] : []),
     ...(invitar ? [{
       Icono: IconoCompartir,
       pregunta: '¿Cómo invito a mis amigos y cuándo cuenta?',
@@ -54,7 +81,7 @@ export default function PreguntasSorteo({ minimo, tope, hasta, resultadoEl }: { 
     {
       Icono: IconoCalendario,
       pregunta: '¿Cuándo y cómo sé si gané?',
-      respuesta: `Cuentan las compras y las cuentas nuevas hasta el ${diaLargo(hasta)}. El ${diaLargo(resultadoEl)} sale el ganador, al azar entre todos los boletos: lo publicamos aquí, con el correo tapado, y le escribimos al correo de su cuenta.`,
+      respuesta: `Cuentan las compras${resenas ? ', las reseñas' : ''} y las cuentas nuevas hasta el ${diaLargo(hasta)}. El ${diaLargo(resultadoEl)} sale el ganador, al azar entre todos los boletos: lo publicamos aquí, con el correo tapado, y le escribimos al correo de su cuenta.`,
     },
     {
       Icono: IconoEnvio,
@@ -67,20 +94,9 @@ export default function PreguntasSorteo({ minimo, tope, hasta, resultadoEl }: { 
   return (
     <section aria-labelledby="preguntas-sorteo" className="mt-10">
       <h2 id="preguntas-sorteo" className="text-xl font-bold text-ink lg:text-2xl">Lo que más nos preguntan</h2>
-      <Aparece className="mt-4 grid items-start gap-3 lg:grid-cols-2">
-        {preguntas.map(({ Icono, pregunta, respuesta }, i) => (
-          <details key={pregunta} open={i === 0} className="group rounded-2xl border border-line bg-white">
-            <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 rounded-2xl px-4 py-3 focus-visible:outline-2 focus-visible:outline-brand-500 [&::-webkit-details-marker]:hidden">
-              <span className="sorteo-pop iconos-marca flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700" style={{ '--i': i } as CSSProperties}>
-                <Icono className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <span className="flex-1 text-base font-semibold text-ink">{pregunta}</span>
-              <IconoChevronAbajo className="h-5 w-5 shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
-            </summary>
-            <p className="px-4 pb-4 text-sm leading-relaxed text-ink-soft sm:pl-[4.25rem]">{respuesta}</p>
-          </details>
-        ))}
-      </Aparece>
+      <AcordeonPreguntas
+        preguntas={preguntas.map(({ Icono, pregunta, respuesta }, i) => ({ id: `p${i}`, icono: <Icono className="h-5 w-5" aria-hidden="true" />, pregunta, respuesta }))}
+      />
     </section>
   );
 }

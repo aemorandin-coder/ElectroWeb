@@ -19,12 +19,15 @@ const FONDO_IMAGEN = '#eef2f9';
 /* ---------- lo que se dibuja ---------- */
 export interface BoletoParaDibujar {
   codigo: string;
-  tipo: 'compra' | 'amigos';
+  /** C-297: también los del producto estrella y los de una reseña */
+  tipo: 'compra' | 'estrella' | 'resena' | 'amigos';
   /** "Compra ORD-2026-0041" o "Invitaste a 2 amigos" */
   origen: string;
   /** Su lugar entre los boletos del cliente ("2 de 3") */
   n: number;
   total: number;
+  /** C-297: si representa a los que nacieron juntos (una compra que dio 15): el talón dice "15 boletos" en lugar de "2 de 3" */
+  cantidad?: number;
 }
 export interface SorteoParaDibujar {
   /** "Sorteo de Navidad" */
@@ -132,7 +135,7 @@ const camino = (d: string) => {
 
 /** Los íconos del pack (components/iconos) que van en el canvas: el trazo de 2 y la superficie al 25 % */
 type Pieza = { d: string; sup?: boolean };
-const ICONOS: Record<'carrito' | 'clientes' | 'calendario', Pieza[]> = {
+const ICONOS: Record<'carrito' | 'clientes' | 'calendario' | 'estrella' | 'chat', Pieza[]> = {
   carrito: [
     { d: 'M5.6 6.5h14.8a.8.8 0 0 1 .78.98L20 12.8a2 2 0 0 1-1.95 1.55H7.6z', sup: true }, { d: 'M2.5 3H4a1 1 0 0 1 .97.76L8 16.5h11' },
     { d: 'M8.25 20a1.25 1.25 0 1 0 2.5 0a1.25 1.25 0 1 0 -2.5 0z' }, { d: 'M16.25 20a1.25 1.25 0 1 0 2.5 0a1.25 1.25 0 1 0 -2.5 0z' },
@@ -141,8 +144,16 @@ const ICONOS: Record<'carrito' | 'clientes' | 'calendario', Pieza[]> = {
     { d: 'M13.5 7.5a3 3 0 1 0 6 0a3 3 0 1 0 -6 0z' }, { d: 'M15 13.3a5.6 5.6 0 0 1 1.5-.2c3 0 5.3 2.2 5.3 5.2v.8h-3' },
     { d: 'M5.4 8a3.6 3.6 0 1 0 7.2 0a3.6 3.6 0 1 0 -7.2 0z', sup: true }, { d: 'M2.5 20.5v-.7c0-3.4 2.9-5.8 6.5-5.8s6.5 2.4 6.5 5.8v.7z', sup: true },
   ],
+  // C-297: el producto estrella y la reseña (IconoEstrella e IconoChat del pack)
+  estrella: [{ d: 'M12 2.8l2.75 5.6 6.2.9-4.5 4.35 1.05 6.15L12 16.9l-5.5 2.9 1.05-6.15L3.05 9.3l6.2-.9z', sup: true }],
+  chat: [
+    { d: 'M12 3.5c5 0 9 3.4 9 7.6s-4 7.6-9 7.6c-1 0-2-.1-2.9-.4L4.5 20.5l1.2-3.9C4 15.2 3 13.3 3 11.1 3 6.9 7 3.5 12 3.5z' },
+    { d: 'M8 11.2h.01M12 11.2h.01M16 11.2h.01' },
+  ],
   calendario: [{ d: 'M5 4.5h14a2 2 0 0 1 2 2v3H3v-3a2 2 0 0 1 2-2z', sup: true }, { d: 'M5 4.5h14a2 2 0 0 1 2 2v12.5a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-12.5a2 2 0 0 1 2 -2z' }, { d: 'M8 2.5v4M16 2.5v4' }],
 };
+/** C-297: el ícono de dónde salió cada boleto */
+const ICONO_DEL_TIPO: Record<BoletoParaDibujar['tipo'], keyof typeof ICONOS> = { compra: 'carrito', estrella: 'estrella', resena: 'chat', amigos: 'clientes' };
 function icono(ctx: CanvasRenderingContext2D, n: keyof typeof ICONOS, x: number, y: number, s: number, color: string) {
   ctx.save();
   ctx.translate(x, y);
@@ -358,7 +369,7 @@ export function dibujarBoleto(ctx: CanvasRenderingContext2D, b: BoletoParaDibuja
   ctx.fillStyle = 'rgba(255,255,255,.13)';
   ctx.fill();
   ctx.restore();
-  icono(ctx, b.tipo === 'amigos' ? 'clientes' : 'carrito', x + 9 * u, 124 * u, 14 * u, '#fff');
+  icono(ctx, ICONO_DEL_TIPO[b.tipo], x + 9 * u, 124 * u, 14 * u, '#fff');
   escribir(ctx, b.origen, x + 26 * u, 135.5 * u, { tam: 12.6 * u, peso: 600, color: '#fff', fam });
 
   // El talón
@@ -370,7 +381,7 @@ export function dibujarBoleto(ctx: CanvasRenderingContext2D, b: BoletoParaDibuja
   ctx.fillStyle = 'rgba(170,193,235,.35)';
   ctx.fillRect(sx - 22 * u, 100 * u, 44 * u, 1 * u);
   escribir(ctx, s.dia, sx, 127 * u, { tam: 14 * u, color: '#fff', fam, al: 'center' });
-  escribir(ctx, `${b.n} de ${b.total}`, sx, 146 * u, { tam: 12.6 * u, peso: 500, color: AZ[300], fam, al: 'center' });
+  escribir(ctx, b.cantidad && b.cantidad > 1 ? `${b.cantidad} boletos` : `${b.n} de ${b.total}`, sx, 146 * u, { tam: 12.6 * u, peso: 500, color: AZ[300], fam, al: 'center' });
 
   // La perforación: se dibuja de arriba abajo
   const corte = sale(tramo(T, 0.22, 0.42));

@@ -6,11 +6,30 @@
 // - Invitando amigos: 1 boleto por cada 2 amigos que se registran con tu enlace y activan su cuenta, hasta un tope. Cada
 //   persona cuenta una sola vez en todo el sorteo, para quien la invitó primero (C-264).
 // - El equipo no participa. El ganador sale al azar entre todos los boletos.
+// C-297 (Andrés, 18/11: "no importa tanto recuperar la inversión: nos quedan los correos y los clientes nuevos; ahora, que
+// la web venda mucho más"). Comprar vale más que invitar:
+// - Por monto (escala.ts): la compra mínima da `boletosPorCompra` (2) y cada `escalaUSD` (50) da `boletosPorEscala` (5);
+//   vale la que dé más. $12 → 2, $50 → 5, $120 → 10.
+// - El producto estrella de la semana: cada unidad comprada en su semana da sus boletos (10), sumados a los del monto.
+// - Las reseñas: cada reseña aprobada, escrita durante el sorteo, de algo que compró y recibió (la tienda no deja reseñar
+//   otra cosa, app/api/reviews), da `boletosPorResena` (1), sin tope y con cualquier calificación.
+// - Invitar queda igual: es lo que trae los correos y la forma de participar sin comprar.
+// Los boletos se cuentan cada vez, así que la regla nueva vale también para las compras de antes (decidido: hacia atrás).
+// Los códigos de antes no cambian: el primer boleto de una compra conserva su origen (origenDeCompra con k = 1).
 
 import { createHash, randomInt } from 'node:crypto';
+import { boletosPorMonto, type ReglaDeCompra } from './escala';
+
+export type { ReglaDeCompra } from './escala';
 
 /** Dos órdenes del mismo cliente con menos de esto entre sí son la misma compra: C-199 crea los dos paquetes en el mismo pedido */
 export const MISMA_COMPRA_MS = 30 * 1000;
+
+/** C-297: un producto de la orden, para el producto estrella */
+export interface ItemParaSorteo {
+  productId: string;
+  cantidad: number;
+}
 
 export interface OrdenParaSorteo {
   orderNumber: string;
@@ -18,6 +37,28 @@ export interface OrdenParaSorteo {
   createdAt: Date;
   /** PAID, y la orden no está cancelada ni devuelta */
   pagada: boolean;
+  /** C-297: sus productos (sin ellos, la estrella no suma) */
+  items?: ItemParaSorteo[];
+}
+
+/** C-297: el producto estrella de una semana: cada unidad comprada entre `desde` y `hasta` da `boletos` */
+export interface EstrellaParaSorteo {
+  id: string;
+  productId: string;
+  /** El nombre del producto, para decir de dónde salió el boleto */
+  nombre: string;
+  desde: Date;
+  hasta: Date;
+  boletos: number;
+}
+
+/** C-297: la estrella vigente en una fecha (las semanas no se pisan; si se pisaran, la que empezó después) */
+export function estrellaEn(estrellas: EstrellaParaSorteo[], fecha: Date): EstrellaParaSorteo | null {
+  let elegida: EstrellaParaSorteo | null = null;
+  for (const e of estrellas) {
+    if (fecha >= e.desde && fecha <= e.hasta && (!elegida || e.desde > elegida.desde)) elegida = e;
+  }
+  return elegida;
 }
 
 export interface CompraConBoleto {
@@ -25,28 +66,59 @@ export interface CompraConBoleto {
   ordenes: string;
   subtotalUSD: number;
   fecha: Date;
+  /** C-297: los boletos por el monto (0 si no llegó a la compra mínima pero llevó el producto estrella) */
+  porMonto: number;
+  /** C-297: los del producto estrella de esa semana, por unidad; null si no lo llevó */
+  estrella: { nombre: string; unidades: number; boletos: number } | null;
+  /** C-297: todos los de esta compra */
+  boletos: number;
 }
 
-/** Las compras de un cliente que dan boleto: las pagadas dentro de las fechas, juntando los paquetes de una misma compra */
-export function comprasConBoleto(ordenes: OrdenParaSorteo[], desde: Date, hasta: Date, minimoUSD: number): CompraConBoleto[] {
+/**
+ * Las compras de un cliente que dan boletos: las pagadas dentro de las fechas, juntando los paquetes de una misma compra,
+ * con cuántos da cada una por su monto y por el producto estrella de su semana (C-297).
+ */
+export function comprasConBoleto(ordenes: OrdenParaSorteo[], desde: Date, hasta: Date, regla: ReglaDeCompra, estrellas: EstrellaParaSorteo[] = []): CompraConBoleto[] {
   const validas = ordenes
     .filter((o) => o.pagada && o.createdAt >= desde && o.createdAt <= hasta)
     .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-  const compras: Array<{ numeros: string[]; subtotal: number; fecha: Date; ultima: Date }> = [];
+  const compras: Array<{ numeros: string[]; subtotal: number; fecha: Date; ultima: Date; items: ItemParaSorteo[] }> = [];
   for (const o of validas) {
     const anterior = compras[compras.length - 1];
     if (anterior && o.createdAt.getTime() - anterior.ultima.getTime() <= MISMA_COMPRA_MS) {
       anterior.numeros.push(o.orderNumber);
       anterior.subtotal += o.subtotalUSD;
       anterior.ultima = o.createdAt;
+      anterior.items.push(...(o.items ?? []));
     } else {
-      compras.push({ numeros: [o.orderNumber], subtotal: o.subtotalUSD, fecha: o.createdAt, ultima: o.createdAt });
+      compras.push({ numeros: [o.orderNumber], subtotal: o.subtotalUSD, fecha: o.createdAt, ultima: o.createdAt, items: [...(o.items ?? [])] });
     }
   }
-  return compras
-    .filter((c) => Math.round(c.subtotal * 100) >= Math.round(minimoUSD * 100))
-    .map((c) => ({ ordenes: c.numeros.join(' y '), subtotalUSD: Math.round(c.subtotal * 100) / 100, fecha: c.fecha }));
+  const salida: CompraConBoleto[] = [];
+  for (const c of compras) {
+    const subtotalUSD = Math.round(c.subtotal * 100) / 100;
+    const porMonto = boletosPorMonto(subtotalUSD, regla);
+    const e = estrellaEn(estrellas, c.fecha);
+    const unidades = e ? c.items.filter((i) => i.productId === e.productId).reduce((s, i) => s + Math.max(0, i.cantidad), 0) : 0;
+    const estrella = e && unidades > 0 && e.boletos > 0 ? { nombre: e.nombre, unidades, boletos: unidades * e.boletos } : null;
+    const boletos = porMonto + (estrella?.boletos ?? 0);
+    if (boletos > 0) salida.push({ ordenes: c.numeros.join(' y '), subtotalUSD, fecha: c.fecha, porMonto, estrella, boletos });
+  }
+  return salida;
 }
+
+/** C-297: una reseña del cliente escrita durante el sorteo. Da boletos cuando el equipo la aprueba */
+export interface ResenaParaSorteo {
+  id: string;
+  /** El producto que reseñó */
+  producto: string;
+  fecha: Date;
+  aprobada: boolean;
+}
+
+/** C-297: las reseñas que dan boletos: las aprobadas dentro de las fechas */
+export const resenasConBoleto = <T extends ResenaParaSorteo>(resenas: T[], desde: Date, hasta: Date): T[] =>
+  resenas.filter((r) => r.aprobada && r.fecha >= desde && r.fecha <= hasta).sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
 
 export interface InvitadoParaSorteo {
   correoVerificado: boolean;
@@ -135,15 +207,22 @@ export interface Boleto {
   codigo: string;
 }
 
-/** C-263: de dónde salió un boleto, para su código: la compra (su primera orden) o el n.º de par de amigos del participante */
-export const origenDeCompra = (ordenes: string) => `compra:${ordenes.split(' y ')[0]}`;
+/**
+ * C-263: de dónde salió un boleto, para su código: la compra (su primera orden) o el n.º de par de amigos del participante.
+ * C-297: una compra da varios: el k-ésimo por el monto, el k-ésimo del producto estrella y el de cada reseña. El primero
+ * por el monto conserva el origen de antes (sin "#1"), así los códigos que ya tenían los clientes no cambian.
+ */
+export const origenDeCompra = (ordenes: string, k = 1) => `compra:${ordenes.split(' y ')[0]}${k > 1 ? `#${k}` : ''}`;
+export const origenDeEstrella = (ordenes: string, k: number) => `estrella:${ordenes.split(' y ')[0]}#${k}`;
+export const origenDeResena = (resenaId: string, k = 1) => `resena:${resenaId}${k > 1 ? `#${k}` : ''}`;
 export const origenDeAmigos = (codigoParticipante: string, par: number) => `amigos:${codigoParticipante}:${par}`;
 
 /**
  * C-263: el código de un boleto, calculado de lo que lo originó y sin guardarlo: la huella (sha256) del sorteo y del origen,
  * escrita con las 31 letras y cifras del código para invitar (sin 0/O ni 1/I/L), 6 caracteres: "F3E-XEP". No cambia cuando
  * entran boletos de otros (no es un número de la lista) y el panel lo calcula igual para cada boleto de la lista que se
- * sortea. Hay 887 millones: con 2.000 boletos, 2 en 1.000 de que dos se repitan (el panel los muestra igual, con su detalle).
+ * sortea. Hay 887 millones: con 2.000 boletos, 2 en 1.000 de que dos se repitan; con 10.000 (C-297, una compra da varios),
+ * 6 en 100. Si se repiten, el panel los muestra igual, con su detalle, y el ganador se anuncia con su correo tapado.
  */
 export function codigoDeBoleto(sorteoId: string, origen: string): string {
   const letras = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';

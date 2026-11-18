@@ -20,13 +20,17 @@ export async function POST(request: NextRequest) {
   // Sin sorteo, o con uno ya sorteado, lo que se guarde es un sorteo nuevo: no le cambia nada a nadie
   if (!actual || actual.sorteadoAt) return NextResponse.json({ efecto: null });
   const d = parsed.data;
-  // Solo lo que cuenta boletos: las fechas, la compra mínima y el tope por invitar
+  // Solo lo que cuenta boletos: las fechas, la compra mínima, el tope por invitar y (C-297) la escala y las reseñas
   const nuevo = {
     ...actual,
     desde: inicioDelDia(d.desde),
     hasta: finDelDia(d.hasta),
     compraMinimaUSD: new Prisma.Decimal(d.compraMinimaUSD),
     topeInvitar: d.topeInvitar,
+    boletosPorCompra: d.boletosPorCompra ?? actual.boletosPorCompra,
+    escalaUSD: d.escalaUSD === undefined ? actual.escalaUSD : new Prisma.Decimal(d.escalaUSD),
+    boletosPorEscala: d.boletosPorEscala ?? actual.boletosPorEscala,
+    boletosPorResena: d.boletosPorResena ?? actual.boletosPorResena,
   };
   return NextResponse.json({ efecto: await efectoDelCambio(actual, nuevo) });
 }

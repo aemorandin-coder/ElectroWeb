@@ -1,15 +1,15 @@
 'use client';
 
 import {
-  IconoAdvertencia, IconoClaqueta, IconoCompartir, IconoConfirmado, IconoCopiar, IconoDescargar, IconoEnlace,
-  IconoNovedad, IconoReloj,
+  IconoAdvertencia, IconoClaqueta, IconoConfirmado, IconoCopiar, IconoEnlace, IconoImagen, IconoNovedad, IconoReloj,
 } from '@/components/iconos';
 import { toast } from 'react-hot-toast';
-import { adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton, avisoAccion } from '@/lib/admin-ui';
+import { adminHint, adminInput, adminLabel, avisoAccion } from '@/lib/admin-ui';
+import { duracionDe } from '@/lib/studio/animaciones';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { buildCaption } from '@/lib/studio/caption';
 import { PASO_PUBLICAR, type FlyerCheck } from '@/lib/studio/checks';
-import { qrUrlFor } from '@/lib/studio/engine';
+import { formatHeight, qrUrlFor } from '@/lib/studio/engine';
 import { sectionSummary, smallButton } from './ui';
 import type { Studio } from './useStudio';
 
@@ -24,14 +24,13 @@ interface Props {
   studio: Studio;
   checks: FlyerCheck[];
   busy: boolean;
-  canShare: boolean;
+  /** C-295: arman la imagen o el video y abren el final (compartir, descargar, Telegram…) */
   onPng: () => void;
   onVideo: () => void;
-  onShare: () => void;
   goStep: (k: number) => void;
 }
 
-export default function StepPublish({ studio, checks, busy, canShare, onPng, onVideo, onShare, goStep }: Props) {
+export default function StepPublish({ studio, checks, busy, onPng, onVideo, goStep }: Props) {
   const { current, update, brand, flyers, currentCode } = studio;
   const { confirm } = useConfirm();
   if (!current) return null;
@@ -83,22 +82,38 @@ export default function StepPublish({ studio, checks, busy, canShare, onPng, onV
         ))}
       </ul>
 
-      <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={onPng} disabled={busy} className={adminPrimaryButton}>
-          <IconoDescargar className="h-4 w-4" aria-hidden="true" />
-          Imagen
+      {/* C-295: sacar la imagen o el video lleva al final, donde se comparte, se descarga o va a Telegram */}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={onPng}
+          disabled={busy}
+          className="flex min-h-24 flex-col items-start justify-between gap-2 rounded-xl bg-brand-500 p-3 text-left text-white shadow-sm transition-[background-color,transform] hover:bg-brand-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/15">
+            <IconoImagen className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <span>
+            <span className="block text-sm font-bold">Sacar la imagen</span>
+            <span className="block text-xs text-brand-50">PNG · 1080 × {formatHeight(current.format)}</span>
+          </span>
         </button>
-        <button type="button" onClick={onVideo} disabled={busy} className={adminSecondaryButton}>
-          <IconoClaqueta className="h-4 w-4" aria-hidden="true" />
-          Video
+        <button
+          type="button"
+          onClick={onVideo}
+          disabled={busy}
+          className="flex min-h-24 flex-col items-start justify-between gap-2 rounded-xl border border-brand-200 bg-brand-50 p-3 text-left text-brand-700 transition-[background-color,transform] hover:bg-brand-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500 text-white">
+            <IconoClaqueta className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <span>
+            <span className="block text-sm font-bold">Sacar el video</span>
+            <span className="block text-xs text-ink-soft">MP4 · {duracionDe(current)} s · Full HD a 60 cuadros</span>
+          </span>
         </button>
-        {canShare && (
-          <button type="button" onClick={onShare} disabled={busy} className={adminSecondaryButton}>
-            <IconoCompartir className="h-4 w-4" aria-hidden="true" />
-            Compartir
-          </button>
-        )}
       </div>
+      <p className={`${adminHint} -mt-2`}>Después la ves en grande y eliges: compartirla, descargarla o mandarla a Telegram.</p>
 
       {link && (
         <div className="rounded-xl border border-line bg-surface p-3">

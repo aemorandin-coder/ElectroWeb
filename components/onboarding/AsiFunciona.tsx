@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  IconoBolsa, IconoCalendario, IconoCandado, IconoCarrito, IconoCelular, IconoCerrar, IconoCheck, IconoClientes, IconoCupon, IconoEnvio,
-  IconoFlechaDerecha, IconoPagoMovil, IconoRecargarPuntos, IconoVer, IconoVerificado,
+  IconoAgrandar, IconoBolsa, IconoCalendario, IconoCandado, IconoCarrito, IconoCelular, IconoCerrar, IconoCheck, IconoClientes,
+  IconoCupon, IconoEnvio, IconoFlechaDerecha, IconoMover, IconoPagoMovil, IconoPuntero, IconoRecargarPuntos, IconoVer, IconoVerificado,
 } from '@/components/iconos';
 import ChispaGuia, { PROPORCION_CHISPA, type PoseGuia } from '@/components/onboarding/ChispaGuia';
 import IconoDibujado, { type AccionIcono } from '@/components/onboarding/IconoDibujado';
@@ -26,6 +26,10 @@ import { prefiereMenosMovimiento } from '@/lib/motion/resorte';
 
 /** Por nombre: las páginas del servidor no le pueden pasar un componente a uno del cliente */
 const ICONOS = {
+  // C-295: los gestos del editor en pantalla completa de ElectroStudio
+  agrandar: IconoAgrandar,
+  mover: IconoMover,
+  tocar: IconoPuntero,
   bolsa: IconoBolsa,
   calendario: IconoCalendario,
   // C-290: los dos pasos del panel (la contraseña y el número del teléfono)

@@ -199,8 +199,12 @@ export async function grabarVideo(
   // fastStart: la cabecera (con la duración) va adelante, como la quieren los teléfonos, Instagram y WhatsApp
   const muxer = new Muxer({ target: destino, video: { codec: 'avc', width: ancho, height: alto, frameRate: fps }, fastStart: 'in-memory' });
   let falla: unknown = null;
+  let trozos = 0;
   const codificador = new VideoEncoder({
-    output: (trozo, meta) => muxer.addVideoChunk(trozo, meta),
+    output: (trozo, meta) => {
+      trozos++;
+      muxer.addVideoChunk(trozo, meta);
+    },
     error: (e) => { falla = e; },
   });
   codificador.configure(config);
@@ -225,9 +229,15 @@ export async function grabarVideo(
     muxer.finalize();
   } catch (error) {
     if (codificador.state !== 'closed') codificador.close();
-    throw error instanceof Error && error.name === 'SecurityError'
-      ? new Error('Una imagen de la historia no deja grabar el video. Cámbiala o descarga la imagen.')
-      : new GrabacionInterrumpida('grabador');
+    if (error instanceof Error && error.name === 'SecurityError') throw new Error('Una imagen de la historia no deja grabar el video. Cámbiala o descarga la imagen.');
+    // C-295: el navegador dijo que codifica H.264 y no pudo ni con el primer cuadro ("The given encoding is not supported":
+    // Firefox sin el códec de Cisco, por ejemplo). Se graba como antes, en tiempo real, en vez de decir que no se pudo
+    const tipo = trozos === 0 ? pickVideoType() : null;
+    if (tipo && typeof canvas.captureStream === 'function') {
+      const blob = await recordCanvas(canvas, tipo, drawAt, duracion);
+      return { blob, extension: tipo.startsWith('video/mp4') ? 'mp4' : 'webm', fps: 30, ancho, alto, segundos: duracion, cuadroPorCuadro: false };
+    }
+    throw new GrabacionInterrumpida('grabador');
   }
   codificador.close();
   opciones.onProgreso?.(1);

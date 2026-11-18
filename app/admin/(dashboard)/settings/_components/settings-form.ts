@@ -2,8 +2,8 @@
 // la validación real está en el servidor (lib/validations/settings.ts).
 
 import {
-  IconoBaseDeDatos, IconoBillete, IconoBolsa, IconoBuscar, IconoCorreo, IconoEnvio, IconoGarantia, IconoMaletin, IconoNovedad,
-  IconoInicio, IconoPaquete, IconoPintura, IconoTarjeta,
+  IconoBaseDeDatos, IconoBillete, IconoBolsa, IconoBuscar, IconoCorreo, IconoEnvio, IconoMaletin, IconoNovedad,
+  IconoClientes, IconoEnviar, IconoHerramientas, IconoInicio, IconoNotificaciones, IconoPaquete, IconoPintura, IconoTarjeta,
 } from '@/components/iconos';
 import type { IconType } from '@/components/iconos';
 import { leerReglasEmbalaje, type Empaque } from '@/lib/embalaje';
@@ -73,7 +73,7 @@ export interface SectionProps {
 // llevan a su sección nueva.
 export type SectionId =
   | 'datos' | 'marca' | 'tasa' | 'pagos' | 'compras' | 'inventario' | 'envios'
-  | 'sistema' | 'correo' | 'ia' | 'respaldos' | 'portada' | 'seo';
+  | 'avisos' | 'telegram' | 'correo' | 'ia' | 'respaldos' | 'mantenimiento';
 
 export type GrupoId = 'negocio' | 'vender' | 'avisos' | 'conexiones' | 'tienda' | 'equipo';
 
@@ -97,8 +97,18 @@ export const GRUPOS: { id: GrupoId; label: string }[] = [
   { id: 'equipo', label: 'Equipo y acceso' },
 ];
 
-/** Las direcciones de antes de C-293 */
-export const SECCION_VIEJA: Record<string, SectionId> = { negocio: 'datos', precios: 'tasa', tienda: 'portada' };
+/** Las direcciones de antes de C-293 y C-294 */
+export const SECCION_VIEJA: Record<string, SectionId> = { negocio: 'datos', precios: 'tasa', sistema: 'avisos' };
+
+/** C-294 (D2 del 18/11): Portada y "Google y redes" pasaron a Marketing: sus direcciones viejas van allá */
+export const EN_MARKETING: Record<string, string> = { tienda: '/admin/marketing#portada', portada: '/admin/marketing#portada', seo: '/admin/marketing#google' };
+
+/** Lo que está en otra pantalla pero se busca aquí: va en el menú de su grupo, como un enlace */
+export const ENLACES: { grupo: GrupoId; href: string; label: string; estado: string; icon: IconType }[] = [
+  { grupo: 'tienda', href: '/admin/marketing#portada', label: 'Portada', estado: 'En Marketing: destacados y video', icon: IconoInicio },
+  { grupo: 'equipo', href: '/admin/equipo', label: 'Equipo', estado: 'Quién entra al panel y con qué rol', icon: IconoClientes },
+  { grupo: 'tienda', href: '/admin/marketing#google', label: 'Google y redes', estado: 'En Marketing: cómo se comparte', icon: IconoBuscar },
+];
 
 const bs = (v: string) => (Number(v) > 0 ? `${Number(v).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs` : 'Sin tasa');
 const usd = (v: string) => `$${Number(v).toLocaleString('es-VE', { maximumFractionDigits: 2 })}`;
@@ -150,12 +160,18 @@ export const SECTIONS: Seccion[] = [
       'pickupEnabled', 'pickupAddress', 'pickupInstructions', 'horaCorte', 'diasCerrados', 'diasAbiertos'],
     estado: (f) => [f.deliveryEnabled ? 'ZOOM y MRW' : 'Sin envíos', f.localDeliveryEnabled ? 'delivery' : '', f.pickupEnabled ? 'retiro' : ''].filter(Boolean).join(' · '),
   },
+  // C-294 (D6 del 18/11): "Qué avisar" y Telegram estaban en Notificaciones; ahora van juntos con los correos de alerta
   {
-    id: 'sistema', grupo: 'avisos', label: 'Avisos y mantenimiento', icon: IconoGarantia,
-    description: 'Los correos que reciben las alertas y el modo mantenimiento.',
-    fields: ['adminAlertEmails', 'primaryColor', 'secondaryColor', 'maintenanceMode', 'maintenanceMessage', 'maintenanceStartTime',
-      'maintenanceEndTime', 'maintenanceAllowedIPs'],
-    estado: (f) => (f.maintenanceMode ? 'En mantenimiento' : `${f.adminAlertEmails.length} ${f.adminAlertEmails.length === 1 ? 'correo de alerta' : 'correos de alerta'}`),
+    id: 'avisos', grupo: 'avisos', label: 'Qué avisar', icon: IconoNotificaciones,
+    description: 'Lo que te avisa la tienda, por dónde (el panel, el correo o Telegram) y a qué correos.',
+    fields: ['adminAlertEmails'],
+    estado: (f) => `${f.adminAlertEmails.length} ${f.adminAlertEmails.length === 1 ? 'correo de alerta' : 'correos de alerta'}`,
+  },
+  {
+    id: 'telegram', grupo: 'avisos', label: 'Telegram', icon: IconoEnviar,
+    description: 'El bot que manda los avisos y lo que sale de ElectroStudio a tu chat de Telegram.',
+    fields: [],
+    estado: () => 'El bot de los avisos',
   },
   // C-75: el servidor de correo estaba en Marketing. Tiene su propio guardado (no usa la barra común)
   {
@@ -179,18 +195,10 @@ export const SECTIONS: Seccion[] = [
     estado: () => 'Copia diaria a Google Drive',
   },
   {
-    id: 'portada', grupo: 'tienda', label: 'Portada', icon: IconoInicio,
-    description: 'Los destacados, las categorías y el video de la página de inicio.',
-    fields: ['maxFeaturedProducts', 'showCategories', 'maxCategoriesDisplay', 'heroVideoEnabled', 'heroVideoUrl', 'heroVideoTitle', 'heroVideoDescription'],
-    estado: (f) => `${Number(f.maxFeaturedProducts) || 0} destacados${f.heroVideoEnabled ? ' · con video' : ''}`,
-  },
-  {
-    id: 'seo', grupo: 'tienda', label: 'Google y redes', icon: IconoBuscar,
-    description: 'El título, la descripción y la imagen con que aparecen las páginas en Google, WhatsApp y Facebook.',
-    fields: ['metaTitle', 'metaDescription', 'metaKeywords', 'homeMetaImage', 'productsMetaTitle', 'productsMetaDescription',
-      'productsMetaKeywords', 'productsMetaImage', 'servicesMetaTitle', 'servicesMetaDescription', 'servicesMetaKeywords',
-      'servicesMetaImage', 'coursesMetaTitle', 'coursesMetaDescription', 'coursesMetaKeywords', 'coursesMetaImage'],
-    estado: () => 'Inicio, productos, servicios y cursos',
+    id: 'mantenimiento', grupo: 'tienda', label: 'Mantenimiento', icon: IconoHerramientas,
+    description: 'Cerrar la tienda un rato, con un aviso para los visitantes.',
+    fields: ['maintenanceMode', 'maintenanceMessage', 'maintenanceStartTime', 'maintenanceEndTime', 'maintenanceAllowedIPs'],
+    estado: (f) => (f.maintenanceMode ? 'Encendido: la tienda está cerrada' : 'Apagado'),
   },
 ];
 

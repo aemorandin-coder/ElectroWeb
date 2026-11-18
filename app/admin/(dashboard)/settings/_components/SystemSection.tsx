@@ -1,7 +1,6 @@
 'use client';
 
 import { useId, useState } from 'react';
-import Link from 'next/link';
 import { IconoAdvertencia, IconoCerrar, IconoCorreo, IconoMas } from '@/components/iconos';
 import { adminBadge, adminInput, adminLabel, adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
 import type { SectionProps } from './settings-form';
@@ -9,26 +8,9 @@ import { Field, SettingsCard, SwitchRow, TextAreaField } from './fields';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function ColorField({ label, value, onChange, error }: { label: string; value: string; onChange: (value: string) => void; error?: string }) {
-  const id = useId();
-  return (
-    <Field label={label} htmlFor={id} error={error}>
-      <div className="flex items-center gap-3">
-        <input id={id} type="color" value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-14 shrink-0 cursor-pointer rounded-lg border border-line bg-white p-1" />
-        <input
-          type="text"
-          aria-label={`${label} (código)`}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          maxLength={7}
-          className={`${adminInput(Boolean(error))} font-mono uppercase`}
-        />
-      </div>
-    </Field>
-  );
-}
-
-export default function SystemSection({ form, set, errors }: SectionProps) {
+// C-294: dos secciones: `avisos` (los correos de alerta, en Avisos → Qué avisar) y `mantenimiento` (La tienda en línea). Se quitaron
+// (D3 del 18/11) los colores de los correos, que ningún correo usaba, y la tarjeta que solo repetía el enlace a Equipo
+export default function SystemSection({ form, set, errors, parte }: SectionProps & { parte: 'avisos' | 'mantenimiento' }) {
   const [newEmail, setNewEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const emailInputId = useId();
@@ -48,11 +30,45 @@ export default function SystemSection({ form, set, errors }: SectionProps) {
     setEmailError('');
   };
 
+  if (parte === 'mantenimiento') return <>
+      <SettingsCard
+        title="Modo mantenimiento"
+        description="Los visitantes ven un aviso en lugar de la tienda."
+        ayuda="Los administradores con sesión iniciada entran normal, y las IPs de abajo también."
+        action={form.maintenanceMode ? <span className={adminBadge('warning')}>Activo</span> : null}
+      >
+        <div className="space-y-5">
+          <SwitchRow label="Poner la tienda en mantenimiento" checked={form.maintenanceMode} onChange={(v) => set('maintenanceMode', v)} />
+          {form.maintenanceMode && (
+            <p className={`${adminNotice('warning')} flex items-start gap-2`}>
+              <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              Al guardar, la tienda se cierra en unos 15 segundos para todos los clientes.
+            </p>
+          )}
+          <TextAreaField label="Mensaje para los visitantes" value={form.maintenanceMessage} onChange={(v) => set('maintenanceMessage', v)} error={errors.maintenanceMessage} maxLength={500} rows={2} placeholder="Estamos haciendo mejoras. Volvemos en unas horas." />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <DateTimeField label="Empieza" value={form.maintenanceStartTime} onChange={(v) => set('maintenanceStartTime', v)} error={errors.maintenanceStartTime} hint="Vacío: en cuanto se guarde" />
+            <DateTimeField label="Termina" value={form.maintenanceEndTime} onChange={(v) => set('maintenanceEndTime', v)} error={errors.maintenanceEndTime} hint="Vacío: hasta que lo apagues" />
+          </div>
+          <TextAreaField
+            label="IPs que pueden entrar"
+            value={form.maintenanceAllowedIPs}
+            onChange={(v) => set('maintenanceAllowedIPs', v)}
+            error={errors.maintenanceAllowedIPs}
+            rows={2}
+            placeholder="190.202.10.4, 200.44.32.12"
+            hint="Separadas por coma: para revisar la tienda desde la oficina."
+          />
+        </div>
+      </SettingsCard>
+
+    </>;
+
   return (
     <>
       <SettingsCard
         title="Correos de alerta"
-        description={<>Reciben los avisos que tengan el canal Correo activo en <a href="/admin/notifications#avisos" className="font-semibold text-brand-600 hover:underline">Notificaciones → Qué avisar</a>.</>}
+        description="Reciben los avisos que tengan el canal Correo encendido, aquí abajo."
       >
         {form.adminAlertEmails.length > 0 ? (
           <ul className="mb-4 flex flex-wrap gap-2">
@@ -102,60 +118,6 @@ export default function SystemSection({ form, set, errors }: SectionProps) {
         {(emailError || errors.adminAlertEmails) && <p className="mt-1 text-xs font-semibold text-deal" role="alert">{emailError || errors.adminAlertEmails}</p>}
       </SettingsCard>
 
-      <SettingsCard title="Colores de los correos" description="Encabezado y botones de los correos que reciben los clientes. La tienda usa siempre el azul de la marca.">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <ColorField label="Color principal" value={form.primaryColor} onChange={(v) => set('primaryColor', v)} error={errors.primaryColor} />
-          <ColorField label="Color secundario" value={form.secondaryColor} onChange={(v) => set('secondaryColor', v)} error={errors.secondaryColor} />
-        </div>
-        {/* Vista previa con los colores elegidos: son datos del admin, no tokens de la tienda */}
-        <div className="mt-4 overflow-hidden rounded-xl border border-line">
-          <div className="px-4 py-3 text-sm font-semibold text-white" style={{ background: `linear-gradient(135deg, ${form.primaryColor}, ${form.secondaryColor})` }}>
-            {form.companyName || 'Electro Shop'} · Tu orden fue confirmada
-          </div>
-          <div className="flex items-center justify-between gap-3 bg-white px-4 py-3">
-            <span className="text-sm text-muted">Vista previa</span>
-            <span className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white" style={{ backgroundColor: form.primaryColor }}>Ver mi orden</span>
-          </div>
-        </div>
-      </SettingsCard>
-
-      <SettingsCard
-        title="Modo mantenimiento"
-        description="Los visitantes ven un aviso en lugar de la tienda. Los administradores con sesión iniciada entran normal."
-        action={form.maintenanceMode ? <span className={adminBadge('warning')}>Activo</span> : null}
-      >
-        <div className="space-y-5">
-          <SwitchRow label="Poner la tienda en mantenimiento" checked={form.maintenanceMode} onChange={(v) => set('maintenanceMode', v)} />
-          {form.maintenanceMode && (
-            <p className={`${adminNotice('warning')} flex items-start gap-2`}>
-              <IconoAdvertencia className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-              Al guardar, la tienda se cierra en unos 15 segundos para todos los clientes.
-            </p>
-          )}
-          <TextAreaField label="Mensaje para los visitantes" value={form.maintenanceMessage} onChange={(v) => set('maintenanceMessage', v)} error={errors.maintenanceMessage} maxLength={500} rows={2} placeholder="Estamos haciendo mejoras. Volvemos en unas horas." />
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <DateTimeField label="Empieza" value={form.maintenanceStartTime} onChange={(v) => set('maintenanceStartTime', v)} error={errors.maintenanceStartTime} hint="Vacío: en cuanto se guarde" />
-            <DateTimeField label="Termina" value={form.maintenanceEndTime} onChange={(v) => set('maintenanceEndTime', v)} error={errors.maintenanceEndTime} hint="Vacío: hasta que lo apagues" />
-          </div>
-          <TextAreaField
-            label="IPs que pueden entrar"
-            value={form.maintenanceAllowedIPs}
-            onChange={(v) => set('maintenanceAllowedIPs', v)}
-            error={errors.maintenanceAllowedIPs}
-            rows={2}
-            placeholder="190.202.10.4, 200.44.32.12"
-            hint="Separadas por coma. Útil para revisar la tienda desde la oficina sin iniciar sesión."
-          />
-        </div>
-      </SettingsCard>
-
-      <SettingsCard
-        title="Equipo"
-        description="Quién entra al panel, con qué rol y con la verificación en dos pasos."
-        action={<Link href="/admin/equipo" className="text-sm font-semibold text-brand-600 hover:underline">Abrir Equipo</Link>}
-      >
-        <p className="text-sm text-muted">Invita a un administrador, cambia su rol, quítale el acceso o reinicia sus dos pasos desde Equipo.</p>
-      </SettingsCard>
     </>
   );
 }

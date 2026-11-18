@@ -12,6 +12,8 @@ import {
   adminSpinner, adminSuccessButton, type AdminTone,
 } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import { useSession } from 'next-auth/react';
+import { hasPermission } from '@/lib/auth-helpers';
 import ModalDestinatarios from '../campanas/_components/ModalDestinatarios';
 import { clientes, type Audiencia } from '../campanas/_components/campana';
 
@@ -76,6 +78,11 @@ function Lista({ datos, recargar }: {
   datos: { campanas: Resumen[]; destinatarios: number; audiencia?: Audiencia; marketingActivo: boolean; limiteDiario: number } | null;
   recargar: () => void;
 }) {
+  // C-294: el interruptor de los correos de marketing vive aquí (antes en Ajustes → Correo). Lo cambia el dueño
+  const { data: session } = useSession();
+  const esDueno = hasPermission(session, 'MANAGE_SETTINGS');
+  const [cambiandoMarketing, setCambiandoMarketing] = useState(false);
+  const cargar = recargar;
   const { confirm } = useConfirm();
   const [ocupada, setOcupada] = useState<string | null>(null);
   const [verDestinatarios, setVerDestinatarios] = useState(false);
@@ -165,13 +172,42 @@ function Lista({ datos, recargar }: {
             <p className="text-xs text-muted">Correos de marketing</p>
             <p className={`text-lg font-bold ${datos.marketingActivo ? 'text-success-strong' : 'text-ink'}`}>{datos.marketingActivo ? 'Activados' : 'Desactivados'}</p>
           </div>
-          <Link href="/admin/settings#correo" className="text-xs font-semibold text-brand-600 hover:underline">Configurar</Link>
+          {esDueno ? (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={datos.marketingActivo}
+              aria-label="Correos de marketing"
+              disabled={cambiandoMarketing}
+              onClick={async () => {
+                setCambiandoMarketing(true);
+                try {
+                  const r = await fetch('/api/admin/email/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ marketingEnabled: !datos.marketingActivo }) });
+                  if (r.ok) {
+                    toast.success(datos.marketingActivo ? 'Correos de marketing apagados' : 'Correos de marketing encendidos');
+                    await cargar();
+                  } else {
+                    toast.error((await r.json().catch(() => ({}))).error || 'No se pudo cambiar');
+                  }
+                } catch {
+                  toast.error('Sin conexión. Intenta de nuevo.');
+                } finally {
+                  setCambiandoMarketing(false);
+                }
+              }}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-60 ${datos.marketingActivo ? 'bg-brand-500' : 'bg-subtle'}`}
+            >
+              <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${datos.marketingActivo ? 'translate-x-5.5' : 'translate-x-0.5'}`} />
+            </button>
+          ) : (
+            <span className="text-xs text-muted">Lo cambia el dueño</span>
+          )}
         </div>
       </div>
 
       {!datos.marketingActivo && (
         <p className={adminNotice('warning')}>
-          Puedes preparar campañas y enviar pruebas, pero para enviarlas a los clientes activa <strong>Correos de marketing</strong> en Ajustes → Correo.
+          Puedes preparar campañas y enviar pruebas, pero para enviarlas a los clientes hay que encender <strong>Correos de marketing</strong>, aquí arriba{esDueno ? '' : ' (lo hace el dueño)'}.
         </p>
       )}
       {datos.destinatarios === 0 && (

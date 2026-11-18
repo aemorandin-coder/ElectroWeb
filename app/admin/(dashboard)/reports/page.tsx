@@ -94,7 +94,7 @@ const FILTROS_BITACORA = [
     { value: 'accesos', label: 'Inicios de sesión' },
     { value: 'precios', label: 'Precios' },
     { value: 'aprobaciones', label: 'Aprobaciones' },
-    { value: 'configuracion', label: 'Configuración' },
+    { value: 'configuracion', label: 'Ajustes' },
 ];
 const ESTADO_SOLICITUD: Record<string, { label: string; color: string }> = {
     PENDING: { label: 'Pendientes', color: 'var(--color-warning)' },

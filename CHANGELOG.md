@@ -10,6 +10,26 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.110] - 2026-11-18
+Ajustes ordenado, segunda parte (C-294), la última fase del plan de Ajustes. Sin cambio de base, sin variables y sin cron.
+### Ajustes 1.8.0 (C-294)
+- **Avisos:**
+  - **Qué avisar:** los correos de alerta y por qué canal llega cada aviso (el panel, el correo o Telegram), juntos. Antes estaban en dos pantallas.
+  - **Telegram:** el bot de los avisos y lo que sale de ElectroStudio.
+- **La tienda en línea:** el mantenimiento en su sección. Portada y "Google y redes" son enlaces a Marketing.
+- **Se quitó (D3):**
+  - los colores de los correos, que ningún correo usaba;
+  - las palabras clave de las páginas;
+  - la tarjeta que repetía el enlace a Equipo.
+  - Los datos quedan en la base.
+- **Arreglo:** cambiar un solo dato del servidor de correo ya no lo deja "sin configurar".
+### Marketing 1.27.0 (C-294)
+- **Portada** y **Google y redes**, antes solo para el dueño en Configuración: también los cambian los administradores con permiso de contenido, con su barra de guardado, y suben las imágenes para compartir.
+- **El interruptor de los correos de marketing** está en Campañas, junto a su estado (lo cambia el dueño).
+### Marco del panel 1.20.0 (C-294)
+- Notificaciones queda con la bandeja y el enlace "Qué avisar y por dónde". Las direcciones viejas (`#avisos`, `#telegram`) llevan a Ajustes.
+- El módulo "Configuración" se llama "Ajustes" en la barra de arriba, en Versiones y en la bitácora.
+
 ## [1.0.0-rc.109] - 2026-11-18
 Ajustes ordenado, primera parte (C-293, la fase 4 del plan de Ajustes). El equipo, 18/11: "inputs anchísimos, muchos textos, semánticas ilógicas, ajustes repetidos". Sin cambio de base, sin variables y sin cron.
 ### Configuración 1.7.0 (C-293)

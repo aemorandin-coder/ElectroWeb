@@ -148,7 +148,7 @@
     8,
     360,
     374,
-    506
+    210
    ]
   },
   "puntos": {
@@ -164,6 +164,9 @@
     189,
     16
    ]
+  },
+  "recortes": {
+   "boton": "hasta la nota: sin el Chispa del pie del correo"
   }
  },
  "ficha": {

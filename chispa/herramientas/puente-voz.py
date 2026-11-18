@@ -26,6 +26,8 @@ if len(sys.argv) > 2:
     subprocess.run(['ffmpeg', '-y', '-v', 'error', '-f', 's16le', '-ar', str(SR), '-ac', '1', '-i', '-', '-c:a', 'libmp3lame', '-b:a', '128k', f'assets/voz/{NOMBRE}.mp3'], input=a.tobytes(), check=True)
     # cómo se escribe en pantalla
     VER = {'Electroshop?': ['Electro', 'Shop?'], 'Todo': ['¡Todo'], 'nosotros.': ['nosotros!'], 'y,': ['y'], 'software,': ['software:']}
+    if NOMBRE == 'chispa-sorteo-amigos-compras':
+        VER = {'electroshopv.com/sorteo.': ['electroshopve', 'punto', 'com,', 'barra', 'sorteo.'], '20': ['veinte']}
     nuevo = []
     for q in pal:
         partes = VER.get(q['w'], [q['w']])

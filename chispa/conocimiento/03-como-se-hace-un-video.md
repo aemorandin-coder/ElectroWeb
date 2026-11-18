@@ -27,6 +27,17 @@ window.settle = async () => {};     // opcional: si seek() cambia imágenes, esp
 - Se puede animar con GSAP (`../assets/gsap.min.js`, con `tl.seek(t)` en pausa) o a mano con funciones de `t` (como `chispa-entrada.src.html`). Para Chispa, a mano.
 - Los ids no se repiten (una vez un `#l2` repetido escondió una tarjeta).
 
+## Videos con capturas de la tienda (C-300)
+Antes de capturar o armar un reel con el teléfono y la web, la skill **`.claude/skills/videos-con-capturas`**. Cubre:
+- la página entera, lo fijo aparte y las tarjetas a 4x;
+- la cámara a 1x o a 1,6-2,2x;
+- el spotlight;
+- los toques;
+- la zona segura;
+- el ritmo.
+
+Las herramientas están en `herramientas/tienda/` (sembrar y capturar) y en `herramientas/evaluar.mjs`, para revisar la línea de tiempo.
+
 ## Sin Chrome: grabar con Firefox (C-300)
 En una PC sin Chrome ni Chromium, `herramientas/render-firefox.mjs` hace lo mismo que `render.mjs`, con los mismos argumentos. Maneja Firefox sin ventana por WebDriver BiDi, sin Playwright, y necesita Node 22 o más:
 ```bash

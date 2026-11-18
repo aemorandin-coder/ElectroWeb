@@ -2,46 +2,59 @@
 <html lang="es"><head><meta charset="utf-8"><title>Más boletos para la PS4 (C-300)</title>
 <style>
 /*BASE*/
-/* ---------- Propio de este reel (guiones/sorteo-amigos-y-compras.md) ----------
-   Dos momentos: Chispa grande cuando habla solo (el gancho, el giro a las compras) y el teléfono grande con las capturas
-   reales, con Chispa chico en la esquina. Fondo oscuro para el problema (los amigos sin activar), azul para las compras. */
+/* ---------- Propio de este reel (guiones/sorteo-amigos-y-compras.md; técnicas en la skill videos-con-capturas) ----------
+   Una cámara sobre el teléfono: 1x o un acercamiento claro (1,6 a 2,2x), nunca a medias, y siempre vuelve a 1x.
+   La página real se desplaza dentro del teléfono y frena sobre lo importante; ahí, el spotlight oscurece y desatura lo
+   demás y la tarjeta (recortada a 4x) se levanta nítida con su sombra. Chispa siempre apoyado en el borde de abajo. */
 #stage { background: #151618; }
-#ph { position: absolute; left: 150px; top: 92px; width: 302px; height: 654px; z-index: 10; }
-#ph .fr { position: absolute; inset: 0; border-radius: 46px; background: #0d0e10; padding: 8px;
+#cam { position: absolute; left: 0; top: 0; width: 540px; height: 960px; transform-origin: 0 0; z-index: 10; }
+#ph { position: absolute; left: 130px; top: 165px; width: 280px; height: 606px; }
+#ph .fr { position: absolute; inset: 0; border-radius: 44px; background: #0d0e10; padding: 8px;
   box-shadow: 0 0 0 2px #2c2f34, 0 0 0 3px #0a0a0b, 0 34px 70px rgba(0,0,0,.55), 0 10px 25px rgba(0,0,0,.35); }
-#ph .sc { position: relative; width: 100%; height: 100%; border-radius: 38px; overflow: hidden; background: #fff; }
-#ph .st { position: relative; height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 2px 22px 0 28px;
-  font: 600 12px/1 Inter; color: #111; background: #fff; z-index: 3; }
-#ph .isl { position: absolute; left: 50%; top: 7px; width: 78px; height: 21px; margin-left: -39px; border-radius: 12px; background: #000; z-index: 4; }
-#ph .vi { position: absolute; left: 0; top: 30px; width: 286px; height: 608px; overflow: hidden; }
-#zoom { position: absolute; left: 0; top: 0; width: 286px; height: 619px; }
-.shot { position: absolute; left: 0; top: 0; width: 286px; opacity: 0; }
-.ring { position: absolute; border: 3px solid #2a63cd; border-radius: 10px; box-shadow: 0 0 0 3px #fff, 0 0 18px rgba(42,99,205,.55); opacity: 0; z-index: 5; }
-#cap2 { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; top: 30px; z-index: 30;
-  display: flex; align-items: center; gap: 9px; padding: 6px 16px 6px 6px; border-radius: 999px;
-  background: linear-gradient(180deg, #fff 0%, #e9ebee 100%); box-shadow: 0 10px 30px rgba(0,0,0,.35);
-  font: 700 16px/1.2 Poppins, sans-serif; color: #15171a; white-space: nowrap; }
-#cap2 .av { width: 32px; height: 32px; border-radius: 50%; background: #2a63cd; color: #fff; display: flex; align-items: center; justify-content: center; }
-#cap2 b { color: #1e4ba3; }
-.st2 { position: absolute; z-index: 26; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px; border-radius: 12px;
-  font: 800 18px/1.15 Poppins, sans-serif; box-shadow: 0 14px 30px rgba(0,0,0,.35); opacity: 0; }
-.st2.dark { background: #16181b; color: #fff; border: 1px solid rgba(255,255,255,.1); }
+#ph .sc { position: relative; width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: #fff; }
+#ph .st { position: absolute; left: 0; right: 0; top: 0; height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 2px 22px 0 26px;
+  font: 600 11.5px/1 Inter; color: #111; background: #fff; z-index: 6; }
+#ph .isl { position: absolute; left: 50%; top: 6px; width: 74px; height: 20px; margin-left: -37px; border-radius: 12px; background: #000; z-index: 7; }
+#vista { position: absolute; left: 0; top: 26px; width: 264px; height: 564px; overflow: hidden; background: #f8f9fa; }
+.pg { position: absolute; inset: 0; opacity: 0; }
+.pg .scroller { position: absolute; left: 0; top: 0; width: 264px; will-change: transform; }
+.pg .scroller img { display: block; width: 264px; }
+.pg .fijo { position: absolute; display: block; }
+.mailbar { position: absolute; left: 0; right: 0; top: 0; height: 54px; background: #fff; border-bottom: 1px solid #e9ecef; z-index: 3; display: flex; flex-direction: column; justify-content: center; padding: 0 12px; }
+.mailbar b { font: 600 12.5px/1.25 Inter; color: #1f1f1f; } .mailbar span { font: 400 10px Inter; color: #6a6c6b; margin-top: 2px; }
+#dim { position: absolute; inset: 0; z-index: 5; opacity: 0; background: rgba(8, 12, 24, .38); backdrop-filter: brightness(.7) saturate(.3) blur(1.6px); }
+.lift { position: absolute; display: block; border-radius: 11px; opacity: 0; z-index: 20; transform-origin: 50% 50%; }
+.ring { position: absolute; border: 2.5px solid #2a63cd; border-radius: 9px; box-shadow: 0 0 0 2.5px #fff, 0 0 16px rgba(42,99,205,.6); opacity: 0; z-index: 22; }
+.chip { position: absolute; z-index: 23; transform-origin: 50% 100%; opacity: 0; white-space: nowrap; padding: 3px 9px; border-radius: 999px;
+  background: #2a63cd; color: #fff; font: 800 13px/1.2 Poppins; border: 2px solid #fff; box-shadow: 0 6px 14px rgba(0,0,0,.3); }
+.tap { position: absolute; z-index: 24; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; opacity: 0;
+  background: rgba(255,255,255,.92); border: 2px solid rgba(17,19,23,.25); box-shadow: 0 6px 16px rgba(0,0,0,.35); }
+.rip { position: absolute; z-index: 23; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; border: 3px solid #fff; opacity: 0; }
+.brillo { position: absolute; z-index: 21; opacity: 0; overflow: hidden; border-radius: 11px; pointer-events: none; }
+.brillo i { position: absolute; top: -20%; bottom: -20%; width: 40%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.75), transparent); }
+
+.st2 { position: absolute; z-index: 30; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 14px;
+  font: 800 25px/1.12 Poppins, sans-serif; box-shadow: 0 14px 30px rgba(0,0,0,.35); opacity: 0; transform-origin: 50% 50%; }
+.st2.dark { background: #16181b; color: #fff; border: 1px solid rgba(255,255,255,.12); }
 .st2.light { background: #fff; color: #15171a; }
 .st2.blue { background: #2a63cd; color: #fff; border: 2px solid #fff; }
 .st2.ok { background: #047857; color: #fff; border: 2px solid #fff; }
-.st2 small { display: block; font: 600 12.5px Inter; opacity: .85; margin-top: 2px; }
-#ojo { left: 60px; top: 150px; font-size: 64px; padding: 10px 26px; border-radius: 18px; }
-#comprar { left: 92px; top: 170px; font-size: 54px; padding: 12px 26px; border-radius: 18px; }
+.st2 small { display: block; font: 600 13px Inter; opacity: .9; margin-top: 2px; }
+.arriba { left: 0; right: 0; margin: 0 auto; width: max-content; top: 112px; }
+#ojo { left: 54px; top: 210px; font-size: 70px; padding: 10px 28px; border-radius: 20px; transform: rotate(-4deg); }
+#comprar { left: 0; right: 0; margin: 0 auto; width: max-content; top: 190px; font-size: 56px; padding: 12px 28px; border-radius: 20px; }
 #disc, #chispa { position: absolute; left: 0; top: 0; width: 400px; height: 420px; transform-origin: 0 0; }
-#chispa { z-index: 20; } #disc { z-index: 19; }
+#chispa { z-index: 40; } #disc { z-index: 39; }
 #disc svg, #chispa svg { width: 400px; height: 420px; display: block; }
-#sub { position: absolute; left: 0; right: 0; display: flex; justify-content: center; z-index: 40; }
-#pill { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; max-width: 330px; padding: 6px 10px; border-radius: 8px; background: #111317; color: #fff;
-  font: 700 17px Poppins; visibility: hidden; box-shadow: 0 8px 20px rgba(0,0,0,.35); }
-#pill span { padding: 1px 5px; border-radius: 5px; }
+#sub { position: absolute; left: 0; right: 0; display: flex; justify-content: center; z-index: 50; }
+#pill { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; max-width: 420px; padding: 7px 12px; border-radius: 10px; background: #111317; color: #fff;
+  font: 700 22px/1.2 Poppins; visibility: hidden; box-shadow: 0 8px 20px rgba(0,0,0,.35); }
+#pill span { padding: 1px 6px; border-radius: 6px; }
 #pill span.on { background: #2a63cd; }
 .azul #pill span.on { background: #ffd54a; color: #111317; }
-#legal { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font: 500 9px Inter; color: rgba(255,255,255,.55); z-index: 50; }
+#confeti { position: absolute; inset: 0; z-index: 45; pointer-events: none; }
+#confeti i { position: absolute; display: block; width: 9px; height: 14px; border-radius: 2px; opacity: 0; }
+#legal { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font: 500 9px Inter; color: rgba(255,255,255,.55); z-index: 60; }
 </style></head>
 <body>
 <div id="stage">
@@ -49,34 +62,29 @@
   <div id="bgBlue"><div class="panel pA"></div><div class="panel pB"></div><div class="panel pC"></div><div class="glow"></div></div>
   <div class="noise"></div>
 
-  <div id="cap2"><span class="av"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v4a2 2 0 0 0 0 4v4H3v-4a2 2 0 0 0 0-4z"/><path d="M14 7v12" stroke-dasharray="2 2.5"/></svg></span><span id="capTx"></span></div>
-
-  <div id="ph"><div class="fr"><div class="sc">
-    <div class="st"><span>9:41</span><span style="display:flex;gap:4px;align-items:center"><svg width="16" height="11" viewBox="0 0 16 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#111"/><rect x="4.3" y="5" width="3" height="6" rx="1" fill="#111"/><rect x="8.6" y="2.5" width="3" height="8.5" rx="1" fill="#111"/><rect x="12.9" y="0" width="3" height="11" rx="1" fill="#111"/></svg><svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="18" height="10" rx="3" fill="none" stroke="#111" opacity=".5"/><rect x="2" y="2" width="13" height="7" rx="1.8" fill="#111"/><rect x="19.5" y="3.5" width="1.6" height="4" rx=".8" fill="#111" opacity=".5"/></svg></span></div>
-    <div class="isl"></div>
-    <div class="vi"><div id="zoom">
-      <img class="shot" id="s1" src="../assets/sorteo/c1-premio.webp" alt="">
-      <img class="shot" id="s2" src="../assets/sorteo/c2-falta-activar.webp" alt="">
-      <img class="shot" id="s3" src="../assets/sorteo/c3-correo.webp" alt="">
-      <img class="shot" id="s4" src="../assets/sorteo/c4-ya-cuenta.webp" alt="">
-      <img class="shot" id="s5" src="../assets/sorteo/c5-escalera.webp" alt="">
-      <img class="shot" id="s6" src="../assets/sorteo/c6-estrella.webp" alt="">
-      <img class="shot" id="s8" src="../assets/sorteo/c8-resenas.webp" alt="">
-      <img class="shot" id="s9" src="../assets/sorteo/c9-carrito.webp" alt="">
-      <div class="ring" id="ring"></div>
-    </div></div>
-  </div></div></div>
+  <div id="cam">
+    <div id="ph"><div class="fr"><div class="sc">
+      <div class="st"><span>9:41</span><span style="display:flex;gap:4px;align-items:center"><svg width="16" height="11" viewBox="0 0 16 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#111"/><rect x="4.3" y="5" width="3" height="6" rx="1" fill="#111"/><rect x="8.6" y="2.5" width="3" height="8.5" rx="1" fill="#111"/><rect x="12.9" y="0" width="3" height="11" rx="1" fill="#111"/></svg><svg width="22" height="11" viewBox="0 0 22 11"><rect x=".5" y=".5" width="18" height="10" rx="3" fill="none" stroke="#111" opacity=".5"/><rect x="2" y="2" width="13" height="7" rx="1.8" fill="#111"/><rect x="19.5" y="3.5" width="1.6" height="4" rx=".8" fill="#111" opacity=".5"/></svg></span></div>
+      <div class="isl"></div>
+      <div id="vista"><div id="dim"></div></div>
+    </div></div></div>
+    <div id="capa"></div>
+  </div>
 
   <div class="st2 dark" id="ojo">¡OJO!</div>
-  <div class="st2 dark" id="noCuenta" style="left:22px;top:430px;transform:rotate(-3deg)">No cuenta<small>todavía</small></div>
-  <div class="st2 ok" id="yaCuenta" style="left:28px;top:430px;transform:rotate(-3deg)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>¡Ya cuenta!</div>
-  <div class="st2 light" id="regla" style="left:14px;top:500px;transform:rotate(-2deg)">2 amigos = 1 boleto<small style="color:#495057">Hasta 3 boletos</small></div>
-  <div class="st2 blue" id="comprar"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>¡Comprar!</div>
-  <div class="st2 blue" id="mas10" style="left:16px;top:430px;transform:rotate(-3deg)">+10 boletos<small>por cada uno</small></div>
-  <div class="st2 light" id="mas1" style="left:22px;top:430px;transform:rotate(-3deg)">+1 boleto<small style="color:#495057">por reseña aprobada</small></div>
-  <div class="st2 light" id="web" style="left:50%;top:640px;margin-left:-150px;width:300px;justify-content:center;font-size:21px">electroshopve.com/sorteo</div>
-  <div class="st2 blue" id="fecha" style="left:20px;top:430px;transform:rotate(-3deg)">20 de diciembre<small>el resultado</small></div>
+  <div class="st2 dark arriba" id="noCuenta">Si no activa, no cuenta</div>
+  <div class="st2 light arriba" id="recordar">Recuérdaselo por WhatsApp</div>
+  <div class="st2 ok arriba" id="yaCuenta"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>¡Ya cuenta!</div>
+  <div class="st2 light arriba" id="regla">2 amigos = 1 boleto<small style="color:#495057">Hasta 3 boletos invitando</small></div>
+  <div class="st2 blue" id="comprar"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>¡Comprar!</div>
+  <div class="st2 blue arriba" id="escalera">Más compras, más boletos</div>
+  <div class="st2 blue arriba" id="estrellaT">Producto estrella: +10</div>
+  <div class="st2 light arriba" id="resenaT">Tu reseña: +1 boleto</div>
+  <div class="st2 light arriba" id="carritoT">El carrito te lo dice</div>
+  <div class="st2 light" id="web" style="left:0;right:0;margin:0 auto;width:max-content;top:170px;font-size:25px;z-index:55">electroshopve.com/sorteo</div>
+  <div class="st2 blue arriba" id="fecha">Resultado: 20 de diciembre</div>
 
+  <div id="confeti"></div>
   <div id="sub"><div id="pill"></div></div>
   <div id="disc"><svg viewBox="0 0 400 420"><circle cx="200" cy="232" r="150" fill="#2a63cd"/><circle cx="200" cy="232" r="166" fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" opacity=".5"/></svg></div>
   <div id="chispa"></div>
@@ -85,27 +93,159 @@
 <script src="../mascota/chispa.js"></script>
 <script>
 const VOZ = /*VOZ:chispa-sorteo-amigos-compras*/;
-const MARCAS = /*JSON:sorteo/marcas.json*/;
+const LAYOUT = /*JSON:sorteo/layout.json*/;
 const $ = (s) => document.querySelector(s);
 const norm = (w) => w.toLowerCase().replace(/[^a-z0-9áéíóúñü]/g, '');
-// D(palabra, desde): cuándo empieza la primera vez que se dice esa palabra después de `desde` (todo tiempo se ata a una palabra)
+// D(palabra, desde): cuándo empieza la primera vez que se dice esa palabra después de `desde`. Todo se ata a una palabra.
 const D = (w, desde = 0) => { const p = VOZ.palabras.find((q) => norm(q.w) === norm(w) && q.t0 >= desde - .001); if (!p) throw new Error('falta ' + w); return p.t0; };
 const FIN = VOZ.palabras[VOZ.palabras.length - 1].t1;
-window.DURATION = Math.ceil((FIN + .9) * 10) / 10;
+window.DURATION = Math.ceil((FIN + 1.4) * 10) / 10;
 
-// Cómo se escribe en pantalla: "electroshopve punto com, barra sorteo" es electroshopve.com/sorteo
-const VER = VOZ.palabras.map((p) => ({ ...p }));
-VER.forEach((p, i) => { if (norm(p.w) === 'electroshopve') { p.w = 'electroshopve.com/sorteo.'; for (let k = 1; k <= 4 && VER[i + k]; k++) VER[i + k].oculta = true; } });
+// ---------- Curvas (autozoom-demo-skill: la cámara sin resorte; llegadas rápidas que frenan) ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const bez = (x1, y1, x2, y2) => (t) => { // cubic-bezier como en CSS, resuelto por Newton
+  t = clamp(t); let u = t;
+  for (let i = 0; i < 8; i++) { const a = 3 * x1 * u * (1 - u) ** 2 + 3 * x2 * u * u * (1 - u) + u ** 3 - t, d = 3 * x1 * (1 - u) ** 2 + 6 * (x2 - x1) * u * (1 - u) + 3 * (1 - x2) * u * u; if (Math.abs(d) < 1e-6) break; u = clamp(u - a / d); }
+  return 3 * y1 * u * (1 - u) ** 2 + 3 * y2 * u * u * (1 - u) + u ** 3;
+};
+const SUAVE = bez(.45, 0, .15, 1), FRENO = bez(.23, 1, .32, 1), SALE = bez(.55, 0, 1, .45);
+const pop = (x, s = 1.7) => { x = clamp(x); return 1 + (s + 1) * (x - 1) ** 3 + s * (x - 1) ** 2; };
+const lerp = (a, b, k) => a + (b - a) * k;
+// Un valor por claves: cada clave {t, dur, v} pasa del valor anterior al suyo en `dur` segundos con su curva
+function porClaves(claves, t, ini, curva = SUAVE) {
+  let v = ini;
+  for (const c of claves) {
+    if (t < c.t) break;
+    const k = (c.curva || curva)(clamp((t - c.t) / (c.dur || .001)));
+    v = Array.isArray(v) ? v.map((x, i) => lerp(x, c.v[i], k)) : lerp(v, c.v, k);
+    if (t < c.t + (c.dur || 0)) return v;
+    v = c.v;
+  }
+  return v;
+}
 
-// Los momentos (guiones/sorteo-amigos-y-compras.md)
+// ---------- Los momentos ----------
 const T = {};
 T.ojo = D('ojo'); T.sorteo = D('sorteo'); T.ti = D('ti'); T.tu = D('tu', T.ti); T.activar = D('activar', T.tu); T.mandale = D('mándale');
-T.abre = D('abre'); T.activar2 = D('activar', T.abre); T.listo = D('listo'); T.cada = D('cada', T.listo); T.pero = D('pero'); T.comprar = D('comprar');
-T.desde = D('desde', T.comprar); T.cinco = D('cinco', T.desde); T.cincuenta = D('cincuenta'); T.cien = D('cien'); T.semana = D('semana');
-T.diez = D('diez', T.semana); T.llego = D('llegó'); T.aprobamos = D('aprobamos'); T.carrito = D('carrito'); T.todo = D('todo', T.carrito);
-T.bases = D('bases'); T.electro = D('electroshopve'); T.veinte = D('veinte'); T.puede = D('puede');
+T.whatsapp = D('whatsapp'); T.abre = D('abre'); T.activar2 = D('activar', T.abre); T.listo = D('listo'); T.cada = D('cada', T.listo);
+T.pero = D('pero'); T.comprar = D('comprar'); T.desde = D('desde', T.comprar); T.cinco = D('cinco', T.desde); T.cincuenta = D('cincuenta');
+T.cien = D('cien'); T.semana = D('semana'); T.diez = D('diez', T.semana); T.llego = D('llegó'); T.aprobamos = D('aprobamos');
+T.carrito = D('carrito'); T.todo = D('todo', T.carrito); T.bases = D('bases'); T.electro = D('electroshopve'); T.veinte = D('veinte'); T.puede = D('puede');
 
-// Subtítulos: ventanas de hasta 4 palabras, cortadas en la puntuación
+// ---------- El teléfono y las páginas ----------
+const K = 264 / 390, VISTA = 564 / K;              // px de la página → px de la pantalla; alto visible en px de página
+const PH = { x: 138, y: 173 + 26 };                // dónde empieza la vista de la página (dentro de #cam)
+const TOPE = { correo: 54 / K };                    // la barra del correo empuja la página
+const vista = $('#vista');
+for (const [nombre, L] of Object.entries(LAYOUT)) {
+  const pg = document.createElement('div'); pg.className = 'pg'; pg.id = 'pg-' + nombre;
+  pg.innerHTML = `<div class="scroller"><img src="../assets/sorteo/${nombre}-pagina.webp" alt=""></div>` + L.fijos.map((f, i) => {
+    const [x, y, w, h] = f.caja, arriba = y < 300, top = arriba ? y : VISTA - (844 - y);
+    return `<img class="fijo" src="../assets/sorteo/${nombre}-fijo${i}.webp" alt="" style="left:${(x * K).toFixed(2)}px;top:${(top * K).toFixed(2)}px;width:${(w * K).toFixed(2)}px;height:${(h * K).toFixed(2)}px;border-radius:${arriba ? 0 : (h * K) / 2.6}px">`;
+  }).join('') + (nombre === 'correo' ? '<div class="mailbar"><b>Activa tu cuenta de Electro Shop</b><span>Electro Shop · para mí · hace 1 min</span></div>' : '');
+  vista.insertBefore(pg, $('#dim'));
+}
+// cuánto bajar para que una tarjeta quede en el medio de lo que se ve (debajo del encabezado)
+const centrar = (pag, card) => { const L = LAYOUT[pag], [, y, , h] = L.tarjetas[card], arriba = L.fijos.some((f) => f.caja[1] < 300) ? 105 : 0;
+  return clamp(y + h / 2 - (arriba + (VISTA - arriba) / 2) + 10, 0, L.pageH - VISTA); };
+// de px de la página (con su desplazamiento) a px de #cam
+const enCam = (pag, [x, y, w, h], s) => { const top = (TOPE[pag] || 0) - s; return [PH.x + x * K, PH.y + (y + top) * K, w * K, h * K]; };
+// el acercamiento para una tarjeta: que llene sin salirse; si no llega a 1,6x, se queda en 1x (nunca a medias)
+const zoomPara = (w, h) => { const z = Math.min(420 / w, 520 / h, 2.2); return z >= 1.52 ? Math.max(1.6, z) : 1; }; // w y h ya en px de pantalla
+
+// Qué página se ve y su desplazamiento
+const PAGINAS = [
+  { t: -1, p: 'sorteo' }, { t: T.tu - .15, p: 'conCuenta' }, { t: T.abre - .05, p: 'correo', desliza: true }, { t: T.listo - .12, p: 'activado' },
+  { t: T.desde - .3, p: 'sorteo' }, { t: T.carrito - .2, p: 'carrito' }, { t: T.todo - .1, p: 'sorteo' },
+];
+const S = { sorteo: [], conCuenta: [], correo: [], activado: [], carrito: [], ficha: [] };
+const sc = (pag, t, v, dur = .85) => S[pag].push({ t, v, dur, curva: FRENO });
+const scrollEn = (pag, t) => porClaves(S[pag], t, 0);
+
+// ---------- El guion de la cámara (claves {t, dur, z, f}: f es el punto de #cam que queda en el centro) ----------
+const CENTRO = [270, 450], CAM = [];
+const cam = (t, z, f, dur = .75) => CAM.push({ t, dur, v: [z, f[0], f[1]] });
+const LIFTS = [], RINGS = [], CHIPS = [], TAPS = [], BRILLOS = [];
+// acercarse a una tarjeta: frenar la página encima, acercar la cámara, levantar la tarjeta, y al final volver a 1x
+function escena(pag, card, tLlega, tSale, { bajar = true, img = `${pag}-${card}` } = {}) {
+  const s = centrar(pag, card);
+  if (bajar) sc(pag, tLlega - .95, s, .85);
+  const r = enCam(pag, LAYOUT[pag].tarjetas[card], s), z = zoomPara(r[2], r[3]);
+  if (z > 1) cam(tLlega - .1, z, [r[0] + r[2] / 2, r[1] + r[3] / 2]);
+  LIFTS.push({ t0: tLlega + .25, t1: tSale, pag, card, img, s });
+  if (z > 1) cam(tSale, 1, CENTRO, .6);
+  return s;
+}
+const anillo = (t0, t1, pag, punto, s, pad = 4) => { const [x, y, w, h] = LAYOUT[pag].puntos[punto]; RINGS.push({ t0, t1, r: enCam(pag, [x - pad, y - pad, w + 2 * pad, h + 2 * pad], s) }); };
+const ficha = (t0, t1, pag, punto, s, texto) => { const [x, y, w] = LAYOUT[pag].puntos[punto]; CHIPS.push({ t0, t1, p: enCam(pag, [x + w / 2, y - 6, 0, 0], s), texto }); };
+const toque = (t, pag, punto, s) => { const [x, y, w, h] = LAYOUT[pag].puntos[punto]; TAPS.push({ t, p: enCam(pag, [x + w * .35, y + h / 2, 0, 0], s) }); };
+
+cam(-1, 1, CENTRO, .001);
+// los amigos: "Falta activar"
+let s1 = escena('conCuenta', 'amigos', T.activar - .2, T.abre - .35);
+anillo(T.activar + .15, T.mandale - .1, 'conCuenta', 'faltaActivar', s1);
+toque(T.whatsapp, 'conCuenta', 'recordar', s1);
+// el correo: "Activar mi cuenta"
+let s2 = escena('correo', 'boton', T.activar2 - .25, T.listo - .3);
+toque(T.activar2 + .2, 'correo', 'activar', s2);
+// ya cuenta: la tarjeta con el boleto que se ganó (a 1x: es alta)
+let s3 = escena('activado', 'amigos', T.listo - .05, T.pero - .25);
+// la tarjeta es alta: la cámara va primero a los dos amigos con "Cuenta" y se desliza al boleto ganado en "te dan un
+// boleto" (paneo entre dos zonas, como Vorec), con un brillo; las zonas, medidas en la tarjeta (px de la página)
+{ const A = LAYOUT.activado.tarjetas.amigos, zona = (dy, h) => enCam('activado', [A[0], A[1] + dy, A[2], h], s3);
+  const za = zona(470, 160), zb = zona(205, 195);
+  cam(T.listo + .05, 1.73, [za[0] + za[2] / 2, za[1] + za[3] / 2]);
+  cam(T.cada - .1, 1.73, [zb[0] + zb[2] / 2, zb[1] + zb[3] / 2], .7);
+  cam(T.pero - .25, 1, CENTRO, .5); }
+BRILLOS.push({ t: T.cada + .45, lift: LIFTS.length - 1 });
+// comprar: la escalera
+let s4 = escena('sorteo', 'camino1', T.desde + .15, T.semana - .3);
+ficha(T.cinco - .05, T.semana - .35, 'sorteo', 'b2', s4, '+2'); ficha(T.cincuenta - .05, T.semana - .35, 'sorteo', 'b5', s4, '+5'); ficha(T.cien - .05, T.semana - .35, 'sorteo', 'b10', s4, '+10');
+// el producto estrella
+let s5 = escena('sorteo', 'estrella', T.semana + .55, T.llego - .3);
+anillo(T.diez - .05, T.llego - .35, 'sorteo', 'mas10', s5);
+// las reseñas
+let s6 = escena('sorteo', 'camino2', T.llego + .55, T.carrito - .35);
+anillo(T.aprobamos - .05, T.carrito - .4, 'sorteo', 'resena', s6);
+// el carrito
+let s7 = escena('carrito', 'boletos', T.carrito + .35, T.todo - .3);
+anillo(D('compra', T.carrito) - .1, T.todo - .35, 'carrito', 'faltan', s7);
+// el cierre: vuelve arriba (el premio) y el teléfono se corre a la derecha para dejar lugar a Chispa
+sc('sorteo', T.todo - .1, 0, .9);
+cam(T.bases - .1, .82, [140, 440], .8);
+
+// ---------- Chispa (3.1: poses y caras por palabra, boca por vocal, parpadeo y respiración) ----------
+const AL_TEL = [.75, -.5];
+const linea = chispa.linea([
+  { t: 0, pose: 'señala', expresion: 'serio' },
+  { t: T.sorteo - .1, pose: 'habla', expresion: 'serio', mirar: AL_TEL },
+  { t: T.tu - .1, pose: 'explica', expresion: 'pensativo', mirar: AL_TEL },
+  { t: T.mandale - .1, pose: 'telefono', expresion: 'alegre', mirar: 'telefono' },
+  { t: T.listo - .15, pose: 'ok', expresion: 'alegre', mirar: [0, 0] },
+  { t: T.cada - .1, pose: 'pulgar', expresion: 'alegre', mirar: [0, 0] },
+  { t: T.pero - .1, pose: 'hombros', expresion: 'sorpresa', mirar: [0, 0] },
+  { t: T.comprar - .1, pose: 'celebra', expresion: 'risa' },
+  { t: T.desde - .1, pose: 'explica', expresion: 'alegre', mirar: AL_TEL },
+  { t: T.semana - .1, pose: 'presenta', expresion: 'orgulloso', mirar: AL_TEL },
+  { t: T.llego - .1, pose: 'ok', expresion: 'alegre', mirar: [0, 0] },
+  { t: T.carrito - .1, pose: 'señala', expresion: 'alegre', mirar: AL_TEL },
+  { t: T.bases - .1, pose: 'brazos', expresion: 'orgulloso', mirar: [0, 0] },
+  { t: T.puede - .1, pose: 'saluda', expresion: 'alegre' },
+]);
+const labios = chispa.labios(VOZ);
+// Dónde va: grande (habla solo), chico (con el teléfono) o el cierre. Siempre apoyado en el borde de abajo: no se corta.
+const GRANDE = [70, 550, 1], CHICO = [-6, 760, .5], CIERRE = [-60, 572, .94];
+const CHISPA = [
+  { t: -1, v: GRANDE, dur: .001 }, { t: T.sorteo - .15, v: CHICO, dur: .55 }, { t: T.pero - .15, v: GRANDE, dur: .55 },
+  { t: T.desde - .3, v: CHICO, dur: .5 }, { t: T.bases - .1, v: CIERRE, dur: .7 },
+];
+// el teléfono: entra desde abajo, sale en el giro a las compras y vuelve
+const TEL = [{ t: -1, v: 820, dur: .001 }, { t: T.sorteo - .15, v: 0, dur: .6, curva: FRENO }, { t: T.pero - .1, v: 900, dur: .35, curva: SALE }, { t: T.desde - .35, v: 0, dur: .6, curva: FRENO }];
+const SUBY = [{ t: -1, v: 496, dur: .001 }, { t: T.sorteo - .15, v: 704, dur: .4 }, { t: T.pero - .15, v: 496, dur: .4 }, { t: T.desde - .3, v: 704, dur: .4 }, { t: T.bases - .1, v: 560, dur: .5 }];
+
+// ---------- Subtítulos (como se escribe: electroshopve.com/sorteo) ----------
+const VER = VOZ.palabras.map((p) => ({ ...p }));
+VER.forEach((p, i) => { if (norm(p.w) === 'electroshopve') { p.w = 'electroshopve.com/sorteo.'; for (let k = 1; k <= 4 && VER[i + k]; k++) VER[i + k].oculta = true; } });
 const vis = VER.map((p, i) => i).filter((i) => !VER[i].oculta);
 const ventanas = []; let cur = [];
 vis.forEach((i, k) => { cur.push(i); if (/[.,:?!…]$/.test(VER[i].w) || cur.length >= 4 || k === vis.length - 1) { ventanas.push(cur); cur = []; } });
@@ -117,98 +257,81 @@ function subtitulos(t) {
   $('#pill').innerHTML = v.map((i) => `<span class="${i === wi ? 'on' : ''}">${VER[i].w.replace(/[.,:…]$/, '')}</span>`).join('');
 }
 
-// Chispa 3.1: pose y cara por palabra, boca por vocal, parpadeo y respiración
-const AL_TELEFONO = [.75, -.55];
-const linea = chispa.linea([
-  { t: 0, pose: 'señala', expresion: 'serio' },
-  { t: T.sorteo - .1, pose: 'habla', expresion: 'serio', mirar: AL_TELEFONO },
-  { t: T.tu - .1, pose: 'explica', expresion: 'pensativo', mirar: AL_TELEFONO },
-  { t: T.mandale - .1, pose: 'telefono', expresion: 'alegre', mirar: 'telefono' },
-  { t: T.listo - .15, pose: 'ok', expresion: 'alegre', mirar: [0, 0] },
-  { t: T.cada - .1, pose: 'pulgar', expresion: 'alegre', mirar: [0, 0] },
-  { t: T.pero - .1, pose: 'hombros', expresion: 'sorpresa', mirar: [0, 0] },
-  { t: T.comprar - .1, pose: 'celebra', expresion: 'risa' },
-  { t: T.desde - .1, pose: 'explica', expresion: 'alegre', mirar: AL_TELEFONO },
-  { t: T.semana - .1, pose: 'presenta', expresion: 'orgulloso', mirar: AL_TELEFONO },
-  { t: T.llego - .1, pose: 'ok', expresion: 'alegre', mirar: [0, 0] },
-  { t: T.carrito - .1, pose: 'señala', expresion: 'alegre', mirar: AL_TELEFONO },
-  { t: T.bases - .1, pose: 'brazos', expresion: 'orgulloso', mirar: [0, 0] },
-  { t: T.puede - .1, pose: 'saluda', expresion: 'alegre' },
-]);
-const labios = chispa.labios(VOZ);
-const clamp = (x) => Math.min(1, Math.max(0, x));
-const ease = (x) => 1 - Math.pow(1 - clamp(x), 3);
-const back = (x) => { x = clamp(x); return 1 + 2.4 * Math.pow(x - 1, 3) + 1.4 * Math.pow(x - 1, 2); };
-const lerp = (a, b, k) => a + (b - a) * k;
+// ---------- Las piezas que se crean una vez ----------
+const capa = $('#capa');
+LIFTS.forEach((l, i) => { const im = document.createElement('img'); im.className = 'lift'; im.id = 'lift' + i; im.src = `../assets/sorteo/${l.img}.webp`; capa.appendChild(im); });
+RINGS.forEach((r, i) => { const d = document.createElement('div'); d.className = 'ring'; d.id = 'ring' + i; capa.appendChild(d); });
+CHIPS.forEach((c, i) => { const d = document.createElement('div'); d.className = 'chip'; d.id = 'chip' + i; d.textContent = c.texto; capa.appendChild(d); });
+TAPS.forEach((c, i) => { capa.insertAdjacentHTML('beforeend', `<div class="rip" id="rip${i}"></div><div class="tap" id="tap${i}"></div>`); });
+BRILLOS.forEach((b, i) => { capa.insertAdjacentHTML('beforeend', `<div class="brillo" id="brillo${i}"><i></i></div>`); });
+// confeti: tres veces en todo el video (ya cuenta, comprar y el cierre), con números fijos (siempre el mismo cuadro)
+let semilla = 7; const azar = () => ((semilla = (semilla * 16807) % 2147483647) / 2147483647);
+const COLORES = ['#2a63cd', '#1a3b7e', '#ffffff', '#aac1eb', '#ffd54a', '#4ade80'];
+const RAFAGAS = [{ t: T.listo, x: 270, y: 300 }, { t: T.comprar, x: 270, y: 240 }, { t: T.puede, x: 270, y: 260 }].map((r) => ({
+  ...r, piezas: Array.from({ length: 46 }, () => ({ vx: (azar() - .5) * 520, vy: -260 - azar() * 360, rot: azar() * 720 - 360, c: COLORES[Math.floor(azar() * COLORES.length)], w: 6 + azar() * 6 })),
+}));
+$('#confeti').innerHTML = RAFAGAS.map((r, j) => r.piezas.map((p, i) => `<i id="cf${j}_${i}" style="background:${p.c};width:${p.w.toFixed(1)}px"></i>`).join('')).join('');
 
-// Chispa grande (solo) o chico en la esquina (con el teléfono)
-const GRANDE = { x: 70, y: 520, s: 1 }, CHICO = { x: -26, y: 714, s: .52 };
-const tramosGrande = [[-1, T.sorteo - .1], [T.pero - .1, T.desde - .15]];
-function cuantoGrande(t) {
-  // 1 = grande, 0 = chico, con transición de .45 s
-  let g = 0;
-  for (const [a, b] of tramosGrande) { if (t >= a && t < b) g = Math.max(g, a < 0 ? 1 : back((t - a) / .45)); else if (t >= b && t < b + .45) g = Math.max(g, 1 - ease((t - b) / .45)); }
-  return g;
-}
-
-// Las capturas: cuál se ve, con un zoom lento hacia lo que se dice, y el aro sobre lo importante
-const K = 286 / 390; // px de la captura del teléfono (390 de ancho) a px de la pantalla
-const caja = (shot, texto, pad = 5) => { const r = MARCAS[shot][texto]; return [r[0] - pad, r[1] - pad, r[2] + 2 * pad, r[3] + 2 * pad]; };
-const PLANOS = [
-  { id: '#s1', a: -1, b: T.tu - .1, shot: 'C1-premio' },
-  { id: '#s2', a: T.tu - .1, b: T.abre - .1, shot: 'C2-falta-activar', aros: [[T.activar - .05, T.mandale - .1, caja('C2-falta-activar', 'Falta activar')], [T.mandale - .05, T.abre - .1, caja('C2-falta-activar', 'Recordarles por WhatsApp', 3)]] },
-  { id: '#s3', a: T.abre - .1, b: T.listo - .1, shot: 'C3-correo-activacion', aros: [[T.activar2 - .05, T.listo - .1, caja('C3-correo-activacion', 'Activar mi cuenta', 3)]] },
-  { id: '#s4', a: T.listo - .1, b: T.pero - .1, shot: 'C4-ya-cuenta', aros: [[T.listo, T.cada - .1, [30, 199, 318, 34]], [T.cada, T.pero - .1, caja('C4-ya-cuenta', '1 de 3 boletos')]] },
-  { id: '#s5', a: T.desde - .15, b: T.semana - .1, shot: 'C5-escalera', aros: [[T.cinco - .05, T.cincuenta - .05, [112, 196, 70, 100]], [T.cincuenta - .05, T.cien - .05, [186, 196, 70, 100]], [T.cien - .05, T.semana - .1, [261, 196, 70, 100]]] },
-  { id: '#s6', a: T.semana - .1, b: T.llego - .1, shot: 'C6-producto-estrella', aros: [[T.diez - .1, T.llego - .1, caja('C6-producto-estrella', 'boletos por cada uno', 4)]] },
-  { id: '#s8', a: T.llego - .1, b: T.carrito - .1, shot: 'C8-resenas', aros: [[T.aprobamos - .1, T.carrito - .1, caja('C8-resenas', '1 boleto por cada reseña', 4)]] },
-  { id: '#s9', a: T.carrito - .1, b: T.todo - .1, shot: 'C9b-carrito-boletos', aros: [[T.carrito, T.todo - .1, [44, 306, 292, 102]]] },
-  { id: '#s1', a: T.todo - .1, b: 999, shot: 'C1-premio', aros: [[T.veinte - .05, 999, caja('C1-premio', 'Remanufacturada', 4)]] },
-];
-const PLANO_DE = (t) => PLANOS.find((p) => t >= p.a && t < p.b);
-
-function telefono(t, g) {
-  // el teléfono entra desde abajo cuando Chispa se achica, y sale en el giro a las compras
-  const y = lerp(0, 760, g); $('#ph').style.transform = `translateY(${y.toFixed(1)}px)`; $('#ph').style.opacity = g > .98 ? 0 : 1;
-  const p = PLANO_DE(t);
-  document.querySelectorAll('.shot').forEach((im) => { im.style.opacity = 0; });
-  let ring = null;
-  if (p) {
-    // fundido corto con la anterior
-    const i = PLANOS.indexOf(p), prev = PLANOS[i - 1], k = clamp((t - p.a) / .22);
-    if (prev && k < 1 && prev.b === p.a) $(prev.id).style.opacity = 1;
-    $(p.id).style.opacity = prev && prev.b === p.a ? k : 1;
-    for (const [a, b, r] of p.aros || []) if (t >= a && t < b) ring = { a, r };
-    // zoom lento hacia el aro (o al centro de arriba si no hay)
-    const foco = ring ? [ (ring.r[0] + ring.r[2] / 2) * K, (ring.r[1] + ring.r[3] / 2) * K ] : [143, 200];
-    const z = 1 + .14 * ease((t - p.a) / 3.5);
-    $('#zoom').style.transformOrigin = `${foco[0].toFixed(1)}px ${foco[1].toFixed(1)}px`;
-    $('#zoom').style.transform = `scale(${z.toFixed(4)})`;
-  }
-  const el = $('#ring');
-  if (ring) {
-    const [x, y2, w, h] = ring.r.map((v) => v * K), k = back((t - ring.a) / .35), pulso = 1 + .03 * Math.sin((t - ring.a) * 6);
-    Object.assign(el.style, { left: x + 'px', top: y2 + 'px', width: w + 'px', height: h + 'px', opacity: clamp((t - ring.a) / .15), transform: `scale(${(k * pulso).toFixed(3)})` });
-  } else el.style.opacity = 0;
-}
-
-// Una etiqueta que aparece con rebote y se va
+// una etiqueta que aparece con rebote y se va
 const ver = (sel, t, a, b, desde = 14) => {
-  const el = $(sel), k = t < a ? 0 : t < b ? back((t - a) / .38) : 1 - ease((t - b) / .25);
-  el.style.opacity = (t < a ? 0 : t < b ? clamp((t - a) / .18) : clamp(1 - (t - b) / .25)).toFixed(3);
-  const rot = (el.style.transform.match(/rotate\([^)]*\)/) || [''])[0] || el.dataset.rot || '';
-  if (!el.dataset.rot) el.dataset.rot = rot;
-  el.style.transform = `translateY(${(desde * (1 - k)).toFixed(1)}px) scale(${(.85 + .15 * k).toFixed(3)}) ${el.dataset.rot}`;
+  const el = $(sel); if (!el.dataset.base) el.dataset.base = el.style.transform || getComputedStyle(el).transform.replace('none', '') || '';
+  const k = t < a ? 0 : t < b ? pop((t - a) / .4) : 1 - clamp((t - b) / .22);
+  el.style.opacity = (t < a ? 0 : t < b ? clamp((t - a) / .15) : clamp(1 - (t - b) / .22)).toFixed(3);
+  el.style.transform = `translateY(${(desde * (1 - Math.min(1, k))).toFixed(1)}px) scale(${(.8 + .2 * k).toFixed(3)}) ${el.dataset.base}`;
 };
 
 let ultimo = '';
 window.seek = (t) => {
-  const g = cuantoGrande(t);
-  // el fondo pasa al azul en el giro a las compras
-  const az = clamp((t - (T.pero - .1)) / .5);
-  $('#bgBlue').style.clipPath = `circle(${(az * 120).toFixed(1)}% at 50% 55%)`;
+  // el fondo pasa al azul en el giro a las compras (un iris desde el centro)
+  const az = clamp((t - (T.pero - .1)) / .45);
+  $('#bgBlue').style.clipPath = `circle(${(SUAVE(az) * 120).toFixed(1)}% at 50% 48%)`;
   document.body.classList.toggle('azul', az > .5);
-  $('#capTx').innerHTML = t < T.pero - .1 ? 'Sorteo de la PS4: <b>tus amigos</b>' : t < T.todo - .1 ? 'Sorteo de la PS4: <b>comprando</b>' : '<b>electroshopve.com</b>/sorteo';
+
+  // la cámara y el teléfono
+  const [z, fx, fy] = porClaves(CAM, t, [1, CENTRO[0], CENTRO[1]]);
+  const dy = porClaves(TEL, t, 820);
+  $('#cam').style.transform = `translate(${(CENTRO[0] - z * fx).toFixed(2)}px, ${(CENTRO[1] - z * fy + dy).toFixed(2)}px) scale(${z.toFixed(4)})`;
+
+  // la página que se ve, con su desplazamiento (un fundido corto o, para el correo, como abrir otra app)
+  let ip = 0; PAGINAS.forEach((p, i) => { if (t >= p.t) ip = i; });
+  document.querySelectorAll('.pg').forEach((pg) => { pg.style.opacity = 0; pg.style.transform = ''; });
+  const P = PAGINAS[ip], prev = PAGINAS[ip - 1], kk = clamp((t - P.t) / .25);
+  const pgEl = $('#pg-' + P.p);
+  if (prev && kk < 1) { const pv = $('#pg-' + prev.p); pv.style.opacity = 1; pv.querySelector('.scroller').style.transform = `translateY(${(-scrollEn(prev.p, t) * K).toFixed(2)}px)`; }
+  pgEl.style.opacity = P.desliza ? 1 : (prev ? SUAVE(kk) : 1);
+  if (P.desliza && kk < 1) pgEl.style.transform = `translateX(${((1 - FRENO(kk)) * 264).toFixed(1)}px)`;
+  pgEl.querySelector('.scroller').style.transform = `translateY(${((TOPE[P.p] || 0) * K - scrollEn(P.p, t) * K).toFixed(2)}px)`;
+
+  // spotlight y tarjetas levantadas
+  let luz = 0;
+  LIFTS.forEach((l, i) => {
+    const el = $('#lift' + i), on = clamp((t - l.t0) / .3) * (1 - clamp((t - l.t1) / .25));
+    el.style.opacity = on > 0 ? Math.min(1, on * 3).toFixed(3) : 0;
+    luz = Math.max(luz, on);
+    if (on <= 0) return;
+    const [x, y, w, h] = enCam(l.pag, LAYOUT[l.pag].tarjetas[l.card], l.s), k = pop((t - l.t0) / .45, 1.2), sube = Math.min(1, k);
+    Object.assign(el.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px',
+      transform: `translateY(${(-5 * sube).toFixed(2)}px) scale(${(1 + .045 * k).toFixed(4)})`,
+      boxShadow: `0 ${(4 + 14 * sube).toFixed(1)}px ${(10 + 26 * sube).toFixed(1)}px rgba(0,0,0,${(.18 + .22 * sube).toFixed(2)}), 0 0 0 1px rgba(255,255,255,.6)` });
+  });
+  $('#dim').style.opacity = SUAVE(luz).toFixed(3);
+  RINGS.forEach((r, i) => { const el = $('#ring' + i), on = t >= r.t0 && t < r.t1 + .2; el.style.opacity = on ? (clamp((t - r.t0) / .15) * (1 - clamp((t - r.t1) / .2))).toFixed(3) : 0;
+    if (on) { const k = pop((t - r.t0) / .35) + .025 * Math.sin((t - r.t0) * 6.5); Object.assign(el.style, { left: r.r[0] + 'px', top: r.r[1] + 'px', width: r.r[2] + 'px', height: r.r[3] + 'px', transform: `scale(${k.toFixed(3)})` }); } });
+  CHIPS.forEach((c, i) => { const el = $('#chip' + i), on = t >= c.t0 && t < c.t1 + .2; el.style.opacity = on ? (clamp((t - c.t0) / .12) * (1 - clamp((t - c.t1) / .2))).toFixed(3) : 0;
+    if (on) { const k = pop((t - c.t0) / .38, 2.2); Object.assign(el.style, { left: c.p[0] + 'px', top: c.p[1] + 'px', transform: `translate(-50%, -100%) scale(${k.toFixed(3)})` }); } });
+  TAPS.forEach((c, i) => {
+    const el = $('#tap' + i), rp = $('#rip' + i), a = c.t - .4, on = t >= a && t < c.t + .55;
+    el.style.opacity = on ? (clamp((t - a) / .12) * (1 - clamp((t - c.t - .35) / .2))).toFixed(3) : 0;
+    if (on) { const k = FRENO(clamp((t - a) / .38)), x = c.p[0] + 34 * (1 - k), y = c.p[1] + 52 * (1 - k), aprieta = t > c.t && t < c.t + .16 ? .82 : 1;
+      Object.assign(el.style, { left: x + 'px', top: y + 'px', transform: `scale(${aprieta})` }); }
+    const kr = clamp((t - c.t) / .5); rp.style.opacity = t >= c.t && kr < 1 ? (1 - kr).toFixed(3) : 0;
+    Object.assign(rp.style, { left: c.p[0] + 'px', top: c.p[1] + 'px', transform: `scale(${(1 + 2.4 * FRENO(kr)).toFixed(3)})` });
+  });
+  BRILLOS.forEach((b, i) => { const el = $('#brillo' + i), l = LIFTS[b.lift], kb = clamp((t - b.t) / .7);
+    el.style.opacity = t >= b.t && kb < 1 ? 1 : 0; if (t < b.t || kb >= 1) return;
+    const [x, y, w, h] = enCam(l.pag, LAYOUT[l.pag].tarjetas[l.card], l.s);
+    Object.assign(el.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
+    el.firstChild.style.left = `${(-40 + 150 * SUAVE(kb)).toFixed(1)}%`; });
 
   // Chispa
   const e = linea(t);
@@ -217,24 +340,29 @@ window.seek = (t) => {
   chispa.vida(e, t, { rms: p ? VOZ.rms[Math.floor(t * 30)] : null });
   e.fondo = false;
   const svg = chispa.rig(e); if (svg !== ultimo) { $('#chispa').innerHTML = svg; ultimo = svg; }
-  const x = lerp(CHICO.x, GRANDE.x, g), y = lerp(CHICO.y, GRANDE.y, g), s = lerp(CHICO.s, GRANDE.s, g);
-  const entra = (1 - back(t / .55)) * 180;
-  for (const id of ['#chispa', '#disc']) $(id).style.transform = `translate(${x.toFixed(1)}px, ${(y + entra).toFixed(1)}px) scale(${s.toFixed(4)})`;
+  const [cx, cy, cs] = porClaves(CHISPA, t, GRANDE);
+  for (const id of ['#chispa', '#disc']) $(id).style.transform = `translate(${cx.toFixed(1)}px, ${cy.toFixed(1)}px) scale(${cs.toFixed(4)})`;
 
-  telefono(t, g);
-  // los subtítulos: al medio con Chispa grande, abajo a la derecha con el teléfono
-  $('#sub').style.top = lerp(770, 486, g).toFixed(1) + 'px';
-  $('#sub').style.paddingLeft = lerp(170, 0, g).toFixed(1) + 'px';
+  // confeti
+  RAFAGAS.forEach((r, j) => { const dt = t - r.t; r.piezas.forEach((q, i) => { const el = $(`#cf${j}_${i}`);
+    if (dt < 0 || dt > 1.6) { el.style.opacity = 0; return; }
+    const x = r.x + q.vx * dt, y = r.y + q.vy * dt + 620 * dt * dt;
+    Object.assign(el.style, { opacity: (1 - clamp((dt - 1.1) / .5)).toFixed(3), transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${(q.rot * dt).toFixed(0)}deg)` }); }); });
 
-  ver('#ojo', t, T.ojo - .05, T.sorteo - .2, 30);
-  ver('#noCuenta', t, T.activar - .1, T.mandale - .15);
+  // etiquetas (fuera de la cámara: no se acercan y no tapan lo que se muestra)
+  ver('#ojo', t, -1, T.sorteo - .25, 30);
+  ver('#noCuenta', t, T.activar, T.mandale - .15);
+  ver('#recordar', t, T.mandale, T.abre - .2);
   ver('#yaCuenta', t, T.listo, T.cada - .15);
-  ver('#regla', t, T.cada, T.pero - .15);
-  ver('#comprar', t, T.comprar - .05, T.desde - .2, 30);
-  ver('#mas10', t, T.diez - .05, T.llego - .15);
-  ver('#mas1', t, T.aprobamos, T.carrito - .15);
+  ver('#regla', t, T.cada, T.pero - .2);
+  ver('#comprar', t, T.comprar - .05, T.desde - .25, 30);
+  ver('#escalera', t, T.cinco, T.semana - .2);
+  ver('#estrellaT', t, T.diez - .05, T.llego - .2);
+  ver('#resenaT', t, T.aprobamos, T.carrito - .2);
+  ver('#carritoT', t, T.carrito + .3, T.todo - .2);
   ver('#fecha', t, T.veinte - .05, 999);
   ver('#web', t, T.electro - .05, 999, 10);
+  $('#sub').style.top = porClaves(SUBY, t, 496).toFixed(1) + 'px';
   subtitulos(t);
 };
 window.ready = document.fonts.ready.then(() => Promise.all(Array.from(document.images).map((i) => (i.complete ? 1 : new Promise((r) => { i.onload = r; i.onerror = r; }))))).then(() => { window.seek(0); return true; });

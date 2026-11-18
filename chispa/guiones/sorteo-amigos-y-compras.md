@@ -1,8 +1,9 @@
 # Guion: "Más boletos para la PS4" (v1, 18/11, C-300)
 
+> **Versión 2 (18/11):** capturas y cámara como los videos profesionales (skill `.claude/skills/videos-con-capturas`). Las capturas se hacen con `herramientas/tienda/capturar-tienda.mjs`, sobre los datos de `herramientas/tienda/sembrar-sorteo.mjs`.
+>
 > **Estado (18/11):**
-> - Hechos: el guion, las capturas, la página del video (`videos/sorteo-amigos-compras.src.html`), la portada (`piezas/portada-sorteo-amigos.html`) y un video de prueba sin voz.
-> - Falta la voz Diego. Con ella: `puente-voz.py`, armar, grabar y unir. Los tiempos de ahora son de prueba (`assets/voz/chispa-sorteo-amigos-compras.json`, `"prueba": true`).
+> - Hechos: el guion, las capturas v2 (`assets/sorteo/`), la voz Diego (`assets/voz/chispa-sorteo-amigos-compras.mp3` y `.scribe.json` + `.json`), los efectos (`herramientas/sonido-sorteo-amigos-compras.py`), la página del video (`videos/sorteo-amigos-compras.src.html`), la portada (`salida/portada-sorteo-amigos.png`) y el reel final con voz y cierre (`salida/reel-sorteo-amigos-compras.mp4`, `61.2 s`, y copia `720p` en `salida/reel-sorteo-amigos-compras-720.mp4`).
 
 Reel de unos 55 s, más el cierre de la serie. Habla Chispa con la voz "Diego" de ElevenLabs. Lo pidió el equipo el 18/11: "que es importante que los amigos que refieras activen su cuenta", con capturas reales del teléfono, y "por las compras tenemos muchas más oportunidades".
 

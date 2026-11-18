@@ -2,7 +2,7 @@
 // la validación real está en el servidor (lib/validations/settings.ts).
 
 import {
-  IconoBaseDeDatos, IconoBillete, IconoBolsa, IconoBuscar, IconoCorreo, IconoEnvio, IconoGarantia, IconoMaletin,
+  IconoBaseDeDatos, IconoBillete, IconoBolsa, IconoBuscar, IconoCorreo, IconoEnvio, IconoGarantia, IconoMaletin, IconoNovedad,
 } from '@/components/iconos';
 import type { IconType } from '@/components/iconos';
 import { leerReglasEmbalaje, type Empaque } from '@/lib/embalaje';
@@ -67,7 +67,7 @@ export interface SectionProps {
   errors: FieldErrors;
 }
 
-export type SectionId = 'negocio' | 'precios' | 'envios' | 'tienda' | 'seo' | 'sistema' | 'correo' | 'respaldos';
+export type SectionId = 'negocio' | 'precios' | 'envios' | 'tienda' | 'seo' | 'sistema' | 'correo' | 'respaldos' | 'ia';
 
 export const SECTIONS: { id: SectionId; label: string; description: string; icon: IconType; fields: SettingsKey[] }[] = [
   {
@@ -116,6 +116,12 @@ export const SECTIONS: { id: SectionId; label: string; description: string; icon
   {
     id: 'respaldos', label: 'Respaldos', icon: IconoBaseDeDatos,
     description: 'Copia cifrada de la base de datos y de los archivos en tu Google Drive, cada día y sola.',
+    fields: [],
+  },
+  // C-288: el motor de Claude, sus reglas y las instrucciones de cada uso. Tiene sus propios guardados (no usa la barra común)
+  {
+    id: 'ia', label: 'IA · Claude', icon: IconoNovedad,
+    description: 'El motor de Claude, las reglas y las instrucciones de cada uso, lo que gasta y lo que falla.',
     fields: [],
   },
 ];

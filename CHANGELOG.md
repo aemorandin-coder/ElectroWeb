@@ -10,6 +10,35 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.103] - 2026-11-18
+Claude en el panel: sus ajustes en Configuración y las reglas estrictas que la tienda comprueba en cada respuesta (C-288). **Cambio de base aditivo:** tres tablas nuevas (`ia_ajustes`, `ia_pedidos`, `ia_atajadas`), sin tocar las que hay. Sin variables nuevas y sin cron.
+### Configuración 1.5.0 (C-288)
+- **IA · Claude** (solo el dueño, con los dos pasos):
+  - **El motor:** el modelo (Haiku, Sonnet u Opus 5.5, con lo que habría costado el mes con cada uno) y el esfuerzo, con "Revisar y publicar" antes → después.
+  - **La clave de la API:** se prueba antes de guardarla (si no es válida o no tiene crédito, lo dice y no se guarda), queda cifrada en la base y nunca se muestra entera. "Volver a la del servidor" devuelve la del `.env`.
+  - **Las instrucciones de cada uno de los seis usos**, por pasos: lo que hace y sus reglas, las instrucciones, "Probar" con un caso real (no guarda nada) y "Revisar y publicar". "De fábrica" las devuelve.
+  - **Las reglas de la tienda:** lo que se comprueba en código y lo que va fijo en las instrucciones, las frases que nunca van en lo que se publica (editables) y "Lo que atajaron".
+  - **Consumo y fallas:** pedidos, tokens, costo y tiempo por uso en el mes, los pedidos por día y las últimas fallas.
+  - **La guía:** las cuatro reglas de oro y cómo pedirle las cosas en cada lugar, con pedidos para copiar.
+### Marco del panel 1.16.0 (C-288)
+- Claude toma el motor y la clave de Configuración (sin nada guardado, los del servidor, como antes) y **anota cada pedido**: el uso, el modelo, los tokens, el costo, lo que tardó y si falló. Nunca lo que se mandó ni lo que respondió.
+- **Las reglas se comprueban en cada respuesta:**
+  - la tienda quita sola una nota para el equipo ("Revisar antes de guardar", "Verificar con el proveedor"), emojis y enlaces de otras tiendas;
+  - cambia sola "saldo" por Puntos ES y los gritos ("GRATIS SOLO HOY!!!");
+  - lo que no puede arreglar se lo pide otra vez a Claude, una sola vez, diciéndole qué regla rompió. Si lo vuelve a romper, eso queda vacío y anotado.
+### Productos 1.18.0 (C-288)
+- **"Buscar en la web", "Completar con la web" e Importar con claude.ai** pasan por las reglas:
+  - un solo modelo: con "posibles modelos" se le pide otra vez;
+  - el modelo del nombre: si la ficha habla de otro, la descripción no se pone y lo dice;
+  - peso y medidas posibles;
+  - la descripción en español y de dos frases o más;
+  - especificaciones con datos: "Potencia: alta" se quita.
+- La segunda vuelta solo se pide si la búsqueda lleva menos de 30 s, porque nginx corta a los 60.
+### Marketing 1.25.0 (C-288)
+- "Armar con Claude": el asunto de 6 a 9 palabras y sin gritos (si no, se le pide otra vez), sin precios en el texto y solo productos de la lista.
+### Clientes 1.8.0 (C-288)
+- La respuesta a una consulta no pide claves ni datos de tarjeta, lleva su saludo y su firma y marca los montos que no están en los datos. La urgencia y el resumen del cliente, sin datos personales.
+
 ## [1.0.0-rc.102] - 2026-11-17
 ElectroStudio pregunta a dónde va cada imagen y video, sus títulos se arrastran, y Claude investiga el modelo exacto de los productos (C-287). Sin cambio de base, sin SQL, sin variables nuevas y sin cron.
 ### ElectroStudio 2.4.0 (C-287)

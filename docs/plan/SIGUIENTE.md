@@ -1,14 +1,17 @@
-# Lo de ahora (actualizado 2026-11-17 · producción en 1.0.0-rc.102; nada por subir: §2)
+# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.102; por subir rc.103: §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-288 · Claude en el panel: sus ajustes y reglas estrictas (rc.103, por subir: §2; `estado/C-288.md`):** el pedido del equipo del 17 y 18/11.
+  - **Configuración → IA · Claude** (solo el dueño): el motor y la clave de la API, las instrucciones de cada uso por pasos (con "Probar"), las reglas con sus frases, lo que gasta cada uso, lo que falla y la guía.
+  - **Reglas que la tienda comprueba en cada respuesta:** "Revisar antes de guardar" y las demás notas para el equipo nunca quedan en lo que se publica; con "posibles modelos" se le pide otra vez a Claude, una sola vez.
+  - **Sigue C-288b:** "No sirvió" en cada resultado, un modelo por uso y otro proveedor.
 - **C-287 · ElectroStudio pregunta a dónde va, los títulos se arrastran y Claude investiga el modelo exacto (rc.102, en producción desde el 17/11; pruebas por confirmar: §2; `estado/C-287.md`):**
   - Al sacar una imagen o un video, ElectroStudio pregunta: descargarlo, mandarlo por Telegram o las dos cosas.
   - Los títulos de la plantilla se toman con el mouse.
   - La plantilla de Importar productos le pide a Claude el modelo exacto, confirmado en la web, sin "posibles modelos".
-  - **Sigue C-288,** "Claude en el panel": los ajustes de IA (el motor, la clave, las instrucciones de cada uso, el consumo y lo que falla) y la guía. Primero las maquetas.
 - **C-285 · Acceso y seguridad: lo que quedó de la auditoría (rc.101, en producción desde el 17/11; pruebas por confirmar: §2; `estado/C-285.md`):** la otra mitad del pedido del 17/11, con el mismo método.
   - **Entrar:** la espera por contraseñas fallidas cuenta por correo y conexión juntos. Quien falla se frena a sí mismo; el dueño de la cuenta entra.
   - **Los enlaces de la cuenta** (activar, recuperar la contraseña, la invitación al equipo y "No fui yo") se guardan como huella. Los que ya se enviaron siguen sirviendo hasta que vencen.
@@ -498,8 +501,13 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: nada por ahora
-Producción está en `v1.0.0-rc.102` (`417f276`); su bloque está en `HISTORIAL.md`.
+### Lo que falta subir: rc.103 (C-288, Claude en el panel)
+Lo sube Claude por SSH: el equipo lo aprobó el 18/11 para este deploy. Producción está en `v1.0.0-rc.102`.
+- **Commit:** `git describe --tags` en el servidor debe decir `v1.0.0-rc.103`.
+- **SQL (aditivo; el guion de deploy para y lo muestra):** tres `CREATE TABLE` (`ia_ajustes`, `ia_pedidos`, `ia_atajadas`) y tres `CREATE INDEX`. Si es eso, `npx prisma db push` y el deploy otra vez.
+- **Sin variables nuevas ni cron.** Sin la fila de ajustes, Claude sigue con el `.env` como hoy.
+- **Comprobación:** la versión, las tablas, que `/api/admin/ia` responda 401 sin sesión, las páginas y el registro de errores.
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.102 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas nuevas se pueden quedar: rc.102 no las usa.
 
 ### Por confirmar de rc.102 (C-287, ElectroStudio y Claude en Productos; unos 10 minutos)
 Ya en producción desde el 17/11, cerca de las 3:05 p. m. (la subió Claude por SSH con la aprobación del equipo; el detalle, en `HISTORIAL.md`). Claude comprobó en el servidor y desde fuera la versión, las páginas, que la ruta de Telegram no responde nada sin sesión y que el registro de errores no sumó líneas. Falta esto (antes, recarga el panel con Ctrl+R):

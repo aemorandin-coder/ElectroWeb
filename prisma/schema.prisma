@@ -2562,3 +2562,75 @@ model NotaContable {
   @@index([periodo])
   @@map("notas_contables")
 }
+
+/// C-288: Claude en el panel (Configuración → IA · Claude). Una sola fila ("default"). Lo que está en null usa lo del
+/// .env o lo de fábrica, así que sin esta fila todo sigue como antes.
+model IaAjustes {
+  id               String    @id @default("default")
+  /// "claude-haiku-5-5", "claude-sonnet-5-5" o "claude-opus-5-5" (lib/ia/precios.ts). null: ANTHROPIC_MODEL o Haiku 5.5
+  modelo           String?
+  /// low | medium | high | xhigh | max. null: ANTHROPIC_EFFORT o "high"
+  esfuerzo         String?
+  /// La clave de la API de Anthropic cifrada con AES-256-GCM (como el token de Telegram). null: ANTHROPIC_API_KEY
+  claveCifrada     String?
+  claveCambiadaAt  DateTime?
+  /// Frases que nunca van en lo que se publica (string[]). null: las de fábrica (lib/ia/reglas.ts)
+  frases           Json?
+  /// Las instrucciones que escribió el equipo, por uso: { [uso]: { texto, porId, porNombre, at } }. Sin el uso: las de fábrica
+  instrucciones    Json?
+  actualizadoPorId String?
+  updatedAt        DateTime  @updatedAt
+
+  @@map("ia_ajustes")
+}
+
+/// C-288: cada pedido a Claude (o a Groq, el respaldo de Buscar en la web) desde el panel: cuánto consume y qué falla.
+/// Nunca guarda lo que se mandó ni lo que respondió: solo cifras.
+model IaPedido {
+  id        String   @id @default(cuid())
+  /// busqueda | proveedor | respuesta | urgencia | cliente | campana | prueba (lib/ia/reglas.ts → USOS_IA)
+  uso       String
+  /// anthropic | groq
+  proveedor String   @default("anthropic")
+  modelo    String
+  esfuerzo  String?
+  entrada   Int      @default(0)
+  salida    Int      @default(0)
+  /// Búsquedas web de Anthropic ($0,01 cada una)
+  busquedas Int      @default(0)
+  /// En dólares, con los precios de lib/ia/precios.ts del momento (0 en Groq: sin precio calculado)
+  costoUsd  Decimal  @default(0) @db.Decimal(12, 6)
+  ms        Int
+  /// null: salió bien. sin-clave | no-termino | servicio | regla (rompió una regla también al pedirla otra vez)
+  falla     String?
+  /// El estado HTTP o el nombre del error. Nunca la clave ni los datos
+  detalle   String?
+  /// Es el segundo pedido, el que se hace cuando la respuesta rompió una regla
+  reintento Boolean  @default(false)
+  usuarioId String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([uso, createdAt])
+  @@map("ia_pedidos")
+}
+
+/// C-288: cada vez que una regla de la tienda cambió o frenó una respuesta de Claude (lib/ia/reglas.ts)
+model IaAtajada {
+  id         String   @id @default(cuid())
+  uso        String
+  /// El id de la regla en lib/ia/reglas.ts ("notas-equipo", "un-modelo"…)
+  regla      String
+  /// quita | cambia | pide | marca
+  accion     String
+  /// Lo que traía, recortado a 300 caracteres
+  antes      String
+  /// Lo que quedó (null: se quitó o se pidió otra vez)
+  despues    String?
+  /// De qué: el nombre del producto o "Respuesta a Pedro R." (sin correo, teléfono ni cédula)
+  referencia String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("ia_atajadas")
+}

@@ -3,24 +3,44 @@
 // comprobaciones: la tienda no cree nada que no esté en los datos que le mandó. Si no hay clave, se acaba el crédito o
 // algo falla, sigue Groq (index.ts). Solo servidor.
 //
-// - El modelo y el esfuerzo salen del .env (ANTHROPIC_MODEL, ANTHROPIC_EFFORT): por defecto Claude Haiku 5.5 en esfuerzo
-//   alto. Andrés pidió el máximo, pero medido el 13/11 con productos reales tardó 98 s leyendo y 158 s buscando (alto:
-//   17 y 13 s, con casi la misma ficha), y nginx corta a los 60 s. "max" en el .env lo vuelve a poner, sin deploy.
+// - El modelo y el esfuerzo son los de Configuración → IA · Claude (C-288) o, si no hay nada guardado, los del .env
+//   (ANTHROPIC_MODEL, ANTHROPIC_EFFORT): por defecto Claude Haiku 5.5 en esfuerzo alto. Andrés pidió el máximo, pero medido el
+//   13/11 con productos reales tardó 98 s leyendo y 158 s buscando (alto: 17 y 13 s, con casi la misma ficha), y nginx corta a
+//   los 60 s.
+// - C-288: cada pedido queda anotado (modelo, tokens, búsquedas, costo, tiempo y fallas) y, si la ficha rompe una regla de tipo
+//   "pide" (más de un modelo posible, un peso imposible, una descripción en inglés), index.ts se lo pide otra vez, una sola vez,
+//   con la corrección en el mensaje (`correccion`).
 // - El texto de las páginas es ajeno: va como datos, la instrucción dice que no son órdenes y la lectura no tiene
 //   herramientas. Solo la búsqueda por su cuenta (sin páginas leídas) usa la búsqueda web de Anthropic.
 
 import type Anthropic from '@anthropic-ai/sdk';
-import { api, avisarError, claudeDisponible, ESFUERZO, firmaDe, MODELO } from '@/lib/ia/claude';
+import { leerAjustesIa } from '@/lib/ia/ajustes';
+import { claudeDisponible, FallaIA, firmaDe, pedirMensaje } from '@/lib/ia/claude';
+import { instruccionesDe, type UsoRegistro } from '@/lib/ia/reglas';
 import {
-  comprobarLectura, ESQUEMA, evidenciaDe, instrucciones, normalizarBusqueda, pedidoDeBusqueda,
+  anexoDeNombres, comprobarLectura, ESQUEMA, evidenciaDe, INSTRUCCIONES_BUSQUEDA, normalizarBusqueda, pedidoDeBusqueda,
   type BusquedaGroq, type LecturaGroq, type PaginaParaLeer,
 } from './groq';
 
 /** Con más esfuerzo, el razonamiento ocupa buena parte de la respuesta: lugar de sobra y en flujo (sin el tope de tiempo de una respuesta entera) */
 const MAX_TOKENS = 32_000;
 
-// El cliente, el modelo, el esfuerzo y la firma son los de todo el panel (lib/ia/claude.ts, C-213)
+// El cliente, el motor y la firma son los de todo el panel (lib/ia/claude.ts, C-213)
 export { claudeDisponible, firmaDe };
+
+/** Lo que cambia en un pedido que no es el de siempre: la corrección de una regla rota, o una prueba de las instrucciones */
+export interface OpcionesDeBusqueda {
+  /** "Tu respuesta anterior no cumplió esta regla de la tienda…": se suma al pedido (lib/ia/revisar.ts → mensajeDeCorreccion) */
+  correccion?: string;
+  /** Es el segundo pedido: se anota como reintento */
+  reintento?: boolean;
+  /** Para "Probar" en Configuración: reemplaza las instrucciones del equipo sin guardarlas, y el pedido se anota como "prueba" */
+  instruccionesPrueba?: string;
+  usuarioId?: string | null;
+}
+
+const conCorreccion = (pedido: string, correccion?: string) => (correccion ? `${pedido}\n\n${correccion}` : pedido);
+const usoDe = (o: OpcionesDeBusqueda): UsoRegistro => (o.instruccionesPrueba !== undefined ? 'prueba' : 'busqueda');
 
 // El esquema de groq.ts con "objeto o null" escrito como lo pide Anthropic (anyOf)
 const citaONula = (cita: unknown) => ({ anyOf: [{ ...(cita as Record<string, unknown>), type: 'object' }, { type: 'null' }] });
@@ -70,23 +90,34 @@ export async function leerConClaude(
   producto: { nombre: string; categoria: string },
   paginas: PaginaParaLeer[],
   nombresSugeridos: string[],
-): Promise<{ lectura: LecturaGroq; firma: string } | null> {
-  if (!claudeDisponible()) return null;
+  opciones: OpcionesDeBusqueda = {},
+): Promise<{ lectura: LecturaGroq; firma: string; pedidoId: string } | null> {
+  const ajustes = await leerAjustesIa();
+  if (!ajustes.clave) return null;
   const evidencia = evidenciaDe(paginas);
   if (!evidencia) return null;
+  const sistema = instruccionesDe('busqueda', INSTRUCCIONES_BUSQUEDA, {
+    delEquipo: opciones.instruccionesPrueba ?? ajustes.instrucciones.busqueda?.texto,
+    anexo: anexoDeNombres(nombresSugeridos),
+  });
+  const pedido = conCorreccion(`Producto: ${producto.nombre}\nCategoría en la tienda: ${producto.categoria || 'sin categoría'}\n\nDatos de las páginas:\n\n${evidencia}`, opciones.correccion);
   try {
-    const respuesta = await api().messages.stream({
-      model: MODELO,
-      max_tokens: MAX_TOKENS,
-      system: instrucciones(nombresSugeridos),
-      messages: [{ role: 'user', content: `Producto: ${producto.nombre}\nCategoría en la tienda: ${producto.categoria || 'sin categoría'}\n\nDatos de las páginas:\n\n${evidencia}` }],
-      output_config: { effort: ESFUERZO, format: { type: 'json_schema', schema: ESQUEMA_LECTURA } },
-    }, { timeout: 120_000 }).finalMessage();
-    const crudo = jsonDe(respuesta);
-    return crudo ? { lectura: comprobarLectura(crudo, producto, paginas, evidencia), firma: firmaDe(respuesta.model) } : null;
+    const { valor: crudo, firma, pedidoId } = await pedirMensaje({
+      uso: usoDe(opciones), donde: 'lectura', reintento: opciones.reintento, usuarioId: opciones.usuarioId, ajustes,
+      crear: (cliente, motor) => cliente.messages.stream({
+        model: motor.modelo,
+        max_tokens: MAX_TOKENS,
+        system: sistema,
+        messages: [{ role: 'user', content: pedido }],
+        output_config: { effort: motor.esfuerzo, format: { type: 'json_schema', schema: ESQUEMA_LECTURA } },
+      }, { timeout: 120_000 }).finalMessage(),
+      leer: jsonDe,
+    });
+    return { lectura: comprobarLectura(crudo, producto, paginas, evidencia), firma, pedidoId };
   } catch (error) {
-    avisarError('lectura', error);
-    return null;
+    // pedirMensaje ya lo anotó y lo dejó en el registro del servidor: sigue Groq
+    if (error instanceof FallaIA) return null;
+    throw error;
   }
 }
 
@@ -94,29 +125,44 @@ export async function leerConClaude(
 export async function buscarConClaude(
   producto: { nombre: string; categoria: string },
   nombresSugeridos: string[],
-): Promise<{ busqueda: BusquedaGroq; firma: string } | null> {
-  if (!claudeDisponible()) return null;
-  const mensajes: Anthropic.MessageParam[] = [{ role: 'user', content: pedidoDeBusqueda(producto, nombresSugeridos) }];
+  opciones: OpcionesDeBusqueda = {},
+): Promise<{ busqueda: BusquedaGroq; firma: string; pedidoId: string } | null> {
+  const ajustes = await leerAjustesIa();
+  if (!ajustes.clave) return null;
+  // Aquí no hay páginas ni lectura con "cita": las instrucciones de fábrica de la lectura no valen. Solo lo que escribió el equipo
+  // (si lo hay) y las reglas fijas; el pedido trae todo lo demás
+  const sistema = instruccionesDe('busqueda', '', { delEquipo: opciones.instruccionesPrueba ?? ajustes.instrucciones.busqueda?.texto });
+  const mensajes: Anthropic.MessageParam[] = [{ role: 'user', content: conCorreccion(pedidoDeBusqueda(producto, nombresSugeridos), opciones.correccion) }];
+  type Vuelta = { pausa: Anthropic.Message } | { json: Record<string, unknown> };
   try {
-    // La búsqueda puede pausar el turno (pause_turn): se le devuelve lo que lleva para que siga, hasta dos veces
+    // La búsqueda puede pausar el turno (pause_turn): se le devuelve lo que lleva para que siga, hasta dos veces. Cada vuelta es
+    // un pedido a la API y queda anotada como tal
     for (let vuelta = 0; vuelta < 3; vuelta++) {
-      const respuesta = await api().messages.stream({
-        model: MODELO,
-        max_tokens: MAX_TOKENS,
-        tools: [{ type: 'web_search_20260318', name: 'web_search', max_uses: 3 }],
-        messages: mensajes,
-        output_config: { effort: ESFUERZO, format: { type: 'json_schema', schema: ESQUEMA_BUSQUEDA } },
-      }, { timeout: 150_000 }).finalMessage();
-      if (respuesta.stop_reason === 'pause_turn') {
-        mensajes.push({ role: 'assistant', content: respuesta.content });
+      const { valor, firma, pedidoId } = await pedirMensaje<Vuelta>({
+        uso: usoDe(opciones), donde: 'búsqueda', reintento: opciones.reintento, usuarioId: opciones.usuarioId, ajustes,
+        crear: (cliente, motor) => cliente.messages.stream({
+          model: motor.modelo,
+          max_tokens: MAX_TOKENS,
+          system: sistema,
+          tools: [{ type: 'web_search_20260318', name: 'web_search', max_uses: 3 }],
+          messages: mensajes,
+          output_config: { effort: motor.esfuerzo, format: { type: 'json_schema', schema: ESQUEMA_BUSQUEDA } },
+        }, { timeout: 150_000 }).finalMessage(),
+        leer: (m) => {
+          if (m.stop_reason === 'pause_turn') return { pausa: m };
+          const json = jsonDe(m);
+          return json ? { json } : null;
+        },
+      });
+      if ('pausa' in valor) {
+        mensajes.push({ role: 'assistant', content: valor.pausa.content });
         continue;
       }
-      const crudo = jsonDe(respuesta);
-      return crudo ? { busqueda: normalizarBusqueda(crudo), firma: firmaDe(respuesta.model) } : null;
+      return { busqueda: normalizarBusqueda(valor.json), firma, pedidoId };
     }
     return null;
   } catch (error) {
-    avisarError('búsqueda', error);
-    return null;
+    if (error instanceof FallaIA) return null;
+    throw error;
   }
 }

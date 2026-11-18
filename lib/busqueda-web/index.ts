@@ -1,3 +1,8 @@
+import { leerAjustesIa } from '@/lib/ia/ajustes';
+import { registrarAtajadas } from '@/lib/ia/atajadas';
+import { marcarFallaDeRegla, type OpcionesDeUso } from '@/lib/ia/claude';
+import type { Cambio } from '@/lib/ia/reglas';
+import { mensajeDeCorreccion, revisarFicha } from '@/lib/ia/revisar';
 import { nombresBase, claveNombre } from '@/lib/spec-sugerencias';
 import { buscarEnLaWeb, dominioDe } from './buscadores';
 import { codigoUtil } from './codigo-barras';
@@ -6,7 +11,7 @@ import { especificacionesDe, type EspecificacionHallada } from './especificacion
 import { cajaDesdeProducto, estimarPorTipo } from './estimar';
 import { extraerDatos, type DatosPagina } from './extraer';
 import { buscarConClaude, leerConClaude } from './claude';
-import { buscarConGroq, leerConGroq } from './groq';
+import { buscarConGroq, leerConGroq, type BusquedaGroq, type LecturaGroq } from './groq';
 import { redactarDescripcion } from './redactar';
 import { clave, palabras, textoPlano } from './texto';
 import type { EspecificacionWeb, FuenteWeb, Hallazgo, MedidasCaja, ResultadoBusquedaWeb } from './tipos';
@@ -21,6 +26,11 @@ import { comoTexto, ordenadas, redondear } from './unidades';
 
 const PAGINAS_MAXIMAS = 6;
 const ESPECIFICACIONES_MAXIMAS = 12;
+/**
+ * C-288: la segunda vuelta a Claude (por una regla rota) solo se pide si la búsqueda lleva menos de esto: nginx corta a los 60 s y
+ * una lectura con esfuerzo alto tarda de 13 a 17 s. Pasado este tiempo se usan los datos limpios, sin pedirlo otra vez
+ */
+const REINTENTO_ANTES_DE_MS = 30_000;
 /** Con este número de datos reconocidos no hace falta una segunda búsqueda */
 const FICHA_SUFICIENTE = 5;
 
@@ -94,7 +104,62 @@ async function buscarEnUpcItemDb(buscado: string): Promise<{ codigo: string; mar
   return null;
 }
 
-export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda): Promise<ResultadoBusquedaWeb> {
+/** Una copia de la ficha para armarla otra vez (con la segunda respuesta de Claude) sin pisar la primera */
+function clonar(r: ResultadoBusquedaWeb): ResultadoBusquedaWeb {
+  return { ...r, fuentes: [...r.fuentes], especificaciones: [...r.especificaciones], avisos: [...r.avisos] };
+}
+
+/**
+ * C-288: las reglas de la tienda sobre la ficha ya armada (lib/ia/revisar.ts → revisarFicha): notas para el equipo, un solo
+ * modelo, el modelo del nombre, peso y medidas posibles, una descripción en español y con datos. Si una regla de tipo "pide" se
+ * rompió y la ficha salió de Claude, se le pide otra vez, una sola vez, diciéndole qué regla rompió. Si vuelve a romperla (o no
+ * vino de Claude), se usan los datos limpios, con lo que la rompió ya vacío, y queda anotado.
+ */
+async function conReglas(o: {
+  nombre: string;
+  frases: readonly string[];
+  primera: ResultadoBusquedaWeb;
+  /** El id del pedido de Claude con el que se armó la primera ficha; null si no vino de Claude */
+  pedidoDeClaude: string | null;
+  /** Otra vez, con la corrección en el mensaje: la ficha nueva y el id de su pedido, o null si Claude no respondió */
+  reintentar: (correccion: string) => Promise<{ ficha: ResultadoBusquedaWeb; pedidoId: string } | null>;
+  /** Cuándo empezó la búsqueda: si ya va tarde, no se le pide otra vez a Claude */
+  inicio: number;
+  opciones: OpcionesDeUso;
+}): Promise<ResultadoBusquedaWeb> {
+  let revision = revisarFicha(o.primera, o.nombre, o.frases);
+  const atajadas: Cambio[] = [];
+  const marcadas: string[] = [];
+  let pidioOtraVez = false;
+  if (revision.pedirOtraVez.length > 0) {
+    const pedidas = revision.pedirOtraVez;
+    if (o.pedidoDeClaude && Date.now() - o.inicio < REINTENTO_ANTES_DE_MS) {
+      pidioOtraVez = true;
+      atajadas.push(...pedidas.map((p) => ({ regla: p.regla, accion: 'pide' as const, antes: p.antes, despues: null })));
+      const segunda = await o.reintentar(mensajeDeCorreccion(pedidas));
+      if (segunda) {
+        revision = revisarFicha(segunda.ficha, o.nombre, o.frases);
+        if (revision.pedirOtraVez.length > 0) marcarFallaDeRegla(segunda.pedidoId, revision.pedirOtraVez[0].regla);
+      }
+    }
+    // Sigue rompiéndola (o no se le podía pedir otra vez): se usan los datos limpios y queda anotado
+    marcadas.push(...revision.pedirOtraVez.map((p) => p.regla));
+    atajadas.push(...revision.pedirOtraVez.map((p) => ({ regla: p.regla, accion: 'marca' as const, antes: p.antes, despues: null })));
+  }
+  atajadas.push(...revision.cambios);
+  const prueba = o.opciones.instruccionesPrueba !== undefined;
+  registrarAtajadas(prueba ? 'prueba' : 'busqueda', atajadas, o.nombre);
+  const ficha = revision.datos;
+  ficha.avisos = [...new Set([...ficha.avisos, ...revision.avisos])];
+  const huella = new Set([...atajadas.map((c) => c.regla), ...marcadas]);
+  o.opciones.alRevisar?.({ cambios: atajadas, avisos: revision.avisos, pasaron: revision.revisadas.filter((id) => !huella.has(id)), pidioOtraVez, marcadas });
+  return ficha;
+}
+
+export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda, opciones: OpcionesDeUso = {}): Promise<ResultadoBusquedaWeb> {
+  const inicio = Date.now();
+  // Lo que viaja a Claude cuando no es una búsqueda de siempre (probar unas instrucciones desde Configuración, C-288)
+  const deClaude = { instruccionesPrueba: opciones.instruccionesPrueba, usuarioId: opciones.usuarioId };
   const nombre = textoPlano(pedido.nombre, 150);
   const modelo = textoPlano(pedido.modelo ?? '', 60);
   const categoria = textoPlano(pedido.categoria ?? '', 80);
@@ -150,150 +215,186 @@ export async function buscarProductoEnLaWeb(pedido: PedidoBusqueda): Promise<Res
   resultado.encontrado = paginas.length > 0;
   resultado.fuentes = paginas.map((p) => p.fuente).slice(0, 5);
   const estimadoTipo = estimarPorTipo(nombre, categoria);
+  const { frases } = await leerAjustesIa();
 
   // Sin ninguna página leída (los buscadores no le responden al servidor, o no hay resultados): la IA busca por su
   // cuenta, Claude primero y Groq si falla (C-211). No hay con qué contrastar lo que traiga: todo queda sin confirmar
   if (!resultado.encontrado) {
-    const conClaude = await buscarConClaude({ nombre: buscado, categoria }, sugeridos);
+    const armarSinPaginas = (ia: BusquedaGroq | null, firma: string): ResultadoBusquedaWeb => {
+      const r = clonar(resultado);
+      const util = ia && (ia.especificaciones.length >= 2 || ia.medidas || ia.pesoKg);
+      if (ia && util) {
+        r.modeloIA = firma;
+        const sinConfirmar = 'Lo trajo la búsqueda con IA, sin una página para contrastarlo';
+        r.encontrado = true;
+        r.redaccion = 'ia';
+        r.avisos = ['Los datos vienen de la búsqueda con IA y no se pudieron contrastar con una página: revísalos uno por uno.'];
+        r.fuentes = ia.fuentes.map((dominio) => ({ dominio, url: `https://${dominio}`, titulo: dominio }));
+        if (ia.marca) r.marca = { valor: ia.marca, fuente: '', estimado: true, nota: sinConfirmar };
+        if (ia.codigoBarras) r.codigoBarras = { valor: ia.codigoBarras, fuente: '', estimado: true, nota: `${sinConfirmar}. ${notaCodigo}` };
+        if (ia.pesoKg) r.peso = { valor: ia.pesoKg, fuente: '', estimado: true, nota: `${sinConfirmar}. ${comprobar}` };
+        if (ia.medidas) r.medidas = { valor: ordenadas(ia.medidas), fuente: '', estimado: true, nota: `${sinConfirmar}. ${comprobar}` };
+        r.especificaciones = ia.especificaciones;
+        r.descripcion = ia.descripcion;
+      } else if (buscador) {
+        r.avisos.push('No encontramos páginas que hablen de este producto. Prueba con la marca y el modelo exactos.');
+      }
+      if (!r.peso && estimadoTipo) r.peso = { valor: estimadoTipo.pesoKg, fuente: '', estimado: true, nota: `Estimado por el tipo de producto (${estimadoTipo.tipo}). ${comprobar}` };
+      if (!r.medidas && estimadoTipo) r.medidas = { valor: estimadoTipo.medidas, fuente: '', estimado: true, nota: `Estimado por el tipo de producto (${estimadoTipo.tipo}). ${comprobar}` };
+      if (!r.medidas || !r.peso) r.avisos.push('No hay un estimado de peso y medidas para este tipo de producto: mide y pesa la caja.');
+      return r;
+    };
+    const conClaude = await buscarConClaude({ nombre: buscado, categoria }, sugeridos, deClaude);
     const ia = conClaude?.busqueda ?? (await buscarConGroq({ nombre: buscado, categoria }, sugeridos));
-    const util = ia && (ia.especificaciones.length >= 2 || ia.medidas || ia.pesoKg);
-    if (ia && util) {
-      resultado.modeloIA = conClaude?.firma ?? 'Groq';
-      const sinConfirmar = 'Lo trajo la búsqueda con IA, sin una página para contrastarlo';
-      resultado.encontrado = true;
-      resultado.redaccion = 'ia';
-      resultado.avisos = ['Los datos vienen de la búsqueda con IA y no se pudieron contrastar con una página: revísalos uno por uno.'];
-      resultado.fuentes = ia.fuentes.map((dominio) => ({ dominio, url: `https://${dominio}`, titulo: dominio }));
-      if (ia.marca) resultado.marca = { valor: ia.marca, fuente: '', estimado: true, nota: sinConfirmar };
-      if (ia.codigoBarras) resultado.codigoBarras = { valor: ia.codigoBarras, fuente: '', estimado: true, nota: `${sinConfirmar}. ${notaCodigo}` };
-      if (ia.pesoKg) resultado.peso = { valor: ia.pesoKg, fuente: '', estimado: true, nota: `${sinConfirmar}. ${comprobar}` };
-      if (ia.medidas) resultado.medidas = { valor: ordenadas(ia.medidas), fuente: '', estimado: true, nota: `${sinConfirmar}. ${comprobar}` };
-      resultado.especificaciones = ia.especificaciones;
-      resultado.descripcion = ia.descripcion;
-    } else if (buscador) {
-      resultado.avisos.push('No encontramos páginas que hablen de este producto. Prueba con la marca y el modelo exactos.');
-    }
-    if (!resultado.peso && estimadoTipo) resultado.peso = { valor: estimadoTipo.pesoKg, fuente: '', estimado: true, nota: `Estimado por el tipo de producto (${estimadoTipo.tipo}). ${comprobar}` };
-    if (!resultado.medidas && estimadoTipo) resultado.medidas = { valor: estimadoTipo.medidas, fuente: '', estimado: true, nota: `Estimado por el tipo de producto (${estimadoTipo.tipo}). ${comprobar}` };
-    if (!resultado.medidas || !resultado.peso) resultado.avisos.push('No hay un estimado de peso y medidas para este tipo de producto: mide y pesa la caja.');
-    return resultado;
+    return conReglas({
+      nombre: buscado,
+      frases,
+      primera: armarSinPaginas(ia, conClaude?.firma ?? 'Groq'),
+      pedidoDeClaude: conClaude?.pedidoId ?? null,
+      inicio,
+      opciones,
+      reintentar: async (correccion) => {
+        const otra = await buscarConClaude({ nombre: buscado, categoria }, sugeridos, { ...deClaude, correccion, reintento: true });
+        return otra ? { ficha: armarSinPaginas(otra.busqueda, otra.firma), pedidoId: otra.pedidoId } : null;
+      },
+    });
   }
 
   // La IA ordena lo leído: Claude (claude.ts, C-211) y, si no hay clave o falla, Groq (groq.ts). Sin ninguna, sigue la
   // lectura propia
   const paraLeer = paginas.map((p) => ({ dominio: p.fuente.dominio, titulo: p.fuente.titulo, pares: p.datos.pares }));
-  const conClaude = await leerConClaude({ nombre: buscado, categoria }, paraLeer, sugeridos);
-  const ia = conClaude?.lectura ?? (await leerConGroq({ nombre: buscado, categoria }, paraLeer, sugeridos));
-  const firmaIA = conClaude?.firma ?? 'Groq';
+  const conClaude = await leerConClaude({ nombre: buscado, categoria }, paraLeer, sugeridos, deClaude);
+  const iaPrimera = conClaude?.lectura ?? (await leerConGroq({ nombre: buscado, categoria }, paraLeer, sugeridos));
 
-  // Marca: la que más páginas repiten
-  const marcas = paginas.filter((p) => p.datos.marca && p.datos.marca.length <= 40).map((p) => ({ marca: p.datos.marca, fuente: p.fuente.dominio }));
-  const marca = masRepetido(marcas, (m) => clave(m.marca));
-  if (marca) {
-    resultado.marca = { valor: marca.valor.marca, fuente: marca.valor.fuente, estimado: false, nota: marca.veces > 1 ? `Coinciden ${marca.veces} páginas` : '' };
-  } else if (ia?.marca) {
-    resultado.marca = { valor: ia.marca, fuente: paginas[0].fuente.dominio, estimado: false, nota: '' };
-  }
+  // La base pública de códigos de barras se consulta una sola vez, aunque la ficha se arme dos
+  let upcPendiente: ReturnType<typeof buscarEnUpcItemDb> | undefined;
+  const upc = () => (upcPendiente ??= buscarEnUpcItemDb(buscado));
 
-  // Código de barras: el que más se repite. Cada color o versión tiene el suyo, así que siempre se pide comprobarlo
-  const codigos = paginas.flatMap((p) => p.datos.codigos.map((codigo) => ({ codigo, fuente: p.fuente.dominio })));
-  const codigo = masRepetido(codigos, (c) => c.codigo);
-  if (codigo) {
-    // Con una sola página no hay con qué contrastarlo: queda sin confirmar
-    resultado.codigoBarras = { valor: codigo.valor.codigo, fuente: codigo.valor.fuente, estimado: codigo.veces < 2, nota: codigo.veces > 1 ? `Coinciden ${codigo.veces} páginas. ${notaCodigo}` : notaCodigo };
-  } else if (ia?.codigoBarras) {
-    resultado.codigoBarras = { valor: ia.codigoBarras, fuente: paginas[0].fuente.dominio, estimado: true, nota: notaCodigo };
-  } else {
-    const deBase = await buscarEnUpcItemDb(buscado);
-    if (deBase) {
-      resultado.codigoBarras = { valor: deBase.codigo, fuente: 'upcitemdb.com', estimado: true, nota: `De una base pública de códigos, sin contrastar. ${notaCodigo}` };
-      if (!resultado.marca && deBase.marca) resultado.marca = { valor: deBase.marca, fuente: 'upcitemdb.com', estimado: false, nota: '' };
+  // La ficha, con lo que leyó la IA (o sin ella). Se arma de nuevo si hay que pedírsela otra vez a Claude (C-288)
+  const armar = async (ia: LecturaGroq | null, firmaIA: string): Promise<ResultadoBusquedaWeb> => {
+    const r = clonar(resultado);
+    // Marca: la que más páginas repiten
+    const marcas = paginas.filter((p) => p.datos.marca && p.datos.marca.length <= 40).map((p) => ({ marca: p.datos.marca, fuente: p.fuente.dominio }));
+    const marca = masRepetido(marcas, (m) => clave(m.marca));
+    if (marca) {
+      r.marca = { valor: marca.valor.marca, fuente: marca.valor.fuente, estimado: false, nota: marca.veces > 1 ? `Coinciden ${marca.veces} páginas` : '' };
+    } else if (ia?.marca) {
+      r.marca = { valor: ia.marca, fuente: paginas[0].fuente.dominio, estimado: false, nota: '' };
     }
-  }
 
-  // Peso y medidas de la caja. Orden: lo que una página dice del paquete, lo calculado desde el producto sin
-  // empacar, y un estimado por el tipo de producto
-  const pesosPaquete = paginas.filter((p) => p.datos.pesoPaquete).map((p) => ({ kg: p.datos.pesoPaquete as number, fuente: p.fuente.dominio }));
-  const pesosProducto = paginas.filter((p) => p.datos.pesoProducto).map((p) => ({ kg: p.datos.pesoProducto as number, fuente: p.fuente.dominio }));
-  const medidasPaquete = paginas.filter((p) => p.datos.medidasPaquete).map((p) => ({ m: ordenadas(p.datos.medidasPaquete as MedidasCaja), fuente: p.fuente.dominio }));
-  const medidasProducto = paginas.filter((p) => p.datos.medidasProducto).map((p) => ({ m: ordenadas(p.datos.medidasProducto as MedidasCaja), fuente: p.fuente.dominio }));
-  // Lo que Groq señaló (con la cita comprobada) va delante: distingue mejor la caja del producto que las etiquetas
-  if (ia?.peso) (ia.peso.delPaquete ? pesosPaquete : pesosProducto).unshift({ kg: ia.peso.kg, fuente: ia.peso.fuente });
-  if (ia?.medidas) (ia.medidas.delPaquete ? medidasPaquete : medidasProducto).unshift({ m: ordenadas(ia.medidas.cm), fuente: ia.medidas.fuente });
-  const primero = <T,>(lista: T[], deGroq: boolean) => (deGroq ? lista.slice(0, 1) : lista);
-
-  if (pesosPaquete.length > 0) {
-    const kg = mediana(primero(pesosPaquete, ia?.peso?.delPaquete === true).map((p) => p.kg));
-    const de = pesosPaquete.find((p) => p.kg === kg) ?? pesosPaquete[0];
-    resultado.peso = { valor: kg, fuente: de.fuente, estimado: false, nota: `Peso del paquete según ${de.fuente}. ${comprobar}` };
-  } else if (pesosProducto.length > 0) {
-    const kg = mediana(primero(pesosProducto, Boolean(ia?.peso && !ia.peso.delPaquete)).map((p) => p.kg));
-    const de = pesosProducto.find((p) => p.kg === kg) ?? pesosProducto[0];
-    const caja = cajaDesdeProducto(null, kg).pesoKg as number;
-    resultado.peso = { valor: caja, fuente: de.fuente, estimado: true, nota: `Estimado: el producto pesa ${String(redondear(kg * 1000, 0))} g sin caja (${de.fuente}). ${comprobar}` };
-  } else if (estimadoTipo) {
-    resultado.peso = { valor: estimadoTipo.pesoKg, fuente: '', estimado: true, nota: `Estimado por el tipo de producto (${estimadoTipo.tipo}). ${comprobar}` };
-  }
-
-  const igual = (m: MedidasCaja) => `${m.largo}x${m.ancho}x${m.alto}`;
-  if (medidasPaquete.length > 0) {
-    const elegida = masRepetido(primero(medidasPaquete, ia?.medidas?.delPaquete === true), (x) => igual(x.m)) as { valor: (typeof medidasPaquete)[number]; veces: number };
-    resultado.medidas = { valor: elegida.valor.m, fuente: elegida.valor.fuente, estimado: false, nota: `Medidas del paquete según ${elegida.valor.fuente}. ${comprobar}` };
-  } else if (medidasProducto.length > 0) {
-    const elegida = masRepetido(primero(medidasProducto, Boolean(ia?.medidas && !ia.medidas.delPaquete)), (x) => igual(x.m)) as { valor: (typeof medidasProducto)[number]; veces: number };
-    const caja = cajaDesdeProducto(elegida.valor.m, null).medidas as MedidasCaja;
-    const p = elegida.valor.m;
-    resultado.medidas = { valor: caja, fuente: elegida.valor.fuente, estimado: true, nota: `Estimado: el producto mide ${comoTexto(p.largo)} × ${comoTexto(p.ancho)} × ${comoTexto(p.alto)} cm sin caja (${elegida.valor.fuente}). ${comprobar}` };
-  } else if (estimadoTipo) {
-    resultado.medidas = { valor: estimadoTipo.medidas, fuente: '', estimado: true, nota: `Estimado por el tipo de producto (${estimadoTipo.tipo}). ${comprobar}` };
-  }
-  if (!resultado.medidas || !resultado.peso) {
-    resultado.avisos.push('No hay un estimado de peso y medidas para este tipo de producto: mide y pesa la caja.');
-  }
-
-  // Especificaciones: un valor por nombre. Entre páginas gana el que más se repite
-  const porNombre = new Map<string, Array<EspecificacionHallada & { fuente: string }>>();
-  for (const p of paginas) {
-    for (const e of p.especificaciones) {
-      const k = claveNombre(e.nombre);
-      porNombre.set(k, [...(porNombre.get(k) ?? []), { ...e, fuente: p.fuente.dominio }]);
+    // Código de barras: el que más se repite. Cada color o versión tiene el suyo, así que siempre se pide comprobarlo
+    const codigos = paginas.flatMap((p) => p.datos.codigos.map((codigo) => ({ codigo, fuente: p.fuente.dominio })));
+    const codigo = masRepetido(codigos, (c) => c.codigo);
+    if (codigo) {
+      // Con una sola página no hay con qué contrastarlo: queda sin confirmar
+      r.codigoBarras = { valor: codigo.valor.codigo, fuente: codigo.valor.fuente, estimado: codigo.veces < 2, nota: codigo.veces > 1 ? `Coinciden ${codigo.veces} páginas. ${notaCodigo}` : notaCodigo };
+    } else if (ia?.codigoBarras) {
+      r.codigoBarras = { valor: ia.codigoBarras, fuente: paginas[0].fuente.dominio, estimado: true, nota: notaCodigo };
+    } else {
+      const deBase = await upc();
+      if (deBase) {
+        r.codigoBarras = { valor: deBase.codigo, fuente: 'upcitemdb.com', estimado: true, nota: `De una base pública de códigos, sin contrastar. ${notaCodigo}` };
+        if (!r.marca && deBase.marca) r.marca = { valor: deBase.marca, fuente: 'upcitemdb.com', estimado: false, nota: '' };
+      }
     }
-  }
-  const sugeridas = nombresBase(categoria).map(claveNombre);
-  const elegidas: Array<EspecificacionWeb & { orden: number }> = [];
-  for (const [k, lista] of porNombre) {
-    const mejor = masRepetido(lista, (e) => clave(e.valor)) as { valor: (typeof lista)[number]; veces: number };
-    const reconocida = lista.some((e) => e.reconocida);
-    // Una etiqueta que la tienda no conoce solo entra si dos páginas la traen
-    if (!reconocida && lista.length < 2) continue;
-    const enCategoria = sugeridas.indexOf(k);
-    elegidas.push({
-      nombre: mejor.valor.nombre,
-      valor: mejor.valor.valor,
-      fuente: mejor.valor.fuente,
-      orden: enCategoria >= 0 ? enCategoria : reconocida ? 100 - lista.length : 200 - lista.length,
-    });
-  }
-  // "Botones: 87" y "Número de teclas: 87" son el mismo dato: queda el de las teclas
-  const teclas = elegidas.find((e) => claveNombre(e.nombre) === 'numero de teclas');
-  resultado.especificaciones = elegidas
-    .filter((e) => !(teclas && claveNombre(e.nombre) === 'botones' && e.valor === teclas.valor))
-    .sort((a, b) => a.orden - b.orden)
-    .slice(0, ESPECIFICACIONES_MAXIMAS)
-    .map(({ nombre: n, valor, fuente }) => ({ nombre: n, valor, fuente }));
-  // Con Groq, su lista: viene en español y sin el ruido de las fichas. Con menos de 3, la de las reglas
-  if (ia && ia.especificaciones.length >= 3) {
-    resultado.especificaciones = ia.especificaciones;
-    resultado.redaccion = 'ia';
-    resultado.modeloIA = firmaIA;
-  }
 
-  resultado.descripcion = ia?.descripcion || redactarDescripcion({ nombre, marca: resultado.marca?.valor ?? '', especificaciones: resultado.especificaciones });
-  if (ia?.descripcion) {
-    resultado.redaccion = 'ia';
-    resultado.modeloIA = firmaIA;
-  }
-  return resultado;
+    // Peso y medidas de la caja. Orden: lo que una página dice del paquete, lo calculado desde el producto sin
+    // empacar, y un estimado por el tipo de producto
+    const pesosPaquete = paginas.filter((p) => p.datos.pesoPaquete).map((p) => ({ kg: p.datos.pesoPaquete as number, fuente: p.fuente.dominio }));
+    const pesosProducto = paginas.filter((p) => p.datos.pesoProducto).map((p) => ({ kg: p.datos.pesoProducto as number, fuente: p.fuente.dominio }));
+    const medidasPaquete = paginas.filter((p) => p.datos.medidasPaquete).map((p) => ({ m: ordenadas(p.datos.medidasPaquete as MedidasCaja), fuente: p.fuente.dominio }));
+    const medidasProducto = paginas.filter((p) => p.datos.medidasProducto).map((p) => ({ m: ordenadas(p.datos.medidasProducto as MedidasCaja), fuente: p.fuente.dominio }));
+    // Lo que Groq señaló (con la cita comprobada) va delante: distingue mejor la caja del producto que las etiquetas
+    if (ia?.peso) (ia.peso.delPaquete ? pesosPaquete : pesosProducto).unshift({ kg: ia.peso.kg, fuente: ia.peso.fuente });
+    if (ia?.medidas) (ia.medidas.delPaquete ? medidasPaquete : medidasProducto).unshift({ m: ordenadas(ia.medidas.cm), fuente: ia.medidas.fuente });
+    const primero = <T,>(lista: T[], deGroq: boolean) => (deGroq ? lista.slice(0, 1) : lista);
+
+    if (pesosPaquete.length > 0) {
+      const kg = mediana(primero(pesosPaquete, ia?.peso?.delPaquete === true).map((p) => p.kg));
+      const de = pesosPaquete.find((p) => p.kg === kg) ?? pesosPaquete[0];
+      r.peso = { valor: kg, fuente: de.fuente, estimado: false, nota: `Peso del paquete según ${de.fuente}. ${comprobar}` };
+    } else if (pesosProducto.length > 0) {
+      const kg = mediana(primero(pesosProducto, Boolean(ia?.peso && !ia.peso.delPaquete)).map((p) => p.kg));
+      const de = pesosProducto.find((p) => p.kg === kg) ?? pesosProducto[0];
+      const caja = cajaDesdeProducto(null, kg).pesoKg as number;
+      r.peso = { valor: caja, fuente: de.fuente, estimado: true, nota: `Estimado: el producto pesa ${String(redondear(kg * 1000, 0))} g sin caja (${de.fuente}). ${comprobar}` };
+    } else if (estimadoTipo) {
+      r.peso = { valor: estimadoTipo.pesoKg, fuente: '', estimado: true, nota: `Estimado por el tipo de producto (${estimadoTipo.tipo}). ${comprobar}` };
+    }
+
+    const igual = (m: MedidasCaja) => `${m.largo}x${m.ancho}x${m.alto}`;
+    if (medidasPaquete.length > 0) {
+      const elegida = masRepetido(primero(medidasPaquete, ia?.medidas?.delPaquete === true), (x) => igual(x.m)) as { valor: (typeof medidasPaquete)[number]; veces: number };
+      r.medidas = { valor: elegida.valor.m, fuente: elegida.valor.fuente, estimado: false, nota: `Medidas del paquete según ${elegida.valor.fuente}. ${comprobar}` };
+    } else if (medidasProducto.length > 0) {
+      const elegida = masRepetido(primero(medidasProducto, Boolean(ia?.medidas && !ia.medidas.delPaquete)), (x) => igual(x.m)) as { valor: (typeof medidasProducto)[number]; veces: number };
+      const caja = cajaDesdeProducto(elegida.valor.m, null).medidas as MedidasCaja;
+      const p = elegida.valor.m;
+      r.medidas = { valor: caja, fuente: elegida.valor.fuente, estimado: true, nota: `Estimado: el producto mide ${comoTexto(p.largo)} × ${comoTexto(p.ancho)} × ${comoTexto(p.alto)} cm sin caja (${elegida.valor.fuente}). ${comprobar}` };
+    } else if (estimadoTipo) {
+      r.medidas = { valor: estimadoTipo.medidas, fuente: '', estimado: true, nota: `Estimado por el tipo de producto (${estimadoTipo.tipo}). ${comprobar}` };
+    }
+    if (!r.medidas || !r.peso) {
+      r.avisos.push('No hay un estimado de peso y medidas para este tipo de producto: mide y pesa la caja.');
+    }
+
+    // Especificaciones: un valor por nombre. Entre páginas gana el que más se repite
+    const porNombre = new Map<string, Array<EspecificacionHallada & { fuente: string }>>();
+    for (const p of paginas) {
+      for (const e of p.especificaciones) {
+        const k = claveNombre(e.nombre);
+        porNombre.set(k, [...(porNombre.get(k) ?? []), { ...e, fuente: p.fuente.dominio }]);
+      }
+    }
+    const sugeridas = nombresBase(categoria).map(claveNombre);
+    const elegidas: Array<EspecificacionWeb & { orden: number }> = [];
+    for (const [k, lista] of porNombre) {
+      const mejor = masRepetido(lista, (e) => clave(e.valor)) as { valor: (typeof lista)[number]; veces: number };
+      const reconocida = lista.some((e) => e.reconocida);
+      // Una etiqueta que la tienda no conoce solo entra si dos páginas la traen
+      if (!reconocida && lista.length < 2) continue;
+      const enCategoria = sugeridas.indexOf(k);
+      elegidas.push({
+        nombre: mejor.valor.nombre,
+        valor: mejor.valor.valor,
+        fuente: mejor.valor.fuente,
+        orden: enCategoria >= 0 ? enCategoria : reconocida ? 100 - lista.length : 200 - lista.length,
+      });
+    }
+    // "Botones: 87" y "Número de teclas: 87" son el mismo dato: queda el de las teclas
+    const teclas = elegidas.find((e) => claveNombre(e.nombre) === 'numero de teclas');
+    r.especificaciones = elegidas
+      .filter((e) => !(teclas && claveNombre(e.nombre) === 'botones' && e.valor === teclas.valor))
+      .sort((a, b) => a.orden - b.orden)
+      .slice(0, ESPECIFICACIONES_MAXIMAS)
+      .map(({ nombre: n, valor, fuente }) => ({ nombre: n, valor, fuente }));
+    // Con Groq, su lista: viene en español y sin el ruido de las fichas. Con menos de 3, la de las reglas
+    if (ia && ia.especificaciones.length >= 3) {
+      r.especificaciones = ia.especificaciones;
+      r.redaccion = 'ia';
+      r.modeloIA = firmaIA;
+    }
+
+    r.descripcion = ia?.descripcion || redactarDescripcion({ nombre, marca: r.marca?.valor ?? '', especificaciones: r.especificaciones });
+    if (ia?.descripcion) {
+      r.redaccion = 'ia';
+      r.modeloIA = firmaIA;
+    }
+    return r;
+  };
+
+  return conReglas({
+    nombre: buscado,
+    frases,
+    primera: await armar(iaPrimera, conClaude?.firma ?? 'Groq'),
+    pedidoDeClaude: conClaude?.pedidoId ?? null,
+    inicio,
+    opciones,
+    reintentar: async (correccion) => {
+      const otra = await leerConClaude({ nombre: buscado, categoria }, paraLeer, sugeridos, { ...deClaude, correccion, reintento: true });
+      return otra ? { ficha: await armar(otra.lectura, otra.firma), pedidoId: otra.pedidoId } : null;
+    },
+  });
 }
 
 export type { Hallazgo };

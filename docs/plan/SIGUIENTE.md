@@ -580,9 +580,9 @@ CREATE TABLE "ia_proveedores" (
      - Marketing → ElectroStudio → una historia con Chispa (Felicitación, por ejemplo): Chispa lleva el logo redondo de la tienda en el pecho, no la placa con «ES»;
      - Marketing → Correos, la vista previa de cualquier correo: Chispa abajo, con el logo en el pecho.
   2. **La IA con proveedores** (C-292, unos 10 minutos, en la computadora con la cuenta del dueño):
-     - Configuración → IA (el menú ya no dice "IA · Claude"): arriba sigue "Claude Haiku 5.5", y "Proveedores y claves" muestra Claude, Gemini, Grok y Groq;
+     - Ajustes → IA (antes "Configuración → IA · Claude"): arriba sigue "Claude Haiku 5.5", y "Proveedores y claves" muestra Claude, Gemini, Grok y Groq;
      - **todo sigue igual mientras no cambies nada:** en una consulta, "Redactar con IA"; el borrador dice "Lo redactó Claude Haiku 5.5 (esfuerzo alto)" y tiene "No sirvió";
-     - toca "No sirvió", elige un motivo y "Anotar": en Configuración → IA → "Lo que no sirvió" aparece;
+     - toca "No sirvió", elige un motivo y "Anotar": en Ajustes → IA → "Lo que no sirvió" aparece;
      - en "Los usos de la IA", "Motor" de "Resumen del cliente": elige Claude Sonnet 5.5 y "Guardar". La tarjeta dice "· el suyo"; "Seguir al principal" lo devuelve;
      - **solo si el equipo tiene una clave de Gemini o Grok:** pégala en su tarjeta ("Conectar la clave"), elige ese motor en "El motor" con "Claude" de respaldo y "Publicar el cambio". Un "Resumir con IA" dice "Lo redactó Gemini · …". Para volver, elige Claude y publica.
   3. **Ajustes ordenado** (C-293, unos 8 minutos, en la computadora y en el teléfono, con la cuenta del dueño):

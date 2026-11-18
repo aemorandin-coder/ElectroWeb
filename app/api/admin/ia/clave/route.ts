@@ -4,6 +4,7 @@ import { anotarIa, esRespuesta, exigirPersonaDeIa } from '@/lib/ia/acceso';
 import { guardarAjustes, leerAjustesIa } from '@/lib/ia/ajustes';
 import { cifrarClave, enmascarar, formatoDeClaveValido } from '@/lib/ia/clave';
 import { probarConexion } from '@/lib/ia/conexion';
+import { exigirCodigoReciente } from '@/lib/dispositivos-confianza';
 
 // C-288 · La clave de la API de Anthropic. La clave nunca sale del servidor: ni en una respuesta, ni en el registro, ni en la
 // bitácora (a la pantalla solo llega "sk-ant-…" y los últimos 4 caracteres).
@@ -18,6 +19,9 @@ export async function PUT(request: NextRequest) {
   // Cinco por minuto: cada intento le pregunta a Anthropic
   const persona = await exigirPersonaDeIa('clave', { maxRequests: 5, windowSeconds: 60 });
   if (esRespuesta(persona)) return persona;
+  // C-291: si la sesión entró por un dispositivo de confianza, esto pide el número de la app otra vez
+  const codigoReciente = await exigirCodigoReciente();
+  if (codigoReciente) return codigoReciente;
   const datos = cuerpo.safeParse(await request.json().catch(() => null));
   if (!datos.success || !formatoDeClaveValido(datos.data.clave)) {
     return NextResponse.json({ error: 'La clave de Anthropic empieza con "sk-ant-" y no lleva espacios. Cópiala otra vez de console.anthropic.com.' }, { status: 400 });
@@ -41,6 +45,9 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const persona = await exigirPersonaDeIa('clave', { maxRequests: 5, windowSeconds: 60 });
   if (esRespuesta(persona)) return persona;
+  // C-291: si la sesión entró por un dispositivo de confianza, esto pide el número de la app otra vez
+  const codigoReciente = await exigirCodigoReciente();
+  if (codigoReciente) return codigoReciente;
   const r = await guardarAjustes(undefined, persona.id, () => ({ claveCifrada: null, claveCambiadaAt: new Date() }));
   if (!r.ok) return NextResponse.json({ error: 'No se pudo volver a la clave del servidor. Prueba otra vez.' }, { status: 409 });
   await anotarIa(persona, request, 'Volvió a la clave de Claude del servidor');

@@ -11,6 +11,7 @@ import { reiniciarDosPasos } from '@/lib/dos-pasos';
 import { cerrarLasDemas } from '@/lib/sesiones';
 import { registrarAccionAdmin } from '@/lib/audit-log';
 import { emitAdminEvent } from '@/lib/admin-events';
+import { exigirCodigoReciente, quitarTodos } from '@/lib/dispositivos-confianza';
 
 // Equipo del panel (C-141). Solo el super admin (MANAGE_TEAM).
 // Reglas: nadie actúa sobre su propia cuenta desde aquí y siempre queda al menos un super admin con acceso.
@@ -32,6 +33,8 @@ const postSchema = z.discriminatedUnion('accion', [
   z.object({ accion: z.literal('reenviar_invitacion'), id }),
   z.object({ accion: z.literal('cancelar_invitacion'), id }),
   z.object({ accion: z.literal('cerrar_sesiones'), id }),
+  // C-291: quitar sus dispositivos de confianza (vuelve a pedirle el número de la app al entrar)
+  z.object({ accion: z.literal('quitar_dispositivos'), id }),
 ]);
 
 const error = (mensaje: string, status: number) => NextResponse.json({ error: mensaje }, { status });
@@ -53,6 +56,12 @@ export async function POST(request: NextRequest) {
     return error(campo === 'correo' ? 'Escribe un correo válido.' : campo === 'nombre' ? 'Escribe el nombre (2 a 80 letras).' : 'Datos inválidos', 400);
   }
   const d = datos.data;
+  // C-291: invitar, cambiar un rol, quitar o devolver el acceso y reiniciar los dos pasos piden el número de la app si la
+  // sesión entró por un dispositivo de confianza. Reenviar o cancelar una invitación y cerrar sesiones, no (no dan poder)
+  if (['invitar', 'cambiar_rol', 'quitar_acceso', 'devolver_acceso', 'reiniciar_dos_pasos', 'quitar_dispositivos'].includes(d.accion)) {
+    const codigoReciente = await exigirCodigoReciente();
+    if (codigoReciente) return codigoReciente;
+  }
   const yo = session.user;
   const quien = yo.name || yo.email || 'Un super admin';
   const avisar = (title: string, summary: string, fields: [string, string][]) =>
@@ -133,6 +142,12 @@ export async function POST(request: NextRequest) {
       case 'cerrar_sesiones': {
         await cerrarSesiones();
         await registrarAccionAdmin(session, 'SECURITY_ADMIN_ACTION', objetivo, { accion: 'Cerró sus sesiones', correo }, request);
+        break;
+      }
+      case 'quitar_dispositivos': {
+        const cuantos = await quitarTodos(miembro.id, 'DUENO');
+        await registrarAccionAdmin(session, 'SECURITY_ADMIN_ACTION', objetivo, { accion: `Quitó sus dispositivos de confianza (${cuantos})`, correo }, request);
+        if (cuantos > 0) avisar(`Dispositivos de confianza quitados · ${nombre}`, 'La próxima vez que entre, el panel le pedirá el número de su app.', [['Cuenta', correo]]);
         break;
       }
       case 'reenviar_invitacion': {

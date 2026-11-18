@@ -30,6 +30,31 @@ export async function correoSesionNueva(d: { nombre: string | null; dispositivo:
   return { asunto: `Nuevo inicio de sesión: ${d.dispositivo}`, html };
 }
 
+/**
+ * C-291: un navegador quedó como dispositivo de confianza del panel (30 días sin pedir el código). Si no fue quien
+ * recibe el correo, "No fui yo" (la ruta de C-140, que vale 24 horas) cierra todo y lo anula.
+ */
+export async function correoDispositivoConfianza(d: { nombre: string | null; dispositivo: string; cuando: string; vence: string; rutaNoFuiYo: string }): Promise<Correo> {
+  const nombre = nombreDe(d.nombre);
+  const html = await marcoCorreo({
+    preheader: `${d.dispositivo} no te pedirá el código del panel por 30 días.`,
+    encabezado: {
+      sello: 'SEGURIDAD',
+      titulo: `Marcaste un dispositivo de confianza${nombre ? `, ${nombre}` : ''}`,
+      texto: 'En ese navegador, el panel no te pedirá el número de tu app por 30 días. La contraseña, sí.',
+    },
+    cuerpo: `
+      ${datosCorreo([['Dispositivo', e(d.dispositivo)], ['Cuándo', e(d.cuando)], ['Hasta', e(d.vence)]])}
+      ${avisoCorreo('¿No fuiste tú?', 'Toca «No fui yo»: se cierran tus sesiones, se anula este dispositivo y te mandamos el enlace para una contraseña nueva. Sirve 24 horas.', 'candado')}
+      ${botonCorreo(`${urlTienda()}${d.rutaNoFuiYo}`, 'No fui yo')}
+      <p style="${CORREO.nota}">Si fuiste tú, no tienes que hacer nada. Lo puedes quitar cuando quieras en el panel → Mi seguridad.</p>`,
+    chispa: { pose: 'explica', texto: 'Te aviso cada vez que un dispositivo deja de pedir el código. Si fuiste tú, todo bien.' },
+    pie: 'equipo',
+    motivo: 'Recibes este correo para proteger tu cuenta del panel.',
+  });
+  return { asunto: `Dispositivo de confianza: ${d.dispositivo}`, html };
+}
+
 /** La contraseña cambió (con el enlace de "Olvidé mi contraseña" o desde Mi perfil). */
 export async function correoContrasenaCambiada(d: { nombre: string | null; sesionesCerradas: boolean }): Promise<Correo> {
   const a = await ajustesCorreo();
@@ -71,6 +96,10 @@ export async function correoEliminarCuenta(d: { nombre: string | null }): Promis
   return { asunto: 'Recibimos tu pedido de eliminar la cuenta', html };
 }
 
+// C-290: la invitación dice antes lo que va a hacer falta (skill herramientas-claras, regla 2): la app y dónde se baja
+const APP_ANDROID = 'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2';
+const APP_IPHONE = 'https://apps.apple.com/app/google-authenticator/id388497605';
+
 /** Invitación al panel (lib/equipo). `rol` llega legible ("Ventas"). */
 export async function correoInvitacionEquipo(d: { nombre: string; rol: string; invitadoPor: string; enlace: string }): Promise<Correo> {
   const nombre = nombreDe(d.nombre);
@@ -82,7 +111,7 @@ export async function correoInvitacionEquipo(d: { nombre: string; rol: string; i
       texto: `${e(d.invitadoPor)} te dio acceso al panel de Electro Shop como <strong style="${CORREO.fuerte}">${e(d.rol)}</strong>.`,
     },
     cuerpo: `
-      ${avisoCorreo('Dos pasos para entrar', 'Crea tu contraseña y después configura la verificación en dos pasos con una app de códigos en tu teléfono (Google Authenticator o Authy).', 'clave')}
+      ${avisoCorreo('Ten tu teléfono a mano', `Para entrar vas a usar tu contraseña y un número que te da una app gratis del teléfono. Te recomendamos Google Authenticator (<a href="${APP_ANDROID}" style="${CORREO.enlace}">Android</a> · <a href="${APP_IPHONE}" style="${CORREO.enlace}">iPhone</a>); también sirven Microsoft Authenticator o Authy. Primero creas tu contraseña y después el panel te guía paso a paso.`, 'clave')}
       ${botonCorreo(e(d.enlace), 'Crear mi contraseña')}
       <p style="${CORREO.nota}">El enlace sirve 24 horas y una sola vez. Si no esperabas esta invitación, ignora este correo: sin la contraseña nadie puede entrar.</p>`,
     chispa: { pose: 'saluda', texto: '¡Qué bueno tenerte! Desde el panel se mueve toda la tienda: pedidos, productos y clientes.' },

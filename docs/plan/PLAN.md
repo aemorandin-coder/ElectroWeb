@@ -470,12 +470,12 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 
 **Claude en el panel (C-288, hecho en rc.103; `estado/C-288.md`):** la sección IA · Claude de Configuración (motor, clave, instrucciones por uso, reglas, consumo, fallas y guía) y las reglas que la tienda comprueba en cada respuesta. **C-288b pasó a C-292** (el plan `AJUSTES.md`). Si `ia_pedidos` o `ia_atajadas` llegan a pesar, borrar lo de más de un año.
 
-**Ajustes, acceso y herramientas claras (el plan de C-289, 18/11; `AJUSTES.md`):** el pedido del equipo después de que la contadora se trabó en los dos pasos. La regla ya está hecha: la skill `herramientas-claras` (§1.12). Las decisiones abiertas son D1 a D6 de `AJUSTES.md` §6.2, y cada fase empieza con sus maquetas.
-- **C-290 · Los dos pasos que se entienden** (pendiente):
+**Ajustes, acceso y herramientas claras (el plan de C-289, 18/11; `AJUSTES.md`):** el pedido del equipo después de que la contadora se trabó en los dos pasos. La regla ya está hecha: la skill `herramientas-claras` (§1.12). Las decisiones D1 a D6 se tomaron el mismo 18/11 (`AJUSTES.md` §6.2; lo recomendado en las seis).
+- **C-290 · Los dos pasos que se entienden** (hecha en rc.104, `estado/C-290.md`):
   - la hoja "Así funciona" y cuatro pasos dibujados;
   - las tres apps con su logo y su tienda (Play Store y App Store);
   - el número de la app dibujado al entrar, y el correo de invitación que avisa lo que hará falta.
-- **C-291 · El dispositivo de confianza, 30 días** (pendiente; tabla y columnas aditivas):
+- **C-291 · El dispositivo de confianza, 30 días** (hecha en rc.105, `estado/C-291.md`; tabla y columnas aditivas):
   - para todo el panel, con el código otra vez en lo delicado (la clave de la IA y la del correo, Equipo, Métodos de pago y Respaldos);
   - se ve y se quita en Mi seguridad y en Equipo, llega un correo al marcarlo y se borra al cambiar la contraseña.
 - **C-292 · La IA de la tienda, no de un proveedor** (pendiente; absorbe C-288b):
@@ -978,6 +978,7 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
   - Admins nuevos solo por invitación al correo. Una cuenta de cliente no se convierte en admin.
   - Una sola sesión de admin, 12 horas y cierre tras 1 hora sin uso.
   - **Dispositivo de confianza (18/11, C-289 → C-291):** para todo el panel (la contadora, los administradores y el dueño), 30 días sin pedir el código en ese dispositivo; la contraseña se sigue pidiendo. Lo delicado pide el código otra vez. Se ve y se quita en Mi seguridad y en Equipo, llega un correo al marcarlo y se borran todos al cambiar la contraseña o reiniciar los dos pasos. Los dos pasos siguen siendo obligatorios.
+  - **Ajustes (18/11, C-289; `AJUSTES.md` §6.2):** Métodos de pago entra a Ajustes → Vender; "Qué avisar" y Telegram, a Ajustes → Avisos (Notificaciones queda con la bandeja); Portada y Google y redes pasan a Marketing (también los cambian los administradores con permiso de contenido); se quitan los colores de los correos, las palabras clave, la tarjeta Equipo repetida y los interruptores de stock repetidos (los datos quedan en la base); el menú de Ajustes, agrupado; la casilla de confianza, apagada al abrir.
   - **La IA en los textos (18/11, C-289 → C-292):** "IA" en los botones ("Armar con IA") y el motor en letra chica en el resultado ("Lo redactó Claude Haiku 5.5"). La sección se llama "IA". Cambiar de motor no toca ningún texto.
   - Menú por secciones; "Dashboard" se llama Dashboard; "Cursos" se queda en el menú (01/10).
 - **Clientes:** se borran solo si no tienen órdenes, Puntos ES, transacciones ni gift cards; si tienen algo, se desactivan (17/09).

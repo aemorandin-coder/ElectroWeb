@@ -57,6 +57,7 @@ model User {
   sesiones      UserSession[]
   // C-141: verificación en dos pasos del panel (app de códigos)
   segundoFactor SegundoFactor?
+  dispositivosConfianza DispositivoConfianza[]
   // C-171: cómo armó cada administrador su Dashboard
   dashboardLayout AdminDashboardLayout?
   orders        Order[]
@@ -1298,9 +1299,39 @@ model UserSession {
   expiresAt    DateTime
   revokedAt    DateTime?
   motivoCierre String?   // CERRADA | OTRA_SESION | INACTIVIDAD
+  /// C-291: cómo pasó el admin el segundo paso al entrar: codigo | respaldo | confianza. null: antes de C-291 o cliente
+  segundoPaso  String?
+  /// C-291: cuándo confirmó con el código algo delicado (vale 15 minutos). Solo cuenta si entró por confianza
+  confirmadoAt DateTime?
 
   @@index([userId])
   @@map("user_sessions")
+}
+
+/// C-291: los dispositivos de confianza del panel: 30 días sin pedir el código en ese navegador (la contraseña, sí).
+/// La galleta lleva un número al azar; aquí solo su huella. Vale mientras no venza, no se quite y la versión de sesión del
+/// usuario sea la misma (cambiar la contraseña, "No fui yo" o cerrar sus sesiones los anulan todos).
+model DispositivoConfianza {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 del valor de la galleta (lib/token-huella)
+  huella       String
+  /// "Chrome en Windows" (lib/dispositivo)
+  dispositivo  String
+  ip           String?
+  /// sessionVersion del usuario al marcarlo
+  version      Int
+  createdAt    DateTime  @default(now())
+  venceAt      DateTime
+  ultimoUsoAt  DateTime?
+  quitadoAt    DateTime?
+  /// QUITADO | QUITADOS_TODOS | DUENO | REINICIO | REEMPLAZADO | NO_FUI_YO
+  motivoQuitado String?
+
+  @@index([huella])
+  @@index([userId])
+  @@map("dispositivos_confianza")
 }
 
 // C-148: cotizaciones (presupuestos) para empresas e instituciones. El equipo las arma en el panel o el cliente las

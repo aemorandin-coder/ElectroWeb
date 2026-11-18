@@ -5,11 +5,11 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import {
   IconoAbrirCandado, IconoActualizar, IconoAdvertencia, IconoBloqueado, IconoCandado, IconoCerrar, IconoChevronDerecha,
-  IconoEliminar, IconoEnviar, IconoFlechaIzquierda, IconoRegistrarse, IconoRepetir, IconoSalir,
+  IconoEliminar, IconoEnviar, IconoFlechaIzquierda, IconoLaptop, IconoRegistrarse, IconoRepetir, IconoSalir,
 } from '@/components/iconos';
 import type { IconType } from '@/components/iconos';
 import {
-  adminBadge, adminCard, adminChoice, adminDangerButton, adminEmpty, adminError, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter,
+  adminBadge, adminCard, adminChoice, adminDangerButton, adminDato, adminEmpty, adminError, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter,
   adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton,
   adminSecondaryButton, adminSectionTitle, adminSpinner,
 } from '@/lib/admin-ui';
@@ -37,7 +37,7 @@ const ESTADOS: Record<EstadoMiembro, { texto: string; tono: 'success' | 'warning
   sin_acceso: { texto: 'Sin acceso', tono: 'danger' },
 };
 
-type Accion = 'cambiar_rol' | 'quitar_acceso' | 'devolver_acceso' | 'reiniciar_dos_pasos' | 'reenviar_invitacion' | 'cancelar_invitacion' | 'cerrar_sesiones';
+type Accion = 'cambiar_rol' | 'quitar_acceso' | 'devolver_acceso' | 'reiniciar_dos_pasos' | 'reenviar_invitacion' | 'cancelar_invitacion' | 'cerrar_sesiones' | 'quitar_dispositivos';
 
 const ACCIONES: Record<Accion, { Icon: IconType; titulo: (m: MiembroEquipo) => string; detalle: (m: MiembroEquipo) => string; boton: string; hecho: string; peligro?: boolean; para: (m: MiembroEquipo) => boolean }> = {
   reenviar_invitacion: {
@@ -59,15 +59,24 @@ const ACCIONES: Record<Accion, { Icon: IconType; titulo: (m: MiembroEquipo) => s
   reiniciar_dos_pasos: {
     Icon: IconoActualizar,
     titulo: () => 'Reiniciar sus dos pasos',
-    detalle: (m) => `Para cuando ${m.nombre} pierde o cambia el teléfono. Se borran su app de códigos y sus códigos de respaldo, se cierran sus sesiones y la próxima vez que entre los configura de nuevo. Antes de hacerlo, confirma por otro medio (una llamada) que quien lo pide es esa persona.`,
+    detalle: (m) => `Para cuando ${m.nombre} pierde o cambia el teléfono. Se borran su app de códigos, sus llaves de repuesto y sus dispositivos de confianza, se cierran sus sesiones y la próxima vez que entre los configura de nuevo. Antes de hacerlo, confirma por otro medio (una llamada) que quien lo pide es esa persona.`,
     boton: 'Reiniciar',
     hecho: 'Dos pasos reiniciados',
     para: (m) => m.dosPasos,
   },
+  // C-291: los navegadores donde no se le pide el número de la app (30 días)
+  quitar_dispositivos: {
+    Icon: IconoLaptop,
+    titulo: (m) => (m.dispositivos === 1 ? 'Quitar su dispositivo de confianza' : `Quitar sus ${m.dispositivos} dispositivos de confianza`),
+    detalle: (m) => `La próxima vez que ${m.nombre} entre, el panel le pide el número de su app en todos lados. Para un teléfono o una computadora perdidos o prestados.`,
+    boton: 'Quitar',
+    hecho: 'Dispositivos de confianza quitados',
+    para: (m) => m.dispositivos > 0,
+  },
   cerrar_sesiones: {
     Icon: IconoSalir,
     titulo: () => 'Cerrar sus sesiones',
-    detalle: (m) => `${m.nombre} sale del panel en todos sus dispositivos y tiene que volver a entrar.`,
+    detalle: (m) => `${m.nombre} sale del panel en todos sus dispositivos y tiene que volver a entrar. También se anulan sus dispositivos de confianza.`,
     boton: 'Cerrar sesiones',
     hecho: 'Sesiones cerradas',
     para: (m) => m.sesionAbierta,
@@ -99,7 +108,7 @@ const ACCIONES: Record<Accion, { Icon: IconType; titulo: (m: MiembroEquipo) => s
     para: (m) => m.estado === 'invitado',
   },
 };
-const ORDEN: Accion[] = ['reenviar_invitacion', 'devolver_acceso', 'cambiar_rol', 'reiniciar_dos_pasos', 'cerrar_sesiones', 'quitar_acceso', 'cancelar_invitacion'];
+const ORDEN: Accion[] = ['reenviar_invitacion', 'devolver_acceso', 'cambiar_rol', 'reiniciar_dos_pasos', 'quitar_dispositivos', 'cerrar_sesiones', 'quitar_acceso', 'cancelar_invitacion'];
 
 const fecha = (iso: string) => new Date(iso).toLocaleString('es-VE', { timeZone: 'America/Caracas', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 
@@ -178,6 +187,12 @@ export default function EquipoPage() {
                       </span>
                     )}
                     {m.sesionAbierta && <span className={adminBadge('brand')}>Sesión abierta</span>}
+                    {m.dispositivos > 0 && (
+                      <span className={adminDato}>
+                        <IconoLaptop className="h-3 w-3" aria-hidden="true" />
+                        {m.dispositivos === 1 ? '1 dispositivo de confianza' : `${m.dispositivos} dispositivos de confianza`}
+                      </span>
+                    )}
                   </p>
                   <p className="mt-2 text-xs text-muted">
                     {m.estado === 'invitado'

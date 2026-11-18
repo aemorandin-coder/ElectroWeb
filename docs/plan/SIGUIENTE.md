@@ -1,9 +1,17 @@
-# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.103; nada por subir: §2)
+# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.103; por subir: rc.104 y rc.105, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-291 · El dispositivo de confianza, 30 días (rc.105, en `main`, por subir: §2; `estado/C-291.md`):** la fase 2 del plan de Ajustes.
+  - **Al entrar con el número,** "No pedir el número en esta computadora por 30 días" (apagada). La contraseña se sigue pidiendo.
+  - **Mi seguridad** los lista y los quita; **Equipo** los cuenta y el dueño los quita. Se anulan al cambiar la contraseña o reiniciar los dos pasos.
+  - **Lo delicado** (la clave de la IA y la del correo, Equipo, Métodos de pago, Respaldos) pide el número otra vez si se entró por confianza.
+- **C-290 · Los dos pasos que se entienden (rc.104, en `main`, por subir con rc.105: §2; `estado/C-290.md`):** la primera fase del plan de Ajustes.
+  - **Mi seguridad** guía los dos pasos en cuatro pasos dibujados: baja la app (las tres, con su logo y sus tiendas), agrega Electro Shop (el teléfono dibujado y el QR; en el teléfono, "Abrir en la app"), escribe el número y guarda tus llaves de repuesto.
+  - **Al entrar:** el número de la app dibujado, errores que dicen qué hacer y la salida por WhatsApp.
+  - **La invitación** avisa antes lo que va a hacer falta.
 - **C-289 · Ajustes, acceso y herramientas claras: el plan (18/11, sin código; `AJUSTES.md` y `estado/C-289.md`):** el pedido del equipo después de que la contadora se trabó en los dos pasos ("qué app es doble factor y qué tengo que hacer después").
   - **Hecha, la regla para todo lo que se construya:** la skill `herramientas-claras`, en el repositorio para cada PC. Pide mensajes claros, íconos, poco texto, muy gráfico, las apps de afuera con su logo y dónde se bajan, y qué viene después. Está citada en `CLAUDE.md` y en `PLAN.md` §1.12.
   - **Las fases:**
@@ -512,8 +520,53 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: nada por ahora
-Producción está en `v1.0.0-rc.103` (`e82052e3`); su bloque está en `HISTORIAL.md`.
+### Lo que falta subir: `v1.0.0-rc.105` (C-290 y C-291)
+Producción está en `v1.0.0-rc.103` (`e82052e3`); su bloque está en `HISTORIAL.md`. Es un solo bloque, con rc.104 adentro. Si entran más tareas del plan de Ajustes antes de subir, se suman aquí.
+- **Cambio de base (aditivo, de C-291):** una tabla nueva y dos columnas en `user_sessions`, sin `DROP` ni cambios de tipo. Sin variables nuevas y sin cron.
+```sql
+ALTER TABLE "user_sessions" ADD COLUMN     "confirmadoAt" TIMESTAMP(3),
+ADD COLUMN     "segundoPaso" TEXT;
+CREATE TABLE "dispositivos_confianza" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "huella" TEXT NOT NULL,
+    "dispositivo" TEXT NOT NULL,
+    "ip" TEXT,
+    "version" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "venceAt" TIMESTAMP(3) NOT NULL,
+    "ultimoUsoAt" TIMESTAMP(3),
+    "quitadoAt" TIMESTAMP(3),
+    "motivoQuitado" TEXT,
+    CONSTRAINT "dispositivos_confianza_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "dispositivos_confianza_huella_idx" ON "dispositivos_confianza"("huella");
+CREATE INDEX "dispositivos_confianza_userId_idx" ON "dispositivos_confianza"("userId");
+ALTER TABLE "dispositivos_confianza" ADD CONSTRAINT "dispositivos_confianza_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+```
+- **Subir** (en la terminal del servidor):
+  1. El respaldo, como en rc.101: `cd /var/www/electroshopve && DB=$(grep '^DATABASE_URL' .env | cut -d= -f2- | tr -d '"' | sed 's/?.*//') && pg_dump -Fc "$DB" -f ~/respaldo-antes-rc105.dump`
+  2. `git pull --ff-only && bash scripts/deploy.sh --sin-pull`. El guion se detiene por el cambio de base y muestra el SQL de arriba.
+  3. `npx prisma db push`, y otra vez `bash scripts/deploy.sh --sin-pull`.
+  - Al terminar, `git describe --tags` debe decir `v1.0.0-rc.105`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 15 minutos; antes, recarga el panel con Ctrl+R):
+  1. **La guía, de cero** (en la computadora, con una cuenta de prueba invitada desde Equipo):
+     - la invitación avisa que hace falta el teléfono y una app;
+     - Mi seguridad abre con "Así entras al panel";
+     - los cuatro pasos con Google Authenticator de verdad, escaneando el QR, y "Entrar al panel".
+  2. **Desde el teléfono** (Android o iPhone), con otra cuenta de prueba: en el paso 2, "Abrir en Google Authenticator" abre la app con Electro Shop puesto.
+  3. **Entrar:** cierra la sesión y entra otra vez.
+     - Pide "Escribe el número de tu app", con la fila dibujada; un número cualquiera dice "Ese número ya cambió…".
+     - Marca "No pedir el número en esta computadora por 30 días" y entra con el número.
+     - Llega el correo "Marcaste un dispositivo de confianza".
+  4. **El dispositivo de confianza:**
+     - cierra la sesión y entra otra vez: solo pide la contraseña;
+     - Mi seguridad → Dispositivos de confianza lo muestra como "Este".
+  5. **Lo delicado** (con la cuenta del dueño, entrando por confianza): en Configuración → IA, "Probar la conexión" de la clave no pide nada; cambiar la clave sí abre "Confirma que eres tú". Cancela.
+  6. **Quitar:** "Quitar" en Mi seguridad; la vez siguiente pide el número otra vez.
+  7. **La contadora:** que entre como siempre y, si quiere, marque su computadora.
+  - Al terminar, quita las cuentas de prueba desde Equipo.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.103 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas se pueden quedar: rc.103 no las usa.
 
 ### Por confirmar de rc.103 (C-288, Claude en el panel; unos 8 minutos)
 Ya en producción desde el 18/11, cerca de las 8:05 a. m. Lo subió Claude por SSH con la aprobación del equipo; el detalle está en `HISTORIAL.md`. Claude ya comprobó la versión, las tablas, que la API nueva no responde sin sesión, las páginas y que el registro de errores no sumó líneas.

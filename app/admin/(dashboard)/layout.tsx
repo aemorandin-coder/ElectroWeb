@@ -17,6 +17,7 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useCajonAccesible } from '@/lib/hooks/useCajonAccesible';
 import ControlSesionAdmin, { cerrarSesionAdmin } from '@/components/admin/ControlSesionAdmin';
+import ConfirmarConCodigo from '@/components/admin/dos-pasos/ConfirmarConCodigo';
 import AvisosDeVersion from '@/components/admin/version/AvisosDeVersion';
 import MarquesinaEquipo from '@/components/admin/edicion/MarquesinaEquipo';
 import { moduloDeRuta, versionDe } from '@/lib/modulos';
@@ -361,6 +362,8 @@ export default function AdminLayout({
     <div className="min-h-dvh bg-surface">
       {/* C-140: se cierra tras 1 hora sin uso, con aviso 5 minutos antes */}
       <ControlSesionAdmin />
+      {/* C-291: lo delicado pide el número de la app si la sesión entró por un dispositivo de confianza */}
+      <ConfirmarConCodigo />
       {isDrawerOpen && (
         <div className="fixed inset-0 z-[var(--z-drawer)] bg-ink/50 lg:hidden" onClick={() => setDrawerPath(null)} aria-hidden="true" />
       )}

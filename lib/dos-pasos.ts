@@ -187,4 +187,6 @@ export async function regenerarRespaldo(userId: string, codigo: string): Promise
 /** Borra la configuración: la próxima vez que entre tendrá que configurarla otra vez. */
 export async function reiniciarDosPasos(userId: string): Promise<void> {
   await prisma.segundoFactor.deleteMany({ where: { userId } });
+  // C-291: sin dos pasos no hay dispositivos de confianza; al configurarlos otra vez, se marcan de nuevo
+  await prisma.dispositivoConfianza.updateMany({ where: { userId, quitadoAt: null }, data: { quitadoAt: new Date(), motivoQuitado: 'REINICIO' } });
 }

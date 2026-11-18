@@ -47,7 +47,7 @@ Fotos de piezas (portadas, banner, destacadas): `node herramientas/captura.mjs p
 | "La ficha de Electro Shop" (Chispa con voz) | `videos/ficha.src.html` | Reel | v2 |
 | "La ficha" para YouTube | `videos/ficha-yt.src.html` + `piezas/miniatura-ficha.html` | 16:9 | Entregada |
 | "El nuevo del equipo" (Andrés real en Google Flow + Chispa) | `videos/chispa-entrada.src.html`, `videos/chispa-medio.src.html`, `videos/andres-chispa-capa.html`, `herramientas/montaje-andres-chispa.sh`, `piezas/portada-andres-chispa.html` | Reel | v4 publicada |
-| "Más boletos para la PS4" (amigos que activan y compras que suman) | `guiones/sorteo-amigos-y-compras.md` | Reel | En guion (se graba después de rc.111) |
+| "Más boletos para la PS4" (amigos que activan y compras que suman) | `videos/sorteo-amigos-compras.src.html` + `piezas/portada-sorteo-amigos.html` (guion: `guiones/sorteo-amigos-y-compras.md`) | Reel | Armado, sin voz todavía (se publica después de rc.111) |
 | Demos de Chispa | `videos/chispa-demo.src.html`, `videos/chispa-giro.html` | Reel | Pruebas de movimiento |
 
 El detalle de cada uno (qué pidió Andrés, qué se corrigió) está en [`conocimiento/07-historial.md`](./conocimiento/07-historial.md).

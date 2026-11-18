@@ -1336,16 +1336,10 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
 ## 3. Tareas del equipo (Andrés y Luis, sin código)
 En el orden en que más destraban:
 
-**El reel "Más boletos para la PS4" (C-300; después de subir rc.111)**
-1. **La voz, en ElevenLabs** (en la computadora): la voz **Diego** con los ajustes de siempre. El texto es el bloque "Texto para la voz" de `chispa/guiones/sorteo-amigos-y-compras.md`. Pásale el mp3 por **Speech to Text** y exporta el **JSON**. Me pasas los dos archivos.
-2. **El producto estrella de esta semana:** en el panel, Marketing → Sorteo → "Producto estrella de cada semana" → "Elegir producto".
-3. **Tres cuentas de prueba** (en el teléfono o la computadora), con nombres inventados como "Chispa Prueba", "Luisa P." y "Carlos M.":
-   - la primera crea su cuenta y copia su enlace de `/sorteo`;
-   - las otras dos se registran con ese enlace, con un teléfono;
-   - **solo una** activa su cuenta desde el correo.
-   - Me pasas el acceso de la primera, por un lugar que no sea el repositorio.
-4. **La captura del correo** (en el teléfono): en Gmail, el correo "Activa tu cuenta de Electro Shop" de la cuenta que falta activar, con el botón "Activar mi cuenta" a la vista. **No toques el botón** hasta que yo saque la pantalla de "Falta activar".
-5. **Al terminar el reel:** quita las tres cuentas de prueba en Clientes.
+**El reel "Más boletos para la PS4" (C-300)**: Claude ya armó el guion, las capturas, el video y la portada; falta la voz.
+1. **Volver a conectar ElevenLabs** (en la computadora, en claude.ai): Configuración → Conectores → ElevenLabs → desconectar y conectar otra vez, aceptando todos los permisos. Hoy responde "Insufficient scope". Con eso Claude genera la voz Diego y termina el video.
+2. **Antes de publicarlo:** subir el bloque de §2 (rc.111 en adelante) y elegir el producto estrella de esa semana (en el panel: Marketing → Sorteo → "Producto estrella de cada semana").
+
 
 **Del plan del 14/11 (C-220):** los textos para Google, el lema y el sorteo de Navidad ya no los hace el equipo en el panel: van en el SQL de datos del bloque de rc.45 (sección 2). Después del deploy queda subir la foto de la consola (Marketing → Sorteo → Cambiar).
 

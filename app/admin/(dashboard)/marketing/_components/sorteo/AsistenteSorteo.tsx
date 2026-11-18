@@ -562,7 +562,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
               </p>
               <TarjetaSorteoVista
                 enlace={false}
-                sorteo={{ titulo: form.titulo.trim(), premio: form.premio.trim(), resultadoEl: fechaResultado.toISOString(), cerrado: false, sorteado: false, compraMinimaUSD: minimo, topeInvitar: tope }}
+                sorteo={{ titulo: form.titulo.trim(), premio: form.premio.trim(), resultadoEl: fechaResultado.toISOString(), cerrado: false, sorteado: false, compraMinimaUSD: minimo, topeInvitar: tope, boletosPorCompra: porCompra }}
               />
             </div>
           )}

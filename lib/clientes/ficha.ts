@@ -128,7 +128,7 @@ export async function fichaDelCliente(id: string): Promise<FichaCliente | null> 
   let boletos: number | null = null;
   if (sorteo) {
     const fila = (await resumenDelSorteo(sorteo)).participantes.find((x) => x.userId === u.id);
-    boletos = fila ? fila.porCompra + fila.porInvitar : 0;
+    boletos = fila ? fila.porCompra + fila.porResena + fila.porInvitar : 0;
   }
   // Quién del equipo hizo cada cosa: el nombre de su cuenta
   const idsEquipo = [...new Set(bitacora.map((b) => b.userId).filter((x): x is string => Boolean(x)))];

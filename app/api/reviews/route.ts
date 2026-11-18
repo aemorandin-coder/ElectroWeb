@@ -11,6 +11,7 @@ import { notifyReviewApproved } from '@/lib/notifications';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { hasPermission } from '@/lib/auth-helpers';
 import { getPublicReviews, getReviewSummary } from '@/lib/queries/product';
+import { avisarBoletoPorResena } from '@/lib/sorteo/correos';
 
 /**
  * GET /api/reviews (C-31):
@@ -255,6 +256,8 @@ export async function PATCH(request: NextRequest) {
                 } catch (notifError) {
                     console.error('[reviews] notificación de reseña aprobada:', notifError);
                 }
+                // C-297: durante el sorteo, una reseña aprobada da boletos: se le dice en la campana (no lanza)
+                await avisarBoletoPorResena(updatedReview.id);
             });
         }
 

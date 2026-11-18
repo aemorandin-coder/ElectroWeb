@@ -10,6 +10,7 @@
 // - El resultado llena el editor: no se guarda ni se envía hasta que una persona lo revisa.
 
 import { prisma } from '@/lib/prisma';
+import { reglaCorta, reglaDe } from '@/lib/sorteo/escala';
 import { formatUSD } from '@/lib/currency';
 import { campanaSchema, type Bloque } from '@/lib/email-campaigns';
 import { INSTRUCCIONES_DE_FABRICA } from '@/lib/ia/fabrica';
@@ -97,7 +98,8 @@ export async function redactarCampana(objetivo: string, opciones: OpcionesDeUso 
     settings.freeDeliveryThresholdUSD ? `Envío gratis en compras desde ${formatUSD(settings.freeDeliveryThresholdUSD)} de lo que sale de Guanare; lo demás va por ZOOM o MRW con cobro a destino.` : 'Envíos a todo el país por ZOOM o MRW, con cobro a destino.',
     settings.entregaNavidad?.envio ? `Para que un envío llegue antes de Navidad hay que comprar hasta el ${diaConNombre(settings.entregaNavidad.envio)}.` : null,
     settings.entregaNavidad?.local ? `En Guanare, con delivery o retiro, hasta el ${diaConNombre(settings.entregaNavidad.local)}.` : null,
-    sorteo && !sorteo.sorteadoAt ? `Hay un sorteo: ${sorteo.premio}. Cada compra pagada de ${formatUSD(Number(sorteo.compraMinimaUSD))} o más es un boleto; el resultado se da el ${new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'long', timeZone: 'America/Caracas' }).format(sorteo.resultadoEl)}.` : null,
+    // C-297: la escala (Desde $5, 2 boletos. Desde $50, 5 por cada $50.), el producto estrella y las reseñas
+    sorteo && !sorteo.sorteadoAt ? `Hay un sorteo: ${sorteo.premio}. ${reglaCorta(reglaDe(sorteo))}${sorteo.boletosPorResena > 0 ? ` Cada reseña aprobada de algo comprado da ${sorteo.boletosPorResena}.` : ''} Cada semana hay un producto estrella que da boletos de más. El resultado se da el ${new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'long', timeZone: 'America/Caracas' }).format(sorteo.resultadoEl)}.` : null,
   ].filter(Boolean);
   const pedido = [
     `Objetivo de la campaña: """${objetivo.slice(0, 600)}"""`,

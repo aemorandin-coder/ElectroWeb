@@ -490,6 +490,7 @@ Lo que está **en `main` sin subir** y las **tareas de Andrés** (datos, configu
 - **C-294 · Ajustes: Avisos, Conexiones y La tienda en línea** (hecha en rc.110, `estado/C-294.md`; con ella termina el plan de `AJUSTES.md`):
   - "Qué avisar", Telegram y los correos de alerta, juntos;
   - fuera los colores de los correos (sin efecto), las palabras clave, la tarjeta Equipo repetida y los interruptores de stock repetidos, si se aprueba D3.
+- **C-299 · El aviso del dispositivo de confianza, solo a un correo comprobado** (hecha en rc.112, 18/11, `estado/C-299.md`): a una dirección sin comprobar rebotaba en cada dispositivo marcado.
 
 **Del Dashboard nuevo (C-279, rc.98), lo que sigue:**
 - **C-279b:** las novedades de versión con antes y después o un mini video en una esquina, "Probarlo" que marca lo nuevo y el estreno a pantalla completa para las versiones grandes, como en la maqueta (`~/.cache/electroshop-trabajo/c279/`). Pide sumarle los medios a `lib/modulos.ts`.

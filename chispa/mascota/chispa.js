@@ -5,6 +5,9 @@
 //   chispa.linea(claves)                        -> función t -> estado, con transiciones suaves entre claves
 //   chispa.labios(voz)                          -> función t -> boca, siguiendo las vocales de cada palabra
 // viewBox 0 0 400 420; la cabeza gira sobre el cuello (200, 258).
+// Versión 3.1 (C-296, 18/11, elegida en la página de variantes): el logo oficial en la camisa, los ojos de asombro
+// (sorpresa), el párpado y el brillo de los tristes, la mirada que se nota y que la cabeza acompaña, la cabeza y los
+// hombros de cada emoción, el puño de «piensa» en la barbilla y la cara «serio».
 (function () {
   const INK = '#111317', SKIN = '#fff8ee', SKIN_SOMBRA = '#f1dfc8', SHIRT = '#16213a', SHIRT_SOMBRA = '#0d1528', BLUE = '#2a63cd', CREAM = '#f4efe4';
   const S = `stroke="${INK}" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"`;
@@ -35,13 +38,35 @@
 
   // Ojos: abre (0 cerrado .. 1 normal .. 1.15 sorpresa), mirada (mx, my en -1..1), forma: normal | feliz | guino | sonrie | entrecerrado.
   // C-195: "sonrie" (abiertos, con el párpado de abajo empujado por la mejilla) y "entrecerrado" (el de arriba bajo: pícaro, pensando)
-  const ojo = (cx, cy, abre, mx, my, forma) => {
+  // C-296 (3.1), en o (el estado de los ojos):
+  // - ax / ay: cuánto se corren al mirar (antes 3,5 y 2,5: no se notaba hacia dónde miraba);
+  // - asombro (0..1): el ojo se vuelve blanco y la pupila se achica (la sorpresa); con los valores de en medio pasa suave;
+  // - parpado (0..1): el párpado de arriba cae hacia el rabillo (triste). lado: -1 el ojo de la izquierda de quien mira;
+  // - lloroso (0..1): los brillos más grandes y el brillo de lágrima abajo.
+  const lerp0 = (a, b, t) => a + (b - a) * t;
+  const ojo = (cx, cy, abre, mx, my, forma, o = {}, lado = 1) => {
     if (forma === 'feliz') return `<path d="M${cx - 12} ${cy + 4} C${cx - 6} ${cy - 7} ${cx + 6} ${cy - 7} ${cx + 12} ${cy + 4}" fill="none" ${S}/>`;
     if (abre < .22) return `<path d="M${cx - 12} ${cy + 2} Q${cx} ${cy + 7} ${cx + 12} ${cy + 2}" fill="none" ${S}/>`;
-    const x = cx + mx * 3.5, y = cy + my * 2.5, ry = 15 * abre, rx = 11 + (abre > 1 ? (abre - 1) * 6 : 0);
-    const k = Math.min(1, abre);
-    const abierto = `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" fill="${INK}"/>
-      <circle cx="${f(x + 4)}" cy="${f(y - 6 * k)}" r="${f(4.2 * k)}" fill="#fff"/><circle cx="${f(x - 3.5)}" cy="${f(y + 5 * k)}" r="${f(1.8 * k)}" fill="#fff" opacity=".85"/>`;
+    const x = cx + mx * (o.ax ?? 7), y = cy + my * (o.ay ?? 5), ry = 15 * abre, rx = 11 + (abre > 1 ? (abre - 1) * 6 : 0);
+    const k = Math.min(1, abre), as = Math.max(0, Math.min(1.3, o.asombro || 0)), ll = o.lloroso || 0, pp = o.parpado || 0;
+    if (as > .01) {
+      // El blanco crece desde el ojo negro y la pupila se achica: en 0 es el ojo de siempre, en 1 el de asombro
+      const sx = lerp0(x, cx, as), sy = lerp0(y, cy, as), px = lerp0(x, cx + mx * 4.5, as), py = lerp0(y, cy + my * 5, as);
+      const prx = Math.max(3, lerp0(rx, 6.4, as)), pry = Math.max(3, lerp0(ry, 6.4, as));
+      const hx = lerp0(x + 4, px + 2.2, as), hy = lerp0(y - 6 * k, py - 2.4, as), hr = lerp0(4.2 * k, 2.1, as);
+      return `<ellipse cx="${f(sx)}" cy="${f(sy)}" rx="${f(lerp0(rx, 12.5 * Math.min(1.08, abre), as))}" ry="${f(lerp0(ry, 16 * abre, as))}" fill="#fff" stroke="${INK}" stroke-width="${f(4.5 * Math.min(1, as))}"/>
+        <ellipse cx="${f(px)}" cy="${f(py)}" rx="${f(prx)}" ry="${f(pry)}" fill="${INK}"/><circle cx="${f(hx)}" cy="${f(hy)}" r="${f(hr)}" fill="#fff"/>`;
+    }
+    const kb = 1 + ll * .35;
+    let abierto = `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" fill="${INK}"/>
+      <circle cx="${f(x + 4)}" cy="${f(y - 6 * k)}" r="${f(4.2 * k * kb)}" fill="#fff"/><circle cx="${f(x - 3.5)}" cy="${f(y + 5 * k)}" r="${f(1.8 * k * kb)}" fill="#fff" opacity=".85"/>`;
+    if (ll > .02) abierto += `<path d="M${f(x - rx * .62)} ${f(y + ry * .5)} Q${f(x)} ${f(y + ry * .95)} ${f(x + rx * .62)} ${f(y + ry * .5)}" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" opacity="${f(.9 * ll)}"/>`;
+    if (pp > .02 && forma !== 'sonrie' && forma !== 'entrecerrado') {
+      const xo = cx + lado * (rx + 6), xi = cx - lado * (rx + 6), arriba = cy - ry - 10;
+      const yo = cy - ry + ry * pp, yi = cy - ry + ry * .3 * pp, ym = (yo + yi) / 2 - 1.5, xo2 = cx + lado * (rx + 1.5), xi2 = cx - lado * (rx + 1.5);
+      abierto += `<path d="M${f(xo)} ${f(arriba)} L${f(xi)} ${f(arriba)} L${f(xi)} ${f(yi)} Q${cx} ${f(ym)} ${f(xo)} ${f(yo)} Z" fill="${SKIN}"/>
+        <path d="M${f(xi2)} ${f(yi + 1)} Q${cx} ${f(ym + 1)} ${f(xo2)} ${f(yo + 1)}" fill="none" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/>`;
+    }
     if (forma === 'sonrie') {
       const yb = cy + ry * .36;
       return `${abierto}<path d="M${f(cx - rx - 6)} ${f(yb)} Q${cx} ${f(cy - ry * .12)} ${f(cx + rx + 6)} ${f(yb)} L${f(cx + rx + 6)} ${f(cy + ry + 8)} L${f(cx - rx - 6)} ${f(cy + ry + 8)} Z" fill="${SKIN}"/>
@@ -54,7 +79,7 @@
     }
     return abierto;
   };
-  const ojos = (o) => `${ojo(166, 176, o.abre, o.mx, o.my, o.forma === 'guino' ? 'normal' : o.forma)}${ojo(234, 176, o.abre, o.mx, o.my, o.forma === 'guino' ? 'feliz' : o.forma)}`;
+  const ojos = (o) => `${ojo(166, 176, o.abre, o.mx, o.my, o.forma === 'guino' ? 'normal' : o.forma, o, -1)}${ojo(234, 176, o.abre, o.mx, o.my, o.forma === 'guino' ? 'feliz' : o.forma, o, 1)}`;
 
   // Cejas: alto (sube las dos), duda (una arriba, otra abajo), enojo (puntas de adentro abajo)
   const ceja = (pts, gr) => { // pts: 4 puntos de la curva; gr: grosor arriba/abajo en cada punto
@@ -79,11 +104,30 @@
     return `<clipPath id="boca${id}"><path d="${d}"/></clipPath><path d="${d}" fill="${INK}"/><g clip-path="url(#boca${id})">${lengua}${dientes}</g><path d="${d}" fill="none" ${s4}/>`;
   };
 
+  // ---------- El logo oficial (C-296) ----------
+  // El círculo del logo de la tienda, redibujado en vector desde public/images/brand/logo-largo.png (no había otro): el
+  // disco azul, el anillo, el monitor con «ES», la flecha y la base. Las medidas, en fracciones del radio (r), salen de
+  // los píxeles de esa imagen; las letras son barras de 0,053 y palos de 0,08. Lleva el borde de tinta de Chispa.
+  const logoES = (cx, cy, r) => {
+    const u = (n) => f(n * r), X = (n) => f(cx + n * r), Y = (n) => f(cy + n * r);
+    const barra = (x0, y0, x1, y1) => `<rect x="${X(x0)}" y="${Y(y0)}" width="${u(x1 - x0)}" height="${u(y1 - y0)}" rx="${u(.014)}" fill="#fff"/>`;
+    return `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}" fill="${BLUE}" stroke="${INK}" stroke-width="4"/>
+      <circle cx="${f(cx)}" cy="${f(cy)}" r="${u(.79)}" fill="none" stroke="#fff" stroke-width="${u(.085)}"/>
+      <rect x="${X(-.526)}" y="${Y(-.356)}" width="${u(1.052)}" height="${u(.53)}" rx="${u(.06)}" fill="none" stroke="#fff" stroke-width="${u(.053)}"/>
+      ${barra(-.402, -.261, -.32, .072)}${barra(-.402, -.261, -.023, -.208)}${barra(-.402, -.137, -.136, -.084)}${barra(-.402, .019, -.023, .072)}
+      ${barra(.03, -.261, .409, -.208)}${barra(.03, -.261, .108, -.084)}${barra(.03, -.137, .409, -.084)}${barra(.331, -.137, .409, .072)}${barra(.03, .019, .409, .072)}
+      <path d="M${X(-.19)} ${Y(.19)} L${X(.19)} ${Y(.19)} L${X(0)} ${Y(.33)} Z" fill="#fff"/>
+      <rect x="${X(-.48)}" y="${Y(.345)}" width="${u(.96)}" height="${u(.09)}" rx="${u(.045)}" fill="#fff"/>`;
+  };
+  // Dónde va: de frente, en el pecho, corrido hacia el centro para que la manga en reposo no lo tape; de espalda, grande.
+  const LOGO_FRENTE = [227, 358, 22], LOGO_ESPALDA = [200, 348, 38];
+
   // ---------- Cuerpo ----------
   const HOMBRO = { L: [136, 306], R: [264, 306] };
-  const TORSO = 'M104 420 L108 340 C110 310 128 292 160 284 L240 284 C272 292 290 310 292 340 L296 420 Z';
+  // C-296: h baja (+) o sube (−) los hombros: los de la emoción (triste, sorpresa)
+  const torsoD = (h = 0) => `M104 420 L108 340 C110 ${f(310 + h)} 128 ${f(292 + h)} 160 ${f(284 + h * .4)} L240 ${f(284 + h * .4)} C272 ${f(292 + h)} 290 ${f(310 + h)} 292 340 L296 420 Z`;
   const cuello = `<path d="M186 250 L186 290 L214 290 L214 250" fill="${SKIN}" ${S}/><path d="M188 258 L212 258 L212 274 C204 279 196 279 188 274 Z" fill="${SKIN_SOMBRA}"/>`;
-  const torso = (id) => `
+  const torso = (id, h = 0) => { const TORSO = torsoD(h); return `
     <clipPath id="torso${id}"><path d="${TORSO}"/></clipPath>
     <path d="${TORSO}" fill="${SHIRT}"/>
     <g clip-path="url(#torso${id})"><path d="M246 284 C276 296 292 318 292 350 L300 420 L258 420 C264 376 262 330 246 300 Z" fill="${SHIRT_SOMBRA}"/>
@@ -94,8 +138,7 @@
     <path d="M168 280 L200 316 L188 330 L158 290 Z M232 280 L200 316 L212 330 L242 290 Z" fill="${BLUE}" ${s4}/>
     <path d="M200 330 L200 420" stroke="#2b3a5c" stroke-width="3" stroke-linecap="round"/>
     <circle cx="200" cy="350" r="3" fill="#2b3a5c"/><circle cx="200" cy="386" r="3" fill="#2b3a5c"/>
-    <g transform="translate(220 344)"><rect x="0" y="0" width="38" height="28" rx="6" fill="#fff" ${s4}/>
-      <text x="19" y="20" text-anchor="middle" font-family="Tektrron, Poppins" font-size="14" font-weight="700" fill="${BLUE}">ES</text></g>`;
+    ${logoES(...LOGO_FRENTE)}`; };
 
   // ---------- Manos (coordenadas locales: muñeca en 0,0 y los dedos hacia -y) ----------
   // C-195 (Andrés, 06/11: "revisa bien las manos", "los pulgares son muy largos y se perciben como índice"). Cada mano es una
@@ -141,6 +184,14 @@
   };
   // Un pulgar por delante: su piel otra vez (tapa las rayas de los dedos que quedan atrás), su borde y la uña
   const pulgarDelante = (q, arriba = .3, abajo = .55) => `<path d="${capsula(q)}" fill="${SKIN}"/>` + borde(q, arriba, abajo) + uña(q);
+  // C-296 (skill manos-de-caricatura): un dedo doblado del todo, como un tubo que sigue una circunferencia (centro cx, cy;
+  // radio R) de a0 a a1 grados, con el grosor de r0 a r1. Para el aro del OK, donde las cápsulas rectas lo dejaban cuadrado.
+  const arcoDedo = (cx, cy, R, a0, a1, r0, r1, n = 28) => {
+    const pt = (a, rr) => p2(cx + rr * Math.cos(a * Math.PI / 180), cy + rr * Math.sin(a * Math.PI / 180));
+    const fuera = [], dentro = [];
+    for (let i = 0; i <= n; i++) { const t = i / n, a = a0 + (a1 - a0) * t, rt = r0 + (r1 - r0) * t; fuera.push(pt(a, R + rt)); dentro.push(pt(a, R - rt)); }
+    return `M${fuera.join(' L')} L${dentro.reverse().join(' L')} Z`;
+  };
   // Medidas: los dedos con 7,4 de radio en la base y 6,2 en la punta; el meñique, más fino; el pulgar, 9,5 y 8,2: más grueso
   // y bastante más corto que el índice.
   const DEDO = [7.4, 6.2], MEÑIQUE = [6.6, 5.6], PULGAR = [9.5, 8.2];
@@ -178,16 +229,23 @@
       const pul = pulgar(-19, -16, 4, -17);
       return g(x, y, r, silueta(PUÑO_PULGAR, capsula(pul)) + trazo('M-6 -11 L24 -11 M-6 2 L25 2 M-4 14 L23 14') + pulgarDelante(pul));
     },
-    // OK: el índice y el pulgar hacen un aro chico, pegado a la palma (una sola silueta), y los otros tres dedos se abren
-    // arriba. El hueco se recorta con una máscara: se ve el fondo aunque quede cerca de la palma. La raya es donde se tocan
-    // las puntas, y la uña dice que la mitad de abajo es el pulgar. (Andrés, 06/11: "el círculo debe ser más pequeño".)
-    // id: el de la Chispa que se dibuja (cada máscara necesita el suyo; con uno fijo, una Chispa le pisaba la mano a otra)
+    // OK. C-296 (skill manos-de-caricatura; el equipo, 18/11: "el pómulo del pulgar abajo es muy exagerado", eran los dedos
+    // del pulgar y el índice): el aro son dos dedos curvos sobre una circunferencia (centro c, radio R), no una dona. El índice
+    // sale de la palma y da la vuelta por arriba; el pulgar sube desde su base, sin abultar la palma y apenas más grueso que
+    // el índice. Las puntas se tocan a la izquierda (la raya), la uña dice cuál es el pulgar y la línea suave de la palma, de
+    // dónde sale. El hueco, chico y redondo, se recorta con una máscara (C-195: «el círculo debe ser más pequeño») con su borde
+    // fino. id: el de la Chispa que se dibuja (cada máscara necesita el suyo; con uno fijo, una Chispa le pisaba la mano a otra)
     ok: (x, y, r, id = ++uid) => {
-      const ds = dedos([4, -25, 7, -61], [12, -24, 18, -55], [18, -17, 27, -43, MEÑIQUE]), [cx, cy, hx, hy] = [-20, -42, 5.6, 4.8];
-      return g(x, y, r, `<mask id="chispaOk${id}" maskUnits="userSpaceOnUse" x="-90" y="-130" width="180" height="200"><rect x="-90" y="-130" width="180" height="200" fill="#fff"/><ellipse cx="${cx}" cy="${cy}" rx="${hx}" ry="${hy}" fill="#000"/></mask>` +
-        `<g mask="url(#chispaOk${id})">` + silueta(PALMA, ...ds.map(capsula), elipse(cx, cy, 16.5, 15.5)) + entre(ds[0], ds[1]) + entre(ds[1], ds[2]) +
-        trazo('M-3.6 -50 L-3.4 -31', 3.2) + `<ellipse cx="${cx}" cy="${cy}" rx="${hx + 1.7}" ry="${hy + 1.7}" fill="none" stroke="${INK}" stroke-width="3.4"/>` +
-        trazo('M-36.5 -37 L-27 -40', 3.2) + `<ellipse cx="-29.5" cy="-33.5" rx="2.6" ry="3.6" transform="rotate(-62 -29.5 -33.5)" fill="#fff" opacity=".8"/></g>`);
+      const ds = dedos([4, -25, 7, -61], [12, -24, 18, -55], [18, -17, 27, -43, MEÑIQUE]);
+      const [cx, cy, R, hr] = [-21, -41, 11, 4.8];
+      const P = (a, rr = R) => [cx + rr * Math.cos(a * Math.PI / 180), cy + rr * Math.sin(a * Math.PI / 180)];
+      const ind = [-11, -27, ...P(28), 7.2, 6.8], pul = [-15, -12, ...P(102), 7.4, 7];
+      return g(x, y, r, `<mask id="chispaOk${id}" maskUnits="userSpaceOnUse" x="-90" y="-130" width="180" height="200"><rect x="-90" y="-130" width="180" height="200" fill="#fff"/><circle cx="${cx}" cy="${cy}" r="${hr}" fill="#000"/></mask>` +
+        `<g mask="url(#chispaOk${id})">` + silueta(PALMA, ...ds.map(capsula), capsula(pul), capsula(ind), arcoDedo(cx, cy, R, 28, -196, 6.8, 6.1), arcoDedo(cx, cy, R, 102, 162, 7, 6.6), elipse(cx, cy, R, R)) +
+        entre(ds[0], ds[1]) + entre(ds[1], ds[2]) +
+        `<circle cx="${cx}" cy="${cy}" r="${hr + 1.7}" fill="none" stroke="${INK}" stroke-width="3.4"/>` +
+        trazo(`M${P(167, R + 7.6).map(f).join(' ')} L${P(167, R - 3).map(f).join(' ')}`, 3.2) +
+        trazo('M-14 -26 C-10 -19 -10 -12 -12 -4', 2.8, .35) + uña([...P(140), ...P(160), 7, 6.6]) + `</g>`);
     },
     // V: el índice y el medio abiertos; el anular y el meñique doblados por delante, y el pulgar encima de ellos
     v: (x, y, r) => {
@@ -221,8 +279,8 @@
   // Brazo: hombro -> codo -> muñeca (tubo de tinta con camisa adentro) y la mano según el antebrazo.
   // b.espejo: la misma mano al revés (el pulgar del otro lado), para la mano izquierda vista de frente.
   // b.objeto: lo que agarra la mano (una llave, una lupa), en coordenadas de la mano y por debajo de los dedos.
-  const brazo = (lado, b, id = 0) => {
-    const [hx, hy] = HOMBRO[lado], c = b.codo, m = b.muñeca, r = ang(c, m) + (b.giro || 0);
+  const brazo = (lado, b, id = 0, h = 0) => {
+    const hx = HOMBRO[lado][0], hy = HOMBRO[lado][1] + h, c = [b.codo[0], b.codo[1] + h * .5], m = b.muñeca, r = ang(c, m) + (b.giro || 0);
     const d = `M${hx} ${hy} Q${f(c[0])} ${f(c[1])} ${f(m[0])} ${f(m[1])}`;
     let mano = b.mano && MANOS[b.mano] ? MANOS[b.mano](m[0], m[1], r, `${id}${lado}`) : '';
     if (mano && b.espejo) mano = `<g transform="translate(${f(m[0])} ${f(m[1])}) rotate(${f(r)}) scale(-1 1) rotate(${f(-r)}) translate(${f(-m[0])} ${f(-m[1])})">${mano}</g>`;
@@ -245,16 +303,15 @@
     <path d="M164 192 L200 222 L236 192 M172 178 L200 202 L228 178" fill="none" stroke="#2c3038" stroke-width="2.5" stroke-linecap="round"/>
     <path d="M150 226 C160 238 170 246 184 252 M250 226 C240 238 230 246 216 252" fill="none" stroke="${SKIN_SOMBRA}" stroke-width="5" stroke-linecap="round"/>
     <path d="M150 96 C166 82 186 76 204 76 M232 82 C250 88 264 100 270 116 M140 130 C150 116 162 108 176 104" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".4"/>`;
-  const torsoEspalda = (id) => `
+  const torsoEspalda = (id, h = 0) => { const TORSO = torsoD(h); return `
     <clipPath id="torsoE${id}"><path d="${TORSO}"/></clipPath>
     <path d="${TORSO}" fill="${SHIRT}"/>
     <g clip-path="url(#torsoE${id})"><path d="M154 284 C124 296 108 318 108 350 L100 420 L142 420 C136 376 138 330 154 300 Z" fill="${SHIRT_SOMBRA}"/></g>
     <path d="${TORSO}" fill="none" ${S}/>
     ${cuello}
     <path d="M164 284 C176 296 224 296 236 284 L240 276 C222 288 178 288 160 276 Z" fill="${BLUE}" ${s4}/>
-    <g transform="translate(166 326)"><rect x="0" y="0" width="68" height="48" rx="10" fill="#fff" ${s4}/>
-      <text x="34" y="34" text-anchor="middle" font-family="Tektrron, Poppins" font-size="24" font-weight="700" fill="${BLUE}">ES</text></g>
-    <path d="M200 380 L200 420" stroke="#2b3a5c" stroke-width="3" stroke-linecap="round"/>`;
+    ${logoES(...LOGO_ESPALDA)}
+    <path d="M200 ${LOGO_ESPALDA[1] + LOGO_ESPALDA[2] + 8} L200 420" stroke="#2b3a5c" stroke-width="3" stroke-linecap="round"/>`; };
 
   // ---------- Poses (solo brazos) ----------
   // La mano del lado izquierdo (L) con las dos manos a la vista va en espejo: el pulgar hacia el centro, como la derecha.
@@ -270,7 +327,8 @@
     hombros: { L: { codo: [94, 372], muñeca: [84, 290], mano: 'palma', giro: -10, espejo: true }, R: { codo: [306, 372], muñeca: [316, 290], mano: 'palma', giro: 10 } },
     saluda: { L: REPOSO_L, R: { codo: [334, 318], muñeca: [330, 232], mano: 'palma', giro: 8 } },
     celebra: { L: { codo: [94, 392], muñeca: [102, 318], mano: 'pulgar', giro: 0, espejo: true }, R: { codo: [306, 392], muñeca: [298, 318], mano: 'pulgar', giro: 0 } },
-    piensa: { L: REPOSO_L, R: { codo: [306, 392], muñeca: [212, 288], mano: 'puño', giro: 44 } },
+    // C-296: el puño sube hasta apoyar la barbilla (antes quedaba sobre el cuello de la camisa: parecía una mano en el pecho)
+    piensa: { L: REPOSO_L, R: { codo: [300, 380], muñeca: [214, 270], mano: 'puño', giro: 44 } },
     // C-195: manos nuevas en poses nuevas
     // El OK junto a la cara, con el aro sobre el fondo azul (sobre la camisa oscura el hueco no se leía)
     ok: { L: REPOSO_L, R: { codo: [318, 380], muñeca: [318, 292], mano: 'ok', giro: -14 } },
@@ -278,7 +336,7 @@
     telefono: { L: REPOSO_L, R: { codo: [302, 398], muñeca: [258, 344], mano: 'telefono', giro: 36 } },
     presenta: { L: REPOSO_L, R: { codo: [326, 370], muñeca: [352, 322], mano: 'palmaJunta', giro: 4 } },
   };
-  const INC_POSE = { señala: 3, pulgar: 2, brazos: -2, hombros: -5, saluda: 4, piensa: -7, celebra: 0, explica: 0, ok: 2, victoria: 4, telefono: -4, presenta: 5 };
+  const INC_POSE = { señala: 3, pulgar: 2, brazos: -2, hombros: -5, saluda: 4, piensa: -4, celebra: 0, explica: 0, ok: 2, victoria: 4, telefono: -4, presenta: 5 };
   const R_ATRAS = { codo: [284, 370], muñeca: [288, 446], mano: 'indiceAtras', giro: 0 }, L_ATRAS = { codo: [116, 370], muñeca: [112, 446], mano: 'puñoAtras', giro: 0 };
   const POSES_ESPALDA = {
     espalda: { L: L_ATRAS, R: R_ATRAS },
@@ -290,8 +348,9 @@
   // ---------- Estado completo ----------
   const ESTADO = () => ({
     vista: 'frente', pose: 'habla', L: REPOSO_L, R: REPOSO_R, orden: 'LR',
-    cabeza: { inc: 0, dx: 0, dy: 0 }, pelo: 0, cuerpo: 1, cuerpoInc: 0,
-    ojos: { abre: 1, mx: 0, my: 0, forma: 'normal' },
+    // C-296: cabeza.sigue (0..1), la cabeza gira un poco hacia donde miran los ojos; hombros, los de la emoción (+ caen)
+    cabeza: { inc: 0, dx: 0, dy: 0, sigue: 1 }, pelo: 0, cuerpo: 1, cuerpoInc: 0, hombros: 0,
+    ojos: { abre: 1, mx: 0, my: 0, forma: 'normal', asombro: 0, parpado: 0, lloroso: 0 },
     cejas: { alto: 0, duda: 0, enojo: 0, triste: 0 },
     boca: { abre: 0, ancho: .5, sonrisa: .5, dientes: false, lado: 0 },
     rubor: .5, fondo: true,
@@ -299,11 +358,17 @@
   const CEJAS = {
     normal: { alto: 0, duda: 0, enojo: 0, triste: 0 }, arriba: { alto: 1, duda: 0, enojo: 0, triste: 0 }, duda: { alto: .2, duda: 1, enojo: 0, triste: 0 },
     enojo: { alto: -.3, duda: 0, enojo: 1, triste: 0 }, triste: { alto: .1, duda: 0, enojo: 0, triste: 1 },
+    serio: { alto: -.15, duda: 0, enojo: .55, triste: 0 }, // C-296: el enojo a medias, para un aviso
   };
   const OJOS = {
-    abiertos: { abre: 1, forma: 'normal' }, cerrados: { abre: 0, forma: 'normal' }, sorpresa: { abre: 1.15, forma: 'normal' }, guino: { abre: 1, forma: 'guino' },
+    abiertos: { abre: 1, forma: 'normal' }, cerrados: { abre: 0, forma: 'normal' }, guino: { abre: 1, forma: 'guino' },
     feliz: { abre: 1, forma: 'feliz' }, sonrie: { abre: 1, forma: 'sonrie' }, entrecerrados: { abre: .95, forma: 'entrecerrado' },
+    // C-296: sorpresa es el ojo blanco con la pupila chica; los de antes (un 15 % más grandes) quedan como «grandes»
+    sorpresa: { abre: 1.08, forma: 'normal', asombro: 1 }, grandes: { abre: 1.15, forma: 'normal' },
+    tristes: { abre: 1, forma: 'normal', parpado: .42, lloroso: 1 },
   };
+  // Cada forma con todos sus números, para que la transición de una a otra pase suave (sin quedarse con el párpado de la anterior)
+  const ojoDe = (n) => ({ asombro: 0, parpado: 0, lloroso: 0, ...(OJOS[n] || OJOS.abiertos) });
   const BOCAS = {
     sonrisa: { abre: 0, ancho: .5, sonrisa: .6, dientes: false, lado: 0 }, seria: { abre: 0, ancho: .45, sonrisa: 0, dientes: false, lado: 0 },
     a: { abre: .85, ancho: .55, sonrisa: .2, dientes: true, lado: 0 }, e: { abre: .45, ancho: .85, sonrisa: .3, dientes: true, lado: 0 },
@@ -318,12 +383,14 @@
   const EXPRESIONES = {
     alegre: { ojos: 'sonrie', cejas: 'normal', boca: 'feliz', rubor: .7 },
     risa: { ojos: 'feliz', cejas: 'arriba', boca: 'risa', rubor: .85 },
-    sorpresa: { ojos: 'sorpresa', cejas: 'arriba', boca: 'sorpresa', rubor: .4 },
+    // C-296: la sorpresa echa la cabeza atrás y sube los hombros; la tristeza la baja y los deja caer
+    sorpresa: { ojos: 'sorpresa', cejas: 'arriba', boca: 'sorpresa', rubor: .4, cabeza: [-2, -6], hombros: -10 },
     pensativo: { ojos: 'abiertos', cejas: 'duda', boca: 'duda', mirar: [.7, -.9], rubor: .35 },
     picaro: { ojos: 'guino', cejas: 'duda', boca: 'picara', rubor: .6 },
     apenado: { ojos: 'abiertos', cejas: 'triste', boca: 'ups', mirar: [-.4, .5], rubor: .85 },
     orgulloso: { ojos: 'entrecerrados', cejas: 'normal', boca: 'picara', rubor: .55 },
-    triste: { ojos: 'abiertos', cejas: 'triste', boca: 'triste', mirar: [0, .7], rubor: .3 },
+    triste: { ojos: 'tristes', cejas: 'triste', boca: 'triste', mirar: [0, .7], rubor: .3, cabeza: [4, 7], hombros: 9 },
+    serio: { ojos: 'abiertos', cejas: 'serio', boca: 'seria', rubor: .3 }, // C-296: para avisos («ojo con las estafas»)
   };
   // C-195: miradas con intención, por nombre (linea acepta mirar: 'telefono' además de [mx, my])
   const MIRADAS = { camara: [0, 0], derecha: [1, 0], izquierda: [-1, 0], arriba: [.3, -1], abajo: [0, 1], telefono: [.6, .8], producto: [.9, .2] };
@@ -333,15 +400,19 @@
   const rig = (e) => {
     const id = ++uid;
     // entre: un aparato entre los dos brazos (el primero lo sostiene por detrás, el segundo trabaja por delante)
-    const brazos = () => e.orden === 'RL' ? brazo('R', e.R, id) + (e.entre || '') + brazo('L', e.L, id) : brazo('L', e.L, id) + (e.entre || '') + brazo('R', e.R, id);
-    const cab = e.cabeza, sy = e.cuerpo, sx = 1 + (1 - sy) * .6;
+    const h = e.hombros || 0;
+    const brazos = () => e.orden === 'RL' ? brazo('R', e.R, id, h) + (e.entre || '') + brazo('L', e.L, id, h) : brazo('L', e.L, id, h) + (e.entre || '') + brazo('R', e.R, id, h);
+    const cab = { ...e.cabeza }, sy = e.cuerpo, sx = 1 + (1 - sy) * .6;
+    // C-296: la cabeza acompaña la mirada (de frente)
+    const sg = cab.sigue ?? 1;
+    if (sg && e.vista !== 'espalda') { cab.dx += e.ojos.mx * 5 * sg; cab.dy += e.ojos.my * 3 * sg; cab.inc += e.ojos.mx * 3 * sg; }
     const cuerpo = `translate(200 420) rotate(${f(e.cuerpoInc || 0)}) scale(${f(sx * 1000) / 1000} ${f(sy * 1000) / 1000}) translate(-200 -420)`;
     const cabeza = `rotate(${f(cab.inc)} 200 258) translate(${f(cab.dx)} ${f(cab.dy)})`;
     let dentro;
     if (e.vista === 'espalda') {
-      dentro = `${torsoEspalda(id)}<g transform="${cabeza}">${cabezaEspalda}</g>${brazos()}`;
+      dentro = `${torsoEspalda(id, h)}<g transform="${cabeza}">${cabezaEspalda}</g>${brazos()}`;
     } else {
-      dentro = `${torso(id)}<g transform="${cabeza}">${peloAtras}${orejas}
+      dentro = `${torso(id, h)}<g transform="${cabeza}">${peloAtras}${orejas}
         <clipPath id="cara${id}"><path d="${CARA}"/></clipPath>
         <path d="${CARA}" fill="${SKIN}"/>
         <g clip-path="url(#cara${id})"><path d="${FLEQUILLO}" fill="${SKIN_SOMBRA}" transform="translate(0 9)"/><path d="M128 236 C150 258 250 258 272 236 L272 270 L128 270 Z" fill="${SKIN_SOMBRA}" opacity=".7"/></g>
@@ -371,7 +442,9 @@
       b = { L: { ...L_ATRAS, giro: 0, ...l }, R: { ...R_ATRAS, giro: 0, ...r } };
     }
     e.L = b.L; e.R = b.R; e.orden = b.orden || 'LR'; e.cabeza.inc = INC_POSE[pose] || 0;
-    Object.assign(e.ojos, OJOS[ojos] || OJOS.abiertos); Object.assign(e.cejas, CEJAS[cejas] || CEJAS.normal); Object.assign(e.boca, BOCAS[boca] || BOCAS.sonrisa);
+    if (ex.cabeza) { e.cabeza.inc += ex.cabeza[0]; e.cabeza.dy += ex.cabeza[1]; }
+    e.hombros = ex.hombros || 0;
+    Object.assign(e.ojos, ojoDe(ojos)); Object.assign(e.cejas, CEJAS[cejas] || CEJAS.normal); Object.assign(e.boca, BOCAS[boca] || BOCAS.sonrisa);
     return rig(e);
   };
 
@@ -406,7 +479,8 @@
   const linea = (claves) => {
     const ks = [...claves].map((k) => {
       const ex = EXPRESIONES[k.expresion];
-      return ex ? { ojos: ex.ojos, cejas: ex.cejas, boca: ex.boca, ...(ex.mirar ? { mirar: ex.mirar } : {}), ...(ex.rubor !== undefined ? { rubor: ex.rubor } : {}), ...k } : k;
+      // C-296: la expresión también pone la cabeza y los hombros, y una sin ellos los devuelve a su lugar
+      return ex ? { ojos: ex.ojos, cejas: ex.cejas, boca: ex.boca, ...(ex.mirar ? { mirar: ex.mirar } : {}), ...(ex.rubor !== undefined ? { rubor: ex.rubor } : {}), cabeza: ex.cabeza || [0, 0], hombros: ex.hombros || 0, ...k } : k;
     }).sort((a, b) => a.t - b.t);
     const valor = (campo, def, t) => {
       let prev = def, cur = def, tc = -1e9;
@@ -435,7 +509,7 @@
       // el cuerpo y la cabeza acompañan el gesto: se inclinan un poco hacia donde va la mano, y la cabeza baja en el impulso
       const haciaX = (bB.R.muñeca[0] - bA.R.muñeca[0]) + (bB.L.muñeca[0] - bA.L.muñeca[0]);
       e.cuerpoInc = Math.sin(Math.PI * x) * clamp(haciaX / 140, -1, 1) * 1.6;
-      const o = valor('ojos', 'abiertos', t), oj = mezcla(OJOS[o.prev] || OJOS.abiertos, OJOS[o.cur] || OJOS.abiertos, easeInOut(clamp(o.x / .12)));
+      const o = valor('ojos', 'abiertos', t), oj = mezcla(ojoDe(o.prev), ojoDe(o.cur), easeInOut(clamp(o.x / .12)));
       Object.assign(e.ojos, oj);
       const c = valor('cejas', 'normal', t); Object.assign(e.cejas, mezcla(CEJAS[c.prev] || CEJAS.normal, CEJAS[c.cur] || CEJAS.normal, backOut(clamp(c.x / .25), 1.2)));
       const m = valor('mirar', [0, 0], t), mm = mezcla(miradaDe(m.prev), miradaDe(m.cur), easeInOut(clamp(m.x / .18))); e.ojos.mx = mm[0]; e.ojos.my = mm[1];
@@ -445,6 +519,9 @@
       const fz = valor('feliz', false, t); e.boca.sonrisa = mezcla(fz.prev ? 1 : .5, fz.cur ? 1 : .5, clamp(fz.x / .2)); e.rubor = .45 + (fz.cur ? .25 : 0);
       const ru = valor('rubor', null, t); if (ru.cur !== null) e.rubor = mezcla(ru.prev ?? .45, ru.cur, easeInOut(clamp(ru.x / .3)));
       const bo = valor('boca', 'sonrisa', t); Object.assign(e.boca, mezcla(BOCAS[bo.prev] || BOCAS.sonrisa, BOCAS[bo.cur] || BOCAS.sonrisa, easeInOut(clamp(bo.x / .1))));
+      // C-296: la cabeza y los hombros de la emoción llegan con el gesto, con un poco de rebote
+      const cz = valor('cabeza', [0, 0], t), czm = mezcla(cz.prev, cz.cur, backOut(clamp(cz.x / .5), 1.2)); e.cabeza.inc += czm[0]; e.cabeza.dy += czm[1];
+      const hb = valor('hombros', 0, t); e.hombros = mezcla(hb.prev, hb.cur, backOut(clamp(hb.x / .45), 1.2));
       e.cambioPose = p.x;
       return e;
     };
@@ -477,6 +554,9 @@
     // C-195: parpadea al cambiar de gesto, como una persona
     if (PARPADEAN.includes(e.ojos.forma) && e.cambioPose !== undefined && e.cambioPose > .03 && e.cambioPose < .15) e.ojos.abre *= 1 - Math.sin(((e.cambioPose - .03) / .12) * Math.PI) * .92;
     e.cuerpo = 1 + Math.sin(t * 2.1) * .006;
+    // C-296 (skill manos-de-caricatura): una mano quieta pierde la vida; la muñeca se mece un grado, cada una a su tiempo
+    if (e.R) e.R = { ...e.R, giro: (e.R.giro || 0) + Math.sin(t * 1.7) * 1.2 };
+    if (e.L) e.L = { ...e.L, giro: (e.L.giro || 0) + Math.sin(t * 1.4 + 1.3) };
     const habla = rms ? clamp((rms + 40) / 22) : 0;
     e.cabeza.inc += Math.sin(t * 1.3) * 1.2 + Math.sin(t * 7.1) * habla * 1.6;
     e.cabeza.dy += -habla * 1.5;
@@ -488,6 +568,8 @@
   };
 
   // ángulo de la mano (grados): para dibujar un objeto que apunte a un punto del mundo
+  // C-296: el logo oficial suelto (para una pieza o para revisarlo de cerca)
+  chispa.logo = (cx = 0, cy = 0, r = 50) => logoES(cx, cy, r);
   chispa.anguloMano = (b) => ang(b.codo, b.muñeca) + (b.giro || 0);
   // C-195: una mano sola (para revisarla de cerca o usarla en una pieza): <g> en (x, y), girada r grados
   chispa.mano = (nombre, x = 0, y = 0, r = 0) => (MANOS[nombre] ? MANOS[nombre](x, y, r) : '');

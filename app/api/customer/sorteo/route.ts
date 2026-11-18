@@ -19,6 +19,8 @@ export async function GET() {
       titulo: sorteo.titulo, premio: sorteo.premio, resultadoEl: sorteo.resultadoEl.toISOString(), cerrado: new Date() > sorteo.hasta, sorteado: Boolean(sorteo.sorteadoAt),
       // C-221: la tarjeta decía "$10" fijo; si el panel cambia el mínimo o apaga las invitaciones, dice lo de verdad
       compraMinimaUSD: Number(sorteo.compraMinimaUSD), topeInvitar: sorteo.topeInvitar,
+      // C-297: cuántos da una compra de la mínima
+      boletosPorCompra: sorteo.boletosPorCompra,
     },
     total: boletos.total,
     // C-262: cuánto falta para el próximo boleto por invitar y cuántos amigos todavía no cuentan (sin sus nombres: la lista

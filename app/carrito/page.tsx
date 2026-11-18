@@ -24,6 +24,7 @@ import IvaIncluido from '@/components/ui/IvaIncluido';
 import { getGiftCardDesign } from '@/lib/gift-card-designs';
 import { useSettings } from '@/contexts/SettingsContext';
 import CouponBox from '@/components/cart/CouponBox';
+import { BoletosDelCarrito } from '@/components/sorteo/BoletosDeCompra';
 import FechaLimiteNavidad from '@/components/navidad/FechaLimiteNavidad';
 import { esLaLinea, parseCartItemId, toOrderItem } from '@/lib/cart-items';
 import { paqueteDesde } from '@/lib/origen';
@@ -511,6 +512,12 @@ export default function CarritoPage() {
                     {localSavings > 0.004 && (
                       <p className="mt-2 text-sm font-semibold text-success-strong">Ahorras {formatUSD(localSavings)} con las ofertas de hoy</p>
                     )}
+                    {/* C-297: cuántos boletos del sorteo da esta compra y cuánto falta para el próximo salto */}
+                    <BoletosDelCarrito
+                      className="mt-3"
+                      subtotalUSD={subtotal}
+                      items={items.filter((item) => !item.id.startsWith('gift-card-')).map((item) => ({ productId: parseCartItemId(item).productId, cantidad: item.quantity }))}
+                    />
                     {hasPhysical && (
                       <p className="mt-2 text-xs text-muted">
                         {!enviosNacionales

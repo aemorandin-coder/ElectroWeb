@@ -24,12 +24,20 @@ export const esquemaSorteo = z.object({
   costoPremioUSD: z.coerce.number().min(0).max(100_000),
   compraMinimaUSD: z.coerce.number().min(1, 'Desde $1').max(10_000),
   topeInvitar: z.coerce.number().int().min(0).max(20),
+  // C-297: la escala por monto y las reseñas. Opcionales, para que un panel abierto de antes (que no los manda) no los cambie
+  boletosPorCompra: z.coerce.number().int().min(1, 'Desde 1 boleto').max(50, 'Hasta 50').optional(),
+  escalaUSD: z.coerce.number().min(0).max(10_000).optional(),
+  boletosPorEscala: z.coerce.number().int().min(0).max(500).optional(),
+  boletosPorResena: z.coerce.number().int().min(0).max(20, 'Hasta 20').optional(),
   desde: dia,
   hasta: dia,
   resultadoEl: dia,
   activo: z.boolean(),
 }).refine((d) => d.hasta >= d.desde, { path: ['hasta'], message: 'El cierre no puede ser antes del inicio' })
-  .refine((d) => d.resultadoEl >= d.hasta, { path: ['resultadoEl'], message: 'El resultado va el día del cierre o después' });
+  .refine((d) => d.resultadoEl >= d.hasta, { path: ['resultadoEl'], message: 'El resultado va el día del cierre o después' })
+  // C-297: la escala va entera (el monto y sus boletos) o apagada, y su tramo no puede ser menor que la compra mínima
+  .refine((d) => d.escalaUSD === undefined || d.boletosPorEscala === undefined || (d.escalaUSD > 0) === (d.boletosPorEscala > 0), { path: ['escalaUSD'], message: 'Pon el monto y sus boletos, o apaga la escala' })
+  .refine((d) => !d.escalaUSD || d.escalaUSD >= d.compraMinimaUSD, { path: ['escalaUSD'], message: 'El tramo va desde la compra mínima' });
 
 export type DatosSorteo = z.infer<typeof esquemaSorteo>;
 

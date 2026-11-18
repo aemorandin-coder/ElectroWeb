@@ -13,7 +13,7 @@ import Ayuda from '@/components/admin/Ayuda';
 import CampoUnidad from '@/components/admin/CampoUnidad';
 import Pasos, { type Paso } from '@/components/admin/Pasos';
 import {
-  IconoBolsa, IconoBuscar, IconoCalendario, IconoCheck, IconoClientes, IconoCupon, IconoEditar, IconoEliminar, IconoFlechaDerecha,
+  IconoBolsa, IconoBuscar, IconoCalendario, IconoChat, IconoCheck, IconoClientes, IconoCupon, IconoEditar, IconoEliminar, IconoFlechaDerecha,
   IconoFlechaIzquierda, IconoGuardar, IconoImagen, IconoInterruptorEncendido, IconoMas, IconoOcultar, IconoPaquete, IconoPremio, IconoRegalo,
   IconoSubir, IconoVer, IconoWeb, type IconType,
 } from '@/components/iconos';
@@ -25,19 +25,22 @@ import { TarjetaSorteoVista, montoCorto } from '@/components/sorteo/TarjetaSorte
 import ProductPicker from '@/app/admin/(dashboard)/studio/_components/ProductPicker';
 import { adminCard, adminError, adminHint, adminInput, adminLabel, adminPrimaryButton, adminSecondaryButton, adminSpinner } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
+import { boletosPorMonto } from '@/lib/sorteo/escala';
 import {
   diaMes, diasEntre, esDia, fechaCorta, numero, PASO_DE, problemaDe, type Formulario, type SorteoPanel,
 } from './tipos';
 
 interface Efecto { boletosAntes: number; boletosDespues: number; pierden: number; ganan: number }
 
-/** El último paso, "Revisar y publicar" (el quinto) */
-const REVISAR = 4;
+/** El último paso, "Revisar y publicar" (el sexto: C-297 partió "Cómo se gana" en dos) */
+const REVISAR = 5;
 
 const PASOS: { titulo: string; icono: IconType; queHacer: string }[] = [
   { titulo: 'El premio', icono: IconoRegalo, queHacer: 'Qué se lleva el ganador y cómo se ve.' },
   { titulo: 'Lo que trae', icono: IconoPaquete, queHacer: 'Lo que viene con el premio, el sello y el nombre de la bandera.' },
-  { titulo: 'Cómo se gana', icono: IconoCupon, queHacer: 'Cuándo una compra o un amigo da un boleto.' },
+  // C-297 (Andrés, 18/11): comprar vale más; las reseñas, un camino más. De 2 a 4 campos por paso (PLAN.md §1.9)
+  { titulo: 'Comprando', icono: IconoBolsa, queHacer: 'Cuántos boletos da una compra, y más si es grande.' },
+  { titulo: 'Reseñas y amigos', icono: IconoClientes, queHacer: 'Los otros caminos: contar cómo le fue e invitar.' },
   { titulo: 'Fechas', icono: IconoCalendario, queHacer: 'Desde cuándo cuenta, la última compra y el resultado.' },
   { titulo: 'Revisar y publicar', icono: IconoVer, queHacer: 'Mira cómo queda antes de guardarlo.' },
 ];
@@ -52,12 +55,16 @@ const CAMPOS: { k: keyof Formulario; nombre: string; ver: (f: Formulario) => str
   { k: 'nombreCorto', nombre: 'Nombre en el inicio', ver: (f) => f.nombreCorto.trim() || 'sin nombre corto' },
   { k: 'costoPremioUSD', nombre: 'Costo del premio', ver: (f) => montoCorto(numero(f.costoPremioUSD) ?? 0) },
   { k: 'compraMinimaUSD', nombre: 'Compra mínima', ver: (f) => montoCorto(numero(f.compraMinimaUSD) ?? 0) },
+  { k: 'boletosPorCompra', nombre: 'Boletos de la compra mínima', ver: (f) => `${numero(f.boletosPorCompra) ?? 0}` },
+  { k: 'escalaUSD', nombre: 'Tramo de la escala', ver: (f) => ((numero(f.escalaUSD) ?? 0) > 0 ? `cada ${montoCorto(numero(f.escalaUSD) ?? 0)}` : 'sin escala') },
+  { k: 'boletosPorEscala', nombre: 'Boletos por tramo', ver: (f) => ((numero(f.escalaUSD) ?? 0) > 0 ? `${numero(f.boletosPorEscala) ?? 0}` : 'sin escala') },
+  { k: 'boletosPorResena', nombre: 'Por reseña', ver: (f) => ((numero(f.boletosPorResena) ?? 0) > 0 ? `${numero(f.boletosPorResena)} boletos` : 'no dan') },
   { k: 'topeInvitar', nombre: 'Tope por invitar', ver: (f) => ((numero(f.topeInvitar) ?? 0) > 0 ? `${numero(f.topeInvitar)} boletos` : 'sin invitar') },
   { k: 'desde', nombre: 'Empieza', ver: (f) => fechaCorta(f.desde) },
   { k: 'hasta', nombre: 'Última compra', ver: (f) => fechaCorta(f.hasta) },
   { k: 'resultadoEl', nombre: 'Resultado', ver: (f) => fechaCorta(f.resultadoEl) },
 ];
-const CUENTAN_BOLETOS: (keyof Formulario)[] = ['desde', 'hasta', 'compraMinimaUSD', 'topeInvitar'];
+const CUENTAN_BOLETOS: (keyof Formulario)[] = ['desde', 'hasta', 'compraMinimaUSD', 'topeInvitar', 'boletosPorCompra', 'escalaUSD', 'boletosPorEscala', 'boletosPorResena'];
 
 // "Lo que trae" es una lista: se compara entera
 const valor = (f: Formulario, k: keyof Formulario) => (k === 'incluye' ? JSON.stringify(f.incluye.map((c) => [c.texto.trim(), c.detalle.trim()])) : String(f[k]).trim());
@@ -85,6 +92,9 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
   const [efecto, setEfecto] = useState<Efecto | null>(null);
   const [calculando, setCalculando] = useState(false);
   const topeAntes = useRef(numero(inicial.topeInvitar) || 3);
+  // C-297: lo que tenían la escala y las reseñas al apagarlas, para volver a eso al encenderlas
+  const escalaAntes = useRef({ monto: numero(inicial.escalaUSD) || 50, boletos: numero(inicial.boletosPorEscala) || 5 });
+  const resenaAntes = useRef(numero(inicial.boletosPorResena) || 1);
   const archivo = useRef<HTMLInputElement>(null);
 
   const set = <K extends keyof Formulario>(k: K, v: Formulario[K]) => {
@@ -92,7 +102,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
     setErrores((e) => { const r = { ...e }; delete r[k]; return r; });
   };
 
-  const problemas = [0, 1, 2, 3].map((i) => problemaDe(i, form));
+  const problemas = [0, 1, 2, 3, 4].map((i) => problemaDe(i, form));
   const listoHasta = (i: number) => problemas.slice(0, i).every((p) => p === null);
   const cambios = modo === 'editar' ? CAMPOS.filter((c) => !mismo(form, inicial, c.k)) : [];
   const cambianBoletos = cambios.some((c) => CUENTAN_BOLETOS.includes(c.k));
@@ -101,6 +111,14 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
   const tope = numero(form.topeInvitar) ?? 0;
   const costo = numero(form.costoPremioUSD) ?? 0;
   const invitar = tope > 0;
+  // C-297: la escala y las reseñas
+  const porCompra = numero(form.boletosPorCompra) ?? 0;
+  const escala = numero(form.escalaUSD) ?? 0;
+  const porEscala = numero(form.boletosPorEscala) ?? 0;
+  const porResena = numero(form.boletosPorResena) ?? 0;
+  const conEscala = escala > 0;
+  const resenas = porResena > 0;
+  const regla = { minimoUSD: minimo, porCompra, escalaUSD: escala, porEscala };
 
   const pasos: Paso[] = PASOS.map((p, i) => ({
     titulo: p.titulo,
@@ -109,8 +127,9 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
     disponible: listoHasta(i),
     resumen: i === 0 ? (form.premio.trim() ? `${form.premio.trim()} · ${montoCorto(costo)}` : 'Qué se lleva el ganador')
       : i === 1 ? (form.incluye.length ? `${form.incluye.length} ${form.incluye.length === 1 ? 'cosa' : 'cosas'}${form.nombreCorto.trim() ? ` · ${form.nombreCorto.trim()}` : ''}` : 'Opcional')
-      : i === 2 ? `Desde ${montoCorto(minimo)} · ${invitar ? '2 amigos' : 'sin invitar'}`
-        : i === 3 ? (esDia(form.hasta) ? `Última compra el ${diaMes(form.hasta)}` : 'Cuándo y hasta cuándo')
+      : i === 2 ? `${montoCorto(minimo)} → ${porCompra}${conEscala ? ` · cada ${montoCorto(escala)} → ${porEscala}` : ''}`
+        : i === 3 ? `${resenas ? `Reseña → ${porResena}` : 'Sin reseñas'} · ${invitar ? '2 amigos' : 'sin invitar'}`
+          : i === 4 ? (esDia(form.hasta) ? `Última compra el ${diaMes(form.hasta)}` : 'Cuándo y hasta cuándo')
           : modo === 'editar' ? `${cambios.length} ${cambios.length === 1 ? 'cambio' : 'cambios'}` : 'Vista previa',
   }));
 
@@ -119,6 +138,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
     incluye: form.incluye.map((c) => ({ texto: c.texto.trim(), detalle: c.detalle.trim() })).filter((c) => c.texto),
     lema: form.lema.trim(), nombreCorto: form.nombreCorto.trim(),
     costoPremioUSD: numero(form.costoPremioUSD), compraMinimaUSD: numero(form.compraMinimaUSD), topeInvitar: numero(form.topeInvitar),
+    boletosPorCompra: numero(form.boletosPorCompra), escalaUSD: conEscala ? escala : 0, boletosPorEscala: conEscala ? porEscala : 0, boletosPorResena: porResena,
     desde: form.desde, hasta: form.hasta, resultadoEl: form.resultadoEl,
     activo: modo === 'nuevo' ? publicar : form.activo,
     nuevo: modo === 'nuevo',
@@ -192,11 +212,13 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
   const problema = paso < REVISAR ? problemas[paso] : null;
   const sinCambios = modo === 'editar' && cambios.length === 0;
 
-  // El ejemplo de "Cómo se gana": una compra que llega al mínimo, una que no y 4 amigos
-  const compraQueCuenta = Math.max(minimo, Math.round(minimo * 2.5));
+  // El ejemplo de "Comprando" (C-297): una compra chica, una grande y una que no llega; y el de "Reseñas y amigos"
+  const compraChica = Math.max(minimo, Math.round(minimo * 2.4));
+  const compraGrande = conEscala ? Math.round(escala * 2.4) : null;
   const compraQueNo = minimo > 1 ? Math.max(1, Math.floor(minimo * 0.8)) : null;
+  const totalCompras = boletosPorMonto(compraChica, regla) + (compraGrande ? boletosPorMonto(compraGrande, regla) : 0);
   const porAmigos = Math.min(2, tope);
-  const totalEjemplo = (minimo >= 1 ? 1 : 0) + (invitar ? porAmigos : 0);
+  const totalOtros = (resenas ? porResena : 0) + (invitar ? porAmigos : 0);
 
   return (
     <div className="space-y-4">
@@ -283,20 +305,90 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
 
             {paso === 2 && (
               <div className="space-y-4">
+                <div className="rounded-2xl border border-line p-4">
+                  <div className="mb-3 flex items-center gap-2.5">
+                    <span className="iconos-marca flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700"><IconoBolsa className="h-4 w-4" aria-hidden="true" /></span>
+                    <p className="flex-1 text-sm font-semibold text-ink">Cada compra</p>
+                    <span className="text-xs text-muted">Siempre</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-ink">
+                    <label htmlFor="sorteo-minimo">Una compra de</label>
+                    <CampoUnidad id="sorteo-minimo" unidad="$" inputMode="decimal" value={form.compraMinimaUSD} onChange={(e) => set('compraMinimaUSD', e.target.value)} invalido={Boolean(errores.compraMinimaUSD)} className="w-28" />
+                    <label htmlFor="sorteo-por-compra">o más da</label>
+                    <CampoUnidad id="sorteo-por-compra" unidad="boletos" inputMode="numeric" value={form.boletosPorCompra} onChange={(e) => set('boletosPorCompra', e.target.value)} invalido={Boolean(errores.boletosPorCompra)} className="w-36" />
+                    <Ayuda>Cuenta lo de los productos, sin el envío. Una compra que llega en dos paquetes cuenta como una, y una cancelada o devuelta no cuenta.</Ayuda>
+                  </div>
+                  {(errores.compraMinimaUSD || errores.boletosPorCompra) && <p className={adminError} role="alert">{errores.compraMinimaUSD ?? errores.boletosPorCompra}</p>}
+                </div>
+                <div className="rounded-2xl border border-line p-4">
+                  <div className="mb-3 flex items-center gap-2.5">
+                    <span className="iconos-marca flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700"><IconoCupon className="h-4 w-4" aria-hidden="true" /></span>
+                    <p id="sorteo-escala" className="flex-1 text-sm font-semibold text-ink">Más boletos si compra más</p>
+                    <Interruptor
+                      etiqueta="sorteo-escala"
+                      encendido={conEscala}
+                      onCambiar={(v) => {
+                        if (!v) escalaAntes.current = { monto: escala || escalaAntes.current.monto, boletos: porEscala || escalaAntes.current.boletos };
+                        set('escalaUSD', v ? String(escalaAntes.current.monto) : '0');
+                        set('boletosPorEscala', v ? String(escalaAntes.current.boletos) : '0');
+                      }}
+                    />
+                  </div>
+                  {conEscala ? (
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-ink">
+                      <label htmlFor="sorteo-escala-monto">Cada</label>
+                      <CampoUnidad id="sorteo-escala-monto" unidad="$" inputMode="decimal" value={form.escalaUSD} onChange={(e) => set('escalaUSD', e.target.value)} invalido={Boolean(errores.escalaUSD)} className="w-28" />
+                      <label htmlFor="sorteo-escala-boletos">de la compra da</label>
+                      <CampoUnidad id="sorteo-escala-boletos" unidad="boletos" inputMode="numeric" value={form.boletosPorEscala} onChange={(e) => set('boletosPorEscala', e.target.value)} invalido={Boolean(errores.boletosPorEscala)} className="w-36" />
+                      <Ayuda>Vale lo que dé más: la compra mínima o la escala. Con $5 = 2 y cada $50 = 5, una de $40 da 2, una de $50 da 5 y una de $120 da 10.</Ayuda>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted">Apagado: toda compra de la mínima o más da lo mismo.</p>
+                  )}
+                  {errores.escalaUSD && <p className={adminError} role="alert">{errores.escalaUSD}</p>}
+                </div>
+                {minimo >= 1 && porCompra >= 1 && (
+                  <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-brand-50 p-3">
+                    <span className="mr-1 text-xs font-semibold text-ink-soft">Así le queda a un cliente:</span>
+                    <Ficha icono={IconoBolsa}>Compra de {montoCorto(compraChica)} → {boletosPorMonto(compraChica, regla)}</Ficha>
+                    {compraGrande !== null && <Ficha icono={IconoBolsa}>Compra de {montoCorto(compraGrande)} → {boletosPorMonto(compraGrande, regla)}</Ficha>}
+                    {compraQueNo !== null && <Ficha icono={IconoBolsa}>Compra de {montoCorto(compraQueNo)} → 0</Ficha>}
+                    <span className="font-bold text-ink-soft" aria-hidden="true">=</span>
+                    <span key={`${minimo}-${porCompra}-${escala}-${porEscala}`} className="inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-3 py-1 text-sm font-bold text-white transition-transform duration-300 starting:scale-75 motion-reduce:transition-none">
+                      <IconoCupon className="h-4 w-4" aria-hidden="true" /> {totalCompras} {totalCompras === 1 ? 'boleto' : 'boletos'}
+                    </span>
+                  </div>
+                )}
+                <p className={adminHint}>El producto estrella de cada semana se elige en el tablero del sorteo: suma sus boletos a los de la compra.</p>
+              </div>
+            )}
+
+            {paso === 3 && (
+              <div className="space-y-4">
                 <div className="grid gap-3 lg:grid-cols-2">
                   <div className="rounded-2xl border border-line p-4">
                     <div className="mb-3 flex items-center gap-2.5">
-                      <span className="iconos-marca flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700"><IconoBolsa className="h-4 w-4" aria-hidden="true" /></span>
-                      <p className="flex-1 text-sm font-semibold text-ink">Comprando</p>
-                      <span className="text-xs text-muted">Siempre</span>
+                      <span className="iconos-marca flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700"><IconoChat className="h-4 w-4" aria-hidden="true" /></span>
+                      <p id="sorteo-resenas" className="flex-1 text-sm font-semibold text-ink">Con sus reseñas</p>
+                      <Interruptor
+                        etiqueta="sorteo-resenas"
+                        encendido={resenas}
+                        onCambiar={(v) => {
+                          if (!v) resenaAntes.current = porResena || resenaAntes.current;
+                          set('boletosPorResena', v ? String(resenaAntes.current || 1) : '0');
+                        }}
+                      />
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 text-sm text-ink">
-                      <label htmlFor="sorteo-minimo">1 boleto por cada compra de</label>
-                      <CampoUnidad id="sorteo-minimo" unidad="$" inputMode="decimal" value={form.compraMinimaUSD} onChange={(e) => set('compraMinimaUSD', e.target.value)} invalido={Boolean(errores.compraMinimaUSD)} className="w-28" />
-                      <span>o más</span>
-                      <Ayuda>Cuenta lo de los productos, sin el envío. Una compra que llega en dos paquetes cuenta como una, y una cancelada o devuelta no cuenta.</Ayuda>
-                    </div>
-                    {errores.compraMinimaUSD && <p className={adminError} role="alert">{errores.compraMinimaUSD}</p>}
+                    {resenas ? (
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-ink">
+                        <label htmlFor="sorteo-resena">Cada reseña aprobada da</label>
+                        <CampoUnidad id="sorteo-resena" unidad="boletos" inputMode="numeric" value={form.boletosPorResena} onChange={(e) => set('boletosPorResena', e.target.value)} invalido={Boolean(errores.boletosPorResena)} className="w-36" />
+                        <Ayuda>Solo de lo que compró y le llegó (la tienda no deja reseñar otra cosa), escrita durante el sorteo. Cuenta al aprobarla, con cualquier calificación: no se rechaza una por ser mala.</Ayuda>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted">Apagado: las reseñas no dan boletos.</p>
+                    )}
+                    {errores.boletosPorResena && <p className={adminError} role="alert">{errores.boletosPorResena}</p>}
                   </div>
                   <div className="rounded-2xl border border-line p-4">
                     <div className="mb-3 flex items-center gap-2.5">
@@ -315,30 +407,29 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
                       <div className="flex flex-wrap items-center gap-2 text-sm text-ink">
                         <label htmlFor="sorteo-tope">1 boleto por cada 2 amigos, hasta</label>
                         <CampoUnidad id="sorteo-tope" unidad="boletos" inputMode="numeric" value={form.topeInvitar} onChange={(e) => set('topeInvitar', e.target.value)} invalido={Boolean(errores.topeInvitar)} className="w-36" />
-                        <Ayuda>Un amigo cuenta si se registra con el enlace del cliente, verifica su correo y su teléfono no se repite en el sorteo.</Ayuda>
+                        <Ayuda>Un amigo cuenta si se registra con el enlace del cliente, verifica su correo y su teléfono no se repite en el sorteo. Es la forma de participar sin comprar.</Ayuda>
                       </div>
                     ) : (
-                      <p className="text-sm text-muted">Apagado: solo se gana comprando.</p>
+                      <p className="text-sm text-muted">Apagado: no hay forma de participar sin comprar.</p>
                     )}
                     {errores.topeInvitar && <p className={adminError} role="alert">{errores.topeInvitar}</p>}
                   </div>
                 </div>
-                {minimo >= 1 && (
+                {totalOtros > 0 && (
                   <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-brand-50 p-3">
                     <span className="mr-1 text-xs font-semibold text-ink-soft">Así le queda a un cliente:</span>
-                    <Ficha icono={IconoBolsa}>Compra de {montoCorto(compraQueCuenta)} → 1</Ficha>
-                    {compraQueNo !== null && <Ficha icono={IconoBolsa}>Compra de {montoCorto(compraQueNo)} → 0</Ficha>}
+                    {resenas && <Ficha icono={IconoChat}>1 reseña → {porResena}</Ficha>}
                     {invitar && <Ficha icono={IconoClientes}>4 amigos → {porAmigos}</Ficha>}
                     <span className="font-bold text-ink-soft" aria-hidden="true">=</span>
-                    <span key={`${minimo}-${tope}`} className="inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-3 py-1 text-sm font-bold text-white transition-transform duration-300 starting:scale-75 motion-reduce:transition-none">
-                      <IconoCupon className="h-4 w-4" aria-hidden="true" /> {totalEjemplo} {totalEjemplo === 1 ? 'boleto' : 'boletos'}
+                    <span key={`${porResena}-${tope}`} className="inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-3 py-1 text-sm font-bold text-white transition-transform duration-300 starting:scale-75 motion-reduce:transition-none">
+                      <IconoCupon className="h-4 w-4" aria-hidden="true" /> {totalOtros} {totalOtros === 1 ? 'boleto' : 'boletos'}
                     </span>
                   </div>
                 )}
               </div>
             )}
 
-            {paso === 3 && (
+            {paso === 4 && (
               <div className="space-y-3">
                 <ol className="grid gap-4 lg:grid-cols-[auto_minmax(4rem,1fr)_auto_minmax(4rem,1fr)_auto] lg:items-start lg:gap-0">
                   <Hito icono={IconoInterruptorEncendido} etiqueta="Empieza" id="sorteo-desde" valor={form.desde} onCambiar={(v) => set('desde', v)} error={errores.desde} />
@@ -359,8 +450,9 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
                 <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line">
                   <Resumen icono={IconoRegalo} titulo={form.premio.trim()} detalle={`${form.titulo.trim()} · ${form.imagen ? 'con foto' : 'sin foto'} · costo ${formatUSD(costo)} (solo el equipo)`} onCambiar={() => ir(0)} />
                   <Resumen icono={IconoPaquete} titulo={form.incluye.length ? form.incluye.map((c) => c.texto.trim()).join(' · ') : 'Sin "Lo que trae"'} detalle={[form.lema.trim() && `Sello: ${form.lema.trim()}`, form.nombreCorto.trim() && `En el inicio: ${form.nombreCorto.trim()}`].filter(Boolean).join(' · ')} onCambiar={() => ir(1)} />
-                  <Resumen icono={IconoCupon} titulo={`Compras de ${montoCorto(minimo)} o más${invitar ? ' · 2 amigos = 1 boleto' : ''}`} detalle={invitar ? `Hasta ${tope} ${tope === 1 ? 'boleto' : 'boletos'} por invitar` : 'Sin boletos por invitar'} onCambiar={() => ir(2)} />
-                  <Resumen icono={IconoCalendario} titulo={`Del ${diaMes(form.desde)} al ${diaMes(form.hasta)} · resultado el ${diaMes(form.resultadoEl)}`} detalle={dias ? `${dias} ${dias === 1 ? 'día' : 'días'} para participar` : ''} onCambiar={() => ir(3)} />
+                  <Resumen icono={IconoBolsa} titulo={`Compra de ${montoCorto(minimo)} o más: ${porCompra} ${porCompra === 1 ? 'boleto' : 'boletos'}`} detalle={conEscala ? `Y cada ${montoCorto(escala)} de la compra, ${porEscala}` : 'Sin escala'} onCambiar={() => ir(2)} />
+                  <Resumen icono={IconoClientes} titulo={`${resenas ? `Cada reseña: ${porResena}` : 'Sin reseñas'} · ${invitar ? '2 amigos = 1 boleto' : 'sin invitar'}`} detalle={invitar ? `Hasta ${tope} ${tope === 1 ? 'boleto' : 'boletos'} por invitar` : 'Sin boletos por invitar'} onCambiar={() => ir(3)} />
+                  <Resumen icono={IconoCalendario} titulo={`Del ${diaMes(form.desde)} al ${diaMes(form.hasta)} · resultado el ${diaMes(form.resultadoEl)}`} detalle={dias ? `${dias} ${dias === 1 ? 'día' : 'días'} para participar` : ''} onCambiar={() => ir(4)} />
                 </ul>
 
                 {modo === 'nuevo' ? (
@@ -455,7 +547,9 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
               <div className="mt-2 rounded-xl border border-line p-3">
                 <p className="text-xs font-semibold text-ink">Cómo participar</p>
                 <ul className="mt-1.5 grid gap-1 text-xs text-ink-soft">
-                  <li className="flex items-start gap-1.5"><IconoBolsa className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-500" aria-hidden="true" /> Compra {montoCorto(minimo)} o más: 1 boleto</li>
+                  <li className="flex items-start gap-1.5"><IconoBolsa className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-500" aria-hidden="true" /> Compra {montoCorto(minimo)} o más: {porCompra} {porCompra === 1 ? 'boleto' : 'boletos'}</li>
+                  {conEscala && <li className="flex items-start gap-1.5"><IconoCupon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-500" aria-hidden="true" /> Cada {montoCorto(escala)}: {porEscala} boletos</li>}
+                  {resenas && <li className="flex items-start gap-1.5"><IconoChat className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-500" aria-hidden="true" /> Cada reseña: {porResena} {porResena === 1 ? 'boleto' : 'boletos'}</li>}
                   {invitar && <li className="flex items-start gap-1.5"><IconoClientes className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-500" aria-hidden="true" /> 2 amigos: 1 boleto (hasta {tope})</li>}
                 </ul>
               </div>
@@ -468,7 +562,7 @@ export default function AsistenteSorteo({ modo, inicial, actual, pasoInicial = 0
               </p>
               <TarjetaSorteoVista
                 enlace={false}
-                sorteo={{ titulo: form.titulo.trim(), premio: form.premio.trim(), resultadoEl: fechaResultado.toISOString(), cerrado: false, sorteado: false, compraMinimaUSD: minimo, topeInvitar: tope }}
+                sorteo={{ titulo: form.titulo.trim(), premio: form.premio.trim(), resultadoEl: fechaResultado.toISOString(), cerrado: false, sorteado: false, compraMinimaUSD: minimo, topeInvitar: tope, boletosPorCompra: porCompra }}
               />
             </div>
           )}

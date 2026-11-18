@@ -6,6 +6,7 @@ import Price from './Price';
 import ProductBadge, { getProductBadges } from './ProductBadge';
 import ShareButton from './ShareButton';
 import { IconoUbicacion } from '@/components/iconos';
+import SelloEstrella from '@/components/sorteo/SelloEstrella';
 import { lugarDe } from '@/lib/origen';
 import { getStockLabel, hasPriceRange, type ProductCardData } from './productCardData';
 
@@ -46,13 +47,13 @@ export default function ProductCard({ product, exchangeRateVES, lowStockThreshol
           // C-133: de borde a borde, para que la cinta ES caiga en la esquina de la tarjeta
           className="object-contain"
         />
-        {badges.length > 0 && (
-          <div className="absolute left-2 right-12 top-2 flex flex-wrap gap-1">
-            {badges.map((badge) => (
-              <ProductBadge key={badge.variant} variant={badge.variant}>{badge.label}</ProductBadge>
-            ))}
-          </div>
-        )}
+        {/* C-297: el sello del producto estrella del sorteo va primero; solo sale en el producto de la semana */}
+        <div className="absolute left-2 right-12 top-2 flex flex-wrap gap-1">
+          <SelloEstrella productId={product.id} />
+          {badges.map((badge) => (
+            <ProductBadge key={badge.variant} variant={badge.variant}>{badge.label}</ProductBadge>
+          ))}
+        </div>
         <div className="absolute right-2 top-2">
           <ShareButton path={product.shortCode ? `/p/${product.shortCode}` : href} title={product.name} />
         </div>

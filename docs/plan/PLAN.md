@@ -615,6 +615,10 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-210 · Correcciones del 13/11** (**hecha**, rc.35, pedido de Andrés mirando producción; eligió lo recomendado en las cuatro preguntas): las píldoras del panel llenas como las de la tienda y los botones animados (§1.8); "Destacados" solo con lo que tiene estrella, de toda la tienda; "Recién llegados" por la fecha de publicación (columna `products.publishedAt`, nueva), con hasta 4 por departamento. `estado/C-210.md`.
 - **C-211 · Claude Haiku 5.5 en "Buscar en la web"** (**hecha**, rc.36, pedido de Andrés del 13/11 con su clave): lee las páginas, redacta la ficha y busca por su cuenta; Groq de respaldo; la ficha dice qué IA la redactó. En esfuerzo alto (el máximo pasa de los 60 s de nginx). `estado/C-211.md`.
   - **Pendiente:** quitar Groq cuando Claude lleve unos días sin fallar.
+- **C-297 · El sorteo que vende** (**hecha** en rc.111, 18/11; `estado/C-297.md`; los números en §7.2): comprar vale más ($5 → 2, cada $50 → 5), el producto estrella de la semana (cualquier producto, +10 por unidad, se elige en el tablero) y las reseñas (1 cada una). /sorteo más corto, el sello en la tarjeta, la ficha y el carrito dicen cuántos boletos da la compra. **Queda:**
+  - en el teléfono, los tres caminos en pestañas (unos 500 px menos; ofrecido, sin decidir);
+  - el correo "tus boletos se multiplicaron" a quienes ya participaban (se puede con Marketing → Campañas);
+  - el flyer del producto estrella en ElectroStudio y los boletos en el checkout.
 - **C-212 · El sorteo de la PlayStation 4** (**hecha**, rc.37, pedido de Andrés del 13/11; los números en §7.2): `/sorteo`, la tarjeta en Mi panel y Marketing → Sorteo. Boletos por compra de USD 10 o más y por invitar a 2 amigos; el sorteo, una sola vez, después del cierre. Dos tablas nuevas. `estado/C-212.md`.
   - **Después del deploy:** armarlo en el panel con la foto de la consola y encenderlo; el 20/12, "Sortear ahora".
   - **Sin pedir:** un correo automático al ganador, una franja del sorteo en el inicio y su flyer en ElectroStudio.
@@ -1124,6 +1128,12 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
     - Con C-222, en una sola línea: "Sale el lunes 16 desde Aragua".
 - **El sorteo de la PlayStation 4 (Andrés, 13/11, C-212):** que la empresa no pierda.
   - **Boletos:** 1 por cada compra pagada de USD 10 o más; sin comprar, el enlace propio y 2 amigos que se registran y verifican el correo (1 boleto por cada 2, hasta 3). Las capturas del estado de WhatsApp no cuentan: no se pueden comprobar.
+  - **Cambio de Andrés, 18/11 (C-297):** "no importa tanto recuperar la inversión del PlayStation: nos quedan correos para la publicidad, clientes nuevos que conocen la web, y ahora con el plan, hacer que la web venda mucho más". La compra mínima ya era $5 (cambiada en el panel).
+    - **Por compra:** $5 o más da 2 boletos; desde $50, 5 por cada $50 ($100 = 10). Vale lo que dé más.
+    - **El producto estrella:** uno por semana, cualquier producto que elija el equipo; cada unidad comprada en su semana da 10 boletos de más, sumados a los del monto.
+    - **Las reseñas:** cada una aprobada, de algo comprado y recibido, da 1 boleto, sin tope, con cualquier calificación.
+    - **Invitar queda igual** (2 amigos = 1, hasta 3): trae los correos y es la forma de participar sin comprar.
+    - **Hacia atrás:** la regla nueva cuenta también las compras desde el 14/11. Nadie pierde un boleto.
   - **El resultado, el 20/12,** para que el premio llegue a otro estado antes de Navidad. **El premio cuesta de USD 150 a 250.**
   - **Sin permiso de Conalot:** "El sorteo lo podemos hacer tranquilamente, no es necesario el Conalot; es simple, elegiremos un correo al azar". Es decisión de Andrés: Claude le avisó que las rifas, también las de redes, piden autorización previa (Providencia CONALOT/P/2025-001). Por eso no se vende ningún boleto, hay una forma sin comprar y las bases son públicas.
   - **El ganador:** al azar entre todos los boletos, publicado con el correo tapado. El equipo no participa.

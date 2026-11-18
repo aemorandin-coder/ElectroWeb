@@ -26,6 +26,7 @@ import {
 import { formatUSD } from '@/lib/currency';
 import { banderaHasta, nombreConCiudad } from '@/lib/sorteo/entrega';
 import { leerYoutube } from '@/lib/youtube';
+import EstrellasDelSorteo from './EstrellasDelSorteo';
 import { diaMes, estadoDe, type Datos, type EntregaPanel } from './tipos';
 
 const instante = (dia: string, fin = false) => new Date(`${dia}T${fin ? '23:59:59' : '00:00:00'}-04:00`).getTime();
@@ -205,6 +206,9 @@ export default function TableroSorteo({ datos, onEditar, onNuevo, onEntrega, onR
         )}
       </section>
 
+      {/* C-297: el producto estrella de cada semana, mientras está abierto */}
+      {!sorteado && !s.cerrado && <EstrellasDelSorteo />}
+
       {/* Cuando cierra: sortear en 3 pasos */}
       {!sorteado && s.cerrado && (
         <section aria-labelledby="sorteo-sortear" className={adminCard}>
@@ -260,12 +264,13 @@ export default function TableroSorteo({ datos, onEditar, onNuevo, onEntrega, onR
           </h3>
           <div className={adminTableWrap}>
             <table className={adminTable}>
-              <thead><tr><th className={adminTh}>Cliente</th><th className={adminTh}>Por compra</th><th className={adminTh}>Por invitar</th><th className={adminTh}>Revisar</th></tr></thead>
+              <thead><tr><th className={adminTh}>Cliente</th><th className={adminTh}>Por compra</th><th className={adminTh}>Por reseñas</th><th className={adminTh}>Por invitar</th><th className={adminTh}>Revisar</th></tr></thead>
               <tbody>
                 {participantes.map((p) => (
                   <tr key={p.userId}>
                     <td className={adminTd}><span className="block font-medium">{p.nombre || 'Sin nombre'}</span><span className="block text-xs text-muted">{p.email}</span></td>
                     <td className={`${adminTd} tabular-nums`}>{p.porCompra}</td>
+                    <td className={`${adminTd} tabular-nums`}>{p.porResena}</td>
                     <td className={`${adminTd} tabular-nums`}>{p.porInvitar}{p.invitados > 0 && <span className="block text-xs text-muted">{p.invitados} {p.invitados === 1 ? 'amigo' : 'amigos'}</span>}</td>
                     <td className={adminTd}>{p.aviso ? <span className={adminDato}>{p.aviso}</span> : <span className="text-xs text-muted">—</span>}</td>
                   </tr>

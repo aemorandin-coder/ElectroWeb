@@ -70,15 +70,21 @@ export async function avisarAmigoYaNoSuma(invitaUserId: string, nombre: string |
   });
 }
 
-/** Ganó un boleto, por una compra o por dos amigos que ya cuentan: a la campana, con cuántos lleva */
-export async function avisarBoletoEnCampana(userId: string, porque: 'compra' | 'invitados', total: number): Promise<void> {
+/**
+ * Ganó boletos, por una compra, una reseña aprobada o dos amigos que ya cuentan: a la campana, con cuántos lleva.
+ * C-297: una compra da varios (por el monto y el producto estrella): `nuevos`.
+ */
+export async function avisarBoletoEnCampana(userId: string, porque: 'compra' | 'invitados' | 'resena', total: number, nuevos = 1): Promise<void> {
+  const ganaste = nuevos === 1 ? 'un boleto' : boletos(nuevos);
   await createNotification({
     userId,
     type: 'SORTEO',
-    title: '¡Ganaste un boleto!',
+    title: `¡Ganaste ${ganaste}!`,
     message: porque === 'compra'
-      ? `Tu compra te dio un boleto para el sorteo. Ya tienes ${boletos(total)}.`
-      : `Dos amigos tuyos ya cuentan: ganaste un boleto. Ya tienes ${boletos(total)}.`,
+      ? `Tu compra te dio ${ganaste} para el sorteo. Ya tienes ${boletos(total)}.`
+      : porque === 'resena'
+        ? `Aprobamos tu reseña: te dio ${ganaste} para el sorteo. Ya tienes ${boletos(total)}.`
+        : `Dos amigos tuyos ya cuentan: ganaste un boleto. Ya tienes ${boletos(total)}.`,
     link: ENLACE,
   });
 }

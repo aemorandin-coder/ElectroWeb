@@ -10,6 +10,23 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.111] - 2026-11-18
+El sorteo que vende (C-297). Andrés, 18/11: "no importa tanto recuperar la inversión: nos quedan correos para la publicidad, clientes nuevos que conocen la web, y ahora con el plan, hacer que la web venda mucho más". **Cambio de base aditivo:** cuatro columnas en `sorteos` (su valor por defecto mantiene la regla de antes) y la tabla `sorteo_estrellas`. Sin variables nuevas y sin cron. La regla nueva entra con el SQL de datos del bloque.
+### Tienda 1.23.0 (C-297)
+- **Comprar vale más:** una compra de $5 o más da 2 boletos, y cada $50, 5 ($100 son 10). Cada reseña aprobada de algo comprado da 1, sin tope. Invitar queda igual. Vale también para las compras hechas desde el 14/11; los códigos de los boletos que ya existían no cambian.
+- **El producto estrella de la semana:** "Descubre el producto estrella" en /sorteo, el sello "+10 boletos" en su tarjeta y, en su ficha, cuántos boletos da. Cada unidad suma sus boletos a los de la compra.
+- **/sorteo más corto y claro:** los tres caminos con la escalera de montos; los boletos de una compra en una pila con su número (y en el teléfono, en fila para deslizar); sin cuenta, "Así se ve tu boleto"; las preguntas en una sola tarjeta que abre una a la vez.
+- **Cada ficha dice cuántos boletos da la compra.**
+### Carrito, checkout y cuenta del cliente 1.14.0 (C-297)
+- **El carrito:** "Esta compra te da N boletos", lo que falta para el próximo salto y su barra.
+- **Mi panel:** "Compra $5 o más y ganas 2 boletos"; los boletos de una compra, en su pila.
+### Marketing 1.28.0 (C-297)
+- **Sorteo, el asistente:** "Cómo se gana" pasa a dos pasos, Comprando (la compra mínima con sus boletos y la escala) y Reseñas y amigos, con su ejemplo y el antes → después.
+- **Sorteo, el tablero:** "Producto estrella de cada semana", con cualquier producto publicado y sus boletos. La semana que ya lo vendió queda fija, para que nadie pierda boletos. "Quiénes participan" suma las reseñas.
+- **Los avisos:** el correo y la campana dicen cuántos boletos dio la compra ("¡Ganaste 15 boletos!"); Chispa y el recordatorio dicen la escala.
+### Productos 1.19.0 y Clientes 1.9.1 (C-297)
+- Al aprobar una reseña durante el sorteo, la campana le avisa al cliente su boleto. La ficha del cliente cuenta los boletos de sus reseñas.
+
 ## [1.0.0-rc.110] - 2026-11-18
 Ajustes ordenado, segunda parte (C-294), la última fase del plan de Ajustes. Sin cambio de base, sin variables y sin cron.
 ### Ajustes 1.8.0 (C-294)

@@ -22,6 +22,8 @@ export interface DatosTarjetaSorteo {
   sorteado: boolean;
   compraMinimaUSD?: number;
   topeInvitar?: number;
+  /** C-297: los boletos de una compra de la mínima (antes, siempre 1) */
+  boletosPorCompra?: number;
 }
 
 /** C-262: lo de los amigos invitados (de /api/customer/sorteo), sin sus nombres */
@@ -48,10 +50,12 @@ export function TarjetaSorteoVista({ sorteo, total = 0, enlace = true, progreso 
   const dia = new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'long', timeZone: 'America/Caracas' }).format(new Date(sorteo.resultadoEl));
   const minimo = montoCorto(sorteo.compraMinimaUSD ?? 10);
   const invitar = (sorteo.topeInvitar ?? 1) > 0;
+  // C-297: una compra de la mínima da varios ("Compra $5 o más y ganas 2 boletos")
+  const porCompra = sorteo.boletosPorCompra ?? 1;
   // C-255 (el equipo, 15/11: "siempre habla claro sobre dos caminos"): la compra primero, y con boletos, cómo sumar más
   const linea = sorteo.sorteado ? 'Ya se sorteó: mira quién ganó.'
     : total > 0 ? `Tienes ${total} ${total === 1 ? 'boleto' : 'boletos'}: suma más comprando${invitar ? ' o invitando' : ''}. Resultado el ${dia}.`
-      : `Compra ${minimo} o más${invitar ? ', o invita a 2 amigos,' : ''} y participa. Resultado el ${dia}.`;
+      : `Compra ${minimo} o más y ganas ${porCompra} ${porCompra === 1 ? 'boleto' : 'boletos'}${invitar ? ', o invita a 2 amigos' : ''}. Resultado el ${dia}.`;
   const amigos = invitar && progreso && !sorteo.cerrado && !sorteo.sorteado ? lineaAmigos(progreso) : null;
   const cuerpo = (
     <>
@@ -85,7 +89,8 @@ export function TarjetaSorteoVista({ sorteo, total = 0, enlace = true, progreso 
 function proximoBoleto(sorteo: DatosTarjetaSorteo, p: ProgresoInvitar | undefined): string {
   const minimo = montoCorto(sorteo.compraMinimaUSD ?? 10);
   const faltan = p && p.tope > 0 ? p.faltanParaProximo : 0;
-  return `Compra ${minimo} o más${faltan === 1 ? ', o suma 1 amigo más' : faltan === 2 ? ', o invita a 2 amigos' : ''}`;
+  const porCompra = sorteo.boletosPorCompra ?? 1;
+  return `Compra ${minimo} o más${porCompra > 1 ? ` (${porCompra} boletos)` : ''}${faltan === 1 ? ', o suma 1 amigo más' : faltan === 2 ? ', o invita a 2 amigos' : ''}`;
 }
 
 /** C-263: con boletos, la sección de Mi panel con los boletos épicos */

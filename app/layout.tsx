@@ -10,6 +10,7 @@ import AvisoCookies from '@/components/consent/AvisoCookies';
 import MobileNavBar from "@/components/public/MobileNavBar";
 import { GuidedTourWrapper } from "@/components/onboarding/GuidedTourWrapper";
 import { getPublicSettings, getSiteSettings } from "@/lib/site-settings";
+import { sorteoParaCompra } from "@/lib/sorteo/estrella";
 import { getNavCategories, getNavDepartamentos } from "@/lib/queries/navigation";
 import { imagenDePagina } from "@/lib/og/datos";
 import { absoluteUrl, siteUrl } from "@/lib/seo";
@@ -128,7 +129,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [publicSettings, navCategories, navDepartamentos] = await Promise.all([getPublicSettings(), getNavCategories(), getNavDepartamentos()]);
+  // C-297: la escala de boletos y el producto estrella del sorteo abierto, para el sello de las tarjetas, la ficha y el carrito
+  const [publicSettings, navCategories, navDepartamentos, sorteoCompra] = await Promise.all([
+    getPublicSettings(), getNavCategories(), getNavDepartamentos(),
+    sorteoParaCompra().catch((error: unknown) => {
+      console.error('[SORTEO] No se pudo leer el sorteo para la tienda:', error);
+      return null;
+    }),
+  ]);
 
   return (
     <html lang="es" data-scroll-behavior="smooth" className={`${inter.variable} ${tektrron.variable}`} suppressHydrationWarning>
@@ -140,7 +148,7 @@ export default async function RootLayout({
       <body className="antialiased" suppressHydrationWarning>
         {/* C-282 (G-03): lo primero que alcanza el teclado */}
         <SaltarAlContenido />
-        <Providers initialSettings={publicSettings} navCategories={navCategories} navDepartamentos={navDepartamentos}>
+        <Providers initialSettings={publicSettings} navCategories={navCategories} navDepartamentos={navDepartamentos} sorteoCompra={sorteoCompra}>
           <NotificationProvider>
             <div className="page-transition-wrapper">
               {children}

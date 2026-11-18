@@ -18,6 +18,8 @@ function paraElPanel(sorteo: Sorteo) {
     id: sorteo.id, titulo: sorteo.titulo, premio: sorteo.premio, imagen: sorteo.imagen ?? '', activo: sorteo.activo,
     incluye: leerQueTrae(sorteo.incluye), lema: sorteo.lema ?? '', nombreCorto: sorteo.nombreCorto ?? '',
     costoPremioUSD: Number(sorteo.costoPremioUSD), compraMinimaUSD: Number(sorteo.compraMinimaUSD), topeInvitar: sorteo.topeInvitar,
+    // C-297: la escala por monto y las reseñas
+    boletosPorCompra: sorteo.boletosPorCompra, escalaUSD: Number(sorteo.escalaUSD), boletosPorEscala: sorteo.boletosPorEscala, boletosPorResena: sorteo.boletosPorResena,
     desde: diaDe(sorteo.desde), hasta: diaDe(sorteo.hasta), resultadoEl: diaDe(sorteo.resultadoEl),
     cerrado: new Date() > sorteo.hasta,
     sorteadoAt: sorteo.sorteadoAt?.toISOString() ?? null, ganadorEmail: sorteo.ganadorEmail, ganadorDetalle: sorteo.ganadorDetalle, ganadorCodigo: sorteo.ganadorCodigo,
@@ -66,6 +68,11 @@ export async function PUT(request: NextRequest) {
     ...(d.incluye === undefined ? {} : { incluye: d.incluye.length ? d.incluye : Prisma.DbNull }),
     ...(d.lema === undefined ? {} : { lema: d.lema || null }),
     ...(d.nombreCorto === undefined ? {} : { nombreCorto: d.nombreCorto || null }),
+    // C-297: sin mandarlos (un panel de antes), quedan como estaban
+    ...(d.boletosPorCompra === undefined ? {} : { boletosPorCompra: d.boletosPorCompra }),
+    ...(d.escalaUSD === undefined ? {} : { escalaUSD: d.escalaUSD }),
+    ...(d.boletosPorEscala === undefined ? {} : { boletosPorEscala: d.boletosPorEscala }),
+    ...(d.boletosPorResena === undefined ? {} : { boletosPorResena: d.boletosPorResena }),
   };
   const actual = await prisma.sorteo.findFirst({ orderBy: { createdAt: 'desc' } });
   // Uno ya sorteado no se cambia: el próximo es un sorteo nuevo

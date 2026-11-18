@@ -7,6 +7,8 @@
 // al lado y las preguntas que la gente hace (PreguntasSorteo). Quien llega con el enlace de un amigo lo ve.
 // C-254 (el equipo eligió la B viendo las maquetas): ya sorteado, el banner cuenta quién ganó (GanadorSorteo). Con la
 // entrega publicada y su permiso, su nombre, su foto y su video; sin eso, el correo tapado, como antes.
+// C-297 (Andrés, 18/11): comprar vale más ($5 → 2 boletos, cada $50 → 5), "Descubre el producto estrella" de la semana
+// (sus boletos de más por cada uno), las reseñas como un camino más, y las bases y las preguntas con la regla nueva.
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -17,16 +19,19 @@ import { IconoRegalo } from '@/components/iconos';
 import PublicHeader from '@/components/public/PublicHeader';
 import ComoParticipar from '@/components/sorteo/ComoParticipar';
 import PreguntasSorteo from '@/components/sorteo/PreguntasSorteo';
+import ProductoEstrella from '@/components/sorteo/ProductoEstrella';
 import GanadorSorteo from '@/components/sorteo/GanadorSorteo';
 import PremioSorteo, { diaLargo } from '@/components/sorteo/PremioSorteo';
 import Container from '@/components/ui/Container';
 import { authOptions } from '@/lib/auth';
 import { formatUSD } from '@/lib/currency';
-import { ganadorPublico, misBoletosPublicos } from '@/lib/dto/sorteo';
+import { ganadorPublico, misBoletosPublicos, sorteoParaBoletos } from '@/lib/dto/sorteo';
 import { compartirPagina } from '@/lib/og/datos';
 import { prisma } from '@/lib/prisma';
 import { siteUrl } from '@/lib/seo';
 import { getPublicSettings } from '@/lib/site-settings';
+import { boletosPorMonto, boletosTexto, reglaDe, reglaLarga } from '@/lib/sorteo/escala';
+import { estrellaPublica } from '@/lib/sorteo/estrella';
 import { avisoDeMarcas, leerQueTrae } from '@/lib/sorteo/premio';
 import { boletosDeCliente, esInvitacionVigente, getSorteoVigente } from '@/lib/sorteo/servidor';
 
@@ -40,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: sorteo
       ? sorteo.sorteadoAt
         ? `Ya hay ganador del sorteo de Electro Shop: la ${sorteo.premio} se sorteó el ${diaLargo(sorteo.sorteadoAt)}, al azar entre todos los boletos.`
-        : `Participa en el sorteo de Electro Shop: ${sorteo.premio}. Con cada compra de $${Number(sorteo.compraMinimaUSD)} o más, o invitando a 2 amigos.`
+        : `Participa en el sorteo de Electro Shop: ${sorteo.premio}. Cada compra de $${Number(sorteo.compraMinimaUSD)} o más te da ${boletosTexto(boletosPorMonto(Number(sorteo.compraMinimaUSD), reglaDe(sorteo)))}.`
       : 'Los sorteos de Electro Shop.',
     alternates: { canonical: '/sorteo' },
     robots: sorteo ? undefined : { index: false },
@@ -86,6 +91,9 @@ export default async function SorteoPage({ searchParams }: { searchParams: Promi
   const codigoInvita = (await cookies()).get('electroshop_sorteo')?.value ?? (typeof params.invita === 'string' ? params.invita : null);
   const invitado = !session?.user?.id && !cerrado && (await esInvitacionVigente(codigoInvita, sorteo.id));
   const ganador = ganadorPublico(sorteo);
+  // C-297: la regla por monto y el producto estrella de esta semana (null si no hay o no está a la venta)
+  const regla = reglaDe(sorteo);
+  const estrella = cerrado ? null : await estrellaPublica();
 
   return (
     <div className="min-h-dvh bg-surface">
@@ -107,19 +115,25 @@ export default async function SorteoPage({ searchParams }: { searchParams: Promi
 
         {!cerrado && (
           <Container className="py-8 lg:py-10">
-            {/* C-255: los tres pasos con los dos caminos (la compra primero), tus boletos al lado y las preguntas */}
+            {/* C-297: el producto estrella de la semana, antes de los pasos: es lo que más boletos da */}
+            {estrella && <div className="mb-10"><ProductoEstrella estrella={estrella} /></div>}
+            {/* C-255: los tres pasos con los caminos (la compra primero), tus boletos al lado y las preguntas */}
             <ComoParticipar
               minimo={minimo} tope={sorteo.topeInvitar} resultadoEl={sorteo.resultadoEl}
               cuenta={session?.user?.id ? { correoActivo: Boolean(usuario?.emailVerified) } : null}
               enlace={enlace} mensaje={`Participa conmigo en el sorteo de Electro Shop: ${sorteo.premio}. Regístrate con mi enlace:`}
               boletos={boletos} invitado={invitado} premio={sorteo.premio} mis={mis} urlSorteo={`${siteUrl()}/sorteo`}
+              regla={regla} porResena={sorteo.boletosPorResena} estrella={estrella} muestra={boletos ? null : sorteoParaBoletos(sorteo)}
             />
-            <PreguntasSorteo minimo={minimo} tope={sorteo.topeInvitar} hasta={sorteo.hasta} resultadoEl={sorteo.resultadoEl} />
+            <PreguntasSorteo
+              tope={sorteo.topeInvitar} hasta={sorteo.hasta} resultadoEl={sorteo.resultadoEl}
+              regla={regla} porResena={sorteo.boletosPorResena} estrella={estrella ? { boletos: estrella.boletos } : null}
+            />
             {/* C-257: la primera vez, el camino en tres íconos y un botón que lleva a "Cómo participar". Los dos caminos, la compra primero */}
             <AsiFunciona
               clave="sorteo"
               titulo="Así participas"
-              nota={sorteo.topeInvitar > 0 ? 'Dos caminos: comprar o invitar amigos.' : 'Cada compra es 1 boleto.'}
+              nota={`Una compra de ${minimo} ya te da ${boletosTexto(boletosPorMonto(regla.minimoUSD, regla))}.`}
               pasos={[
                 { icono: 'verificado', texto: 'Crea tu cuenta gratis', hecho: Boolean(session?.user?.id) },
                 { icono: 'carrito', texto: `Compra ${minimo} o más`, accion: 'carrito' },
@@ -140,7 +154,12 @@ export default async function SorteoPage({ searchParams }: { searchParams: Promi
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-ink-soft">
               <li>Lo organiza {settings.companyName}. Cuentan las compras pagadas y los registros del {diaLargo(sorteo.desde)} al {diaLargo(sorteo.hasta)}, hora de Venezuela. El resultado se da el {diaLargo(sorteo.resultadoEl)}.</li>
               <li>Participan las personas mayores de 18 años con una cuenta en la tienda y que vivan en Venezuela. No participa el equipo de la tienda.</li>
-              <li>Cada compra pagada de {minimo} o más en productos (sin contar el envío) es 1 boleto. Una compra que llega en dos paquetes cuenta como una. Si una compra se cancela o se devuelve, su boleto se anula.</li>
+              <li>{reglaLarga(regla)} Una compra que llega en dos paquetes cuenta como una. Si una compra se cancela o se devuelve, sus boletos se anulan.</li>
+              {/* C-297: el producto estrella y las reseñas */}
+              <li>Cada semana la tienda elige un producto estrella y lo publica en esta página. Cada unidad que se compre en su semana da los boletos que se anuncian{estrella ? ` (esta semana, ${estrella.boletos})` : ''}, además de los de la compra.</li>
+              {sorteo.boletosPorResena > 0 && (
+                <li>Cada reseña aprobada, escrita durante el sorteo, de un producto que la persona compró y recibió, da {boletosTexto(sorteo.boletosPorResena)}, sin límite. La aprobación no depende de la calificación: solo se rechazan las ofensivas o las que no hablan del producto.</li>
+              )}
               <li>Invitando amigos: cada 2 amigos que se registren con tu enlace, con su teléfono, y activen su cuenta desde el correo te dan 1 boleto, hasta {sorteo.topeInvitar}. Cada persona cuenta una sola vez: si se registra con el enlace de dos participantes, cuenta para quien la invitó primero.</li>
               <li>No se vende ningún boleto. Participar no cuesta nada aparte de lo que decidas comprar.</li>
               <li>El ganador se elige al azar entre todos los boletos: cada boleto es una oportunidad. Se publica en esta página con el correo tapado y se le escribe al correo de su cuenta. Solo si la persona lo acepta, se publican también su nombre, su foto y el video de la entrega.</li>

@@ -4,6 +4,7 @@
 import type { Sorteo } from '@prisma/client';
 import { etapaDeLaBandera, entregaVisible, FOTO_ENTREGA, type EtapaBandera } from '@/lib/sorteo/entrega';
 import { logoDelNombreCorto, logoEnElPremio, partesDelPremio, type LogoDePremio } from '@/lib/sorteo/premio';
+import { reglaDe, type ReglaDeCompra } from '@/lib/sorteo/escala';
 import { correoTapado } from '@/lib/sorteo/reglas';
 import type { BoletosDeCliente } from '@/lib/sorteo/servidor';
 import { leerYoutube, type VideoYoutube } from '@/lib/youtube';
@@ -67,14 +68,19 @@ export function banderaPublica(s: Sorteo, ahora: Date = new Date()): BanderaPubl
  */
 export interface BoletoPublico {
   codigo: string;
-  tipo: 'compra' | 'amigos';
-  /** Lo que dice el boleto: "Compra ORD-2026-0041" o "Invitaste a 2 amigos" */
+  /** C-297: también los del producto estrella y los de una reseña */
+  tipo: 'compra' | 'estrella' | 'resena' | 'amigos';
+  /** Lo que dice el boleto: "Compra ORD-2026-0041", "Producto estrella", "Tu reseña" o "Invitaste a 2 amigos" */
   origen: string;
   /** Solo en la pantalla, debajo del boleto: el monto de la compra y los dos amigos del par */
   monto: number | null;
   amigos: string[];
   /** ISO */
   fecha: string;
+  /** C-297: los que nacieron juntos (una compra con su estrella, una reseña, un par de amigos): la tienda los apila */
+  grupo: string;
+  /** C-297: el producto estrella o el reseñado, o null */
+  producto: string | null;
 }
 
 export interface MisBoletosPublicos {
@@ -97,21 +103,33 @@ export interface MisBoletosPublicos {
     /** La compra mínima, en USD */
     minimo: number;
     tope: number;
+    /** C-297: la escala por monto (cuántos da la compra mínima y cada tramo) y los boletos por reseña */
+    regla: ReglaDeCompra;
+    porResena: number;
   };
 }
 
 /** `nombres: false`: sin los nombres cortos de los amigos (Mi panel, como C-262: la lista con nombres está en /sorteo) */
-export function misBoletosPublicos(s: Sorteo, b: BoletosDeCliente, base: string, { nombres = true } = {}): MisBoletosPublicos {
+/** C-297: lo público del sorteo para dibujar un boleto: el de un cliente o el de muestra ("Así se ve tu boleto") */
+export function sorteoParaBoletos(s: Sorteo): MisBoletosPublicos['sorteo'] {
   const { nombre } = partesDelPremio(s.premio);
   const nombreCorto = s.nombreCorto?.trim() || null;
   const imagen = s.imagen && s.imagen.startsWith('/') && !s.imagen.startsWith('//') ? s.imagen : null;
   return {
-    boletos: b.boletos.map((x) => ({ codigo: x.codigo, tipo: x.tipo, origen: x.origen, monto: x.monto, amigos: nombres ? x.amigos : [], fecha: x.fecha.toISOString() })),
+    titulo: s.titulo, premio: nombre, logo: logoEnElPremio(nombre, nombreCorto)?.logo ?? logoDelNombreCorto(nombreCorto), nombreCorto, imagen,
+    resultadoEl: s.resultadoEl.toISOString(), minimo: Number(s.compraMinimaUSD), tope: s.topeInvitar,
+    regla: reglaDe(s), porResena: s.boletosPorResena,
+  };
+}
+
+export function misBoletosPublicos(s: Sorteo, b: BoletosDeCliente, base: string, { nombres = true } = {}): MisBoletosPublicos {
+  return {
+    boletos: b.boletos.map((x) => ({
+      codigo: x.codigo, tipo: x.tipo, origen: x.origen, monto: x.monto, amigos: nombres ? x.amigos : [], fecha: x.fecha.toISOString(),
+      grupo: x.grupo, producto: x.producto,
+    })),
     correo: b.correo,
     enlace: `${base}${b.enlaceCorto}`,
-    sorteo: {
-      titulo: s.titulo, premio: nombre, logo: logoEnElPremio(nombre, nombreCorto)?.logo ?? logoDelNombreCorto(nombreCorto), nombreCorto, imagen,
-      resultadoEl: s.resultadoEl.toISOString(), minimo: Number(s.compraMinimaUSD), tope: s.topeInvitar,
-    },
+    sorteo: sorteoParaBoletos(s),
   };
 }

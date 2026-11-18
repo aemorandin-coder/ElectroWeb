@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { boletosDeCliente, cargarInvitaciones, cuentanDe, getSorteoVigente, repartir, resumenDelSorteo, type BoletosDeCliente } from './servidor';
 import { logoDelNombreCorto, logoEnElPremio, partesDelPremio } from './premio';
 import { boletosPorInvitar, correoTapado, faltanParaProximo } from './reglas';
+import { reglaCorta, reglaDe } from './escala';
 import {
   correoBoletoSorteo, correoGanadorSorteo, correoRecordatorioSorteo, correoResultadoSorteo, type BoletoDelCorreo, type DatosSorteo,
 } from '@/lib/email-templates/comunidad';
@@ -14,20 +15,25 @@ import { enviarAUsuario } from '@/lib/email-templates/enviar';
 import { avisarAmigoListo, avisarAmigoYaNoSuma, avisarBoletoEnCampana } from './avisos';
 
 function datosDe(s: Sorteo): DatosSorteo {
+  // C-297: la regla de la compra en una línea (la escala), para Chispa y el recordatorio
   // C-263: lo que necesitan el boleto épico (el logo o el nombre del premio) y Chispa (la compra mínima de verdad)
   const { nombre } = partesDelPremio(s.premio);
   const nombreCorto = s.nombreCorto?.trim() || null;
   return {
     titulo: s.titulo, premio: s.premio, imagen: s.imagen, resultadoEl: s.resultadoEl, minimoUSD: Number(s.compraMinimaUSD), tope: s.topeInvitar,
     logo: logoEnElPremio(nombre, nombreCorto)?.logo ?? logoDelNombreCorto(nombreCorto), nombreCorto: nombreCorto ?? nombre,
+    reglaCorta: reglaCorta(reglaDe(s)),
   };
 }
 
-/** C-263: el boleto que acaba de nacer, como lo ve el cliente en la tienda: el de esa compra, o el último de amigos */
+/**
+ * C-263: el boleto que acaba de nacer, como lo ve el cliente en la tienda: el de esa compra, o el último de amigos.
+ * C-297: de una compra, el primero de los suyos (el grupo de la compra, con los del producto estrella)
+ */
 function boletoDelCorreo(b: BoletosDeCliente, cual: { compra: string } | 'amigos'): BoletoDelCorreo | null {
   const i = cual === 'amigos'
     ? b.boletos.map((x) => x.tipo).lastIndexOf('amigos')
-    : b.boletos.findIndex((x) => x.tipo === 'compra' && x.origen === `Compra ${cual.compra.split(' y ')[0]}`);
+    : b.boletos.findIndex((x) => x.grupo === `compra:${cual.compra.split(' y ')[0]}`);
   if (i < 0 || !b.correo) return null;
   return { codigo: b.boletos[i].codigo, origen: b.boletos[i].origen, n: i + 1, correo: b.correo };
 }
@@ -64,9 +70,9 @@ export async function avisarBoletoPorCompra(orderId: string): Promise<void> {
       const ultima = pagos.sort((a, b) => (a.paidAt?.getTime() ?? 0) - (b.paidAt?.getTime() ?? 0) || a.orderNumber.localeCompare(b.orderNumber)).at(-1);
       if (ultima?.orderNumber !== orden.orderNumber) return;
     }
-    await enviarAUsuario(orden.userId, (u) => correoBoletoSorteo({ nombre: u.name, sorteo: datosDe(sorteo), porque: 'compra', total: boletos.total, boleto: boletoDelCorreo(boletos, { compra: compra.ordenes }) }));
-    // C-262: también a la campana de Mi panel
-    await avisarBoletoEnCampana(orden.userId, 'compra', boletos.total);
+    await enviarAUsuario(orden.userId, (u) => correoBoletoSorteo({ nombre: u.name, sorteo: datosDe(sorteo), porque: 'compra', total: boletos.total, boleto: boletoDelCorreo(boletos, { compra: compra.ordenes }), nuevos: compra.boletos }));
+    // C-262: también a la campana de Mi panel (C-297: con cuántos dio la compra)
+    await avisarBoletoEnCampana(orden.userId, 'compra', boletos.total, compra.boletos);
   } catch (error) {
     console.error('[SORTEO] No se pudo avisar el boleto por compra:', error);
   }
@@ -125,6 +131,24 @@ export async function avisarBoletoPorInvitados(invitadoUserId: string): Promise<
 }
 
 /**
+ * C-297: el equipo aprobó una reseña. Si es de un cliente, escrita durante el sorteo abierto y las reseñas dan boletos,
+ * se le avisa en la campana con cuántos ganó y cuántos lleva (el correo de "reseña publicada" ya sale aparte).
+ */
+export async function avisarBoletoPorResena(reviewId: string): Promise<void> {
+  try {
+    const sorteo = await getSorteoVigente();
+    if (!sorteoAbierto(sorteo) || sorteo.boletosPorResena <= 0) return;
+    const resena = await prisma.review.findUnique({ where: { id: reviewId }, select: { userId: true, createdAt: true, isApproved: true, user: { select: { role: true } } } });
+    if (!resena?.isApproved || resena.user.role !== 'USER') return;
+    if (resena.createdAt < sorteo.desde || resena.createdAt > sorteo.hasta) return;
+    const boletos = await boletosDeCliente(sorteo, resena.userId);
+    await avisarBoletoEnCampana(resena.userId, 'resena', boletos.total, sorteo.boletosPorResena);
+  } catch (error) {
+    console.error('[SORTEO] No se pudo avisar el boleto por reseña:', error);
+  }
+}
+
+/**
  * El recordatorio, una sola vez y en los últimos días antes del cierre, a quien tiene boletos. Lo llama el cron una vez
  * al día. Se reclama con la columna `recordatorioAt` antes de enviar: dos corridas a la vez no lo mandan dos veces.
  * Devuelve a quiénes hay que escribirles (el envío, con pausa, lo hace `enviarRecordatorio` en segundo plano).
@@ -141,7 +165,7 @@ export async function reclamarRecordatorio(ahora = new Date()): Promise<{ sorteo
   const { participantes } = await resumenDelSorteo(sorteo);
   return {
     sorteo,
-    participantes: participantes.map((p) => ({ userId: p.userId, boletos: p.porCompra + p.porInvitar })).filter((p) => p.boletos > 0),
+    participantes: participantes.map((p) => ({ userId: p.userId, boletos: p.porCompra + p.porResena + p.porInvitar })).filter((p) => p.boletos > 0),
   };
 }
 

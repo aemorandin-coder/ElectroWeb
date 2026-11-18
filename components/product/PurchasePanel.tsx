@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import { IconoCarrito, IconoCuenta, IconoMas, IconoMenos } from '@/components/iconos';
 import Price from '@/components/ui/Price';
+import { BoletosDelProducto } from '@/components/sorteo/BoletosDeCompra';
 import { getStockLabel } from '@/components/ui/productCardData';
 import { avisarAgregado } from '@/components/onboarding/AvisoAgregado';
 import { useCart } from '@/contexts/CartContext';
@@ -172,6 +173,9 @@ export default function PurchasePanel({ product: productoInicial, exchangeRateVE
       </div>
 
       {afterPrice}
+
+      {/* C-297: cuántos boletos del sorteo da esta compra; el producto estrella, destacado */}
+      <BoletosDelProducto productId={product.id} subtotalUSD={unitPrice * quantity} cantidad={quantity} />
 
       {variants.length > 0 && (
         <fieldset>

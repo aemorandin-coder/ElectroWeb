@@ -406,6 +406,8 @@ model Product {
   wishlistItems WishlistItem[]
   digitalCodes  DigitalCode[]
   digitalVariants DigitalVariant[]
+  /// C-297: las semanas en que fue el producto estrella del sorteo
+  estrellasSorteo EstrellaSorteo[]
 
   @@index([deletedAt])
   // C-196: la lista del panel por páginas (estado, categoría, lo más nuevo) con miles de productos
@@ -2411,6 +2413,14 @@ model Sorteo {
   compraMinimaUSD  Decimal   @default(10)
   /// Hasta cuántos boletos se ganan invitando (1 por cada 2 amigos)
   topeInvitar      Int       @default(3)
+  /// C-297: cuántos boletos da una compra de la compra mínima o más (Andrés, 18/11: 2). Antes, siempre 1
+  boletosPorCompra Int       @default(1)
+  /// C-297: la escala por monto: cada `escalaUSD` en productos da `boletosPorEscala` (Andrés, 18/11: cada $50, 5).
+  /// Vale la que dé más: la de la compra o la escala. 0: sin escala
+  escalaUSD        Decimal   @default(0)
+  boletosPorEscala Int       @default(0)
+  /// C-297: boletos por cada reseña aprobada de algo que compró y recibió, escrita durante el sorteo (Andrés: 1). 0: no dan
+  boletosPorResena Int       @default(0)
   desde            DateTime
   /// Lo último que cuenta: compras pagadas y registros de invitados
   hasta            DateTime
@@ -2446,8 +2456,30 @@ model Sorteo {
   updatedAt        DateTime  @updatedAt
 
   participantes ParticipanteSorteo[]
+  estrellas     EstrellaSorteo[]
 
   @@map("sorteos")
+}
+
+/// C-297: el producto estrella de una semana del sorteo (Andrés, 18/11): cada unidad comprada en esas fechas da `boletos`
+/// de más, sumados a los del monto. Lo elige el equipo en el panel, cualquier producto. Las semanas no se pisan
+model EstrellaSorteo {
+  id        String   @id @default(cuid())
+  sorteoId  String
+  sorteo    Sorteo   @relation(fields: [sorteoId], references: [id], onDelete: Cascade)
+  productId String
+  /// Un producto con ventas no se puede borrar (sus órdenes lo sujetan): solo se va con él una semana que no vendió
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  desde     DateTime
+  /// Lo último que cuenta (fin del día de Venezuela)
+  hasta     DateTime
+  /// Boletos por cada unidad
+  boletos   Int      @default(10)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sorteoId, desde])
+  @@map("sorteo_estrellas")
 }
 
 /// C-212: quien abrió el sorteo con su cuenta (o llegó por el enlace de alguien): su código para invitar y quién lo invitó

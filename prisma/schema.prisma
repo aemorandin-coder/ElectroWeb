@@ -2609,10 +2609,34 @@ model IaAjustes {
   frases           Json?
   /// Las instrucciones que escribió el equipo, por uso: { [uso]: { texto, porId, porNombre, at } }. Sin el uso: las de fábrica
   instrucciones    Json?
+  /// C-292: el proveedor que responde (anthropic | google | xai | groq). null: anthropic, como antes
+  proveedor        String?
+  /// C-292: el que responde si el principal falla o no tiene clave. null: ninguno
+  respaldo         String?
+  /// C-292: un motor propio por uso: { [uso]: { proveedor, modelo } }. Sin el uso: el principal
+  porUso           Json?
   actualizadoPorId String?
   updatedAt        DateTime  @updatedAt
 
   @@map("ia_ajustes")
+}
+
+/// C-292: la clave y el modelo de cada proveedor que no es Anthropic (Anthropic sigue en ia_ajustes, como desde C-288). Una fila
+/// por proveedor: google | xai | groq. Los modelos los trae el proveedor al conectar la clave; el precio lo escribe el equipo.
+model IaProveedor {
+  id               String    @id
+  /// Cifrada con AES-256-GCM (lib/ia/clave.ts). null: sin clave (Groq: la de GROQ_API_KEY, si hay)
+  claveCifrada     String?
+  claveCambiadaAt  DateTime?
+  /// El modelo por defecto de este proveedor
+  modelo           String?
+  /// Dólares por millón de tokens, de la página oficial del proveedor. null: sin precio (el consumo cuenta solo los tokens)
+  precioEntrada    Decimal?  @db.Decimal(10, 4)
+  precioSalida     Decimal?  @db.Decimal(10, 4)
+  actualizadoPorId String?
+  updatedAt        DateTime  @updatedAt
+
+  @@map("ia_proveedores")
 }
 
 /// C-288: cada pedido a Claude (o a Groq, el respaldo de Buscar en la web) desde el panel: cuánto consume y qué falla.
@@ -2621,7 +2645,7 @@ model IaPedido {
   id        String   @id @default(cuid())
   /// busqueda | proveedor | respuesta | urgencia | cliente | campana | prueba (lib/ia/reglas.ts → USOS_IA)
   uso       String
-  /// anthropic | groq
+  /// anthropic | google | xai | groq (C-292)
   proveedor String   @default("anthropic")
   modelo    String
   esfuerzo  String?
@@ -2640,6 +2664,10 @@ model IaPedido {
   reintento Boolean  @default(false)
   usuarioId String?
   createdAt DateTime @default(now())
+  /// C-292: alguien del equipo marcó el resultado como "No sirvió", con el motivo
+  noSirvioAt     DateTime?
+  noSirvioMotivo String?
+  noSirvioPorId  String?
 
   @@index([createdAt])
   @@index([uso, createdAt])

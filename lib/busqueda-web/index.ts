@@ -1,6 +1,6 @@
 import { leerAjustesIa } from '@/lib/ia/ajustes';
 import { registrarAtajadas } from '@/lib/ia/atajadas';
-import { marcarFallaDeRegla, type OpcionesDeUso } from '@/lib/ia/claude';
+import { marcarFallaDeRegla, type OpcionesDeUso } from '@/lib/ia/pedir';
 import type { Cambio } from '@/lib/ia/reglas';
 import { mensajeDeCorreccion, revisarFicha } from '@/lib/ia/revisar';
 import { nombresBase, claveNombre } from '@/lib/spec-sugerencias';

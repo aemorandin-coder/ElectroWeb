@@ -8,7 +8,7 @@ import {
 } from '@/components/iconos';
 import { adminCard, adminSecondaryButton } from '@/lib/admin-ui';
 
-// C-288 · La guía: cómo pedirle las cosas a Claude para que acierte. Cuatro reglas de oro y, por cada lugar donde se usa, un pedido
+// C-288 · La guía: cómo pedirle las cosas a la IA para que acierte. Cuatro reglas de oro y, por cada lugar donde se usa, un pedido
 // para copiar y un "Así sí" / "Así no". El pedido de Importar tiene que decir lo mismo que la plantilla que se descarga
 // (lib/product-import-server.ts → buildImportTemplate): el modelo exacto, confirmado en la web, un solo resultado.
 
@@ -72,13 +72,13 @@ export default function Guia() {
   return (
     <div className="space-y-3">
       <section className={adminCard}>
-        <h4 className="text-base font-semibold text-ink">Claude trabaja con lo que le das</h4>
+        <h4 className="text-base font-semibold text-ink">La IA trabaja con lo que le das</h4>
         <p className="mt-0.5 text-sm text-muted">Cuanto más exacto el pedido, mejor el resultado. Cuatro reglas para todo el panel:</p>
         <div className="mt-3 grid gap-2.5 @lg:grid-cols-2 @3xl:grid-cols-4">
           <Regla icono={IconoLista} titulo="El nombre completo">Marca y modelo exactos, como en la caja: &quot;Emtop ETID65&quot;, no &quot;taladro Emtop&quot;.</Regla>
           <Regla icono={IconoCamaraFotos} titulo="La foto de la etiqueta">La de abajo del producto o la caja: ahí está el modelo. Con ella no adivina.</Regla>
           <Regla icono={IconoObjetivo} titulo="Un pedido, un resultado">Pide que confirme el modelo en la web y entregue uno solo, con de dónde sacó cada dato.</Regla>
-          <Regla icono={IconoVer} titulo="Revisa antes de publicar">Claude propone; publica quien revisó. Si algo salió mal, cambia sus instrucciones y pruébalas.</Regla>
+          <Regla icono={IconoVer} titulo="Revisa antes de publicar">La IA propone; publica quien revisó. Si algo salió mal, cambia sus instrucciones y pruébalas.</Regla>
         </div>
       </section>
 
@@ -88,19 +88,19 @@ export default function Guia() {
           <Pedido texto={PEDIDO_IMPORTAR} />
           <AsiSiAsiNo si={'"Taladro percutor Emtop ETID65 de 650 W" más la foto de la etiqueta.'} no={'"Taladro Emtop" y una foto de lejos: da varios modelos posibles.'} />
         </Lugar>
-        <Lugar icono={IconoChat} titulo="Consultas: la respuesta a un cliente" sub="Redactar con Claude, en cada mensaje">
-          <p>Claude ya trae las órdenes del cliente, los productos que nombra con su precio y existencia y el flete de ZOOM a su ciudad. Revisa el borrador y cámbialo lo que haga falta antes de enviarlo.</p>
-          <AsiSiAsiNo si="Revisar que el precio y el flete sean los de hoy y enviar." no="Enviar sin leer: si el cliente escribió mal el modelo, Claude no lo inventa, pero puede quedar corto." />
+        <Lugar icono={IconoChat} titulo="Consultas: la respuesta a un cliente" sub="Redactar con IA, en cada mensaje">
+          <p>La IA ya trae las órdenes del cliente, los productos que nombra con su precio y existencia y el flete de ZOOM a su ciudad. Revisa el borrador y cámbialo lo que haga falta antes de enviarlo.</p>
+          <AsiSiAsiNo si="Revisar que el precio y el flete sean los de hoy y enviar." no="Enviar sin leer: si el cliente escribió mal el modelo, la IA no lo inventa, pero puede quedar corto." />
         </Lugar>
-        <Lugar icono={IconoClientes} titulo="Clientes: el resumen antes de atender" sub="Resumir con Claude, en la ficha">
-          <p>Úsalo antes de escribirle a un cliente: dice qué tipo de cliente es, qué ofrecerle (solo productos de la tienda) y el siguiente paso. Las cifras las calcula la tienda, no Claude.</p>
+        <Lugar icono={IconoClientes} titulo="Clientes: el resumen antes de atender" sub="Resumir con IA, en la ficha">
+          <p>Úsalo antes de escribirle a un cliente: dice qué tipo de cliente es, qué ofrecerle (solo productos de la tienda) y el siguiente paso. Las cifras las calcula la tienda, no la IA.</p>
         </Lugar>
-        <Lugar icono={IconoCorreo} titulo="Campañas: el objetivo bien escrito" sub="Armar con Claude, en Marketing → Campañas">
+        <Lugar icono={IconoCorreo} titulo="Campañas: el objetivo bien escrito" sub="Armar con IA, en Marketing → Campañas">
           <p>El objetivo es lo único que escribe el equipo. Di qué, para quién y por qué ahora:</p>
           <Pedido texto={PEDIDO_CAMPANA} />
-          <AsiSiAsiNo si="Un objetivo concreto: producto, público y motivo." no={'"Vender más": Claude elige al azar.'} />
+          <AsiSiAsiNo si="Un objetivo concreto: producto, público y motivo." no={'"Vender más": la IA elige al azar.'} />
         </Lugar>
-        <Lugar icono={IconoLista} titulo="Proveedor: categoría y nombre de la lista" sub="Productos → Proveedor → Proponer con Claude">
+        <Lugar icono={IconoLista} titulo="Proveedor: categoría y nombre de la lista" sub="Productos → Proveedor → Proponer con IA">
           <p>Propone el nombre de la tienda y la categoría de cada código. Lo que no entiende lo marca en &quot;duda&quot;: revisa esos primero en &quot;Nombres para revisar&quot;.</p>
         </Lugar>
       </div>

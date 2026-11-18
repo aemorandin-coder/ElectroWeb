@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
 import { IconoAdvertencia, IconoAjustes, IconoBillete, IconoClave, IconoRepetir, type IconType } from '@/components/iconos';
-import { infoModelo, nombreDeEsfuerzo, nombreDeModelo } from '@/lib/ia/precios';
-import { miles, usd, type DatosIa } from './tipos';
+import { infoModelo, nombreDeEsfuerzo } from '@/lib/ia/precios';
+import { infoProveedor, nombreDelMotor } from '@/lib/ia/proveedores/catalogo';
+import { claveDe, miles, modeloDe, usd, type DatosIa } from './tipos';
 
 // C-288 · El estado de Claude de un vistazo: la pieza fuerte de la pantalla, en el azul oscuro del logo (una por pantalla, PLAN.md
 // §1.1). El modelo de ahora y si está conectado, de dónde sale la clave, el respaldo y el precio, y las cuatro cifras del mes.
+// C-292: el motor de cualquier proveedor (Claude, Gemini, Grok o Groq) y el respaldo elegido.
 
 function Chip({ icono: Icono, children }: { icono: IconType; children: ReactNode }) {
   return (
@@ -25,13 +27,24 @@ function Cifra({ valor, rotulo }: { valor: string; rotulo: string }) {
 }
 
 export default function Estado({ datos }: { datos: DatosIa }) {
-  const { motor, clave, consumo } = datos;
-  const precio = infoModelo(motor.modelo);
-  const problema = !clave.hay ? 'Sin clave' : clave.claveRota ? 'La clave del panel no se pudo leer' : null;
+  const { motor, consumo } = datos;
+  const info = infoProveedor(datos.proveedor);
+  const modelo = modeloDe(datos, datos.proveedor) ?? '';
+  const clave = claveDe(datos, datos.proveedor);
+  const esAnthropic = datos.proveedor === 'anthropic';
+  const otro = datos.proveedores.find((p) => p.id === datos.proveedor);
+  const deClaude = infoModelo(motor.modelo);
+  const precio = esAnthropic
+    ? deClaude ? `${usd(deClaude.entrada)} / ${usd(deClaude.salida)} el millón de tokens` : null
+    : otro?.precioEntrada != null && otro.precioSalida != null ? `${usd(otro.precioEntrada)} / ${usd(otro.precioSalida)} el millón de tokens` : 'Sin precio: cuenta solo los tokens';
+  const problema = !clave.hay ? 'Sin clave' : clave.claveRota ? 'La clave del panel no se pudo leer' : !modelo ? 'Sin modelo' : null;
   const fuente = clave.fuente === 'panel' ? 'Clave del panel' : clave.fuente === 'env' ? 'Clave en el servidor' : 'Sin clave';
+  const respaldo = datos.respaldo
+    ? `Respaldo: ${infoProveedor(datos.respaldo).motor}`
+    : datos.groq ? 'Respaldo: Groq (solo Buscar en la web)' : 'Sin respaldo';
 
   return (
-    <section aria-label="El motor de Claude" className="rounded-3xl bg-gradient-to-br from-brand-600 to-brand-700 p-5 text-white sm:p-6">
+    <section aria-label="El motor de la IA" className="rounded-3xl bg-gradient-to-br from-brand-600 to-brand-700 p-5 text-white sm:p-6">
       <div className="grid gap-5 @4xl:grid-cols-[minmax(0,1fr)_auto] @4xl:items-center @4xl:gap-8">
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-300">
@@ -47,14 +60,14 @@ export default function Estado({ datos }: { datos: DatosIa }) {
               </>
             )}
             <span aria-hidden="true" className="hidden @md:inline">·</span>
-            <span>el motor de todo el panel</span>
+            <span>{info.empresa} · el motor de todo el panel</span>
           </p>
-          <h3 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{nombreDeModelo(motor.modelo)}</h3>
+          <h3 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{modelo ? nombreDelMotor(datos.proveedor, modelo) : info.motor}</h3>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Chip icono={IconoAjustes}>Esfuerzo {nombreDeEsfuerzo(motor.esfuerzo)}</Chip>
+            {esAnthropic && <Chip icono={IconoAjustes}>Esfuerzo {nombreDeEsfuerzo(motor.esfuerzo)}</Chip>}
             <Chip icono={IconoClave}>{fuente}</Chip>
-            <Chip icono={IconoRepetir}>{datos.groq ? 'Respaldo: Groq (solo Buscar en la web)' : 'Sin respaldo de Groq'}</Chip>
-            {precio && <Chip icono={IconoBillete}>{usd(precio.entrada)} / {usd(precio.salida)} el millón de tokens</Chip>}
+            <Chip icono={IconoRepetir}>{respaldo}</Chip>
+            {precio && <Chip icono={IconoBillete}>{precio}</Chip>}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-white/15 pt-4 @md:grid-cols-4 @4xl:flex @4xl:gap-8 @4xl:border-l @4xl:border-t-0 @4xl:pl-8 @4xl:pt-0">

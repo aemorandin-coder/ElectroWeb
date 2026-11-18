@@ -12,7 +12,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { formatUSD } from '@/lib/currency';
-import { claudeDisponible, pedirJSON, type OpcionesDeUso } from '@/lib/ia/claude';
+import { iaDisponible, pedirJSON, type OpcionesDeUso } from '@/lib/ia/pedir';
 import { INSTRUCCIONES_DE_FABRICA } from '@/lib/ia/fabrica';
 import { productosMencionados, type ProductoMencionado } from '@/lib/ia/productos-mencionados';
 import { articulosMencionados, type ArticuloMencionado } from '@/lib/proveedores/articulos';
@@ -181,7 +181,7 @@ export async function revisarUrgencia(cuales: { mensajes?: string[]; solicitudes
 
 /** Para las rutas que crean un mensaje o una solicitud: lo revisa después de responder, sin hacer esperar a nadie */
 export async function revisarAlLlegar(cual: { mensaje?: string; solicitud?: string }): Promise<void> {
-  if (!(await claudeDisponible())) return;
+  if (!(await iaDisponible('urgencia'))) return;
   try {
     await revisarUrgencia({ mensajes: cual.mensaje ? [cual.mensaje] : [], solicitudes: cual.solicitud ? [cual.solicitud] : [] });
   } catch {

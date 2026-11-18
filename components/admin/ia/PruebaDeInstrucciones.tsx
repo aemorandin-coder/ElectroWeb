@@ -84,7 +84,7 @@ export default function PruebaDeInstrucciones({ uso, texto, alProbar }: { uso: U
       )}
       <p className={adminHint}>La prueba cuesta lo mismo que un pedido de verdad y no guarda nada.{uso === 'busqueda' ? ' Busca en la web como siempre: puede tardar hasta un minuto.' : ''}</p>
       <button type="button" onClick={() => void probar()} disabled={ocupado || caso.trim().length < 2} className={`${adminPrimaryButton} mt-3 h-9! px-3! text-[13px]`}>
-        <IconoPlay className="h-4 w-4" aria-hidden="true" />{ocupado ? 'Claude está trabajando…' : 'Probar con las instrucciones de arriba'}
+        <IconoPlay className="h-4 w-4" aria-hidden="true" />{ocupado ? 'La IA está trabajando…' : 'Probar con las instrucciones de arriba'}
       </button>
 
       {error && <p className="mt-3 text-sm font-semibold text-deal" role="alert">{error}</p>}

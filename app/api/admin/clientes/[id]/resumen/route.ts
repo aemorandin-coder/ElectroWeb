@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
-import { claudeDisponible, FallaIA } from '@/lib/ia/claude';
+import { FallaIA, iaDisponible } from '@/lib/ia/pedir';
 import { hechosDelCliente, resumirCliente } from '@/lib/ia/resumen-cliente';
 import { checkRateLimit } from '@/lib/rate-limit';
 
@@ -20,7 +20,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
   const hechos = await hechosDelCliente(id);
   if (!hechos) return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 });
-  return NextResponse.json({ hechos, iaDisponible: await claudeDisponible() });
+  return NextResponse.json({ hechos, iaDisponible: await iaDisponible('cliente') });
 }
 
 export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

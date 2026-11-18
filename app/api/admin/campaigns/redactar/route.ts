@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
 import { isAuthorized } from '@/lib/auth-helpers';
 import { redactarCampana } from '@/lib/ia/campana';
-import { FallaIA } from '@/lib/ia/claude';
+import { FallaIA } from '@/lib/ia/pedir';
 import { checkRateLimit } from '@/lib/rate-limit';
 
 // C-217: arma el borrador de una campaña de correo para un objetivo, con productos reales. No guarda ni envía: el

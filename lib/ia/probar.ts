@@ -9,7 +9,7 @@ import { buscarProductoEnLaWeb } from '@/lib/busqueda-web';
 import { formatUSD } from '@/lib/currency';
 import { redactarCampana } from '@/lib/ia/campana';
 import { probarCatalogo } from '@/lib/ia/catalogo-proveedor';
-import { FallaIA, type RevisionFinal } from '@/lib/ia/claude';
+import { FallaIA, type RevisionFinal } from '@/lib/ia/pedir';
 import { redactarRespuesta } from '@/lib/ia/respuesta-consulta';
 import { resumirCliente } from '@/lib/ia/resumen-cliente';
 import { probarUrgencia } from '@/lib/ia/urgencia';

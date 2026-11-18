@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma';
 import { formatUSD } from '@/lib/currency';
 import { formatPaymentMethod } from '@/lib/format-helpers';
 import { INSTRUCCIONES_DE_FABRICA } from '@/lib/ia/fabrica';
-import { pedirJSON, type OpcionesDeUso } from '@/lib/ia/claude';
+import { pedirJSON, type OpcionesDeUso } from '@/lib/ia/pedir';
 import { nombreCorto } from '@/lib/ia/atajadas';
 import { revisarResumenIa } from '@/lib/ia/revisar';
 import { limpiarTextoIA } from '@/lib/ia/texto';
@@ -74,6 +74,8 @@ export interface ResumenIA {
   ofrecer: Oferta[];
   siguientePaso: string;
   firma: string;
+  /** C-292: el pedido de la IA, para "No sirvió" */
+  pedidoId: string;
 }
 
 const fecha = (d: Date) => new Intl.DateTimeFormat('es-VE', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Caracas' }).format(d);
@@ -265,7 +267,7 @@ export async function resumirCliente(userId: string, opciones: OpcionesDeUso = {
   const hechos = hechosDe(leido);
   const productos = await candidatos(leido);
   // C-288: la tienda comprueba la respuesta: solo productos de la lista y sin datos personales
-  const { datos, firma } = await pedirJSON({
+  const { datos, firma, pedidoId } = await pedirJSON({
     donde: 'resumen del cliente',
     uso: 'cliente',
     deFabrica: INSTRUCCIONES_DE_FABRICA.cliente,
@@ -292,6 +294,7 @@ export async function resumirCliente(userId: string, opciones: OpcionesDeUso = {
       ofrecer,
       siguientePaso: limpiarTextoIA(datos.siguientePaso, 240),
       firma,
+      pedidoId,
     },
   };
 }

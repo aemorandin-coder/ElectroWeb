@@ -10,6 +10,7 @@ import { FaWhatsapp } from 'react-icons/fa6';
 import { IconoActualizar, IconoCheck, IconoCopiar, IconoCorreo, IconoEnvio, IconoNovedad, IconoOrdenes, IconoPaquete, IconoUbicacion } from '@/components/iconos';
 import { adminInput, adminNotice, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import type { BorradorRespuesta as Borrador, DatoUsado } from '@/lib/ia/respuesta-consulta';
+import FirmaIA from '@/components/admin/ia/FirmaIA';
 
 /** Como adminDato, pero el texto puede partirse: un dato largo no se sale de la caja en el teléfono */
 const dato = 'inline-flex max-w-full items-start gap-1 rounded-2xl bg-surface px-2.5 py-0.5 text-xs font-semibold tabular-nums text-ink-soft ring-1 ring-inset ring-line [overflow-wrap:anywhere]';
@@ -109,10 +110,10 @@ export default function BorradorRespuesta({ mensaje, onRespondido }: { mensaje: 
         </p>
       ) : !borrador ? (
         <div className="mt-3 space-y-3">
-          <p className="text-sm text-ink-soft">Claude redacta la respuesta con el estado real de su orden, los productos que nombra (precio y existencia) y lo que cobra ZOOM a su ciudad. Tú la revisas y la envías.</p>
+          <p className="text-sm text-ink-soft">La IA redacta la respuesta con el estado real de su orden, los productos que nombra (precio y existencia) y lo que cobra ZOOM a su ciudad. Tú la revisas y la envías.</p>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={redactar} className={`${adminPrimaryButton} min-h-11`}>
-              <IconoNovedad className="h-4 w-4" aria-hidden="true" /> Redactar con Claude
+              <IconoNovedad className="h-4 w-4" aria-hidden="true" /> Redactar con IA
             </button>
             {/* Responder sin borrador, como antes (era el botón "Responder por Email" del mensaje) */}
             <a href={`mailto:${mensaje.email}?subject=${encodeURIComponent(asunto)}`} className={`${adminSecondaryButton} min-h-11`}>
@@ -169,7 +170,7 @@ export default function BorradorRespuesta({ mensaje, onRespondido }: { mensaje: 
               {copiado ? 'Copiado' : 'Copiar'}
             </button>
           </div>
-          <p className="text-xs text-muted">Redactado por {borrador.firma}. Revísalo antes de enviarlo. Si lo mandas por WhatsApp o desde tu correo, marca el mensaje como «Respondido».</p>
+          <FirmaIA firma={borrador.firma} pedidoId={borrador.pedidoId} nota="Revísalo antes de enviarlo. Si lo mandas por WhatsApp o desde tu correo, marca el mensaje como «Respondido»." />
         </div>
       )}
       {error && <p className={`${adminNotice('danger')} mt-3`} role="alert">{error}</p>}

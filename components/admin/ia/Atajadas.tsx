@@ -10,7 +10,7 @@ import { cuando } from './tipos';
 /** Qué hizo la tienda, en una frase: lo que traía y lo que quedó */
 export function queHizo(a: { accion: string; antes: string; despues: string | null }): string {
   if (a.accion === 'cambia') return `Cambió «${a.antes}»${a.despues ? ` por «${a.despues}»` : ''}`;
-  if (a.accion === 'pide') return `Le pidió otra vez a Claude: traía «${a.antes}»`;
+  if (a.accion === 'pide') return `Le pidió otra vez a la IA: traía «${a.antes}»`;
   if (a.accion === 'marca') return `Quedó para revisar: ${a.antes}`;
   return `Quitó «${a.antes}»`;
 }

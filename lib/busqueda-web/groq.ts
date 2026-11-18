@@ -1,5 +1,5 @@
 import { leerAjustesIa } from '@/lib/ia/ajustes';
-import { registrarPedido } from '@/lib/ia/claude';
+import { registrarPedido } from '@/lib/ia/pedir';
 import { INSTRUCCIONES_BUSQUEDA } from '@/lib/ia/fabrica';
 import { instruccionesDe } from '@/lib/ia/reglas';
 import { codigoUtil } from './codigo-barras';
@@ -30,8 +30,13 @@ const MODELO_BUSCADOR = process.env.GROQ_SEARCH_MODEL || 'openai/gpt-oss-20b';
 const EVIDENCIA_MAXIMA = 11_000;
 const POR_PAGINA = 2_400;
 
-export function groqDisponible(): boolean {
-  return Boolean(process.env.GROQ_API_KEY);
+/** C-292: la clave de Groq: la del panel (Ajustes → IA) o, si no hay, GROQ_API_KEY */
+async function claveGroq(): Promise<string | null> {
+  return (await leerAjustesIa()).otros.groq.clave;
+}
+
+export async function groqDisponible(): Promise<boolean> {
+  return Boolean(await claveGroq());
 }
 
 interface Mensaje {
@@ -44,10 +49,12 @@ async function pedir(cuerpo: Record<string, unknown>, tiempoMs: number): Promise
   const inicio = Date.now();
   const anotar = (extra: { entrada?: number; salida?: number; falla?: 'servicio' | 'no-termino'; detalle?: string }) =>
     registrarPedido({ uso: 'busqueda', proveedor: 'groq', modelo: String(cuerpo.model ?? ''), esfuerzo: typeof cuerpo.reasoning_effort === 'string' ? cuerpo.reasoning_effort : null, ms: Date.now() - inicio, ...extra });
+  const clave = await claveGroq();
+  if (!clave) return null;
   try {
     const res = await fetch(DIRECCION, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${clave}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(cuerpo),
       signal: AbortSignal.timeout(tiempoMs),
     });
@@ -169,7 +176,7 @@ export async function leerConGroq(
   paginas: PaginaParaLeer[],
   nombresSugeridos: string[],
 ): Promise<LecturaGroq | null> {
-  if (!groqDisponible()) return null;
+  if (!(await groqDisponible())) return null;
   const evidencia = evidenciaDe(paginas);
   if (!evidencia) return null;
   const ajustes = await leerAjustesIa();
@@ -276,7 +283,7 @@ export interface BusquedaGroq {
  * Gasta casi todo el cupo de un minuto: solo se usa si no se leyó ninguna página.
  */
 export async function buscarConGroq(producto: { nombre: string; categoria: string }, nombresSugeridos: string[]): Promise<BusquedaGroq | null> {
-  if (!groqDisponible()) return null;
+  if (!(await groqDisponible())) return null;
   const contenido = await pedir({
     model: MODELO_BUSCADOR,
     temperature: 0.2,

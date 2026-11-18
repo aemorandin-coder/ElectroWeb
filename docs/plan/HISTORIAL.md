@@ -1,10 +1,44 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.102`, comprobada el 17/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.103`, comprobada el 18/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 18/11 · C-288, Claude en el panel: ajustes y reglas estrictas (de rc.102 a `v1.0.0-rc.103`)
+La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida (18/11), cerca de las 8:05 a. m.:
+1. `git pull --ff-only` y `deploy.sh --sin-pull`. El guion paró por el cambio de base y mostró el SQL: solo los 3 `CREATE TABLE` y los 3 `CREATE INDEX` de abajo, sin `DROP` ni `ALTER`.
+2. `npx prisma db push` y el guion otra vez. Terminó en "Listo: sirviendo .next-a (e82052e3 Merge branch 'claude/C-288')".
+
+Sin variables nuevas y sin cron.
+
+**Lo comprobado, el 18/11:**
+- **En el servidor:**
+  - `git describe --tags` dice `v1.0.0-rc.103` y la tienda escucha en `127.0.0.1:3000`;
+  - las tres tablas existen, vacías: sin ajustes guardados, Claude sigue con el `.env` como antes;
+  - el registro de errores de PM2 no tiene líneas nuevas (18 antes y 18 después).
+- **Desde fuera, como un visitante:**
+  - la portada dice `1.0.0-rc.103|e82052e3`;
+  - la portada, Productos, `/sorteo` y `/api/settings/public` responden 200;
+  - `/admin/settings` sin sesión lleva al login (307);
+  - `/api/admin/ia` y `PUT /api/admin/ia/clave` responden 401.
+- **Antes de subir,** en la tienda de prueba con Anthropic simulado: lo de `estado/C-288.md` (76 casos de reglas, 32 de 32 de punta a punta, la pantalla a 4 anchos).
+
+**Falta que el equipo lo mire** (`SIGUIENTE.md`, "Por confirmar de rc.103"): las 3 pruebas.
+
+### El bloque que se subió: `v1.0.0-rc.103` (C-288)
+- **Commit:** `e82052e3` (etiqueta `v1.0.0-rc.103`).
+- **SQL (aditivo):**
+```sql
+CREATE TABLE "ia_ajustes" ("id" TEXT NOT NULL DEFAULT 'default', "modelo" TEXT, "esfuerzo" TEXT, "claveCifrada" TEXT, "claveCambiadaAt" TIMESTAMP(3), "frases" JSONB, "instrucciones" JSONB, "actualizadoPorId" TEXT, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "ia_ajustes_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "ia_pedidos" ("id" TEXT NOT NULL, "uso" TEXT NOT NULL, "proveedor" TEXT NOT NULL DEFAULT 'anthropic', "modelo" TEXT NOT NULL, "esfuerzo" TEXT, "entrada" INTEGER NOT NULL DEFAULT 0, "salida" INTEGER NOT NULL DEFAULT 0, "busquedas" INTEGER NOT NULL DEFAULT 0, "costoUsd" DECIMAL(12,6) NOT NULL DEFAULT 0, "ms" INTEGER NOT NULL, "falla" TEXT, "detalle" TEXT, "reintento" BOOLEAN NOT NULL DEFAULT false, "usuarioId" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "ia_pedidos_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "ia_atajadas" ("id" TEXT NOT NULL, "uso" TEXT NOT NULL, "regla" TEXT NOT NULL, "accion" TEXT NOT NULL, "antes" TEXT NOT NULL, "despues" TEXT, "referencia" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "ia_atajadas_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "ia_pedidos_createdAt_idx" ON "ia_pedidos"("createdAt");
+CREATE INDEX "ia_pedidos_uso_createdAt_idx" ON "ia_pedidos"("uso", "createdAt");
+CREATE INDEX "ia_atajadas_createdAt_idx" ON "ia_atajadas"("createdAt");
+```
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.102 && npm install && bash scripts/deploy.sh --sin-pull`. Las tablas nuevas se pueden quedar: rc.102 no las usa.
 
 ## 17/11 · C-287, ElectroStudio y Claude en Productos (de rc.101 a `v1.0.0-rc.102`)
 La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida, cerca de las 3:05 p. m.: `git pull --ff-only` y `deploy.sh --sin-pull`, sin base, sin SQL y sin cron. Terminó en "Listo: sirviendo .next-b (417f2769 Merge branch 'claude/C-287')".

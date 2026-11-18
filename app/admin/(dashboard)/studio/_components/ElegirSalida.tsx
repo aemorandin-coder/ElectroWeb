@@ -23,13 +23,14 @@ interface Props {
 
 /**
  * C-286 y C-287: la imagen o el video, a Telegram (los chats del bot de Notificaciones), tal como salió: Full HD y con el
- * texto de la historia. Solo cuando el equipo lo elige al sacarlo (ElegirSalida).
+ * texto de la historia. Solo cuando el equipo lo elige al sacarlo (ElegirSalida, o la pantalla del final: C-295).
+ * Devuelve true si llegó a todos los chats; los avisos salen igual.
  */
-export async function enviarATelegram(archivo: { blob: Blob; nombre: string; texto: string; tipo: 'imagen' | 'video'; segundos?: number; ancho?: number; alto?: number }) {
+export async function enviarATelegram(archivo: { blob: Blob; nombre: string; texto: string; tipo: 'imagen' | 'video'; segundos?: number; ancho?: number; alto?: number }): Promise<boolean> {
   const que = archivo.tipo === 'video' ? 'el video' : 'la imagen';
   if (archivo.blob.size > 40 * 1024 * 1024) {
     toast.error(`${archivo.tipo === 'video' ? 'El video' : 'La imagen'} pesa más de 40 MB: no se puede mandar a Telegram.`);
-    return;
+    return false;
   }
   const datos = new FormData();
   datos.append('archivo', new File([archivo.blob], archivo.nombre, { type: archivo.blob.type }));
@@ -42,13 +43,18 @@ export async function enviarATelegram(archivo: { blob: Blob; nombre: string; tex
   try {
     const res = await fetch('/api/admin/studio/telegram', { method: 'POST', body: datos });
     const r = (await res.json().catch(() => ({}))) as { apagado?: boolean; enviados?: number; total?: number; error?: string };
-    if (!res.ok) { toast.error(r.error || `No se pudo mandar ${que} a Telegram`, { id }); return; }
-    if (r.apagado || !r.total) { toast.error('El bot de Telegram no está conectado o no tiene chats: se conecta en Notificaciones → Telegram.', { id, duration: 8000 }); return; }
+    if (!res.ok) { toast.error(r.error || `No se pudo mandar ${que} a Telegram`, { id }); return false; }
+    if (r.apagado || !r.total) { toast.error('El bot de Telegram no está conectado o no tiene chats: se conecta en Notificaciones → Telegram.', { id, duration: 8000 }); return false; }
     const enviados = r.enviados ?? 0;
-    if (enviados === r.total) toast.success(`Listo en Telegram (${enviados === 1 ? '1 chat' : `${enviados} chats`}), en Full HD`, { id });
-    else toast.error(`Telegram: llegó a ${enviados} de ${r.total} chats. ${r.error ?? ''}`, { id, duration: 8000 });
+    if (enviados === r.total) {
+      toast.success(`Listo en Telegram (${enviados === 1 ? '1 chat' : `${enviados} chats`}), en Full HD`, { id });
+      return true;
+    }
+    toast.error(`Telegram: llegó a ${enviados} de ${r.total} chats. ${r.error ?? ''}`, { id, duration: 8000 });
+    return false;
   } catch {
     toast.error(`No se pudo mandar ${que} a Telegram (sin conexión).`, { id });
+    return false;
   }
 }
 

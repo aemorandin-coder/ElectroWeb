@@ -1,8 +1,8 @@
 # 2. Chispa, el personaje
 
-Chispa es la mascota de Electro Shop: un muchacho en dibujo 2D de tinta, con colores planos y el pelo negro en puntas. Tiene piel crema, ojos grandes negros con brillo y cachetes rosados. Lleva camisa azul marino con cuello en V azul y una placa blanca con "ES" en letras azules. Va siempre de la cintura para arriba, delante de un círculo azul de marca.
+Chispa es la mascota de Electro Shop: un muchacho en dibujo 2D de tinta, con colores planos y el pelo negro en puntas. Tiene piel crema, ojos grandes negros con brillo y cachetes rosados. Lleva camisa azul marino con cuello en V azul y, en el pecho, el logo oficial de la tienda (el círculo azul con el monitor y «ES»); en la espalda, el mismo logo grande. Va siempre de la cintura para arriba, delante de un círculo azul de marca.
 
-Todo está en `mascota/chispa.js` (versión 3.0, del 06/11, C-195): un SVG armado como muñeco articulado. La hoja de poses está en `mascota/hoja.html` (foto: `mascota/chispa-poses.png`).
+Todo está en `mascota/chispa.js` (versión 3.1, del 18/11, C-296; la 3.0 fue del 06/11, C-195): un SVG armado como muñeco articulado. La hoja de poses está en `mascota/hoja.html` (foto: `mascota/chispa-poses.png`).
 
 ## Lo que Andrés corrigió (no repetir)
 - **Sin franja azul en la muñeca.** "Rompe las manos". Las manos salen directo de la manga.
@@ -17,9 +17,15 @@ Todo está en `mascota/chispa.js` (versión 3.0, del 06/11, C-195): un SVG armad
 - **Los pulgares son cortos y gruesos** (06/11: «los pulgares son muy largos y se perciben como índice»).
 - **Sin cortes donde un dedo se junta con la palma** (06/11: «revisa bien las manos»). Cada mano es una sola silueta (abajo).
 - **El aro del OK, chico y con el hueco sobre el fondo** (06/11: «el círculo debe ser más pequeño, dale más enfoque»). Sobre la camisa oscura el hueco no se leía.
+- **El aro del OK son dos dedos, no una dona** (18/11: «el pómulo del pulgar abajo es muy exagerado», «son los dedos del pulgar y el índice»). El índice sale de la palma y se curva; el pulgar sube desde su base sin abultar la palma; abajo, el costado baja derecho. Antes de tocar una mano: la skill `.claude/skills/manos-de-caricatura`.
+- **Los brazos cruzados: una mano agarra el brazo del otro lado y de la otra asoman las puntas** (18/11: «esas manos están mal»; eran dos puños de perfil que salían por los costados, como bloques). Eligió la 10B.
+- **En la camisa va el logo oficial**, no una placa con «ES» escrito (18/11). Está redibujado en vector (`logoES`, `chispa.logo()`), corrido al centro para que la manga en reposo no lo tape.
+- **Los ojos de sorpresa son blancos con la pupila chica** (18/11, elegido en la página de variantes: la 2B). Los de antes quedan como `grandes`.
 
-## Las manos: cómo se dibujan (C-195)
-No hay una skill que enseñe a dibujar manos (se buscó el 06/11). Estas reglas salen de cómo las trabajan la animación y los juegos: Preston Blair (la mano como un mitón primero), Proko (palma en bloque, dedos como cilindros, base triangular del pulgar), Streamline (empezar por la mano abierta y el puño, y que se lean en chico) y la prueba de silueta de los estudios. Más lo que corrigió Andrés.
+## Las manos: cómo se dibujan (C-195; desde C-296, con la skill)
+**Desde el 18/11 está la skill `.claude/skills/manos-de-caricatura`**, con lo que enseñan Preston Blair, John Kricfalusi, Richard Williams y los animadores japoneses: la construcción, el pulgar y el índice (el OK, la pinza, sostener), cómo se anima un cambio de forma y la revisión. Se lee antes de tocar una mano; lo de abajo es lo propio de Chispa.
+
+El 06/11 no había ninguna skill que enseñara a dibujar manos. Estas reglas salen de cómo las trabajan la animación y los juegos: Preston Blair (la mano como un mitón primero), Proko (palma en bloque, dedos como cilindros, base triangular del pulgar), Streamline (empezar por la mano abierta y el puño, y que se lean en chico) y la prueba de silueta de los estudios. Más lo que corrigió Andrés.
 1. **Una mano, una silueta.** La palma, los dedos y el pulgar se dibujan juntos con un solo contorno: primero todo en tinta con un trazo de 12 por fuera, después todo en piel encima (`silueta()`). Así no quedan cortes ni manchas en las uniones.
    - Un pulgar que cruza por delante de los dedos doblados también entra en la silueta. Encima va su borde, abierto en la base para que se funda con la palma (`pulgarDelante()`): el lado de arriba llega más cerca de la base que el de abajo.
 2. **Primero la silueta.** Cada gesto se tiene que entender en negro sólido y a 32 px. Si no se entiende, se cambia la forma; no se agregan líneas. El pulgar arriba tiene que verse distinto del índice, y el hueco del OK tiene que verse.
@@ -47,12 +53,14 @@ No hay una skill que enseñe a dibujar manos (se buscó el 06/11). Estas reglas 
 // en la página: <script src="../mascota/chispa.js"></script>
 el.innerHTML = chispa({ pose: 'saluda', boca: 'sonrisa', ojos: 'feliz', cejas: 'normal', fondo: false });
 ```
-- **Poses (de frente):** `habla`, `señala` (índice arriba a su izquierda), `explica` (dos palmas abiertas), `pulgar`, `brazos` (cruzados), `hombros` ("¿y entonces?"), `saluda`, `celebra` (dos pulgares al pecho), `piensa` (puño bajo la barbilla), `ok` (junto a la cara), `victoria` (la V), `telefono` (muestra el teléfono con la tienda) y `presenta` (la mano abierta hacia un lado, para presentar algo).
+- **Poses (de frente):** `habla`, `señala` (índice arriba a su izquierda), `explica` (dos palmas abiertas), `pulgar`, `brazos` (cruzados: una mano agarra el brazo y de la otra asoman las puntas; C-296), `hombros` ("¿y entonces?"), `saluda`, `celebra` (dos pulgares al pecho), `piensa` (el puño apoyado en la barbilla; C-296), `ok` (junto a la cara), `victoria` (la V), `telefono` (muestra el teléfono con la tienda) y `presenta` (la mano abierta hacia un lado, para presentar algo).
 - **Poses de espalda:** `espalda`, `espalda-señala`, `espalda-señala-alto`, `espalda-dos` y `espalda-libre` (brazos a mano con `window.CHISPA_L` y `window.CHISPA_R`).
-- **Ojos:** `abiertos`, `cerrados`, `sorpresa`, `guino`, `feliz`, `sonrie`, `entrecerrados`.
-- **Cejas:** `normal`, `arriba`, `duda`, `enojo`, `triste`.
+- **Ojos:** `abiertos`, `cerrados`, `sorpresa` (C-296: blancos con la pupila chica), `guino`, `feliz`, `sonrie`, `entrecerrados`, `grandes` (los de sorpresa de antes, un 15 % más grandes) y `tristes` (el párpado cae hacia el rabillo y brillan).
+- **Cejas:** `normal`, `arriba`, `duda`, `enojo`, `triste` y `serio` (el enojo a medias, para un aviso).
 - **Bocas:** `sonrisa`, `seria`, las vocales `a`, `e`, `i`, `o`, `u`, y `feliz`, `risa`, `sorpresa`, `triste`, `ups`, `picara`, `duda`.
-- **Expresiones** (ponen ojos, cejas, boca, mirada y rubor juntos; lo que se pase aparte manda): `alegre`, `risa`, `sorpresa`, `pensativo`, `picaro`, `apenado`, `orgulloso`, `triste`. Ejemplo: `chispa({ pose: 'telefono', expresion: 'alegre' })`.
+- **Expresiones** (ponen ojos, cejas, boca, mirada y rubor juntos; lo que se pase aparte manda): `alegre`, `risa`, `sorpresa`, `pensativo`, `picaro`, `apenado`, `orgulloso`, `triste` y `serio`. Desde C-296 también ponen la cabeza y los hombros: la sorpresa echa la cabeza atrás y sube los hombros; la tristeza la baja y los deja caer.
+- **La mirada se nota** (C-296): los ojos se corren 7 px a los lados y 5 arriba o abajo (antes 3,5 y 2,5), y la cabeza gira un poco hacia donde miran (`cabeza.sigue`, de 0 a 1; en 0 se queda quieta).
+- **El logo suelto:** `chispa.logo(x, y, radio)` da el logo oficial en SVG, para una pieza. Ejemplo: `chispa({ pose: 'telefono', expresion: 'alegre' })`.
 - **Miradas por nombre** (en `chispa.linea`, `mirar: 'telefono'`): `camara`, `derecha`, `izquierda`, `arriba`, `abajo`, `telefono`, `producto`.
 - **Una mano sola:** `chispa.mano('pulgar', x, y, giro)` da el SVG de la mano, para revisarla de cerca o usarla en una pieza.
 - Cada pose inclina un poco la cabeza (`INC_POSE`) para que no se vea rígido.

@@ -10,6 +10,50 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.107] - 2026-11-18
+Chispa 3.1 (C-296), elegida por el equipo en la página de variantes: el logo oficial de la tienda en la camisa, en las historias de ElectroStudio, el popup navideño y los correos. Sin cambio de base, sin variables nuevas y sin cron.
+### ElectroStudio 2.5.1 (C-296)
+- Las 10 imágenes de Chispa (5 poses, con y sin gorro) salen con Chispa 3.1: el logo oficial en el pecho, en lugar de la placa blanca con «ES». Van en `public/images/studio/chispa-31`, porque el optimizador guarda las de antes 30 días.
+### Marketing 1.25.3 (C-296)
+- Las mismas poses en los correos, y las imágenes de los correos con `?v=3`, para que Gmail no muestre las guardadas.
+### Chispa (estudio de video, fuera de la web)
+- `chispa.js` 3.1:
+  - ojos de asombro en la sorpresa, y párpado caído con brillo en la tristeza;
+  - la mirada que se nota, con la cabeza que la acompaña;
+  - la cabeza y los hombros de cada emoción;
+  - el puño de «piensa» en la barbilla y la cara «serio»;
+  - el OK rehecho como dos dedos;
+  - los brazos cruzados con una mano que agarra el brazo;
+  - las manos quietas se mecen apenas.
+- La skill `manos-de-caricatura` y el guion `poses-web.mjs`.
+
+## [1.0.0-rc.106] - 2026-11-18
+ElectroStudio en el teléfono (C-295): el pedido del equipo del 18/11 ("que se vea espectacular en el teléfono, intuitiva, nativa y a 60 fps", "los ajustes de stickers, imágenes y títulos, touch friendly" y "al final uno queda así: ¿cómo que y ahora?"). Sigue dentro del panel, sin app aparte. Sin cambio de base, sin variables y sin cron.
+### ElectroStudio 2.5.0 (C-295)
+- **"Editar en grande"** (en el teléfono, o el botón de la esquina de la vista previa): la historia del alto de la pantalla, sobre fondo oscuro.
+  - Arriba: Listo, deshacer, rehacer y ver la animación.
+  - Abajo, una hoja: el paso con sus flechas, y **+ Título, + Subtítulo, + Sticker y Terminar**. Al subirla, todo lo del paso.
+  - Con el teclado del teléfono abierto, la hoja queda encima de él.
+  - La primera vez, la hoja "Edita con los dedos": un dedo mueve, dos dedos agrandan y giran, tocar afuera suelta.
+- **Para el dedo:**
+  - las asas y los botones de la pieza se toman en 44 px aunque se vean finos;
+  - con una pieza elegida, dos dedos en cualquier parte del lienzo la agrandan y la giran (antes, el primer dedo tenía que caer sobre ella);
+  - un toque afuera la suelta (antes no la soltaba, tampoco con el ratón);
+  - el teléfono vibra corto al pegarse a una guía (Android).
+- **60 cuadros:** la vista previa se dibuja del tamaño en que se ve, no a 1080 (en el teléfono, de 3 a 14 veces menos trabajo por cuadro), y el arrastre manda un cambio por cuadro. Las sombras y los desenfoques se ajustan a la escala: la vista previa sale igual que la descarga, que sigue en 1080 × 1920.
+- **El final:** al sacar la imagen o el video, la pantalla entera en el azul oscuro del logo.
+  - Mientras se arma, la vista previa con el anillo de lo que falta.
+  - Lista: la historia en grande llega con un rebote, un destello y chispas (una sola vez; con "reducir movimiento", quieta), y "Lista en 2:14" y cuántas van esta semana.
+  - Lo que se hace con ella: **compartir** (Instagram, WhatsApp… en el teléfono) o descargar, **Telegram**, copiar el texto y el enlace. Y ahora: otra igual (para cambiarle el producto), una nueva, también el video (o la imagen) y seguir editando.
+  - Reemplaza la ventana "¿Qué hago con…?" del editor (C-287): las mismas salidas, después de verla. La lista de historias sigue preguntando como antes.
+- **Publicar:** "Sacar la imagen" y "Sacar el video", con su formato y su duración.
+- **El título nuevo** baja de línea antes del borde (960 px de ancho máximo).
+- **Arreglado:** si el navegador decía que arma MP4 y no podía (Firefox sin el códec de Cisco), salía "no se pudo grabar el video"; ahora lo graba como antes, en tiempo real. La pantalla queda encendida mientras se arma el video.
+### Tienda 1.22.1 (C-295)
+- Las animaciones del final de ElectroStudio en la hoja de estilos.
+### Carrito, checkout y cuenta del cliente 1.13.2 (C-295)
+- La hoja "Así funciona" suma tres íconos de gestos.
+
 ## [1.0.0-rc.105] - 2026-11-18
 El dispositivo de confianza (C-291), la fase 2 del plan de Ajustes: en un navegador marcado, el panel no pide el número de la app por 30 días. La contraseña se sigue pidiendo, y la sesión sigue igual (12 horas, se cierra tras 1 hora sin uso). **Cambio de base aditivo:** una tabla nueva (`dispositivos_confianza`) y dos columnas en `user_sessions`. Sin variables nuevas y sin cron.
 ### Marco del panel 1.18.0 (C-291)

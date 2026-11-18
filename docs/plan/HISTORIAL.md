@@ -1,10 +1,49 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.103`, comprobada el 18/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.106`, comprobada el 18/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 18/11 · C-290, C-291 y C-295: los dos pasos, el dispositivo de confianza y ElectroStudio en el teléfono (de rc.103 a `v1.0.0-rc.106`)
+La subió el equipo a mano en la terminal del servidor, con los pasos del bloque, el 18/11 cerca de las 10:17 a. m. (desde la PC de Claude de ese momento no había acceso SSH): el respaldo, `git pull --ff-only` y `deploy.sh --sin-pull`, el SQL de C-291 con `npx prisma db push`, y el guion otra vez. Sin variables nuevas y sin cron. C-296 (rc.107) entró a `main` después del `git pull` y quedó para el bloque siguiente.
+
+**Lo comprobado, el 18/11, desde fuera (como un visitante):**
+- la portada dice `1.0.0-rc.106|8dae211c`. Como el guion no sirve una versión nueva con la base distinta, el SQL quedó aplicado;
+- la portada, Productos, Categorías, `/sorteo`, `robots.txt` y `/api/settings/public` responden 200;
+- sin sesión, `/admin/studio`, `/admin/seguridad` y `/admin/settings` llevan al login (307), y `/api/admin/studio/flyers`, `/api/admin/studio/telegram`, `/api/admin/dos-pasos`, `/api/admin/equipo` y `/api/admin/ia` responden 401;
+- una pestaña de otra versión recibe 204 en `/categorias` (se recarga entera).
+- **No se pudo mirar en el servidor** (sin SSH): las tablas nuevas, el registro de errores de PM2 y que exista el respaldo `~/respaldo-antes-rc106.dump`.
+- **Antes de subir:** C-290 y C-291, lo de sus estados (59 de 59 por HTTP y en el navegador para C-291); C-295, 48 de 48 en Firefox como teléfono, con "reducir movimiento" y en la computadora (`estado/C-295.md`).
+
+**Falta que el equipo lo mire** (`SIGUIENTE.md`, "Por confirmar de rc.106"): las 8 pruebas.
+
+### El bloque que se subió: `v1.0.0-rc.106` (C-290, C-291 y C-295)
+- **Commit:** `8dae211c` (etiqueta `v1.0.0-rc.106`; adentro, `v1.0.0-rc.104` y `v1.0.0-rc.105`).
+- **SQL (aditivo, de C-291):**
+```sql
+ALTER TABLE "user_sessions" ADD COLUMN     "confirmadoAt" TIMESTAMP(3),
+ADD COLUMN     "segundoPaso" TEXT;
+CREATE TABLE "dispositivos_confianza" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "huella" TEXT NOT NULL,
+    "dispositivo" TEXT NOT NULL,
+    "ip" TEXT,
+    "version" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "venceAt" TIMESTAMP(3) NOT NULL,
+    "ultimoUsoAt" TIMESTAMP(3),
+    "quitadoAt" TIMESTAMP(3),
+    "motivoQuitado" TEXT,
+    CONSTRAINT "dispositivos_confianza_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "dispositivos_confianza_huella_idx" ON "dispositivos_confianza"("huella");
+CREATE INDEX "dispositivos_confianza_userId_idx" ON "dispositivos_confianza"("userId");
+ALTER TABLE "dispositivos_confianza" ADD CONSTRAINT "dispositivos_confianza_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+```
+- **Vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.103 && npm install && bash scripts/deploy.sh --sin-pull`. La tabla y las columnas nuevas se pueden quedar: rc.103 no las usa. Solo ElectroStudio en el teléfono: `v1.0.0-rc.105`.
 
 ## 18/11 · C-288, Claude en el panel: ajustes y reglas estrictas (de rc.102 a `v1.0.0-rc.103`)
 La subió Claude por SSH desde la PC de Andrés, con la aprobación del equipo para esta subida (18/11), cerca de las 8:05 a. m.:

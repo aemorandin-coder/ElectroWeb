@@ -14,6 +14,8 @@ for name in sys.argv[1:] or ['sin-miedo']:
     if '/*VOZ_MEDIO*/' in s: s = s.replace('/*VOZ_MEDIO*/', leer(A / 'voz/chispa-medio.json').strip())
     if '/*VOZ_PUENTE*/' in s: s = s.replace('/*VOZ_PUENTE*/', leer(A / 'voz/chispa-puente.json').strip())
     s = re.sub(r'/\*VOZ:([\w-]+)\*/', lambda m: leer(A / f'voz/{m.group(1)}.json').strip(), s)
+    # C-300: /*JSON:carpeta/archivo.json*/ mete un JSON de assets/ (las posiciones de lo importante en las capturas)
+    s = re.sub(r'/\*JSON:([\w/.-]+)\*/', lambda m: leer(A / m.group(1)).strip(), s)
     if '/*VOZ*/' in s: s = s.replace('/*VOZ*/', leer(A / 'voz/chispa-ficha.json').strip())
     (V / f'{name}.html').write_text(s.replace('/*BASE*/', leer(H / 'base.css')).replace('/*ICONS*/', icons), encoding='utf-8')
     print('videos/' + name + '.html')

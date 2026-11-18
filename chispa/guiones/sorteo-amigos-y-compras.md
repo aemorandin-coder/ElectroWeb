@@ -1,5 +1,9 @@
 # Guion: "Más boletos para la PS4" (v1, 18/11, C-300)
 
+> **Estado (18/11):**
+> - Hechos: el guion, las capturas, la página del video (`videos/sorteo-amigos-compras.src.html`), la portada (`piezas/portada-sorteo-amigos.html`) y un video de prueba sin voz.
+> - Falta la voz Diego. Con ella: `puente-voz.py`, armar, grabar y unir. Los tiempos de ahora son de prueba (`assets/voz/chispa-sorteo-amigos-compras.json`, `"prueba": true`).
+
 Reel de unos 55 s, más el cierre de la serie. Habla Chispa con la voz "Diego" de ElevenLabs. Lo pidió el equipo el 18/11: "que es importante que los amigos que refieras activen su cuenta", con capturas reales del teléfono, y "por las compras tenemos muchas más oportunidades".
 
 **Se publica cuando `v1.0.0-rc.111` esté en producción.** La regla de las compras ($5 → 2, $50 → 5, el producto estrella y las reseñas) llegó en C-297 y hoy producción todavía dice "1 boleto por compra". Si el reel sale antes, promete algo que la tienda no muestra.
@@ -55,7 +59,19 @@ Todo está en las bases, en electroshopve punto com, barra sorteo. El veinte de 
 ```
 Si "PS4" no suena bien, se cambia por "la PlayStation 4". Después: Speech to Text en JSON y `puente-voz.py` con `NOMBRE=chispa-sorteo-amigos-compras`.
 
-## Las capturas reales
+## Las capturas reales (hechas el 18/11)
+**Ya están, en `assets/sorteo/`.** Son pantallas de la tienda, compilada desde `main` con el mismo código que va a tener producción, en tamaño de teléfono (390 × 844, escala 3). Los datos son de prueba:
+- productos reales tomados de la API pública: el Mini DC UPS como producto estrella, los Galaxy Buds y el bombillo LED;
+- el sorteo con la configuración de producción;
+- la cuenta "Chispa Prueba" con sus dos amigos;
+- el correo de activación, armado con la misma función de la tienda, sin enviarlo.
+
+`assets/sorteo/marcas.json` guarda dónde queda cada texto importante, para el aro que lo resalta en el video. Las saca `capturar.mjs` (en la carpeta temporal de la sesión; el método está en `estado/C-300.md`).
+
+**Antes de publicar:** que la tienda tenga elegido un producto estrella esa semana. La captura muestra el Mini DC UPS; la voz no lo nombra.
+
+Lo de abajo era el plan para sacarlas en producción; quedó como referencia.
+
 - **El tamaño:** el teléfono a 390 × 844 (el ancho de un iPhone), a escala 3. Salen de producción **después de subir rc.111**, con la tienda como la ve un cliente.
 - **Los datos:**
   - nada de clientes de verdad (`01-reglas-de-marca.md`);

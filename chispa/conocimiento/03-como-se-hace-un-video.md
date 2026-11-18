@@ -27,10 +27,19 @@ window.settle = async () => {};     // opcional: si seek() cambia imágenes, esp
 - Se puede animar con GSAP (`../assets/gsap.min.js`, con `tl.seek(t)` en pausa) o a mano con funciones de `t` (como `chispa-entrada.src.html`). Para Chispa, a mano.
 - Los ids no se repiten (una vez un `#l2` repetido escondió una tarjeta).
 
+## Sin Chrome: grabar con Firefox (C-300)
+En una PC sin Chrome ni Chromium, `herramientas/render-firefox.mjs` hace lo mismo que `render.mjs`, con los mismos argumentos. Maneja Firefox sin ventana por WebDriver BiDi, sin Playwright, y necesita Node 22 o más:
+```bash
+PAGE=videos/mi-video.html node herramientas/render-firefox.mjs preview salida/cuadros "" "0.5,3,6.2"
+PAGE=videos/mi-video.html node herramientas/render-firefox.mjs video salida/mudo.mp4
+```
+Sirve también para las piezas fijas (portadas): con `window.ready` y un `window.seek` vacío, `preview` con el tiempo `0` saca la foto a 1080 × 1920.
+
 ## Los marcadores que llena `armar.py`
 `python3 herramientas/armar.py <nombre>` lee `videos/<nombre>.src.html` y escribe `videos/<nombre>.html` reemplazando:
 - `/*BASE*/` por `herramientas/base.css` (colores, fuentes, píldora, teléfono, etiquetas, subtítulos).
 - `/*ICONS*/` por `herramientas/icons.js` (íconos de línea: `<i data-ic="truck"></i>`).
+- `/*JSON:carpeta/archivo.json*/` por ese JSON de `assets/`. C-300 lo usa para las posiciones de lo importante en las capturas.
 - `/*VOZ:nombre*/` por `assets/voz/nombre.json` (la voz con sus tiempos). Los viejos `/*VOZ*/`, `/*VOZ_PUENTE*/` y `/*VOZ_MEDIO*/` siguen funcionando.
 - `/*COMANDA*/` y `/*RECIBO*/` por los tickets de L2 Control.
 

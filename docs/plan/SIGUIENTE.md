@@ -4,6 +4,9 @@
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **C-300 · El reel "Más boletos para la PS4" (el guion; `estado/C-300.md`):** que los amigos activen su cuenta y que comprando se ganan muchos más boletos.
+  - El guion, el texto para la voz y las capturas están en `chispa/guiones/sorteo-amigos-y-compras.md`.
+  - **Se graba y se publica después de subir rc.111**, que trae la regla nueva de las compras. Lo del equipo está en §3.
 - **C-299 · El aviso del dispositivo de confianza (rc.112, en `main`, por subir con el bloque de §2; `estado/C-299.md`):** el correo "Marcaste un dispositivo de confianza" sale solo a un correo comprobado, como el aviso de inicio de sesión. A una dirección sin comprobar rebotaba y el rebote llegaba al buzón de la tienda en cada entrada (18/11, captura del equipo).
 - **C-297 · El sorteo que vende (rc.111, en `main`, por subir con rc.107 a rc.110: §2; `estado/C-297.md`):** la decisión de Andrés del 18/11, vista en desarrollo.
   - **Comprar vale más:** $5 → 2 boletos, cada $50 → 5; cada reseña aprobada → 1; invitar queda igual. Cuenta también lo comprado desde el 14/11.
@@ -1326,6 +1329,17 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
 
 ## 3. Tareas del equipo (Andrés y Luis, sin código)
 En el orden en que más destraban:
+
+**El reel "Más boletos para la PS4" (C-300; después de subir rc.111)**
+1. **La voz, en ElevenLabs** (en la computadora): la voz **Diego** con los ajustes de siempre. El texto es el bloque "Texto para la voz" de `chispa/guiones/sorteo-amigos-y-compras.md`. Pásale el mp3 por **Speech to Text** y exporta el **JSON**. Me pasas los dos archivos.
+2. **El producto estrella de esta semana:** en el panel, Marketing → Sorteo → "Producto estrella de cada semana" → "Elegir producto".
+3. **Tres cuentas de prueba** (en el teléfono o la computadora), con nombres inventados como "Chispa Prueba", "Luisa P." y "Carlos M.":
+   - la primera crea su cuenta y copia su enlace de `/sorteo`;
+   - las otras dos se registran con ese enlace, con un teléfono;
+   - **solo una** activa su cuenta desde el correo.
+   - Me pasas el acceso de la primera, por un lugar que no sea el repositorio.
+4. **La captura del correo** (en el teléfono): en Gmail, el correo "Activa tu cuenta de Electro Shop" de la cuenta que falta activar, con el botón "Activar mi cuenta" a la vista. **No toques el botón** hasta que yo saque la pantalla de "Falta activar".
+5. **Al terminar el reel:** quita las tres cuentas de prueba en Clientes.
 
 **Del plan del 14/11 (C-220):** los textos para Google, el lema y el sorteo de Navidad ya no los hace el equipo en el panel: van en el SQL de datos del bloque de rc.45 (sección 2). Después del deploy queda subir la foto de la consola (Marketing → Sorteo → Cambiar).
 

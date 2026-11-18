@@ -113,6 +113,11 @@ Las fechas son de 2026. Los MP4 los tiene Andrés; aquí quedan las fuentes.
   - el guion que las hace quedó en `herramientas/poses-web.mjs`: el de C-193 no se había guardado y se rearmó midiendo las de chispa-3.
 - Los reels y los stickers ya grabados no cambian: toman a Chispa 3.1 cuando se vuelven a grabar.
 
+## "Más boletos para la PS4" (sorteo, 18/11, C-300): en guion
+- Pedido del equipo: "que es importante que los amigos que refieras activen su cuenta", con capturas reales del teléfono, y "por las compras tenemos muchas más oportunidades".
+- El guion está en `guiones/sorteo-amigos-y-compras.md`: unos 55 s, 9 bloques, las 9 capturas y las poses de Chispa 3.1.
+- **Se graba después de subir rc.111**, que trae la regla nueva de las compras ($5 → 2, $50 → 5, el producto estrella +10 y las reseñas +1). Antes, la tienda dice "1 boleto por compra".
+
 ## Ideas pendientes (Andrés no las ha pedido todavía)
 - Plantilla de historias "Domingo de web".
 - Calendario de contenido de dos semanas.

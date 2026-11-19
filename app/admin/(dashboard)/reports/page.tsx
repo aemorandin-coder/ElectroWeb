@@ -15,9 +15,11 @@ import {
     Legend, PieChart, Pie, Cell,
 } from 'recharts';
 import {
-    adminTab, adminPageHeader, adminPageTitle,
-    adminPageSubtitle, adminInput, adminIconButton, adminSecondaryButton, adminBadge, adminChoice, type AdminTone,
+  adminPageHeaderCompact, adminPageTitle, adminPageSubtitle, adminInput, adminSecondaryButton, adminBadge, type AdminTone,
 } from '@/lib/admin-ui';
+import Filtros, { type Filtro } from '@/components/admin/Filtros';
+import Ayuda from '@/components/admin/Ayuda';
+import Plegable from '@/components/admin/Plegable';
 import { formatUSD } from '@/lib/currency';
 import { ETIQUETA_GRAVEDAD } from '@/lib/audit-labels';
 import RelacionVentas from './_components/RelacionVentas';
@@ -81,12 +83,12 @@ const PERIODOS = [
     { value: '90d', label: '90 días' },
     { value: '1y', label: '1 año' },
 ];
-const TABS: Array<{ id: Tab; label: string; icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }> }> = [
-    { id: 'overview', label: 'Resumen', icon: IconoReportes },
-    { id: 'products', label: 'Productos', icon: IconoPaquete },
-    { id: 'interactions', label: 'Interacciones', icon: IconoPuntero },
-    { id: 'security', label: 'Seguridad', icon: IconoGarantia },
-    { id: 'referrals', label: 'Referidos', icon: IconoRegalo },
+const TABS: Array<Omit<Filtro<Tab>, 'cuenta'>> = [
+    { valor: 'overview', etiqueta: 'Resumen', ayuda: 'Ventas, pedidos y clientes', Icono: IconoReportes },
+    { valor: 'products', etiqueta: 'Productos', ayuda: 'Más vendidos y pedidos', Icono: IconoPaquete },
+    { valor: 'interactions', etiqueta: 'Interacciones', ayuda: 'Visitas y páginas', Icono: IconoPuntero },
+    { valor: 'security', etiqueta: 'Seguridad', ayuda: 'Bitácora y alertas', Icono: IconoGarantia },
+    { valor: 'referrals', etiqueta: 'Referidos', ayuda: 'Promotores y comisiones', Icono: IconoRegalo },
 ];
 const FILTROS_BITACORA = [
     { value: '', label: 'Todo' },
@@ -132,18 +134,20 @@ function Stat({ label, value, detail, source, icon: Icon, wide }: {
     icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>; wide?: boolean;
 }) {
     return (
-        <div className={`min-w-0 rounded-xl border border-line bg-white p-3 sm:p-4 ${wide ? 'col-span-2 lg:col-span-1' : ''}`}>
+        <div className={`flex h-full min-w-0 flex-col justify-between rounded-2xl border border-line bg-white p-3.5 sm:p-4 ${wide ? 'col-span-2 lg:col-span-1' : ''}`}>
             <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                    <p className="text-sm text-muted">{label}</p>
-                    <p className="whitespace-nowrap text-xl font-bold tabular-nums text-ink">{value}</p>
-                    {detail && <p className="text-xs text-ink-soft">{detail}</p>}
+                    <div className="flex items-center gap-1">
+                        <span className="text-sm font-medium text-muted">{label}</span>
+                        <Ayuda etiqueta={`De dónde sale ${label}`}>{source}</Ayuda>
+                    </div>
+                    <p className="mt-1 whitespace-nowrap text-2xl font-bold tabular-nums text-ink">{value}</p>
                 </div>
-                <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 sm:flex">
+                <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 sm:flex">
                     <Icon className="h-5 w-5 text-brand-500" aria-hidden />
                 </span>
             </div>
-            <p className="mt-2 border-t border-line pt-2 text-xs text-muted">{source}</p>
+            {detail && <p className="mt-1.5 text-xs text-ink-soft">{detail}</p>}
         </div>
     );
 }
@@ -281,35 +285,15 @@ export default function ReportsPage() {
     const criticas = security?.bySeverity.find((s) => s.severity === 'CRITICAL')?.count ?? 0;
 
     return (
-        <div className="min-w-0 space-y-4">
-            <div className={adminPageHeader}>
+        <div className="min-w-0 space-y-3">
+            <div className={adminPageHeaderCompact}>
                 <div>
                     <h1 className={adminPageTitle}>Reportes</h1>
-                    <p className={adminPageSubtitle}>Ventas, pedidos y actividad de los últimos {periodoTexto}</p>
+                    <p className={adminPageSubtitle}>
+                        Ventas, pedidos y actividad de los últimos {periodoTexto}
+                        {actualizado ? ` · actualizado a las ${format(actualizado, 'h:mm:ss a', { locale: es })}` : ''}
+                    </p>
                 </div>
-            </div>
-
-            {/* C-173: quién está conectado ahora (con cuenta y sin ella) y lo cobrado hoy, en vivo */}
-            <EnVivo />
-
-            {/* C-147: la descarga del mes para el contador (no depende del período de abajo) */}
-            <RelacionVentas />
-
-            <div className="space-y-3">
-                <div className="min-w-0 overflow-x-auto border-b border-line pb-2 pr-6" role="tablist" aria-label="Secciones de reportes">
-                    <div className="flex w-max gap-1">
-                        {TABS.map((tab) => {
-                            const Icon = tab.icon;
-                            return (
-                                <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
-                                    role="tab" aria-selected={activeTab === tab.id} className={adminTab(activeTab === tab.id)}>
-                                    <Icon className="h-4 w-4 shrink-0" aria-hidden />{tab.label}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-                <p className="text-xs text-muted lg:hidden">Desliza las pestañas para ver más secciones.</p>
                 <div className="flex flex-wrap items-center gap-2">
                     <label htmlFor="report-period" className="sr-only">Período del reporte</label>
                     <div className="w-36">
@@ -317,16 +301,30 @@ export default function ReportsPage() {
                             {PERIODOS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                         </select>
                     </div>
-                    <button type="button" onClick={() => setRecargas((n) => n + 1)} className={`${adminIconButton} h-11 w-11 border border-line bg-white`}
+                    <button type="button" onClick={() => setRecargas((n) => n + 1)} className={`${adminSecondaryButton} w-11 px-0!`}
                         aria-label="Actualizar reporte" title="Actualizar reporte">
                         <IconoActualizar className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
                     </button>
-                    {actualizado && <span className="text-xs text-muted">Actualizado a las {format(actualizado, 'h:mm:ss a', { locale: es })}</span>}
                     <button type="button" onClick={exportToCSV} className={adminSecondaryButton}>
                         <IconoDescargar className="h-4 w-4" aria-hidden="true" /> Exportar CSV
                     </button>
                 </div>
             </div>
+
+            {/* C-173 + G-70: En vivo plegado con el pulso, hoy y el mes en su cabecera */}
+            <EnVivo />
+
+            {/* G-70: secciones con los botones Filtros alineados en 5 columnas */}
+            <Filtros
+                columnas={5}
+                etiqueta="Secciones de reportes"
+                valor={activeTab}
+                onCambiar={setActiveTab}
+                filtros={TABS.map((t) => ({
+                    ...t,
+                    ...(t.valor === 'security' && criticas > 0 ? { cuenta: criticas, tono: 'aviso' as const } : {}),
+                }))}
+            />
 
             {loading ? (
                 <div className="flex items-center justify-center py-12" role="status" aria-label="Cargando reporte">
@@ -337,8 +335,8 @@ export default function ReportsPage() {
                     {activeTab === 'overview' && overview && (
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                                <Stat wide label="Ingresos cobrados" icon={IconoVentas} value={formatUSD(overview.revenue.total)}
-                                    detail={overview.orders.paid > 0 ? `${overview.orders.paid} pagos · ticket promedio ${formatUSD(overview.revenue.averageTicket)}` : 'Sin pagos confirmados'}
+                                <Stat label="Ingresos cobrados" icon={IconoVentas} value={formatUSD(overview.revenue.total)}
+                                    detail={overview.orders.paid > 0 ? `${overview.orders.paid} pagos · ticket prom. ${formatUSD(overview.revenue.averageTicket)}` : 'Sin pagos confirmados'}
                                     source="Órdenes con el pago confirmado en el período. No cuenta las canceladas ni las que esperan pago." />
                                 <Stat label="Pedidos" icon={IconoCarrito} value={overview.orders.created}
                                     detail={`${overview.orders.pendingPayment} esperan pago`}
@@ -346,91 +344,99 @@ export default function ReportsPage() {
                                 <Stat label="Clientes" icon={IconoClientes} value={overview.users.total}
                                     detail={`+${overview.users.new} nuevos en el período`}
                                     source="Cuentas de clientes (sin el equipo). Nuevos: registrados en el período." />
-                                <Stat wide label="Productos" icon={IconoPaquete} value={overview.products.total}
-                                    detail={`${overview.products.published} publicados · ${overview.productRequests.pending} solicitudes pendientes`}
+                                <Stat label="Productos" icon={IconoPaquete} value={overview.products.total}
+                                    detail={`${overview.products.published} publicados · ${overview.productRequests.pending} solicitudes`}
                                     source="Todo el catálogo, en cualquier estado. Solicitudes: pedidos de productos que aún no se atienden." />
                             </div>
 
                             {mounted && overview.dailyData.length > 0 && (
-                                <Panel title="Tendencias del período" icon={IconoVentas} source="Por día, en hora de Venezuela.">
-                                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                                        <div className="space-y-2">
-                                            <p className="text-xs font-semibold text-muted">Ingresos cobrados (USD), por día del pago</p>
-                                            <div className="h-52 w-full sm:h-64">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart data={overview.dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                                        <defs>
-                                                            <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                                                <stop offset="5%" stopColor="var(--color-brand-500)" stopOpacity={0.2} />
-                                                                <stop offset="95%" stopColor="var(--color-brand-500)" stopOpacity={0} />
-                                                            </linearGradient>
-                                                        </defs>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
-                                                        <XAxis dataKey="date" stroke="var(--color-muted)" fontSize={11} tickLine={false} tickFormatter={formatChartDate} />
-                                                        <YAxis stroke="var(--color-muted)" fontSize={11} tickLine={false} />
-                                                        <Tooltip contentStyle={tooltipStyle} labelFormatter={(v) => formatChartDate(String(v))}
-                                                            formatter={(value) => [formatUSD(Number(value)), 'Cobrado']} />
-                                                        <Area type="monotone" dataKey="sales" stroke="var(--color-brand-500)" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
-                                                    </AreaChart>
-                                                </ResponsiveContainer>
-                                            </div>
+                                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                                    <Panel title="Ingresos cobrados (USD)" icon={IconoVentas} source="Por día del pago, en hora de Venezuela.">
+                                        <div className="h-52 w-full sm:h-64">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <AreaChart data={overview.dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                    <defs>
+                                                        <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor="var(--color-brand-500)" stopOpacity={0.2} />
+                                                            <stop offset="95%" stopColor="var(--color-brand-500)" stopOpacity={0} />
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
+                                                    <XAxis dataKey="date" stroke="var(--color-muted)" fontSize={11} tickLine={false} tickFormatter={formatChartDate} />
+                                                    <YAxis stroke="var(--color-muted)" fontSize={11} tickLine={false} />
+                                                    <Tooltip contentStyle={tooltipStyle} labelFormatter={(v) => formatChartDate(String(v))}
+                                                        formatter={(value) => [formatUSD(Number(value)), 'Cobrado']} />
+                                                    <Area type="monotone" dataKey="sales" stroke="var(--color-brand-500)" strokeWidth={2} fillOpacity={1} fill="url(#colorSales)" />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
                                         </div>
-                                        <div className="space-y-2">
-                                            <p className="text-xs font-semibold text-muted">Pedidos creados y clientes nuevos</p>
-                                            <div className="h-52 w-full sm:h-64">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <LineChart data={overview.dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
-                                                        <XAxis dataKey="date" stroke="var(--color-muted)" fontSize={11} tickLine={false} tickFormatter={formatChartDate} />
-                                                        <YAxis stroke="var(--color-muted)" fontSize={11} tickLine={false} allowDecimals={false} />
-                                                        <Tooltip contentStyle={tooltipStyle} labelFormatter={(v) => formatChartDate(String(v))} />
-                                                        <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                                                        <Line type="monotone" dataKey="orders" name="Pedidos" stroke="var(--color-warning-strong)" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                                                        <Line type="monotone" dataKey="users" name="Clientes nuevos" stroke="var(--color-success-strong)" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                                                    </LineChart>
-                                                </ResponsiveContainer>
-                                            </div>
+                                    </Panel>
+                                    <Panel title="Pedidos creados y clientes nuevos" icon={IconoCarrito} source="Por día, en hora de Venezuela.">
+                                        <div className="h-52 w-full sm:h-64">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <LineChart data={overview.dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
+                                                    <XAxis dataKey="date" stroke="var(--color-muted)" fontSize={11} tickLine={false} tickFormatter={formatChartDate} />
+                                                    <YAxis stroke="var(--color-muted)" fontSize={11} tickLine={false} allowDecimals={false} />
+                                                    <Tooltip contentStyle={tooltipStyle} labelFormatter={(v) => formatChartDate(String(v))} />
+                                                    <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                                                    <Line type="monotone" dataKey="orders" name="Pedidos" stroke="var(--color-brand-500)" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                                                    <Line type="monotone" dataKey="users" name="Clientes nuevos" stroke="var(--color-success-strong)" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                                                </LineChart>
+                                            </ResponsiveContainer>
                                         </div>
-                                    </div>
-                                </Panel>
+                                    </Panel>
+                                </div>
                             )}
 
-                            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                                <Panel title="Interacciones" icon={IconoPuntero} source="Visitas a la tienda (no el panel), sin buscadores ni bots.">
-                                    <div className="grid grid-cols-3 gap-3 text-center">
-                                        {[
-                                            { label: 'Visitantes', value: overview.interactions.visitors, icon: IconoClientes },
-                                            { label: 'Vistas', value: overview.interactions.pageViews, icon: IconoVer },
-                                            { label: 'Clics', value: overview.interactions.clicks, icon: IconoPuntero },
-                                        ].map(({ label, value, icon: Icon }) => (
-                                            <div key={label}>
-                                                <Icon className="mx-auto mb-1 h-5 w-5 text-brand-500" aria-hidden="true" />
-                                                <p className="text-xl font-bold tabular-nums text-ink">{value}</p>
-                                                <p className="text-xs text-muted">{label}</p>
+                            {/* C-147 + G-70: relación mensual para el contador debajo de las métricas prioritarias */}
+                            <RelacionVentas />
+
+                            <Plegable
+                                id="reportes-resumen-extra"
+                                nivel="item"
+                                icono={IconoVer}
+                                titulo="Resumen de visitas y seguridad"
+                                resumen={`${overview.interactions.visitors} visitantes · ${overview.interactions.pageViews} vistas · ${overview.security.events} registros (${overview.security.critical} críticas)`}
+                                abierto={false}
+                            >
+                                <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                                    <Panel title="Interacciones" icon={IconoPuntero} source="Visitas a la tienda (no el panel), sin buscadores ni bots.">
+                                        <div className="grid grid-cols-3 gap-3 text-center">
+                                            {[
+                                                { label: 'Visitantes', value: overview.interactions.visitors, icon: IconoClientes },
+                                                { label: 'Vistas', value: overview.interactions.pageViews, icon: IconoVer },
+                                                { label: 'Clics', value: overview.interactions.clicks, icon: IconoPuntero },
+                                            ].map(({ label, value, icon: Icon }) => (
+                                                <div key={label}>
+                                                    <Icon className="mx-auto mb-1 h-5 w-5 text-brand-500" aria-hidden="true" />
+                                                    <p className="text-xl font-bold tabular-nums text-ink">{value}</p>
+                                                    <p className="text-xs text-muted">{label}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </Panel>
+                                    <Panel title="Seguridad" icon={IconoGarantia} source="Bitácora del servidor: inicios de sesión, aprobaciones y cambios de precio.">
+                                        <div className="grid grid-cols-3 gap-3 text-center">
+                                            <div>
+                                                <IconoLista className="mx-auto mb-1 h-5 w-5 text-brand-500" aria-hidden="true" />
+                                                <p className="text-xl font-bold tabular-nums text-ink">{overview.security.events}</p>
+                                                <p className="text-xs text-muted">Registros</p>
                                             </div>
-                                        ))}
-                                    </div>
-                                </Panel>
-                                <Panel title="Seguridad" icon={IconoGarantia} source="Bitácora del servidor: inicios de sesión, aprobaciones y cambios de precio.">
-                                    <div className="grid grid-cols-3 gap-3 text-center">
-                                        <div>
-                                            <IconoLista className="mx-auto mb-1 h-5 w-5 text-brand-500" aria-hidden="true" />
-                                            <p className="text-xl font-bold tabular-nums text-ink">{overview.security.events}</p>
-                                            <p className="text-xs text-muted">Registros</p>
+                                            <div>
+                                                <IconoCandado className="mx-auto mb-1 h-5 w-5 text-brand-500" aria-hidden="true" />
+                                                <p className="text-xl font-bold tabular-nums text-ink">{overview.security.failedLogins}</p>
+                                                <p className="text-xs text-muted">Accesos fallidos</p>
+                                            </div>
+                                            <div>
+                                                <IconoAdvertencia className={`mx-auto mb-1 h-5 w-5 ${overview.security.critical > 0 ? 'text-deal' : 'text-success-strong'}`} aria-hidden="true" />
+                                                <p className="text-xl font-bold tabular-nums text-ink">{overview.security.critical}</p>
+                                                <p className="text-xs text-muted">Críticas</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <IconoCandado className="mx-auto mb-1 h-5 w-5 text-brand-500" aria-hidden="true" />
-                                            <p className="text-xl font-bold tabular-nums text-ink">{overview.security.failedLogins}</p>
-                                            <p className="text-xs text-muted">Accesos fallidos</p>
-                                        </div>
-                                        <div>
-                                            <IconoAdvertencia className={`mx-auto mb-1 h-5 w-5 ${overview.security.critical > 0 ? 'text-deal' : 'text-success-strong'}`} aria-hidden="true" />
-                                            <p className="text-xl font-bold tabular-nums text-ink">{overview.security.critical}</p>
-                                            <p className="text-xs text-muted">Críticas</p>
-                                        </div>
-                                    </div>
-                                </Panel>
-                            </div>
+                                    </Panel>
+                                </div>
+                            </Plegable>
                         </div>
                     )}
 
@@ -609,12 +615,24 @@ export default function ReportsPage() {
 
                             <Panel title="Bitácora" icon={IconoReloj} source="Los 100 registros más recientes del filtro elegido, en hora de Venezuela.">
                                 <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Filtrar la bitácora">
-                                    {FILTROS_BITACORA.map((f) => (
-                                        <button key={f.value} type="button" aria-pressed={grupo === f.value} onClick={() => setGrupo(f.value)}
-                                            className={`${adminChoice(grupo === f.value)} min-h-11 px-3 text-sm`}>
-                                            {f.label}
-                                        </button>
-                                    ))}
+                                    {FILTROS_BITACORA.map((f) => {
+                                        const activo = grupo === f.value;
+                                        return (
+                                            <button
+                                                key={f.value}
+                                                type="button"
+                                                aria-pressed={activo}
+                                                onClick={() => setGrupo(f.value)}
+                                                className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 ${
+                                                    activo
+                                                        ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-[inset_0_0_0_1px_var(--color-brand-500)]'
+                                                        : 'border-line-strong bg-white text-ink-soft hover:border-brand-200 hover:bg-brand-50'
+                                                }`}
+                                            >
+                                                {f.label}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                                 {security.recentLogs.length > 0 ? (
                                     <ul className="max-h-[32rem] divide-y divide-line overflow-y-auto rounded-xl border border-line">
@@ -635,21 +653,28 @@ export default function ReportsPage() {
                                     </ul>
                                 ) : <Vacio>Sin registros para este filtro</Vacio>}
                             </Panel>
-                            <CspPanel />
+                            <Plegable
+                                id="reportes-csp"
+                                nivel="item"
+                                icono={IconoCandado}
+                                titulo="Política de contenido (CSP)"
+                                resumen="Avisos técnicos de scripts o recursos externos bloqueados"
+                                abierto={false}
+                            >
+                                <CspPanel />
+                            </Plegable>
                         </div>
                     )}
 
                     {activeTab === 'referrals' && referrals && (
                         <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                                <Stat wide label="Promotores" icon={IconoClientes} value={referrals.totalInfluencers} source="Todos los promotores registrados." />
+                            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+                                <Stat label="Promotores" icon={IconoClientes} value={referrals.totalInfluencers} source="Todos los promotores registrados." />
                                 <Stat label="Activos" icon={IconoConfirmado} value={referrals.activeInfluencers} source="Pueden generar comisiones." />
                                 <Stat label="Pausados" icon={IconoEnVivo} value={referrals.pausedInfluencers} source="No generan comisiones nuevas." />
-                            </div>
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <Stat label="Ventas por referidos" icon={IconoCarrito} value={formatUSD(referrals.approvedRevenue.gross)}
                                     source="Monto de las compras con comisión aprobada en el período." />
-                                <Stat label="Comisiones aprobadas" icon={IconoBillete} value={formatUSD(referrals.approvedRevenue.commission)}
+                                <Stat wide label="Comisiones aprobadas" icon={IconoBillete} value={formatUSD(referrals.approvedRevenue.commission)}
                                     source="Comisiones acreditadas como Puntos ES en el período." />
                             </div>
                             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

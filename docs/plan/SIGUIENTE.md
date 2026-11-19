@@ -1,10 +1,14 @@
-# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.111; por subir: rc.112 y rc.113, §2)
+# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.114; por subir: rc.115, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **C-302 · Mi panel anima a ganar boletos (rc.114, en `main`, por subir: §2; `estado/C-302.md`):** el pedido del equipo del 18/11, de forma discreta.
+- **G-70 · Reportes por prioridad y Ventas ordenadas con tablas cebra en gris neutro y píldoras vibrantes (rc.115, en `main`, por subir: §2; `estado/G-70.md`):** elegido por el equipo el 18/11 sobre las 3 propuestas (Opción A con botones `Filtros` alineados y filas cebra sin rayas verticales) y afinado en vivo en el servidor local.
+  - **Reportes:** cabecera compacta con período y CSV, En vivo plegado con hoy/mes/por confirmar visibles, 5 secciones en botones `Filtros` alineados, cifras simétricas con `(i)`, 2 gráficos arriba y Relación de ventas en una sola línea debajo; Interacciones/Seguridad y CSP plegados.
+  - **Las 5 pantallas de Ventas** (Órdenes, Cotizaciones a lo ancho, Transacciones, Garantías y Gift Cards): cabecera compacta con totales en línea, botones `Filtros` simétricos (`columnas`) y tabla cebra en escritorio (`lg:`), conservando tarjetas en teléfono (`<lg`) y todas las acciones/modales.
+  - **Contraste en gris neutro puro y pendientes vibrantes:** divisores, bordes, cabeceras (`adminTh`), filas cebra (`adminRowZebra`) y caja de "Notas internas" del detalle de orden en gris neutro puro (`#d4d4d4` / `#bdbdbd` acotados al panel, sin tinte azulado); únicamente las píldoras de estado `warning` hacen una vibración suave cada 3,6 s en el panel (los botones de filtro quedan quietos y no aplica en la tienda ni en Mi panel).
+- **C-302 · Mi panel anima a ganar boletos (rc.114, en producción; por confirmar: §2; `estado/C-302.md`):** el pedido del equipo del 18/11, de forma discreta.
   - **Sin boletos:** "Aún tienes N días para ganar boletos", las vías con sus números y el boleto de muestra con el correo del cliente.
   - **Con boletos:** "Aún tienes N días para sumar más" y las vías en píldoras. Puntos ES va en blanco mientras dura el sorteo.
 - **C-298 · Ajustes → IA por prioridad (rc.113, en `main`, por subir con el bloque de §2; `estado/C-298.md`):** el motor y lo que gasta arriba; Proveedores, Usos, Reglas y Guía plegados con lo esencial en la cabecera. La pieza `components/admin/Plegable` sirve para cualquier pantalla larga del panel.
@@ -557,18 +561,27 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.114` (C-302)
-Producción está en `v1.0.0-rc.113` (`7f7c6f28`): la subió el equipo el 18/11 a las 3:41 p. m. y Claude la vio desde fuera (bloque en `HISTORIAL.md`). Si entran más tareas antes de subir, se suman aquí.
-- **C-302** (rc.114): Mi panel anima a ganar boletos. **Sin cambio de base, sin variables y sin cron.**
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.114`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 4 minutos, en el teléfono y en la computadora):
+### Lo que falta subir: `v1.0.0-rc.115` (G-70)
+Producción está en `v1.0.0-rc.114` (`d347208a`, C-302). Si entran más tareas antes de subir, se suman aquí.
+- **G-70** (rc.115): Reportes reorganizado por prioridad y las 5 pantallas de Ventas (Órdenes, Cotizaciones, Transacciones, Garantías y Gift Cards) con cabecera compacta, botones `Filtros` alineados, tabla cebra y bordes en gris neutro puro (`#d4d4d4` / `#bdbdbd`) sin rayas tipo Excel en escritorio, caja visible en Notas internas del detalle de orden y vibración suave cada 3,6 s únicamente en las píldoras de pendiente del panel admin. **Sin cambio de base, sin variables y sin cron.**
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.115`, o una mayor si entró otra tarea antes del `git pull`.
+- **Pruebas** (unos 6 minutos, en la computadora y en el teléfono a `360 px`):
+  1. **Reportes (`/admin/reports`):** En vivo plegado con conectados/hoy/mes/por confirmar visibles en la cabecera; los 5 botones de sección en una fila alineada; cifras arriba con `(i)`, dos gráficos abajo y Relación de ventas en una sola línea debajo; sin desborde horizontal a `360 px`.
+  2. **Ventas (`/admin/orders`, `/admin/cotizaciones`, `/admin/transactions`, `/admin/garantias` y `/admin/gift-cards`):**
+     - arriba, la tabla empieza casi de inmediato debajo de los botones de filtro (sin tarjetas repetidas ni espacio vacío);
+     - los botones de filtro quedan en filas simétricas en escritorio y se deslizan limpio en teléfono (`360 px`);
+     - en escritorio (`1440 px`), filas alternadas cebra en gris neutro puro sin líneas verticales tipo Excel; en teléfono (`<1024 px`), tarjetas limpias y clicables sin perder acciones ni modales.
+  3. **Pendientes y contraste del panel:** únicamente las píldoras de pendiente (`Pendiente`, `Por validar`, `1 pendiente`, `Por atender`, `Por activar`) muestran una vibración corta cada ~3,6 s (se detiene al pasar el cursor) y los botones de filtro quedan quietos; las líneas de celdas, cabeceras, filas cebra, bordes de campos y la caja de "Notas internas" en el detalle de orden se ven en gris neutro más definido sin matiz azulado (y en la tienda pública / Mi panel nada vibra ni cambia de borde).
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.114 && npm install && bash scripts/deploy.sh --sin-pull`.
+- **Sigue pendiente desde rc.111:** elegir el producto estrella de la semana en Marketing → Sorteo. El 18/11 en la noche, /sorteo todavía no lo mostraba.
+
+### Por confirmar de rc.114 (C-302; unos 3 minutos)
+Ya en producción (`1.0.0-rc.114|d347208a`). Falta comprobar con cuenta de cliente:
   1. **Con una cuenta de cliente sin boletos** (una nueva, o la de un cliente que no ha comprado desde el 14/11), Mi panel:
      - arriba, "Aún tienes N días para ganar boletos", con las vías: "Compra $5 → 2 · $50 → 5 · $100 → 10", "Tu reseña +1" y "2 amigos +1, hasta 3"; si ya elegiste el producto estrella, también "Producto estrella (…) +10";
      - al lado (en el teléfono, debajo), "Así se verá tu boleto": el boleto de la PS4 con su correo tapado y la pila de 2;
      - la tarjeta de Puntos ES va en blanco (ya no en azul oscuro).
   2. **Con una cuenta que tiene boletos:** debajo de "¡Tienes N boletos!", "Aún tienes N días para sumar más:" y las vías en píldoras chicas.
-- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.113 && npm install && bash scripts/deploy.sh --sin-pull`.
-- **Sigue pendiente desde rc.111:** elegir el producto estrella de la semana en Marketing → Sorteo. El 18/11 en la noche, /sorteo todavía no lo mostraba.
 
 ### Por confirmar de rc.113 (C-299 y C-298; unos 4 minutos)
 Ya en producción desde el 18/11 a las 3:41 p. m. (la portada dice `1.0.0-rc.113|7f7c6f28`). Falta esto (antes, recarga el panel con Ctrl+R):

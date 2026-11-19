@@ -179,6 +179,53 @@ body:has(#mobile-bottom-nav) [data-site-footer] {
   }
 }
 
+/* G-71b: líneas, bordes y celdas más legibles en gris neutro puro en el panel admin (incluye modales en body).
+   Solo aplica cuando el panel está montado: no cambia la tienda pública ni Mi panel. */
+body:has([data-panel-admin]) {
+  --color-line: #d4d4d4;
+  --color-line-strong: #bdbdbd;
+}
+
+/* G-71 / G-71b: vibración suave periódica únicamente para píldoras de pendiente en el panel admin.
+   Quieta la mayor parte del ciclo (82%), pulso breve y delicado cada 3,6 s; pausada al pasar el cursor
+   y desactivada con prefers-reduced-motion. Nunca corre en la tienda pública ni en botones de filtro. */
+@keyframes admin-pendiente-vibra {
+  0%, 82%, 100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  85% {
+    transform: translate3d(-1.5px, 0, 0) rotate(-0.8deg);
+  }
+  88% {
+    transform: translate3d(1.5px, 0, 0) rotate(0.8deg);
+  }
+  91% {
+    transform: translate3d(-1px, 0, 0) rotate(-0.5deg);
+  }
+  94% {
+    transform: translate3d(1px, 0, 0) rotate(0.5deg);
+  }
+  97% {
+    transform: translate3d(-0.5px, 0, 0) rotate(0deg);
+  }
+}
+
+body:has([data-panel-admin]) .admin-pendiente-vibra {
+  animation: admin-pendiente-vibra 3.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+body:has([data-panel-admin]) .admin-pendiente-vibra:hover,
+body:has([data-panel-admin]) .admin-pendiente-vibra:focus-visible {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:has([data-panel-admin]) .admin-pendiente-vibra {
+    animation: none;
+  }
+}
+
 /* Reset & Base Styles */
 * {
   box-sizing: border-box;

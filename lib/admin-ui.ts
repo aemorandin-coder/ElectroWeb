@@ -3,6 +3,7 @@
 
 /* ── Página ───────────────────────────────────────────────────────────── */
 export const adminPageHeader = 'mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between';
+export const adminPageHeaderCompact = 'mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between';
 export const adminPageTitle = 'text-2xl font-bold text-ink';
 export const adminPageSubtitle = 'mt-1 text-sm text-muted';
 export const adminSectionTitle = 'text-lg font-semibold text-ink';
@@ -22,7 +23,7 @@ export function adminInput(hasError = false): string {
   return [
     'h-11 w-full rounded-lg border bg-white px-3 text-sm text-ink placeholder:text-subtle',
     'focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:bg-surface disabled:text-muted',
-    hasError ? 'border-deal' : 'border-line focus:border-brand-500',
+    hasError ? 'border-deal' : 'border-line-strong focus:border-brand-500',
   ].join(' ');
 }
 
@@ -47,7 +48,7 @@ const MOVIMIENTO =
 const buttonBase =
   `inline-flex h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold ${MOVIMIENTO} disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500`;
 export const adminPrimaryButton = `${buttonBase} bg-brand-500 text-white hover:bg-brand-600 hover:shadow-md hover:shadow-brand-500/25`;
-export const adminSecondaryButton = `${buttonBase} border border-line bg-white text-ink hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 hover:shadow-md hover:shadow-brand-600/10`;
+export const adminSecondaryButton = `${buttonBase} border border-line-strong bg-white text-ink hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 hover:shadow-md hover:shadow-brand-600/10`;
 export const adminDangerButton = `${buttonBase} bg-deal text-white hover:bg-deal/90 hover:shadow-md hover:shadow-deal/25`;
 export const adminSuccessButton = `${buttonBase} bg-success-strong text-white hover:bg-success-strong/90 hover:shadow-md hover:shadow-success-strong/25`;
 // C-245: lo que se suma a un botón compartido no siempre le gana a lo que ya trae: en el CSS, `px-5` va después de
@@ -59,11 +60,12 @@ export const adminIconButton =
 
 /* ── Tablas ───────────────────────────────────────────────────────────── */
 /** Envuelve siempre la <table>: en móvil se desliza en vez de romper la página. */
-export const adminTableWrap = 'overflow-x-auto rounded-2xl border border-line bg-white';
+export const adminTableWrap = 'overflow-x-auto rounded-2xl border border-line-strong bg-white';
 export const adminTable = 'w-full text-sm';
-export const adminTh = 'bg-surface px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted';
+export const adminTh = 'border-b border-line-strong bg-line/55 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-soft';
 export const adminTd = 'border-t border-line px-4 py-3 text-ink';
 export const adminRowHover = 'hover:bg-surface';
+export const adminRowZebra = 'odd:bg-white even:bg-line/40 hover:bg-line/60 transition-colors';
 
 /* ── Estados (badges, chips de ícono, avisos) ─────────────────────────── */
 export type AdminTone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger';
@@ -91,7 +93,8 @@ const TONES: Record<AdminTone, { badge: string; chip: string; notice: string }> 
   // C-216 (Andrés, 13/11: "esas píldoras ámbar, las detesto"): la píldora de lo que alguien tiene que hacer es un sello
   // del azul oscuro del logo (brand-700) con texto e ícono blancos (C-243, el kit; antes, azul noche con cian). C-226
   // (14/11): el aviso en bloque y el cuadro de ícono tampoco son ámbar; el nombre del tono quedó, el color cambió.
-  warning: { badge: 'bg-brand-700 text-white', chip: placaAccion, notice: avisoAccion },
+  // G-71: vibra suavemente en el panel para distinguir pendientes sin ser agresiva (inactiva en la tienda).
+  warning: { badge: 'bg-brand-700 text-white admin-pendiente-vibra', chip: placaAccion, notice: avisoAccion },
   danger: { badge: 'bg-deal text-white', chip: 'bg-deal-bg text-deal', notice: 'border-deal/30 bg-deal-bg text-deal' },
 };
 

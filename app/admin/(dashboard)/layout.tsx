@@ -338,7 +338,7 @@ export default function AdminLayout({
   // Sin dos pasos: solo la pantalla para configurarlos, sin menú, campana ni contadores
   if (!conDosPasos) {
     return (
-      <div className="min-h-dvh bg-surface">
+      <div className="min-h-dvh bg-surface" data-panel-admin="">
         <ControlSesionAdmin />
         <header className="flex h-16 items-center gap-3 border-b border-line bg-white px-4 lg:px-6">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-white">
@@ -359,7 +359,7 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-dvh bg-surface">
+    <div className="min-h-dvh bg-surface" data-panel-admin="">
       {/* C-140: se cierra tras 1 hora sin uso, con aviso 5 minutos antes */}
       <ControlSesionAdmin />
       {/* C-291: lo delicado pide el número de la app si la sesión entró por un dispositivo de confianza */}

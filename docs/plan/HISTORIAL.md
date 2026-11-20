@@ -1,9 +1,21 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.113`, comprobada el 18/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.115`, comprobada el 20/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 20/11 · G-70: Reportes por prioridad y Ventas ordenadas con tablas cebra y píldoras vibrantes (de rc.114 a `v1.0.0-rc.115`)
+Subida a producción y comprobada desde fuera el 20/11/2026 (`https://electroshopve.com/` responde `1.0.0-rc.115|37cebdfb`).
+
+**Falta que el equipo lo confirme** (`SIGUIENTE.md`, "Por confirmar de rc.115"): las 3 pruebas visuales en producción.
+
+### El bloque que se subió: `v1.0.0-rc.115` (G-70)
+- **Commit:** `37cebdfb` (etiqueta `v1.0.0-rc.115`).
+- **G-70** (rc.115): Reportes reorganizado por prioridad y las 5 pantallas de Ventas (Órdenes, Cotizaciones, Transacciones, Garantías y Gift Cards) con cabecera compacta, botones `Filtros` alineados, tabla cebra y bordes en gris neutro puro (`#d4d4d4` / `#bdbdbd`) sin rayas tipo Excel en escritorio, caja visible en Notas internas del detalle de orden y vibración suave cada 3,6 s únicamente en las píldoras de pendiente del panel admin. **Sin cambio de base, sin variables y sin cron.**
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.115`.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.114 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 
 ## 18/11 · C-299 y C-298: el aviso del dispositivo de confianza y Ajustes → IA por prioridad (de rc.111 a `v1.0.0-rc.113`)

@@ -1,10 +1,14 @@
-# Lo de ahora (actualizado 2026-11-18 · producción en 1.0.0-rc.114; por subir: rc.115, §2)
+# Lo de ahora (actualizado 2026-11-20 · producción en 1.0.0-rc.115; por subir: rc.116, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **G-70 · Reportes por prioridad y Ventas ordenadas con tablas cebra en gris neutro y píldoras vibrantes (rc.115, en `main`, por subir: §2; `estado/G-70.md`):** elegido por el equipo el 18/11 sobre las 3 propuestas (Opción A con botones `Filtros` alineados y filas cebra sin rayas verticales) y afinado en vivo en el servidor local.
+- **G-71 · ElectroStudio 2.6.0 (Fases 1 y 2) (rc.116, en `main`, por subir: §2; `estado/G-71.md`):** pedido del equipo el 20/11 para corregir fallas críticas/móviles, ordenar el Paso 4 y rediseñar el Home (opción elegida `A · A · A`, probada en vivo antes de pasar a `main`).
+  - **Fase 1 · Bugs críticos, flujo honesto, Paso 4 y móvil A:** notificaciones sobre `Pasos`, popover móvil en `components/admin/Pasos` sin empujar contenido ni cortar el nombre del paso, pasos honestos (sin `Fotos` en `tasa`/`felicitacion`, nunca salta directo a `Publicar` ni avanza con Paso 1 incompleto), detección de cambios post-descarga por huella visual, filtro digital + aviso en `Gift card`, rutas Telegram en `Ajustes → Avisos → Telegram`, selector de plantilla colapsado con `Opcion`, Paso 4 en 4 pestañas (`Texto`, `Fuente y estilo` en 2 columnas sin truncar, `Color y fondo`, `Posición` con cruceta 1 px) + soltar y devolver textos de la plantilla (`C-271`), y móvil Variante A (`Editar | Vista previa`, `Mover en lienzo` fullscreen con barra superior externa, doble toque en texto y cierre con Atrás).
+  - **Fase 2 · Home operativo y Radar:** "Qué publicamos hoy (desde tu tienda)" con 4 sugerencias en vivo (`/api/admin/studio/radar`), cajón `Ajustes de marca` en el Home, buscador y filtros con atajos al paso faltante, calendario `Semana` accionable (`+ Crear aquí` prellenando `?fecha=`) y `Resultados` con KPIs y `Repetir fórmula`.
+  - **Siguen (Fases 3 y 4):** `C-274` (6 plantillas nuevas, ElectroStudio `2.7.0`) y `C-275` (5 mejoras con IA, `2.8.0`).
+- **G-70 · Reportes por prioridad y Ventas ordenadas con tablas cebra en gris neutro y píldoras vibrantes (rc.115, en producción; por confirmar: §2; `estado/G-70.md`):** elegido por el equipo el 18/11 sobre las 3 propuestas (Opción A con botones `Filtros` alineados y filas cebra sin rayas verticales) y afinado en vivo en el servidor local.
   - **Reportes:** cabecera compacta con período y CSV, En vivo plegado con hoy/mes/por confirmar visibles, 5 secciones en botones `Filtros` alineados, cifras simétricas con `(i)`, 2 gráficos arriba y Relación de ventas en una sola línea debajo; Interacciones/Seguridad y CSP plegados.
   - **Las 5 pantallas de Ventas** (Órdenes, Cotizaciones a lo ancho, Transacciones, Garantías y Gift Cards): cabecera compacta con totales en línea, botones `Filtros` simétricos (`columnas`) y tabla cebra en escritorio (`lg:`), conservando tarjetas en teléfono (`<lg`) y todas las acciones/modales.
   - **Contraste en gris neutro puro y pendientes vibrantes:** divisores, bordes, cabeceras (`adminTh`), filas cebra (`adminRowZebra`) y caja de "Notas internas" del detalle de orden en gris neutro puro (`#d4d4d4` / `#bdbdbd` acotados al panel, sin tinte azulado); únicamente las píldoras de estado `warning` hacen una vibración suave cada 3,6 s en el panel (los botones de filtro quedan quietos y no aplica en la tienda ni en Mi panel).
@@ -560,18 +564,25 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.115` (G-70)
-Producción está en `v1.0.0-rc.114` (`d347208a`, C-302). Si entran más tareas antes de subir, se suman aquí.
-- **G-70** (rc.115): Reportes reorganizado por prioridad y las 5 pantallas de Ventas (Órdenes, Cotizaciones, Transacciones, Garantías y Gift Cards) con cabecera compacta, botones `Filtros` alineados, tabla cebra y bordes en gris neutro puro (`#d4d4d4` / `#bdbdbd`) sin rayas tipo Excel en escritorio, caja visible en Notas internas del detalle de orden y vibración suave cada 3,6 s únicamente en las píldoras de pendiente del panel admin. **Sin cambio de base, sin variables y sin cron.**
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.115`, o una mayor si entró otra tarea antes del `git pull`.
-- **Pruebas** (unos 6 minutos, en la computadora y en el teléfono a `360 px`):
+### Lo que falta subir: `v1.0.0-rc.116` (G-71)
+Producción está en `v1.0.0-rc.115` (`37cebdfb`, G-70). Si entran más tareas antes de subir, se suman aquí.
+- **G-71** (`rc.116` · ElectroStudio `2.6.0` + Marco del panel `1.22.1`): Fases 1 y 2 de ElectroStudio — corrección de bugs Chrome/móvil, pasos honestos, Paso 4 en 4 pestañas + soltar texto de la plantilla (`C-271`), editor móvil Variante A con `Mover en lienzo` fullscreen, nuevo Home con Radar en vivo (`/api/admin/studio/radar`), `Ajustes de marca` en cajón propio, calendario `Semana` accionable y `Resultados` con `Repetir fórmula`. **Sin cambio de base, sin variables y sin cron.**
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.116`.
+- **Pruebas** (unos 5 minutos en escritorio y teléfono `360 px`, recargando el panel con `Ctrl+R`):
+  1. **Home, Radar y Ajustes de marca (`/admin/studio`):** se ve "Qué publicamos hoy (desde tu tienda)" con sugerencias en vivo y "Crear historia", `Ajustes de marca` abre su cajón desde la cabecera, `Semana` muestra `+ Crear aquí` por día y `Resultados` trae KPIs y `Repetir fórmula`.
+  2. **Flujo por pasos y Paso 4 (`/admin/studio/<id>`):** en plantillas sin fotos (`Tasa del día` / `Felicitación`) se omite `Fotos`; en Paso 4, `Soltar a capa libre` convierte un texto fijo en capa editable (y `Devolver a la plantilla` lo restaura) y las 4 pestañas (`Texto`, `Fuente y estilo` en 2 columnas sin cortes, `Color y fondo`, `Posición` con cruceta 1 px) se ven ordenadas.
+  3. **Campana de avisos y selector de Gift Cards:** abrir la campana de notificaciones sobre la barra de `Pasos` (queda encima sin quedar tapada); crear una historia `Gift card` y comprobar filtro digital.
+  4. **Móvil (`360 px`):** desplegar `Pasos` sin empujar el contenido ni cortar el título del paso; alternar `Editar | Vista previa`; pulsar `Mover en lienzo`, comprobar cero solapes con la barra superior y cerrar con el botón Atrás.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.115 && npm install && bash scripts/deploy.sh --sin-pull`.
+
+### Por confirmar de rc.115 (G-70; unos 6 minutos)
+Ya en producción (`1.0.0-rc.115|37cebdfb`). Falta confirmar en escritorio y teléfono (`360 px`):
   1. **Reportes (`/admin/reports`):** En vivo plegado con conectados/hoy/mes/por confirmar visibles en la cabecera; los 5 botones de sección en una fila alineada; cifras arriba con `(i)`, dos gráficos abajo y Relación de ventas en una sola línea debajo; sin desborde horizontal a `360 px`.
   2. **Ventas (`/admin/orders`, `/admin/cotizaciones`, `/admin/transactions`, `/admin/garantias` y `/admin/gift-cards`):**
      - arriba, la tabla empieza casi de inmediato debajo de los botones de filtro (sin tarjetas repetidas ni espacio vacío);
      - los botones de filtro quedan en filas simétricas en escritorio y se deslizan limpio en teléfono (`360 px`);
      - en escritorio (`1440 px`), filas alternadas cebra en gris neutro puro sin líneas verticales tipo Excel; en teléfono (`<1024 px`), tarjetas limpias y clicables sin perder acciones ni modales.
   3. **Pendientes y contraste del panel:** únicamente las píldoras de pendiente (`Pendiente`, `Por validar`, `1 pendiente`, `Por atender`, `Por activar`) muestran una vibración corta cada ~3,6 s (se detiene al pasar el cursor) y los botones de filtro quedan quietos; las líneas de celdas, cabeceras, filas cebra, bordes de campos y la caja de "Notas internas" en el detalle de orden se ven en gris neutro más definido sin matiz azulado (y en la tienda pública / Mi panel nada vibra ni cambia de borde).
-- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.114 && npm install && bash scripts/deploy.sh --sin-pull`.
 - **Sigue pendiente desde rc.111:** elegir el producto estrella de la semana en Marketing → Sorteo. El 18/11 en la noche, /sorteo todavía no lo mostraba.
 
 ### Por confirmar de rc.114 (C-302; unos 3 minutos)

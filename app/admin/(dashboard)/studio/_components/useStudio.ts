@@ -439,10 +439,51 @@ export function useStudio() {
     [update],
   );
 
-  /** La lista con la historia abierta tal como está en pantalla (aunque aún no se haya guardado) */
+  /** G-71: repite una historia ganadora conservando su estilo, plantilla, capas y animación para cambiarle solo el producto */
+  const repeatFormula = useCallback(
+    async (id: string): Promise<StudioFlyer | null> => {
+      const source = flyers.find((f) => f.id === id);
+      if (!source) return null;
+      const base = normalizeFlyer(source);
+      const copy = await create({
+        template: base.template,
+        format: base.format,
+        bg: base.bg,
+        bgPhoto: base.bgPhoto,
+        anim: base.anim,
+        fx: base.fx,
+        accent: base.accent,
+        accent2: base.accent2,
+        heading: base.heading,
+        qr: base.qr,
+        navidad: base.navidad,
+        tramo: base.tramo,
+        capas: base.capas,
+        piezas: base.piezas,
+        piezasOcultas: base.piezasOcultas,
+        duracion: base.duracion,
+        final: base.final,
+        cierreLogo: base.cierreLogo,
+        name: 'Nueva historia',
+        date: '',
+        batch: base.batch,
+        products: Array.from({ length: Math.max(TEMPLATES[base.template].n, 1) }, blankProduct),
+      });
+      if (copy) toast.success('Fórmula lista: elige el producto nuevo');
+      return copy;
+    },
+    [create, flyers],
+  );
+
+  /** La lista con la historia abierta y los datos vivos de la tienda (misma verdad en Home y Editor) */
   const flyersView = useMemo(
-    () => flyers.map((f) => (current && f.id === currentId ? { ...f, ...current } : f)),
-    [flyers, current, currentId],
+    () =>
+      flyers.map((f) => {
+        const merged = current && f.id === currentId ? { ...f, ...current } : f;
+        const synced = refreshLinked(merged, live);
+        return synced === merged ? merged : { ...merged, ...synced };
+      }),
+    [flyers, current, currentId, live],
   );
 
   const currentCode = flyers.find((f) => f.id === currentId)?.code ?? null;
@@ -470,6 +511,7 @@ export function useStudio() {
     select,
     create,
     duplicate,
+    repeatFormula,
     remove,
     saveNow,
     rememberLive,

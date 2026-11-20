@@ -1,6 +1,6 @@
 // C-270: las capas de ElectroStudio, piezas sueltas encima de la plantilla (docs/plan/ELECTROSTUDIO.md §5). Crear,
 // duplicar, ordenar y medir. Módulo puro: lo usan el editor y las pruebas; el dibujo está en engine.ts.
-import { CAPAS_MAX, ESTILOS_CAPA, TAM_STICKER, TAM_TEXTO, type CapaSticker, type CapaTexto, type ChispaPose, type EstiloCapa, type StudioCapa } from './schema';
+import { CAPAS_MAX, ESTILOS_CAPA, TAM_STICKER, TAM_TEXTO, TRAMOS_REGALO, type CapaSticker, type CapaTexto, type ChispaPose, type EstiloCapa, type StudioCapa, type StudioFlyerData } from './schema';
 import { STICKERS, type Sticker } from './stickers';
 
 /** Lo que se puede cambiar de una capa (de texto o sticker): el id y el tipo no cambian nunca */
@@ -23,7 +23,7 @@ export const ANIMACION_INICIAL = (): Pick<CapaTexto, 'entrada' | 'enfasis' | 'sa
   salida: { tipo: 'ninguna', inicio: null, dura: 0.6 },
 });
 
-const ARRANQUE: Record<EstiloCapa, Omit<CapaTexto, 'id' | 'tipo' | 'estilo' | 'x' | 'giro' | 'oculta' | 'bloqueada' | 'fuente' | 'alinear' | 'color' | 'entrada' | 'enfasis' | 'salida'>> = {
+const ARRANQUE: Record<EstiloCapa, Omit<CapaTexto, 'id' | 'tipo' | 'estilo' | 'x' | 'giro' | 'oculta' | 'bloqueada' | 'origenPieza' | 'fuente' | 'alinear' | 'color' | 'entrada' | 'enfasis' | 'salida'>> = {
   // C-295: el título nuevo baja de línea antes del borde (sin ancho máximo, "LLEGÓ EL TALADRO" a 120 px se salía de la historia)
   titulo: { texto: 'Tu título', tam: 120, peso: 900, cursiva: true, mayusculas: true, contorno: false, sombra: true, fondo: 'ninguno', anchoMax: 960, y: 0.3 },
   subtitulo: { texto: 'Tu subtítulo', tam: 56, peso: 800, cursiva: true, mayusculas: false, contorno: false, sombra: false, fondo: 'cinta', anchoMax: 0, y: 0.4 },
@@ -45,6 +45,7 @@ export function nuevaCapa(estilo: EstiloCapa, capas: readonly StudioCapa[]): Cap
     giro: 0,
     oculta: false,
     bloqueada: false,
+    origenPieza: '',
     ...ANIMACION_INICIAL(),
     ...a,
     y: Math.min(0.9, a.y + encima * 0.05),
@@ -155,4 +156,89 @@ export const ESTILOS_LISTOS: { id: string; nombre: string; cambio: Partial<CapaT
 export function estiloListoDe(c: CapaTexto): string | null {
   const e = ESTILOS_LISTOS.find(({ cambio }) => (Object.keys(cambio) as (keyof CapaTexto)[]).every((k) => c[k] === cambio[k]));
   return e?.id ?? null;
+}
+
+export interface PiezaPlantilla {
+  id: string;
+  etiqueta: string;
+  texto: string;
+  xDef: number;
+  yDef: number;
+  tamDef: number;
+}
+
+/** G-71 (C-271): textos propios de la plantilla elegida que se pueden soltar a capa libre */
+export function piezasPlantillaDe(f: StudioFlyerData): PiezaPlantilla[] {
+  switch (f.template) {
+    case 'solo':
+      return [{ id: 'titulo', etiqueta: 'Título del producto', texto: f.products[0]?.title || 'PRODUCTO', xDef: 0.36, yDef: 0.16, tamDef: 92 }];
+    case 'duo':
+      return [
+        { id: 'titulo-1', etiqueta: 'Título del producto 1', texto: f.products[0]?.title || 'PRODUCTO', xDef: 0.31, yDef: 0.13, tamDef: 78 },
+        { id: 'titulo-2', etiqueta: 'Título del producto 2', texto: f.products[1]?.title || 'PRODUCTO', xDef: 0.72, yDef: 0.56, tamDef: 78 },
+      ];
+    case 'trio':
+      return [{ id: 'titulo', etiqueta: 'Título de la categoría', texto: f.heading || 'OFERTAS', xDef: 0.5, yDef: 0.15, tamDef: 96 }];
+    case 'nuevo':
+      return [
+        { id: 'etiqueta', etiqueta: 'Etiqueta superior', texto: f.heading || 'Recién llegado', xDef: 0.5, yDef: 0.11, tamDef: 44 },
+        { id: 'titulo', etiqueta: 'Título del producto', texto: f.products[0]?.title || 'PRODUCTO', xDef: 0.5, yDef: 0.2, tamDef: 96 },
+      ];
+    case 'giftcard':
+      return [{ id: 'titulo', etiqueta: 'Título de la gift card', texto: f.products[0]?.title || 'GIFT CARD', xDef: 0.36, yDef: 0.16, tamDef: 88 }];
+    case 'cupon':
+      return [{ id: 'titulo', etiqueta: 'Etiqueta del cupón', texto: f.heading || 'Cupón de descuento', xDef: 0.5, yDef: 0.13, tamDef: 44 }];
+    case 'resena':
+      return [{ id: 'titulo', etiqueta: 'Etiqueta de reseña', texto: f.heading || 'Lo que dicen nuestros clientes', xDef: 0.36, yDef: 0.13, tamDef: 44 }];
+    case 'tasa':
+      return [
+        { id: 'etiqueta', etiqueta: 'Etiqueta Tasa BCV', texto: 'Tasa oficial BCV', xDef: 0.34, yDef: 0.13, tamDef: 44 },
+        { id: 'titulo', etiqueta: 'Fecha de la tasa', texto: f.rateDate ? new Date(f.rateDate).toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Tasa del día', xDef: 0.5, yDef: 0.21, tamDef: 56 },
+      ];
+    case 'mensaje':
+      return [{ id: 'titulo', etiqueta: 'Titular del mensaje', texto: f.msg.headline || 'Tu mensaje', xDef: 0.5, yDef: 0.26, tamDef: 82 }];
+    case 'regalos':
+      return [
+        { id: 'etiqueta', etiqueta: 'Etiqueta de regalos', texto: 'Ideas para regalar', xDef: 0.34, yDef: 0.13, tamDef: 44 },
+        { id: 'titulo', etiqueta: 'Tramo de presupuesto', texto: TRAMOS_REGALO[f.tramo]?.titulo || 'Regalos', xDef: 0.38, yDef: 0.22, tamDef: 92 },
+      ];
+    case 'felicitacion':
+      return [{ id: 'titulo', etiqueta: 'Titular de felicitación', texto: f.msg.headline || '¡Feliz Navidad!', xDef: 0.5, yDef: 0.28, tamDef: 82 }];
+    default:
+      return [];
+  }
+}
+
+/** G-71 (C-271): convierte un texto fijo de la plantilla en una capa libre editable */
+export function capaDesdePieza(
+  idPieza: string,
+  texto: string,
+  capas: readonly StudioCapa[],
+  pos?: { x: number; y: number },
+  tam?: number,
+): CapaTexto {
+  return {
+    id: nuevoIdCapa(capas.map((c) => c.id)),
+    tipo: 'texto',
+    estilo: idPieza === 'etiqueta' ? 'subtitulo' : 'titulo',
+    texto: texto.slice(0, 200),
+    fuente: 'montserrat',
+    tam: tamTexto(tam ?? (idPieza === 'etiqueta' ? 48 : 88)),
+    peso: 900,
+    cursiva: true,
+    mayusculas: idPieza !== 'etiqueta',
+    contorno: false,
+    sombra: true,
+    fondo: idPieza === 'etiqueta' ? 'pildora' : 'ninguno',
+    alinear: 'centro',
+    anchoMax: 920,
+    color: '',
+    x: Math.min(0.9, Math.max(0.1, pos?.x ?? 0.5)),
+    y: Math.min(0.9, Math.max(0.1, pos?.y ?? 0.2)),
+    giro: 0,
+    oculta: false,
+    bloqueada: false,
+    origenPieza: idPieza,
+    ...ANIMACION_INICIAL(),
+  };
 }

@@ -5,34 +5,29 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import {
-  IconoAdvertencia, IconoAgrandar, IconoCheck, IconoChevronDerecha, IconoChevronIzquierda, IconoClaqueta, IconoCompartir, IconoCopiar,
-  IconoDescargar, IconoDeshacer, IconoEditar, IconoEliminar, IconoEstrella, IconoFlechaIzquierda, IconoImagen, IconoMas, IconoNube,
-  IconoPausa, IconoPintura, IconoPlay, IconoRehacer, IconoTexto, type IconType,
+  IconoAbrirCandado, IconoAdvertencia, IconoCandado, IconoCheck, IconoChevronDerecha, IconoChevronIzquierda, IconoClaqueta,
+  IconoCompartir, IconoCopiar, IconoDescargar, IconoDeshacer, IconoEditar, IconoEliminar, IconoFlechaAbajo,
+  IconoFlechaArriba, IconoFlechaDerecha, IconoFlechaIzquierda, IconoImagen, IconoMas, IconoMover, IconoNube, IconoPausa,
+  IconoPintura, IconoPlay, IconoRehacer, IconoTexto, type IconType,
 } from '@/components/iconos';
 import AsiFunciona from '@/components/onboarding/AsiFunciona';
 import Pasos, { type Paso } from '@/components/admin/Pasos';
 import { adminEmpty, adminHint, adminIconButton, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
-import { PASO_PUBLICAR, firstOpenStep, flyerChecks, stepDone, type TextIssues } from '@/lib/studio/checks';
-import { cambiarCapa, duplicarCapa, moverCapa, nuevaCapa, nuevoIdCapa, nuevoSticker, puedeAgregarCapa, type CambioCapa } from '@/lib/studio/capas';
+import {
+  PASO_PUBLICAR, activeStepsFor, contentProblems, firstOpenStep, flyerChecks, stepDone, type TextIssues,
+} from '@/lib/studio/checks';
+import {
+  cambiarCapa, capaDesdePieza, duplicarCapa, moverCapa, nuevaCapa, nuevoIdCapa, nuevoSticker, puedeAgregarCapa, type CambioCapa,
+} from '@/lib/studio/capas';
 import { STICKERS } from '@/lib/studio/stickers';
 import { duracionDe } from '@/lib/studio/animaciones';
 import { cargarFuentes } from '@/lib/studio/fuentes';
+import { hasChangesSinceExport } from '@/lib/studio/live';
 import {
-  H,
-  StudioImages,
-  formatHeight,
-  W,
-  bgFor,
-  createRenderer,
-  flyerImageSources,
-  loadStudioFonts,
-  missingImages,
-  qrUrlFor,
-  type CajaCapa,
-  type ProductSrc,
-  type StudioRenderer,
+  H, StudioImages, formatHeight, W, bgFor, createRenderer, flyerImageSources, loadStudioFonts, missingImages, qrUrlFor,
+  type CajaCapa, type ProductSrc, type StudioRenderer,
 } from '@/lib/studio/engine';
 import { canvasBlob, GrabacionInterrumpida, grabarVideo, type VideoGrabado } from '@/lib/studio/exportar';
 import {
@@ -54,7 +49,6 @@ import { toggleButton } from './ui';
 import { useDownloadGate } from './useDownloadGate';
 import type { SaveStatus } from './useStudio';
 
-/** C-270: los seis pasos, con la ruta de pasos del panel (components/admin/Pasos, PLAN.md §1.6) */
 const STEPS: [number, string, IconType][] = [
   [1, 'Contenido', IconoEditar],
   [2, 'Fotos', IconoImagen],
@@ -64,38 +58,29 @@ const STEPS: [number, string, IconType][] = [
   [6, 'Publicar', IconoCompartir],
 ];
 const SAFE_KEY = 'studio-safe';
+const MEJOR_KEY = 'studio-mejor-tiempo';
 
-/** Qué se hace en cada paso (C-116, fase 2): una línea arriba del paso */
 const STEP_HELP: Record<number, string> = {
   1: 'Qué publicar y el producto. Con un producto de la tienda, el precio y la oferta se ponen solos.',
   2: 'La foto de cada producto: pégala (Ctrl+V), arrástrala o elígela. Mejor con fondo blanco o transparente.',
   3: 'Opcional: formato, fondo, efectos y colores. Si no cambias nada, queda con el diseño de la plantilla.',
-  4: 'Opcional: títulos, subtítulos y textos sueltos. Se mueven, se agrandan y se giran sobre la vista previa.',
+  4: 'Opcional: títulos, subtítulos y textos sueltos, o suelta un título fijo para moverlo a tu gusto.',
   5: 'Opcional: cómo entra la historia en el video. Las piezas sueltas entran después de la plantilla.',
   6: 'Revisa la lista, descarga la imagen o el video y copia el texto para Instagram.',
 };
 
-/** Vista previa chica del teléfono, para que el editor quede a la vista (se agranda con un botón) */
-const PREVIEW_SMALL: Record<FormatId, string> = {
-  story: 'max-lg:max-w-[9rem]',
-  post45: 'max-lg:max-w-[11rem]',
-  post11: 'max-lg:max-w-[12rem]',
-};
-
-/**
- * C-295: en pantalla completa, la vista previa ocupa todo lo que deja libre la hoja de abajo, con su proporción: el
- * contenedor mide su ancho y su alto (container-type: size) y la vista toma el menor de los dos.
- */
 const PREVIEW_GRANDE: Record<FormatId, string> = {
   story: 'aspect-[9/16] w-[min(100cqw,calc(100cqh*9/16))]',
   post45: 'aspect-[4/5] w-[min(100cqw,calc(100cqh*4/5))]',
   post11: 'aspect-square w-[min(100cqw,100cqh)]',
 };
 
-/** C-295: el mejor tiempo para sacar una historia en este navegador (para "Tu mejor tiempo" del final) */
-const MEJOR_KEY = 'studio-mejor-tiempo';
+const PREVIEW_CLASS: Record<FormatId, string> = {
+  story: 'aspect-[9/16] max-w-[16rem] sm:max-w-xs lg:w-[min(100%,calc((100dvh_-_17rem)*9/16))]',
+  post45: 'aspect-[4/5] max-w-xs sm:max-w-sm lg:w-[min(100%,calc((100dvh_-_17rem)*4/5))]',
+  post11: 'aspect-square max-w-xs sm:max-w-sm lg:w-[min(100%,calc(100dvh_-_17rem))]',
+};
 
-/** C-295: lo visible de la pantalla (sin el teclado del teléfono), para que la pantalla completa no quede debajo de él */
 function suscribirVista(cb: () => void) {
   const vv = window.visualViewport;
   vv?.addEventListener('resize', cb);
@@ -108,17 +93,26 @@ function suscribirVista(cb: () => void) {
 const altoVisible = () => Math.round(window.visualViewport?.height ?? window.innerHeight);
 const arribaVisible = () => Math.round(window.visualViewport?.offsetTop ?? 0);
 
-/** Proporción de la vista previa y su ancho en escritorio (alto disponible × proporción) */
-const PREVIEW_CLASS: Record<FormatId, string> = {
-  story: 'aspect-[9/16] max-w-[15rem] sm:max-w-xs lg:w-[min(100%,calc((100dvh_-_17rem)*9/16))]',
-  post45: 'aspect-[4/5] max-w-xs sm:max-w-sm lg:w-[min(100%,calc((100dvh_-_17rem)*4/5))]',
-  post11: 'aspect-square max-w-xs sm:max-w-sm lg:w-[min(100%,calc(100dvh_-_17rem))]',
-};
+function readVistos(id: string | null): number[] {
+  if (!id) return [];
+  try {
+    const raw = localStorage.getItem(`studio-vistos:${id}`);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(parsed) ? parsed.filter((n): n is number => typeof n === 'number') : [];
+  } catch {
+    return [];
+  }
+}
 
-/**
- * C-268: la pestaña juntó código de dos versiones (quedó abierta durante un deploy) y una descarga falló. En vez del error
- * crudo ("(0 , p.recordCanvas) is not a function"), qué hacer y el botón: guarda lo pendiente y recarga.
- */
+function saveVistos(id: string | null, list: number[]) {
+  if (!id) return;
+  try {
+    localStorage.setItem(`studio-vistos:${id}`, JSON.stringify(list));
+  } catch {
+    // Sin almacenamiento
+  }
+}
+
 function avisarRecargar(guardar: () => Promise<unknown>) {
   toast.error(
     (t) => (
@@ -149,13 +143,35 @@ const STATUS_TEXT: Record<SaveStatus, string> = {
   error: 'No se pudo guardar',
 };
 
+function cajasSolapan(a: CajaCapa, b: CajaCapa): boolean {
+  return Math.abs(a.cx - b.cx) * 2 < a.w + b.w && Math.abs(a.cy - b.cy) * 2 < a.h + b.h;
+}
+
+function medirTiempoFinal(primera: boolean, id: string | null, abierta: { id: string | null; desde: number }): { tiempo: number | null; record: boolean } {
+  if (!primera || !id || abierta.id !== id) return { tiempo: null, record: false };
+  const t = (Date.now() - abierta.desde) / 1000;
+  if (t > 3600) return { tiempo: null, record: false };
+  let record = false;
+  try {
+    const antes = Number(localStorage.getItem(MEJOR_KEY)) || 0;
+    if (!antes || t < antes) {
+      record = antes > 0;
+      localStorage.setItem(MEJOR_KEY, String(Math.round(t)));
+    }
+  } catch {
+    // Sin almacenamiento
+  }
+  return { tiempo: t, record };
+}
+
+function ahoraEpoch(): number {
+  return Date.now();
+}
 
 export default function Studio({ id }: { id: string }) {
   const studio = useStudioContext();
   const { loading, flyers, current: openFlyer, currentId: openId, currentCode, brand, status, update, select, saveNow } = studio;
-  // C-193: el gorro y la franja salen del tema navideño de la tienda (Marketing → Navidad)
   const navidad = studio.store?.navidad ?? null;
-  // Solo cuenta la historia de esta dirección: mientras se abre otra, el editor no muestra la anterior
   const current = openId === id ? openFlyer : null;
   const currentId = openId === id ? openId : null;
   const router = useRouter();
@@ -163,7 +179,6 @@ export default function Studio({ id }: { id: string }) {
   const { confirm } = useConfirm();
   const gate = useDownloadGate();
 
-  // Abre la historia de la dirección; si ya no existe, se dice
   const [missing, setMissing] = useState(false);
   useEffect(() => {
     if (loading || openId === id) return;
@@ -175,46 +190,52 @@ export default function Studio({ id }: { id: string }) {
       alive = false;
     };
   }, [loading, openId, id, select]);
-  // Al volver al inicio se guarda lo pendiente (el estado sigue vivo en el layout)
   useEffect(() => () => void saveNow(), [saveNow]);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const images = useRef<StudioImages | null>(null);
   const renderer = useRef<StudioRenderer | null>(null);
-  // Fotos pegadas que aún se están subiendo: se ven al instante, antes de tener su ruta en la tienda
   const [tempImages, setTempImages] = useState<Record<string, string>>({});
   const srcRef = useRef<ProductSrc>((p) => p.imageUrl);
   const productSrc: ProductSrc = useCallback((p, i) => tempImages[`${currentId}:${i}`] || p.imageUrl, [tempImages, currentId]);
 
-  // C-270: `vistos` son los pasos opcionales ya recorridos (Diseño, Textos y Animación): la ruta los marca hechos
+  const activeStepNums = current ? activeStepsFor(current.template) : [1, 2, 3, 4, 5, 6];
   const [stepFor, setStepFor] = useState<{ id: string | null; step: number; vistos: number[] }>({ id: null, step: 1, vistos: [] });
-  // Al abrir otra historia se va al paso pedido (?paso=, desde el inicio) o al primero pendiente;
-  // después el paso solo cambia cuando la persona lo elige
   const askedStep = Number(params.get('paso'));
   if (current && currentId && stepFor.id !== currentId) {
-    setStepFor({ id: currentId, step: askedStep >= 1 && askedStep <= STEPS.length ? askedStep : firstOpenStep(current, productSrc), vistos: [] });
+    const allowed = activeStepsFor(current.template);
+    const initialStep = allowed.includes(askedStep) ? askedStep : firstOpenStep(current, productSrc);
+    const initialVistos = readVistos(currentId);
+    setStepFor({ id: currentId, step: initialStep, vistos: initialVistos });
   }
-  const step = stepFor.id === currentId ? stepFor.step : 1;
+  const rawStep = stepFor.id === currentId ? stepFor.step : 1;
+  const step = activeStepNums.includes(rawStep) ? rawStep : 1;
   const vistos = stepFor.id === currentId ? stepFor.vistos : [];
+  const activeIdx = Math.max(0, activeStepNums.indexOf(step));
+
   const editorRef = useRef<HTMLElement | null>(null);
+  const [tiempo, setTiempo] = useState<number | null>(null);
   const goStep = (k: number) => {
+    const target = activeStepNums.includes(k) ? k : 1;
     setTiempo(null);
-    setStepFor((s) => ({ id: currentId, step: k, vistos: s.id === currentId && !s.vistos.includes(s.step) ? [...s.vistos, s.step] : s.id === currentId ? s.vistos : [] }));
-    // Si el comienzo del editor quedó arriba de la pantalla (teléfono, después de un paso largo), se vuelve a él. En
-    // pantalla completa (C-295) la página de atrás no se mueve: el paso está en la hoja
+    setStepFor((s) => {
+      const nextVistos = s.id === currentId && !s.vistos.includes(s.step) ? [...s.vistos, s.step] : s.id === currentId ? s.vistos : [];
+      saveVistos(currentId, nextVistos);
+      return { id: currentId, step: target, vistos: nextVistos };
+    });
     const top = editorRef.current?.getBoundingClientRect().top ?? 0;
     if (top < 0 && !grandeRef.current) editorRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
   };
+
   const [slotFor, setSlotFor] = useState<{ id: string | null; slot: number }>({ id: null, slot: 0 });
   const activeSlot = slotFor.id === currentId ? slotFor.slot : 0;
   const setActiveSlot = useCallback((i: number) => setSlotFor({ id: currentId, slot: i }), [currentId]);
 
   const [playing, setPlaying] = useState(false);
-  // C-273: desde qué segundo arranca la reproducción, y el segundo que va (para la aguja de la línea de tiempo)
   const desdeRef = useRef(0);
   const tiempoVivo = useRef(0);
-  // Teléfono: vista previa chica por defecto
-  const [bigPreview, setBigPreview] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'editar' | 'preview'>('editar');
+  const [nudgeOpen, setNudgeOpen] = useState(false);
   const playStart = useRef(0);
   const busyRef = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -225,43 +246,35 @@ export default function Studio({ id }: { id: string }) {
       return false;
     }
   });
-  // C-295: el editor en pantalla completa (teléfono): la vista previa del alto de la pantalla y el paso en una hoja abajo
+
+  // G-71: pantalla completa móvil + soporte de botón Atrás del teléfono
   const [grande, setGrande] = useState(false);
   const [hojaAbierta, setHojaAbierta] = useState(false);
   const grandeRef = useRef(grande);
   useEffect(() => {
     grandeRef.current = grande;
   });
+  const pushedHistory = useRef(false);
   const [pedirGaleria, setPedirGaleria] = useState(false);
   useBodyScrollLock(grande);
   const vistaAlto = useSyncExternalStore(suscribirVista, altoVisible, () => 0);
   const vistaArriba = useSyncExternalStore(suscribirVista, arribaVisible, () => 0);
-  // C-295: la vista previa se dibuja del tamaño en que se ve (su ancho en pantalla por la densidad, hasta 2×), no a 1080:
-  // en el teléfono son de 3 a 14 veces menos puntos por cuadro. La descarga y el video siguen a 1080 (escala 1)
   const escalaVista = useRef(1);
 
-  // Lo último que hay que dibujar, para el bucle de animación y las cargas de imágenes
-  // C-273: un segundo fijo de la animación para mirarlo en la vista previa (desde la línea de tiempo); null = la imagen
-  const [tiempo, setTiempo] = useState<number | null>(null);
   const scene = useRef({ current, brand, safe, code: currentCode, navidad, tiempo });
   useEffect(() => {
     scene.current = { current, brand, safe, code: currentCode, navidad, tiempo };
     srcRef.current = productSrc;
   });
-  // Sube cada vez que llega una imagen: las miniaturas de los fondos con foto se vuelven a dibujar
   const [imgTick, setImgTick] = useState(0);
 
-  // Textos que no caben ni con la letra más chica (C-116): se avisan en Publicar y al descargar
   const [textIssues, setTextIssues] = useState<TextIssues>({ cut: [], tiny: [] });
-  // C-270: dónde quedó cada capa en el último dibujo, para tocarla en la vista previa
   const [cajas, setCajas] = useState<CajaCapa[]>([]);
-  // C-287: los títulos de la plantilla que se arrastran
   const [cajasPiezas, setCajasPiezas] = useState<CajaCapa[]>([]);
   const drawStatic = useCallback(() => {
     if (!renderer.current || busyRef.current) return;
     const s = scene.current;
     renderer.current.draw(s.current, s.brand, { preview: true, safeZones: s.safe, code: s.code, navidad: s.navidad, t: s.tiempo, escala: escalaVista.current });
-    // Las cajas y los avisos son los de la imagen (sin animación): con un segundo fijo no se tocan
     if (s.tiempo !== null) return;
     const now = renderer.current.textIssues();
     setTextIssues((prev) => (JSON.stringify(prev) === JSON.stringify(now) ? prev : now));
@@ -271,7 +284,6 @@ export default function Studio({ id }: { id: string }) {
     setCajasPiezas((prev) => (JSON.stringify(prev) === JSON.stringify(piezasAhora) ? prev : piezasAhora));
   }, []);
 
-  // C-270: la capa elegida (de esta historia) y lo que se hace con las capas
   const [selFor, setSelFor] = useState<{ id: string | null; capa: string | null }>({ id: null, capa: null });
   const capaSel = selFor.id === currentId && current?.capas.some((c) => c.id === selFor.capa) ? selFor.capa : null;
   const setCapaSel = useCallback((capa: string | null) => setSelFor({ id: currentId, capa }), [currentId]);
@@ -289,25 +301,14 @@ export default function Studio({ id }: { id: string }) {
     });
     return () => cancelAnimationFrame(frame);
   }, [enfocar]);
-  // Un gesto en la vista previa (arrastrar, agrandar, girar) es un solo paso de deshacer: entra al historial con el primer cambio
   const gestoNuevo = useRef(false);
-  // C-270: el alto de la ruta de pasos (en el teléfono queda fija arriba, y la vista previa, fija debajo)
-  const pasosRef = useRef<HTMLDivElement | null>(null);
   const [altoPasos, setAltoPasos] = useState(0);
-  useEffect(() => {
-    const el = pasosRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setAltoPasos(el.offsetHeight));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [currentId]);
 
   const drawThumb = useCallback((target: HTMLCanvasElement, style: BackgroundId) => {
     const s = scene.current;
     if (renderer.current && s.current) renderer.current.drawBackgroundThumb(target, style, s.current, s.brand);
   }, []);
 
-  // Canvas y motor: una vez
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || renderer.current) return;
@@ -325,8 +326,6 @@ export default function Studio({ id }: { id: string }) {
     return () => cancelAnimationFrame(frame);
   }, [drawStatic, loading]);
 
-  // C-295: la escala de la vista previa sigue a su tamaño (la chica, la grande, la pantalla completa, la PC). Cambiarla
-  // borra el lienzo: se vuelve a dibujar enseguida (si se está reproduciendo, el próximo cuadro ya sale con ella)
   useEffect(() => {
     const c = canvasRef.current;
     if (!c) return;
@@ -343,18 +342,45 @@ export default function Studio({ id }: { id: string }) {
     return () => ro.disconnect();
   }, [drawStatic]);
 
-  // C-295: Escape sale de la pantalla completa (si hay una pieza elegida, primero la suelta; si hay una ventana, es suyo)
+  const abrirGrande = () => {
+    setPlaying(false);
+    setHojaAbierta(false);
+    setGrande(true);
+  };
+  const cerrarGrande = useCallback(() => {
+    setNudgeOpen(false);
+    if (pushedHistory.current) {
+      pushedHistory.current = false;
+      window.history.back();
+    } else {
+      setGrande(false);
+    }
+  }, []);
+
+  // C-295: Escape y botón Atrás del teléfono cierran la pantalla completa sin sacar del editor
   useEffect(() => {
     if (!grande) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || capaSelRef.current || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+    if (!pushedHistory.current) {
+      window.history.pushState({ studioGrande: true }, '');
+      pushedHistory.current = true;
+    }
+    const onPop = () => {
+      pushedHistory.current = false;
+      setNudgeOpen(false);
       setGrande(false);
     };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || capaSelRef.current || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      cerrarGrande();
+    };
+    window.addEventListener('popstate', onPop);
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [grande]);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [grande, cerrarGrande]);
 
-  // C-271: las fuentes que usan las capas se cargan al elegirlas; cuando llegan, se vuelve a dibujar
   const fuentesUsadas = current ? [...new Set(current.capas.map((c) => (c.tipo === 'texto' ? c.fuente : STICKERS[c.sticker]?.texto?.fuente ?? 'montserrat')))].sort().join(',') : '';
   useEffect(() => {
     if (!fuentesUsadas) return;
@@ -367,14 +393,12 @@ export default function Studio({ id }: { id: string }) {
     };
   }, [fuentesUsadas, drawStatic]);
 
-  // Imagen fija cada vez que cambia algo (si no se está reproduciendo la animación)
   useEffect(() => {
     if (playing) return;
     const frame = requestAnimationFrame(drawStatic);
     return () => cancelAnimationFrame(frame);
-  }, [current, brand, safe, tempImages, playing, drawStatic, currentCode, tiempo]);
+  }, [current, brand, safe, tempImages, playing, drawStatic, currentCode, tiempo, mobileTab]);
 
-  // Animación en la vista previa, en bucle
   useEffect(() => {
     if (!playing) return;
     let frame = 0;
@@ -396,7 +420,6 @@ export default function Studio({ id }: { id: string }) {
   }, [playing]);
 
   const replay = () => reproducirDesde(0);
-  /** C-273: reproduce desde ese segundo (null = detener). Mientras se reproduce no hay segundo fijo */
   const reproducirDesde = (desde: number | null) => {
     if (desde === null) {
       setPlaying(false);
@@ -415,7 +438,6 @@ export default function Studio({ id }: { id: string }) {
     currentIdRef.current = currentId;
   });
 
-  /** Foto pegada, arrastrada o elegida: se ve al instante y se sube a la tienda */
   const onFile = useCallback(
     async (index: number, file: File) => {
       if (!file.type.startsWith('image/')) {
@@ -444,7 +466,6 @@ export default function Studio({ id }: { id: string }) {
     [currentId, update],
   );
 
-  // Ctrl+V en cualquier parte del estudio pega la foto en el producto marcado
   useEffect(() => {
     const onPaste = (e: ClipboardEvent) => {
       const f = scene.current.current;
@@ -466,7 +487,6 @@ export default function Studio({ id }: { id: string }) {
     return () => document.removeEventListener('paste', onPaste);
   }, [activeSlot, onFile]);
 
-  // Ctrl+Z deshace y Ctrl+Mayús+Z (o Ctrl+Y) rehace, en todo el estudio
   const { undo, redo } = studio;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -484,8 +504,9 @@ export default function Studio({ id }: { id: string }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [undo, redo]);
 
-  // C-270: las capas. Lo que se calcula al azar (el id) se elige antes de `update`, para que el cambio sea el mismo
-  // aunque React lo corra dos veces
+  const format = current?.format ?? 'story';
+  const alto = formatHeight(format);
+
   const capas: AccionesCapas = {
     agregar: (estilo: EstiloCapa) => {
       if (!current || !puedeAgregarCapa(current.capas)) return;
@@ -514,14 +535,36 @@ export default function Studio({ id }: { id: string }) {
       setCapaSel(nid);
     },
     orden: (cid: string, paso: 1 | -1) => update((f) => ({ ...f, capas: moverCapa(f.capas, cid, paso) })),
+    soltarPieza: (piezaId: string, texto: string) => {
+      if (!current || !puedeAgregarCapa(current.capas)) return;
+      const caja = cajasPiezas.find((c) => c.id === piezaId);
+      const pos = caja ? { x: caja.cx / W, y: caja.cy / alto } : undefined;
+      const nueva = capaDesdePieza(piezaId, texto, current.capas, pos);
+      update((f) => ({
+        ...f,
+        piezasOcultas: f.piezasOcultas.includes(piezaId) ? f.piezasOcultas : [...f.piezasOcultas, piezaId],
+        capas: [...f.capas, nueva],
+      }));
+      setCapaSel(nueva.id);
+      setEnfocar((n) => n + 1);
+    },
+    devolverPieza: (piezaId: string) => {
+      if (!current) return;
+      const quitadas = new Set(current.capas.filter((c) => c.tipo === 'texto' && c.origenPieza === piezaId).map((c) => c.id));
+      update((f) => ({
+        ...f,
+        piezasOcultas: f.piezasOcultas.filter((id) => id !== piezaId),
+        capas: f.capas.filter((c) => !(c.tipo === 'texto' && c.origenPieza === piezaId)),
+      }));
+      if (capaSel && quitadas.has(capaSel)) setCapaSel(null);
+    },
   };
-  /** Elegir una capa tocándola en la vista previa lleva a su paso, con lo suyo a la vista */
+
   const elegirCapa = (cid: string | null) => {
     setCapaSel(cid);
     if (cid && step !== 4 && step !== 5) goStep(4);
   };
 
-  /** Bloquea la vista previa mientras se exporta y la devuelve al terminar */
   const exclusive = async (fn: () => Promise<void>) => {
     if (busyRef.current) return;
     busyRef.current = true;
@@ -553,22 +596,15 @@ export default function Studio({ id }: { id: string }) {
     return blob;
   };
 
-  /** Anota los precios de esta descarga: si cambian en la tienda después, la lista avisa */
   const markCurrentExported = async () => {
     const f = flyers.find((x) => x.id === currentId);
     if (f) await studio.markExported([f]);
   };
 
-  // C-116: una sola revisión para el paso Publicar, la lista del inicio y cada descarga
   const checks = current ? flyerChecks(current, { src: productSrc, live: studio.live, coupons: studio.coupons, store: studio.store, text: textIssues }) : [];
-  /** Revisa antes de descargar: lo incompleto lleva a su paso, los avisos se confirman */
   const ready = async () => !!current && (await gate(checks, goStep));
 
-  // C-295: el final (Terminada.tsx). Al sacar la imagen o el video se ve la pantalla de "lista", con lo que se hace con
-  // ella: compartir, descargar, Telegram, copiar el texto y el enlace, u otra historia. Antes (C-287) una ventana
-  // preguntaba a dónde iba antes de armarla, y después solo quedaba un aviso
   const [fin, setFin] = useState<Final | null>(null);
-  // Desde cuándo está abierta esta historia en el editor, para "Lista en 2:14"
   const abiertaDesde = useRef<{ id: string | null; desde: number }>({ id: null, desde: 0 });
   useEffect(() => {
     if (currentId && abiertaDesde.current.id !== currentId) abiertaDesde.current = { id: currentId, desde: Date.now() };
@@ -579,25 +615,6 @@ export default function Studio({ id }: { id: string }) {
     setFin(null);
   };
 
-  /** Cuánto tardó (solo la primera vez que se saca, y si fue en menos de una hora) y si es el mejor tiempo */
-  const medirTiempo = (primera: boolean, id: string | null): { tiempo: number | null; record: boolean } => {
-    if (!primera || !id || abiertaDesde.current.id !== id) return { tiempo: null, record: false };
-    const tiempo = (Date.now() - abiertaDesde.current.desde) / 1000;
-    if (tiempo > 3600) return { tiempo: null, record: false };
-    let record = false;
-    try {
-      const antes = Number(localStorage.getItem(MEJOR_KEY)) || 0;
-      if (!antes || tiempo < antes) {
-        record = antes > 0;
-        localStorage.setItem(MEJOR_KEY, String(Math.round(tiempo)));
-      }
-    } catch {
-      // Sin almacenamiento: no se recuerda el mejor tiempo
-    }
-    return { tiempo, record };
-  };
-
-  /** Cuántas historias se sacaron esta semana (desde el lunes), contando la que se acaba de sacar */
   const deLaSemana = (id: string | null) => {
     const lunes = new Date();
     lunes.setHours(0, 0, 0, 0);
@@ -619,27 +636,21 @@ export default function Studio({ id }: { id: string }) {
     await loadStudioFonts(current);
     await images.current.whenReady(flyerImageSources(current, brand, productSrc));
     const dur = duracionDe(current);
-    const epoch = Date.now();
+    const epoch = ahoraEpoch();
     const r = renderer.current;
     let avance = 0;
     const dibujar = (t: number) => {
       r.draw(current, brand, { preview: false, t, epoch, code: currentCode, navidad });
-      // C-295: lo que va del video, cada 2 % (también cuando el navegador lo graba en tiempo real, que no avisaba nada)
       const f = Math.min(1, t / dur);
       if (f - avance >= 0.02) {
         avance = f;
         alAvanzar(f);
       }
     };
-    // C-295: la vista previa está dibujada del tamaño en que se ve; el primer cuadro deja el lienzo en Full HD antes de que
-    // el grabador lea su tamaño
     dibujar(0);
-    // C-295: la pantalla encendida mientras se arma (si se apaga, el navegador frena el dibujo y el video se corta)
     const llave = await navigator.wakeLock?.request('screen').catch(() => null);
     let video: VideoGrabado;
     try {
-      // C-286: cuadro por cuadro, en Full HD a 60 cuadros (antes, en tiempo real: el MP4 salía en trozos y el teléfono
-      // lo cortaba en 3 s). Tarda unos segundos más, y el final muestra cuánto falta
       video = await grabarVideo(canvasRef.current, dibujar, dur, { fps: 60 });
     } finally {
       void llave?.release().catch(() => undefined);
@@ -651,16 +662,15 @@ export default function Studio({ id }: { id: string }) {
     return { blob: video.blob, nombre: `${fileBase(current)}.${video.extension}`, url: URL.createObjectURL(video.blob), segundos: video.segundos, ancho: video.ancho, alto: video.alto, nota };
   };
 
-  /** Revisa, arma la imagen o el video y muestra el final. Si falla, el final se cierra y el aviso dice qué pasó */
   const terminar = async (tipo: 'imagen' | 'video') => {
     if (!current || busyRef.current || !(await ready())) return;
     const primera = !current.exported.at;
-    const id = currentId;
+    const fid = currentId;
     let poster: string | null = null;
     try {
       poster = canvasRef.current?.toDataURL('image/jpeg', 0.85) ?? null;
     } catch {
-      // Sin la vista del momento: el anillo va sobre el fondo
+      // Sin póster
     }
     setFin({ tipo, fase: 'armando', progreso: 0, poster, archivo: null, tiempo: null, record: false, semana: 0 });
     const salida: { archivo: ArchivoListo | null } = { archivo: null };
@@ -674,14 +684,13 @@ export default function Studio({ id }: { id: string }) {
       setFin(null);
       return;
     }
-    const marca = medirTiempo(primera, id);
-    setFin((f) => (f ? { ...f, fase: 'lista', progreso: 1, archivo, ...marca, semana: deLaSemana(id) } : f));
+    const marca = medirTiempoFinal(primera, fid, abiertaDesde.current);
+    setFin((f) => (f ? { ...f, fase: 'lista', progreso: 1, archivo, ...marca, semana: deLaSemana(fid) } : f));
   };
 
-  /** "Otra igual": una copia de esta historia, en el primer paso, para cambiarle el producto */
   const otraIgual = async () => {
     cerrarFin();
-    setGrande(false);
+    cerrarGrande();
     const copy = await studio.duplicate();
     if (copy) router.push(`/admin/studio/${copy.id}?paso=1`);
   };
@@ -717,142 +726,191 @@ export default function Studio({ id }: { id: string }) {
   }
 
   const miss = current ? missingImages(current, productSrc) : [];
-  const format = current?.format ?? 'story';
-  const alto = formatHeight(format);
   const enlace = current && currentCode ? qrUrlFor(current, brand, currentCode) : '';
-  const abrirGrande = () => {
-    setPlaying(false);
-    setGrande(true);
-  };
-  /** En pantalla completa, agregar algo abre la hoja: el texto se escribe ahí */
-  const agregarEnGrande = (estilo: EstiloCapa) => {
-    setHojaAbierta(true);
-    capas.agregar(estilo);
-  };
+  const paso1Ok = current ? stepDone(1, current, productSrc) : false;
+  const bloqueos = checks.filter((c) => c.level === 'block');
+  const tieneBloqueos = bloqueos.length > 0;
+  const hayCambiosPostExport = current ? hasChangesSinceExport(current) : false;
+  const primerFaltante = current ? (contentProblems(current)[0] ?? bloqueos[0]?.text ?? '') : '';
 
-  // C-270: la ruta de pasos (components/admin/Pasos): hecho, lo elegido en una línea, y todos se pueden tocar
   const pasos: Paso[] = current
-    ? STEPS.map(([k, titulo, icono]) => {
+    ? activeStepNums.map((k) => {
+        const [, titulo, icono] = STEPS.find(([s]) => s === k)!;
         const n = current.capas.length;
-        const hecho = k === 1 || k === 2 ? stepDone(k, current, productSrc) : k === PASO_PUBLICAR ? !!current.exported.at : vistos.includes(k) || (k === 4 && n > 0);
+        const disponible = k === 1 ? true : k === PASO_PUBLICAR ? paso1Ok && !tieneBloqueos : paso1Ok;
+        const hecho =
+          k === 1 ? paso1Ok
+          : k === 2 ? stepDone(2, current, productSrc)
+          : k === 3 ? vistos.includes(3) || Boolean(current.bg)
+          : k === 4 ? vistos.includes(4) || n > 0
+          : k === 5 ? vistos.includes(5) || current.anim !== 'entrada'
+          : Boolean(current.exported.at) && !hayCambiosPostExport && !tieneBloqueos && !checks.some((c) => c.kind === 'redownload');
         const resumen =
           k === 1 ? (current.products[0]?.title && TEMPLATES[current.template].n ? current.products[0].title : TEMPLATES[current.template].label)
           : k === 2 ? (miss.length ? `Falta${miss.length > 1 ? 'n' : ''} ${miss.length} foto${miss.length > 1 ? 's' : ''}` : requiredPhotos(current.template) ? 'Fotos listas' : 'Sin fotos de producto')
           : k === 3 ? `${BACKGROUNDS[bgFor(current)]} · ${FORMATS[current.format].short}`
           : k === 4 ? (n ? `${n} pieza${n > 1 ? 's' : ''}` : 'Opcional')
           : k === 5 ? ANIMATIONS[current.anim]
-          : current.exported.at ? 'Descargada' : 'Revisar y descargar';
-        return { titulo, icono, hecho, resumen, disponible: true };
+          : tieneBloqueos ? 'Faltan datos'
+          : hayCambiosPostExport ? 'Cambios nuevos'
+          : checks.some((c) => c.kind === 'redownload') ? 'Actualizar imagen'
+          : current.exported.at ? 'Descargada'
+          : 'Revisar y descargar';
+        return { titulo, icono, hecho, resumen, disponible };
       })
     : [];
 
-  // C-295: la misma vista previa (el mismo canvas: no se vuelve a crear) va en su lugar o, en pantalla completa, en el
-  // espacio libre entre la barra de arriba y la hoja de abajo. Sobre el lienzo no hay menú del navegador ni selección
+  const siguientePasoNum = activeStepNums[activeIdx + 1] ?? null;
+  const siguienteDisponible = siguientePasoNum !== null ? Boolean(pasos[activeIdx + 1]?.disponible) : false;
+  const capaActivaObj = current && capaSel ? current.capas.find((c) => c.id === capaSel) ?? null : null;
+  const idxCapaActiva = current && capaActivaObj ? current.capas.findIndex((c) => c.id === capaActivaObj.id) : -1;
+  const solapadas = (() => {
+    if (!current || !capaActivaObj) return [] as CajaCapa[];
+    const caja = cajas.find((x) => x.id === capaActivaObj.id);
+    if (!caja) return [] as CajaCapa[];
+    return cajas.filter((x) => {
+      const c = current.capas.find((l) => l.id === x.id);
+      return c && !c.oculta && cajasSolapan(x, caja);
+    });
+  })();
+  const elegirDebajo = () => {
+    if (!capaActivaObj || solapadas.length < 2) return;
+    const pos = solapadas.findIndex((c) => c.id === capaActivaObj.id);
+    const next = solapadas[(pos - 1 + solapadas.length) % solapadas.length];
+    if (next) setCapaSel(next.id);
+  };
+
   const preview = (
     <div
       className={
         grande
-          ? 'flex min-h-0 flex-1 items-center justify-center px-3 py-2 [container-type:size]'
-          : 'flex flex-col items-center gap-2 bg-white pb-2 max-lg:-mx-3 max-lg:border-b max-lg:border-line max-lg:px-3 max-sm:pt-1 sm:max-lg:-mx-4 sm:max-lg:px-4 lg:gap-3 lg:pb-0'
+          ? 'flex min-h-0 flex-1 flex-col items-center justify-center px-3 py-1'
+          : 'flex flex-col items-center gap-2 bg-white pb-2 lg:gap-3 lg:pb-0'
       }
     >
-      <div className={`relative select-none [-webkit-touch-callout:none] ${grande ? PREVIEW_GRANDE[format] : `w-full ${PREVIEW_CLASS[format]} ${bigPreview ? '' : PREVIEW_SMALL[format]} lg:max-w-none`}`}>
-        <canvas
-          ref={canvasRef}
-          width={W}
-          height={H}
-          role="img"
-          aria-label={current ? `Vista previa de ${current.name}` : 'Vista previa'}
-          className={`block h-auto w-full bg-white ${grande ? 'rounded-lg' : 'rounded-md shadow-lg'}`}
-        />
-        {current && (
-          <Lienzo
-            canvasRef={canvasRef}
-            alto={alto}
-            capas={current.capas}
-            cajas={cajas}
-            sel={capaSel}
-            activo={!playing && !busy && tiempo === null}
-            historia={format === 'story'}
-            onSel={elegirCapa}
-            onEmpezar={() => {
-              gestoNuevo.current = true;
-            }}
-            onCambiar={(cid, cambio) => {
-              update((f) => ({ ...f, capas: cambiarCapa(f.capas, cid, cambio) }), { history: gestoNuevo.current });
-              gestoNuevo.current = false;
-            }}
-            onBorrar={capas.borrar}
-            onDuplicar={capas.duplicar}
-            onOrden={capas.orden}
-            onEditar={(cid) => {
-              elegirCapa(cid);
-              setEnfocar((n) => n + 1);
-            }}
-            piezas={cajasPiezas}
-            corrimientos={current.piezas ?? {}}
-            onMoverPieza={(pid, dx, dy) => {
-              update((f) => ({ ...f, piezas: { ...(f.piezas ?? {}), [pid]: { dx, dy } } }), { history: gestoNuevo.current });
-              gestoNuevo.current = false;
-            }}
-            onVolverPieza={(pid) => {
-              update((f) => {
-                const resto = { ...(f.piezas ?? {}) };
-                delete resto[pid];
-                return { ...f, piezas: resto };
-              });
-            }}
+      {/* En pantalla completa móvil, la barra de acciones va anclada arriba del lienzo para nunca solapar la hoja */}
+      {grande && current && (
+        <div className="mb-1.5 flex shrink-0 max-w-full flex-col items-center gap-1">
+          {capaActivaObj ? (
+            <>
+              <div role="toolbar" aria-label="Acciones de la pieza elegida" className="flex flex-wrap items-center justify-center gap-1 rounded-xl bg-white p-1 text-ink shadow-md">
+                <button type="button" onClick={() => capas.duplicar(capaActivaObj.id)} className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-brand-50 hover:text-brand-600" aria-label="Duplicar">
+                  <IconoCopiar className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button type="button" onClick={() => capas.orden(capaActivaObj.id, 1)} disabled={idxCapaActiva === current.capas.length - 1} className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-brand-50 hover:text-brand-600 disabled:opacity-35" aria-label="Subir capa">
+                  <IconoFlechaArriba className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button type="button" onClick={() => capas.orden(capaActivaObj.id, -1)} disabled={idxCapaActiva <= 0} className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-brand-50 hover:text-brand-600 disabled:opacity-35" aria-label="Bajar capa">
+                  <IconoFlechaAbajo className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button type="button" onClick={() => capas.cambiar(capaActivaObj.id, { bloqueada: !capaActivaObj.bloqueada })} aria-pressed={capaActivaObj.bloqueada} className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-brand-50 hover:text-brand-600" aria-label={capaActivaObj.bloqueada ? 'Desbloquear' : 'Bloquear'}>
+                  {capaActivaObj.bloqueada ? <IconoCandado className="h-4 w-4" aria-hidden="true" /> : <IconoAbrirCandado className="h-4 w-4" aria-hidden="true" />}
+                </button>
+                {solapadas.length > 1 && (
+                  <button type="button" onClick={elegirDebajo} className="inline-flex h-10 items-center rounded-lg px-2.5 text-xs font-semibold text-brand-700 hover:bg-brand-50">
+                    Debajo
+                  </button>
+                )}
+                <button type="button" aria-pressed={nudgeOpen} onClick={() => setNudgeOpen((v) => !v)} className={`inline-flex h-10 items-center rounded-lg px-2.5 text-xs font-semibold ${nudgeOpen ? 'bg-brand-500 text-white' : 'hover:bg-brand-50 hover:text-brand-600'}`}>
+                  1 px
+                </button>
+                <button type="button" onClick={() => capas.borrar(capaActivaObj.id)} className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-deal hover:bg-deal-bg" aria-label="Borrar">
+                  <IconoEliminar className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+              {nudgeOpen && (
+                <div role="group" aria-label="Mover 1 px" className="flex items-center gap-1 rounded-xl bg-white p-1 text-ink shadow-md">
+                  <button type="button" onClick={() => capas.cambiar(capaActivaObj.id, { x: Math.max(0, capaActivaObj.x - 1 / W) })} className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-brand-50" aria-label="Izquierda 1 px"><IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /></button>
+                  <button type="button" onClick={() => capas.cambiar(capaActivaObj.id, { y: Math.max(0, capaActivaObj.y - 1 / alto) })} className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-brand-50" aria-label="Subir 1 px"><IconoFlechaArriba className="h-4 w-4" aria-hidden="true" /></button>
+                  <button type="button" onClick={() => capas.cambiar(capaActivaObj.id, { y: Math.min(1, capaActivaObj.y + 1 / alto) })} className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-brand-50" aria-label="Bajar 1 px"><IconoFlechaAbajo className="h-4 w-4" aria-hidden="true" /></button>
+                  <button type="button" onClick={() => capas.cambiar(capaActivaObj.id, { x: Math.min(1, capaActivaObj.x + 1 / W) })} className="inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-brand-50" aria-label="Derecha 1 px"><IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" /></button>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="px-2 text-center text-xs text-white/80">
+              Toca una pieza para moverla · doble toque en un texto para escribir
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className={grande ? 'flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]' : 'flex w-full flex-col items-center'}>
+        <div className={`relative min-h-0 select-none [-webkit-touch-callout:none] ${grande ? PREVIEW_GRANDE[format] : `w-full ${PREVIEW_CLASS[format]} lg:max-w-none`}`}>
+          <canvas
+            ref={canvasRef}
+            width={W}
+            height={H}
+            role="img"
+            aria-label={current ? `Vista previa de ${current.name}` : 'Vista previa'}
+            className={`block h-auto w-full bg-white ${grande ? 'rounded-lg' : 'rounded-md shadow-lg'}`}
           />
-        )}
-        {current && !grande && (
-          <button
-            type="button"
-            onClick={abrirGrande}
-            aria-label="Editar en pantalla completa"
-            title="Pantalla completa"
-            className="absolute bottom-1.5 right-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-ink/65 text-white shadow-md before:absolute before:-inset-1.5 before:content-[''] hover:bg-ink/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 lg:hidden"
-          >
-            <IconoAgrandar className="h-4 w-4" aria-hidden="true" />
-          </button>
-        )}
+          {current && (
+            <Lienzo
+              canvasRef={canvasRef}
+              alto={alto}
+              capas={current.capas}
+              cajas={cajas}
+              sel={capaSel}
+              activo={!playing && !busy && tiempo === null}
+              historia={format === 'story'}
+              barraExterna={grande}
+              onSel={elegirCapa}
+              onEmpezar={() => {
+                gestoNuevo.current = true;
+              }}
+              onCambiar={(cid, cambio) => {
+                update((f) => ({ ...f, capas: cambiarCapa(f.capas, cid, cambio) }), { history: gestoNuevo.current });
+                gestoNuevo.current = false;
+              }}
+              onBorrar={capas.borrar}
+              onDuplicar={capas.duplicar}
+              onOrden={capas.orden}
+              onEditar={(cid) => {
+                elegirCapa(cid);
+                if (grande) setHojaAbierta(true);
+                setEnfocar((n) => n + 1);
+              }}
+              piezas={cajasPiezas}
+              corrimientos={current.piezas ?? {}}
+              onMoverPieza={(pid, dx, dy) => {
+                update((f) => ({ ...f, piezas: { ...(f.piezas ?? {}), [pid]: { dx, dy } } }), { history: gestoNuevo.current });
+                gestoNuevo.current = false;
+              }}
+              onVolverPieza={(pid) => {
+                update((f) => {
+                  const resto = { ...(f.piezas ?? {}) };
+                  delete resto[pid];
+                  return { ...f, piezas: resto };
+                });
+              }}
+            />
+          )}
+        </div>
       </div>
       {current && !grande && (
         <div className="flex flex-wrap justify-center gap-2">
           <button type="button" aria-pressed={playing} onClick={() => setPlaying((p) => !p)} className={toggleButton(playing)} aria-label={playing ? 'Detener la animación' : 'Ver la animación'}>
             {playing ? <IconoPausa className="h-4 w-4 sm:mr-1.5" aria-hidden="true" /> : <IconoPlay className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />}
-            <span className="max-sm:sr-only">{playing ? 'Detener' : 'Ver animación'}</span>
+            <span>{playing ? 'Detener' : 'Ver animación'}</span>
           </button>
-          <button type="button" onClick={() => capas.agregar('titulo')} disabled={!puedeAgregarCapa(current.capas)} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 text-sm font-semibold text-brand-700 hover:bg-brand-100 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500">
-            <IconoMas className="h-4 w-4" aria-hidden="true" />
-            Título
+          <button type="button" onClick={abrirGrande} className={`${adminPrimaryButton} h-11 sm:h-9 px-4 lg:hidden`}>
+            <IconoMover className="h-4 w-4" aria-hidden="true" />
+            Mover en lienzo
           </button>
-          <button type="button" onClick={() => capas.agregar('subtitulo')} disabled={!puedeAgregarCapa(current.capas)} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 text-sm font-semibold text-brand-700 hover:bg-brand-100 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500">
-            <IconoMas className="h-4 w-4" aria-hidden="true" />
-            Subtítulo
+          <button type="button" onClick={() => void terminar('imagen')} disabled={busy} className={`${adminSecondaryButton} h-11 sm:h-9 px-4`}>
+            <IconoDescargar className="h-4 w-4" aria-hidden="true" />
+            Sacar imagen
           </button>
         </div>
       )}
     </div>
   );
 
-  /** Lo de la vista previa que no queda fijo en el teléfono */
   const previewExtras = current && (
     <div className="flex flex-col items-center gap-2">
-      <div className="flex flex-wrap justify-center gap-2">
-        <button type="button" onClick={abrirGrande} className={`${adminPrimaryButton} h-9 px-3 lg:hidden`}>
-          <IconoAgrandar className="h-4 w-4" aria-hidden="true" />
-          Editar en grande
-        </button>
-        <button type="button" aria-pressed={bigPreview} onClick={() => setBigPreview((b) => !b)} className={`${toggleButton(bigPreview)} lg:hidden`}>
-          {bigPreview ? 'Achicar la vista previa' : 'Agrandar la vista previa'}
-        </button>
-        <button type="button" onClick={() => void terminar('imagen')} disabled={busy} className={`${adminSecondaryButton} h-9 px-3`}>
-          <IconoDescargar className="h-4 w-4" aria-hidden="true" />
-          Imagen
-        </button>
-      </div>
       {format === 'story' && (
-        <label className="flex items-center gap-2 text-sm text-ink-soft">
+        <label className="flex min-h-11 sm:min-h-0 items-center gap-2 text-sm text-ink-soft">
           <input
             type="checkbox"
             checked={safe}
@@ -861,7 +919,7 @@ export default function Studio({ id }: { id: string }) {
               try {
                 localStorage.setItem(SAFE_KEY, e.target.checked ? '1' : '0');
               } catch {
-                // Sin almacenamiento: no se recuerda
+                // Sin almacenamiento
               }
             }}
             className="h-4 w-4 accent-brand-500"
@@ -875,14 +933,23 @@ export default function Studio({ id }: { id: string }) {
     </div>
   );
 
-  // C-295: lo del paso elegido, en su columna o (en pantalla completa) en la hoja de abajo: nunca en los dos a la vez
   const panelPaso = current && (
     <>
       {step === 1 && <StepContent studio={studio} activeSlot={activeSlot} setActiveSlot={setActiveSlot} />}
       {step === 2 && <StepPhoto studio={studio} productSrc={productSrc} onFile={(i, f) => void onFile(i, f)} activeSlot={activeSlot} setActiveSlot={setActiveSlot} />}
       {step === 3 && <StepDesign studio={studio} onAnim={replay} drawThumb={drawThumb} imgTick={imgTick} />}
       {step === 4 && (
-        <StepCapas studio={studio} sel={capaSel} onSel={setCapaSel} acciones={capas} textoRef={textoCapaRef} pedirGaleria={pedirGaleria} onGaleriaVista={() => setPedirGaleria(false)} />
+        <StepCapas
+          studio={studio}
+          sel={capaSel}
+          onSel={setCapaSel}
+          acciones={capas}
+          textoRef={textoCapaRef}
+          pedirGaleria={pedirGaleria}
+          onGaleriaVista={() => setPedirGaleria(false)}
+          enfocar={enfocar}
+          onMoverEnLienzo={abrirGrande}
+        />
       )}
       {step === 5 && (
         <StepAnimacion
@@ -914,13 +981,11 @@ export default function Studio({ id }: { id: string }) {
     </>
   );
 
-  // C-295: la pantalla completa del teléfono. Arriba: Listo, deshacer, rehacer y ver la animación. Abajo, una hoja con el
-  // paso (Paso N de 6, con sus flechas), lo que se agrega más seguido y, al subirla, todo lo del paso
   const barraGrande = current && (
     <div className="flex min-h-14 shrink-0 items-center gap-1 px-2 pt-[env(safe-area-inset-top)] text-white">
       <button
         type="button"
-        onClick={() => setGrande(false)}
+        onClick={cerrarGrande}
         className="inline-flex h-11 items-center gap-1.5 rounded-full bg-white px-4 text-sm font-bold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
         <IconoCheck className="h-4 w-4" aria-hidden="true" />
@@ -947,7 +1012,8 @@ export default function Studio({ id }: { id: string }) {
       </button>
     </div>
   );
-  const herramienta = 'flex h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl border border-brand-200 bg-brand-50 px-1 text-xs font-semibold text-brand-700 transition-transform active:scale-95 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500';
+
+  const anteriorPasoNum = activeStepNums[activeIdx - 1] ?? null;
   const hojaGrande = current && (
     <div className="shrink-0 rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)] text-ink shadow-[0_-10px_30px_rgb(0_0_0/0.3)]">
       <button type="button" onClick={() => setHojaAbierta((v) => !v)} aria-expanded={hojaAbierta} aria-controls="studio-hoja" className="flex w-full justify-center pb-1 pt-2">
@@ -955,53 +1021,70 @@ export default function Studio({ id }: { id: string }) {
         <span className="sr-only">{hojaAbierta ? 'Bajar el panel del paso' : 'Subir el panel del paso'}</span>
       </button>
       <div className="flex items-center gap-1 px-2">
-        <button type="button" onClick={() => goStep(step - 1)} disabled={step === 1} aria-label={step > 1 ? `Paso anterior: ${STEPS[step - 2][1]}` : 'Es el primer paso'} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-soft hover:bg-surface disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-brand-500">
+        <button type="button" onClick={() => anteriorPasoNum && goStep(anteriorPasoNum)} disabled={!anteriorPasoNum} aria-label="Paso anterior" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-soft hover:bg-surface disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-brand-500">
           <IconoChevronIzquierda className="h-5 w-5" aria-hidden="true" />
         </button>
         <button type="button" onClick={() => setHojaAbierta((v) => !v)} aria-expanded={hojaAbierta} aria-controls="studio-hoja" className="min-w-0 flex-1 rounded-lg py-1 text-center focus-visible:outline-2 focus-visible:outline-brand-500">
-          <span className="block text-xs text-muted">Paso {step} de {STEPS.length}</span>
-          <span className="block truncate text-sm font-bold text-ink">{STEPS[step - 1][1]}</span>
+          <span className="block text-xs text-muted">Paso {activeIdx + 1} de {activeStepNums.length}</span>
+          <span className="block truncate text-sm font-bold text-ink">{STEPS.find(([s]) => s === step)?.[1]}</span>
         </button>
-        <button type="button" onClick={() => goStep(step + 1)} disabled={step === STEPS.length} aria-label={step < STEPS.length ? `Siguiente paso: ${STEPS[step][1]}` : 'Es el último paso'} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-soft hover:bg-surface disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-brand-500">
+        <button type="button" onClick={() => siguientePasoNum && siguienteDisponible && goStep(siguientePasoNum)} disabled={!siguientePasoNum || !siguienteDisponible} aria-label="Siguiente paso" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-soft hover:bg-surface disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-brand-500">
           <IconoChevronDerecha className="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
-      <div className="grid grid-cols-4 gap-2 px-3 py-2">
-        <button type="button" onClick={() => agregarEnGrande('titulo')} disabled={!puedeAgregarCapa(current.capas)} className={herramienta}>
-          <IconoTexto className="h-5 w-5" aria-hidden="true" />
-          + Título
-        </button>
-        <button type="button" onClick={() => agregarEnGrande('subtitulo')} disabled={!puedeAgregarCapa(current.capas)} className={herramienta}>
-          <IconoMas className="h-5 w-5" aria-hidden="true" />
-          + Subtítulo
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (step !== 4) goStep(4);
-            setHojaAbierta(true);
-            setPedirGaleria(true);
-          }}
-          disabled={!puedeAgregarCapa(current.capas)}
-          className={herramienta}
-        >
-          <IconoEstrella className="h-5 w-5" aria-hidden="true" />
-          + Sticker
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            goStep(PASO_PUBLICAR);
-            setHojaAbierta(true);
-          }}
-          className={`${herramienta} border-brand-500 bg-brand-500 text-white`}
-        >
-          <IconoCompartir className="h-5 w-5" aria-hidden="true" />
-          Terminar
-        </button>
+
+      {/* Acciones contextuales según el paso actual (sin repetir botones fijos en todos los pasos) */}
+      <div className="grid grid-cols-2 gap-2 px-3 py-2">
+        {step === 4 ? (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setHojaAbierta(true);
+                setPedirGaleria(false);
+              }}
+              className={adminSecondaryButton}
+            >
+              <IconoMas className="h-4 w-4" aria-hidden="true" />
+              Piezas
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setHojaAbierta((v) => (capaActivaObj ? true : !v));
+                if (capaActivaObj?.tipo === 'texto') setEnfocar((n) => n + 1);
+              }}
+              className={adminPrimaryButton}
+            >
+              {capaActivaObj ? 'Editar pieza' : 'Opciones'}
+            </button>
+          </>
+        ) : (
+          <>
+            <button type="button" onClick={() => setHojaAbierta((v) => !v)} className={adminSecondaryButton}>
+              {hojaAbierta ? 'Ocultar opciones' : `Editar ${STEPS.find(([s]) => s === step)?.[1]}`}
+            </button>
+            {siguientePasoNum ? (
+              <button
+                type="button"
+                disabled={!siguienteDisponible}
+                onClick={() => siguienteDisponible && goStep(siguientePasoNum)}
+                className={adminPrimaryButton}
+              >
+                Siguiente
+              </button>
+            ) : (
+              <button type="button" disabled={busy} onClick={() => void terminar('imagen')} className={adminPrimaryButton}>
+                <IconoDescargar className="h-4 w-4" aria-hidden="true" />
+                Imagen
+              </button>
+            )}
+          </>
+        )}
       </div>
+
       {hojaAbierta && (
-        <div id="studio-hoja" className="max-h-[44dvh] overflow-y-auto overscroll-contain border-t border-line px-3 pb-4 pt-3">
+        <div id="studio-hoja" className="max-h-[42dvh] overflow-y-auto overscroll-contain border-t border-line px-3 pb-4 pt-3">
           <p className="mb-3 text-sm text-ink-soft">{STEP_HELP[step]}</p>
           {panelPaso}
         </div>
@@ -1009,8 +1092,6 @@ export default function Studio({ id }: { id: string }) {
     </div>
   );
 
-  // C-270, el editor A que eligió el equipo: la ruta de pasos a lo ancho; el paso a la izquierda y la vista previa grande
-  // a la derecha. En el teléfono, la ruta y la vista previa (chica) quedan fijas arriba y el paso se recorre debajo.
   return (
     <div>
       {back}
@@ -1018,7 +1099,6 @@ export default function Studio({ id }: { id: string }) {
         <div className="flex flex-col gap-3">
           {current && (
             <>
-              {/* C-170: quién más tiene abierta esta historia y si la cambiaron mientras tanto */}
               {currentId && <PresenciaEnEditor recurso={`studio:${currentId}`} nombreRecurso="historia" femenino />}
               <div className="flex items-center justify-between gap-2">
                 <h1 className="min-w-0 truncate text-base font-bold text-ink">{current.name || 'Sin nombre'}</h1>
@@ -1029,17 +1109,17 @@ export default function Studio({ id }: { id: string }) {
                     {status === 'error' && <IconoAdvertencia className="h-3.5 w-3.5 text-deal" aria-hidden="true" />}
                     {STATUS_TEXT[status]}
                   </span>
-                  <button type="button" onClick={studio.undo} disabled={!studio.canUndo} className={adminIconButton} aria-label="Deshacer (Ctrl+Z)" title="Deshacer (Ctrl+Z)">
+                  <button type="button" onClick={studio.undo} disabled={!studio.canUndo} className={`${adminIconButton} h-11 w-11 sm:h-9 sm:w-9`} aria-label="Deshacer (Ctrl+Z)" title="Deshacer (Ctrl+Z)">
                     <IconoDeshacer className="h-4 w-4" aria-hidden="true" />
                   </button>
-                  <button type="button" onClick={studio.redo} disabled={!studio.canRedo} className={adminIconButton} aria-label="Rehacer (Ctrl+Mayús+Z)" title="Rehacer (Ctrl+Mayús+Z)">
+                  <button type="button" onClick={studio.redo} disabled={!studio.canRedo} className={`${adminIconButton} h-11 w-11 sm:h-9 sm:w-9`} aria-label="Rehacer (Ctrl+Mayús+Z)" title="Rehacer (Ctrl+Mayús+Z)">
                     <IconoRehacer className="h-4 w-4" aria-hidden="true" />
                   </button>
                   <span className="mx-1 h-6 w-px bg-line" aria-hidden="true" />
-                  <button type="button" onClick={() => void onDuplicate()} className={adminIconButton} aria-label="Duplicar esta historia" title="Duplicar">
+                  <button type="button" onClick={() => void onDuplicate()} className={`${adminIconButton} h-11 w-11 sm:h-9 sm:w-9`} aria-label="Duplicar esta historia" title="Duplicar">
                     <IconoCopiar className="h-4 w-4" aria-hidden="true" />
                   </button>
-                  <button type="button" onClick={() => void onRemove()} className={`${adminIconButton} text-deal hover:bg-deal-bg`} aria-label="Eliminar esta historia" title="Eliminar">
+                  <button type="button" onClick={() => void onRemove()} className={`${adminIconButton} h-11 w-11 text-deal hover:bg-deal-bg sm:h-9 sm:w-9`} aria-label="Eliminar esta historia" title="Eliminar">
                     <IconoEliminar className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </span>
@@ -1048,40 +1128,75 @@ export default function Studio({ id }: { id: string }) {
                 {status === 'saved' && <IconoCheck className="h-3.5 w-3.5 text-success-strong" aria-hidden="true" />}
                 {STATUS_TEXT[status]}
               </span>
-              <div ref={pasosRef} className="sticky top-16 z-[var(--z-sticky)]">
-                <Pasos pasos={pasos} actual={step - 1} onIr={(i) => goStep(i + 1)} etiqueta="Pasos de la historia" />
+
+              {/* Sin doble sticky: Pasos ya incluye sticky top-16 */}
+              <Pasos
+                pasos={pasos}
+                actual={activeIdx}
+                onIr={(i) => goStep(activeStepNums[i] ?? 1)}
+                onAltura={setAltoPasos}
+                etiqueta="Pasos de la historia"
+              />
+
+              {/* Móvil Variante A: selector Editar | Vista previa */}
+              <div className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-surface p-1 lg:hidden" role="tablist" aria-label="Modo del editor móvil">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mobileTab === 'editar'}
+                  onClick={() => setMobileTab('editar')}
+                  className={`min-h-11 rounded-lg px-3 text-sm font-semibold transition-colors ${mobileTab === 'editar' ? 'bg-brand-500 text-white shadow-sm' : 'text-ink-soft hover:text-ink'}`}
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mobileTab === 'preview'}
+                  onClick={() => setMobileTab('preview')}
+                  className={`min-h-11 rounded-lg px-3 text-sm font-semibold transition-colors ${mobileTab === 'preview' ? 'bg-brand-500 text-white shadow-sm' : 'text-ink-soft hover:text-ink'}`}
+                >
+                  Vista previa
+                </button>
               </div>
             </>
           )}
 
           <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
-            <div className="order-2 flex min-w-0 flex-col gap-4 lg:order-1">
+            <div className={`order-2 flex min-w-0 flex-col gap-4 lg:order-1 ${current && !grande && mobileTab === 'preview' ? 'max-lg:hidden' : ''}`}>
               {current ? (
-                <>
-                  <div className="lg:hidden">{previewExtras}</div>
-                  {!grande && (
-                    <>
-                  <p className="text-sm text-ink-soft">
-                    <strong className="text-ink">Paso {step} de {STEPS.length}.</strong> {STEP_HELP[step]}
-                  </p>
-                  {panelPaso}
-                  <div className="flex items-center justify-between gap-2 border-t border-line pt-3">
-                    {step > 1 ? (
-                      <button type="button" onClick={() => goStep(step - 1)} className={adminSecondaryButton}>
-                        Atrás
-                      </button>
-                    ) : (
-                      <span />
-                    )}
-                    {step < STEPS.length && (
-                      <button type="button" onClick={() => goStep(step + 1)} className={adminPrimaryButton}>
-                        Siguiente: {STEPS[step][1]}
-                      </button>
-                    )}
-                  </div>
-                    </>
-                  )}
-                </>
+                !grande && (
+                  <>
+                    <p className="text-sm text-ink-soft">
+                      <strong className="text-ink">Paso {activeIdx + 1} de {activeStepNums.length}.</strong> {STEP_HELP[step]}
+                    </p>
+                    {panelPaso}
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
+                      {anteriorPasoNum ? (
+                        <button type="button" onClick={() => goStep(anteriorPasoNum)} className={adminSecondaryButton}>
+                          Atrás
+                        </button>
+                      ) : (
+                        <span />
+                      )}
+                      {siguientePasoNum && (
+                        <div className="flex flex-col items-end gap-1">
+                          <button
+                            type="button"
+                            disabled={!siguienteDisponible}
+                            onClick={() => siguienteDisponible && goStep(siguientePasoNum)}
+                            className={adminPrimaryButton}
+                          >
+                            Siguiente: {STEPS.find(([s]) => s === siguientePasoNum)?.[1]}
+                          </button>
+                          {!siguienteDisponible && primerFaltante && (
+                            <span className="text-xs font-medium text-deal">{primerFaltante}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )
               ) : (
                 <p className="py-12 text-center text-sm text-muted" aria-busy="true">
                   {loading ? 'Cargando ElectroStudio…' : 'Abriendo la historia…'}
@@ -1089,30 +1204,28 @@ export default function Studio({ id }: { id: string }) {
               )}
             </div>
 
-            {/* La vista previa queda fija debajo de la ruta de pasos mientras se recorre el paso: es la celda de la rejilla la
-                que es sticky (así su recorrido es toda la rejilla). En el teléfono, lo que no es la vista previa va en el panel */}
             <div
               role={grande ? 'region' : undefined}
               aria-label={grande ? 'Editor en pantalla completa' : undefined}
               className={
                 grande
                   ? 'fixed inset-x-0 top-0 z-[var(--z-drawer)] flex h-dvh flex-col overscroll-none bg-ink'
-                  : 'order-1 flex flex-col gap-2 max-lg:sticky max-lg:top-[var(--tope-vista)] max-lg:z-[var(--z-sticky)] lg:sticky lg:top-[calc(var(--tope-vista)+0.75rem)] lg:order-2'
+                  : `order-1 flex flex-col gap-2 lg:sticky lg:top-[calc(var(--tope-vista)+0.75rem)] lg:order-2 ${mobileTab === 'editar' ? 'max-lg:hidden' : ''}`
               }
               style={
                 grande
-                  ? // Lo visible de la pantalla: con el teclado abierto, la hoja queda encima de él y no debajo
-                    { height: vistaAlto ? `${vistaAlto}px` : undefined, top: vistaArriba }
+                  ? { height: vistaAlto ? `${vistaAlto}px` : undefined, top: vistaArriba }
                   : ({ '--tope-vista': `calc(4rem + ${altoPasos}px)` } as CSSProperties)
               }
             >
               {grande && barraGrande}
               {preview}
-              {grande ? hojaGrande : <div className="hidden lg:block">{previewExtras}</div>}
+              {grande ? hojaGrande : previewExtras}
             </div>
           </div>
         </div>
       </section>
+
       {grande && (
         <AsiFunciona
           clave="studio-grande"
@@ -1121,12 +1234,13 @@ export default function Studio({ id }: { id: string }) {
           pasos={[
             { icono: 'mover', texto: 'Un dedo mueve la pieza', accion: 'salta' },
             { icono: 'agrandar', texto: 'Dos dedos la agrandan y la giran', accion: 'gira' },
-            { icono: 'tocar', texto: 'Toca afuera para soltarla' },
+            { icono: 'tocar', texto: 'Doble toque para escribir en un texto' },
           ]}
           boton="Entendido: a editar"
           sinChispa
         />
       )}
+
       {fin && current && (
         <Terminada
           final={fin}
@@ -1148,7 +1262,7 @@ export default function Studio({ id }: { id: string }) {
           }}
           onEscribirTexto={() => {
             cerrarFin();
-            setGrande(false);
+            cerrarGrande();
             goStep(PASO_PUBLICAR);
           }}
         />

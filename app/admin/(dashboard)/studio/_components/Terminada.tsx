@@ -176,7 +176,7 @@ export default function Terminada({ final, formato, texto, enlace, onCerrar, onO
     : enviado === 'enviando' ? 'Mandando…'
       : telegram === null ? 'Revisando el bot…'
         : telegram.disponible ? `Llega a ${chats === 1 ? '1 chat' : `${chats} chats`}, en Full HD`
-          : telegram.motivo ?? 'Se conecta en Notificaciones → Telegram';
+          : telegram.motivo ?? 'Se conecta en Ajustes → Avisos → Telegram';
   const pct = Math.round(final.progreso * 100);
   const vuelta = 2 * Math.PI * 42;
 

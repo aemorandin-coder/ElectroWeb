@@ -10,10 +10,10 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { buildCaption } from '@/lib/studio/caption';
 import { PASO_PUBLICAR, type FlyerCheck } from '@/lib/studio/checks';
 import { formatHeight, qrUrlFor } from '@/lib/studio/engine';
-import { sectionSummary, smallButton } from './ui';
+import { smallButton } from './ui';
 import type { Studio } from './useStudio';
 
-// C-116: cómo se ve cada revisión. Lo que impide descargar, en rojo; los avisos, en ámbar
+// C-116 + G-71: lo que impide descargar en rojo; los avisos en azul claro de acción
 const CHECK_STYLE: Record<FlyerCheck['level'], string> = {
   ok: 'border-line bg-surface text-success-strong',
   warn: avisoAccion,
@@ -35,7 +35,6 @@ export default function StepPublish({ studio, checks, busy, onPng, onVideo, goSt
   const { confirm } = useConfirm();
   if (!current) return null;
   const batches = [...new Set(flyers.map((f) => f.batch).filter(Boolean))];
-  // Enlace con la marca de la historia: lo que entra por aquí (y por el QR) cuenta en Resultados
   const link = currentCode ? qrUrlFor(current, brand, currentCode) : '';
 
   const generate = async () => {
@@ -144,7 +143,7 @@ export default function StepPublish({ studio, checks, busy, onPng, onVideo, goSt
         </div>
         <textarea
           id="caption"
-          rows={8}
+          rows={6}
           value={current.caption}
           onChange={(e) => update((f) => ({ ...f, caption: e.target.value }))}
           placeholder="Descripción, precio y hashtags"
@@ -156,38 +155,36 @@ export default function StepPublish({ studio, checks, busy, onPng, onVideo, goSt
         </button>
       </div>
 
-      <details className="border-t border-line pt-3" open={!!current.date || !!current.batch}>
-        <summary className={sectionSummary}>Fecha, lote y nombre</summary>
-        <div className="mt-3 flex flex-col gap-3">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label htmlFor="f-date" className={adminLabel}>
-                Fecha de publicación
-              </label>
-              <input id="f-date" type="date" value={current.date} onChange={(e) => update((f) => ({ ...f, date: e.target.value }))} className={adminInput()} />
-            </div>
-            <div>
-              <label htmlFor="f-batch" className={adminLabel}>
-                Lote
-              </label>
-              <input id="f-batch" type="text" list="studio-batches" value={current.batch} onChange={(e) => update((f) => ({ ...f, batch: e.target.value }))} placeholder="Ej: Componentes PC" className={adminInput()} />
-              <datalist id="studio-batches">
-                {batches.map((b) => (
-                  <option key={b} value={b} />
-                ))}
-              </datalist>
-            </div>
-          </div>
-          <p className={adminHint}>Con fecha, la historia aparece en la vista de semana; con lote, se descargan juntas.</p>
+      {/* G-71: fecha, lote y nombre visibles sin esconder en un acordeón */}
+      <section aria-label="Planificación y nombre" className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-3">
+        <p className="text-sm font-semibold text-ink">Planificación y organización</p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div>
-            <label htmlFor="f-name" className={adminLabel}>
-              Nombre interno
+            <label htmlFor="f-date" className={adminLabel}>
+              Fecha de publicación
             </label>
-            <input id="f-name" type="text" value={current.name} onChange={(e) => update((f) => ({ ...f, name: e.target.value }))} className={adminInput()} />
+            <input id="f-date" type="date" value={current.date} onChange={(e) => update((f) => ({ ...f, date: e.target.value }))} className={adminInput()} />
+          </div>
+          <div>
+            <label htmlFor="f-batch" className={adminLabel}>
+              Lote
+            </label>
+            <input id="f-batch" type="text" list="studio-batches" value={current.batch} onChange={(e) => update((f) => ({ ...f, batch: e.target.value }))} placeholder="Ej: Componentes PC" className={adminInput()} />
+            <datalist id="studio-batches">
+              {batches.map((b) => (
+                <option key={b} value={b} />
+              ))}
+            </datalist>
           </div>
         </div>
-      </details>
-
+        <p className={adminHint}>Con fecha aparece en la pestaña Semana; con lote se descargan juntas.</p>
+        <div>
+          <label htmlFor="f-name" className={adminLabel}>
+            Nombre interno
+          </label>
+          <input id="f-name" type="text" value={current.name} onChange={(e) => update((f) => ({ ...f, name: e.target.value }))} className={adminInput()} />
+        </div>
+      </section>
     </div>
   );
 }

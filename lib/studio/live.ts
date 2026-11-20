@@ -166,13 +166,58 @@ export function refreshRate(f: StudioFlyerData, store: Pick<StudioStoreInfo, 'ra
   return f.rate === store.rateVES && f.rateDate === date ? f : { ...f, rate: store.rateVES, rateDate: date };
 }
 
-/** Lo que salió en esta descarga: si después cambia en la tienda, la lista avisa */
+/** Huella visual de una historia para detectar si se editó después de sacarla (G-71) */
+export function flyerFingerprint(f: StudioFlyerData): string {
+  const s = JSON.stringify({
+    template: f.template,
+    format: f.format,
+    bg: f.bg,
+    bgPhoto: f.bgPhoto,
+    anim: f.anim,
+    fx: f.fx,
+    accent: f.accent,
+    accent2: f.accent2,
+    heading: f.heading,
+    qr: f.qr,
+    qrUrl: f.qrUrl,
+    offerEnds: f.offerEnds,
+    offerLabel: f.offerLabel,
+    msg: f.msg,
+    coupon: f.coupon,
+    review: f.review,
+    rate: f.rate,
+    rateDate: f.rateDate,
+    products: f.products,
+    chispa: f.chispa,
+    navidad: f.navidad,
+    tramo: f.tramo,
+    capas: f.capas,
+    piezas: f.piezas,
+    piezasOcultas: f.piezasOcultas,
+    duracion: f.duracion,
+    final: f.final,
+    cierreLogo: f.cierreLogo,
+  });
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+export function hasChangesSinceExport(f: StudioFlyerData): boolean {
+  return Boolean(f.exported.at && f.exported.huella && f.exported.huella !== flyerFingerprint(f));
+}
+
+/** Lo que salió en esta descarga: si después cambia en la tienda o se edita, la lista avisa */
 export function exportSnapshot(f: StudioFlyerData): StudioFlyerData['exported'] {
   return {
     at: new Date().toISOString(),
     prices: f.products.slice(0, 3).map((p) => Number(p.price) || 0),
     rate: f.template === 'tasa' ? f.rate : 0,
     coupon: f.template === 'cupon' ? f.coupon.code : '',
+    huella: flyerFingerprint(f),
   };
 }
 

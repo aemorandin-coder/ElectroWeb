@@ -23,6 +23,8 @@ interface Props {
   /** Mientras se reproduce la animación o se exporta, sin asas */
   activo: boolean;
   historia: boolean;
+  /** G-71: en pantalla completa móvil, la barra de acciones va anclada afuera para nunca pisar la hoja */
+  barraExterna?: boolean;
   onSel: (id: string | null) => void;
   onEmpezar: () => void;
   onCambiar: (id: string, cambio: CambioCapa) => void;
@@ -62,7 +64,7 @@ function vibrar() {
   }
 }
 
-export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, historia, onSel, onEmpezar, onCambiar, onBorrar, onDuplicar, onOrden, onEditar, piezas, corrimientos, onMoverPieza, onVolverPieza }: Props) {
+export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, historia, barraExterna = false, onSel, onEmpezar, onCambiar, onBorrar, onDuplicar, onOrden, onEditar, piezas, corrimientos, onMoverPieza, onVolverPieza }: Props) {
   // C-287: el título de la plantilla elegido (las capas tienen su propia elección, `sel`)
   const [piezaSel, setPiezaSel] = useState<string | null>(null);
   const raiz = useRef<HTMLDivElement | null>(null);
@@ -71,6 +73,7 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
   const [k, setK] = useState(0);
   const gesto = useRef<Gesto | null>(null);
   const punteros = useRef(new Map<number, { x: number; y: number }>());
+  const tapTactil = useRef<{ id: string; t: number; x: number; y: number } | null>(null);
   const [guias, setGuias] = useState({ v: false, h: false, zona: false });
   // C-295: con el dedo (o el lápiz), lo que se toca mide al menos 44 px
   const grueso = useDelNavegador(() => window.matchMedia('(pointer: coarse)').matches, false);
@@ -271,6 +274,19 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
     vaciar();
     const g = gesto.current;
     punteros.current.delete(e.pointerId);
+    if (g?.tipo === 'mover' && e.type === 'pointerup' && e.pointerType !== 'mouse') {
+      const dist = Math.hypot(e.clientX - g.x0, e.clientY - g.y0);
+      if (dist < 10) {
+        const ahora = e.timeStamp;
+        const prev = tapTactil.current;
+        if (prev && prev.id === g.id && ahora - prev.t < 350 && Math.hypot(e.clientX - prev.x, e.clientY - prev.y) < 28) {
+          tapTactil.current = null;
+          if (capaDe(g.id)?.tipo === 'texto') onEditar(g.id);
+        } else {
+          tapTactil.current = { id: g.id, t: ahora, x: e.clientX, y: e.clientY };
+        }
+      }
+    }
     if (g?.tipo === 'fondo') {
       if (punteros.current.size > 0) return;
       gesto.current = null;
@@ -436,6 +452,7 @@ export default function Lienzo({ canvasRef, alto, capas, cajas, sel, activo, his
           k={k}
           alto={alto}
           grueso={grueso}
+          barraExterna={barraExterna}
           onTam={(e) => {
             const c = centro(elegida);
             empezar(e, { tipo: 'tam', id: elegida.id, cx: c.x, cy: c.y, d0: Math.hypot(e.clientX - c.x, e.clientY - c.y), tam0: elegida.tam, ancho0: elegida.tipo === 'texto' ? elegida.anchoMax : 0, capa: elegida.tipo });
@@ -480,12 +497,13 @@ function recto(g: number): number {
 // mide desde adentro del borde de 2 px: 10 + 2·8 o 10 + 2·17)
 const ASA = "absolute h-3.5 w-3.5 rounded-full border-2 border-brand-500 bg-white shadow-sm before:absolute before:-inset-2 before:rounded-full before:content-[''] pointer-coarse:before:-inset-[17px]";
 
-function Seleccion({ capa, caja, k, alto, grueso, onTam, onGiro, onBorrar, onDuplicar, onOrden, onBloquear, primera, ultima }: {
+function Seleccion({ capa, caja, k, alto, grueso, barraExterna, onTam, onGiro, onBorrar, onDuplicar, onOrden, onBloquear, primera, ultima }: {
   capa: StudioCapa;
   caja: CajaCapa;
   k: number;
   alto: number;
   grueso: boolean;
+  barraExterna: boolean;
   onTam: (e: PtrEvent<HTMLElement>) => void;
   onGiro: (e: PtrEvent<HTMLElement>) => void;
   onBorrar: () => void;
@@ -500,8 +518,6 @@ function Seleccion({ capa, caja, k, alto, grueso, onTam, onGiro, onBorrar, onDup
   let h = Math.max(min, caja.h * k) + 8;
   let x = capa.x * W * k;
   let y = capa.y * alto * k;
-  // Una pieza más grande que la imagen: el recuadro se recorta al borde (más 10 px) para que las asas queden a mano.
-  // Siguen agrandando desde el centro de la pieza. Con giro no se recorta (sería otra forma)
   if (!capa.giro) {
     const m = 10;
     const l = Math.max(-m, x - w / 2);
@@ -515,11 +531,14 @@ function Seleccion({ capa, caja, k, alto, grueso, onTam, onGiro, onBorrar, onDup
       h = b - t;
     }
   }
-  // La barra va arriba de la capa (encima del asa de girar); si no cabe, abajo. Con el dedo, sus botones miden 44 px
+  // La barra va arriba de la capa cuando no está externalizada, y acotada al lienzo para no desbordar
   const sobre = grueso ? 36 + 52 : 76;
   const arriba = y - h / 2 - sobre > 0;
   const boton = 'flex h-8 w-8 items-center justify-center rounded-md text-ink-soft hover:bg-brand-50 hover:text-brand-600 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-brand-500 pointer-coarse:h-11 pointer-coarse:w-11';
   const parar = (e: PtrEvent<HTMLElement>) => e.stopPropagation();
+  const maxL = Math.max(4, W * k - (grueso ? 232 : 184));
+  const maxT = Math.max(4, alto * k - 48);
+  const barTop = Math.min(maxT, Math.max(4, arriba ? y - h / 2 - sobre : y + h / 2 + 40));
   return (
     <>
       <div
@@ -536,25 +555,27 @@ function Seleccion({ capa, caja, k, alto, grueso, onTam, onGiro, onBorrar, onDup
             <span className="absolute -top-4 left-1/2 h-4 w-px -translate-x-1/2 bg-brand-500" />
           </>
         )}
-        <span className="absolute -bottom-8 -right-2 whitespace-nowrap rounded-md bg-brand-700 px-1.5 py-1 text-[11px] font-semibold leading-none text-white">
+        <span className="absolute -bottom-8 -right-2 whitespace-nowrap rounded-md bg-brand-700 px-1.5 py-1 text-xs font-semibold leading-none text-white">
           {capa.tam} px{capa.giro ? ` · ${capa.giro}°` : ''}
         </span>
       </div>
-      <div
-        role="toolbar"
-        aria-label="La pieza elegida"
-        onPointerDown={parar}
-        className="absolute z-10 flex gap-0.5 rounded-lg bg-white p-1 shadow-lg ring-1 ring-line"
-        style={{ left: Math.max(4, x - (grueso ? 116 : 90)), top: arriba ? Math.max(4, y - h / 2 - sobre) : y + h / 2 + 40 }}
-      >
-        <button type="button" className={boton} onClick={onDuplicar} aria-label="Duplicar (Ctrl+D)" title="Duplicar (Ctrl+D)"><IconoCopiar className="h-4 w-4" aria-hidden="true" /></button>
-        <button type="button" className={boton} onClick={() => onOrden(1)} disabled={ultima} aria-label="Traer adelante" title="Adelante"><IconoFlechaArriba className="h-4 w-4" aria-hidden="true" /></button>
-        <button type="button" className={boton} onClick={() => onOrden(-1)} disabled={primera} aria-label="Llevar atrás" title="Atrás"><IconoFlechaAbajo className="h-4 w-4" aria-hidden="true" /></button>
-        <button type="button" className={boton} onClick={onBloquear} aria-pressed={capa.bloqueada} aria-label={capa.bloqueada ? 'Desbloquear' : 'Bloquear: que no se mueva sin querer'} title={capa.bloqueada ? 'Desbloquear' : 'Bloquear'}>
-          {capa.bloqueada ? <IconoCandado className="h-4 w-4" aria-hidden="true" /> : <IconoAbrirCandado className="h-4 w-4" aria-hidden="true" />}
-        </button>
-        <button type="button" className={`${boton} hover:text-deal`} onClick={onBorrar} aria-label="Borrar (Supr)" title="Borrar (Supr)"><IconoEliminar className="h-4 w-4" aria-hidden="true" /></button>
-      </div>
+      {!barraExterna && (
+        <div
+          role="toolbar"
+          aria-label="La pieza elegida"
+          onPointerDown={parar}
+          className="absolute z-10 flex gap-0.5 rounded-lg bg-white p-1 shadow-lg ring-1 ring-line"
+          style={{ left: Math.min(maxL, Math.max(4, x - (grueso ? 116 : 90))), top: barTop }}
+        >
+          <button type="button" className={boton} onClick={onDuplicar} aria-label="Duplicar (Ctrl+D)" title="Duplicar (Ctrl+D)"><IconoCopiar className="h-4 w-4" aria-hidden="true" /></button>
+          <button type="button" className={boton} onClick={() => onOrden(1)} disabled={ultima} aria-label="Traer adelante" title="Adelante"><IconoFlechaArriba className="h-4 w-4" aria-hidden="true" /></button>
+          <button type="button" className={boton} onClick={() => onOrden(-1)} disabled={primera} aria-label="Llevar atrás" title="Atrás"><IconoFlechaAbajo className="h-4 w-4" aria-hidden="true" /></button>
+          <button type="button" className={boton} onClick={onBloquear} aria-pressed={capa.bloqueada} aria-label={capa.bloqueada ? 'Desbloquear' : 'Bloquear: que no se mueva sin querer'} title={capa.bloqueada ? 'Desbloquear' : 'Bloquear'}>
+            {capa.bloqueada ? <IconoCandado className="h-4 w-4" aria-hidden="true" /> : <IconoAbrirCandado className="h-4 w-4" aria-hidden="true" />}
+          </button>
+          <button type="button" className={`${boton} hover:text-deal`} onClick={onBorrar} aria-label="Borrar (Supr)" title="Borrar (Supr)"><IconoEliminar className="h-4 w-4" aria-hidden="true" /></button>
+        </div>
+      )}
     </>
   );
 }

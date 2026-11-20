@@ -16,14 +16,17 @@ export default function ProductPicker({
   onPick,
   onCancel,
   tramo,
+  soloDigitales = false,
   excluir = [],
 }: {
   onPick: (p: StudioStoreProduct) => void;
   onCancel?: () => void;
   tramo?: TramoRegalo;
+  soloDigitales?: boolean;
   excluir?: string[];
 }) {
   const [q, setQ] = useState('');
+  const [soloDig, setSoloDig] = useState(soloDigitales);
   const [results, setResults] = useState<StudioStoreProduct[]>([]);
   const [searching, setSearching] = useState(false);
   const inputId = useId();
@@ -35,7 +38,10 @@ export default function ProductPicker({
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(`/api/admin/studio/products?q=${encodeURIComponent(q.trim())}${tramo ? `&tramo=${tramo}` : ''}`);
+        const qs = new URLSearchParams({ q: q.trim() });
+        if (tramo) qs.set('tramo', tramo);
+        if (soloDig) qs.set('digital', '1');
+        const res = await fetch(`/api/admin/studio/products?${qs.toString()}`);
         const data = res.ok ? ((await res.json()) as { products: StudioStoreProduct[] }) : { products: [] };
         if (n === seq.current) setResults(data.products);
       } finally {
@@ -43,13 +49,20 @@ export default function ProductPicker({
       }
     }, 250);
     return () => clearTimeout(timer);
-  }, [q, tramo]);
+  }, [q, tramo, soloDig]);
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-brand-200 bg-brand-50 p-3">
-      <label htmlFor={inputId} className="text-sm font-semibold text-ink">
-        {tramo ? `Elegir de la tienda · ${TRAMOS_REGALO[tramo].titulo}` : 'Elegir de la tienda'}
-      </label>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <label htmlFor={inputId} className="text-sm font-semibold text-ink">
+          {tramo ? `Elegir de la tienda · ${TRAMOS_REGALO[tramo].titulo}` : soloDig ? 'Elegir gift card o recarga digital' : 'Elegir de la tienda'}
+        </label>
+        {soloDigitales && (
+          <button type="button" onClick={() => setSoloDig((v) => !v)} className={smallButton}>
+            {soloDig ? 'Ver todos los productos' : 'Solo digitales'}
+          </button>
+        )}
+      </div>
       <div className="flex gap-2">
         <div className="relative flex-1">
           <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />

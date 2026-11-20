@@ -116,7 +116,7 @@ export function GaleriaStickers({ acento, acento2, onElegir, onCerrar, soloIcono
     <section aria-label={soloIconos ? 'Elegir otro ícono' : 'Agregar un sticker'} className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-3">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-ink">{soloIconos ? 'Elige el ícono' : 'Elige un sticker'}</p>
-        <button type="button" onClick={onCerrar} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-white hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-500" aria-label="Cerrar la galería">
+        <button type="button" onClick={onCerrar} className="flex h-11 w-11 sm:h-9 sm:w-9 items-center justify-center rounded-lg text-muted hover:bg-white hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-500" aria-label="Cerrar la galería">
           <IconoCerrar className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
@@ -220,14 +220,14 @@ function Colores({ etiqueta, valor, acento, acento2, onCambiar }: { etiqueta: st
               aria-label={nombre}
               title={nombre}
               onClick={() => onCambiar(hex)}
-              className={`flex h-9 items-center justify-center rounded-full border-2 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 ${activo ? 'border-brand-500 ring-2 ring-brand-100' : 'border-line'} ${hex ? 'w-9' : 'px-3'}`}
+              className={`flex h-11 sm:h-9 items-center justify-center rounded-full border-2 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 ${activo ? 'border-brand-500 ring-2 ring-brand-100' : 'border-line'} ${hex ? 'w-11 sm:w-9' : 'px-3'}`}
               style={hex ? { background: hex } : undefined}
             >
               {hex ? '' : 'Como viene'}
             </button>
           );
         })}
-        <label className="flex h-9 cursor-pointer items-center gap-2 rounded-full border-2 border-line pl-1 pr-3 text-xs font-semibold text-ink-soft">
+        <label className="flex h-11 sm:h-9 cursor-pointer items-center gap-2 rounded-full border-2 border-line pl-1.5 pr-3 text-xs font-semibold text-ink-soft">
           <input type="color" value={valor || '#FFFFFF'} onChange={(e) => onCambiar(e.target.value.toUpperCase())} className="h-6 w-6 cursor-pointer rounded-full border-0 bg-transparent p-0" />
           Otro
         </label>
@@ -237,7 +237,7 @@ function Colores({ etiqueta, valor, acento, acento2, onCambiar }: { etiqueta: st
 }
 
 /** El panel del sticker elegido */
-export function PanelSticker({ elegida, acento, acento2, alto, lleno, onCambiar, onDuplicar, onBorrar }: {
+export function PanelSticker({ elegida, acento, acento2, alto, lleno, onCambiar, onDuplicar, onBorrar, onMoverPx }: {
   elegida: CapaSticker;
   acento: string;
   acento2: string;
@@ -246,6 +246,7 @@ export function PanelSticker({ elegida, acento, acento2, alto, lleno, onCambiar,
   onCambiar: (cambio: CambioCapa) => void;
   onDuplicar: () => void;
   onBorrar: () => void;
+  onMoverPx?: (dx: number, dy: number) => void;
 }) {
   const ids = useId();
   const [cambiarIcono, setCambiarIcono] = useState(false);
@@ -339,7 +340,7 @@ export function PanelSticker({ elegida, acento, acento2, alto, lleno, onCambiar,
         onCambiar={(v) => onCambiar({ tam: tamSticker(v) })}
         ayuda="El ancho, en px de la imagen (1080). También con las esquinas de la pieza."
       />
-      <PosicionGiro id={ids} capa={elegida} alto={alto} onCambiar={onCambiar} />
+      <PosicionGiro id={ids} capa={elegida} alto={alto} onCambiar={onCambiar} onMoverPx={onMoverPx} />
     </div>
   );
 }

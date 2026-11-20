@@ -4,8 +4,8 @@
 import { missingImages, type ProductSrc } from '@/lib/studio/engine';
 import { CIERRE_LOGO, duracionDe, inicioEntrada, inicioSalida } from '@/lib/studio/animaciones';
 import { nombreCapa } from '@/lib/studio/capas';
-import { enTramo, staleWarnings } from '@/lib/studio/live';
-import { TEMPLATES, TRAMOS_REGALO, type StudioCoupon, type StudioFlyerData, type StudioProductSlot, type StudioStoreInfo, type StudioStoreProduct } from '@/lib/studio/schema';
+import { enTramo, hasChangesSinceExport, staleWarnings } from '@/lib/studio/live';
+import { TEMPLATES, TRAMOS_REGALO, type StudioCoupon, type StudioFlyerData, type StudioProductSlot, type StudioStoreInfo, type StudioStoreProduct, type TemplateId } from '@/lib/studio/schema';
 
 export type CheckLevel = 'ok' | 'warn' | 'block';
 
@@ -91,6 +91,11 @@ const CONTENT_OK: Partial<Record<StudioFlyerData['template'], string>> = {
 /** Los pasos del editor (C-270): 1 Contenido, 2 Fotos, 3 Diseño, 4 Textos y stickers, 5 Animación y 6 Publicar */
 export const PASO_PUBLICAR = 6;
 
+/** Pasos visibles según la plantilla: las que no usan foto de producto omiten Fotos (G-71) */
+export function activeStepsFor(template: TemplateId): number[] {
+  return TEMPLATES[template].photo === 'none' ? [1, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6];
+}
+
 /** Paso completo. Diseño, Textos y Animación son opcionales: no se marcan solos (siempre tienen algo elegido) */
 export function stepDone(k: number, f: StudioFlyerData, src: ProductSrc): boolean {
   if (k === 1) return contentProblems(f).length === 0;
@@ -100,7 +105,9 @@ export function stepDone(k: number, f: StudioFlyerData, src: ProductSrc): boolea
 }
 
 export function firstOpenStep(f: StudioFlyerData, src: ProductSrc): number {
-  return [1, 2, PASO_PUBLICAR].find((k) => !stepDone(k, f, src)) ?? PASO_PUBLICAR;
+  if (!stepDone(1, f, src)) return 1;
+  if (TEMPLATES[f.template].photo !== 'none' && !stepDone(2, f, src)) return 2;
+  return 1;
 }
 
 function todayYmd(): string {
@@ -159,9 +166,13 @@ export function flyerChecks(f: StudioFlyerData, env: CheckEnv): FlyerCheck[] {
   // "Desde la descarga" solo cuenta si ya se descargó: la próxima descarga lo corrige
   staleWarnings(f, env.live, env.coupons, env.store).forEach((w) => {
     if (w.kind === 'coupon') out.push({ level: 'block', kind: 'store', text: w.text, step: 1, download: true });
-    else if (w.kind === 'price' || w.kind === 'rate') out.push({ level: 'warn', kind: 'redownload', text: `${w.text}: descárgala de nuevo`, download: false });
+    else if (w.kind === 'price' || w.kind === 'rate') out.push({ level: 'warn', kind: 'redownload', text: `${w.text}: descárgala de nuevo`, step: PASO_PUBLICAR, download: false });
     else out.push({ level: 'warn', kind: 'store', text: w.text, step: 1, download: true });
   });
+
+  if (hasChangesSinceExport(f)) {
+    out.push({ level: 'warn', kind: 'redownload', text: 'Editaste esta historia después de sacarla: descárgala de nuevo', step: PASO_PUBLICAR, download: false });
+  }
 
   if (f.caption.trim()) out.push({ level: 'ok', kind: 'caption', text: 'Texto para Instagram escrito', step: PASO_PUBLICAR, download: false });
   else out.push({ level: 'warn', kind: 'caption', text: 'Falta el texto para Instagram', step: PASO_PUBLICAR, download: false });
@@ -172,13 +183,14 @@ export function flyerChecks(f: StudioFlyerData, env: CheckEnv): FlyerCheck[] {
   return out;
 }
 
-/** Etiqueta de la historia en la lista: lo más grave que tiene */
-export function flyerStatus(checks: FlyerCheck[]): { tone: 'success' | 'warning' | 'danger'; text: string; more: number } {
-  const blocks = checks.filter((c) => c.level === 'block');
-  const warns = checks.filter((c) => c.level === 'warn');
-  if (blocks.length) return { tone: 'danger', text: blocks[0].text, more: blocks.length + warns.length - 1 };
-  if (warns.length) return { tone: 'warning', text: warns[0].text, more: warns.length - 1 };
-  return { tone: 'success', text: 'Lista', more: 0 };
+/** Etiqueta de la historia en la lista: lo más grave que tiene (sin hacer ruido por caption cuando aún no hace falta) */
+export function flyerStatus(checks: FlyerCheck[]): { tone: 'success' | 'warning' | 'danger'; text: string; more: number; step?: number } {
+  const relevant = checks.filter((c) => c.kind !== 'caption');
+  const blocks = relevant.filter((c) => c.level === 'block');
+  const warns = relevant.filter((c) => c.level === 'warn');
+  if (blocks.length) return { tone: 'danger', text: blocks[0].text, more: blocks.length + warns.length - 1, step: blocks[0].step };
+  if (warns.length) return { tone: 'warning', text: warns[0].text, more: warns.length - 1, step: warns[0].step };
+  return { tone: 'success', text: 'Lista para publicar', more: 0 };
 }
 
 /** Lo que importa al descargar: lo que la impide y lo que conviene confirmar */

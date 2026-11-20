@@ -80,7 +80,7 @@ Stack: Next.js 16 (App Router, `proxy.ts` como middleware), React 19, Tailwind C
 - Corre y reporta con salidas reales: `npm run lint`, `npx tsc --noEmit`, `npm run build`, `npm run check:modulos` y `npm run check:marca`. Si el entorno no tiene base o Node activo, decláralo explícitamente sin asumir que pasó.
 - Cambios de UI — inspección real en Chrome antes de pedir revisión: siempre que exista servidor local (o tras maquetar), abre Chrome real (`CHROME=/opt/google/chrome/chrome` con `scripts/e2e/chrome.ts`, o `--headless=new` con perfil en `~/.cache/`) sobre las rutas afectadas a **360, 768, 1024 y 1440 px** (`PLAN.md` §6), incluyendo modales y estados interactivos, y con `prefers-reduced-motion`. Mira las capturas, saca conclusiones propias de diseño (contraste de líneas y celdas, alineación, jerarquía, desbordes, matices de color) y corrige lo evidente **antes** de entregarlo al usuario.
 - Cambios en órdenes, carrito, pagos o Puntos ES: probar el caso normal **y** el caso manipulado.
-- **Diseño nuevo** (pantalla, pieza, correo o imagen): primero maquetas en variantes reales para que Andrés o Luis elijan viendo, revisadas a tamaño real y a 360–400 px.
+- **Diseño nuevo** (pantalla, pieza, correo o imagen): primero maquetas en variantes reales para que Andrés o Luis elijan viendo, revisadas a tamaño real y a 360–400 px. Al terminar cualquier maqueta, sírvela con un servidor HTTP local (con rutas relativas para fuentes e imágenes, sin `file://`), ábrela automáticamente en Chrome usando el subagente `browser` y entrega el enlace `http://127.0.0.1:<puerto>/` en la respuesta.
 - **Lo compartido en redes:** verificar en producción con `curl -A "facebookexternalhit/1.1"` y `-A "WhatsApp/2.24"`.
 
 ---

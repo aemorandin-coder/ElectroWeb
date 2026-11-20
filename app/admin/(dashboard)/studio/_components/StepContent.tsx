@@ -2,8 +2,13 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { IconoAbrirAparte, IconoActualizar, IconoAdvertencia, IconoBuscar, IconoConfirmado, IconoEnlace } from '@/components/iconos';
-import { adminBadge, adminChoice, adminHint, adminInput, adminLabel, adminNotice } from '@/lib/admin-ui';
+import {
+  IconoAbrirAparte, IconoActualizar, IconoAdvertencia, IconoBillete, IconoBolsa, IconoBuscar, IconoChat,
+  IconoConfirmado, IconoCuadricula, IconoCupon, IconoEnlace, IconoEstrella, IconoLista, IconoNovedad,
+  IconoOferta, IconoRegalo, type IconType,
+} from '@/components/iconos';
+import Opcion, { claseOpcion } from '@/components/admin/Opcion';
+import { adminBadge, adminHint, adminInput, adminLabel, adminNotice } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { SPEC_ICONS } from '@/lib/studio/icons';
@@ -31,6 +36,27 @@ export const TEMPLATE_CARDS: [TemplateId, string, string, string][] = [
   ['regalos', 'regalo', 'Regalos por presupuesto', 'Tres regalos de un tramo de precio'],
   ['felicitacion', 'estrella', 'Felicitación', 'Un saludo con Chispa, sin precios'],
 ];
+
+export const TEMPLATE_ICON: Record<TemplateId, IconType> = {
+  solo: IconoBolsa,
+  duo: IconoCuadricula,
+  trio: IconoLista,
+  nuevo: IconoNovedad,
+  giftcard: IconoRegalo,
+  cupon: IconoCupon,
+  resena: IconoEstrella,
+  tasa: IconoBillete,
+  mensaje: IconoChat,
+  regalos: IconoOferta,
+  felicitacion: IconoEstrella,
+};
+
+export const TEMPLATE_GROUPS: { titulo: string; ids: TemplateId[] }[] = [
+  { titulo: 'Vender productos', ids: ['solo', 'duo', 'trio', 'nuevo', 'giftcard'] },
+  { titulo: 'Ofertas, cupones y regalos', ids: ['cupon', 'regalos', 'resena'] },
+  { titulo: 'Tienda y avisos', ids: ['tasa', 'mensaje', 'felicitacion'] },
+];
+
 /** C-193: la felicitación arranca con el saludo del popup navideño (lib/navidad.ts) */
 export const FELICITACION_MSG: StudioMessage = {
   eyebrow: 'Electro Shop te desea',
@@ -82,28 +108,30 @@ interface Props {
 export default function StepContent({ studio, activeSlot, setActiveSlot }: Props) {
   const { current, update } = studio;
   const { confirm } = useConfirm();
+  const [cambiarTpl, setCambiarTpl] = useState(false);
   if (!current) return null;
   const n = TEMPLATES[current.template].n;
-  const chooseTemplate = (id: TemplateId) =>
+  const cardActual = TEMPLATE_CARDS.find(([id]) => id === current.template);
+
+  const chooseTemplate = (id: TemplateId) => {
+    setCambiarTpl(false);
     update((f) => {
       const start = TEMPLATE_START[id];
-      // Una plantilla nueva arranca con su fondo (bg vacío = el de la plantilla) y, si tiene, sus efectos
       return {
         ...f,
         template: id,
         bg: '',
+        piezasOcultas: [],
         fx: start ? { ...f.fx, confeti: start.confeti ?? f.fx.confeti, reflejo: start.reflejo ?? f.fx.reflejo } : f.fx,
         anim: start?.anim ?? f.anim,
         name: id === 'tasa' && f.name === 'Nueva historia' ? 'Tasa BCV del día' : f.name,
-        // C-193: la felicitación sin texto toma el saludo navideño y a Chispa saludando
         ...(id === 'felicitacion' && !f.msg.headline.trim() ? { msg: FELICITACION_MSG, chispa: f.chispa || 'saluda', navidad: true } : {}),
       };
     });
-  // C-193: al cambiar de tramo, las gift cards vinculadas dicen el menor monto que cabe en el nuevo
-  const setTramo = (tramo: TramoRegalo) => update((f) => refreshLinked({ ...f, tramo }, studio.live));
+  };
 
+  const setTramo = (tramo: TramoRegalo) => update((f) => refreshLinked({ ...f, tramo }, studio.live));
   const setMsg = (patch: Partial<StudioMessage>) => update((f) => ({ ...f, msg: { ...f.msg, ...patch } }));
-  // Como con un producto de la tienda: la historia nueva toma su nombre del titular
   const nameFromHeadline = (headline: string) => {
     const clean = headline.replace(/\*/g, '').trim().slice(0, 80);
     if (clean && current.name === 'Nueva historia') update((f) => ({ ...f, name: clean }));
@@ -119,24 +147,50 @@ export default function StepContent({ studio, activeSlot, setActiveSlot }: Props
 
   return (
     <div className="flex flex-col gap-4">
-      <fieldset>
-        <legend className={adminLabel}>¿Qué quieres publicar?</legend>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {TEMPLATE_CARDS.map(([id, icon, title, desc]) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={current.template === id}
-              onClick={() => current.template !== id && chooseTemplate(id)}
-              className={`${adminChoice(current.template === id)} flex flex-col items-start gap-1 p-3`}
-            >
-              <StudioIcon name={icon} className="h-6 w-6 text-brand-500" />
-              <span className="text-sm font-bold text-ink">{title}</span>
-              <span className="text-xs text-muted">{desc}</span>
-            </button>
-          ))}
+      {/* G-71: plantilla contraída en una fila; solo se despliega si piden cambiarla */}
+      <div className="rounded-xl border border-line bg-surface p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-brand-600 ring-1 ring-line">
+              <StudioIcon name={cardActual?.[1] ?? 'tarjeta'} className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <span className="block text-xs text-muted">Plantilla</span>
+              <span className="block truncate text-sm font-bold text-ink">{cardActual?.[2] ?? TEMPLATES[current.template].label}</span>
+            </div>
+          </div>
+          <button type="button" aria-expanded={cambiarTpl} onClick={() => setCambiarTpl((v) => !v)} className={smallButton}>
+            {cambiarTpl ? 'Cerrar' : 'Cambiar plantilla'}
+          </button>
         </div>
-      </fieldset>
+
+        {cambiarTpl && (
+          <div className="mt-3 flex flex-col gap-3 border-t border-line pt-3">
+            {TEMPLATE_GROUPS.map((g) => (
+              <fieldset key={g.titulo}>
+                <legend className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{g.titulo}</legend>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {g.ids.map((id) => {
+                    const card = TEMPLATE_CARDS.find(([c]) => c === id);
+                    if (!card) return null;
+                    return (
+                      <Opcion
+                        key={id}
+                        elegida={current.template === id}
+                        icono={TEMPLATE_ICON[id]}
+                        titulo={card[2]}
+                        detalle={card[3]}
+                        aria-pressed={current.template === id}
+                        onClick={() => (current.template === id ? setCambiarTpl(false) : chooseTemplate(id))}
+                      />
+                    );
+                  })}
+                </div>
+              </fieldset>
+            ))}
+          </div>
+        )}
+      </div>
 
       {current.template === 'cupon' && <CouponForm studio={studio} />}
       {current.template === 'resena' && <ReviewForm studio={studio} />}
@@ -212,11 +266,16 @@ export default function StepContent({ studio, activeSlot, setActiveSlot }: Props
           {current.template === 'regalos' && (
             <fieldset>
               <legend className={adminLabel}>Presupuesto</legend>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {(Object.keys(TRAMOS_REGALO) as TramoRegalo[]).map((id) => (
-                  <button key={id} type="button" aria-pressed={current.tramo === id} onClick={() => current.tramo !== id && setTramo(id)} className={`${adminChoice(current.tramo === id)} min-h-11 px-2 text-sm font-semibold`}>
-                    {TRAMOS_REGALO[id].titulo}
-                  </button>
+                  <Opcion
+                    key={id}
+                    tamano="chica"
+                    elegida={current.tramo === id}
+                    titulo={TRAMOS_REGALO[id].titulo}
+                    aria-pressed={current.tramo === id}
+                    onClick={() => current.tramo !== id && setTramo(id)}
+                  />
                 ))}
               </div>
               <p className={adminHint}>Al elegir de la tienda salen solo los productos de este presupuesto, como en Ideas para regalar.</p>
@@ -231,7 +290,7 @@ export default function StepContent({ studio, activeSlot, setActiveSlot }: Props
             </div>
           )}
           {Array.from({ length: n }, (_, i) => (
-            <ProductSlot key={i} studio={studio} index={i} count={n} active={activeSlot === i} onFocus={() => setActiveSlot(i)} />
+            <ProductSlot key={i} studio={studio} index={i} count={n} active={activeSlot === i} onFocus={() => setActiveSlot(i)} onCambiarA1Producto={() => chooseTemplate('solo')} />
           ))}
         </>
       )}
@@ -239,7 +298,14 @@ export default function StepContent({ studio, activeSlot, setActiveSlot }: Props
   );
 }
 
-function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio; index: number; count: number; active: boolean; onFocus: () => void }) {
+function ProductSlot({ studio, index, count, active, onFocus, onCambiarA1Producto }: {
+  studio: Studio;
+  index: number;
+  count: number;
+  active: boolean;
+  onFocus: () => void;
+  onCambiarA1Producto: () => void;
+}) {
   const { current, update, live, rememberLive } = studio;
   const [picking, setPicking] = useState(false);
   if (!current) return null;
@@ -247,6 +313,8 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
   if (!p) return null;
   const linked = p.productId ? live[p.productId] : undefined;
   const id = (k: string) => `p${index}-${k}`;
+  const soloDigital = current.template === 'giftcard';
+  const esProductoFisicoEnGiftCard = soloDigital && p.productId && !p.digital && p.variants.length === 0;
 
   const setSlot = (patch: Partial<StudioProductSlot>) =>
     update((f) => ({ ...f, products: f.products.map((s, i) => (i === index ? { ...s, ...patch } : s)) }));
@@ -258,7 +326,6 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
         const specs = [...s.specs];
         while (specs.length <= k) specs.push({ icon: 'check', label: '', value: '' });
         specs[k] = { ...specs[k], ...patch };
-        // Las filas vacías del final no se guardan
         while (specs.length && !specs[specs.length - 1].label && !specs[specs.length - 1].value) specs.pop();
         return { ...s, specs };
       }),
@@ -266,6 +333,17 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
 
   const body = (
     <div className="flex flex-col gap-3" onFocus={onFocus} onPointerDown={onFocus}>
+      {esProductoFisicoEnGiftCard && (
+        <div className={`${adminNotice('warning')} flex flex-wrap items-center justify-between gap-2 p-3`}>
+          <p className="min-w-0 flex-1 text-sm">
+            Elegiste un producto físico sin montos dentro de la plantilla Gift card.
+          </p>
+          <button type="button" onClick={onCambiarA1Producto} className={smallButton}>
+            Pasar a &quot;1 producto&quot;
+          </button>
+        </div>
+      )}
+
       {p.productId ? (
         <div className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-3">
           <div className="flex items-start gap-3">
@@ -320,6 +398,7 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
       {picking && (
         <ProductPicker
           tramo={current.template === 'regalos' ? current.tramo : undefined}
+          soloDigitales={soloDigital}
           onCancel={() => setPicking(false)}
           onPick={(prod) => {
             rememberLive(prod);
@@ -329,7 +408,7 @@ function ProductSlot({ studio, index, count, active, onFocus }: { studio: Studio
         />
       )}
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
           <label htmlFor={id('title')} className={adminLabel}>
             Título grande
@@ -456,7 +535,7 @@ function ChispaPicker({ studio }: { studio: Studio }) {
     <fieldset>
       <legend className={adminLabel}>Chispa</legend>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-        <button type="button" aria-pressed={!current.chispa} onClick={() => elegir('')} className={`${adminChoice(!current.chispa)} flex min-h-11 items-center justify-center p-2 text-xs font-semibold`}>
+        <button type="button" aria-pressed={!current.chispa} onClick={() => elegir('')} className={`${claseOpcion(!current.chispa)} flex min-h-11 items-center justify-center p-2 text-xs font-semibold`}>
           Sin Chispa
         </button>
         {(Object.keys(CHISPA_POSES) as ChispaPose[]).map((pose) => (
@@ -465,7 +544,7 @@ function ChispaPicker({ studio }: { studio: Studio }) {
             type="button"
             aria-pressed={current.chispa === pose}
             onClick={() => elegir(pose)}
-            className={`${adminChoice(current.chispa === pose)} flex flex-col items-center gap-1 p-1.5 text-xs font-semibold`}
+            className={`${claseOpcion(current.chispa === pose)} flex flex-col items-center gap-1 p-1.5 text-xs font-semibold`}
           >
             <Image src={chispaSrc(pose, current.navidad)} alt="" width={60} height={74} className="h-14 w-auto" />
             {CHISPA_POSES[pose]}

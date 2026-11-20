@@ -326,7 +326,7 @@ export function StoryColors({ studio }: { studio: Studio }) {
           </button>
         )}
       </div>
-      <p className={adminHint}>{own ? 'Solo cambian en esta historia.' : 'Por ahora usa los de la marca (abajo, en "Marca y ajustes").'}</p>
+      <p className={adminHint}>{own ? 'Solo cambian en esta historia.' : 'Por ahora usa los de la marca (se ajustan en "Ajustes de marca" del inicio).'}</p>
     </div>
   );
 }

@@ -22,16 +22,27 @@ export interface Paso {
   icono?: IconType;
 }
 
-export default function Pasos({ pasos, actual, onIr, etiqueta = 'Pasos' }: {
+export default function Pasos({ pasos, actual, onIr, onAltura, etiqueta = 'Pasos' }: {
   pasos: Paso[];
   actual: number;
   onIr: (i: number) => void;
+  onAltura?: (px: number) => void;
   etiqueta?: string;
 }) {
   const [abierto, setAbierto] = useState(false);
   const idLista = useId();
   const caja = useRef<HTMLDivElement>(null);
   const siguiente = pasos[actual + 1];
+
+  useEffect(() => {
+    const el = caja.current;
+    if (!el || !onAltura) return;
+    const medir = () => onAltura(Math.round(el.offsetHeight));
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [onAltura]);
 
   // En el teléfono, la lista de pasos se cierra al tocar fuera o con Escape
   useEffect(() => {
@@ -141,9 +152,9 @@ export default function Pasos({ pasos, actual, onIr, etiqueta = 'Pasos' }: {
       <nav aria-label={etiqueta} className="hidden lg:block">
         <ol className="grid" style={{ gridTemplateColumns: `repeat(${pasos.length}, minmax(0, 1fr))` }}>{pasos.map(enFila)}</ol>
       </nav>
-      {/* Teléfono: el paso de ahora, lo que sigue, una barra por tramos y la lista a mano */}
+      {/* Teléfono: el paso de ahora, lo que sigue, una barra por tramos y la lista como popover flotante */}
       <div className="lg:hidden">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2.5">
             {Actual && (
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-brand-500 text-brand-500">
@@ -151,8 +162,10 @@ export default function Pasos({ pasos, actual, onIr, etiqueta = 'Pasos' }: {
               </span>
             )}
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-ink">Paso {actual + 1} de {pasos.length} · {pasos[actual]?.titulo}</p>
-              <p className="truncate text-xs text-muted">{siguiente ? `Después: ${siguiente.titulo.toLowerCase()}` : 'Es el último paso'}</p>
+              <p className="truncate text-xs text-muted">
+                Paso {actual + 1} de {pasos.length} · {siguiente ? `Después: ${siguiente.titulo}` : 'Último paso'}
+              </p>
+              <p className="truncate text-sm font-semibold text-ink">{pasos[actual]?.titulo}</p>
             </div>
           </div>
           <button
@@ -160,9 +173,9 @@ export default function Pasos({ pasos, actual, onIr, etiqueta = 'Pasos' }: {
             onClick={() => setAbierto((a) => !a)}
             aria-expanded={abierto}
             aria-controls={idLista}
-            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-surface"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-lg border border-line px-2.5 text-sm font-semibold text-ink hover:bg-surface"
           >
-            Ver pasos <IconoChevronAbajo className={`h-4 w-4 transition-transform duration-200 ${abierto ? 'rotate-180' : ''}`} aria-hidden="true" />
+            Pasos <IconoChevronAbajo className={`h-4 w-4 transition-transform duration-200 ${abierto ? 'rotate-180' : ''}`} aria-hidden="true" />
           </button>
         </div>
         <div className="mt-2 grid gap-1" style={{ gridTemplateColumns: `repeat(${pasos.length}, minmax(0, 1fr))` }} aria-hidden="true">
@@ -174,7 +187,7 @@ export default function Pasos({ pasos, actual, onIr, etiqueta = 'Pasos' }: {
           ))}
         </div>
         {abierto && (
-          <nav aria-label={etiqueta} id={idLista} className="mt-2 border-t border-line pt-2">
+          <nav aria-label={etiqueta} id={idLista} className="absolute inset-x-0 top-full z-20 border-b border-line bg-white px-3 pb-3 pt-2 shadow-lg sm:px-4">
             <ol className="grid gap-0.5">{pasos.map(enLista)}</ol>
           </nav>
         )}

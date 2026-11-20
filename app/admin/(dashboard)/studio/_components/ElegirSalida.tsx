@@ -44,7 +44,7 @@ export async function enviarATelegram(archivo: { blob: Blob; nombre: string; tex
     const res = await fetch('/api/admin/studio/telegram', { method: 'POST', body: datos });
     const r = (await res.json().catch(() => ({}))) as { apagado?: boolean; enviados?: number; total?: number; error?: string };
     if (!res.ok) { toast.error(r.error || `No se pudo mandar ${que} a Telegram`, { id }); return false; }
-    if (r.apagado || !r.total) { toast.error('El bot de Telegram no está conectado o no tiene chats: se conecta en Notificaciones → Telegram.', { id, duration: 8000 }); return false; }
+    if (r.apagado || !r.total) { toast.error('El bot de Telegram no está conectado o no tiene chats: se conecta en Ajustes → Avisos → Telegram.', { id, duration: 8000 }); return false; }
     const enviados = r.enviados ?? 0;
     if (enviados === r.total) {
       toast.success(`Listo en Telegram (${enviados === 1 ? '1 chat' : `${enviados} chats`}), en Full HD`, { id });
@@ -81,7 +81,7 @@ export default function ElegirSalida({ tipo, onElegir, onCerrar }: Props) {
   const chats = telegram?.chats ?? 0;
   const aTelegram = telegram === null ? 'Revisando el bot…'
     : telegram.disponible ? `Llega a ${chats === 1 ? '1 chat' : `${chats} chats`} del bot, en Full HD${tipo === 'video' ? ' a 60 cuadros' : ''} y con el texto de la historia`
-      : telegram.motivo ?? 'El bot no está conectado: se conecta en Notificaciones → Telegram.';
+      : telegram.motivo ?? 'El bot no está conectado: se conecta en Ajustes → Avisos → Telegram.';
   const sinTelegram = !telegram?.disponible;
 
   return (

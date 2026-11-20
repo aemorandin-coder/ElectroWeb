@@ -19,7 +19,7 @@ Stack: Next.js 16 (App Router, `proxy.ts` como middleware), React 19, Tailwind C
 ## Flujo de trabajo, ramas, versiones y deploy
 
 1. **Ramas, worktrees aislados y cero micro-versiones en `main`:**
-   - Una tarea = una sola rama propia en worktree aislado (`gemini/<ID>` o `claude/<ID>`) sin cambiar de rama en la carpeta principal (`main`); commits con prefijo `[ID]`.
+   - Una tarea = una sola rama propia en worktree aislado (`gemini/<ID>` o `claude/<ID>`) sin cambiar de rama en la carpeta principal (`main`); commits con prefijo `[ID]`. Los worktrees nunca se crean en `~/Escritorio/`: van en `.claude/worktrees/<ID>` o `~/.cache/electroshop-worktrees/<ID>`.
    - **Mientras se ajusta o revisa en vivo** (servidor local de desarrollo/prueba), el servidor corre desde ese mismo worktree y **todos los ajustes se acumulan en la misma rama** sin fusionar a `main`, sin cambiar versiones de `package.json`/`lib/modulos.ts`, sin escribir `CHANGELOG.md` ni crear tags intermedios.
    - Prohibido generar basura o micro-merges/micro-versiones en `main` por cada corrección visual o ajuste pedido durante una revisión.
 2. **Merge a `main` y push (solo con aprobación explícita de paso a `main` o subida):**
@@ -33,6 +33,9 @@ Stack: Next.js 16 (App Router, `proxy.ts` como middleware), React 19, Tailwind C
    - Andrés sube en un solo bloque desde `SIGUIENTE.md` (commit destino, SQL total, cron, pruebas y vuelta atrás), o bien el líder lo ejecuta por SSH **solo si quien está en la sesión lo aprueba explícitamente para ese deploy** (una aprobación no vale para el siguiente).
    - Lo que requiere `sudo` (nginx, apt, SSH) se entrega en bloques numerados con su comprobación y vuelta atrás para que la persona lo pegue en el servidor. Después de subir, comprobar la tienda desde fuera y mover el bloque a `HISTORIAL.md` ese mismo día.
 6. **Método de rediseño:** al rehacer pantallas existentes aplica `docs/plan/archivo/CHATGPT.md` §4 (anatomía, primera pantalla móvil a 360 px, inventario de acciones): ninguna acción ni dato visible desaparece sin aprobación de Andrés.
+7. **Al cerrar una rama, siempre se limpia (`cerrar-rama-y-limpiar`):**
+   - Antes de borrar un worktree, rescata a la carpeta principal (o pregunta al usuario qué salvar) cualquier entregable útil ignorado por git (`chispa/salida/`, reportes o archivos en `~/Escritorio/`).
+   - Tras el merge autorizado a `main`: elimina el worktree (`git worktree remove` + `git worktree prune`), borra la rama local ya mergeada (`git branch -d`), elimina el esquema local `<id>_demo` en PostgreSQL, borra fotos bajadas en `public/uploads`, scripts temporales `scripts/e2e/_t*`, `.next-test` y el perfil/caché temporal en `~/.cache/electroshop-trabajo/<id>` (salvo maquetas pendientes de revisión en `SIGUIENTE.md`).
 
 ---
 

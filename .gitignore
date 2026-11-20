@@ -62,7 +62,8 @@ prisma/dev.db-journal
 # Uploads
 public/uploads/
 # Agent folders
-.agents/
+.agents/*
+!.agents/skills/
 .agent/
 .claude/*
 # C-289: las skills del equipo sí van al repositorio (las lee cada sesión de Claude, en cada PC)

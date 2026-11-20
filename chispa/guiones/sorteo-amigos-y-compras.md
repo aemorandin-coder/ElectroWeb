@@ -1,8 +1,9 @@
 # Guion: "Más boletos para la PS4" (v1, 18/11, C-300)
 
+> **Versión 2 (18/11):** capturas y cámara como los videos profesionales (skill `.claude/skills/videos-con-capturas`). Las capturas se hacen con `herramientas/tienda/capturar-tienda.mjs`, sobre los datos de `herramientas/tienda/sembrar-sorteo.mjs`.
+>
 > **Estado (18/11):**
-> - Hechos: el guion, las capturas, la página del video (`videos/sorteo-amigos-compras.src.html`), la portada (`piezas/portada-sorteo-amigos.html`) y un video de prueba sin voz.
-> - Falta la voz Diego. Con ella: `puente-voz.py`, armar, grabar y unir. Los tiempos de ahora son de prueba (`assets/voz/chispa-sorteo-amigos-compras.json`, `"prueba": true`).
+> - Hechos: el guion, las capturas v2 (`assets/sorteo/`), la voz Diego (`assets/voz/chispa-sorteo-amigos-compras.mp3` y `.scribe.json` + `.json`), los efectos (`herramientas/sonido-sorteo-amigos-compras.py`), la página del video (`videos/sorteo-amigos-compras.src.html`), la portada (`salida/portada-sorteo-amigos.png`) y el reel final con voz y cierre (`salida/reel-sorteo-amigos-compras.mp4`, `61.2 s`, y copia `720p` en `salida/reel-sorteo-amigos-compras-720.mp4`).
 
 Reel de unos 55 s, más el cierre de la serie. Habla Chispa con la voz "Diego" de ElevenLabs. Lo pidió el equipo el 18/11: "que es importante que los amigos que refieras activen su cuenta", con capturas reales del teléfono, y "por las compras tenemos muchas más oportunidades".
 
@@ -92,20 +93,56 @@ Lo de abajo era el plan para sacarlas en producción; quedó como referencia.
 | C9 | El carrito | Con productos por unos $40: "Esta compra te da N boletos" y la barra que dice cuánto falta para 5. | Claude, desde fuera (el carrito no pide cuenta) |
 
 ## La portada
-1080 × 1920, con lo importante en el centro (1080 × 1440). Lleva:
-- el título corto: **"¿Tu amigo ya activó su cuenta?"**, y abajo, más chico, "y cómo ganar más boletos comprando";
-- Chispa con `señala` + `serio`;
-- la PS4 de C1 y el logo.
+1080 × 1920 (`piezas/portada-sorteo-amigos.html`), con todo lo importante en el centro `1080 × 1440` (`salida/portada-sorteo-amigos.png`). Lleva:
+- cabecera con el logo oficial de ElectroShop y el sello "SORTEO DE NAVIDAD";
+- el título **"¿Tu amigo ya activó su cuenta?"** (destacado en amarillo neo-brutalista) y el subtítulo "Y cómo ganar muchos más boletos comprando";
+- Chispa 3.1 (`señala` + `serio`) apoyado detrás de la tarjeta inferior (sin corte al aire);
+- la tarjeta de la **PS4 remanufacturada · 1000 GB** con el paso "Falta activar → Cuenta" y las fichas `+2 desde $5`, `+5 desde $50`, `+10 $100 o estrella`;
+- pie seguro con "Sorteo: 20 de diciembre" y `electroshopve.com/sorteo`.
 
-## La descripción para Instagram (borrador)
+## Las descripciones para Instagram y TikTok
+
+### Instagram Reels
 ```
-¿Invitaste amigos al sorteo y no te salen los boletos? Tu amigo cuenta cuando activa su cuenta con el enlace del correo. Mándale el recordatorio desde la página del sorteo.
+¿Invitaste amigos al sorteo de la PS4 y no te salen los boletos?
 
-Y comprando ganas mucho más: desde $5 te llevas 2 boletos, con $50 son 5 y con $100, 10. Cada semana, el producto estrella te da 10 boletos más por cada uno, y cada reseña de lo que compraste suma 1.
+Tu amigo no cuenta solo por registrarse: tiene que ingresar su teléfono y activar su cuenta desde el correo que le llega. Si en la página del sorteo aparece "Falta activar", tócale "Recordarles por WhatsApp" para que la active al instante. Cada 2 amigos activos suman 1 boleto (hasta 3 boletos).
 
-Sorteamos una PlayStation 4 remanufacturada, lista para jugar, el 20 de diciembre. Las bases están en electroshopve.com/sorteo
+Y si compras en Electro Shop multiplicas tus oportunidades:
+- Desde $5 en productos: 2 boletos
+- Desde $50: 5 boletos
+- Desde $100: 10 boletos
+- Producto estrella de la semana: +10 boletos extra por cada unidad
+- Reseñas aprobadas de tus compras entregadas: +1 boleto por cada una, sin límite
 
-#ElectroShop #Sorteo #PS4 #PlayStation4 #Guanare #Portuguesa #Venezuela #Gaming #Tecnologia #EnviosATodaVenezuela
+Sorteamos una PlayStation 4 Sony remanufacturada de 1000 GB, lista para jugar, con envío gratis a cualquier estado el 20 de diciembre.
+
+Consulta las bases en electroshopve.com/sorteo o escríbenos por WhatsApp al +58 257 251 1282.
+Guanare, Portuguesa · Envíos a toda Venezuela por ZOOM y MRW.
+
+#ElectroShop #SorteoVenezuela #PS4 #PlayStation4 #TecnologiaVenezuela #Guanare #Portuguesa #GamingVenezuela #EnviosATodaVenezuela #ComprasOnlineVenezuela #NavidadVenezuela #SorteoNavidad
+```
+
+### TikTok
+```
+Título corto para portada en TikTok:
+¿Tu amigo ya activó su cuenta? Más boletos para la PS4
+
+Descripción:
+¿Invitaste amigos al sorteo de la PS4 y no te suman los boletos? Tienen que activar su cuenta desde el correo.
+
+Mándales el recordatorio por WhatsApp desde electroshopve.com/sorteo y apenas toquen "Activar mi cuenta" ya suman (2 amigos activos = 1 boleto, hasta 3).
+
+Y comprando ganas mucho más:
+- Desde $5: 2 boletos
+- Con $50: 5 boletos
+- Con $100: 10 boletos
+- Producto estrella semanal: +10 boletos por unidad
+- Cada reseña aprobada: +1 boleto
+
+Premio: PlayStation 4 Sony remanufacturada (1000 GB, lista para jugar). Resultado el 20 de diciembre. Envíos a toda Venezuela por ZOOM y MRW desde Guanare. WhatsApp +58 257 251 1282.
+
+#ElectroShop #SorteoVenezuela #PS4 #PlayStation4 #Venezuela #Guanare #Portuguesa #TecnologiaVenezuela #GamingVenezuela #EnviosATodaVenezuela
 ```
 
 ## Para revisar antes de entregarlo

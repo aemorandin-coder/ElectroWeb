@@ -1,0 +1,316 @@
+{
+ "sorteo": {
+  "url": "/sorteo",
+  "pageH": 4319,
+  "fijos": [
+   {
+    "caja": [
+     0,
+     0,
+     390,
+     105
+    ],
+    "pos": "sticky"
+   },
+   {
+    "caja": [
+     12,
+     768,
+     366,
+     64
+    ],
+    "pos": "fixed"
+   }
+  ],
+  "tarjetas": {
+   "estrella": [
+    16,
+    1318,
+    358,
+    226
+   ],
+   "camino1": [
+    85,
+    1903,
+    272,
+    406
+   ],
+   "camino2": [
+    85,
+    2321,
+    272,
+    256
+   ],
+   "camino3": [
+    85,
+    2589,
+    272,
+    232
+   ]
+  },
+  "puntos": {
+   "remanufacturada": [
+    193,
+    282,
+    134,
+    24
+   ],
+   "b2": [
+    130,
+    2116,
+    18,
+    20
+   ],
+   "b5": [
+    208,
+    2116,
+    27,
+    20
+   ],
+   "b10": [
+    286,
+    2116,
+    33,
+    20
+   ],
+   "mas10": [
+    157,
+    1471,
+    180,
+    28
+   ],
+   "resena": [
+    170,
+    2420,
+    170,
+    40
+   ]
+  }
+ },
+ "conCuenta": {
+  "url": "/sorteo",
+  "pageH": 4572,
+  "fijos": [
+   {
+    "caja": [
+     0,
+     0,
+     390,
+     105
+    ],
+    "pos": "sticky"
+   },
+   {
+    "caja": [
+     12,
+     768,
+     366,
+     64
+    ],
+    "pos": "fixed"
+   }
+  ],
+  "tarjetas": {
+   "amigos": [
+    16,
+    2956,
+    358,
+    332
+   ]
+  },
+  "puntos": {
+   "faltaActivar": [
+    262,
+    3190,
+    91,
+    20
+   ],
+   "recordar": [
+    37,
+    3222,
+    240,
+    44
+   ],
+   "carlos": [
+    37,
+    3190,
+    87,
+    20
+   ]
+  }
+ },
+ "correo": {
+  "url": "correo",
+  "pageH": 1259,
+  "fijos": [],
+  "tarjetas": {
+   "boton": [
+    8,
+    360,
+    374,
+    210
+   ]
+  },
+  "puntos": {
+   "activar": [
+    89,
+    412,
+    213,
+    51
+   ],
+   "invito": [
+    43,
+    499,
+    189,
+    16
+   ]
+  },
+  "recortes": {
+   "boton": "hasta la nota: sin el Chispa del pie del correo"
+  }
+ },
+ "ficha": {
+  "url": "/productos/mini-dc-ups-de-20000-mah",
+  "pageH": 3609,
+  "fijos": [
+   {
+    "caja": [
+     0,
+     0,
+     390,
+     105
+    ],
+    "pos": "sticky"
+   },
+   {
+    "caja": [
+     0,
+     703,
+     390,
+     61
+    ],
+    "pos": "fixed"
+   },
+   {
+    "caja": [
+     12,
+     768,
+     366,
+     64
+    ],
+    "pos": "fixed"
+   }
+  ],
+  "tarjetas": {
+   "estrellaFicha": [
+    33,
+    751,
+    324,
+    118
+   ]
+  },
+  "puntos": {
+   "quince": [
+    242,
+    818,
+    68,
+    17
+   ]
+  }
+ },
+ "carrito": {
+  "url": "/carrito",
+  "pageH": 2572,
+  "fijos": [
+   {
+    "caja": [
+     0,
+     0,
+     390,
+     105
+    ],
+    "pos": "sticky"
+   },
+   {
+    "caja": [
+     12,
+     768,
+     366,
+     64
+    ],
+    "pos": "fixed"
+   },
+   {
+    "caja": [
+     326,
+     704,
+     48,
+     48
+    ],
+    "pos": "fixed"
+   }
+  ],
+  "tarjetas": {
+   "boletos": [
+    37,
+    1218,
+    316,
+    156
+   ]
+  },
+  "puntos": {
+   "faltan": [
+    49,
+    1278,
+    292,
+    44
+   ]
+  }
+ },
+ "activado": {
+  "url": "/sorteo",
+  "pageH": 4929,
+  "fijos": [
+   {
+    "caja": [
+     0,
+     0,
+     390,
+     105
+    ],
+    "pos": "sticky"
+   },
+   {
+    "caja": [
+     12,
+     768,
+     366,
+     64
+    ],
+    "pos": "fixed"
+   }
+  ],
+  "tarjetas": {
+   "amigos": [
+    16,
+    3008,
+    358,
+    637
+   ]
+  },
+  "puntos": {
+   "carlos": [
+    37,
+    3604,
+    87,
+    20
+   ],
+   "boletos": [
+    258,
+    3494,
+    95,
+    20
+   ]
+  }
+ }
+}

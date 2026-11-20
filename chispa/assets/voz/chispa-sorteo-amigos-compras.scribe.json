@@ -1,0 +1,757 @@
+{
+  "language_code": "es",
+  "segments": [
+    {
+      "text": "¡Ojo! Si invitaste amigos al sorteo de la PS4 y no te salen los boletos, esto es para ti. Tu amigo no cuenta solo por registrarse. Tiene que activar su cuenta con el enlace que le llega al correo. Mándale el recordatorio por WhatsApp desde la página del sorteo. Abre el correo, toca \"Activar mi cuenta\" ¡y listo! Ya cuenta. Cada dos amigos activos te dan un boleto, hasta tres boletos. Pero ¿sabes qué te da muchas más oportunidades? ¡Comprar! Desde cinco dólares te llevas dos boletos. Con cincuenta, cinco. Con cien, diez. Y cada semana hay un producto estrella. Cada uno que compres te da diez boletos más. ¿Ya te llegó? Deja tu reseña. Cuando la aprobamos, ganas uno más. Y el carrito te dice cuántos boletos te da tu compra. Todo está en las bases, en electroshopv.com/sorteo. El 20 de diciembre sorteamos la PlayStation. ¡Puede ser tuya!",
+      "start_time": 0.04,
+      "end_time": 55.48,
+      "words": [
+        {
+          "text": "¡Ojo!",
+          "start_time": 0.04,
+          "end_time": 0.34
+        },
+        {
+          "text": "Si",
+          "start_time": 0.8,
+          "end_time": 0.86
+        },
+        {
+          "text": "invitaste",
+          "start_time": 0.92,
+          "end_time": 1.38
+        },
+        {
+          "text": "amigos",
+          "start_time": 1.4,
+          "end_time": 1.74
+        },
+        {
+          "text": "al",
+          "start_time": 1.78,
+          "end_time": 1.84
+        },
+        {
+          "text": "sorteo",
+          "start_time": 1.92,
+          "end_time": 2.26
+        },
+        {
+          "text": "de",
+          "start_time": 2.3,
+          "end_time": 2.36
+        },
+        {
+          "text": "la",
+          "start_time": 2.4,
+          "end_time": 2.46
+        },
+        {
+          "text": "PS4",
+          "start_time": 2.58,
+          "end_time": 3.3
+        },
+        {
+          "text": "y",
+          "start_time": 3.48,
+          "end_time": 3.52
+        },
+        {
+          "text": "no",
+          "start_time": 3.68,
+          "end_time": 3.8
+        },
+        {
+          "text": "te",
+          "start_time": 3.88,
+          "end_time": 3.94
+        },
+        {
+          "text": "salen",
+          "start_time": 4.04,
+          "end_time": 4.26
+        },
+        {
+          "text": "los",
+          "start_time": 4.3,
+          "end_time": 4.42
+        },
+        {
+          "text": "boletos,",
+          "start_time": 4.48,
+          "end_time": 4.96
+        },
+        {
+          "text": "esto",
+          "start_time": 5.48,
+          "end_time": 5.7
+        },
+        {
+          "text": "es",
+          "start_time": 5.72,
+          "end_time": 5.84
+        },
+        {
+          "text": "para",
+          "start_time": 5.86,
+          "end_time": 6.02
+        },
+        {
+          "text": "ti.",
+          "start_time": 6.1,
+          "end_time": 6.3
+        },
+        {
+          "text": "Tu",
+          "start_time": 6.74,
+          "end_time": 6.8
+        },
+        {
+          "text": "amigo",
+          "start_time": 6.82,
+          "end_time": 7.1
+        },
+        {
+          "text": "no",
+          "start_time": 7.24,
+          "end_time": 7.4
+        },
+        {
+          "text": "cuenta",
+          "start_time": 7.44,
+          "end_time": 7.7
+        },
+        {
+          "text": "solo",
+          "start_time": 7.88,
+          "end_time": 8.14
+        },
+        {
+          "text": "por",
+          "start_time": 8.16,
+          "end_time": 8.26
+        },
+        {
+          "text": "registrarse.",
+          "start_time": 8.28,
+          "end_time": 8.98
+        },
+        {
+          "text": "Tiene",
+          "start_time": 9.32,
+          "end_time": 9.5
+        },
+        {
+          "text": "que",
+          "start_time": 9.56,
+          "end_time": 9.62
+        },
+        {
+          "text": "activar",
+          "start_time": 9.66,
+          "end_time": 10.06
+        },
+        {
+          "text": "su",
+          "start_time": 10.14,
+          "end_time": 10.2
+        },
+        {
+          "text": "cuenta",
+          "start_time": 10.28,
+          "end_time": 10.64
+        },
+        {
+          "text": "con",
+          "start_time": 10.86,
+          "end_time": 10.96
+        },
+        {
+          "text": "el",
+          "start_time": 11.0,
+          "end_time": 11.08
+        },
+        {
+          "text": "enlace",
+          "start_time": 11.1,
+          "end_time": 11.48
+        },
+        {
+          "text": "que",
+          "start_time": 11.56,
+          "end_time": 11.62
+        },
+        {
+          "text": "le",
+          "start_time": 11.66,
+          "end_time": 11.72
+        },
+        {
+          "text": "llega",
+          "start_time": 11.78,
+          "end_time": 11.96
+        },
+        {
+          "text": "al",
+          "start_time": 11.98,
+          "end_time": 12.06
+        },
+        {
+          "text": "correo.",
+          "start_time": 12.08,
+          "end_time": 12.46
+        },
+        {
+          "text": "Mándale",
+          "start_time": 12.84,
+          "end_time": 13.14
+        },
+        {
+          "text": "el",
+          "start_time": 13.16,
+          "end_time": 13.22
+        },
+        {
+          "text": "recordatorio",
+          "start_time": 13.28,
+          "end_time": 13.9
+        },
+        {
+          "text": "por",
+          "start_time": 13.92,
+          "end_time": 14.06
+        },
+        {
+          "text": "WhatsApp",
+          "start_time": 14.08,
+          "end_time": 14.48
+        },
+        {
+          "text": "desde",
+          "start_time": 14.58,
+          "end_time": 14.8
+        },
+        {
+          "text": "la",
+          "start_time": 14.84,
+          "end_time": 14.88
+        },
+        {
+          "text": "página",
+          "start_time": 15.0,
+          "end_time": 15.32
+        },
+        {
+          "text": "del",
+          "start_time": 15.34,
+          "end_time": 15.44
+        },
+        {
+          "text": "sorteo.",
+          "start_time": 15.5,
+          "end_time": 15.94
+        },
+        {
+          "text": "Abre",
+          "start_time": 16.3,
+          "end_time": 16.44
+        },
+        {
+          "text": "el",
+          "start_time": 16.48,
+          "end_time": 16.52
+        },
+        {
+          "text": "correo,",
+          "start_time": 16.6,
+          "end_time": 16.94
+        },
+        {
+          "text": "toca",
+          "start_time": 17.28,
+          "end_time": 17.56
+        },
+        {
+          "text": "\"Activar",
+          "start_time": 17.72,
+          "end_time": 18.22
+        },
+        {
+          "text": "mi",
+          "start_time": 18.28,
+          "end_time": 18.34
+        },
+        {
+          "text": "cuenta\"",
+          "start_time": 18.42,
+          "end_time": 18.76
+        },
+        {
+          "text": "¡y",
+          "start_time": 19.08,
+          "end_time": 19.14
+        },
+        {
+          "text": "listo!",
+          "start_time": 19.2,
+          "end_time": 19.56
+        },
+        {
+          "text": "Ya",
+          "start_time": 19.86,
+          "end_time": 19.98
+        },
+        {
+          "text": "cuenta.",
+          "start_time": 20.08,
+          "end_time": 20.46
+        },
+        {
+          "text": "Cada",
+          "start_time": 20.82,
+          "end_time": 21.04
+        },
+        {
+          "text": "dos",
+          "start_time": 21.14,
+          "end_time": 21.3
+        },
+        {
+          "text": "amigos",
+          "start_time": 21.38,
+          "end_time": 21.7
+        },
+        {
+          "text": "activos",
+          "start_time": 21.74,
+          "end_time": 22.18
+        },
+        {
+          "text": "te",
+          "start_time": 22.26,
+          "end_time": 22.36
+        },
+        {
+          "text": "dan",
+          "start_time": 22.4,
+          "end_time": 22.58
+        },
+        {
+          "text": "un",
+          "start_time": 22.76,
+          "end_time": 22.88
+        },
+        {
+          "text": "boleto,",
+          "start_time": 22.92,
+          "end_time": 23.32
+        },
+        {
+          "text": "hasta",
+          "start_time": 23.58,
+          "end_time": 23.9
+        },
+        {
+          "text": "tres",
+          "start_time": 24.04,
+          "end_time": 24.26
+        },
+        {
+          "text": "boletos.",
+          "start_time": 24.32,
+          "end_time": 24.84
+        },
+        {
+          "text": "Pero",
+          "start_time": 25.14,
+          "end_time": 25.46
+        },
+        {
+          "text": "¿sabes",
+          "start_time": 25.76,
+          "end_time": 26.08
+        },
+        {
+          "text": "qué",
+          "start_time": 26.14,
+          "end_time": 26.2
+        },
+        {
+          "text": "te",
+          "start_time": 26.26,
+          "end_time": 26.32
+        },
+        {
+          "text": "da",
+          "start_time": 26.36,
+          "end_time": 26.46
+        },
+        {
+          "text": "muchas",
+          "start_time": 26.66,
+          "end_time": 27.0
+        },
+        {
+          "text": "más",
+          "start_time": 27.08,
+          "end_time": 27.22
+        },
+        {
+          "text": "oportunidades?",
+          "start_time": 27.26,
+          "end_time": 28.04
+        },
+        {
+          "text": "¡Comprar!",
+          "start_time": 28.4,
+          "end_time": 28.94
+        },
+        {
+          "text": "Desde",
+          "start_time": 29.34,
+          "end_time": 29.58
+        },
+        {
+          "text": "cinco",
+          "start_time": 29.7,
+          "end_time": 29.98
+        },
+        {
+          "text": "dólares",
+          "start_time": 30.04,
+          "end_time": 30.42
+        },
+        {
+          "text": "te",
+          "start_time": 30.44,
+          "end_time": 30.52
+        },
+        {
+          "text": "llevas",
+          "start_time": 30.56,
+          "end_time": 30.88
+        },
+        {
+          "text": "dos",
+          "start_time": 31.0,
+          "end_time": 31.16
+        },
+        {
+          "text": "boletos.",
+          "start_time": 31.22,
+          "end_time": 31.7
+        },
+        {
+          "text": "Con",
+          "start_time": 31.94,
+          "end_time": 32.04
+        },
+        {
+          "text": "cincuenta,",
+          "start_time": 32.1,
+          "end_time": 32.619
+        },
+        {
+          "text": "cinco.",
+          "start_time": 32.9,
+          "end_time": 33.28
+        },
+        {
+          "text": "Con",
+          "start_time": 33.54,
+          "end_time": 33.66
+        },
+        {
+          "text": "cien,",
+          "start_time": 33.78,
+          "end_time": 34.02
+        },
+        {
+          "text": "diez.",
+          "start_time": 34.34,
+          "end_time": 34.78
+        },
+        {
+          "text": "Y",
+          "start_time": 35.08,
+          "end_time": 35.12
+        },
+        {
+          "text": "cada",
+          "start_time": 35.26,
+          "end_time": 35.44
+        },
+        {
+          "text": "semana",
+          "start_time": 35.52,
+          "end_time": 35.96
+        },
+        {
+          "text": "hay",
+          "start_time": 35.98,
+          "end_time": 36.16
+        },
+        {
+          "text": "un",
+          "start_time": 36.22,
+          "end_time": 36.34
+        },
+        {
+          "text": "producto",
+          "start_time": 36.36,
+          "end_time": 36.76
+        },
+        {
+          "text": "estrella.",
+          "start_time": 36.8,
+          "end_time": 37.28
+        },
+        {
+          "text": "Cada",
+          "start_time": 37.54,
+          "end_time": 37.8
+        },
+        {
+          "text": "uno",
+          "start_time": 37.86,
+          "end_time": 37.96
+        },
+        {
+          "text": "que",
+          "start_time": 38.04,
+          "end_time": 38.14
+        },
+        {
+          "text": "compres",
+          "start_time": 38.18,
+          "end_time": 38.54
+        },
+        {
+          "text": "te",
+          "start_time": 38.6,
+          "end_time": 38.68
+        },
+        {
+          "text": "da",
+          "start_time": 38.72,
+          "end_time": 38.82
+        },
+        {
+          "text": "diez",
+          "start_time": 38.98,
+          "end_time": 39.22
+        },
+        {
+          "text": "boletos",
+          "start_time": 39.28,
+          "end_time": 39.66
+        },
+        {
+          "text": "más.",
+          "start_time": 39.72,
+          "end_time": 39.98
+        },
+        {
+          "text": "¿Ya",
+          "start_time": 40.34,
+          "end_time": 40.44
+        },
+        {
+          "text": "te",
+          "start_time": 40.5,
+          "end_time": 40.56
+        },
+        {
+          "text": "llegó?",
+          "start_time": 40.6,
+          "end_time": 40.84
+        },
+        {
+          "text": "Deja",
+          "start_time": 41.24,
+          "end_time": 41.42
+        },
+        {
+          "text": "tu",
+          "start_time": 41.48,
+          "end_time": 41.56
+        },
+        {
+          "text": "reseña.",
+          "start_time": 41.6,
+          "end_time": 42.04
+        },
+        {
+          "text": "Cuando",
+          "start_time": 42.34,
+          "end_time": 42.56
+        },
+        {
+          "text": "la",
+          "start_time": 42.6,
+          "end_time": 42.64
+        },
+        {
+          "text": "aprobamos,",
+          "start_time": 42.66,
+          "end_time": 43.18
+        },
+        {
+          "text": "ganas",
+          "start_time": 43.34,
+          "end_time": 43.64
+        },
+        {
+          "text": "uno",
+          "start_time": 43.84,
+          "end_time": 44.0
+        },
+        {
+          "text": "más.",
+          "start_time": 44.08,
+          "end_time": 44.36
+        },
+        {
+          "text": "Y",
+          "start_time": 44.64,
+          "end_time": 44.68
+        },
+        {
+          "text": "el",
+          "start_time": 44.72,
+          "end_time": 44.82
+        },
+        {
+          "text": "carrito",
+          "start_time": 44.84,
+          "end_time": 45.2
+        },
+        {
+          "text": "te",
+          "start_time": 45.26,
+          "end_time": 45.34
+        },
+        {
+          "text": "dice",
+          "start_time": 45.36,
+          "end_time": 45.7
+        },
+        {
+          "text": "cuántos",
+          "start_time": 45.74,
+          "end_time": 46.08
+        },
+        {
+          "text": "boletos",
+          "start_time": 46.14,
+          "end_time": 46.56
+        },
+        {
+          "text": "te",
+          "start_time": 46.58,
+          "end_time": 46.66
+        },
+        {
+          "text": "da",
+          "start_time": 46.7,
+          "end_time": 46.78
+        },
+        {
+          "text": "tu",
+          "start_time": 46.84,
+          "end_time": 46.9
+        },
+        {
+          "text": "compra.",
+          "start_time": 46.98,
+          "end_time": 47.32
+        },
+        {
+          "text": "Todo",
+          "start_time": 47.62,
+          "end_time": 47.82
+        },
+        {
+          "text": "está",
+          "start_time": 47.88,
+          "end_time": 48.1
+        },
+        {
+          "text": "en",
+          "start_time": 48.12,
+          "end_time": 48.18
+        },
+        {
+          "text": "las",
+          "start_time": 48.22,
+          "end_time": 48.32
+        },
+        {
+          "text": "bases,",
+          "start_time": 48.38,
+          "end_time": 48.8
+        },
+        {
+          "text": "en",
+          "start_time": 49.0,
+          "end_time": 49.06
+        },
+        {
+          "text": "electroshopv.com/sorteo.",
+          "start_time": 49.1,
+          "end_time": 51.56
+        },
+        {
+          "text": "El",
+          "start_time": 51.86,
+          "end_time": 51.94
+        },
+        {
+          "text": "20",
+          "start_time": 52.12,
+          "end_time": 52.3
+        },
+        {
+          "text": "de",
+          "start_time": 52.34,
+          "end_time": 52.38
+        },
+        {
+          "text": "diciembre",
+          "start_time": 52.44,
+          "end_time": 52.84
+        },
+        {
+          "text": "sorteamos",
+          "start_time": 52.94,
+          "end_time": 53.46
+        },
+        {
+          "text": "la",
+          "start_time": 53.52,
+          "end_time": 53.58
+        },
+        {
+          "text": "PlayStation.",
+          "start_time": 53.7,
+          "end_time": 54.42
+        },
+        {
+          "text": "¡Puede",
+          "start_time": 54.66,
+          "end_time": 54.88
+        },
+        {
+          "text": "ser",
+          "start_time": 54.96,
+          "end_time": 55.08
+        },
+        {
+          "text": "tuya!",
+          "start_time": 55.16,
+          "end_time": 55.48
+        }
+      ]
+    }
+  ]
+}

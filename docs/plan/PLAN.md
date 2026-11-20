@@ -601,8 +601,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - El logo oficial en la camisa (vector).
   - El OK y los brazos cruzados rehechos con la skill `manos-de-caricatura`, que junta lo que enseñan los animadores.
   - Las imágenes de la web en `chispa-31`.
-- **C-300** (**hecho el guion**, 18/11; `estado/C-300.md`): el reel "Más boletos para la PS4", sobre los amigos que activan su cuenta y las compras que dan más boletos, en `chispa/guiones/sorteo-amigos-y-compras.md`.
-  - **Sigue:** grabarlo cuando rc.111 esté en producción y llegue la voz. Claude saca las capturas desde fuera (C1 y C5 a C9), arma la página del video, lo graba y entrega la portada.
+- **C-300** (**hecha**, 18/11; `estado/C-300.md`): el reel "Más boletos para la PS4", sobre los amigos que activan su cuenta y las compras que dan más boletos (`chispa/guiones/sorteo-amigos-y-compras.md`).
+  - Capturas profesionales v2 (`capturar-tienda.mjs`, `sembrar-sorteo.mjs`, `evaluar.mjs` y skill `.claude/skills/videos-con-capturas`), voz Diego de ElevenLabs + Scribe (`chispa-sorteo-amigos-compras.mp3` + `.scribe.json`), efectos (`sonido-sorteo-amigos-compras.py`), portada épica (`portada-sorteo-amigos.html`) y descripciones para Instagram y TikTok listos para publicar (tras elegir el producto estrella de la semana en Marketing → Sorteo).
 - **Sigue: las manos animadas de Chispa** (pendiente; el equipo lo pidió el 18/11, con la skill):
   - la mano intermedia de cada cambio de forma ("ve a otro lado en el medio");
   - los dedos con su propio tiempo;

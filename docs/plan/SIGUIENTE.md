@@ -12,9 +12,8 @@
   - **Sin boletos:** "Aún tienes N días para ganar boletos", las vías con sus números y el boleto de muestra con el correo del cliente.
   - **Con boletos:** "Aún tienes N días para sumar más" y las vías en píldoras. Puntos ES va en blanco mientras dura el sorteo.
 - **C-298 · Ajustes → IA por prioridad (rc.113, en `main`, por subir con el bloque de §2; `estado/C-298.md`):** el motor y lo que gasta arriba; Proveedores, Usos, Reglas y Guía plegados con lo esencial en la cabecera. La pieza `components/admin/Plegable` sirve para cualquier pantalla larga del panel.
-- **C-300 · El reel "Más boletos para la PS4" (el guion; `estado/C-300.md`):** que los amigos activen su cuenta y que comprando se ganan muchos más boletos.
-  - El guion, el texto para la voz y las capturas están en `chispa/guiones/sorteo-amigos-y-compras.md`.
-  - **Se graba y se publica después de subir rc.111**, que trae la regla nueva de las compras. Lo del equipo está en §3.
+- **C-300 · El reel "Más boletos para la PS4" (`estado/C-300.md`):** terminado con capturas profesionales v2 (página a 3x, tarjetas a 4x con spotlight, zoom 1,66–2,2x), la voz Diego de ElevenLabs + Scribe (`chispa/assets/voz/chispa-sorteo-amigos-compras.mp3`), efectos sincronizados (`sonido-sorteo-amigos-compras.py`), portada épica (`chispa/piezas/portada-sorteo-amigos.html`) y descripciones para Instagram y TikTok en `chispa/guiones/sorteo-amigos-y-compras.md`.
+  - **Listo para publicar** (`rc.111+` ya en producción; falta elegir el producto estrella de la semana en Marketing → Sorteo, §3).
 - **C-299 · El aviso del dispositivo de confianza (rc.112, en `main`, por subir con el bloque de §2; `estado/C-299.md`):** el correo "Marcaste un dispositivo de confianza" sale solo a un correo comprobado, como el aviso de inicio de sesión. A una dirección sin comprobar rebotaba y el rebote llegaba al buzón de la tienda en cada entrada (18/11, captura del equipo).
 - **C-297 · El sorteo que vende (rc.111, en producción; por confirmar: §2; `estado/C-297.md`):** la decisión de Andrés del 18/11, vista en desarrollo.
   - **Comprar vale más:** $5 → 2 boletos, cada $50 → 5; cada reseña aprobada → 1; invitar queda igual. Cuenta también lo comprado desde el 14/11.
@@ -1313,9 +1312,8 @@ No hay más deploy pendiente que el de arriba. Estas son las pruebas que Andrés
 ## 3. Tareas del equipo (Andrés y Luis, sin código)
 En el orden en que más destraban:
 
-**El reel "Más boletos para la PS4" (C-300)**: Claude ya armó el guion, las capturas, el video y la portada; falta la voz.
-1. **Volver a conectar ElevenLabs** (en la computadora, en claude.ai): Configuración → Conectores → ElevenLabs → desconectar y conectar otra vez, aceptando todos los permisos. Hoy responde "Insufficient scope". Con eso Claude genera la voz Diego y termina el video.
-2. **Antes de publicarlo:** subir el bloque de §2 (rc.111 en adelante) y elegir el producto estrella de esa semana (en el panel: Marketing → Sorteo → "Producto estrella de cada semana").
+**El reel "Más boletos para la PS4" (C-300)**: ya están terminados el video final (`61.2 s`, con voz Diego, efectos y cierre), la portada épica y las descripciones de Instagram y TikTok.
+1. **Antes de publicarlo:** elegir el producto estrella de esa semana en el panel (Marketing → Sorteo → "Producto estrella de cada semana"; en el video aparece el Mini DC UPS) y confirmar que la tienda lo muestre. (`rc.111+` ya está en producción.)
 
 
 **Del plan del 14/11 (C-220):** los textos para Google, el lema y el sorteo de Navidad ya no los hace el equipo en el panel: van en el SQL de datos del bloque de rc.45 (sección 2). Después del deploy queda subir la foto de la consola (Marketing → Sorteo → Cambiar).

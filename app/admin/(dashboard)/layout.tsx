@@ -451,7 +451,7 @@ export default function AdminLayout({
       </aside>
 
       <div className={`transition-[padding] duration-200 ${isCollapsed ? '' : 'lg:pl-64'}`}>
-        <header className="sticky top-0 z-[var(--z-sticky)] flex h-16 items-center gap-2 border-b border-line bg-white px-4 lg:px-6">
+        <header className="sticky top-0 z-[var(--z-header)] flex h-16 items-center gap-2 border-b border-line bg-white px-4 lg:px-6">
           <button
             type="button"
             onClick={() => setDrawerPath(pathname)}

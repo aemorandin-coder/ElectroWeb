@@ -5,19 +5,27 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import {
-  IconoAdvertencia, IconoArchivar, IconoChevronDerecha, IconoChevronIzquierda, IconoConfirmado, IconoCopiar,
-  IconoDescargar, IconoEditar, IconoEliminar, IconoImagen, IconoMas, IconoTienda, type IconType,
+  IconoAdvertencia, IconoAjustes, IconoArchivar, IconoBuscar, IconoChevronDerecha, IconoChevronIzquierda,
+  IconoConfirmado, IconoCopiar, IconoDescargar, IconoEditar, IconoEliminar, IconoImagen, IconoMas, IconoNovedad,
+  IconoTexto, IconoTienda, type IconType,
 } from '@/components/iconos';
 import Filtros from '@/components/admin/Filtros';
-import { adminBadge, adminEmpty, adminHint, adminIconButton, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminTab } from '@/lib/admin-ui';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
+import {
+  adminBadge, adminDato, adminEmpty, adminIconButton, adminInput, adminPageHeader,
+  adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab, placaAccion,
+} from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { downloadIssues, flyerChecks, flyerStatus, type CheckKind, type FlyerCheck, type TextIssues } from '@/lib/studio/checks';
 import type { ProductSrc } from '@/lib/studio/engine';
-import { FORMATS, TEMPLATES, slugify, type StudioFlyer } from '@/lib/studio/schema';
+import { linkProduct, linkReview, refreshRate } from '@/lib/studio/live';
+import { FORMATS, TEMPLATES, blankProduct, normalizeFlyer, slugify, type FormatId, type StudioFlyer, type StudioRadarItem } from '@/lib/studio/schema';
 import { makeZip } from '@/lib/studio/zip';
 import { downloadBlob } from '@/lib/studio/exportar';
+import BrandSettingsDrawer from './BrandSettingsDrawer';
 import ElegirSalida, { enviarATelegram, type Destino } from './ElegirSalida';
 import { fileBase } from './exporters';
+import { TEMPLATE_START } from './StepContent';
 import StudioResults from './StudioResults';
 import { useStudioContext } from './StudioContext';
 import { smallButton } from './ui';
@@ -25,18 +33,26 @@ import { useDownloadGate } from './useDownloadGate';
 import { useFlyerRenderer } from './useFlyerRenderer';
 
 type View = 'lista' | 'semana' | 'resultados';
+type FormatFilter = 'all' | FormatId | 'alerts';
 const VIEW_KEY = 'studio-view';
 const storeSrc: ProductSrc = (p) => p.imageUrl;
 const editHref = (id: string, step?: number) => `/admin/studio/${id}${step ? `?paso=${step}` : ''}`;
 
-/** Lo que se muestra en "Por atender": cada grupo filtra la lista */
-// C-249: cada uno con su píldora de `Filtros` (ícono, nombre y lo que junta; §1.7)
-const ATTENTION: { kind: CheckKind; blocksOnly?: boolean; one: string; many: string; etiqueta: string; ayuda: string; Icono: IconType }[] = [
-  { kind: 'content', blocksOnly: true, one: '1 incompleta', many: 'incompletas', etiqueta: 'Incompletas', ayuda: 'Les falta algo para publicar', Icono: IconoEditar },
-  { kind: 'store', one: '1 con un problema en la tienda', many: 'con problemas en la tienda', etiqueta: 'Problema en la tienda', ayuda: 'El cupón o el producto cambió', Icono: IconoTienda },
-  { kind: 'photo', one: '1 sin foto', many: 'sin foto', etiqueta: 'Sin foto', ayuda: 'Les falta la imagen', Icono: IconoImagen },
-  { kind: 'redownload', one: '1 para descargar de nuevo', many: 'para descargar de nuevo', etiqueta: 'Descargar de nuevo', ayuda: 'Cambió el precio o la tasa', Icono: IconoDescargar },
+const ATTENTION: { kind: CheckKind; blocksOnly?: boolean; etiqueta: string; ayuda: string; Icono: IconType }[] = [
+  { kind: 'content', blocksOnly: true, etiqueta: 'Incompletas', ayuda: 'Les falta algo para publicar', Icono: IconoEditar },
+  { kind: 'store', etiqueta: 'Problema en tienda', ayuda: 'Producto o cupón cambió', Icono: IconoTienda },
+  { kind: 'photo', etiqueta: 'Sin foto', ayuda: 'Falta la imagen', Icono: IconoImagen },
+  { kind: 'overflow', etiqueta: 'Texto cortado', ayuda: 'No cabe en su espacio', Icono: IconoTexto },
+  { kind: 'redownload', etiqueta: 'Por descargar', ayuda: 'Cambió precio, tasa o diseño', Icono: IconoDescargar },
 ];
+
+const STEP_SHORTCUT: Record<number, string> = {
+  1: 'Ir a Contenido',
+  2: 'Ir a Fotos',
+  4: 'Ir a Textos',
+  5: 'Ir a Animación',
+  6: 'Volver a sacar',
+};
 
 function ymd(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -53,7 +69,6 @@ function weekDays(offset: number): Date[] {
   });
 }
 
-// Miniaturas ya dibujadas: sobreviven al ir y volver del editor. Clave: id y fecha de guardado.
 const thumbCache = new Map<string, { key: string; url: string; text: TextIssues }>();
 const thumbPending = new Set<string>();
 
@@ -78,18 +93,33 @@ export default function StudioHome() {
     try {
       localStorage.setItem(VIEW_KEY, v);
     } catch {
-      // Sin almacenamiento: vuelve a "Historias" la próxima vez
+      // Sin almacenamiento
     }
   };
+
+  const [radar, setRadar] = useState<StudioRadarItem[] | null>(null);
+  const [creatingRadarId, setCreatingRadarId] = useState<string | null>(null);
+  const [brandOpen, setBrandOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [formatFilter, setFormatFilter] = useState<FormatFilter>('all');
   const [batch, setBatch] = useState<string | null>(null);
   const [attention, setAttention] = useState<CheckKind | null>(null);
   const [weekOffset, setWeekOffset] = useState(0);
   const [busy, setBusy] = useState(false);
-  // C-287: la historia cuya imagen se va a sacar: antes se pregunta qué hacer con ella
   const [salida, setSalida] = useState<StudioFlyer | null>(null);
   const [, setThumbTick] = useState(0);
 
-  // Dibuja las miniaturas que faltan, de a una (la cola del dibujante las ordena)
+  useCargarAlMontar(async () => {
+    const res = await fetch('/api/admin/studio/radar');
+    if (res.ok) {
+      const data = (await res.json()) as { items: StudioRadarItem[] };
+      setRadar(data.items);
+    } else {
+      setRadar([]);
+    }
+  });
+
+  // Miniaturas con el cache de última modificación
   useEffect(() => {
     if (loading) return;
     flyers.forEach((f) => {
@@ -135,7 +165,6 @@ export default function StudioHome() {
     setBusy(true);
     try {
       await studio.saveNow();
-      // Precios, ofertas y tasa al día antes de dibujar
       const [fresh] = await studio.freshFlyers([f]);
       const { blob } = await still(fresh, fresh.code);
       if (!blob) throw new Error('No se pudo generar la imagen');
@@ -150,7 +179,6 @@ export default function StudioHome() {
     }
   };
 
-  /** Varias juntas en un ZIP: las incompletas se saltan, y lo que tenga avisos se confirma */
   const downloadZip = async (list: StudioFlyer[], name: string) => {
     if (busy || !list.length) return;
     const blocked = list.filter((f) => downloadIssues(checksFor(f)).blocks.length);
@@ -191,24 +219,122 @@ export default function StudioHome() {
     }
   };
 
+  const createFromRadar = async (item: StudioRadarItem) => {
+    if (creatingRadarId) return;
+    setCreatingRadarId(item.id);
+    try {
+      const start = TEMPLATE_START[item.template];
+      let data = normalizeFlyer({ template: item.template });
+      data = {
+        ...data,
+        products: Array.from({ length: Math.max(TEMPLATES[item.template].n, 1) }, blankProduct),
+        fx: start ? { ...data.fx, confeti: start.confeti ?? data.fx.confeti, reflejo: start.reflejo ?? data.fx.reflejo } : data.fx,
+        anim: start?.anim ?? data.anim,
+        navidad: store?.navidad.activo ?? false,
+      };
+      if (item.product) {
+        studio.rememberLive(item.product);
+        data = linkProduct(data, 0, item.product);
+      }
+      if (item.review) {
+        if (item.review.product) studio.rememberLive(item.review.product);
+        data = linkReview(data, item.review);
+      }
+      if (item.template === 'tasa') {
+        data = refreshRate({ ...data, name: 'Tasa BCV del día' }, store);
+      }
+      if (item.extra?.tag && data.products[0]) {
+        data.products[0] = { ...data.products[0], tag: item.extra.tag };
+      }
+      if (item.extra?.name) {
+        data.name = item.extra.name;
+      }
+      const created = await studio.create(data);
+      if (created) {
+        const paso = TEMPLATES[item.template].photo !== 'none' && !data.products[0]?.imageUrl ? 2 : 3;
+        router.push(editHref(created.id, paso));
+      }
+    } finally {
+      setCreatingRadarId(null);
+    }
+  };
+
+  const handleRepeat = async (flyerId: string) => {
+    const copy = await studio.repeatFormula(flyerId);
+    if (copy) router.push(editHref(copy.id, 1));
+  };
+
   const header = (
     <div className={adminPageHeader}>
       <div>
         <h1 className={adminPageTitle}>ElectroStudio</h1>
-        <p className={adminPageSubtitle}>Historias y videos para Instagram con los productos, precios y ofertas de la tienda.</p>
+        <p className={adminPageSubtitle}>Crea historias y posts con precios, ofertas y boletos en vivo de la tienda.</p>
       </div>
-      {/* C-116, fase 2: el asistente guarda la historia recién cuando se eligió qué publicar */}
-      <Link href="/admin/studio/nueva" className={`${adminPrimaryButton} shrink-0 self-start whitespace-nowrap sm:self-auto`}>
-        <IconoMas className="h-4 w-4" aria-hidden="true" />
-        Nueva historia
-      </Link>
+      <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+        <button type="button" onClick={() => setBrandOpen(true)} className={adminSecondaryButton}>
+          <IconoAjustes className="h-4 w-4" aria-hidden="true" />
+          Ajustes de marca
+        </button>
+        <Link href="/admin/studio/nueva" className={adminPrimaryButton}>
+          <IconoMas className="h-4 w-4" aria-hidden="true" />
+          Nueva historia
+        </Link>
+      </div>
     </div>
+  );
+
+  const radarSection = (
+    <section aria-label="Qué publicamos hoy" className="mb-5 rounded-2xl border border-brand-200 bg-brand-50 p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2.5 text-base font-bold text-brand-700">
+          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${placaAccion}`} aria-hidden="true">
+            <IconoNovedad className="h-4 w-4" />
+          </span>
+          Qué publicamos hoy (desde tu tienda)
+        </h2>
+        {radar && radar.length > 0 && <span className={adminDato}>{radar.length} sugerencias en vivo</span>}
+      </div>
+
+      {radar === null ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-busy="true">
+          {[0, 1, 2, 3].map((k) => (
+            <div key={k} className="h-28 animate-pulse rounded-xl border border-brand-200 bg-white/70" />
+          ))}
+        </div>
+      ) : radar.length === 0 ? (
+        <p className="text-sm text-brand-700">Publica productos, ofertas o carga la tasa del día para recibir ideas listas aquí.</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {radar.map((item) => (
+            <div
+              key={item.id}
+              className={`flex flex-col justify-between gap-2.5 rounded-xl border bg-white p-3.5 ${item.destacada ? 'border-brand-500 ring-1 ring-brand-200' : 'border-line'}`}
+            >
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wide text-brand-600">{item.kicker}</span>
+                <p className="mt-0.5 text-sm font-bold text-ink">{item.titulo}</p>
+                <p className="mt-0.5 line-clamp-2 text-xs text-muted">{item.detalle}</p>
+              </div>
+              <button
+                type="button"
+                disabled={creatingRadarId !== null}
+                onClick={() => void createFromRadar(item)}
+                className="min-h-11 sm:min-h-9 w-full rounded-lg border border-brand-200 bg-brand-50 px-3 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-100 disabled:opacity-50"
+              >
+                {creatingRadarId === item.id ? 'Creando…' : item.cta}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 
   if (loading) {
     return (
       <div>
         {header}
+        {radarSection}
         <div className={adminEmpty} aria-busy="true">
           <p className="text-sm text-muted">Cargando ElectroStudio…</p>
         </div>
@@ -221,19 +347,19 @@ export default function StudioHome() {
     const thumb = thumbCache.get(f.id);
     const date = f.date ? new Date(`${f.date}T12:00:00`).toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
     const name = f.name || f.products[0]?.title || 'Sin nombre';
-    const all = (checks.get(f.id) ?? []).filter((c) => c.level !== 'ok').map((c) => c.text);
+    const all = (checks.get(f.id) ?? []).filter((c) => c.level !== 'ok' && c.kind !== 'caption').map((c) => c.text);
+    const shortcutLabel = status.step ? STEP_SHORTCUT[status.step] : undefined;
     return (
       <li key={f.id} className="relative grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-3 gap-y-2 rounded-2xl border border-line bg-white p-3 transition-colors hover:border-brand-200 sm:grid-cols-[5rem_minmax(0,1fr)]">
         <span className={`w-full self-start overflow-hidden rounded-md border border-line bg-surface sm:row-span-2 ${f.format === 'story' ? 'aspect-[9/16]' : f.format === 'post45' ? 'aspect-[4/5]' : 'aspect-square'}`}>
           {thumb?.url ? (
-            // eslint-disable-next-line @next/next/no-img-element -- miniatura dibujada en el navegador (URL de objeto)
+            // eslint-disable-next-line @next/next/no-img-element -- miniatura dibujada en el navegador
             <img src={thumb.url} alt="" className="h-full w-full object-cover" />
           ) : (
             <span className="block h-full w-full animate-pulse bg-line" aria-hidden="true" />
           )}
         </span>
         <div className="flex min-w-0 flex-col gap-1.5">
-          {/* Toda la tarjeta abre el editor (enlace estirado); las acciones van encima */}
           <Link href={editHref(f.id)} className="truncate text-sm font-semibold text-ink after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-brand-500">
             {name}
           </Link>
@@ -249,11 +375,16 @@ export default function StudioHome() {
             {status.more > 0 && <span className="shrink-0">+{status.more}</span>}
           </span>
         </div>
-        <div className="relative col-span-2 flex flex-wrap gap-1.5 sm:col-span-1 sm:col-start-2 sm:self-end">
-          <Link href={editHref(f.id)} className={`${smallButton} h-11 sm:h-9`}>
+        <div className="relative z-10 col-span-2 flex flex-wrap gap-1.5 sm:col-span-1 sm:col-start-2 sm:self-end">
+          <Link href={editHref(f.id)} className={smallButton}>
             <IconoEditar className="h-4 w-4" aria-hidden="true" />
             Editar
           </Link>
+          {shortcutLabel && status.step && status.tone !== 'success' && (
+            <Link href={editHref(f.id, status.step)} className={`${smallButton} border-brand-200! bg-brand-50! text-brand-700! hover:bg-brand-100!`}>
+              {shortcutLabel}
+            </Link>
+          )}
           <button type="button" onClick={() => void pedirSalida(f)} disabled={busy} className={`${adminIconButton} h-11 w-11 sm:h-9 sm:w-9`} aria-label={`Sacar la imagen de ${name}`} title="Imagen: descargar o mandar por Telegram">
             <IconoDescargar className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -270,9 +401,21 @@ export default function StudioHome() {
 
   const attentionCounts = ATTENTION.map((a) => ({ ...a, count: flyers.filter((f) => has(f, a.kind, a.blocksOnly)).length })).filter((a) => a.count > 0);
   const activeAttention = ATTENTION.find((a) => a.kind === attention);
-  const listed = flyers.filter(
-    (f) => (batch === null || f.batch === batch) && (!activeAttention || has(f, activeAttention.kind, activeAttention.blocksOnly)),
-  );
+  const qNorm = query.trim().toLowerCase();
+  const listed = flyers.filter((f) => {
+    if (batch !== null && f.batch !== batch) return false;
+    if (activeAttention && !has(f, activeAttention.kind, activeAttention.blocksOnly)) return false;
+    if (formatFilter === 'alerts') {
+      if (flyerStatus(checks.get(f.id) ?? []).tone === 'success') return false;
+    } else if (formatFilter !== 'all' && f.format !== formatFilter) {
+      return false;
+    }
+    if (qNorm) {
+      const hay = [f.name, f.batch, TEMPLATES[f.template].label, ...f.products.map((p) => `${p.title} ${p.model}`)].join(' ').toLowerCase();
+      if (!hay.includes(qNorm)) return false;
+    }
+    return true;
+  });
 
   const days = weekDays(weekOffset);
   const today = ymd(new Date());
@@ -281,16 +424,16 @@ export default function StudioHome() {
   return (
     <div>
       {header}
+      {radarSection}
 
       {flyers.length === 0 ? (
         <div className={adminEmpty}>
           <p className="font-semibold text-ink">Aún no hay historias</p>
           <ol className="mt-2 flex flex-col gap-1 text-sm text-muted">
-            <li>1. Elige qué quieres publicar: un producto, una oferta, un cupón o un mensaje.</li>
-            <li>2. Elige el producto de la tienda: el precio y la oferta se ponen solos.</li>
-            <li>3. Descarga la imagen o el video y súbelo a Instagram.</li>
+            <li>1. Elige una oportunidad arriba o toca &quot;Nueva historia&quot;.</li>
+            <li>2. El precio, la oferta y la foto de la tienda se ponen solos.</li>
+            <li>3. Descarga la imagen o el video en Full HD o mándalo a Telegram.</li>
           </ol>
-          <p className={adminHint}>Empieza con &quot;Nueva historia&quot;, arriba.</p>
         </div>
       ) : (
         <>
@@ -300,7 +443,7 @@ export default function StudioHome() {
               <Filtros
                 etiqueta="Por atender"
                 valor={attention ?? ''}
-                onCambiar={(v) => { setAttention(attention === v ? null : v as CheckKind); changeView('lista'); }}
+                onCambiar={(v) => { setAttention(attention === v ? null : (v as CheckKind)); changeView('lista'); }}
                 filtros={attentionCounts.map((a) => ({ valor: a.kind, etiqueta: a.etiqueta, ayuda: a.ayuda, Icono: a.Icono, cuenta: a.count, tono: 'aviso' as const }))}
               />
               {attention && (
@@ -311,47 +454,99 @@ export default function StudioHome() {
             </section>
           )}
 
-          <nav aria-label="Vistas" className="-mx-1 mb-4 overflow-x-auto px-1">
-            <div className="flex w-max gap-2">
-              {(
-                [
-                  ['lista', `Historias (${flyers.length})`],
-                  ['semana', 'Semana'],
-                  ['resultados', 'Resultados'],
-                ] as [View, string][]
-              ).map(([v, label]) => (
-                <button key={v} type="button" aria-pressed={view === v} onClick={() => changeView(v)} className={adminTab(view === v)}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </nav>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <nav aria-label="Vistas" className="overflow-x-auto">
+              <div className="flex w-max gap-2">
+                {(
+                  [
+                    ['lista', `Historias (${flyers.length})`],
+                    ['semana', 'Semana'],
+                    ['resultados', 'Resultados'],
+                  ] as [View, string][]
+                ).map(([v, label]) => (
+                  <button key={v} type="button" aria-pressed={view === v} onClick={() => changeView(v)} className={adminTab(view === v)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </nav>
+
+            {view === 'lista' && (
+              <div className="relative w-full sm:w-64">
+                <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Buscar historia o producto…"
+                  aria-label="Buscar historia o producto"
+                  className={`${adminInput()} h-11 sm:h-10 pl-9`}
+                />
+              </div>
+            )}
+          </div>
 
           {view === 'resultados' ? (
-            <StudioResults onSelect={(id) => router.push(editHref(id))} />
+            <StudioResults onSelect={(id) => router.push(editHref(id))} onRepeat={(id) => void handleRepeat(id)} />
           ) : view === 'semana' ? (
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-2">
-                <button type="button" onClick={() => setWeekOffset((w) => w - 1)} className={adminIconButton} aria-label="Semana anterior">
+                <button type="button" onClick={() => setWeekOffset((w) => w - 1)} className={`${adminIconButton} h-11 w-11`} aria-label="Semana anterior">
                   <IconoChevronIzquierda className="h-5 w-5" aria-hidden="true" />
                 </button>
                 <span className="text-sm font-semibold text-ink">
                   {days[0].toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })} – {days[6].toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })}
                 </span>
-                <button type="button" onClick={() => setWeekOffset((w) => w + 1)} className={adminIconButton} aria-label="Semana siguiente">
+                <button type="button" onClick={() => setWeekOffset((w) => w + 1)} className={`${adminIconButton} h-11 w-11`} aria-label="Semana siguiente">
                   <IconoChevronDerecha className="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
-              {days.map((d) => {
-                const ds = ymd(d);
-                const list = flyers.filter((f) => f.date === ds);
-                return (
-                  <section key={ds} className={`rounded-2xl border p-3 ${ds === today ? 'border-brand-500' : 'border-line'}`}>
-                    <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">{d.toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric' })}</h2>
-                    {list.length ? <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{list.map(card)}</ul> : <p className="text-xs text-subtle">Sin historia</p>}
-                  </section>
-                );
-              })}
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-7">
+                {days.map((d) => {
+                  const ds = ymd(d);
+                  const list = flyers.filter((f) => f.date === ds);
+                  const isToday = ds === today;
+                  return (
+                    <section key={ds} className={`flex flex-col justify-between gap-2 rounded-2xl border p-3 ${isToday ? 'border-brand-500 bg-brand-50/40' : 'border-line bg-white'}`}>
+                      <div className="flex flex-col gap-2">
+                        <h2 className={`text-xs font-semibold uppercase tracking-wide ${isToday ? 'text-brand-700' : 'text-muted'}`}>
+                          {d.toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric' })}
+                          {isToday ? ' · Hoy' : ''}
+                        </h2>
+                        {list.length ? (
+                          <ul className="flex flex-col gap-1.5">
+                            {list.map((f) => {
+                              const thumb = thumbCache.get(f.id);
+                              const label = f.name || f.products[0]?.title || 'Sin nombre';
+                              return (
+                                <li key={f.id}>
+                                  <Link href={editHref(f.id)} className="flex items-center gap-2 rounded-lg border border-line bg-white p-1.5 text-xs font-semibold text-ink hover:border-brand-300">
+                                    <span className="h-8 w-5 shrink-0 overflow-hidden rounded bg-surface">
+                                      {thumb?.url && (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={thumb.url} alt="" className="h-full w-full object-cover" />
+                                      )}
+                                    </span>
+                                    <span className="min-w-0 flex-1 truncate">{label}</span>
+                                  </Link>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        ) : (
+                          <p className="text-xs text-subtle">Sin historia</p>
+                        )}
+                      </div>
+                      <Link
+                        href={`/admin/studio/nueva?fecha=${ds}`}
+                        className="inline-flex min-h-11 sm:min-h-9 w-full items-center justify-center rounded-lg border border-dashed border-brand-300 bg-white px-2 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+                      >
+                        + Crear aquí
+                      </Link>
+                    </section>
+                  );
+                })}
+              </div>
               <div className="flex flex-wrap items-center gap-3">
                 {inWeek.length > 0 && (
                   <button type="button" disabled={busy} onClick={() => void downloadZip(inWeek, `semana-${ymd(days[0])}`)} className={smallButton}>
@@ -359,15 +554,31 @@ export default function StudioHome() {
                     Descargar la semana (ZIP)
                   </button>
                 )}
-                <p className="text-xs text-muted">{flyers.filter((f) => !f.date).length} sin fecha. La fecha se pone en el paso Publicar.</p>
+                <p className="text-xs text-muted">{flyers.filter((f) => !f.date).length} sin fecha · toca &quot;+ Crear aquí&quot; para planificar un día.</p>
               </div>
             </div>
           ) : (
             <>
+              <div className="-mx-1 mb-3 flex items-center gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible" role="group" aria-label="Filtros rápidos">
+                {(
+                  [
+                    ['all', 'Todas'],
+                    ['story', '9:16 Historia'],
+                    ['post45', '4:5 Post'],
+                    ['post11', '1:1 Cuadrado'],
+                    ['alerts', 'Con alertas'],
+                  ] as [FormatFilter, string][]
+                ).map(([v, label]) => (
+                  <button key={v} type="button" aria-pressed={formatFilter === v} onClick={() => setFormatFilter(v)} className={adminTab(formatFilter === v)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
               {batches.length > 1 && (
                 <div className="-mx-1 mb-3 flex items-center gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible" role="group" aria-label="Lotes">
                   <button type="button" aria-pressed={batch === null} onClick={() => setBatch(null)} className={adminTab(batch === null)}>
-                    Todos
+                    Todos los lotes
                   </button>
                   {batches.map(([b, n]) => (
                     <button key={b || '-'} type="button" aria-pressed={batch === b} onClick={() => setBatch(b)} className={adminTab(batch === b)}>
@@ -382,15 +593,19 @@ export default function StudioHome() {
                   )}
                 </div>
               )}
+
               {listed.length ? (
                 <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{listed.map(card)}</ul>
               ) : (
-                <p className="text-sm text-muted">Ninguna historia con este filtro.</p>
+                <p className="text-sm text-muted">Ninguna historia coincide con el filtro actual.</p>
               )}
             </>
           )}
         </>
       )}
+
+      <BrandSettingsDrawer studio={studio} abierto={brandOpen} onCerrar={() => setBrandOpen(false)} />
+
       {salida && (
         <ElegirSalida
           tipo="imagen"

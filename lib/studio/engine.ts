@@ -609,6 +609,7 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
    * para que la vista previa lo pueda tomar. `dibujar` devuelve la caja del título en las coordenadas de la grilla.
    */
   function pieza(id: string, dibujar: () => Box | null) {
+    if (FL?.piezasOcultas?.includes(id)) return;
     const o = FL?.piezas?.[id];
     const dx = (o?.dx ?? 0) / SC;
     const dy = (o?.dy ?? 0) / SC;
@@ -3476,10 +3477,6 @@ export function createRenderer(canvas: HTMLCanvasElement, images: StudioImages, 
     if (!f) {
       ctx.fillStyle = PALE;
       ctx.fillRect(0, 0, W, FH);
-      ctx.fillStyle = '#7A8AA8';
-      ctx.textAlign = 'center';
-      ctx.font = F(800, 40);
-      ctx.fillText('Elige o crea una historia', W / 2, FH / 2);
       ctx.restore();
       return;
     }

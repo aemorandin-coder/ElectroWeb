@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 });
   }
   // Una copia empieza sin descargas: sus avisos de "cambió desde la descarga" no son los de la original
-  const data = { ...parsed.data, exported: { at: '', prices: [], rate: 0, coupon: '' } };
+  const data = { ...parsed.data, exported: { at: '', prices: [], rate: 0, coupon: '', huella: '' } };
   for (let attempt = 1; ; attempt++) {
     try {
       const row = await prisma.studioFlyer.create({

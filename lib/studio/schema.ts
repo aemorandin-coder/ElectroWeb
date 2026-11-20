@@ -244,6 +244,7 @@ export const capaTextoSchema = z.object({
   giro: z.coerce.number().min(-180).max(180).catch(0).default(0),
   oculta: siNo(false),
   bloqueada: siNo(false),
+  origenPieza: z.string().max(24).catch('').default(''),
   ...animacionCapa,
 });
 export type CapaTexto = z.infer<typeof capaTextoSchema>;
@@ -296,6 +297,7 @@ export const exportedSchema = z.object({
   prices: z.array(money).max(3).catch([]).default([]),
   rate: money.default(0),
   coupon: text(40).default(''),
+  huella: z.string().max(64).catch('').default(''),
 });
 
 export const flyerSchema = z.object({
@@ -335,6 +337,8 @@ export const flyerSchema = z.object({
   capas: capasSchema,
   /** C-287: cuánto se corrió cada título de la plantilla al arrastrarlo, en px del lienzo ({ titulo: { dx, dy } }) */
   piezas: z.record(z.string().max(20), z.object({ dx: z.number().min(-1080).max(1080).catch(0), dy: z.number().min(-1920).max(1920).catch(0) })).catch({}).default({}),
+  /** G-71 (C-271): títulos de la plantilla que la persona soltó como capa libre (se ocultan de la plantilla fija) */
+  piezasOcultas: z.array(z.string().max(24)).max(10).catch([]).default([]),
   /** C-273: cuánto dura el video, cómo termina toda la historia y si cierra con el logo */
   duracion: z.union([z.literal(5), z.literal(7), z.literal(10), z.literal(15)]).catch(DURACION_DEF).default(DURACION_DEF),
   final: z.enum(Object.keys(FINALES) as [FinalId, ...FinalId[]]).catch('ninguno').default('ninguno'),
@@ -491,4 +495,19 @@ export interface StudioResult {
   orders: number;
   paidOrders: number;
   paidUSD: number;
+}
+
+/** Oportunidad sugerida en el Radar "¿Qué publicamos hoy?" de ElectroStudio (G-71) */
+export interface StudioRadarItem {
+  id: string;
+  tipo: 'estrella' | 'oferta' | 'nuevo' | 'tasa' | 'resena';
+  kicker: string;
+  titulo: string;
+  detalle: string;
+  cta: string;
+  destacada?: boolean;
+  template: TemplateId;
+  product?: StudioStoreProduct;
+  review?: StudioReview;
+  extra?: { promo?: string; tag?: string; heading?: string; name?: string; offerEnds?: string };
 }

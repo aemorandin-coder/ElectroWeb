@@ -3,7 +3,7 @@
 // C-272: lo que comparten el panel de un texto y el de un sticker (paso Textos y stickers): la cabecera con Duplicar y
 // Borrar, el tamaño en px y la posición y el giro con números. C-273: el campo de números que se escribe tecla por tecla.
 import { useState, type ComponentProps } from 'react';
-import { IconoCopiar, IconoEliminar, IconoMas, IconoMenos } from '@/components/iconos';
+import { IconoCopiar, IconoEliminar, IconoFlechaAbajo, IconoFlechaArriba, IconoFlechaDerecha, IconoFlechaIzquierda, IconoMas, IconoMenos } from '@/components/iconos';
 import CampoUnidad from '@/components/admin/CampoUnidad';
 import { adminHint, adminLabel } from '@/lib/admin-ui';
 import type { CambioCapa } from '@/lib/studio/capas';
@@ -99,11 +99,42 @@ export function CampoTamano({ id, valor, min, max, paso, onCambiar, ayuda }: {
   );
 }
 
-export function PosicionGiro({ id, capa, alto, onCambiar }: { id: string; capa: StudioCapa; alto: number; onCambiar: (cambio: CambioCapa) => void }) {
+export function CrucetaMicroAjuste({ onMover }: { onMover: (dx: number, dy: number) => void }) {
+  const btn = 'inline-flex h-11 w-11 items-center justify-center rounded-lg border border-line bg-white text-ink-soft transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500';
   return (
-    <details className="border-t border-line pt-3">
-      <summary className="cursor-pointer text-sm font-semibold text-ink">Posición y giro, con números</summary>
-      <div className="mt-3 flex flex-wrap items-end gap-3">
+    <div>
+      <p className={adminLabel}>Ajuste fino (1 px)</p>
+      <div className="inline-grid grid-cols-3 gap-1 rounded-xl border border-line bg-surface p-1.5" role="group" aria-label="Mover 1 px">
+        <span />
+        <button type="button" onClick={() => onMover(0, -1)} className={btn} aria-label="Subir 1 px" title="Subir 1 px">
+          <IconoFlechaArriba className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <span />
+        <button type="button" onClick={() => onMover(-1, 0)} className={btn} aria-label="Mover a la izquierda 1 px" title="Izquierda 1 px">
+          <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <button type="button" onClick={() => onMover(0, 1)} className={btn} aria-label="Bajar 1 px" title="Bajar 1 px">
+          <IconoFlechaAbajo className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <button type="button" onClick={() => onMover(1, 0)} className={btn} aria-label="Mover a la derecha 1 px" title="Derecha 1 px">
+          <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function PosicionGiro({ id, capa, alto, onCambiar, abierto = false, onMoverPx }: {
+  id: string;
+  capa: StudioCapa;
+  alto: number;
+  onCambiar: (cambio: CambioCapa) => void;
+  abierto?: boolean;
+  onMoverPx?: (dx: number, dy: number) => void;
+}) {
+  const contenido = (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-end gap-3">
         <div>
           <label htmlFor={`${id}-x`} className={adminLabel}>De izquierda a derecha</label>
           <CampoNumero id={`${id}-x`} unidad="px" min={0} max={W} valor={Math.round(capa.x * W)} onCambiar={(v) => onCambiar({ x: v / W })} />
@@ -121,7 +152,16 @@ export function PosicionGiro({ id, capa, alto, onCambiar }: { id: string; capa: 
           <button type="button" className={smallButton} onClick={() => onCambiar({ giro: 0 })}>Sin giro</button>
         )}
       </div>
-      <p className={`${adminHint} mt-2`}>En la vista previa, las flechas del teclado mueven la pieza 1 px (con Mayús, 10).</p>
+      {onMoverPx && <CrucetaMicroAjuste onMover={onMoverPx} />}
+      <p className={adminHint}>En la vista previa, las flechas del teclado mueven la pieza 1 px (con Mayús, 10).</p>
+    </div>
+  );
+
+  if (abierto) return contenido;
+  return (
+    <details className="border-t border-line pt-3">
+      <summary className="cursor-pointer text-sm font-semibold text-ink">Posición y giro, con números</summary>
+      <div className="mt-3">{contenido}</div>
     </details>
   );
 }

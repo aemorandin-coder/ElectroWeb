@@ -31,9 +31,9 @@ export async function GET() {
   const fuera = await autorizar();
   if (fuera) return fuera;
   const { botToken } = await getNotificationSettings();
-  if (!botToken) return NextResponse.json({ disponible: false, chats: 0, motivo: 'El bot de Telegram no está conectado: se conecta en Notificaciones → Telegram.' });
+  if (!botToken) return NextResponse.json({ disponible: false, chats: 0, motivo: 'El bot de Telegram no está conectado: se conecta en Ajustes → Avisos → Telegram.' });
   const chats = await prisma.telegramChat.count({ where: { isActive: true } });
-  return NextResponse.json({ disponible: chats > 0, chats, motivo: chats > 0 ? undefined : 'El bot no tiene chats conectados: se agregan en Notificaciones → Telegram.' });
+  return NextResponse.json({ disponible: chats > 0, chats, motivo: chats > 0 ? undefined : 'El bot no tiene chats conectados: se agregan en Ajustes → Avisos → Telegram.' });
 }
 
 export async function POST(request: NextRequest) {

@@ -8,6 +8,7 @@ import { publicReviewerName } from '@/lib/queries/product';
 import { randomBytes } from 'crypto';
 import { existsSync } from 'fs';
 import path from 'path';
+import { formatUSD, formatVES } from '@/lib/currency';
 import { getPublicSettings } from '@/lib/site-settings';
 import { roundMoney } from '@/lib/pricing';
 import { diaEnCaracas, franjaNavidad } from '@/lib/navidad';
@@ -16,6 +17,7 @@ import {
   type StudioCoupon,
   type StudioFlyer,
   type StudioFlyerData,
+  type StudioRadarItem,
   type StudioResult,
   type StudioReview,
   type StudioStoreInfo,
@@ -135,11 +137,12 @@ function toStudioProduct(p: PublicProduct, published: boolean, rateVES: number):
  * C-193: con `tramo`, solo los que se pueden comprar hoy y caben en ese tramo de Ideas para regalar (una gift card, si
  * alguno de sus montos cabe), como la página: los físicos con stock primero.
  */
-export async function studioProducts({ q, ids, tramo }: { q?: string; ids?: string[]; tramo?: TramoRegalo }): Promise<StudioStoreProduct[]> {
+export async function studioProducts({ q, ids, tramo, digital }: { q?: string; ids?: string[]; tramo?: TramoRegalo; digital?: boolean }): Promise<StudioStoreProduct[]> {
   const where: Prisma.ProductWhereInput = ids?.length
     ? { id: { in: ids.slice(0, 100) } }
     : {
         status: 'PUBLISHED',
+        ...(digital ? { productType: 'DIGITAL' } : {}),
         ...(q ? { OR: [{ name: { contains: q, mode: 'insensitive' } }, { shortCode: { equals: q.toUpperCase() } }] } : {}),
       };
   const [rows, settings] = await Promise.all([
@@ -284,4 +287,133 @@ export async function studioResults(days: number): Promise<StudioResult[]> {
 /** Columnas que se guardan aparte del JSON para listar y agrupar */
 export function flyerColumns(f: StudioFlyerData) {
   return { name: f.name || 'Sin nombre', template: f.template, date: f.date || null, batch: f.batch.trim() || null };
+}
+
+/**
+ * G-71 · Radar "¿Qué publicamos hoy?": sugiere hasta 4 piezas reales de la tienda sin costo, SKU ni stock numérico:
+ * producto estrella del sorteo (C-297), oferta activa sin historia, recién llegado, reseña 5 estrellas y tasa BCV.
+ */
+export async function studioRadar(): Promise<StudioRadarItem[]> {
+  const now = new Date();
+  const hace7Dias = new Date(now.getTime() - 7 * 86_400_000);
+  const [estrella, storeInfo, recientesRows, flyersRecientes, reviews] = await Promise.all([
+    prisma.estrellaSorteo.findFirst({
+      where: { desde: { lte: now }, hasta: { gte: now }, sorteo: { activo: true, sorteadoAt: null } },
+      orderBy: { desde: 'desc' },
+      select: { id: true, productId: true, boletos: true },
+    }),
+    studioStoreInfo(),
+    prisma.product.findMany({
+      where: { status: 'PUBLISHED' },
+      include: publicProductInclude,
+      orderBy: { createdAt: 'desc' },
+      take: 24,
+    }),
+    prisma.studioFlyer.findMany({
+      where: { updatedAt: { gte: hace7Dias } },
+      select: { data: true },
+      take: 50,
+    }),
+    studioReviews(),
+  ]);
+
+  const usadosRecientes = new Set<string>();
+  flyersRecientes.forEach((row) => {
+    const f = normalizeFlyer(row.data);
+    f.products.forEach((p) => {
+      if (p.productId) usadosRecientes.add(p.productId);
+    });
+  });
+
+  const estrellaList = estrella ? await studioProducts({ ids: [estrella.productId] }) : [];
+  const estrellaProd = estrellaList.find((p) => p.published && p.inStock);
+
+  const withOffers = await conOfertas(recientesRows.map(toPublicProduct));
+  const catalog = withOffers.map((p) => toStudioProduct(p, true, storeInfo.rateVES)).filter((p) => p.inStock);
+
+  const items: StudioRadarItem[] = [];
+  const usadosEnRadar = new Set<string>();
+
+  if (estrella && estrellaProd) {
+    usadosEnRadar.add(estrellaProd.id);
+    items.push({
+      id: `estrella-${estrella.id}`,
+      tipo: 'estrella',
+      kicker: 'Sorteo semanal',
+      titulo: `Producto estrella (+${estrella.boletos} boletos)`,
+      detalle: `${estrellaProd.name}${usadosRecientes.has(estrellaProd.id) ? ' · vigente esta semana' : ' · aún sin historia'}`,
+      cta: 'Crear historia',
+      destacada: true,
+      template: 'solo',
+      product: estrellaProd,
+      extra: {
+        tag: `+${estrella.boletos} BOLETOS DEL SORTEO`,
+        name: `Estrella: ${estrellaProd.name}`.slice(0, 80),
+      },
+    });
+  }
+
+  const tieneOferta = (p: StudioStoreProduct) => Boolean(p.offerLabel || (p.compareAtPriceUSD && p.compareAtPriceUSD > p.priceUSD));
+  const oferta = catalog.find((p) => !usadosEnRadar.has(p.id) && tieneOferta(p) && !usadosRecientes.has(p.id))
+    ?? catalog.find((p) => !usadosEnRadar.has(p.id) && tieneOferta(p));
+  if (oferta) {
+    usadosEnRadar.add(oferta.id);
+    const pct = oferta.compareAtPriceUSD && oferta.compareAtPriceUSD > oferta.priceUSD
+      ? Math.round((1 - oferta.priceUSD / oferta.compareAtPriceUSD) * 100)
+      : 0;
+    items.push({
+      id: `oferta-${oferta.id}`,
+      tipo: 'oferta',
+      kicker: 'Oferta activa',
+      titulo: oferta.name,
+      detalle: pct > 0 && oferta.compareAtPriceUSD ? `De ${formatUSD(oferta.compareAtPriceUSD)} a ${formatUSD(oferta.priceUSD)} (-${pct} %)` : oferta.offerLabel || formatUSD(oferta.priceUSD),
+      cta: 'Crear historia',
+      template: 'solo',
+      product: oferta,
+    });
+  }
+
+  const nuevo = catalog.find((p) => !usadosEnRadar.has(p.id) && !usadosRecientes.has(p.id))
+    ?? catalog.find((p) => !usadosEnRadar.has(p.id));
+  if (nuevo) {
+    usadosEnRadar.add(nuevo.id);
+    items.push({
+      id: `nuevo-${nuevo.id}`,
+      tipo: 'nuevo',
+      kicker: 'Recién llegado',
+      titulo: nuevo.name,
+      detalle: `${formatUSD(nuevo.priceUSD)}${usadosRecientes.has(nuevo.id) ? ' · sugerido hoy' : ' · aún sin historia'}`,
+      cta: 'Crear historia',
+      template: 'nuevo',
+      product: nuevo,
+    });
+  }
+
+  const resena5 = reviews.find((r) => r.rating === 5 && (!r.product || !usadosEnRadar.has(r.product.id)));
+  if (resena5 && items.length < 3) {
+    items.push({
+      id: `resena-${resena5.id}`,
+      tipo: 'resena',
+      kicker: 'Reseña 5 estrellas',
+      titulo: `Lo que dijo ${resena5.author}`,
+      detalle: resena5.comment.slice(0, 68),
+      cta: 'Crear reseña',
+      template: 'resena',
+      review: resena5,
+    });
+  }
+
+  if (storeInfo.rateVES > 0) {
+    items.push({
+      id: 'tasa-bcv',
+      tipo: 'tasa',
+      kicker: 'Tasa del día',
+      titulo: `Tasa BCV: ${formatVES(storeInfo.rateVES)}`,
+      detalle: storeInfo.rateUpdatedAt ? 'Lista para publicar hoy' : 'Tasa vigente de la tienda',
+      cta: 'Crear historia',
+      template: 'tasa',
+    });
+  }
+
+  return items.slice(0, 4);
 }

@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
   const q = (searchParams.get('q') || '').trim().slice(0, 60);
   const t = searchParams.get('tramo') || '';
   const tramo = t in TRAMOS_REGALO ? (t as TramoRegalo) : undefined;
-  const products = await studioProducts(ids.length ? { ids } : { q, tramo });
+  const digital = searchParams.get('digital') === '1';
+  const products = await studioProducts(ids.length ? { ids } : { q, tramo, digital });
   return NextResponse.json({ products });
 }

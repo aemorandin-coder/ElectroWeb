@@ -380,16 +380,16 @@ Todo se renderiza en el servidor (`revalidate = 60`). Solo son componentes clien
 
 ## 4. Carriles (quién puede tocar qué)
 
-**El equipo (desde el 21/09):**
+**El equipo (desde el 18/11):**
 | Quién | Qué hace |
 |---|---|
-| **Claude** | Todo lo que pide criterio: seguridad, dinero, datos, arquitectura, componentes compartidos y el rediseño de las pantallas. Revisa el trabajo de Gemini, hace el merge a `main` y el push. |
-| **Gemini** | Tareas mecánicas y cerradas, solo con una tarjeta `G-*` abierta. |
-| **Andrés** | Decide el negocio (§7), hace el deploy y las pruebas en producción, y trae los datos reales. |
+| **Gemini 4 Neon** | **Líder principal** (decisión de Andrés del 18/11): todo el repositorio — arquitectura, seguridad, dinero, datos, componentes compartidos, panel admin, Mi panel, rediseño de pantallas, revisiones, merges a `main`, versiones y deploys autorizados. Sus reglas viven en `GEMINI.md`. |
+| **Claude** | Apoyo opcional cuando Andrés lo invoque: trabaja en rama/worktree aislado (`claude/<ID>`) coordinándose con Gemini 4 Neon para no pisar archivos compartidos, versiones ni merges. Sus reglas viven en `CLAUDE.md`. |
+| **Andrés** | Decide el negocio (§7), aprueba deploys, hace las pruebas en producción y trae los datos reales. |
 
-ChatGPT salió del equipo el 21/09. Sus pantallas (panel admin, `app/creator/**`, `app/recuperar-contrasena/**`, `app/verificar-email/**`) son de Claude, que las rediseña con el método de `archivo/CHATGPT.md` §4.
+> **Historial previo al 18/11:** Entre el 21/09 y el 17/11 el liderazgo estuvo en Claude y Gemini ejecutaba tarjetas `G-*` cerradas (`archivo/GEMINI_HISTORICO_R1_R23.md`). ChatGPT salió el 21/09 (`archivo/CHATGPT.md` §4 sigue vigente como método de rediseño). La división histórica de carriles abajo queda como referencia de esa etapa.
 
-### Carril CLAUDE
+### Carril CLAUDE (referencia histórica previa al 18/11)
 Todo el repositorio, salvo el carril Gemini de abajo. Lo que más pesa:
 ```
 app/api/**            prisma/**             lib/**               contexts/**          scripts/**
@@ -619,6 +619,8 @@ Quedan para después de C-177 (`estado/C-177.md`):
 - **C-210 · Correcciones del 13/11** (**hecha**, rc.35, pedido de Andrés mirando producción; eligió lo recomendado en las cuatro preguntas): las píldoras del panel llenas como las de la tienda y los botones animados (§1.8); "Destacados" solo con lo que tiene estrella, de toda la tienda; "Recién llegados" por la fecha de publicación (columna `products.publishedAt`, nueva), con hasta 4 por departamento. `estado/C-210.md`.
 - **C-211 · Claude Haiku 5.5 en "Buscar en la web"** (**hecha**, rc.36, pedido de Andrés del 13/11 con su clave): lee las páginas, redacta la ficha y busca por su cuenta; Groq de respaldo; la ficha dice qué IA la redactó. En esfuerzo alto (el máximo pasa de los 60 s de nginx). `estado/C-211.md`.
   - **Pendiente:** quitar Groq cuando Claude lleve unos días sin fallar.
+- **G-70 · Reportes por prioridad y Ventas ordenadas con tablas cebra en gris neutro y píldoras vibrantes** (**hecha** en rc.115, 18/11; `estado/G-70.md`): Reportes con cabecera compacta, En vivo plegable, secciones en 5 botones `Filtros` alineados, cifras uniformes con `(i)` y dos gráficos arriba; las 5 pantallas de Ventas (Órdenes, Cotizaciones a lo ancho, Transacciones, Garantías y Gift Cards) con cabecera compacta, botones `Filtros` simétricos y tablas cebra en gris neutro puro (`#d4d4d4`/`#bdbdbd`, sin tinte azulado ni rayas verticales) en escritorio (`lg:`), caja con borde visible en "Notas internas" del detalle de orden y vibración suave cada 3,6 s únicamente en píldoras de estado pendiente (`warning`) dentro del panel admin.
+- **C-302 · Mi panel anima a ganar boletos** (**hecha** en rc.114, 18/11; `estado/C-302.md`): sin boletos, "Aún tienes N días para ganar boletos" con las vías y el boleto de muestra; con boletos, las vías en píldoras. Puntos ES va en blanco mientras dura el sorteo.
 - **C-297 · El sorteo que vende** (**hecha** en rc.111, 18/11; `estado/C-297.md`; los números en §7.2): comprar vale más ($5 → 2, cada $50 → 5), el producto estrella de la semana (cualquier producto, +10 por unidad, se elige en el tablero) y las reseñas (1 cada una). /sorteo más corto, el sello en la tarjeta, la ficha y el carrito dicen cuántos boletos da la compra. **Queda:**
   - en el teléfono, los tres caminos en pestañas (unos 500 px menos; ofrecido, sin decidir);
   - el correo "tus boletos se multiplicaron" a quienes ya participaban (se puede con Marketing → Campañas);
@@ -651,7 +653,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **F · El catálogo de la ferretería** (**hecha**, C-218, rc.43; Andrés eligió guardar su lista en la base): la lista completa de cada proveedor queda guardada al subirla, y "Proponer con Claude" propone la categoría y el nombre de todo lo nuevo, guardado y sin repetir. `estado/C-218.md`.
     - **Pendiente:** probarla con la clave nueva en unos 40 códigos antes de correr los 3.114, y volver a subir la lista de la ferretería después del deploy.
 - **C-208 · Videos de creadores, fase 1** (pendiente; plan maestro de Andrés del 13/11): el equipo carga videos de TikTok y YouTube (Instagram como enlace) y salen en la ficha y en el inicio, con el código del promotor. Una tabla nueva (aditiva), una pantalla en Marketing y la revisión semanal de los enlaces. Las fases 2 y 3 esperan sus decisiones.
-- **C-206 · La regla de anchos en todo el panel y en la web** (pendiente, sigue a C-205): las páginas que se centran angostas dentro del marco y dejan un hueco junto al menú (Configuración, Equipo, Seguridad, Notificaciones, Cotizaciones y Marketing), los campos cortos estirados y las píldoras de filtro sin ícono. Una por una, con capturas a 360, 768, 1024 y 1440 px. El asistente de productos puede pasar a `Pasos`. Desde el 14/11 también pasa cada pantalla a las reglas de §1.9 (C-220). **Configuración, Equipo y Seguridad pasaron al plan de `AJUSTES.md`** (18/11: C-290, C-291, C-293 y C-294); aquí quedan Notificaciones (la bandeja), Cotizaciones, Marketing y la web.
+- **C-206 · La regla de anchos en todo el panel y en la web** (pendiente, sigue a C-205): las páginas que se centran angostas dentro del marco y dejan un hueco junto al menú (Configuración, Equipo, Seguridad, Notificaciones, Cotizaciones y Marketing), los campos cortos estirados y las píldoras de filtro sin ícono. Una por una, con capturas a 360, 768, 1024 y 1440 px. El asistente de productos puede pasar a `Pasos`. Desde el 14/11 también pasa cada pantalla a las reglas de §1.9 (C-220). **Configuración, Equipo y Seguridad pasaron al plan de `AJUSTES.md`** (18/11: C-290, C-291, C-293 y C-294) y Cotizaciones ya va a lo ancho (G-70); aquí quedan Notificaciones (la bandeja), Marketing y la web.
 - **El plan de crecimiento del 14/11** (C-220, `estado/C-220.md`; el equipo eligió lo recomendado viendo las maquetas, §7.2). En este orden:
   - **C-221 · El sorteo por pasos** (**hecha**, rc.45, 14/11; `estado/C-221.md`). Sin cambio de base. Los textos para Google, el lema y el sorteo de Navidad van en el SQL de datos de su bloque.
     - Crearlo en 4 pasos: el premio, cómo se gana, las fechas y "Revisar y publicar", con la vista previa de /sorteo y de Mi panel.
@@ -776,7 +778,7 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **C-248 · Dos botones de Contabilidad con la regla del "!"** (**hecha**, rc.62, 15/11; `estado/C-248.md`): el tacho de "Quitar el renglón" y el verde de "¡Copiado!" en la orden. Lo demás de Contabilidad ya cumplía.
   - **C-244 · La vista previa de los correos, fija mientras se recorre la lista** (**hecha**, rc.58, 15/11; `estado/C-244.md`; el equipo lo vio en producción: el marco salía bajo, con su propio scroll, y quedaba un espacio en blanco).
   - **C-242 · Facturas, ordenada, y la tarjeta de opción** (**hecha**, rc.56, 14/11; `estado/C-242.md`; el equipo eligió la A y la tarjeta con el círculo para todo el panel, §1.10).
-    - **Pendiente:** las pantallas que usan `adminChoice` con su propia disposición se ven bien y pasan a `Opcion` cuando se toquen. C-245 pasó Descuentos y la tasa de Configuración, y los filtros de Productos y Legal a `Filtros`. Quedan Equipo, la Lista del proveedor (casillas de varias), Reportes y ElectroStudio (las direcciones de Mi panel, hechas en C-251b).
+    - **Pendiente:** las pantallas que usan `adminChoice` con su propia disposición se ven bien y pasan a `Opcion` cuando se toquen. C-245 pasó Descuentos y la tasa de Configuración, y los filtros de Productos y Legal a `Filtros`. Quedan Equipo, la Lista del proveedor (casillas de varias) y ElectroStudio (las direcciones de Mi panel, hechas en C-251b; Reportes pasó a píldoras en G-70).
   - **Lo que queda de ámbar y de píldoras claras en la tienda** (pendiente; salió del checkout el 14/11, con la regla de §1.1 y §1.8):
     - letras ámbar en una veintena de archivos (35 usos): cursos, gift cards, servicios, recargas, firma de documentos, inicio de sesión. Las estrellas y un "Quedan 3" se quedan;
     - píldoras en verde claro con letra verde: la gift card válida, el certificado, el panel del creador y el sello de la cotización (Mis cursos y Mis códigos, hechas en C-251 y C-251b).
@@ -972,7 +974,8 @@ Nada de esta sección se cambia sin Andrés. Tampoco se hace sin su confirmació
 
 - **Equipo y forma de trabajo:**
   - ChatGPT fuera del equipo (21/09).
-  - Claude hace el merge a `main` y el push; el deploy lo hace Andrés, en un solo bloque (30/09 y 01/10).
+  - **Gemini 4 Neon es el líder principal de ElectroShopVe WEB** (18/11); **Claude** queda como apoyo opcional cuando Andrés lo invoque. Las reglas del líder viven en `GEMINI.md`.
+  - El líder (Gemini 4 Neon, antes Claude hasta el 17/11) hace el merge a `main` y el push; el deploy lo hace Andrés en un solo bloque (o el líder por SSH con aprobación explícita de esa sesión).
   - Migraciones autorizadas siempre que sean aditivas y con respaldo (29/09).
   - Sin emojis en la web ni en el código (14/09).
   - Cuidado con los términos: ninguna promesa escrita a mano que la tienda no cumpla; ante la duda, preguntar (30/09).

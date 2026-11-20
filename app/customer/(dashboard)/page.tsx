@@ -11,7 +11,7 @@ import {
 } from '@/components/iconos';
 import CustomerOnboarding from '@/components/customer/CustomerOnboarding';
 import PreguntarPromociones from '@/components/promociones/PreguntarPromociones';
-import TarjetaSorteo, { conBoletos, type DatosSorteoCliente } from '@/components/sorteo/TarjetaSorteo';
+import TarjetaSorteo, { conPiezaDelSorteo, type DatosSorteoCliente } from '@/components/sorteo/TarjetaSorteo';
 import OrderStepper from '@/components/customer/OrderStepper';
 import { formatUSD } from '@/lib/currency';
 import { adminBadge, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
@@ -244,8 +244,9 @@ export default function CustomerDashboard() {
   const porValidar = stats?.pending ?? 0;
   const lineaCompras = [porPagar > 0 && `${porPagar} por pagar`, porValidar > 0 && `${porValidar} con el pago por validar`].filter(Boolean).join(' · ');
 
-  // C-265 (decisión del equipo): una sola pieza fuerte. Con los boletos del sorteo a la vista, ellos; Puntos ES va en blanco
-  const puntosFuerte = !conBoletos(sorteo);
+  // C-265 (decisión del equipo): una sola pieza fuerte. Con los boletos del sorteo a la vista, ellos; Puntos ES va en blanco.
+  // C-302: también con el boleto de muestra que invita a ganarlos, mientras el sorteo está abierto
+  const puntosFuerte = !conPiezaDelSorteo(sorteo);
   const total = stats?.activeCount ?? 0;
   const otros = (cuantos: number) => (total > cuantos ? `Ver los otros ${total - cuantos} pedidos en curso` : null);
 

@@ -4,18 +4,19 @@ import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import {
-  IconoActualizar, IconoAdvertencia, IconoBillete, IconoBolsa, IconoBuscar, IconoCerrar, IconoCheck, IconoCopiar,
-  IconoGiftCard, IconoImpresora, IconoMas, IconoNumero, IconoVer,
+  IconoActualizar, IconoArchivar, IconoBolsa, IconoBuscar, IconoCerrar, IconoCheck, IconoConfirmado, IconoCopiar,
+  IconoGiftCard, IconoImpresora, IconoLista, IconoMas, IconoReloj, IconoVer,
 } from '@/components/iconos';
+import Filtros from '@/components/admin/Filtros';
 import GiftCard3D from '@/components/gift-card/GiftCard3D';
 import { formatUSD } from '@/lib/currency';
 import { formatGiftCardCode } from '@/lib/gift-card-designs';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import {
-  adminBadge, adminCard, adminEmpty, adminHint, adminIconButton, adminIconChip, adminInput, adminLabel, adminModalBody,
-  adminModalFooter, adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPageHeader,
-  adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminRowHover, adminSecondaryButton, adminSpinner, adminStatCard,
-  adminStatLabel, adminStatValue, adminSuccessButton, adminTable, adminTableWrap, adminTd, adminTh, type AdminTone,
+  adminBadge, adminCard, adminDato, adminEmpty, adminHint, adminIconButton, adminInput, adminLabel, adminModalBody,
+  adminModalFooter, adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPageHeaderCompact,
+  adminPageTitle, adminPrimaryButton, adminRowZebra, adminSecondaryButton, adminSpinner,
+  adminSuccessButton, adminTable, adminTableWrap, adminTd, adminTh, type AdminTone,
 } from '@/lib/admin-ui';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { leerLotePendiente } from './_components/lotePendiente';
@@ -152,31 +153,45 @@ export default function GiftCardsAdminPage() {
       || card.code.toLowerCase().includes(term.replace(/-/g, ''))
       || card.recipientEmail?.toLowerCase().includes(term)
       || card.recipientName?.toLowerCase().includes(term);
-    return matches && (statusFilter === 'all' || card.status === statusFilter);
+    if (!matches) return false;
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'ACTIVE') return card.status === 'ACTIVE' || card.status === 'PARTIALLY_USED';
+    if (statusFilter === 'OTHER') return card.status === 'EXPIRED' || card.status === 'SUSPENDED' || card.status === 'CANCELLED';
+    return card.status === statusFilter;
   });
 
+  const depletedCount = giftCards.filter((c) => c.status === 'DEPLETED').length;
+  const otherCount = giftCards.filter((c) => c.status === 'EXPIRED' || c.status === 'SUSPENDED' || c.status === 'CANCELLED').length;
+
   return (
-    <div>
-      <div className={adminPageHeader}>
-        <div>
+    <div className="min-w-0 space-y-3">
+      <div className={adminPageHeaderCompact}>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           <h1 className={adminPageTitle}>Gift Cards</h1>
-          <p className={adminPageSubtitle}>Genera las impresas y actívalas al cobrar. Las digitales se compran en la tienda.</p>
+          <span className={adminDato}>
+            {stats.total} {stats.total === 1 ? 'tarjeta' : 'tarjetas'} · Sin canjear <strong className="text-ink">{formatUSD(stats.activeBalance)}</strong> · Canjeado <strong className="text-ink">{formatUSD(stats.redeemed)}</strong>
+          </span>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => void fetchGiftCards()} className={`${adminIconButton} h-11 w-11`} aria-label="Actualizar lista" title="Actualizar lista">
-            <IconoActualizar className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative min-w-0 flex-1 sm:w-60 sm:flex-initial">
+            <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
+            <label htmlFor="gc-search" className="sr-only">Buscar gift cards</label>
+            <input id="gc-search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Código, correo o nombre" className={`${adminInput()} pl-9`} />
+          </div>
+          <button type="button" onClick={() => void fetchGiftCards()} className={`${adminSecondaryButton} w-11 px-0!`} aria-label="Actualizar lista" title="Actualizar lista">
+            <IconoActualizar className={`h-4 w-4 text-muted ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
           <button type="button" onClick={() => openSell()} className={adminSecondaryButton}>
             <IconoBolsa className="h-4 w-4" aria-hidden="true" /> Vender en caja
           </button>
-          <Link href="/admin/gift-cards/nuevo" className={`${adminPrimaryButton} order-first`}>
+          <Link href="/admin/gift-cards/nuevo" className={adminPrimaryButton}>
             <IconoMas className="h-4 w-4" aria-hidden="true" /> Generar impresas
           </Link>
         </div>
       </div>
 
       {lotePendiente !== null && (
-        <div role="status" className={`${adminNotice('warning')} mb-4 flex flex-col gap-3 sm:flex-row sm:items-center`}>
+        <div role="status" className={`${adminNotice('warning')} flex flex-col gap-3 sm:flex-row sm:items-center`}>
           <IconoImpresora aria-hidden="true" />
           <p className="min-w-0 flex-1">
             <strong className="font-semibold">Tienes un lote de {lotePendiente === 1 ? '1 tarjeta' : `${lotePendiente} tarjetas`} sin cerrar.</strong>{' '}
@@ -186,36 +201,19 @@ export default function GiftCardsAdminPage() {
         </div>
       )}
 
-      <div className="mb-4 flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-5">
-        {[
-          { label: 'Total', value: String(stats.total), icon: IconoNumero, tone: 'neutral' as AdminTone },
-          { label: 'Por activar', value: String(stats.toActivate), icon: IconoAdvertencia, tone: 'warning' as AdminTone },
-          { label: 'Activas', value: String(stats.active), icon: IconoCheck, tone: 'success' as AdminTone },
-          { label: 'Valor sin canjear', value: formatUSD(stats.activeBalance), icon: IconoBillete, tone: 'brand' as AdminTone },
-          { label: 'Canjeado', value: formatUSD(stats.redeemed), icon: IconoGiftCard, tone: 'brand' as AdminTone },
-        ].map(({ label, value, icon: Icon, tone }) => (
-          <div key={label} className={`${adminStatCard} min-w-max shrink-0 p-3`}>
-            <span className={`${adminIconChip(tone)} hidden`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
-            <div className="min-w-0">
-              <p className={adminStatLabel}>{label}</p>
-              <p className={`${adminStatValue} text-lg tabular-nums`}>{value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
-          <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
-          <label htmlFor="gc-search" className="sr-only">Buscar gift cards</label>
-          <input id="gc-search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Código, correo o nombre" className={`${adminInput()} pl-9`} />
-        </div>
-        <label htmlFor="gc-status" className="sr-only">Estado</label>
-        <select id="gc-status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={`${adminInput()} sm:w-52`}>
-          <option value="all">Todos los estados</option>
-          {Object.entries(STATUS).map(([value, { label }]) => <option key={value} value={value}>{label}</option>)}
-        </select>
-      </div>
+      <Filtros
+        columnas={5}
+        etiqueta="Filtrar gift cards por estado"
+        valor={statusFilter}
+        onCambiar={setStatusFilter}
+        filtros={[
+          { valor: 'all', etiqueta: 'Todas', ayuda: 'Impresas y digitales', Icono: IconoLista, cuenta: stats.total },
+          { valor: 'INACTIVE', etiqueta: 'Por activar', ayuda: 'Se cobran en caja', Icono: IconoReloj, cuenta: stats.toActivate, tono: stats.toActivate > 0 ? 'aviso' : undefined },
+          { valor: 'ACTIVE', etiqueta: 'Activas', ayuda: 'Listas para canjear', Icono: IconoConfirmado, cuenta: stats.active },
+          { valor: 'DEPLETED', etiqueta: 'Canjeadas', ayuda: 'Ya fueron usadas', Icono: IconoGiftCard, cuenta: depletedCount },
+          { valor: 'OTHER', etiqueta: 'Otras', ayuda: 'Vencidas o canceladas', Icono: IconoArchivar, cuenta: otherCount },
+        ]}
+      />
 
       {loading ? (
         <div className="flex justify-center py-16"><span className={adminSpinner} aria-label="Cargando" /></div>
@@ -227,7 +225,7 @@ export default function GiftCardsAdminPage() {
         </div>
       ) : (
         <>
-          <div className="space-y-3 xl:hidden">
+          <div className="space-y-2.5 lg:hidden">
             {filtered.map((card) => {
               const status = STATUS[card.status] ?? { label: card.status, tone: 'neutral' as AdminTone };
               return (
@@ -252,59 +250,59 @@ export default function GiftCardsAdminPage() {
               );
             })}
           </div>
-        <div className={`${adminTableWrap} hidden xl:block`}>
-          <table className={`${adminTable} min-w-[760px]`}>
-            <thead>
-              <tr>
-                <th className={adminTh}>Código</th>
-                <th className={adminTh}>Tipo</th>
-                <th className={adminTh}>Monto</th>
-                <th className={adminTh}>Disponible</th>
-                <th className={adminTh}>Estado</th>
-                <th className={adminTh}>Destinatario</th>
-                <th className={adminTh}>Fecha</th>
-                <th className={`${adminTh} text-right`}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((card) => {
-                const status = STATUS[card.status] ?? { label: card.status, tone: 'neutral' as AdminTone };
-                return (
-                  <tr key={card.id} className={adminRowHover}>
-                    <td className={adminTd}>
-                      <div className="flex items-center gap-1">
-                        <code className="rounded bg-surface px-2 py-1 font-mono text-xs">****{card.codeLast4 || card.code.slice(-4)}</code>
-                        <button type="button" onClick={() => void copyCode(card.code)} className={`${adminIconButton} h-11 w-11`} aria-label="Copiar código completo">
-                          <IconoCopiar className="h-3.5 w-3.5" aria-hidden="true" />
-                        </button>
-                      </div>
-                    </td>
-                    <td className={`${adminTd} text-ink-soft`}>{isPrinted(card) ? 'Impresa' : 'Digital'}</td>
-                    <td className={`${adminTd} whitespace-nowrap font-semibold`}>{formatUSD(Number(card.amountUSD))}</td>
-                    <td className={`${adminTd} whitespace-nowrap font-semibold ${Number(card.balanceUSD) > 0 ? 'text-success-strong' : 'text-muted'}`}>{formatUSD(Number(card.balanceUSD))}</td>
-                    <td className={adminTd}><span className={adminBadge(status.tone)}>{status.label}</span></td>
-                    <td className={adminTd}>
-                      {card.recipientEmail ? (
-                        <div className="text-sm"><p className="font-medium">{card.recipientName}</p><p className="text-muted">{card.recipientEmail}</p></div>
-                      ) : <span className="text-muted">—</span>}
-                    </td>
-                    <td className={`${adminTd} text-muted`}>{new Date(card.createdAt).toLocaleDateString('es-VE')}</td>
-                    <td className={adminTd}>
-                      <div className="flex items-center justify-end gap-1">
-                        {card.status === 'INACTIVE' && (
-                          <button type="button" onClick={() => openSell(card.code)} className={`${adminSuccessButton} h-11 px-3 text-sm`}>Activar</button>
-                        )}
-                        <button type="button" onClick={() => setDetails(card)} className={adminIconButton} aria-label={`Ver tarjeta terminada en ${card.codeLast4 || card.code.slice(-4)}`}>
-                          <IconoVer className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+          <div className={`${adminTableWrap} hidden lg:block`}>
+            <table className={`${adminTable} min-w-[760px]`}>
+              <thead>
+                <tr>
+                  <th className={adminTh}>Código</th>
+                  <th className={adminTh}>Tipo</th>
+                  <th className={adminTh}>Monto</th>
+                  <th className={adminTh}>Disponible</th>
+                  <th className={adminTh}>Estado</th>
+                  <th className={adminTh}>Destinatario</th>
+                  <th className={adminTh}>Fecha</th>
+                  <th className={`${adminTh} text-right`}>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((card) => {
+                  const status = STATUS[card.status] ?? { label: card.status, tone: 'neutral' as AdminTone };
+                  return (
+                    <tr key={card.id} className={adminRowZebra}>
+                      <td className={adminTd}>
+                        <div className="flex items-center gap-1">
+                          <code className="rounded bg-surface px-2 py-1 font-mono text-xs">****{card.codeLast4 || card.code.slice(-4)}</code>
+                          <button type="button" onClick={() => void copyCode(card.code)} className={`${adminIconButton} h-11 w-11`} aria-label="Copiar código completo">
+                            <IconoCopiar className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </td>
+                      <td className={`${adminTd} text-ink-soft`}>{isPrinted(card) ? 'Impresa' : 'Digital'}</td>
+                      <td className={`${adminTd} whitespace-nowrap font-semibold tabular-nums`}>{formatUSD(Number(card.amountUSD))}</td>
+                      <td className={`${adminTd} whitespace-nowrap font-semibold tabular-nums ${Number(card.balanceUSD) > 0 ? 'text-success-strong' : 'text-muted'}`}>{formatUSD(Number(card.balanceUSD))}</td>
+                      <td className={adminTd}><span className={adminBadge(status.tone)}>{status.label}</span></td>
+                      <td className={adminTd}>
+                        {card.recipientEmail ? (
+                          <div className="text-sm"><p className="font-medium">{card.recipientName}</p><p className="text-muted">{card.recipientEmail}</p></div>
+                        ) : <span className="text-muted">—</span>}
+                      </td>
+                      <td className={`${adminTd} whitespace-nowrap text-muted`}>{new Date(card.createdAt).toLocaleDateString('es-VE')}</td>
+                      <td className={adminTd}>
+                        <div className="flex items-center justify-end gap-1">
+                          {card.status === 'INACTIVE' && (
+                            <button type="button" onClick={() => openSell(card.code)} className={`${adminSuccessButton} h-11 px-3 text-sm`}>Activar</button>
+                          )}
+                          <button type="button" onClick={() => setDetails(card)} className={adminIconButton} aria-label={`Ver tarjeta terminada en ${card.codeLast4 || card.code.slice(-4)}`}>
+                            <IconoVer className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
 

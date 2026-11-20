@@ -10,6 +10,35 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.115] - 2026-11-18
+Reportes por prioridad y Ventas ordenadas con tablas cebra en gris neutro, filtros alineados y píldoras de pendiente con vibración suave (G-70). El equipo, 18/11: reorganizar Reportes para evitar saturación y grillas desordenadas, reducir el espacio muerto arriba en las cinco pantallas de Ventas, separar filas horizontalmente con gris neutro puro (sin tinte azulado ni rayas verticales tipo Excel) y dar una vibración corta y periódica únicamente a las píldoras de pendiente del panel. Sin cambio de base, sin variables y sin cron.
+### Marco del panel 1.22.0 (G-70)
+- Cabecera compacta de una línea (`adminPageHeaderCompact`), bordes y divisores en gris neutro puro (`--color-line: #d4d4d4`, `--color-line-strong: #bdbdbd` acotados a `body:has([data-panel-admin])`), cabecera `adminTh` (`bg-line/55`) y filas alternadas cebra sin rayas verticales (`adminRowZebra`, `odd:bg-white even:bg-line/40 hover:bg-line/60`) en `lib/admin-ui.ts`.
+- **Pendientes visibles sin estridencia:** las píldoras de estado `warning` hacen una vibración corta cada 3,6 s solo dentro del panel admin (pausada al pasar el cursor o enfocar y desactivada con `prefers-reduced-motion`); los botones de filtro permanecen quietos y no aplica en la tienda pública ni en Mi panel.
+- `components/admin/Filtros` admite `columnas` (3, 4, 5 o 6) para cuadrículas simétricas en escritorio (`sm:grid`) y deslizamiento horizontal en teléfono, manteniendo ícono, título, cuenta y subtítulo en una fila ordenada.
+### Reportes y seguridad 1.2.0 (G-70)
+- **Cabecera compacta:** período (`24 horas`, `7 días`, `30 días`, `1 año`, `Todo`), actualizar y Exportar CSV junto al título.
+- **En vivo plegable:** cerrado por defecto (`Plegable`, id `reportes-en-vivo`), mostrando en su cabecera conectados, hoy, mes y pagos por confirmar; adentro conserva las cuatro cifras, la barra de proporción, las tres columnas simétricas, las cifras del día (sin la celda decorativa "Se actualiza solo") y la lista con sus tres filtros.
+- **Secciones y cifras:** cinco botones `Filtros` alineados en fila (con aviso si hay registros críticos), tarjetas de métricas con altura uniforme y ayuda `(i)` en la cabecera, y dos gráficos lado a lado arriba.
+- **Prioridad y orden:** Relación de ventas del mes en barra compacta de una sola línea debajo de los gráficos principales; Interacciones y Seguridad en Resumen y Política de contenido (CSP) plegados por defecto; filtros de la bitácora como píldoras; Referidos en una grilla uniforme.
+### Órdenes y pagos 1.9.0 (G-70)
+- **Órdenes (`/admin/orders`):** cabecera compacta con estado en vivo, cobrado, conteo, píldora de pendientes clicable, buscador y actualizar (sin las cuatro tarjetas repetidas); 10 botones `Filtros` en cuadrícula simétrica de 5×2; tabla con filas cebra en gris neutro sin rayas verticales en escritorio (`lg:`), código `#ORD-...` en una sola línea, campo de Notas internas con caja y borde visible en el detalle, tabla de productos del modal con filas cebra y tarjetas en teléfono (`<lg`).
+- **Transacciones (`/admin/transactions`):** cabecera compacta con hoy, semana, píldora de pendientes clicable, consulta BDV, actualizar y exportar CSV (sin las tarjetas repetidas ni la caja triple de pendientes); cuatro botones `Filtros` alineados, formato limpio de montos negativos (`-$11,20`), fila compacta de búsqueda y tipo, tabla cebra en escritorio (`lg:`) y tarjetas en teléfono.
+- **Garantías (`/admin/garantias`):** cabecera compacta con buscador en línea, cuatro botones `Filtros` alineados, tabla cebra en escritorio (`lg:`) con píldoras de estado en una sola línea y tarjetas en teléfono.
+### Cotizaciones 1.6.0 (G-70)
+- Sin `max-w-5xl`: aprovecha el ancho completo junto al menú (`PLAN.md` §1.5), con cabecera compacta (título, buscador y "Nueva cotización"), seis botones `Filtros` en cuadrícula simétrica 3×2 para que ningún título ni subtítulo se trunque, tabla cebra en escritorio (`lg:`) y tarjetas en teléfono.
+### Clientes 1.10.0 (G-70)
+- **Gift Cards (`/admin/gift-cards`):** cabecera compacta con total, monto sin canjear y canjeado en línea junto a búsqueda, actualizar, "Vender en caja" y "Generar impresas" (sin las cinco tarjetas superiores); selector reemplazado por cinco botones `Filtros` alineados y tabla cebra desde `lg:`.
+
+## [1.0.0-rc.114] - 2026-11-18
+Mi panel anima a ganar boletos (C-302). El equipo, 18/11: "colocar esta información en el panel del cliente para que la gente se anime, de forma discreta", y "el boleto que quedó muy genial; que aún tienes tiempo de conseguir boletos, y las vías". Sin cambio de base, sin variables y sin cron.
+### Carrito, checkout y cuenta del cliente 1.15.0 (C-302)
+- **Sin boletos:** la tarjeta del sorteo pasa a "Aún tienes N días para ganar boletos", con las vías y sus números (compra $5 → 2 · $50 → 5 · $100 → 10, el producto estrella, la reseña y los amigos) y, al lado, el boleto de muestra con el correo tapado del cliente: "Así se verá tu boleto".
+- **Con boletos:** debajo de "¡Tienes N boletos!", "Aún tienes N días para sumar más" y las vías en píldoras chicas.
+- Mientras el sorteo está abierto, la pieza fuerte de Mi panel es el sorteo: Puntos ES va en blanco también sin boletos.
+### Marketing 1.28.1 (C-302)
+- La vista previa de Mi panel en el asistente del sorteo muestra la invitación nueva.
+
 ## [1.0.0-rc.113] - 2026-11-18
 Ajustes → IA por prioridad y con plegables (C-298), pedido del equipo después de ver C-292. Sin cambio de base, sin variables y sin cron.
 ### Ajustes 1.9.0 (C-298)

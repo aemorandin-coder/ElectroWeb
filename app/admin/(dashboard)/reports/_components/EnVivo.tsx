@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IconoCarrito, IconoCelular, IconoClientes, IconoCuenta, IconoEnVivo, IconoMonitor, IconoTableta } from '@/components/iconos';
-import { adminBadge } from '@/lib/admin-ui';
+import Plegable from '@/components/admin/Plegable';
+import { adminBadge, adminDato } from '@/lib/admin-ui';
 import { formatUSD } from '@/lib/currency';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useTiempoReal } from '@/lib/realtime/hooks';
@@ -48,7 +49,7 @@ function Cifra({ titulo, valor, detalle, icono: Icono }: { titulo: string; valor
 function Barras({ titulo, filas, vacio }: { titulo: string; filas: Array<{ nombre: string; cantidad: number }>; vacio: string }) {
   const maximo = Math.max(1, ...filas.map((f) => f.cantidad));
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 rounded-xl bg-surface p-3">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{titulo}</h3>
       {filas.length === 0 ? <p className="mt-2 text-sm text-muted">{vacio}</p> : (
         <ul className="mt-2 space-y-1.5">
@@ -106,21 +107,48 @@ export default function EnVivo() {
   const total = datos?.total ?? 0;
   const pctCuenta = total > 0 ? Math.round(((datos?.conCuenta ?? 0) / total) * 100) : 0;
 
-  return (
-    <section aria-labelledby="envivo-titulo" className="overflow-hidden rounded-2xl border border-line bg-white">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line px-4 py-3">
-        <span className="relative flex h-3 w-3" aria-hidden="true">
-          <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-60 motion-safe:animate-ping" />
-          <span className="relative inline-flex h-3 w-3 rounded-full bg-success" />
-        </span>
-        <h2 id="envivo-titulo" className="text-base font-semibold text-ink">En vivo</h2>
-        <p className="text-xs text-muted">
-          {fallo ? 'No se pudo actualizar. Reintentando…' : datos ? `Actualizado a las ${hora.format(new Date(datos.ahora))}` : 'Cargando…'}
-          {estado === 'conectado' ? ' · conexión en vivo' : ''}
-        </p>
-      </div>
+  const resumenCabecera = fallo
+    ? 'No se pudo actualizar. Reintentando…'
+    : datos
+      ? `${total === 0 ? 'Sin visitantes activos en la tienda' : `${datos.conCuenta} con cuenta · ${datos.conCarrito} en el carrito`} · ${hora.format(new Date(datos.ahora))}${estado === 'conectado' ? ' · en vivo' : ''}`
+      : 'Cargando…';
 
-      <div className="space-y-4 p-4">
+  return (
+    <Plegable
+      id="reportes-en-vivo"
+      nivel="item"
+      icono={IconoEnVivo}
+      abierto={false}
+      titulo={
+        <span className="inline-flex flex-wrap items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-success opacity-60 motion-safe:animate-ping" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success" />
+          </span>
+          <span>En vivo</span>
+          <span className={adminDato}>{datos ? `${total} ${total === 1 ? 'conectado' : 'conectados'}` : '…'}</span>
+        </span>
+      }
+      resumen={resumenCabecera}
+      extra={
+        hoy ? (
+          <>
+            <span className={adminDato}>
+              Hoy <strong className="text-ink">{formatUSD(hoy.hoyUSD)}</strong> ({hoy.hoyOrdenes})
+            </span>
+            <span className={adminDato}>
+              Mes <strong className="text-ink">{formatUSD(hoy.mesUSD)}</strong> ({hoy.mesOrdenes})
+            </span>
+            {hoy.pagosPorConfirmar > 0 ? (
+              <span className={adminBadge('warning')}>{hoy.pagosPorConfirmar} por confirmar</span>
+            ) : (
+              <span className={adminDato}>Por confirmar 0</span>
+            )}
+          </>
+        ) : null
+      }
+    >
+      <div className="space-y-4 pt-1">
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
           <Cifra titulo="Conectados ahora" valor={datos ? total : '…'} detalle="en la tienda" icono={IconoEnVivo} />
           <Cifra titulo="Con cuenta" valor={datos ? datos.conCuenta : '…'} detalle="clientes que iniciaron sesión" icono={IconoCuenta} />
@@ -138,10 +166,10 @@ export default function EnVivo() {
           </div>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Barras titulo="Qué están mirando" filas={(datos?.paginas ?? []).map((p) => ({ nombre: p.pagina, cantidad: p.cantidad }))} vacio="Nadie en la tienda ahora." />
           <Barras titulo="De dónde llegaron" filas={(datos?.origenes ?? []).map((o) => ({ nombre: o.origen, cantidad: o.cantidad }))} vacio="Sin visitas ahora." />
-          <div>
+          <div className="min-w-0 rounded-xl bg-surface p-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">Desde qué equipo</h3>
             <ul className="mt-2 space-y-1.5 text-sm">
               {(['desktop', 'mobile', 'tablet'] as const).map((d) => {
@@ -158,7 +186,7 @@ export default function EnVivo() {
         </div>
 
         {hoy && (
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl bg-brand-50 p-3 text-sm lg:grid-cols-4" aria-label="Cobrado hoy">
+          <dl className="grid grid-cols-1 gap-x-4 gap-y-2 rounded-xl bg-brand-50 p-3 text-sm sm:grid-cols-3" aria-label="Cobrado hoy">
             <div><dt className="text-xs text-brand-700">Cobrado hoy</dt><dd className="font-bold tabular-nums text-ink">{formatUSD(hoy.hoyUSD)} <span className="text-xs font-normal text-muted">· {hoy.hoyOrdenes} {hoy.hoyOrdenes === 1 ? 'orden' : 'órdenes'}</span></dd></div>
             <div><dt className="text-xs text-brand-700">Este mes</dt><dd className="font-bold tabular-nums text-ink">{formatUSD(hoy.mesUSD)} <span className="text-xs font-normal text-muted">· {hoy.mesOrdenes} {hoy.mesOrdenes === 1 ? 'orden' : 'órdenes'}</span></dd></div>
             <div>
@@ -167,7 +195,6 @@ export default function EnVivo() {
                 {hoy.pagosPorConfirmar > 0 ? <Link href="/admin/orders" className="text-brand-600 hover:text-brand-700">{hoy.pagosPorConfirmar} ver órdenes</Link> : '0'}
               </dd>
             </div>
-            <div><dt className="text-xs text-brand-700">Se actualiza solo</dt><dd className="text-xs text-muted">con cada orden o pago nuevo</dd></div>
           </dl>
         )}
 
@@ -213,6 +240,6 @@ export default function EnVivo() {
           {datos && datos.total > datos.lista.length && <p className="mt-1 text-xs text-muted">Se muestran los {datos.lista.length} más recientes de {datos.total}.</p>}
         </div>
       </div>
-    </section>
+    </Plegable>
   );
 }

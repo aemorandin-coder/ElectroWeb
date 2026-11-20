@@ -38,16 +38,12 @@ import FacturaOrden from './_components/FacturaOrden';
 import EntregaOrden from './_components/EntregaOrden';
 import {
   adminBadge,
+  adminCard,
   adminDato,
   adminModalHeader,
   adminModalBody,
-  adminPageHeader,
+  adminPageHeaderCompact,
   adminPageTitle,
-  adminPageSubtitle,
-  adminStatCard,
-  adminStatLabel,
-  adminStatValue,
-  adminIconChip,
   adminPrimaryButton,
   adminSecondaryButton,
   adminIconButton,
@@ -55,9 +51,10 @@ import {
   adminModalPanel,
   adminModalFooter,
   adminTableWrap,
+  adminTable,
   adminTh,
   adminTd,
-  adminRowHover,
+  adminRowZebra,
   adminInput,
   adminLabel,
   adminHint,
@@ -511,207 +508,290 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="space-y-5">
-      <div className={adminPageHeader}>
-        <div>
+    <div className="min-w-0 space-y-3">
+      <div className={adminPageHeaderCompact}>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           <h1 className={adminPageTitle}>Órdenes</h1>
-          <p className={adminPageSubtitle}>Pedidos de la tienda</p>
-          <div className="mt-1"><EnVivo estado={enVivo} /></div>
+          <EnVivo estado={enVivo} />
+          {summary && (
+            <span className={adminDato}>
+              Cobrado <strong className="text-ink">{formatUSD(stats.totalRevenue)}</strong> · {stats.total} {stats.total === 1 ? 'orden' : 'órdenes'}
+            </span>
+          )}
+          {summary && stats.pendingCount > 0 && (
+            <button type="button" onClick={() => setFilterStatus('PENDING')} className={adminBadge('warning')}>
+              {stats.pendingCount} {stats.pendingCount === 1 ? 'pendiente' : 'pendientes'}
+            </button>
+          )}
         </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div className="flex w-full items-center gap-3 flex-1 sm:w-auto">
-          <div className="relative min-w-0 flex-1 sm:max-w-xs">
-            <IconoBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+        <div className="flex w-full items-center gap-2 lg:w-auto">
+          <div className="relative min-w-0 flex-1 lg:w-72">
+            <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
             <input
               type="search"
               aria-label="Buscar por número, cliente, teléfono, cédula, referencia o guía"
-              placeholder="Número, cliente, teléfono, referencia o guía"
+              placeholder="Número, cliente, teléfono o guía"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`${adminInput()} pl-9`}
             />
           </div>
           {encontradas !== null && !loading && (
-            <p className="shrink-0 text-sm text-muted" role="status">
+            <p className="shrink-0 text-xs font-medium text-muted" role="status">
               {encontradas === 1 ? '1 orden' : `${encontradas.toLocaleString('es-VE')} órdenes`}
             </p>
           )}
+          <button
+            type="button"
+            onClick={() => fetchOrders(1)}
+            disabled={loading}
+            className={adminSecondaryButton}
+          >
+            <IconoActualizar className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+            <span className="max-sm:sr-only">Actualizar</span>
+          </button>
         </div>
-        <button
-          onClick={() => fetchOrders(1)}
-          disabled={loading}
-          className={adminSecondaryButton}
-        >
-          <IconoActualizar className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Actualizar
-        </button>
       </div>
 
       <Filtros
+        columnas={5}
         etiqueta="Filtrar órdenes por estado"
         valor={filterStatus}
         onCambiar={setFilterStatus}
         filtros={FILTROS_ESTADO.map((f) => ({ ...f, cuenta: loading || !summary ? null : f.valor === 'all' ? summary.total : summary.byStatus[f.valor] ?? 0 }))}
       />
 
-      {/* Stats Cards */}
-      <div className="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-4">
-        <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
-          <span className={`${adminIconChip('brand')} hidden`}>
-            <IconoBillete className="w-5 h-5" />
-          </span>
-          <div>
-            <span className={adminStatLabel}>Cobrado</span>
-            <p className={`${adminStatValue} text-lg tabular-nums`}>{formatUSD(stats.totalRevenue)}</p>
-          </div>
-        </div>
-        <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
-          <span className={`${adminIconChip('warning')} hidden`}>
-            <IconoReloj className="w-5 h-5" />
-          </span>
-          <div>
-            <span className={adminStatLabel}>Pendientes</span>
-            <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.pendingCount}</p>
-          </div>
-        </div>
-        <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
-          <span className={`${adminIconChip('brand')} hidden`}>
-            <IconoPaquete className="w-5 h-5" />
-          </span>
-          <div>
-            <span className={adminStatLabel}>En proceso</span>
-            <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.processingCount}</p>
-          </div>
-        </div>
-        <div className={`${adminStatCard} min-w-max shrink-0 p-3`}>
-          <span className={`${adminIconChip('success')} hidden`}>
-            <IconoCheck className="w-5 h-5" />
-          </span>
-          <div>
-            <span className={adminStatLabel}>Completadas</span>
-            <p className={`${adminStatValue} text-lg tabular-nums`}>{stats.completedCount}</p>
-          </div>
-        </div>
-      </div>
-
       {/* Orders List */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16">
-          <div className="relative w-12 h-12">
+          <div className="relative h-12 w-12">
             <div className="absolute inset-0 rounded-full border-2 border-line" />
-            <div className="absolute inset-0 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
+            <div className="absolute inset-0 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
           </div>
           <p className="mt-4 text-sm text-muted">Cargando órdenes...</p>
         </div>
       ) : filteredOrders.length === 0 ? (
         <EmptyState
-          icon={<IconoPaquete className="w-8 h-8" />}
+          icon={<IconoPaquete className="h-8 w-8" />}
           title="No hay órdenes"
           description={busqueda ? `Ninguna orden coincide con "${busqueda}"${filterStatus !== 'all' ? ' en este estado' : ''}` : filterStatus !== 'all' ? 'No hay órdenes con este estado' : 'Aún no se han realizado pedidos'}
         />
       ) : (
-        <div className="space-y-3">
-          {filteredOrders.map((order) => {
-            const paso = siguientePaso(order.status, order.deliveryMethod ?? (order.isOnlyDigital ? 'DIGITAL' : null));
-            return (
-              <div key={order.id} className="relative rounded-2xl border border-line bg-white p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    {/* Order Info */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                        <h3 className="font-semibold text-ink text-sm">
-                          <button type="button" onClick={() => { setSelectedOrder(order); setAdminNotes(order.adminNotes || ''); setShowDetailsModal(true); }} className="text-left after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-2 focus-visible:outline-brand-500">
-                            #{order.orderNumber}
-                          </button>
-                        </h3>
-                        {/* C-210: el estado lleno y con su ícono; "Digital", como el sello de la tienda; la guía, un dato en gris */}
-                        <PildoraEstadoOrden status={order.status} />
-                        {order.hasDigital && (
-                          <span className={adminBadge('brand')}>
-                            <IconoDigital className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                            Digital
-                          </span>
-                        )}
-                        {order.trackingNumber && (
-                          <span className={adminDato} title="Número de guía">
-                            <IconoEnvio className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                            {order.shippingCarrier} {order.trackingNumber}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+        <>
+          {/* Escritorio: tabla cebra limpia sin rayas verticales */}
+          <div className={`${adminTableWrap} hidden lg:block`}>
+            <table className={`${adminTable} min-w-[820px]`}>
+              <thead>
+                <tr>
+                  <th className={adminTh}>Orden</th>
+                  <th className={adminTh}>Cliente</th>
+                  <th className={adminTh}>Entrega / Tipo</th>
+                  <th className={adminTh}>Estado</th>
+                  <th className={adminTh}>Fecha</th>
+                  <th className={`${adminTh} text-right`}>Total</th>
+                  <th className={`${adminTh} text-right`}>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOrders.map((order) => {
+                  const paso = siguientePaso(order.status, order.deliveryMethod ?? (order.isOnlyDigital ? 'DIGITAL' : null));
+                  const abrir = () => {
+                    setSelectedOrder(order);
+                    setAdminNotes(order.adminNotes || '');
+                    setShowDetailsModal(true);
+                  };
+                  return (
+                    <tr
+                      key={order.id}
+                      onClick={abrir}
+                      className={`cursor-pointer ${adminRowZebra}`}
+                    >
+                      <td className={`${adminTd} whitespace-nowrap`}>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); abrir(); }}
+                          className="font-mono text-sm font-semibold text-ink hover:text-brand-600 focus-visible:outline-2 focus-visible:outline-brand-500"
+                        >
+                          #{order.orderNumber}
+                        </button>
+                        <span className="block text-xs text-muted">
+                          {order.items?.length || 0} {order.items?.length === 1 ? 'producto' : 'productos'}
+                        </span>
+                      </td>
+                      <td className={adminTd}>
                         {order.user ? (
                           <span className="font-medium text-ink">{order.user.name || 'Invitado'}</span>
                         ) : order.guestEmail ? (
-                          <span className="font-medium text-ink">Invitado</span>
+                          <span className="font-medium text-ink">{order.guestName || 'Invitado'}</span>
                         ) : (
                           <span className={adminBadge('neutral')}><IconoCuentaBorrada className="h-3.5 w-3.5" aria-hidden="true" /> Cliente eliminado</span>
                         )}
-                        <span>•</span>
-                        <span>{getTimeSince(order.createdAt)}</span>
-                        <span>•</span>
-                        <span>{order.items?.length || 0} {order.items?.length === 1 ? 'producto' : 'productos'}</span>
+                      </td>
+                      <td className={adminTd}>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {order.hasDigital && (
+                            <span className={adminBadge('brand')}>
+                              <IconoDigital className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              Digital
+                            </span>
+                          )}
+                          {order.trackingNumber ? (
+                            <span className={adminDato} title="Número de guía">
+                              <IconoEnvio className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              {order.shippingCarrier} {order.trackingNumber}
+                            </span>
+                          ) : !order.isOnlyDigital ? (
+                            <span className={adminDato}>{describirEntrega(order)}</span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className={adminTd}>
+                        <PildoraEstadoOrden status={order.status} />
+                      </td>
+                      <td className={`${adminTd} whitespace-nowrap text-ink-soft`}>
+                        {getTimeSince(order.createdAt)}
+                      </td>
+                      <td className={`${adminTd} whitespace-nowrap text-right font-bold tabular-nums text-ink`}>
+                        {formatUSD(Number(order.totalUSD) || 0)}
+                      </td>
+                      <td className={`${adminTd} text-right`} onClick={(e) => e.stopPropagation()}>
+                        <div className="inline-flex items-center justify-end gap-1.5">
+                          {paso && (
+                            <button
+                              type="button"
+                              onClick={() => avanzar(order, paso)}
+                              disabled={updatingStatus}
+                              className={`${adminSecondaryButton} h-9! px-3! text-xs!`}
+                            >
+                              {paso.pideGuia ? <IconoEnvio className="h-3.5 w-3.5" aria-hidden="true" /> : <IconoFlechaDerecha className="h-3.5 w-3.5" aria-hidden="true" />}
+                              {paso.accion}
+                            </button>
+                          )}
+                          {order.hasDigital && order.paymentStatus === 'PAID' && (
+                            <a
+                              href={`/admin/orders/${order.id}/digital`}
+                              className={`${adminSecondaryButton} h-9! px-3! text-xs!`}
+                              title="Enviar códigos digitales"
+                            >
+                              <IconoMonitor className="h-3.5 w-3.5" aria-hidden="true" />
+                              Códigos
+                            </a>
+                          )}
+                          <button
+                            type="button"
+                            onClick={abrir}
+                            className={adminIconButton}
+                            aria-label={`Ver detalles de la orden #${order.orderNumber}`}
+                            title="Ver detalles"
+                          >
+                            <IconoVer className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Móvil: tarjetas */}
+          <div className="space-y-2.5 lg:hidden">
+            {filteredOrders.map((order) => {
+              const paso = siguientePaso(order.status, order.deliveryMethod ?? (order.isOnlyDigital ? 'DIGITAL' : null));
+              return (
+                <div key={order.id} className={`${adminCard} relative p-4`}>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-0.5 flex flex-wrap items-center gap-2">
+                          <h3 className="text-sm font-semibold text-ink">
+                            <button type="button" onClick={() => { setSelectedOrder(order); setAdminNotes(order.adminNotes || ''); setShowDetailsModal(true); }} className="text-left after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-2 focus-visible:outline-brand-500">
+                              #{order.orderNumber}
+                            </button>
+                          </h3>
+                          <PildoraEstadoOrden status={order.status} />
+                          {order.hasDigital && (
+                            <span className={adminBadge('brand')}>
+                              <IconoDigital className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              Digital
+                            </span>
+                          )}
+                          {order.trackingNumber && (
+                            <span className={adminDato} title="Número de guía">
+                              <IconoEnvio className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              {order.shippingCarrier} {order.trackingNumber}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+                          {order.user ? (
+                            <span className="font-medium text-ink">{order.user.name || 'Invitado'}</span>
+                          ) : order.guestEmail ? (
+                            <span className="font-medium text-ink">Invitado</span>
+                          ) : (
+                            <span className={adminBadge('neutral')}><IconoCuentaBorrada className="h-3.5 w-3.5" aria-hidden="true" /> Cliente eliminado</span>
+                          )}
+                          <span>•</span>
+                          <span>{getTimeSince(order.createdAt)}</span>
+                          <span>•</span>
+                          <span>{order.items?.length || 0} {order.items?.length === 1 ? 'producto' : 'productos'}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Price & Quick Actions */}
-                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                    <div className="basis-full text-left sm:basis-auto sm:text-right">
-                      <p className="text-lg font-bold text-ink">{formatUSD(Number(order.totalUSD) || 0)}</p>
-                    </div>
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                      <div className="basis-full text-left sm:basis-auto sm:text-right">
+                        <p className="text-lg font-bold tabular-nums text-ink">{formatUSD(Number(order.totalUSD) || 0)}</p>
+                      </div>
 
-                    {/* Quick action button */}
-                    {paso && (
+                      {paso && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            avanzar(order, paso);
+                          }}
+                          disabled={updatingStatus}
+                          className={`${adminSecondaryButton} relative min-h-11 flex-1 sm:flex-none`}
+                        >
+                          {paso.pideGuia ? <IconoEnvio className="h-3 w-3" aria-hidden="true" /> : <IconoFlechaDerecha className="h-3 w-3" aria-hidden="true" />}
+                          {paso.accion}
+                        </button>
+                      )}
+
+                      {order.hasDigital && order.paymentStatus === 'PAID' && (
+                        <a
+                          href={`/admin/orders/${order.id}/digital`}
+                          onClick={(e) => e.stopPropagation()}
+                          className={`${adminSecondaryButton} relative`}
+                          title="Enviar códigos digitales"
+                        >
+                          <IconoMonitor className="h-3.5 w-3.5" aria-hidden="true" />
+                          Códigos
+                        </a>
+                      )}
+
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          avanzar(order, paso);
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setAdminNotes(order.adminNotes || '');
+                          setShowDetailsModal(true);
                         }}
-                        disabled={updatingStatus}
-                        className={`${adminSecondaryButton} relative min-h-11 flex-1 sm:flex-none`}
+                        className={`${adminIconButton} relative h-11 w-11`}
+                        aria-label="Ver detalles"
+                        title="Ver detalles"
                       >
-                        {paso.pideGuia ? <IconoEnvio className="w-3 h-3" aria-hidden="true" /> : <IconoFlechaDerecha className="w-3 h-3" aria-hidden="true" />}
-                        {paso.accion}
+                        <IconoVer className="h-4 w-4" aria-hidden="true" />
                       </button>
-                    )}
-
-                    {/* Digital Codes button - VISIBLE for orders with digital products */}
-                    {order.hasDigital && order.paymentStatus === 'PAID' && (
-                      <a
-                        href={`/admin/orders/${order.id}/digital`}
-                        onClick={(e) => e.stopPropagation()}
-                        className={`${adminSecondaryButton} relative`}
-                        title="Enviar códigos digitales"
-                      >
-                        <IconoMonitor className="w-3.5 h-3.5" />
-                        Códigos
-                      </a>
-                    )}
-
-                    <button
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        setAdminNotes(order.adminNotes || '');
-                        setShowDetailsModal(true);
-                      }}
-                      className={`${adminIconButton} relative h-11 w-11`}
-                      aria-label="Ver detalles"
-                      title="Ver detalles"
-                    >
-                      <IconoVer className="w-4 h-4" />
-                    </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {!loading && hasMore && (
@@ -805,7 +885,7 @@ export default function OrdersPage() {
                     id="orden-notas-texto"
                     value={adminNotes}
                     onChange={(e) => setAdminNotes(e.target.value)}
-                    className="w-full resize-none border-none bg-transparent p-0 text-sm text-ink placeholder:text-muted focus:ring-0"
+                    className="mb-2.5 w-full resize-none rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                     rows={3}
                     placeholder="Solo las ve el equipo"
                   />
@@ -872,7 +952,7 @@ export default function OrdersPage() {
                     </thead>
                     <tbody>
                       {selectedOrder.items?.map((item) => (
-                        <tr key={item.id} className={adminRowHover}>
+                        <tr key={item.id} className={adminRowZebra}>
                           <td className={adminTd}>
                             <div className="font-medium text-ink">{item.productName || item.product?.name}</div>
                             {conditionBadge(item.productCondition, item.conditionGrade) && (

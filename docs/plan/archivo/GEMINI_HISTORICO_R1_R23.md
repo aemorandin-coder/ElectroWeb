@@ -1,0 +1,544 @@
+# GEMINI.md — Reglas para Gemini en ElectroShopVe WEB
+
+Lee este archivo COMPLETO antes de cada tarea. Si una instrucción de aquí choca con tu criterio, **gana este archivo**.
+
+Proyecto: tienda online (Next.js 16 App Router, React 19, Tailwind CSS 4, Prisma, NextAuth). Idioma de la interfaz: español de Venezuela.
+**Tu orden de trabajo (rondas, prompts y tarjetas desde G-09): `docs/plan/PLAN_GEMINI.md`. Hoy no hay ronda abierta (la última fue R23, cerrada el 28/09): la próxima la escribe Claude al final de ese archivo. Sin una tarjeta abierta no se edita nada.**
+**Desde el 21/09 el equipo es Claude + Gemini:** ChatGPT salió. Todo lo que diga "carril ChatGPT" ahora es de Claude.
+Contexto: `docs/plan/PLAN.md` (plan maestro: diseño en §1, carriles en §4, decisiones en §7) y `docs/plan/AUDITORIA.md` (problemas, con su cierre). Lo que hace Claude: `docs/plan/SIGUIENTE.md` y `docs/plan/PLAN_CLAUDE.md`.
+
+---
+
+## 1. Las 12 reglas (no negociables)
+
+1. **Haz SOLO las tareas de la ronda que te asignaron** (ej. Ronda R2: `G-05a`…), en el orden de `PLAN_GEMINI.md`. Nada de "de paso arreglé…".
+2. **Solo edita archivos de TU carril** (sección 2). Si el archivo no está en tu carril, NO lo toques, aunque veas un error.
+3. **No borres, renombres ni muevas archivos**, salvo la lista exacta de la tarea G-02.
+4. **No toques:** `app/api/**`, `prisma/**`, `lib/**`, `contexts/**`, `proxy.ts`, `next.config.js`, `package.json`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx`, `components/ui/**` (salvo R12, sección 2), `components/public/**`, `CLAUDE.md`, `GEMINI.md`, `CHATGPT.md`, `docs/plan/PLAN.md`, `docs/plan/PLAN_CLAUDE.md`, `docs/plan/PLAN_GEMINI.md`, `docs/plan/AUDITORIA.md`, `docs/plan/estado/C-*.md`.
+5. **No instales dependencias.** No ejecutes `npm install`, `prisma migrate`, `prisma db push`, `git push` (a ninguna rama), `git reset --hard`, `git rebase`, `rm -rf` ni `git merge` a `main`. Terminar una ronda = commits en tu rama y avisar a Andrés; **Claude revisa, mergea y sube**. (En R9 se mergeó y subió a `main` sin revisión: no se repite.)
+6. **Cambios mínimos.** En R11 se reindentaron archivos enteros otra vez (referidos: 1.363 líneas de diff para 231 cambios reales; garantía 780/210). No reformatees archivos, no cambies comillas, indentación ni orden de imports, y no reescribas componentes enteros. Si el diff tiene líneas que la tarea no pide, deshazlas. Antes de cada commit: `git diff --stat` y `git diff -w --stat` deben dar números parecidos; si el primero es mucho mayor, cambiaste la sangría (en G-33 quedaron 8 archivos con 1 espacio de sangría). `'use client'` siempre es la primera línea del archivo.
+7. **No cambies textos visibles** (copys, mensajes) salvo que la tarea lo diga.
+8. **Colores:** solo los tokens de la sección 4. Nunca escribas un hex nuevo en un className.
+9. **Tipografía:** nunca `text-[7px]`, `text-[8px]`, `text-[9px]`, `text-[9.5px]`, `text-[10px]`, `font-black` ni `font-extrabold`.
+10. **Nada de** `any` nuevo, `console.log`, `alert()`, `<style jsx>`, `style={{ color/background }}` ni **emojis** nuevos (en textos, toasts o comentarios: usa íconos). **Íconos (desde C-188): los propios de `@/components/iconos`** (`IconoCarrito`, `IconoCheck`…, con `className` como antes). No importes íconos nuevos de `react-icons`: de ahí solo quedan los logos de marca (WhatsApp, Steam…). Para una estrella o un corazón marcados, `lleno`, no `fill-current`.
+11. **Verifica antes de decir "listo"**: corre los comandos de "Verificación" de la tarea y pega la salida en `docs/plan/estado/G-XX.md` (un archivo por tarea, con el ID de la tarea). **`npx tsc --noEmit` se corre de verdad y se pega su salida**: en R10 los estados de G-36 y G-37 decían "0 errores" y el build estaba roto por dos imports que faltaban (`adminPrimaryButton` en `app/creator/page.tsx`, `useBodyScrollLock` y `adminModalOverlay` en `components/cursos/CourseDetailClient.tsx`). **Si usas una receta de `@/lib/admin-ui` o un hook, agrégalo al import de ese archivo.**
+12. **Si algo no cuadra** (la línea no existe, el grep da un resultado distinto al esperado, un error que no entiendes): PARA, escribe `BLOQUEADO: <motivo>` en `docs/plan/estado/G-XX.md` y pasa a la siguiente tarea. **No improvises.**
+
+---
+
+**Pantallas del panel (desde 14/11, C-220, para todas las IA):** lo nuevo del panel sigue `docs/plan/PLAN.md` §1.9: pasos con su ícono, poco texto (una línea de ayuda), "Revisar y publicar" con la vista previa, fotos que se suben o se eligen y campos del tamaño de su dato. Si tu tarjeta toca una pantalla y no dice cómo, PARA (regla 12).
+
+**Regla de informes (desde 24/09, G-67):** en un informe o estado, cada texto que cites entre comillas y cada número de línea sale de un `grep -n` que pegas al lado. Si no lo encontraste con `grep`, no lo escribes. G-67 inventó 21 de 49 citas y se rechazó.
+
+## 2. Tu carril (lo único que puedes editar)
+
+```
+app/customer/**          components/customer/**
+app/cursos/**            components/cursos/**
+app/servicios/**         components/servicios/**
+app/contacto/**          components/contact/**
+app/gift-cards/**        app/canjear-gift-card/**
+app/solicitar-producto/**   app/privacidad/**   app/terminos/**
+components/modals/**   components/reviews/**   components/orders/**   components/social/**
+components/pago-movil/**   components/onboarding/**
+docs/plan/estado/G-*.md      (solo archivos que empiecen con G-)
+# Desde el 2026-09-16 ya NO son tuyos:
+#   app/login/**, app/registro/** → Claude (C-84: registro y Google)
+#   app/creator/**, app/recuperar-contrasena/**, app/verificar-email/** y el panel admin
+#   (dashboard, orders, customers, transactions, gift-cards, reports) → Claude (eran de ChatGPT hasta el 21/09)
+# R13 (17/09): solo tu carril, sin app/customer/(dashboard)/orders/[id]/digital/** (lo rediseñó ChatGPT)
+# R14: app/api/** y lib/** SOLO TIPOS (sin lib/auth.ts ni app/api/customers/[id]/route.ts)
+# R15: scripts/** (G-52), emojis de correos y APIs y tildes (G-53)
+# R17-R19 (desde 21/09, ChatGPT en pausa): lista exacta en PLAN_GEMINI.md, "Plan final de Gemini".
+#   R17: tu carril + una línea de components/onboarding/GuidedTourWrapper.tsx (G-55)
+#   R18: pantallas del admin sin dueño (orders, customers, transactions, reports, payments, inquiries,
+#        messages, product-requests, discount-requests, reviews, verifications, categories, servicios, legal),
+#        app/admin/(dashboard)/products/page.tsx (solo G-58), app/creator/dashboard/cursos/** y
+#        app/customer/(dashboard)/orders/[id]/digital/** (solo G-59 y G-60)
+#   R19: solo docs/plan/estado/G-61.md
+# ChatGPT salió del equipo el 21/09: sus pantallas son de Claude. Solo entras con una tarjeta que las nombre.
+# R20 (desde 21/09): lista exacta en PLAN_GEMINI.md, "Ronda R20". Además de tu carril:
+#   components/modals/ConfirmDialog.tsx (G-62), app/admin/(dashboard)/gift-cards/page.tsx (G-64),
+#   app/admin/(dashboard)/products/** (G-63, G-65, G-66), app/admin/(dashboard)/cursos/page.tsx,
+#   components/admin/EmailSettingsPanel.tsx (solo G-65). SocialMediaGenerator.tsx ya no existe (C-112: ElectroStudio, carril Claude)
+#   Fuera en R20: app/admin/(dashboard)/orders/**, components/orders/**, app/checkout/** (Claude rehace los envíos en C-100)
+# R22 (desde 24/09): solo G-68, los 5 archivos de app/customer/(dashboard)/ que nombra la tarjeta.
+# Solo en R12 y solo para cambiar clases (ver PLAN_GEMINI.md, "Reglas de R12"):
+#   app/checkout/page.tsx   components/checkout/CheckoutPagoMovilForm.tsx   components/pago-movil/VerificarPagoMovilForm.tsx
+#   components/ui/**   components/Footer.tsx   components/UserAccountButton.tsx   components/CartIcon.tsx
+# Solo en R11 y solo para cambiar clases (ver PLAN_GEMINI.md, "Reglas de R11"):
+app/carrito/page.tsx   app/checkout/**   components/checkout/**   components/pago-movil/VerificarPagoMovilForm.tsx
+components/ProcessingOverlay.tsx   components/EpicTooltip.tsx   app/not-found.tsx   app/error.tsx
+```
+Excepciones puntuales (solo cuando la tarea lo dice):
+- `app/admin/**` y `components/admin/**` → **solo arreglos mecánicos** y **solo cuando una tarjeta G lo pide**. Autorizado por Andrés el 2026-09-14.
+  - **Permitido:**
+    - `alert()`/`confirm()` → toast.
+    - hex → tokens, tipografía, z-index → capas.
+    - `type="button"` en botones.
+    - Quitar `<style jsx>`, imports y variables sin uso.
+    - Traducir al español los textos visibles.
+    - Estados de vacío y de carga con el texto que indique la tarjeta.
+  - **Prohibido** aunque la tarjeta parezca pedirlo (en ese caso → `BLOQUEADO` con `PEDIDO:` para Claude):
+    - Cambiar `fetch`, URLs de API, cuerpos de peticiones, validaciones, permisos o roles.
+    - Tocar cálculos de precios, costos, saldos o stock, o agregar o quitar campos de formularios.
+    - Mover lógica entre archivos o crear componentes nuevos.
+  - **Fuera de límites hasta nuevo aviso:** `app/admin/(dashboard)/settings/**` (Claude) y `app/admin/(dashboard)/products/**` (ChatGPT R2 desde el 17/09).
+    En R18 se abre solo `products/page.tsx` para G-58; `products/_components/**` sigue fuera.
+    Únicas excepciones: los 6 archivos de **G-29** (solo `className`). En **R9 (G-31…G-34)** se rehace el resto del admin con `lib/admin-ui.ts`, pero `layout.tsx`, `settings/**` y `products/**` siguen fuera.
+  - **`components/modals/RechargeModalV2.tsx` (G-38):** la tasa sale de `useSettings()` (`exchangeRateVES`, la de la tienda; C-72 y C-164). No volver a `/api/exchange-rates` ni a pedir `/api/settings/public`: el servidor aprueba la recarga con la tasa de la tienda.
+  - **Cotizaciones (C-148):** `app/cotizacion/**`, `app/admin/(dashboard)/cotizaciones/**`, `components/cotizaciones/**` y `lib/cotizaciones/**` son carril Claude (mueven montos). El pie de página tiene un enlace nuevo a `/cotizacion`: no lo quites.
+  - **Permisos del panel (C-141):** `app/admin/(dashboard)/equipo/**`, `seguridad/**`, `layout.tsx`, `lib/auth-helpers.ts`, `lib/equipo.ts`, `lib/dos-pasos.ts` y `proxy.ts` son carril Claude. Nunca compares `session.user.role` a mano ni quites un `hasPermission`: el Administrador no ve Configuración, Métodos de pago ni Equipo, y ningún admin tiene permisos sin la verificación en dos pasos.
+  - **`components/notifications/**`, `lib/admin-events/**`, `lib/telegram/**` y `app/admin/(dashboard)/notifications/**` son carril Claude (C-73).** Para íconos de notificaciones usa `notificationMeta` y `timeAgo` de `@/components/notifications/notification-meta`.
+  - **R10:** las páginas de acceso, el contenido de las páginas públicas, el panel de creadores y el panel del cliente usan también `lib/admin-ui.ts` (ver tarjetas G-35…G-39). `app/customer/(dashboard)/layout.tsx` lo hace Claude (C-55).
+  - **Mi panel (C-251, 15/11):** Claude lo revisó entero (el equipo pidió el rediseño y hay dinero de por medio). Lo que trae el estado de un pedido para el cliente sale de `lib/order-pasos.ts` (`estadoParaCliente`, `pasosPedido` con `paymentReference` y `lineaDeSalida`, "Sale el… desde Aragua"), que es de Claude: no lo copies en una pantalla. Las rutas `/api/customer/payment-methods` y `/api/customer/chat` ya no existen. C-251b (rc.71) pasó Mi panel al kit: los filtros van con `components/admin/Filtros` y las opciones con `components/admin/Opcion`; no vuelvas a las píldoras hechas a mano.
+  - **El kit de onboarding (C-257, 15/11):** Claude rehízo `components/onboarding/**` porque el equipo pidió el rediseño (`GuidedTour`, la hoja `AsiFunciona`, `ChispaGuia`, `IconoDibujado` y `compartido.ts`; las reglas, en `PLAN.md` §1.11). Una tarjeta que toque esos archivos usa las piezas del kit y no cambia la física, la colocación de Chispa ni el teclado. `GuidedTourWrapper` sigue siendo la lista de páginas donde no sale el recorrido.
+  - **Las decisiones de C-258 (C-261, 15/11), con el sí del equipo:** `app/solicitar-producto/**` sin sesión muestra "Entra para pedirlo" en lugar del formulario (la página recibe `conCuenta` del servidor); la garantía de Mi panel abre en "Nueva" o en Mis solicitudes; `RechargeModalV2` ya no usa `useConfirm` en la recarga manual (el botón dice el monto y el método). No volver a lo de antes.
+  - **Mi panel rediseñado (C-265, 15/11), con la elección del equipo (la A):** Claude tocó casi todo `app/customer/**`, `components/customer/**` y, en `components/modals/RechargeModalV2.tsx`, cómo se cierra la firma de los términos. Lo que cambia para una tarjeta tuya:
+    - **El marco ya no es `app/customer/(dashboard)/layout.tsx`:** ese archivo es de servidor (el título y el noindex) y el marco vive en `components/customer/MarcoMiPanel.tsx`. El menú es una columna de la página (no `fixed`) y no hay tarjeta blanca alrededor de cada página: las tarjetas van sobre el gris, en un solo nivel. No vuelvas a meter la página en una tarjeta ni a centrarla.
+    - **Cada página lleva su `layout.tsx` con el título** ("Mis pedidos"). Una página nueva de Mi panel, igual.
+    - **WhatsApp va en la cabecera de Mi panel**, no flotando: `components/WhatsAppButton.tsx` no sale en `/customer`.
+    - **Las listas van en dos columnas desde 1280 px** (`xl:grid-cols-2`), con tarjetas que llevan sus acciones abajo (`mt-auto`). Los filtros de Mi panel son `Filtros` con `tamano="chica"`.
+    - **Una ventana nueva usa `useFocoDeVuelta`** (`lib/hooks/useFocoDeVuelta.ts`, carril Claude): el foco entra y vuelve al cerrarla.
+    - **La garantía no acepta lo digital** (el servidor lo rechaza): en "Nueva" solo sale lo físico y lo digital va por WhatsApp.
+  - **El kit en más lugares (C-260, 15/11), con el pedido del equipo:** la tarjeta de Mis códigos (`PlatformScratchCard`) hace de "Voltear tarjeta" el botón principal hasta ver el código; las misiones (`CustomerOnboarding`) dibujan sus íconos y "¿Cómo funciona la tienda?" abre `AsiFunciona` a mano. Una tarjeta que toque esos archivos conserva las piezas del kit.
+  - **Los flujos que venden (C-281, 17/11, la Fase 4 de la auditoría que pidió el equipo):** Claude tocó tres archivos de tu carril. No vuelvas a lo de antes:
+    - `app/canjear-gift-card/page.tsx`: sin sesión ofrece "Crear mi cuenta gratis" y "Ya tengo cuenta", y el código espera en `sessionStorage` (`canje-gift-card:codigo`, nunca el PIN ni en la dirección) hasta que vuelve con sesión. Su título y su imagen para compartir están en `app/canjear-gift-card/layout.tsx` (carril Claude).
+    - `app/cursos/[slug]/page.tsx` lleva la imagen para compartir del curso (`imagenDeCurso` de `lib/og/datos.ts`), y `components/cursos/CourseDetailClient.tsx` dice el error si la reseña no se publica.
+    - `app/customer/(dashboard)/orders/page.tsx` abre un pedido con `?orden=` por su id **o por su número** (la confirmación de la compra manda el número).
+  - **Dinero y seguridad (C-280, 17/11, de la misma auditoría, pedido del equipo):** Claude tocó tres archivos de tu carril. No vuelvas a lo de antes:
+    - `components/modals/RechargeModalV2.tsx`: en el paso de verificar, el monto en Bs. es el que devuelve el servidor al crear la recarga (`montoBsServidor`), no `monto × tasa` del navegador; y con el pago ya verificado, cerrar la ventana no cancela la recarga.
+    - `app/customer/(dashboard)/profile/_components/Seguridad.tsx`: cambiar la contraseña cierra siempre las otras sesiones. Ya no hay casilla ni se manda `cerrarOtras`: queda la línea "Al cambiarla se cierran tus otras sesiones."
+    - `components/servicios/ServiciosPortfolio.tsx`: si las reseñas no llegan, la lista queda vacía (antes, cargando para siempre). `GET /api/service-reviews` es pública y da el nombre corto de quien reseña.
+  - **La verificación del Pago Móvil (C-283, 17/11):** `POST /api/pago-movil/verificar` pide `referencia` como texto de 4 a 8 dígitos y `bancoOrigen` como un código de `BANCOS_VENEZUELA`; otra cosa da 400. La respuesta de un pago ya verificado que sigue libre (`reutilizado`) trae `referencia`, la que quedó guardada.
+  - **La llave de la compra y el contexto del pago (C-284, 17/11):** `app/checkout/page.tsx` guarda una llave por intento de compra (`compraId`, en un `useRef`) y la manda en `POST /api/orders`: no la quites ni la crees de nuevo en cada toque, porque con ella dos toques en "Completar pedido" dejan una sola compra (la segunda respuesta es 200 con `repetida: true` y las mismas órdenes). `POST /api/pago-movil/verificar` pide `contexto`: `ORDER`, o `RECHARGE` con su `transactionId`; sin eso responde 400.
+  - **Lo que cambia algo va a la propia tienda (C-285, 17/11):** un `fetch` con `POST`, `PUT`, `PATCH` o `DELETE` a `/api` usa siempre una dirección relativa (`/api/...`). Si el pedido llega con el `Origin` de otro sitio, `proxy.ts` responde 403 `{ error: 'Origen no permitido' }`. `GET /api/creator` trae solo lo que usan sus pantallas (nombre, bio, foto, especialidad, estado, comisión, total y cuántos cursos), y su `PATCH` responde 400 con el motivo si un texto es muy largo o la foto no es una subida de la tienda ni una dirección `https`. `/api/public/stats` ya no existe.
+  - **Las API sin sesión responden 401 en JSON (C-280):** antes rebotaban a la página de entrada y el `fetch` recibía HTML con 200. Un `fetch` a una API privada mira `res.ok` (o `res.status === 401`) antes de leer el cuerpo.
+  - **La guía web (C-282, 17/11, de la misma auditoría):** Claude tocó dos archivos de tu carril. No vuelvas a lo de antes:
+    - `components/modals/RechargeModalV2.tsx` es un diálogo (`role="dialog"`, su título, `useFocoDeVuelta` y Escape) y el paso 1 es un `<form id="recarga-formulario">`: los botones del pie lo envían con `form=`. Cada `<button>` adentro lleva `type="button"`, o enviaría el formulario.
+    - `app/customer/(dashboard)/addresses/page.tsx`: la ventana es un `<form>` (Enter guarda) y los campos de la dirección llevan su `autoComplete` (`shipping address-line1`…).
+    - Una imagen nueva no lleva `priority` (en desuso en Next 16): `preload` si es la principal de la página, o `loading="eager"`.
+- `app/carrito/**`, `app/checkout/**` y `components/checkout/**` → G-04b, G-05g, G-06g y **R11 (G-40, G-41: solo `className` y los arreglos permitidos)**. El carrito y el checkout mueven dinero: nada de lógica.
+- Borrado de la lista cerrada de G-02.
+
+---
+
+## 3. Flujo de trabajo (una rama por ronda, un commit por tarea)
+
+Trabajas en tu propia carpeta (worktree), **nunca** en la carpeta principal del proyecto.
+
+⚠️ **Todos los comandos de este archivo son para `bash`.** El sistema de Andrés usa fish/zsh, donde `$RUTAS` no funciona igual. Ejecuta cada bloque así: `bash -c '<comandos>'`, o abre `bash` primero.
+
+```bash
+# La primera vez, o si la carpeta no existe (se quitó el 06/11/2026, C-185). Lo hace Andrés desde la carpeta principal "ElectroShopVe WEB":
+git worktree add "../ElectroShopVe-gemini" -b gemini/base
+ln -s "$PWD/node_modules" "../ElectroShopVe-gemini/node_modules"   # reutiliza dependencias, sin npm install
+cp .env "../ElectroShopVe-gemini/.env"                              # solo si Gemini va a levantar el servidor
+# Si Gemini levanta el servidor, que use otro puerto: npm run dev -- -p 3001
+# Si no puede levantarlo, anota "QA visual pendiente" y Claude lo revisa antes del merge.
+
+# Inicio de ronda (dentro de ../ElectroShopVe-gemini), solo cuando la ronda anterior ya está en main (el merge lo hace Claude):
+git status                                   # debe estar limpio
+git switch -c gemini/R1 main                 # R1, R2, R3… según la ronda
+
+# Cada tarea dentro de la ronda:
+npx tsc --noEmit > /tmp/tsc-antes.txt 2>&1   # guardar errores previos
+# ... hacer la tarea ...
+npx tsc --noEmit > /tmp/tsc-despues.txt 2>&1
+diff /tmp/tsc-antes.txt /tmp/tsc-despues.txt # NO debe haber errores nuevos
+git diff --stat                              # revisa que solo cambiaron archivos de tu carril
+# crea docs/plan/estado/G-XX.md (plantilla abajo)
+git add <archivos concretos> docs/plan/estado/G-XX.md   # nunca "git add -A" a ciegas
+git commit -m "[G-XX] descripción corta"
+```
+Plantilla de `docs/plan/estado/G-XX.md`:
+```
+# G-XX
+Estado: HECHO            (o: Estado: BLOQUEADO — motivo)
+Rama: gemini/RN
+- Archivos: N
+- Verificación: <salida de los greps>
+- tsc: sin errores nuevos
+- Notas / cosas raras vistas (sin arreglarlas):
+```
+
+Antes de empezar una tarea con dependencia (columna "Depende"), abre `docs/plan/estado/C-XX.md` de esa dependencia y confirma que dice `Estado: HECHO` (si el archivo no existe, no está hecha). Si no, elige otra tarea.
+
+---
+
+## 4. Tabla de colores (hex → token)
+
+Aplica **solo** a clases con la forma `utilidad-[#hex]` (ej. `bg-[#2a63cd]`, `hover:text-[#6a6c6b]`, `from-[#1e4ba3]`, `border-[#e9ecef]/50`). Mayúsculas o minúsculas da igual.
+
+| Hex | Token |
+|-----|-------|
+| `#2a63cd` | `brand-500` |
+| `#1e4ba3` | `brand-600` |
+| `#1a3b7e` | `brand-700` |
+| `#1e3a8a` | `brand-700` |
+| `#212529` | `ink` |
+| `#1a1a1a` | `ink` |
+| `#495057` | `ink-soft` |
+| `#6a6c6b` | `muted` |
+| `#6c757d` | `muted` |
+| `#adb5bd` | `subtle` |
+| `#dee2e6` | `line-strong` |
+| `#e9ecef` | `line` |
+| `#f8f9fa` | `surface` |
+| `#ffffff` | `white` |
+| `#10b981` | `success` |
+| `#059669` | `success-strong` |
+| `#f59e0b` | `warning` |
+| `#d97706` | `warning-strong` |
+| `#ef4444` | `danger` |
+| `#dc2626` | `deal` |
+| `#3b82f6` | `info` |
+| `#0f172a` | `brand-700` (el azul noche salió del kit de marca, C-243) |
+
+**Ámbar (`#f59e0b`, `#d97706`, amarillos): ningún contenedor ámbar** (C-226, Andrés, 14/11: "ese color de contenedor ámbar lo detesto, está en todos lados"). Ni cajas, ni avisos, ni fondos, ni bordes, ni píldoras (`bg-warning…`, `border-warning…`).
+- **Un aviso de lo que alguien tiene que hacer** va con `adminNotice('warning')` (o `avisoAccion` de `lib/admin-ui.ts`): azul claro de la tienda, con el ícono blanco en su placa del azul de la marca (C-243).
+- **Los colores salen del kit de marca** (C-243, `lib/marca.ts`, `/admin/marca`): los dos azules del logo y sus claros. Nada de `brand-950` ni `accent` (el azul noche y el cian salieron); `npm run check:marca` los rechaza.
+- **El ámbar solo queda en un texto suelto** (`text-warning-strong`: "Quedan 3") y en las estrellas. Nunca para destacar una frase dentro de un texto: eso va en negrita, del mismo color (14/11).
+- **Un estado en píldora va lleno** (`adminBadge`, `bg-success-strong text-white`), en la tienda también: nunca el verde claro con letra verde (14/11: "los colores están invertidos").
+- **Si destaca, celebra o clasifica** (un nivel, "Destacado", "Antes", el logo de Binance), no lo conviertas: déjalo y anótalo como `PEDIDO:` para Claude (`PLAN.md` §1.1, C-192). La tabla de arriba convirtió así 60 ámbares decorativos que Claude tuvo que deshacer el 06/11.
+
+**`navidad` (#e0263a)** es solo del tema navideño (C-186, `components/navidad/`): no se usa para errores ni para ofertas.
+
+**Rojos:** para **texto, bordes y fondos de error** usa la familia `deal` (`text-deal`, `bg-deal-bg`, `border-deal/30`), como manda la tabla R3 de `PLAN_GEMINI.md`. `danger` (#ef4444) solo se queda donde ya venía en un hex: sobre blanco da 3,8:1 y no se lee. En R10 hubo que cambiar `text-danger` por `text-deal` en 6 archivos.
+
+Además: `slate-` → `gray-` (ej. `bg-slate-100` → `bg-gray-100`).
+**No toques** hex dentro de `style={{ }}`, dentro de strings de JavaScript ni dentro de sombras arbitrarias (`shadow-[0_4px_20px_rgba(...)]`). Solo cuéntalos y anótalos en tu estado.
+
+---
+
+## 5. Tarjetas de tareas
+
+### G-01 · Links a rutas inexistentes · Depende: —
+Edita exactamente estas líneas (números según `main@0f86604`; si no coinciden, busca el texto):
+
+| Archivo | Buscar | Reemplazar |
+|---------|--------|------------|
+| `app/canjear-gift-card/page.tsx` (~l.122) | `href="/customer/wallet"` | `href="/customer/balance"` |
+| `components/cursos/CourseDetailClient.tsx` (~l.524) | `href="/customer/wallet"` | `href="/customer/balance"` |
+| `app/customer/(dashboard)/orders/[id]/digital/page.tsx` (~l.225) | `router.push('/auth/login');` | `router.push('/login');` |
+| `app/admin/(dashboard)/orders/[id]/digital/page.tsx` (~l.73) | `router.push('/auth/login');` | `router.push('/login?redirect=admin');` |
+| `app/customer/(dashboard)/layout.tsx` (~l.61 y ~l.156) | `router.push('/auth/signin');` | `router.push('/login');` |
+| `app/customer/(dashboard)/layout.tsx` (~l.150) | `callbackUrl: '/auth/signin',` | `callbackUrl: '/login',` |
+
+Verificación:
+```bash
+grep -rnE "/customer/wallet|/auth/login|/auth/signin" app components
+# Esperado: 0 resultados
+```
+
+---
+
+### G-02 · Borrar componentes muertos · Depende: —
+Lista cerrada (no borres nada más). Para **cada** fila, corre el grep de la columna "Verificar". Debe dar **0 resultados** fuera del propio archivo; si da otro resultado → NO lo borres y anótalo como `BLOQUEADO`.
+
+| Archivo a borrar | Verificar (debe dar 0 fuera del propio archivo) |
+|------------------|-----------------------------------------------|
+| `components/AdminButton.tsx` | `grep -rn "components/AdminButton" app components contexts lib` |
+| `components/FloatingTechIcons.tsx` | `grep -rn "FloatingTechIcons" app components contexts lib` |
+| `components/ShaderWave.tsx` | `grep -rn "ShaderWave" app components contexts lib` |
+| `components/SubtleParticles.tsx` | `grep -rn "SubtleParticles" app components contexts lib` |
+| `components/YouTubeEmbed.tsx` | `grep -rn "YouTubeEmbed" app components contexts lib` |
+| `components/admin/NotificationBell.tsx` | `grep -rn "admin/NotificationBell" app components contexts lib` |
+| `components/admin/ReviewsWidget.tsx` | `grep -rn "admin/ReviewsWidget" app components contexts lib` |
+| `components/admin/VerificationsTab.tsx` | `grep -rn "VerificationsTab" app components contexts lib` |
+| `components/home/CategoryCarousel.tsx` | `grep -rn "CategoryCarousel" app components contexts lib` |
+| `components/modals/RechargeModal.tsx` | `grep -rnw "RechargeModal" app components contexts lib` |
+
+⚠️ `components/notifications/NotificationBell.tsx` y `components/modals/RechargeModalV2.tsx` **NO se borran** (sí se usan). El comentario `// Removed ReviewsWidget import` en `app/admin/(dashboard)/page.tsx` no cuenta como uso.
+Borra con `git rm <archivo>`. Al final corre `npx tsc --noEmit` y compara con el archivo "antes".
+
+---
+
+### G-03 · Header y Footer en páginas legales y canje · Depende: —
+**`app/privacidad/page.tsx` y `app/terminos/page.tsx`:**
+1. Agrega los imports debajo de los existentes:
+   ```tsx
+   import PublicHeader from '@/components/public/PublicHeader';
+   import Footer from '@/components/Footer';
+   ```
+2. Envuelve lo que devuelve el `return (` en un fragmento, así:
+   ```tsx
+   return (
+     <>
+       <PublicHeader />
+       {/* ...el <div className="min-h-screen ..."> original, SIN cambios... */}
+       <Footer />
+     </>
+   );
+   ```
+3. No cambies nada más del contenido.
+
+**`app/canjear-gift-card/page.tsx`:** ya tiene `<PublicHeader />` en dos `return`. Agrega `import Footer from '@/components/Footer';` y, en **ambos** `return`, pon `<Footer />` como **último hijo** del `<div>` raíz (justo antes de su `</div>` de cierre).
+
+Verificación:
+```bash
+grep -c "<Footer" app/privacidad/page.tsx app/terminos/page.tsx app/canjear-gift-card/page.tsx
+# Esperado: 1, 1, 2
+```
+
+---
+
+### G-04a · `alert()` → toast (verificar email) · Depende: —
+`app/verificar-email/[token]/page.tsx`:
+1. Agrega `import toast from 'react-hot-toast';` si no existe.
+2. Reemplaza `alert(data.message || data.error);` por:
+   ```tsx
+   if (res.ok) { toast.success(data.message || 'Email reenviado'); } else { toast.error(data.error || 'No se pudo reenviar el email'); }
+   ```
+Verificación: `grep -n "alert(" "app/verificar-email/[token]/page.tsx"` → 0.
+
+### G-04b · `alert()` → toast (checkout) · Depende: **C-01 y C-05 HECHO**
+`components/checkout/CheckoutPagoMovilForm.tsx` (4 alerts) y `app/checkout/page.tsx` (1 alert): cada `alert('texto')` → `toast.error('texto')`. Agrega el import de `toast` si falta.
+Verificación: `grep -rn "alert(" components/checkout app/checkout` → 0.
+
+---
+
+### G-05 · Tipografía legible (por lotes) · Depende: ver lote
+Cada lote es una tarea, una rama y un commit.
+
+| Lote | Rutas | Depende |
+|------|-------|---------|
+| G-05a | `app/customer components/customer` | — |
+| G-05b | `components/modals components/social components/orders components/pago-movil components/reviews components/onboarding` | — |
+| G-05c | `app/servicios components/servicios app/contacto components/contact app/solicitar-producto` | — |
+| G-05d | `app/gift-cards app/canjear-gift-card app/cursos components/cursos app/creator` | — |
+| G-05e | `app/login app/registro app/recuperar-contrasena app/verificar-email app/privacidad app/terminos` | — |
+| G-05f | `app/admin components/admin` | hacer al final |
+| G-05g | `app/carrito app/checkout components/checkout` | **C-01 y C-05 HECHO** |
+
+**Paso 1 — reemplazo automático** (cambia `RUTAS` por las del lote):
+```bash
+RUTAS="app/customer components/customer"
+find $RUTAS -type f -name '*.tsx' -print0 | xargs -0 sed -i -E \
+  -e 's/text-\[(7|8|9|9\.5)px\]/text-[11px]/g' \
+  -e 's/text-\[10px\]/text-xs/g' \
+  -e 's/\bfont-(black|extrabold)\b/font-bold/g'
+```
+**Paso 2 — revisión manual de contadores circulares.** Lista los candidatos:
+```bash
+grep -rnE "text-\[11px\]" $RUTAS | grep "rounded-full" | grep -E "\b[wh]-(3|3\.5|4|4\.5)\b"
+```
+En cada resultado, dentro de ese mismo className, reemplaza el par `w-N h-N` (N = 3, 3.5, 4 o 4.5) por `min-w-5 h-5 px-1`. Nada más.
+
+**Paso 3 — duplicados redundantes:** si en un mismo className queda `text-xs sm:text-xs` o `text-xs lg:text-xs`, borra la versión con prefijo.
+
+Verificación:
+```bash
+grep -rnE "text-\[(7|8|9|9\.5|10)px\]|font-black|font-extrabold" $RUTAS
+# Esperado: 0 resultados
+git diff --stat   # solo archivos dentro de $RUTAS
+```
+
+---
+
+### G-06 · Colores a tokens (por lotes) · Depende: **C-10 HECHO** (todos los lotes)
+Mismos lotes y rutas que G-05 (`G-06a` … `G-06g`, con las mismas dependencias extra para `f` y `g`).
+Antes de empezar, comprueba que los tokens existen: `grep -n "color-brand-500" app/globals.css` → debe aparecer. Si no aparece → `BLOQUEADO`.
+
+**Paso 1 — reemplazo automático:**
+```bash
+RUTAS="app/customer components/customer"
+find $RUTAS -type f -name '*.tsx' -print0 | xargs -0 sed -i -E \
+  -e 's/-\[#2a63cd\]/-brand-500/gI' \
+  -e 's/-\[#1e4ba3\]/-brand-600/gI' \
+  -e 's/-\[#1a3b7e\]/-brand-700/gI' \
+  -e 's/-\[#1e3a8a\]/-brand-700/gI' \
+  -e 's/-\[#0f172a\]/-brand-700/gI' \
+  -e 's/-\[#212529\]/-ink/gI' \
+  -e 's/-\[#1a1a1a\]/-ink/gI' \
+  -e 's/-\[#495057\]/-ink-soft/gI' \
+  -e 's/-\[#6a6c6b\]/-muted/gI' \
+  -e 's/-\[#6c757d\]/-muted/gI' \
+  -e 's/-\[#adb5bd\]/-subtle/gI' \
+  -e 's/-\[#dee2e6\]/-line-strong/gI' \
+  -e 's/-\[#e9ecef\]/-line/gI' \
+  -e 's/-\[#f8f9fa\]/-surface/gI' \
+  -e 's/-\[#ffffff\]/-white/gI' \
+  -e 's/-\[#10b981\]/-success/gI' \
+  -e 's/-\[#059669\]/-success-strong/gI' \
+  -e 's/-\[#f59e0b\]/-warning/gI' \
+  -e 's/-\[#d97706\]/-warning-strong/gI' \
+  -e 's/-\[#ef4444\]/-danger/gI' \
+  -e 's/-\[#dc2626\]/-deal/gI' \
+  -e 's/-\[#3b82f6\]/-info/gI' \
+  -e 's/\bslate-([0-9]{2,3})\b/gray-\1/g'
+```
+**Paso 2 — reporte (no arreglar):** cuenta los hex que quedaron y anótalos en tu estado:
+```bash
+grep -rhoiE "\-\[#[0-9a-f]{6}\]" $RUTAS | sort | uniq -c | sort -rn
+grep -rnoiE "['\"]#[0-9a-f]{6}['\"]" $RUTAS | wc -l   # hex dentro de style/JS
+```
+
+Verificación:
+```bash
+grep -rniE "\-\[#(2a63cd|1e4ba3|1a3b7e|212529|6a6c6b|e9ecef|f8f9fa|dee2e6)\]" $RUTAS
+# Esperado: 0 resultados
+grep -rn "slate-" $RUTAS
+# Esperado: 0 resultados
+```
+Después, abre en el navegador 2 páginas del lote a 360px y a 1280px y confirma que los colores se ven igual que antes. Si algo quedó transparente o sin color → `BLOQUEADO` con el nombre de la clase.
+
+---
+
+### G-07 · Alturas de pantalla móviles · Depende: —
+```bash
+RUTAS="app/customer app/creator app/cursos components/cursos app/servicios app/contacto app/gift-cards app/canjear-gift-card app/login app/registro app/recuperar-contrasena app/verificar-email app/solicitar-producto app/privacidad app/terminos"
+find $RUTAS -type f -name '*.tsx' -print0 | xargs -0 sed -i -E \
+  -e 's/\bmin-h-screen\b/min-h-dvh/g' \
+  -e 's/\bh-screen\b/h-dvh/g'
+```
+Verificación: `grep -rnE "\bh-screen\b|\bmin-h-screen\b" $RUTAS` → 0.
+
+---
+
+### G-08 · Controles visibles en táctil · Depende: —
+En **estas 4 líneas exactas**, cambia `opacity-0 group-hover:opacity-100` por `lg:opacity-0 lg:group-hover:opacity-100`:
+
+| Archivo | Cómo reconocer la línea |
+|---------|------------------------|
+| `app/customer/(dashboard)/wishlist/page.tsx` (~l.420) | botón con `<FiTrash2` (eliminar de favoritos) |
+| `app/cursos/page.tsx` (~l.128) | overlay con el ícono de play `M8 5v14l11-7z` |
+| `components/servicios/ServiciosPortfolio.tsx` (~l.211) | comentario `{/* Play overlay */}` |
+| `components/reviews/ReviewForm.tsx` (~l.137) | texto `Ver requisitos` |
+
+**NO** cambies `components/modals/RechargeModalV2.tsx` (ese es un brillo decorativo).
+Verificación: `grep -rn "lg:group-hover:opacity-100" app/customer app/cursos components/servicios components/reviews | wc -l` → 4.
+
+---
+
+## 6. Qué hacer si…
+
+| Situación | Acción |
+|-----------|--------|
+| `tsc` muestra errores nuevos | Revierte el archivo que los causó (`git checkout -- <archivo>`), anótalo como `BLOQUEADO` y sigue. |
+| Ves un bug fuera de tu tarea | NO lo arregles. Anótalo en "Notas" de tu estado. |
+| Necesitas un componente, token o endpoint | Escribe `PEDIDO: …` en tu estado. Claude lo resuelve. |
+| Un archivo de tu carril tiene cambios de Claude sin mergear | No lo toques; espera a que esté en `main`. |
+| El sed cambió algo que no debía | `git checkout -- <archivo>` y repite con cuidado, o marca `BLOQUEADO`. |
+
+## 7. Cambios de Claude del 25-26/09 que te afectan (C-102 a C-111, C-40)
+
+- **ESLint quedó en 0 errores** (C-111). Una tarea tuya no puede agregar ninguno: compara con `main` antes de marcar HECHO.
+- **Hooks nuevos en `lib/hooks/`**. Úsalos en vez de repetir estos patrones:
+  - `useMontado()`: en vez de `const [mounted, setMounted] = useState(false)` + efecto, para `createPortal`.
+  - `useDelNavegador(() => window.location.origin, '')`: valores que solo existen en el navegador.
+  - `useCargarAlMontar(cargar, deps)`: cargar datos al montar. Nunca `useEffect(() => { fetchX(); }, [])`.
+  - `useCajonAccesible(abierto, idCajon, cerrar)`: cajones del menú (foco, Tab atrapado, Escape).
+- **`PublicProduct` tiene `oferta`** (C-102): con oferta, `priceUSD` ya viene rebajado y `compareAtPriceUSD` es el precio anterior. `ProductCard` muestra `OfferNote`. No recalcules precios en la tienda.
+- **`CartContext` tiene `couponCode` y `setCouponCode`**, y los ítems, `listPrice` opcional.
+- **Pantallas movidas:** `/admin/messages` y `/admin/product-requests` redirigen a `/admin/inquiries` (C-110). Descuentos vive en `/admin/discount-requests`, con pestañas. Legal se rehízo (C-103). Productos está en `products/_components/lista/` (C-51).
+- **Carril:** `lib/promotions*`, `lib/legal-docs*`, `lib/pdf-simple.ts`, `lib/audit-*` y `lib/hooks/*` son de Claude.
+
+## 8. Cambios de Claude del 28/09 que te afectan (C-112, C-113, C-114) y tu ronda R23
+
+- **R23 (G-69) quedó cerrada y en `main`** el 28/09, con dos arreglos de Claude (ver "Resultado de R23" en `PLAN_GEMINI.md`). No tienes ronda abierta.
+- **ElectroStudio** reemplazó "Imágenes para redes": `components/admin/SocialMediaGenerator.tsx` ya no existe. `app/admin/(dashboard)/studio/**` y `lib/studio/**` son del carril de Claude.
+  - Desde C-116, ElectroStudio tiene inicio (`/admin/studio`) y editor (`/admin/studio/<id>`). Marketing ya no tiene la pestaña "ElectroStudio": no la vuelvas a poner.
+- **C-119 (29/09), cambios de Claude en tu carril, por pedido de Andrés:**
+  - `app/customer/(dashboard)/warranty/page.tsx`: el formulario ahora envía de verdad (`/api/customer/warranty`) y los textos dicen la política real (sin devoluciones por cambio de opinión).
+  - `app/terminos/page.tsx`: versión 3.0 (garantía, usados y digitales).
+  - `app/customer/(dashboard)/orders/page.tsx`: la condición del producto.
+  - **No cambies estos textos ni los plazos:** salen de `lib/product-condition.ts`.
+- **Pagos sin orden** (C-114):
+  - `app/admin/(dashboard)/transactions/_components/PagosSinOrden.tsx` y `lib/pago-movil-sin-orden.ts` son de Claude: tocan dinero.
+  - En `transactions/page.tsx` solo hay una línea nueva que monta ese componente: no la muevas.
+- **Transacciones `REFUND`:** ahora también las crea el servidor cuando un Pago Móvil no llega a ser orden. Se muestran como crédito con `isCreditTransaction`. No hagas un mapeo de tipos aparte.
+- **Checkout** (carril de Claude): no deja pagar si la orden no se puede crear. No lo toques aunque una tarjeta vieja lo nombre.
+- **Medición de historias:** `proxy.ts` y `components/AnalyticsTracker.tsx` guardan `?es=<código>`. Los dos son de Claude.
+
+## 9. Cambios de Claude del 29/09 que te afectan (C-124 a C-128)
+
+Andrés pidió el 29/09 cinco módulos, y algunos tocan tu carril. **No reviertas estos cambios ni los "limpies"**: dependen de APIs y librerías del carril de Claude.
+- **Reseñas (C-124):**
+  - La columna `isPublished` no existe: no la vuelvas a usar.
+  - El estado de una reseña sale de `reviewStatus()` (`lib/review-status.ts`): Pendiente, Publicada o Rechazada.
+  - Archivo tuyo tocado: `app/customer/(dashboard)/reviews/page.tsx`.
+- **Pago Móvil (C-125):**
+  - Las fechas de pago salen de `hoyCaracas()` (`lib/pago-movil/monto.ts`). **Nunca** `new Date().toISOString().split('T')[0]`: después de las 8 p. m. da el día de mañana y el banco responde 1010.
+  - Los montos en Bs. salen de `montoBs()` y `montoParaAPI()`, no de `toFixed`.
+  - Archivo tuyo tocado: `components/pago-movil/VerificarPagoMovilForm.tsx`.
+- **Tiempo real (C-127):** `useTiempoReal`, `useOrderRealtime` y `useStockEnVivo` (`lib/realtime/hooks.ts`).
+  - En `app/customer/(dashboard)/orders/page.tsx` y `balance/page.tsx` hay un `useTiempoReal`: no lo quites.
+  - `fetchOrders(silencioso)` recibe un booleano: en un `onClick` úsalo como `() => fetchOrders()`.
+- **Panel del cliente (C-128), rehechos por Claude:**
+  - `app/customer/(dashboard)/page.tsx` (inicio).
+  - `components/customer/CustomerMobileNavBar.tsx` (barra inferior: Inicio, Pedidos, Saldo, Favoritos y Más).
+  - `components/customer/OrderStepper.tsx` (nuevo).
+  - El layout: el inicio va sin tarjeta envolvente y escucha el evento `abrir-menu-cliente`.
+  - Los pasos de un pedido salen de `pasosPedido()` (`lib/order-pasos.ts`): no hagas otro mapeo de estados.
+- **Palabras (C-129, C-131):** el saldo de la tienda se llama **"Puntos ES"** en todo texto visible (regla de Andrés del 30/09). Nunca "saldo", "billetera", "wallet" ni "monedero". SUDEBAN sancionó a Yummy por un servicio de "billeteras", y el saldo de ElectroShop se mantiene como pago anticipado que solo compra en la tienda. Tampoco escribas que el saldo se puede retirar o transferir.
+
+## 10. Cambios de Claude del 01/10 que te afectan (C-149)
+
+Andrés autorizó el 01/10 que Claude pusiera título y descripción propios en siete páginas de tu carril. **No los quites ni los "limpies".**
+- **Archivos tuyos tocados (solo metadatos):** `app/contacto/page.tsx`, `app/terminos/page.tsx`, `app/privacidad/page.tsx`, `app/solicitar-producto/page.tsx`, `app/servicios/page.tsx`, `app/cursos/page.tsx` y uno nuevo, `app/gift-cards/layout.tsx`.
+- **Títulos:** una página pública declara `title: 'Contacto'`, sin el nombre de la tienda. El layout raíz agrega " | Electro Shop": si lo escribes tú, sale dos veces.
+- **Una página `'use client'` no puede exportar `metadata`:** va en un `layout.tsx` de su carpeta (como `app/gift-cards/layout.tsx`).
+- **Imágenes y direcciones absolutas:** `absoluteUrl()` de `@/lib/seo`. No armes la dirección a mano con `NEXT_PUBLIC_BASE_URL`, y no uses `/og-image.png` (no existe).
+- **Enlaces a una categoría:** `/categorias/<slug>`. `/productos?category=<slug>` sigue funcionando para los filtros, pero la dirección propia de la categoría es la primera.
+- **Datos estructurados:** `<JsonLd data={…} />` de `@/components/seo/JsonLd` con las funciones de `lib/seo.ts`. No escribas un `<script type="application/ld+json">` a mano.
+
+## 11. Cambios de Claude del 01/10 que te afectan (C-147: datos para la factura)
+
+Mueven datos de facturación: **no los cambies ni los "limpies".**
+- **Archivos tuyos tocados:** `components/customer/DetallePedido.tsx` (muestra a nombre de quién va la factura y su número) y `app/customer/(dashboard)/profile/_components/Empresa.tsx` y `tipos.ts` (domicilio fiscal).
+- **A nombre de quién va la factura** lo decide el servidor (`lib/facturacion.ts`, `resolverFactura`) con los datos de la cuenta. Ninguna pantalla manda el nombre, la cédula, la razón social ni el RIF en el pedido: solo la elección (`billing.type`).
+- **La razón social y el RIF de una empresa en revisión o verificada no se editan.** No agregues campos para cambiarlos.
+- **Textos:** la web no emite facturas (las hace la tienda en SADES o en el talonario). Nunca escribas "factura fiscal automática", "descarga tu factura" ni nada parecido. El recibo del pedido sigue diciendo "Este recibo no es una factura fiscal".
+
+## 12. Documentos reordenados el 01/10 (C-156)
+- **`docs/plan/PLAN.md` es el plan maestro**, y sus secciones conservan el número: diseño (§1), carriles (§4), lista de pendientes (§5), QA (§6) y decisiones de Andrés (§7).
+- `docs/plan/SIGUIENTE.md` quedó solo con lo vigente. Los pasos de deploy y el entorno de pruebas están en `docs/plan/OPERACION.md`; lo ya subido, en `docs/plan/HISTORIAL.md`.
+- Donde una tarjeta vieja diga "`SIGUIENTE.md` §5" (el prompt de arranque): ya no existe. El prompt lo da Andrés al abrir la ronda.
+- **No edites ninguno de esos archivos** (regla 4): son carril de Claude, igual que `README.md`.
+- El merge a `main` y el push los hace Claude desde el 30/09. Tú terminas la ronda con commits en tu rama y avisas.
+
+## 13. Cambios de Claude del 01/10 que te afectan (C-155 y C-161)
+- **El asistente de productos tiene un campo nuevo, "Marca"** (`WizardData.brand`), y un bloque "Buscar este producto en la web" (`wizard/BusquedaWeb.tsx`). `products/**` sigue fuera de tu carril.
+- `lib/busqueda-web/**`, `lib/marcas.ts` y `app/api/admin/products/**` son carril Claude: leen páginas ajenas y llaman a una IA con una clave. No copies ese patrón a otra pantalla ni uses `fetch` hacia direcciones que no sean de la tienda.
+- `uploadProductPhoto` devuelve ahora `framed` además de `badged` (C-161). Si una tarjeta te pide tocar la subida de fotos, no cambies el `purpose` que se manda.
+
+## 14. Cambios de Claude del 16/10 que te afectan (C-177 y C-178)
+- **Imágenes para compartir (C-178):** cada página pública lleva su imagen de 1200 × 630 y su Open Graph propio, que salen de `lib/og/` y `app/og/` (carril Claude). Si una tarjeta tuya crea una página pública nueva, **avísale a Claude** para que le ponga su imagen. Sin eso, al compartirla dice ser la portada.
+- **No cambies `generateMetadata` ni `metadata`** de las páginas públicas (portada, productos, categorías, servicios, cursos, gift cards, contacto, cotización, solicitar producto, términos y privacidad): llevan `compartirPagina`, `imagenDePagina` o `imagenGenerada`.
+- **`<img>` en lugar de `next/image`** solo en `lib/og/tarjetas.tsx`, porque Satori lo exige. No copies ese `eslint-disable` a otros archivos.
+- **Dependencias nuevas (C-177):** Next 16.3.8, sharp 0.35 y nodemailer 10. Los tipos de sharp y de nodemailer ahora se importan por nombre (`import sharp, { type OverlayOptions } from 'sharp'`, `import nodemailer, { type SMTPTransportOptions } from 'nodemailer'`). No agregues dependencias ni subas versiones en `package.json` (carril Claude).
+- **La tienda escucha solo en `127.0.0.1`** (`npm start`). Para probar en local, usa `npm run dev` como siempre.
+
+## 15. Cambios de Claude del 06/11 que te afectan (C-191 y C-192)
+- **`app/customer/(dashboard)/page.tsx`:** Claude agregó `<PreguntarPromociones />` debajo de `<CustomerOnboarding />`, a pedido de Andrés. Es la pregunta de una sola vez por las ofertas por correo: no la quites ni la muevas arriba del resumen.
+- **El componente vive en `components/promociones/`** (carril Claude) y guarda con `PATCH /api/customer/settings`. Si una tarjeta tuya toca Mi perfil → Notificaciones, el interruptor de ofertas sigue mandando `notificaciones.emailPromotions`: el servidor anota la fecha de la decisión, no la mandes tú.
+- **C-192, el ámbar solo para avisos:** Claude cambió clases y tonos (sin lógica) en `app/cursos/`, `app/gift-cards/`, `app/customer/` (Promotores, Puntos ES, cotizaciones, reseñas, empresa), `components/cursos/`, `components/servicios/`, `components/modals/RechargeModalV2.tsx`, `components/contact/ContactForm.tsx` y `components/pago-movil/`. No los vuelvas a `warning`: lo que espera al equipo va en azul (`adminBadge('brand')`), los niveles y "Destacado" en la familia azul, y "Antes" en `bg-brand-950`. La regla está en §4 y en `PLAN.md` §1.1.
+
+## 16. Cambios de Claude del 10/11 que te afectan (C-201)
+Andrés pidió pulir Mi panel, así que Claude entró a tu carril (`estado/C-201.md`):
+- **`app/customer/(dashboard)/page.tsx`:**
+  - Ya no tiene `<EnVivo />`.
+  - "Movimientos" pasó a llamarse "Actividad reciente".
+  - Esa sección y "Últimos pedidos" llevan `min-w-0` para no salirse en el teléfono: no se lo quites.
+- **`components/customer/CustomerOnboarding.tsx`:** para quien ya compró, una tarjeta corta con solo las misiones que faltan.
+- **`app/customer/(dashboard)/layout.tsx`** (desde C-265, el menú está en `components/customer/MarcoMiPanel.tsx`):
+  - "Mis pedidos" y "Mis cursos", con minúscula.
+  - "Mis cotizaciones" y "Mis cursos" llevan `soloSi`: salen solo a quien tiene alguno. Los números vienen de `GET /api/user/profile` (`menu`).
+  - Si agregas una entrada al menú, escríbela igual.
+- **Títulos:** "Mis cursos" y "Mis reseñas".
+- **Garantía:** en el teléfono, las pestañas van sin ícono y la de "Mis solicitudes" dice "Solicitudes".
+- **Los textos de los movimientos** salen de `descripcionLimpia` (`lib/dto/movimiento.ts`, carril Claude). No muestres el `description` de la base sin pasarlo por ahí.
+
+## 17. Cambios de Claude del 10/11 que te afectan (C-200)
+- **El pack de íconos va en la v1.2:** 166 íconos, con 10 nuevos de ferretería (IconoFerreteria, IconoPintura, IconoTaladro, IconoEnchufe, IconoJardin, IconoAgua, IconoLlave, IconoBombillo, IconoHerramientas e IconoSoldadura). Úsalos donde corresponda. No dibujes otros ni traigas de librerías.
+- **Departamentos aparte:** la ferretería es un departamento (`categories.isDepartment`), con su acceso en la franja y en "Más" (`useNavDepartamentos` de `contexts/CatalogNavContext.tsx`). Si una tarjeta tuya toca menús o listas de categorías, no mezcles sus categorías con las de tecnología.
+
+## 18. Cambios de Claude del 13/11 que te afectan (C-205)
+- **Anchos (`PLAN.md` §1.5):** cada contenedor, del tamaño de lo que lleva.
+  - La página empieza a la izquierda, a lo ancho del marco: no la centres con `mx-auto max-w-…`. Adentro, un formulario no pasa de `max-w-3xl`. Un nombre o un select de una palabra, hasta `sm:max-w-sm`. Un número con unidad, `CampoUnidad` (`components/admin/CampoUnidad`).
+  - No estires un dato corto para llenar una columna, ni metas una tarjeta dentro de otra.
+  - Vale también para tus pantallas (`app/customer/**`, cursos, servicios): si una tarjeta tuya toca un formulario, aplícalo.
+- **Filtros en píldoras (§1.7):** ícono, nombre, cuenta y un subtítulo corto, con `components/admin/Filtros`. Si tu tarjeta tiene píldoras de filtro, úsalo; no armes otras a mano.
+- **Trabajos de varios pasos (§1.6):** `components/admin/Pasos`. No es de tu carril: si una pantalla tuya lo necesita, pídelo como `PEDIDO:`.
+- **Elegir entre opciones (§1.10, C-242):** `components/admin/Opcion` (ícono, título, línea y círculo, con su relleno). No uses `adminChoice` sola en una pieza nueva: es solo el borde y el color.

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { IconoDescargar, IconoDocumento } from '@/components/iconos';
-import { adminCard, adminHint, adminInput, adminLabel, adminSecondaryButton } from '@/lib/admin-ui';
+import { adminCard, adminHint, adminInput, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { csvRelacionVentas, mesActual, type FilaVenta, type TotalesVentas } from '@/lib/relacion-ventas';
 
@@ -51,19 +51,20 @@ export default function RelacionVentas() {
 
   return (
     <section aria-labelledby="relacion-ventas-titulo" className={`${adminCard} p-4`}>
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div className="min-w-0">
-          <h2 id="relacion-ventas-titulo" className="flex items-center gap-2 text-sm font-semibold text-ink">
-            <IconoDocumento className="h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" /> Relación de ventas del mes
-          </h2>
-          <p className={adminHint}>Para tu contador: cada orden pagada con su base, su IVA, la forma de pago y el número de factura. No es un documento fiscal.</p>
-        </div>
-        <div className="flex shrink-0 items-end gap-2">
-          <div>
-            <label htmlFor="relacion-ventas-mes" className={adminLabel}>Mes</label>
-            <input id="relacion-ventas-mes" type="month" value={mes} max={mesActual()} onChange={(e) => setMes(e.target.value)} className={`${adminInput()} w-44`} />
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+            <IconoDocumento className="h-[18px] w-[18px]" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <h2 id="relacion-ventas-titulo" className="text-sm font-semibold text-ink">Relación de ventas del mes (para tu contador)</h2>
+            <p className={`${adminHint} mt-0.5`}>Cada orden pagada con su base, su IVA, la forma de pago y el número de factura. No es un documento fiscal.</p>
           </div>
-          <button type="button" onClick={descargar} disabled={cargando || !mes} className={adminSecondaryButton}>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <label htmlFor="relacion-ventas-mes" className="sr-only">Mes</label>
+          <input id="relacion-ventas-mes" type="month" value={mes} max={mesActual()} onChange={(e) => setMes(e.target.value)} className={`${adminInput()} w-44`} />
+          <button type="button" onClick={descargar} disabled={cargando || !mes} className={`${adminSecondaryButton} shrink-0`}>
             <IconoDescargar className="h-4 w-4" aria-hidden="true" /> {cargando ? 'Preparando…' : 'Descargar'}
           </button>
         </div>

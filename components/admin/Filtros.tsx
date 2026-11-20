@@ -17,7 +17,14 @@ export interface Filtro<T extends string> {
   tono?: 'aviso';
 }
 
-export default function Filtros<T extends string>({ filtros, valor, onCambiar, etiqueta, tamano = 'normal' }: {
+const COLUMNAS_GRID: Record<3 | 4 | 5 | 6, string> = {
+  3: 'sm:grid-cols-3',
+  4: 'sm:grid-cols-2 lg:grid-cols-4',
+  5: 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5',
+  6: 'sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6',
+};
+
+export default function Filtros<T extends string>({ filtros, valor, onCambiar, etiqueta, tamano = 'normal', columnas }: {
   filtros: ReadonlyArray<Filtro<T>>;
   valor: T;
   onCambiar: (v: T) => void;
@@ -27,6 +34,8 @@ export default function Filtros<T extends string>({ filtros, valor, onCambiar, e
    * que la lista. Lo que junta la elegida se lee debajo (y el de cada una, en su title y para el lector de pantalla).
    */
   tamano?: 'normal' | 'chica';
+  /** G-70: en modo normal, alinea las tarjetas en una cuadrícula simétrica en lugar de anchos irregulares. */
+  columnas?: 3 | 4 | 5 | 6;
 }) {
   if (tamano === 'chica') {
     const elegida = filtros.find((f) => f.valor === valor);
@@ -68,7 +77,10 @@ export default function Filtros<T extends string>({ filtros, valor, onCambiar, e
     <div
       role="group"
       aria-label={etiqueta}
-      className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
+      className={[
+        'relative -mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide sm:mx-0 sm:overflow-visible sm:px-0 sm:pb-0',
+        columnas ? `sm:grid ${COLUMNAS_GRID[columnas]}` : 'sm:flex-wrap',
+      ].join(' ')}
     >
       {filtros.map(({ valor: v, etiqueta: texto, ayuda, Icono, cuenta, tono }) => {
         const activo = v === valor;
@@ -81,6 +93,7 @@ export default function Filtros<T extends string>({ filtros, valor, onCambiar, e
             onClick={() => onCambiar(v)}
             className={[
               'flex min-h-[3.25rem] shrink-0 snap-start items-center gap-2.5 rounded-xl border py-2 pl-2.5 pr-3 text-left transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+              columnas ? 'sm:w-full' : '',
               activo ? 'border-brand-500 bg-brand-50 shadow-[inset_0_0_0_1px_var(--color-brand-500)]' : 'border-line-strong bg-white hover:border-brand-200 hover:bg-brand-50',
               vacio ? 'opacity-60' : '',
             ].join(' ')}
@@ -93,12 +106,12 @@ export default function Filtros<T extends string>({ filtros, valor, onCambiar, e
             >
               <Icono className="h-4 w-4" aria-hidden="true" />
             </span>
-            <span className="min-w-0">
+            <span className="min-w-0 flex-1">
               <span className={`flex items-baseline gap-1.5 text-sm font-semibold leading-tight ${activo ? 'text-brand-700' : 'text-ink'}`}>
-                {texto}
-                {cuenta !== undefined && cuenta !== null && <span className={`text-xs font-bold tabular-nums ${activo ? 'text-brand-700' : 'text-ink-soft'}`}>{cuenta.toLocaleString('es-VE')}</span>}
+                <span className="truncate">{texto}</span>
+                {cuenta !== undefined && cuenta !== null && <span className={`shrink-0 text-xs font-bold tabular-nums ${activo ? 'text-brand-700' : 'text-ink-soft'}`}>{cuenta.toLocaleString('es-VE')}</span>}
               </span>
-              <span className="block text-xs leading-tight text-muted">{ayuda}</span>
+              <span className="block truncate text-xs leading-tight text-muted">{ayuda}</span>
             </span>
           </button>
         );

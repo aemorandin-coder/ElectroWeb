@@ -6,6 +6,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { misBoletosPublicos } from '@/lib/dto/sorteo';
 import { siteUrl } from '@/lib/seo';
+import { reglaDe } from '@/lib/sorteo/escala';
+import { estrellaPublica } from '@/lib/sorteo/estrella';
 import { boletosDeCliente, getSorteoVigente } from '@/lib/sorteo/servidor';
 
 export async function GET() {
@@ -13,7 +15,7 @@ export async function GET() {
   if (!session?.user?.id) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   const sorteo = await getSorteoVigente();
   if (!sorteo) return NextResponse.json({ sorteo: null });
-  const boletos = await boletosDeCliente(sorteo, session.user.id);
+  const [boletos, estrella] = await Promise.all([boletosDeCliente(sorteo, session.user.id), estrellaPublica()]);
   return NextResponse.json({
     sorteo: {
       titulo: sorteo.titulo, premio: sorteo.premio, resultadoEl: sorteo.resultadoEl.toISOString(), cerrado: new Date() > sorteo.hasta, sorteado: Boolean(sorteo.sorteadoAt),
@@ -21,6 +23,9 @@ export async function GET() {
       compraMinimaUSD: Number(sorteo.compraMinimaUSD), topeInvitar: sorteo.topeInvitar,
       // C-297: cuántos da una compra de la mínima
       boletosPorCompra: sorteo.boletosPorCompra,
+      // C-302: las vías con sus números (la escala, las reseñas y el producto estrella de esta semana) y hasta cuándo
+      regla: reglaDe(sorteo), porResena: sorteo.boletosPorResena, hasta: sorteo.hasta.toISOString(),
+      estrella: estrella ? { nombre: estrella.nombre, boletos: estrella.boletos } : null,
     },
     total: boletos.total,
     // C-262: cuánto falta para el próximo boleto por invitar y cuántos amigos todavía no cuentan (sin sus nombres: la lista

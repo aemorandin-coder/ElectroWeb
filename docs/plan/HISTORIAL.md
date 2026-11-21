@@ -1,19 +1,19 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.117`, comprobada el 20/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.118`, comprobada el 20/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
 
-## 20/11 · G-72: Tema de lanzamiento GTA VI y Descripción inteligente en ficha de producto (de rc.116 a `v1.0.0-rc.117`)
-Subida a producción por SSH (respaldo `~/respaldo-antes-rc117.dump`, `npx prisma db push` y `scripts/deploy.sh --sin-pull`) y comprobada desde fuera el 20/11/2026 (`https://electroshopve.com/` responde `1.0.0-rc.117|277082e0` y `/productos/grand-theft-auto-vi-ps5-psn-codigo` responde `200`).
+## 20/11 · G-72: Tema de lanzamiento GTA VI (video protagonista + fuente Rockstar Anton) y Descripción inteligente en ficha de producto (de rc.116 a `v1.0.0-rc.118`)
+Subida a producción por SSH (respaldo `~/respaldo-antes-rc117.dump`, `npx prisma db push` y `scripts/deploy.sh --sin-pull`) y comprobada desde fuera el 20/11/2026 (`https://electroshopve.com/` responde `1.0.0-rc.118|7526bd05` y `/productos/grand-theft-auto-vi-ps5-psn-codigo` responde `200`).
 
-**Falta que el equipo lo active y confirme** (`SIGUIENTE.md`, "Por confirmar de rc.117"): cargar la plantilla GTA VI en `Marketing → Lanzamiento`, asignar los productos publicados de PS5 y Xbox y revisar las 3 pruebas.
+**Falta que el equipo lo confirme** (`SIGUIENTE.md`, "Por confirmar de rc.118"): revisar las 3 pruebas en escritorio y teléfono (`360 px`).
 
-### El bloque que se subió: `v1.0.0-rc.117` (G-72)
-- **Commit:** `277082e0` (etiqueta `v1.0.0-rc.117`).
-- **G-72** (`rc.117` · Tienda `1.24.0` + Marketing `1.29.0` + Productos `1.19.1` + Ajustes `1.9.1`): tema temporal de lanzamiento GTA VI (`Marketing → Lanzamiento`, píldora en barra, hero Vice City con wordmark oficial blanco en una línea, precio arriba y selector PS5/Xbox con logos oficiales, modal de tráiler y fila de 4 productos) y grilla inteligente para `Descripción` en `/productos/[id]`.
+### El bloque que se subió: `v1.0.0-rc.117` y `v1.0.0-rc.118` (G-72)
+- **Commit:** `7526bd05` (etiqueta `v1.0.0-rc.118`; adentro, `v1.0.0-rc.117` en `277082e0`).
+- **G-72** (`rc.117` y `rc.118` · Tienda `1.24.1` + Marketing `1.29.1` + Productos `1.19.1` + Ajustes `1.9.1`): tema temporal de lanzamiento GTA VI (`Marketing → Lanzamiento`, píldora en barra, hero Vice City con wordmark oficial blanco en una línea, tráiler protagonista a 7 de 12 columnas, barra glass discreta Opción A con precio en fuente display Rockstar `Anton` y selector PS5/Xbox con logos oficiales, modal de tráiler y fila de 4 productos) y grilla inteligente para `Descripción` en `/productos/[id]`.
 - **Cambio de base aditivo aplicado en `company_settings`** (sin variables nuevas y sin cron):
 ```sql
 ALTER TABLE "company_settings" ADD COLUMN     "launchThemeEnabled" BOOLEAN NOT NULL DEFAULT false,

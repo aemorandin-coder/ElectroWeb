@@ -107,7 +107,7 @@ export function armarRecepcion(entrada: {
   }
   if (puede('MANAGE_CONTENT')) pasos.push({ id: 'historia', texto: sorteo ? 'Crear la historia del sorteo' : 'Crear una historia', icono: 'Claqueta', href: '/admin/studio/nueva' });
   if (datos.tienda.length > 0) pasos.push({ id: 'tienda', texto: 'Completar la tienda', icono: 'Tienda', cuenta: datos.tienda.length, href: datos.tienda[0].href, widget: 'tienda' });
-  if (sorteo && puede('MANAGE_CONTENT')) pasos.push({ id: 'sorteo', texto: 'Ver el sorteo', icono: 'Premio', href: '/admin/marketing#sorteo', widget: 'sorteo' });
+  if (sorteo && puede('MANAGE_CONTENT')) pasos.push({ id: 'sorteo', texto: 'Ver el sorteo', icono: 'Premio', href: '/admin/discount-requests?vista=sorteo', widget: 'sorteo' });
   if (pasos.length === 0) pasos.push({ id: 'ordenes', texto: 'Ver las órdenes', icono: 'Ordenes', href: '/admin/orders' });
 
   const corte = corteDeHoy(ahora, entrada.calendario);

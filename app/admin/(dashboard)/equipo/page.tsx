@@ -147,7 +147,7 @@ export default function EquipoPage() {
   useCargarAlMontar(cargar);
 
   return (
-    <div className="max-w-4xl">
+    <div className="min-w-0">
       <div className={adminPageHeader}>
         <div>
           <h1 className={adminPageTitle}>Equipo</h1>

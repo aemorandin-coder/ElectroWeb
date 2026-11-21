@@ -456,7 +456,7 @@ export function WidgetSorteo({ sorteo, ahora }: { sorteo: DatosSorteo | null; ah
     return (
       <Tarjeta id="sorteo" titulo="Sorteo" icono="Premio">
         <AlDia icono="premio" titulo="No hay un sorteo abierto" detalle="Cuando lo abras, aquí ves la cuenta atrás y los boletos." />
-        <div className={cx(s.tPie, s.sinH2)}><Link href="/admin/marketing#sorteo" className={cx(s.btn, s.btnSecundario)}><IconoMas aria-hidden="true" />Crear un sorteo</Link></div>
+        <div className={cx(s.tPie, s.sinH2)}><Link href="/admin/discount-requests?vista=sorteo" className={cx(s.btn, s.btnSecundario)}><IconoMas aria-hidden="true" />Crear un sorteo</Link></div>
       </Tarjeta>
     );
   }
@@ -484,7 +484,7 @@ export function WidgetSorteo({ sorteo, ahora }: { sorteo: DatosSorteo | null; ah
       </div>
       <div className={cx(s.tPie, s.sinH3)}>
         <Link href="/admin/studio/nueva" className={cx(s.btn, s.btnPrimario)}><IconoClaqueta aria-hidden="true" />Crear la historia</Link>
-        <Enlace href="/admin/marketing#sorteo" clase={s.sinMuyAngosto}>Ver</Enlace>
+        <Enlace href="/admin/discount-requests?vista=sorteo" clase={s.sinMuyAngosto}>Ver</Enlace>
       </div>
     </Tarjeta>
   );

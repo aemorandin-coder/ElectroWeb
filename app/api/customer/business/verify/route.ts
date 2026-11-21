@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
             title: `Verificación de empresa · ${empresa}`.slice(0, 150),
             summary: `${session.user.name || session.user.email || 'Un cliente'} subió acta constitutiva y RIF`,
             fields: [['Empresa', empresa], ['RIF', rifLeido.valor], ['Correo', session.user.email]],
-            link: '/admin/verifications',
+            link: '/admin/customers?vista=verificaciones',
         });
 
         // Sin la fila del perfil: antes salía entera (IP del último acceso, motivo de eliminación…)

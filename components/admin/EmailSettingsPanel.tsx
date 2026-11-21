@@ -421,7 +421,7 @@ export default function EmailSettingsPanel() {
                 <div className="p-4 grid gap-4 sm:grid-cols-2">
                     <p className="text-sm text-muted sm:col-span-2">
                         Encender o apagar los correos de marketing está en{' '}
-                        <a href="/admin/marketing#campanas" className="font-semibold text-brand-600 hover:underline">Marketing → Campañas</a>.
+                        <a href="/admin/marketing/correos#campanas" className="font-semibold text-brand-600 hover:underline">Marketing → Correos</a>.
                     </p>
                     <div>
                         <label htmlFor="correo-limite" className="block text-xs font-bold text-muted uppercase tracking-wide mb-1">

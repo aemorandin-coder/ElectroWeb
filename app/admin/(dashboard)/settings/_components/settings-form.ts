@@ -2,11 +2,13 @@
 // la validación real está en el servidor (lib/validations/settings.ts).
 
 import {
-  IconoBaseDeDatos, IconoBillete, IconoBolsa, IconoBuscar, IconoCorreo, IconoEnvio, IconoMaletin, IconoNovedad,
+  IconoBaseDeDatos, IconoBillete, IconoBolsa, IconoBuscar, IconoCorreo, IconoEnvio, IconoGarantia, IconoMaletin, IconoNovedad,
   IconoClientes, IconoEnviar, IconoHerramientas, IconoInicio, IconoNotificaciones, IconoPaquete, IconoPintura, IconoTarjeta,
+  IconoVersiones,
 } from '@/components/iconos';
 import type { IconType } from '@/components/iconos';
 import { leerReglasEmbalaje, type Empaque } from '@/lib/embalaje';
+import { VERSION_BUILD } from '@/lib/version-build';
 
 export const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 export type WeekDay = (typeof WEEK_DAYS)[number];
@@ -73,7 +75,7 @@ export interface SectionProps {
 // llevan a su sección nueva.
 export type SectionId =
   | 'datos' | 'marca' | 'tasa' | 'pagos' | 'compras' | 'inventario' | 'envios'
-  | 'avisos' | 'telegram' | 'correo' | 'ia' | 'respaldos' | 'mantenimiento';
+  | 'avisos' | 'telegram' | 'correo' | 'ia' | 'respaldos' | 'mantenimiento' | 'sistema';
 
 export type GrupoId = 'negocio' | 'vender' | 'avisos' | 'conexiones' | 'tienda' | 'equipo';
 
@@ -98,16 +100,17 @@ export const GRUPOS: { id: GrupoId; label: string }[] = [
 ];
 
 /** Las direcciones de antes de C-293 y C-294 */
-export const SECCION_VIEJA: Record<string, SectionId> = { negocio: 'datos', precios: 'tasa', sistema: 'avisos' };
+export const SECCION_VIEJA: Record<string, SectionId> = { negocio: 'datos', precios: 'tasa' };
 
 /** C-294 (D2 del 18/11): Portada y "Google y redes" pasaron a Marketing: sus direcciones viejas van allá */
 export const EN_MARKETING: Record<string, string> = { tienda: '/admin/marketing#portada', portada: '/admin/marketing#portada', seo: '/admin/marketing#google' };
 
 /** Lo que está en otra pantalla pero se busca aquí: va en el menú de su grupo, como un enlace */
 export const ENLACES: { grupo: GrupoId; href: string; label: string; estado: string; icon: IconType }[] = [
-  { grupo: 'tienda', href: '/admin/marketing#portada', label: 'Portada', estado: 'En Marketing: destacados y video', icon: IconoInicio },
+  { grupo: 'negocio', href: '/admin/legal', label: 'Documentos legales', estado: 'Términos, privacidad y firmas', icon: IconoGarantia },
+  { grupo: 'tienda', href: '/admin/marketing#portada', label: 'Portada', estado: 'En Vitrina y portada: destacados y video', icon: IconoInicio },
   { grupo: 'equipo', href: '/admin/equipo', label: 'Equipo', estado: 'Quién entra al panel y con qué rol', icon: IconoClientes },
-  { grupo: 'tienda', href: '/admin/marketing#google', label: 'Google y redes', estado: 'En Marketing: cómo se comparte', icon: IconoBuscar },
+  { grupo: 'tienda', href: '/admin/marketing#google', label: 'Google y redes', estado: 'En Vitrina y portada: cómo se comparte', icon: IconoBuscar },
 ];
 
 const bs = (v: string) => (Number(v) > 0 ? `${Number(v).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs` : 'Sin tasa');
@@ -199,6 +202,12 @@ export const SECTIONS: Seccion[] = [
     description: 'Cerrar la tienda un rato, con un aviso para los visitantes.',
     fields: ['maintenanceMode', 'maintenanceMessage', 'maintenanceStartTime', 'maintenanceEndTime', 'maintenanceAllowedIPs'],
     estado: (f) => (f.maintenanceMode ? 'Encendido: la tienda está cerrada' : 'Apagado'),
+  },
+  {
+    id: 'sistema', grupo: 'equipo', label: 'Sistema y versiones', icon: IconoVersiones,
+    description: 'Versión en ejecución, compilación e historial técnico por módulo.',
+    fields: [],
+    estado: () => `v${VERSION_BUILD.version}`,
   },
 ];
 

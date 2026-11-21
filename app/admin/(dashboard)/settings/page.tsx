@@ -26,6 +26,7 @@ import BackupsSection from './_components/BackupsSection';
 import SeccionIA from '@/components/admin/ia/SeccionIA';
 import EmailSettingsPanel from '@/components/admin/EmailSettingsPanel';
 import MetodosDePago from '../payments/_components/MetodosDePago';
+import HistorialVersiones from '@/components/admin/version/HistorialVersiones';
 
 // Configuración (C-50b): secciones por tarea. Antes: 1.594 líneas en un archivo y 29 campos sin efecto en la tienda.
 // C-293 · Ajustes (AJUSTES.md §3; el equipo, 18/11: "inputs anchísimos, muchos textos, semánticas ilógicas, ajustes repetidos"):
@@ -217,7 +218,7 @@ export default function SettingsPage() {
   const afecta = [...new Set(delicados.map((k) => CAMPOS_DELICADOS[k]!.afecta))];
 
   return (
-    <div className="max-w-6xl">
+    <div className="min-w-0">
       <div className={adminPageHeader}>
         <div>
           <h1 className={adminPageTitle}>Ajustes</h1>
@@ -332,6 +333,7 @@ export default function SettingsPage() {
             {active === 'correo' && <EmailSettingsPanel />}
             {active === 'respaldos' && <BackupsSection />}
             {active === 'ia' && <SeccionIA />}
+            {active === 'sistema' && <HistorialVersiones enAjustes />}
           </div>
 
           {/* La barra de la sección: aparece con cambios y queda pegada abajo mientras se edita */}

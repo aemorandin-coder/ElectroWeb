@@ -1,21 +1,20 @@
 'use client';
 
-import { useState, Fragment } from 'react';
+import { useState } from 'react';
+import Link from 'next/link';
 import {
-  IconoBillete, IconoCarrito, IconoChevronDerecha, IconoClientes, IconoCompartir, IconoConfirmado, IconoCopiar,
+  IconoBillete, IconoCarrito, IconoClientes, IconoCompartir, IconoConfirmado, IconoCopiar,
   IconoPremio, IconoRegalo, IconoRegistrarse, IconoReloj, IconoVentas,
 } from '@/components/iconos';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { formatUSD } from '@/lib/currency';
-import { adminInput, adminLabel, adminHint, adminNotice, adminSecondaryButton } from '@/lib/admin-ui';
-import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import {
-  adminCard,
-  adminPrimaryButton,
-  adminBadge,
+  adminBadge, adminCard, adminNotice, adminPageHeader, adminPageSubtitle, adminPrimaryButton,
+  adminSecondaryButton,
 } from '@/lib/admin-ui';
+import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { useDelNavegador } from '@/lib/hooks/useMontado';
 
 interface Influencer {
@@ -77,57 +76,6 @@ interface ReferralData {
   leaderboard?: LeaderboardEntry[];
 }
 
-type Tier = 'bronze' | 'silver' | 'gold';
-
-const TIERS: Record<Tier, {
-  label: string;
-  color: string;
-  bg: string;
-  border: string;
-  icon: React.ReactNode;
-}> = {
-  // C-192: los niveles suben en la familia azul de la marca (antes, bronce y oro en el ámbar de los avisos)
-  bronze: {
-    label: 'Bronce',
-    color: 'text-ink-soft',
-    bg: 'bg-surface',
-    border: 'border-line',
-    icon: <IconoPremio className="h-5 w-5 text-ink-soft" aria-hidden="true" />,
-  },
-  silver: {
-    label: 'Plata',
-    color: 'text-brand-700',
-    bg: 'bg-brand-50',
-    border: 'border-brand-200',
-    icon: <IconoPremio className="h-5 w-5 text-brand-600" aria-hidden="true" />,
-  },
-  gold: {
-    label: 'Oro',
-    color: 'text-brand-800',
-    bg: 'bg-brand-100',
-    border: 'border-brand-300',
-    icon: <IconoPremio className="h-5 w-5 text-brand-700" aria-hidden="true" />,
-  },
-};
-
-function getTier(approvedConversions: number): Tier {
-  if (approvedConversions >= 50) return 'gold';
-  if (approvedConversions >= 10) return 'silver';
-  return 'bronze';
-}
-
-function getTierProgress(approvedConversions: number) {
-  if (approvedConversions >= 50) {
-    return { current: 'gold' as Tier, nextTier: null, progress: 100, needed: 0 };
-  }
-  if (approvedConversions >= 10) {
-    const progress = ((approvedConversions - 10) / 40) * 100;
-    return { current: 'silver' as Tier, nextTier: 'gold' as Tier, progress, needed: 50 - approvedConversions };
-  }
-  const progress = (approvedConversions / 10) * 100;
-  return { current: 'bronze' as Tier, nextTier: 'silver' as Tier, progress, needed: 10 - approvedConversions };
-}
-
 const CONVERSION_LABELS: Record<string, { label: string; Icon: React.ElementType; color: string }> = {
   REGISTRATION: { label: 'Registro', Icon: IconoRegistrarse, color: 'text-brand-500' },
   PURCHASE: { label: 'Compra', Icon: IconoCarrito, color: 'text-success-strong' },
@@ -179,182 +127,32 @@ function StatCard({
   );
 }
 
-function NotEnrolledView({ data, onEnviada }: { data: ReferralData | null; onEnviada: () => void }) {
-  const [canales, setCanales] = useState('');
-  const [seguidores, setSeguidores] = useState('');
-  const [mensaje, setMensaje] = useState('');
-  const [codigo, setCodigo] = useState('');
-  const [enviando, setEnviando] = useState(false);
-  const [error, setError] = useState('');
-  const dias = data?.reglas?.diasParaAcreditar ?? 7;
-  const solicitud = data?.solicitud ?? null;
-
-  const enviar = async (evento: React.FormEvent) => {
-    evento.preventDefault();
-    setError('');
-    setEnviando(true);
-    try {
-      const res = await fetch('/api/customer/referrals/solicitud', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ channels: canales, followers: seguidores ? Number(seguidores) : null, message: mensaje || null, wantedCode: codigo || null }),
-      });
-      const json = await res.json().catch(() => null);
-      if (!res.ok) {
-        setError(json?.error ?? 'No se pudo enviar la solicitud.');
-        return;
-      }
-      toast.success('Solicitud enviada. Te avisamos cuando la revisemos.');
-      onEnviada();
-    } catch {
-      setError('No se pudo enviar la solicitud. Revisa tu conexión.');
-    } finally {
-      setEnviando(false);
-    }
-  };
-
+function NotEnrolledView() {
   return (
-    <div className="space-y-6">
-      <div className="text-center pt-4 pb-2">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-50 text-brand-500 mb-4 shadow-sm">
-          <IconoRegalo className="w-8 h-8" />
-        </div>
-        <h1 className="text-2xl font-bold text-ink mb-2">Programa de promotores</h1>
-        <p className="text-muted max-w-md mx-auto text-sm leading-relaxed">
-          Recomienda la tienda con tu código: tus seguidores compran con descuento y tú ganas{' '}
-          <strong className="text-brand-500">Puntos ES</strong> por cada compra, para usarlos en lo que quieras de la tienda.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {[
-          {
-            Icon: IconoBillete,
-            title: 'Ganas en cada compra',
-            desc: 'Un porcentaje del valor de los productos (sin IVA ni envío) de cada compra hecha con tu código o tu enlace.',
-            color: 'text-success-strong',
-            bg: 'bg-success/10',
-          },
-          {
-            Icon: IconoRegalo,
-            title: 'En Puntos ES',
-            desc: `Se acreditan solos ${dias} días después de que el cliente recibe su pedido. No se cambian por dinero: se usan para comprar en la tienda.`,
-            color: 'text-brand-600',
-            bg: 'bg-brand-50',
-          },
-          {
-            Icon: IconoClientes,
-            title: 'Descuento para tus seguidores',
-            desc: 'Quien escribe tu código en el carrito paga menos. Sirve aunque ya tenga cuenta, y en todas sus compras.',
-            color: 'text-brand-500',
-            bg: 'bg-brand-50',
-          },
-        ].map((b) => (
-          <div
-            key={b.title}
-            className="flex items-start gap-3 p-4 bg-white rounded-xl border border-line"
-          >
-            <div
-              className={`w-9 h-9 rounded-lg ${b.bg} flex items-center justify-center flex-shrink-0`}
-            >
-              <b.Icon className={`w-4 h-4 ${b.color}`} />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-ink">{b.title}</p>
-              <p className="text-xs text-muted mt-0.5">{b.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div>
-        <h3 className="text-base font-bold text-ink mb-3 text-center">¿Cómo funciona?</h3>
-        <div className="flex flex-col sm:flex-row items-stretch gap-2">
-          {[
-            {
-              n: '1',
-              title: 'Pide entrar',
-              desc: 'Cuéntanos dónde publicas. Lo revisamos y te avisamos.',
-            },
-            {
-              n: '2',
-              title: 'Comparte tu código',
-              desc: 'En tus historias, tu grupo o tu canal, con tu enlace si quieres.',
-            },
-            {
-              n: '3',
-              title: 'Ganas Puntos ES',
-              desc: 'Por cada compra pagada y entregada con tu código o tu enlace.',
-            },
-          ].map((step, idx) => (
-            <Fragment key={step.n}>
-              <div className="flex-1 text-center p-4 bg-white rounded-xl border border-line">
-                <div className="w-8 h-8 rounded-full bg-brand-500 text-white text-sm font-bold flex items-center justify-center mx-auto mb-2">
-                  {step.n}
-                </div>
-                <p className="text-sm font-semibold text-ink">{step.title}</p>
-                <p className="text-xs text-muted mt-0.5">{step.desc}</p>
-              </div>
-              {idx < 2 && (
-                <IconoChevronDerecha className="hidden sm:block w-5 h-5 text-line-strong flex-shrink-0 self-center" />
-              )}
-            </Fragment>
-          ))}
+    <div className="space-y-5">
+      <div className={adminPageHeader}>
+        <div>
+          <h1 className="text-xl font-bold text-ink text-balance lg:text-2xl">Programa de promotores</h1>
+          <p className={adminPageSubtitle}>Este programa está temporalmente en pausa para nuevas solicitudes.</p>
         </div>
       </div>
 
-      {solicitud?.status === 'PENDING' ? (
-        <div className={`${adminNotice('brand')} flex items-start gap-2`}>
-          <IconoReloj className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>
-            <strong>Tu solicitud está en revisión</strong> (la enviaste el {format(new Date(solicitud.createdAt), "d 'de' MMMM", { locale: es })}). Te avisamos aquí y por correo cuando la revisemos.
-          </span>
+      <div className={`${adminCard} space-y-4`}>
+        <div className={adminNotice('brand')}>
+          <p className="font-semibold text-ink">Inscripciones en pausa</p>
+          <p className="mt-1 text-sm text-ink-soft">
+            Estamos reordenando nuestras promociones en cupones directos para ofrecer mejores descuentos en toda la tienda. Si ya tenías un código activo o invitación previa, se conserva sin cambios.
+          </p>
         </div>
-      ) : data?.puedePedir === false ? (
-        <div className={adminNotice('warning')}>Las cuentas del equipo no entran al programa de promotores.</div>
-      ) : (
-        <form onSubmit={enviar} className={`${adminCard} p-5 space-y-4`}>
-          <div>
-            <p className="text-base font-bold text-ink">Pide entrar al programa</p>
-            <p className="text-sm text-muted">Lo revisa una persona del equipo. No hace falta tener miles de seguidores: cuenta que tu público compre tecnología.</p>
-          </div>
-          {solicitud?.status === 'REJECTED' && (
-            <div className={adminNotice('warning')}>
-              Tu solicitud anterior no se aprobó{solicitud.reviewNote ? `: ${solicitud.reviewNote}` : '.'} Puedes volver a pedirlo 30 días después de esa respuesta.
-            </div>
-          )}
-          {data?.correoVerificado === false && (
-            <div className={adminNotice('warning')}>Verifica tu correo antes de pedirlo: revisa tu bandeja o entra a Mi perfil.</div>
-          )}
-          <div>
-            <label htmlFor="promotor-canales" className={adminLabel}>¿Dónde publicas?</label>
-            <textarea id="promotor-canales" required minLength={5} maxLength={300} rows={2} value={canales} onChange={(e) => setCanales(e.target.value)}
-              placeholder="@miusuario en Instagram, mi canal de TikTok, un grupo de WhatsApp de gamers…" className={`${adminInput(false)} h-auto resize-y py-2.5`} />
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="promotor-seguidores" className={adminLabel}>Seguidores (aproximado)</label>
-              <input id="promotor-seguidores" type="number" min={0} max={100000000} inputMode="numeric" value={seguidores} onChange={(e) => setSeguidores(e.target.value)} className={adminInput(false)} />
-              <p className={adminHint}>Opcional.</p>
-            </div>
-            <div>
-              <label htmlFor="promotor-codigo" className={adminLabel}>Código que te gustaría</label>
-              <input id="promotor-codigo" maxLength={20} value={codigo} onChange={(e) => setCodigo(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))} placeholder="TUNOMBRE" className={`${adminInput(false)} font-mono uppercase`} />
-              <p className={adminHint}>Opcional. Es el que escribirán tus seguidores en el carrito.</p>
-            </div>
-          </div>
-          <div>
-            <label htmlFor="promotor-mensaje" className={adminLabel}>¿Cómo piensas recomendar la tienda?</label>
-            <textarea id="promotor-mensaje" maxLength={600} rows={3} value={mensaje} onChange={(e) => setMensaje(e.target.value)} className={`${adminInput(false)} h-auto resize-y py-2.5`} />
-            <p className={adminHint}>Opcional.</p>
-          </div>
-          {error && <p className="text-sm font-semibold text-deal" role="alert">{error}</p>}
-          <button type="submit" disabled={enviando || canales.trim().length < 5} className={`${adminPrimaryButton} w-full sm:w-auto`}>
-            <IconoRegalo className="w-4 h-4" aria-hidden="true" />
-            {enviando ? 'Enviando…' : 'Enviar solicitud'}
-          </button>
-        </form>
-      )}
+        <div className="flex flex-wrap gap-2">
+          <Link href="/productos" className={adminPrimaryButton}>
+            Ir a la tienda
+          </Link>
+          <Link href="/customer" className={adminSecondaryButton}>
+            Volver a Mi panel
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
@@ -436,42 +234,27 @@ export default function ReferralsPage() {
   }
 
   if (!data?.enrolled) {
-    return <NotEnrolledView data={data} onEnviada={cargar} />;
+    return <NotEnrolledView />;
   }
 
   const { influencer, stats, conversions, leaderboard, currentUserRank } = data;
   if (!influencer || !stats) return null;
   const dias = data.reglas?.diasParaAcreditar ?? 7;
 
-  const tier = getTier(stats.approvedConversions);
-  const tierInfo = TIERS[tier];
-  const tierProgress = getTierProgress(stats.approvedConversions);
-
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <div
-          className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border ${tierInfo.bg} ${tierInfo.border}`}
-        >
-          <span className="text-2xl">{tierInfo.icon}</span>
-          <div>
-            <p className={`text-xs font-semibold uppercase tracking-wide ${tierInfo.color}`}>
-              Nivel actual
-            </p>
-            <p className={`text-base font-bold ${tierInfo.color}`}>{tierInfo.label}</p>
-          </div>
-        </div>
+      <div className={adminPageHeader}>
         <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold text-ink">Mi programa de promotor</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-bold text-ink text-balance lg:text-2xl">Mi programa de promotor</h1>
             {influencer.status === 'PAUSED' && (
               <span className={adminBadge('neutral')}>
                 Pausado
               </span>
             )}
           </div>
-          <p className="text-sm text-muted">
+          <p className="mt-1 text-sm text-muted">
             Ganas{' '}
             <span className="font-semibold text-brand-500">
               {influencer.commissionRate} %
@@ -497,7 +280,7 @@ export default function ReferralsPage() {
           suffix=" Puntos ES"
           Icon={IconoConfirmado}
           color="text-success-strong"
-          bg="bg-success/10"
+          bg="bg-success-strong/10"
         />
         <StatCard
           label="Acreditado este mes"
@@ -621,7 +404,7 @@ export default function ReferralsPage() {
               desc: 'Cuenta cada compra pagada. Un registro sin compra no genera comisión, y una compra cancelada tampoco.',
               Icon: IconoCarrito,
               color: 'text-success-strong',
-              bg: 'bg-success/10',
+              bg: 'bg-success-strong/10',
               step: '2',
             },
             {
@@ -654,69 +437,6 @@ export default function ReferralsPage() {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Tier progression */}
-      <div className="bg-white rounded-xl border border-line p-5">
-        <h3 className="text-base font-bold text-ink">Tu nivel</h3>
-        <p className="mb-4 text-xs text-muted">Un reconocimiento por tus ventas acreditadas. No cambia tu comisión.</p>
-        <div className="flex items-center justify-between mb-3">
-          {(['bronze', 'silver', 'gold'] as Tier[]).map((t, idx) => {
-            const info = TIERS[t];
-            const isActive = tier === t;
-            const isPast =
-              (t === 'bronze' && tier !== 'bronze') ||
-              (t === 'silver' && tier === 'gold');
-            return (
-              <Fragment key={t}>
-                <div
-                  className={`flex flex-col items-center gap-1 transition-opacity ${
-                    isActive ? 'opacity-100' : isPast ? 'opacity-70' : 'opacity-35'
-                  }`}
-                >
-                  <span className="text-2xl">{info.icon}</span>
-                  <span
-                    className={`text-xs font-semibold ${isActive ? info.color : 'text-muted'}`}
-                  >
-                    {info.label}
-                  </span>
-                  <span className="text-xs text-subtle">
-                    {t === 'bronze' ? '0+' : t === 'silver' ? '10+' : '50+'}
-                  </span>
-                </div>
-                {idx < 2 && (
-                  <div className="flex-1 mx-3 h-2 bg-line rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-brand-500 rounded-full transition-all duration-700"
-                      style={{
-                        width:
-                          idx === 0
-                            ? tier === 'bronze'
-                              ? `${tierProgress.progress}%`
-                              : '100%'
-                            : tier === 'silver'
-                              ? `${tierProgress.progress}%`
-                              : tier === 'gold'
-                                ? '100%'
-                                : '0%',
-                      }}
-                    />
-                  </div>
-                )}
-              </Fragment>
-            );
-          })}
-        </div>
-        {tierProgress.nextTier && (
-          <p className="text-xs text-muted text-center mt-2">
-            Te faltan{' '}
-            <strong className="text-ink">{tierProgress.needed} {tierProgress.needed === 1 ? 'venta' : 'ventas'}</strong> para
-            alcanzar el nivel{' '}
-            <strong className="text-brand-500">
-              {TIERS[tierProgress.nextTier].label}
-            </strong>
-          </p>
-        )}
       </div>
 
       {/* Two column: Conversions & Leaderboard */}

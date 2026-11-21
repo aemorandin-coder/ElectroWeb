@@ -199,7 +199,7 @@ export async function recordPaidOrder(orderId: string) {
       ['Productos sin IVA', formatUSD(base)],
       ['Comisión', formatPuntos(commission)],
     ],
-    link: '/admin/marketing#promotores',
+    link: '/admin/discount-requests?vista=afiliados',
   });
 
   void createNotification({

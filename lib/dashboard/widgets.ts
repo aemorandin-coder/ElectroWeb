@@ -72,7 +72,7 @@ export const ACCESOS: AccesoDef[] = [
   { id: 'ordenes', titulo: 'Ver órdenes', href: '/admin/orders', permiso: 'MANAGE_ORDERS' },
   { id: 'nueva-cotizacion', titulo: 'Nueva cotización', href: '/admin/cotizaciones/nueva', permiso: 'MANAGE_ORDERS' },
   { id: 'consultar-pago', titulo: 'Consultar un pago', href: '/admin/transactions', permiso: 'MANAGE_ORDERS' },
-  { id: 'oferta', titulo: 'Oferta o cupón', href: '/admin/discount-requests', permiso: 'MANAGE_CONTENT' },
+  { id: 'oferta', titulo: 'Promociones y sorteo', href: '/admin/discount-requests', permiso: 'MANAGE_CONTENT' },
   { id: 'nueva-historia', titulo: 'Nueva historia', href: '/admin/studio/nueva', permiso: 'MANAGE_CONTENT' },
   { id: 'importar', titulo: 'Importar productos', href: '/admin/products/importar', permiso: 'MANAGE_PRODUCTS' },
   { id: 'categorias', titulo: 'Categorías', href: '/admin/categories', permiso: 'MANAGE_PRODUCTS' },
@@ -82,7 +82,7 @@ export const ACCESOS: AccesoDef[] = [
   { id: 'productos', titulo: 'Productos', href: '/admin/products', permiso: 'MANAGE_PRODUCTS' },
   { id: 'clientes', titulo: 'Clientes', href: '/admin/customers', permiso: 'MANAGE_USERS' },
   { id: 'mensajes', titulo: 'Mensajes', href: '/admin/inquiries', permiso: 'MANAGE_CONTENT' },
-  { id: 'promotores', titulo: 'Promotores', href: '/admin/marketing', permiso: 'MANAGE_CONTENT' },
+  { id: 'promotores', titulo: 'Afiliados (archivo)', href: '/admin/discount-requests?vista=afiliados', permiso: 'MANAGE_CONTENT' },
   { id: 'resenas', titulo: 'Reseñas', href: '/admin/reviews', permiso: 'MANAGE_CONTENT' },
   { id: 'garantias', titulo: 'Garantías', href: '/admin/garantias', permiso: 'MANAGE_ORDERS' },
 ];

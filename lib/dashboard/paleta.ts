@@ -34,7 +34,10 @@ export const ACCIONES_PALETA: AccionPaleta[] = [
     grupo: (PANTALLAS.has(a.id) ? 'Ir a' : 'Acciones') as AccionPaleta['grupo'], permisos: [a.permiso],
   })),
   { id: 'facturas', titulo: 'Contabilidad · Facturas', claves: 'factura talonario contadora', icono: 'Documento', href: '/admin/contabilidad/facturas', grupo: 'Ir a', permisos: ['FACTURAR', 'VER_CONTABILIDAD'] },
-  { id: 'sorteo', titulo: 'Marketing · Sorteo', claves: 'rifa premio boletos ganador', icono: 'Premio', href: '/admin/marketing#sorteo', grupo: 'Ir a', permisos: ['MANAGE_CONTENT'] },
+  { id: 'sorteo', titulo: 'Promociones · Sorteo', claves: 'rifa premio boletos ganador', icono: 'Premio', href: '/admin/discount-requests?vista=sorteo', grupo: 'Ir a', permisos: ['MANAGE_CONTENT'] },
+  { id: 'correos', titulo: 'Marketing · Correos y campañas', claves: 'correos campanas plantillas newsletter', icono: 'Correo', href: '/admin/marketing/correos', grupo: 'Ir a', permisos: ['MANAGE_CONTENT'] },
+  { id: 'legal', titulo: 'Documentos legales', claves: 'terminos privacidad firmas contrato', icono: 'Garantia', href: '/admin/legal', grupo: 'Ir a', permisos: ['MANAGE_USERS'] },
+  { id: 'versiones', titulo: 'Sistema y versiones', claves: 'version build historial changelog', icono: 'Configuracion', href: '/admin/versiones', grupo: 'Ir a', permisos: ['MANAGE_SETTINGS', 'MANAGE_CONTENT', 'VER_CONTABILIDAD'] },
   { id: 'studio', titulo: 'ElectroStudio', claves: 'historias flyers instagram', icono: 'Claqueta', href: '/admin/studio', grupo: 'Ir a', permisos: ['MANAGE_CONTENT'] },
   { id: 'transacciones', titulo: 'Transacciones', claves: 'pagos recargas puntos es', icono: 'Billete', href: '/admin/transactions', grupo: 'Ir a', permisos: ['MANAGE_ORDERS'] },
 ];

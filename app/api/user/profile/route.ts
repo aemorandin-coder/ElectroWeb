@@ -108,10 +108,12 @@ export async function GET() {
     }
     // C-201: el menú del panel muestra "Mis cotizaciones" y "Mis cursos" solo a quien tiene alguna
     // C-251: y "Mis reseñas" a quien dejó alguna (la página no tenía ningún enlace)
-    const [cotizaciones, cursos, resenas] = await Promise.all([
+    // G-73 (P1): "Promotores" solo para quienes ya forman parte del programa histórico
+    const [cotizaciones, cursos, resenas, promotor] = await Promise.all([
       contarCotizacionesDelCliente(user.id, user.email, Boolean(user.emailVerified)),
       prisma.courseEnrollment.count({ where: { userId: user.id } }),
       prisma.review.count({ where: { userId: user.id } }),
+      prisma.influencer.count({ where: { userId: user.id } }),
     ]);
 
     return NextResponse.json({
@@ -125,7 +127,7 @@ export async function GET() {
       },
       profile: user.profile,
       resumen: { pedidosPagados: pagados._count, totalComprado: Number(pagados._sum.totalUSD ?? 0) },
-      menu: { cotizaciones, cursos, resenas },
+      menu: { cotizaciones, cursos, resenas, promotor },
     });
   } catch (error) {
     console.error('Error fetching profile:', error);

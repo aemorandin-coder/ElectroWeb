@@ -7,10 +7,10 @@ import { avisoAccion } from '@/lib/admin-ui';
 import Link from 'next/link';
 import {
   IconoAbrirAparte, IconoAdministrador, IconoAdvertencia, IconoBillete, IconoBolsa, IconoCandado, IconoCargando,
-  IconoCerrar, IconoChat, IconoChevronAbajo, IconoClaqueta, IconoPintura, IconoClientes, IconoConfiguracion, IconoCuadricula,
-  IconoCursos, IconoDocumento, IconoEstrella, IconoGarantia, IconoGiftCard, IconoMaletin, IconoMenu, IconoNotificaciones, IconoOrdenes,
-  IconoPaquete, IconoPorcentaje, IconoRegistrarse, IconoReportes, IconoSalir, IconoSalvavidas, IconoServicioTecnico,
-  IconoVariantes, IconoVentas, IconoVerificado, IconoVersiones,
+  IconoCerrar, IconoChat, IconoChevronAbajo, IconoClaqueta, IconoPintura, IconoClientes, IconoConfiguracion, IconoCorreo,
+  IconoCuadricula, IconoCursos, IconoDocumento, IconoEstrella, IconoGiftCard, IconoMaletin, IconoMenu, IconoOrdenes,
+  IconoPaquete, IconoPorcentaje, IconoReportes, IconoSalir, IconoSalvavidas, IconoServicioTecnico, IconoVariantes,
+  IconoVentas, IconoVersiones,
 } from '@/components/iconos';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -20,8 +20,6 @@ import ControlSesionAdmin, { cerrarSesionAdmin } from '@/components/admin/Contro
 import ConfirmarConCodigo from '@/components/admin/dos-pasos/ConfirmarConCodigo';
 import AvisosDeVersion from '@/components/admin/version/AvisosDeVersion';
 import MarquesinaEquipo from '@/components/admin/edicion/MarquesinaEquipo';
-import { moduloDeRuta, versionDe } from '@/lib/modulos';
-import { VERSION_BUILD } from '@/lib/version-build';
 import { hasPermission, PAGINAS_SOLO_DUENO } from '@/lib/auth-helpers';
 
 interface NavigationItem {
@@ -30,7 +28,7 @@ interface NavigationItem {
   icon: ReactNode;
   /** Con una lista basta uno (C-235: Facturas se ve con FACTURAR o con VER_CONTABILIDAD) */
   permission?: string | string[];
-  countKey?: keyof SidebarCounts;
+  countKey?: keyof SidebarCounts | (keyof SidebarCounts)[];
 }
 
 /** C-150: sección del menú que se abre y se cierra (Ventas, Catálogo…) */
@@ -181,8 +179,7 @@ export default function AdminLayout({
   const icono = 'h-5 w-5';
   const dashboard: NavigationItem = { name: 'Dashboard', href: '/admin', icon: <IconoCuadricula className={icono} aria-hidden="true" /> };
 
-  // C-150: el menú eran 25 ítems en una sola lista (en el teléfono había que deslizar para llegar a Configuración).
-  // Ahora son secciones que se abren y se cierran. Ninguna página cambió de dirección ni de permiso.
+  // F1 (G-73): 6 grupos limpios sin redundancias; Mi seguridad vive en el pie del menú para todos los roles.
   const grupos: NavigationGroup[] = [
     {
       id: 'ventas',
@@ -190,24 +187,19 @@ export default function AdminLayout({
       icon: <IconoBolsa className={icono} aria-hidden="true" />,
       items: [
         { name: 'Órdenes', href: '/admin/orders', icon: <IconoOrdenes className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingOrders' },
-        // C-148: presupuestos para empresas e instituciones
         { name: 'Cotizaciones', href: '/admin/cotizaciones', icon: <IconoDocumento className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingQuotes' },
         { name: 'Transacciones', href: '/admin/transactions', icon: <IconoBillete className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingTransactions' },
-        // C-122: antes las solicitudes llegaban mezcladas en Mensajes y Solicitudes
         { name: 'Garantías', href: '/admin/garantias', icon: <IconoSalvavidas className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS', countKey: 'pendingWarranty' },
         { name: 'Gift Cards', href: '/admin/gift-cards', icon: <IconoGiftCard className={icono} aria-hidden="true" />, permission: 'MANAGE_ORDERS' },
       ],
     },
     {
-      // C-229: Contabilidad (docs/plan/CONTABILIDAD.md). Facturas es de quien factura (FACTURAR) y de quien lleva la
-      // contabilidad (VER_CONTABILIDAD: el dueño y la contadora, C-235), que la ve sin facturar. La mesa, del dueño y de ella
       id: 'contabilidad',
       name: 'Contabilidad',
       icon: <IconoMaletin className={icono} aria-hidden="true" />,
       items: [
         { name: 'Mesa de la contadora', href: '/admin/contabilidad/mesa', icon: <IconoCuadricula className={icono} aria-hidden="true" />, permission: 'VER_CONTABILIDAD' },
         { name: 'Facturas', href: '/admin/contabilidad/facturas', icon: <IconoDocumento className={icono} aria-hidden="true" />, permission: ['FACTURAR', 'VER_CONTABILIDAD'] },
-        // C-230: el libro, del dueño y de la contadora
         { name: 'Libro de ventas', href: '/admin/contabilidad/libro', icon: <IconoReportes className={icono} aria-hidden="true" />, permission: 'VER_CONTABILIDAD' },
       ],
     },
@@ -218,43 +210,30 @@ export default function AdminLayout({
       items: [
         { name: 'Productos', href: '/admin/products', icon: <IconoPaquete className={icono} aria-hidden="true" />, permission: 'MANAGE_PRODUCTS' },
         { name: 'Categorías', href: '/admin/categories', icon: <IconoVariantes className={icono} aria-hidden="true" />, permission: 'MANAGE_PRODUCTS' },
-        { name: 'Descuentos', href: '/admin/discount-requests', icon: <IconoPorcentaje className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingDiscounts' },
-        // C-110: antes solo se llegaba desde el Dashboard
         { name: 'Reseñas', href: '/admin/reviews', icon: <IconoEstrella className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingReviews' },
       ],
     },
     {
       id: 'clientes',
-      name: 'Clientes',
+      name: 'Clientes y Academia',
       icon: <IconoClientes className={icono} aria-hidden="true" />,
       items: [
-        { name: 'Clientes', href: '/admin/customers', icon: <IconoClientes className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS' },
+        { name: 'Clientes', href: '/admin/customers', icon: <IconoClientes className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS', countKey: 'pendingVerifications' },
         { name: 'Mensajes y Solicitudes', href: '/admin/inquiries', icon: <IconoChat className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingInquiries' },
-        // C-150: las empresas por verificar no estaban en el menú (solo se llegaba desde un aviso del Dashboard)
-        { name: 'Verificaciones', href: '/admin/verifications', icon: <IconoVerificado className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS', countKey: 'pendingVerifications' },
+        { name: 'Cursos y Creadores', href: '/admin/cursos', icon: <IconoCursos className={icono} aria-hidden="true" />, permission: ['MANAGE_CONTENT', 'MANAGE_USERS'], countKey: ['pendingCourses', 'pendingCreators'] },
       ],
     },
     {
       id: 'marketing',
-      name: 'Marketing',
+      name: 'Marketing y Contenido',
       icon: <IconoVentas className={icono} aria-hidden="true" />,
       items: [
-        { name: 'Marketing y Contenido', href: '/admin/marketing', icon: <IconoVentas className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
-        // C-112: reemplaza a "Imágenes para redes" de Marketing
+        { name: 'Vitrina y Portada', href: '/admin/marketing', icon: <IconoVentas className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
+        { name: 'Promociones y Sorteo', href: '/admin/discount-requests', icon: <IconoPorcentaje className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingDiscounts' },
+        { name: 'Correos', href: '/admin/marketing/correos', icon: <IconoCorreo className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
         { name: 'ElectroStudio', href: '/admin/studio', icon: <IconoClaqueta className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
         { name: 'Trabajos Realizados', href: '/admin/servicios', icon: <IconoServicioTecnico className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
-        // C-243: los colores y las piezas de la marca, para el equipo y para las IA
         { name: 'Kit de marca', href: '/admin/marca', icon: <IconoPintura className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT' },
-      ],
-    },
-    {
-      // C-82: no había forma de llegar a los cursos ni a los creadores desde el menú (solo desde una notificación)
-      id: 'cursos',
-      name: 'Cursos',
-      icon: <IconoCursos className={icono} aria-hidden="true" />,
-      items: [
-        { name: 'Cursos', href: '/admin/cursos', icon: <IconoCursos className={icono} aria-hidden="true" />, permission: 'MANAGE_CONTENT', countKey: 'pendingCourses' },
-        { name: 'Creadores', href: '/admin/creators', icon: <IconoRegistrarse className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS', countKey: 'pendingCreators' },
       ],
     },
     {
@@ -263,34 +242,48 @@ export default function AdminLayout({
       icon: <IconoConfiguracion className={icono} aria-hidden="true" />,
       items: [
         { name: 'Reportes', href: '/admin/reports', icon: <IconoReportes className={icono} aria-hidden="true" />, permission: 'VIEW_REPORTS' },
-        { name: 'Notificaciones', href: '/admin/notifications', icon: <IconoNotificaciones className={icono} aria-hidden="true" />, countKey: 'unreadNotifications' },
-        { name: 'Documentos Legales', href: '/admin/legal', icon: <IconoGarantia className={icono} aria-hidden="true" />, permission: 'MANAGE_USERS' },
-        // C-141: invitar admins, roles, accesos y dos pasos de cada cuenta. Solo el super admin
         { name: 'Equipo', href: '/admin/equipo', icon: <IconoClientes className={icono} aria-hidden="true" />, permission: 'MANAGE_TEAM' },
-        // C-293: "Ajustes", con Métodos de pago adentro (D5 del 18/11)
         { name: 'Ajustes', href: '/admin/settings', icon: <IconoConfiguracion className={icono} aria-hidden="true" />, permission: 'MANAGE_SETTINGS' },
-        { name: 'Mi seguridad', href: '/admin/seguridad', icon: <IconoCandado className={icono} aria-hidden="true" /> },
-        // C-168: qué versión corre y qué cambió en cada módulo
-        { name: 'Versiones', href: '/admin/versiones', icon: <IconoVersiones className={icono} aria-hidden="true" /> },
       ],
     },
   ];
 
-  // Los mismos permisos que revisa el servidor (C-141): antes el menú tenía su propia copia, que le daba todo al Administrador
-  // C-235: la contadora ve solo Contabilidad, Mi seguridad y Versiones (lo que no pide permiso, como Notificaciones, es del equipo)
+  // Los mismos permisos que revisa el servidor (C-141) y la contadora (C-235).
   const esContadora = session?.user?.role === 'ACCOUNTANT';
-  const deLaContadora = (item: NavigationItem) => !esContadora || item.href.startsWith('/admin/contabilidad') || item.href === '/admin/seguridad' || item.href === '/admin/versiones';
+  const deLaContadora = (item: NavigationItem) => !esContadora || item.href.startsWith('/admin/contabilidad');
   const permite = (item: NavigationItem) => !item.permission
     || (Array.isArray(item.permission) ? item.permission.some((p) => hasPermission(session, p)) : hasPermission(session, item.permission));
   const gruposVisibles = grupos
     .map((grupo) => ({ ...grupo, items: grupo.items.filter((item) => permite(item) && deLaContadora(item)) }))
     .filter((grupo) => grupo.items.length > 0);
-  const activo = (item: NavigationItem) => pathname === item.href || (item.href !== '/admin' && pathname.startsWith(`${item.href}/`));
+  const activo = (item: NavigationItem) => {
+    if (pathname === item.href) return true;
+    if (item.href === '/admin') return false;
+    if (item.href === '/admin/marketing') return false;
+    if (item.href === '/admin/marketing/correos') {
+      return pathname.startsWith('/admin/marketing/correos') || pathname.startsWith('/admin/marketing/campanas');
+    }
+    if (item.href === '/admin/discount-requests') {
+      return pathname.startsWith('/admin/discount-requests/') || pathname.startsWith('/admin/marketing/promotores');
+    }
+    if (item.href === '/admin/customers') {
+      return pathname.startsWith('/admin/customers/') || pathname.startsWith('/admin/verifications');
+    }
+    if (item.href === '/admin/cursos') {
+      return pathname.startsWith('/admin/cursos/') || pathname.startsWith('/admin/creators');
+    }
+    return pathname.startsWith(`${item.href}/`);
+  };
+  const contarItem = (item: NavigationItem) => {
+    if (!item.countKey) return 0;
+    const keys = Array.isArray(item.countKey) ? item.countKey : [item.countKey];
+    return keys.reduce((acc, k) => acc + (sidebarCounts[k] || 0), 0);
+  };
   const grupoActivo = gruposVisibles.find((grupo) => grupo.items.some(activo))?.id ?? null;
 
   const enlace = (item: NavigationItem, dentro: boolean) => {
     const isActive = activo(item);
-    const badgeCount = item.countKey ? sidebarCounts[item.countKey] : 0;
+    const badgeCount = contarItem(item);
     return (
       <li key={item.href}>
         <Link
@@ -329,7 +322,6 @@ export default function AdminLayout({
     }
   };
 
-  const modulo = moduloDeRuta(pathname);
   const roleLabel = session.user.role === 'SUPER_ADMIN' ? 'Super Admin'
     : session.user.role === 'ADMIN' ? 'Administrador'
       : session.user.role === 'ACCOUNTANT' ? 'Contadora'
@@ -372,7 +364,7 @@ export default function AdminLayout({
       <aside
         id="admin-sidebar"
         aria-label="Menú del panel"
-        className={`fixed inset-y-0 left-0 z-[var(--z-drawer)] flex w-72 flex-col border-r border-line bg-white transition-[transform,visibility] duration-200 lg:z-[var(--z-sticky)] lg:w-64 ${
+        className={`fixed inset-y-0 left-0 z-[var(--z-drawer)] flex w-72 flex-col border-r border-line bg-white transition-[transform,visibility] duration-200 lg:z-[var(--z-sticky)] lg:w-68 ${
           // Cerrado queda invisible: el foco con Tab ya no entra a un menú que no se ve (C-111)
           isDrawerOpen ? 'visible translate-x-0' : '-translate-x-full max-lg:invisible'
         } ${isCollapsed ? 'lg:invisible lg:-translate-x-full' : 'lg:visible lg:translate-x-0'}`}
@@ -397,7 +389,7 @@ export default function AdminLayout({
               const abierta = secciones[grupo.id] ?? grupo.id === grupoActivo;
               const contiene = grupo.id === grupoActivo;
               // Cerrada, la sección muestra la suma de los avisos de sus páginas
-              const avisos = grupo.items.reduce((suma, item) => suma + (item.countKey ? sidebarCounts[item.countKey] : 0), 0);
+              const avisos = grupo.items.reduce((suma, item) => suma + contarItem(item), 0);
               return (
                 <li key={grupo.id}>
                   <button
@@ -436,21 +428,42 @@ export default function AdminLayout({
               <span className="block truncate text-xs text-muted">{session.user.email}</span>
             </span>
           </div>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-line text-sm font-medium text-ink-soft transition-colors hover:border-deal/30 hover:bg-deal-bg hover:text-deal"
-          >
-            <IconoSalir className="h-4 w-4" aria-hidden="true" />
-            Cerrar sesión
-          </button>
-          <Link href="/admin/versiones" className="mt-2 block rounded text-center text-xs text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-500">
-            Versión {VERSION_BUILD.version}{VERSION_BUILD.commit && ` · ${VERSION_BUILD.commit}`}
-          </Link>
+          <div className="space-y-1.5">
+            <Link
+              href="/admin/seguridad"
+              aria-current={pathname === '/admin/seguridad' ? 'page' : undefined}
+              className={`flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border text-sm font-medium transition-colors ${
+                pathname === '/admin/seguridad'
+                  ? 'border-brand-300 bg-brand-50 font-semibold text-brand-700'
+                  : 'border-line text-ink-soft hover:bg-surface hover:text-ink'
+              }`}
+            >
+              <IconoCandado className="h-4 w-4" aria-hidden="true" />
+              Mi seguridad
+            </Link>
+            {esContadora && (
+              <Link
+                href="/admin/versiones"
+                aria-current={pathname === '/admin/versiones' ? 'page' : undefined}
+                className="flex min-h-9 w-full items-center justify-center gap-2 rounded-lg text-xs font-medium text-muted transition-colors hover:bg-surface hover:text-ink"
+              >
+                <IconoVersiones className="h-3.5 w-3.5" aria-hidden="true" />
+                Versiones del sistema
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-line text-sm font-medium text-ink-soft transition-colors hover:border-deal/30 hover:bg-deal-bg hover:text-deal"
+            >
+              <IconoSalir className="h-4 w-4" aria-hidden="true" />
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </aside>
 
-      <div className={`transition-[padding] duration-200 ${isCollapsed ? '' : 'lg:pl-64'}`}>
+      <div className={`transition-[padding] duration-200 ${isCollapsed ? '' : 'lg:pl-68'}`}>
         <header className="sticky top-0 z-[var(--z-header)] flex h-16 items-center gap-2 border-b border-line bg-white px-4 lg:px-6">
           <button
             type="button"
@@ -474,15 +487,6 @@ export default function AdminLayout({
           </button>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
-            {modulo && (
-              <Link
-                href={`/admin/versiones#${modulo.id}`}
-                title={`Versión de este módulo (${modulo.nombre}). Toca para ver qué cambió.`}
-                className="hidden h-8 items-center rounded-full bg-surface px-3 text-xs font-medium text-ink-soft hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-brand-500 md:inline-flex"
-              >
-                {modulo.nombre} {versionDe(modulo)}
-              </Link>
-            )}
             <Link href="/" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-surface">
               <IconoAbrirAparte className="h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">Ver tienda</span>
@@ -501,7 +505,7 @@ export default function AdminLayout({
 
         {/* Sin transform ni backdrop-filter en los contenedores: si no, los modales `fixed` de las páginas quedan encerrados aquí */}
         <main className="p-3 sm:p-4 lg:p-6">
-          <div className="mx-auto min-w-0 max-w-[1600px]">
+          <div className="min-w-0 max-w-[1600px]">
             <AvisosDeVersion />
             {sinSuperAdmin && (
               <div className={`mb-4 flex items-start gap-3 rounded-xl border p-4 text-sm ${avisoAccion}`} role="alert">

@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     title: `Solicitud de promotor · ${cuenta.name || cuenta.email || 'cliente'}`.slice(0, 150),
     summary: 'Un cliente quiere entrar al programa de promotores.',
     fields: [['Dónde publica', datos.data.channels.slice(0, 120)], ['Seguidores', datos.data.followers ?? null]],
-    link: '/admin/marketing#promotores',
+    link: '/admin/discount-requests?vista=afiliados',
   });
   return NextResponse.json({ ok: true, id: solicitud.id }, { status: 201 });
 }

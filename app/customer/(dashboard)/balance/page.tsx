@@ -170,14 +170,18 @@ export default function BalancePage() {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-xl font-bold text-ink text-balance lg:text-2xl">Puntos ES</h1>
+      </div>
+
       {/* C-251b: la pieza fuerte de la pantalla, en el azul oscuro del logo (PLAN.md §1.0) */}
       <header className="rounded-2xl bg-brand-700 p-4 text-white lg:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="flex items-center gap-2 text-sm font-semibold text-white/80">
+            <p className="flex items-center gap-2 text-sm font-semibold text-white/80">
               <IconoBillete className="h-4 w-4" aria-hidden="true" />
               Puntos ES disponibles
-            </h1>
+            </p>
             {resumen ? (
               <p className="mt-1 text-4xl font-bold tracking-tight">
                 {formatUSD(resumen.puntos)} <span className="text-base font-semibold text-white/80">Puntos ES</span>

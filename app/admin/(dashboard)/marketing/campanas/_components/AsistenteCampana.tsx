@@ -45,7 +45,7 @@ const PASOS: { titulo: string; queHacer: string; icono: IconType }[] = [
   { titulo: 'Revisar y enviar', queHacer: 'A quiénes llega, y guardarla o enviarla.', icono: IconoVer },
 ];
 const ULTIMO = PASOS.length - 1;
-const LISTA = '/admin/marketing#campanas';
+const LISTA = '/admin/marketing/correos#campanas';
 
 const ETIQUETAS = { subject: 'Asunto', preheader: 'Texto de vista previa', bloques: 'Contenido del correo' };
 const enTexto = (campo: string, valor: unknown) =>

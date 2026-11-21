@@ -1140,6 +1140,15 @@ model CompanySettings {
   launchThemeProductId  String?
   launchThemeProductIds String[]  @default([])
 
+  // G-74: Studio de Portada (Marketing → Vitrina y Portada → Portada)
+  homeSectionsConfig    String?
+  homeBannerEnabled     Boolean   @default(false)
+  homeBannerText        String?
+  homeBannerLink        String?
+  homeRotateFeatured    Boolean   @default(true)
+  homeCategoryShelves   Int       @default(3)
+  homeVideoPosition     String    @default("bottom")
+
   // Admin Alert Emails — comma-separated or JSON array of emails to notify on key events
   adminAlertEmails      String?
 

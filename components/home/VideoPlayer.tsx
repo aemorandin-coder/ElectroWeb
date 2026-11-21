@@ -2,61 +2,65 @@
 
 import { useState } from 'react';
 import { IconoPlay } from '@/components/iconos';
+import { extraerYoutubeIdPortada } from '@/lib/portada';
 
 interface VideoPlayerProps {
   videoId?: string;
   videoUrl?: string;
 }
 
+/** Reproductor de portada alineado al Kit 2.0 (miniatura + disparo accesible en YouTube nocookie). */
 export default function VideoPlayer({ videoId, videoUrl }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [fallbackThumb, setFallbackThumb] = useState(false);
 
-  function getYoutubeVideoId(url: string): string | null {
-    if (!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/|live\/)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-  }
-
-  const resolvedVideoId = videoUrl ? getYoutubeVideoId(videoUrl) : videoId;
+  const resolvedVideoId = videoUrl ? extraerYoutubeIdPortada(videoUrl) : (videoId ?? null);
 
   if (!resolvedVideoId) return null;
 
   if (isPlaying) {
     return (
-      <div className="rounded-2xl overflow-hidden shadow-2xl aspect-video relative mx-auto w-full max-w-4xl border border-white/20 bg-black">
+      <div className="relative mx-auto aspect-video w-full max-w-4xl overflow-hidden rounded-2xl border border-line-strong bg-brand-700">
         <iframe
-          src={`https://www.youtube.com/embed/${resolvedVideoId}?autoplay=1`}
-          title="YouTube video player"
+          src={`https://www.youtube-nocookie.com/embed/${resolvedVideoId}?autoplay=1`}
+          title="Reproductor de video de Electro Shop"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
-          className="absolute inset-0 w-full h-full border-0"
+          className="absolute inset-0 h-full w-full border-0"
         />
       </div>
     );
   }
 
-  const thumbnailUrl = `https://img.youtube.com/vi/${resolvedVideoId}/maxresdefault.jpg`;
+  const thumbnailUrl = fallbackThumb
+    ? `https://img.youtube.com/vi/${resolvedVideoId}/hqdefault.jpg`
+    : `https://img.youtube.com/vi/${resolvedVideoId}/maxresdefault.jpg`;
 
   return (
-    <div 
-      className="rounded-2xl overflow-hidden border border-white/20 bg-black/50 backdrop-blur-sm shadow-2xl aspect-video relative mx-auto group cursor-pointer max-w-4xl"
+    <button
+      type="button"
       onClick={() => setIsPlaying(true)}
+      aria-label="Reproducir video"
+      className="group relative mx-auto block aspect-video w-full max-w-4xl overflow-hidden rounded-2xl border border-line-strong bg-brand-700 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
     >
-      <div className="absolute inset-0 flex flex-col items-center justify-center transition-all duration-500 group-hover:bg-black/25 z-10">
-        <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-[0_0_30px_rgba(220,38,38,0.6)] mb-3">
-          <IconoPlay lleno className="w-8 h-8 text-white ml-1" />
-        </div>
-        <span className="text-white font-bold tracking-wide drop-shadow-md">Haz clic para reproducir</span>
-      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element -- miniatura dinámica de YouTube por ID */}
       <img
         src={thumbnailUrl}
-        alt="Video thumbnail"
-        className="absolute inset-0 w-full h-full object-cover z-0 opacity-70 group-hover:opacity-85 transition-opacity"
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${resolvedVideoId}/hqdefault.jpg`;
+        alt="Miniatura del video"
+        onError={() => {
+          if (!fallbackThumb) setFallbackThumb(true);
         }}
+        className="absolute inset-0 h-full w-full object-cover opacity-85 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:transition-none"
       />
-    </div>
+      <span aria-hidden="true" className="absolute inset-0 bg-brand-700/30 transition-colors group-hover:bg-brand-700/15" />
+      <span className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-2.5 p-4">
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-500 text-white ring-4 ring-white/30 transition duration-200 group-hover:scale-105 group-hover:bg-brand-600 motion-reduce:transition-none motion-reduce:group-hover:scale-100">
+          <IconoPlay lleno className="ml-1 h-7 w-7" aria-hidden="true" />
+        </span>
+        <span className="rounded-full border border-white/25 bg-brand-700/85 px-3.5 py-1 text-xs font-semibold text-white">
+          Reproducir video
+        </span>
+      </span>
+    </button>
   );
 }

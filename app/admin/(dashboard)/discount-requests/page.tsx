@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { IconoClientes, IconoCupon, IconoInfo, IconoPorcentaje, IconoRegalo, IconoVerificado } from '@/components/iconos';
 import {
-  adminIconChip, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab,
+  adminIconChip, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab, adminTabList, adminTabScroll,
 } from '@/lib/admin-ui';
 import Promociones from './_components/Promociones';
 import Solicitudes from './_components/Solicitudes';
@@ -50,19 +50,21 @@ export default function PromocionesYSorteoPage() {
         </div>
       </div>
 
-      <div className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0" role="tablist" aria-label="Promociones y Sorteo">
-        <button type="button" role="tab" aria-selected={tab === 'promos'} onClick={() => cambiarTab('promos')} className={adminTab(tab === 'promos')}>
-          <IconoCupon className="h-4 w-4" aria-hidden="true" /> Ofertas y cupones
-        </button>
-        <button type="button" role="tab" aria-selected={tab === 'sorteo'} onClick={() => cambiarTab('sorteo')} className={adminTab(tab === 'sorteo')}>
-          <IconoRegalo className="h-4 w-4" aria-hidden="true" /> Sorteo
-        </button>
-        <button type="button" role="tab" aria-selected={tab === 'solicitudes'} onClick={() => cambiarTab('solicitudes')} className={adminTab(tab === 'solicitudes')}>
-          <IconoClientes className="h-4 w-4" aria-hidden="true" /> Solicitudes (historial)
-        </button>
-        <button type="button" role="tab" aria-selected={tab === 'afiliados'} onClick={() => cambiarTab('afiliados')} className={adminTab(tab === 'afiliados')}>
-          <IconoVerificado className="h-4 w-4" aria-hidden="true" /> Afiliados (en pausa)
-        </button>
+      <div className={adminTabScroll}>
+        <div className={adminTabList} role="tablist" aria-label="Promociones y Sorteo">
+          <button type="button" role="tab" aria-selected={tab === 'promos'} onClick={() => cambiarTab('promos')} className={adminTab(tab === 'promos')}>
+            <IconoCupon className="h-4 w-4" aria-hidden="true" /> Ofertas y cupones
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'sorteo'} onClick={() => cambiarTab('sorteo')} className={adminTab(tab === 'sorteo')}>
+            <IconoRegalo className="h-4 w-4" aria-hidden="true" /> Sorteo
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'solicitudes'} onClick={() => cambiarTab('solicitudes')} className={adminTab(tab === 'solicitudes')}>
+            <IconoClientes className="h-4 w-4" aria-hidden="true" /> Solicitudes (historial)
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'afiliados'} onClick={() => cambiarTab('afiliados')} className={adminTab(tab === 'afiliados')}>
+            <IconoVerificado className="h-4 w-4" aria-hidden="true" /> Afiliados (en pausa)
+          </button>
+        </div>
       </div>
 
       {tab === 'promos' && <Promociones />}

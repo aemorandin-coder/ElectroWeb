@@ -159,7 +159,7 @@ export default function ProfilePage() {
 
       {/* En el teléfono, 2×2: en una fila deslizable la cuarta pestaña quedaba escondida a 360 px */}
       <nav aria-label="Secciones de mi perfil">
-        <ul className="grid grid-cols-2 gap-1 border-b border-line pb-2 sm:flex">
+        <ul className="grid grid-cols-2 gap-1 rounded-xl border border-line-strong bg-white p-1 sm:inline-flex sm:w-max">
           {PESTANAS.map(({ id, texto, Icono }) => (
             <li key={id}>
               <button type="button" onClick={() => elegir(id)} aria-current={pestana === id ? 'page' : undefined} className={`${adminTab(pestana === id)} h-11 w-full justify-center sm:w-auto`}>

@@ -21,7 +21,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import VerificacionesPanel from './_components/VerificacionesPanel';
 import {
   adminBadge, adminCardFlush, adminDato, adminIconButton, adminIconChip, adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle,
-  adminRowZebra, adminSecondaryButton, adminTab, adminTableWrap, adminTh,
+  adminRowZebra, adminSecondaryButton, adminTab, adminTabList, adminTabScroll, adminTableWrap, adminTh,
 } from '@/lib/admin-ui';
 import { fechaCorta, haceCuanto } from '@/lib/clientes/fechas';
 import type { FiltroClientes } from '@/lib/clientes/lista';
@@ -167,33 +167,38 @@ export default function ClientesPage() {
         </div>
       </div>
 
-      <div className="scrollbar-hide flex max-w-full gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Secciones de clientes">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={vista === 'clientes'}
-          onClick={() => cambiarVista('clientes')}
-          className={adminTab(vista === 'clientes')}
-        >
-          <IconoClientes className="h-4 w-4" aria-hidden="true" />
-          Clientes
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={vista === 'verificaciones'}
-          onClick={() => cambiarVista('verificaciones')}
-          className={adminTab(vista === 'verificaciones')}
-        >
-          <IconoGarantia className="h-4 w-4" aria-hidden="true" />
-          Verificaciones de empresas
-          {pendientes > 0 && (
-            <span className={adminBadge(vista === 'verificaciones' ? 'neutral' : 'warning')}>
-              {pendientes > 99 ? '99+' : pendientes}
-              <span className="sr-only"> por verificar</span>
-            </span>
-          )}
-        </button>
+      <div className={adminTabScroll}>
+        <div className={adminTabList} role="tablist" aria-label="Secciones de clientes">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={vista === 'clientes'}
+            onClick={() => cambiarVista('clientes')}
+            className={adminTab(vista === 'clientes')}
+          >
+            <IconoClientes className="h-4 w-4" aria-hidden="true" />
+            Clientes
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={vista === 'verificaciones'}
+            onClick={() => cambiarVista('verificaciones')}
+            className={adminTab(vista === 'verificaciones')}
+          >
+            <IconoGarantia className="h-4 w-4" aria-hidden="true" />
+            Verificaciones de empresas
+            {pendientes > 0 && (
+              <span className={vista === 'verificaciones'
+                ? 'inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold tabular-nums text-white'
+                : adminBadge('warning')}
+              >
+                {pendientes > 99 ? '99+' : pendientes}
+                <span className="sr-only"> por verificar</span>
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {vista === 'verificaciones' ? (

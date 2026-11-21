@@ -10,6 +10,7 @@ interface FeaturedShowcaseProps {
   products: ProductCardData[];
   exchangeRateVES?: number | null;
   lowStockThreshold: number;
+  rotar?: boolean;
 }
 
 /**
@@ -22,7 +23,7 @@ interface FeaturedShowcaseProps {
  * tarjeta de 405 y dejaba una franja blanca arriba.
  * C-172: `products` llega ya girado por día (la estrella del día, `lib/destacados.ts`) y en xl la estrella rota.
  */
-export default function FeaturedShowcase({ products, exchangeRateVES, lowStockThreshold }: FeaturedShowcaseProps) {
+export default function FeaturedShowcase({ products, exchangeRateVES, lowStockThreshold, rotar = true }: FeaturedShowcaseProps) {
   if (products.length === 0) return null;
 
   return (
@@ -47,6 +48,7 @@ export default function FeaturedShowcase({ products, exchangeRateVES, lowStockTh
             en el servidor, y el componente cliente solo decide cuál se ve */}
         <DestacadosRotativos
           nombres={products.map((product) => product.name)}
+          rotar={rotar}
           estrellas={products.map((product, index) => (
             <FeaturedHeroCard key={product.id} product={product} exchangeRateVES={exchangeRateVES} lowStockThreshold={lowStockThreshold} priority={index === 0} />
           ))}

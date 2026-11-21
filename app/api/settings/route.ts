@@ -11,6 +11,7 @@ import { isPlausibleRate, refreshExchangeRate } from '@/lib/exchange-rate';
 import { formatVES } from '@/lib/currency';
 import { emitAdminEvent } from '@/lib/admin-events';
 import { registrarAccionAdmin } from '@/lib/audit-log';
+import { leerConfigSeccionesPortada, normalizarPosicionVideo } from '@/lib/portada';
 import { revalidatePath } from 'next/cache';
 
 // Campos que solo ve quien administra la configuración (CLAUDE.md: nunca salen del servidor hacia otros)
@@ -45,6 +46,8 @@ function toAdminSettings(row: CompanySettings, canManageSettings: boolean) {
   data.adminAlertEmails = parseAlertEmails(row.adminAlertEmails);
   // C-153: los empaques van como objeto (la columna guarda el texto JSON)
   data.packagingRules = leerReglasEmbalaje(row.packagingRules);
+  data.homeSectionsConfig = leerConfigSeccionesPortada(row.homeSectionsConfig);
+  data.homeVideoPosition = normalizarPosicionVideo(row.homeVideoPosition);
   if (!canManageSettings) {
     for (const field of SETTINGS_ONLY_FIELDS) delete data[field];
   }

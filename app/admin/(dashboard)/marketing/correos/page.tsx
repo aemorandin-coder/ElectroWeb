@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { IconoEnviar, IconoVer, type IconType } from '@/components/iconos';
-import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab } from '@/lib/admin-ui';
+import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab, adminTabList, adminTabScroll } from '@/lib/admin-ui';
 import Campanas from '../_components/Campanas';
 import Plantillas from '../_components/Plantillas';
 
@@ -49,23 +49,25 @@ export default function CorreosAdminPage() {
         </div>
       </div>
 
-      <div className="scrollbar-hide flex max-w-full gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Correos de marketing y tienda">
-        {SECCIONES.map((s) => {
-          const Icon = s.icon;
-          return (
-            <button
-              key={s.id}
-              type="button"
-              role="tab"
-              aria-selected={activa === s.id}
-              onClick={() => ir(s.id)}
-              className={adminTab(activa === s.id)}
-            >
-              <Icon className="h-4 w-4" aria-hidden="true" />
-              {s.label}
-            </button>
-          );
-        })}
+      <div className={adminTabScroll}>
+        <div className={adminTabList} role="tablist" aria-label="Correos de marketing y tienda">
+          {SECCIONES.map((s) => {
+            const Icon = s.icon;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                role="tab"
+                aria-selected={activa === s.id}
+                onClick={() => ir(s.id)}
+                className={adminTab(activa === s.id)}
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {activa === 'campanas' ? <Campanas /> : <Plantillas />}

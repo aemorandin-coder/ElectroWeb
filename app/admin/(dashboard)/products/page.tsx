@@ -11,7 +11,7 @@ import {
 } from '@/components/iconos';
 import Filtros from '@/components/admin/Filtros';
 import {
-  adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab,
+  adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab, adminTabList, adminTabScroll,
 } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { hasPermission } from '@/lib/auth-helpers';
@@ -504,14 +504,16 @@ function Productos() {
       </div>
 
       {/* C-187: en el teléfono "SADES" a secas, para que la Papelera quepa a la vista (antes quedaba fuera, a la derecha) */}
-      <div className="flex gap-1 overflow-x-auto border-b border-line pb-2" role="tablist" aria-label="Origen de los productos">
-        <button type="button" role="tab" aria-selected={tab === 'local'} onClick={() => setTab('local')} className={`${adminTab(tab === 'local')} ${TAB_TELEFONO}`}><IconoPaquete className="h-4 w-4" aria-hidden="true" /> Catálogo</button>
-        <button type="button" role="tab" aria-selected={tab === 'sades'} onClick={() => setTab('sades')} className={`${adminTab(tab === 'sades')} ${TAB_TELEFONO}`}>
-          <IconoBaseDeDatos className="h-4 w-4" aria-hidden="true" /> <span><span className="hidden sm:inline">ElectroCaja / </span>SADES</span>
-        </button>
-        <button type="button" role="tab" aria-selected={tab === 'papelera'} onClick={() => setTab('papelera')} className={`${adminTab(tab === 'papelera')} ${TAB_TELEFONO}`}>
-          <IconoEliminar className="h-4 w-4" aria-hidden="true" /> Papelera{enPapelera > 0 && <span className="rounded-full bg-surface px-2 text-xs font-semibold tabular-nums text-muted">{enPapelera}</span>}
-        </button>
+      <div className={adminTabScroll}>
+        <div className={adminTabList} role="tablist" aria-label="Origen de los productos">
+          <button type="button" role="tab" aria-selected={tab === 'local'} onClick={() => setTab('local')} className={`${adminTab(tab === 'local')} ${TAB_TELEFONO}`}><IconoPaquete className="h-4 w-4" aria-hidden="true" /> Catálogo</button>
+          <button type="button" role="tab" aria-selected={tab === 'sades'} onClick={() => setTab('sades')} className={`${adminTab(tab === 'sades')} ${TAB_TELEFONO}`}>
+            <IconoBaseDeDatos className="h-4 w-4" aria-hidden="true" /> <span><span className="hidden sm:inline">ElectroCaja / </span>SADES</span>
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'papelera'} onClick={() => setTab('papelera')} className={`${adminTab(tab === 'papelera')} ${TAB_TELEFONO}`}>
+            <IconoEliminar className="h-4 w-4" aria-hidden="true" /> Papelera{enPapelera > 0 && <span className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${tab === 'papelera' ? 'bg-white/20 text-white' : 'bg-surface text-muted'}`}>{enPapelera}</span>}
+          </button>
+        </div>
       </div>
 
       {tab === 'sades' ? (

@@ -12,6 +12,8 @@ interface DestacadosRotativosProps {
   tarjetas: ReactNode[];
   /** Nombre de cada producto, para decir cuál se muestra. */
   nombres: string[];
+  /** Permitir rotación automática en escritorio (G-74). */
+  rotar?: boolean;
 }
 
 const INTERVALO_MS = 7000;
@@ -22,11 +24,11 @@ const INTERVALO_MS = 7000;
  * sin fin. Se detiene con el ratón encima, con el foco dentro, con la pestaña oculta y al tocar cualquier control.
  * Con "reducir movimiento" no gira sola: quedan las flechas. En teléfono no existe (ahí manda la fila deslizable).
  */
-export default function DestacadosRotativos({ estrellas, tarjetas, nombres }: DestacadosRotativosProps) {
+export default function DestacadosRotativos({ estrellas, tarjetas, nombres, rotar = true }: DestacadosRotativosProps) {
   const total = estrellas.length;
   const [actual, setActual] = useState(0);
   // 'girando' → sola; 'pausa' → la detuvo la persona; 'fin' → ya dio su vuelta
-  const [estado, setEstado] = useState<'girando' | 'pausa' | 'fin'>('girando');
+  const [estado, setEstado] = useState<'girando' | 'pausa' | 'fin'>(rotar ? 'girando' : 'pausa');
   const [encima, setEncima] = useState(false);
   // Solo gira donde se ve (xl) y si la persona no pidió menos movimiento. Es comportamiento, no diseño: el diseño lo decide el CSS
   const [permitido, setPermitido] = useState(false);
@@ -45,7 +47,7 @@ export default function DestacadosRotativos({ estrellas, tarjetas, nombres }: De
     };
   }, []);
 
-  const gira = permitido && estado === 'girando' && !encima && total > 1;
+  const gira = rotar && permitido && estado === 'girando' && !encima && total > 1;
 
   useEffect(() => {
     if (!gira) return;

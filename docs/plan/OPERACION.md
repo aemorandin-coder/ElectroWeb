@@ -142,7 +142,7 @@ Una política de qué puede cargar la tienda: scripts, conexiones y marcos solo 
     - **Un `next start` en segundo plano puede seguir vivo** después de detener la tarea, con el puerto tomado.
       - Se busca por su línea de comando y se corta por PID.
 - **Deploy desde la laptop, con la aprobación del equipo para ese deploy** (`CLAUDE.md`, regla 2):
-  - **Desde la PC de Andrés (Linux, desde el 16/11):** `ssh electroshop`, con su llave `~/.ssh/electroshop_claude`. El primero fue rc.87. Antes del deploy, avisar a las otras sesiones de esa PC que no empujen nada.
+  - **Desde la PC de Andrés (Linux):** `ssh electroshop`, con llave dedicada `~/.ssh/electroshop_deploy` y `ServerAliveInterval 30` / `ServerAliveCountMax 6` / `TCPKeepAlive yes` en `~/.ssh/config` (desde el 21/11; antes `~/.ssh/electroshop_claude` desde el 16/11, rc.87). Antes del deploy, avisar a las otras sesiones de esa PC que no empujen nada.
   - **Antes:** `git describe --tags --abbrev=0`, `git status -sb` y la memoria libre.
   - **Respaldo** (si hace falta): el `pg_dump` del bloque.
   - **Subir:** `ssh … 'cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull'`, guardando la salida en un archivo, porque el build tarda.

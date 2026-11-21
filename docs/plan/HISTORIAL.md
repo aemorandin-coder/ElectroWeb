@@ -1,9 +1,21 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.119`, comprobada el 20/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.120`, comprobada el 21/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 21/11 · G-73: Kit de marca 2.0, fusiones del Admin Panel, pausa de Promotores y novedades en la Campana (de rc.119 a `v1.0.0-rc.120`)
+Subida a producción por SSH (`ssh electroshop`, `bash scripts/deploy.sh --sin-pull`) y comprobada en el servidor y desde fuera el 21/11/2026 (`https://electroshopve.com/` responde `1.0.0-rc.120|e21e685f`, PM2 `online` en `.next-a` sobre `127.0.0.1:3000` sin errores nuevos, rutas públicas `200`, guarda de versión `204` y rutas privadas `307`/`401`).
+
+**Falta que el equipo lo confirme** (`SIGUIENTE.md`, "Por confirmar de rc.120"): revisar las 4 pruebas en escritorio y teléfono (`360 px`).
+
+### El bloque que se subió: `v1.0.0-rc.120` (G-73)
+- **Commit:** `e21e685f` (etiqueta `v1.0.0-rc.120`).
+- **G-73** (`rc.120` · 14 módulos actualizados en `lib/modulos.ts`): Kit de marca 2.0 unificado para Admin, Mi panel y Tienda (`/admin/marca`, `lib/marca.ts`, `lib/admin-ui.ts`), eliminación de los 6 componentes heredados de `components/ui/`, 4 reglas nuevas en `npm run check:marca`, avisos en Top Layer (`popover="manual"`, `ElectroToaster`) y modales nativos `<dialog>.showModal()` (`ModalDialog`, `ConfirmDialog`); menú del Admin Panel consolidado en 6 grupos sin truncado, `Mi seguridad` al pie, Verificaciones en Clientes, Creadores en Cursos y Creadores, división de Marketing (`Vitrina y Portada`, `Correos`, `Promociones y Sorteo` con `Afiliados (en pausa)`), `Documentos legales` y `Sistema y versiones` en Ajustes, pausa de Promotores en Mi panel conservando BD histórica, y novedades legibles en la Campana + pill discreta de recarga (`AvisosDeVersion`). **Sin cambio de base, sin variables de entorno nuevas y sin cron.**
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.119 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 
 ## 20/11 · G-72: Tema de lanzamiento GTA VI (video protagonista + fuente Rockstar Anton + limpieza móvil) y Descripción inteligente en ficha de producto (de rc.116 a `v1.0.0-rc.119`)

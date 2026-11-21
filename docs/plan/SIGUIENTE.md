@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-21 · producción en 1.0.0-rc.119; pendiente subir 1.0.0-rc.120 — G-73)
+# Lo de ahora (actualizado 2026-11-21 · producción en 1.0.0-rc.120 — sin deploy pendiente)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **G-73 · Kit de marca 2.0, fusiones del Admin Panel, pausa de Promotores y novedades en la Campana (rc.120, en `main`, por subir: §2; `estado/G-73.md`):** pedido del equipo el 21/11 (`K1 + F1 + P1 + V1`), revisado en vivo y sobre galería completa de capturas Chrome antes de fusionar a `main`.
+- **G-73 · Kit de marca 2.0, fusiones del Admin Panel, pausa de Promotores y novedades en la Campana (rc.120, en producción; por confirmar: §2; `estado/G-73.md`):** pedido del equipo el 21/11 (`K1 + F1 + P1 + V1`), revisado en vivo y sobre galería completa de capturas Chrome antes de fusionar a `main`.
   - **Kit 2.0 y piezas en Top Layer (`K1`):** escala tipográfica, grillas/anchos y flujos unificados (`lib/marca.ts`, `lib/admin-ui.ts`, `/admin/marca`), contraste corregido (`bg-success-strong`), eliminación de los 6 componentes heredados de `components/ui/`, 4 reglas nuevas en `npm run check:marca`, avisos en `popover="manual"` (`ElectroToaster`) y modales nativos `<dialog>.showModal()` (`ModalDialog`, `ConfirmDialog`).
   - **Fusiones del Admin Panel y Promotores en pausa (`F1 + P1`):** menú lateral en 6 grupos sin truncado ni hash crudo, `Mi seguridad` al pie, Verificaciones dentro de Clientes, Creadores dentro de Cursos y Creadores, división funcional de Marketing (`Vitrina y Portada`, `Correos`, `Promociones y Sorteo` con `Afiliados (en pausa)`), `Documentos legales` y `Sistema y versiones` en Ajustes, homologación de Categorías/Consultas/Servicios/Reseñas/Equipo/Notificaciones y Mi panel sin `Promotores` para clientes sin historial (conservando datos históricos en BD).
   - **Novedades en la Campana (`V1`):** novedades de versión traducidas a lenguaje claro dentro de la Campana (`Entendido` / `Ver detalle`) y pill flotante discreta solo cuando hay actualización por recargar (`AvisosDeVersion`).
@@ -573,18 +573,10 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-Listo para subir en un solo bloque (**`v1.0.0-rc.120`**, `G-73`). **Sin cambios de base de datos, sin variables de entorno nuevas y sin cron nuevo.**
-
-### Bloque de deploy (`v1.0.0-rc.120` — G-73)
-En `/var/www/electroshopve`:
-```bash
-git log -1 --oneline
-git pull --ff-only
-bash scripts/deploy.sh --sin-pull
-```
+No hay deploy pendiente (producción al día en **`v1.0.0-rc.120`** / `e21e685f`, comprobada el 21/11/2026; bloque movido a `HISTORIAL.md`).
 
 ### Por confirmar de rc.120 (G-73; unos 5 minutos)
-Después del deploy, recargar el panel con `Ctrl+R` y revisar en escritorio y teléfono (`360 px`):
+Ya en producción (`1.0.0-rc.120|e21e685f`). Recargar el panel con `Ctrl+R` y revisar en escritorio y teléfono (`360 px`):
 1. **Kit de marca 2.0 (`/admin/marca`):** paleta y reglas de tipografía/grillas visibles; probar botones de **Probar aviso** (Snackbar arriba a la derecha), **Probar error** y **Abrir modal `<dialog>`** (cierra con Escape).
 2. **Menú y fusiones del Admin Panel:**
    - Menú lateral en 6 grupos sin cortar `Marketing y Contenido`, `Mi seguridad` abajo para todos los roles, y cabecera sin píldora fija ni hash crudo en el pie;

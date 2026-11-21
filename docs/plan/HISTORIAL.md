@@ -1,9 +1,34 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.120`, comprobada el 21/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.121`, comprobada el 21/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 21/11 · G-74: Contraste en Contabilidad (`1A`), pestañas en riel segmentado blanco (`2A`) y Studio de Portada + Video Kit 2.0 (`3A`) (de rc.120 a `v1.0.0-rc.121`)
+Subida a producción por SSH (`ssh electroshop`, respaldo `~/respaldo-antes-rc121.dump`, `npx prisma db push --skip-generate --accept-data-loss=false` y `bash scripts/deploy.sh --sin-pull`) y comprobada en el servidor y desde fuera el 21/11/2026 (`https://electroshopve.com/` responde `1.0.0-rc.121|b110382a`, PM2 `online` en `.next-b` sobre `127.0.0.1:3000` con 28 líneas base y 0 errores nuevos, rutas públicas `200`, `/admin/marketing` sin sesión `307` y `/api/admin/marketing/portada` sin sesión `401`).
+
+**Falta que el equipo lo confirme** (`SIGUIENTE.md`, "Por confirmar de rc.121"): revisar en escritorio y teléfono (`360 px`) la Mesa de la contadora, las pestañas segmentadas del panel y el Studio de Portada.
+
+### El bloque que se subió: `v1.0.0-rc.121` (G-74)
+- **Commit:** `b110382a` (etiqueta `v1.0.0-rc.121`).
+- **G-74** (`rc.121` · 11 módulos actualizados en `lib/modulos.ts`: `Contabilidad 1.3.3`, `Marco del panel 1.24.0`, `Marketing 1.31.0`, `Tienda 1.26.0`, `Productos 1.19.3`, `Ofertas y cupones 1.4.1`, `ElectroStudio 2.6.2`, `Cursos 1.4.1`, `Clientes 1.11.1`, `Ajustes 1.10.1`, `Cuenta 1.15.2`):
+  - **1A · Mesa de la contadora (`MesaContadora.tsx`):** píldora translúcida blanca (`border-white/20 bg-white/10 text-white` + ícono `text-brand-300`) sobre `bg-brand-700`.
+  - **2A · Riel segmentado blanco (`lib/admin-ui.ts`):** `adminTabScroll` + `adminTabList` + hover claro en `adminTab` aplicados en las 12 vistas del panel admin y homologados en `Mi panel → Mi perfil` / `Garantías`.
+  - **3A · Studio de Portada (`PortadaStudio.tsx`, `/api/admin/marketing/portada`, `lib/portada.ts`, `app/page.tsx`, `VideoPlayer.tsx`):** steppers de `8 rem`, cinta superior opcional, curaduría en vivo de destacados y estrella del día, orden/visibilidad de 10 bloques del inicio, preview de YouTube + ubicación del video con `VideoPlayer` Kit 2.0, vista previa fija `PC | 360 px` y modal `Antes → Después`.
+- **Cambio de base aditivo aplicado en `company_settings`** (sin variables nuevas y sin cron):
+```sql
+ALTER TABLE "company_settings" ADD COLUMN     "homeBannerEnabled" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "homeBannerLink" TEXT,
+ADD COLUMN     "homeBannerText" TEXT,
+ADD COLUMN     "homeCategoryShelves" INTEGER NOT NULL DEFAULT 3,
+ADD COLUMN     "homeRotateFeatured" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "homeSectionsConfig" TEXT,
+ADD COLUMN     "homeVideoPosition" TEXT NOT NULL DEFAULT 'bottom';
+```
+- **Subir** (en la terminal del servidor): respaldar BD (`pg_dump -Fc`), `cd /var/www/electroshopve && git pull --ff-only && npx prisma db push --skip-generate --accept-data-loss=false && bash scripts/deploy.sh --sin-pull`.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.120 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 
 ## 21/11 · G-73: Kit de marca 2.0, fusiones del Admin Panel, pausa de Promotores y novedades en la Campana (de rc.119 a `v1.0.0-rc.120`)

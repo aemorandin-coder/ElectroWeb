@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-21 · en `main`: 1.0.0-rc.121 listo para subir; producción en 1.0.0-rc.120)
+# Lo de ahora (actualizado 2026-11-21 · producción en 1.0.0-rc.121 — sin deploy pendiente)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **G-74 · Contraste en Contabilidad (`1A`), pestañas en riel segmentado (`2A`) y Studio de Portada + Video Kit 2.0 (`3A`) (rc.121, en `main`, por subir en §2; `estado/G-74.md`):** pedido del equipo tras revisar `rc.120`, aprobado con las opciones `1A + 2A + 3A` y verificado en pruebas API + Chrome headless (`26 de 26`, 0 errores JS y 0 desbordes a `360 px`).
+- **G-74 · Contraste en Contabilidad (`1A`), pestañas en riel segmentado (`2A`) y Studio de Portada + Video Kit 2.0 (`3A`) (rc.121, en producción; por confirmar: §2; `estado/G-74.md`):** pedido del equipo tras revisar `rc.120`, aprobado con las opciones `1A + 2A + 3A` y verificado en pruebas API + Chrome headless (`26 de 26`, 0 errores JS y 0 desbordes a `360 px`) y en producción (`1.0.0-rc.121|b110382a`).
   - **Contabilidad (`1A`):** corregido el contraste de la píldora de estado sobre el banner `bg-brand-700` en `MesaContadora.tsx` usando cápsula translúcida blanca (`border-white/20 bg-white/10 text-white`).
   - **Pestañas en riel segmentado blanco (`2A`):** `adminTabScroll` + `adminTabList` + hover claro en `adminTab` aplicados en las 12 pantallas del panel admin y homologados en `Mi perfil` / `Garantías` de Mi panel.
   - **Studio de Portada (`3A`):** reemplaza la vista heredada en `Marketing → Vitrina y Portada` con steppers compactos de `8 rem`, cinta superior opcional, curaduría en vivo de destacados (`/api/admin/marketing/portada`), orden/visibilidad de 10 bloques del inicio, ubicación de video + vista previa de YouTube, preview sticky `PC | 360 px`, modal nativo `Antes → Después` y `VideoPlayer` Kit 2.0 en la portada pública (`/`).
@@ -578,21 +578,14 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-Listo en `main` para subir: **`v1.0.0-rc.121`** (**G-74** · Contabilidad `1.3.3` + Marco del panel `1.24.0` + Marketing `1.31.0` + Tienda `1.26.0` + 7 módulos homologados). Producción actual: `v1.0.0-rc.120` (`e21e685f`).
+No hay deploy pendiente (producción al día en **`v1.0.0-rc.121`** / `b110382a`, comprobada el 21/11/2026; bloque movido a `HISTORIAL.md`).
 
-- **Cambio de base aditivo requerido en `company_settings`** (sin `DROP`, sin variables nuevas y sin cron):
-```sql
-ALTER TABLE "company_settings"
-ADD COLUMN "homeBannerEnabled" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN "homeBannerLink" TEXT,
-ADD COLUMN "homeBannerText" TEXT,
-ADD COLUMN "homeCategoryShelves" INTEGER NOT NULL DEFAULT 3,
-ADD COLUMN "homeRotateFeatured" BOOLEAN NOT NULL DEFAULT true,
-ADD COLUMN "homeSectionsConfig" TEXT,
-ADD COLUMN "homeVideoPosition" TEXT NOT NULL DEFAULT 'bottom';
-```
-- **Subir** (en el servidor): respaldar BD (`pg_dump -Fc`), `cd /var/www/electroshopve && git pull --ff-only && npx prisma db push --skip-generate --accept-data-loss=false && bash scripts/deploy.sh --sin-pull`.
-- **Vuelta atrás** (si hiciera falta): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.120 && npm install && bash scripts/deploy.sh --sin-pull`.
+### Por confirmar de rc.121 (G-74; unos 3 minutos)
+Ya en producción (`1.0.0-rc.121|b110382a`). Recargar el panel con `Ctrl+R` y revisar en escritorio y teléfono (`360 px`):
+1. **Mesa de la contadora (`/admin/contabilidad/mesa`):** confirmar que la píldora informativa dentro del banner azul se lee nítida en texto blanco translúcido.
+2. **Pestañas en riel segmentado (`/admin/customers`, `/admin/marketing`, `/admin/products`, `/admin/cursos`, `/admin/discount-requests`, `/customer/profile`):** comprobar separación dentro de la barra blanca y estado hover al pasar el ratón.
+3. **Studio de Portada (`/admin/marketing`):** probar los steppers compactos, la cinta superior opcional, curaduría en vivo de destacados (`+ Agregar destacado` / `Subir al #1`), orden/visibilidad de secciones, vista previa `PC | 360 px` y modal `Antes → Después` al publicar.
+4. **Vuelta atrás** (si hiciera falta, en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.120 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de rc.120 (G-73; unos 5 minutos)
 Ya en producción (`1.0.0-rc.120|e21e685f`). Recargar el panel con `Ctrl+R` y revisar en escritorio y teléfono (`360 px`):

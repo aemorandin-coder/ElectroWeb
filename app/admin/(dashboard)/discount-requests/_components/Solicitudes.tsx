@@ -1,13 +1,14 @@
 'use client';
 
-import { adminBadge, adminInput, adminModalOverlay, adminModalPanel, adminSecondaryButton, adminSuccessButton } from '@/lib/admin-ui';
+import {
+  adminBadge, adminDangerButton, adminInput, adminSecondaryButton, adminSuccessButton,
+} from '@/lib/admin-ui';
 import Filtros from '@/components/admin/Filtros';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import ModalDialog from '@/components/ui/ModalDialog';
 import { formatUSD } from '@/lib/currency';
 
 
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { IconoBuscar, IconoCerrar, IconoCheck, IconoConfirmado, IconoCuenta, IconoLista, IconoPaquete, IconoPorcentaje, IconoRechazado, IconoReloj } from '@/components/iconos';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
@@ -51,7 +52,6 @@ export default function Solicitudes() {
     // Action modal state
     const [selectedRequest, setSelectedRequest] = useState<DiscountRequest | null>(null);
     const [showActionModal, setShowActionModal] = useState(false);
-    useBodyScrollLock(showActionModal);
     const [actionType, setActionType] = useState<'approve' | 'reject'>('approve');
     const [approvedDiscount, setApprovedDiscount] = useState(0);
     const [expirationHours, setExpirationHours] = useState(24);
@@ -298,63 +298,64 @@ export default function Solicitudes() {
                 </div>
             )}
 
-            {/* Action Modal - Using Portal */}
-            {showActionModal && selectedRequest && typeof document !== 'undefined' && createPortal(
-                <div
-                    onClick={() => setShowActionModal(false)}
-                    className={adminModalOverlay}
-                >
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        className={`${adminModalPanel} sm:max-w-md`}
-                    >
-                        {/* Header */}
-                        <div className={`p-5 text-white ${actionType === 'approve' ? 'bg-success' : 'bg-deal'}`}>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                                        {actionType === 'approve' ? <IconoCheck className="w-6 h-6" /> : <IconoCerrar className="w-6 h-6" />}
+            <ModalDialog
+                open={Boolean(showActionModal && selectedRequest)}
+                onClose={() => setShowActionModal(false)}
+                ariaLabelledBy="solicitud-descuento-titulo"
+                size="md"
+            >
+                {selectedRequest && (
+                    <>
+                        <div className={`p-5 text-white ${actionType === 'approve' ? 'bg-success-strong' : 'bg-deal'}`}>
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex min-w-0 items-center gap-3">
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20">
+                                        {actionType === 'approve' ? <IconoCheck className="h-5 w-5" aria-hidden="true" /> : <IconoCerrar className="h-5 w-5" aria-hidden="true" />}
                                     </div>
-                                    <div>
-                                        <h2 className="text-lg font-bold">{actionType === 'approve' ? 'Aprobar Descuento' : 'Rechazar Solicitud'}</h2>
-                                        <p className="text-sm opacity-80">{selectedRequest.productName}</p>
+                                    <div className="min-w-0">
+                                        <h2 id="solicitud-descuento-titulo" className="text-lg font-bold text-balance">{actionType === 'approve' ? 'Aprobar Descuento' : 'Rechazar Solicitud'}</h2>
+                                        <p className="truncate text-sm text-white/85">{selectedRequest.productName}</p>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowActionModal(false)} className="p-2 hover:bg-white/20 rounded-lg">
-                                    <IconoCerrar className="w-5 h-5" />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowActionModal(false)}
+                                    aria-label="Cerrar"
+                                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg hover:bg-white/20"
+                                >
+                                    <IconoCerrar className="h-5 w-5" aria-hidden="true" />
                                 </button>
                             </div>
                         </div>
 
-                        <div className="p-5 space-y-5">
-                            {/* Request Info */}
-                            <div className="bg-surface rounded-xl p-4">
-                                <div className="flex justify-between text-sm mb-2">
+                        <div className="space-y-5 overflow-y-auto p-5">
+                            <div className="rounded-xl bg-surface p-4">
+                                <div className="mb-2 flex justify-between text-sm">
                                     <span className="text-muted">Cliente:</span>
-                                    <span className="font-semibold">{selectedRequest.user.name || selectedRequest.user.email}</span>
+                                    <span className="font-semibold text-ink">{selectedRequest.user.name || selectedRequest.user.email}</span>
                                 </div>
-                                <div className="flex justify-between text-sm mb-2">
+                                <div className="mb-2 flex justify-between text-sm">
                                     <span className="text-muted">Precio original:</span>
-                                    <span className="font-semibold">{formatUSD(Number(selectedRequest.originalPrice))}</span>
+                                    <span className="font-semibold tabular-nums text-ink">{formatUSD(Number(selectedRequest.originalPrice))}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted">Descuento solicitado:</span>
-                                    <span className="font-bold text-warning-strong">{selectedRequest.requestedDiscount}%</span>
+                                    <span className="font-bold tabular-nums text-warning-strong">{selectedRequest.requestedDiscount}%</span>
                                 </div>
                             </div>
 
                             {actionType === 'approve' && (
                                 <>
-                                    {/* Discount to approve */}
                                     <div>
-                                        <label className="block text-sm font-bold text-ink mb-3">Descuento a aprobar</label>
+                                        <label className="mb-3 block text-sm font-bold text-ink">Descuento a aprobar</label>
                                         <div className="flex gap-2">
                                             {[1, 2, 3, 4, 5].map((percent) => (
                                                 <button
                                                     key={percent}
+                                                    type="button"
                                                     onClick={() => setApprovedDiscount(percent)}
-                                                    className={`flex-1 py-3 rounded-xl font-bold transition-all ${approvedDiscount === percent
-                                                        ? 'bg-success text-white shadow-lg'
+                                                    className={`min-h-11 flex-1 rounded-xl font-bold transition-colors ${approvedDiscount === percent
+                                                        ? 'bg-success-strong text-white'
                                                         : 'bg-surface text-ink hover:bg-line'
                                                         }`}
                                                 >
@@ -364,15 +365,15 @@ export default function Solicitudes() {
                                         </div>
                                     </div>
 
-                                    {/* Expiration */}
                                     <div>
-                                        <label className="block text-sm font-bold text-ink mb-2">Horas de validez</label>
+                                        <label className="mb-2 block text-sm font-bold text-ink">Horas de validez</label>
                                         <div className="flex gap-2">
                                             {[12, 24, 48, 72].map((hours) => (
                                                 <button
                                                     key={hours}
+                                                    type="button"
                                                     onClick={() => setExpirationHours(hours)}
-                                                    className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${expirationHours === hours
+                                                    className={`min-h-10 flex-1 rounded-lg text-sm font-semibold transition-colors ${expirationHours === hours
                                                         ? 'bg-brand-500 text-white'
                                                         : 'bg-surface text-ink hover:bg-line'
                                                         }`}
@@ -383,61 +384,55 @@ export default function Solicitudes() {
                                         </div>
                                     </div>
 
-                                    {/* Final Price Preview */}
-                                    <div className="bg-success/10 border border-success/20 rounded-xl p-4 text-center">
-                                        <p className="text-sm text-success-strong mb-1">Precio final para el cliente</p>
-                                        <p className="text-3xl font-bold text-success-strong">
+                                    <div className="rounded-xl border border-success-strong/20 bg-success-strong/5 p-4 text-center">
+                                        <p className="mb-1 text-sm text-success-strong">Precio final para el cliente</p>
+                                        <p className="text-3xl font-bold tabular-nums text-success-strong">
                                             {formatUSD(Number(selectedRequest.originalPrice) * (1 - approvedDiscount / 100))}
                                         </p>
-                                        <p className="text-xs text-success-strong mt-1">
+                                        <p className="mt-1 text-xs tabular-nums text-success-strong">
                                             Ahorra {formatUSD(Number(selectedRequest.originalPrice) * approvedDiscount / 100)}
                                         </p>
                                     </div>
                                 </>
                             )}
 
-                            {/* Response message */}
                             <div>
-                                <label className="block text-sm font-bold text-ink mb-2">
-                                    {actionType === 'approve' ? 'Mensaje (opcional)' : 'Razon del rechazo (opcional)'}
+                                <label className="mb-2 block text-sm font-bold text-ink">
+                                    {actionType === 'approve' ? 'Mensaje (opcional)' : 'Razón del rechazo (opcional)'}
                                 </label>
                                 <textarea
                                     value={adminResponse}
                                     onChange={(e) => setAdminResponse(e.target.value)}
                                     placeholder={actionType === 'approve' ? 'Ej: Aprovecha tu descuento!' : 'Ej: El precio ya es competitivo'}
-                                    className="w-full px-4 py-3 border border-line rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 resize-none"
+                                    className="w-full resize-none rounded-xl border border-line px-4 py-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                                     rows={2}
                                 />
                             </div>
 
-                            {/* Action Button */}
                             <button
+                                type="button"
                                 onClick={handleAction}
                                 disabled={processing}
-                                className={`w-full py-4 font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${actionType === 'approve'
-                                    ? 'bg-success text-white'
-                                    : 'bg-deal text-white'
-                                    }`}
+                                className={`w-full ${actionType === 'approve' ? adminSuccessButton : adminDangerButton}`}
                             >
                                 {processing ? (
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                 ) : actionType === 'approve' ? (
                                     <>
-                                        <IconoCheck className="w-5 h-5" />
+                                        <IconoCheck className="h-5 w-5" aria-hidden="true" />
                                         Aprobar Descuento
                                     </>
                                 ) : (
                                     <>
-                                        <IconoCerrar className="w-5 h-5" />
+                                        <IconoCerrar className="h-5 w-5" aria-hidden="true" />
                                         Rechazar Solicitud
                                     </>
                                 )}
                             </button>
                         </div>
-                    </div>
-                </div>,
-                document.body
-            )}
+                    </>
+                )}
+            </ModalDialog>
         </div>
     );
 }

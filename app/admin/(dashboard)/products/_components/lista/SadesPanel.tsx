@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { IconoActualizar, IconoBaseDeDatos } from '@/components/iconos';
-import { Button } from '@/components/ui/Button';
+import { adminPrimaryButton } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 
 // Conexión con ElectroCaja/SADES (C-51: movida tal cual desde products/page.tsx, con los colores del sistema)
@@ -148,15 +148,15 @@ export default function SadesPanel({ onSincronizado }: { onSincronizado: () => v
             </div>
           </div>
 
-          <Button
-            variant="primary"
+          <button
+            type="button"
             onClick={handleSync}
-            isLoading={isSyncing}
-            className="w-full bg-brand-600 hover:bg-brand-700 text-white sm:w-auto"
+            disabled={isSyncing}
+            className={`${adminPrimaryButton} w-full sm:w-auto`}
           >
-            <IconoActualizar className={`mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+            <IconoActualizar className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} aria-hidden="true" />
             {isSyncing ? 'Sincronizando...' : 'Sincronizar Todo Ahora'}
-          </Button>
+          </button>
         </div>
       </div>
 

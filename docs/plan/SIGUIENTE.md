@@ -1,9 +1,14 @@
-# Lo de ahora (actualizado 2026-11-20 · producción en 1.0.0-rc.119; sin deploy pendiente)
+# Lo de ahora (actualizado 2026-11-21 · producción en 1.0.0-rc.119; pendiente subir 1.0.0-rc.120 — G-73)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **G-73 · Kit de marca 2.0, fusiones del Admin Panel, pausa de Promotores y novedades en la Campana (rc.120, en `main`, por subir: §2; `estado/G-73.md`):** pedido del equipo el 21/11 (`K1 + F1 + P1 + V1`), revisado en vivo y sobre galería completa de capturas Chrome antes de fusionar a `main`.
+  - **Kit 2.0 y piezas en Top Layer (`K1`):** escala tipográfica, grillas/anchos y flujos unificados (`lib/marca.ts`, `lib/admin-ui.ts`, `/admin/marca`), contraste corregido (`bg-success-strong`), eliminación de los 6 componentes heredados de `components/ui/`, 4 reglas nuevas en `npm run check:marca`, avisos en `popover="manual"` (`ElectroToaster`) y modales nativos `<dialog>.showModal()` (`ModalDialog`, `ConfirmDialog`).
+  - **Fusiones del Admin Panel y Promotores en pausa (`F1 + P1`):** menú lateral en 6 grupos sin truncado ni hash crudo, `Mi seguridad` al pie, Verificaciones dentro de Clientes, Creadores dentro de Cursos y Creadores, división funcional de Marketing (`Vitrina y Portada`, `Correos`, `Promociones y Sorteo` con `Afiliados (en pausa)`), `Documentos legales` y `Sistema y versiones` en Ajustes, homologación de Categorías/Consultas/Servicios/Reseñas/Equipo/Notificaciones y Mi panel sin `Promotores` para clientes sin historial (conservando datos históricos en BD).
+  - **Novedades en la Campana (`V1`):** novedades de versión traducidas a lenguaje claro dentro de la Campana (`Entendido` / `Ver detalle`) y pill flotante discreta solo cuando hay actualización por recargar (`AvisosDeVersion`).
+  - **Sin cambio de base, sin variables de entorno nuevas y sin cron.**
 - **G-72 · Tema de lanzamiento GTA VI y Descripción inteligente en ficha de producto (rc.117 a rc.119, en producción; por confirmar: §2; `estado/G-72.md`):** pedido de Andrés el 20/11, elegido sobre maqueta HTML local (Opción A + maqueta v2 Opción A con fuente `Anton`) y afinado en vivo en escritorio y teléfono (`360 px`).
   - **Tema de lanzamiento (`Marketing → Lanzamiento`):** nueva pestaña en el panel con programación por fechas en Caracas, ambiente `Atardecer Vice` o `Azul Electro Shop`, botón `Cargar plantilla GTA VI` en un clic, logo oficial GTA VI con transparencia limpia, `"Ya llegó a [Electro Shop]"` en una sola línea con wordmark oficial blanco, tráiler oficial protagonista a 7 de 12 columnas, barra glass discreta sin textos genéricos inferiores ni colores fuera del kit, precio en tipografía display Rockstar (`Anton`) centrado en móvil y cambio directo PS5 ↔ Xbox usando los logos oficiales de plataforma, modal de tráiler y fila de hasta 4 productos.
   - **Descripción inteligente en ficha de producto (`/productos/[id]`):** separa introducción, subtítulos, tarjetas de detalle, `De un vistazo` (2×2) y pasos numerados de `¿Cómo se canjea?` en una grilla equilibrada de `7/5` sin huecos en blanco en escritorio.
@@ -568,7 +573,28 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-No hay cambios pendientes de subir: producción está en `v1.0.0-rc.119` (`57f0fb51`, G-72).
+Listo para subir en un solo bloque (**`v1.0.0-rc.120`**, `G-73`). **Sin cambios de base de datos, sin variables de entorno nuevas y sin cron nuevo.**
+
+### Bloque de deploy (`v1.0.0-rc.120` — G-73)
+En `/var/www/electroshopve`:
+```bash
+git log -1 --oneline
+git pull --ff-only
+bash scripts/deploy.sh --sin-pull
+```
+
+### Por confirmar de rc.120 (G-73; unos 5 minutos)
+Después del deploy, recargar el panel con `Ctrl+R` y revisar en escritorio y teléfono (`360 px`):
+1. **Kit de marca 2.0 (`/admin/marca`):** paleta y reglas de tipografía/grillas visibles; probar botones de **Probar aviso** (Snackbar arriba a la derecha), **Probar error** y **Abrir modal `<dialog>`** (cierra con Escape).
+2. **Menú y fusiones del Admin Panel:**
+   - Menú lateral en 6 grupos sin cortar `Marketing y Contenido`, `Mi seguridad` abajo para todos los roles, y cabecera sin píldora fija ni hash crudo en el pie;
+   - **Clientes:** pestañas `Clientes | Verificaciones de empresas` y enlace `Documentos legales` (y `/admin/verifications` redirige ahí);
+   - **Cursos y Creadores:** pestañas `Cursos | Creadores` (y `/admin/creators` redirige ahí);
+   - **Marketing:** `Vitrina y Portada`, `Correos` (`/admin/marketing/correos`), y `Promociones y Sorteo` (`/admin/discount-requests` con la pestaña `Afiliados (en pausa)`);
+   - **Ajustes:** ancho completo, `Documentos legales` en Tu negocio y `Sistema y versiones`.
+3. **Campana de novedades y recarga:** abrir la campana en el header para ver `Mejoras listas en el panel` en lenguaje claro y pulsar **Entendido**.
+4. **Mi panel:** confirmar que `Promotores` ya no sale en el menú de cuentas sin historial (y que `/customer/referrals` muestra el aviso de pausa).
+5. **Vuelta atrás** (si hiciera falta, en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.119 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de rc.119 (G-72; unos 3 minutos)
 Ya en producción (`1.0.0-rc.119|57f0fb51`). Falta confirmar en escritorio y teléfono (`360 px`):

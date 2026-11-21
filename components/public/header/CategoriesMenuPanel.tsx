@@ -15,7 +15,7 @@ const contar = (n: number) => `${n} ${n === 1 ? 'producto' : 'productos'}`;
 
 /** Mega menú de categorías. Se carga solo al abrirlo (los íconos pesan). */
 export default function CategoriesMenuPanel({ categories, departamentos = [], onNavigate }: CategoriesMenuPanelProps) {
-  const sorted = [...categories].sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  const sorted = categories.toSorted((a, b) => a.name.localeCompare(b.name, 'es'));
   const enGrupos = departamentos.length > 0;
 
   return (
@@ -48,24 +48,24 @@ export default function CategoriesMenuPanel({ categories, departamentos = [], on
 
 function CategoryGrid({ categories, onNavigate }: { categories: NavCategory[]; onNavigate: () => void }) {
   return (
-        <ul className="grid grid-cols-3 gap-1 xl:grid-cols-4">
-          {categories.map((category) => (
-            <li key={category.id}>
-              <Link
-                href={`/categorias/${category.slug}`}
-                onClick={onNavigate}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500"
-              >
-                <span className="iconos-marca flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-                  <CategoryIconRenderer iconName={category.icon} className="h-5 w-5" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium text-ink">{category.name}</span>
-                  <span className="block text-xs text-muted">{contar(category.productCount)}</span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+    <ul className="grid grid-cols-3 gap-1 xl:grid-cols-4">
+      {categories.map((category) => (
+        <li key={category.id}>
+          <Link
+            href={`/categorias/${category.slug}`}
+            onClick={onNavigate}
+            className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-500"
+          >
+            <span className="iconos-marca flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+              <CategoryIconRenderer iconName={category.icon} className="h-5 w-5" />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-medium text-ink">{category.name}</span>
+              <span className="block text-xs text-muted">{contar(category.productCount)}</span>
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }

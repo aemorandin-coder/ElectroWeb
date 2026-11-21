@@ -23,7 +23,7 @@ const PESO: Record<string, number> = { alta: 0, media: 1, baja: 3 };
 
 /** Lo más urgente primero; lo que Claude no revisó, en medio; a igual urgencia, lo más nuevo primero */
 export function porUrgencia<T extends ConUrgencia>(lista: T[]): T[] {
-  return [...lista].sort((a, b) =>
+  return lista.toSorted((a, b) =>
     (PESO[a.iaUrgencia ?? ''] ?? 2) - (PESO[b.iaUrgencia ?? ''] ?? 2) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 

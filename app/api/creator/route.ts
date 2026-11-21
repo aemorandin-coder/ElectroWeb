@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       title: `Solicitud de creador · ${String(displayName).slice(0, 80)}`,
       summary: `${String(displayName).slice(0, 80)} quiere publicar cursos`,
       fields: [['Correo', session.user.email], ['Especialidad', typeof expertise === 'string' ? expertise.slice(0, 200) : null]],
-      link: '/admin/creators',
+      link: '/admin/cursos?vista=creadores',
     });
 
     return NextResponse.json(creator, { status: 201 });

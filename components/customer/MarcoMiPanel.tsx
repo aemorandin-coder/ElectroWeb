@@ -29,7 +29,7 @@ const MENU = [
   { href: '/customer/reviews', icon: IconoEstrella, label: 'Mis reseñas', soloSi: 'resenas' as const },
   { href: '/customer/documentos', icon: IconoDocumento, label: 'Mis documentos' },
   { href: '/customer/mis-cursos', icon: IconoCursos, label: 'Mis cursos', soloSi: 'cursos' as const },
-  { href: '/customer/referrals', icon: IconoRegalo, label: 'Promotores' },
+  { href: '/customer/referrals', icon: IconoRegalo, label: 'Promotores', soloSi: 'promotor' as const },
   { href: '/customer/profile', icon: IconoCuenta, label: 'Mi perfil' },
 ];
 
@@ -45,7 +45,7 @@ export default function MarcoMiPanel({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const { settings: companySettings } = useSettings();
   const [userImage, setUserImage] = useState<string | null>(null);
-  const [usa, setUsa] = useState<{ cotizaciones: number; cursos: number; resenas: number } | null>(null);
+  const [usa, setUsa] = useState<{ cotizaciones: number; cursos: number; resenas: number; promotor: number } | null>(null);
 
   // Escritorio: menú fijo que se puede ocultar. Móvil: cajón cerrado que se cierra al navegar
   // (se guarda la ruta en la que se abrió, así no hace falta un efecto para cerrarlo). Igual que el admin (C-52).
@@ -79,7 +79,7 @@ export default function MarcoMiPanel({ children }: { children: React.ReactNode }
         // La foto que sube el cliente queda en user.image; profile.avatar es de cuentas viejas (C-80: antes leía profile.image, que no existe)
         const imagen = data?.user?.image || data?.profile?.avatar;
         if (!cancelado && imagen) setUserImage(imagen);
-        if (!cancelado && data?.menu) setUsa({ cotizaciones: Number(data.menu.cotizaciones) || 0, cursos: Number(data.menu.cursos) || 0, resenas: Number(data.menu.resenas) || 0 });
+        if (!cancelado && data?.menu) setUsa({ cotizaciones: Number(data.menu.cotizaciones) || 0, cursos: Number(data.menu.cursos) || 0, resenas: Number(data.menu.resenas) || 0, promotor: Number(data.menu.promotor) || 0 });
       })
       .catch(() => { /* la foto es opcional */ });
     return () => { cancelado = true; };

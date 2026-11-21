@@ -1,15 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import { mensajeError } from '@/lib/admin/respuesta';
 import { IconoAbrirAparte, IconoActualizar, IconoCerrar, IconoCheck, IconoConfirmado, IconoEliminar, IconoEstrella, IconoLista, IconoRechazado, IconoReloj } from '@/components/iconos';
 import Filtros from '@/components/admin/Filtros';
+import ModalDialog from '@/components/ui/ModalDialog';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
-import { useMontado } from '@/lib/hooks/useMontado';
 import { REVIEW_STATUS_LABEL, reviewStatus, type ReviewStatus } from '@/lib/review-status';
 import {
     adminBadge,
@@ -22,12 +20,11 @@ import {
     adminModalBody,
     adminModalFooter,
     adminModalHeader,
-    adminModalOverlay,
-    adminModalPanel,
     adminModalTitle,
     adminPageHeader,
     adminPageSubtitle,
     adminPageTitle,
+    adminRowZebra,
     adminSecondaryButton,
     adminSpinner,
     adminSuccessButton,
@@ -79,15 +76,12 @@ function Estrellas({ rating }: { rating: number }) {
 
 export default function AdminReviewsPage() {
     const { confirm } = useConfirm();
-    const mounted = useMontado();
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState(true);
     const [filtro, setFiltro] = useState<Filtro>('PENDING');
     const [ocupada, setOcupada] = useState<string | null>(null);
     const [rechazando, setRechazando] = useState<Review | null>(null);
     const [motivo, setMotivo] = useState('');
-
-    useBodyScrollLock(rechazando !== null);
 
     async function fetchReviews() {
         setLoading(true);
@@ -297,7 +291,7 @@ export default function AdminReviewsPage() {
                             </thead>
                             <tbody>
                                 {visibles.map((review) => (
-                                    <tr key={review.id} className="align-top hover:bg-surface">
+                                    <tr key={review.id} className={`${adminRowZebra} align-top`}>
                                         <td className={`${adminTd} max-w-48`}>
                                             <p className="font-medium text-ink">{review.user?.name || 'Cliente'}</p>
                                             {review.user?.email && <p className="truncate text-xs text-muted">{review.user.email}</p>}
@@ -319,9 +313,14 @@ export default function AdminReviewsPage() {
                 </>
             )}
 
-            {mounted && rechazando && createPortal(
-                <div className={adminModalOverlay} onClick={(e) => { if (e.target === e.currentTarget) setRechazando(null); }}>
-                    <div className={`${adminModalPanel} sm:max-w-md`} role="dialog" aria-modal="true" aria-labelledby="rechazo-titulo">
+            <ModalDialog
+                open={Boolean(rechazando)}
+                onClose={() => setRechazando(null)}
+                ariaLabelledBy="rechazo-titulo"
+                size="md"
+            >
+                {rechazando && (
+                    <>
                         <div className={adminModalHeader}>
                             <h2 id="rechazo-titulo" className={adminModalTitle}>
                                 {rechazando.isApproved ? 'Retirar reseña publicada' : 'Rechazar reseña'}
@@ -354,10 +353,9 @@ export default function AdminReviewsPage() {
                                 <IconoCerrar className="h-4 w-4" aria-hidden="true" /> {rechazando.isApproved ? 'Retirar' : 'Rechazar'}
                             </button>
                         </div>
-                    </div>
-                </div>,
-                document.body
-            )}
+                    </>
+                )}
+            </ModalDialog>
         </div>
     );
 }

@@ -103,6 +103,7 @@ export function StylesBar({ studio }: { studio: Studio }) {
               maxLength={30}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => {
+                if (e.nativeEvent.isComposing || e.keyCode === 229) return;
                 if (e.key === 'Enter') save();
                 if (e.key === 'Escape') setNaming(false);
               }}

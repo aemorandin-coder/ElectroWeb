@@ -1,7 +1,21 @@
-# components/ui — Componentes base de la tienda (C-12)
+# components/ui — Componentes base de la tienda (C-12 · Kit 2.0)
 
 Reglas: solo tokens de `PLAN.md` §1 (sin hex), breakpoint único `lg`, nada que dependa del hover y texto seleccionable.
-Precios siempre con `lib/currency.ts`. Página de muestra en desarrollo: **`/dev/ui`** (en producción responde 404).
+Botones, sellos, avisos, tablas y pestañas viven en `lib/admin-ui.ts` y `lib/marca.ts` (los componentes obsoletos `Button`, `Modal`, `Badge`, `StatusBadge`, `ErrorState` y `LoadingSpinner` fueron retirados en G-73).
+Precios siempre con `lib/currency.ts`.
+
+## ModalDialog
+Modal nativo en Top Layer sobre `<dialog>` y `.showModal()` (`closedby` y fallback de clic afuera, sin scroll-lock manual).
+```tsx
+import ModalDialog from '@/components/ui/ModalDialog';
+
+<ModalDialog open={abierto} onClose={() => setAbierto(false)} ariaLabelledBy="titulo" size="md">
+  …
+</ModalDialog>
+```
+
+## ElectroToaster
+Sistema único de notificaciones emergentes en Top Layer (`popover="manual"`) conectado a `react-hot-toast` (`toast.success`, `toast.error`, `toast.custom`). Montado globalmente en `app/providers.tsx`.
 
 ## Container
 Ancho máximo de la tienda y márgenes laterales.

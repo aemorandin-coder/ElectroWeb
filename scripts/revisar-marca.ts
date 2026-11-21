@@ -24,6 +24,26 @@ const REGLAS: Array<{ id: string; rx: RegExp; por: string }> = [
   { id: 'oscuro', rx: /\b(?:bg|from|to|via|border)-brand-(?:800|900)\b/, por: 'ningún fondo más oscuro que brand-700, el azul oscuro del logo' },
   { id: 'ambar', rx: /\b(?:bg|border|from|to|via)-(?:warning|amber|yellow|orange)(?:-[a-z0-9]+)?(?:\/\d+)?\b/, por: 'ningún contenedor ámbar (PLAN.md §1.1): lo que hay que hacer va en el azul claro con la placa azul' },
   { id: 'otros', rx: /\b(?:bg|text|border|from|to|via)-(?:indigo|violet|purple|pink|fuchsia|cyan|sky|teal)-\d{2,3}\b/, por: 'colores que no son de la marca' },
+  {
+    id: 'verde-claro-texto',
+    rx: /(?:\bbg-success(?![-\/])[^"'`]*\btext-white\b|\btext-white\b[^"'`]*\bbg-success(?![-\/])|\bhover:bg-success(?![-\/])[^"'`]*\btext-white\b|\btext-white\b[^"'`]*\bhover:bg-success(?![-\/])|\bbg-success\s+bg-success\b)/,
+    por: 'nunca texto blanco sobre verde claro bg-success: usa bg-success-strong (contraste >= 4.5:1)',
+  },
+  {
+    id: 'ui-obsoleto',
+    rx: /@\/components\/ui\/(?:Button|Modal|Badge|StatusBadge|ErrorState|LoadingSpinner)\b/,
+    por: 'componente legacy eliminado en Kit 2.0: usa lib/admin-ui.ts o ModalDialog',
+  },
+  {
+    id: 'micro-texto',
+    rx: /\btext-\[(?:[7-9]|10)px\]/,
+    por: 'tipografía menor a 11 px prohibida (PLAN.md §1.2): mínimo text-xs (12 px) o 11 px en casos puntuales',
+  },
+  {
+    id: 'peso-excesivo',
+    rx: /\bfont-(?:black|extrabold)\b/,
+    por: 'font-black y font-extrabold prohibidos (PLAN.md §1.2): usa font-bold como máximo',
+  },
 ];
 
 function archivos(dir: string): string[] {

@@ -219,7 +219,7 @@ export default function AdminDigitalCodesPage() {
         return (
             <div className="text-center py-12">
                 <IconoError className="w-16 h-16 text-deal mx-auto mb-4" />
-                <h1 className="text-xl font-bold text-ink mb-2">Orden no encontrada</h1>
+                <h1 className={`${adminPageTitle} mb-2`}>Orden no encontrada</h1>
                 <Link href="/admin/orders" className="text-brand-600 hover:underline">
                     Volver a órdenes
                 </Link>
@@ -232,7 +232,7 @@ export default function AdminDigitalCodesPage() {
     const completedItems = data.digitalItems.filter(item => item.codes.length >= item.quantity);
 
     return (
-        <div className="max-w-5xl">
+        <div className="min-w-0">
             {/* Header */}
             <div className="mb-6">
                 <Link

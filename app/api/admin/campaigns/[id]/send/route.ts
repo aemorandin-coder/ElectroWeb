@@ -67,7 +67,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     type: 'EMAIL_CAMPAIGN_STARTED',
     title: `Campaña enviándose · ${campana.subject}`.slice(0, 150),
     summary: `${session?.user?.name || 'Un administrador'} empezó a enviar una campaña a ${usuarios.length} clientes`,
-    link: '/admin/marketing#campanas',
+    link: '/admin/marketing/correos#campanas',
   });
   return NextResponse.json({ status: 'SENDING', totalRecipients: usuarios.length });
 }

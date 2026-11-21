@@ -34,9 +34,9 @@ export const PENDIENTES: Pendiente[] = [
   { clave: 'sinStock', uno: 'producto publicado sin existencias', varios: 'productos publicados sin existencias', cortoUno: '1 producto agotado', cortoVarios: 'productos agotados', href: '/admin/products', icono: 'Paquete', permiso: 'MANAGE_PRODUCTS' },
   { clave: 'resenas', uno: 'reseña por moderar', varios: 'reseñas por moderar', cortoUno: '1 reseña', cortoVarios: 'reseñas', href: '/admin/reviews', icono: 'Estrella', permiso: 'MANAGE_CONTENT' },
   { clave: 'descuentos', uno: 'descuento por aprobar', varios: 'descuentos por aprobar', cortoUno: '1 descuento', cortoVarios: 'descuentos', href: '/admin/discount-requests', icono: 'Porcentaje', permiso: 'MANAGE_CONTENT' },
-  { clave: 'verificaciones', uno: 'empresa por verificar', varios: 'empresas por verificar', cortoUno: '1 empresa', cortoVarios: 'empresas', href: '/admin/verifications', icono: 'Garantia', permiso: 'MANAGE_USERS' },
-  { clave: 'referidos', uno: 'comisión de promotor por aprobar', varios: 'comisiones de promotores por aprobar', cortoUno: '1 comisión', cortoVarios: 'comisiones', href: '/admin/marketing', icono: 'Compartir', permiso: 'MANAGE_CONTENT' },
-  { clave: 'creadores', uno: 'solicitud de creador de cursos', varios: 'solicitudes de creadores de cursos', cortoUno: '1 creador', cortoVarios: 'creadores', href: '/admin/creators', icono: 'Clientes', permiso: 'MANAGE_USERS' },
+  { clave: 'verificaciones', uno: 'empresa por verificar', varios: 'empresas por verificar', cortoUno: '1 empresa', cortoVarios: 'empresas', href: '/admin/customers?vista=verificaciones', icono: 'Garantia', permiso: 'MANAGE_USERS' },
+  { clave: 'referidos', uno: 'comisión de promotor por aprobar', varios: 'comisiones de promotores por aprobar', cortoUno: '1 comisión', cortoVarios: 'comisiones', href: '/admin/discount-requests?vista=afiliados', icono: 'Compartir', permiso: 'MANAGE_CONTENT' },
+  { clave: 'creadores', uno: 'solicitud de creador de cursos', varios: 'solicitudes de creadores de cursos', cortoUno: '1 creador', cortoVarios: 'creadores', href: '/admin/cursos?vista=creadores', icono: 'Clientes', permiso: 'MANAGE_USERS' },
   { clave: 'cursos', uno: 'curso por aprobar', varios: 'cursos por aprobar', cortoUno: '1 curso', cortoVarios: 'cursos', href: '/admin/cursos', icono: 'ServicioTecnico', permiso: 'MANAGE_CONTENT' },
 ];
 

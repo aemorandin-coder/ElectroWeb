@@ -157,7 +157,7 @@ export default function BusquedaWeb({ data, onChange }: Props) {
             value={texto}
             maxLength={150}
             onChange={(e) => setConsulta(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void buscar(); } }}
+            onKeyDown={(e) => { if (e.nativeEvent.isComposing || e.keyCode === 229) return; if (e.key === 'Enter') { e.preventDefault(); void buscar(); } }}
             placeholder="Nombre y modelo, por ejemplo: Teclado Redragon Kumara K552"
             className={wizardInput()}
           />

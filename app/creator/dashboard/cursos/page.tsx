@@ -5,7 +5,7 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { IconoAbrirAparte, IconoMas } from '@/components/iconos';
-import { adminPageHeader, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
+import { adminBadge, adminPageHeader, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 import { formatRating } from '@/lib/currency';
 
 type Course = {
@@ -102,11 +102,7 @@ export default function CreatorCoursesPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-2">
                     <h3 className="text-ink font-bold">{course.title}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                      course.isActive
-                        ? 'bg-success/15 text-success-strong'
-                        : 'bg-brand-50 text-brand-700'
-                    }`}>
+                    <span className={adminBadge(course.isActive ? 'success' : 'brand')}>
                       {course.isActive ? 'Activo' : 'En revisión'}
                     </span>
                     {course.category && (

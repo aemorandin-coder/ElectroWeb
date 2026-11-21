@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 import { IconoCandado, IconoCheck } from '@/components/iconos';
 import StarRating from './StarRating';
-import { Button } from '@/components/ui/Button';
+import { adminPrimaryButton } from '@/lib/admin-ui';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 
 interface ReviewFormProps {
@@ -139,15 +139,13 @@ export default function ReviewForm({ productId, onReviewSubmitted }: ReviewFormP
                 </p>
             </div>
 
-            <Button
+            <button
                 type="submit"
-                variant="primary"
-                isLoading={isSubmitting}
                 disabled={isSubmitting}
-                className="w-full"
+                className={`${adminPrimaryButton} w-full`}
             >
-                Enviar Reseña
-            </Button>
+                {isSubmitting ? 'Enviando…' : 'Enviar Reseña'}
+            </button>
         </form>
     );
 }

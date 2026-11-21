@@ -217,7 +217,7 @@ function SesionesAbiertas() {
     }
     const data = await res.json();
     setActualConNombre(data.actualConNombre);
-    setSesiones([...data.sesiones].sort((a: SesionAbierta, b: SesionAbierta) => Number(b.actual) - Number(a.actual)));
+    setSesiones(data.sesiones.toSorted((a: SesionAbierta, b: SesionAbierta) => Number(b.actual) - Number(a.actual)));
   };
   useCargarAlMontar(() => void cargar(), []);
 

@@ -18,9 +18,10 @@ import {
   IconoCuenta, IconoEnviar, IconoError, IconoGarantia, IconoMaletin, IconoNovedad, IconoPausa, IconoPuntosEs, IconoReloj,
 } from '@/components/iconos';
 import { EmptyState } from '@/components/ui/EmptyState';
+import VerificacionesPanel from './_components/VerificacionesPanel';
 import {
-  adminBadge, adminCardFlush, adminDato, adminIconButton, adminIconChip, adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle, adminTableWrap,
-  adminSecondaryButton, adminTh,
+  adminBadge, adminCardFlush, adminDato, adminIconButton, adminIconChip, adminInput, adminNotice, adminPageHeader, adminPageSubtitle, adminPageTitle,
+  adminRowZebra, adminSecondaryButton, adminTab, adminTableWrap, adminTh,
 } from '@/lib/admin-ui';
 import { fechaCorta, haceCuanto } from '@/lib/clientes/fechas';
 import type { FiltroClientes } from '@/lib/clientes/lista';
@@ -57,6 +58,7 @@ function UltimoIngreso({ fila }: { fila: FilaCliente }) {
 }
 
 export default function ClientesPage() {
+  const [vista, setVista] = useState<'clientes' | 'verificaciones'>('clientes');
   const [filtro, setFiltro] = useState<FiltroClientes>('todos');
   const [texto, setTexto] = useState('');
   const [busqueda, setBusqueda] = useState('');
@@ -67,6 +69,33 @@ export default function ClientesPage() {
   const [error, setError] = useState('');
   const [vuelta, setVuelta] = useState(0);
   const [pendientes, setPendientes] = useState(0);
+
+  useEffect(() => {
+    const leerVista = () => {
+      const p = new URLSearchParams(window.location.search).get('vista');
+      setVista(p === 'verificaciones' ? 'verificaciones' : 'clientes');
+    };
+    const t = window.setTimeout(leerVista, 0);
+    window.addEventListener('popstate', leerVista);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener('popstate', leerVista);
+    };
+  }, []);
+
+  const cambiarVista = (next: 'clientes' | 'verificaciones') => {
+    setVista(next);
+    const url = new URL(window.location.href);
+    if (next === 'verificaciones') url.searchParams.set('vista', 'verificaciones');
+    else url.searchParams.delete('vista');
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+  };
+
+  const refrescarPendientes = () => {
+    fetch('/api/admin/verifications/pending-count')
+      .then(async (r) => { if (r.ok) setPendientes((await r.json()).count || 0); })
+      .catch(() => toast.error('No se pudo cargar el conteo de verificaciones'));
+  };
 
   // La búsqueda va al servidor cuando se deja de escribir (antes pedía en cada tecla)
   useEffect(() => {
@@ -103,7 +132,7 @@ export default function ClientesPage() {
     { valor: 'nuevos', etiqueta: 'Nuevos', ayuda: 'Este mes', Icono: IconoNovedad, cuenta: c?.nuevos },
     { valor: 'sin-activar', etiqueta: 'Sin activar', ayuda: 'No abrieron el correo', Icono: IconoCorreo, cuenta: c?.['sin-activar'], tono: c?.['sin-activar'] ? 'aviso' : undefined },
     { valor: 'con-pedidos', etiqueta: 'Con pedidos', ayuda: 'Compraron alguna vez', Icono: IconoCarrito, cuenta: c?.['con-pedidos'] },
-    { valor: 'con-puntos', etiqueta: 'Con Puntos ES', ayuda: 'Tienen saldo', Icono: IconoPuntosEs, cuenta: c?.['con-puntos'] },
+    { valor: 'con-puntos', etiqueta: 'Con Puntos ES', ayuda: 'Tienen Puntos ES', Icono: IconoPuntosEs, cuenta: c?.['con-puntos'] },
     { valor: 'empresas', etiqueta: 'Empresas', ayuda: 'Por verificar', Icono: IconoMaletin, cuenta: c?.empresas, tono: c?.empresas ? 'aviso' : undefined },
     { valor: 'dormidos', etiqueta: 'Dormidos', ayuda: 'Sin entrar en 30 días', Icono: IconoReloj, cuenta: c?.dormidos },
     ...(c?.suspendidos || filtro === 'suspendidos' ? [{ valor: 'suspendidos' as const, etiqueta: 'Suspendidos', ayuda: 'No pueden entrar', Icono: IconoPausa, cuenta: c?.suspendidos }] : []),
@@ -114,7 +143,7 @@ export default function ClientesPage() {
   const hasta = datos ? Math.min(datos.total, datos.pagina * POR_PAGINA) : 0;
 
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 space-y-5">
       <div className={adminPageHeader}>
         <div className="flex items-center gap-3">
           <div className={`${adminIconChip('brand')} hidden sm:flex`}>
@@ -122,34 +151,63 @@ export default function ClientesPage() {
           </div>
           <div>
             <h1 className={adminPageTitle}>Clientes</h1>
-            <p className={adminPageSubtitle}>Quién es cada uno, qué compra y qué le falta.</p>
+            <p className={adminPageSubtitle}>Quién es cada uno, qué compra y verificación de empresas.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/admin/verifications" className={adminSecondaryButton} title="Verificaciones de empresas">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href="/admin/legal" className={adminSecondaryButton} title="Términos, privacidad y firmas">
             <IconoGarantia className="h-4 w-4" aria-hidden="true" />
-            <span>Verificaciones</span>
-            {pendientes > 0 && (
-              <span className={adminBadge('warning')}>
-                {pendientes > 99 ? '99+' : pendientes}
-                <span className="sr-only"> por verificar</span>
-              </span>
-            )}
+            <span>Documentos legales</span>
           </Link>
-          <button type="button" onClick={() => setVuelta((v) => v + 1)} className={`${adminSecondaryButton} w-11 px-0!`} aria-label="Actualizar clientes" title="Actualizar">
-            <IconoActualizar className={`h-5 w-5 text-muted ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
-          </button>
+          {vista === 'clientes' && (
+            <button type="button" onClick={() => setVuelta((v) => v + 1)} className={`${adminSecondaryButton} w-11 px-0!`} aria-label="Actualizar clientes" title="Actualizar">
+              <IconoActualizar className={`h-5 w-5 text-muted ${cargando ? 'animate-spin' : ''}`} aria-hidden="true" />
+            </button>
+          )}
         </div>
       </div>
 
-      {error && (
-        <div className={`${adminNotice('danger')} mb-4 flex items-center gap-2`} role="alert">
-          <IconoError className="h-5 w-5 shrink-0" aria-hidden="true" />
-          {error}
-        </div>
-      )}
+      <div className="scrollbar-hide flex max-w-full gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Secciones de clientes">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={vista === 'clientes'}
+          onClick={() => cambiarVista('clientes')}
+          className={adminTab(vista === 'clientes')}
+        >
+          <IconoClientes className="h-4 w-4" aria-hidden="true" />
+          Clientes
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={vista === 'verificaciones'}
+          onClick={() => cambiarVista('verificaciones')}
+          className={adminTab(vista === 'verificaciones')}
+        >
+          <IconoGarantia className="h-4 w-4" aria-hidden="true" />
+          Verificaciones de empresas
+          {pendientes > 0 && (
+            <span className={adminBadge(vista === 'verificaciones' ? 'neutral' : 'warning')}>
+              {pendientes > 99 ? '99+' : pendientes}
+              <span className="sr-only"> por verificar</span>
+            </span>
+          )}
+        </button>
+      </div>
 
-      <div className="grid gap-4">
+      {vista === 'verificaciones' ? (
+        <VerificacionesPanel onActualizado={refrescarPendientes} />
+      ) : (
+        <>
+          {error && (
+            <div className={`${adminNotice('danger')} flex items-center gap-2`} role="alert">
+              <IconoError className="h-5 w-5 shrink-0" aria-hidden="true" />
+              {error}
+            </div>
+          )}
+
+          <div className="grid gap-4">
         <label className="relative block">
           <span className="sr-only">Buscar clientes</span>
           <IconoBuscar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
@@ -187,7 +245,7 @@ export default function ClientesPage() {
                 </thead>
                 <tbody>
                   {filas.map((f) => (
-                    <tr key={f.id} className="relative border-t border-line hover:bg-surface">
+                    <tr key={f.id} className={`${adminRowZebra} relative border-t border-line`}>
                       <td className="px-4 py-3">
                         <div className="flex min-w-0 items-center gap-3">
                           <Avatar fila={f} />
@@ -274,7 +332,9 @@ export default function ClientesPage() {
             </div>
           </>
         )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

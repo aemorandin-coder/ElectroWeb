@@ -2,7 +2,7 @@
 import {
   IconoActualizar, IconoAdvertencia, IconoBillete, IconoBolsa, IconoClientes, IconoConfirmado, IconoCorreo, IconoCursos,
   IconoChat, IconoCupon, IconoDocumento, IconoEntrar, IconoEntregado, IconoEnviar, IconoEnvio, IconoEstrella, IconoFavoritos, IconoGarantia,
-  IconoGiftCard, IconoMaletin, IconoNotificaciones, IconoOferta, IconoPaquete, IconoPorcentaje, IconoRechazado,
+  IconoGiftCard, IconoMaletin, IconoNotificaciones, IconoNovedad, IconoOferta, IconoPaquete, IconoPorcentaje, IconoRechazado,
   IconoRegistrarse, IconoServicioTecnico, IconoTarjeta,
 } from '@/components/iconos';
 import type { IconType } from '@/components/iconos';
@@ -62,6 +62,8 @@ const EVENT_META: Partial<Record<string, Meta>> = {
   SORTEO: { Icon: IconoCupon, tone: 'brand' },
   // C-276: un mensaje del equipo desde la ficha del cliente
   MENSAJE_EQUIPO: { Icon: IconoChat, tone: 'brand' },
+  // G-73 (V1): actualización del sistema en la Campana
+  SYSTEM_UPDATE: { Icon: IconoNovedad, tone: 'brand' },
 };
 
 export function notificationMeta(type: string): Meta {

@@ -62,7 +62,7 @@ export default function ProveedorCampos({ data, onChange, errors }: {
               aria-describedby="p-proveedor-hint"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void agregar(); } }}
+              onKeyDown={(e) => { if (e.nativeEvent.isComposing || e.keyCode === 229) return; if (e.key === 'Enter') { e.preventDefault(); void agregar(); } }}
               placeholder="Nombre del proveedor"
               maxLength={80}
               className={`${wizardInput(false)} min-w-0 flex-1`}

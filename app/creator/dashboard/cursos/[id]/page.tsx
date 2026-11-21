@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
+import { adminBadge, adminNotice, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 import ImageUploadField from '@/components/ui/ImageUploadField';
 import { IconoCerrar, IconoFlechaIzquierda } from '@/components/iconos';
 
@@ -144,15 +144,13 @@ export default function EditCreatorCoursePage({ params }: { params: Promise<{ id
           </Link>
           <h1 className={`${adminPageTitle} break-words`}>{course.title}</h1>
           <div className="flex items-center gap-2 mt-1">
-            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-              course.isActive ? 'bg-success/15 text-success-strong' : 'bg-brand-50 text-brand-700'
-            }`}>
+            <span className={adminBadge(course.isActive ? 'success' : 'brand')}>
               {course.isActive ? 'Activo' : 'En revisión por admin'}
             </span>
           </div>
         </div>
         {msg && (
-          <div className="px-4 py-2 bg-success/15 border border-success/30 rounded-xl text-success-strong text-sm font-semibold">
+          <div className={`${adminNotice('success')} py-2 font-semibold`} role="status">
             {msg}
           </div>
         )}

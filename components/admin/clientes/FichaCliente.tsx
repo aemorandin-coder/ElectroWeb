@@ -330,7 +330,7 @@ export default function FichaCliente({ ficha, yo }: { ficha: Ficha; yo: string |
               </Fila>
               {f.empresa && (
                 <Fila Icono={IconoMaletin} tono={f.empresa.estado === 'APPROVED' ? 'si' : f.empresa.estado === 'PENDING' ? 'falta' : 'gris'} titulo={f.empresa.estado === 'APPROVED' ? 'Empresa verificada' : f.empresa.estado === 'PENDING' ? 'Empresa por verificar' : f.empresa.estado === 'REJECTED' ? 'Empresa rechazada' : 'Empresa sin verificar'} detalle={f.empresa.nombre ?? undefined}>
-                  {f.empresa.estado === 'PENDING' && <Link href="/admin/verifications" className={`${adminSecondaryButton} h-8! px-2.5! text-xs!`}>Revisar</Link>}
+                  {f.empresa.estado === 'PENDING' && <Link href="/admin/customers?vista=verificaciones" className={`${adminSecondaryButton} h-8! px-2.5! text-xs!`}>Revisar</Link>}
                 </Fila>
               )}
             </ul>

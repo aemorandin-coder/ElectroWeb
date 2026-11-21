@@ -2,7 +2,7 @@
 // Solo los del pack de Electro Shop (components/iconos). Sirve en el servidor y en el navegador.
 import {
   IconoAdministrador, IconoAdvertencia, IconoBandeja, IconoBaseDeDatos, IconoBillete, IconoCalendario, IconoChat, IconoClaqueta,
-  IconoClientes, IconoCompartir, IconoConfiguracion, IconoCuadricula, IconoCupon, IconoDocumento, IconoEnvio, IconoEnVivo,
+  IconoClientes, IconoCompartir, IconoConfiguracion, IconoCorreo, IconoCuadricula, IconoCupon, IconoDocumento, IconoEnvio, IconoEnVivo,
   IconoEstrella, IconoFiltro, IconoGarantia, IconoMaletin, IconoMas, IconoObjetivo, IconoOrdenes, IconoPaquete, IconoPorcentaje,
   IconoPremio, IconoPuntero, IconoRecargarPuntos, IconoReportes, IconoSalvavidas, IconoServicioTecnico, IconoSubir, IconoTienda,
   IconoVariantes, IconoVentas,
@@ -13,7 +13,7 @@ import type { IconType, IconoProps } from '@/components/iconos/base';
 const ICONOS: Record<string, IconType> = {
   Administrador: IconoAdministrador, Advertencia: IconoAdvertencia, Bandeja: IconoBandeja, BaseDeDatos: IconoBaseDeDatos, Billete: IconoBillete,
   Calendario: IconoCalendario, Chat: IconoChat, Claqueta: IconoClaqueta, Clientes: IconoClientes, Compartir: IconoCompartir,
-  Configuracion: IconoConfiguracion, Cuadricula: IconoCuadricula, Cupon: IconoCupon, Documento: IconoDocumento, Envio: IconoEnvio,
+  Configuracion: IconoConfiguracion, Correo: IconoCorreo, Cuadricula: IconoCuadricula, Cupon: IconoCupon, Documento: IconoDocumento, Envio: IconoEnvio,
   EnVivo: IconoEnVivo, Estrella: IconoEstrella, Filtro: IconoFiltro, Garantia: IconoGarantia, Maletin: IconoMaletin, Mas: IconoMas,
   Objetivo: IconoObjetivo, Ordenes: IconoOrdenes, Paquete: IconoPaquete, Porcentaje: IconoPorcentaje, Premio: IconoPremio, Puntero: IconoPuntero,
   RecargarPuntos: IconoRecargarPuntos, Reportes: IconoReportes, Salvavidas: IconoSalvavidas, ServicioTecnico: IconoServicioTecnico,

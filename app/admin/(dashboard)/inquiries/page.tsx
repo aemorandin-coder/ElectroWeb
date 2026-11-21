@@ -1,7 +1,11 @@
 'use client';
 
-import { adminBadge, adminInput, adminModalOverlay, adminModalPanel } from '@/lib/admin-ui';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import {
+  adminBadge, adminCard, adminCardFlush, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter,
+  adminModalHeader, adminModalTitle, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton,
+  adminSecondaryButton, adminSpinner, adminTab,
+} from '@/lib/admin-ui';
+import ModalDialog from '@/components/ui/ModalDialog';
 import { formatUSD } from '@/lib/currency';
 
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
@@ -16,7 +20,6 @@ import {
   IconoConfirmado, IconoEliminar, IconoLista, IconoPaquete, IconoRechazado, IconoReloj, IconoTelefono, IconoVer,
 } from '@/components/iconos';
 import Filtros from '@/components/admin/Filtros';
-import { Button } from '@/components/ui/Button';
 import { toast } from 'react-hot-toast';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import { mensajeError } from '@/lib/admin/respuesta';
@@ -95,7 +98,6 @@ export default function InquiriesPage() {
     const [selectedRequest, setSelectedRequest] = useState<ProductRequest | null>(null);
     const [requestFilterStatus, setRequestFilterStatus] = useState('all');
     const [requestModal, setRequestModal] = useState(false);
-    useBodyScrollLock(requestModal);
     const [adminNotes, setAdminNotes] = useState('');
     const [newStatus, setNewStatus] = useState('');
 
@@ -326,89 +328,83 @@ export default function InquiriesPage() {
     // ============== RENDER ==============
 
     return (
-        <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className="flex-shrink-0 mb-6">
-                <div className="flex items-center justify-between mb-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-ink">Mensajes y Solicitudes</h1>
-                        <p className="text-sm text-muted mt-1">Mensajes de contacto y solicitudes de productos de los clientes</p>
-                    </div>
-                </div>
-
-                {/* Tabs */}
-                <div className="flex max-w-full gap-2 overflow-x-auto rounded-xl bg-surface p-1 sm:w-fit">
-                    <button
-                        onClick={() => setActiveTab('messages')}
-                        className={`shrink-0 whitespace-nowrap px-4 sm:px-6 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${activeTab === 'messages'
-                                ? 'bg-white text-brand-500 shadow-sm'
-                                : 'text-muted hover:text-ink'
-                            }`}
-                    >
-                        <IconoChat className="w-4 h-4" />
-                        Mensajes
-                        {messageStats.pending > 0 && (
-                            <span className="w-5 h-5 bg-brand-500 text-white text-xs rounded-full flex items-center justify-center">
-                                {messageStats.pending}
-                            </span>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('requests')}
-                        className={`shrink-0 whitespace-nowrap px-4 sm:px-6 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${activeTab === 'requests'
-                                ? 'bg-white text-brand-500 shadow-sm'
-                                : 'text-muted hover:text-ink'
-                            }`}
-                    >
-                        <IconoPaquete className="w-4 h-4" />
-                        Solicitudes de Productos
-                        {requestStats.pending > 0 && (
-                            <span className="w-5 h-5 bg-brand-500 text-white text-xs rounded-full flex items-center justify-center">
-                                {requestStats.pending}
-                            </span>
-                        )}
-                    </button>
+        <div className="min-w-0 space-y-5">
+            <div className={adminPageHeader}>
+                <div>
+                    <h1 className={adminPageTitle}>Mensajes y Solicitudes</h1>
+                    <p className={adminPageSubtitle}>Mensajes de contacto y solicitudes de productos de los clientes.</p>
                 </div>
             </div>
 
+            {/* Tabs */}
+            <div className="scrollbar-hide flex max-w-full gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Buzones de atención">
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === 'messages'}
+                    onClick={() => setActiveTab('messages')}
+                    className={adminTab(activeTab === 'messages')}
+                >
+                    <IconoChat className="h-4 w-4" aria-hidden="true" />
+                    Mensajes
+                    {messageStats.pending > 0 && (
+                        <span className={adminBadge(activeTab === 'messages' ? 'neutral' : 'warning')}>
+                            {messageStats.pending}
+                        </span>
+                    )}
+                </button>
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === 'requests'}
+                    onClick={() => setActiveTab('requests')}
+                    className={adminTab(activeTab === 'requests')}
+                >
+                    <IconoPaquete className="h-4 w-4" aria-hidden="true" />
+                    Solicitudes de Productos
+                    {requestStats.pending > 0 && (
+                        <span className={adminBadge(activeTab === 'requests' ? 'neutral' : 'warning')}>
+                            {requestStats.pending}
+                        </span>
+                    )}
+                </button>
+            </div>
+
             {/* Content */}
-            <div className="flex-1 overflow-hidden">
+            <div className="min-w-0">
                 {activeTab === 'messages' && (
-                    // ============== MESSAGES TAB ==============
-                    <div className="h-full flex flex-col">
+                    <div className="space-y-4">
                         {/* Filter */}
-                        <div className="flex-shrink-0 mb-4">
-                            <div className="flex flex-wrap gap-2">
-                                <div className="w-full">
-                                    <Filtros
-                                        etiqueta="Filtrar mensajes"
-                                        valor={messageFilterStatus}
-                                        onCambiar={setMessageFilterStatus}
-                                        filtros={[
-                                            { valor: 'ALL', etiqueta: 'Todos', ayuda: 'Los de la lista', Icono: IconoLista, cuenta: messages.length },
-                                            { valor: 'PENDING', etiqueta: 'Pendientes', ayuda: 'Sin leer', Icono: IconoReloj, tono: 'aviso', cuenta: messageStats.pending },
-                                            { valor: 'READ', etiqueta: 'Leídos', ayuda: 'Falta responder', Icono: IconoVer },
-                                            { valor: 'RESPONDED', etiqueta: 'Respondidos', ayuda: 'Ya tienen respuesta', Icono: IconoConfirmado },
-                                        ]}
-                                    />
-                                </div>
-                                {selectorOrden}
-                                <BotonUrgencia alTerminar={despuesDeOrdenar} />
+                        <div className="flex flex-wrap gap-2">
+                            <div className="w-full">
+                                <Filtros
+                                    etiqueta="Filtrar mensajes"
+                                    valor={messageFilterStatus}
+                                    onCambiar={setMessageFilterStatus}
+                                    filtros={[
+                                        { valor: 'ALL', etiqueta: 'Todos', ayuda: 'Los de la lista', Icono: IconoLista, cuenta: messages.length },
+                                        { valor: 'PENDING', etiqueta: 'Pendientes', ayuda: 'Sin leer', Icono: IconoReloj, tono: 'aviso', cuenta: messageStats.pending },
+                                        { valor: 'READ', etiqueta: 'Leídos', ayuda: 'Falta responder', Icono: IconoVer },
+                                        { valor: 'RESPONDED', etiqueta: 'Respondidos', ayuda: 'Ya tienen respuesta', Icono: IconoConfirmado },
+                                    ]}
+                                />
                             </div>
+                            {selectorOrden}
+                            <BotonUrgencia alTerminar={despuesDeOrdenar} />
                         </div>
 
                         {/* Messages List */}
-                        <div className="flex-1 bg-white rounded-xl border border-line shadow-sm overflow-hidden flex">
+                        <div className={`${adminCardFlush} flex min-h-[28rem]`}>
                             {/* List Sidebar */}
-                            <div className={`w-full md:w-1/3 border-r border-line overflow-y-auto ${selectedMessage ? 'hidden md:block' : 'block'}`}>
+                            <div className={`w-full border-r border-line md:w-1/3 overflow-y-auto ${selectedMessage ? 'hidden md:block' : 'block'}`}>
                                 {messagesLoading ? (
-                                    <div className="h-full flex items-center justify-center">
-                                        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                                    <div className="flex h-64 items-center justify-center">
+                                        <span className={adminSpinner} aria-label="Cargando mensajes" />
                                     </div>
                                 ) : filteredMessages.length === 0 ? (
-                                    <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted">
-                                        <IconoChat className="w-12 h-12 text-subtle mb-3" />
-                                        <p>No hay mensajes</p>
+                                    <div className="flex h-64 flex-col items-center justify-center p-8 text-center text-muted">
+                                        <IconoChat className="mb-3 h-10 w-10 text-subtle" aria-hidden="true" />
+                                        <p className="text-sm">No hay mensajes</p>
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-line">
@@ -421,19 +417,18 @@ export default function InquiriesPage() {
                                                         handleMessageStatusChange(msg.id, 'READ');
                                                     }
                                                 }}
-                                                className={`p-4 cursor-pointer hover:bg-surface transition-colors ${selectedMessage?.id === msg.id ? 'bg-brand-50' : ''
-                                                    } ${msg.status === 'PENDING' ? 'border-l-4 border-brand-500' : ''}`}
+                                                className={`cursor-pointer p-4 transition-colors hover:bg-surface ${selectedMessage?.id === msg.id ? 'bg-brand-50' : ''} ${msg.status === 'PENDING' ? 'border-l-4 border-brand-500' : ''}`}
                                             >
-                                                <div className="flex justify-between items-start mb-1">
+                                                <div className="mb-1 flex items-start justify-between gap-2">
                                                     <h3 className={`text-sm font-semibold ${msg.status === 'PENDING' ? 'text-ink' : 'text-muted'}`}>
                                                         {msg.name}
                                                     </h3>
-                                                    <span className="text-xs text-muted">
+                                                    <span className="shrink-0 text-xs tabular-nums text-muted">
                                                         {format(new Date(msg.createdAt), 'dd MMM', { locale: es })}
                                                     </span>
                                                 </div>
-                                                <p className="text-sm text-ink font-medium truncate mb-1">{msg.subject}</p>
-                                                <p className="text-xs text-muted truncate">{msg.message}</p>
+                                                <p className="mb-1 truncate text-sm font-medium text-ink">{msg.subject}</p>
+                                                <p className="truncate text-xs text-muted">{msg.message}</p>
                                                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                                     <span className={getMessageStatusColor(msg.status)}>
                                                         {getMessageStatusLabel(msg.status)}
@@ -447,32 +442,34 @@ export default function InquiriesPage() {
                             </div>
 
                             {/* Message Detail */}
-                            <div className={`w-full md:w-2/3 bg-surface flex flex-col ${selectedMessage ? 'flex' : 'hidden md:flex'}`}>
+                            <div className={`w-full bg-surface/50 md:w-2/3 flex-col ${selectedMessage ? 'flex' : 'hidden md:flex'}`}>
                                 {selectedMessage ? (
-                                    <div className="h-full flex flex-col">
+                                    <div className="flex h-full flex-col">
                                         {/* Detail Header */}
                                         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line bg-white p-4 md:p-6">
                                             <div>
-                                                <div className="flex items-center gap-3 mb-2">
+                                                <div className="mb-2 flex items-center gap-3">
                                                     <button
+                                                        type="button"
                                                         onClick={() => setSelectedMessage(null)}
-                                                        className="md:hidden p-1 hover:bg-surface rounded-full"
+                                                        aria-label="Volver a la lista"
+                                                        className="rounded-lg p-1.5 hover:bg-surface md:hidden"
                                                     >
-                                                        <IconoChevronIzquierda className="w-5 h-5" />
+                                                        <IconoChevronIzquierda className="h-5 w-5" aria-hidden="true" />
                                                     </button>
-                                                    <h2 className="text-xl font-bold text-ink">{selectedMessage.subject}</h2>
+                                                    <h2 className="text-lg font-bold text-ink text-balance">{selectedMessage.subject}</h2>
                                                 </div>
                                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
                                                     <span className="flex items-center gap-1">
-                                                        <IconoCuenta className="w-4 h-4" />
+                                                        <IconoCuenta className="h-4 w-4" aria-hidden="true" />
                                                         {selectedMessage.name}
                                                     </span>
                                                     <span className="flex min-w-0 items-center gap-1 [overflow-wrap:anywhere]">
-                                                        <IconoCorreo className="w-4 h-4 shrink-0" />
+                                                        <IconoCorreo className="h-4 w-4 shrink-0" aria-hidden="true" />
                                                         {selectedMessage.email}
                                                     </span>
                                                     <span className="flex items-center gap-1">
-                                                        <IconoTelefono className="w-4 h-4" />
+                                                        <IconoTelefono className="h-4 w-4" aria-hidden="true" />
                                                         {selectedMessage.phone}
                                                     </span>
                                                 </div>
@@ -487,42 +484,42 @@ export default function InquiriesPage() {
                                                 )}
                                             </div>
 
-                                            <div className="flex gap-2">
+                                            <div className="flex items-center gap-2">
                                                 <select
                                                     value={selectedMessage.status}
                                                     onChange={(e) => handleMessageStatusChange(selectedMessage.id, e.target.value)}
-                                                    className="px-3 py-1.5 border border-line rounded-lg text-sm focus:outline-none focus:border-brand-500"
+                                                    aria-label="Cambiar estado del mensaje"
+                                                    className={`${adminInput()} w-auto`}
                                                 >
                                                     <option value="PENDING">Pendiente</option>
                                                     <option value="READ">Leído</option>
                                                     <option value="RESPONDED">Respondido</option>
                                                 </select>
                                                 <button
+                                                    type="button"
                                                     onClick={() => handleDeleteMessage(selectedMessage.id)}
-                                                    className="p-2 text-deal bg-deal/10 rounded-lg transition-colors"
+                                                    className={`${adminSecondaryButton} w-11 px-0! text-deal!`}
                                                     title="Eliminar mensaje"
+                                                    aria-label="Eliminar mensaje"
                                                 >
-                                                    <IconoEliminar className="w-5 h-5" />
+                                                    <IconoEliminar className="h-5 w-5" aria-hidden="true" />
                                                 </button>
                                             </div>
                                         </div>
 
                                         {/* Detail Content */}
-                                        <div className="flex-1 overflow-y-auto p-4 md:p-8">
-                                            <div className="min-h-[200px] rounded-xl border border-line bg-white p-5 shadow-sm md:p-8">
-                                                <p className="text-ink whitespace-pre-wrap leading-relaxed">
+                                        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+                                            <div className={`${adminCard} min-h-[12rem]`}>
+                                                <p className="whitespace-pre-wrap leading-relaxed text-ink">
                                                     {selectedMessage.message}
                                                 </p>
                                             </div>
 
-                                            {/* C-214: responder, con o sin el borrador de Claude (key: uno nuevo por mensaje). El botón
-                                                "Responder por Email" de antes vive ahí como "Responder por correo" */}
-                                            <div className="mt-6">
+                                            <div className="mt-5">
                                                 <BorradorRespuesta
                                                     key={selectedMessage.id}
                                                     mensaje={selectedMessage}
                                                     onRespondido={() => {
-                                                        // C-219: lo envió la tienda y la ruta ya lo marcó respondido
                                                         setMessages((lista) => lista.map((m) => (m.id === selectedMessage.id ? { ...m, status: 'RESPONDED' } : m)));
                                                         setSelectedMessage({ ...selectedMessage, status: 'RESPONDED' });
                                                         window.dispatchEvent(new Event('refresh-sidebar-counts'));
@@ -532,9 +529,9 @@ export default function InquiriesPage() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="flex-1 flex flex-col items-center justify-center text-muted p-8">
-                                        <IconoChat className="w-16 h-16 text-subtle mb-4" />
-                                        <p className="text-lg font-medium">Selecciona un mensaje para leer</p>
+                                    <div className="flex flex-1 flex-col items-center justify-center p-8 text-muted">
+                                        <IconoChat className="mb-3 h-12 w-12 text-subtle" aria-hidden="true" />
+                                        <p className="text-base font-medium">Selecciona un mensaje para leer</p>
                                     </div>
                                 )}
                             </div>
@@ -542,226 +539,186 @@ export default function InquiriesPage() {
                     </div>
                 )}
                 {activeTab === 'requests' && (
-                    // ============== REQUESTS TAB ==============
-                    <div className="h-full flex flex-col">
-                        {/* Stats and Filter */}
-                        <div className="flex-shrink-0 space-y-4 mb-4">
-                            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                                <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
-                                    <p className="text-xs text-muted font-medium mb-1">Total</p>
-                                    <p className="text-2xl font-semibold text-ink">{requestStats.total}</p>
-                                </div>
-                                <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
-                                    <p className="text-xs text-muted font-medium mb-1">Pendientes</p>
-                                    <p className="text-2xl font-semibold text-ink">{requestStats.pending}</p>
-                                </div>
-                                <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
-                                    <p className="text-xs text-muted font-medium mb-1">En Progreso</p>
-                                    <p className="text-2xl font-semibold text-ink">{requestStats.inProgress}</p>
-                                </div>
-                                <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
-                                    <p className="text-xs text-muted font-medium mb-1">Cumplidas</p>
-                                    <p className="text-2xl font-semibold text-ink">
-                                        {requests.filter(r => r.status === 'FULFILLED').length}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="bg-white rounded-lg border border-line p-3 shadow-sm">
-                                <Filtros
-                                    etiqueta="Filtrar solicitudes"
-                                    valor={requestFilterStatus}
-                                    onCambiar={setRequestFilterStatus}
-                                    filtros={[
-                                        { valor: 'all', etiqueta: 'Todas', ayuda: 'Las de la lista', Icono: IconoLista, cuenta: requestStats.total },
-                                        { valor: 'PENDING', etiqueta: 'Pendientes', ayuda: 'Esperan respuesta', Icono: IconoReloj, tono: 'aviso', cuenta: requestStats.pending },
-                                        { valor: 'IN_PROGRESS', etiqueta: 'En progreso', ayuda: 'Se están buscando', Icono: IconoPaquete, cuenta: requestStats.inProgress },
-                                        { valor: 'FULFILLED', etiqueta: 'Cumplidas', ayuda: 'Ya se consiguieron', Icono: IconoConfirmado },
-                                        { valor: 'REJECTED', etiqueta: 'Rechazadas', ayuda: 'No se pudieron conseguir', Icono: IconoRechazado },
-                                    ]}
-                                />
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {selectorOrden}
-                                    <BotonUrgencia alTerminar={despuesDeOrdenar} />
-                                </div>
+                    <div className="space-y-4">
+                        <div className={adminCard}>
+                            <Filtros
+                                etiqueta="Filtrar solicitudes"
+                                valor={requestFilterStatus}
+                                onCambiar={setRequestFilterStatus}
+                                filtros={[
+                                    { valor: 'all', etiqueta: 'Todas', ayuda: 'Las de la lista', Icono: IconoLista, cuenta: requestStats.total },
+                                    { valor: 'PENDING', etiqueta: 'Pendientes', ayuda: 'Esperan respuesta', Icono: IconoReloj, tono: 'aviso', cuenta: requestStats.pending },
+                                    { valor: 'IN_PROGRESS', etiqueta: 'En progreso', ayuda: 'Se están buscando', Icono: IconoPaquete, cuenta: requestStats.inProgress },
+                                    { valor: 'FULFILLED', etiqueta: 'Cumplidas', ayuda: 'Ya se consiguieron', Icono: IconoConfirmado, cuenta: requests.filter(r => r.status === 'FULFILLED').length },
+                                    { valor: 'REJECTED', etiqueta: 'Rechazadas', ayuda: 'No se pudieron conseguir', Icono: IconoRechazado },
+                                ]}
+                            />
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                {selectorOrden}
+                                <BotonUrgencia alTerminar={despuesDeOrdenar} />
                             </div>
                         </div>
 
-                        {/* Requests List */}
-                        <div className="flex-1 overflow-y-auto pr-2">
-                            <div className="space-y-3">
-                                {requestsLoading ? (
-                                    <div className="bg-white rounded-lg border border-line p-12 text-center">
-                                        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                                        <p className="text-sm text-muted mt-3">Cargando solicitudes...</p>
-                                    </div>
-                                ) : requests.length === 0 ? (
-                                    <div className="bg-white rounded-lg border border-line p-12 text-center">
-                                        <IconoPaquete className="w-16 h-16 text-subtle mx-auto mb-3" />
-                                        <h3 className="text-lg font-semibold text-ink mb-1">No hay solicitudes</h3>
-                                        <p className="text-sm text-muted">No se encontraron solicitudes de productos</p>
-                                    </div>
-                                ) : (
-                                    (ordenUrgencia ? porUrgencia(requests) : requests).map((request) => (
-                                        <div
-                                            key={request.id}
-                                            className="bg-white rounded-lg border border-line p-4 shadow-sm hover:shadow-md transition-all"
-                                        >
-                                            <div className="flex gap-4">
-                                                {/* C-215: en el teléfono, el ícono deja el ancho al nombre de lo pedido */}
-                                                <div className="hidden flex-shrink-0 sm:block">
-                                                    <div className="w-12 h-12 rounded-lg bg-brand-100 flex items-center justify-center">
-                                                        <IconoPaquete className="w-6 h-6 text-brand-600" />
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-start justify-between gap-3 mb-2">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-2 mb-1">
-                                                                <h3 className="text-base font-semibold text-ink">
-                                                                    {request.productName}
-                                                                </h3>
-                                                                {getRequestStatusBadge(request.status)}
-                                                            </div>
-                                                            <p className="text-sm text-muted mb-2">
-                                                                {request.description}
-                                                            </p>
-                                                            {(request.iaUrgencia || request.iaProducto || request.iaArticulo) && (
-                                                                <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                                                                    <PildoraUrgencia urgencia={request.iaUrgencia} />
-                                                                    <EnLaTienda coincide={request.iaCoincide} producto={request.iaProducto} />
-                                                                    <EnProveedor articulo={request.iaArticulo} />
-                                                                    {request.iaMotivo && <span className="text-xs text-ink-soft">{request.iaMotivo}</span>}
-                                                                </div>
-                                                            )}
-                                                            <div className="flex flex-wrap gap-3 text-xs text-muted">
-                                                                <span className="flex items-center gap-1">
-                                                                    <IconoCuenta className="w-4 h-4" />
-                                                                    {request.customerName}
-                                                                </span>
-                                                                <span className="flex items-center gap-1">
-                                                                    <IconoCorreo className="w-4 h-4" />
-                                                                    {request.customerEmail}
-                                                                </span>
-                                                                {request.customerPhone && (
-                                                                    <span className="flex items-center gap-1">
-                                                                        <IconoTelefono className="w-4 h-4" />
-                                                                        {request.customerPhone}
-                                                                    </span>
-                                                                )}
-                                                                {request.estimatedBudget && (
-                                                                    <span className="flex items-center gap-1">
-                                                                        <IconoBillete className="w-4 h-4" />
-                                                                        Presupuesto: {formatUSD(request.estimatedBudget)}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <p className="text-xs text-subtle mt-2">
-                                                                <IconoCalendario className="inline w-3 h-3 mr-1" />
-                                                                {new Date(request.createdAt).toLocaleString('es-VE')}
-                                                            </p>
-                                                        </div>
-
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => openRequestModal(request)}
-                                                                className="p-2 hover:bg-surface rounded-lg transition-colors"
-                                                                title="Gestionar"
-                                                            >
-                                                                <IconoCheck className="w-4 h-4 text-brand-500" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteRequest(request.id)}
-                                                                className="p-2 bg-deal/10 rounded-lg transition-colors"
-                                                                title="Eliminar"
-                                                            >
-                                                                <IconoEliminar className="w-4 h-4 text-deal" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    {request.adminNotes && (
-                                                        <div className="mt-3 p-3 bg-surface rounded-lg">
-                                                            <p className="text-xs font-semibold text-ink mb-1">Notas del Admin:</p>
-                                                            <p className="text-xs text-muted">{request.adminNotes}</p>
-                                                        </div>
-                                                    )}
+                        <div className="space-y-3">
+                            {requestsLoading ? (
+                                <div className={`${adminCard} flex justify-center p-12`}>
+                                    <span className={adminSpinner} aria-label="Cargando solicitudes" />
+                                </div>
+                            ) : requests.length === 0 ? (
+                                <div className={`${adminCard} p-12 text-center`}>
+                                    <IconoPaquete className="mx-auto mb-3 h-12 w-12 text-subtle" aria-hidden="true" />
+                                    <h3 className="mb-1 text-lg font-semibold text-ink">No hay solicitudes</h3>
+                                    <p className="text-sm text-muted">No se encontraron solicitudes de productos</p>
+                                </div>
+                            ) : (
+                                (ordenUrgencia ? porUrgencia(requests) : requests).map((request) => (
+                                    <div key={request.id} className={adminCard}>
+                                        <div className="flex gap-4">
+                                            <div className="hidden shrink-0 sm:block">
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                                                    <IconoPaquete className="h-6 w-6" aria-hidden="true" />
                                                 </div>
                                             </div>
+
+                                            <div className="min-w-0 flex-1">
+                                                <div className="mb-2 flex items-start justify-between gap-3">
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                                                            <h3 className="text-base font-semibold text-ink">{request.productName}</h3>
+                                                            {getRequestStatusBadge(request.status)}
+                                                        </div>
+                                                        <p className="mb-2 text-sm text-muted">{request.description}</p>
+                                                        {(request.iaUrgencia || request.iaProducto || request.iaArticulo) && (
+                                                            <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                                                                <PildoraUrgencia urgencia={request.iaUrgencia} />
+                                                                <EnLaTienda coincide={request.iaCoincide} producto={request.iaProducto} />
+                                                                <EnProveedor articulo={request.iaArticulo} />
+                                                                {request.iaMotivo && <span className="text-xs text-ink-soft">{request.iaMotivo}</span>}
+                                                            </div>
+                                                        )}
+                                                        <div className="flex flex-wrap gap-3 text-xs text-muted">
+                                                            <span className="flex items-center gap-1">
+                                                                <IconoCuenta className="h-4 w-4" aria-hidden="true" />
+                                                                {request.customerName}
+                                                            </span>
+                                                            <span className="flex items-center gap-1">
+                                                                <IconoCorreo className="h-4 w-4" aria-hidden="true" />
+                                                                {request.customerEmail}
+                                                            </span>
+                                                            {request.customerPhone && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <IconoTelefono className="h-4 w-4" aria-hidden="true" />
+                                                                    {request.customerPhone}
+                                                                </span>
+                                                            )}
+                                                            {request.estimatedBudget && (
+                                                                <span className="flex items-center gap-1 tabular-nums">
+                                                                    <IconoBillete className="h-4 w-4" aria-hidden="true" />
+                                                                    Presupuesto: {formatUSD(request.estimatedBudget)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="mt-2 text-xs text-muted">
+                                                            <IconoCalendario className="mr-1 inline h-3 w-3" aria-hidden="true" />
+                                                            {new Date(request.createdAt).toLocaleString('es-VE')}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="flex shrink-0 gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openRequestModal(request)}
+                                                            className={`${adminSecondaryButton} h-10! min-h-10! px-3!`}
+                                                            title="Gestionar"
+                                                        >
+                                                            <IconoCheck className="h-4 w-4 text-brand-500" aria-hidden="true" /> Gestionar
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteRequest(request.id)}
+                                                            className={`${adminIconButton} h-10 w-10 text-deal hover:bg-deal-bg`}
+                                                            title="Eliminar"
+                                                            aria-label="Eliminar solicitud"
+                                                        >
+                                                            <IconoEliminar className="h-4 w-4" aria-hidden="true" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {request.adminNotes && (
+                                                    <div className="mt-3 rounded-lg bg-surface p-3">
+                                                        <p className="mb-1 text-xs font-semibold text-ink">Notas del Admin:</p>
+                                                        <p className="text-xs text-muted">{request.adminNotes}</p>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                    ))
-                                )}
-                            </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 )}
-
             </div>
 
-            {/* Request Modal */}
-            {requestModal && selectedRequest && (
-                <div className={adminModalOverlay} onClick={() => setRequestModal(false)}>
-                    <div className={`${adminModalPanel} sm:max-w-lg`} onClick={(e) => e.stopPropagation()}>
-                            <div className="bg-white px-6 pt-6 pb-4">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-xl font-semibold text-ink">
-                                        Gestionar Solicitud
-                                    </h3>
-                                    <button
-                                        onClick={() => setRequestModal(false)}
-                                        className="p-2 hover:bg-surface rounded-lg transition-colors"
-                                    >
-                                        <IconoCerrar className="w-5 h-5 text-muted" />
-                                    </button>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-ink mb-2">
-                                            Estado
-                                        </label>
-                                        <select
-                                            value={newStatus}
-                                            onChange={(e) => setNewStatus(e.target.value)}
-                                            className="w-full px-4 py-3 bg-surface border border-line rounded-lg focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10"
-                                        >
-                                            <option value="PENDING">Pendiente</option>
-                                            <option value="IN_PROGRESS">En Progreso</option>
-                                            <option value="FULFILLED">Cumplida</option>
-                                            <option value="REJECTED">Rechazada</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-semibold text-ink mb-2">
-                                            Notas del Administrador
-                                        </label>
-                                        <textarea
-                                            value={adminNotes}
-                                            onChange={(e) => setAdminNotes(e.target.value)}
-                                            rows={4}
-                                            placeholder="Agrega notas internas sobre esta solicitud..."
-                                            className="w-full px-4 py-3 bg-surface border border-line rounded-lg text-ink placeholder:text-subtle focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 resize-none"
-                                        />
-                                    </div>
-                                </div>
+            <ModalDialog
+                open={Boolean(requestModal && selectedRequest)}
+                onClose={() => setRequestModal(false)}
+                ariaLabelledBy="solicitud-producto-titulo"
+                size="lg"
+            >
+                {selectedRequest && (
+                    <>
+                        <div className={adminModalHeader}>
+                            <h3 id="solicitud-producto-titulo" className={adminModalTitle}>Gestionar Solicitud</h3>
+                            <button
+                                type="button"
+                                onClick={() => setRequestModal(false)}
+                                aria-label="Cerrar"
+                                className={adminIconButton}
+                            >
+                                <IconoCerrar className="h-5 w-5" aria-hidden="true" />
+                            </button>
+                        </div>
+                        <div className={`${adminModalBody} space-y-4`}>
+                            <div>
+                                <label htmlFor="solicitud-estado" className={adminLabel}>Estado</label>
+                                <select
+                                    id="solicitud-estado"
+                                    value={newStatus}
+                                    onChange={(e) => setNewStatus(e.target.value)}
+                                    className={adminInput()}
+                                >
+                                    <option value="PENDING">Pendiente</option>
+                                    <option value="IN_PROGRESS">En Progreso</option>
+                                    <option value="FULFILLED">Cumplida</option>
+                                    <option value="REJECTED">Rechazada</option>
+                                </select>
                             </div>
 
-                            <div className="bg-surface px-6 py-4 flex items-center justify-end gap-3 border-t border-line">
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => setRequestModal(false)}
-                                >
-                                    Cancelar
-                                </Button>
-                                <Button variant="primary" onClick={handleUpdateRequestStatus}>
-                                    Guardar Cambios
-                                </Button>
+                            <div>
+                                <label htmlFor="solicitud-notas" className={adminLabel}>Notas del Administrador</label>
+                                <textarea
+                                    id="solicitud-notas"
+                                    value={adminNotes}
+                                    onChange={(e) => setAdminNotes(e.target.value)}
+                                    rows={4}
+                                    placeholder="Agrega notas internas sobre esta solicitud..."
+                                    className={`${adminInput()} h-auto resize-none py-2.5`}
+                                />
                             </div>
                         </div>
-                    </div>
-            )}
+                        <div className={adminModalFooter}>
+                            <button type="button" onClick={() => setRequestModal(false)} className={adminSecondaryButton}>
+                                Cancelar
+                            </button>
+                            <button type="button" onClick={handleUpdateRequestStatus} className={adminPrimaryButton}>
+                                Guardar Cambios
+                            </button>
+                        </div>
+                    </>
+                )}
+            </ModalDialog>
         </div>
     );
 }

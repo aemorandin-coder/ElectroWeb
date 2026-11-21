@@ -130,7 +130,7 @@ export default function PhysicalStep1BasicInfo({ data, onChange, errors, categor
             type="text"
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarEtiqueta(); } }}
+            onKeyDown={(e) => { if (e.nativeEvent.isComposing || e.keyCode === 229) return; if (e.key === 'Enter') { e.preventDefault(); agregarEtiqueta(); } }}
             placeholder="Ej: gaming"
             className={wizardInput()}
           />

@@ -2,11 +2,12 @@
 // Las páginas del admin las importan en lugar de escribir colores sueltos (tarjetas R9 de Gemini).
 
 /* ── Página ───────────────────────────────────────────────────────────── */
+export const adminPageStack = 'min-w-0 space-y-5';
 export const adminPageHeader = 'mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between';
 export const adminPageHeaderCompact = 'mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between';
-export const adminPageTitle = 'text-2xl font-bold text-ink';
-export const adminPageSubtitle = 'mt-1 text-sm text-muted';
-export const adminSectionTitle = 'text-lg font-semibold text-ink';
+export const adminPageTitle = 'text-2xl font-bold text-ink text-balance';
+export const adminPageSubtitle = 'mt-1 text-sm text-muted text-pretty';
+export const adminSectionTitle = 'text-lg font-semibold text-ink text-balance';
 
 /* ── Contenedores ─────────────────────────────────────────────────────── */
 export const adminCard = 'rounded-2xl border border-line bg-white p-5';
@@ -16,7 +17,7 @@ export const adminDivider = 'border-t border-line';
 /* ── Formularios ──────────────────────────────────────────────────────── */
 export const adminLabel = 'mb-1.5 block text-sm font-semibold text-ink';
 /** C-205: la ayuda no pasa de 65 caracteres por línea (PLAN.md §1.5) */
-export const adminHint = 'mt-1 max-w-prose text-xs text-muted';
+export const adminHint = 'mt-1 max-w-prose text-xs text-muted text-pretty';
 export const adminError = 'mt-1 text-xs font-semibold text-deal';
 
 export function adminInput(hasError = false): string {
@@ -46,7 +47,7 @@ const MOVIMIENTO =
   'transition duration-150 ease-out motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 motion-safe:active:scale-[0.97] ' +
   'disabled:hover:translate-y-0 disabled:active:scale-100 disabled:hover:shadow-none';
 const buttonBase =
-  `inline-flex h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold ${MOVIMIENTO} disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500`;
+  `inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold ${MOVIMIENTO} disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500`;
 export const adminPrimaryButton = `${buttonBase} bg-brand-500 text-white hover:bg-brand-600 hover:shadow-md hover:shadow-brand-500/25`;
 export const adminSecondaryButton = `${buttonBase} border border-line-strong bg-white text-ink hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 hover:shadow-md hover:shadow-brand-600/10`;
 export const adminDangerButton = `${buttonBase} bg-deal text-white hover:bg-deal/90 hover:shadow-md hover:shadow-deal/25`;
@@ -62,7 +63,7 @@ export const adminIconButton =
 /** Envuelve siempre la <table>: en móvil se desliza en vez de romper la página. */
 export const adminTableWrap = 'overflow-x-auto rounded-2xl border border-line-strong bg-white';
 export const adminTable = 'w-full text-sm';
-export const adminTh = 'border-b border-line-strong bg-line/55 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-soft';
+export const adminTh = 'border-b border-line-strong bg-line/55 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-soft text-balance';
 export const adminTd = 'border-t border-line px-4 py-3 text-ink';
 export const adminRowHover = 'hover:bg-surface';
 export const adminRowZebra = 'odd:bg-white even:bg-line/40 hover:bg-line/60 transition-colors';
@@ -128,15 +129,15 @@ export const adminModalOverlay = 'fixed inset-0 z-[var(--z-modal)] flex items-en
 /** Panel: hoja inferior en móvil, centrado desde sm. Sumar un ancho: sm:max-w-md | sm:max-w-lg | sm:max-w-2xl | sm:max-w-4xl. */
 export const adminModalPanel = 'flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-lg sm:rounded-2xl';
 export const adminModalHeader = 'flex items-center justify-between gap-3 border-b border-line px-5 py-4';
-export const adminModalTitle = 'text-lg font-semibold text-ink';
+export const adminModalTitle = 'text-lg font-semibold text-ink text-balance';
 export const adminModalBody = 'overflow-y-auto px-5 py-4';
 export const adminModalFooter = 'flex flex-col-reverse gap-2 border-t border-line bg-surface px-5 py-3 sm:flex-row sm:justify-end';
 
 /* ── Pestañas y filtros ───────────────────────────────────────────────── */
 export function adminTab(active: boolean): string {
   return [
-    'inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-semibold transition-colors',
-    active ? 'bg-brand-500 text-white' : 'text-ink-soft hover:bg-surface hover:text-ink',
+    'inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border-b-2 px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+    active ? 'border-brand-700 bg-brand-500 text-white' : 'border-transparent text-ink-soft hover:bg-surface hover:text-ink',
   ].join(' ');
 }
 

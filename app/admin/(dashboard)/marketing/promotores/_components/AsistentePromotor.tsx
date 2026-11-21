@@ -44,7 +44,7 @@ const INFO: Record<Clave, { titulo: string; queHacer: string; icono: IconType }>
   dinero: { titulo: 'Comisión y descuento', queHacer: 'Lo que gana él y lo que ahorra el cliente.', icono: IconoPorcentaje },
   revisar: { titulo: 'Revisar y publicar', queHacer: 'Mira cómo queda antes de guardarlo.', icono: IconoVer },
 };
-const LISTA = '/admin/marketing#promotores';
+const LISTA = '/admin/discount-requests?vista=afiliados';
 const ETIQUETAS: Record<keyof Formulario, string> = { name: 'Nombre para mostrar', commissionRate: 'Comisión %', customerDiscountPercent: 'Descuento al cliente %', notes: 'Notas internas' };
 // Las mismas reglas de lib/influencer-admin.ts y lib/influencer-cupon.ts
 const COMISION_MAXIMA = 50;

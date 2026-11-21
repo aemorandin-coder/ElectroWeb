@@ -18,7 +18,7 @@ export default async function PaginaCambiarCampana({ params }: { params: Promise
   const { id } = await params;
   const c = await prisma.emailCampaign.findUnique({ where: { id }, select: { id: true, subject: true, preheader: true, content: true, status: true, updatedAt: true } });
   if (!c) notFound();
-  if (c.status !== 'DRAFT') redirect('/admin/marketing#campanas');
+  if (c.status !== 'DRAFT') redirect('/admin/marketing/correos#campanas');
   return (
     <AsistenteCampana
       key={c.updatedAt.toISOString()}

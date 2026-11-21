@@ -30,7 +30,7 @@ export default function NotificationsPage() {
   }, [router]);
 
   return (
-    <div className="max-w-5xl">
+    <div className="min-w-0">
       <div className={adminPageHeader}>
         <div>
           <h1 className={adminPageTitle}>Notificaciones</h1>

@@ -1,142 +1,106 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { useEffect, useRef } from 'react';
+import ModalDialog from '@/components/ui/ModalDialog';
 import { IconoAdvertencia, IconoCerrar, IconoError, IconoInfo } from '@/components/iconos';
 import {
-    adminModalOverlay,
-    adminModalPanel,
-    adminPrimaryButton,
-    adminSecondaryButton,
-    adminDangerButton,
-    adminIconChip,
-    type AdminTone,
+  adminDangerButton,
+  adminIconChip,
+  adminModalTitle,
+  adminPrimaryButton,
+  adminSecondaryButton,
+  type AdminTone,
 } from '@/lib/admin-ui';
 
 export interface ConfirmDialogProps {
-    isOpen: boolean;
-    title: string;
-    message: string;
-    confirmText?: string;
-    cancelText?: string;
-    onConfirm: () => void;
-    onCancel: () => void;
-    type?: 'danger' | 'warning' | 'info';
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  type?: 'danger' | 'warning' | 'info';
 }
 
 export default function ConfirmDialog({
-    isOpen,
-    title,
-    message,
-    confirmText = 'Confirmar',
-    cancelText = 'Cancelar',
-    onConfirm,
-    onCancel,
-    type = 'warning',
+  isOpen,
+  title,
+  message,
+  confirmText = 'Confirmar',
+  cancelText = 'Cancelar',
+  onConfirm,
+  onCancel,
+  type = 'warning',
 }: ConfirmDialogProps) {
-    useBodyScrollLock(isOpen);
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const tone: AdminTone = type === 'danger' ? 'danger' : type === 'warning' ? 'warning' : 'brand';
+  const confirmButtonClass = type === 'danger' ? adminDangerButton : adminPrimaryButton;
 
-    // Close on ESC key
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen) {
-                onCancel();
-            }
-        };
+  useEffect(() => {
+    if (!isOpen || type !== 'danger') return;
+    const id = requestAnimationFrame(() => cancelButtonRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [isOpen, type]);
 
-        if (isOpen) {
-            document.addEventListener('keydown', handleEscape);
-        }
+  return (
+    <ModalDialog
+      open={isOpen}
+      onClose={onCancel}
+      closedBy={type === 'danger' ? 'closerequest' : 'any'}
+      role="alertdialog"
+      size="md"
+      ariaLabelledBy="confirm-dialog-title"
+      ariaDescribedBy="confirm-dialog-message"
+      panelClassName="relative p-6 text-center sm:p-8"
+    >
+      <button
+        type="button"
+        onClick={onCancel}
+        className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink"
+        aria-label="Cerrar"
+      >
+        <IconoCerrar className="h-5 w-5" aria-hidden="true" />
+      </button>
 
-        return () => {
-            document.removeEventListener('keydown', handleEscape);
-        };
-    }, [isOpen, onCancel]);
+      <div className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl ${adminIconChip(tone)}`}>
+        {type === 'danger' ? (
+          <IconoError className="h-7 w-7" aria-hidden="true" />
+        ) : type === 'info' ? (
+          <IconoInfo className="h-7 w-7" aria-hidden="true" />
+        ) : (
+          <IconoAdvertencia className="h-7 w-7" aria-hidden="true" />
+        )}
+      </div>
 
-    if (!isOpen) return null;
+      <h3 id="confirm-dialog-title" className={`${adminModalTitle} mb-2 text-lg lg:text-xl`}>
+        {title}
+      </h3>
 
-    const tone: AdminTone = type === 'danger' ? 'danger' : type === 'warning' ? 'warning' : 'brand';
+      <div id="confirm-dialog-message" className="mb-6">
+        <p className="whitespace-pre-line break-words text-sm leading-relaxed text-muted">
+          {message}
+        </p>
+      </div>
 
-    const getIcon = () => {
-        switch (type) {
-            case 'danger':
-                return <IconoError className="w-8 h-8" />;
-            case 'warning':
-                return <IconoAdvertencia className="w-8 h-8" />;
-            case 'info':
-                return <IconoInfo className="w-8 h-8" />;
-            default:
-                return <IconoAdvertencia className="w-8 h-8" />;
-        }
-    };
-
-    const confirmButtonClass = type === 'danger' ? adminDangerButton : adminPrimaryButton;
-
-    return (
-        <div className={adminModalOverlay}>
-            {/* Backdrop click */}
-            <div
-                className="fixed inset-0"
-                onClick={onCancel}
-                aria-hidden="true"
-            />
-
-            {/* Dialog Panel */}
-            <div
-                className={`${adminModalPanel} max-w-md p-6 sm:p-8 text-center relative z-10 my-auto`}
-                role="alertdialog"
-                aria-modal="true"
-                aria-labelledby="confirm-dialog-title"
-                aria-describedby="confirm-dialog-message"
-            >
-                {/* Close Button */}
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="absolute top-4 right-4 p-1.5 text-muted hover:text-ink rounded-lg transition-colors"
-                    aria-label="Cerrar"
-                >
-                    <IconoCerrar className="w-5 h-5" />
-                </button>
-
-                {/* Icon */}
-                <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${adminIconChip(tone)}`}>
-                    {getIcon()}
-                </div>
-
-                {/* Title */}
-                <h3 id="confirm-dialog-title" className="text-lg lg:text-xl font-bold text-ink mb-2">
-                    {title}
-                </h3>
-
-                {/* Message */}
-                <div id="confirm-dialog-message" className="mb-6">
-                    <p className="text-sm text-muted leading-relaxed whitespace-pre-line break-words">
-                        {message}
-                    </p>
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-col-reverse sm:flex-row gap-2.5">
-                    <button
-                        type="button"
-                        className={`flex-1 ${adminSecondaryButton} py-2.5 font-semibold justify-center`}
-                        onClick={onCancel}
-                    >
-                        {cancelText}
-                    </button>
-                    <button
-                        type="button"
-                        className={`flex-1 ${confirmButtonClass} py-2.5 font-semibold justify-center`}
-                        onClick={() => {
-                            onConfirm();
-                            onCancel();
-                        }}
-                    >
-                        {confirmText}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+      <div className="flex flex-col-reverse gap-2.5 sm:flex-row">
+        <button
+          ref={cancelButtonRef}
+          type="button"
+          autoFocus={type === 'danger'}
+          className={`flex-1 justify-center ${adminSecondaryButton}`}
+          onClick={onCancel}
+        >
+          {cancelText}
+        </button>
+        <button
+          type="button"
+          className={`flex-1 justify-center ${confirmButtonClass}`}
+          onClick={onConfirm}
+        >
+          {confirmText}
+        </button>
+      </div>
+    </ModalDialog>
+  );
 }

@@ -1,50 +1,40 @@
 'use client';
 
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
-import { IconoBuscar, IconoEnviar, IconoInicio, IconoNovedad, IconoPopup, IconoRegalo, IconoVer, IconoVerificado } from '@/components/iconos';
-import type { IconType } from '@/components/iconos';
+import { IconoBuscar, IconoInicio, IconoNovedad, IconoPopup, type IconType } from '@/components/iconos';
 import { useRouter } from 'next/navigation';
 import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab } from '@/lib/admin-ui';
 import { IconoGorro } from '@/components/navidad/GorroSanta';
-import Promotores from './_components/Promotores';
 import Popup from './_components/Popup';
 import Navidad from './_components/Navidad';
 import Lanzamiento from './_components/Lanzamiento';
-import Sorteo from './_components/Sorteo';
-import Campanas from './_components/Campanas';
-import Plantillas from './_components/Plantillas';
 import AjustesDeContenido from './_components/AjustesDeContenido';
 import StorefrontSection from '../settings/_components/StorefrontSection';
 import SeoSection from '../settings/_components/SeoSection';
 import type { SettingsKey } from '../settings/_components/settings-form';
 import { PORTADA_FIELDS, SEO_FIELDS } from '@/lib/validations/settings';
 
-// Marketing (C-75): una sección por tarea y un archivo por sección. Antes: 1.118 líneas en un archivo con 6 pestañas,
-// una de ellas la configuración SMTP (ahora en Configuración → Correo).
-
-type SeccionId = 'promotores' | 'campanas' | 'popup' | 'lanzamiento' | 'navidad' | 'sorteo' | 'plantillas' | 'portada' | 'google';
+type SeccionId = 'portada' | 'lanzamiento' | 'popup' | 'navidad' | 'google';
 
 const SECCIONES: { id: SeccionId; label: string; descripcion: string; icon: IconType }[] = [
-  { id: 'promotores', label: 'Promotores', descripcion: 'Códigos de referido y comisiones por compras pagadas.', icon: IconoVerificado },
-  { id: 'campanas', label: 'Campañas de correo', descripcion: 'Correos con imágenes para los clientes que aceptan promociones.', icon: IconoEnviar },
-  { id: 'popup', label: 'Popup del home', descripcion: 'La imagen promocional que aparece al entrar a la tienda.', icon: IconoPopup },
-  { id: 'lanzamiento', label: 'Lanzamiento', descripcion: 'Bloque protagonista arriba del inicio y píldora en la barra para grandes estrenos.', icon: IconoNovedad },
-  // C-186: el ícono es el gorro de la tienda en la versión de un color del pack de íconos, no uno de librería
-  { id: 'navidad', label: 'Navidad', descripcion: 'El tema navideño: el gorro de Santa en el logo, la franja navideña del inicio y hasta cuándo pedir para que llegue antes del 24.', icon: IconoGorro },
-  // C-212: el sorteo (la PlayStation 4 del 20/12)
-  { id: 'sorteo', label: 'Sorteo', descripcion: 'El sorteo de la tienda: las fechas, el premio, quiénes participan, lo que dejó y el sorteo en sí.', icon: IconoRegalo },
-  { id: 'plantillas', label: 'Correos de la tienda', descripcion: 'Cómo se ven los correos automáticos que recibe el cliente.', icon: IconoVer },
-  // C-294 (D2 del 18/11): estaban en Configuración, solo para el dueño. Son contenido: los cambia también quien tiene permiso de contenido
   { id: 'portada', label: 'Portada', descripcion: 'Los destacados, las categorías y el video de la página de inicio.', icon: IconoInicio },
-  { id: 'google', label: 'Google y redes', descripcion: 'El título, la descripción y la imagen con que aparecen las páginas en Google, WhatsApp y Facebook.', icon: IconoBuscar },
-  // C-116: la pestaña "ElectroStudio" (acceso directo desde C-112) se quitó: el estudio tiene su entrada en la barra lateral
+  { id: 'lanzamiento', label: 'Lanzamiento', descripcion: 'Bloque protagonista arriba del inicio y píldora en la barra para grandes estrenos.', icon: IconoNovedad },
+  { id: 'popup', label: 'Popup del home', descripcion: 'La imagen promocional que aparece al entrar a la tienda.', icon: IconoPopup },
+  { id: 'navidad', label: 'Navidad', descripcion: 'El tema navideño: el gorro en el logo, la franja de inicio y fecha límite de entrega.', icon: IconoGorro },
+  { id: 'google', label: 'Google y redes', descripcion: 'El título, la descripción y la imagen al compartir en Google, WhatsApp y Facebook.', icon: IconoBuscar },
 ];
 
+const REDIRECTS_LEGACY: Record<string, string> = {
+  redes: '/admin/studio',
+  campanas: '/admin/marketing/correos#campanas',
+  plantillas: '/admin/marketing/correos#plantillas',
+  sorteo: '/admin/discount-requests?vista=sorteo',
+  promotores: '/admin/discount-requests?vista=afiliados',
+};
+
 function seccionDelHash(): SeccionId {
-  // C-249e: al volver de un asistente con router.push('/admin/marketing#campanas'), Next a veces deja el hash repetido
-  // (#campanas#campanas): vale el último
   const hash = window.location.hash.split('#').filter(Boolean).pop() ?? '';
-  return SECCIONES.some((s) => s.id === hash) ? (hash as SeccionId) : 'promotores';
+  return SECCIONES.some((s) => s.id === hash) ? (hash as SeccionId) : 'portada';
 }
 
 function suscribirHash(avisar: () => void) {
@@ -53,25 +43,23 @@ function suscribirHash(avisar: () => void) {
 }
 
 export default function MarketingPage() {
-  const activa = useSyncExternalStore(suscribirHash, seccionDelHash, () => 'promotores' as SeccionId);
+  const activa = useSyncExternalStore(suscribirHash, seccionDelHash, () => 'portada' as SeccionId);
   const router = useRouter();
-  // Enlaces viejos a la pestaña de redes: van directo al estudio
-  useEffect(() => {
-    if (window.location.hash === '#redes') router.replace('/admin/studio');
-  }, [router]);
-  // C-249d: al volver de un asistente (/admin/marketing#campanas), Next cambia la dirección después de pintar la página: el
-  // hash se vuelve a leer cuando ya está (si no, quedaba la primera sección)
+
   useEffect(() => {
     const t = setTimeout(() => {
-      // Y la dirección queda con uno solo
       const partes = window.location.hash.split('#').filter(Boolean);
-      if (partes.length > 1) window.history.replaceState(window.history.state, '', `#${partes[partes.length - 1]}`);
+      const ultimo = partes[partes.length - 1] ?? '';
+      if (REDIRECTS_LEGACY[ultimo]) {
+        router.replace(REDIRECTS_LEGACY[ultimo]);
+        return;
+      }
+      if (partes.length > 1) window.history.replaceState(window.history.state, '', `#${ultimo}`);
       window.dispatchEvent(new HashChangeEvent('hashchange'));
     }, 0);
     return () => clearTimeout(t);
-  }, []);
+  }, [router]);
 
-  // Cambiar el hash dispara hashchange y la sección se lee de ahí; replaceState no lo dispara, por eso se avisa a mano
   const ir = useCallback((id: SeccionId) => {
     window.history.replaceState(null, '', `#${id}`);
     window.dispatchEvent(new HashChangeEvent('hashchange'));
@@ -80,15 +68,15 @@ export default function MarketingPage() {
   const seccion = SECCIONES.find((s) => s.id === activa) ?? SECCIONES[0];
 
   return (
-    <div>
+    <div className="min-w-0 space-y-5">
       <div className={adminPageHeader}>
         <div>
-          <h1 className={adminPageTitle}>Marketing</h1>
+          <h1 className={adminPageTitle}>Vitrina y Portada</h1>
           <p className={adminPageSubtitle}>{seccion.descripcion}</p>
         </div>
       </div>
 
-      <nav aria-label="Secciones de marketing" className="-mx-1 mb-5 overflow-x-auto px-1 pb-1">
+      <nav aria-label="Secciones de vitrina" className="scrollbar-hide -mx-1 overflow-x-auto px-1 pb-1">
         <ul className="flex w-max gap-2">
           {SECCIONES.map((s) => {
             const Icon = s.icon;
@@ -104,16 +92,12 @@ export default function MarketingPage() {
         </ul>
       </nav>
 
-      {activa === 'promotores' && <Promotores />}
-      {activa === 'campanas' && <Campanas />}
-      {activa === 'popup' && <Popup />}
-      {activa === 'lanzamiento' && <Lanzamiento />}
-      {activa === 'navidad' && <Navidad />}
-      {activa === 'sorteo' && <Sorteo />}
-      {activa === 'plantillas' && <Plantillas />}
       {activa === 'portada' && (
         <AjustesDeContenido campos={PORTADA_FIELDS as readonly SettingsKey[]}>{(p) => <StorefrontSection {...p} parte="portada" />}</AjustesDeContenido>
       )}
+      {activa === 'lanzamiento' && <Lanzamiento />}
+      {activa === 'popup' && <Popup />}
+      {activa === 'navidad' && <Navidad />}
       {activa === 'google' && (
         <AjustesDeContenido campos={SEO_FIELDS as readonly SettingsKey[]}>{(p) => <SeoSection {...p} />}</AjustesDeContenido>
       )}

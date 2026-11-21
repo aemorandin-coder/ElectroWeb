@@ -12,7 +12,7 @@ import Filtros from '@/components/admin/Filtros';
 import {
   adminBadge, adminDato, adminError, adminHint, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter,
   adminModalHeader, adminModalOverlay, adminModalPanel, adminModalTitle, adminNotice, adminPageHeader, adminPageSubtitle,
-  adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab,
+  adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab, adminTabList, adminTabScroll,
 } from '@/lib/admin-ui';
 import { useSession } from 'next-auth/react';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -198,13 +198,15 @@ export default function LegalPage() {
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-line pb-2" role="tablist" aria-label="Secciones de legal">
-        <button type="button" role="tab" aria-selected={tab === 'firmas'} onClick={() => setTab('firmas')} className={adminTab(tab === 'firmas')}>
-          <IconoGarantia className="h-4 w-4" aria-hidden="true" /> Firmas
-        </button>
-        <button type="button" role="tab" aria-selected={tab === 'documentos'} onClick={() => setTab('documentos')} className={adminTab(tab === 'documentos')}>
-          <IconoDocumento className="h-4 w-4" aria-hidden="true" /> Documentos
-        </button>
+      <div className={adminTabScroll}>
+        <div className={adminTabList} role="tablist" aria-label="Secciones de legal">
+          <button type="button" role="tab" aria-selected={tab === 'firmas'} onClick={() => setTab('firmas')} className={adminTab(tab === 'firmas')}>
+            <IconoGarantia className="h-4 w-4" aria-hidden="true" /> Firmas
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'documentos'} onClick={() => setTab('documentos')} className={adminTab(tab === 'documentos')}>
+            <IconoDocumento className="h-4 w-4" aria-hidden="true" /> Documentos
+          </button>
+        </div>
       </div>
 
       {legado > 0 && (

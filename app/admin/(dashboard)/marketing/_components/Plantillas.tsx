@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { IconoCelular, IconoMonitor } from '@/components/iconos';
-import { adminCardFlush, adminSpinner, adminTab } from '@/lib/admin-ui';
+import { adminCardFlush, adminSpinner, adminTab, adminTabList } from '@/lib/admin-ui';
 
 interface Plantilla { id: string; grupo?: string; name: string; description: string }
 
@@ -66,11 +66,11 @@ export default function Plantillas() {
           <p className="min-w-0 text-sm text-muted">
             Asunto: <span className="font-semibold text-ink">{vista?.subject || '—'}</span>
           </p>
-          <div className="flex gap-1">
-            <button type="button" onClick={() => setModo('escritorio')} className={`${adminTab(modo === 'escritorio')} h-9`} aria-pressed={modo === 'escritorio'}>
+          <div className={adminTabList}>
+            <button type="button" onClick={() => setModo('escritorio')} className={`${adminTab(modo === 'escritorio')} min-h-9 py-1.5`} aria-pressed={modo === 'escritorio'}>
               <IconoMonitor className="h-4 w-4" aria-hidden="true" /> Escritorio
             </button>
-            <button type="button" onClick={() => setModo('movil')} className={`${adminTab(modo === 'movil')} h-9`} aria-pressed={modo === 'movil'}>
+            <button type="button" onClick={() => setModo('movil')} className={`${adminTab(modo === 'movil')} min-h-9 py-1.5`} aria-pressed={modo === 'movil'}>
               <IconoCelular className="h-4 w-4" aria-hidden="true" /> Móvil
             </button>
           </div>

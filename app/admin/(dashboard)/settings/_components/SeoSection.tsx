@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { IconoWeb } from '@/components/iconos';
-import { adminTab } from '@/lib/admin-ui';
+import { adminTab, adminTabList, adminTabScroll } from '@/lib/admin-ui';
 import type { SectionProps, SettingsKey } from './settings-form';
 import { ImageField, SettingsCard, TextAreaField, TextField } from './fields';
 
@@ -42,8 +42,8 @@ export default function SeoSection({ form, set, errors }: SectionProps) {
 
   return (
     <>
-      <div className="-mx-1 overflow-x-auto px-1 pb-1">
-        <div className="flex w-max gap-1 rounded-xl border border-line bg-white p-1" role="tablist" aria-label="Página">
+      <div className={adminTabScroll}>
+        <div className={adminTabList} role="tablist" aria-label="Página">
           {PAGES.map((item) => (
             <button
               key={item.id}

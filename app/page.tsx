@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
@@ -20,6 +21,7 @@ import Container from '@/components/ui/Container';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { crearReparto, porDiaYDestacado, variados } from '@/lib/inicio/reparto';
 import { diaEnCaracas } from '@/lib/navidad';
+import type { SeccionPortadaId } from '@/lib/portada';
 import {
   getActivePaymentMethodKinds,
   getBestSellers,
@@ -56,7 +58,6 @@ export const metadata: Metadata = { alternates: { canonical: '/' } };
 // (C-210: 4, lo que eligió Andrés el 13/11)
 const POR_ESTANTE = 12;
 const NUEVOS_POR_GRUPO = 4;
-const ESTANTES_DE_CATEGORIA = 3;
 
 /**
  * Home "vitrina" (PLAN.md §3): lo primero son productos con precio y botón, no un mensaje.
@@ -71,7 +72,7 @@ export default async function Home() {
     getBestSellers(90, 24),
     getRecienLlegados(48),
     getCodigosDigitales(POR_ESTANTE),
-    getTopCategoriesWithProducts(6, 16),
+    getTopCategoriesWithProducts(12, 16),
     getActivePaymentMethodKinds(),
     getHotAd(),
     getSaludoNavidad(),
@@ -91,47 +92,246 @@ export default async function Home() {
   ]);
   const vitrinas = await Promise.all(departamentos.map(async (departamento) => ({ departamento, products: await getVitrinaDepartamento(departamento.id, 24) })));
 
-  // C-207: cada producto sale una sola vez, en la primera sección que le toca, en el orden de la página; una sección con
-  // menos de 4 no sale y lo suyo queda para las de abajo (lib/inicio/reparto.ts)
+  // C-207: cada producto sale una sola vez, en la primera sección que le toca, en el orden de la página (G-74: configurable)
   const reparto = crearReparto();
-
-  // La vitrina: solo lo que tiene la estrella, de toda la tienda (C-210, Andrés 13/11: "los he desactivado todos y siguen
-  // apareciendo los mismos": antes se completaba con ofertas y lo nuevo). Sin ninguno, la sección no sale.
-  // C-172: la estrella cambia cada día siguiendo el orden de los destacados (la página se regenera cada minuto)
-  const showcase = estrellaDelDia(reparto.tomar(featured, featured.length, 1));
-  if (temaLanzamiento) {
-    reparto.tomar(temaLanzamiento.productosFila, temaLanzamiento.productosFila.length, 0);
-  }
-  const ofertas = reparto.tomar(deals, POR_ESTANTE);
-  const masVendidos = reparto.tomar(bestSellers, POR_ESTANTE);
-  // Las gift cards y recargas, en su sección y en ninguna otra
-  const codigosDigitales = reparto.tomar(codigos, POR_ESTANTE);
-  const categoriasDigitales = [...new Set(codigosDigitales.map((product) => product.category.slug))];
-  const hrefDigitales = categoriasDigitales.length === 1 ? `/categorias/${categoriasDigitales[0]}` : '/productos?tipo=digital';
-  // "Recién llegados": lo último de toda la tienda (Andrés, 13/11), por día y con los destacados del día primero, y pocos de
-  // cada departamento o categoría: una carga de 70 productos de un proveedor no llena la sección
-  const departamentoDe = new Map(departamentos.flatMap((departamento) => departamento.ids.map((id) => [id, departamento.id] as const)));
-  const nuevos = porDiaYDestacado(
-    recientes.filter((product) => !reparto.mostrado(product.id)),
-    (product) => product.publishedAt ?? product.createdAt,
-    (momento) => diaEnCaracas(new Date(momento))
-  );
-  const recienLlegados = reparto.tomar(variados(nuevos, (product) => departamentoDe.get(product.category.id) ?? product.category.id, NUEVOS_POR_GRUPO), POR_ESTANTE);
-  const vitrinasConProductos = vitrinas
-    .map(({ departamento, products }) => ({ departamento, products: reparto.tomar(products, POR_ESTANTE) }))
-    .filter(({ products }) => products.length > 0);
-  // Los estantes de categoría, con lo que no salió arriba: los primeros tres que tengan con qué
-  const estantes: typeof topCategories = [];
-  for (const { category, products } of topCategories) {
-    if (estantes.length === ESTANTES_DE_CATEGORIA) break;
-    const elegidos = reparto.tomar(products, POR_ESTANTE);
-    if (elegidos.length > 0) estantes.push({ category, products: elegidos });
-  }
   const rate = settings.exchangeRateVES;
   const lowStock = homeSettings.lowStockThreshold;
+  const ocultas = new Set<SeccionPortadaId>(homeSettings.homeSectionsConfig.ocultas);
+  const bannerHref = safeHotAdLink(homeSettings.homeBannerLink);
+
+  let lanzamientoMarcado = false;
+  const asegurarLanzamientoMarcado = () => {
+    if (!lanzamientoMarcado && temaLanzamiento) {
+      reparto.tomar(temaLanzamiento.productosFila, temaLanzamiento.productosFila.length, 0);
+      lanzamientoMarcado = true;
+    }
+  };
+
+  let featuredVisible = false;
+  let greetingInserted = false;
+  let shelfToneIndex = 0;
+  const bloques: { id: string; node: ReactNode }[] = [];
+
+  for (const seccion of homeSettings.homeSectionsConfig.orden) {
+    if (ocultas.has(seccion)) {
+      if (seccion === 'featured') asegurarLanzamientoMarcado();
+      continue;
+    }
+
+    switch (seccion) {
+      case 'featured': {
+        const showcase = estrellaDelDia(reparto.tomar(featured, featured.length, 1));
+        asegurarLanzamientoMarcado();
+        if (showcase.length > 0) {
+          featuredVisible = true;
+          bloques.push({
+            id: 'featured',
+            node: <FeaturedShowcase key="sec-featured" products={showcase} exchangeRateVES={rate} lowStockThreshold={lowStock} rotar={homeSettings.homeRotateFeatured} />,
+          });
+          if (saludo && !greetingInserted) {
+            greetingInserted = true;
+            bloques.push({
+              id: 'saludo',
+              node: (
+                <section key="sec-saludo" aria-label={saludo.titulo} className="bg-white pt-6 lg:pt-8">
+                  <Container>
+                    <SaludoNavidad titulo={saludo.titulo} mensaje={saludo.mensaje} boton={saludo.boton} enlace={safeHotAdLink(saludo.enlace)} gorro={saludo.gorro} />
+                  </Container>
+                </section>
+              ),
+            });
+          }
+        }
+        break;
+      }
+      case 'categories': {
+        if (homeSettings.showCategories) {
+          bloques.push({
+            id: 'categories',
+            node: <CategoryRail key="sec-categories" casillas={compraPorCategoria.casillas} mas={compraPorCategoria.mas} />,
+          });
+        }
+        break;
+      }
+      case 'deals': {
+        asegurarLanzamientoMarcado();
+        const ofertas = reparto.tomar(deals, POR_ESTANTE);
+        if (ofertas.length > 0) {
+          const tone = shelfToneIndex++ % 2 === 0 ? 'surface' : 'white';
+          bloques.push({
+            id: 'deals',
+            node: <ProductSection key="sec-deals" id="ofertas" title="Ofertas" subtitle="Precios rebajados por tiempo limitado" href="/productos?oferta=1" products={ofertas} exchangeRateVES={rate} lowStockThreshold={lowStock} tone={tone} />,
+          });
+        }
+        break;
+      }
+      case 'bestSellers': {
+        asegurarLanzamientoMarcado();
+        const masVendidos = reparto.tomar(bestSellers, POR_ESTANTE);
+        if (masVendidos.length > 0) {
+          const tone = shelfToneIndex++ % 2 === 0 ? 'surface' : 'white';
+          bloques.push({
+            id: 'bestSellers',
+            node: <ProductSection key="sec-bestSellers" id="mas-vendidos" title="Lo más vendido" subtitle="Lo que más compran nuestros clientes" products={masVendidos} exchangeRateVES={rate} lowStockThreshold={lowStock} tone={tone} />,
+          });
+        }
+        break;
+      }
+      case 'digital': {
+        asegurarLanzamientoMarcado();
+        const codigosDigitales = reparto.tomar(codigos, POR_ESTANTE);
+        if (codigosDigitales.length > 0) {
+          const categoriasDigitales = [...new Set(codigosDigitales.map((product) => product.category.slug))];
+          const hrefDigitales = categoriasDigitales.length === 1 ? `/categorias/${categoriasDigitales[0]}` : '/productos?tipo=digital';
+          bloques.push({
+            id: 'digital',
+            node: <DigitalStrip key="sec-digital" products={codigosDigitales} href={hrefDigitales} exchangeRateVES={rate} lowStockThreshold={lowStock} />,
+          });
+        }
+        break;
+      }
+      case 'recent': {
+        asegurarLanzamientoMarcado();
+        const departamentoDe = new Map(departamentos.flatMap((departamento) => departamento.ids.map((id) => [id, departamento.id] as const)));
+        const nuevos = porDiaYDestacado(
+          recientes.filter((product) => !reparto.mostrado(product.id)),
+          (product) => product.publishedAt ?? product.createdAt,
+          (momento) => diaEnCaracas(new Date(momento))
+        );
+        const recienLlegados = reparto.tomar(
+          variados(nuevos, (product) => departamentoDe.get(product.category.id) ?? product.category.id, NUEVOS_POR_GRUPO),
+          POR_ESTANTE
+        );
+        if (recienLlegados.length > 0) {
+          const tone = shelfToneIndex++ % 2 === 0 ? 'surface' : 'white';
+          bloques.push({
+            id: 'recent',
+            node: <ProductSection key="sec-recent" id="recien-llegados" title="Recién llegados" subtitle="Lo último que llegó a la tienda" href="/productos" products={recienLlegados} exchangeRateVES={rate} lowStockThreshold={lowStock} tone={tone} />,
+          });
+        }
+        break;
+      }
+      case 'departments': {
+        asegurarLanzamientoMarcado();
+        const vitrinasConProductos = vitrinas
+          .map(({ departamento, products }) => ({ departamento, products: reparto.tomar(products, POR_ESTANTE) }))
+          .filter(({ products }) => products.length > 0);
+        if (vitrinasConProductos.length > 0) {
+          bloques.push({
+            id: 'departments',
+            node: (
+              <div key="sec-departments">
+                {vitrinasConProductos.map(({ departamento, products }) => (
+                  <VitrinaDepartamento key={departamento.id} departamento={departamento} products={products} exchangeRateVES={rate} lowStockThreshold={lowStock} />
+                ))}
+              </div>
+            ),
+          });
+        }
+        break;
+      }
+      case 'shelves': {
+        asegurarLanzamientoMarcado();
+        const maxShelves = homeSettings.homeCategoryShelves;
+        if (maxShelves > 0) {
+          const estantes: typeof topCategories = [];
+          for (const { category, products } of topCategories) {
+            if (estantes.length === maxShelves) break;
+            const elegidos = reparto.tomar(products, POR_ESTANTE);
+            if (elegidos.length > 0) estantes.push({ category, products: elegidos });
+          }
+          if (estantes.length > 0) {
+            bloques.push({
+              id: 'shelves',
+              node: (
+                <div key="sec-shelves">
+                  {estantes.map(({ category, products }) => {
+                    const tone = shelfToneIndex++ % 2 === 0 ? 'surface' : 'white';
+                    return (
+                      <ProductSection
+                        key={category.id}
+                        id={`categoria-${category.slug}`}
+                        title={category.name}
+                        href={`/categorias/${category.slug}`}
+                        products={products}
+                        exchangeRateVES={rate}
+                        lowStockThreshold={lowStock}
+                        tone={tone}
+                      />
+                    );
+                  })}
+                </div>
+              ),
+            });
+          }
+        }
+        break;
+      }
+      case 'trust': {
+        bloques.push({
+          id: 'trust',
+          node: <TrustBar key="sec-trust" whatsapp={settings.whatsapp} paymentMethods={paymentMethods} pagoMovilVerificado={paymentMethods.includes('MOBILE_PAYMENT') && Boolean(process.env.BDV_API_KEY)} />,
+        });
+        break;
+      }
+      case 'more': {
+        bloques.push({ id: 'more', node: <MoreFromElectroShop key="sec-more" /> });
+        break;
+      }
+    }
+  }
+
+  if (saludo && !greetingInserted) {
+    bloques.unshift({
+      id: 'saludo',
+      node: (
+        <section key="sec-saludo" aria-label={saludo.titulo} className="bg-white pt-6 lg:pt-8">
+          <Container>
+            <SaludoNavidad titulo={saludo.titulo} mensaje={saludo.mensaje} boton={saludo.boton} enlace={safeHotAdLink(saludo.enlace)} gorro={saludo.gorro} />
+          </Container>
+        </section>
+      ),
+    });
+  }
+
+  const videoNode = settings.heroVideoEnabled && settings.heroVideoUrl ? (
+    <section key="sec-video" aria-labelledby="videos-title" className="bg-surface py-6 lg:py-8">
+      <Container>
+        <SectionHeader id="videos-title" title={settings.heroVideoTitle || 'Reviews y novedades'} subtitle={settings.heroVideoDescription || undefined} />
+        <div className="mx-auto max-w-4xl">
+          <VideoPlayer videoUrl={settings.heroVideoUrl} />
+        </div>
+      </Container>
+    </section>
+  ) : null;
+
+  const seccionesFinales = [...bloques];
+  if (videoNode) {
+    if (homeSettings.homeVideoPosition === 'after-featured') {
+      const idx = seccionesFinales.findIndex((b) => b.id === 'featured');
+      seccionesFinales.splice(idx >= 0 ? idx + 1 : 0, 0, { id: 'video', node: videoNode });
+    } else if (homeSettings.homeVideoPosition === 'middle') {
+      seccionesFinales.splice(Math.ceil(seccionesFinales.length / 2), 0, { id: 'video', node: videoNode });
+    } else {
+      seccionesFinales.push({ id: 'video', node: videoNode });
+    }
+  }
 
   return (
     <div className="min-h-dvh bg-white">
+      {homeSettings.homeBannerEnabled && homeSettings.homeBannerText && (
+        <div className="bg-brand-700 px-3 py-2 text-center text-xs font-semibold text-white sm:text-sm">
+          {bannerHref ? (
+            <Link href={bannerHref} className="inline-flex items-center gap-1.5 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+              <span>{homeSettings.homeBannerText}</span>
+              <span aria-hidden="true">→</span>
+            </Link>
+          ) : (
+            <span>{homeSettings.homeBannerText}</span>
+          )}
+        </div>
+      )}
+
       <PublicHeader />
       {/* Datos estructurados (C-149): la tienda como negocio (nombre, RIF, dirección, horario) y el buscador del sitio */}
       <JsonLd data={storeJsonLd(settings)} />
@@ -146,9 +346,7 @@ export default async function Home() {
           <TemaLanzamiento tema={temaLanzamiento} exchangeRateVES={rate} lowStockThreshold={lowStock} />
         )}
 
-        {showcase.length > 0 ? (
-          <FeaturedShowcase products={showcase} exchangeRateVES={rate} lowStockThreshold={lowStock} />
-        ) : recientes.length > 0 ? null : (
+        {!featuredVisible && recientes.length === 0 ? (
           <section className="bg-surface py-12">
             <Container className="text-center">
               <p className="text-lg font-semibold text-ink">Estamos preparando el catálogo</p>
@@ -158,59 +356,9 @@ export default async function Home() {
               </Link>
             </Container>
           </section>
-        )}
+        ) : null}
 
-        {/* C-207: el saludo navideño, en una franja dentro de la página y después de los destacados: ya no tapa la tienda */}
-        {saludo && (
-          <section aria-label={saludo.titulo} className="bg-white pt-6 lg:pt-8">
-            <Container>
-              <SaludoNavidad titulo={saludo.titulo} mensaje={saludo.mensaje} boton={saludo.boton} enlace={safeHotAdLink(saludo.enlace)} gorro={saludo.gorro} />
-            </Container>
-          </section>
-        )}
-
-        <CategoryRail casillas={compraPorCategoria.casillas} mas={compraPorCategoria.mas} />
-
-        <ProductSection id="ofertas" title="Ofertas" subtitle="Precios rebajados por tiempo limitado" href="/productos?oferta=1" products={ofertas} exchangeRateVES={rate} lowStockThreshold={lowStock} tone="surface" />
-
-        <ProductSection id="mas-vendidos" title="Lo más vendido" subtitle="Lo que más compran nuestros clientes" products={masVendidos} exchangeRateVES={rate} lowStockThreshold={lowStock} />
-
-        <DigitalStrip products={codigosDigitales} href={hrefDigitales} exchangeRateVES={rate} lowStockThreshold={lowStock} />
-
-        <ProductSection id="recien-llegados" title="Recién llegados" subtitle="Lo último que llegó a la tienda" href="/productos" products={recienLlegados} exchangeRateVES={rate} lowStockThreshold={lowStock} tone="surface" />
-
-        {vitrinasConProductos.map(({ departamento, products }) => (
-          <VitrinaDepartamento key={departamento.id} departamento={departamento} products={products} exchangeRateVES={rate} lowStockThreshold={lowStock} />
-        ))}
-
-        {estantes.map(({ category, products }, index) => (
-          <ProductSection
-            key={category.id}
-            id={`categoria-${category.slug}`}
-            title={category.name}
-            href={`/categorias/${category.slug}`}
-            products={products}
-            exchangeRateVES={rate}
-            lowStockThreshold={lowStock}
-            tone={(index + (vitrinasConProductos.length % 2)) % 2 === 0 ? 'white' : 'surface'}
-          />
-        ))}
-
-        {/* C-224: el Pago Móvil verificado con el banco solo se promete si la conciliación del BDV está configurada */}
-        <TrustBar whatsapp={settings.whatsapp} paymentMethods={paymentMethods} pagoMovilVerificado={paymentMethods.includes('MOBILE_PAYMENT') && Boolean(process.env.BDV_API_KEY)} />
-
-        <MoreFromElectroShop />
-
-        {settings.heroVideoEnabled && settings.heroVideoUrl && (
-          <section aria-labelledby="videos-title" className="bg-surface py-6 lg:py-8">
-            <Container>
-              <SectionHeader id="videos-title" title={settings.heroVideoTitle || 'Reviews y novedades'} subtitle={settings.heroVideoDescription || undefined} />
-              <div className="mx-auto max-w-4xl">
-                <VideoPlayer videoUrl={settings.heroVideoUrl} />
-              </div>
-            </Container>
-          </section>
-        )}
+        {seccionesFinales.map((s) => s.node)}
       </main>
 
       <Footer />

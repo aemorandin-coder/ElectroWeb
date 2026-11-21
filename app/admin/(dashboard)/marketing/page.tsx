@@ -3,16 +3,16 @@
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { IconoBuscar, IconoInicio, IconoNovedad, IconoPopup, type IconType } from '@/components/iconos';
 import { useRouter } from 'next/navigation';
-import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab } from '@/lib/admin-ui';
+import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab, adminTabList, adminTabScroll } from '@/lib/admin-ui';
 import { IconoGorro } from '@/components/navidad/GorroSanta';
 import Popup from './_components/Popup';
 import Navidad from './_components/Navidad';
 import Lanzamiento from './_components/Lanzamiento';
+import PortadaStudio from './_components/PortadaStudio';
 import AjustesDeContenido from './_components/AjustesDeContenido';
-import StorefrontSection from '../settings/_components/StorefrontSection';
 import SeoSection from '../settings/_components/SeoSection';
 import type { SettingsKey } from '../settings/_components/settings-form';
-import { PORTADA_FIELDS, SEO_FIELDS } from '@/lib/validations/settings';
+import { SEO_FIELDS } from '@/lib/validations/settings';
 
 type SeccionId = 'portada' | 'lanzamiento' | 'popup' | 'navidad' | 'google';
 
@@ -76,13 +76,13 @@ export default function MarketingPage() {
         </div>
       </div>
 
-      <nav aria-label="Secciones de vitrina" className="scrollbar-hide -mx-1 overflow-x-auto px-1 pb-1">
-        <ul className="flex w-max gap-2">
+      <nav aria-label="Secciones de vitrina" className={adminTabScroll}>
+        <ul className={adminTabList} role="tablist">
           {SECCIONES.map((s) => {
             const Icon = s.icon;
             return (
-              <li key={s.id}>
-                <button type="button" onClick={() => ir(s.id)} aria-current={activa === s.id ? 'page' : undefined} className={adminTab(activa === s.id)}>
+              <li key={s.id} role="presentation">
+                <button type="button" role="tab" aria-selected={activa === s.id} onClick={() => ir(s.id)} className={adminTab(activa === s.id)}>
                   <Icon className="h-4 w-4" aria-hidden="true" />
                   {s.label}
                 </button>
@@ -92,9 +92,7 @@ export default function MarketingPage() {
         </ul>
       </nav>
 
-      {activa === 'portada' && (
-        <AjustesDeContenido campos={PORTADA_FIELDS as readonly SettingsKey[]}>{(p) => <StorefrontSection {...p} parte="portada" />}</AjustesDeContenido>
-      )}
+      {activa === 'portada' && <PortadaStudio onIrSeccion={ir} />}
       {activa === 'lanzamiento' && <Lanzamiento />}
       {activa === 'popup' && <Popup />}
       {activa === 'navidad' && <Navidad />}

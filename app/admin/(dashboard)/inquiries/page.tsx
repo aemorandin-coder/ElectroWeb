@@ -3,7 +3,7 @@
 import {
   adminBadge, adminCard, adminCardFlush, adminIconButton, adminInput, adminLabel, adminModalBody, adminModalFooter,
   adminModalHeader, adminModalTitle, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton,
-  adminSecondaryButton, adminSpinner, adminTab,
+  adminSecondaryButton, adminSpinner, adminTab, adminTabList, adminTabScroll,
 } from '@/lib/admin-ui';
 import ModalDialog from '@/components/ui/ModalDialog';
 import { formatUSD } from '@/lib/currency';
@@ -337,37 +337,45 @@ export default function InquiriesPage() {
             </div>
 
             {/* Tabs */}
-            <div className="scrollbar-hide flex max-w-full gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Buzones de atención">
-                <button
-                    type="button"
-                    role="tab"
-                    aria-selected={activeTab === 'messages'}
-                    onClick={() => setActiveTab('messages')}
-                    className={adminTab(activeTab === 'messages')}
-                >
-                    <IconoChat className="h-4 w-4" aria-hidden="true" />
-                    Mensajes
-                    {messageStats.pending > 0 && (
-                        <span className={adminBadge(activeTab === 'messages' ? 'neutral' : 'warning')}>
-                            {messageStats.pending}
-                        </span>
-                    )}
-                </button>
-                <button
-                    type="button"
-                    role="tab"
-                    aria-selected={activeTab === 'requests'}
-                    onClick={() => setActiveTab('requests')}
-                    className={adminTab(activeTab === 'requests')}
-                >
-                    <IconoPaquete className="h-4 w-4" aria-hidden="true" />
-                    Solicitudes de Productos
-                    {requestStats.pending > 0 && (
-                        <span className={adminBadge(activeTab === 'requests' ? 'neutral' : 'warning')}>
-                            {requestStats.pending}
-                        </span>
-                    )}
-                </button>
+            <div className={adminTabScroll}>
+                <div className={adminTabList} role="tablist" aria-label="Buzones de atención">
+                    <button
+                        type="button"
+                        role="tab"
+                        aria-selected={activeTab === 'messages'}
+                        onClick={() => setActiveTab('messages')}
+                        className={adminTab(activeTab === 'messages')}
+                    >
+                        <IconoChat className="h-4 w-4" aria-hidden="true" />
+                        Mensajes
+                        {messageStats.pending > 0 && (
+                            <span className={activeTab === 'messages'
+                                ? 'inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold tabular-nums text-white'
+                                : adminBadge('warning')}
+                            >
+                                {messageStats.pending}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        type="button"
+                        role="tab"
+                        aria-selected={activeTab === 'requests'}
+                        onClick={() => setActiveTab('requests')}
+                        className={adminTab(activeTab === 'requests')}
+                    >
+                        <IconoPaquete className="h-4 w-4" aria-hidden="true" />
+                        Solicitudes de Productos
+                        {requestStats.pending > 0 && (
+                            <span className={activeTab === 'requests'
+                                ? 'inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold tabular-nums text-white'
+                                : adminBadge('warning')}
+                            >
+                                {requestStats.pending}
+                            </span>
+                        )}
+                    </button>
+                </div>
             </div>
 
             {/* Content */}

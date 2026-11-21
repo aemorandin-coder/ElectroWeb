@@ -134,10 +134,13 @@ export const adminModalBody = 'overflow-y-auto px-5 py-4';
 export const adminModalFooter = 'flex flex-col-reverse gap-2 border-t border-line bg-surface px-5 py-3 sm:flex-row sm:justify-end';
 
 /* ── Pestañas y filtros ───────────────────────────────────────────────── */
+export const adminTabScroll = 'scrollbar-hide max-w-full overflow-x-auto px-0.5 py-1';
+export const adminTabList = 'inline-flex w-max max-w-none items-center gap-1 rounded-xl border border-line-strong bg-white p-1';
+
 export function adminTab(active: boolean): string {
   return [
-    'inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-lg border-b-2 px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
-    active ? 'border-brand-700 bg-brand-500 text-white' : 'border-transparent text-ink-soft hover:bg-surface hover:text-ink',
+    'inline-flex min-h-10 cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+    active ? 'bg-brand-500 text-white shadow-xs' : 'text-ink-soft hover:bg-brand-50 hover:text-brand-700',
   ].join(' ');
 }
 

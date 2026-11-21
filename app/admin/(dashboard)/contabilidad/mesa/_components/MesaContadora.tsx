@@ -95,8 +95,8 @@ export default function MesaContadora({ yo, saludo, hoy, periodo, vence, empresa
           <p className="mt-1 text-sm text-white/80">
             {yo.esContadora ? 'Contadora' : 'Contabilidad'} de {empresa.nombre || 'la empresa'}{empresa.rif ? ` · RIF ${empresa.rif}` : ''} · {hoy}
           </p>
-          <p className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-3 py-2 text-sm">
-            <IconoInfo className="h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />
+          <p className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white">
+            <IconoInfo className="h-4 w-4 shrink-0 text-brand-300" aria-hidden="true" />
             {resumen.emitidas === 0 && resumen.sinFactura === 0
               ? `${Mes} todavía no tiene facturas ni compras cobradas.`
               : `${Mes}: ${resumen.emitidas} ${resumen.emitidas === 1 ? 'factura' : 'facturas'} · IVA ${formatVES(resumen.ivaBs)} · ${resumen.sinFactura} ${resumen.sinFactura === 1 ? 'compra cobrada' : 'compras cobradas'} sin factura`}

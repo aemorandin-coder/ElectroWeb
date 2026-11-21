@@ -15,6 +15,8 @@ import {
   adminPrimaryButton,
   adminSecondaryButton,
   adminTab,
+  adminTabList,
+  adminTabScroll,
   adminBadge,
   adminLabel,
   adminModalOverlay,
@@ -378,25 +380,27 @@ export default function WarrantyPage() {
 
       {/* Tabs */}
       {/* C-201: a 360 px "Nueva" quedaba cortada: en el teléfono, sin íconos, con menos aire y "Solicitudes" */}
-      <div className="flex gap-2 overflow-x-auto pb-1 border-b border-line max-sm:gap-1" role="tablist" aria-label="Garantía">
-        {PESTANAS.map(({ id, texto, corto, Icono }) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={selectedTab === id}
-            onClick={() => { setSelectedTab(id); if (id === 'requests') setAbierta(null); }}
-            className={`${adminTab(selectedTab === id)} max-sm:px-2.5`}
-          >
-            <span className="inline-flex items-center gap-1.5">
-              <Icono className="w-3.5 h-3.5 max-sm:hidden" aria-hidden="true" />
-              <span className="sm:hidden">{corto}</span><span className="max-sm:hidden">{texto}</span>
-              {id === 'requests' && claims.length > 0 && <span className={`text-xs font-bold tabular-nums ${selectedTab === id ? 'text-white/80' : 'text-muted'}`}>{claims.length}</span>}
-              {/* C-251b: lo que te toca va en el azul oscuro del logo (el rojo es error o cancelado) */}
-              {id === 'requests' && esperaRespuesta && <span className={`h-2 w-2 rounded-full ${selectedTab === id ? 'bg-white' : 'bg-brand-700'}`} aria-label="Hay una solicitud esperando tu respuesta" />}
-            </span>
-          </button>
-        ))}
+      <div className={adminTabScroll}>
+        <div className={adminTabList} role="tablist" aria-label="Garantía">
+          {PESTANAS.map(({ id, texto, corto, Icono }) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={selectedTab === id}
+              onClick={() => { setSelectedTab(id); if (id === 'requests') setAbierta(null); }}
+              className={`${adminTab(selectedTab === id)} max-sm:px-2.5`}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <Icono className="w-3.5 h-3.5 max-sm:hidden" aria-hidden="true" />
+                <span className="sm:hidden">{corto}</span><span className="max-sm:hidden">{texto}</span>
+                {id === 'requests' && claims.length > 0 && <span className={`text-xs font-bold tabular-nums ${selectedTab === id ? 'text-white/80' : 'text-muted'}`}>{claims.length}</span>}
+                {/* C-251b: lo que te toca va en el azul oscuro del logo (el rojo es error o cancelado) */}
+                {id === 'requests' && esperaRespuesta && <span className={`h-2 w-2 rounded-full ${selectedTab === id ? 'bg-white' : 'bg-brand-700'}`} aria-label="Hay una solicitud esperando tu respuesta" />}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab Content */}

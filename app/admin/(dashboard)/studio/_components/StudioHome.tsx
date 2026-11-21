@@ -13,7 +13,7 @@ import Filtros from '@/components/admin/Filtros';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
 import {
   adminBadge, adminDato, adminEmpty, adminIconButton, adminInput, adminPageHeader,
-  adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab, placaAccion,
+  adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab, adminTabList, adminTabScroll, placaAccion,
 } from '@/lib/admin-ui';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { downloadIssues, flyerChecks, flyerStatus, type CheckKind, type FlyerCheck, type TextIssues } from '@/lib/studio/checks';
@@ -455,8 +455,8 @@ export default function StudioHome() {
           )}
 
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <nav aria-label="Vistas" className="overflow-x-auto">
-              <div className="flex w-max gap-2">
+            <nav aria-label="Vistas" className={adminTabScroll}>
+              <div className={adminTabList}>
                 {(
                   [
                     ['lista', `Historias (${flyers.length})`],
@@ -559,32 +559,38 @@ export default function StudioHome() {
             </div>
           ) : (
             <>
-              <div className="-mx-1 mb-3 flex items-center gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible" role="group" aria-label="Filtros rápidos">
-                {(
-                  [
-                    ['all', 'Todas'],
-                    ['story', '9:16 Historia'],
-                    ['post45', '4:5 Post'],
-                    ['post11', '1:1 Cuadrado'],
-                    ['alerts', 'Con alertas'],
-                  ] as [FormatFilter, string][]
-                ).map(([v, label]) => (
-                  <button key={v} type="button" aria-pressed={formatFilter === v} onClick={() => setFormatFilter(v)} className={adminTab(formatFilter === v)}>
-                    {label}
-                  </button>
-                ))}
+              <div className={`${adminTabScroll} mb-3`}>
+                <div className={adminTabList} role="group" aria-label="Filtros rápidos">
+                  {(
+                    [
+                      ['all', 'Todas'],
+                      ['story', '9:16 Historia'],
+                      ['post45', '4:5 Post'],
+                      ['post11', '1:1 Cuadrado'],
+                      ['alerts', 'Con alertas'],
+                    ] as [FormatFilter, string][]
+                  ).map(([v, label]) => (
+                    <button key={v} type="button" aria-pressed={formatFilter === v} onClick={() => setFormatFilter(v)} className={adminTab(formatFilter === v)}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {batches.length > 1 && (
-                <div className="-mx-1 mb-3 flex items-center gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible" role="group" aria-label="Lotes">
-                  <button type="button" aria-pressed={batch === null} onClick={() => setBatch(null)} className={adminTab(batch === null)}>
-                    Todos los lotes
-                  </button>
-                  {batches.map(([b, n]) => (
-                    <button key={b || '-'} type="button" aria-pressed={batch === b} onClick={() => setBatch(b)} className={adminTab(batch === b)}>
-                      {b || 'Sin lote'} ({n})
-                    </button>
-                  ))}
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <div className={adminTabScroll}>
+                    <div className={adminTabList} role="group" aria-label="Lotes">
+                      <button type="button" aria-pressed={batch === null} onClick={() => setBatch(null)} className={adminTab(batch === null)}>
+                        Todos los lotes
+                      </button>
+                      {batches.map(([b, n]) => (
+                        <button key={b || '-'} type="button" aria-pressed={batch === b} onClick={() => setBatch(b)} className={adminTab(batch === b)}>
+                          {b || 'Sin lote'} ({n})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   {batch && (
                     <button type="button" disabled={busy} onClick={() => void downloadZip(flyers.filter((f) => f.batch === batch), batch)} className={`${smallButton} shrink-0 whitespace-nowrap`}>
                       <IconoArchivar className="h-4 w-4" aria-hidden="true" />

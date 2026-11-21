@@ -7,6 +7,9 @@ import { z } from '@/lib/zod';
 import { MAX_EMPAQUES } from '@/lib/embalaje';
 import { corteValido, GORROS } from '@/lib/navidad';
 import { extraerYoutubeId, PALETAS_LANZAMIENTO } from '@/lib/lanzamiento';
+import {
+  extraerYoutubeIdPortada, normalizarConfigSecciones, POSICIONES_VIDEO, SECCION_PORTADA_IDS,
+} from '@/lib/portada';
 
 export const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 export type WeekDay = (typeof WEEK_DAYS)[number];
@@ -173,12 +176,33 @@ export const settingsUpdateSchema = z.object({
 
   // Tienda
   heroVideoEnabled: z.boolean(),
-  heroVideoUrl: optionalUrl(500),
+  heroVideoUrl: z
+    .string()
+    .trim()
+    .max(500, 'Máximo 500 caracteres')
+    .refine(
+      (value) => value === '' || (/^https?:\/\/\S+$/i.test(value) && extraerYoutubeIdPortada(value) !== null),
+      'Pega un enlace válido de YouTube (video o short)'
+    )
+    .nullable()
+    .transform((value) => value || null),
   heroVideoTitle: optionalText(80),
   heroVideoDescription: optionalText(200),
   maxFeaturedProducts: integer(2, 24),
   showCategories: z.boolean(),
   maxCategoriesDisplay: integer(1, 12),
+  homeSectionsConfig: z
+    .object({
+      orden: z.array(z.enum(SECCION_PORTADA_IDS)).max(SECCION_PORTADA_IDS.length),
+      ocultas: z.array(z.enum(SECCION_PORTADA_IDS)).max(SECCION_PORTADA_IDS.length),
+    })
+    .transform((value) => JSON.stringify(normalizarConfigSecciones(value))),
+  homeBannerEnabled: z.boolean(),
+  homeBannerText: optionalText(90),
+  homeBannerLink: optionalLink(200),
+  homeRotateFeatured: z.boolean(),
+  homeCategoryShelves: integer(0, 6),
+  homeVideoPosition: z.enum(POSICIONES_VIDEO, { error: 'Elige una ubicación válida para el video' }),
   lowStockThreshold: integer(0, 1000),
   autoHideOutOfStock: z.boolean(),
   notifyLowStock: z.boolean(),
@@ -314,9 +338,10 @@ export const LAUNCH_THEME_FIELDS: readonly SettingsField[] = [
   'launchThemeShelfTitle', 'launchThemeProductId', 'launchThemeProductIds',
 ];
 
-/** C-294 (D2 del 18/11): la portada y "Google y redes" pasaron a Marketing: también los guardan los administradores con MANAGE_CONTENT */
+/** C-294 (D2 del 18/11) + G-74 (Studio de Portada): la portada y "Google y redes" también los guardan admins con MANAGE_CONTENT */
 export const PORTADA_FIELDS: readonly SettingsField[] = [
   'maxFeaturedProducts', 'showCategories', 'maxCategoriesDisplay', 'heroVideoEnabled', 'heroVideoUrl', 'heroVideoTitle', 'heroVideoDescription',
+  'homeSectionsConfig', 'homeBannerEnabled', 'homeBannerText', 'homeBannerLink', 'homeRotateFeatured', 'homeCategoryShelves', 'homeVideoPosition',
 ];
 export const SEO_FIELDS: readonly SettingsField[] = [
   'metaTitle', 'metaDescription', 'metaKeywords', 'homeMetaImage',

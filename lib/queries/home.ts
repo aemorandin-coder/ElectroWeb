@@ -12,6 +12,9 @@ import { repartirCategorias } from '@/lib/inicio/reparto';
 import {
   etiquetaPlataforma, extraerYoutubeId, lanzamientoActivo, nombreBaseJuego, paletaLanzamiento, type PaletaLanzamiento,
 } from '@/lib/lanzamiento';
+import {
+  leerConfigSeccionesPortada, normalizarPosicionVideo, type HomeSectionsConfig, type PosicionVideoPortada,
+} from '@/lib/portada';
 
 const MAX_LIMIT = 50;
 const clampLimit = (value: number) => Math.min(MAX_LIMIT, Math.max(1, Math.floor(value) || 1));
@@ -22,6 +25,13 @@ export interface HomeSettings {
   lowStockThreshold: number;
   showCategories: boolean;
   maxCategoriesDisplay: number;
+  homeSectionsConfig: HomeSectionsConfig;
+  homeBannerEnabled: boolean;
+  homeBannerText: string | null;
+  homeBannerLink: string | null;
+  homeRotateFeatured: boolean;
+  homeCategoryShelves: number;
+  homeVideoPosition: PosicionVideoPortada;
 }
 
 export const getHomeSettings = cache(async (): Promise<HomeSettings> => {
@@ -33,6 +43,13 @@ export const getHomeSettings = cache(async (): Promise<HomeSettings> => {
       lowStockThreshold: true,
       showCategories: true,
       maxCategoriesDisplay: true,
+      homeSectionsConfig: true,
+      homeBannerEnabled: true,
+      homeBannerText: true,
+      homeBannerLink: true,
+      homeRotateFeatured: true,
+      homeCategoryShelves: true,
+      homeVideoPosition: true,
     },
   });
   return {
@@ -41,6 +58,13 @@ export const getHomeSettings = cache(async (): Promise<HomeSettings> => {
     lowStockThreshold: settings?.lowStockThreshold ?? 10,
     showCategories: settings?.showCategories ?? true,
     maxCategoriesDisplay: settings?.maxCategoriesDisplay ?? 6,
+    homeSectionsConfig: leerConfigSeccionesPortada(settings?.homeSectionsConfig),
+    homeBannerEnabled: settings?.homeBannerEnabled ?? false,
+    homeBannerText: settings?.homeBannerText?.trim() || null,
+    homeBannerLink: settings?.homeBannerLink?.trim() || null,
+    homeRotateFeatured: settings?.homeRotateFeatured ?? true,
+    homeCategoryShelves: Math.min(6, Math.max(0, settings?.homeCategoryShelves ?? 3)),
+    homeVideoPosition: normalizarPosicionVideo(settings?.homeVideoPosition),
   };
 });
 

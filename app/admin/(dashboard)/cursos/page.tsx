@@ -8,7 +8,7 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { hasPermission } from '@/lib/auth-helpers';
 import {
   adminBadge, adminCardFlush, adminIconButton, adminPageHeader, adminPageSubtitle, adminPageTitle,
-  adminPrimaryButton, adminSecondaryButton, adminSpinner, adminSuccessButton, adminTab,
+  adminPrimaryButton, adminSecondaryButton, adminSpinner, adminSuccessButton, adminTab, adminTabList, adminTabScroll,
 } from '@/lib/admin-ui';
 import { formatRating, formatUSD } from '@/lib/currency';
 import { useCargarAlMontar } from '@/lib/hooks/useCargarAlMontar';
@@ -167,27 +167,29 @@ export default function AdminCursosPage() {
       </div>
 
       {puedeCursos && puedeCreadores && (
-        <div className="scrollbar-hide flex max-w-full gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Academia">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={vista === 'cursos'}
-            onClick={() => cambiarVista('cursos')}
-            className={adminTab(vista === 'cursos')}
-          >
-            <IconoCursos className="h-4 w-4" aria-hidden="true" />
-            Cursos
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={vista === 'creadores'}
-            onClick={() => cambiarVista('creadores')}
-            className={adminTab(vista === 'creadores')}
-          >
-            <IconoClientes className="h-4 w-4" aria-hidden="true" />
-            Creadores
-          </button>
+        <div className={adminTabScroll}>
+          <div className={adminTabList} role="tablist" aria-label="Academia">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={vista === 'cursos'}
+              onClick={() => cambiarVista('cursos')}
+              className={adminTab(vista === 'cursos')}
+            >
+              <IconoCursos className="h-4 w-4" aria-hidden="true" />
+              Cursos
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={vista === 'creadores'}
+              onClick={() => cambiarVista('creadores')}
+              className={adminTab(vista === 'creadores')}
+            >
+              <IconoClientes className="h-4 w-4" aria-hidden="true" />
+              Creadores
+            </button>
+          </div>
         </div>
       )}
 

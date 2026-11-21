@@ -10,6 +10,18 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.119] - 2026-11-20
+Limpieza de textos genéricos y color fuera del kit en la barra de compra del tema de lanzamiento GTA VI, más centrado y simetría en teléfono (G-72). Sin cambio de base, sin variables y sin cron.
+### Tienda 1.24.2 y Marketing 1.29.2 (G-72)
+- **Sin textos genéricos ni verde menta (`HeroInteractivoLanzamiento.tsx` + `app/globals.css`):** se eliminan las dos líneas inferiores de relleno (`Código digital · Entrega rápida` en `#a7f3d0` y `Pago Móvil · BCV · Soporte VE`) y la clase `.tema-lanzamiento-stock`.
+- **Centrado y simetría móvil (`< 640 px`):** centra el precio en fuente Rockstar (`Anton`) y su conversión a tasa BCV, y expande el selector de plataformas (`PS5` / `XBOX`) a una grilla simétrica de 2 columnas a ancho completo sin dejar espacio vacío a la derecha.
+
+## [1.0.0-rc.119] - 2026-11-20
+Limpieza de textos genéricos y color fuera del kit en la barra de compra del tema de lanzamiento GTA VI, más centrado y simetría en teléfono (G-72). Sin cambio de base, sin variables y sin cron.
+### Tienda 1.24.2 y Marketing 1.29.2 (G-72)
+- **Sin textos genéricos ni verde menta (`HeroInteractivoLanzamiento.tsx` + `app/globals.css`):** se eliminan las dos líneas inferiores de relleno (`Código digital · Entrega rápida` en `#a7f3d0` y `Pago Móvil · BCV · Soporte VE`) y la clase `.tema-lanzamiento-stock`.
+- **Centrado y simetría móvil (`< 640 px`):** centra el precio en fuente Rockstar (`Anton`) y su conversión a tasa BCV, y expande el selector de plataformas (`PS5` / `XBOX`) a una grilla simétrica de 2 columnas a ancho completo sin dejar espacio vacío a la derecha.
+
 ## [1.0.0-rc.118] - 2026-11-20
 Ajuste de jerarquía visual en el tema de lanzamiento GTA VI (G-72): protagonismo al tráiler oficial (7 de 12 columnas) con barra de compra discreta (Opción A) y precio en tipografía display Rockstar (`Anton`). Sin cambio de base, sin variables y sin cron.
 ### Tienda 1.24.1 y Marketing 1.29.1 (G-72)

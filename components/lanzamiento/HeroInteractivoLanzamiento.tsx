@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
-  IconoCarrito, IconoCerrar, IconoCheck, IconoPlay,
+  IconoCarrito, IconoCerrar, IconoPlay,
 } from '@/components/iconos';
 import { avisarAgregado } from '@/components/onboarding/AvisoAgregado';
 import { needsProductPage, type ProductCardData } from '@/components/ui/productCardData';
@@ -160,9 +160,9 @@ export default function HeroInteractivoLanzamiento({
 
           {activo && (
             <div className="tema-lanzamiento-caja mx-auto mt-4 w-full max-w-[470px] rounded-2xl p-3.5 sm:p-4 lg:mx-0">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/15 pb-3">
-                <div className="text-left">
-                  <div className="flex items-baseline gap-2">
+              <div className="flex flex-col items-center gap-3 border-b border-white/15 pb-3 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+                <div>
+                  <div className="flex items-baseline justify-center gap-2 sm:justify-start">
                     <span className="tema-lanzamiento-precio text-4xl font-normal text-white tabular-nums sm:text-[40px]">
                       {formatUSD(activo.priceUSD)}
                     </span>
@@ -181,7 +181,7 @@ export default function HeroInteractivoLanzamiento({
                   <div
                     role="group"
                     aria-label="Elegir plataforma"
-                    className="tema-edicion-track inline-flex items-center gap-1 rounded-xl p-1"
+                    className={`tema-edicion-track w-full rounded-xl p-1 sm:w-auto ${ediciones.length === 2 ? 'grid grid-cols-2 gap-1 sm:inline-flex sm:items-center' : 'flex flex-wrap justify-center gap-1 sm:inline-flex sm:items-center'}`}
                   >
                     {ediciones.map((ed, idx) => {
                       const platLogo = logoPlataforma(ed.plataforma);
@@ -191,7 +191,7 @@ export default function HeroInteractivoLanzamiento({
                           type="button"
                           aria-pressed={idx === edicionIdx}
                           onClick={() => setEdicionIdx(idx)}
-                          className="tema-edicion-btn flex min-h-9 items-center justify-center rounded-lg px-3 py-1.5 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                          className="tema-edicion-btn flex min-h-10 items-center justify-center rounded-lg px-3 py-1.5 transition sm:min-h-9 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                         >
                           {platLogo ? (
                             <>
@@ -255,14 +255,6 @@ export default function HeroInteractivoLanzamiento({
                 >
                   Ver ficha
                 </Link>
-              </div>
-
-              <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11.5px] font-semibold text-white/90 sm:justify-start">
-                <span className="tema-lanzamiento-stock inline-flex items-center gap-1">
-                  <IconoCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  <span>{isDigital ? 'Código digital · Entrega rápida' : agotado ? 'Agotado temporalmente' : 'Disponible para envío o retiro'}</span>
-                </span>
-                <span className="text-white/80">· Pago Móvil · BCV · Soporte VE</span>
               </div>
             </div>
           )}

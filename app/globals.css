@@ -1773,6 +1773,19 @@ html, body { overflow-x: clip; }
 }
 
 /* G-72: Tema temporal de lanzamiento (Vice City) — encapsulado en clases semánticas para mantener intacto el kit de marca C-243 */
+@font-face {
+  font-family: 'AntonLanzamiento';
+  src: url('/fonts/studio/Anton-latin-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+.tema-lanzamiento-precio {
+  font-family: 'AntonLanzamiento', var(--font-sans), sans-serif;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+}
 .tema-vice-pildora {
   background: linear-gradient(135deg, #6246ea 0%, #c83d95 55%, #f27b66 100%);
   border: 1px solid rgba(255, 255, 255, 0.45);
@@ -1825,22 +1838,11 @@ html, body { overflow-x: clip; }
 .tema-lanzamiento-caja {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(158deg, rgba(14, 16, 40, 0.74) 0%, rgba(30, 20, 62, 0.64) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  box-shadow: 0 18px 40px rgba(10, 12, 32, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.22);
-}
-.tema-lanzamiento-caja::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 2px;
-  background: linear-gradient(90deg, #ffd426 0%, #f27b66 52%, #c83d95 100%);
-  pointer-events: none;
-}
-.tema-brand-zona .tema-lanzamiento-caja::before {
-  background: linear-gradient(90deg, #ffffff 0%, var(--color-brand-300) 100%);
+  background: rgba(16, 18, 42, 0.34);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 0 10px 26px rgba(10, 12, 32, 0.22);
 }
 .tema-lanzamiento-bcv {
   background: rgba(255, 255, 255, 0.11);

@@ -10,6 +10,11 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.118] - 2026-11-20
+Ajuste de jerarquía visual en el tema de lanzamiento GTA VI (G-72): protagonismo al tráiler oficial (7 de 12 columnas) con barra de compra discreta (Opción A) y precio en tipografía display Rockstar (`Anton`). Sin cambio de base, sin variables y sin cron.
+### Tienda 1.24.1 y Marketing 1.29.1 (G-72)
+- **Tráiler protagonista y barra glass discreta (`components/lanzamiento/HeroInteractivoLanzamiento.tsx` + `app/globals.css`):** el video pasa a ocupar 7 de las 12 columnas a ancho completo sin `max-w-lg`, mientras la columna izquierda (5 columnas) usa una barra translúcida compacta a mitad de altura donde el precio en tipografía display Rockstar (`Anton`, `/fonts/studio/Anton-latin-normal.woff2`) y el selector de plataformas (`PS5` / `XBOX` con sus logos oficiales) comparten la misma fila superior horizontal.
+
 ## [1.0.0-rc.117] - 2026-11-20
 Tema temporal de lanzamiento para GTA VI en el inicio (`Marketing → Lanzamiento`) y organización inteligente de la Descripción en la ficha de producto (G-72). Pedido de Andrés, 20/11: estrenar un tema promocional Vice City arriba de la portada (Opción A aprobada sobre maqueta local: barra intacta + píldora `GTA VI`, logo oficial limpio sin cuadrícula, wordmark oficial en blanco en una sola línea, caja centrada con precio arriba, cambio instantáneo PS5 ↔ Xbox con sus logos oficiales, tráiler oficial en modal y fila de 4 productos) administrable desde el panel, y equilibrar la tarjeta Descripción de la ficha de producto en una grilla ordenada sin huecos vacíos. **Cambio de base aditivo:** 13 columnas `launchTheme*` en `company_settings` (sin `DROP` ni cambios de tipo). Sin variables nuevas y sin cron.
 ### Tienda 1.24.0 (G-72)

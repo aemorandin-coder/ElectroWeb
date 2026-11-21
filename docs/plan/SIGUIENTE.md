@@ -1,10 +1,14 @@
-# Lo de ahora (actualizado 2026-11-20 · producción en 1.0.0-rc.115; por subir: rc.116, §2)
+# Lo de ahora (actualizado 2026-11-20 · producción en 1.0.0-rc.116; por subir: rc.117, §2)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **G-71 · ElectroStudio 2.6.0 (Fases 1 y 2) (rc.116, en `main`, por subir: §2; `estado/G-71.md`):** pedido del equipo el 20/11 para corregir fallas críticas/móviles, ordenar el Paso 4 y rediseñar el Home (opción elegida `A · A · A`, probada en vivo antes de pasar a `main`).
+- **G-72 · Tema de lanzamiento GTA VI y Descripción inteligente en ficha de producto (rc.117, en `main`, por subir: §2; `estado/G-72.md`):** pedido de Andrés el 20/11, elegido sobre maqueta HTML local (Opción A) y afinado en vivo en escritorio y teléfono (`360 px`).
+  - **Tema de lanzamiento (`Marketing → Lanzamiento`):** nueva pestaña en el panel con programación por fechas en Caracas, ambiente `Atardecer Vice` o `Azul Electro Shop`, botón `Cargar plantilla GTA VI` en un clic, logo oficial GTA VI con transparencia limpia, `"Ya llegó a [Electro Shop]"` en una sola línea con wordmark oficial blanco, caja centrada con precio arriba, cambio directo PS5 ↔ Xbox usando los logos oficiales de plataforma, tráiler de YouTube en modal y fila de hasta 4 productos.
+  - **Descripción inteligente en ficha de producto (`/productos/[id]`):** separa introducción, subtítulos, tarjetas de detalle, `De un vistazo` (2×2) y pasos numerados de `¿Cómo se canjea?` en una grilla equilibrada de `7/5` sin huecos en blanco en escritorio.
+  - **Cambio de base aditivo:** 13 columnas `launchTheme*` en `company_settings` (sin `DROP` ni `ALTER ... TYPE`).
+- **G-71 · ElectroStudio 2.6.0 (Fases 1 y 2) (rc.116, en producción; por confirmar: §2; `estado/G-71.md`):** pedido del equipo el 20/11 para corregir fallas críticas/móviles, ordenar el Paso 4 y rediseñar el Home (opción elegida `A · A · A`, probada en vivo antes de pasar a `main`).
   - **Fase 1 · Bugs críticos, flujo honesto, Paso 4 y móvil A:** notificaciones sobre `Pasos`, popover móvil en `components/admin/Pasos` sin empujar contenido ni cortar el nombre del paso, pasos honestos (sin `Fotos` en `tasa`/`felicitacion`, nunca salta directo a `Publicar` ni avanza con Paso 1 incompleto), detección de cambios post-descarga por huella visual, filtro digital + aviso en `Gift card`, rutas Telegram en `Ajustes → Avisos → Telegram`, selector de plantilla colapsado con `Opcion`, Paso 4 en 4 pestañas (`Texto`, `Fuente y estilo` en 2 columnas sin truncar, `Color y fondo`, `Posición` con cruceta 1 px) + soltar y devolver textos de la plantilla (`C-271`), y móvil Variante A (`Editar | Vista previa`, `Mover en lienzo` fullscreen con barra superior externa, doble toque en texto y cierre con Atrás).
   - **Fase 2 · Home operativo y Radar:** "Qué publicamos hoy (desde tu tienda)" con 4 sugerencias en vivo (`/api/admin/studio/radar`), cajón `Ajustes de marca` en el Home, buscador y filtros con atajos al paso faltante, calendario `Semana` accionable (`+ Crear aquí` prellenando `?fecha=`) y `Resultados` con KPIs y `Repetir fórmula`.
   - **Siguen (Fases 3 y 4):** `C-274` (6 plantillas nuevas, ElectroStudio `2.7.0`) y `C-275` (5 mejoras con IA, `2.8.0`).
@@ -564,10 +568,19 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.116` (G-71)
-Producción está en `v1.0.0-rc.115` (`37cebdfb`, G-70). Si entran más tareas antes de subir, se suman aquí.
-- **G-71** (`rc.116` · ElectroStudio `2.6.0` + Marco del panel `1.22.1`): Fases 1 y 2 de ElectroStudio — corrección de bugs Chrome/móvil, pasos honestos, Paso 4 en 4 pestañas + soltar texto de la plantilla (`C-271`), editor móvil Variante A con `Mover en lienzo` fullscreen, nuevo Home con Radar en vivo (`/api/admin/studio/radar`), `Ajustes de marca` en cajón propio, calendario `Semana` accionable y `Resultados` con `Repetir fórmula`. **Sin cambio de base, sin variables y sin cron.**
-- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.116`.
+### Lo que falta subir: `v1.0.0-rc.117` (G-72)
+Producción está en `v1.0.0-rc.116` (`2a056597`, G-71). Si entran más tareas antes de subir, se suman aquí.
+- **G-72** (`rc.117` · Tienda `1.24.0` + Marketing `1.29.0` + Productos `1.19.1` + Ajustes `1.9.1`): tema temporal de lanzamiento GTA VI (`Marketing → Lanzamiento`, píldora en barra, hero Vice City con wordmark oficial blanco, precio arriba y selector PS5/Xbox con logos oficiales, modal de tráiler y fila de 4 productos) y grilla inteligente para `Descripción` en `/productos/[id]`.
+- **Cambio de base aditivo en `company_settings`:** 13 columnas `launchTheme*` (`Boolean`, `Date`, `String`, `String[]`). Sin variables ni cron.
+- **Subir** (en la terminal del servidor): respaldar PostgreSQL (`pg_dump -Fc`), `cd /var/www/electroshopve && git pull --ff-only && npx prisma db push && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.117`.
+- **Pruebas** (unos 4 minutos en escritorio y teléfono `360 px`):
+  1. **Configurar GTA VI (`Marketing → Lanzamiento`):** pulsar **Cargar plantilla GTA VI**, seleccionar `Grand Theft Auto VI (PS5)` como protagonista y añadir la edición Xbox + relacionados en la fila inferior; activar y guardar.
+  2. **Inicio (`/` en `1440 px` y `360 px`):** comprobar píldora `GTA VI` en barra, `"Ya llegó a Electro Shop"` en una línea sin isotipo circular, precio arriba y cambio instantáneo PS5 ↔ Xbox con sus logos oficiales, tráiler en modal y compra directa.
+  3. **Ficha de producto (`/productos/grand-theft-auto-vi-ps5-psn-codigo`):** tarjeta `Descripción` equilibrada en 2 columnas (`De un vistazo` + `¿Cómo se canjea?` sin espacio blanco vacío).
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.116 && npm install && bash scripts/deploy.sh --sin-pull`.
+
+### Por confirmar de rc.116 (G-71; unos 5 minutos)
+Ya en producción (`1.0.0-rc.116|2a056597`). Falta confirmar en escritorio y teléfono (`360 px`), recargando el panel con `Ctrl+R`:
 - **Pruebas** (unos 5 minutos en escritorio y teléfono `360 px`, recargando el panel con `Ctrl+R`):
   1. **Home, Radar y Ajustes de marca (`/admin/studio`):** se ve "Qué publicamos hoy (desde tu tienda)" con sugerencias en vivo y "Crear historia", `Ajustes de marca` abre su cajón desde la cabecera, `Semana` muestra `+ Crear aquí` por día y `Resultados` trae KPIs y `Repetir fórmula`.
   2. **Flujo por pasos y Paso 4 (`/admin/studio/<id>`):** en plantillas sin fotos (`Tasa del día` / `Felicitación`) se omite `Fotos`; en Paso 4, `Soltar a capa libre` convierte un texto fijo en capa editable (y `Devolver a la plantilla` lo restaura) y las 4 pestañas (`Texto`, `Fuente y estilo` en 2 columnas sin cortes, `Color y fondo`, `Posición` con cruceta 1 px) se ven ordenadas.

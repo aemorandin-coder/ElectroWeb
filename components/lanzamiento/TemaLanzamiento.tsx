@@ -15,7 +15,7 @@ export default function TemaLanzamiento({ tema, exchangeRateVES, lowStockThresho
   const zonaClass = tema.paleta === 'vice' ? 'tema-vice-zona' : 'tema-brand-zona';
 
   return (
-    <section id="lanzamiento" aria-labelledby="lanzamiento-title" className={`${zonaClass} py-6 lg:py-9`}>
+    <section id="lanzamiento" aria-labelledby="lanzamiento-title" className={`${zonaClass} py-4 lg:py-9`}>
       <Container className="relative z-10">
         <HeroInteractivoLanzamiento
           eyebrow={tema.eyebrow}

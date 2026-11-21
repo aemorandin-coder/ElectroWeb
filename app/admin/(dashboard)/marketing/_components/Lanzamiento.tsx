@@ -401,6 +401,7 @@ export default function Lanzamiento() {
             counter
             ancho="largo"
             className="max-w-3xl"
+            hint="Si incluyes «Electro Shop», en el inicio se muestra el wordmark oficial en blanco."
             error={errores.launchThemeTitle}
           />
 

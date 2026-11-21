@@ -1823,8 +1823,29 @@ html, body { overflow-x: clip; }
   color: #ffffff;
 }
 .tema-lanzamiento-caja {
-  background: rgba(16, 20, 44, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(158deg, rgba(14, 16, 40, 0.74) 0%, rgba(30, 20, 62, 0.64) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 18px 40px rgba(10, 12, 32, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.tema-lanzamiento-caja::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, #ffd426 0%, #f27b66 52%, #c83d95 100%);
+  pointer-events: none;
+}
+.tema-brand-zona .tema-lanzamiento-caja::before {
+  background: linear-gradient(90deg, #ffffff 0%, var(--color-brand-300) 100%);
+}
+.tema-lanzamiento-bcv {
+  background: rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.96);
 }
 .tema-lanzamiento-acento {
   color: #ffd426;
@@ -1835,7 +1856,7 @@ html, body { overflow-x: clip; }
 .tema-lanzamiento-cta {
   background-color: #ffd426;
   color: #161821;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 .tema-lanzamiento-cta:hover {
   background-color: #f5c400;
@@ -1855,16 +1876,34 @@ html, body { overflow-x: clip; }
 .tema-lanzamiento-sec:hover {
   background: rgba(255, 255, 255, 0.22);
 }
+.tema-edicion-track {
+  background: rgba(8, 10, 26, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
 .tema-edicion-btn {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  color: rgba(255, 255, 255, 0.92);
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.88);
 }
 .tema-edicion-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 .tema-edicion-btn[aria-pressed='true'] {
   background: #ffffff;
   border-color: #ffffff;
   color: #161821;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+}
+.tema-edicion-btn .tema-plat-logo {
+  filter: brightness(0) invert(1);
+  opacity: 0.88;
+  transition: filter 0.18s ease, opacity 0.18s ease;
+}
+.tema-edicion-btn:hover .tema-plat-logo {
+  opacity: 1;
+}
+.tema-edicion-btn[aria-pressed='true'] .tema-plat-logo {
+  filter: none;
+  opacity: 1;
 }

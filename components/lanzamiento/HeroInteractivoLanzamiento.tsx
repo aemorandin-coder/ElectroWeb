@@ -3,13 +3,33 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { IconoCarrito, IconoCerrar, IconoCheck, IconoPlay } from '@/components/iconos';
+import {
+  IconoCarrito, IconoCerrar, IconoCheck, IconoDigital, IconoGarantia, IconoPagoMovil, IconoPlay, IconoVerificado,
+} from '@/components/iconos';
 import { avisarAgregado } from '@/components/onboarding/AvisoAgregado';
 import { needsProductPage, type ProductCardData } from '@/components/ui/productCardData';
 import { useCart } from '@/contexts/CartContext';
 import { formatUSD, formatVES } from '@/lib/currency';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import type { EdicionLanzamiento } from '@/lib/queries/home';
+
+const WORDMARK_BLANCO = '/images/brand/wordmark-blanco.png';
+
+function logoPlataforma(plataforma: string): string | null {
+  if (/ps5|playstation/i.test(plataforma)) return '/images/lanzamiento/logo-ps5.png';
+  if (/xbox/i.test(plataforma)) return '/images/lanzamiento/logo-xbox.svg';
+  return null;
+}
+
+function dividirMarcaTitulo(texto: string): { antes: string; tieneMarca: boolean; despues: string } {
+  const match = /electro\s*shop/i.exec(texto);
+  if (!match || match.index === undefined) return { antes: texto, tieneMarca: false, despues: '' };
+  return {
+    antes: texto.slice(0, match.index).trim(),
+    tieneMarca: true,
+    despues: texto.slice(match.index + match[0].length).trim(),
+  };
+}
 
 interface HeroInteractivoLanzamientoProps {
   eyebrow: string;
@@ -80,110 +100,190 @@ export default function HeroInteractivoLanzamiento({
   const thumbUrl = trailerYoutubeId
     ? `https://img.youtube.com/vi/${trailerYoutubeId}/${thumbFallback ? 'hqdefault' : 'maxresdefault'}.jpg`
     : null;
+  const partesTitulo = dividirMarcaTitulo(titulo);
+  const etiquetaEdicion = ediciones[edicionIdx]?.plataforma;
 
   return (
     <>
-      <div className="grid items-center gap-5 lg:grid-cols-12 lg:gap-10">
+      <div className="grid items-center gap-6 lg:grid-cols-12 lg:gap-10">
         <div className="min-w-0 lg:col-span-6">
-          <span className="tema-lanzamiento-eyebrow inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider">
-            {eyebrow}
-          </span>
+          <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+            <span className="tema-lanzamiento-eyebrow inline-flex items-center rounded-full px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider">
+              {eyebrow}
+            </span>
 
-          <div className="mt-3 flex flex-wrap items-center gap-4">
-            {logo && (
-              <div className="relative h-20 w-28 shrink-0 sm:h-24 sm:w-32">
-                <Image src={logo} alt={titulo} fill sizes="128px" className="object-contain drop-shadow-md" priority />
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <h2 id="lanzamiento-title" className="text-2xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
-                {titulo}
-              </h2>
-              {subtitulo && (
-                <p className="mt-2 max-w-[54ch] text-sm leading-relaxed text-white/95 sm:text-[15px]">
-                  {subtitulo}
-                </p>
+            <div className="mt-2.5 flex flex-col items-center justify-center gap-2 sm:mt-3.5 sm:flex-row sm:items-center sm:gap-4 lg:justify-start">
+              {logo && (
+                <div className="relative h-16 w-24 shrink-0 sm:h-20 sm:w-28">
+                  <Image src={logo} alt={titulo} fill sizes="112px" className="object-contain drop-shadow-md" priority />
+                </div>
               )}
+              {logo && <span className="hidden h-12 w-px shrink-0 bg-white/25 sm:block" aria-hidden="true" />}
+              <div className="min-w-0">
+                {partesTitulo.tieneMarca ? (
+                  <h2
+                    id="lanzamiento-title"
+                    className="inline-flex items-center justify-center whitespace-nowrap gap-1.5 tracking-tight text-white sm:gap-2 lg:justify-start"
+                  >
+                    {partesTitulo.antes && (
+                      <span className="text-[17px] font-bold leading-none text-white sm:text-xl lg:text-[20px] xl:text-2xl">
+                        {partesTitulo.antes}
+                      </span>
+                    )}
+                    <Image
+                      src={WORDMARK_BLANCO}
+                      alt="Electro Shop"
+                      width={262}
+                      height={28}
+                      className="h-[18px] w-auto translate-y-[1px] drop-shadow-sm sm:h-[21px] lg:h-[20px] xl:h-[25px]"
+                      priority
+                    />
+                    {partesTitulo.despues && (
+                      <span className="text-[17px] font-bold leading-none text-white sm:text-xl lg:text-[20px] xl:text-2xl">
+                        {partesTitulo.despues}
+                      </span>
+                    )}
+                  </h2>
+                ) : (
+                  <h2 id="lanzamiento-title" className="text-2xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
+                    {titulo}
+                  </h2>
+                )}
+              </div>
             </div>
+
+            {subtitulo && (
+              <p className="mx-auto mt-2 max-w-[48ch] text-[13px] leading-snug text-white/95 sm:mt-3 sm:text-[15px] sm:leading-relaxed lg:mx-0">
+                {subtitulo}
+              </p>
+            )}
           </div>
 
           {activo && (
-            <div className="tema-lanzamiento-caja mt-4 max-w-xl rounded-2xl p-4 sm:p-5">
+            <div className="tema-lanzamiento-caja mx-auto mt-3.5 w-full max-w-xl rounded-2xl p-3.5 sm:mt-5 sm:p-5 lg:mx-0">
+              <div className="text-center">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/75">
+                  {ediciones.length > 1 && etiquetaEdicion
+                    ? `Edición seleccionada · ${etiquetaEdicion}`
+                    : isDigital
+                      ? 'Edición digital oficial'
+                      : 'Disponible en Electro Shop'}
+                </p>
+
+                <div className="mt-0.5 flex items-baseline justify-center gap-2.5 sm:mt-1">
+                  <span className="text-3xl font-bold tracking-tight text-white tabular-nums sm:text-4xl">
+                    {formatUSD(activo.priceUSD)}
+                  </span>
+                  {activo.compareAtPriceUSD && activo.compareAtPriceUSD > activo.priceUSD && (
+                    <span className="text-sm text-white/75 line-through">{formatUSD(activo.compareAtPriceUSD)}</span>
+                  )}
+                </div>
+
+                {exchangeRateVES ? (
+                  <div className="mt-1.5 flex justify-center sm:mt-2">
+                    <span className="tema-lanzamiento-bcv inline-flex items-center justify-center rounded-full px-3 py-0.5 text-xs font-medium">
+                      {formatVES(activo.priceUSD * exchangeRateVES)} · Tasa BCV
+                    </span>
+                  </div>
+                ) : null}
+
+                <p className="tema-lanzamiento-stock mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold sm:mt-2.5">
+                  <IconoCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span>{isDigital ? 'Código digital · Entrega rápida al confirmar' : agotado ? 'Agotado temporalmente' : 'Disponible para envío o retiro'}</span>
+                </p>
+              </div>
+
               {ediciones.length > 1 && (
-                <div className="mb-3 flex flex-wrap items-center gap-2" role="group" aria-label="Elegir plataforma">
-                  <span className="text-xs font-semibold text-white/80">Plataforma:</span>
-                  {ediciones.map((ed, idx) => (
-                    <button
-                      key={ed.producto.id}
-                      type="button"
-                      aria-pressed={idx === edicionIdx}
-                      onClick={() => setEdicionIdx(idx)}
-                      className="tema-edicion-btn rounded-lg px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                    >
-                      {ed.plataforma} · {formatUSD(ed.producto.priceUSD)}
-                    </button>
-                  ))}
+                <div
+                  role="group"
+                  aria-label="Elegir plataforma"
+                  className={`tema-edicion-track mt-3.5 rounded-xl p-1 ${ediciones.length === 2 ? 'grid grid-cols-2 gap-1' : 'flex flex-wrap justify-center gap-1'}`}
+                >
+                  {ediciones.map((ed, idx) => {
+                    const platLogo = logoPlataforma(ed.plataforma);
+                    return (
+                      <button
+                        key={ed.producto.id}
+                        type="button"
+                        aria-pressed={idx === edicionIdx}
+                        onClick={() => setEdicionIdx(idx)}
+                        className="tema-edicion-btn flex min-h-11 items-center justify-center rounded-lg px-3 py-2 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                      >
+                        {platLogo ? (
+                          <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={platLogo}
+                              alt=""
+                              aria-hidden="true"
+                              className="tema-plat-logo h-5 w-auto max-w-[130px] object-contain sm:h-[22px]"
+                            />
+                            <span className="sr-only">{ed.plataforma}</span>
+                          </>
+                        ) : (
+                          <span className="text-xs font-bold">{ed.plataforma}</span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-baseline gap-2.5">
-                    <span className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                      {formatUSD(activo.priceUSD)}
-                    </span>
-                    {activo.compareAtPriceUSD && activo.compareAtPriceUSD > activo.priceUSD && (
-                      <span className="text-sm text-white/75 line-through">{formatUSD(activo.compareAtPriceUSD)}</span>
-                    )}
-                  </div>
-                  {exchangeRateVES ? (
-                    <p className="mt-0.5 text-xs font-medium text-white/90 sm:text-sm">
-                      {formatVES(activo.priceUSD * exchangeRateVES)} a tasa BCV
-                    </p>
-                  ) : null}
-                  <p className="tema-lanzamiento-stock mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold">
-                    <IconoCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    {isDigital ? 'Código digital · Entrega rápida al confirmar' : agotado ? 'Agotado temporalmente' : 'Disponible para envío o retiro'}
-                  </p>
-                </div>
-
-                <div className="flex w-full flex-wrap items-center gap-2.5 sm:w-auto">
-                  {conVariantes ? (
-                    <Link
-                      href={`/productos/${activo.slug}`}
-                      className="tema-lanzamiento-cta inline-flex h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:w-auto"
-                    >
-                      Elegir edición
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={agotado}
-                      onClick={agregarActivo}
-                      className="tema-lanzamiento-cta inline-flex h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:w-auto"
-                    >
-                      <IconoCarrito className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      {agotado ? 'Agotado' : 'Comprar ahora'}
-                    </button>
-                  )}
-
-                  {trailerYoutubeId && (
-                    <button
-                      type="button"
-                      onClick={() => setTrailerOpen(true)}
-                      className="tema-lanzamiento-sec inline-flex h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-4 text-sm font-semibold transition sm:flex-initial lg:hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                    >
-                      <IconoPlay lleno className="h-3.5 w-3.5" aria-hidden="true" />
-                      Ver tráiler
-                    </button>
-                  )}
-
+              <div className={`mt-3 grid gap-2.5 sm:mt-4 ${trailerYoutubeId ? 'grid-cols-2 lg:grid-cols-12' : 'grid-cols-1 sm:grid-cols-12'}`}>
+                {conVariantes ? (
                   <Link
                     href={`/productos/${activo.slug}`}
-                    className="tema-lanzamiento-sec inline-flex h-11 flex-1 items-center justify-center whitespace-nowrap rounded-xl px-4 text-sm font-semibold transition sm:flex-initial focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                    className={`tema-lanzamiento-cta inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${trailerYoutubeId ? 'col-span-2 lg:col-span-7' : 'sm:col-span-7'}`}
                   >
-                    Ver ficha
+                    Elegir edición
                   </Link>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={agotado}
+                    onClick={agregarActivo}
+                    className={`tema-lanzamiento-cta inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${trailerYoutubeId ? 'col-span-2 lg:col-span-7' : 'sm:col-span-7'}`}
+                  >
+                    <IconoCarrito className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {agotado ? 'Agotado' : 'Comprar ahora'}
+                  </button>
+                )}
+
+                {trailerYoutubeId && (
+                  <button
+                    type="button"
+                    onClick={() => setTrailerOpen(true)}
+                    className="tema-lanzamiento-sec col-span-1 inline-flex h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-sm font-semibold transition lg:hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  >
+                    <IconoPlay lleno className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    Ver tráiler
+                  </button>
+                )}
+
+                <Link
+                  href={`/productos/${activo.slug}`}
+                  className={`tema-lanzamiento-sec inline-flex items-center justify-center whitespace-nowrap rounded-xl px-4 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${trailerYoutubeId ? 'col-span-1 h-11 lg:col-span-5 lg:h-12' : 'h-12 sm:col-span-5'}`}
+                >
+                  Ver ficha
+                </Link>
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-2 border-t border-white/15 pt-3.5 text-center text-[11px] font-medium leading-tight text-white/90">
+                <div className="flex flex-col items-center gap-1 sm:flex-row sm:justify-center sm:gap-1.5">
+                  {isDigital ? (
+                    <IconoDigital className="h-3.5 w-3.5 shrink-0 text-white/85" aria-hidden="true" />
+                  ) : (
+                    <IconoGarantia className="h-3.5 w-3.5 shrink-0 text-white/85" aria-hidden="true" />
+                  )}
+                  <span>{isDigital ? 'Código original' : 'Garantía real'}</span>
+                </div>
+                <div className="flex flex-col items-center gap-1 sm:flex-row sm:justify-center sm:gap-1.5">
+                  <IconoPagoMovil className="h-3.5 w-3.5 shrink-0 text-white/85" aria-hidden="true" />
+                  <span>Pago Móvil · BCV</span>
+                </div>
+                <div className="flex flex-col items-center gap-1 sm:flex-row sm:justify-center sm:gap-1.5">
+                  <IconoVerificado className="h-3.5 w-3.5 shrink-0 text-white/85" aria-hidden="true" />
+                  <span>Soporte en VE</span>
                 </div>
               </div>
             </div>

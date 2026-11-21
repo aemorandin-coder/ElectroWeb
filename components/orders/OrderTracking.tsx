@@ -215,7 +215,7 @@ export default function OrderTracking({
             {/* Historial del envío: lo que marca la tienda y lo que dice ZOOM (C-100) */}
             {shipmentEvents.length > 0 && (
                 <ol className="mt-3 space-y-2 rounded-xl border border-line bg-white p-3">
-                    {[...shipmentEvents].reverse().map((evento, index) => (
+                    {shipmentEvents.toReversed().map((evento, index) => (
                         <li key={evento.id} className="flex gap-2 text-xs">
                             <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${index === 0 ? 'bg-brand-500' : 'bg-line-strong'}`} aria-hidden="true" />
                             <span className="min-w-0">

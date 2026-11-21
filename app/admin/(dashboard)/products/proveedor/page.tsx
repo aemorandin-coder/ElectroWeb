@@ -182,7 +182,7 @@ export default function ListaDelProveedorPage() {
   // abreviado de la lista del proveedor, se suba en el orden que se suba
   const filas = useMemo(() => {
     const riqueza = (a: Archivo) => (['categoria', 'marca', 'peso', 'largo'] as const).filter((c) => a.columnas[c] !== undefined).length;
-    const ordenados = [...archivos].sort((x, y) => riqueza(y) - riqueza(x));
+    const ordenados = archivos.toSorted((x, y) => riqueza(y) - riqueza(x));
     return unirListas(...ordenados.map((a) => leerFilas(a.filas, a.columnas)));
   }, [archivos]);
   // Cambia (y obliga a revisar de nuevo) cuando cambian el proveedor o los archivos
@@ -633,7 +633,7 @@ export default function ListaDelProveedorPage() {
               </div>
               {nuevoAbierto && (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <input aria-label="Nombre del proveedor nuevo" autoFocus value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void agregarProveedor(); }} placeholder="Nombre del proveedor" maxLength={80} className={`${adminInput()} sm:max-w-sm`} />
+                  <input aria-label="Nombre del proveedor nuevo" autoFocus value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} onKeyDown={(e) => { if (e.nativeEvent.isComposing || e.keyCode === 229) return; if (e.key === 'Enter') void agregarProveedor(); }} placeholder="Nombre del proveedor" maxLength={80} className={`${adminInput()} sm:max-w-sm`} />
                   <button type="button" onClick={() => void agregarProveedor()} disabled={creandoProveedor || nuevoNombre.trim().length < 2} className={adminPrimaryButton}>Agregar</button>
                   <button type="button" onClick={() => { setNuevoAbierto(false); setNuevoNombre(''); }} className="min-h-11 px-2 text-sm font-semibold text-brand-600 hover:underline">Cancelar</button>
                 </div>

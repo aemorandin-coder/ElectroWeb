@@ -162,7 +162,7 @@ export default function FacturaOrden({ orden, onGuardada }: { orden: OrdenFactur
               id="orden-factura-numero"
               value={numero}
               onChange={(e) => setNumero(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void guardar(); } }}
+              onKeyDown={(e) => { if (e.nativeEvent.isComposing || e.keyCode === 229) return; if (e.key === 'Enter') { e.preventDefault(); void guardar(); } }}
               maxLength={30}
               inputMode="text"
               autoComplete="off"

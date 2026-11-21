@@ -1,12 +1,12 @@
 'use client';
-import { formatPuntos, formatUSD } from '@/lib/currency';
+import { formatRating, formatPuntos, formatUSD } from '@/lib/currency';
+import { formatDuracionHorasMinutos } from '@/lib/formato-duracion';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { IconoCandado, IconoCerrar, IconoCheck, IconoChevronDerecha, IconoError, IconoEstrellaLlena, IconoPlay } from '@/components/iconos';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
-import { formatRating } from '@/lib/currency';
 
 type Lesson = {
   id: string;
@@ -72,9 +72,7 @@ const LEVEL_LABELS: Record<string, string> = {
 };
 
 function formatDuration(secs: number) {
-  const h = Math.floor(secs / 3600);
-  const m = Math.floor((secs % 3600) / 60);
-  return h > 0 ? `${h}h ${m > 0 ? m + 'm' : ''}`.trim() : `${m}m`;
+  return formatDuracionHorasMinutos(Math.floor(secs / 60));
 }
 
 function getEmbedUrl(url: string): string | null {

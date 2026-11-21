@@ -98,7 +98,7 @@ export default function PhysicalStep3Specs({ data, onChange, errors, categories 
               onChange={(e) => setKey(e.target.value)}
               placeholder="Nombre (ej: Conexión)"
               className={wizardInput()}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); valorRef.current?.focus(); } }}
+              onKeyDown={(e) => { if (e.nativeEvent.isComposing || e.keyCode === 229) return; if (e.key === 'Enter') { e.preventDefault(); valorRef.current?.focus(); } }}
               list="spec-keys"
             />
           </label>
@@ -115,7 +115,7 @@ export default function PhysicalStep3Specs({ data, onChange, errors, categories 
               onChange={(e) => setValue(e.target.value)}
               placeholder="Valor (ej: USB-C)"
               className={wizardInput()}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
+              onKeyDown={(e) => { if (e.nativeEvent.isComposing || e.keyCode === 229) return; if (e.key === 'Enter') { e.preventDefault(); handleAdd(); } }}
             />
           </label>
           <button

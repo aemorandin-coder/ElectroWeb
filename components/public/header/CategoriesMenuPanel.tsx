@@ -15,7 +15,7 @@ const contar = (n: number) => `${n} ${n === 1 ? 'producto' : 'productos'}`;
 
 /** Mega menú de categorías. Se carga solo al abrirlo (los íconos pesan). */
 export default function CategoriesMenuPanel({ categories, departamentos = [], onNavigate }: CategoriesMenuPanelProps) {
-  const sorted = [...categories].sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  const sorted = categories.toSorted((a, b) => a.name.localeCompare(b.name, 'es'));
   const enGrupos = departamentos.length > 0;
 
   return (

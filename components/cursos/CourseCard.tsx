@@ -6,6 +6,7 @@ import Link from 'next/link';
 import ShareEarnButton from '@/components/social/ShareEarnButton';
 import { IconoCursos, IconoEstrella, IconoEstrellaLlena, IconoPlay } from '@/components/iconos';
 import { formatUSD } from '@/lib/currency';
+import { formatDuracionHorasMinutos } from '@/lib/formato-duracion';
 
 const LEVEL_LABELS: Record<string, string> = {
   PRINCIPIANTE: 'Principiante',
@@ -47,9 +48,7 @@ export default function CourseCard({ course, compartir = true }: CourseCardProps
   const rating = course.rating ? Number(course.rating) : null;
 
   function formatDuration(mins: number) {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return h > 0 ? `${h}h ${m > 0 ? m + 'm' : ''}`.trim() : `${m}m`;
+    return formatDuracionHorasMinutos(mins);
   }
 
   return (

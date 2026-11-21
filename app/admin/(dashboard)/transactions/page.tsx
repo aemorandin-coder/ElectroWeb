@@ -434,7 +434,7 @@ export default function TransactionsPage() {
                 <>
                     {/* Mobile cards */}
                     <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white lg:hidden">
-                        {[...displayed].sort((a, b) => Number(b.status === 'PENDING') - Number(a.status === 'PENDING')).map(t => {
+                        {displayed.toSorted((a, b) => Number(b.status === 'PENDING') - Number(a.status === 'PENDING')).map(t => {
                             const typeConf = TYPE_CONFIG[t.type] || TYPE_CONFIG.RECHARGE;
                             const statusConf = STATUS_CONFIG[t.status] || STATUS_CONFIG.PENDING;
                             const isCredit = isCreditTransaction(t.type);
@@ -544,7 +544,7 @@ export default function TransactionsPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {[...displayed].sort((a, b) => Number(b.status === 'PENDING') - Number(a.status === 'PENDING')).map(t => {
+                                {displayed.toSorted((a, b) => Number(b.status === 'PENDING') - Number(a.status === 'PENDING')).map(t => {
                                     const typeConf = TYPE_CONFIG[t.type] || TYPE_CONFIG.RECHARGE;
                                     const statusConf = STATUS_CONFIG[t.status] || STATUS_CONFIG.PENDING;
                                     const isCredit = isCreditTransaction(t.type);

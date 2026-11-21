@@ -168,7 +168,7 @@ export default function StepCapas({ studio, sel, onSel, acciones, textoRef, pedi
         </div>
         {capas.length > 0 ? (
           <ul className="flex flex-col gap-1.5" aria-label="Piezas sueltas, la de arriba va adelante">
-            {[...capas].reverse().map((c, iInv) => {
+            {capas.toReversed().map((c, iInv) => {
               const i = capas.length - 1 - iInv;
               const activa = c.id === sel;
               return (

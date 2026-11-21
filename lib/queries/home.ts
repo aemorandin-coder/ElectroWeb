@@ -9,6 +9,9 @@ import { prisma } from '@/lib/prisma';
 import { publicProductInclude, toPublicProduct, type PublicProduct } from '@/lib/dto/product';
 import { conOfertas, filtroEnOferta } from '@/lib/promotions';
 import { repartirCategorias } from '@/lib/inicio/reparto';
+import {
+  etiquetaPlataforma, extraerYoutubeId, lanzamientoActivo, nombreBaseJuego, paletaLanzamiento, type PaletaLanzamiento,
+} from '@/lib/lanzamiento';
 
 const MAX_LIMIT = 50;
 const clampLimit = (value: number) => Math.min(MAX_LIMIT, Math.max(1, Math.floor(value) || 1));
@@ -362,4 +365,91 @@ export const getActivePaymentMethodKinds = cache(async (): Promise<PaymentMethod
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
   });
   return [...new Set(rows.map((row) => row.type as PaymentMethodKind))];
+});
+
+export interface EdicionLanzamiento {
+  plataforma: string;
+  producto: PublicProduct;
+}
+
+export interface TemaLanzamientoHome {
+  paleta: PaletaLanzamiento;
+  eyebrow: string;
+  titulo: string;
+  subtitulo: string;
+  logo: string | null;
+  trailerYoutubeId: string | null;
+  tituloFila: string;
+  principal: PublicProduct | null;
+  ediciones: EdicionLanzamiento[];
+  productosFila: PublicProduct[];
+}
+
+/** G-72: bloque de lanzamiento del inicio cuando está encendido y vigente en hora de Venezuela. */
+export const getTemaLanzamiento = cache(async (): Promise<TemaLanzamientoHome | null> => {
+  const row = await prisma.companySettings.findUnique({
+    where: { id: 'default' },
+    select: {
+      launchThemeEnabled: true,
+      launchThemeFrom: true,
+      launchThemeUntil: true,
+      launchThemePalette: true,
+      launchThemeEyebrow: true,
+      launchThemeTitle: true,
+      launchThemeSubtitle: true,
+      launchThemeLogo: true,
+      launchThemeTrailerUrl: true,
+      launchThemeShelfTitle: true,
+      launchThemeProductId: true,
+      launchThemeProductIds: true,
+    },
+  });
+  if (!row || !lanzamientoActivo(row)) return null;
+
+  const ids = [...new Set([row.launchThemeProductId, ...(row.launchThemeProductIds ?? [])].filter((id): id is string => Boolean(id)))];
+  let porId = new Map<string, PublicProduct>();
+  if (ids.length > 0) {
+    const rows = await prisma.product.findMany({
+      where: await visibleProducts({ id: { in: ids } }),
+      include: publicProductInclude,
+    });
+    const list = await conOfertas(rows.map(toPublicProduct));
+    porId = new Map(list.map((p) => [p.id, p]));
+  }
+
+  const fila = (row.launchThemeProductIds ?? []).map((id) => porId.get(id)).filter((p): p is PublicProduct => Boolean(p));
+  const principal = (row.launchThemeProductId ? porId.get(row.launchThemeProductId) : null) ?? fila[0] ?? null;
+  const productosFila = fila.length > 0 ? fila.slice(0, 4) : principal ? [principal] : [];
+
+  const ediciones: EdicionLanzamiento[] = [];
+  if (principal) {
+    const basePrincipal = nombreBaseJuego(principal.name);
+    const platPrincipal = etiquetaPlataforma(principal.name) ?? (principal.productType === 'DIGITAL' ? 'Digital' : 'Estándar');
+    ediciones.push({ plataforma: platPrincipal, producto: principal });
+    for (const candidato of productosFila) {
+      if (candidato.id === principal.id) continue;
+      const plat = etiquetaPlataforma(candidato.name);
+      if (!plat || ediciones.some((e) => e.plataforma === plat)) continue;
+      if (basePrincipal && nombreBaseJuego(candidato.name) === basePrincipal) {
+        ediciones.push({ plataforma: plat, producto: candidato });
+      }
+    }
+  }
+
+  const titulo = row.launchThemeTitle?.trim() || principal?.name || '';
+  const trailerYoutubeId = extraerYoutubeId(row.launchThemeTrailerUrl);
+  if (!principal && !titulo && !row.launchThemeLogo && !trailerYoutubeId) return null;
+
+  return {
+    paleta: paletaLanzamiento(row.launchThemePalette),
+    eyebrow: row.launchThemeEyebrow?.trim() || 'NUEVO LANZAMIENTO',
+    titulo,
+    subtitulo: row.launchThemeSubtitle?.trim() || '',
+    logo: row.launchThemeLogo?.trim() || null,
+    trailerYoutubeId,
+    tituloFila: row.launchThemeShelfTitle?.trim() || 'Relacionados con este lanzamiento',
+    principal,
+    ediciones,
+    productosFila,
+  };
 });

@@ -14,6 +14,7 @@ import VitrinaDepartamento from '@/components/home/VitrinaDepartamento';
 import VideoPlayer from '@/components/home/VideoPlayer';
 import SaludoNavidad from '@/components/navidad/SaludoNavidad';
 import BanderaSorteo from '@/components/sorteo/BanderaSorteo';
+import TemaLanzamiento from '@/components/lanzamiento/TemaLanzamiento';
 import PublicHeader from '@/components/public/PublicHeader';
 import Container from '@/components/ui/Container';
 import SectionHeader from '@/components/ui/SectionHeader';
@@ -30,6 +31,7 @@ import {
   getHomeSettings,
   getDepartamentos,
   getRecienLlegados,
+  getTemaLanzamiento,
   getTopCategoriesWithProducts,
   getVitrinaDepartamento,
   getRubros,
@@ -61,7 +63,7 @@ const ESTANTES_DE_CATEGORIA = 3;
  * Todo se renderiza en el servidor; solo carrito, compartir y buscador son cliente.
  */
 export default async function Home() {
-  const [settings, homeSettings, featured, deals, bestSellers, recientes, codigos, topCategories, paymentMethods, hotAd, saludo] = await Promise.all([
+  const [settings, homeSettings, featured, deals, bestSellers, recientes, codigos, topCategories, paymentMethods, hotAd, saludo, temaLanzamiento] = await Promise.all([
     getPublicSettings(),
     getHomeSettings(),
     getFeatured(),
@@ -73,6 +75,7 @@ export default async function Home() {
     getActivePaymentMethodKinds(),
     getHotAd(),
     getSaludoNavidad(),
+    getTemaLanzamiento(),
   ]);
   // C-253: la bandera del sorteo (la página se regenera cada minuto: cambia de etapa sola). C-254: también cerrado, con la
   // fecha del resultado, y la semana del ganador (lib/sorteo/entrega.ts); lo que sale, por lib/dto/sorteo.ts
@@ -96,6 +99,9 @@ export default async function Home() {
   // apareciendo los mismos": antes se completaba con ofertas y lo nuevo). Sin ninguno, la sección no sale.
   // C-172: la estrella cambia cada día siguiendo el orden de los destacados (la página se regenera cada minuto)
   const showcase = estrellaDelDia(reparto.tomar(featured, featured.length, 1));
+  if (temaLanzamiento) {
+    reparto.tomar(temaLanzamiento.productosFila, temaLanzamiento.productosFila.length, 0);
+  }
   const ofertas = reparto.tomar(deals, POR_ESTANTE);
   const masVendidos = reparto.tomar(bestSellers, POR_ESTANTE);
   // Las gift cards y recargas, en su sección y en ninguna otra
@@ -134,7 +140,11 @@ export default async function Home() {
       <main>
         <h1 className="sr-only">{settings.companyName}: {rubrosEnPalabras(rubros)} con envíos a toda Venezuela</h1>
 
-        <CategoryChips categories={railCategories} />
+        <CategoryChips categories={railCategories} lanzamiento={settings.lanzamientoPildora} />
+
+        {temaLanzamiento && (
+          <TemaLanzamiento tema={temaLanzamiento} exchangeRateVES={rate} lowStockThreshold={lowStock} />
+        )}
 
         {showcase.length > 0 ? (
           <FeaturedShowcase products={showcase} exchangeRateVES={rate} lowStockThreshold={lowStock} />

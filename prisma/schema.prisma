@@ -1125,6 +1125,21 @@ model CompanySettings {
   diasCerrados            String[]  @default([])
   diasAbiertos            String[]  @default([])
 
+  // G-72: tema de lanzamiento del inicio (Marketing → Lanzamiento): bloque protagonista en el Home + píldora en la barra.
+  launchThemeEnabled    Boolean   @default(false)
+  launchThemeFrom       DateTime? @db.Date
+  launchThemeUntil      DateTime? @db.Date
+  launchThemePalette    String    @default("vice")
+  launchThemePillText   String?
+  launchThemeEyebrow    String?
+  launchThemeTitle      String?
+  launchThemeSubtitle   String?
+  launchThemeLogo       String?
+  launchThemeTrailerUrl String?
+  launchThemeShelfTitle String?
+  launchThemeProductId  String?
+  launchThemeProductIds String[]  @default([])
+
   // Admin Alert Emails — comma-separated or JSON array of emails to notify on key events
   adminAlertEmails      String?
 

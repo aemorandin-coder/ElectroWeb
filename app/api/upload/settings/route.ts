@@ -86,13 +86,13 @@ export async function POST(request: NextRequest) {
         // campaign: imágenes de las campañas de correo de Marketing (C-75). studio: fotos y logos de ElectroStudio (C-112)
         // quoteStamp: el sello con la firma de los presupuestos (C-148b). sorteo: la foto del premio (C-221)
         // curso: la miniatura de un curso; servicio: la miniatura y las fotos de antes y después de un trabajo (C-249e)
-        const allowedAssetTypes = ['logo', 'favicon', 'quoteStamp', 'heroBackground', 'hotAd', 'campaign', 'studio', 'sorteo', 'curso', 'servicio', ...seoImageTypes];
+        const allowedAssetTypes = ['logo', 'favicon', 'quoteStamp', 'heroBackground', 'hotAd', 'campaign', 'studio', 'sorteo', 'lanzamiento', 'curso', 'servicio', ...seoImageTypes];
 
         if (!type || !allowedAssetTypes.includes(type)) {
             return NextResponse.json({ error: 'Tipo de asset no válido' }, { status: 400 });
         }
         // C-294: las imágenes para compartir son de Marketing → Google y redes (D2 del 18/11)
-        const marketingTypes = ['hotAd', 'campaign', 'studio', 'sorteo', 'curso', 'servicio', ...seoImageTypes];
+        const marketingTypes = ['hotAd', 'campaign', 'studio', 'sorteo', 'lanzamiento', 'curso', 'servicio', ...seoImageTypes];
         if (!canManageSettings && !marketingTypes.includes(type)) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
         }

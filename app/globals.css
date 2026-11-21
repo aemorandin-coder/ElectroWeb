@@ -1771,3 +1771,100 @@ html, body { overflow-x: clip; }
     page: libro;
   }
 }
+
+/* G-72: Tema temporal de lanzamiento (Vice City) — encapsulado en clases semánticas para mantener intacto el kit de marca C-243 */
+.tema-vice-pildora {
+  background: linear-gradient(135deg, #6246ea 0%, #c83d95 55%, #f27b66 100%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(200, 61, 149, 0.35);
+}
+.tema-vice-pildora:hover {
+  filter: brightness(1.06);
+}
+.tema-vice-punto {
+  background-color: #ffd426;
+}
+.tema-brand-pildora {
+  background-color: var(--color-brand-700);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  color: #ffffff;
+}
+.tema-brand-pildora:hover {
+  background-color: var(--color-brand-500);
+}
+.tema-brand-punto {
+  background-color: var(--color-brand-300);
+}
+
+.tema-vice-zona {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(162deg, #4b50c7 0%, #9b4b9c 38%, #de6e7c 68%, #f39d76 100%);
+  color: #ffffff;
+}
+.tema-vice-zona::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 18% 35%, rgba(16, 18, 42, 0.36), transparent 58%);
+  pointer-events: none;
+}
+.tema-brand-zona {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--color-brand-700) 0%, var(--color-brand-600) 55%, var(--color-brand-500) 100%);
+  color: #ffffff;
+}
+
+.tema-lanzamiento-eyebrow {
+  background: rgba(15, 18, 38, 0.44);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+.tema-lanzamiento-caja {
+  background: rgba(16, 20, 44, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+}
+.tema-lanzamiento-acento {
+  color: #ffd426;
+}
+.tema-lanzamiento-stock {
+  color: #a7f3d0;
+}
+.tema-lanzamiento-cta {
+  background-color: #ffd426;
+  color: #161821;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+.tema-lanzamiento-cta:hover {
+  background-color: #f5c400;
+}
+.tema-brand-zona .tema-lanzamiento-cta {
+  background-color: #ffffff;
+  color: var(--color-brand-700);
+}
+.tema-brand-zona .tema-lanzamiento-cta:hover {
+  background-color: var(--color-brand-50);
+}
+.tema-lanzamiento-sec {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  color: #ffffff;
+}
+.tema-lanzamiento-sec:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+.tema-edicion-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.92);
+}
+.tema-edicion-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.tema-edicion-btn[aria-pressed='true'] {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #161821;
+}

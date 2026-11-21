@@ -6,6 +6,7 @@
 import { z } from '@/lib/zod';
 import { MAX_EMPAQUES } from '@/lib/embalaje';
 import { corteValido, GORROS } from '@/lib/navidad';
+import { extraerYoutubeId, PALETAS_LANZAMIENTO } from '@/lib/lanzamiento';
 
 export const WEEK_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 export type WeekDay = (typeof WEEK_DAYS)[number];
@@ -266,6 +267,27 @@ export const settingsUpdateSchema = z.object({
   // C-190: las fechas de corte de la franja "Para que llegue antes del 24" (vacías: no sale)
   christmasCutoffShipping: optionalCutoff,
   christmasCutoffLocal: optionalCutoff,
+
+  // G-72: tema de lanzamiento del inicio (Marketing → Lanzamiento)
+  launchThemeEnabled: z.boolean(),
+  launchThemeFrom: optionalDay,
+  launchThemeUntil: optionalDay,
+  launchThemePalette: z.enum(PALETAS_LANZAMIENTO, { error: 'Elige una paleta válida' }),
+  launchThemePillText: optionalText(20),
+  launchThemeEyebrow: optionalText(60),
+  launchThemeTitle: optionalText(60),
+  launchThemeSubtitle: optionalText(200),
+  launchThemeLogo: optionalImage,
+  launchThemeTrailerUrl: z
+    .string()
+    .trim()
+    .max(300, 'Máximo 300 caracteres')
+    .refine((value) => value === '' || (/^https?:\/\/\S+$/i.test(value) && extraerYoutubeId(value) !== null), 'Pega un enlace válido de YouTube')
+    .nullable()
+    .transform((value) => value || null),
+  launchThemeShelfTitle: optionalText(60),
+  launchThemeProductId: optionalText(40),
+  launchThemeProductIds: z.array(z.string().trim().min(1).max(40)).max(6, 'Máximo 6 productos'),
 });
 
 export const settingsPatchSchema = settingsUpdateSchema.partial();
@@ -285,6 +307,13 @@ export const CHRISTMAS_FIELDS: readonly SettingsField[] = [
   'christmasCutoffShipping', 'christmasCutoffLocal',
 ];
 
+/** G-72: tema temporal de lanzamiento (Marketing → Lanzamiento). */
+export const LAUNCH_THEME_FIELDS: readonly SettingsField[] = [
+  'launchThemeEnabled', 'launchThemeFrom', 'launchThemeUntil', 'launchThemePalette', 'launchThemePillText',
+  'launchThemeEyebrow', 'launchThemeTitle', 'launchThemeSubtitle', 'launchThemeLogo', 'launchThemeTrailerUrl',
+  'launchThemeShelfTitle', 'launchThemeProductId', 'launchThemeProductIds',
+];
+
 /** C-294 (D2 del 18/11): la portada y "Google y redes" pasaron a Marketing: también los guardan los administradores con MANAGE_CONTENT */
 export const PORTADA_FIELDS: readonly SettingsField[] = [
   'maxFeaturedProducts', 'showCategories', 'maxCategoriesDisplay', 'heroVideoEnabled', 'heroVideoUrl', 'heroVideoTitle', 'heroVideoDescription',
@@ -296,7 +325,7 @@ export const SEO_FIELDS: readonly SettingsField[] = [
   'coursesMetaTitle', 'coursesMetaDescription', 'coursesMetaKeywords', 'coursesMetaImage',
 ];
 
-export const MARKETING_FIELDS: readonly SettingsField[] = [...HOT_AD_FIELDS, ...CHRISTMAS_FIELDS, ...PORTADA_FIELDS, ...SEO_FIELDS];
+export const MARKETING_FIELDS: readonly SettingsField[] = [...HOT_AD_FIELDS, ...CHRISTMAS_FIELDS, ...LAUNCH_THEME_FIELDS, ...PORTADA_FIELDS, ...SEO_FIELDS];
 
 /** Errores de zod como { campo: mensaje } (el primero de cada campo). */
 export function fieldErrors(error: z.ZodError): Record<string, string> {
@@ -318,6 +347,8 @@ type MergedRules = {
   maintenanceEndTime: Date | null;
   christmasThemeFrom: Date | null;
   christmasThemeUntil: Date | null;
+  launchThemeFrom: Date | null;
+  launchThemeUntil: Date | null;
 };
 
 /** Reglas entre campos, con los valores ya combinados (lo guardado + lo que llega). */
@@ -335,6 +366,9 @@ export function crossFieldErrors(merged: MergedRules): Record<string, string> {
   // C-186: el mismo día sirve (los dos días son incluidos)
   if (merged.christmasThemeFrom && merged.christmasThemeUntil && merged.christmasThemeUntil < merged.christmasThemeFrom) {
     errors.christmasThemeUntil = 'El último día no puede ser antes del primero';
+  }
+  if (merged.launchThemeFrom && merged.launchThemeUntil && merged.launchThemeUntil < merged.launchThemeFrom) {
+    errors.launchThemeUntil = 'El último día no puede ser antes del primero';
   }
   return errors;
 }

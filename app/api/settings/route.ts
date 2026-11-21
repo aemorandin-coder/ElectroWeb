@@ -131,6 +131,8 @@ export async function PUT(request: NextRequest) {
       maintenanceEndTime: (pick('maintenanceEndTime', null) as Date | null) ?? null,
       christmasThemeFrom: (pick('christmasThemeFrom', null) as Date | null) ?? null,
       christmasThemeUntil: (pick('christmasThemeUntil', null) as Date | null) ?? null,
+      launchThemeFrom: (pick('launchThemeFrom', null) as Date | null) ?? null,
+      launchThemeUntil: (pick('launchThemeUntil', null) as Date | null) ?? null,
     });
     if (Object.keys(crossErrors).length > 0) {
       return NextResponse.json({ error: 'Revisa los campos marcados', fields: crossErrors }, { status: 400 });

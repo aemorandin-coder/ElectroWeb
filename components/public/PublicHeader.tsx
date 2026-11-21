@@ -45,6 +45,7 @@ function PublicHeader() {
   // En móvil el nombre legal completo empujaba los íconos fuera de la pantalla
   const shortName = companyName.split(/\s+/).slice(0, 2).join(' ');
   const exchangeRate = settings?.exchangeRateVES;
+  const pildora = settings?.lanzamientoPildora;
 
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
   const navLinkClass = (href: string) =>
@@ -153,6 +154,17 @@ function PublicHeader() {
           <Link href="/contacto" className={navLinkClass('/contacto')} aria-current={isActive('/contacto') ? 'page' : undefined}>
             Contáctanos
           </Link>
+          {pildora && (
+            <Link
+              href={pildora.href}
+              className={`ml-1 inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-bold tracking-wide transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+                pildora.paleta === 'vice' ? 'tema-vice-pildora' : 'tema-brand-pildora'
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${pildora.paleta === 'vice' ? 'tema-vice-punto' : 'tema-brand-punto'}`} aria-hidden="true" />
+              {pildora.texto}
+            </Link>
+          )}
 
           {/* Compacto entre lg y xl para que la franja no se desborde */}
           <p className="ml-auto whitespace-nowrap pl-2 text-xs font-medium text-white/80">

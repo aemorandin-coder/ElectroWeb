@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
-import { IconoBuscar, IconoEnviar, IconoInicio, IconoPopup, IconoRegalo, IconoVer, IconoVerificado } from '@/components/iconos';
+import { IconoBuscar, IconoEnviar, IconoInicio, IconoNovedad, IconoPopup, IconoRegalo, IconoVer, IconoVerificado } from '@/components/iconos';
 import type { IconType } from '@/components/iconos';
 import { useRouter } from 'next/navigation';
 import { adminPageHeader, adminPageSubtitle, adminPageTitle, adminTab } from '@/lib/admin-ui';
@@ -9,6 +9,7 @@ import { IconoGorro } from '@/components/navidad/GorroSanta';
 import Promotores from './_components/Promotores';
 import Popup from './_components/Popup';
 import Navidad from './_components/Navidad';
+import Lanzamiento from './_components/Lanzamiento';
 import Sorteo from './_components/Sorteo';
 import Campanas from './_components/Campanas';
 import Plantillas from './_components/Plantillas';
@@ -21,12 +22,13 @@ import { PORTADA_FIELDS, SEO_FIELDS } from '@/lib/validations/settings';
 // Marketing (C-75): una sección por tarea y un archivo por sección. Antes: 1.118 líneas en un archivo con 6 pestañas,
 // una de ellas la configuración SMTP (ahora en Configuración → Correo).
 
-type SeccionId = 'promotores' | 'campanas' | 'popup' | 'navidad' | 'sorteo' | 'plantillas' | 'portada' | 'google';
+type SeccionId = 'promotores' | 'campanas' | 'popup' | 'lanzamiento' | 'navidad' | 'sorteo' | 'plantillas' | 'portada' | 'google';
 
 const SECCIONES: { id: SeccionId; label: string; descripcion: string; icon: IconType }[] = [
   { id: 'promotores', label: 'Promotores', descripcion: 'Códigos de referido y comisiones por compras pagadas.', icon: IconoVerificado },
   { id: 'campanas', label: 'Campañas de correo', descripcion: 'Correos con imágenes para los clientes que aceptan promociones.', icon: IconoEnviar },
   { id: 'popup', label: 'Popup del home', descripcion: 'La imagen promocional que aparece al entrar a la tienda.', icon: IconoPopup },
+  { id: 'lanzamiento', label: 'Lanzamiento', descripcion: 'Bloque protagonista arriba del inicio y píldora en la barra para grandes estrenos.', icon: IconoNovedad },
   // C-186: el ícono es el gorro de la tienda en la versión de un color del pack de íconos, no uno de librería
   { id: 'navidad', label: 'Navidad', descripcion: 'El tema navideño: el gorro de Santa en el logo, la franja navideña del inicio y hasta cuándo pedir para que llegue antes del 24.', icon: IconoGorro },
   // C-212: el sorteo (la PlayStation 4 del 20/12)
@@ -105,6 +107,7 @@ export default function MarketingPage() {
       {activa === 'promotores' && <Promotores />}
       {activa === 'campanas' && <Campanas />}
       {activa === 'popup' && <Popup />}
+      {activa === 'lanzamiento' && <Lanzamiento />}
       {activa === 'navidad' && <Navidad />}
       {activa === 'sorteo' && <Sorteo />}
       {activa === 'plantillas' && <Plantillas />}

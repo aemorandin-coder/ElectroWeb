@@ -6,7 +6,14 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { reglasEmbalajeActivas, type ReglasEmbalaje } from '@/lib/embalaje';
 import { entregaNavidad, navidadActiva, varianteGorro, type EntregaNavidad, type VarianteGorro } from '@/lib/navidad';
+import { lanzamientoActivo, paletaLanzamiento, type PaletaLanzamiento } from '@/lib/lanzamiento';
 import { HORA_CORTE_POR_DEFECTO } from '@/lib/horarios';
+
+export interface PildoraLanzamientoPublica {
+    texto: string;
+    href: string;
+    paleta: PaletaLanzamiento;
+}
 
 export interface SiteSettings {
     companyName: string;
@@ -188,6 +195,8 @@ export interface PublicSettings {
     /** C-190: el último día para pedir y que llegue antes del 24 (ZOOM o MRW, y delivery o retiro en Guanare), solo con el
      *  tema activo y las fechas que siguen en pie. null: no sale la franja */
     entregaNavidad: EntregaNavidad | null;
+    /** G-72: píldora de lanzamiento activo en la barra de navegación (null si está apagado o fuera de fecha) */
+    lanzamientoPildora: PildoraLanzamientoPublica | null;
     /** C-234: el calendario de los despachos (lib/horarios): la hora de corte, los días cerrados y los feriados abiertos */
     horaCorte: string;
     diasCerrados: string[];
@@ -217,6 +226,7 @@ const PUBLIC_SETTINGS_SELECT = {
     rif: true, legalName: true,
     christmasTheme: true, christmasThemeFrom: true, christmasThemeUntil: true, christmasHat: true,
     christmasCutoffShipping: true, christmasCutoffLocal: true,
+    launchThemeEnabled: true, launchThemeFrom: true, launchThemeUntil: true, launchThemePalette: true, launchThemePillText: true,
     horaCorte: true, diasCerrados: true, diasAbiertos: true,
 } satisfies Prisma.CompanySettingsSelect;
 
@@ -246,6 +256,7 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
     rif: null, legalName: null,
     gorroNavidad: null,
     entregaNavidad: null,
+    lanzamientoPildora: null,
     horaCorte: HORA_CORTE_POR_DEFECTO,
     diasCerrados: [],
     diasAbiertos: [],
@@ -267,7 +278,11 @@ function toPublicSettings(row: PublicSettingsRow): PublicSettings {
 
     // La columna se llama taxDigitalProducts; hacia afuera sale como taxDigital. Del tema navideño sale solo el gorro, y
     // solo si se ve hoy (C-186), y las fechas de corte que siguen en pie (C-190: se publican en la franja de todos modos)
-    const { taxDigitalProducts, christmasTheme, christmasThemeFrom, christmasThemeUntil, christmasHat, christmasCutoffShipping, christmasCutoffLocal, ...resto } = row;
+    const {
+        taxDigitalProducts, christmasTheme, christmasThemeFrom, christmasThemeUntil, christmasHat, christmasCutoffShipping, christmasCutoffLocal,
+        launchThemeEnabled, launchThemeFrom, launchThemeUntil, launchThemePalette, launchThemePillText,
+        ...resto
+    } = row;
     return {
         ...resto,
         socialMedia: Array.isArray(socialMedia) ? (socialMedia as SocialMediaLink[]) : [],
@@ -292,6 +307,9 @@ function toPublicSettings(row: PublicSettingsRow): PublicSettings {
         pagoMovilDirecto: Boolean(process.env.BDV_API_KEY && process.env.BDV_TELEFONO_COMERCIO),
         gorroNavidad: navidadActiva({ christmasTheme, christmasThemeFrom, christmasThemeUntil }) ? varianteGorro(christmasHat) : null,
         entregaNavidad: entregaNavidad({ christmasTheme, christmasThemeFrom, christmasThemeUntil, christmasCutoffShipping, christmasCutoffLocal }),
+        lanzamientoPildora: lanzamientoActivo({ launchThemeEnabled, launchThemeFrom, launchThemeUntil })
+            ? { texto: launchThemePillText?.trim() || 'Estreno', href: '/#lanzamiento', paleta: paletaLanzamiento(launchThemePalette) }
+            : null,
     };
 }
 

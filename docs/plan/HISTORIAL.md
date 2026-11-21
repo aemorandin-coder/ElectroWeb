@@ -1,9 +1,49 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.115`, comprobada el 20/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.117`, comprobada el 20/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
+
+
+## 20/11 · G-72: Tema de lanzamiento GTA VI y Descripción inteligente en ficha de producto (de rc.116 a `v1.0.0-rc.117`)
+Subida a producción por SSH (respaldo `~/respaldo-antes-rc117.dump`, `npx prisma db push` y `scripts/deploy.sh --sin-pull`) y comprobada desde fuera el 20/11/2026 (`https://electroshopve.com/` responde `1.0.0-rc.117|277082e0` y `/productos/grand-theft-auto-vi-ps5-psn-codigo` responde `200`).
+
+**Falta que el equipo lo active y confirme** (`SIGUIENTE.md`, "Por confirmar de rc.117"): cargar la plantilla GTA VI en `Marketing → Lanzamiento`, asignar los productos publicados de PS5 y Xbox y revisar las 3 pruebas.
+
+### El bloque que se subió: `v1.0.0-rc.117` (G-72)
+- **Commit:** `277082e0` (etiqueta `v1.0.0-rc.117`).
+- **G-72** (`rc.117` · Tienda `1.24.0` + Marketing `1.29.0` + Productos `1.19.1` + Ajustes `1.9.1`): tema temporal de lanzamiento GTA VI (`Marketing → Lanzamiento`, píldora en barra, hero Vice City con wordmark oficial blanco en una línea, precio arriba y selector PS5/Xbox con logos oficiales, modal de tráiler y fila de 4 productos) y grilla inteligente para `Descripción` en `/productos/[id]`.
+- **Cambio de base aditivo aplicado en `company_settings`** (sin variables nuevas y sin cron):
+```sql
+ALTER TABLE "company_settings" ADD COLUMN     "launchThemeEnabled" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "launchThemeEyebrow" TEXT,
+ADD COLUMN     "launchThemeFrom" DATE,
+ADD COLUMN     "launchThemeLogo" TEXT,
+ADD COLUMN     "launchThemePalette" TEXT NOT NULL DEFAULT 'vice',
+ADD COLUMN     "launchThemePillText" TEXT,
+ADD COLUMN     "launchThemeProductId" TEXT,
+ADD COLUMN     "launchThemeProductIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN     "launchThemeShelfTitle" TEXT,
+ADD COLUMN     "launchThemeSubtitle" TEXT,
+ADD COLUMN     "launchThemeTitle" TEXT,
+ADD COLUMN     "launchThemeTrailerUrl" TEXT,
+ADD COLUMN     "launchThemeUntil" DATE;
+```
+- **Subir** (en la terminal del servidor): respaldar PostgreSQL (`pg_dump -Fc`), `cd /var/www/electroshopve && git pull --ff-only && npx prisma db push && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` dice `v1.0.0-rc.117`.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.116 && npm install && bash scripts/deploy.sh --sin-pull` (las 13 columnas aditivas de `company_settings` tienen valor por defecto o nulo y no afectan a `rc.116`).
+
+
+## 20/11 · G-71: ElectroStudio 2.6.0 (Fases 1 y 2) y Marco del panel 1.22.1 (de rc.115 a `v1.0.0-rc.116`)
+Subida a producción y comprobada desde fuera el 20/11/2026 (`https://electroshopve.com/` respondió `1.0.0-rc.116|2a056597`).
+
+**Falta que el equipo lo confirme** (`SIGUIENTE.md`, "Por confirmar de rc.116"): las 4 pruebas de ElectroStudio en escritorio y teléfono.
+
+### El bloque que se subió: `v1.0.0-rc.116` (G-71)
+- **Commit:** `2a056597` (etiqueta `v1.0.0-rc.116`).
+- **G-71** (`rc.116` · ElectroStudio `2.6.0` + Marco del panel `1.22.1`): Fases 1 y 2 de ElectroStudio — corrección de bugs Chrome/móvil, pasos honestos, Paso 4 en 4 pestañas + soltar texto de la plantilla (`C-271`), editor móvil Variante A con `Mover en lienzo` fullscreen, nuevo Home con Radar en vivo (`/api/admin/studio/radar`), `Ajustes de marca` en cajón propio, calendario `Semana` accionable y `Resultados` con `Repetir fórmula`. **Sin cambio de base, sin variables y sin cron.**
+- **Subir** (en la terminal del servidor): `cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull`.
+- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.115 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 
 ## 20/11 · G-70: Reportes por prioridad y Ventas ordenadas con tablas cebra y píldoras vibrantes (de rc.114 a `v1.0.0-rc.115`)

@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-20 · producción en 1.0.0-rc.116; por subir: rc.117, §2)
+# Lo de ahora (actualizado 2026-11-20 · producción en 1.0.0-rc.117; sin deploy pendiente)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **G-72 · Tema de lanzamiento GTA VI y Descripción inteligente en ficha de producto (rc.117, en `main`, por subir: §2; `estado/G-72.md`):** pedido de Andrés el 20/11, elegido sobre maqueta HTML local (Opción A) y afinado en vivo en escritorio y teléfono (`360 px`).
+- **G-72 · Tema de lanzamiento GTA VI y Descripción inteligente en ficha de producto (rc.117, en producción; por confirmar: §2; `estado/G-72.md`):** pedido de Andrés el 20/11, elegido sobre maqueta HTML local (Opción A) y afinado en vivo en escritorio y teléfono (`360 px`).
   - **Tema de lanzamiento (`Marketing → Lanzamiento`):** nueva pestaña en el panel con programación por fechas en Caracas, ambiente `Atardecer Vice` o `Azul Electro Shop`, botón `Cargar plantilla GTA VI` en un clic, logo oficial GTA VI con transparencia limpia, `"Ya llegó a [Electro Shop]"` en una sola línea con wordmark oficial blanco, caja centrada con precio arriba, cambio directo PS5 ↔ Xbox usando los logos oficiales de plataforma, tráiler de YouTube en modal y fila de hasta 4 productos.
   - **Descripción inteligente en ficha de producto (`/productos/[id]`):** separa introducción, subtítulos, tarjetas de detalle, `De un vistazo` (2×2) y pasos numerados de `¿Cómo se canjea?` en una grilla equilibrada de `7/5` sin huecos en blanco en escritorio.
   - **Cambio de base aditivo:** 13 columnas `launchTheme*` en `company_settings` (sin `DROP` ni `ALTER ... TYPE`).
@@ -568,16 +568,13 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Lo que falta subir: `v1.0.0-rc.117` (G-72)
-Producción está en `v1.0.0-rc.116` (`2a056597`, G-71). Si entran más tareas antes de subir, se suman aquí.
-- **G-72** (`rc.117` · Tienda `1.24.0` + Marketing `1.29.0` + Productos `1.19.1` + Ajustes `1.9.1`): tema temporal de lanzamiento GTA VI (`Marketing → Lanzamiento`, píldora en barra, hero Vice City con wordmark oficial blanco, precio arriba y selector PS5/Xbox con logos oficiales, modal de tráiler y fila de 4 productos) y grilla inteligente para `Descripción` en `/productos/[id]`.
-- **Cambio de base aditivo en `company_settings`:** 13 columnas `launchTheme*` (`Boolean`, `Date`, `String`, `String[]`). Sin variables ni cron.
-- **Subir** (en la terminal del servidor): respaldar PostgreSQL (`pg_dump -Fc`), `cd /var/www/electroshopve && git pull --ff-only && npx prisma db push && bash scripts/deploy.sh --sin-pull`. Al terminar, `git describe --tags` debe decir `v1.0.0-rc.117`.
-- **Pruebas** (unos 4 minutos en escritorio y teléfono `360 px`):
+No hay cambios pendientes de subir: producción está en `v1.0.0-rc.117` (`277082e0`, G-72).
+
+### Por confirmar de rc.117 (G-72; unos 4 minutos)
+Ya en producción (`1.0.0-rc.117|277082e0`). Falta encender el tema en el panel y confirmar en escritorio y teléfono (`360 px`):
   1. **Configurar GTA VI (`Marketing → Lanzamiento`):** pulsar **Cargar plantilla GTA VI**, seleccionar `Grand Theft Auto VI (PS5)` como protagonista y añadir la edición Xbox + relacionados en la fila inferior; activar y guardar.
   2. **Inicio (`/` en `1440 px` y `360 px`):** comprobar píldora `GTA VI` en barra, `"Ya llegó a Electro Shop"` en una línea sin isotipo circular, precio arriba y cambio instantáneo PS5 ↔ Xbox con sus logos oficiales, tráiler en modal y compra directa.
   3. **Ficha de producto (`/productos/grand-theft-auto-vi-ps5-psn-codigo`):** tarjeta `Descripción` equilibrada en 2 columnas (`De un vistazo` + `¿Cómo se canjea?` sin espacio blanco vacío).
-- **Si algo falla, la vuelta atrás** (en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.116 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de rc.116 (G-71; unos 5 minutos)
 Ya en producción (`1.0.0-rc.116|2a056597`). Falta confirmar en escritorio y teléfono (`360 px`), recargando el panel con `Ctrl+R`:

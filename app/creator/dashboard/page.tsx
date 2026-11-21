@@ -4,7 +4,7 @@ import { formatUSD } from '@/lib/currency';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { IconoFlechaDerecha, IconoFlechaIzquierda, IconoMas } from '@/components/iconos';
-import { adminPageHeader, adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
+import { adminBadge, adminPageHeader, adminPageTitle, adminPrimaryButton, adminSecondaryButton } from '@/lib/admin-ui';
 import { formatRating } from '@/lib/currency';
 
 type Course = {
@@ -162,11 +162,7 @@ export default function CreatorDashboardPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <p className="text-ink font-semibold text-sm">{course.title}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                      course.isActive
-                        ? 'bg-success/15 text-success-strong'
-                        : 'bg-brand-50 text-brand-700'
-                    }`}>
+                    <span className={adminBadge(course.isActive ? 'success' : 'brand')}>
                       {course.isActive ? 'Activo' : 'En revisión'}
                     </span>
                   </div>

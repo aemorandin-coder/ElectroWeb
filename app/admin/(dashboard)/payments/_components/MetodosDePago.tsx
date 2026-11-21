@@ -87,7 +87,7 @@ const PAYMENT_TYPE_METADATA: Record<string, { label: string; icon: React.ReactNo
     CASH: {
         label: 'Efectivo',
         icon: <IconoBillete className="w-5 h-5 text-brand-600" />,
-        badgeClass: 'bg-success/10 text-success-strong border-success/30',
+        badgeClass: 'bg-success-strong text-white border-success-strong',
     },
     OTHER: {
         label: 'Otro',

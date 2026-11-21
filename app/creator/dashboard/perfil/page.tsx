@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import ImageUploadField from '@/components/ui/ImageUploadField';
-import { adminPageHeader, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
+import { adminNotice, adminPageHeader, adminPageTitle, adminPrimaryButton } from '@/lib/admin-ui';
 
 const INPUT = 'w-full px-4 py-2.5 bg-white border border-line rounded-xl text-ink placeholder-muted focus:outline-none focus:border-brand-500 text-sm transition-colors';
 
@@ -63,7 +63,7 @@ export default function CreatorProfilePage() {
           <p className="text-muted text-sm mt-1">Esta información es visible para tus estudiantes.</p>
         </div>
         {msg && (
-          <div className="px-4 py-2 bg-success/15 border border-success/30 rounded-xl text-success-strong text-sm font-semibold">
+          <div className={`${adminNotice('success')} py-2 font-semibold`} role="status">
             {msg}
           </div>
         )}

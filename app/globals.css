@@ -1196,6 +1196,12 @@ body {
   animation: fadeIn 0.3s ease-out backwards;
 }
 
+@supports (animation-delay: calc(sibling-index() * 1s)) {
+  .stagger-children>* {
+    animation-delay: calc(sibling-index() * 0.05s);
+  }
+}
+
 .stagger-children>*:nth-child(1) {
   animation-delay: 0.05s;
 }
@@ -1558,6 +1564,14 @@ html {
     opacity: 1 !important;
   }
 
+  .es-dialog,
+  .es-dialog::backdrop,
+  .es-toast-item,
+  .es-update-pill {
+    transform: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
   html {
     scroll-behavior: auto !important;
   }
@@ -1905,4 +1919,110 @@ html, body { overflow-x: clip; }
 .tema-edicion-btn[aria-pressed='true'] .tema-plat-logo {
   filter: none;
   opacity: 1;
+}
+
+/* Kit 2.0 · Modales nativos <dialog> y Top Layer para Snackbars y avisos de recarga (modern-web-guidance) */
+dialog.es-dialog {
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  max-width: min(100vw, 100%);
+  max-height: 100dvh;
+  overflow: visible;
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition:
+    opacity 0.18s ease-out,
+    transform 0.18s ease-out,
+    overlay 0.18s ease-out allow-discrete,
+    display 0.18s ease-out allow-discrete;
+}
+
+dialog.es-dialog[open] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+dialog.es-dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog.es-dialog::backdrop {
+  background-color: rgb(33 37 41 / 0.5);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  opacity: 0;
+  transition:
+    opacity 0.18s ease-out,
+    overlay 0.18s ease-out allow-discrete,
+    display 0.18s ease-out allow-discrete;
+}
+
+dialog.es-dialog[open]::backdrop {
+  opacity: 1;
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+.es-toast-region {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  inset: auto;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  max-width: calc(100vw - 2rem);
+  pointer-events: none;
+}
+
+.es-toast-item {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.2s ease-out,
+    display 0.2s ease-out allow-discrete;
+  @starting-style {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.es-toast-item[data-leaving='true'] {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.es-update-pill {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  inset: auto;
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  max-width: calc(100vw - 2rem);
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.2s ease-out,
+    overlay 0.2s ease-out allow-discrete,
+    display 0.2s ease-out allow-discrete;
+  @starting-style {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 }

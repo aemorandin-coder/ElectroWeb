@@ -19,7 +19,7 @@ export const CATEGORIES = [
 export const PLATFORM_BADGES: Record<string, { label: string; cls: string }> = {
   YOUTUBE: { label: 'YouTube', cls: 'bg-deal text-white' },
   TIKTOK: { label: 'TikTok', cls: 'bg-ink text-white' },
-  KICK: { label: 'Kick', cls: 'bg-success text-white' },
+  KICK: { label: 'Kick', cls: 'bg-success-strong text-white' },
 };
 
 export type Video = {

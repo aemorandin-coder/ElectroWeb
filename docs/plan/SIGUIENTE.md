@@ -1,10 +1,10 @@
-# Lo de ahora (actualizado 2026-11-23 · producción en 1.0.0-rc.121 — falta subir G-75 / rc.122)
+# Lo de ahora (actualizado 2026-11-23 · producción en 1.0.0-rc.122 — sin deploy pendiente)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
-- **G-75 · "Recién llegados" real en portada, `publishedAt` en Edición rápida y orden de `/productos` (rc.122, listo para subir; `estado/G-75.md`):** Opción A aprobada por Andrés. Muestra exactamente los 12 últimos productos publicados en toda la tienda en `#recien-llegados`, ordena `/productos` por `publishedAt DESC` y fija `publishedAt` al publicar desde Edición rápida. Sin cambios de BD, env ni cron.
+- **G-75 · "Recién llegados" real en portada, `publishedAt` en Edición rápida y orden de `/productos` (rc.122, en producción; por confirmar: §2; `estado/G-75.md`):** Opción A aprobada por Andrés. Muestra exactamente los 12 últimos productos publicados en toda la tienda en `#recien-llegados`, ordena `/productos` por `publishedAt DESC` y fija `publishedAt` al publicar desde Edición rápida. Verificada en producción (`1.0.0-rc.122`, `#recien-llegados` con `12` productos únicos). Sin cambios de BD, env ni cron.
 - **G-74 · Contraste en Contabilidad (`1A`), pestañas en riel segmentado (`2A`) y Studio de Portada + Video Kit 2.0 (`3A`) (rc.121, en producción; por confirmar: §2; `estado/G-74.md`):** pedido del equipo tras revisar `rc.120`, aprobado con las opciones `1A + 2A + 3A` y verificado en pruebas API + Chrome headless (`26 de 26`, 0 errores JS y 0 desbordes a `360 px`) y en producción (`1.0.0-rc.121|b110382a`).
   - **Contabilidad (`1A`):** corregido el contraste de la píldora de estado sobre el banner `bg-brand-700` en `MesaContadora.tsx` usando cápsula translúcida blanca (`border-white/20 bg-white/10 text-white`).
   - **Pestañas en riel segmentado blanco (`2A`):** `adminTabScroll` + `adminTabList` + hover claro en `adminTab` aplicados en las 12 pantallas del panel admin y homologados en `Mi perfil` / `Garantías` de Mi panel.
@@ -579,13 +579,13 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-### Subir `G-75` (de `rc.121` a `v1.0.0-rc.122`)
-- **Sin cambios de esquema Prisma, variables `.env` ni cron.**
-- **En el servidor (`/var/www/electroshopve`):**
-  ```bash
-  cd /var/www/electroshopve && git pull --ff-only && bash scripts/deploy.sh --sin-pull
-  ```
-- **Vuelta atrás:** `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.121 && npm install && bash scripts/deploy.sh --sin-pull`.
+No hay deploy pendiente (producción al día en **`v1.0.0-rc.122`** / `2544b3bc`, comprobada el 23/11/2026; bloque movido a `HISTORIAL.md`).
+
+### Por confirmar de rc.122 (G-75; unos 2 minutos)
+Ya en producción (`1.0.0-rc.122|2544b3bc`). Al importar o publicar el lote nuevo:
+1. **Inicio (`/` → `#recien-llegados`):** comprobar que aparecen los 12 últimos productos publicados en orden de publicación real, sin quedar filtrados por categoría.
+2. **Catálogo (`/productos`):** comprobar que los recién publicados salen primero en Relevancia y Recientes.
+3. **Vuelta atrás** (si hiciera falta, en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.121 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ### Por confirmar de rc.121 (G-74; unos 3 minutos)
 Ya en producción (`1.0.0-rc.121|b110382a`). Recargar el panel con `Ctrl+R` y revisar en escritorio y teléfono (`360 px`):

@@ -1,10 +1,21 @@
 # Historial de subidas y detalle por tarea
 
-> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.121`, comprobada el 21/11/2026).
+> **Registro, no lista de pendientes.** Todo lo de este archivo está en producción desde la fecha de su título (producción: versión `v1.0.0-rc.122`, comprobada el 23/11/2026).
 > Lo que falta por subir y por hacer está en [`SIGUIENTE.md`](./SIGUIENTE.md). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). El plan completo, en [`PLAN.md`](./PLAN.md).
 > Cada bloque conserva el SQL que se aplicó y las pruebas que se dieron entonces: sirven para repetir una comprobación o para saber qué cambió en la base. Lo más nuevo va arriba.
 > De antes del 29/09 no hay bloque aquí: el detalle está en el `estado/C-XX.md` de cada tarea.
 
+
+## 23/11 · G-75: "Recién llegados" real en portada, `publishedAt` en Edición rápida y orden de `/productos` (de rc.121 a `v1.0.0-rc.122`)
+Subida a producción por SSH (`ssh electroshop`, `git pull --ff-only` y `bash scripts/deploy.sh --sin-pull`) y comprobada en el servidor y desde fuera el 23/11/2026 (`https://electroshopve.com/` responde `200` con `1.0.0-rc.122` y `#recien-llegados` muestra exactamente `12` productos únicos recientes en orden cronológico real; `/productos` responde `200`; guarda de versión en `/categorias` responde `204`; PM2 `electroshop` `online` en `.next-a` sobre `127.0.0.1:3000` sin errores nuevos de aplicación).
+
+**Falta que el equipo lo confirme** (`SIGUIENTE.md`, "Por confirmar de rc.122"): subir los nuevos productos y confirmar visualmente en portada (`#recien-llegados`) y `/productos`.
+
+### El bloque que se subió: `v1.0.0-rc.122` (G-75)
+- **Commit:** `2544b3bc` (etiqueta `v1.0.0-rc.122`).
+- **Cambios:** `getRecienLlegados(120)` + selección directa de los 12 últimos publicados sin tope por categoría ni exclusión por Destacados en `app/page.tsx` (marcando luego sus IDs en `reparto`), `marcarPublicados()` en Edición rápida Modo 1 (`app/api/products/bulk/update/route.ts`) y orden `publishedAt DESC, createdAt DESC, id ASC` en `lib/queries/catalog.ts`.
+- **SQL aplicado:** ninguno (sin cambios de `prisma/schema.prisma`), sin variables `.env` nuevas ni cron.
+- **Vuelta atrás** (si hiciera falta, en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.121 && npm install && bash scripts/deploy.sh --sin-pull`.
 
 ## 21/11 · G-74: Contraste en Contabilidad (`1A`), pestañas en riel segmentado blanco (`2A`) y Studio de Portada + Video Kit 2.0 (`3A`) (de rc.120 a `v1.0.0-rc.121`)
 Subida a producción por SSH (`ssh electroshop`, respaldo `~/respaldo-antes-rc121.dump`, `npx prisma db push --skip-generate --accept-data-loss=false` y `bash scripts/deploy.sh --sin-pull`) y comprobada en el servidor y desde fuera el 21/11/2026 (`https://electroshopve.com/` responde `1.0.0-rc.121|b110382a`, PM2 `online` en `.next-b` sobre `127.0.0.1:3000` con 28 líneas base y 0 errores nuevos, rutas públicas `200`, `/admin/marketing` sin sesión `307` y `/api/admin/marketing/portada` sin sesión `401`).

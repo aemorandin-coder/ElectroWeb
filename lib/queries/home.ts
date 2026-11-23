@@ -245,17 +245,17 @@ export const getBestSellers = cache(async (days = 90, max = 12): Promise<PublicP
 });
 
 /**
- * C-207: "Recién llegados" es lo último de toda la tienda, ferretería incluida (Andrés, 13/11: "se tiene que ver de
- * todo"). C-210: por la fecha en que salió a la tienda y no por la de creación: la carga del proveedor crea en borrador y
- * se publica días después. Trae más de los que se muestran: el inicio quita lo que ya salió arriba y deja pocos de cada
- * departamento o categoría (lib/inicio/reparto.ts).
+ * G-75: "Recién llegados" es lo último publicado de toda la tienda, ferretería incluida.
+ * Trae hasta 120 registros ordenados por fecha de publicación para garantizar las 12 tarjetas del estante.
  */
-export const getRecienLlegados = cache(async (max = 48): Promise<PublicProduct[]> => {
+const MAX_RECIEN_LLEGADOS = 120;
+export const getRecienLlegados = cache(async (max = 120): Promise<PublicProduct[]> => {
+  const take = Math.min(MAX_RECIEN_LLEGADOS, Math.max(1, Math.floor(max) || 1));
   const rows = await prisma.product.findMany({
     where: await visibleProducts(),
     include: publicProductInclude,
     orderBy: [{ publishedAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }],
-    take: clampLimit(max),
+    take,
   });
   return conOfertas(rows.map(toPublicProduct));
 });

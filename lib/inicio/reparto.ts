@@ -19,6 +19,8 @@ export interface Reparto {
   tomar<T extends { id: string }>(candidatos: readonly T[], max: number, minimo?: number): T[];
   /** ¿Ya salió arriba? */
   mostrado(id: string): boolean;
+  /** G-75: marca IDs mostrados en una sección que permite repetir productos de bloques superiores (p. ej. Recién llegados). */
+  marcar(ids: readonly string[]): void;
 }
 
 export function crearReparto(minimoPorDefecto = MIN_SECCION): Reparto {
@@ -32,6 +34,9 @@ export function crearReparto(minimoPorDefecto = MIN_SECCION): Reparto {
       return elegidos;
     },
     mostrado: (id) => mostrados.has(id),
+    marcar(ids) {
+      for (const id of ids) mostrados.add(id);
+    },
   };
 }
 

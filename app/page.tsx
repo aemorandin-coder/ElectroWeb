@@ -19,7 +19,7 @@ import TemaLanzamiento from '@/components/lanzamiento/TemaLanzamiento';
 import PublicHeader from '@/components/public/PublicHeader';
 import Container from '@/components/ui/Container';
 import SectionHeader from '@/components/ui/SectionHeader';
-import { crearReparto, porDiaYDestacado, variados } from '@/lib/inicio/reparto';
+import { crearReparto, MIN_SECCION, porDiaYDestacado } from '@/lib/inicio/reparto';
 import { diaEnCaracas } from '@/lib/navidad';
 import type { SeccionPortadaId } from '@/lib/portada';
 import {
@@ -54,10 +54,8 @@ export const revalidate = 60;
 // Los enlaces de promotores (?ref=) y de las historias (?es=) son la misma portada
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 
-// C-207: lo que muestra cada estante del inicio, y cuántos de un mismo departamento o categoría van en "Recién llegados"
-// (C-210: 4, lo que eligió Andrés el 13/11)
+// G-75: cantidad de productos que muestra cada estante del inicio
 const POR_ESTANTE = 12;
-const NUEVOS_POR_GRUPO = 4;
 
 /**
  * Home "vitrina" (PLAN.md §3): lo primero son productos con precio y botón, no un mensaje.
@@ -70,7 +68,7 @@ export default async function Home() {
     getFeatured(),
     getDeals(24),
     getBestSellers(90, 24),
-    getRecienLlegados(48),
+    getRecienLlegados(120),
     getCodigosDigitales(POR_ESTANTE),
     getTopCategoriesWithProducts(12, 16),
     getActivePaymentMethodKinds(),
@@ -192,17 +190,18 @@ export default async function Home() {
       }
       case 'recent': {
         asegurarLanzamientoMarcado();
-        const departamentoDe = new Map(departamentos.flatMap((departamento) => departamento.ids.map((id) => [id, departamento.id] as const)));
+        // G-75: "Recién llegados" muestra lo último publicado de toda la tienda aunque ya salga en Destacados/Ofertas
+        // o pertenezca a la misma categoría/departamento, sin duplicados internos y marcando sus IDs para las vitrinas inferiores.
         const nuevos = porDiaYDestacado(
-          recientes.filter((product) => !reparto.mostrado(product.id)),
+          recientes,
           (product) => product.publishedAt ?? product.createdAt,
           (momento) => diaEnCaracas(new Date(momento))
         );
-        const recienLlegados = reparto.tomar(
-          variados(nuevos, (product) => departamentoDe.get(product.category.id) ?? product.category.id, NUEVOS_POR_GRUPO),
-          POR_ESTANTE
-        );
+        const vistos = new Set<string>();
+        const candidatos = nuevos.filter((product) => !vistos.has(product.id) && (vistos.add(product.id), true)).slice(0, POR_ESTANTE);
+        const recienLlegados = candidatos.length >= MIN_SECCION ? candidatos : [];
         if (recienLlegados.length > 0) {
+          reparto.marcar(recienLlegados.map((product) => product.id));
           const tone = shelfToneIndex++ % 2 === 0 ? 'surface' : 'white';
           bloques.push({
             id: 'recent',

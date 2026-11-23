@@ -179,9 +179,9 @@ function condicionDe(u: Ubicacion): Prisma.ProductWhereInput {
 
 const ORDER_BY: Record<CatalogSort, Prisma.ProductOrderByWithRelationInput[]> = {
   // "relevancia" no la da la base: la resuelve `idsEnOrden`. Si algo la pide aquí, cae al más reciente.
-  relevancia: [{ createdAt: 'desc' }, { id: 'asc' }],
-  recientes: [{ createdAt: 'desc' }, { id: 'asc' }],
-  destacados: [{ isFeatured: 'desc' }, { createdAt: 'desc' }, { id: 'asc' }],
+  relevancia: [{ publishedAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }, { id: 'asc' }],
+  recientes: [{ publishedAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }, { id: 'asc' }],
+  destacados: [{ isFeatured: 'desc' }, { publishedAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }, { id: 'asc' }],
   'precio-asc': [{ priceUSD: 'asc' }, { id: 'asc' }],
   'precio-desc': [{ priceUSD: 'desc' }, { id: 'asc' }],
   nombre: [{ name: 'asc' }, { id: 'asc' }],

@@ -28,7 +28,7 @@ export const SECCIONES_PORTADA: readonly DefinicionSeccionPortada[] = [
   { id: 'deals', titulo: 'Ofertas', detalle: 'Productos rebajados o con promoción vigente.' },
   { id: 'bestSellers', titulo: 'Lo más vendido', detalle: 'Más vendidos de los últimos 90 días.' },
   { id: 'digital', titulo: 'Códigos digitales', detalle: 'Franja de gift cards, juegos y recargas.' },
-  { id: 'recent', titulo: 'Recién llegados', detalle: 'Últimos productos publicados variados por rubro.' },
+  { id: 'recent', titulo: 'Recién llegados', detalle: 'Los 12 últimos productos publicados en toda la tienda.' },
   { id: 'departments', titulo: 'Departamentos', detalle: 'Vitrinas aparte con catálogo propio (como Ferretería).' },
   { id: 'shelves', titulo: 'Estantes por categoría', detalle: 'Filas destacadas de las categorías principales.' },
   { id: 'trust', titulo: 'Por qué comprar en Electro Shop', detalle: 'Sellos de garantía, Pago Móvil BCV y envíos.' },

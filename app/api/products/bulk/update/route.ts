@@ -76,6 +76,10 @@ export async function POST(request: NextRequest) {
                     cambios.map(({ id, data }) => prisma.product.update({ where: { id }, data }))
                 );
 
+                // G-75: los borradores publicados desde Edición rápida también llevan su fecha para "Recién llegados"
+                const publicadosIds = cambios.filter(({ data }) => data.status === 'PUBLISHED').map(({ id }) => id);
+                if (publicadosIds.length > 0) await marcarPublicados(publicadosIds);
+
                 if (results.length > 0) revalidateStorefront();
                 // Bitácora (C-104): solo los precios que de verdad cambiaron
                 const preciosCambiados = cambios

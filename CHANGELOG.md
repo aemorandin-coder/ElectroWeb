@@ -10,6 +10,14 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.122] - 2026-11-23
+Corrección integral de **Recién llegados** en portada, orden del catálogo por fecha de publicación real y registro de `publishedAt` en Edición rápida (`G-75`, Opción A):
+- **Portada (`app/page.tsx`, `lib/queries/home.ts`, `lib/inicio/reparto.ts`, `lib/portada.ts`):** `getRecienLlegados(120)` obtiene hasta 120 candidatos y la sección `#recien-llegados` muestra exactamente los **12 últimos productos publicados** en toda la tienda por `publishedAt DESC, createdAt DESC, id ASC`, sin tope de 4 por categoría ni exclusión por haber salido en Destacados; los 12 elegidos marcan sus IDs en `reparto` para que los estantes inferiores no los repitan.
+- **Catálogo (`lib/queries/catalog.ts`):** los órdenes `relevancia`, `recientes` y `destacados` ordenan por `publishedAt DESC` (nulos al final), `createdAt DESC`, `id ASC`, alineando `/productos` con portada.
+- **Productos / Edición rápida (`app/api/products/bulk/update/route.ts`):** al pasar productos a `PUBLISHED` desde Edición rápida (Modo 1), llama a `marcarPublicados()` para grabar `publishedAt` antes de revalidar la tienda.
+
+Sin cambios de esquema SQL, sin variables de entorno nuevas ni cron.
+
 ## [1.0.0-rc.121] - 2026-11-21
 Corrección de contraste en Mesa de la contadora (`1A`), pestañas en riel segmentado blanco en todo el panel y Mi panel (`2A`), y nuevo **Studio de Portada** con reproductor de video Kit 2.0 (`3A`, `G-74`). Incluye 7 columnas aditivas en `company_settings` (`homeBannerEnabled`, `homeBannerText`, `homeBannerLink`, `homeRotateFeatured`, `homeCategoryShelves`, `homeSectionsConfig`, `homeVideoPosition`), sin variables de entorno nuevas ni cron.
 ### Contabilidad 1.3.3 (G-74)

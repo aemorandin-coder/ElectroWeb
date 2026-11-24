@@ -2551,6 +2551,8 @@ model Talonario {
   region          String?
   /// EN_USO, AGOTADO o ANULADO (los sobrantes, el 19/04/2027)
   estado          String    @default("EN_USO")
+  /// G-76: NORMAL (uso regular hasta 18/04/2027) o CONTINGENCIA (art. 6 SNAT/2026/00093)
+  uso             String    @default("NORMAL")
   notas           String?
   creadoPorId     String?
   documentos      DocumentoFiscal[]
@@ -2575,6 +2577,10 @@ model DocumentoFiscal {
   numeroControl        String
   /// Lo que se escribió en "Fecha de emisión"
   emitidaEl            DateTime
+  /// G-76: hora exacta de emisión en Venezuela ("HH:MM:SS", SNAT/2026/00093 art. 8 num. 5)
+  emitidaHora          String?
+  /// G-76: VES o USD (cuando la operación se pacta en divisas)
+  monedaOperacion      String    @default("VES")
   /// El mes del libro de ventas ("2026-11"), en hora de Venezuela
   periodo              String
   /// EMITIDA o ANULADA
@@ -2606,8 +2612,21 @@ model DocumentoFiscal {
   /// Si un contribuyente especial retuvo el IVA (Providencia SNAT/2025/000054)
   ivaRetenidoBs        Decimal?
   comprobanteRetencion String?
+  /// G-76: fecha del comprobante de retención recibido
+  retencionFecha       DateTime?
   /// En una nota de crédito o de débito, la factura que afecta
   documentoAfectadoId  String?
+  /// G-76: datos de facturación digital (Imprenta Digital / Portal SENIAT) y contingencia (00093)
+  imprentaProveedor    String?
+  idExterno            String?
+  llaveIdempotencia    String?   @unique
+  pdfPrivadoRuta       String?
+  xmlPrivadoRuta       String?
+  qrVerificacion       String?
+  /// REGISTRADO | TIMBRADO | PENDIENTE_REPORTE | REPORTADO | ERROR
+  estadoTransmision    String    @default("REGISTRADO")
+  contingenciaCausal   String?
+  contingenciaReportadaEl DateTime?
   ordenes              Order[]
   creadoPorId          String
   createdAt            DateTime  @default(now())
@@ -2615,6 +2634,9 @@ model DocumentoFiscal {
 
   @@unique([talonarioId, numero])
   @@index([periodo])
+  @@index([medio, tipo, serie, numero])
+  @@index([documentoAfectadoId])
+  @@index([numeroControl])
   @@map("documentos_fiscales")
 }
 
@@ -2648,6 +2670,139 @@ model NotaContable {
 
   @@index([periodo])
   @@map("notas_contables")
+}
+
+/// G-76: configuración contable y transición a facturación digital SNAT/2026/00093 (solo el dueño).
+model ConfigContable {
+  id                     String    @id @default("default")
+  /// TALONARIO | PORTAL_SENIAT | IMPRENTA_DIGITAL
+  canalEmision           String    @default("TALONARIO")
+  /// GENERICO_REST | THE_FACTORY_HKA | OTRO
+  imprentaProveedor      String?
+  /// SANDBOX | PRODUCCION
+  imprentaAmbiente       String    @default("SANDBOX")
+  imprentaSerieDigital   String    @default("F")
+  imprentaProximoNumero  Int       @default(1)
+  imprentaApiUrl         String?
+  alcaldiaAlicuota       Decimal   @default(1.5)
+  alcaldiaMinimoBs       Decimal   @default(0)
+  alcaldiaDiaLimite      Int       @default(10)
+  ivaDiaLimite           Int       @default(15)
+  alquilerArrendador     String?
+  alquilerRif            String?
+  /// PERSONA | EMPRESA
+  alquilerTipo           String    @default("EMPRESA")
+  alquilerCanonUSD       Decimal   @default(0)
+  alquilerConIva         Boolean   @default(false)
+  alquilerDiaPago        Int       @default(5)
+  alquilerVenceEl        DateTime?
+  pensionesPorcentaje    Decimal   @default(9)
+  pensionesDiaLimite     Int       @default(18)
+  nominaBaseMinimaUSD    Decimal   @default(0)
+  checklist2027          Json?
+  avisosTelegram         Boolean   @default(true)
+  updatedById            String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  @@map("config_contable")
+}
+
+/// G-76: libro de compras y gastos del mes (crédito fiscal del IVA + archivo privado revisado por la contadora).
+model CompraGasto {
+  id              String    @id @default(cuid())
+  periodo         String
+  fechaEmision    DateTime
+  proveedorNombre String
+  proveedorRif    String
+  supplierId      String?
+  numeroFactura   String
+  numeroControl   String
+  categoria       String
+  descripcion     String?
+  baseBs          Decimal   @default(0)
+  alicuota        Decimal   @default(16)
+  ivaBs           Decimal   @default(0)
+  exentoBs        Decimal   @default(0)
+  totalBs         Decimal   @default(0)
+  retencionIslrBs Decimal   @default(0)
+  comprobanteIslr String?
+  archivoPrivado  String?
+  /// PENDIENTE | REVISADA | FALTA_ALGO
+  estadoRevision  String    @default("PENDIENTE")
+  notaRevision    String?
+  revisadaPorId   String?
+  revisadaEl      DateTime?
+  creadoPorId     String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([periodo])
+  @@map("compras_gastos")
+}
+
+/// G-76: calendario mensual de obligaciones fiscales y parafiscales (Alcaldía, IVA, Pensiones, Alquiler/ISLR).
+model ObligacionFiscal {
+  id                     String    @id @default(cuid())
+  periodo                String
+  /// ALCALDIA | IVA | PENSIONES | ALQUILER_ISLR | OTRO
+  tipo                   String
+  titulo                 String
+  detalle                String?
+  venceEl                DateTime
+  montoBs                Decimal   @default(0)
+  montoUSD               Decimal?
+  /// POR_CALCULAR | LISTA_PAGAR | PAGADA
+  estado                 String    @default("POR_CALCULAR")
+  /// CONTADORA | DUENO | LISTO
+  quienToca              String    @default("CONTADORA")
+  numeroPlanilla         String?
+  comprobanteIslr        String?
+  planillaPrivada        String?
+  comprobantePagoPrivado String?
+  nominaEmpleados        Int?
+  nominaSalariosBs       Decimal?
+  nominaBonosBs          Decimal?
+  pagadaEl               DateTime?
+  actualizadoPorId       String?
+  aviso3DiasEl           DateTime?
+  avisoDiaEl             DateTime?
+  avisoVencidaEl         DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  @@unique([periodo, tipo])
+  @@index([periodo])
+  @@index([venceEl])
+  @@map("obligaciones_fiscales")
+}
+
+/// G-76: hoja de IVA (Forma 99030) y candado de cierre mensual firmado por la contadora.
+model PeriodoContable {
+  id                        String    @id @default(cuid())
+  periodo                   String    @unique
+  /// ABIERTO | DECLARADO | CERRADO
+  estado                    String    @default("ABIERTO")
+  excedenteAnteriorBs       Decimal   @default(0)
+  debitoFiscalBs            Decimal   @default(0)
+  creditoFiscalBs           Decimal   @default(0)
+  retencionesIvaBs          Decimal   @default(0)
+  ivaAPagarBs               Decimal   @default(0)
+  nuevoExcedenteBs          Decimal   @default(0)
+  numeroPlanillaIva         String?
+  planillaIvaPrivada        String?
+  comprobantePagoIvaPrivado String?
+  declaradoEl               DateTime?
+  pagadoEl                  DateTime?
+  cerradoEl                 DateTime?
+  cerradoPorId              String?
+  firmaNombre               String?
+  firmaTitulo               String?
+  firmaCpc                  String?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+
+  @@map("periodos_contables")
 }
 
 /// C-288: Claude en el panel (Configuración → IA · Claude). Una sola fila ("default"). Lo que está en null usa lo del

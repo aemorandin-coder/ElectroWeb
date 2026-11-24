@@ -35,7 +35,9 @@ export type NotificationType =
   // C-262: el sorteo: un boleto ganado o un amigo que se unió con tu enlace
   | 'SORTEO'
   // C-276: un mensaje que el equipo le escribió al cliente desde su ficha
-  | 'MENSAJE_EQUIPO';
+  | 'MENSAJE_EQUIPO'
+  // G-76: recordatorios de obligaciones fiscales y contingencias
+  | 'CONTABILIDAD_AVISO';
 
 interface CreateNotificationParams {
   userId: string;

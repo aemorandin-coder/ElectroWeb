@@ -12,6 +12,14 @@ export function documentOwner(name: string): string | null {
 /** Fotos de las solicitudes de garantía (C-122): de la falla o del daño, a veces con datos de la casa del cliente. */
 export const WARRANTY_PHOTOS_DIR = path.join(process.cwd(), 'private-uploads', 'warranty');
 
+/** G-76: documentos privados de Contabilidad (facturas de compra, PDFs fiscales SENIAT/imprenta, planillas y comprobantes). */
+export const CONTABILIDAD_FILES_DIR = path.join(process.cwd(), 'private-uploads', 'contabilidad');
+
+/** Valida nombre seguro de archivo privado contable (contab-<tipo>-<ts>-<hex>.<ext>). */
+export function contabilidadFileName(name: string): boolean {
+  return /^contab-[a-z0-9_-]+-\d+-[a-f0-9]+\.(?:pdf|png|jpg|jpeg|webp)$/i.test(name);
+}
+
 /** Nombre de una foto de garantía: garantia-<userId>-<timestamp>-<aleatorio>.jpg. Devuelve el userId dueño. */
 export function warrantyPhotoOwner(name: string): string | null {
   return /^garantia-([a-z0-9]+)-\d+-[a-f0-9]+\.jpg$/.exec(name)?.[1] ?? null;

@@ -9,7 +9,7 @@ import { isAuthorized } from '@/lib/auth-helpers';
  * FACTURAR: administradores y dueño. VER_CONTABILIDAD y DECLARAR: el dueño y la contadora (C-235). CARGAR_TALONARIO: solo
  * el dueño. Con una lista basta uno de ellos (las facturas se ven con FACTURAR o con VER_CONTABILIDAD).
  */
-export type PermisoContable = 'FACTURAR' | 'VER_CONTABILIDAD' | 'DECLARAR' | 'CARGAR_TALONARIO';
+export type PermisoContable = 'FACTURAR' | 'VER_CONTABILIDAD' | 'DECLARAR' | 'CARGAR_TALONARIO' | 'CONFIG_CONTABLE';
 
 /** Las facturas las leen quien factura y quien lleva la contabilidad (la contadora las ve, pero no factura) */
 export const LEER_FACTURAS: PermisoContable[] = ['FACTURAR', 'VER_CONTABILIDAD'];

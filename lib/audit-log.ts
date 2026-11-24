@@ -50,6 +50,15 @@ export type AuditAction =
     | 'TALONARIO_CREATED'
     // C-235: la contadora dibujó o cambió su firma y su sello
     | 'FIRMA_CONTABLE_GUARDADA'
+    // G-76: Contabilidad 2.0 y facturación digital SNAT/2026/00093
+    | 'CREDIT_DEBIT_NOTE_ISSUED'
+    | 'IVA_RETENTION_RECORDED'
+    | 'CONTINGENCIA_REPORTED'
+    | 'PURCHASE_EXPENSE_CREATED'
+    | 'PURCHASE_EXPENSE_REVIEWED'
+    | 'FISCAL_OBLIGATION_UPDATED'
+    | 'FISCAL_PERIOD_CLOSED'
+    | 'ACCOUNTING_CONFIG_UPDATED'
     | 'ORDER_CANCELLED'
     | 'ORDER_REFUNDED'
     // Gift Cards

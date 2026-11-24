@@ -1,8 +1,5 @@
 'use client';
 
-// C-229: una factura registrada. La réplica tal como se escribió, quién la registró y de qué órdenes sale. Una factura
-// emitida no se cambia: si se escribió mal, se anula con su motivo (el papel se guarda) y se escribe la siguiente.
-
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -11,27 +8,47 @@ import CasillaPorCasilla from '@/components/admin/contabilidad/CasillaPorCasilla
 import ReplicaTalonario from '@/components/admin/contabilidad/ReplicaTalonario';
 import { datosReplica } from '@/components/admin/contabilidad/datos';
 import { imprimirFactura } from '@/components/admin/contabilidad/imprimir';
-import { IconoAdvertencia, IconoCerrar, IconoDocumento, IconoEliminar, IconoFlechaIzquierda, IconoImpresora, IconoOrdenes, IconoVer } from '@/components/iconos';
+import ModalDialog from '@/components/ui/ModalDialog';
 import {
-  adminBadge, adminCard, adminDangerButton, adminDato, adminError, adminLabel, adminModalBody, adminModalFooter, adminModalHeader, adminModalOverlay,
-  adminModalPanel, adminModalTitle, adminPageHeader, adminPageTitle, adminSecondaryButton,
+  IconoAdvertencia, IconoCerrar, IconoConfirmado, IconoDescargar, IconoDocumento, IconoEliminar, IconoFlechaIzquierda,
+  IconoImpresora, IconoOrdenes, IconoVer,
+} from '@/components/iconos';
+import {
+  adminBadge, adminCard, adminDangerButton, adminDato, adminError, adminInput, adminLabel, adminModalBody, adminModalFooter,
+  adminModalHeader, adminModalTitle, adminNotice, adminPageHeader, adminPageTitle, adminSecondaryButton,
 } from '@/lib/admin-ui';
-import type { FacturaDTO } from '@/lib/dto/contabilidad';
+import { formatearHora12 } from '@/lib/contabilidad/montos';
 import { formatUSD, formatVES } from '@/lib/currency';
-import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import type { FacturaDTO } from '@/lib/dto/contabilidad';
+import { enlaceArchivoContable } from '../../_components/subirArchivo';
+import { etiquetaCanal } from '../../_components/tipos';
 
-const cuando = (iso: string) => new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: '2-digit', month: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+const cuando = (iso: string) =>
+  new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: '2-digit', month: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
 
-export default function FichaFactura({ factura, puedeAnular }: { factura: FacturaDTO; /** C-235: la contadora la ve, pero no anula */ puedeAnular: boolean }) {
+const etiquetaTipo = (tipo: string) =>
+  tipo === 'NOTA_CREDITO' ? 'Nota de Crédito' : tipo === 'NOTA_DEBITO' ? 'Nota de Débito' : 'Factura';
+
+export default function FichaFactura({
+  factura,
+  puedeAnular,
+  cerrado = false,
+  hoy,
+}: {
+  factura: FacturaDTO;
+  puedeAnular: boolean;
+  cerrado?: boolean;
+  hoy?: string;
+}) {
   const router = useRouter();
   const [anulando, setAnulando] = useState(false);
   const [motivo, setMotivo] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verCompleta, setVerCompleta] = useState(false);
-  useBodyScrollLock(anulando);
 
   const anulada = factura.estado === 'ANULADA';
+  const pdfUrl = enlaceArchivoContable(factura.pdfPrivadoRuta);
   const replica = factura.talonario
     ? datosReplica(factura.talonario, {
         numeroTexto: factura.numeroTexto,
@@ -50,13 +67,17 @@ export default function FichaFactura({ factura, puedeAnular }: { factura: Factur
     setEnviando(true);
     setError(null);
     try {
-      const r = await fetch(`/api/admin/contabilidad/facturas/${factura.id}/anular`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ motivo: motivo.trim() }) });
+      const r = await fetch(`/api/admin/contabilidad/facturas/${factura.id}/anular`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motivo: motivo.trim() }),
+      });
       const d = await r.json().catch(() => null);
       if (!r.ok) {
         setError(d?.error ?? 'No se pudo anular.');
         return;
       }
-      toast.success(`Factura ${factura.etiqueta} anulada`);
+      toast.success(`${etiquetaTipo(factura.tipo)} ${factura.etiqueta} anulada`);
       setAnulando(false);
       router.refresh();
     } catch {
@@ -71,21 +92,36 @@ export default function FichaFactura({ factura, puedeAnular }: { factura: Factur
       <Link href={`/admin/contabilidad/facturas?mes=${factura.periodo}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700">
         <IconoFlechaIzquierda className="h-4 w-4" aria-hidden="true" /> Facturas
       </Link>
+
       <header className={adminPageHeader}>
         <div>
           <h1 className={`${adminPageTitle} flex flex-wrap items-center gap-3`}>
-            Factura {factura.etiqueta}
+            {etiquetaTipo(factura.tipo)} {factura.etiqueta}
             {anulada
               ? <span className={adminBadge('danger')}><IconoCerrar className="h-3.5 w-3.5" aria-hidden="true" /> Anulada</span>
               : <span className={adminBadge('success')}><IconoDocumento className="h-3.5 w-3.5" aria-hidden="true" /> Emitida</span>}
+            {factura.estadoTransmision === 'PENDIENTE_REPORTE' && (
+              <span className={adminBadge('warning')}>Reportar contingencia</span>
+            )}
           </h1>
-          <p className="mt-1 text-sm text-muted tabular-nums">Control {factura.numeroControl} · {factura.origen === 'EN_BLANCO' ? 'papel anulado sin usar' : formatVES(factura.totalBs)}</p>
+          <p className="mt-1 text-sm text-muted tabular-nums">
+            Control {factura.numeroControl} · {etiquetaCanal(factura.medio)}
+            {factura.emitidaHora ? ` · ${formatearHora12(factura.emitidaHora)}` : ''}
+            {` · ${factura.origen === 'EN_BLANCO' ? 'papel anulado sin usar' : formatVES(factura.totalBs)}`}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {replica && factura.origen !== 'EN_BLANCO' && (
-            <button type="button" onClick={imprimirFactura} className={adminSecondaryButton}><IconoImpresora className="h-4 w-4" aria-hidden="true" /> Imprimir</button>
+          {pdfUrl && (
+            <a href={pdfUrl} target="_blank" rel="noreferrer" className={adminSecondaryButton}>
+              <IconoDescargar className="h-4 w-4" aria-hidden="true" /> Descargar PDF
+            </a>
           )}
-          {!anulada && puedeAnular && (
+          {replica && factura.origen !== 'EN_BLANCO' && (
+            <button type="button" onClick={imprimirFactura} className={adminSecondaryButton}>
+              <IconoImpresora className="h-4 w-4" aria-hidden="true" /> Imprimir
+            </button>
+          )}
+          {!anulada && !cerrado && puedeAnular && (
             <button type="button" onClick={() => { setAnulando(true); setError(null); }} className={adminSecondaryButton}>
               <IconoEliminar className="h-4 w-4" aria-hidden="true" /> Anular
             </button>
@@ -93,9 +129,15 @@ export default function FichaFactura({ factura, puedeAnular }: { factura: Factur
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:items-start">
+      {cerrado && (
+        <div className={adminNotice('warning')}>
+          El mes {factura.periodo} está cerrado y firmado: este documento no se puede anular ni editar. Para ajustes, emite una Nota de Crédito o Débito en {hoy ?? 'el mes en curso'}.
+        </div>
+      )}
+
+      <div className={`grid gap-4 ${replica ? 'lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:items-start' : 'max-w-3xl'}`}>
         <section className={adminCard} aria-labelledby="datos-factura">
-          <h2 id="datos-factura" className="text-base font-semibold text-ink">Datos</h2>
+          <h2 id="datos-factura" className="text-base font-semibold text-ink">Datos del documento</h2>
           <dl className="mt-3 grid gap-3 text-sm">
             {anulada && (
               <div className="rounded-xl border border-deal/30 bg-deal-bg p-3 text-deal">
@@ -104,9 +146,25 @@ export default function FichaFactura({ factura, puedeAnular }: { factura: Factur
               </div>
             )}
             <div><dt className="text-xs text-muted">Registrada</dt><dd className="font-semibold text-ink">{cuando(factura.registradaEl)}{factura.creadoPor ? ` · ${factura.creadoPor}` : ''}</dd></div>
+            <div><dt className="text-xs text-muted">Canal y moneda</dt><dd className="font-semibold text-ink">{etiquetaCanal(factura.medio)} · Moneda {factura.monedaOperacion}{factura.imprentaProveedor ? ` (${factura.imprentaProveedor})` : ''}</dd></div>
+            {factura.documentoAfectadoId && (
+              <div>
+                <dt className="text-xs text-muted">Factura afectada</dt>
+                <dd><Link href={`/admin/contabilidad/facturas/${factura.documentoAfectadoId}`} className="font-semibold text-brand-600 hover:underline">Abrir factura original</Link></dd>
+              </div>
+            )}
+            {factura.ivaRetenidoBs !== null && factura.ivaRetenidoBs > 0 && (
+              <div className="rounded-xl border border-brand-200 bg-brand-50 p-3">
+                <dt className="flex items-center gap-1.5 text-xs font-semibold text-brand-700"><IconoConfirmado className="h-4 w-4" aria-hidden="true" /> Retención de IVA registrada</dt>
+                <dd className="mt-1 font-bold tabular-nums text-brand-700">{formatVES(factura.ivaRetenidoBs)} · Comp. {factura.comprobanteRetencion}</dd>
+              </div>
+            )}
+            {factura.contingenciaCausal && (
+              <div><dt className="text-xs text-muted">Contingencia</dt><dd className="font-semibold text-ink">{factura.contingenciaCausal} · {factura.estadoTransmision}</dd></div>
+            )}
             {factura.origen !== 'EN_BLANCO' && (
               <>
-                <div><dt className="text-xs text-muted">De dónde sale</dt><dd className="font-semibold text-ink">{factura.origen === 'ORDEN' ? 'Una compra de la web' : 'Una venta en la tienda'}</dd></div>
+                <div><dt className="text-xs text-muted">De dónde sale</dt><dd className="font-semibold text-ink">{factura.origen === 'ORDEN' ? 'Una compra de la web' : factura.origen === 'NOTA_FISCAL' ? 'Nota fiscal vinculada' : 'Una venta en la tienda'}</dd></div>
                 {factura.ordenes.length > 0 && (
                   <div>
                     <dt className="text-xs text-muted">Órdenes</dt>
@@ -120,7 +178,7 @@ export default function FichaFactura({ factura, puedeAnular }: { factura: Factur
                   </div>
                 )}
                 {factura.totalUSD !== null && factura.tasa !== null && (
-                  <div><dt className="text-xs text-muted">Cobrado</dt><dd className="font-semibold tabular-nums text-ink">{formatUSD(factura.totalUSD)} a {formatVES(factura.tasa)}</dd></div>
+                  <div><dt className="text-xs text-muted">Referencia en divisas</dt><dd className="font-semibold tabular-nums text-ink">{formatUSD(factura.totalUSD)} a {formatVES(factura.tasa)}</dd></div>
                 )}
               </>
             )}
@@ -145,30 +203,33 @@ export default function FichaFactura({ factura, puedeAnular }: { factura: Factur
         )}
       </div>
 
-      {anulando && (
-        <div className={adminModalOverlay} role="dialog" aria-modal="true" aria-labelledby="anular-titulo" onClick={(e) => { if (e.target === e.currentTarget && !enviando) setAnulando(false); }}>
-          <div className={`${adminModalPanel} sm:max-w-md`}>
-            <div className={adminModalHeader}>
-              <h2 id="anular-titulo" className={adminModalTitle}>Anular la factura {factura.etiqueta}</h2>
-              <button type="button" onClick={() => setAnulando(false)} disabled={enviando} aria-label="Cerrar" className="rounded-lg p-2 text-muted hover:bg-surface"><IconoCerrar className="h-5 w-5" aria-hidden="true" /></button>
-            </div>
-            <div className={adminModalBody}>
-              <p className="text-sm text-ink-soft">
-                Queda en el libro como anulada y {factura.ordenes.length ? 'la orden vuelve a quedar sin factura. ' : ''}<strong>Guarda el papel: el original y la copia</strong>. Si había que corregir algo, escribe la siguiente.
-              </p>
-              <label htmlFor="anular-motivo" className={`${adminLabel} mt-4`}>Motivo</label>
-              <textarea id="anular-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={200} rows={3} placeholder="El RIF quedó mal escrito" className="w-full rounded-lg border border-line-strong p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
-              {error && <p role="alert" className={`${adminError} mt-2`}><IconoAdvertencia className="mr-1 inline h-4 w-4" aria-hidden="true" />{error}</p>}
-            </div>
-            <div className={adminModalFooter}>
-              <button type="button" onClick={() => setAnulando(false)} disabled={enviando} className={adminSecondaryButton}>Cancelar</button>
-              <button type="button" onClick={() => void anular()} disabled={enviando || motivo.trim().length < 5} className={adminDangerButton}>
-                {enviando ? 'Anulando…' : 'Anular la factura'}
-              </button>
-            </div>
-          </div>
+      <ModalDialog open={anulando} onClose={() => !enviando && setAnulando(false)} ariaLabelledBy="anular-titulo" size="sm">
+        <div className={adminModalHeader}>
+          <h2 id="anular-titulo" className={adminModalTitle}>Anular {etiquetaTipo(factura.tipo)} {factura.etiqueta}</h2>
         </div>
-      )}
+        <div className={adminModalBody}>
+          <p className="text-sm text-ink-soft">
+            Queda en el libro como anulada y {factura.ordenes.length ? 'la orden vuelve a quedar sin factura. ' : ''}Si corresponde al papel físico, guarda el original y la copia.
+          </p>
+          <label htmlFor="anular-motivo" className={`${adminLabel} mt-4`}>Motivo</label>
+          <textarea
+            id="anular-motivo"
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+            maxLength={200}
+            rows={3}
+            placeholder="El RIF quedó mal escrito"
+            className={adminInput()}
+          />
+          {error && <p role="alert" className={`${adminError} mt-2`}><IconoAdvertencia className="mr-1 inline h-4 w-4" aria-hidden="true" />{error}</p>}
+        </div>
+        <div className={adminModalFooter}>
+          <button type="button" onClick={() => setAnulando(false)} disabled={enviando} className={adminSecondaryButton}>Cancelar</button>
+          <button type="button" onClick={() => void anular()} disabled={enviando || motivo.trim().length < 5} className={adminDangerButton}>
+            {enviando ? 'Anulando…' : 'Confirmar anulación'}
+          </button>
+        </div>
+      </ModalDialog>
     </div>
   );
 }

@@ -28,6 +28,8 @@ interface NavigationItem {
   icon: ReactNode;
   /** Con una lista basta uno (C-235: Facturas se ve con FACTURAR o con VER_CONTABILIDAD) */
   permission?: string | string[];
+  /** Oculta el sub-enlace cuando el rol ya ve la entrada principal del Hub */
+  soloSin?: string;
   countKey?: keyof SidebarCounts | (keyof SidebarCounts)[];
 }
 
@@ -198,9 +200,8 @@ export default function AdminLayout({
       name: 'Contabilidad',
       icon: <IconoMaletin className={icono} aria-hidden="true" />,
       items: [
-        { name: 'Mesa de la contadora', href: '/admin/contabilidad/mesa', icon: <IconoCuadricula className={icono} aria-hidden="true" />, permission: 'VER_CONTABILIDAD' },
-        { name: 'Facturas', href: '/admin/contabilidad/facturas', icon: <IconoDocumento className={icono} aria-hidden="true" />, permission: ['FACTURAR', 'VER_CONTABILIDAD'] },
-        { name: 'Libro de ventas', href: '/admin/contabilidad/libro', icon: <IconoReportes className={icono} aria-hidden="true" />, permission: 'VER_CONTABILIDAD' },
+        { name: 'Contabilidad', href: '/admin/contabilidad', icon: <IconoCuadricula className={icono} aria-hidden="true" />, permission: 'VER_CONTABILIDAD' },
+        { name: 'Facturas', href: '/admin/contabilidad/facturas', icon: <IconoDocumento className={icono} aria-hidden="true" />, permission: 'FACTURAR', soloSin: 'VER_CONTABILIDAD' },
       ],
     },
     {
@@ -251,8 +252,8 @@ export default function AdminLayout({
   // Los mismos permisos que revisa el servidor (C-141) y la contadora (C-235).
   const esContadora = session?.user?.role === 'ACCOUNTANT';
   const deLaContadora = (item: NavigationItem) => !esContadora || item.href.startsWith('/admin/contabilidad');
-  const permite = (item: NavigationItem) => !item.permission
-    || (Array.isArray(item.permission) ? item.permission.some((p) => hasPermission(session, p)) : hasPermission(session, item.permission));
+  const permite = (item: NavigationItem) => (!item.soloSin || !hasPermission(session, item.soloSin))
+    && (!item.permission || (Array.isArray(item.permission) ? item.permission.some((p) => hasPermission(session, p)) : hasPermission(session, item.permission)));
   const gruposVisibles = grupos
     .map((grupo) => ({ ...grupo, items: grupo.items.filter((item) => permite(item) && deLaContadora(item)) }))
     .filter((grupo) => grupo.items.length > 0);

@@ -52,6 +52,7 @@ function esApiPublica(pathname: string): boolean {
     pathname === '/api/cron/despachos' ||
     pathname === '/api/cron/promotores' ||
     pathname === '/api/cron/papelera' ||
+    pathname === '/api/cron/contabilidad' ||
     // Avisos de la Content-Security-Policy (C-166): los manda el navegador del visitante, sin sesión. Límite en el handler
     pathname === '/api/csp-report' ||
     // Tiempo real (C-127): sin sesión solo recibe el stock; el handler filtra por sesión y permisos
@@ -224,8 +225,11 @@ export default withAuth(
         return NextResponse.redirect(new URL(userRole === 'ACCOUNTANT' ? INICIO_CONTADORA : '/admin', req.url));
       }
 
-      // C-235: la mesa es del dueño y de la contadora; un administrador vuelve a Facturas
-      if (userRole === 'ADMIN' && (pathname === INICIO_CONTADORA || pathname.startsWith(`${INICIO_CONTADORA}/`))) {
+      // C-235 / G-76: el Hub, mesa y libro son del dueño y la contadora; un administrador va a Facturas (sin atrapar /facturas/*)
+      if (
+        userRole === 'ADMIN'
+        && (pathname === INICIO_CONTADORA || pathname.startsWith('/admin/contabilidad/mesa') || pathname.startsWith('/admin/contabilidad/libro'))
+      ) {
         return NextResponse.redirect(new URL('/admin/contabilidad/facturas', req.url));
       }
 

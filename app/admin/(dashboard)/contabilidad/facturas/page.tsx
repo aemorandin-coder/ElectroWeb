@@ -2,39 +2,55 @@ import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { hasPermission } from '@/lib/auth-helpers';
+import { calcularHojaIva, obtenerConfigContable } from '@/lib/contabilidad/hub';
 import { hoyVe, periodoDe, ultimosMeses } from '@/lib/contabilidad/montos';
-import { comprasSinFactura, facturasDelMes, talonarioActivo, ventasDe30Dias } from '@/lib/contabilidad/servidor';
+import { comprasSinFactura, facturasDelMes, talonarioActivo, tasaYAlicuota } from '@/lib/contabilidad/servidor';
 import { talonarioDTO } from '@/lib/dto/contabilidad';
 import { rangoMes } from '@/lib/relacion-ventas';
-import PanelFacturas from './_components/PanelFacturas';
+import FacturasSoloPanel from './_components/FacturasSoloPanel';
 
-// C-229: Contabilidad → Facturas. Para quien factura (administradores y dueño, FACTURAR); cargar un talonario, solo el dueño.
-// C-230: el talonario dice hasta cuándo alcanza, al ritmo de las ventas de los últimos 30 días.
 export const dynamic = 'force-dynamic';
 
 export default async function PaginaFacturas({ searchParams }: { searchParams: Promise<{ mes?: string }> }) {
   const session = await getServerSession(authOptions);
   const puedeFacturar = hasPermission(session, 'FACTURAR');
-  // C-235: la contadora las ve (VER_CONTABILIDAD) pero no factura
-  if (!puedeFacturar && !hasPermission(session, 'VER_CONTABILIDAD')) redirect('/admin');
+  const verContabilidad = hasPermission(session, 'VER_CONTABILIDAD');
+  if (!puedeFacturar && !verContabilidad) redirect('/admin');
+
   const { mes: pedido } = await searchParams;
   const actual = periodoDe(new Date());
   const mes = pedido && rangoMes(pedido) && pedido <= actual ? pedido : actual;
+
+  if (verContabilidad) {
+    redirect(`/admin/contabilidad?tab=facturacion&mes=${encodeURIComponent(mes)}`);
+  }
+
   const meses = ultimosMeses(actual);
   if (!meses.includes(mes)) meses.push(mes);
 
-  const [activo, facturas, compras, ventas30] = await Promise.all([talonarioActivo(), facturasDelMes(mes), comprasSinFactura(mes), ventasDe30Dias()]);
+  const [tNormal, tCont, facturas, compras, { tasa }, cfg, periodo] = await Promise.all([
+    talonarioActivo(undefined, 'NORMAL'),
+    talonarioActivo(undefined, 'CONTINGENCIA'),
+    facturasDelMes(mes),
+    comprasSinFactura(mes),
+    tasaYAlicuota(),
+    obtenerConfigContable(),
+    calcularHojaIva(mes),
+  ]);
+
   return (
-    <PanelFacturas
+    <FacturasSoloPanel
       mes={mes}
       meses={meses}
-      talonario={activo ? talonarioDTO(activo) : null}
+      hoy={hoyVe()}
+      talonarioNormal={tNormal ? talonarioDTO(tNormal) : null}
+      talonarioContingencia={tCont ? talonarioDTO(tCont) : null}
       facturas={facturas}
       compras={compras}
-      ventas30={ventas30}
-      hoy={hoyVe()}
-      esDueno={hasPermission(session, 'CARGAR_TALONARIO')}
-      puedeFacturar={puedeFacturar}
+      tasaHoy={tasa}
+      canalPublico={cfg.canalEmision}
+      imprentaAmbientePublico={cfg.imprentaAmbiente}
+      cerrado={periodo.estado === 'CERRADO'}
     />
   );
 }

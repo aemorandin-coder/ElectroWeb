@@ -1,9 +1,6 @@
 'use client';
 
-// C-229: "Nueva factura de talonario" (docs/plan/CONTABILIDAD.md §6), la maqueta B que eligió el equipo el 14/11.
-// Tres pasos cortos y "Revisar y emitir" con la factura tal como se escribe (PLAN.md §1.9): en la computadora, la réplica
-// con cada casilla numerada; en el teléfono, casilla por casilla. La web no emite la factura: el equipo la escribe en el
-// papel y aquí la registra. Los montos, el número y el control los calcula el servidor (/preparar y, al registrar, otra vez).
+// C-229 y G-76: "Nueva factura fiscal" (Talonario físico, Contingencia 00093, Portal SENIAT asistido o Imprenta Digital).
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -18,39 +15,55 @@ import ReplicaTalonario from '@/components/admin/contabilidad/ReplicaTalonario';
 import { datosReplica } from '@/components/admin/contabilidad/datos';
 import { imprimirFactura } from '@/components/admin/contabilidad/imprimir';
 import {
-  IconoAdvertencia, IconoCheck, IconoClientes, IconoDocumento, IconoEditar, IconoEliminar, IconoFlechaDerecha, IconoFlechaIzquierda,
-  IconoImpresora, IconoLista, IconoMas, IconoOrdenes, IconoTienda, IconoVer,
+  IconoAdvertencia, IconoCheck, IconoClientes, IconoDocumento, IconoEditar, IconoEliminar, IconoFlechaDerecha,
+  IconoFlechaIzquierda, IconoImpresora, IconoLista, IconoMas, IconoNube, IconoOrdenes, IconoTienda, IconoVer,
 } from '@/components/iconos';
 import {
-  adminCard, adminError, adminHint, adminInput, adminLabel, adminNotice, adminPrimaryButton, adminSecondaryButton,
+  adminBadge, adminCard, adminError, adminHint, adminInput, adminLabel, adminNotice, adminPrimaryButton, adminSecondaryButton,
 } from '@/lib/admin-ui';
-import type { CompraSinFactura, Borrador } from '@/lib/contabilidad/servidor';
-import { normalizarDocumento, tipoComprador } from '@/lib/contabilidad/montos';
-import type { TalonarioDTO } from '@/lib/dto/contabilidad';
+import { CAUSALES_CONTINGENCIA } from '@/lib/contabilidad/esquemas';
+import { formatearHora12, horaActualVe, normalizarDocumento, tipoComprador } from '@/lib/contabilidad/montos';
+import type { Borrador, CompraSinFactura } from '@/lib/contabilidad/servidor';
 import { formatUSD, formatVES } from '@/lib/currency';
+import type { TalonarioDTO } from '@/lib/dto/contabilidad';
 import { precioValido } from '@/lib/pricing';
+import { subirArchivoContable } from '../../_components/subirArchivo';
+import { etiquetaCanal } from '../../_components/tipos';
 
 interface Manual { cantidad: string; descripcion: string; exento: boolean; precio: string }
 interface Comprador { nombre: string; documento: string; domicilio: string; telefono: string }
 
 const PASOS = [
-  { titulo: 'De dónde sale', icono: IconoOrdenes },
+  { titulo: 'Canal y origen', icono: IconoOrdenes },
   { titulo: 'A nombre de quién', icono: IconoClientes },
   { titulo: 'Qué se vendió', icono: IconoLista },
   { titulo: 'Revisar y emitir', icono: IconoDocumento },
 ];
 
-const fechaCorta = (iso: string | null) => (iso ? new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: '2-digit', month: '2-digit' }).format(new Date(iso)) : '');
-/** "914,02": la tasa como se escribe */
+const fechaCorta = (iso: string | null) =>
+  iso ? new Intl.DateTimeFormat('es-VE', { timeZone: 'America/Caracas', day: '2-digit', month: '2-digit' }).format(new Date(iso)) : '';
 const textoTasa = (n: number) => new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(n);
 const vacio: Comprador = { nombre: '', documento: '', domicilio: '', telefono: '' };
 const renglonVacio: Manual = { cantidad: '1', descripcion: '', exento: false, precio: '' };
 
-export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy, alicuota, hoy }: {
+const crearLlaveIdempotencia = (): string => crypto.randomUUID();
+
+export default function AsistenteFactura({
+  talonario,
+  talonarioContingencia = null,
+  canalActivo = 'TALONARIO',
+  imprentaAmbiente = 'SANDBOX',
+  compras,
+  inicial,
+  tasaHoy,
+  alicuota,
+  hoy,
+}: {
   talonario: TalonarioDTO | null;
-  /** Lo cobrado este mes que no tiene factura, por compra */
+  talonarioContingencia?: TalonarioDTO | null;
+  canalActivo?: 'TALONARIO' | 'PORTAL_SENIAT' | 'IMPRENTA_DIGITAL';
+  imprentaAmbiente?: 'SANDBOX' | 'PRODUCCION';
   compras: CompraSinFactura[];
-  /** Si se llegó desde una orden (Órdenes → "Facturar en el talonario") */
   inicial: { ordenIds: string[]; ordenes: string[] } | null;
   tasaHoy: number | null;
   alicuota: number;
@@ -62,22 +75,38 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
   const [origen, setOrigen] = useState<'ORDEN' | 'TIENDA'>(inicial || compras.length ? 'ORDEN' : 'TIENDA');
   const [ordenIds, setOrdenIds] = useState<string[]>(inicial?.ordenIds ?? []);
   const [condicion, setCondicion] = useState<'CONTADO' | 'CREDITO'>('CONTADO');
+  const [monedaOperacion, setMonedaOperacion] = useState<'VES' | 'USD'>('VES');
   const [fecha, setFecha] = useState(hoy);
+  const [horaEmision, setHoraEmision] = useState(() => horaActualVe());
+  const [usarContingencia, setUsarContingencia] = useState(false);
+  const [contingenciaCausal, setContingenciaCausal] = useState<string>(CAUSALES_CONTINGENCIA[0]);
   const [comprador, setComprador] = useState<Comprador>(vacio);
   const [manuales, setManuales] = useState<Manual[]>([{ ...renglonVacio }]);
-  // C-230: la tasa BCV del día de la factura (la contadora, 16/11). Si la fecha es hoy, viene la de Configuración
   const [tasa, setTasa] = useState(tasaHoy ? String(tasaHoy).replace('.', ',') : '');
   const [descripciones, setDescripciones] = useState<string[] | null>(null);
   const [borrador, setBorrador] = useState<Borrador | null>(null);
+
+  // Campos exclusivos para Portal SENIAT asistido
+  const [numeroExterno, setNumeroExterno] = useState('');
+  const [numeroControlExterno, setNumeroControlExterno] = useState('');
+  const [pdfPrivadoRuta, setPdfPrivadoRuta] = useState('');
+  const [subiendoPdf, setSubiendoPdf] = useState(false);
+
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emitiendo, setEmitiendo] = useState(false);
   const [verCompleta, setVerCompleta] = useState(false);
 
-  // Las compras para elegir: las del mes y, si se llegó desde una orden de otro mes, esa también
+  const medioEfectivo: 'TALONARIO' | 'PORTAL_SENIAT' | 'IMPRENTA_DIGITAL' = usarContingencia ? 'TALONARIO' : canalActivo;
+  const talonarioEfectivo = usarContingencia ? (talonarioContingencia ?? talonario) : talonario;
+  const maxRenglones = medioEfectivo === 'TALONARIO' ? 12 : 60;
+
   const opciones = useMemo(() => {
     if (!inicial || compras.some((c) => c.ordenIds.join() === inicial.ordenIds.join())) return compras;
-    return [{ ordenIds: inicial.ordenIds, ordenes: inicial.ordenes, cliente: 'La orden que abriste', documento: '', totalUSD: 0, totalBs: 0, pagadaEl: null, metodo: null, productos: 0, digital: false }, ...compras];
+    return [
+      { ordenIds: inicial.ordenIds, ordenes: inicial.ordenes, cliente: 'La orden que abriste', documento: '', totalUSD: 0, totalBs: 0, pagadaEl: null, metodo: null, productos: 0, digital: false },
+      ...compras,
+    ];
   }, [compras, inicial]);
 
   const tasaNumero = precioValido(tasa);
@@ -95,25 +124,43 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
     origen === 'ORDEN' && !ordenIds.length ? 'Elige la compra que vas a facturar.'
       : !/^\d{4}-\d{2}-\d{2}$/.test(fecha) || fecha > hoy ? 'La fecha de emisión no puede ser de un día que no ha llegado.'
         : !(tasaNumero && tasaNumero > 0) ? 'Escribe la tasa BCV del día de la factura.' : null,
-    comprador.nombre.trim().length < 2 ? 'Escribe el nombre o la razón social.' : !documento ? 'Escribe el RIF o la cédula: una letra (V, E, J, G o P) y sus números.' : empresa && comprador.domicilio.trim().length < 10 ? 'Una empresa lleva su domicilio fiscal.' : null,
+    comprador.nombre.trim().length < 2 ? 'Escribe el nombre o la razón social.'
+      : !documento ? 'Escribe el RIF o la cédula: una letra (V, E, J, G o P) y sus números.'
+        : empresa && comprador.domicilio.trim().length < 10 ? 'Una empresa lleva su domicilio fiscal.' : null,
     origen === 'TIENDA' && !manualesBien ? 'Completa cada renglón: cantidad, descripción y precio.' : null,
   ];
   const listoHasta = (i: number) => problemas.slice(0, i).every((p) => p === null);
 
-  const pedido = (conNumero?: number) => {
-    const base = { condicionPago: condicion, fecha, tasa: tasaNumero ?? 0, ...(conNumero ? { numeroEsperado: conNumero } : {}) };
+  const pedido = (conNumero?: number, incluirIdempotencia = false) => {
+    const base = {
+      condicionPago: condicion,
+      monedaOperacion,
+      fecha,
+      horaEmision: /^\d{2}:\d{2}:\d{2}$/.test(horaEmision) ? horaEmision : horaActualVe(),
+      tasa: tasaNumero ?? 0,
+      medio: medioEfectivo,
+      ...(usarContingencia ? { contingenciaCausal } : {}),
+      ...(medioEfectivo === 'PORTAL_SENIAT' && numeroExterno.trim() ? { numeroExterno: Math.trunc(Number(numeroExterno)) } : {}),
+      ...(medioEfectivo === 'PORTAL_SENIAT' && numeroControlExterno.trim() ? { numeroControlExterno: numeroControlExterno.trim() } : {}),
+      ...(pdfPrivadoRuta ? { pdfPrivadoRuta } : {}),
+      ...(conNumero ? { numeroEsperado: conNumero } : {}),
+      ...(incluirIdempotencia ? { llaveIdempotencia: crearLlaveIdempotencia() } : {}),
+    };
     const c = { nombre: comprador.nombre.trim(), documento: comprador.documento.trim(), domicilio: comprador.domicilio.trim(), telefono: comprador.telefono.trim() };
     return origen === 'ORDEN'
       ? { origen, ordenIds, ...(descripciones ? { descripciones } : {}), ...(comprador.nombre || comprador.documento ? { comprador: c } : {}), ...base }
       : { origen, renglones: filas.map((f) => ({ ...f, precioUSD: f.precioUSD ?? 0 })), comprador: c, ...base };
   };
 
-  /** Lo pide al servidor: los renglones, los totales, el número que toca y lo que falta */
   const preparar = async (cuerpo: object): Promise<Borrador | null> => {
     setCargando(true);
     setError(null);
     try {
-      const r = await fetch('/api/admin/contabilidad/facturas/preparar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
+      const r = await fetch('/api/admin/contabilidad/facturas/preparar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cuerpo),
+      });
       const d = await r.json().catch(() => null);
       if (!r.ok) {
         setError(d?.error ?? 'No se pudo preparar la factura.');
@@ -130,9 +177,18 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
   };
 
   const ir = async (i: number) => {
-    // Al dejar el paso 1 con una compra de la web: sus datos llenan el comprador y los renglones
     if (paso === 0 && i > 0 && origen === 'ORDEN') {
-      const b = await preparar({ origen, ordenIds, condicionPago: condicion, fecha, tasa: tasaNumero ?? 0 });
+      const b = await preparar({
+        origen,
+        ordenIds,
+        condicionPago: condicion,
+        monedaOperacion,
+        fecha,
+        horaEmision,
+        tasa: tasaNumero ?? 0,
+        medio: medioEfectivo,
+        ...(usarContingencia ? { contingenciaCausal } : {}),
+      });
       if (!b) return;
       if (!comprador.nombre && !comprador.documento && b.compradorDeLaOrden) {
         const o = b.compradorDeLaOrden;
@@ -147,14 +203,21 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
   };
 
   const registrar = async () => {
-    if (!borrador?.numero) return;
+    if (!borrador) return;
     setEmitiendo(true);
+    setError(null);
     try {
-      const r = await fetch('/api/admin/contabilidad/facturas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pedido(borrador.numero)) });
+      const numEsperado = medioEfectivo === 'TALONARIO' ? (borrador.numero ?? undefined) : undefined;
+      const r = await fetch('/api/admin/contabilidad/facturas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pedido(numEsperado, true)),
+      });
       const d = await r.json().catch(() => null);
       if (!r.ok) {
-        toast.error(d?.error ?? 'No se pudo registrar la factura.');
-        // Otro registró ese número mientras tanto: se vuelve a preparar con el que toca ahora
+        const msg = d?.error ?? 'No se pudo registrar la factura.';
+        setError(msg);
+        toast.error(msg);
         if (r.status === 409) await preparar(pedido());
         return;
       }
@@ -168,29 +231,42 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
     }
   };
 
+  const subirPdfSeniat = async (file: File | undefined) => {
+    if (!file) return;
+    setSubiendoPdf(true);
+    const res = await subirArchivoContable(file, 'seniat-pdf');
+    setSubiendoPdf(false);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    setPdfPrivadoRuta(res.archivo);
+    toast.success('PDF adjunto');
+  };
+
   const compra = opciones.find((c) => c.ordenIds.join() === ordenIds.join());
   const pasos: Paso[] = PASOS.map((p, i) => ({
     titulo: p.titulo,
     icono: p.icono,
     hecho: i < 3 && i < alcanzado && problemas[i] === null,
     disponible: listoHasta(i),
-    resumen: i === 0 ? (origen === 'TIENDA' ? 'Venta en la tienda' : compra ? compra.ordenes.join(' y ') : 'Una compra de la web')
+    resumen: i === 0 ? `${etiquetaCanal(medioEfectivo)} · ${origen === 'TIENDA' ? 'Tienda' : compra ? compra.ordenes.join(' y ') : 'Web'}`
       : i === 1 ? (comprador.nombre.trim() || 'Nombre, RIF o cédula')
         : i === 2 ? (borrador && origen === 'ORDEN' ? `${borrador.renglones.length} renglones` : origen === 'TIENDA' ? `${manuales.length} renglones` : 'Los renglones')
-          : borrador?.numeroTexto ? `La ${borrador.numeroTexto}` : 'Cómo se escribe',
+          : borrador?.numeroTexto ? `La ${borrador.numeroTexto}` : 'Confirmar y emitir',
   }));
 
-  const replica = borrador && talonario && borrador.numeroTexto && borrador.numeroControl
-    ? datosReplica(borrador.talonario ?? talonario, {
-        numeroTexto: borrador.numeroTexto,
-        numeroControl: borrador.numeroControl,
-        fecha: borrador.fecha,
-        comprador: borrador.comprador,
-        condicionPago: borrador.condicionPago,
-        renglones: borrador.renglones,
-        totales: borrador.totales,
-        alicuota: borrador.alicuota,
-      })
+  const replica = borrador && medioEfectivo === 'TALONARIO' && talonarioEfectivo && borrador.numeroTexto && borrador.numeroControl
+    ? datosReplica(borrador.talonario ?? talonarioEfectivo, {
+      numeroTexto: borrador.numeroTexto,
+      numeroControl: borrador.numeroControl,
+      fecha: borrador.fecha,
+      comprador: borrador.comprador,
+      condicionPago: borrador.condicionPago,
+      renglones: borrador.renglones,
+      totales: borrador.totales,
+      alicuota: borrador.alicuota,
+    })
     : null;
 
   const botonesPie = (siguiente: number, texto: string) => (
@@ -206,15 +282,21 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
     </div>
   );
 
-  if (!talonario) {
+  if (medioEfectivo === 'TALONARIO' && !talonarioEfectivo) {
     return (
       <div className={adminNotice('warning')}>
         <IconoAdvertencia aria-hidden="true" />
-        <p className="mt-2 font-semibold">No hay un talonario con facturas por usar.</p>
-        <p className="mt-1">El dueño lo carga en Contabilidad → Facturas → &ldquo;Cargar el talonario&rdquo;. Después vuelve aquí.</p>
+        <p className="mt-2 font-semibold">No hay un talonario físico con facturas disponibles.</p>
+        <p className="mt-1">El dueño puede cargar un talonario o activar Portal SENIAT / Imprenta Digital en Contabilidad → Ajustes de contabilidad.</p>
       </div>
     );
   }
+
+  const listoEmitir = borrador !== null && borrador.falta.length === 0 && (
+    medioEfectivo === 'IMPRENTA_DIGITAL'
+    || (medioEfectivo === 'TALONARIO' && Boolean(borrador.numero))
+    || (medioEfectivo === 'PORTAL_SENIAT' && Number(numeroExterno) > 0 && numeroControlExterno.trim().length >= 4)
+  );
 
   return (
     <div className="space-y-4">
@@ -223,8 +305,38 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
 
       {paso === 0 && (
         <section className={`${adminCard} max-w-3xl`} aria-labelledby="paso-origen">
-          <h2 id="paso-origen" className="text-lg font-semibold text-ink">De dónde sale</h2>
-          <p className="mt-1 text-sm text-muted">Una compra de la web, o una venta en la tienda sin orden.</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 id="paso-origen" className="text-lg font-semibold text-ink">Canal y origen</h2>
+              <p className="mt-1 text-sm text-muted">Una compra de la web, o una venta en la tienda sin orden.</p>
+            </div>
+            <span className={adminBadge('brand')}>
+              {etiquetaCanal(medioEfectivo)}{medioEfectivo === 'IMPRENTA_DIGITAL' ? ` · ${imprentaAmbiente}` : ''}
+            </span>
+          </div>
+
+          {canalActivo !== 'TALONARIO' && (
+            <div className="mt-4 rounded-xl border border-line bg-surface p-3.5">
+              <label className="flex cursor-pointer items-center gap-2.5 text-sm font-semibold text-ink">
+                <input
+                  type="checkbox"
+                  checked={usarContingencia}
+                  onChange={(e) => setUsarContingencia(e.target.checked)}
+                  className="h-4 w-4 rounded border-line-strong text-brand-600"
+                />
+                Emitir por talonario de contingencia (Providencia 00093 art. 7)
+              </label>
+              {usarContingencia && (
+                <div className="mt-3">
+                  <label htmlFor="f-causal" className={adminLabel}>Causal de contingencia</label>
+                  <select id="f-causal" value={contingenciaCausal} onChange={(e) => setContingenciaCausal(e.target.value)} className={adminInput()}>
+                    {CAUSALES_CONTINGENCIA.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <Opcion elegida={origen === 'ORDEN'} aria-pressed={origen === 'ORDEN'} onClick={() => setOrigen('ORDEN')}
               icono={IconoOrdenes} titulo="Una compra de la web" detalle="Los montos salen de la orden" />
@@ -236,9 +348,9 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
             <fieldset className="mt-5">
               <legend className={adminLabel}>La compra</legend>
               {opciones.length === 0 ? (
-                <p className="text-sm text-muted">No hay compras cobradas sin factura este mes. Para una de otro mes, ábrela en Órdenes y toca &ldquo;Facturar en el talonario&rdquo;.</p>
+                <p className="text-sm text-muted">No hay compras cobradas sin factura este mes.</p>
               ) : (
-                <ul className="max-h-80 space-y-2 overflow-y-auto pr-1">
+                <ul className="max-h-72 space-y-2 overflow-y-auto pr-1">
                   {opciones.map((c) => {
                     const elegida = c.ordenIds.join() === ordenIds.join();
                     return (
@@ -273,28 +385,44 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
                 max={hoy}
                 onChange={(e) => {
                   setFecha(e.target.value);
-                  // Otro día, otra tasa: la de hoy solo vale para hoy
                   setTasa(e.target.value === hoy && tasaHoy ? String(tasaHoy).replace('.', ',') : '');
                 }}
                 className={`${adminInput()} sm:max-w-48`}
               />
-              <p className={adminHint}>La que escribes en la factura.</p>
+            </div>
+            <div>
+              <label htmlFor="factura-hora" className={adminLabel}>Hora exacta (art. 8 num. 5)</label>
+              <input
+                id="factura-hora"
+                type="time"
+                step="1"
+                value={horaEmision}
+                onChange={(e) => setHoraEmision(e.target.value.length === 5 ? `${e.target.value}:00` : e.target.value)}
+                className={`${adminInput()} tabular-nums sm:max-w-44`}
+              />
+              <p className={adminHint}>{formatearHora12(horaEmision)}</p>
             </div>
             <div>
               <label htmlFor="factura-tasa" className={`${adminLabel} inline-flex items-center gap-1`}>
-                Tasa BCV del día de la factura
-                <Ayuda etiqueta="Qué tasa va">La del BCV del día en que escribes la factura, como pidió la contadora el 16/11. Si la fecha es hoy, viene la de Ajustes.</Ayuda>
+                Tasa BCV del día
+                <Ayuda etiqueta="Qué tasa va">La del BCV del día en que emites la factura.</Ayuda>
               </label>
               <CampoUnidad id="factura-tasa" unidad="Bs por $" value={tasa} inputMode="decimal" onChange={(e) => setTasa(e.target.value)} invalido={Boolean(tasa) && !tasaNumero} className="w-48" />
-              <p className={adminHint}>{fecha === hoy && tasaHoy ? 'La de hoy, del BCV.' : `Escribe la del ${fecha.split('-').reverse().join('/')}.`}</p>
             </div>
-            <div className="sm:col-span-2">
+            <div>
               <span className={adminLabel}>Condiciones de pago</span>
               <div className="flex gap-2" role="radiogroup" aria-label="Condiciones de pago">
                 {(['CONTADO', 'CREDITO'] as const).map((c) => (
                   <Opcion key={c} tamano="chica" role="radio" aria-checked={condicion === c} elegida={condicion === c} onClick={() => setCondicion(c)}
                     titulo={c === 'CONTADO' ? 'Contado' : 'Crédito'} className="flex-1" />
                 ))}
+              </div>
+            </div>
+            <div className="sm:col-span-2">
+              <span className={adminLabel}>Moneda de operación (art. 8 · Ley de Impuesto Grandes Transacciones)</span>
+              <div className="flex gap-2 max-w-md" role="radiogroup" aria-label="Moneda de operación">
+                <Opcion tamano="chica" role="radio" aria-checked={monedaOperacion === 'VES'} elegida={monedaOperacion === 'VES'} onClick={() => setMonedaOperacion('VES')} titulo="Bolívares (Bs.)" className="flex-1" />
+                <Opcion tamano="chica" role="radio" aria-checked={monedaOperacion === 'USD'} elegida={monedaOperacion === 'USD'} onClick={() => setMonedaOperacion('USD')} titulo="Divisas (USD + equiv. Bs.)" className="flex-1" />
               </div>
             </div>
           </div>
@@ -306,10 +434,7 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
       {paso === 1 && (
         <section className={`${adminCard} max-w-3xl`} aria-labelledby="paso-comprador">
           <h2 id="paso-comprador" className="text-lg font-semibold text-ink">A nombre de quién</h2>
-          <p className="mt-1 text-sm text-muted">Como lo vas a escribir en la factura.</p>
-          {borrador?.compradorDeLaOrden && origen === 'ORDEN' && (
-            <p className={`${adminHint} mt-1`}>Viene de la orden. Si lo cambias, queda anotado en la bitácora.</p>
-          )}
+          <p className="mt-1 text-sm text-muted">Datos fiscales del comprador.</p>
           <div className="mt-4 grid gap-4">
             <div>
               <label htmlFor="c-nombre" className={adminLabel}>Nombre y apellido o razón social</label>
@@ -340,8 +465,7 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
           {origen === 'ORDEN' && borrador ? (
             <>
               <p className="mt-1 text-sm text-muted">
-                Los montos salen de la orden, a la tasa del día de la factura ({textoTasa(borrador.tasa)})
-                {borrador.tasaOrden ? `; la orden se cobró a ${textoTasa(borrador.tasaOrden)}` : ''}. Puedes acortar una descripción o agregarle el serial.
+                Los montos salen de la orden a la tasa del día ({textoTasa(borrador.tasa)}).
               </p>
               <ul className="mt-4 divide-y divide-line">
                 {borrador.renglones.map((r, i) => (
@@ -354,9 +478,6 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
                       onChange={(e) => setDescripciones((d) => (d ?? borrador.renglones.map((x) => x.descripcion)).map((x, j) => (j === i ? e.target.value : x)))}
                       className={adminInput()}
                     />
-                    {(descripciones?.[i] ?? r.descripcion).length > 45 && (
-                      <p className={`${adminHint} sm:col-start-2 sm:row-start-2 sm:mt-0`}>Larga para un renglón: en el papel puede ocupar dos.</p>
-                    )}
                     <span className="text-right text-sm tabular-nums sm:col-start-3 sm:row-start-1">
                       <span className="block font-semibold text-ink">{formatVES(r.montoBs)}</span>
                       <span className="block text-xs text-muted">{r.exento ? 'exento (E)' : 'sin IVA'}</span>
@@ -367,7 +488,7 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
             </>
           ) : (
             <>
-              <p className="mt-1 text-sm text-muted">El precio de cada producto en dólares, como en la tienda: con el IVA ({alicuota} %) adentro.</p>
+              <p className="mt-1 text-sm text-muted">Precio de cada producto en dólares (con IVA del {alicuota} % incluido si es gravado). Hasta {maxRenglones} renglones.</p>
               <div className="mt-4 hidden grid-cols-[4.5rem_minmax(0,1fr)_8rem_8rem_2.75rem] gap-2 text-xs font-semibold uppercase tracking-wide text-muted lg:grid">
                 <span>Cant.</span><span>Descripción</span><span>(E)</span><span>Precio $</span><span />
               </div>
@@ -375,7 +496,7 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
                 {manuales.map((m, i) => (
                   <li key={i} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-2 rounded-xl border border-line p-3 lg:grid-cols-[4.5rem_minmax(0,1fr)_8rem_8rem_2.75rem] lg:items-center lg:border-0 lg:p-0">
                     <input aria-label={`Cantidad del renglón ${i + 1}`} value={m.cantidad} inputMode="numeric" maxLength={4} onChange={(e) => setManuales(manuales.map((x, j) => (j === i ? { ...x, cantidad: e.target.value.replace(/\D/g, '') } : x)))} className={`${adminInput()} text-center tabular-nums`} />
-                    <input aria-label={`Descripción del renglón ${i + 1}`} value={m.descripcion} maxLength={90} placeholder="Control PlayStation 5" onChange={(e) => setManuales(manuales.map((x, j) => (j === i ? { ...x, descripcion: e.target.value } : x)))} className={adminInput()} />
+                    <input aria-label={`Descripción del renglón ${i + 1}`} value={m.descripcion} maxLength={90} placeholder="Producto o servicio" onChange={(e) => setManuales(manuales.map((x, j) => (j === i ? { ...x, descripcion: e.target.value } : x)))} className={adminInput()} />
                     <Opcion tamano="chica" aria-pressed={m.exento} elegida={m.exento} onClick={() => setManuales(manuales.map((x, j) => (j === i ? { ...x, exento: !x.exento } : x)))}
                       titulo={m.exento ? '(E) exento' : 'Con IVA'} className="whitespace-nowrap" />
                     <input aria-label={`Precio en dólares del renglón ${i + 1}`} value={m.precio} inputMode="decimal" placeholder="0,00" onChange={(e) => setManuales(manuales.map((x, j) => (j === i ? { ...x, precio: e.target.value } : x)))} className={`${adminInput()} text-right tabular-nums`} />
@@ -385,10 +506,9 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
                   </li>
                 ))}
               </ul>
-              <button type="button" onClick={() => setManuales([...manuales, { ...renglonVacio }])} disabled={manuales.length >= 12} className={`${adminSecondaryButton} mt-3`}>
+              <button type="button" onClick={() => setManuales([...manuales, { ...renglonVacio }])} disabled={manuales.length >= maxRenglones} className={`${adminSecondaryButton} mt-3`}>
                 <IconoMas className="h-4 w-4" aria-hidden="true" /> Agregar renglón
               </button>
-              {tasaNumero && <p className={`${adminHint} mt-3`}>En bolívares, a la tasa del día de la factura ({textoTasa(tasaNumero)}).</p>}
             </>
           )}
           {problemas[2] && <p className={`${adminHint} mt-3`}>{problemas[2]}</p>}
@@ -397,16 +517,16 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
       )}
 
       {paso === 3 && borrador && (
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:items-start">
+        <div className={`grid gap-4 ${replica ? 'lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:items-start' : 'max-w-3xl'}`}>
           <div className="space-y-4">
             <section className={adminCard} aria-labelledby="paso-revisar">
               <h2 id="paso-revisar" className="text-lg font-semibold text-ink">Revisar y emitir</h2>
               <p className="mt-1 text-sm text-muted">
-                Copia esto en la factura <strong className="tabular-nums text-ink">{borrador.numeroTexto}</strong> del talonario (control <span className="whitespace-nowrap tabular-nums">{borrador.numeroControl}</span>).
+                Canal: <strong>{etiquetaCanal(medioEfectivo)}</strong> · Hora <span className="tabular-nums">{formatearHora12(borrador.hora)}</span>.
               </p>
               <ul className="mt-3 divide-y divide-line text-sm">
                 {[
-                  { i: 0, icono: IconoOrdenes, titulo: origen === 'TIENDA' ? 'Venta en la tienda' : `Órdenes ${borrador.ordenes.map((o) => o.orderNumber).join(' y ')}`, detalle: `${borrador.condicionPago === 'CREDITO' ? 'Crédito' : 'Contado'} · fecha ${borrador.fecha.split('-').reverse().join('/')} · tasa ${textoTasa(borrador.tasa)}` },
+                  { i: 0, icono: IconoOrdenes, titulo: origen === 'TIENDA' ? 'Venta en la tienda' : `Órdenes ${borrador.ordenes.map((o) => o.orderNumber).join(' y ')}`, detalle: `${borrador.condicionPago === 'CREDITO' ? 'Crédito' : 'Contado'} · ${monedaOperacion} · fecha ${borrador.fecha.split('-').reverse().join('/')} · tasa ${textoTasa(borrador.tasa)}` },
                   { i: 1, icono: IconoClientes, titulo: `${borrador.comprador.nombre} · ${borrador.comprador.documento}`, detalle: [borrador.comprador.domicilio, borrador.comprador.telefono].filter(Boolean).join(' · ') || 'Sin domicilio ni teléfono' },
                   { i: 2, icono: IconoLista, titulo: `${borrador.renglones.length} ${borrador.renglones.length === 1 ? 'renglón' : 'renglones'} · ${formatVES(borrador.totales.totalBs)}`, detalle: `Base ${formatVES(borrador.totales.baseBs)} · IVA ${formatVES(borrador.totales.ivaBs)}${borrador.totales.exentoBs ? ` · exento ${formatVES(borrador.totales.exentoBs)}` : ''}` },
                 ].map((r) => (
@@ -422,6 +542,28 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
               </ul>
             </section>
 
+            {medioEfectivo === 'PORTAL_SENIAT' && (
+              <section className={adminCard} aria-labelledby="seniat-datos">
+                <h3 id="seniat-datos" className="text-base font-semibold text-ink">Datos asignados por el Portal SENIAT</h3>
+                <p className="mt-0.5 text-xs text-muted">Copia los montos de arriba en el portal y registra aquí el número y control que emitió.</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="seniat-num" className={adminLabel}>N.º de factura</label>
+                    <input id="seniat-num" type="number" min={1} value={numeroExterno} onChange={(e) => setNumeroExterno(e.target.value)} className={adminInput()} required />
+                  </div>
+                  <div>
+                    <label htmlFor="seniat-ctrl" className={adminLabel}>N.º de control</label>
+                    <input id="seniat-ctrl" value={numeroControlExterno} onChange={(e) => setNumeroControlExterno(e.target.value)} placeholder="00-000001" className={adminInput()} required />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label htmlFor="seniat-pdf" className={adminLabel}>PDF descargado del Portal SENIAT (opcional)</label>
+                    <input id="seniat-pdf" type="file" accept=".pdf" disabled={subiendoPdf} onChange={(e) => void subirPdfSeniat(e.target.files?.[0])} className="block w-full text-xs text-muted" />
+                    {pdfPrivadoRuta && <p className={adminHint}>PDF adjunto listo.</p>}
+                  </div>
+                </div>
+              </section>
+            )}
+
             {borrador.falta.length > 0 && (
               <div className={adminNotice('warning')} role="alert">
                 <IconoAdvertencia aria-hidden="true" />
@@ -436,33 +578,25 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
             ))}
 
             <section className={adminCard} aria-labelledby="como-llenarla">
-              <h2 id="como-llenarla" className="flex items-center gap-2 text-base font-semibold text-ink"><IconoEditar className="h-4 w-4" aria-hidden="true" /> Cómo llenarla</h2>
-              <ol className="mt-3 space-y-2 text-sm">
-                {[
-                  `La fecha: ${borrador.fecha.split('-').reverse().join(' · ')}.`,
-                  'El nombre, el domicilio, el RIF o la cédula y el teléfono, como están.',
-                  `Marca "${borrador.condicionPago === 'CREDITO' ? 'Crédito' : 'Contado'}".`,
-                  `Los renglones con el precio sin IVA.${borrador.renglones.some((r) => r.exento) ? ' Los exentos llevan (E).' : ''}`,
-                  'Tacha los renglones vacíos con una raya.',
-                  `Abajo, la base, lo exento, el IVA del ${borrador.alicuota} % y el total.`,
-                ].map((t, i) => (
-                  <li key={t} className="flex gap-2.5">
-                    <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-700 text-xs font-bold text-white">{i + 1}</span>
-                    <span>{t}</span>
-                  </li>
-                ))}
-              </ol>
-              <p className={`${adminHint} mt-3`}>Si te equivocas, no la corrijas: anúlala y usa la siguiente. El original va al cliente; la copia se queda.</p>
-              <div className="mt-4 flex flex-col gap-2">
-                <button type="button" onClick={() => void registrar()} disabled={emitiendo || borrador.falta.length > 0 || !borrador.numero} className={adminPrimaryButton}>
-                  <IconoCheck className="h-4 w-4" aria-hidden="true" />
-                  {emitiendo ? 'Registrando…' : `Ya la escribí: registrar la ${borrador.numeroTexto}`}
+              <h2 id="como-llenarla" className="flex items-center gap-2 text-base font-semibold text-ink"><IconoEditar className="h-4 w-4" aria-hidden="true" /> Confirmación</h2>
+              <div className="mt-3 flex flex-col gap-2">
+                <button type="button" onClick={() => void registrar()} disabled={emitiendo || subiendoPdf || !listoEmitir} className={adminPrimaryButton}>
+                  {medioEfectivo === 'IMPRENTA_DIGITAL' ? <IconoNube className="h-4 w-4" aria-hidden="true" /> : <IconoCheck className="h-4 w-4" aria-hidden="true" />}
+                  {emitiendo
+                    ? 'Procesando…'
+                    : medioEfectivo === 'IMPRENTA_DIGITAL'
+                      ? `Timbrar factura digital (${imprentaAmbiente})`
+                      : medioEfectivo === 'PORTAL_SENIAT'
+                        ? 'Guardar factura del Portal SENIAT'
+                        : `Ya la escribí: registrar la ${borrador.numeroTexto}`}
                 </button>
-                <button type="button" onClick={imprimirFactura} className={adminSecondaryButton}>
-                  <IconoImpresora className="h-4 w-4" aria-hidden="true" /> Imprimir borrador
-                </button>
+                {replica && (
+                  <button type="button" onClick={imprimirFactura} className={adminSecondaryButton}>
+                    <IconoImpresora className="h-4 w-4" aria-hidden="true" /> Imprimir borrador
+                  </button>
+                )}
                 <Link href="/admin/contabilidad/facturas" className="text-center text-sm font-semibold text-brand-600 hover:text-brand-700">
-                  ¿Se dañó el papel? Anúlalo en Facturas
+                  Volver a Facturas
                 </Link>
               </div>
             </section>
@@ -470,10 +604,8 @@ export default function AsistenteFactura({ talonario, compras, inicial, tasaHoy,
 
           {replica && (
             <div>
-              {/* Teléfono: casilla por casilla (la réplica no se lee a 360 px) */}
               <section className={`${adminCard} lg:hidden`} aria-labelledby="casillas">
                 <h2 id="casillas" className="flex items-center gap-2 text-base font-semibold text-ink"><IconoDocumento className="h-4 w-4" aria-hidden="true" /> Casilla por casilla</h2>
-                <p className="mt-1 text-sm text-muted">Lo que va en cada casilla de la {borrador.numeroTexto}.</p>
                 <CasillaPorCasilla datos={replica} />
                 <button type="button" onClick={() => setVerCompleta((v) => !v)} aria-expanded={verCompleta} className={`${adminSecondaryButton} mt-3 w-full`}>
                   <IconoVer className="h-4 w-4" aria-hidden="true" /> {verCompleta ? 'Ocultar la factura completa' : 'Ver la factura completa'}

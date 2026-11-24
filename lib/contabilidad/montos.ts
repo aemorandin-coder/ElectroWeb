@@ -113,7 +113,9 @@ export function tipoComprador(documento: string): 'PERSONA' | 'EMPRESA' {
   return /^[JGC]/i.test(documento.trim()) ? 'EMPRESA' : 'PERSONA';
 }
 
-// ── Fechas en hora de Venezuela (UTC−4 todo el año) ──────────────────────────────────────
+import { CALENDARIO_POR_DEFECTO, esDiaHabil, siguienteDiaHabil } from '@/lib/horarios';
+
+// ── Fechas y horas en hora de Venezuela (UTC−4 todo el año) ──────────────────────────────
 
 const ZONA = 'America/Caracas';
 
@@ -122,7 +124,29 @@ export function hoyVe(ahora: Date = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: ZONA, year: 'numeric', month: '2-digit', day: '2-digit' }).format(ahora);
 }
 
+/** G-76: hora exacta actual en Venezuela ("HH:MM:SS", 24h) para SNAT/2026/00093 art. 8 num. 5 */
+export function horaActualVe(ahora: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: ZONA,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).format(ahora);
+}
+
+/** "14:38:05" → "02:38:05 p. m." (formato legible 00093 art. 8 num. 5) */
+export function formatearHora12(hora24: string | null | undefined): string {
+  if (!hora24 || !/^\d{2}:\d{2}(:\d{2})?$/.test(hora24)) return '';
+  const [hRaw, m, s = '00'] = hora24.split(':');
+  const h = Number(hRaw);
+  const sufijo = h >= 12 ? 'p. m.' : 'a. m.';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${String(h12).padStart(2, '0')}:${m}:${s} ${sufijo}`;
+}
+
 export const FECHA = /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+export const HORA_24 = /^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
 
 /** "2026-11-14" → el mediodía de ese día en Venezuela (así ningún cambio de zona lo pasa a otro día). null si no existe. */
 export function fechaDesdeTexto(texto: string): Date | null {
@@ -130,6 +154,12 @@ export function fechaDesdeTexto(texto: string): Date | null {
   if (!m) return null;
   const fecha = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 16));
   return hoyVe(fecha) === texto ? fecha : null;
+}
+
+/** Si la fecha cae fin de semana o feriado nacional, la traslada al siguiente día hábil (COT art. 10). */
+export function siguienteDiaHabilVe(fechaIso: string): string {
+  if (!FECHA.test(fechaIso)) return fechaIso;
+  return esDiaHabil(fechaIso, CALENDARIO_POR_DEFECTO) ? fechaIso : siguienteDiaHabil(fechaIso, CALENDARIO_POR_DEFECTO);
 }
 
 /** El mes del libro de ventas: "2026-11" */
@@ -161,15 +191,23 @@ export function ultimosMeses(actual: string): string[] {
 }
 
 /**
- * C-230: hasta cuándo se declara el IVA de un mes: el día 15 del mes siguiente (la contadora, 16/11; contribuyente
- * ordinario). Si cae sábado o domingo, el lunes (Código Orgánico Tributario, art. 10). Los feriados los suma el
- * calendario de obligaciones (C-236). "2026-11" → "2026-12-15".
+ * Vencimiento de una obligación del `periodo` ("2026-11") en el día `diaLimite` del mes siguiente, ajustado a día hábil
+ * según feriados nacionales de Venezuela (COT art. 10).
  */
-export function venceIva(periodo: string): string {
+export function venceDiaMesSiguiente(periodo: string, diaLimite: number): string {
   const [anio, mes] = periodo.split('-').map(Number);
-  const fecha = new Date(Date.UTC(anio, mes, 15));
-  const dia = fecha.getUTCDay();
-  if (dia === 6) fecha.setUTCDate(17);
-  if (dia === 0) fecha.setUTCDate(16);
-  return fecha.toISOString().slice(0, 10);
+  const sigMes = mes === 12 ? 1 : mes + 1;
+  const sigAnio = mes === 12 ? anio + 1 : anio;
+  const ultimoDia = new Date(Date.UTC(sigAnio, sigMes, 0)).getUTCDate();
+  const dia = Math.min(Math.max(1, Math.trunc(diaLimite)), ultimoDia);
+  const iso = `${sigAnio}-${String(sigMes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+  return siguienteDiaHabilVe(iso);
+}
+
+/**
+ * C-230 / G-76: hasta cuándo se declara el IVA de un mes: el día 15 del mes siguiente (contribuyente ordinario),
+ * trasladado al siguiente día hábil si cae en fin de semana o feriado nacional (COT art. 10).
+ */
+export function venceIva(periodo: string, diaLimite = 15): string {
+  return venceDiaMesSiguiente(periodo, diaLimite);
 }

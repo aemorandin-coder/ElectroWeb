@@ -875,30 +875,19 @@ Quedan para después de C-177 (`estado/C-177.md`):
   - **Las fotos (12/11):** las rehizo un agente aparte, con las mismas reglas del 10/11. 50 de los 85 códigos tienen foto; lo que falta se le pidió a la ferretería (`SIGUIENTE.md`).
   - **El proponedor de nombres** (`lib/nombres/marcas.ts`) tiene que conocer Belt-G (su lista dice "BG"), Protektor y V-Teg para la próxima lista.
 
-- **Contabilidad** (pedido del 14/11, ampliado esa noche; el plan en `CONTABILIDAD.md`, C-228 y C-228b; las decisiones, en §7.2). En este orden:
-  - **C-229 · Las facturas de talonario** (**hecha**, rc.50, 14/11; la maqueta B, alineada; `estado/C-229.md`). Pendiente: que el dueño cargue el talonario después del deploy.
-    - La sección Contabilidad en el menú, con los permisos `FACTURAR`, `VER_CONTABILIDAD` y `DECLARAR`.
-    - Las tablas `talonarios` y `documentos_fiscales` y la columna `orders.documentoFiscalId` (aditivas). Avisar a la sesión de C-222, que también suma columnas a `orders`.
-    - Cargar el talonario. La nueva factura va por pasos: de dónde sale, a nombre de quién, qué se vendió, y revisar y emitir con la réplica.
-    - Anular con motivo, y la orden queda facturada sola.
-  - **C-235 · La contadora en el equipo** (**hecha**, rc.54, 14/11; `estado/C-235.md`). Pendiente: que el dueño la invite después del deploy (`SIGUIENTE.md` §3, paso 23) y que ella dibuje su firma.
-    - El rol `ACCOUNTANT` (enum aditivo) con `VER_CONTABILIDAD` y `DECLARAR`, solo con los dos pasos; `CARGAR_TALONARIO`, nuevo, solo del dueño. `proxy.ts` le abre solo Contabilidad, Mi seguridad y Versiones.
-    - La invitación desde Equipo, y quitarla y poner otra (su firma queda guardada).
-    - La mesa de la contadora: el mes en números, las últimas facturas, lo que viene, su firma y sello (`firmas_contables`) y las notas del mes (`notas_contables`).
-    - Para después: el aviso de una nota nueva (con C-236). "Descargar" el mes: hecho con C-230 (el libro de ventas en Excel); el Excel con una pestaña por libro, con C-232.
-  - **C-230 · El libro de ventas, con las respuestas de la contadora** (**hecha**, rc.90, 16/11; la A que eligió el equipo viendo las maquetas; `estado/C-230.md`).
-    - Contabilidad → Libro de ventas: una línea por factura con las columnas que pidió ella, el IVA del mes con su fecha, lo de la declaración, el Excel (`lib/excel/`, sin librerías nuevas) y la hoja impresa apaisada.
-    - La factura va a la tasa BCV del día en que se escribe (antes, la de la orden). Facturas dice hasta cuándo alcanza el talonario y cuántas pedir. La mesa trae el Excel y, la primera vez de la contadora, "Así funciona".
-    - El "Resumen del mes" del plan quedó en la mesa (el inicio de Contabilidad del dueño y de ella) y en el libro.
-    - Pendiente: las preguntas que quedaron abiertas con ella (§7.2, "Lo que respondió la contadora").
-  - **C-236 · El calendario de obligaciones y los avisos** (campana y Telegram; feriados con C-234), con las obligaciones de §13.2 y las fechas que dio la contadora el 16/11: la alcaldía hasta el 10 y el IVA hasta el 15. Va antes que el resto: la alcaldía vence primero.
-  - **C-237 · Gastos y compras:** la foto y los datos de cada factura; el libro de compras y el crédito fiscal.
-  - **C-232 · El IVA del mes y el cierre firmado:** la hoja del IVA, "Declarada" y "Pagada", el mes cerrado con la firma de la contadora y el Excel con pestañas. La tabla `periodos_iva` (aditiva).
-  - **C-238 · El alquiler del local:** el contrato, el canon, la retención de ISLR (3 % o 5 %) y el aviso del vencimiento del contrato.
-  - **C-239 · Nómina y aportes:** los totales del mes; pensiones (9 %), IVSS, FAOV e INCES; las planillas.
-  - **C-240 · La Alcaldía de Guanare:** actividades económicas, la licencia anual, la publicidad y el aseo.
-  - **C-231 · Los movimientos de la web:** cobros por forma de pago, Puntos ES, gift cards, devoluciones y comisiones. El costo y el margen, solo para el dueño.
-  - **C-233 · Listos para el 19/04/2027:** el talonario de contingencia, la fecha y la hora en cada factura, "Preparar para el portal" y la lista del calendario (`CONTABILIDAD.md` §7).
+- **Contabilidad** (pedido del 14/11, ampliado esa noche; el plan en `CONTABILIDAD.md`, C-228 y C-228b; las decisiones, en §7.2). **Consolidado en Contabilidad 2.0 (`G-76`, rc.123, 24/11/2026; `estado/G-76.md`):**
+  - **C-229 · Las facturas de talonario** (**hecha**, rc.50, 14/11; `estado/C-229.md`).
+  - **C-235 · La contadora en el equipo** (**hecha**, rc.54, 14/11; `estado/C-235.md`). Pendiente operativo: invitar a la contadora después del deploy y entregarle [`docs/guias/GUIA_CONTADORA.md`](../guias/GUIA_CONTADORA.md).
+  - **C-230 · El libro de ventas, con las respuestas de la contadora** (**hecha**, rc.90, 16/11; `estado/C-230.md`).
+  - **G-76 · Contabilidad 2.0 (Hub Unificado · Opción A · SNAT/2026/00093 · Forma 99030)** (**hecha**, rc.123, 24/11; consolida `C-231, C-232, C-233, C-236, C-237, C-238, C-239, C-240`; `estado/G-76.md`):
+    - **C-236 · Calendario de obligaciones y avisos:** Alcaldía día 10, IVA día 15, Alquiler día 5, Pensiones 9 % día 18 y nómina + cron diario (`POST /api/cron/contabilidad`).
+    - **C-237 · Gastos y compras:** carga con foto/PDF privado y revisión (`Aprobada` / `Observada`).
+    - **C-232 · El IVA del mes y cierre firmado:** Hoja de IVA con casillas exactas de la Forma 99030 (`40, 42, 43/49, 30, 33, 34/36, 20, 39, 66/55, 60, 90`), `Declarada` / `Pagada`, candado mensual firmado con C.P.C. y Paquete Excel de 5 hojas (`lib/contabilidad/paquete-excel.ts`).
+    - **C-238 · Alquiler del local** y **C-239 · Nómina y aportes (9 % pensiones)** integrados en obligaciones y `Ajustes de contabilidad` (solo dueño).
+    - **C-240 · Alcaldía de Guanare:** alícuota, mínimo tributable, fecha límite y obligación mensual.
+    - **C-231 · Movimientos de la web:** cobros por método, comisiones, Puntos ES y Gift Cards (costos y margen bloqueados fuera de dueño).
+    - **C-233 · Listos para SNAT/2026/00093:** adaptador Imprenta Digital (`TALONARIO` / `SANDBOX` / `PRODUCCION`), Notas de Crédito/Débito, idempotencia, contingencia con causal, fecha/hora, QR y rutas privadas PDF/XML.
+  - **Siguiente bloque opcional (`G-77`, pendiente de aprobación):** lectura de facturas de compra con IA (foto/PDF → campos) y generador `.XML` de Retenciones ISLR para el portal SENIAT.
 
 - **ElectroStudio 2.0** (pedido del 16/11: arreglar el video y mejorar mucho la herramienta; el plan en `ELECTROSTUDIO.md`, C-269). En este orden:
   - **C-268 · El video** (**hecha**, rc.85, 16/11; `estado/C-268.md`): "(0 , p.recordCanvas) is not a function" no se reprodujo con rc.84 en pestaña nueva; el editor importa la grabación directo, una descarga que falla así dice "El panel se actualizó…" con "Guardar y recargar", y la grabación se detiene con su aviso si la pestaña se oculta.

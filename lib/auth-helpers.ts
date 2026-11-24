@@ -13,7 +13,7 @@ import { Session } from 'next-auth';
  * - ACCOUNTANT (la contadora, C-235): solo Contabilidad (PERMISOS_CONTADORA), y también con los dos pasos.
  * El menú del panel usa esta misma función.
  */
-export const SOLO_DUENO = ['MANAGE_SETTINGS', 'MANAGE_TEAM', 'VER_CONTABILIDAD', 'DECLARAR', 'CARGAR_TALONARIO'];
+export const SOLO_DUENO = ['MANAGE_SETTINGS', 'MANAGE_TEAM', 'VER_CONTABILIDAD', 'DECLARAR', 'CARGAR_TALONARIO', 'CONFIG_CONTABLE'];
 
 /** C-235: lo único que puede la contadora: ver Contabilidad (y descargarla) y declarar y firmar. No factura. */
 export const PERMISOS_CONTADORA = ['VER_CONTABILIDAD', 'DECLARAR'];
@@ -22,8 +22,8 @@ export const PERMISOS_CONTADORA = ['VER_CONTABILIDAD', 'DECLARAR'];
 export const ROLES_PANEL = ['ADMIN', 'SUPER_ADMIN', 'ACCOUNTANT'] as const;
 export const esRolDelPanel = (rol: string | null | undefined): boolean => rol === 'ADMIN' || rol === 'SUPER_ADMIN' || rol === 'ACCOUNTANT';
 
-/** C-235: las páginas que abre la contadora (las demás del panel la llevan a su mesa) y las APIs que puede llamar. */
-export const INICIO_CONTADORA = '/admin/contabilidad/mesa';
+/** C-235 / G-76: las páginas que abre la contadora (las demás del panel la llevan al Hub de Contabilidad) y las APIs que puede llamar. */
+export const INICIO_CONTADORA = '/admin/contabilidad';
 export const PAGINAS_CONTADORA = ['/admin/contabilidad', '/admin/seguridad', '/admin/versiones'];
 export const APIS_CONTADORA = ['/api/admin/contabilidad', '/api/admin/dos-pasos', '/api/admin/version', '/api/admin/sidebar-counts'];
 /** Páginas del panel que solo abre el super admin (el `proxy` devuelve a los demás al inicio del panel). */

@@ -2,10 +2,11 @@ import { notFound, redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { hasPermission } from '@/lib/auth-helpers';
+import { calcularHojaIva } from '@/lib/contabilidad/hub';
+import { hoyVe } from '@/lib/contabilidad/montos';
 import { facturaPorId } from '@/lib/contabilidad/servidor';
 import FichaFactura from '../_components/FichaFactura';
 
-// C-229: una factura registrada: la réplica, quién la registró, sus órdenes y "Anular".
 export const dynamic = 'force-dynamic';
 
 export default async function PaginaFactura({ params }: { params: Promise<{ id: string }> }) {
@@ -15,5 +16,6 @@ export default async function PaginaFactura({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const factura = await facturaPorId(id);
   if (!factura) notFound();
-  return <FichaFactura factura={factura} puedeAnular={puedeFacturar} />;
+  const periodo = await calcularHojaIva(factura.periodo);
+  return <FichaFactura factura={factura} puedeAnular={puedeFacturar} cerrado={periodo.estado === 'CERRADO'} hoy={hoyVe()} />;
 }

@@ -26,7 +26,6 @@ export async function POST(request: NextRequest) {
   if (s instanceof NextResponse) return s;
   const leido = pedidoFacturaSchema.safeParse(await request.json().catch(() => null));
   if (!leido.success) return errorDeEsquema(leido.error.issues);
-  if (!leido.data.numeroEsperado) return NextResponse.json({ error: 'Falta el número de la factura que se escribió.', campo: 'numeroEsperado' }, { status: 400 });
 
   const r = await emitirFactura(leido.data, leido.data.numeroEsperado, s.usuarioId);
   if (!r.ok) return respuestaError(r);
@@ -34,6 +33,7 @@ export async function POST(request: NextRequest) {
   const factura = await facturaPorId(r.datos.id);
   await registrarAccionAdmin(s.session, 'INVOICE_ISSUED', { type: 'DOCUMENTO_FISCAL', id: r.datos.id }, {
     factura: r.datos.etiqueta,
+    medio: factura?.medio,
     origen: leido.data.origen,
     ordenes: factura?.ordenes.map((o) => o.orderNumber) ?? [],
     totalBs: factura?.totalBs,

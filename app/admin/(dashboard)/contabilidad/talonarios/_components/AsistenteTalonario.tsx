@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import Ayuda from '@/components/admin/Ayuda';
+import { OpcionRadio } from '@/components/admin/Opcion';
 import Pasos, { type Paso } from '@/components/admin/Pasos';
 import ReplicaTalonario from '@/components/admin/contabilidad/ReplicaTalonario';
 import { datosReplica } from '@/components/admin/contabilidad/datos';
@@ -37,6 +38,7 @@ export default function AsistenteTalonario({ empresa, alicuota }: { empresa: { n
   const router = useRouter();
   const [paso, setPaso] = useState(0);
   const [alcanzado, setAlcanzado] = useState(0);
+  const [uso, setUso] = useState<'NORMAL' | 'CONTINGENCIA'>('NORMAL');
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [f, setF] = useState<Form>({
@@ -76,7 +78,7 @@ export default function AsistenteTalonario({ empresa, alicuota }: { empresa: { n
 
   const vistaTalonario: TalonarioDTO | null = listoHasta(4)
     ? {
-        id: 'nuevo', ...nums, estado: 'EN_USO', emisorNombre: f.emisorNombre.trim(), emisorRif: normalizarDocumento(f.emisorRif) ?? f.emisorRif,
+        id: 'nuevo', uso, ...nums, estado: 'EN_USO', emisorNombre: f.emisorNombre.trim(), emisorRif: normalizarDocumento(f.emisorRif) ?? f.emisorRif,
         emisorDomicilio: f.emisorDomicilio.trim(), emisorTelefono: f.emisorTelefono.trim() || null, imprenta: f.imprenta.trim(),
         imprentaRif: normalizarDocumento(f.imprentaRif) ?? f.imprentaRif, autorizacion: f.autorizacion.trim(), elaboradoEl: f.elaboradoEl || null,
         quedan: quedan(nums), usadas: usadas(nums), proximoTexto: numeroFactura(nums, nums.proximo), proximoControl: numeroControl(nums, nums.proximo),
@@ -91,7 +93,7 @@ export default function AsistenteTalonario({ empresa, alicuota }: { empresa: { n
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...nums, emisorNombre: f.emisorNombre, emisorRif: f.emisorRif, emisorDomicilio: f.emisorDomicilio, emisorTelefono: f.emisorTelefono,
+          uso, ...nums, emisorNombre: f.emisorNombre, emisorRif: f.emisorRif, emisorDomicilio: f.emisorDomicilio, emisorTelefono: f.emisorTelefono,
           imprenta: f.imprenta, imprentaRif: f.imprentaRif, autorizacion: f.autorizacion, elaboradoEl: f.elaboradoEl,
         }),
       });
@@ -142,11 +144,20 @@ export default function AsistenteTalonario({ empresa, alicuota }: { empresa: { n
         <p className="mt-1 text-sm text-muted">{PASOS[paso].queHacer}</p>
 
         {paso === 0 && (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {campo('serie', 'Serie', { ancho: 'sm:max-w-24', ayuda: 'Debajo de "FACTURA": "A".' })}
-            {campo('proximo', 'La próxima por usar', { ancho: 'sm:max-w-32', numerico: true, ayuda: 'La primera en blanco del talonario.' })}
-            {campo('numeroDesde', 'Primera factura', { ancho: 'sm:max-w-32', numerico: true, ayuda: 'En el pie: "desde 001".' })}
-            {campo('numeroHasta', 'Última factura', { ancho: 'sm:max-w-32', numerico: true, ayuda: 'En el pie: "hasta 100".' })}
+          <div className="mt-4 space-y-4">
+            <div>
+              <span className={adminLabel}>Tipo de talonario</span>
+              <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Uso del talonario">
+                <OpcionRadio name="talonario-uso" tamano="chica" elegida={uso === 'NORMAL'} onElegir={() => setUso('NORMAL')} titulo="Ordinario (Serie normal)" detalle="El talonario principal en uso." />
+                <OpcionRadio name="talonario-uso" tamano="chica" elegida={uso === 'CONTINGENCIA'} onElegir={() => setUso('CONTINGENCIA')} titulo="Contingencia (00093)" detalle="Para fallas de luz, internet o portal." />
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {campo('serie', 'Serie', { ancho: 'sm:max-w-24', ayuda: 'Debajo de "FACTURA": "A" o "C".' })}
+              {campo('proximo', 'La próxima por usar', { ancho: 'sm:max-w-32', numerico: true, ayuda: 'La primera en blanco del talonario.' })}
+              {campo('numeroDesde', 'Primera factura', { ancho: 'sm:max-w-32', numerico: true, ayuda: 'En el pie: "desde 001".' })}
+              {campo('numeroHasta', 'Última factura', { ancho: 'sm:max-w-32', numerico: true, ayuda: 'En el pie: "hasta 100".' })}
+            </div>
           </div>
         )}
         {paso === 1 && (

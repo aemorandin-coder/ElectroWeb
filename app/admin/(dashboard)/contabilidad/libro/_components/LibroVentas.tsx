@@ -23,13 +23,15 @@ const cifra = (n: number) => formatVES(n).replace(/^Bs\.\s*/, '');
 const diaMes = (iso: string) => fechaCorta(iso).slice(0, 5);
 const nadaQueHacer = () => () => {};
 
-export default function LibroVentas({ libro, meses, vence, empresa }: {
+export default function LibroVentas({ libro, meses, vence, empresa, embebido = false }: {
   libro: Libro;
   /** Los meses para elegir, del más nuevo al más viejo */
   meses: string[];
   /** Hasta cuándo se declara el IVA del mes ("2026-12-15") */
   vence: string;
   empresa: { nombre: string; rif: string };
+  /** True cuando se muestra dentro de Libros e IVA del Hub para no repetir h1 ni selector de mes */
+  embebido?: boolean;
 }) {
   const router = useRouter();
   // La hoja para imprimir va directo en el body (fuera del marco del panel), solo en el navegador
@@ -70,26 +72,45 @@ export default function LibroVentas({ libro, meses, vence, empresa }: {
 
   return (
     <div className="space-y-4">
-      <header className={adminPageHeader}>
-        <div>
-          <h1 className={adminPageTitle}>Libro de ventas</h1>
-          <p className={adminPageSubtitle}>Una línea por factura, en bolívares, con las columnas que pidió la contadora.</p>
+      {embebido ? (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-semibold text-ink">Libro de ventas · {Mes}</h2>
+            <p className="text-xs text-muted">Una línea por documento fiscal en orden cronológico (incluye Notas de Crédito y Débito).</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {!vacio && (
+              <button type="button" onClick={imprimir} className={`${adminSecondaryButton} max-lg:hidden!`}>
+                <IconoImpresora className="h-4 w-4" aria-hidden="true" /> Imprimir
+              </button>
+            )}
+            <a href={`/api/admin/contabilidad/libro?mes=${libro.periodo}`} download className={`${adminPrimaryButton} w-full sm:w-auto`}>
+              <IconoDescargar className="h-4 w-4" aria-hidden="true" /> Libro de ventas (.xlsx)
+            </a>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="libro-mes" className="sr-only">Mes</label>
-          <select id="libro-mes" value={libro.periodo} onChange={(e) => router.push(`/admin/contabilidad/libro?mes=${e.target.value}`)} className="h-11 rounded-lg border border-line-strong bg-white px-3 text-sm font-semibold text-ink">
-            {meses.map((m) => <option key={m} value={m}>{nombreMes(m).replace(/^./, (c) => c.toUpperCase())}</option>)}
-          </select>
-          {!vacio && (
-            <button type="button" onClick={imprimir} className={`${adminSecondaryButton} max-lg:hidden!`}>
-              <IconoImpresora className="h-4 w-4" aria-hidden="true" /> Imprimir
-            </button>
-          )}
-          <a href={`/api/admin/contabilidad/libro?mes=${libro.periodo}`} download className={`${adminPrimaryButton} w-full sm:w-auto`}>
-            <IconoDescargar className="h-4 w-4" aria-hidden="true" /> Descargar en Excel
-          </a>
-        </div>
-      </header>
+      ) : (
+        <header className={adminPageHeader}>
+          <div>
+            <h1 className={adminPageTitle}>Libro de ventas</h1>
+            <p className={adminPageSubtitle}>Una línea por factura, en bolívares, con las columnas que pidió la contadora.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="libro-mes" className="sr-only">Mes</label>
+            <select id="libro-mes" value={libro.periodo} onChange={(e) => router.push(`/admin/contabilidad/libro?mes=${e.target.value}`)} className="h-11 rounded-lg border border-line-strong bg-white px-3 text-sm font-semibold text-ink">
+              {meses.map((m) => <option key={m} value={m}>{nombreMes(m).replace(/^./, (c) => c.toUpperCase())}</option>)}
+            </select>
+            {!vacio && (
+              <button type="button" onClick={imprimir} className={`${adminSecondaryButton} max-lg:hidden!`}>
+                <IconoImpresora className="h-4 w-4" aria-hidden="true" /> Imprimir
+              </button>
+            )}
+            <a href={`/api/admin/contabilidad/libro?mes=${libro.periodo}`} download className={`${adminPrimaryButton} w-full sm:w-auto`}>
+              <IconoDescargar className="h-4 w-4" aria-hidden="true" /> Descargar en Excel
+            </a>
+          </div>
+        </header>
+      )}
 
       {/* La pieza fuerte: el IVA del mes con su fecha. Lo demás, neutro */}
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">

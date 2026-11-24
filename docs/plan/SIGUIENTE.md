@@ -1,9 +1,13 @@
-# Lo de ahora (actualizado 2026-11-23 · producción en 1.0.0-rc.122 — sin deploy pendiente)
+# Lo de ahora (actualizado 2026-11-24 · producción en 1.0.0-rc.122 — deploy pendiente: v1.0.0-rc.123 / G-76)
 
 > Solo lo vigente. El plan completo, la lista de pendientes y las decisiones están en [`PLAN.md`](./PLAN.md) (§5 y §7). Cómo se sube y cómo se prueba, en [`OPERACION.md`](./OPERACION.md). Lo ya subido, con su SQL y sus pruebas, en [`HISTORIAL.md`](./HISTORIAL.md).
 > Las referencias viejas a "`SIGUIENTE.md` §N" que quedan en los estados son de antes del 01/10: el deploy y los datos para Claude pasaron a `OPERACION.md`, las decisiones a `PLAN.md` §7 y los bloques de deploy a `HISTORIAL.md`.
 
 ## 1. Cómo está todo
+- **G-76 · Contabilidad 2.0: Hub Unificado, SNAT/2026/00093, Forma 99030 y guía para la contadora (rc.123, en `main`, por subir en §2; `estado/G-76.md`):** consolida todo el ciclo contable y fiscal (`C-231, C-232, C-233, C-236, C-237, C-238, C-239, C-240`) en una pantalla con 5 pestañas (`Resumen y Cierre`, `Facturación`, `Libros e IVA`, `Movimientos` y `Ajustes de contabilidad`), incluye adaptador de Imprenta Digital (`TALONARIO` / `SANDBOX` / `PRODUCCION`), Notas de Crédito/Débito, retenciones de IVA (`75 %` / `100 %`), compras y gastos con archivos privados, casillas reales de Forma 99030 del SENIAT (`40, 42, 43/49, 30, 33, 34/36, 20, 39, 66/55, 60, 90`), calendario de obligaciones con cron diario, cierre mensual firmado con candado, paquete Excel de 5 hojas (sin costos para la contadora) y [`docs/guias/GUIA_CONTADORA.md`](../guias/GUIA_CONTADORA.md).
+  - **Cambio de base aditivo:** 1 columna en `talonarios`, 12 columnas e índices en `documentos_fiscales` y 4 tablas nuevas (`config_contable`, `compras_gastos`, `obligaciones_fiscales`, `periodos_contables`) — SQL idempotente en §2.
+  - **Cron nuevo:** `POST /api/cron/contabilidad` (diario 8:00 a. m. Caracas con `CRON_SECRET`); variable `IMPRENTA_DIGITAL_API_KEY` opcional solo cuando se active imprenta digital en producción.
+  - **Siguiente bloque opcional aparte (`G-77`):** lector de facturas de compra con IA y generador `.XML` de Retenciones ISLR para SENIAT.
 - **G-75 · "Recién llegados" real en portada, `publishedAt` en Edición rápida y orden de `/productos` (rc.122, en producción; por confirmar: §2; `estado/G-75.md`):** Opción A aprobada por Andrés. Muestra exactamente los 12 últimos productos publicados en toda la tienda en `#recien-llegados`, ordena `/productos` por `publishedAt DESC` y fija `publishedAt` al publicar desde Edición rápida. Verificada en producción (`1.0.0-rc.122`, `#recien-llegados` con `12` productos únicos). Sin cambios de BD, env ni cron.
 - **G-74 · Contraste en Contabilidad (`1A`), pestañas en riel segmentado (`2A`) y Studio de Portada + Video Kit 2.0 (`3A`) (rc.121, en producción; por confirmar: §2; `estado/G-74.md`):** pedido del equipo tras revisar `rc.120`, aprobado con las opciones `1A + 2A + 3A` y verificado en pruebas API + Chrome headless (`26 de 26`, 0 errores JS y 0 desbordes a `360 px`) y en producción (`1.0.0-rc.121|b110382a`).
   - **Contabilidad (`1A`):** corregido el contraste de la píldora de estado sobre el banner `bg-brand-700` en `MesaContadora.tsx` usando cápsula translúcida blanca (`border-white/20 bg-white/10 text-white`).
@@ -579,7 +583,164 @@
 - **Gemini:** sin ronda abierta. Su carpeta (`../ElectroShopVe-gemini`) volvió el 15/11 con la rama `gemini/maqueta-5-redisenos`: una maqueta de cinco rediseños (`maquetas/propuesta-5-redisenos`). **El equipo la descartó el 16/11** ("lo de Gemini no va"): no se revisa ni se fusiona.
 
 ## 2. Deploy pendiente
-No hay deploy pendiente (producción al día en **`v1.0.0-rc.122`** / `2544b3bc`, comprobada el 23/11/2026; bloque movido a `HISTORIAL.md`).
+
+### Bloque listo para subir: `v1.0.0-rc.123` (`G-76` · Contabilidad 2.0)
+- **Destino:** rama `main` · etiqueta **`v1.0.0-rc.123`** (desde producción actual `v1.0.0-rc.122`).
+- **1. Respaldo y SQL aditivo e idempotente (ejecutar en el PostgreSQL del servidor antes de `scripts/deploy.sh`):**
+  ```sql
+  -- G-76 · Contabilidad 2.0 (solo aditivo e idempotente; cero DROP ni ALTER COLUMN TYPE)
+  ALTER TABLE "talonarios" ADD COLUMN IF NOT EXISTS "uso" TEXT NOT NULL DEFAULT 'NORMAL';
+
+  ALTER TABLE "documentos_fiscales"
+    ADD COLUMN IF NOT EXISTS "contingenciaCausal" TEXT,
+    ADD COLUMN IF NOT EXISTS "contingenciaReportadaEl" TIMESTAMP(3),
+    ADD COLUMN IF NOT EXISTS "emitidaHora" TEXT,
+    ADD COLUMN IF NOT EXISTS "estadoTransmision" TEXT NOT NULL DEFAULT 'REGISTRADO',
+    ADD COLUMN IF NOT EXISTS "idExterno" TEXT,
+    ADD COLUMN IF NOT EXISTS "imprentaProveedor" TEXT,
+    ADD COLUMN IF NOT EXISTS "llaveIdempotencia" TEXT,
+    ADD COLUMN IF NOT EXISTS "monedaOperacion" TEXT NOT NULL DEFAULT 'VES',
+    ADD COLUMN IF NOT EXISTS "pdfPrivadoRuta" TEXT,
+    ADD COLUMN IF NOT EXISTS "qrVerificacion" TEXT,
+    ADD COLUMN IF NOT EXISTS "retencionFecha" TIMESTAMP(3),
+    ADD COLUMN IF NOT EXISTS "xmlPrivadoRuta" TEXT;
+
+  CREATE TABLE IF NOT EXISTS "config_contable" (
+    "id" TEXT NOT NULL DEFAULT 'default',
+    "canalEmision" TEXT NOT NULL DEFAULT 'TALONARIO',
+    "imprentaProveedor" TEXT,
+    "imprentaAmbiente" TEXT NOT NULL DEFAULT 'SANDBOX',
+    "imprentaSerieDigital" TEXT NOT NULL DEFAULT 'F',
+    "imprentaProximoNumero" INTEGER NOT NULL DEFAULT 1,
+    "imprentaApiUrl" TEXT,
+    "alcaldiaAlicuota" DECIMAL(65,30) NOT NULL DEFAULT 1.5,
+    "alcaldiaMinimoBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "alcaldiaDiaLimite" INTEGER NOT NULL DEFAULT 10,
+    "ivaDiaLimite" INTEGER NOT NULL DEFAULT 15,
+    "alquilerArrendador" TEXT,
+    "alquilerRif" TEXT,
+    "alquilerTipo" TEXT NOT NULL DEFAULT 'EMPRESA',
+    "alquilerCanonUSD" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "alquilerConIva" BOOLEAN NOT NULL DEFAULT false,
+    "alquilerDiaPago" INTEGER NOT NULL DEFAULT 5,
+    "alquilerVenceEl" TIMESTAMP(3),
+    "pensionesPorcentaje" DECIMAL(65,30) NOT NULL DEFAULT 9,
+    "pensionesDiaLimite" INTEGER NOT NULL DEFAULT 18,
+    "nominaBaseMinimaUSD" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "checklist2027" JSONB,
+    "avisosTelegram" BOOLEAN NOT NULL DEFAULT true,
+    "updatedById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "config_contable_pkey" PRIMARY KEY ("id")
+  );
+
+  CREATE TABLE IF NOT EXISTS "compras_gastos" (
+    "id" TEXT NOT NULL,
+    "periodo" TEXT NOT NULL,
+    "fechaEmision" TIMESTAMP(3) NOT NULL,
+    "proveedorNombre" TEXT NOT NULL,
+    "proveedorRif" TEXT NOT NULL,
+    "supplierId" TEXT,
+    "numeroFactura" TEXT NOT NULL,
+    "numeroControl" TEXT NOT NULL,
+    "categoria" TEXT NOT NULL,
+    "descripcion" TEXT,
+    "baseBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "alicuota" DECIMAL(65,30) NOT NULL DEFAULT 16,
+    "ivaBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "exentoBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "totalBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "retencionIslrBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "comprobanteIslr" TEXT,
+    "archivoPrivado" TEXT,
+    "estadoRevision" TEXT NOT NULL DEFAULT 'PENDIENTE',
+    "notaRevision" TEXT,
+    "revisadaPorId" TEXT,
+    "revisadaEl" TIMESTAMP(3),
+    "creadoPorId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "compras_gastos_pkey" PRIMARY KEY ("id")
+  );
+
+  CREATE TABLE IF NOT EXISTS "obligaciones_fiscales" (
+    "id" TEXT NOT NULL,
+    "periodo" TEXT NOT NULL,
+    "tipo" TEXT NOT NULL,
+    "titulo" TEXT NOT NULL,
+    "detalle" TEXT,
+    "venceEl" TIMESTAMP(3) NOT NULL,
+    "montoBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "montoUSD" DECIMAL(65,30),
+    "estado" TEXT NOT NULL DEFAULT 'POR_CALCULAR',
+    "quienToca" TEXT NOT NULL DEFAULT 'CONTADORA',
+    "numeroPlanilla" TEXT,
+    "comprobanteIslr" TEXT,
+    "planillaPrivada" TEXT,
+    "comprobantePagoPrivado" TEXT,
+    "nominaEmpleados" INTEGER,
+    "nominaSalariosBs" DECIMAL(65,30),
+    "nominaBonosBs" DECIMAL(65,30),
+    "pagadaEl" TIMESTAMP(3),
+    "actualizadoPorId" TEXT,
+    "aviso3DiasEl" TIMESTAMP(3),
+    "avisoDiaEl" TIMESTAMP(3),
+    "avisoVencidaEl" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "obligaciones_fiscales_pkey" PRIMARY KEY ("id")
+  );
+
+  CREATE TABLE IF NOT EXISTS "periodos_contables" (
+    "id" TEXT NOT NULL,
+    "periodo" TEXT NOT NULL,
+    "estado" TEXT NOT NULL DEFAULT 'ABIERTO',
+    "excedenteAnteriorBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "debitoFiscalBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "creditoFiscalBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "retencionesIvaBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "ivaAPagarBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "nuevoExcedenteBs" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "numeroPlanillaIva" TEXT,
+    "planillaIvaPrivada" TEXT,
+    "comprobantePagoIvaPrivado" TEXT,
+    "declaradoEl" TIMESTAMP(3),
+    "pagadoEl" TIMESTAMP(3),
+    "cerradoEl" TIMESTAMP(3),
+    "cerradoPorId" TEXT,
+    "firmaNombre" TEXT,
+    "firmaTitulo" TEXT,
+    "firmaCpc" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "periodos_contables_pkey" PRIMARY KEY ("id")
+  );
+
+  CREATE INDEX IF NOT EXISTS "compras_gastos_periodo_idx" ON "compras_gastos"("periodo");
+  CREATE INDEX IF NOT EXISTS "obligaciones_fiscales_periodo_idx" ON "obligaciones_fiscales"("periodo");
+  CREATE INDEX IF NOT EXISTS "obligaciones_fiscales_venceEl_idx" ON "obligaciones_fiscales"("venceEl");
+  CREATE UNIQUE INDEX IF NOT EXISTS "obligaciones_fiscales_periodo_tipo_key" ON "obligaciones_fiscales"("periodo", "tipo");
+  CREATE UNIQUE INDEX IF NOT EXISTS "periodos_contables_periodo_key" ON "periodos_contables"("periodo");
+  CREATE UNIQUE INDEX IF NOT EXISTS "documentos_fiscales_llaveIdempotencia_key" ON "documentos_fiscales"("llaveIdempotencia");
+  CREATE INDEX IF NOT EXISTS "documentos_fiscales_medio_tipo_serie_numero_idx" ON "documentos_fiscales"("medio", "tipo", "serie", "numero");
+  CREATE INDEX IF NOT EXISTS "documentos_fiscales_documentoAfectadoId_idx" ON "documentos_fiscales"("documentoAfectadoId");
+  CREATE INDEX IF NOT EXISTS "documentos_fiscales_numeroControl_idx" ON "documentos_fiscales"("numeroControl");
+  ```
+- **2. Variables de entorno:** sin cambios obligatorios. (`IMPRENTA_DIGITAL_API_KEY` es opcional y solo se agrega cuando se contrate imprenta digital autorizada en modo `PRODUCCION`.)
+- **3. Despliegue en el servidor:**
+  ```bash
+  cd /var/www/electroshopve && git fetch --all --tags && git pull --ff-only origin main && npm ci && npx prisma generate && bash scripts/deploy.sh --sin-pull
+  ```
+- **4. Cron diario de alertas contables (en el crontab del servidor, 8:00 a. m. Caracas = 12:00 UTC):**
+  ```cron
+  0 12 * * * curl -sf -X POST -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/contabilidad >/dev/null
+  ```
+- **5. Pruebas post-deploy (unos 3 minutos en escritorio y `360 px`):**
+  1. **Dueño (`/admin/contabilidad`):** comprobar las 5 pestañas (`Resumen y Cierre`, `Facturación`, `Libros e IVA`, `Movimientos`, `Ajustes de contabilidad`), casillas Forma 99030 (`40, 42, 43/49, 30, 33, 34/36, 20, 39, 66/55, 60, 90`) y descarga del paquete Excel `.xlsx` de 5 hojas.
+  2. **Contadora (`ACCOUNTANT`):** entrar siguiendo [`docs/guias/GUIA_CONTADORA.md`](../guias/GUIA_CONTADORA.md), verificar que solo ve 4 pestañas (sin `Ajustes de contabilidad`), sin costos internos en Movimientos ni Excel, y que solo ve Contabilidad / Mi seguridad / Versiones.
+  3. **Cron (`POST /api/cron/contabilidad`):** sin token devuelve `401`; con `Authorization: Bearer $CRON_SECRET` devuelve `200`.
+- **6. Vuelta atrás** (si hiciera falta, en la terminal del servidor): `cd /var/www/electroshopve && git reset --hard v1.0.0-rc.122 && npm install && bash scripts/deploy.sh --sin-pull` (el SQL aditivo no rompe `rc.122`).
 
 ### Por confirmar de rc.122 (G-75; unos 2 minutos)
 Ya en producción (`1.0.0-rc.122|2544b3bc`). Al importar o publicar el lote nuevo:

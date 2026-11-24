@@ -10,6 +10,12 @@ Cada versión que se sube a producción tiene su número, su etiqueta de git (`v
 - Un bloque de deploy = una versión. `package.json`, esta lista y la etiqueta se actualizan en el mismo commit que arma el bloque. En el servidor, `git describe --tags` dice cuál está corriendo.
 - **Por módulo (desde C-168):** cada módulo del panel lleva su propia versión en `lib/modulos.ts`, con la misma regla. Cada tarea que toca archivos de un módulo le sube la versión (`npm run check:modulos` falla si no), y esta lista agrupa los cambios por módulo (`### Productos 1.1.0 (C-169)`). La página Administración → Versiones los muestra.
 
+## [1.0.0-rc.124] - 2026-11-24
+**Guía visual en PDF para la Contadora y Guía rápida dentro de Contabilidad (`G-76b`):** reemplaza las instrucciones de texto plano por un PDF visual de 3 páginas con códigos QR escaneables y un modal interactivo dentro del panel. Sin cambios adicionales de base de datos ni variables de entorno nuevas.
+### Contabilidad 2.0.1 (G-76b)
+- **PDF visual de 3 páginas (`docs/guias/Guia-Contadora-ElectroShop.pdf`, generado con `scripts/generar-guia-contadora.ts`):** incluye QR escaneables hacia Google Authenticator (Play Store / App Store) y acceso al panel, teléfonos dibujados, resumen de las 4 pestañas, 5 hojas del Paquete Excel, límites de rol, checklist imprimible de 6 pasos y mapa de casillas SENIAT Forma 99030.
+- **Descarga protegida e integrada en el panel (`app/api/admin/contabilidad/guia-pdf/route.ts`, `ModalGuiaContadora.tsx`, `HubContabilidad.tsx`):** botón **Guía rápida** en la cabecera de Contabilidad con 3 pestañas (apps + QR/tiendas + teléfonos dibujados + WhatsApp + pestañas + Forma 99030), bienvenida automática `AsiFunciona` para el rol `ACCOUNTANT` y descarga del PDF validada con `VER_CONTABILIDAD`.
+
 ## [1.0.0-rc.123] - 2026-11-24
 **Contabilidad 2.0 · Hub Unificado (Opción A):** unifica todo el ciclo fiscal y contable bajo SNAT/2026/00093 en una sola pantalla con 5 pestañas (`Resumen y Cierre`, `Facturación`, `Libros e IVA`, `Movimientos` y `Ajustes de contabilidad`), suma casillas reales de la Forma 99030 del SENIAT y entrega la guía paso a paso para la contadora (`G-76`).
 - **Cambio de base aditivo:** columna `uso` en `talonarios`, 12 columnas y 4 índices en `documentos_fiscales` y 4 tablas nuevas (`config_contable`, `compras_gastos`, `obligaciones_fiscales`, `periodos_contables`).

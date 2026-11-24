@@ -4,13 +4,16 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  IconoBillete, IconoConfiguracion, IconoCuadricula, IconoDocumento, IconoMas, IconoReportes,
+  IconoAyuda, IconoBillete, IconoConfiguracion, IconoCuadricula, IconoDocumento, IconoMas, IconoReportes,
 } from '@/components/iconos';
+import AsiFunciona from '@/components/onboarding/AsiFunciona';
 import {
-  adminBadge, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminTab, adminTabList, adminTabScroll,
+  adminBadge, adminPageHeader, adminPageSubtitle, adminPageTitle, adminPrimaryButton, adminSecondaryButton, adminTab, adminTabList,
+  adminTabScroll,
 } from '@/lib/admin-ui';
 import { nombreMes } from '@/lib/contabilidad/montos';
 import HubTabAjustes from './TabAjustesFiscal';
+import ModalGuiaContadora from './ModalGuiaContadora';
 import TabFacturacion from './TabFacturacion';
 import TabLibrosIva from './TabLibrosIva';
 import TabMovimientos from './TabMovimientos';
@@ -21,6 +24,7 @@ export default function HubContabilidad({ datos }: { datos: HubDatosProps }) {
   const router = useRouter();
   const [tab, setTab] = useState<TabHubId>(datos.tabInicial);
   const [subTabLibro, setSubTabLibro] = useState<SubTabLibro>(datos.subTabLibroInicial ?? 'ventas');
+  const [guiaAbierta, setGuiaAbierta] = useState(false);
 
   const pendientesFacturacion = datos.comprasPendientes.length
     + datos.facturas.filter((f) => f.estado === 'EMITIDA' && f.estadoTransmision === 'PENDIENTE_REPORTE').length;
@@ -75,6 +79,9 @@ export default function HubContabilidad({ datos }: { datos: HubDatosProps }) {
               <option key={m} value={m}>{nombreMes(m).replace(/^./, (c) => c.toUpperCase())}</option>
             ))}
           </select>
+          <button type="button" onClick={() => setGuiaAbierta(true)} className={adminSecondaryButton}>
+            <IconoAyuda className="h-4 w-4" aria-hidden="true" /> Guía rápida
+          </button>
           {datos.yo.puedeFacturar && !cerrado && (
             <Link href="/admin/contabilidad/facturas/nueva" className={`${adminPrimaryButton} w-full sm:w-auto`}>
               <IconoMas className="h-4 w-4" aria-hidden="true" /> Nueva factura
@@ -155,6 +162,23 @@ export default function HubContabilidad({ datos }: { datos: HubDatosProps }) {
       {tab === 'ajustes' && datos.yo.esDueno && datos.config && (
         <HubTabAjustes configInicial={datos.config} talonarios={datos.talonariosTodos} />
       )}
+
+      <AsiFunciona
+        clave="contabilidad-hub-2"
+        sinChispa
+        activa={datos.yo.esContadora}
+        titulo="Así funciona Contabilidad"
+        nota="Alcaldía hasta el 10, IVA hasta el 15 y Pensiones hasta el 18. La parte técnica es nuestra."
+        pasos={[
+          { icono: 'ver', texto: 'Revisas compras y retenciones del mes' },
+          { icono: 'calendario', texto: 'Declaras el IVA (Forma 99030) y obligaciones' },
+          { icono: 'verificado', texto: 'Descargas el Excel y firmas el cierre con tu C.P.C.' },
+        ]}
+        boton="Ver guía completa y PDF"
+        alAceptar={() => setGuiaAbierta(true)}
+      />
+
+      <ModalGuiaContadora abierta={guiaAbierta} onCerrar={() => setGuiaAbierta(false)} esDueno={datos.yo.esDueno} />
     </div>
   );
 }

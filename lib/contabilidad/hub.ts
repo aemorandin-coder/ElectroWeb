@@ -373,7 +373,7 @@ export async function sincronizarObligacionesMes(periodo: string): Promise<Oblig
     {
       tipo: 'ALQUILER_ISLR',
       titulo: `Alquiler del local + Retención ISLR (${cfg.alquilerTipo === 'PERSONA' ? '3 %' : '5 %'})`,
-      detalle: cfg.alquilerArrendador ? `${cfg.alquilerArrendador} (${cfg.alquilerRif ?? 'Sin RIF'})` : 'Configura el contrato en Ajustes 2027',
+      detalle: cfg.alquilerArrendador ? `${cfg.alquilerArrendador} (${cfg.alquilerRif ?? 'Sin RIF'})` : 'Configura el contrato en Ajustes de contabilidad',
       vence: venceDiaMesSiguiente(periodo, cfg.alquilerDiaPago),
       montoBs: alquilerNetoBs,
       montoUSD: cfg.alquilerCanonUSD || null,

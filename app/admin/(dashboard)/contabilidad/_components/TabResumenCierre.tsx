@@ -262,49 +262,74 @@ export default function TabResumenCierre({ datos, onIrTab }: {
         />
       )}
 
-      {/* Pieza fuerte del Kit 2.0: cabecera del mes + resultado de IVA */}
-      <section className="rounded-2xl bg-brand-700 p-5 text-white sm:p-6" aria-labelledby="hub-resumen-iva">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0 space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
-                {etiquetaCanal(canalPublico)}{canalPublico === 'IMPRENTA_DIGITAL' ? ` (${imprentaAmbientePublico})` : ''}
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
-                {periodo.estado === 'CERRADO' ? 'Mes cerrado y firmado' : periodo.estado === 'DECLARADO' ? 'IVA declarado' : 'Mes abierto'}
-              </span>
-            </div>
-            <p className="text-sm text-white/85">
-              {saludo}{primerNombre ? `, ${primerNombre}` : ''} · {hoyLargo}
-            </p>
-            <h2 id="hub-resumen-iva" className="text-xl font-bold sm:text-2xl">
-              {hayExcedente ? `Excedente a favor en ${mesTxt}` : `IVA estimado por pagar en ${mesTxt}`}
-            </h2>
-            <p className="text-3xl font-bold tabular-nums sm:text-4xl">
-              {formatVES(hayExcedente ? periodo.nuevoExcedenteBs : periodo.ivaAPagarBs)}
-            </p>
-            <p className="text-xs text-white/80 tabular-nums">
-              Débito {formatVES(periodo.debitoFiscalBs)} − Crédito {formatVES(periodo.creditoFiscalBs)} − Excedente ant. {formatVES(periodo.excedenteAnteriorBs)} − Retenciones {formatVES(periodo.retencionesIvaBs)} · Vence el <strong className="text-white">{fechaCorta(venceIvaMes)}</strong>
-            </p>
+      {/* Cabecera ligera del período + acciones rápidas */}
+      <section className={`${adminCard} flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between`} aria-labelledby="hub-resumen-saludo">
+        <div className="min-w-0 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={adminDato}>
+              {etiquetaCanal(canalPublico)}{canalPublico === 'IMPRENTA_DIGITAL' ? ` (${imprentaAmbientePublico})` : ''}
+            </span>
+            <span className={adminBadge(periodo.estado === 'CERRADO' ? 'success' : periodo.estado === 'DECLARADO' ? 'brand' : 'warning')}>
+              {periodo.estado === 'CERRADO' ? 'Mes cerrado y firmado' : periodo.estado === 'DECLARADO' ? 'IVA declarado' : 'Mes abierto'}
+            </span>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <a
-              href={`/api/admin/contabilidad/paquete?mes=${mes}`}
-              download
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50"
-            >
-              <IconoDescargar className="h-4 w-4" aria-hidden="true" /> Descargar paquete (.xlsx)
-            </a>
-            <button
-              type="button"
-              onClick={() => onIrTab('libros', 'iva')}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/20"
-            >
-              <IconoPorcentaje className="h-4 w-4" aria-hidden="true" /> Hoja Forma 99030
-            </button>
-          </div>
+          <h2 id="hub-resumen-saludo" className="text-lg font-semibold text-ink">
+            {saludo}{primerNombre ? `, ${primerNombre}` : ''}
+          </h2>
+          <p className="text-xs text-muted capitalize">{hoyLargo}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <a href={`/api/admin/contabilidad/paquete?mes=${mes}`} download className={adminPrimaryButton}>
+            <IconoDescargar className="h-4 w-4" aria-hidden="true" /> Descargar paquete (.xlsx)
+          </a>
+          <button type="button" onClick={() => onIrTab('libros', 'iva')} className={adminSecondaryButton}>
+            <IconoPorcentaje className="h-4 w-4" aria-hidden="true" /> Hoja Forma 99030
+          </button>
         </div>
       </section>
+
+      {/* Fila de 4 métricas equilibradas: solo la del IVA usa el azul fuerte del kit (1/4 en escritorio, como el Libro) */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <button
+          type="button"
+          onClick={() => onIrTab('libros', 'iva')}
+          className="flex flex-col justify-between rounded-2xl bg-brand-700 p-4 text-left text-white transition-colors hover:bg-brand-600 sm:p-5"
+        >
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-white/80">
+            <IconoPorcentaje className="h-4 w-4" aria-hidden="true" />
+            {hayExcedente ? `Excedente a favor · ${mesTxt.split(' de ')[0]}` : `IVA estimado · ${mesTxt.split(' de ')[0]}`}
+          </span>
+          <span className="mt-1.5 block text-2xl font-bold tabular-nums sm:text-3xl">
+            {formatVES(hayExcedente ? periodo.nuevoExcedenteBs : periodo.ivaAPagarBs)}
+          </span>
+          <span className="mt-1 block text-xs text-white/85">
+            Se declara hasta el <strong className="text-white">{fechaCorta(venceIvaMes)}</strong>
+          </span>
+        </button>
+
+        <button type="button" onClick={() => onIrTab('facturacion')} className={`${adminCard} flex flex-col justify-between p-4! text-left transition-colors hover:border-brand-300 sm:p-5!`}>
+          <p className="text-xs font-semibold text-muted">Facturado en {mesTxt.split(' de ')[0]}</p>
+          <p className="mt-1.5 text-2xl font-bold tabular-nums text-ink">{formatVES(resumen.totalBs)}</p>
+          <p className="mt-1 text-xs text-muted">{resumen.emitidas} {resumen.emitidas === 1 ? 'documento' : 'documentos'}{resumen.anuladas ? ` · ${resumen.anuladas} anul.` : ''}</p>
+        </button>
+
+        <button type="button" onClick={() => onIrTab('facturacion')} className={`${adminCard} flex flex-col justify-between p-4! text-left transition-colors hover:border-brand-300 sm:p-5!`}>
+          <p className="text-xs font-semibold text-muted">Cobros por facturar</p>
+          <p className={`mt-1.5 text-2xl font-bold tabular-nums ${comprasPendientes.length > 0 ? 'text-brand-700' : 'text-ink'}`}>
+            {comprasPendientes.length}
+          </p>
+          <p className="mt-1 text-xs text-muted">{comprasPendientes.length === 0 ? 'Al día con la tienda' : 'Órdenes pagadas esperando factura'}</p>
+        </button>
+
+        <button type="button" onClick={() => onIrTab('libros', 'compras')} className={`${adminCard} flex flex-col justify-between p-4! text-left transition-colors hover:border-brand-300 sm:p-5!`}>
+          <p className="text-xs font-semibold text-muted">Crédito fiscal (Compras)</p>
+          <p className="mt-1.5 text-2xl font-bold tabular-nums text-ink">{formatVES(comprasGastos.creditoFiscalBs)}</p>
+          <p className="mt-1 text-xs text-muted">
+            {comprasGastos.items.length} {comprasGastos.items.length === 1 ? 'compra cargada' : 'compras cargadas'}
+            {contingenciasPendientes > 0 ? ` · ${contingenciasPendientes} conting. por reportar` : ''}
+          </p>
+        </button>
+      </div>
 
       {/* Aviso transición SNAT/2026/00093 en azul del kit (nunca ámbar) */}
       <div className={`${adminNotice('warning')} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}>
@@ -321,40 +346,9 @@ export default function TabResumenCierre({ datos, onIrTab }: {
         </div>
         {yo.esDueno && (
           <button type="button" onClick={() => onIrTab('ajustes')} className={`${adminSecondaryButton} shrink-0`}>
-            Abrir Ajustes 2027 <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
+            Ajustes de contabilidad <IconoFlechaDerecha className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
-      </div>
-
-      {/* 4 tarjetas KPI neutras */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <button type="button" onClick={() => onIrTab('facturacion')} className={`${adminCard} p-4! text-left transition-colors hover:border-brand-300`}>
-          <p className="text-xs font-semibold text-muted">Facturado en {mesTxt.split(' de ')[0]}</p>
-          <p className="mt-1 text-xl font-bold tabular-nums text-ink sm:text-2xl">{formatVES(resumen.totalBs)}</p>
-          <p className="mt-1 text-xs text-muted">{resumen.emitidas} {resumen.emitidas === 1 ? 'documento' : 'documentos'}{resumen.anuladas ? ` · ${resumen.anuladas} anul.` : ''}</p>
-        </button>
-
-        <button type="button" onClick={() => onIrTab('facturacion')} className={`${adminCard} p-4! text-left transition-colors hover:border-brand-300`}>
-          <p className="text-xs font-semibold text-muted">Cobros por facturar</p>
-          <p className={`mt-1 text-xl font-bold tabular-nums sm:text-2xl ${comprasPendientes.length > 0 ? 'text-brand-700' : 'text-ink'}`}>
-            {comprasPendientes.length}
-          </p>
-          <p className="mt-1 text-xs text-muted">{comprasPendientes.length === 0 ? 'Al día con la tienda' : 'Órdenes pagadas esperando factura'}</p>
-        </button>
-
-        <button type="button" onClick={() => onIrTab('libros', 'compras')} className={`${adminCard} p-4! text-left transition-colors hover:border-brand-300`}>
-          <p className="text-xs font-semibold text-muted">Crédito fiscal (Compras)</p>
-          <p className="mt-1 text-xl font-bold tabular-nums text-ink sm:text-2xl">{formatVES(comprasGastos.creditoFiscalBs)}</p>
-          <p className="mt-1 text-xs text-muted">{comprasGastos.items.length} {comprasGastos.items.length === 1 ? 'compra cargada' : 'compras cargadas'}</p>
-        </button>
-
-        <button type="button" onClick={() => onIrTab('facturacion')} className={`${adminCard} p-4! text-left transition-colors hover:border-brand-300`}>
-          <p className="text-xs font-semibold text-muted">Contingencias pendientes</p>
-          <p className={`mt-1 text-xl font-bold tabular-nums sm:text-2xl ${contingenciasPendientes > 0 ? 'text-deal' : 'text-ink'}`}>
-            {contingenciasPendientes}
-          </p>
-          <p className="mt-1 text-xs text-muted">{contingenciasPendientes === 0 ? 'Sin reportes atrasados' : 'Reportar al día siguiente (art. 7)'}</p>
-        </button>
       </div>
 
       {/* Cuerpo: Obligaciones a la izquierda, Cierre + Firma + Notas a la derecha */}

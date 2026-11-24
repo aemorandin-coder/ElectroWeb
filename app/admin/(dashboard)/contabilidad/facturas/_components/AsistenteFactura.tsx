@@ -258,15 +258,15 @@ export default function AsistenteFactura({
 
   const replica = borrador && medioEfectivo === 'TALONARIO' && talonarioEfectivo && borrador.numeroTexto && borrador.numeroControl
     ? datosReplica(borrador.talonario ?? talonarioEfectivo, {
-        numeroTexto: borrador.numeroTexto,
-        numeroControl: borrador.numeroControl,
-        fecha: borrador.fecha,
-        comprador: borrador.comprador,
-        condicionPago: borrador.condicionPago,
-        renglones: borrador.renglones,
-        totales: borrador.totales,
-        alicuota: borrador.alicuota,
-      })
+      numeroTexto: borrador.numeroTexto,
+      numeroControl: borrador.numeroControl,
+      fecha: borrador.fecha,
+      comprador: borrador.comprador,
+      condicionPago: borrador.condicionPago,
+      renglones: borrador.renglones,
+      totales: borrador.totales,
+      alicuota: borrador.alicuota,
+    })
     : null;
 
   const botonesPie = (siguiente: number, texto: string) => (
@@ -287,7 +287,7 @@ export default function AsistenteFactura({
       <div className={adminNotice('warning')}>
         <IconoAdvertencia aria-hidden="true" />
         <p className="mt-2 font-semibold">No hay un talonario físico con facturas disponibles.</p>
-        <p className="mt-1">El dueño puede cargar un talonario o activar Portal SENIAT / Imprenta Digital en Contabilidad → Ajustes 2027.</p>
+        <p className="mt-1">El dueño puede cargar un talonario o activar Portal SENIAT / Imprenta Digital en Contabilidad → Ajustes de contabilidad.</p>
       </div>
     );
   }

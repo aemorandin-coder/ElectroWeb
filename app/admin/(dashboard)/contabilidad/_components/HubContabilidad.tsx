@@ -52,7 +52,7 @@ export default function HubContabilidad({ datos }: { datos: HubDatosProps }) {
     { id: 'libros', etiqueta: 'Libros e IVA', icono: <IconoReportes className="h-4 w-4" aria-hidden="true" /> },
     { id: 'movimientos', etiqueta: 'Movimientos', icono: <IconoBillete className="h-4 w-4" aria-hidden="true" /> },
     ...(datos.yo.esDueno && datos.config
-      ? [{ id: 'ajustes' as const, etiqueta: 'Ajustes 2027', icono: <IconoConfiguracion className="h-4 w-4" aria-hidden="true" /> }]
+      ? [{ id: 'ajustes' as const, etiqueta: 'Ajustes de contabilidad', icono: <IconoConfiguracion className="h-4 w-4" aria-hidden="true" /> }]
       : []),
   ];
 

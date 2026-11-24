@@ -315,7 +315,7 @@ export async function prepararFactura(pedido: PedidoFactura, db: Db = prisma): P
 
   if (medio === 'TALONARIO') {
     if (renglones.length > 12) avisos.push(`Son ${renglones.length} renglones y el talonario tiene 12: hacen falta dos facturas.`);
-    if (!t) avisos.push('No hay un talonario con facturas por usar: el dueño lo carga en Facturas o Ajustes 2027.');
+    if (!t) avisos.push('No hay un talonario con facturas por usar: el dueño lo carga en Facturas o Ajustes de contabilidad.');
   }
   const diferenciaBs = cobradoBs === null ? 0 : r2(totales.totalBs - cobradoBs);
   if (Math.abs(diferenciaBs) >= 0.01) {

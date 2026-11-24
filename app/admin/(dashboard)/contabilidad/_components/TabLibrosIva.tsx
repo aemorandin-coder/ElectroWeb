@@ -423,12 +423,17 @@ export default function TabLibrosIva({
         </div>
       )}
 
-      {subTab === 'iva' && (
+      {subTab === 'iva' && (() => {
+        const comprasValidas = comprasGastos.items.filter((i) => i.estadoRevision !== 'FALTA_ALGO');
+        const comprasExentasBs = comprasValidas.reduce((s, i) => s + i.exentoBs, 0);
+        const comprasBaseBs = comprasValidas.reduce((s, i) => s + i.baseBs, 0);
+        const totalCreditosBs = periodo.creditoFiscalBs + periodo.excedenteAnteriorBs;
+        return (
         <section className={adminCard} aria-labelledby="iva-hoja-titulo">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 id="iva-hoja-titulo" className="text-lg font-semibold text-ink">Hoja de trabajo IVA · Forma 99030 ({mesTxt})</h2>
-              <p className="mt-0.5 text-xs text-muted">Cifras consolidadas de Libro de Ventas, Libro de Compras y comprobantes de retención.</p>
+              <p className="mt-0.5 text-xs text-muted">Valores mapeados a las casillas exactas del portal SENIAT en Línea (carga manual web).</p>
             </div>
             <span className={adminBadge(periodo.estado === 'CERRADO' ? 'success' : periodo.estado === 'DECLARADO' ? 'brand' : 'warning')}>
               {periodo.estado === 'CERRADO' ? 'Cerrado' : periodo.estado === 'DECLARADO' ? 'Declarado' : 'Abierto'}
@@ -436,16 +441,46 @@ export default function TabLibrosIva({
           </div>
 
           <dl className="mt-4 divide-y divide-line text-sm">
-            <div className="flex items-baseline justify-between py-3">
-              <dt className="text-ink-soft">1. Débito fiscal (IVA ventas − Notas de Crédito + Notas de Débito)</dt>
+            <div className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
+              <dt className="flex items-center gap-2 text-ink-soft">
+                <span className={adminDato}>Casilla 40</span> Ventas internas no gravadas / exentas
+              </dt>
+              <dd className="font-semibold tabular-nums text-ink">{formatVES(libro.totales.exentoBs)}</dd>
+            </div>
+            <div className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
+              <dt className="flex items-center gap-2 text-ink-soft">
+                <span className={adminDato}>Casilla 42</span> Base imponible ventas gravadas (alícuota general)
+              </dt>
+              <dd className="font-semibold tabular-nums text-ink">{formatVES(libro.totales.baseBs)}</dd>
+            </div>
+            <div className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
+              <dt className="flex items-center gap-2 font-medium text-ink">
+                <span className={adminDato}>Casillas 43 / 49</span> Total Débito Fiscal (ventas − NC + ND)
+              </dt>
               <dd className="font-semibold tabular-nums text-ink">{formatVES(periodo.debitoFiscalBs)}</dd>
             </div>
-            <div className="flex items-baseline justify-between py-3">
-              <dt className="text-ink-soft">2. (−) Crédito fiscal del mes (Libro de Compras)</dt>
+            <div className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
+              <dt className="flex items-center gap-2 text-ink-soft">
+                <span className={adminDato}>Casilla 30</span> Compras no gravadas / sin derecho a crédito
+              </dt>
+              <dd className="font-semibold tabular-nums text-ink">{formatVES(comprasExentasBs)}</dd>
+            </div>
+            <div className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
+              <dt className="flex items-center gap-2 text-ink-soft">
+                <span className={adminDato}>Casilla 33</span> Base imponible compras internas gravadas
+              </dt>
+              <dd className="font-semibold tabular-nums text-ink">{formatVES(comprasBaseBs)}</dd>
+            </div>
+            <div className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
+              <dt className="flex items-center gap-2 text-ink-soft">
+                <span className={adminDato}>Casillas 34 / 36</span> Crédito fiscal del período (Libro de Compras)
+              </dt>
               <dd className="font-semibold tabular-nums text-ink">− {formatVES(periodo.creditoFiscalBs)}</dd>
             </div>
-            <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <dt className="text-ink-soft">3. (−) Excedente de crédito del mes anterior</dt>
+            <div className="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+              <dt className="flex items-center gap-2 text-ink-soft">
+                <span className={adminDato}>Casilla 20</span> Excedente créditos fiscales del mes anterior
+              </dt>
               <dd className="flex items-center gap-2">
                 {!cerrado ? (
                   <>
@@ -465,13 +500,25 @@ export default function TabLibrosIva({
                 )}
               </dd>
             </div>
-            <div className="flex items-baseline justify-between py-3">
-              <dt className="text-ink-soft">4. (−) Retenciones de IVA recibidas (compradores contribuyentes especiales)</dt>
+            <div className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
+              <dt className="flex items-center gap-2 font-medium text-ink">
+                <span className={adminDato}>Casilla 39</span> Total Créditos Fiscales (período + excedente ant.)
+              </dt>
+              <dd className="font-semibold tabular-nums text-ink">− {formatVES(totalCreditosBs)}</dd>
+            </div>
+            <div className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
+              <dt className="space-y-0.5 text-ink-soft">
+                <span className="flex items-center gap-2">
+                  <span className={adminDato}>Casillas 66 / 55</span> Retenciones de IVA del período descontadas
+                </span>
+                <span className="block text-xs text-muted">Confirmar en SENIAT → Consultas → Retenciones Efectivamente Pagadas</span>
+              </dt>
               <dd className="font-semibold tabular-nums text-ink">− {formatVES(periodo.retencionesIvaBs)}</dd>
             </div>
-            <div className="flex items-baseline justify-between bg-brand-50 px-3 py-3.5 rounded-xl mt-2">
-              <dt className="font-bold text-brand-700">
-                {periodo.ivaAPagarBs > 0 ? 'Resultado: IVA neto por pagar en planilla' : 'Resultado: Nuevo excedente a trasladar'}
+            <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2 rounded-xl bg-brand-50 px-3 py-3.5">
+              <dt className="flex items-center gap-2 font-bold text-brand-700">
+                <span className={adminBadge('brand')}>{periodo.ivaAPagarBs > 0 ? 'Casilla 90' : 'Casilla 60'}</span>
+                {periodo.ivaAPagarBs > 0 ? 'Total a Pagar en planilla' : 'Excedente de Crédito Fiscal para el mes siguiente'}
               </dt>
               <dd className="text-xl font-bold tabular-nums text-brand-700">
                 {formatVES(periodo.ivaAPagarBs > 0 ? periodo.ivaAPagarBs : periodo.nuevoExcedenteBs)}
@@ -515,7 +562,8 @@ export default function TabLibrosIva({
             </div>
           )}
         </section>
-      )}
+        );
+      })()}
 
       {/* Modal Cargar Compra / Gasto */}
       <ModalDialog open={modalNueva} onClose={() => !guardandoCompra && setModalNueva(false)} ariaLabelledBy="compra-modal-titulo" size="lg">

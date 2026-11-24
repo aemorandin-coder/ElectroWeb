@@ -371,7 +371,7 @@ export default function TabFacturacion({
           </p>
           {esDueno && onIrAjustes && (
             <button type="button" onClick={onIrAjustes} className="mt-3 text-xs font-semibold text-brand-600 hover:underline">
-              Cambiar canal en Ajustes 2027
+              Cambiar canal en Ajustes de contabilidad
             </button>
           )}
         </section>
